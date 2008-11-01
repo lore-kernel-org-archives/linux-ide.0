@@ -1,107 +1,98 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] fix pata-rb532-cf
-Date: Sat, 01 Nov 2008 19:45:39 +0300
-Message-ID: <490C87B3.1000403@ru.mvista.com>
-References: <20081101160930.GA10321@nuty> <1225555965-27557-1-git-send-email-n0-1@freewrt.org> <490C833A.7010702@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: [PATCH] fix pata-rb532-cf
+Date: Sat,  1 Nov 2008 19:09:32 +0100
+Message-ID: <1225562973-8843-1-git-send-email-n0-1@freewrt.org>
+References: <20081101164545.GB10321@nuty>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:40435 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751776AbYKAQpo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Nov 2008 12:45:44 -0400
-In-Reply-To: <490C833A.7010702@ru.mvista.com>
+Received: from orbit.nwl.cc ([81.169.176.177]:44371 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690AbYKASJi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Nov 2008 14:09:38 -0400
+Received: from base (localhost [127.0.0.1])
+	by mail.ifyouseekate.net (Postfix) with ESMTP id 52407386DBBE
+	for <linux-ide@vger.kernel.org>; Sat,  1 Nov 2008 19:09:36 +0100 (CET)
+In-Reply-To: <20081101164545.GB10321@nuty>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Sutter <n0-1@freewrt.org>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+To: linux-ide@vger.kernel.org
 
-Hello, I wrote:
+After applying the following changes I could verify functionality by
+mounting a filesystem on the cfdisk and reading/writing files in it.
 
->> After applying the following changes I could verify functionality by
->> mounting a filesystem on the cfdisk and reading/writing files in it.
->>
->> The symbols rb532_gpio_set_ilevel and rb532_gpio_set_istat are not yet
->> available in a vanilla kernel, an appropriate patch has already been
->> sent to the linux-mips mailinglist.
->>
->> Also change rb532_pata_data_xfer() so it reads and writes 4-byte blocks,
->> like the original driver did. Rename the offset definition of the
->> buffered data register for clearness.
->>   
->
->   Looks ike I'll have to NAK this part...
+The symbols rb532_gpio_set_ilevel and rb532_gpio_set_istat are not yet
+available in a vanilla kernel, an appropriate patch has already been
+sent to the linux-mips mailinglist.
 
-   I'd advise to break up the patch since you're fixing 2 unrelated 
-things now...
+Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+---
+ drivers/ata/pata_rb532_cf.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
->> index f8b3ffc..bdf413e 100644
->> --- a/drivers/ata/pata_rb532_cf.c
->> +++ b/drivers/ata/pata_rb532_cf.c
->>   
-> diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-> [...]
->> @@ -39,9 +40,11 @@
->>  #define RB500_CF_MAXPORTS    1
->>  #define RB500_CF_IO_DELAY    400
->>  
->> -#define RB500_CF_REG_CMD    0x0800
->> +#define RB500_CF_REG_BASE    0x0800
->>  #define RB500_CF_REG_CTRL    0x080E
->> -#define RB500_CF_REG_DATA    0x0C00
->> +/* 32bit buffered data register offset */
->> +#define RB500_CF_REG_DBUF32    0x0C00
->> +#define RB500_CF_REG_ERR    0x080D
->>   
->
->   Wouldn't hurt to have the macros in the ascending address order...
->
->> @@ -72,21 +75,26 @@ static void rb532_pata_exec_command(struct 
->> ata_port *ap,
->>      rb532_pata_finish_io(ap);
->>  }
->>  
->> -static void rb532_pata_data_xfer(struct ata_device *adev, unsigned 
->> char *buf,
->> +static unsigned int rb532_pata_data_xfer(struct ata_device *adev, 
->> unsigned char *buf,
->>                  unsigned int buflen, int write_data)
->>  {
->> +    int i;
-
-  I'd have made this the last variable in the declartion block...
-
->>      struct ata_port *ap = adev->link->ap;
->>      void __iomem *ioaddr = ap->ioaddr.data_addr;
->>  
->> +    BUG_ON(buflen % sizeof(u32));
-
-   Well, if there's no chance for an ATAPI device to be connected...
-
->> +
->>      if (write_data) {
->> -        for (; buflen > 0; buflen--, buf++)
->> -            writeb(*buf, ioaddr);
->> +        for(i = 0; i < buflen / sizeof(u32); i++)
->> +            writel(((u32 *)buf)[i], ioaddr);
->>      } else {
->> -        for (; buflen > 0; buflen--, buf++)
->> -            *buf = readb(ioaddr);
->> +        for(i = 0; i < buflen / sizeof(u32); i++)
->> +            ((u32 *)buf)[i] = readl(ioaddr);
->>      }
->
->   So, I didn't get what was wrong with using readsl() and writesl()?
->   Besides, using readl() and witel() this way would be wrong on BE 
-> mode since the data is expected to be stored to memory in the LE order.
->
-
-   Hm, I'seeing that RB532 only supports LE it seems -- though I wodner 
-why it also selects CONFIG_SWAP_IO_SPACE which shouldn't affect anything 
-in LE mode...
-Anyway, using readl()/writel() this way is wrong...
-
-MBR, Sergei
-
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index f8b3ffc..7b11f40 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_host.h>
+ 
+ #include <asm/gpio.h>
++#include <asm/mach-rc32434/gpio.h>
+ 
+ #define DRV_NAME	"pata-rb532-cf"
+ #define DRV_VERSION	"0.1.0"
+@@ -39,7 +40,8 @@
+ #define RB500_CF_MAXPORTS	1
+ #define RB500_CF_IO_DELAY	400
+ 
+-#define RB500_CF_REG_CMD	0x0800
++#define RB500_CF_REG_BASE	0x0800
++#define RB500_CF_REG_ERR	0x080D
+ #define RB500_CF_REG_CTRL	0x080E
+ #define RB500_CF_REG_DATA	0x0C00
+ 
+@@ -62,7 +64,7 @@ static inline void rb532_pata_finish_io(struct ata_port *ap)
+ 	ata_sff_dma_pause(ap);
+ 	ndelay(RB500_CF_IO_DELAY);
+ 
+-	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
++	rb532_gpio_set_ilevel(1, info->gpio_line);
+ }
+ 
+ static void rb532_pata_exec_command(struct ata_port *ap,
+@@ -109,13 +111,15 @@ static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
+ 	struct rb532_cf_info *info = ah->private_data;
+ 
+ 	if (gpio_get_value(info->gpio_line)) {
+-		set_irq_type(info->irq, IRQ_TYPE_LEVEL_LOW);
++		rb532_gpio_set_ilevel(0, info->gpio_line);
+ 		if (!info->frozen)
+ 			ata_sff_interrupt(info->irq, dev_instance);
+ 	} else {
+-		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
++		rb532_gpio_set_ilevel(1, info->gpio_line);
+ 	}
+ 
++	rb532_gpio_set_istat(0, info->gpio_line);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -146,13 +150,14 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
+ 	ap->pio_mask	= 0x1f; /* PIO4 */
+ 	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
+ 
+-	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
++	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_BASE;
+ 	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
+ 	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
+ 
+ 	ata_sff_std_ports(&ap->ioaddr);
+ 
+ 	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
+ }
+ 
+ static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
+-- 
+1.5.6.4
 
