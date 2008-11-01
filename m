@@ -1,43 +1,55 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2/2] cmd64x: set IDE_HFLAG_SERIALIZE explictly for CMD646
-Date: Fri, 31 Oct 2008 10:36:21 -0400
-Message-ID: <490B17E5.1090109@rtr.ca>
-References: <200810272058.54522.bzolnier@gmail.com> <200810300010.06303.bzolnier@gmail.com> <4908F240.2020606@ru.mvista.com> <200810300042.29405.bzolnier@gmail.com>
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: Re: [PATCH] fix pata-rb532-cf
+Date: Sat, 1 Nov 2008 17:09:30 +0100
+Message-ID: <20081101160930.GA10321@nuty>
+References: <1225403251-15705-1-git-send-email-n0-1@freewrt.org> <490A4156.5080302@ru.mvista.com> <20081031000912.GB10620@nuty> <490AE023.9040906@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:49984 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751398AbYJaOfs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Oct 2008 10:35:48 -0400
-In-Reply-To: <200810300042.29405.bzolnier@gmail.com>
+Received: from orbit.nwl.cc ([81.169.176.177]:51875 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752807AbYKAQIX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Nov 2008 12:08:23 -0400
+Received: from nuty (localhost [127.0.0.1])
+	by mail.ifyouseekate.net (Postfix) with ESMTP id CDA6B386DBBE
+	for <linux-ide@vger.kernel.org>; Sat,  1 Nov 2008 17:08:19 +0100 (CET)
+Content-Disposition: inline
+In-Reply-To: <490AE023.9040906@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 30 October 2008, Sergei Shtylyov wrote:
->> Hello.
->>
->> Bartlomiej Zolnierkiewicz wrote:
-.. 
->>    Ah, got it at last. But I doubt that 646 *really* needs serialization...
+Hi,
+
+On Fri, Oct 31, 2008 at 01:38:27PM +0300, Sergei Shtylyov wrote:
+> >The original driver (see my patch) accesses 0x80D to read error codes,
+> >so I assumed this is correct. Indeed, the driver works also with the
+> >standard setting. Is there a way I can clearly verify which is the right
+> >offset?
+> >  
 > 
-> I remember getting bugreport which supposedly was fixed by commit
-> deffca117b90dadec395c0cf3ee816de27dfe2fd (but it could also be that
-> it was something else in reality or that it just hide some other
-> bug that we fixed in the meantime).
-> 
-> We would need somebody with the hardware to verify it.
-..
+>   I assume you don't have the documentation? I wodner why they needed 
+> to duplicate (or remap) this register...
 
-Apple B&W PowerMac G3 boxes originally shipped with CMD646 chips inside,
-so if anyone has one of those, then it could be used for testing this.
+Sadly not. All I have is the specification of the SoC by IDT, but the
+CompactFlash slot was added by Mikrotik, so it's not mentioned in there.
+The routerboard user's manual Mikrotik has published doesn't contain
+much more information about it than "it's there".
 
-The early CMD646 chips have issues with UDMA modes, but later ones work fine.
-I really don't remember if the old CMD640 serialization issues persist
-with the "newer" CMD646 chips, though.
+>   No. The alternatives would be to use local variable as a loop counter 
+> or, better yet, using readsb()/writesb() instead of the loops...
+> Wait! The original driver used 32-bit I/O to this register, not 8-bit -- 
+> so it looks like you have artificially slowed it down... :-/
 
-Cheers
+Ok, so this should be clear now. I changed the code to use readl() and
+writel() (the reads*() and writes*() versions sadly aren't useable as
+they increment the target memory pointer) which worked fine.
+
+When it comes to the register offsets I'd say in dubio pro reo and keep
+the custom error address. Changing it afterwards to the standard should
+also be much easier than fiddling out what the custom offset was again.
+
+I'll reply to this mail with an updated patch addressing all discussed
+problems.
+
+Greetings and many thanks, Phil
