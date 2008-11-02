@@ -1,51 +1,45 @@
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
-Subject: [PATCH] sata_via: restore vt*_prepare_host error handling
-Date: Sun, 2 Nov 2008 22:18:52 +0100
-Message-ID: <20081102211848.GA20785@joi>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] read and write data in 4-byte blocks
+Date: Mon, 03 Nov 2008 00:23:47 +0300
+Message-ID: <490E1A63.3040507@ru.mvista.com>
+References: <1225563098-11447-1-git-send-email-n0-1@freewrt.org> <1225563670-23236-1-git-send-email-n0-1@freewrt.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:45980 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755206AbYKBVT0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Nov 2008 16:19:26 -0500
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:53018 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754024AbYKBVXx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Nov 2008 16:23:53 -0500
+In-Reply-To: <1225563670-23236-1-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Joseph Chan <JosephChan@via.com.tw>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org
+To: Phil Sutter <n0-1@freewrt.org>
+Cc: linux-ide@vger.kernel.org
 
-commit b9d5b89b487517cbd4cb4702da829e07ef9e4432 (sata_via: fix support
-for 5287) accidently (?) removed vt*_prepare_host error handling - restore it
+Hello.
 
-catched by gcc:
-drivers/ata/sata_via.c: In function 'svia_init_one':
-drivers/ata/sata_via.c:567: warning: 'host' may be used uninitialized in this function
+Phil Sutter wrote:
 
-Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Joseph Chan <JosephChan@via.com.tw>
-Cc: Jeff Garzik <jgarzik@redhat.com>
----
- drivers/ata/sata_via.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+> I forgot to include the one line changing rb532_pata_data_xfer()'s signature,
+> sorry for that. So here's the correct version.
+>
+> * rename the offset definition to avoid abiguity with the standard ATA
+>   IO address
+> * read and write four bytes at once
+> * use writesl() and readsl() which implicitly iterate over the data
+> * fix the signature of rb532_pata_data_xfer() to mach the function
+>   
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 62367fe..c18935f 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -602,8 +602,10 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		rc = vt8251_prepare_host(pdev, &host);
- 		break;
- 	default:
--		return -EINVAL;
-+		rc = -EINVAL;
- 	}
-+	if (rc)
-+		return rc;
- 
- 	svia_configure(pdev);
- 
--- 
-1.5.6.4
+   s/mach/match/
+
+>   pointer definition and return the number of bytes consumed
+>
+> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+>   
+
+Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
+
 
