@@ -1,86 +1,105 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata fixes
-Date: Sun, 02 Nov 2008 08:21:24 -0500
-Message-ID: <490DA954.2070503@garzik.org>
-References: <20081031054949.GA10474@havoc.gtf.org> <87f94c370810310620u77f2b31r85b196d7261ef75f@mail.gmail.com>
+From: Yan Seiner <yan@seiner.com>
+Subject: Port multiplier resets
+Date: Sun, 02 Nov 2008 07:10:56 -0800
+Message-ID: <490DC300.40703@seiner.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57747 "EHLO mail.dvmed.net"
+Received: from flatoutfitness.com ([66.178.130.209]:40297 "EHLO www.seiner.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753443AbYKBNV2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Nov 2008 08:21:28 -0500
-In-Reply-To: <87f94c370810310620u77f2b31r85b196d7261ef75f@mail.gmail.com>
+	id S1753024AbYKBP4V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Nov 2008 10:56:21 -0500
+Received: from www.seiner.com ([192.168.128.6] ident=yan)
+	by www.seiner.com with esmtp (Exim 4.69)
+	(envelope-from <yan@seiner.com>)
+	id 1KwebQ-0006yy-Dl
+	for linux-ide@vger.kernel.org; Sun, 02 Nov 2008 07:10:56 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> On Fri, Oct 31, 2008 at 1:49 AM, Jeff Garzik <jeff@garzik.org> wrote:
->> Notes:
->>
->> 1) 1.5TB drive fix from Roland
->>
->> 2) Tejun's sata_via brings a non-working via configuration thanks to a
->>   new facility also being used in recent (ICH9/10) ata_piix.
->>
->>   Change is longer than one might like, but it accurately describes the
->>   hardware now, the previous stuff wasn't working, and the newly added
->>   support code shouldn't touch non-broken VIA controllers.
->>
->>
->>
->> Please pull from 'upstream-linus' branch of
->> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
->>
->> to receive the following updates:
->>
->>  drivers/ata/ata_piix.c    |    1 -
->>  drivers/ata/libata-core.c |   11 +++-
->>  drivers/ata/sata_via.c    |  155 +++++++++++++++++++++++++++++++++++++++++----
->>  include/linux/libata.h    |    1 +
->>  4 files changed, 152 insertions(+), 16 deletions(-)
->>
->> Jens Axboe (1):
->>      libata: add whitelist for devices with known good pata-sata bridges
->>
->> Randy Dunlap (1):
->>      ATA: remove excess kernel-doc notation
->>
->> Roland Dreier (1):
->>      libata: Avoid overflow in ata_tf_to_lba48() when tf->hba_lbal > 127
->>
->> Tejun Heo (1):
->>      sata_via: fix support for 5287
-> <snip>
-> 
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 2ff633c..82af701 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -1268,7 +1268,7 @@ u64 ata_tf_to_lba48(const struct ata_taskfile *tf)
->>
->>        sectors |= ((u64)(tf->hob_lbah & 0xff)) << 40;
->>        sectors |= ((u64)(tf->hob_lbam & 0xff)) << 32;
->> -       sectors |= (tf->hob_lbal & 0xff) << 24;
->> +       sectors |= ((u64)(tf->hob_lbal & 0xff)) << 24;
->>        sectors |= (tf->lbah & 0xff) << 16;
->>        sectors |= (tf->lbam & 0xff) << 8;
->>        sectors |= (tf->lbal & 0xff);
-> <snip>
-> 
-> That looks really serious.
-> 
-> What happens with all previous / stable kernels when connecting up a
-> 1.5TB drive and the user tries to use the last portion of the drive?
+I'm seeing errors on a new port multiplier install.  
 
-tf-to-lba48 is a far less common operation, generally used for error 
-reporting (and in Host-Protected Area code as well, it appears).
+The mobo has a J-Micron SATA controller: JMicron Technologies, Inc. JMicron 20360/20363 AHCI Controller (rev 03)
+The port multiplier has a SIL 3726 chipset.  AFAICT, this is a supported comnbination.  The kernel recognizes the chipset.  
 
-	Jeff
+The system has an adaptec SCSI controller w/ 2 15K SCSI drives, 6 internal SATA drives, and 3 external SATA drives using the port multiplier. Because of a broken bios (ARGH!) I have to power up the external drives after the system scans the SCSI bus.  This seems to cause no problems.  Here's a log of a recent boot (scroll down for the error I see after the system is booted):
 
+Nov  2 05:26:07 selene kernel: [   28.691524] ata8: SATA max UDMA/133 abar m8192@0xfdcfe000 port 0xfdcfe180 irq 16
+Nov  2 05:26:07 selene kernel: [   34.104580] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Nov  2 05:26:07 selene kernel: [   34.104580] ata8.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+Nov  2 05:26:07 selene kernel: [   34.104580] ata8.00: hard resetting link
+Nov  2 05:26:07 selene kernel: [   34.425000] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   34.425003] ata8.01: hard resetting link
+Nov  2 05:26:07 selene kernel: [   35.001232] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   35.001234] ata8.02: hard resetting link
+Nov  2 05:26:07 selene kernel: [   35.321389] ata8.02: SATA link down (SStatus 0 SControl 320)
+Nov  2 05:26:07 selene kernel: [   35.321419] ata8.03: hard resetting link
+Nov  2 05:26:07 selene kernel: [   35.869739] ata8.03: SATA link down (SStatus 0 SControl 320)
+Nov  2 05:26:07 selene kernel: [   35.869769] ata8.04: hard resetting link
+Nov  2 05:26:07 selene kernel: [   36.621491] ata8.04: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   36.621493] ata8.05: hard resetting link
+Nov  2 05:26:07 selene kernel: [   36.941025] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   36.942522] ata8.00: ATA-8: ST31000340AS, SD15, max UDMA/133
+Nov  2 05:26:07 selene kernel: [   36.942525] ata8.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+Nov  2 05:26:07 selene kernel: [   36.944479] ata8.00: configured for UDMA/133
+Nov  2 05:26:07 selene kernel: [   53.613888] ata8.01: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+Nov  2 05:26:07 selene kernel: [   53.613888] ata8.04: failed to IDENTIFY (I/O error, err_mask=0x100)
+Nov  2 05:26:07 selene kernel: [   53.613888] ata8: failed to recover some devices, retrying in 5 secs
+Nov  2 05:26:07 selene kernel: [   61.420677] ata8.01: hard resetting link
+Nov  2 05:26:07 selene kernel: [   66.420763] ata8.15: qc timeout (cmd 0xe4)
+Nov  2 05:26:07 selene kernel: [   66.420770] ata8.01: failed to read SCR 2 (Emask=0x4)
+Nov  2 05:26:07 selene kernel: [   66.420773] ata8.01: failed to read SCR 2 (Emask=0x40)
+Nov  2 05:26:07 selene kernel: [   66.420775] ata8.01: COMRESET failed (errno=-5)
+Nov  2 05:26:07 selene kernel: [   66.420804] ata8.01: failed to read SCR 0 (Emask=0x40)
+Nov  2 05:26:07 selene kernel: [   66.420806] ata8.01: reset failed, giving up
+Nov  2 05:26:07 selene kernel: [   66.420835] ata8.15: hard resetting link
+Nov  2 05:26:07 selene kernel: [   68.284883] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Nov  2 05:26:07 selene kernel: [   68.285116] ata8.00: hard resetting link
+Nov  2 05:26:07 selene kernel: [   68.604947] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   68.604949] ata8.01: hard resetting link
+Nov  2 05:26:07 selene kernel: [   69.329438] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   69.329440] ata8.02: hard resetting link
+Nov  2 05:26:07 selene kernel: [   69.649777] ata8.02: SATA link down (SStatus 0 SControl 320)
+Nov  2 05:26:07 selene kernel: [   69.649807] ata8.03: hard resetting link
+Nov  2 05:26:07 selene kernel: [   69.969439] ata8.03: SATA link down (SStatus 0 SControl 320)
+Nov  2 05:26:07 selene kernel: [   69.969469] ata8.04: hard resetting link
+Nov  2 05:26:07 selene kernel: [   70.813852] ata8.04: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   70.813855] ata8.05: hard resetting link
+Nov  2 05:26:07 selene kernel: [   71.377665] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:26:07 selene kernel: [   71.381475] ata8.00: configured for UDMA/133
+Nov  2 05:26:07 selene kernel: [   71.381475] ata8.01: ATA-8: ST31000340AS, SD15, max UDMA/133
+Nov  2 05:26:07 selene kernel: [   71.381475] ata8.01: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+Nov  2 05:26:07 selene kernel: [   71.381879] ata8.01: configured for UDMA/133
+Nov  2 05:26:07 selene kernel: [   71.381879] ata8.04: ATA-8: ST31000340AS, SD15, max UDMA/133
+Nov  2 05:26:07 selene kernel: [   71.381879] ata8.04: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+Nov  2 05:26:07 selene kernel: [   71.381890] ata8.04: configured for UDMA/133
+Nov  2 05:26:07 selene kernel: [   71.389769] ata8: EH complete
 
+Once the system is up and running, I get these errors.  They appear anywhere from several hours to a few minutes apart.  What exactly does this mean?  It doesn't seem to have any impact on the performance of the drives.  Typically, these drives are very heavily loaded; I've been dumping > 1TB of data to them while rebuilding the RAID-5 array, so they're pretty well maxed out.
+
+Nov  2 05:40:13 selene kernel: [  984.254543] ata8.15: exception Emask 0x10 SAct 0x0 SErr 0x780101 action 0x7
+Nov  2 05:40:13 selene kernel: [  984.254549] ata8.15: irq_stat 0x0c000000
+Nov  2 05:40:13 selene kernel: [  984.254552] ata8: SError: { RecovData UnrecovData 10B8B Dispar BadCRC Handshk }
+Nov  2 05:40:13 selene kernel: [  984.254557] ata8.01: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x0
+Nov  2 05:40:13 selene kernel: [  984.254563] ata8.15: hard resetting link
+Nov  2 05:40:14 selene kernel: [  985.018050] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Nov  2 05:40:14 selene kernel: [  985.018332] ata8.00: hard resetting link
+Nov  2 05:40:14 selene kernel: [  985.338351] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:40:14 selene kernel: [  985.338351] ata8.01: hard resetting link
+Nov  2 05:40:15 selene kernel: [  985.658050] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:40:15 selene kernel: [  985.658050] ata8.02: hard resetting link
+Nov  2 05:40:15 selene kernel: [  985.978141] ata8.02: SATA link down (SStatus 0 SControl 320)
+Nov  2 05:40:15 selene kernel: [  985.978227] ata8.03: hard resetting link
+Nov  2 05:40:15 selene kernel: [  986.299067] ata8.03: SATA link down (SStatus 0 SControl 320)
+Nov  2 05:40:15 selene kernel: [  986.299155] ata8.04: hard resetting link
+Nov  2 05:40:16 selene kernel: [  986.619270] ata8.04: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:40:16 selene kernel: [  986.619278] ata8.05: hard resetting link
+Nov  2 05:40:16 selene kernel: [  986.939112] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Nov  2 05:40:16 selene kernel: [  986.943256] ata8.00: configured for UDMA/133
+Nov  2 05:40:16 selene kernel: [  986.946950] ata8.01: configured for UDMA/133
+Nov  2 05:40:16 selene kernel: [  986.950647] ata8.04: configured for UDMA/133
+Nov  2 05:40:16 selene kernel: [  986.950647] ata8: EH complete
 
 
