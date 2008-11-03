@@ -1,30 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
-Date: Mon, 03 Nov 2008 23:26:00 +0900
-Message-ID: <490F09F8.5070802@kernel.org>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org> <49069317.3000600@garzik.org>
+Subject: Re: [RFC PATCH] ide-floppy partitions
+Date: Tue, 04 Nov 2008 00:37:42 +0900
+Message-ID: <490F1AC6.8000109@kernel.org>
+References: <20081029071319.GA9205@gollum.tnic> <20081101201419.GA29462@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36511 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:36481 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754311AbYKCO0J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 09:26:09 -0500
-In-Reply-To: <49069317.3000600@garzik.org>
+	id S1754402AbYKCPhx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Nov 2008 10:37:53 -0500
+In-Reply-To: <20081101201419.GA29462@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: petkovbb@gmail.com, Tejun Heo <tj@kernel.org>, axboe@kernel.dk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> ACK patchset
+Borislav Petkov wrote:
+> can you guys please ACK/NACK this so that we can have an agreed upon solution
+> and so that I can stop applying it ontop of current git before testing any
+> further.
 
-Jeff, are you gonna create #upstream soon?  I have other patches
-targeted for #upstream and having a branch open and having patch orders
-fixed there would help a lot.
-
-Thanks.
+Ah... right.  I missed removable devices.  I think it would be better to
+just expand the table rather than recursing into __blkdev_get() again.
+I'll try to come up with cleaner solution.  Also, I don't think the
+discontinuous partition would be a problem.  ptbl is expanded to the
+highest numbered partition not the number of partitions.  I'll test that
+too.  Thanks.
 
 -- 
 tejun
