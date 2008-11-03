@@ -1,47 +1,78 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: hdparm-9.2 now available:  w/ DCO and firmware support
-Date: Mon, 03 Nov 2008 13:17:20 -0500
-Message-ID: <490F4030.5030709@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 2/6] ide: always set nIEN on idle devices
+Date: Mon, 03 Nov 2008 21:02:53 +0100
+Message-ID: <20081103200253.5098.17871.sendpatchset@localhost.localdomain>
+References: <20081103200244.5098.29817.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:55155 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091AbYKCSQl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 13:16:41 -0500
-Received: from [10.0.0.6] (corey.localnet [10.0.0.6])
-	by mail.rtr.ca (Postfix) with ESMTP id 5AC3394672F
-	for <linux-ide@vger.kernel.org>; Mon,  3 Nov 2008 13:17:21 -0500 (EST)
+Received: from ey-out-2122.google.com ([74.125.78.25]:51038 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754420AbYKCUFN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Nov 2008 15:05:13 -0500
+In-Reply-To: <20081103200244.5098.29817.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-hdparm v9.2 is now available from sourceforge.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: always set nIEN on idle devices
 
-	http://sourceforge.net/projects/hdparm/
+* Set nIEN for previous port/device in ide_do_request()
+  also if port uses a non-shared IRQ.
 
-New since v8.9 are:
+* Remove no longer needed ide_hwif_t.sharing_irq.
 
-1. Support for Device Configuration Overlay (DCO),
-   with the --dco-identify, --dco-freeze, and --dco-restore flags.
-   DCO is a feature set that enables vendors/OEMs to disable/hide
-   certain drive features (eg. NCQ, LBA48, ..) for whatever reason
-   (eg. compatibility with a specific b0rked BIOS).
-   This release of hdparm can display/reset DCO, but not selectively
-   disable features yet.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-io.c    |    2 +-
+ drivers/ide/ide-probe.c |    4 +---
+ include/linux/ide.h     |    1 -
+ 3 files changed, 2 insertions(+), 5 deletions(-)
 
-2. Support for firmware download (upgrade) using the
-   standard ATA DOWNLOAD_MICROCODE protocols 7 (preferred) and 3.
-   This is initiated via the new --fwdownload flag,
-   or the --fwdownload80 flag for a non-standard final packet
-   (needed by some vendors).
-
-3. Fixed WorldWideName display, and added cache-size display in -I output.
-
-4. Detect/warn of kernel driver bugs in -N output.
-   Eg. sata_sil24 misbehaves here in 2.6.25, but is fine in 2.6.27.
-
-5. General fixes and tidiness in the sg16 routines.
-
-Enjoy.
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1009,7 +1009,7 @@ void do_ide_request(struct request_queue
+ again:
+ 		hwif = drive->hwif;
+ 
+-		if (hwgroup->hwif->sharing_irq && hwif != hwgroup->hwif) {
++		if (hwif != hwgroup->hwif) {
+ 			/*
+ 			 * set nIEN for previous hwif, drives in the
+ 			 * quirk_list may not like intr setups/cleanups
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1059,7 +1059,6 @@ static int init_irq (ide_hwif_t *hwif)
+ 
+ 		if (h && h->hwgroup) {  /* scan only initialized ports */
+ 			if (hwif->irq == h->irq) {
+-				hwif->sharing_irq = h->sharing_irq = 1;
+ 				if (hwif->chipset != ide_pci ||
+ 				    h->chipset != ide_pci) {
+ 					save_match(hwif, h, &match);
+@@ -1152,8 +1151,7 @@ static int init_irq (ide_hwif_t *hwif)
+ 		io_ports->data_addr, hwif->irq);
+ #endif /* __mc68000__ */
+ 	if (match)
+-		printk(KERN_CONT " (%sed with %s)",
+-			hwif->sharing_irq ? "shar" : "serializ", match->name);
++		printk(KERN_CONT " (serialized with %s)", match->name);
+ 	printk(KERN_CONT "\n");
+ 
+ 	mutex_unlock(&ide_cfg_mtx);
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -835,7 +835,6 @@ typedef struct hwif_s {
+ 
+ 	unsigned	present    : 1;	/* this interface exists */
+ 	unsigned	serialized : 1;	/* serialized all channel operation */
+-	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
+ 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
+ 
+ 	struct device		gendev;
