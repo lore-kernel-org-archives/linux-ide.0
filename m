@@ -1,44 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream 2/3] libata: when restoring SControl during detach
- do the PMP links first
-Date: Mon, 03 Nov 2008 20:03:49 +0900
-Message-ID: <490EDA95.6070409@kernel.org>
-References: <490EDA75.5060703@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11943] Boot fails at scsi0:MESH with hde: lost interrupt, AEC6260
+Date: Mon,  3 Nov 2008 04:48:00 -0800 (PST)
+Message-ID: <20081103124801.05A30108057@picon.linux-foundation.org>
+References: <bug-11943-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40184 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754937AbYKCLEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 06:04:01 -0500
-In-Reply-To: <490EDA75.5060703@kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59180 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754716AbYKCMsC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Nov 2008 07:48:02 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA3Cm1jY024478
+	for <linux-ide@vger.kernel.org>; Mon, 3 Nov 2008 04:48:02 -0800
+In-Reply-To: <bug-11943-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Elias Oltmanns <eo@nebensachen.de>
+To: linux-ide@vger.kernel.org
 
-When restoring SControl during detach, PMP links should be handled
-first as changing SControl of the host link can affect SCR access of
-PMP links.
+http://bugzilla.kernel.org/show_bug.cgi?id=11943
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f527c30..0e03644 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5995,7 +5995,7 @@ static void ata_port_detach(struct ata_port *ap)
- 	/* EH is now guaranteed to see UNLOADING - EH context belongs
- 	 * to us.  Restore SControl and disable all existing devices.
- 	 */
--	ata_for_each_link(link, ap, HOST_FIRST) {
-+	ata_for_each_link(link, ap, PMP_FIRST) {
- 		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
- 		ata_for_each_dev(dev, link, ALL)
- 			ata_dev_disable(dev);
+bzolnier@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|bzolnier@gmail.com          |io_ide@kernel-bugs.osdl.org
+             Status|ASSIGNED                    |NEW
+
+
+
+
 -- 
-1.5.4.5
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
