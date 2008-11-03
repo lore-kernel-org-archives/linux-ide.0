@@ -1,59 +1,90 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 7/8] libata: Fix a potential race condition in ata_scsi_park_show()
-Date: Mon,  3 Nov 2008 19:01:08 +0900
-Message-ID: <1225706469-27870-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/8] SATA PIIX: Blacklist system that spins off disks during ACPI power off
+Date: Mon,  3 Nov 2008 19:01:07 +0900
+Message-ID: <1225706469-27870-7-git-send-email-tj@kernel.org>
 References: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34658 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:60511 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754883AbYKCKBi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 05:01:38 -0500
+	id S1754736AbYKCKBf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Nov 2008 05:01:35 -0500
 In-Reply-To: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Elias Oltmanns <eo@nebensachen.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
 
-From: Elias Oltmanns <eo@nebensachen.de>
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-Peter Moulder has pointed out that there is a slight chance that a
-negative value might be passed to jiffies_to_msecs() in
-ata_scsi_park_show(). This is fixed by saving the value of jiffies in a
-local variable, thus also reducing code since the volatile variable
-jiffies is accessed only once.
+Some notebooks from HP have the problem that their BIOSes attempt to
+spin down hard drives before entering ACPI system states S4 and S5.
+This leads to a yo-yo effect during system power-off shutdown and the
+last phase of hibernation when the disk is first spun down by the
+kernel and then almost immediately turned on and off by the BIOS.
+This, in turn, may result in shortening the disk's life times.
 
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
-Signed-off-by: Tejun Heo <tj.kernel.org>
+To prevent this from happening we can blacklist the affected systems
+using DMI information.
+
+Blacklist HP 2510p that uses the ata_piix driver.
+
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-scsi.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/ata/ata_piix.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0a0aa95..d12f84f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -191,7 +191,7 @@ static ssize_t ata_scsi_park_show(struct device *device,
- 	struct ata_port *ap;
- 	struct ata_link *link;
- 	struct ata_device *dev;
--	unsigned long flags;
-+	unsigned long flags, now;
- 	unsigned int uninitialized_var(msecs);
- 	int rc = 0;
- 
-@@ -209,10 +209,11 @@ static ssize_t ata_scsi_park_show(struct device *device,
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 8e37be1..f5fff92 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1370,6 +1370,32 @@ static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
  	}
+ }
  
- 	link = dev->link;
-+	now = jiffies;
- 	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
- 	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
--	    time_after(dev->unpark_deadline, jiffies))
--		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
-+	    time_after(dev->unpark_deadline, now))
-+		msecs = jiffies_to_msecs(dev->unpark_deadline - now);
- 	else
- 		msecs = 0;
++static bool piix_broken_system_poweroff(struct pci_dev *pdev)
++{
++	static const struct dmi_system_id broken_systems[] = {
++		{
++			.ident = "HP Compaq 2510p",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x1FUL,
++		},
++
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++
++	if (dmi) {
++		unsigned long slot = (unsigned long)dmi->driver_data;
++		/* apply the quirk only to on-board controllers */
++		return slot == PCI_SLOT(pdev->devfn);
++	}
++
++	return false;
++}
++
+ /**
+  *	piix_init_one - Register PIIX ATA PCI device with kernel services
+  *	@pdev: PCI device to register
+@@ -1405,6 +1431,14 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 	if (!in_module_init)
+ 		return -ENODEV;
+ 
++	if (piix_broken_system_poweroff(pdev)) {
++		piix_port_info[ent->driver_data].flags |=
++				ATA_FLAG_NO_POWEROFF_SPINDOWN |
++					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
++		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
++				"on poweroff and hibernation\n");
++	}
++
+ 	port_info[0] = piix_port_info[ent->driver_data];
+ 	port_info[1] = piix_port_info[ent->driver_data];
  
 -- 
 1.5.4.5
