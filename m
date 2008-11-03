@@ -1,15 +1,18 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] sata_nv: fix generic, nf2/3 detection regression
-Date: Mon, 03 Nov 2008 12:14:11 +0900
-Message-ID: <490E6C83.3010309@kernel.org>
+Subject: [PATCH #upstream-fixes UPDATED] sata_nv: fix generic, nf2/3 detection
+ regression
+Date: Mon, 03 Nov 2008 12:37:49 +0900
+Message-ID: <490E720D.7070101@kernel.org>
+References: <490E6C83.3010309@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56269 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:46601 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754303AbYKCDOm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Nov 2008 22:14:42 -0500
+	id S1754386AbYKCDiK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Nov 2008 22:38:10 -0500
+In-Reply-To: <490E6C83.3010309@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Rafael J. Wysocki" <rjw@sisk.pl>, stable@kernel.org, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
@@ -20,10 +23,10 @@ behaves.
 * generic: Hardreset is not reliable.  Link often doesn't come online
   after hardreset.
 
-* nf2/3: A little bit better - link comes online.  However, nf2/3
-  can't reliable wait for the first D2H Register FIS, so it can't wait
-  for device readiness or classify the device after hardreset.
-  Follow-up SRST required.
+* nf2/3: A little bit better - link comes online with longer debounce
+  timing.  However, nf2/3 can't reliable wait for the first D2H
+  Register FIS, so it can't wait for device readiness or classify the
+  device after hardreset.  Follow-up SRST required.
 
 * ck804: Hardreset finally works.
 
@@ -34,11 +37,14 @@ and should make sata_nv error handling more reliable.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/sata_nv.c |   48 ++++++++++++++++++++----------------------------
- 1 file changed, 20 insertions(+), 28 deletions(-)
+Forgot to update comment for longer debounce timing required for
+nf2/3.  Commit message and comment updated.
+
+ drivers/ata/sata_nv.c |   53 +++++++++++++++++++++++---------------------------
+ 1 file changed, 25 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index fae3841..f734dd0 100644
+index fae3841..6f14606 100644
 --- a/drivers/ata/sata_nv.c
 +++ b/drivers/ata/sata_nv.c
 @@ -307,10 +307,10 @@ static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
@@ -72,12 +78,17 @@ index fae3841..f734dd0 100644
  	.scr_read		= nv_scr_read,
  	.scr_write		= nv_scr_write,
  };
-@@ -429,12 +420,17 @@ static struct ata_port_operations nv_generic_ops = {
+@@ -429,12 +420,22 @@ static struct ata_port_operations nv_generic_ops = {
  	.hardreset		= ATA_OP_NULL,
  };
  
 +/* OSDL bz3352 reports that nf2/3 controllers can't determine device
-+ * signature reliably.  Use sata_std_hardreset().
++ * signature reliably.  Also, the following thread reports detection
++ * failure on cold boot with the standard debouncing timing.
++ *
++ * http://thread.gmane.org/gmane.linux.ide/34098
++ *
++ * Debounce with hotplug timing and request follow-up SRST.
 + */
  static struct ata_port_operations nv_nf2_ops = {
  	.inherits		= &nv_common_ops,
@@ -90,7 +101,7 @@ index fae3841..f734dd0 100644
  static struct ata_port_operations nv_ck804_ops = {
  	.inherits		= &nv_common_ops,
  	.freeze			= nv_ck804_freeze,
-@@ -443,7 +439,7 @@ static struct ata_port_operations nv_ck804_ops = {
+@@ -443,7 +444,7 @@ static struct ata_port_operations nv_ck804_ops = {
  };
  
  static struct ata_port_operations nv_adma_ops = {
@@ -99,7 +110,7 @@ index fae3841..f734dd0 100644
  
  	.check_atapi_dma	= nv_adma_check_atapi_dma,
  	.sff_tf_read		= nv_adma_tf_read,
-@@ -467,7 +463,7 @@ static struct ata_port_operations nv_adma_ops = {
+@@ -467,7 +468,7 @@ static struct ata_port_operations nv_adma_ops = {
  };
  
  static struct ata_port_operations nv_swncq_ops = {
@@ -108,7 +119,7 @@ index fae3841..f734dd0 100644
  
  	.qc_defer		= ata_std_qc_defer,
  	.qc_prep		= nv_swncq_qc_prep,
-@@ -1553,6 +1549,17 @@ static void nv_nf2_thaw(struct ata_port *ap)
+@@ -1553,6 +1554,17 @@ static void nv_nf2_thaw(struct ata_port *ap)
  	iowrite8(mask, scr_addr + NV_INT_ENABLE);
  }
  
@@ -126,7 +137,7 @@ index fae3841..f734dd0 100644
  static void nv_ck804_freeze(struct ata_port *ap)
  {
  	void __iomem *mmio_base = ap->host->iomap[NV_MMIO_BAR];
-@@ -1605,21 +1612,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
+@@ -1605,21 +1617,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
  	ata_sff_thaw(ap);
  }
  
