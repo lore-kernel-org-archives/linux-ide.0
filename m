@@ -1,13 +1,13 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/8] DMI: Introduce dmi_first_match to make the interface more flexible
-Date: Mon,  3 Nov 2008 19:01:03 +0900
-Message-ID: <1225706469-27870-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/8] SATA Sil: Blacklist system that spins off disks during ACPI power off
+Date: Mon,  3 Nov 2008 19:01:06 +0900
+Message-ID: <1225706469-27870-6-git-send-email-tj@kernel.org>
 References: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60499 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34653 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754711AbYKCKBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 05:01:24 -0500
+	id S1754883AbYKCKBh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Nov 2008 05:01:37 -0500
 In-Reply-To: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -24,139 +24,74 @@ kernel and then almost immediately turned on and off by the BIOS.
 This, in turn, may result in shortening the disk's life times.
 
 To prevent this from happening we can blacklist the affected systems
-using DMI information.  However, only the on-board controlles should
-be blacklisted and their PCI slot numbers can be used for this
-purpose.  Unfortunately the existing interface for checking DMI
-information of the system is not very convenient for this purpose,
-because to use it, we would have to define special callback functions
-or create a separate struct dmi_system_id table for each blacklisted
-system.
+using DMI information.
 
-To overcome this difficulty introduce a new function
-dmi_first_match() returning a pointer to the first entry in an array
-of struct dmi_system_id elements that matches the system DMI
-information.  Then, we can use this pointer to access the entry's
-.driver_data field containing the additional information, such as
-the PCI slot number, allowing us to do the desired blacklisting.
+Blacklist HP nx6325 that uses the sata_sil driver.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/firmware/dmi_scan.c |   74 ++++++++++++++++++++++++++++++++-----------
- include/linux/dmi.h         |    1 +
- 2 files changed, 56 insertions(+), 19 deletions(-)
+ drivers/ata/sata_sil.c |   36 +++++++++++++++++++++++++++++++++++-
+ 1 files changed, 35 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-index 3e526b6..6e88b99 100644
---- a/drivers/firmware/dmi_scan.c
-+++ b/drivers/firmware/dmi_scan.c
-@@ -415,6 +415,27 @@ void __init dmi_scan_machine(void)
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 031d7b7..f1dd478 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -603,11 +603,38 @@ static void sil_init_controller(struct ata_host *host)
+ 	}
  }
  
- /**
-+ *	dmi_match - check if dmi_system_id structure matches system DMI data
-+ *	@dmi: pointer to the dmi_system_id structure to check
-+ */
-+static bool dmi_match(const struct dmi_system_id *dmi)
++static bool sil_broken_system_poweroff(struct pci_dev *pdev)
 +{
-+	int i;
++	static const struct dmi_system_id broken_systems[] = {
++		{
++			.ident = "HP Compaq nx6325",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x12UL,
++		},
 +
-+	for (i = 0; i < ARRAY_SIZE(dmi->matches); i++) {
-+		int s = dmi->matches[i].slot;
-+		if (s == DMI_NONE)
-+			continue;
-+		if (dmi_ident[s]
-+		    && strstr(dmi_ident[s], dmi->matches[i].substr))
-+			continue;
-+		/* No match */
-+		return false;
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++
++	if (dmi) {
++		unsigned long slot = (unsigned long)dmi->driver_data;
++		/* apply the quirk only to on-board controllers */
++		return slot == PCI_SLOT(pdev->devfn);
 +	}
-+	return true;
++
++	return false;
 +}
 +
-+/**
-  *	dmi_check_system - check system DMI data
-  *	@list: array of dmi_system_id structures to match against
-  *		All non-null elements of the list must match
-@@ -429,32 +450,47 @@ void __init dmi_scan_machine(void)
-  */
- int dmi_check_system(const struct dmi_system_id *list)
+ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
--	int i, count = 0;
--	const struct dmi_system_id *d = list;
--
--	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
--
--	while (d->ident) {
--		for (i = 0; i < ARRAY_SIZE(d->matches); i++) {
--			int s = d->matches[i].slot;
--			if (s == DMI_NONE)
--				continue;
--			if (dmi_ident[s] && strstr(dmi_ident[s], d->matches[i].substr))
--				continue;
--			/* No match */
--			goto fail;
-+	int count = 0;
-+	const struct dmi_system_id *d;
-+
-+	for (d = list; d->ident; d++)
-+		if (dmi_match(d)) {
-+			count++;
-+			if (d->callback && d->callback(d))
-+				break;
- 		}
--		count++;
--		if (d->callback && d->callback(d))
--			break;
--fail:		d++;
--	}
+ 	static int printed_version;
+ 	int board_id = ent->driver_data;
+-	const struct ata_port_info *ppi[] = { &sil_port_info[board_id], NULL };
++	struct ata_port_info pi = sil_port_info[board_id];
++	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ata_host *host;
+ 	void __iomem *mmio_base;
+ 	int n_ports, rc;
+@@ -621,6 +648,13 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (board_id == sil_3114)
+ 		n_ports = 4;
  
- 	return count;
- }
- EXPORT_SYMBOL(dmi_check_system);
- 
- /**
-+ *	dmi_first_match - find dmi_system_id structure matching system DMI data
-+ *	@list: array of dmi_system_id structures to match against
-+ *		All non-null elements of the list must match
-+ *		their slot's (field index's) data (i.e., each
-+ *		list string must be a substring of the specified
-+ *		DMI slot's string data) to be considered a
-+ *		successful match.
-+ *
-+ *	Walk the blacklist table until the first match is found.  Return the
-+ *	pointer to the matching entry or NULL if there's no match.
-+ */
-+const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
-+{
-+	const struct dmi_system_id *d;
++	if (sil_broken_system_poweroff(pdev)) {
++		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN |
++					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
++		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
++				"on poweroff and hibernation\n");
++	}
 +
-+	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
-+
-+	for (d = list; d->ident; d++)
-+		if (dmi_match(d))
-+			return d;
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(dmi_first_match);
-+
-+/**
-  *	dmi_get_system_info - return DMI data value
-  *	@field: data index (see enum dmi_field)
-  *
-diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-index e5084eb..6e20820 100644
---- a/include/linux/dmi.h
-+++ b/include/linux/dmi.h
-@@ -38,6 +38,7 @@ struct dmi_device {
- #ifdef CONFIG_DMI
- 
- extern int dmi_check_system(const struct dmi_system_id *list);
-+const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list);
- extern const char * dmi_get_system_info(int field);
- extern const struct dmi_device * dmi_find_device(int type, const char *name,
- 	const struct dmi_device *from);
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
 -- 
 1.5.4.5
 
