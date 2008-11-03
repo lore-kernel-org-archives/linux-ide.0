@@ -1,13 +1,13 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 5/8] SATA Sil: Blacklist system that spins off disks during ACPI power off
-Date: Mon,  3 Nov 2008 19:01:06 +0900
-Message-ID: <1225706469-27870-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 3/8] SATA: Blacklisting of systems that spin off disks during ACPI power off (rev. 2)
+Date: Mon,  3 Nov 2008 19:01:04 +0900
+Message-ID: <1225706469-27870-4-git-send-email-tj@kernel.org>
 References: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34653 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:60509 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754883AbYKCKBh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 05:01:37 -0500
+	id S1754755AbYKCKBe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Nov 2008 05:01:34 -0500
 In-Reply-To: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,82 +16,88 @@ Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
 
 From: Rafael J. Wysocki <rjw@sisk.pl>
 
-Some notebooks from HP have the problem that their BIOSes attempt to
-spin down hard drives before entering ACPI system states S4 and S5.
-This leads to a yo-yo effect during system power-off shutdown and the
-last phase of hibernation when the disk is first spun down by the
-kernel and then almost immediately turned on and off by the BIOS.
-This, in turn, may result in shortening the disk's life times.
-
-To prevent this from happening we can blacklist the affected systems
-using DMI information.
-
-Blacklist HP nx6325 that uses the sata_sil driver.
+Introduce new libata flags ATA_FLAG_NO_POWEROFF_SPINDOWN and
+ATA_FLAG_NO_HIBERNATE_SPINDOWN that, if set, will prevent disks from
+being spun off during system power off and hibernation, respectively
+(to handle the hibernation case we need the new system state
+SYSTEM_HIBERNATE_ENTER that can be checked against by libata, in
+analogy with SYSTEM_POWER_OFF).
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/sata_sil.c |   36 +++++++++++++++++++++++++++++++++++-
- 1 files changed, 35 insertions(+), 1 deletions(-)
+ drivers/ata/libata-scsi.c |   20 +++++++++++++++++---
+ include/linux/libata.h    |    2 ++
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 031d7b7..f1dd478 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -603,11 +603,38 @@ static void sil_init_controller(struct ata_host *host)
- 	}
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bbb30d8..0a0aa95 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -46,6 +46,7 @@
+ #include <linux/libata.h>
+ #include <linux/hdreg.h>
+ #include <linux/uaccess.h>
++#include <linux/suspend.h>
+ 
+ #include "libata.h"
+ 
+@@ -1307,6 +1308,17 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 
+ 		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
+ 	} else {
++		/* Some odd clown BIOSen issue spindown on power off (ACPI S4
++		 * or S5) causing some drives to spin up and down again.
++		 */
++		if ((qc->ap->flags & ATA_FLAG_NO_POWEROFF_SPINDOWN) &&
++		    system_state == SYSTEM_POWER_OFF)
++			goto skip;
++
++		if ((qc->ap->flags & ATA_FLAG_NO_HIBERNATE_SPINDOWN) &&
++		     system_entering_hibernation())
++			goto skip;
++
+ 		/* XXX: This is for backward compatibility, will be
+ 		 * removed.  Read Documentation/feature-removal-schedule.txt
+ 		 * for more info.
+@@ -1330,8 +1342,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 				scmd->scsi_done = qc->scsidone;
+ 				qc->scsidone = ata_delayed_done;
+ 			}
+-			scmd->result = SAM_STAT_GOOD;
+-			return 1;
++			goto skip;
+ 		}
+ 
+ 		/* Issue ATA STANDBY IMMEDIATE command */
+@@ -1347,10 +1358,13 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 
+ 	return 0;
+ 
+-invalid_fld:
++ invalid_fld:
+ 	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	/* "Invalid field in cbd" */
+ 	return 1;
++ skip:
++	scmd->result = SAM_STAT_GOOD;
++	return 1;
  }
  
-+static bool sil_broken_system_poweroff(struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id broken_systems[] = {
-+		{
-+			.ident = "HP Compaq nx6325",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x12UL,
-+		},
-+
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
-+
-+	if (dmi) {
-+		unsigned long slot = (unsigned long)dmi->driver_data;
-+		/* apply the quirk only to on-board controllers */
-+		return slot == PCI_SLOT(pdev->devfn);
-+	}
-+
-+	return false;
-+}
-+
- static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
- 	int board_id = ent->driver_data;
--	const struct ata_port_info *ppi[] = { &sil_port_info[board_id], NULL };
-+	struct ata_port_info pi = sil_port_info[board_id];
-+	const struct ata_port_info *ppi[] = { &pi, NULL };
- 	struct ata_host *host;
- 	void __iomem *mmio_base;
- 	int n_ports, rc;
-@@ -621,6 +648,13 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (board_id == sil_3114)
- 		n_ports = 4;
  
-+	if (sil_broken_system_poweroff(pdev)) {
-+		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN |
-+					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
-+		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
-+				"on poweroff and hibernation\n");
-+	}
-+
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
- 	if (!host)
- 		return -ENOMEM;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f5441ed..cc0ceaf 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -187,6 +187,8 @@ enum {
+ 	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
+ 					     * doesn't handle PIO interrupts */
+ 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
++	ATA_FLAG_NO_POWEROFF_SPINDOWN = (1 << 11), /* don't spindown before poweroff */
++	ATA_FLAG_NO_HIBERNATE_SPINDOWN = (1 << 12), /* don't spindown before hibernation */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
 -- 
 1.5.4.5
 
