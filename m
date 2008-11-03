@@ -1,52 +1,162 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET #upstream-fixes] patches which fell off the crack during maintainership handover
-Date: Mon,  3 Nov 2008 19:01:01 +0900
-Message-ID: <1225706469-27870-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/8] DMI: Introduce dmi_first_match to make the interface more flexible
+Date: Mon,  3 Nov 2008 19:01:03 +0900
+Message-ID: <1225706469-27870-3-git-send-email-tj@kernel.org>
+References: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60491 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:60499 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754668AbYKCKBU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 05:01:20 -0500
+	id S1754711AbYKCKBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Nov 2008 05:01:24 -0500
+In-Reply-To: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
 
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-Hello, Jeff.
+Some notebooks from HP have the problem that their BIOSes attempt to
+spin down hard drives before entering ACPI system states S4 and S5.
+This leads to a yo-yo effect during system power-off shutdown and the
+last phase of hibernation when the disk is first spun down by the
+kernel and then almost immediately turned on and off by the BIOS.
+This, in turn, may result in shortening the disk's life times.
 
-This patchset contains eight patches that I collected for 2.6.28 while
-you were away.  Unfortunately, the handover to you didn't work out too
-well and these got forgotten.  This patchset contains the following
-eight patches.
+To prevent this from happening we can blacklist the affected systems
+using DMI information.  However, only the on-board controlles should
+be blacklisted and their PCI slot numbers can be used for this
+purpose.  Unfortunately the existing interface for checking DMI
+information of the system is not very convenient for this purpose,
+because to use it, we would have to define special callback functions
+or create a separate struct dmi_system_id table for each blacklisted
+system.
 
-  0001-Hibernation-Introduce-system_entering_hibernation.patch
-  0002-DMI-Introduce-dmi_first_match-to-make-the-interface.patch
-  0003-SATA-Blacklisting-of-systems-that-spin-off-disks-du.patch
-  0004-SATA-AHCI-Blacklist-system-that-spins-off-disks-dur.patch
-  0005-SATA-Sil-Blacklist-system-that-spins-off-disks-duri.patch
-  0006-SATA-PIIX-Blacklist-system-that-spins-off-disks-dur.patch
-  0007-libata-Fix-a-potential-race-condition-in-ata_scsi_p.patch
-  0008-libata-implement-ATA_HORKAGE_ATAPI_MOD16_DMA-and-ap.patch
+To overcome this difficulty introduce a new function
+dmi_first_match() returning a pointer to the first entry in an array
+of struct dmi_system_id elements that matches the system DMI
+information.  Then, we can use this pointer to access the entry's
+.driver_data field containing the additional information, such as
+the PCI slot number, allowing us to do the desired blacklisting.
 
-0001-0006 are to fix the long-standing double spindown problems on
-certain laptops.  0007 fixes a potential race condition and 0008
-implements a workaround for a strange device.  These missed rc1 window
-but they're all fixes or workarounds for weird hardware so I think
-they qualify.
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/firmware/dmi_scan.c |   74 ++++++++++++++++++++++++++++++++-----------
+ include/linux/dmi.h         |    1 +
+ 2 files changed, 56 insertions(+), 19 deletions(-)
 
-Thanks.
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index 3e526b6..6e88b99 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -415,6 +415,27 @@ void __init dmi_scan_machine(void)
+ }
+ 
+ /**
++ *	dmi_match - check if dmi_system_id structure matches system DMI data
++ *	@dmi: pointer to the dmi_system_id structure to check
++ */
++static bool dmi_match(const struct dmi_system_id *dmi)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dmi->matches); i++) {
++		int s = dmi->matches[i].slot;
++		if (s == DMI_NONE)
++			continue;
++		if (dmi_ident[s]
++		    && strstr(dmi_ident[s], dmi->matches[i].substr))
++			continue;
++		/* No match */
++		return false;
++	}
++	return true;
++}
++
++/**
+  *	dmi_check_system - check system DMI data
+  *	@list: array of dmi_system_id structures to match against
+  *		All non-null elements of the list must match
+@@ -429,32 +450,47 @@ void __init dmi_scan_machine(void)
+  */
+ int dmi_check_system(const struct dmi_system_id *list)
+ {
+-	int i, count = 0;
+-	const struct dmi_system_id *d = list;
+-
+-	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
+-
+-	while (d->ident) {
+-		for (i = 0; i < ARRAY_SIZE(d->matches); i++) {
+-			int s = d->matches[i].slot;
+-			if (s == DMI_NONE)
+-				continue;
+-			if (dmi_ident[s] && strstr(dmi_ident[s], d->matches[i].substr))
+-				continue;
+-			/* No match */
+-			goto fail;
++	int count = 0;
++	const struct dmi_system_id *d;
++
++	for (d = list; d->ident; d++)
++		if (dmi_match(d)) {
++			count++;
++			if (d->callback && d->callback(d))
++				break;
+ 		}
+-		count++;
+-		if (d->callback && d->callback(d))
+-			break;
+-fail:		d++;
+-	}
+ 
+ 	return count;
+ }
+ EXPORT_SYMBOL(dmi_check_system);
+ 
+ /**
++ *	dmi_first_match - find dmi_system_id structure matching system DMI data
++ *	@list: array of dmi_system_id structures to match against
++ *		All non-null elements of the list must match
++ *		their slot's (field index's) data (i.e., each
++ *		list string must be a substring of the specified
++ *		DMI slot's string data) to be considered a
++ *		successful match.
++ *
++ *	Walk the blacklist table until the first match is found.  Return the
++ *	pointer to the matching entry or NULL if there's no match.
++ */
++const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
++{
++	const struct dmi_system_id *d;
++
++	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
++
++	for (d = list; d->ident; d++)
++		if (dmi_match(d))
++			return d;
++
++	return NULL;
++}
++EXPORT_SYMBOL(dmi_first_match);
++
++/**
+  *	dmi_get_system_info - return DMI data value
+  *	@field: data index (see enum dmi_field)
+  *
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index e5084eb..6e20820 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -38,6 +38,7 @@ struct dmi_device {
+ #ifdef CONFIG_DMI
+ 
+ extern int dmi_check_system(const struct dmi_system_id *list);
++const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list);
+ extern const char * dmi_get_system_info(int field);
+ extern const struct dmi_device * dmi_find_device(int type, const char *name,
+ 	const struct dmi_device *from);
+-- 
+1.5.4.5
 
- drivers/ata/ahci.c          |   32 +++++++++++++++++++
- drivers/ata/ata_piix.c      |   34 ++++++++++++++++++++
- drivers/ata/libata-core.c   |    4 +-
- drivers/ata/libata-scsi.c   |   27 ++++++++++++----
- drivers/ata/sata_sil.c      |   36 ++++++++++++++++++++-
- drivers/firmware/dmi_scan.c |   74 ++++++++++++++++++++++++++++++++------------
- include/linux/dmi.h         |    1 
- include/linux/libata.h      |    4 ++
- include/linux/suspend.h     |    2 +
- kernel/power/disk.c         |   10 +++++
- 10 files changed, 197 insertions(+), 27 deletions(-)
-
---
-tejun
