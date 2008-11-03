@@ -1,102 +1,38 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [git patches] libata fixes
-Date: Sun, 02 Nov 2008 18:42:12 -0500
-Message-ID: <490E3AD4.90506@rtr.ca>
-References: <20081031054949.GA10474@havoc.gtf.org>	 <87f94c370810310620u77f2b31r85b196d7261ef75f@mail.gmail.com>	 <490DA954.2070503@garzik.org> <87f94c370811021218g29ad4962ndc0a59f17733f2af@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] sata_via: restore vt*_prepare_host error handling
+Date: Mon, 03 Nov 2008 11:47:36 +0900
+Message-ID: <490E6648.4020503@kernel.org>
+References: <20081102211848.GA20785@joi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:59880 "EHLO mail.rtr.ca"
+Received: from hera.kernel.org ([140.211.167.34]:35123 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753814AbYKBXmO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Nov 2008 18:42:14 -0500
-In-Reply-To: <87f94c370811021218g29ad4962ndc0a59f17733f2af@mail.gmail.com>
+	id S1754150AbYKCCry (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Nov 2008 21:47:54 -0500
+In-Reply-To: <20081102211848.GA20785@joi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> On Sun, Nov 2, 2008 at 8:21 AM, Jeff Garzik <jeff@garzik.org> wrote:
->> Greg Freemyer wrote:
->>> On Fri, Oct 31, 2008 at 1:49 AM, Jeff Garzik <jeff@garzik.org> wrote:
->>>> Notes:
->>>>
->>>> 1) 1.5TB drive fix from Roland
->>>>
->>>> 2) Tejun's sata_via brings a non-working via configuration thanks to a
->>>>  new facility also being used in recent (ICH9/10) ata_piix.
->>>>
->>>>  Change is longer than one might like, but it accurately describes the
->>>>  hardware now, the previous stuff wasn't working, and the newly added
->>>>  support code shouldn't touch non-broken VIA controllers.
->>>>
->>>>
->>>>
->>>> Please pull from 'upstream-linus' branch of
->>>> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>>> upstream-linus
->>>>
->>>> to receive the following updates:
->>>>
->>>>  drivers/ata/ata_piix.c    |    1 -
->>>>  drivers/ata/libata-core.c |   11 +++-
->>>>  drivers/ata/sata_via.c    |  155
->>>> +++++++++++++++++++++++++++++++++++++++++----
->>>>  include/linux/libata.h    |    1 +
->>>>  4 files changed, 152 insertions(+), 16 deletions(-)
->>>>
->>>> Jens Axboe (1):
->>>>     libata: add whitelist for devices with known good pata-sata bridges
->>>>
->>>> Randy Dunlap (1):
->>>>     ATA: remove excess kernel-doc notation
->>>>
->>>> Roland Dreier (1):
->>>>     libata: Avoid overflow in ata_tf_to_lba48() when tf->hba_lbal > 127
->>>>
->>>> Tejun Heo (1):
->>>>     sata_via: fix support for 5287
->>> <snip>
->>>
->>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>>> index 2ff633c..82af701 100644
->>>> --- a/drivers/ata/libata-core.c
->>>> +++ b/drivers/ata/libata-core.c
->>>> @@ -1268,7 +1268,7 @@ u64 ata_tf_to_lba48(const struct ata_taskfile *tf)
->>>>
->>>>       sectors |= ((u64)(tf->hob_lbah & 0xff)) << 40;
->>>>       sectors |= ((u64)(tf->hob_lbam & 0xff)) << 32;
->>>> -       sectors |= (tf->hob_lbal & 0xff) << 24;
->>>> +       sectors |= ((u64)(tf->hob_lbal & 0xff)) << 24;
->>>>       sectors |= (tf->lbah & 0xff) << 16;
->>>>       sectors |= (tf->lbam & 0xff) << 8;
->>>>       sectors |= (tf->lbal & 0xff);
->>> <snip>
->>>
->>> That looks really serious.
->>>
->>> What happens with all previous / stable kernels when connecting up a
->>> 1.5TB drive and the user tries to use the last portion of the drive?
->> tf-to-lba48 is a far less common operation, generally used for error
->> reporting (and in Host-Protected Area code as well, it appears).
->>
->>        Jeff
+Marcin Slusarz wrote:
+> commit b9d5b89b487517cbd4cb4702da829e07ef9e4432 (sata_via: fix support
+> for 5287) accidently (?) removed vt*_prepare_host error handling - restore it
 > 
-> So are you saying it is not on any data read / write paths?
+> catched by gcc:
+> drivers/ata/sata_via.c: In function 'svia_init_one':
+> drivers/ata/sata_via.c:567: warning: 'host' may be used uninitialized in this function
 > 
-> Or that it is only on rarely used data read/write paths?
-> 
-> Because if this is on a data read/write path at all, it looks like it
-> could cause major data corruption with 1.5 TB drives (or larger).
-..
+> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Joseph Chan <JosephChan@via.com.tw>
+> Cc: Jeff Garzik <jgarzik@redhat.com>
 
-It's on the initialization path for all lba48 devices which have
-a configured HPA (Host Protected Area, mostly seen in brand-name
-consumer-level systems).
+Acked-by: Tejun Heo <tj@kernel.org>
 
-The data it generates is then used on subsequent R/W commands.
-I recommend the fix be backported for earlier kernels.
+Thank you.
 
-Cheers
+-- 
+tejun
