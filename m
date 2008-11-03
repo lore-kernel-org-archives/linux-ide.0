@@ -1,32 +1,84 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10370] mount failed on ubuntu-8.04_ppc
-Date: Mon,  3 Nov 2008 05:28:20 -0800 (PST)
-Message-ID: <20081103132820.24C14108040@picon.linux-foundation.org>
-References: <bug-10370-11633@http.bugzilla.kernel.org/>
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: [PATCH] pata-rb532-cf: read and write data in 4-byte blocks
+Date: Mon,  3 Nov 2008 14:29:14 +0100
+Message-ID: <1225718954-8307-1-git-send-email-n0-1@freewrt.org>
+References: <490E1A63.3040507@ru.mvista.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52182 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755171AbYKCN2v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Nov 2008 08:28:51 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA3DSK6F026619
-	for <linux-ide@vger.kernel.org>; Mon, 3 Nov 2008 05:28:21 -0800
-In-Reply-To: <bug-10370-11633@http.bugzilla.kernel.org/>
+Received: from orbit.nwl.cc ([81.169.176.177]:59201 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755179AbYKCN3X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Nov 2008 08:29:23 -0500
+In-Reply-To: <490E1A63.3040507@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10370
+* rename the offset definition to avoid abiguity with the standard ATA
+  IO address
+* read and write four bytes at once
+* use writesl() and readsl() which implicitly iterate over the data
+* fix the signature of rb532_pata_data_xfer() to match the function
+  pointer definition and return the number of bytes consumed
 
+Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
+---
+ drivers/ata/pata_rb532_cf.c |   21 ++++++++++-----------
+ 1 files changed, 10 insertions(+), 11 deletions(-)
 
-
-
-
-------- Comment #7 from bzolnier@gmail.com  2008-11-03 05:28 -------
-Hmm, so what was the final conclusion about this report?  not-a-bug?
-
-
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index 7b11f40..a220992 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -43,7 +43,8 @@
+ #define RB500_CF_REG_BASE	0x0800
+ #define RB500_CF_REG_ERR	0x080D
+ #define RB500_CF_REG_CTRL	0x080E
+-#define RB500_CF_REG_DATA	0x0C00
++/* 32bit buffered data register offset */
++#define RB500_CF_REG_DBUF32	0x0C00
+ 
+ struct rb532_cf_info {
+ 	void __iomem	*iobase;
+@@ -74,21 +75,19 @@ static void rb532_pata_exec_command(struct ata_port *ap,
+ 	rb532_pata_finish_io(ap);
+ }
+ 
+-static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+-				unsigned int buflen, int write_data)
++static unsigned int rb532_pata_data_xfer(struct ata_device *adev,
++		unsigned char *buf, unsigned int buflen, int write_data)
+ {
+ 	struct ata_port *ap = adev->link->ap;
+ 	void __iomem *ioaddr = ap->ioaddr.data_addr;
+ 
+-	if (write_data) {
+-		for (; buflen > 0; buflen--, buf++)
+-			writeb(*buf, ioaddr);
+-	} else {
+-		for (; buflen > 0; buflen--, buf++)
+-			*buf = readb(ioaddr);
+-	}
++	if (write_data)
++		writesl(ioaddr, buf, buflen / sizeof(u32));
++	else
++		readsl(ioaddr, buf, buflen / sizeof(u32));
+ 
+ 	rb532_pata_finish_io(adev->link->ap);
++	return buflen;
+ }
+ 
+ static void rb532_pata_freeze(struct ata_port *ap)
+@@ -156,7 +155,7 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
+ 
+ 	ata_sff_std_ports(&ap->ioaddr);
+ 
+-	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DBUF32;
+ 	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
+ }
+ 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.6.4
+
