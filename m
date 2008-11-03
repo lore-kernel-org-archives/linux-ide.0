@@ -1,89 +1,60 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/8] SATA AHCI: Blacklist system that spins off disks during ACPI power off
-Date: Mon,  3 Nov 2008 19:01:05 +0900
-Message-ID: <1225706469-27870-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 7/8] libata: Fix a potential race condition in ata_scsi_park_show()
+Date: Mon,  3 Nov 2008 19:01:08 +0900
+Message-ID: <1225706469-27870-8-git-send-email-tj@kernel.org>
 References: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60507 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34658 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754752AbYKCKBd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Nov 2008 05:01:33 -0500
+	id S1754883AbYKCKBi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Nov 2008 05:01:38 -0500
 In-Reply-To: <1225706469-27870-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
+Cc: Elias Oltmanns <eo@nebensachen.de>
 
-From: Rafael J. Wysocki <rjw@sisk.pl>
+From: Elias Oltmanns <eo@nebensachen.de>
 
-Some notebooks from HP have the problem that their BIOSes attempt to
-spin down hard drives before entering ACPI system states S4 and S5.
-This leads to a yo-yo effect during system power-off shutdown and the
-last phase of hibernation when the disk is first spun down by the
-kernel and then almost immediately turned on and off by the BIOS.
-This, in turn, may result in shortening the disk's life times.
+Peter Moulder has pointed out that there is a slight chance that a
+negative value might be passed to jiffies_to_msecs() in
+ata_scsi_park_show(). This is fixed by saving the value of jiffies in a
+local variable, thus also reducing code since the volatile variable
+jiffies is accessed only once.
 
-To prevent this from happening we can blacklist the affected systems
-using DMI information.
-
-Blacklist HP nx6310 that uses the AHCI driver.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+Signed-off-by: Tejun Heo <tj.kernel.org>
 ---
- drivers/ata/ahci.c |   32 ++++++++++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+ drivers/ata/libata-scsi.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a67b8e7..8e8790b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2546,6 +2546,32 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
- 	}
- }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0a0aa95..d12f84f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -191,7 +191,7 @@ static ssize_t ata_scsi_park_show(struct device *device,
+ 	struct ata_port *ap;
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+-	unsigned long flags;
++	unsigned long flags, now;
+ 	unsigned int uninitialized_var(msecs);
+ 	int rc = 0;
  
-+static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id broken_systems[] = {
-+		{
-+			.ident = "HP Compaq nx6310",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6310"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x1FUL,
-+		},
-+
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
-+
-+	if (dmi) {
-+		unsigned long slot = (unsigned long)dmi->driver_data;
-+		/* apply the quirk only to on-board controllers */
-+		return slot == PCI_SLOT(pdev->devfn);
-+	}
-+
-+	return false;
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-@@ -2641,6 +2667,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
+@@ -209,10 +209,11 @@ static ssize_t ata_scsi_park_show(struct device *device,
  	}
  
-+	if (ahci_broken_system_poweroff(pdev)) {
-+		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
-+		dev_info(&pdev->dev,
-+			"quirky BIOS, skipping spindown on poweroff\n");
-+	}
-+
- 	/* CAP.NP sometimes indicate the index of the last enabled
- 	 * port, at other times, that of the last possible port, so
- 	 * determining the maximum port number requires looking at
+ 	link = dev->link;
++	now = jiffies;
+ 	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
+ 	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
+-	    time_after(dev->unpark_deadline, jiffies))
+-		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
++	    time_after(dev->unpark_deadline, now))
++		msecs = jiffies_to_msecs(dev->unpark_deadline - now);
+ 	else
+ 		msecs = 0;
+ 
 -- 
 1.5.4.5
 
