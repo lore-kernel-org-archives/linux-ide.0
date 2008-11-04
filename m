@@ -1,51 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_via: restore vt*_prepare_host error handling
-Date: Tue, 04 Nov 2008 01:10:32 -0500
-Message-ID: <490FE758.9060102@garzik.org>
-References: <20081102211848.GA20785@joi>
+Subject: Re: [PATCH 8/8] libata: implement ATA_HORKAGE_ATAPI_MOD16_DMA and
+ apply it
+Date: Tue, 04 Nov 2008 01:11:03 -0500
+Message-ID: <490FE777.1060207@garzik.org>
+References: <1225706469-27870-1-git-send-email-tj@kernel.org> <1225706469-27870-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45519 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:45549 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754195AbYKDGKi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 01:10:38 -0500
-In-Reply-To: <20081102211848.GA20785@joi>
+	id S1753919AbYKDGLH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 01:11:07 -0500
+In-Reply-To: <1225706469-27870-9-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Joseph Chan <JosephChan@via.com.tw>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, John Clark <clarkjc@runbox.com>
 
-Marcin Slusarz wrote:
-> commit b9d5b89b487517cbd4cb4702da829e07ef9e4432 (sata_via: fix support
-> for 5287) accidently (?) removed vt*_prepare_host error handling - restore it
+Tejun Heo wrote:
+> libata always uses PIO for ATAPI commands when the number of bytes to
+> transfer isn't multiple of 16 but quantum DAT72 chokes on odd bytes
+> PIO transfers.  Implement a horkage to skip the mod16 check and apply
+> it to the quantum device.
 > 
-> catched by gcc:
-> drivers/ata/sata_via.c: In function 'svia_init_one':
-> drivers/ata/sata_via.c:567: warning: 'host' may be used uninitialized in this function
+> This is reported by John Clark in the following thread.
 > 
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Joseph Chan <JosephChan@via.com.tw>
-> Cc: Jeff Garzik <jgarzik@redhat.com>
+>   http://thread.gmane.org/gmane.linux.ide/34748
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: John Clark <clarkjc@runbox.com>
 > ---
->  drivers/ata/sata_via.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-> index 62367fe..c18935f 100644
-> --- a/drivers/ata/sata_via.c
-> +++ b/drivers/ata/sata_via.c
-> @@ -602,8 +602,10 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		rc = vt8251_prepare_host(pdev, &host);
->  		break;
->  	default:
-> -		return -EINVAL;
-> +		rc = -EINVAL;
->  	}
-> +	if (rc)
-> +		return rc;
+>  drivers/ata/libata-core.c |    4 +++-
+>  include/linux/libata.h    |    2 ++
+>  2 files changed, 5 insertions(+), 1 deletions(-)
 
 applied
 
