@@ -1,111 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes UPDATED] libata: fix last_reset timestamp
- handling
-Date: Tue, 04 Nov 2008 17:08:40 +0900
-Message-ID: <49100308.90207@kernel.org>
-References: <490FFA89.1030002@kernel.org>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Odd behaviour of device in response to idleimmediate with unload
+Date: Tue, 04 Nov 2008 11:31:24 +0100
+Message-ID: <871vxrzssj.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44093 "EHLO hera.kernel.org"
+Received: from nebensachen.de ([195.34.83.29]:51556 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753379AbYKDIIw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 03:08:52 -0500
-In-Reply-To: <490FFA89.1030002@kernel.org>
+	id S1753354AbYKDKbf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 05:31:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Shane Huang <Shane.Huang@amd.com>
-Cc: stable@kernel.org
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Evgeni Golov <sargentd@die-welt.net>
 
-ehc->last_reset is used to ensure that resets are not issued too close
-to each other.  It's initialized to jiffies minus one minute on EH
-entry.  However, when new links are initialized after PMP is probed,
-new links have zero for this timestamp resulting in long wait
-depending on the current jiffies.
+Hi all,
 
-This patch makes last_set considered iff ATA_EHI_DID_RESET is set, in
-which case last_reset is always initialized.  As an added precaution,
-WARN_ON() is added so that warning is printed if last_reset is in
-future.
+apparently, we have the first case of a quirky implementation of
+idleimmediate with unload feature in a device, or I'm barking up the
+wrong tree, of course. Evgeni Golov has reported the following on
+hdaps-devel:
 
-This problem is spotted and debugged by Shane Huang.
+Evgeni Golov <sargentd@die-welt.net> wrote:
+> Hi,
+>
+> I have a ThinkPad Z61m with a 100GB S-ATA TOSHIBA MK1032GSX.
+[...]
+> Now I thought I should try the new interface and compiled 2.6.28-rc2,
+[...]
+> After that I could park the heads and got the following in dmesg:
+>
+> ata1: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xf
+> ata1: SError: { PHYRdyChg CommWake }
+> ata1: hard resetting link
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
+> ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+> ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
+> ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
+> ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+> ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
+> ata1.00: configured for UDMA/100
+> ata1.00: configured for UDMA/100
+> ata1: EH complete
+> sd 0:0:0:0: [sda] 195371568 512-byte hardware sectors: (100 GB/93.1 GiB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 0:0:0:0: [sda] 195371568 512-byte hardware sectors: (100 GB/93.1 GiB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Shane Huang <Shane.Huang@amd.com>
----
-This one also should go into 2.6.27-x.  Thanks.
+The only explanation I could come up with so far is that the head park
+command, for some reason or other, causes the device to set
+SERR_PHYRDY_CHG and SERR_COMM_WAKE in serror, thus triggering the
+handling of hotplug events. Do you have any idea what's really going on
+here and what can / should be done about it?
 
-Minor update.  Kill ehc->last_reset update right after
-ata_eh_about_to_do().  This does no harm but is unnecessary with the
-patch applied.
+Regards,
 
- drivers/ata/libata-eh.c |   21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 6b05809..8147a83 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -632,9 +632,6 @@ void ata_scsi_error(struct Scsi_Host *host)
- 				if (ata_ncq_enabled(dev))
- 					ehc->saved_ncq_enabled |= 1 << devno;
- 			}
--
--			/* set last reset timestamp to some time in the past */
--			ehc->last_reset = jiffies - 60 * HZ;
- 		}
- 
- 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
-@@ -2308,17 +2305,21 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	if (link->flags & ATA_LFLAG_NO_SRST)
- 		softreset = NULL;
- 
--	now = jiffies;
--	deadline = ata_deadline(ehc->last_reset, ATA_EH_RESET_COOL_DOWN);
--	if (time_before(now, deadline))
--		schedule_timeout_uninterruptible(deadline - now);
-+	/* make sure each reset attemp is at least COOL_DOWN apart */
-+	if (ehc->i.flags & ATA_EHI_DID_RESET) {
-+		now = jiffies;
-+		WARN_ON(time_after(ehc->last_reset, now));
-+		deadline = ata_deadline(ehc->last_reset,
-+					ATA_EH_RESET_COOL_DOWN);
-+		if (time_before(now, deadline))
-+			schedule_timeout_uninterruptible(deadline - now);
-+	}
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 	ap->pflags |= ATA_PFLAG_RESETTING;
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
--	ehc->last_reset = jiffies;
- 
- 	ata_for_each_dev(dev, link, ALL) {
- 		/* If we issue an SRST then an ATA drive (not ATAPI)
-@@ -2406,7 +2407,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	/*
- 	 * Perform reset
- 	 */
--	ehc->last_reset = jiffies;
- 	if (ata_is_host_link(link))
- 		ata_eh_freeze_port(ap);
- 
-@@ -2418,6 +2418,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 					reset == softreset ? "soft" : "hard");
- 
- 		/* mark that this EH session started with reset */
-+		ehc->last_reset = jiffies;
- 		if (reset == hardreset)
- 			ehc->i.flags |= ATA_EHI_DID_HARDRESET;
- 		else
-@@ -2562,7 +2563,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	ata_eh_done(link, NULL, ATA_EH_RESET);
- 	if (slave)
- 		ata_eh_done(slave, NULL, ATA_EH_RESET);
--	ehc->last_reset = jiffies;
-+	ehc->last_reset = jiffies;	/* update to completion time */
- 	ehc->i.action |= ATA_EH_REVALIDATE;
- 
- 	rc = 0;
+Elias
