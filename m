@@ -1,15 +1,18 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: fix last_reset timestamp handling
-Date: Tue, 04 Nov 2008 16:32:25 +0900
-Message-ID: <490FFA89.1030002@kernel.org>
+Subject: [PATCH #upstream-fixes UPDATED] libata: fix last_reset timestamp
+ handling
+Date: Tue, 04 Nov 2008 17:08:40 +0900
+Message-ID: <49100308.90207@kernel.org>
+References: <490FFA89.1030002@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56482 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44093 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751780AbYKDHch (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 02:32:37 -0500
+	id S1753379AbYKDIIw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 03:08:52 -0500
+In-Reply-To: <490FFA89.1030002@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Shane Huang <Shane.Huang@amd.com>
@@ -33,11 +36,15 @@ Cc: Shane Huang <Shane.Huang@amd.com>
 ---
 This one also should go into 2.6.27-x.  Thanks.
 
- drivers/ata/libata-eh.c |   20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+Minor update.  Kill ehc->last_reset update right after
+ata_eh_about_to_do().  This does no harm but is unnecessary with the
+patch applied.
+
+ drivers/ata/libata-eh.c |   21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 6b05809..1b46f60 100644
+index 6b05809..8147a83 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
 @@ -632,9 +632,6 @@ void ata_scsi_error(struct Scsi_Host *host)
@@ -50,7 +57,7 @@ index 6b05809..1b46f60 100644
  		}
  
  		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
-@@ -2308,10 +2305,15 @@ int ata_eh_reset(struct ata_link *link, int classify,
+@@ -2308,17 +2305,21 @@ int ata_eh_reset(struct ata_link *link, int classify,
  	if (link->flags & ATA_LFLAG_NO_SRST)
  		softreset = NULL;
  
@@ -70,7 +77,14 @@ index 6b05809..1b46f60 100644
  
  	spin_lock_irqsave(ap->lock, flags);
  	ap->pflags |= ATA_PFLAG_RESETTING;
-@@ -2406,7 +2408,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
+-	ehc->last_reset = jiffies;
+ 
+ 	ata_for_each_dev(dev, link, ALL) {
+ 		/* If we issue an SRST then an ATA drive (not ATAPI)
+@@ -2406,7 +2407,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
  	/*
  	 * Perform reset
  	 */
@@ -78,7 +92,7 @@ index 6b05809..1b46f60 100644
  	if (ata_is_host_link(link))
  		ata_eh_freeze_port(ap);
  
-@@ -2418,6 +2419,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+@@ -2418,6 +2418,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
  					reset == softreset ? "soft" : "hard");
  
  		/* mark that this EH session started with reset */
@@ -86,7 +100,7 @@ index 6b05809..1b46f60 100644
  		if (reset == hardreset)
  			ehc->i.flags |= ATA_EHI_DID_HARDRESET;
  		else
-@@ -2562,7 +2564,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+@@ -2562,7 +2563,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
  	ata_eh_done(link, NULL, ATA_EH_RESET);
  	if (slave)
  		ata_eh_done(slave, NULL, ATA_EH_RESET);
