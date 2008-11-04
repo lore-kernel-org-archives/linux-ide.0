@@ -1,40 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata-rb532-cf: read and write data in 4-byte blocks
-Date: Tue, 04 Nov 2008 01:01:25 -0500
-Message-ID: <490FE535.8080109@garzik.org>
-References: <490E1A63.3040507@ru.mvista.com> <1225718954-8307-1-git-send-email-n0-1@freewrt.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.28-rc2] sata_promise: add ATA engine reset to reset
+ ops
+Date: Tue, 04 Nov 2008 01:10:24 -0500
+Message-ID: <490FE750.50405@pobox.com>
+References: <200810310703.m9V73tAk019180@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45576 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:45511 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751224AbYKDGBa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 01:01:30 -0500
-In-Reply-To: <1225718954-8307-1-git-send-email-n0-1@freewrt.org>
+	id S1753045AbYKDGKa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 01:10:30 -0500
+In-Reply-To: <200810310703.m9V73tAk019180@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Sutter <n0-1@freewrt.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 
-Phil Sutter wrote:
-> * rename the offset definition to avoid abiguity with the standard ATA
->   IO address
-> * read and write four bytes at once
-> * use writesl() and readsl() which implicitly iterate over the data
-> * fix the signature of rb532_pata_data_xfer() to match the function
->   pointer definition and return the number of bytes consumed
+Mikael Pettersson wrote:
+> Promise ATA engines need to be reset when errors occur.
+> That's currently done for errors detected by sata_promise itself,
+> but it's not done for errors like timeouts detected outside of
+> the low-level driver.
 > 
-> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
-> Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
+> The effect of this omission is that a timeout tends to result
+> in a sequence of failed COMRESETs after which libata EH gives
+> up and disables the port. At that point the port's ATA engine
+> hangs and even reloading the driver will not resume it.
+> 
+> To fix this, make sata_promise override ->hardreset on SATA
+> ports with code which calls pdc_reset_port() on the port in
+> question before calling libata's hardreset. PATA ports don't
+> use ->hardreset, so for those we override ->softreset instead.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 > ---
->  drivers/ata/pata_rb532_cf.c |   21 ++++++++++-----------
->  1 files changed, 10 insertions(+), 11 deletions(-)
+> Updated to add pdc_reset_port() to ->softreset not ->hardreset
+> on PATA ports. Patch title adjusted accordingly.
+> 
+> This should also go into the 2.6.27 and 2.6.26 stable branches.
+> In older branches libata EH is different and I'm seeing different
+> behaviour on timeouts, so I don't think this should go in as-is
+> in 2.6.25 and older.
+> 
+>  drivers/ata/sata_promise.c |   20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 
-None of this description says _why_ you wish to do this.  Also, maybe I 
-missed the response, what about ATAPI?
-
-	Jeff
-
+applied
 
 
