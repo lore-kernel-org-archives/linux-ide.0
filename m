@@ -1,42 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
-Date: Tue, 04 Nov 2008 14:38:12 +0900
-Message-ID: <490FDFC4.6090806@kernel.org>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org> <49069317.3000600@garzik.org> <490F09F8.5070802@kernel.org> <490FDF06.80009@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata-rb532-cf: read and write data in 4-byte blocks
+Date: Tue, 04 Nov 2008 01:01:25 -0500
+Message-ID: <490FE535.8080109@garzik.org>
+References: <490E1A63.3040507@ru.mvista.com> <1225718954-8307-1-git-send-email-n0-1@freewrt.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48802 "EHLO hera.kernel.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:45576 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751505AbYKDFiW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 00:38:22 -0500
-In-Reply-To: <490FDF06.80009@garzik.org>
+	id S1751224AbYKDGBa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 01:01:30 -0500
+In-Reply-To: <1225718954-8307-1-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Phil Sutter <n0-1@freewrt.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Jeff Garzik wrote:
->>> ACK patchset
->>
->> Jeff, are you gonna create #upstream soon?  I have other patches
->> targeted for #upstream and having a branch open and having patch orders
->> fixed there would help a lot.
+Phil Sutter wrote:
+> * rename the offset definition to avoid abiguity with the standard ATA
+>   IO address
+> * read and write four bytes at once
+> * use writesl() and readsl() which implicitly iterate over the data
+> * fix the signature of rb532_pata_data_xfer() to match the function
+>   pointer definition and return the number of bytes consumed
 > 
-> Yep, I was waiting on the patchset in $subject to be resent, because
-> otherwise there was no content for #upstream.
-> 
-> #tj-upstream sounded like it contained some work for 2.6.28 and some for
-> later kernels, so I didn't want to pull it verbatim.
+> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+> Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
+> ---
+>  drivers/ata/pata_rb532_cf.c |   21 ++++++++++-----------
+>  1 files changed, 10 insertions(+), 11 deletions(-)
 
-Ah... it was #tj-upstream before -rc1 opened and just contained fixes
-and stuff you already acked.  I probably should have renamed it to
-#tj-upstream-fixes.  Are you gonna push in the lost patches into 2.6.28?
+None of this description says _why_ you wish to do this.  Also, maybe I 
+missed the response, what about ATAPI?
 
-Thanks.
+	Jeff
 
--- 
-tejun
+
+
