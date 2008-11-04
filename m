@@ -1,46 +1,57 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 6/6] ide: rework handling of serialized ports
-Date: Tue, 04 Nov 2008 21:34:44 +0300
-Message-ID: <491095C4.3000503@ru.mvista.com>
-References: <20081103200244.5098.29817.sendpatchset@localhost.localdomain> <20081103200326.5098.2058.sendpatchset@localhost.localdomain> <491094B2.4090107@ru.mvista.com>
+From: Evgeni Golov <sargentd@die-welt.net>
+Subject: Re: Odd behaviour of device in response to idleimmediate with
+ unload
+Date: Tue, 4 Nov 2008 19:54:38 +0100
+Message-ID: <20081104185444.3BE721FDF7@chi.die-welt.net>
+References: <871vxrzssj.fsf@denkblock.local>
+	<491026AB.1090704@kernel.org>
+	<20081104123211.A86321FD5A@chi.die-welt.net>
+	<49108120.6000205@rtr.ca>
+	<491083CC.5050508@rtr.ca>
+	<49108AA0.1080507@rtr.ca>
+	<491090BC.5060403@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__4_Nov_2008_19_54_38_+0100_fBPW/Taqs1dBXwc2"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:48023 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752237AbYKDSeu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Nov 2008 13:34:50 -0500
-In-Reply-To: <491094B2.4090107@ru.mvista.com>
+Received: from chi.die-welt.net ([84.246.123.210]:34813 "EHLO chi.die-welt.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752822AbYKDSyu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 13:54:50 -0500
+In-Reply-To: <491090BC.5060403@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello, I wrote:
+--Signature=_Tue__4_Nov_2008_19_54_38_+0100_fBPW/Taqs1dBXwc2
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> Index: b/drivers/ide/ide-probe.c
->> ===================================================================
->> --- a/drivers/ide/ide-probe.c
->> +++ b/drivers/ide/ide-probe.c
+On Tue, 04 Nov 2008 13:13:16 -0500 Mark Lord wrote:
 
-> [...]
+> Okay, hdparm-9.3 is now out in the wild (sourceforge),
+> and has  --idle-immediate and --idle-unload  flags now,
+> so it can be used to help debug/test this problem.
 
->> @@ -1436,10 +1398,8 @@ static void ide_init_port(ide_hwif_t *hw
->>      }
->>  
->>      if ((d->host_flags & IDE_HFLAG_SERIALIZE) ||
->> -        ((d->host_flags & IDE_HFLAG_SERIALIZE_DMA) && hwif->dma_base)) {
->> -        if (hwif->mate)
->> -            hwif->mate->serialized = hwif->serialized = 1;
->> -    }
->> +        ((d->host_flags & IDE_HFLAG_SERIALIZE_DMA) && hwif->dma_base))
->> +        hwif->host_flags |= IDE_HFLAG_SERIALIZE;
+Okay, got it, built it.
+Neither --idle-immediate nor --idle-immediate brings up the reset,
+echo 1000 > /sys/block/sda/device/unload_heads does.
 
->    I don't see what use is forcing this flag at all here -- it doesn't 
-> seem to be checked only in init_irq() now, so this *if* could just be 
-> moved there...
+Regards
+Evgeni, puzzled.
 
-    Oops, rephrasing hurts sometimes: I meant "it seems", of course. :-)
+--Signature=_Tue__4_Nov_2008_19_54_38_+0100_fBPW/Taqs1dBXwc2
+Content-Type: application/pgp-signature
 
-MBR, Sergei
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkkQmm4ACgkQJKAUGKwVtQwcLgCfX/v6SH9w1GQKfxNxjHEIkXbs
+QNgAn1DNGEcu6DXnk/lhzqVOdtdSgRya
+=14TY
+-----END PGP SIGNATURE-----
+
+--Signature=_Tue__4_Nov_2008_19_54_38_+0100_fBPW/Taqs1dBXwc2--
