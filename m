@@ -1,14 +1,14 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 4 Nov 2008 01:20:54 -0500
-Message-ID: <20081104062054.GA4239@havoc.gtf.org>
+Subject: [git patches] libata hibernation fixes
+Date: Tue, 4 Nov 2008 01:27:34 -0500
+Message-ID: <20081104062734.GA4420@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:33828 "EHLO havoc.gtf.org"
+Received: from havoc.gtf.org ([69.61.125.42]:39422 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751541AbYKDGU4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 01:20:56 -0500
+	id S1751780AbYKDG1f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 01:27:35 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,288 +16,466 @@ To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-fo
 Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
-_Hopefully_ nailing down the last of the sata_nv EH problems.
-Plus a key sata_promise fix.
+This adds code at a late stage (heading towards -rc4), but does
+eliminate a particular spin-up overcycling behavior associated with
+hibernation.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Rafael's extended description below...  Separated to make it easier to
+pull-or-not, separate from the other libata fixes.  There shouldn't be
+any merge trouble between the two.
+
+	Jeff
+
+
+
+
+SATA: Blacklist systems that spin off disks during ACPI power off
+
+Some notebooks from HP have the problem that their BIOSes attempt to
+spin down hard drives before entering ACPI system states S4 and S5.
+This leads to a yo-yo effect during system power-off shutdown and
+the last phase of hibernation when the disk is first spun down by
+the kernel and then almost immediately turned on and off by the BIOS.
+This, in turn, may result in shortening the disk's life times.
+
+To prevent this from happening we can blacklist the affected systems
+using DMI information.  However, only the on-board controlles should be
+blacklisted and their PCI slot numbers can be used for this purpose.
+Unfortunately the existing interface for checking DMI information of
+the system is not very convenient for this purpose, because to use
+it, we would have to define special callback functions or create a
+separate struct dmi_system_id table for each blacklisted system.
+
+To overcome this difficulty introduce a new function dmi_first_match()
+returning a pointer to the first entry in an array of struct
+dmi_system_id elements that matches the system DMI information.  Then,
+we can use this pointer to access the entry's .driver_data field
+containing the additional information, such as the PCI slot number,
+allowing us to do the desired blacklisting.
+
+Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
+set, will prevent disks from being spun off during system power off
+and hibernation (to handle the hibernation case we need a new system
+state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
+in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set
+this flag for some systems affected by the problem described above
+(HP nx6325, HP nx6310, HP 2510p).
+
+Please pull from 'hibern_regress' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git hibern_regress
 
 to receive the following updates:
 
- drivers/ata/libata-core.c  |    6 +++-
- drivers/ata/libata-scsi.c  |    7 +++--
- drivers/ata/sata_nv.c      |   53 ++++++++++++++++++++-----------------------
- drivers/ata/sata_promise.c |   20 ++++++++++++++++
- drivers/ata/sata_via.c     |    4 ++-
- include/linux/libata.h     |    2 +
- 6 files changed, 58 insertions(+), 34 deletions(-)
+ drivers/ata/ahci.c          |   32 ++++++++++++++++++
+ drivers/ata/ata_piix.c      |   34 +++++++++++++++++++
+ drivers/ata/libata-scsi.c   |   20 ++++++++++--
+ drivers/ata/sata_sil.c      |   36 ++++++++++++++++++++-
+ drivers/firmware/dmi_scan.c |   74 ++++++++++++++++++++++++++++++++-----------
+ include/linux/dmi.h         |    1 +
+ include/linux/libata.h      |    2 +
+ include/linux/suspend.h     |    2 +
+ kernel/power/disk.c         |   10 ++++++
+ 9 files changed, 188 insertions(+), 23 deletions(-)
 
-Elias Oltmanns (1):
-      libata: Fix a potential race condition in ata_scsi_park_show()
+Rafael J. Wysocki (6):
+      Hibernation: Introduce system_entering_hibernation
+      DMI: Introduce dmi_first_match to make the interface more flexible
+      SATA: Blacklisting of systems that spin off disks during ACPI power off (rev. 2)
+      SATA AHCI: Blacklist system that spins off disks during ACPI power off
+      SATA Sil: Blacklist system that spins off disks during ACPI power off
+      SATA PIIX: Blacklist system that spins off disks during ACPI power off
 
-Marcin Slusarz (1):
-      sata_via: restore vt*_prepare_host error handling
-
-Mikael Pettersson (1):
-      sata_promise: add ATA engine reset to reset ops
-
-Tejun Heo (3):
-      sata_nv: fix generic, nf2/3 detection regression
-      libata: implement ATA_HORKAGE_ATAPI_MOD16_DMA and apply it
-      libata: mask off DET when restoring SControl for detach
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 82af701..622350d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4024,6 +4024,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 
- 	/* Weird ATAPI devices */
- 	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
-+	{ "QUANTUM DAT    DAT72-000", NULL,	ATA_HORKAGE_ATAPI_MOD16_DMA },
- 
- 	/* Devices we expect to fail diagnostics */
- 
-@@ -4444,7 +4445,8 @@ int atapi_check_dma(struct ata_queued_cmd *qc)
- 	/* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
- 	 * few ATAPI devices choke on such DMA requests.
- 	 */
--	if (unlikely(qc->nbytes & 15))
-+	if (!(qc->dev->horkage & ATA_HORKAGE_ATAPI_MOD16_DMA) &&
-+	    unlikely(qc->nbytes & 15))
- 		return 1;
- 
- 	if (ap->ops->check_atapi_dma)
-@@ -5934,7 +5936,7 @@ static void ata_port_detach(struct ata_port *ap)
- 	 * to us.  Restore SControl and disable all existing devices.
- 	 */
- 	__ata_port_for_each_link(link, ap) {
--		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol);
-+		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
- 		ata_link_for_each_dev(dev, link)
- 			ata_dev_disable(dev);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a67b8e7..8e8790b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2546,6 +2546,32 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
  	}
+ }
+ 
++static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
++{
++	static const struct dmi_system_id broken_systems[] = {
++		{
++			.ident = "HP Compaq nx6310",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6310"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x1FUL,
++		},
++
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++
++	if (dmi) {
++		unsigned long slot = (unsigned long)dmi->driver_data;
++		/* apply the quirk only to on-board controllers */
++		return slot == PCI_SLOT(pdev->devfn);
++	}
++
++	return false;
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+@@ -2641,6 +2667,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
+ 
++	if (ahci_broken_system_poweroff(pdev)) {
++		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
++		dev_info(&pdev->dev,
++			"quirky BIOS, skipping spindown on poweroff\n");
++	}
++
+ 	/* CAP.NP sometimes indicate the index of the last enabled
+ 	 * port, at other times, that of the last possible port, so
+ 	 * determining the maximum port number requires looking at
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 8e37be1..f5fff92 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1370,6 +1370,32 @@ static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
+ 	}
+ }
+ 
++static bool piix_broken_system_poweroff(struct pci_dev *pdev)
++{
++	static const struct dmi_system_id broken_systems[] = {
++		{
++			.ident = "HP Compaq 2510p",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x1FUL,
++		},
++
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++
++	if (dmi) {
++		unsigned long slot = (unsigned long)dmi->driver_data;
++		/* apply the quirk only to on-board controllers */
++		return slot == PCI_SLOT(pdev->devfn);
++	}
++
++	return false;
++}
++
+ /**
+  *	piix_init_one - Register PIIX ATA PCI device with kernel services
+  *	@pdev: PCI device to register
+@@ -1405,6 +1431,14 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 	if (!in_module_init)
+ 		return -ENODEV;
+ 
++	if (piix_broken_system_poweroff(pdev)) {
++		piix_port_info[ent->driver_data].flags |=
++				ATA_FLAG_NO_POWEROFF_SPINDOWN |
++					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
++		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
++				"on poweroff and hibernation\n");
++	}
++
+ 	port_info[0] = piix_port_info[ent->driver_data];
+ 	port_info[1] = piix_port_info[ent->driver_data];
+ 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bbb30d8..3fa75ea 100644
+index bbb30d8..0a0aa95 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -190,7 +190,7 @@ static ssize_t ata_scsi_park_show(struct device *device,
- 	struct ata_port *ap;
- 	struct ata_link *link;
- 	struct ata_device *dev;
--	unsigned long flags;
-+	unsigned long flags, now;
- 	unsigned int uninitialized_var(msecs);
- 	int rc = 0;
+@@ -46,6 +46,7 @@
+ #include <linux/libata.h>
+ #include <linux/hdreg.h>
+ #include <linux/uaccess.h>
++#include <linux/suspend.h>
  
-@@ -208,10 +208,11 @@ static ssize_t ata_scsi_park_show(struct device *device,
+ #include "libata.h"
+ 
+@@ -1307,6 +1308,17 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 
+ 		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
+ 	} else {
++		/* Some odd clown BIOSen issue spindown on power off (ACPI S4
++		 * or S5) causing some drives to spin up and down again.
++		 */
++		if ((qc->ap->flags & ATA_FLAG_NO_POWEROFF_SPINDOWN) &&
++		    system_state == SYSTEM_POWER_OFF)
++			goto skip;
++
++		if ((qc->ap->flags & ATA_FLAG_NO_HIBERNATE_SPINDOWN) &&
++		     system_entering_hibernation())
++			goto skip;
++
+ 		/* XXX: This is for backward compatibility, will be
+ 		 * removed.  Read Documentation/feature-removal-schedule.txt
+ 		 * for more info.
+@@ -1330,8 +1342,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 				scmd->scsi_done = qc->scsidone;
+ 				qc->scsidone = ata_delayed_done;
+ 			}
+-			scmd->result = SAM_STAT_GOOD;
+-			return 1;
++			goto skip;
+ 		}
+ 
+ 		/* Issue ATA STANDBY IMMEDIATE command */
+@@ -1347,10 +1358,13 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 
+ 	return 0;
+ 
+-invalid_fld:
++ invalid_fld:
+ 	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	/* "Invalid field in cbd" */
+ 	return 1;
++ skip:
++	scmd->result = SAM_STAT_GOOD;
++	return 1;
+ }
+ 
+ 
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 031d7b7..f1dd478 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -603,11 +603,38 @@ static void sil_init_controller(struct ata_host *host)
  	}
+ }
  
- 	link = dev->link;
-+	now = jiffies;
- 	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
- 	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
--	    time_after(dev->unpark_deadline, jiffies))
--		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
-+	    time_after(dev->unpark_deadline, now))
-+		msecs = jiffies_to_msecs(dev->unpark_deadline - now);
- 	else
- 		msecs = 0;
++static bool sil_broken_system_poweroff(struct pci_dev *pdev)
++{
++	static const struct dmi_system_id broken_systems[] = {
++		{
++			.ident = "HP Compaq nx6325",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x12UL,
++		},
++
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++
++	if (dmi) {
++		unsigned long slot = (unsigned long)dmi->driver_data;
++		/* apply the quirk only to on-board controllers */
++		return slot == PCI_SLOT(pdev->devfn);
++	}
++
++	return false;
++}
++
+ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+ 	int board_id = ent->driver_data;
+-	const struct ata_port_info *ppi[] = { &sil_port_info[board_id], NULL };
++	struct ata_port_info pi = sil_port_info[board_id];
++	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ata_host *host;
+ 	void __iomem *mmio_base;
+ 	int n_ports, rc;
+@@ -621,6 +648,13 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (board_id == sil_3114)
+ 		n_ports = 4;
  
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index fae3841..6f14606 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -307,10 +307,10 @@ static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
++	if (sil_broken_system_poweroff(pdev)) {
++		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN |
++					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
++		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
++				"on poweroff and hibernation\n");
++	}
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index 3e526b6..6e88b99 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -415,6 +415,27 @@ void __init dmi_scan_machine(void)
+ }
  
- static void nv_nf2_freeze(struct ata_port *ap);
- static void nv_nf2_thaw(struct ata_port *ap);
-+static int nv_nf2_hardreset(struct ata_link *link, unsigned int *class,
-+			    unsigned long deadline);
- static void nv_ck804_freeze(struct ata_port *ap);
- static void nv_ck804_thaw(struct ata_port *ap);
--static int nv_hardreset(struct ata_link *link, unsigned int *class,
--			unsigned long deadline);
- static int nv_adma_slave_config(struct scsi_device *sdev);
- static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
- static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
-@@ -405,17 +405,8 @@ static struct scsi_host_template nv_swncq_sht = {
- 	.slave_configure	= nv_swncq_slave_config,
- };
- 
--/* OSDL bz3352 reports that some nv controllers can't determine device
-- * signature reliably and nv_hardreset is implemented to work around
-- * the problem.  This was reported on nf3 and it's unclear whether any
-- * other controllers are affected.  However, the workaround has been
-- * applied to all variants and there isn't much to gain by trying to
-- * find out exactly which ones are affected at this point especially
-- * because NV has moved over to ahci for newer controllers.
-- */
- static struct ata_port_operations nv_common_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
--	.hardreset		= nv_hardreset,
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
- };
-@@ -429,12 +420,22 @@ static struct ata_port_operations nv_generic_ops = {
- 	.hardreset		= ATA_OP_NULL,
- };
- 
-+/* OSDL bz3352 reports that nf2/3 controllers can't determine device
-+ * signature reliably.  Also, the following thread reports detection
-+ * failure on cold boot with the standard debouncing timing.
-+ *
-+ * http://thread.gmane.org/gmane.linux.ide/34098
-+ *
-+ * Debounce with hotplug timing and request follow-up SRST.
+ /**
++ *	dmi_match - check if dmi_system_id structure matches system DMI data
++ *	@dmi: pointer to the dmi_system_id structure to check
 + */
- static struct ata_port_operations nv_nf2_ops = {
- 	.inherits		= &nv_common_ops,
- 	.freeze			= nv_nf2_freeze,
- 	.thaw			= nv_nf2_thaw,
-+	.hardreset		= nv_nf2_hardreset,
- };
- 
-+/* CK804 finally gets hardreset right */
- static struct ata_port_operations nv_ck804_ops = {
- 	.inherits		= &nv_common_ops,
- 	.freeze			= nv_ck804_freeze,
-@@ -443,7 +444,7 @@ static struct ata_port_operations nv_ck804_ops = {
- };
- 
- static struct ata_port_operations nv_adma_ops = {
--	.inherits		= &nv_common_ops,
-+	.inherits		= &nv_ck804_ops,
- 
- 	.check_atapi_dma	= nv_adma_check_atapi_dma,
- 	.sff_tf_read		= nv_adma_tf_read,
-@@ -467,7 +468,7 @@ static struct ata_port_operations nv_adma_ops = {
- };
- 
- static struct ata_port_operations nv_swncq_ops = {
--	.inherits		= &nv_common_ops,
-+	.inherits		= &nv_generic_ops,
- 
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_swncq_qc_prep,
-@@ -1553,6 +1554,17 @@ static void nv_nf2_thaw(struct ata_port *ap)
- 	iowrite8(mask, scr_addr + NV_INT_ENABLE);
- }
- 
-+static int nv_nf2_hardreset(struct ata_link *link, unsigned int *class,
-+			    unsigned long deadline)
++static bool dmi_match(const struct dmi_system_id *dmi)
 +{
-+	bool online;
-+	int rc;
++	int i;
 +
-+	rc = sata_link_hardreset(link, sata_deb_timing_hotplug, deadline,
-+				 &online, NULL);
-+	return online ? -EAGAIN : rc;
++	for (i = 0; i < ARRAY_SIZE(dmi->matches); i++) {
++		int s = dmi->matches[i].slot;
++		if (s == DMI_NONE)
++			continue;
++		if (dmi_ident[s]
++		    && strstr(dmi_ident[s], dmi->matches[i].substr))
++			continue;
++		/* No match */
++		return false;
++	}
++	return true;
 +}
 +
- static void nv_ck804_freeze(struct ata_port *ap)
++/**
+  *	dmi_check_system - check system DMI data
+  *	@list: array of dmi_system_id structures to match against
+  *		All non-null elements of the list must match
+@@ -429,32 +450,47 @@ void __init dmi_scan_machine(void)
+  */
+ int dmi_check_system(const struct dmi_system_id *list)
  {
- 	void __iomem *mmio_base = ap->host->iomap[NV_MMIO_BAR];
-@@ -1605,21 +1617,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
- 	ata_sff_thaw(ap);
- }
- 
--static int nv_hardreset(struct ata_link *link, unsigned int *class,
--			unsigned long deadline)
--{
--	int rc;
+-	int i, count = 0;
+-	const struct dmi_system_id *d = list;
 -
--	/* SATA hardreset fails to retrieve proper device signature on
--	 * some controllers.  Request follow up SRST.  For more info,
--	 * see http://bugzilla.kernel.org/show_bug.cgi?id=3352
--	 */
--	rc = sata_sff_hardreset(link, class, deadline);
--	if (rc)
--		return rc;
--	return -EAGAIN;
--}
+-	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
 -
- static void nv_adma_error_handler(struct ata_port *ap)
- {
- 	struct nv_adma_port_priv *pp = ap->private_data;
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 750d8cd..ba9a257 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -153,6 +153,10 @@ static void pdc_freeze(struct ata_port *ap);
- static void pdc_sata_freeze(struct ata_port *ap);
- static void pdc_thaw(struct ata_port *ap);
- static void pdc_sata_thaw(struct ata_port *ap);
-+static int pdc_pata_softreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
-+static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
- static void pdc_error_handler(struct ata_port *ap);
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
- static int pdc_pata_cable_detect(struct ata_port *ap);
-@@ -186,6 +190,7 @@ static struct ata_port_operations pdc_sata_ops = {
- 	.scr_read		= pdc_sata_scr_read,
- 	.scr_write		= pdc_sata_scr_write,
- 	.port_start		= pdc_sata_port_start,
-+	.hardreset		= pdc_sata_hardreset,
- };
+-	while (d->ident) {
+-		for (i = 0; i < ARRAY_SIZE(d->matches); i++) {
+-			int s = d->matches[i].slot;
+-			if (s == DMI_NONE)
+-				continue;
+-			if (dmi_ident[s] && strstr(dmi_ident[s], d->matches[i].substr))
+-				continue;
+-			/* No match */
+-			goto fail;
++	int count = 0;
++	const struct dmi_system_id *d;
++
++	for (d = list; d->ident; d++)
++		if (dmi_match(d)) {
++			count++;
++			if (d->callback && d->callback(d))
++				break;
+ 		}
+-		count++;
+-		if (d->callback && d->callback(d))
+-			break;
+-fail:		d++;
+-	}
  
- /* First-generation chips need a more restrictive ->check_atapi_dma op */
-@@ -200,6 +205,7 @@ static struct ata_port_operations pdc_pata_ops = {
- 	.freeze			= pdc_freeze,
- 	.thaw			= pdc_thaw,
- 	.port_start		= pdc_common_port_start,
-+	.softreset		= pdc_pata_softreset,
- };
- 
- static const struct ata_port_info pdc_port_info[] = {
-@@ -693,6 +699,20 @@ static void pdc_sata_thaw(struct ata_port *ap)
- 	readl(host_mmio + hotplug_offset); /* flush */
+ 	return count;
  }
+ EXPORT_SYMBOL(dmi_check_system);
  
-+static int pdc_pata_softreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
+ /**
++ *	dmi_first_match - find dmi_system_id structure matching system DMI data
++ *	@list: array of dmi_system_id structures to match against
++ *		All non-null elements of the list must match
++ *		their slot's (field index's) data (i.e., each
++ *		list string must be a substring of the specified
++ *		DMI slot's string data) to be considered a
++ *		successful match.
++ *
++ *	Walk the blacklist table until the first match is found.  Return the
++ *	pointer to the matching entry or NULL if there's no match.
++ */
++const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
 +{
-+	pdc_reset_port(link->ap);
-+	return ata_sff_softreset(link, class, deadline);
-+}
++	const struct dmi_system_id *d;
 +
-+static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	pdc_reset_port(link->ap);
-+	return sata_sff_hardreset(link, class, deadline);
-+}
++	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
 +
- static void pdc_error_handler(struct ata_port *ap)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 62367fe..c18935f 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -602,8 +602,10 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		rc = vt8251_prepare_host(pdev, &host);
- 		break;
- 	default:
--		return -EINVAL;
-+		rc = -EINVAL;
- 	}
-+	if (rc)
-+		return rc;
++	for (d = list; d->ident; d++)
++		if (dmi_match(d))
++			return d;
++
++	return NULL;
++}
++EXPORT_SYMBOL(dmi_first_match);
++
++/**
+  *	dmi_get_system_info - return DMI data value
+  *	@field: data index (see enum dmi_field)
+  *
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index e5084eb..6e20820 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -38,6 +38,7 @@ struct dmi_device {
+ #ifdef CONFIG_DMI
  
- 	svia_configure(pdev);
- 
+ extern int dmi_check_system(const struct dmi_system_id *list);
++const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list);
+ extern const char * dmi_get_system_info(int field);
+ extern const struct dmi_device * dmi_find_device(int type, const char *name,
+ 	const struct dmi_device *from);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f5441ed..c7665a4 100644
+index f5441ed..cc0ceaf 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -373,6 +373,8 @@ enum {
- 	ATA_HORKAGE_IVB		= (1 << 8),	/* cbl det validity bit bugs */
- 	ATA_HORKAGE_STUCK_ERR	= (1 << 9),	/* stuck ERR on next PACKET */
- 	ATA_HORKAGE_BRIDGE_OK	= (1 << 10),	/* no bridge limits */
-+	ATA_HORKAGE_ATAPI_MOD16_DMA = (1 << 11), /* use ATAPI DMA for commands
-+						    not multiple of 16 bytes */
+@@ -187,6 +187,8 @@ enum {
+ 	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
+ 					     * doesn't handle PIO interrupts */
+ 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
++	ATA_FLAG_NO_POWEROFF_SPINDOWN = (1 << 11), /* don't spindown before poweroff */
++	ATA_FLAG_NO_HIBERNATE_SPINDOWN = (1 << 12), /* don't spindown before hibernation */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+diff --git a/include/linux/suspend.h b/include/linux/suspend.h
+index 2ce8207..195200b 100644
+--- a/include/linux/suspend.h
++++ b/include/linux/suspend.h
+@@ -232,6 +232,7 @@ extern unsigned long get_safe_page(gfp_t gfp_mask);
  
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
+ extern void hibernation_set_ops(struct platform_hibernation_ops *ops);
+ extern int hibernate(void);
++extern bool system_entering_hibernation(void);
+ #else /* CONFIG_HIBERNATION */
+ static inline int swsusp_page_is_forbidden(struct page *p) { return 0; }
+ static inline void swsusp_set_page_free(struct page *p) {}
+@@ -239,6 +240,7 @@ static inline void swsusp_unset_page_free(struct page *p) {}
+ 
+ static inline void hibernation_set_ops(struct platform_hibernation_ops *ops) {}
+ static inline int hibernate(void) { return -ENOSYS; }
++static inline bool system_entering_hibernation(void) { return false; }
+ #endif /* CONFIG_HIBERNATION */
+ 
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/kernel/power/disk.c b/kernel/power/disk.c
+index c9d7408..248e243 100644
+--- a/kernel/power/disk.c
++++ b/kernel/power/disk.c
+@@ -72,6 +72,14 @@ void hibernation_set_ops(struct platform_hibernation_ops *ops)
+ 	mutex_unlock(&pm_mutex);
+ }
+ 
++static bool entering_platform_hibernation;
++
++bool system_entering_hibernation(void)
++{
++	return entering_platform_hibernation;
++}
++EXPORT_SYMBOL_GPL(system_entering_hibernation);
++
+ #ifdef CONFIG_PM_DEBUG
+ static void hibernation_debug_sleep(void)
+ {
+@@ -416,6 +424,7 @@ int hibernation_platform_enter(void)
+ 	if (error)
+ 		goto Close;
+ 
++	entering_platform_hibernation = true;
+ 	suspend_console();
+ 	ftrace_save = __ftrace_enabled_save();
+ 	error = device_suspend(PMSG_HIBERNATE);
+@@ -451,6 +460,7 @@ int hibernation_platform_enter(void)
+  Finish:
+ 	hibernation_ops->finish();
+  Resume_devices:
++	entering_platform_hibernation = false;
+ 	device_resume(PMSG_RESTORE);
+ 	__ftrace_enabled_restore(ftrace_save);
+ 	resume_console();
