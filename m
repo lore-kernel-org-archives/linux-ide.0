@@ -1,44 +1,51 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Odd behaviour of device in response to idleimmediate with unload
-Date: Tue, 04 Nov 2008 12:18:04 -0500
-Message-ID: <491083CC.5050508@rtr.ca>
-References: <871vxrzssj.fsf@denkblock.local>	<491026AB.1090704@kernel.org> <20081104123211.A86321FD5A@chi.die-welt.net> <49108120.6000205@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/6] rz1000: apply chipset quirks early
+Date: Tue, 04 Nov 2008 20:18:33 +0300
+Message-ID: <491083E9.60305@ru.mvista.com>
+References: <20081103200244.5098.29817.sendpatchset@localhost.localdomain> <20081103200306.5098.41565.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:35386 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753506AbYKDRRY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 12:17:24 -0500
-In-Reply-To: <49108120.6000205@rtr.ca>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:46713 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753560AbYKDRSj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Nov 2008 12:18:39 -0500
+In-Reply-To: <20081103200306.5098.41565.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Evgeni Golov <sargentd@die-welt.net>
-Cc: Tejun Heo <tj@kernel.org>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Evgeni Golov wrote:
->> Hi,
->>
->> On Tue, 04 Nov 2008 19:40:43 +0900 Tejun Heo wrote:
->>
->>> Is it a laptop?
->>
->> Yes it is, it's a IBM/Lenovo Thinkpad Z61m (9453A11)
->>
->>> Does 'hdparm -y' cause the same thing?
->>
->> No, neither -y nor -Y cause these messages.
-> ..
-> 
-> Well, -y does a simple ATA "IDLE IMMEDIATE" command.
-> 
-> So, what command is being used to cause the problem??
-..
+Hello.
 
-Duh.. sorry about that:  IDLE_IMMEDIATE_WITH_UNLOAD.
+Bartlomiej Zolnierkiewicz wrote:
 
-I'll add that to hdparm for v9.3, eventually.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rz1000: apply chipset quirks early
 
-Cheers
+> * Use pci_name(dev) instead of hwif->name in init_hwif_rz1000().
+
+> * init_hwif_rz1000() -> rz1000_init_chipset().  Update rz1000_init_one()
+>   to use rz1000_init_chipset() and add now required rz1000_remove().
+
+> * Remove superfluous ide_rz1000 chipset type.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+> Index: b/drivers/ide/rz1000.c
+> ===================================================================
+> --- a/drivers/ide/rz1000.c
+> +++ b/drivers/ide/rz1000.c
+> @@ -22,34 +22,48 @@
+>  
+>  #define DRV_NAME "rz1000"
+>  
+> -static void __devinit init_hwif_rz1000 (ide_hwif_t *hwif)
+> +static unsigned int __devinit rz1000_init_chipset(struct pci_dev *dev)
+
+    Hm, this is not a real init_chipset() method and it does just one thing -- 
+disables readahead, so rz1000_disable_readahead() or something of that sort 
+seems like a better name...
+
+MBR, Sergei
