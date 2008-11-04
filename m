@@ -1,49 +1,31 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: hdparm-9.2 now available: w/ DCO and firmware support
-Date: Tue, 04 Nov 2008 13:08:22 -0500
-Message-ID: <49108F96.8010902@rtr.ca>
-References: <490F4030.5030709@rtr.ca> <87f94c370811041001ucd76d27lc948c553ad2a381e@mail.gmail.com>
+Subject: Re: Odd behaviour of device in response to idleimmediate with unload
+Date: Tue, 04 Nov 2008 13:13:16 -0500
+Message-ID: <491090BC.5060403@rtr.ca>
+References: <871vxrzssj.fsf@denkblock.local>	<491026AB.1090704@kernel.org> <20081104123211.A86321FD5A@chi.die-welt.net> <49108120.6000205@rtr.ca> <491083CC.5050508@rtr.ca> <49108AA0.1080507@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:40326 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:36110 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753695AbYKDSHm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 13:07:42 -0500
-In-Reply-To: <87f94c370811041001ucd76d27lc948c553ad2a381e@mail.gmail.com>
+	id S1752177AbYKDSMh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 13:12:37 -0500
+In-Reply-To: <49108AA0.1080507@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Evgeni Golov <sargentd@die-welt.net>
+Cc: Tejun Heo <tj@kernel.org>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Greg Freemyer wrote:
-> On Mon, Nov 3, 2008 at 1:17 PM, Mark Lord <liml@rtr.ca> wrote:
->> hdparm v9.2 is now available from sourceforge.
->>
->>        http://sourceforge.net/projects/hdparm/
->>
->> New since v8.9 are:
->>
->> 1. Support for Device Configuration Overlay (DCO),
->>  with the --dco-identify, --dco-freeze, and --dco-restore flags.
->>  DCO is a feature set that enables vendors/OEMs to disable/hide
->>  certain drive features (eg. NCQ, LBA48, ..) for whatever reason
->>  (eg. compatibility with a specific b0rked BIOS).
->>  This release of hdparm can display/reset DCO, but not selectively
->>  disable features yet.
-..
-> I'm very happy to see the DCO support go in.
-> 
-> There is a small army of "Computer Forensic" examiners which do their
-> forensic imaging via Linux and I'm sure many will feel the same.
+Mark Lord wrote:
+> ..
+> I'm releasing hdparm-9.3 in the next few minutes,
+> with new --idle and --idle-unload flags to issue
+> the commands in question here.
 ..
 
-Mmm.. never thought about that much before now,
-but DCO is a nifty way to hide much of a drive from prying eyes.
-Eg. Use DCO to restrict the drive to LBA28 accessible sectors
-and also turn off LBA48 support, and then a lot of space becomes "hidden". 
-
-Until now!
+Okay, hdparm-9.3 is now out in the wild (sourceforge),
+and has  --idle-immediate and --idle-unload  flags now,
+so it can be used to help debug/test this problem.
 
 Cheers
