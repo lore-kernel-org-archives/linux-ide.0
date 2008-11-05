@@ -1,46 +1,51 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Subject: [PATCH] block: fix __blkdev_get() for removable devices
-Date: Wed, 5 Nov 2008 10:19:22 +0100
-Message-ID: <20081105091921.GC21867@kernel.dk>
-References: <20081029071319.GA9205@gollum.tnic> <20081101201419.GA29462@gollum.tnic> <490F1AC6.8000109@kernel.org> <9ea470500811030956k209b2f2ci10bcde1ea4ac7334@mail.gmail.com> <490FCC87.1070205@kernel.org> <20081105090449.GA9269@gollum.tnic>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [git patches] libata hibernation fixes
+Date: Wed, 05 Nov 2008 10:31:08 +0100
+Message-ID: <874p2mecyr.fsf@denkblock.local>
+References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no>
+	<fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no>
+	<fa.+bfipgmFkcLlZMtnFL0Ks2zyN8Q@ifi.uio.no>
+	<fa.Iek0GbTZLinM2sOi6+b7bsCgnfs@ifi.uio.no> <4910E240.4000801@shaw.ca>
+	<87abcfdmpp.fsf@denkblock.local> <4911053E.9070103@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:58665 "EHLO pasmtpB.tele.dk"
+Received: from nebensachen.de ([195.34.83.29]:60158 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752226AbYKEJUp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Nov 2008 04:20:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20081105090449.GA9269@gollum.tnic>
+	id S1753585AbYKEJb2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Nov 2008 04:31:28 -0500
+In-Reply-To: <4911053E.9070103@kernel.org> (Tejun Heo's message of "Wed, 05
+	Nov 2008 11:30:22 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Tejun Heo <tj@kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Mark Lord <liml@rtr.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Nov 05 2008, Borislav Petkov wrote:
-> On Tue, Nov 04, 2008 at 01:16:07PM +0900, Tejun Heo wrote:
-> > Commit 0762b8bde9729f10f8e6249809660ff2ec3ad735 moved disk_get_part()
-> > in front of recursive get on the whole disk, which caused removable
-> > devices to try disk_get_part() before rescanning after a new media is
-> > inserted, which might fail legit open attempts or give the old
-> > partition.
-> > 
-> > This patch fixes the problem by moving disk_get_part() after
-> > __blkdev_get() on the whole disk.
-> > 
-> > This problem was spotted by Borislav Petkov.
-> > 
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
-> > Cc: <Borislav Petkov> petkovbb@googlemail.com
-> > ---
-> > Borislav, can you please verify this patch?  Thanks.
-> 
-> Yep, it works. Thanks.
-> 
-> Tested-by: Borislav Petkov <petkovbb@gmail.com>
+Tejun Heo <tj@kernel.org> wrote:
+> Elias Oltmanns wrote:
+>>> On these systems, not spinning the disk down is fine because the BIOS
+>
+>>> does it. However this would cause problems on systems where the BIOS
+>>> doesn't do so as it will cause an emergency unload on power-down.
+>> 
+>> Ah, but do BIOSes just cut power without spinning disks down first?
+>> Pressing the power button on my laptop either at the prompt for the HD
+>> password or in GRUB's menu spins the disk down properly. Isn't that the
+>> BIOS doing its job?
+>
+> Drives don't like emergency unloads but they are designed to take
+> some.
 
-I merged it and added your tested-by.
+In the situations I mentioned above, the drive definitely is not
+performing an emergency unload. On the other hand, the BIOS hasn't
+handed over control to the OS at this stage, so it would make sense if
+the BIOS behaved differently once the OS has taken over. BTW, what
+exactly will happen if I install an ancient OS like DOS on my
+(reasonably) modern laptop? I've never tried that but I don't see how
+the OS would even have a chance to spin the disk down befor power off
+since there is no way for the user to initiate power off in the OS. Is
+that anything to do with ACPI support?
 
--- 
-Jens Axboe
+Regards,
 
+Elias
