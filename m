@@ -1,72 +1,54 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Odd behaviour of device in response to idleimmediate with unload
-Date: Wed, 05 Nov 2008 18:32:01 +0900
-Message-ID: <49116811.5000109@kernel.org>
-References: <871vxrzssj.fsf@denkblock.local>	<491026AB.1090704@kernel.org>	<20081104123211.A86321FD5A@chi.die-welt.net>	<49108120.6000205@rtr.ca>	<491083CC.5050508@rtr.ca>	<49108AA0.1080507@rtr.ca>	<491090BC.5060403@rtr.ca> <20081104185444.3BE721FDF7@chi.die-welt.net> <4910A509.1030307@rtr.ca>
+Subject: Re: [git patches] libata hibernation fixes
+Date: Wed, 05 Nov 2008 18:37:42 +0900
+Message-ID: <49116966.7040403@kernel.org>
+References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no>	<fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no>	<fa.+bfipgmFkcLlZMtnFL0Ks2zyN8Q@ifi.uio.no>	<fa.Iek0GbTZLinM2sOi6+b7bsCgnfs@ifi.uio.no> <4910E240.4000801@shaw.ca>	<87abcfdmpp.fsf@denkblock.local> <4911053E.9070103@kernel.org> <874p2mecyr.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090906050309050009080104"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50855 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:48777 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754025AbYKEJcY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Nov 2008 04:32:24 -0500
-In-Reply-To: <4910A509.1030307@rtr.ca>
+	id S1754227AbYKEJit (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Nov 2008 04:38:49 -0500
+In-Reply-To: <874p2mecyr.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Evgeni Golov <sargentd@die-welt.net>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Robert Hancock <hancockr@shaw.ca>, Mark Lord <liml@rtr.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090906050309050009080104
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Elias Oltmanns wrote:
+> Tejun Heo <tj@kernel.org> wrote:
+>> Elias Oltmanns wrote:
+>>>> On these systems, not spinning the disk down is fine because the BIOS
+>>>> does it. However this would cause problems on systems where the BIOS
+>>>> doesn't do so as it will cause an emergency unload on power-down.
+>>> Ah, but do BIOSes just cut power without spinning disks down first?
+>>> Pressing the power button on my laptop either at the prompt for the HD
+>>> password or in GRUB's menu spins the disk down properly. Isn't that the
+>>> BIOS doing its job?
+>> Drives don't like emergency unloads but they are designed to take
+>> some.
+> 
+> In the situations I mentioned above, the drive definitely is not
+> performing an emergency unload. On the other hand, the BIOS hasn't
+> handed over control to the OS at this stage, so it would make sense if
+> the BIOS behaved differently once the OS has taken over.
 
-Mark Lord wrote:
-> Evgeni Golov wrote:
->> On Tue, 04 Nov 2008 13:13:16 -0500 Mark Lord wrote:
->>
->>> Okay, hdparm-9.3 is now out in the wild (sourceforge),
->>> and has  --idle-immediate and --idle-unload  flags now,
->>> so it can be used to help debug/test this problem.
->>
->> Okay, got it, built it.
->> Neither --idle-immediate nor --idle-immediate brings up the reset,
->> echo 1000 > /sys/block/sda/device/unload_heads does.
-> ..
-> 
-> Mmmm.. okay, this is new stuff in 2.6.28,
-> and it appears to just issue a --idle-unload equivalent after a delay.
-> 
-> But it does it from within libata-eh, so I suppose there must
-> be some confusion in there somewhere.
-> 
-> So it's up to Tejun now, I suppose.
+Yeah, that was what I was talking about later in my email, but generally
+I don't really think it's worth the trouble.
 
-Hmmm... maybe garbage values in unused TF regs?
+> BTW, what exactly will happen if I install an ancient OS like DOS on my
+> (reasonably) modern laptop? I've never tried that but I don't see how
+> the OS would even have a chance to spin the disk down befor power off
+> since there is no way for the user to initiate power off in the OS. Is
+> that anything to do with ACPI support?
+
+DOS had a lot of fun parking programs.  ACPI doesn't have much to do
+with it although the BIOS can use it to stay out of OS's way if the OS
+is calling ACPI to power the machine down.
+
+Thanks.
 
 -- 
 tejun
-
---------------090906050309050009080104
-Content-Type: text/x-patch;
- name="idleimm-dbg.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="idleimm-dbg.patch"
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 8077bdf..f0f3d11 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2649,7 +2649,7 @@ static void ata_eh_park_issue_cmd(struct ata_device *dev, int park)
- 		tf.command = ATA_CMD_CHK_POWER;
- 	}
- 
--	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf.protocol |= ATA_PROT_NODATA;
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
- 	if (park && (err_mask || tf.lbal != 0xc4)) {
-
---------------090906050309050009080104--
