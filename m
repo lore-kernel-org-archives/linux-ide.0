@@ -1,111 +1,35 @@
-From: Elias Oltmanns <eo@nebensachen.de>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [git patches] libata hibernation fixes
-Date: Wed, 05 Nov 2008 01:45:54 +0100
-Message-ID: <87abcfdmpp.fsf@denkblock.local>
-References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no>
-	<fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no>
-	<fa.+bfipgmFkcLlZMtnFL0Ks2zyN8Q@ifi.uio.no>
-	<fa.Iek0GbTZLinM2sOi6+b7bsCgnfs@ifi.uio.no> <4910E240.4000801@shaw.ca>
+Date: Tue, 04 Nov 2008 21:10:27 -0500
+Message-ID: <49110093.5090506@rtr.ca>
+References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no> <fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no> <fa.8GbzH83c2CAI53n9dyzVOFugmoc@ifi.uio.no> <fa.hGdpNHQGmXAR19JiGuHxSr9N9CA@ifi.uio.no> <4910E6CD.9090605@mail.usask.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37883 "EHLO mail.nebensachen.de"
+Received: from rtr.ca ([76.10.145.34]:34079 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329AbYKEAqs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 19:46:48 -0500
+	id S1753541AbYKECJs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 21:09:48 -0500
+In-Reply-To: <4910E6CD.9090605@mail.usask.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Robert Hancock <rwh461@mail.usask.ca>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Pavel Machek <pavel@suse.cz>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Robert Hancock <hancockr@shaw.ca> wrote:
-> Mark Lord wrote:
->> Rafael J. Wysocki wrote:
+Robert Hancock wrote:
 >
->>> On Tuesday, 4 of November 2008, Linus Torvalds wrote:
->>>> On Tue, 4 Nov 2008, Jeff Garzik wrote:
->>>>> This adds code at a late stage (heading towards -rc4), but does
->>>>> eliminate a particular spin-up overcycling behavior associated with
->>>>> hibernation.
->>>> What does this have to do with hibernation?
->>>> If it's a hibernation-only issue, then there is something wrong. 
->>>
->>> No, it is not.  On some machines it is a power-off issue, on the
->>> others it is
->>> hibernation and power-off issue.
->>>
->>>> Also, if it is an issue for normal power-off as well, then I
->>>> wonder why this isn't an issue on Windows. Does windows not spin
->>>> down disks at all?
->>>
->>> In fact, AFAICS, it is an issue on Windows as well, at least if
->>> other-than-HP-preloaded version of Windows is used.
->>>
->>>> IOW, I really don't think this is correct.
->>>> I _do_ think that correct might be:
->>>>
->>>>  - maybe we just do something odd and different, triggering some
->>>> BIOS    behavior that isn't there under Windows.
->>>>
->>>>    So we should power down thigns differently so that the BIOS.
->>>>
->>>>  - quite possibly: we just should not spin down disks at all, and
->>>> just    flush them and do the "park" command thing. If we're
->>>> _really_ powering    off, the disks will spin down on their own
->>>> when power goes away. Maybe    that's what Windows does?
->>>>
->>>> So I really don't want to pull this, because I want to get more of
->>>> an explanation for why we need to do this at all. I also don't
->>>> think this is even appropriate at this stage in -rc.
->>>>
->>>> Is it a regression? If so, that just strengthens the questions
->>>> above - what did _we_ start doing wrong that this is needed at
->>>> all? Let's just stop doing that, not add some idiotic black-list
->>>> for somethign that _we_ do wrong.
->>>
->>> This is a regression, but from something like 2.6.25 or even earlier.
->>> I think what happened is we started to power-off disks at one point
->>> and these
->>> BIOS-es just don't like that.
->>>
->>> [Note that the issue only appears in _some_ HP boxes, other vendors don't
->>> seem to be affected at all.]
->> .
->>
->> So, what happens if we just don't ever spin them down from the kernel?
->> Presumably they still spin-down normally (HP or otherwise) when the BIOS
->> actually cuts the power at the end of all of this?
->>
->> Just curious..
->
-> On many disks (especially laptops) just cutting the power without
-> spinning the disk down is a bad thing to do, as it causes an emergency
-> head unload which causes much more disk wear than a normal controlled
-> unload (which a commanded spindown causes). This is much worse than
-> the problem here, where the disk is spun down, spun up and down again.
->
-> On these systems, not spinning the disk down is fine because the BIOS
-> does it. However this would cause problems on systems where the BIOS
-> doesn't do so as it will cause an emergency unload on power-down.
+> IDLE IMMEDIATE just transitions the device to the Idle state, which is 
+> normally parked/unloaded and spun down.
+..
 
-Ah, but do BIOSes just cut power without spinning disks down first?
-Pressing the power button on my laptop either at the prompt for the HD
-password or in GRUB's menu spins the disk down properly. Isn't that the
-BIOS doing its job?
+No, you're confusing "IDLE" with "STANDBY".  IDLE just puts the drive
+electronics into a lower-power state than "ACTIVE", but normally leaves
+the platters spinning.
 
->
-> From what I have heard, the problem on the HP laptops is thought to be
-> something to do with the disk spinning up and back down when it gets
-> an IDLE IMMEDIATE command (from the BIOS' SMI code, or whatever it is)
-> when it's already spun down (by the kernel). If that's truly the case
-> it's pretty retarded behavior on the disk's part..
+The "UNLOAD" enhancement causes it to also "unload" or "park" (drive's option)
+the heads as part of this action.
 
-IDLE IMMEDIATE is supposed to spin the disk up unless the unload feature
-is requested. You are probably thinking of STANDBY IMMEDIATE. If your
-theory is correct, then a hdparm -y while the drive is in standby mode
-should have a similar effect, i.e. the disk should spin up and down
-again right afterwards. Is that the case?
+"STANDBY" is the command set which parks heads and spins down the platters.
 
-Regards,
-
-Elias
+Cheers
