@@ -1,36 +1,38 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [git patches] libata hibernation fixes
-Date: Wed, 05 Nov 2008 11:17:31 +0900
-Message-ID: <4911023B.20901@kernel.org>
-References: <20081104062734.GA4420@havoc.gtf.org> <200811041753.53342.rjw@sisk.pl> <49107F76.60107@rtr.ca> <200811041807.17183.rjw@sisk.pl>
+Date: Wed, 05 Nov 2008 11:23:07 +0900
+Message-ID: <4911038B.9020003@kernel.org>
+References: <20081104062734.GA4420@havoc.gtf.org> <alpine.LFD.2.00.0811040823350.3419@nehalem.linux-foundation.org> <20081104203036.GE5862@ucw.cz> <alpine.LFD.2.00.0811041307030.3419@nehalem.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36473 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:32926 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753937AbYKECSg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:18:36 -0500
-In-Reply-To: <200811041807.17183.rjw@sisk.pl>
+	id S1753748AbYKECXW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 21:23:22 -0500
+In-Reply-To: <alpine.LFD.2.00.0811041307030.3419@nehalem.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Mark Lord <liml@rtr.ca>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Pavel Machek <pavel@suse.cz>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Rafael J. Wysocki wrote:
->> So, what happens if we just don't ever spin them down from the kernel?
->> Presumably they still spin-down normally (HP or otherwise) when the BIOS
->> actually cuts the power at the end of all of this?
->>
->> Just curious..
+Linus Torvalds wrote:
 > 
-> Well, I'll let Tejun answer that. :-)
+> On Tue, 4 Nov 2008, Pavel Machek wrote:
+>> (Is park command normally supported on modern disks? IIRC hdaps people
+>> had issues with not all disks supporting it?)
+> 
+> The modern version of parking is called "idle immediate". It may be that 
+> only laptop drives support the "unload" part. But it's definitely not an 
+> ancient and deprecated thing (although calling it "parking" is apparently 
+> old-fashioned :)
 
-The BIOSen on the affected HP ones will spin the drives down during
-power off or hibernation, so there won't be any problem (that's what the
-patch does, BTW).  For all other machines, the drive will do emergency
-head unload which usually sounds a bit differently and shortens the
-lifespan of the drive.
+I'm afraid trying to use that new extension during shutdown would cause
+far more trouble which would require extensive black/white list at the
+end.  For hdaps, it's okay as the laptops w/ those sensors are supposed
+to have matching hard drive but using it on generic machines doesn't
+sound like a sane idea.
 
 Thanks.
 
