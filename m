@@ -1,137 +1,92 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Re: hdparm-9.2 now available: w/ DCO and firmware support
-Date: Tue, 4 Nov 2008 16:55:25 -0500
-Message-ID: <87f94c370811041355n43ed46f3p13749ac0ec8f9c99@mail.gmail.com>
-References: <490F4030.5030709@rtr.ca>
-	 <87f94c370811041001ucd76d27lc948c553ad2a381e@mail.gmail.com>
-	 <49108F96.8010902@rtr.ca>
-	 <87f94c370811041023s3de41ec9o66614bf3f0fdb63c@mail.gmail.com>
-	 <49109EDE.1020803@rtr.ca>
-	 <87f94c370811041304r1ad54bd9tee4c2b7de4cb873f@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [git patches] libata hibernation fixes
+Date: Tue, 04 Nov 2008 18:01:04 -0600
+Message-ID: <4910E240.4000801@shaw.ca>
+References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no> <fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no> <fa.+bfipgmFkcLlZMtnFL0Ks2zyN8Q@ifi.uio.no> <fa.Iek0GbTZLinM2sOi6+b7bsCgnfs@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:31725 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754380AbYKDVz1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Nov 2008 16:55:27 -0500
-Received: by an-out-0708.google.com with SMTP id d40so367165and.1
-        for <linux-ide@vger.kernel.org>; Tue, 04 Nov 2008 13:55:25 -0800 (PST)
-In-Reply-To: <87f94c370811041304r1ad54bd9tee4c2b7de4cb873f@mail.gmail.com>
-Content-Disposition: inline
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:21293 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757988AbYKEABI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Nov 2008 19:01:08 -0500
+In-Reply-To: <fa.Iek0GbTZLinM2sOi6+b7bsCgnfs@ifi.uio.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Nov 4, 2008 at 4:04 PM, Greg Freemyer <greg.freemyer@gmail.com> wrote:
-> On Tue, Nov 4, 2008 at 2:13 PM, Mark Lord <liml@rtr.ca> wrote:
->> Greg Freemyer wrote:
+Mark Lord wrote:
+> Rafael J. Wysocki wrote:
+>> On Tuesday, 4 of November 2008, Linus Torvalds wrote:
+>>> On Tue, 4 Nov 2008, Jeff Garzik wrote:
+>>>> This adds code at a late stage (heading towards -rc4), but does
+>>>> eliminate a particular spin-up overcycling behavior associated with
+>>>> hibernation.
+>>> What does this have to do with hibernation?
+>>> If it's a hibernation-only issue, then there is something wrong. 
+>>
+>> No, it is not.  On some machines it is a power-off issue, on the 
+>> others it is
+>> hibernation and power-off issue.
+>>
+>>> Also, if it is an issue for normal power-off as well, then I wonder 
+>>> why this isn't an issue on Windows. Does windows not spin down disks 
+>>> at all?
+>>
+>> In fact, AFAICS, it is an issue on Windows as well, at least if
+>> other-than-HP-preloaded version of Windows is used.
+>>
+>>> IOW, I really don't think this is correct.
+>>> I _do_ think that correct might be:
 >>>
->>> On Tue, Nov 4, 2008 at 1:08 PM, Mark Lord <liml@rtr.ca> wrote:
->>
->> ..
->>>>
->>>> Mmm.. never thought about that much before now,
->>>> but DCO is a nifty way to hide much of a drive from prying eyes.
->>>> Eg. Use DCO to restrict the drive to LBA28 accessible sectors
->>>> and also turn off LBA48 support, and then a lot of space becomes
->>>> "hidden".
->>>> Until now!
+>>>  - maybe we just do something odd and different, triggering some BIOS 
+>>>    behavior that isn't there under Windows.
 >>>
->>> Yeah, combine that with some HPA shenanigans and you can create two
->>> complete disk partition layouts on one drive.
+>>>    So we should power down thigns differently so that the BIOS.
 >>>
->>> ie. Two partition tables, the normal partition table for the first 128
->>> GiB is in sector 1.  The partition table for the rest of the disk is
->>> at sector 128 GiB + 1.  Then use DCO to totally hide the upper section
->>> of the drive.
+>>>  - quite possibly: we just should not spin down disks at all, and 
+>>> just    flush them and do the "park" command thing. If we're _really_ 
+>>> powering    off, the disks will spin down on their own when power 
+>>> goes away. Maybe    that's what Windows does?
 >>>
->>> When you want access, use DCO commands to expose it, and then HPA
->>> commands to make only the sectors beyond 128 GiB accessible.
->>
->> ..
->>
->> Now that one has me stumped.  The only HPA commands I know of,
->> permit setting only the maximum-LBA, not the minimum.
->> Or is this a newish ATA9 (or last-minute ATA8) sort of thing ?
->> ..
+>>> So I really don't want to pull this, because I want to get more of an 
+>>> explanation for why we need to do this at all. I also don't think 
+>>> this is even appropriate at this stage in -rc.
 >>>
->>> to the end of the disk, then issue a "hpa swap" command.  That will
->>> hide the first 128 GiB and expose the rest of the disk.
+>>> Is it a regression? If so, that just strengthens the questions above 
+>>> - what did _we_ start doing wrong that this is needed at all? Let's 
+>>> just stop doing that, not add some idiotic black-list for somethign 
+>>> that _we_ do wrong.
 >>
->> ..
+>> This is a regression, but from something like 2.6.25 or even earlier.
+>> I think what happened is we started to power-off disks at one point 
+>> and these
+>> BIOS-es just don't like that.
 >>
->> Yeah.. what's this "hpa swap" ?  Possibly a vendor-specific op, perhaps?
->>
->> Cheers
->>
-> Mark,
->
-> I don't know the details,
+>> [Note that the issue only appears in _some_ HP boxes, other vendors don't
+>> seem to be affected at all.]
+> .
+> 
+> So, what happens if we just don't ever spin them down from the kernel?
+> Presumably they still spin-down normally (HP or otherwise) when the BIOS
+> actually cuts the power at the end of all of this?
+> 
+> Just curious..
 
-<snip>
+On many disks (especially laptops) just cutting the power without 
+spinning the disk down is a bad thing to do, as it causes an emergency 
+head unload which causes much more disk wear than a normal controlled 
+unload (which a commanded spindown causes). This is much worse than the 
+problem here, where the disk is spun down, spun up and down again.
 
-I got curious.  It is in a 7 or 8 year old spec.
+On these systems, not spinning the disk down is fine because the BIOS 
+does it. However this would cause problems on systems where the BIOS 
+doesn't do so as it will cause an emergency unload on power-down.
 
-T13
-1407DT
-
->From Draft 5:  (http://www.t13.org/Documents/UploadedDocuments/project/d1407r5-Address-Offset.doc)
-
-3.	Address Offset Mode operation
-
-3.1	Enable/Disable Address Offset Mode
-
-In devices that support the Address Offset feature, the SET FEATURES
-subcommand 09h Enable Address Offset Mode, offsets address Cylinder 0,
-Head 0, Sector 1, LBA 0, to the start of the non-volatile protected
-area established using the SET MAX ADDRESS Command.
-
-The Address Offset condition is cleared by the SET FEATURES subcommand
-89h Disable Address Offset Mode,  a hardware reset or a power-on
-reset.
-
-If Reverting to Power on Defaults has been enabled by a SET FEATURES
-command, it is cleared by software reset as well.
-
-Upon entering the Address Offset mode the capacity of the drive
-returned in the Identify device data is the size of the former
-protected area. A subsequent SET MAX ADDRESS command using the address
-returned by the  READ NATIVE MAX ADDRESS command allows access to the
-entire drive. Addresses wrap so the entire drive remains addressable
-(see figure 1).
-
-If a non-volatile reserved area has not been established before the
-device receives a SET FEATURES Enable Address Offset Mode command, the
-command fails with Abort error status.
-
-The Disable Address Offset Mode removes the address offset and sets
-the size of the drive reported by the IDENTIFY DEVICE command back to
-the size specified in the last non-volatile SET MAX ADDRESS command.
-
-3.2	IDENTIFY DEVICE
-
-IDENTIFY DEVICE word 83 bit 07, if set to one, indicates the device
-supports the Address Offset Mode. IDENTIFY DEVICE word 86 bit 07, if
-set to one, indicates the device is in Address Offset Mode.
-
-3.3	SET MAX ADDRESS
-
-Issuing the SET MAX ADDRESS command with bit 0 in the Sector Count
-register set to one is not valid when the device is in Address Offset
-Mode.
-
-HTH
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+ From what I have heard, the problem on the HP laptops is thought to be 
+something to do with the disk spinning up and back down when it gets an 
+IDLE IMMEDIATE command (from the BIOS' SMI code, or whatever it is) when 
+it's already spun down (by the kernel). If that's truly the case it's 
+pretty retarded behavior on the disk's part..
