@@ -1,66 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [git patches] libata hibernation fixes
-Date: Wed, 05 Nov 2008 11:42:31 +0900
-Message-ID: <49110817.60000@kernel.org>
-References: <20081104062734.GA4420@havoc.gtf.org> <alpine.LFD.2.00.0811040823350.3419@nehalem.linux-foundation.org>
+From: James Andrewartha <jamesa@daa.com.au>
+Subject: Re: trouble with seagate 1.5TB - 2.6.27.4
+Date: Wed, 05 Nov 2008 13:44:28 +0900
+Message-ID: <491124AC.2030406@daa.com.au>
+References: <000901c93b0a$774ff3d0$b902a8c0@kyle>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46363 "EHLO hera.kernel.org"
+Received: from quoll.daa.com.au ([203.17.251.1]:38984 "EHLO quoll.daa.com.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601AbYKECmo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:42:44 -0500
-In-Reply-To: <alpine.LFD.2.00.0811040823350.3419@nehalem.linux-foundation.org>
+	id S1754508AbYKEEzV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 23:55:21 -0500
+In-Reply-To: <000901c93b0a$774ff3d0$b902a8c0@kyle>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: kyle <kylewong@southa.com>
+Cc: linux-ide@vger.kernel.org
 
-Linus Torvalds wrote:
->  - maybe we just do something odd and different, triggering some BIOS 
->    behavior that isn't there under Windows.
->    So we should power down thigns differently so that the BIOS.
+kyle wrote:
+> Please cc me if possible.
+> 
+> I just built a new server with some seagate 1.5TB harddisks with mirrored
+> /boot and root partition , The system sometime degrade the root partition
+> with error message as follow, this happened 4 times within 2 days.
 
-These HP machines require patched storage driver to avoid the same
-problem, so it's not a generic problem and Windows is doing its own
-blacklisting in its own way.
-
->  - quite possibly: we just should not spin down disks at all, and just 
->    flush them and do the "park" command thing. If we're _really_ powering 
->    off, the disks will spin down on their own when power goes away. Maybe 
->    that's what Windows does?
-
-I'm fairly sure they do about the same thing we do (FLUSH followed by
-STANDBY_IMMEDIATE).  The only problem we've seen regarding harddrive
-shutdown or suspend sequence is a BIOS wrongfully assuming the
-controller is turned on and goes bonkers on suspend (this, we might want
-to change, not much point in turning off all the PCI controllers before
-entering suspend, is there?) and these HP machines which like to issue
-STANDBY_IMMEDIATE of its own and also breaks on stock Windows.
-
-> So I really don't want to pull this, because I want to get more of an 
-> explanation for why we need to do this at all. I also don't think this is 
-> even appropriate at this stage in -rc.
-
-They were supposed to go in during -rc1 but there was a misunderstanding
-while handing off patches I collected during Jeff's vacation and they
-got lost inbetween.  I apologize for the late submission but this
-problem can shorten life span of hard drives considerably && applies
-only to a small set of machines, so I hope this can go in for 2.6.28.
-
-> Is it a regression? If so, that just strengthens the questions above - 
-> what did _we_ start doing wrong that this is needed at all? Let's just 
-> stop doing that, not add some idiotic black-list for somethign that _we_ 
-> do wrong.
-
-It's a regression in a sense that a long while ago, libata didn't do any
-spindown at all, which, again, was a regression from drivers/ide.  So,
-the question whether this problem is a regression or not is sort of
-irrelevant here.  It's plainly a ugly workaround for ugly hardware
-situation and Windows does it in even uglier way.
-
-Thanks.
+It appears that model of drive is broken:
+http://forums.seagate.com/stx/board/message?board.id=ata_drives&thread.id=2390
+http://www.techreport.com/discussions.x/15837
+Apparently disabling the write cache is a workaround.
 
 -- 
-tejun
+James Andrewartha
