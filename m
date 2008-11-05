@@ -1,65 +1,45 @@
-From: "kyle" <kylewong@southa.com>
-Subject: Re: trouble with seagate 1.5TB - 2.6.27.4
-Date: Wed, 5 Nov 2008 13:47:06 +0800
-Message-ID: <009c01c93f09$efc54bf0$b902a8c0@kyle>
-References: <000901c93b0a$774ff3d0$b902a8c0@kyle> <491124AC.2030406@daa.com.au> <491129D5.2070009@rtr.ca>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: Subject: [PATCH] block: fix __blkdev_get() for removable
+	devices
+Date: Wed, 5 Nov 2008 10:04:50 +0100
+Message-ID: <20081105090449.GA9269@gollum.tnic>
+References: <20081029071319.GA9205@gollum.tnic> <20081101201419.GA29462@gollum.tnic> <490F1AC6.8000109@kernel.org> <9ea470500811030956k209b2f2ci10bcde1ea4ac7334@mail.gmail.com> <490FCC87.1070205@kernel.org>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.southa.com ([125.215.237.177]:43871 "HELO southa.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750884AbYKEFQR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Nov 2008 00:16:17 -0500
+Received: from fk-out-0910.google.com ([209.85.128.190]:51751 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754124AbYKEJEv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Nov 2008 04:04:51 -0500
+Content-Disposition: inline
+In-Reply-To: <490FCC87.1070205@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Tue, Nov 04, 2008 at 01:16:07PM +0900, Tejun Heo wrote:
+> Commit 0762b8bde9729f10f8e6249809660ff2ec3ad735 moved disk_get_part()
+> in front of recursive get on the whole disk, which caused removable
+> devices to try disk_get_part() before rescanning after a new media is
+> inserted, which might fail legit open attempts or give the old
+> partition.
+> 
+> This patch fixes the problem by moving disk_get_part() after
+> __blkdev_get() on the whole disk.
+> 
+> This problem was spotted by Borislav Petkov.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: <Borislav Petkov> petkovbb@googlemail.com
+> ---
+> Borislav, can you please verify this patch?  Thanks.
 
------ Original Message ----- 
-From: "Mark Lord" <liml@rtr.ca>
-To: "James Andrewartha" <jamesa@daa.com.au>
-Cc: "kyle" <kylewong@southa.com>; <linux-ide@vger.kernel.org>
-Sent: Wednesday, November 05, 2008 1:06 PM
-Subject: Re: trouble with seagate 1.5TB - 2.6.27.4
+Yep, it works. Thanks.
 
+Tested-by: Borislav Petkov <petkovbb@gmail.com>
 
-> James Andrewartha wrote:
-> > kyle wrote:
-> >> Please cc me if possible.
-> >>
-> >> I just built a new server with some seagate 1.5TB harddisks with
-mirrored
-> >> /boot and root partition , The system sometime degrade the root
-partition
-> >> with error message as follow, this happened 4 times within 2 days.
-> >
-> > It appears that model of drive is broken:
-> >
-http://forums.seagate.com/stx/board/message?board.id=ata_drives&thread.id=2390
-> > http://www.techreport.com/discussions.x/15837
-> > Apparently disabling the write cache is a workaround.
-> >..
->
-> Heh, I wonder if there's been some firmware spying between Seagate and
-Hitachi..
-> because my two Hitachi 750GB drives can be made to have the same problem.
->
-> Triggers quite reliably (perhaps 1/5 attempts?) by running "hddtemp"
-> (to read drive temperature) during heavy I/O.  Bingo.
->
-> I imagine the smartmontools would have a similar effect.
->
-> Cheers
->
-
-Now I have to rebuild the raid everyday since every morning when I check out
-the mirrored root partition, one of the drives (not always the same) fails
-with the mentioned error. Strange the the 6x1.5TB raid 0 storage partition
-even down because of this.
-
-Kyle
-
-
+-- 
+Regards/Gruss,
+    Boris.
