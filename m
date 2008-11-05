@@ -1,40 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
+From: Robert Hancock <hancockr@shaw.ca>
 Subject: Re: [git patches] libata hibernation fixes
-Date: Wed, 05 Nov 2008 11:23:07 +0900
-Message-ID: <4911038B.9020003@kernel.org>
-References: <20081104062734.GA4420@havoc.gtf.org> <alpine.LFD.2.00.0811040823350.3419@nehalem.linux-foundation.org> <20081104203036.GE5862@ucw.cz> <alpine.LFD.2.00.0811041307030.3419@nehalem.linux-foundation.org>
+Date: Tue, 04 Nov 2008 20:24:10 -0600
+Message-ID: <491103CA.7090905@shaw.ca>
+References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no> <fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no> <fa.8GbzH83c2CAI53n9dyzVOFugmoc@ifi.uio.no> <fa.hGdpNHQGmXAR19JiGuHxSr9N9CA@ifi.uio.no> <4910E6CD.9090605@mail.usask.ca> <49110093.5090506@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:32926 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753748AbYKECXW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:23:22 -0500
-In-Reply-To: <alpine.LFD.2.00.0811041307030.3419@nehalem.linux-foundation.org>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:3369 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896AbYKECYO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Nov 2008 21:24:14 -0500
+In-Reply-To: <49110093.5090506@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Pavel Machek <pavel@suse.cz>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Pavel Machek <pavel@suse.cz>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Linus Torvalds wrote:
+Mark Lord wrote:
+> Robert Hancock wrote:
+>>
+>> IDLE IMMEDIATE just transitions the device to the Idle state, which is 
+>> normally parked/unloaded and spun down.
+> ..
 > 
-> On Tue, 4 Nov 2008, Pavel Machek wrote:
->> (Is park command normally supported on modern disks? IIRC hdaps people
->> had issues with not all disks supporting it?)
+> No, you're confusing "IDLE" with "STANDBY".  IDLE just puts the drive
+> electronics into a lower-power state than "ACTIVE", but normally leaves
+> the platters spinning.
 > 
-> The modern version of parking is called "idle immediate". It may be that 
-> only laptop drives support the "unload" part. But it's definitely not an 
-> ancient and deprecated thing (although calling it "parking" is apparently 
-> old-fashioned :)
+> The "UNLOAD" enhancement causes it to also "unload" or "park" (drive's 
+> option)
+> the heads as part of this action.
+> 
+> "STANDBY" is the command set which parks heads and spins down the platters.
 
-I'm afraid trying to use that new extension during shutdown would cause
-far more trouble which would require extensive black/white list at the
-end.  For hdaps, it's okay as the laptops w/ those sensors are supposed
-to have matching hard drive but using it on generic machines doesn't
-sound like a sane idea.
-
-Thanks.
-
--- 
-tejun
+Right, STANDBY IMMEDIATE was the one I was thinking of.
