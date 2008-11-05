@@ -1,52 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [git patches] libata hibernation fixes
-Date: Wed, 05 Nov 2008 11:30:22 +0900
-Message-ID: <4911053E.9070103@kernel.org>
-References: <fa.Ast7pgG6P20u1PcyOsfgzoaX5YA@ifi.uio.no>	<fa.1+JQHm7yjIiZJxAzR0eBPn39a9M@ifi.uio.no>	<fa.+bfipgmFkcLlZMtnFL0Ks2zyN8Q@ifi.uio.no>	<fa.Iek0GbTZLinM2sOi6+b7bsCgnfs@ifi.uio.no> <4910E240.4000801@shaw.ca> <87abcfdmpp.fsf@denkblock.local>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: hdparm-9.2 now available: w/ DCO and firmware support
+Date: Tue, 04 Nov 2008 21:34:44 -0500
+Message-ID: <49110644.4070709@rtr.ca>
+References: <490F4030.5030709@rtr.ca>	 <87f94c370811041001ucd76d27lc948c553ad2a381e@mail.gmail.com>	 <49108F96.8010902@rtr.ca>	 <87f94c370811041023s3de41ec9o66614bf3f0fdb63c@mail.gmail.com>	 <49109EDE.1020803@rtr.ca>	 <87f94c370811041304r1ad54bd9tee4c2b7de4cb873f@mail.gmail.com> <87f94c370811041355n43ed46f3p13749ac0ec8f9c99@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35371 "EHLO hera.kernel.org"
+Received: from rtr.ca ([76.10.145.34]:50113 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753748AbYKECa5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Nov 2008 21:30:57 -0500
-In-Reply-To: <87abcfdmpp.fsf@denkblock.local>
+	id S1753601AbYKECeF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2008 21:34:05 -0500
+In-Reply-To: <87f94c370811041355n43ed46f3p13749ac0ec8f9c99@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Robert Hancock <hancockr@shaw.ca>, Mark Lord <liml@rtr.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Elias Oltmanns wrote:
->> On these systems, not spinning the disk down is fine because the BIOS
->> does it. However this would cause problems on systems where the BIOS
->> doesn't do so as it will cause an emergency unload on power-down.
+Greg Freemyer wrote:
+>..
+> I got curious.  It is in a 7 or 8 year old spec.
 > 
-> Ah, but do BIOSes just cut power without spinning disks down first?
-> Pressing the power button on my laptop either at the prompt for the HD
-> password or in GRUB's menu spins the disk down properly. Isn't that the
-> BIOS doing its job?
+> T13
+> 1407DT
+> 
+>>From Draft 5:  (http://www.t13.org/Documents/UploadedDocuments/project/d1407r5-Address-Offset.doc)
+> 
+> 3.	Address Offset Mode operation
+..
 
-Drives don't like emergency unloads but they are designed to take
-some.  BIOS diddling with the storage controller behind OS's back
-causes a lot of trouble.  On certain machines, the BIOS expects the
-storage controller to be in certain state on suspend and tries to
-issue commands assuming that particular state triggering a minute long
-CPU burn before finally entering suspend.  It just isn't worth it and
-if BIOS wants to do it, it should be smart and don't do it if the
-system is powering off in orderly manner (that is, driven by OS).
+Ahh.. yes.  hdparm reports this from the IDENTIFY data (-I),
+but I haven't had a drive that supports it since, well, a long time ago.
 
-The double spindown happens due to combination of weirdities in the
-BIOS and drive firmware.  Some drives like to spin up on FLUSH while
-spun down even when the buffer is empty.  Others like to spin up on
-STANDBY_IMMEDIATE recevied while spun down and then spin back down.
-
-My guess is HP added BIOS spin down feature to BIOS and tested with
-certain flavors of drives and then later found out that other drives
-suffer from the new BIOS behavior and patched up their preloaded
-windows driver.  It's a messy case requiring a messy workaround.
-
-Thanks.
-
--- 
-tejun
+Thanks!
