@@ -1,39 +1,59 @@
-From: Evgeni Golov <sargentd@die-welt.net>
-Subject: Re: Odd behaviour of device in response to idleimmediate with
- unload
-Date: Wed, 5 Nov 2008 20:34:51 +0100
-Message-ID: <20081105193452.84DB91FD87@chi.die-welt.net>
-References: <871vxrzssj.fsf@denkblock.local>
-	<491026AB.1090704@kernel.org>
-	<20081104123211.A86321FD5A@chi.die-welt.net>
-	<49108120.6000205@rtr.ca>
-	<491083CC.5050508@rtr.ca>
-	<49108AA0.1080507@rtr.ca>
-	<491090BC.5060403@rtr.ca>
-	<20081104185444.3BE721FDF7@chi.die-welt.net>
-	<4910A509.1030307@rtr.ca>
-	<49116811.5000109@kernel.org>
-	<873ai6cmio.fsf@denkblock.local>
-	<4911A8EA.8030605@kernel.org>
+From: Marc Pignat <marc.pignat@hevs.ch>
+Subject: [PATCH] pata_pcmcia: another memory card support
+Date: Thu, 6 Nov 2008 11:44:34 +0100
+Message-ID: <200811061144.35556.marc.pignat@hevs.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chi.die-welt.net ([84.246.123.210]:40817 "EHLO chi.die-welt.net"
+Received: from mail.hevs.ch ([153.109.23.10]:33398 "EHLO mail.hevs.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752858AbYKETfA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Nov 2008 14:35:00 -0500
-In-Reply-To: <4911A8EA.8030605@kernel.org>
+	id S1753389AbYKFKon (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Nov 2008 05:44:43 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-pcmcia@lists.infradead.org
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 05 Nov 2008 23:08:42 +0900 Tejun Heo wrote:
+Support for Apacer photo steno pro card.
 
-> Ah... it's ata_piix, right?
+Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+---
 
-It's ahci (Intel Corporation 82801GBM/GHM (ICH7 Family) SATA AHCI
-Controller (rev 02)).
+Hi all!
 
-Regards
+Here is a new ID for ide-cs and pata_pcmcia. I tried all the card
+I can find in the labs, only this one was unknown.
+
+Best regards
+
+Marc
+
+
+
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index 271cb64..64b2e22 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -416,6 +416,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+ 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+ 	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+ 	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
++	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+ 	PCMCIA_DEVICE_NULL,
+ };
+ 
+diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
+index cb199c8..f50210f 100644
+--- a/drivers/ide/ide-cs.c
++++ b/drivers/ide/ide-cs.c
+@@ -444,6 +444,7 @@ static struct pcmcia_device_id ide_ids[] = {
+ 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+ 	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+ 	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
++	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+ 	PCMCIA_DEVICE_NULL,
+ };
+ MODULE_DEVICE_TABLE(pcmcia, ide_ids);
