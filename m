@@ -1,36 +1,53 @@
-From: Komuro <komurojun-mbn@nifty.com>
-Subject: Re: [PATCH] pata_pcmcia: another memory card support
-Date: Fri, 7 Nov 2008 06:09:21 +0900
-Message-ID: <20081107060921.ad18bb83.komurojun-mbn@nifty.com>
-References: <200811061144.35556.marc.pignat@hevs.ch>
-	<20081106205522.1c86a44b.komurojun-mbn@nifty.com>
-	<200811061309.26939.marc.pignat@hevs.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11943] Boot fails at scsi0:MESH with hde: lost interrupt, AEC6260
+Date: Thu,  6 Nov 2008 15:50:46 -0800 (PST)
+Message-ID: <20081106235046.72D3E108040@picon.linux-foundation.org>
+References: <bug-11943-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userg501.nifty.com ([202.248.238.81]:33506 "EHLO
-	userg501.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753801AbYKFVOX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Nov 2008 16:14:23 -0500
-In-Reply-To: <200811061309.26939.marc.pignat@hevs.ch>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36903 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752294AbYKFXus (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Nov 2008 18:50:48 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA6Nokj6015818
+	for <linux-ide@vger.kernel.org>; Thu, 6 Nov 2008 15:50:47 -0800
+In-Reply-To: <bug-11943-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Pignat <marc.pignat@hevs.ch>
-Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11943
 
 
-> > 
-> > > +	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+
+
+
+------- Comment #5 from eshaffer1@mac.com  2008-11-06 15:50 -------
+(In reply to comment #2)
+> Could you try some newer kernel like 2.6.27 or 2.6.28-rc3?
 > 
-> I don't want to hardcode the size, however I'm not sure if other size have the
-> same prod_id2. " 512MB" with the space at the begginning let me hope there is
-> some card exists with 1024, 2048, ... or anything else in that place.
+> Also did it work OK with some earlier kernel?
+> 
+> [ From the bugreport it seems that kernel from Live CD works OK? ]
+> 
+> Thanks.
 > 
 
-OK. You are right.
-Thanks!
+I am happy to  attempt a newer kernel if I can. While technically minded, I am
+fairly new to Linux and can only load from Live CD or alt CD. Research to date
+hasn't shown updating kernel from CD as possible...?
+
+Hardy (2.6.24-19) failed at the same point in the boot process as Intrepid. No
+other kernel attempted to date. 
+
+The Hardy Live CD worked flawlessly, even wireless connection, which is why I
+installed. I presumed if the Live CD worked it meant an install would also.
+
+I have also tried startx from terminal at root (hde3) on rescue cd, Ibex loads
+but keyboard and mouse are unresponsive.
 
 
-Best Regards
-Komuro
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
