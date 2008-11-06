@@ -1,61 +1,85 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: Odd behaviour of device in response to idleimmediate with unload
-Date: Thu, 06 Nov 2008 12:41:45 +0100
-Message-ID: <87k5bhxerq.fsf@denkblock.local>
-References: <871vxrzssj.fsf@denkblock.local> <491026AB.1090704@kernel.org>
-	<20081104123211.A86321FD5A@chi.die-welt.net> <49108120.6000205@rtr.ca>
-	<491083CC.5050508@rtr.ca> <49108AA0.1080507@rtr.ca>
-	<491090BC.5060403@rtr.ca> <20081104185444.3BE721FDF7@chi.die-welt.net>
-	<4910A509.1030307@rtr.ca> <49116811.5000109@kernel.org>
-	<873ai6cmio.fsf@denkblock.local> <4911A8EA.8030605@kernel.org>
+From: Komuro <komurojun-mbn@nifty.com>
+Subject: Re: [PATCH] pata_pcmcia: another memory card support
+Date: Thu, 6 Nov 2008 20:55:22 +0900
+Message-ID: <20081106205522.1c86a44b.komurojun-mbn@nifty.com>
+References: <200811061144.35556.marc.pignat@hevs.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:52898 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753048AbYKFLlz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Nov 2008 06:41:55 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+In-Reply-To: <200811061144.35556.marc.pignat@hevs.ch>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: Marc Pignat <marc.pignat@hevs.ch>
+Cc: linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mark Lord <liml@rtr.ca>, Evgeni Golov <sargentd@die-welt.net>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Tejun Heo <tj@kernel.org> wrote:
-> Elias Oltmanns wrote:
-[...]
->> As a wild guess, I'm wondering whether ata_eh_revalidate_and_attach()
->> has anything to do with it. Unless you have a better suggestion, perhaps
->> the following debug patch would give some useful information.
->
-> I don't have much idea at this point.  To the drive, it shouldn't look
-> any different.  Ah... it's ata_piix, right?  ata_piix doesn't have PHY
-> event IRQ, so it could be that the command issued by hdparm did trigger
-> PHY event but didn't get noticed by EH while the condition triggered by
-> IDLE IMMEDIATE did.  One way to find out would be adding SCR print outs
-> on command completion.
+Hi,
 
-Actually, event notification is turned off during error recovery for
-ahci as well. Additionally, we have the following in the interrupt
-handler of ahci.c:
+Could you post the output of lspcmcia -vv?
 
-	/* If we are getting PhyRdy, this is
- 	 * just a power state change, we should
- 	 * clear out this, plus the PhyRdy/Comm
- 	 * Wake bits from Serror
- 	 */
-	if ((hpriv->flags & AHCI_HFLAG_NO_HOTPLUG) &&
-		(status & PORT_IRQ_PHYRDY)) {
-		status &= ~PORT_IRQ_PHYRDY;
-		ahci_scr_write(&ap->link, SCR_ERROR, ((1 << 16) | (1 << 18)));
-	}
+I think it is better to use "PCMCIA_DEVICE_PROD_ID12"
+instead of "PCMCIA_DEVICE_PROD_ID2"
 
-This suggests to me that hdparm --idle-unload does indeed trigger a phy
-event, but the interrupt handler clears SError. Issuing the unload
-command in EH, on the other hand, does not result in a phy event because
-event notification is disabled. That way, phyrdy and commwake don't get
-cleared in SError in will indicate a hotplug event next time SError is
-checked. Does that make sense? If so, what's to be done about it?
+> +	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
 
-Regards,
 
-Elias
+Best Regards
+Komuro
+
+
+> Support for Apacer photo steno pro card.
+> 
+> Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+> ---
+> 
+> Hi all!
+> 
+> Here is a new ID for ide-cs and pata_pcmcia. I tried all the card
+> I can find in the labs, only this one was unknown.
+> 
+> Best regards
+> 
+> Marc
+> 
+> 
+> 
+> diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+> index 271cb64..64b2e22 100644
+> --- a/drivers/ata/pata_pcmcia.c
+> +++ b/drivers/ata/pata_pcmcia.c
+> @@ -416,6 +416,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+>  	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+>  	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+>  	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
+> +	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+>  	PCMCIA_DEVICE_NULL,
+>  };
+>  
+> diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
+> index cb199c8..f50210f 100644
+> --- a/drivers/ide/ide-cs.c
+> +++ b/drivers/ide/ide-cs.c
+> @@ -444,6 +444,7 @@ static struct pcmcia_device_id ide_ids[] = {
+>  	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+>  	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+>  	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
+> +	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+>  	PCMCIA_DEVICE_NULL,
+>  };
+>  MODULE_DEVICE_TABLE(pcmcia, ide_ids);
+> 
+> _______________________________________________
+> Linux PCMCIA reimplementation list
+> http://lists.infradead.org/mailman/listinfo/linux-pcmcia
+
+
+-- 
+Komuro <komurojun-mbn@nifty.com>
