@@ -1,42 +1,50 @@
-From: Mark Salter <msalter@redhat.com>
-Subject: [PATCH] pata_sch slave devices
-Date: Thu, 06 Nov 2008 08:03:23 -0500
-Message-ID: <1225976603.24291.8.camel@deneb.localdomain>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH #hibern_regress] libata: add missing dummy dmi_first_match()
+Date: Thu, 6 Nov 2008 17:33:50 +0100
+Message-ID: <200811061733.51338.rjw@sisk.pl>
+References: <4911B47A.2010409@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:52312 "EHLO mx2.redhat.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:59827 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753486AbYKFNDZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Nov 2008 08:03:25 -0500
-Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
-	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id mA6D3PNm005403
-	for <linux-ide@vger.kernel.org>; Thu, 6 Nov 2008 08:03:25 -0500
+	id S1750827AbYKFQ33 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Nov 2008 11:29:29 -0500
+In-Reply-To: <4911B47A.2010409@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-I posted this last month, but was prompted to do so again in bz#467457
+On Wednesday, 5 of November 2008, Tejun Heo wrote:
+> Dummy dmi_first_match() definition for !CONFIG_DMI is missing.  Add it.
 
-Add capability flag to support slave devices with pata_sch driver.
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-Signed-off-by: Mark Salter <msalter@redhat.com>
----
-diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
-index c8cc027..6aeeeeb 100644
---- a/drivers/ata/pata_sch.c
-+++ b/drivers/ata/pata_sch.c
-@@ -83,7 +83,7 @@ static struct ata_port_operations sch_pata_ops = {
- };
- 
- static struct ata_port_info sch_port_info = {
--	.flags		= 0,
-+	.flags		= ATA_FLAG_SLAVE_POSS,
- 	.pio_mask	= ATA_PIO4,   /* pio0-4 */
- 	.mwdma_mask	= ATA_MWDMA2, /* mwdma0-2 */
- 	.udma_mask	= ATA_UDMA5,  /* udma0-5 */
+Thanks!
 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  include/linux/dmi.h |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+> index 6e20820..dbce0ce 100644
+> --- a/include/linux/dmi.h
+> +++ b/include/linux/dmi.h
+> @@ -51,6 +51,8 @@ extern int dmi_walk(void (*decode)(const struct dmi_header *));
+>  #else
+>  
+>  static inline int dmi_check_system(const struct dmi_system_id *list) { return 0; }
+> +static inline const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
+> +	{ return NULL; }
+>  static inline const char * dmi_get_system_info(int field) { return NULL; }
+>  static inline const struct dmi_device * dmi_find_device(int type, const char *name,
+>  	const struct dmi_device *from) { return NULL; }
+> 
+> 
 
 
