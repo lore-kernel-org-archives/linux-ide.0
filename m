@@ -1,41 +1,52 @@
-From: Evgeni Golov <sargentd@die-welt.net>
-Subject: Re: Odd behaviour of device in response to idleimmediate with
-	unload
-Date: Fri, 7 Nov 2008 08:48:58 +0100
-Message-ID: <20081107074857.GA6461@dragonheart.kerker.die-welt.net>
-References: <491083CC.5050508@rtr.ca> <49108AA0.1080507@rtr.ca> <491090BC.5060403@rtr.ca> <20081104185444.3BE721FDF7@chi.die-welt.net> <4910A509.1030307@rtr.ca> <49116811.5000109@kernel.org> <873ai6cmio.fsf@denkblock.local> <4911A8EA.8030605@kernel.org> <87k5bhxerq.fsf@denkblock.local> <4913BF3D.3090704@kernel.org>
+From: "KueiHuan Chen" <khchen@synology.com>
+Subject: Re: [PATCH] ata: ata_id_is_ssd() bugfix
+Date: Fri, 7 Nov 2008 22:37:46 +0800
+Message-ID: <788014650811070637k723c74d9s176a3afdcd3618bb@mail.gmail.com>
+References: <200810182222.13281.bzolnier@gmail.com>
+	 <20081019180545.GT19428@kernel.dk>
+	 <200810192052.47819.bzolnier@gmail.com>
+	 <20081019191202.GW19428@kernel.dk> <490694D0.2060804@pobox.com>
+Reply-To: khchen@synology.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chi.die-welt.net ([84.246.123.210]:42437 "EHLO chi.die-welt.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbYKGHtI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Nov 2008 02:49:08 -0500
+Received: from rn-out-0910.google.com ([64.233.170.184]:29900 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019AbYKGOhs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Nov 2008 09:37:48 -0500
+In-Reply-To: <490694D0.2060804@pobox.com>
 Content-Disposition: inline
-In-Reply-To: <4913BF3D.3090704@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, Nov 07, 2008 at 01:08:29PM +0900, Tejun Heo wrote:
-> > This suggests to me that hdparm --idle-unload does indeed trigger a phy
-> > event, but the interrupt handler clears SError. Issuing the unload
-> > command in EH, on the other hand, does not result in a phy event because
-> > event notification is disabled. That way, phyrdy and commwake don't get
-> > cleared in SError in will indicate a hotplug event next time SError is
-> > checked. Does that make sense? If so, what's to be done about it?
-> 
-> Hmmm... if ALPM is enabled, it could explain all.  Enabling ALPM does
-> inhibit event notifications but it doesn't prevent autopsy from
-> interpreting SError as if ALPM is not enabled.
-> 
-> Evgeni, is ALPM enabled?
+I had a transcend 32GB SSD. It use ATA8 but lack of support word 217.
+So this is not really work for all SSD currently...
 
-You mean Aggressive Link Power Management? As patches from here:
-http://www.kernel.org/pub/linux/kernel/people/kristen/patches/SATA/alpm/
-?
-Unless they got merged into 2.6.27 and autoenabled, no, I dont use ALPM :)
+Here is the spec of such SSD
+http://www.transcend.com.tw/support/dlcenter/datasheet/SSD25S-JMI%20Datasheet%20v1.05.pdf
 
-Regards
-Evgeni
+--
+Best Regards,
+KueiHuan-Chen
+
+2008/10/28 Jeff Garzik <jgarzik@pobox.com>
+>
+> It seems highly unlikely that any drive that claims ATA8 would repurpose word 217, therefore upstream logic IMO should look like
+>
+>        if (id[ATA_ID_ROT_SPEED] == 0x01 &&
+>            ((ata_id_major_version(id) >= 8) ||
+>             (a list of ATA6/7 exceptions that Jens wishes to supply)))
+>
+> Regards,
+>
+>        Jeff
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
