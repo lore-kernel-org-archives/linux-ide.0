@@ -1,88 +1,37 @@
-From: Andreas Mohr <andi@lisas.de>
-Subject: 2.6.28-rc3 libata: still "failed to IDENTIFY" on bootup
-Date: Sun, 9 Nov 2008 14:02:31 +0100
-Message-ID: <20081109130231.GA20290@rhlx01.hs-esslingen.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10216] kernel from different versions hangs with some CD/DVD drives
+Date: Sun,  9 Nov 2008 07:53:26 -0800 (PST)
+Message-ID: <20081109155326.83CFE108042@picon.linux-foundation.org>
+References: <bug-10216-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:40965 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751657AbYKINNJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 08:13:09 -0500
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49852 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755268AbYKIPx7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 10:53:59 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9FrQOZ006346
+	for <linux-ide@vger.kernel.org>; Sun, 9 Nov 2008 07:53:27 -0800
+In-Reply-To: <bug-10216-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hello all,
-
-on my Inspiron 8000, I keep getting this on bootup (including the
-ensuing 3 x 5 second delay!):
-
-ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xbfa0 irq 14
-ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xbfa8 irq 15
-Switched to high resolution mode on CPU 0
-ata1.00: ATA-6: IC25N060ATMR04-0, MO3OAD0A, max UDMA/100
-ata1.00: 117210240 sectors, multi 8: LBA48
-ata1.01: ATAPI: TOSHIBA DVD-ROM SD-C2402, X021, max UDMA/33
-ata1.00: configured for UDMA/100
-ata1.01: configured for UDMA/33
-ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata2.00: ATAPI: SONY    CD-RW  CRX700E, 1.4u, max MWDMA2
-ata2.00: configured for MWDMA2
-
-This did not occur with kernels <= config-2.6.24-rc6 and did occur with _all_
-kernels >= config-2.6.26-rc5, if I'm not entirely mistaken (I believe there has been
-a large libata update in between).
-
-# hdparm -I /dev/sr1
-
-/dev/sr1:
-
-ATAPI CD-ROM, with removable media
-        Model Number:       SONY    CD-RW  CRX700E
-        Firmware Revision:  1.4u
-Standards:
-        Likely used CD-ROM ATAPI-1
-Configuration:
-        DRQ response: 50us.
-        Packet size: 12 bytes
-Capabilities:
-        LBA, IORDY(can be disabled)
-        DMA: sdma0 sdma1 sdma2 mdma0 mdma1 *mdma2
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=180ns  IORDY flow control=120ns
-  
+http://bugzilla.kernel.org/show_bug.cgi?id=10216
 
 
-As you can see, ata2.00 AKA /dev/sr1 is a single-drive controller setup,
-if only I knew whether it's hardware-configured
-as Master / Slave or Cable Select...
 
 
-Earlier kernels did not have any IDENTIFY bootup delay (both old-style ide
-and my earlier libata configurations!), but I assume this ""problem"" occured
-due to some _increase_ in verification functionality in later kernels,
-not due to some stupid bug.
 
-So, since earlier kernels did not annoy me with a 15-second delay
-since they didn't detect a problematic controller port configuration,
-what can we do about this now?
+------- Comment #5 from bzolnier@gmail.com  2008-11-09 07:53 -------
+This actually seems to be a controller specific issue (quite surprising at
+that).
+Could you try the fix proposed for bug #11659 (as after the fact it seems to be
+same issue):
 
-How can I figure out my controller configuration? The drive in question
-is a removeable notebook CD writer.
+http://bugzilla.kernel.org/attachment.cgi?id=18748&action=view
 
-If this turns out to be (e.g.) an "illegal" Master-only configuration
-(thus with a "phantom" second drive), then is there a way to blacklist
-(DMI etc.) my notebook model for this check?
-And what if this happens to be a "legal" Cable Select setup which thus
-shouldn't trigger this IDENTIFY problem?
 
-Further thoughts?
-
-Thanks a lot for your very nice ATA/IDE work,
-
-Andreas Mohr
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
