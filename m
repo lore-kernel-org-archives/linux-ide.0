@@ -1,42 +1,33 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11943] Boot fails at scsi0:MESH with hde: lost interrupt, AEC6260
-Date: Sun,  9 Nov 2008 08:58:10 -0800 (PST)
-Message-ID: <20081109165810.20EB5108047@picon.linux-foundation.org>
-References: <bug-11943-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 07/11] ide: use ATA_DMA_* defines in ide-dma-sff.c
+Date: Sun, 09 Nov 2008 20:14:49 +0300
+Message-ID: <49171A89.6070205@ru.mvista.com>
+References: <20081109162219.18999.74912.sendpatchset@localhost.localdomain> <20081109162301.18999.9793.sendpatchset@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53887 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755424AbYKIQ6M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:58:12 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9GwANR010180
-	for <linux-ide@vger.kernel.org>; Sun, 9 Nov 2008 08:58:11 -0800
-In-Reply-To: <bug-11943-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:32754 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755434AbYKIROv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Nov 2008 12:14:51 -0500
+In-Reply-To: <20081109162301.18999.9793.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11943
+Hello.
 
+Bartlomiej Zolnierkiewicz wrote:
 
-alan@lxorguk.ukuu.org.uk changed:
+> In few places open-coded values were still being used.  Fix it.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
+   Oh, you've beaten me to it (and made one of my still pending patches 
+unapplcable :-).
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-
-------- Comment #10 from alan@lxorguk.ukuu.org.uk  2008-11-09 08:58 -------
-If the BIOS isn't getting run then that patch seems plausible IFF the registers
-are the same between the chips. I don't have enough Artop docs here to tell.
-
-Probably worth getting an lspci -vvxxx from it (off a live cd or similar) to
-see what it look slike.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+MBR, Sergei
