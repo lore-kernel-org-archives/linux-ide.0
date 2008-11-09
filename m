@@ -1,91 +1,92 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 6/6] ide: rework handling of serialized ports
-Date: Sun, 9 Nov 2008 15:04:14 +0100
-Message-ID: <200811091504.14279.bzolnier@gmail.com>
-References: <20081103200244.5098.29817.sendpatchset@localhost.localdomain> <491094B2.4090107@ru.mvista.com> <491095C4.3000503@ru.mvista.com>
+Subject: [PATCH] ide-cd: remove dead dsc_overlap setting
+Date: Sun, 9 Nov 2008 15:48:31 +0100
+Message-ID: <200811091548.33137.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.180]:63336 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755771AbYKIQXL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:23:11 -0500
-In-Reply-To: <491095C4.3000503@ru.mvista.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:35481 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755784AbYKIQXN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:23:13 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@googlemail.com>
 
-On Tuesday 04 November 2008, Sergei Shtylyov wrote:
-> Hello, I wrote:
-> 
-> >> Index: b/drivers/ide/ide-probe.c
-> >> ===================================================================
-> >> --- a/drivers/ide/ide-probe.c
-> >> +++ b/drivers/ide/ide-probe.c
-> 
-> > [...]
-> 
-> >> @@ -1436,10 +1398,8 @@ static void ide_init_port(ide_hwif_t *hw
-> >>      }
-> >>  
-> >>      if ((d->host_flags & IDE_HFLAG_SERIALIZE) ||
-> >> -        ((d->host_flags & IDE_HFLAG_SERIALIZE_DMA) && hwif->dma_base)) {
-> >> -        if (hwif->mate)
-> >> -            hwif->mate->serialized = hwif->serialized = 1;
-> >> -    }
-> >> +        ((d->host_flags & IDE_HFLAG_SERIALIZE_DMA) && hwif->dma_base))
-> >> +        hwif->host_flags |= IDE_HFLAG_SERIALIZE;
-> 
-> >    I don't see what use is forcing this flag at all here -- it doesn't 
-> > seem to be checked only in init_irq() now, so this *if* could just be 
-> > moved there...
-> 
->     Oops, rephrasing hurts sometimes: I meant "it seems", of course. :-)
+dsc_overlap setting is not useful anymore for ide-cd so remove
+"dsc_overlap" /proc setting, disallow changing the setting through
+HDIO_SET_NICE ioctl and cleanup ide_cd{rom_setup,_release}().
 
-I prefer to leave it in ide_init_port() because the future ide_hwgroup_t
-removal depends on this flag in deciding whether serialization is needed.
+Cc: Borislav Petkov <petkovbb@googlemail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+for pata-2.6 tree
 
-Actually it is better to force the flag on host instead of port so:
+ drivers/ide/ide-cd.c     |   15 +--------------
+ drivers/ide/ide-ioctls.c |    2 +-
+ 2 files changed, 2 insertions(+), 15 deletions(-)
 
-...
-v2:
-* Set host's ->host_flags field instead of port's copy.
-...
-diff -u b/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
---- b/drivers/ide/hpt366.c
-+++ b/drivers/ide/hpt366.c
-@@ -1303,7 +1303,7 @@
- 		 * Clock is shared between the channels,
- 		 * so we'll have to serialize them... :-(
- 		 */
--		hwif->host_flags |= IDE_HFLAG_SERIALIZE;
-+		hwif->host->host_flags |= IDE_HFLAG_SERIALIZE;
- 		hwif->rw_disk = &hpt3xxn_rw_disk;
- 	}
+Index: b/drivers/ide/ide-cd.c
+===================================================================
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1831,13 +1831,6 @@ static ide_proc_entry_t idecd_proc[] = {
+ 	{ NULL, 0, NULL, NULL }
+ };
+ 
+-ide_devset_rw_flag(dsc_overlap, IDE_DFLAG_DSC_OVERLAP);
+-
+-static const struct ide_proc_devset idecd_settings[] = {
+-	IDE_PROC_DEVSET(dsc_overlap, 0, 1),
+-	{ 0 },
+-};
+-
+ static ide_proc_entry_t *ide_cd_proc_entries(ide_drive_t *drive)
+ {
+ 	return idecd_proc;
+@@ -1845,7 +1838,7 @@ static ide_proc_entry_t *ide_cd_proc_ent
+ 
+ static const struct ide_proc_devset *ide_cd_proc_devsets(ide_drive_t *drive)
+ {
+-	return idecd_settings;
++	return NULL;
  }
-diff -u b/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
---- b/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1030,7 +1030,7 @@
- 		ide_hwif_t *h = ide_ports[index];
+ #endif
  
- 		if (h && h->hwgroup) {  /* scan only initialized ports */
--			if (hwif->host_flags & IDE_HFLAG_SERIALIZE) {
-+			if (hwif->host->host_flags & IDE_HFLAG_SERIALIZE) {
- 				if (hwif->host == h->host)
- 					match = h;
- 			}
-@@ -1399,7 +1399,7 @@
+@@ -1945,11 +1938,6 @@ static int ide_cdrom_setup(ide_drive_t *
+ 	/* set correct block size */
+ 	blk_queue_hardsect_size(drive->queue, CD_FRAMESIZE);
  
- 	if ((d->host_flags & IDE_HFLAG_SERIALIZE) ||
- 	    ((d->host_flags & IDE_HFLAG_SERIALIZE_DMA) && hwif->dma_base))
--		hwif->host_flags |= IDE_HFLAG_SERIALIZE;
-+		hwif->host->host_flags |= IDE_HFLAG_SERIALIZE;
+-	if (drive->next != drive)
+-		drive->dev_flags |= IDE_DFLAG_DSC_OVERLAP;
+-	else
+-		drive->dev_flags &= ~IDE_DFLAG_DSC_OVERLAP;
+-
+ 	if (ide_cdrom_register(drive, nslots)) {
+ 		printk(KERN_ERR PFX "%s: %s failed to register device with the"
+ 				" cdrom driver.\n", drive->name, __func__);
+@@ -1986,7 +1974,6 @@ static void ide_cd_release(struct kref *
+ 	kfree(info->toc);
+ 	if (devinfo->handle == drive)
+ 		unregister_cdrom(devinfo);
+-	drive->dev_flags &= ~IDE_DFLAG_DSC_OVERLAP;
+ 	drive->driver_data = NULL;
+ 	blk_queue_prep_rq(drive->queue, NULL);
+ 	g->private_data = NULL;
+Index: b/drivers/ide/ide-ioctls.c
+===================================================================
+--- a/drivers/ide/ide-ioctls.c
++++ b/drivers/ide/ide-ioctls.c
+@@ -95,7 +95,7 @@ static int ide_set_nice_ioctl(ide_drive_
+ 		return -EPERM;
  
- 	if (d->host_flags & IDE_HFLAG_RQSIZE_256)
- 		hwif->rqsize = 256;
-
+ 	if (((arg >> IDE_NICE_DSC_OVERLAP) & 1) &&
+-	    (drive->media == ide_disk || drive->media == ide_floppy ||
++	    (drive->media != ide_tape ||
+ 	     (drive->dev_flags & IDE_DFLAG_SCSI)))
+ 		return -EPERM;
+ 
