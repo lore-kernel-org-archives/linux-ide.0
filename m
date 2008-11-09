@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 02/11] ide: fix build for DEBUG_PM
-Date: Sun, 09 Nov 2008 17:22:26 +0100
-Message-ID: <20081109162226.18999.89256.sendpatchset@localhost.localdomain>
+Subject: [PATCH 11/11] ide: push local_irq_{save,restore}() to do_identify()
+Date: Sun, 09 Nov 2008 17:23:31 +0100
+Message-ID: <20081109162331.18999.93299.sendpatchset@localhost.localdomain>
 References: <20081109162219.18999.74912.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ey-out-2122.google.com ([74.125.78.27]:60863 "EHLO
 	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755905AbYKIQYZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:24:25 -0500
+	with ESMTP id S1755784AbYKIQZb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:25:31 -0500
 In-Reply-To: <20081109162219.18999.74912.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,78 +15,54 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix build for DEBUG_PM
+Subject: [PATCH] ide: push local_irq_{save,restore}() to do_identify()
 
-Also while at it:
-
-* Drop unused arguments from ide_complete_power_step().
-
-* Move DEBUG_PM printk() from ide_end_drive_cmd() to
-  ide_complete_power_step().
+Push local_irq_{save,restore}() from actual_try_to_identify()
+to do_identify() and remove no longer needed local_irq_enable().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/ide/ide-probe.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Index: b/drivers/ide/ide-io.c
+Index: b/drivers/ide/ide-probe.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -120,10 +120,14 @@ int ide_end_request (ide_drive_t *drive,
- }
- EXPORT_SYMBOL(ide_end_request);
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -116,14 +116,16 @@ static inline void do_identify (ide_driv
+ 	ide_hwif_t *hwif = HWIF(drive);
+ 	u16 *id = drive->id;
+ 	char *m = (char *)&id[ATA_ID_PROD];
++	unsigned long flags;
+ 	int bswap = 1, is_cfa;
  
--static void ide_complete_power_step(ide_drive_t *drive, struct request *rq, u8 stat, u8 error)
-+static void ide_complete_power_step(ide_drive_t *drive, struct request *rq)
- {
- 	struct request_pm_state *pm = rq->data;
++	/* local CPU only; some systems need this */
++	local_irq_save(flags);
+ 	/* read 512 bytes of id info */
+ 	hwif->tp_ops->input_data(drive, NULL, id, SECTOR_SIZE);
++	local_irq_restore(flags);
  
-+#ifdef DEBUG_PM
-+	printk(KERN_INFO "%s: complete_power_step(step: %d)\n",
-+		drive->name, pm->pm_step);
-+#endif
- 	if (drive->media != ide_disk)
- 		return;
+ 	drive->dev_flags |= IDE_DFLAG_ID_READ;
+-
+-	local_irq_enable();
+ #ifdef DEBUG
+ 	printk(KERN_INFO "%s: dumping identify data\n", drive->name);
+ 	ide_dump_identify((u8 *)id);
+@@ -305,17 +307,12 @@ static int actual_try_to_identify (ide_d
+ 	s = tp_ops->read_status(hwif);
  
-@@ -160,7 +164,7 @@ static ide_startstop_t ide_start_power_s
- 		/* Not supported? Switch to next step now. */
- 		if (ata_id_flush_enabled(drive->id) == 0 ||
- 		    (drive->dev_flags & IDE_DFLAG_WCACHE) == 0) {
--			ide_complete_power_step(drive, rq, 0, 0);
-+			ide_complete_power_step(drive, rq);
- 			return ide_stopped;
- 		}
- 		if (ata_id_flush_ext_enabled(drive->id))
-@@ -179,7 +183,7 @@ static ide_startstop_t ide_start_power_s
- 		if (drive->media != ide_disk)
- 			pm->pm_step = IDE_PM_RESTORE_DMA;
- 		else
--			ide_complete_power_step(drive, rq, 0, 0);
-+			ide_complete_power_step(drive, rq);
- 		return ide_stopped;
- 	case IDE_PM_IDLE:		/* Resume step 2 (idle) */
- 		args->tf.command = ATA_CMD_IDLEIMMEDIATE;
-@@ -301,11 +305,8 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 		}
- 	} else if (blk_pm_request(rq)) {
- 		struct request_pm_state *pm = rq->data;
--#ifdef DEBUG_PM
--		printk("%s: complete_power_step(step: %d, stat: %x, err: %x)\n",
--			drive->name, rq->pm->pm_step, stat, err);
--#endif
--		ide_complete_power_step(drive, rq, stat, err);
-+
-+		ide_complete_power_step(drive, rq);
- 		if (pm->pm_step == IDE_PM_COMPLETED)
- 			ide_complete_pm_request(drive, rq);
- 		return;
-@@ -782,7 +783,7 @@ static ide_startstop_t start_request (id
- 			struct request_pm_state *pm = rq->data;
- #ifdef DEBUG_PM
- 			printk("%s: start_power_step(step: %d)\n",
--				drive->name, rq->pm->pm_step);
-+				drive->name, pm->pm_step);
- #endif
- 			startstop = ide_start_power_step(drive, rq);
- 			if (startstop == ide_stopped &&
+ 	if (OK_STAT(s, ATA_DRQ, BAD_R_STAT)) {
+-		unsigned long flags;
+-
+-		/* local CPU only; some systems need this */
+-		local_irq_save(flags);
+ 		/* drive returned ID */
+ 		do_identify(drive, cmd);
+ 		/* drive responded with ID */
+ 		rc = 0;
+ 		/* clear drive IRQ */
+ 		(void)tp_ops->read_status(hwif);
+-		local_irq_restore(flags);
+ 	} else {
+ 		/* drive refused ID */
+ 		rc = 2;
