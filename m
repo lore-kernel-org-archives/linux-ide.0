@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 04/11] ide: remove redundant code from ide_end_drive_cmd()
-Date: Sun, 09 Nov 2008 17:22:40 +0100
-Message-ID: <20081109162240.18999.50977.sendpatchset@localhost.localdomain>
+Subject: [PATCH 03/11] ide: remove dead code from drive_is_ready()
+Date: Sun, 09 Nov 2008 17:22:33 +0100
+Message-ID: <20081109162233.18999.12402.sendpatchset@localhost.localdomain>
 References: <20081109162219.18999.74912.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:37779 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756096AbYKIQYl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:24:41 -0500
+Received: from ey-out-2122.google.com ([74.125.78.27]:60863 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755527AbYKIQYc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:24:32 -0500
 In-Reply-To: <20081109162219.18999.74912.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,26 +15,28 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove redundant code from ide_end_drive_cmd()
+Subject: [PATCH] ide: remove dead code from drive_is_ready()
 
-rq->errors is overwritten later in this function.
+We guarantee 400ns delay at the time of issuing the command.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c |    3 ---
- 1 file changed, 3 deletions(-)
+ drivers/ide/ide-iops.c |    5 -----
+ 1 file changed, 5 deletions(-)
 
-Index: b/drivers/ide/ide-io.c
+Index: b/drivers/ide/ide-iops.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -289,9 +289,6 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
- 		ide_task_t *task = (ide_task_t *)rq->special;
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -457,11 +457,6 @@ int drive_is_ready (ide_drive_t *drive)
+ 	if (drive->waiting_for_dma)
+ 		return hwif->dma_ops->dma_test_irq(drive);
  
--		if (rq->errors == 0)
--			rq->errors = !OK_STAT(stat, ATA_DRDY, BAD_STAT);
+-#if 0
+-	/* need to guarantee 400ns since last command was issued */
+-	udelay(1);
+-#endif
 -
- 		if (task) {
- 			struct ide_taskfile *tf = &task->tf;
- 
+ 	/*
+ 	 * We do a passive status test under shared PCI interrupts on
+ 	 * cards that truly share the ATA side interrupt, but may also share
