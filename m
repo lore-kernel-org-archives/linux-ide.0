@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 05/11] ide: remove inline tags from ide-probe.c
-Date: Sun, 09 Nov 2008 17:22:47 +0100
-Message-ID: <20081109162247.18999.87287.sendpatchset@localhost.localdomain>
+Subject: [PATCH 02/11] ide: fix build for DEBUG_PM
+Date: Sun, 09 Nov 2008 17:22:26 +0100
+Message-ID: <20081109162226.18999.89256.sendpatchset@localhost.localdomain>
 References: <20081109162219.18999.74912.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:40170 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756116AbYKIQYr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:24:47 -0500
+Received: from ey-out-2122.google.com ([74.125.78.27]:60863 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755905AbYKIQYZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2008 11:24:25 -0500
 In-Reply-To: <20081109162219.18999.74912.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,38 +15,78 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove inline tags from ide-probe.c
+Subject: [PATCH] ide: fix build for DEBUG_PM
 
-Let the compiler handle it.
+Also while at it:
+
+* Drop unused arguments from ide_complete_power_step().
+
+* Move DEBUG_PM printk() from ide_end_drive_cmd() to
+  ide_complete_power_step().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ide/ide-io.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
+Index: b/drivers/ide/ide-io.c
 ===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -110,8 +110,8 @@ static void ide_disk_init_mult_count(ide
-  *	read and parse the results. This function is run with
-  *	interrupts disabled. 
-  */
-- 
--static inline void do_identify (ide_drive_t *drive, u8 cmd)
-+
-+static void do_identify(ide_drive_t *drive, u8 cmd)
- {
- 	ide_hwif_t *hwif = HWIF(drive);
- 	u16 *id = drive->id;
-@@ -553,8 +553,8 @@ static void enable_nest (ide_drive_t *dr
-  *			1  device was found
-  *			   (note: IDE_DFLAG_PRESENT might still be not set)
-  */
-- 
--static inline u8 probe_for_drive (ide_drive_t *drive)
-+
-+static u8 probe_for_drive(ide_drive_t *drive)
- {
- 	char *m;
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -120,10 +120,14 @@ int ide_end_request (ide_drive_t *drive,
+ }
+ EXPORT_SYMBOL(ide_end_request);
  
+-static void ide_complete_power_step(ide_drive_t *drive, struct request *rq, u8 stat, u8 error)
++static void ide_complete_power_step(ide_drive_t *drive, struct request *rq)
+ {
+ 	struct request_pm_state *pm = rq->data;
+ 
++#ifdef DEBUG_PM
++	printk(KERN_INFO "%s: complete_power_step(step: %d)\n",
++		drive->name, pm->pm_step);
++#endif
+ 	if (drive->media != ide_disk)
+ 		return;
+ 
+@@ -160,7 +164,7 @@ static ide_startstop_t ide_start_power_s
+ 		/* Not supported? Switch to next step now. */
+ 		if (ata_id_flush_enabled(drive->id) == 0 ||
+ 		    (drive->dev_flags & IDE_DFLAG_WCACHE) == 0) {
+-			ide_complete_power_step(drive, rq, 0, 0);
++			ide_complete_power_step(drive, rq);
+ 			return ide_stopped;
+ 		}
+ 		if (ata_id_flush_ext_enabled(drive->id))
+@@ -179,7 +183,7 @@ static ide_startstop_t ide_start_power_s
+ 		if (drive->media != ide_disk)
+ 			pm->pm_step = IDE_PM_RESTORE_DMA;
+ 		else
+-			ide_complete_power_step(drive, rq, 0, 0);
++			ide_complete_power_step(drive, rq);
+ 		return ide_stopped;
+ 	case IDE_PM_IDLE:		/* Resume step 2 (idle) */
+ 		args->tf.command = ATA_CMD_IDLEIMMEDIATE;
+@@ -301,11 +305,8 @@ void ide_end_drive_cmd (ide_drive_t *dri
+ 		}
+ 	} else if (blk_pm_request(rq)) {
+ 		struct request_pm_state *pm = rq->data;
+-#ifdef DEBUG_PM
+-		printk("%s: complete_power_step(step: %d, stat: %x, err: %x)\n",
+-			drive->name, rq->pm->pm_step, stat, err);
+-#endif
+-		ide_complete_power_step(drive, rq, stat, err);
++
++		ide_complete_power_step(drive, rq);
+ 		if (pm->pm_step == IDE_PM_COMPLETED)
+ 			ide_complete_pm_request(drive, rq);
+ 		return;
+@@ -782,7 +783,7 @@ static ide_startstop_t start_request (id
+ 			struct request_pm_state *pm = rq->data;
+ #ifdef DEBUG_PM
+ 			printk("%s: start_power_step(step: %d)\n",
+-				drive->name, rq->pm->pm_step);
++				drive->name, pm->pm_step);
+ #endif
+ 			startstop = ide_start_power_step(drive, rq);
+ 			if (startstop == ide_stopped &&
