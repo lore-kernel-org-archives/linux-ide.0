@@ -1,67 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration
- bugs
-Date: Mon, 10 Nov 2008 10:07:06 -0500
-Message-ID: <49184E1A.3010508@rtr.ca>
-References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: request to revert libata-convert-to-block-tagging patches
+Date: Mon, 10 Nov 2008 08:00:10 -0800 (PST)
+Message-ID: <alpine.LFD.2.00.0811100754210.3468@nehalem.linux-foundation.org>
+References: <4917C449.2080504@kernel.org> <20081110120533.GB26778@kernel.dk> <20081110120959.GC26778@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:46830 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752259AbYKJPGX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Nov 2008 10:06:23 -0500
-In-Reply-To: <49180B2E.6020604@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754411AbYKJQAn@vger.kernel.org>
+In-Reply-To: <20081110120959.GC26778@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Michael Guntsche <mike@it-loops.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Tejun Heo wrote:
-> (cc'ing Alan, Jeff and Mark).
+
+
+On Mon, 10 Nov 2008, Jens Axboe wrote:
+> > 
+> > Or we could just change the blk-tag.c logic to stop of
+> > find_first_zero_bit() returns >= some_value instead of starting at an
+> > offset? You don't need any extra locking for that.
 > 
-> Hello, guys.
-> 
-> Michael Guntsche wrote:
->> On Mon, 10 Nov 2008 15:52:02 +0900, Tejun Heo <tj@kernel.org> wrote:
->>> Hello,
->>> Looks like our phantom device detection logic is somehow broken.  Can
->>> you please apply the attached patch and report boot log?
->> Here is the output after adding the debug line. Hopefully this helps.
->>
->> ata_piix 0000:00:07.1: version 2.12
->> scsi0 : ata_piix
->> scsi1 : ata_piix
->> ata1: PATA max MWDMA2 cmd 0x1f0 ctl 0x3f6 bmdma 0xe800 irq 14
->> ata2: PATA max MWDMA2 cmd 0x170 ctl 0x376 bmdma 0xe808 irq 15
->> ata1.00: ATA-5: IC35L040AVER07-0, ER4OA45A, max UDMA/100
->> ata1.00: 66055248 sectors, multi 16: LBA
->> ata1.00: configured for MWDMA2
->> ata2.01: XXX status=0x1
->> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
->> ata2.01: XXX status=0x1
->> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
->> ata2.01: XXX status=0x1
->> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
->> ata2.00: ATAPI: SAMSUNG CD-R/RW SW-408B, M300, max MWDMA2
->> ata2.00: configured for MWDMA2
-> 
-> On Michael's real old ata_piix, somehow the ERR bit is set on phantom
-> device defeating our phantom device detection logic.  We can relax
-> phantom device condition but that increases the risk of misdetection on
-> actual IDENTIFY errors.  Any ideas how we can nicely work around this one?
-..
+> Something like the below.
 
-Mmm.. I'm way out of the loop on this now,
-so please pardon me suggesting things known not to work, but..
+No, there were two reasons for doing it the way I did it, and this shows 
+both. One trivial, one subtle.
 
-1. Pay attention to ATA status register on this chipset?
-   Eg. if it has BUSY, or reads 0x7f, then don't IDENTIFY?
-2. Check for device signature before trying IDENTIFY?
-3. Try a r/w test on the data register first, to see if there's
-   really hardware attached to it?
+> +	if (!rq_is_sync(rq))
+> +		max_depth = 3 * max_depth / 4;
 
-Cheers
+The trivial one here is that you round down. Imagine what happens if 
+"max_depth" was 1.
 
+The subtler one was that the 'use starting offset' means that async and 
+sync can _share_ the tagspace, and while you limit async ones to a maximum 
+outstanding number, you really cut down on them only when sync ones really 
+have filled everything up.
 
+In contrast, limiting like the above means that it's much easier to be in 
+the situation where you still have tags to use, but you've used them all 
+for reads, and you refuse to start a single write.
+
+Anyway, I'll do the revert, since -rc4 is too late to discuss these 
+issues. I think we can easily re-do things when everybody is ok with the 
+code.
+
+			Linus
