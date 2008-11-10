@@ -1,43 +1,34 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: Odd behaviour of device in response to idleimmediate with unload
-Date: Mon, 10 Nov 2008 12:35:20 +0100
-Message-ID: <87r65ju83r.fsf@denkblock.local>
-References: <491083CC.5050508@rtr.ca> <49108AA0.1080507@rtr.ca>
-	<491090BC.5060403@rtr.ca> <20081104185444.3BE721FDF7@chi.die-welt.net>
-	<4910A509.1030307@rtr.ca> <49116811.5000109@kernel.org>
-	<873ai6cmio.fsf@denkblock.local> <4911A8EA.8030605@kernel.org>
-	<87k5bhxerq.fsf@denkblock.local> <4913BF3D.3090704@kernel.org>
-	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
-	<4917F822.5060204@kernel.org>
-	<20081110102607.094281FD7C@chi.die-welt.net>
+From: Santiago Vila <sanvila@unex.es>
+Subject: Re: Bug 11581
+Date: Mon, 10 Nov 2008 13:02:02 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0811101258580.12415@cantor.unex.es>
+References: <Pine.LNX.4.64.0810141314590.2555@cantor.unex.es>
+ <9ea470500810140453m6e1f7eb6raf179ee78414e19e@mail.gmail.com>
+ <Pine.LNX.4.64.0810141709450.4529@cantor.unex.es> <20081026154657.GA2578@gollum.tnic>
+ <Pine.LNX.4.64.0810281202010.24944@cantor.unex.es> <20081110063443.GA17946@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:48743 "EHLO mail.nebensachen.de"
+Received: from guadiana.unex.es ([158.49.17.23]:55967 "EHLO guadiana.unex.es"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754492AbYKJLfc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Nov 2008 06:35:32 -0500
-In-Reply-To: <20081110102607.094281FD7C@chi.die-welt.net> (Evgeni Golov's
-	message of "Mon, 10 Nov 2008 11:26:05 +0100")
+	id S1754483AbYKJMCR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Nov 2008 07:02:17 -0500
+In-Reply-To: <20081110063443.GA17946@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Evgeni Golov <sargentd@die-welt.net>
-Cc: Tejun Heo <tj@kernel.org>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: petkovbb@gmail.com
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Evgeni Golov <sargentd@die-welt.net> wrote:
-> On Mon, 10 Nov 2008 18:00:18 +0900 Tejun Heo wrote:
->
->> Is the phy event before or after head unloading?
->
-> How do I check this?
+On Mon, 10 Nov 2008, Borislav Petkov wrote:
 
-# dmesg
-# echo 3000 > /sys/block/sda/device/unload_heads &
-# dmesg
+> Ok, so it looks like your drive gets puzzled again by a
+> GET_CONFIGURATION command despite 2.6.18 which used to work, as you say.
+> But I think it fails this time because you've updated to debian testing
+> and, correct me if I'm wrong, but the udev utility cdrom_id came with
+> the update and it sends all those GET_CONFIGURATION commands. Have you
+> thought of updating the drive's firmware - that helps sometimes?
 
-The first call to dmesg is only to make sure that it is in the cache so
-the second won't be blocked by the park request.
-
-Regards,
-
-Elias
+Ok, I tried that today, using Wine and the root account, but the unit
+is not detected by the firmware updating utility. Which of the multiple
+patched kernels should I try? Neither 2.6.18 or 2.6.26 from Debian
+seem to work this time.
