@@ -1,260 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] libata: revert convert-to-block-tagging patches
-Date: Mon, 10 Nov 2008 14:48:21 +0900
-Message-ID: <4917CB25.7050909@kernel.org>
-References: <4917C449.2080504@kernel.org> <4917C6DD.4010500@kernel.org>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: Bug 11581
+Date: Mon, 10 Nov 2008 07:34:43 +0100
+Message-ID: <20081110063443.GA17946@gollum.tnic>
+References: <Pine.LNX.4.64.0810141314590.2555@cantor.unex.es> <9ea470500810140453m6e1f7eb6raf179ee78414e19e@mail.gmail.com> <Pine.LNX.4.64.0810141709450.4529@cantor.unex.es> <20081026154657.GA2578@gollum.tnic> <Pine.LNX.4.64.0810281202010.24944@cantor.unex.es>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44126 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751868AbYKJFsj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Nov 2008 00:48:39 -0500
-In-Reply-To: <4917C6DD.4010500@kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.158]:60638 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752875AbYKJGex (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2008 01:34:53 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2155284fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 09 Nov 2008 22:34:49 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0810281202010.24944@cantor.unex.es>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Santiago Vila <sanvila@unex.es>
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-This patch reverts the following three commits which convert libata to
-use block layer tagging.
+On Tue, Oct 28, 2008 at 12:04:19PM +0100, Santiago Vila wrote:
 
- 43a49cbdf31e812c0d8f553d433b09b421f5d52c
- e013e13bf605b9e6b702adffbe2853cfc60e7806
- 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e
+[.. ]
 
-Although using block layer tagging is the right direction, due to the
-tight coupling among tag number, data structure allocation and
-hardware command slot allocation, libata doesn't work correctly with
-the current conversion.
+> [    4.756000] ide-cd: Call ide_do_rw_cdrom, rq->cmd[0]: 0x46, rq->flags: 0x2988, block: 0
+> [    4.756000] BLOCK PC:
+> [    4.756000] Original rq: : dev hdc: flags = REQ_SOFTBARRIER REQ_NOMERGE REQ_STARTED REQ_ELVPRIV REQ_BLOCK_PC 
+> [    4.756000] sector 0, nr/cnr 0/0
+> [    4.756000] bio cffc2480, biotail cffc2480, buffer 00000000, data 00000000, len 8
+> [    4.756000] cdb: 46 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 
+> [    4.756000] rq->cmd_len: 10
+> [    4.756000] GET_CONFIGURATION cmd!
+> [    4.756000]  [<d086d89b>] ide_do_rw_cdrom+0x4cd/0x5b7 [ide_cd]
+> [    4.756000]  [<c01be540>] __delay+0x6/0x7
+> [    4.756000]  [<d08460a0>] ide_wait_stat+0xbc/0xf5 [ide_core]
+> [    4.760000]  [<d0844668>] ide_do_request+0x554/0x711 [ide_core]
+> [    4.760000]  [<d08440e3>] ide_end_request+0xc7/0xcf [ide_core]
+> [    4.760000]  [<d086e100>] cdrom_newpc_intr+0x27c/0x2d4 [ide_cd]
+> [    4.760000]  [<d086e20c>] cdrom_pc_intr+0xb4/0x1ef [ide_cd]
+> [    4.760000]  [<d0844a8f>] ide_intr+0x167/0x190 [ide_core]
+> [    4.760000]  [<c013f81b>] handle_IRQ_event+0x23/0x49
+> [    4.760000]  [<c013f8d4>] __do_IRQ+0x93/0xe8
+> [    4.760000]  [<c010512d>] do_IRQ+0x43/0x52
+> [    4.760000]  [<c01036fe>] common_interrupt+0x1a/0x20
+> [    4.760000]  [<d081935f>] acpi_safe_halt+0x14/0x20 [processor]
+> [    4.760000]  [<d081951f>] acpi_processor_idle+0x15f/0x380 [processor]
+> [    4.760000]  [<c0101b4d>] cpu_idle+0x9f/0xb9
+> [    4.760000]  [<c0305707>] start_kernel+0x383/0x38a
+> [    4.760000] ide-cd: Call cdrom_do_block_pc, rq->cmd[0]: 0x46, rq->flags: 0x2988, rq->bio: cffc2480
+> [    4.760000] ide-cd: Turning off dma for cmd 0x46,rq->data_len: 0x8, addr: 0xcf67d000mask: 0x1f
+> [    4.760000] ide-cd: Call cdrom_start_packet_command: xferlen: 8
+> [    4.760000] ide-cd: Call cdrom_transfer_packet_command, rq->cmd[0]: 0x46
+> [    4.760000] ide-cd: Call cdrom_decode_status, stat: 0x59, good_stat: 0x0, rq->cmd[0]: 0x46,rq->flags: 0x12988, err: 0x20
+> [    4.760000] ide-cd: Call cdrom_queue_request_sense
+> [    4.760000] ide-cd: cdrom_queue_request_sense: failed_cmd: 0x46
+> [    4.760000] ide-cd: Call ide_do_rw_cdrom, rq->cmd[0]: 0x43, rq->flags: 0x11108, block: 0
+> [    4.760000] ide-cd: Call cdrom_start_packet_command: xferlen: 4
+> [    4.760000] ide-cd: Call cdrom_transfer_packet_command, rq->cmd[0]: 0x43
+> [    4.764000] ide-cd: Call cdrom_decode_status, stat: 0x51, good_stat: 0x0, rq->cmd[0]: 0x43,rq->flags: 0x11108, err: 0x20
+> [    4.764000] ide-cd: Call cdrom_queue_request_sense
+> [    4.764000] ide-cd: cdrom_queue_request_sense: failed_cmd: 0x43
+> [    4.764000] hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
 
-The biggest problem is guaranteeing that tag 0 is always used for
-non-NCQ commands.  Due to the way blk-tag is implemented and how SCSI
-starts and finishes requests, such guarantee can't be made.  I'm not
-sure whether this would actually break any low level driver but it
-doesn't look like a good idea to break such assumption given the
-frailty of ATA controllers.
+Ok, so it looks like your drive gets puzzled again by a
+GET_CONFIGURATION command despite 2.6.18 which used to work, as you say.
+But I think it fails this time because you've updated to debian testing
+and, correct me if I'm wrong, but the udev utility cdrom_id came with
+the update and it sends all those GET_CONFIGURATION commands. Have you
+thought of updating the drive's firmware - that helps sometimes?
 
-So, for the time being, keep using the old dumb in-libata qc
-allocation.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axobe <jens.axboe@oracle.com>
-Cc: Jeff Garzik <jeff@garzik.org>
----
- drivers/ata/libata-core.c |   66 +++++++++++++++++++++++++++++++++++++++++-----
- drivers/ata/libata-scsi.c |   23 +---------------
- drivers/ata/libata.h      |   19 +------------
- include/linux/libata.h    |    1 
- 4 files changed, 65 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 622350d..0cd3ad4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1712,6 +1712,8 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	else
- 		tag = 0;
- 
-+	if (test_and_set_bit(tag, &ap->qc_allocated))
-+		BUG();
- 	qc = __ata_qc_from_tag(ap, tag);
- 
- 	qc->tag = tag;
-@@ -4563,6 +4565,37 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- }
- 
- /**
-+ *	ata_qc_new - Request an available ATA command, for queueing
-+ *	@ap: Port associated with device @dev
-+ *	@dev: Device from whom we request an available command structure
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+
-+static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
-+{
-+	struct ata_queued_cmd *qc = NULL;
-+	unsigned int i;
-+
-+	/* no command while frozen */
-+	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
-+		return NULL;
-+
-+	/* the last tag is reserved for internal command. */
-+	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
-+		if (!test_and_set_bit(i, &ap->qc_allocated)) {
-+			qc = __ata_qc_from_tag(ap, i);
-+			break;
-+		}
-+
-+	if (qc)
-+		qc->tag = i;
-+
-+	return qc;
-+}
-+
-+/**
-  *	ata_qc_new_init - Request an available ATA command, and initialize it
-  *	@dev: Device from whom we request an available command structure
-  *	@tag: command tag
-@@ -4571,20 +4604,16 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
-  *	None.
-  */
- 
--struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
-+struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	struct ata_queued_cmd *qc;
- 
--	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
--		return NULL;
--
--	qc = __ata_qc_from_tag(ap, tag);
-+	qc = ata_qc_new(ap);
- 	if (qc) {
- 		qc->scsicmd = NULL;
- 		qc->ap = ap;
- 		qc->dev = dev;
--		qc->tag = tag;
- 
- 		ata_qc_reinit(qc);
- 	}
-@@ -4592,6 +4621,31 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
- 	return qc;
- }
- 
-+/**
-+ *	ata_qc_free - free unused ata_queued_cmd
-+ *	@qc: Command to complete
-+ *
-+ *	Designed to free unused ata_queued_cmd object
-+ *	in case something prevents using it.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ */
-+void ata_qc_free(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	unsigned int tag;
-+
-+	WARN_ON(qc == NULL);	/* ata_qc_from_tag _might_ return NULL */
-+
-+	qc->flags = 0;
-+	tag = qc->tag;
-+	if (likely(ata_tag_valid(tag))) {
-+		qc->tag = ATA_TAG_POISON;
-+		clear_bit(tag, &ap->qc_allocated);
-+	}
-+}
-+
- void __ata_qc_complete(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3fa75ea..47c7afc 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -709,11 +709,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- {
- 	struct ata_queued_cmd *qc;
- 
--	if (cmd->request->tag != -1)
--		qc = ata_qc_new_init(dev, cmd->request->tag);
--	else
--		qc = ata_qc_new_init(dev, 0);
--
-+	qc = ata_qc_new_init(dev);
- 	if (qc) {
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
-@@ -1108,17 +1104,7 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 
- 		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
- 		depth = min(ATA_MAX_QUEUE - 1, depth);
--
--		/*
--		 * If this device is behind a port multiplier, we have
--		 * to share the tag map between all devices on that PMP.
--		 * Set up the shared tag map here and we get automatic.
--		 */
--		if (dev->link->ap->pmp_link)
--			scsi_init_shared_tag_map(sdev->host, ATA_MAX_QUEUE - 1);
--
--		scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
--		scsi_activate_tcq(sdev, depth);
-+		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
- 	}
- 
- 	return 0;
-@@ -1958,11 +1944,6 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 		hdr[1] |= (1 << 7);
- 
- 	memcpy(rbuf, hdr, sizeof(hdr));
--
--	/* if ncq, set tags supported */
--	if (ata_id_has_ncq(args->id))
--		rbuf[7] |= (1 << 1);
--
- 	memcpy(&rbuf[8], "ATA     ", 8);
- 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
- 	ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index d3831d3..fe2839e 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -74,7 +74,7 @@ extern struct ata_link *ata_dev_phys_link(struct ata_device *dev);
- extern void ata_force_cbl(struct ata_port *ap);
- extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
- extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
--extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
-+extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
- 			   unsigned int tag);
-@@ -103,6 +103,7 @@ extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_link *link);
- extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
-+extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
- extern void __ata_qc_complete(struct ata_queued_cmd *qc);
- extern int atapi_check_dma(struct ata_queued_cmd *qc);
-@@ -118,22 +119,6 @@ extern struct ata_port *ata_port_alloc(struct ata_host *host);
- extern void ata_dev_enable_pm(struct ata_device *dev, enum link_pm policy);
- extern void ata_lpm_schedule(struct ata_port *ap, enum link_pm);
- 
--/**
-- *	ata_qc_free - free unused ata_queued_cmd
-- *	@qc: Command to complete
-- *
-- *	Designed to free unused ata_queued_cmd object
-- *	in case something prevents using it.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--static inline void ata_qc_free(struct ata_queued_cmd *qc)
--{
--	qc->flags = 0;
--	qc->tag = ATA_TAG_POISON;
--}
--
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
- extern void ata_acpi_associate_sata_port(struct ata_port *ap);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index c7665a4..59b0f1c 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -698,6 +698,7 @@ struct ata_port {
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
- 
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
-+	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
- 	int			nr_active_links; /* #links with active qcs */
- 
+-- 
+Regards/Gruss,
+    Boris.
