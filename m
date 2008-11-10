@@ -1,49 +1,178 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Odd behaviour of device in response to idleimmediate with	unload
-Date: Mon, 10 Nov 2008 18:00:18 +0900
-Message-ID: <4917F822.5060204@kernel.org>
-References: <491083CC.5050508@rtr.ca> <49108AA0.1080507@rtr.ca> <491090BC.5060403@rtr.ca> <20081104185444.3BE721FDF7@chi.die-welt.net> <4910A509.1030307@rtr.ca> <49116811.5000109@kernel.org> <873ai6cmio.fsf@denkblock.local> <4911A8EA.8030605@kernel.org> <87k5bhxerq.fsf@denkblock.local> <4913BF3D.3090704@kernel.org> <20081107074857.GA6461@dragonheart.kerker.die-welt.net>
+From: "Alex Gonzalez" <langabe@gmail.com>
+Subject: Re: [libata/sata_sil] Error on startup
+Date: Mon, 10 Nov 2008 10:02:32 +0000
+Message-ID: <c58a7a270811100202m64e4c9d2k75773ef3a05db00d@mail.gmail.com>
+References: <c58a7a270809120334r16164e3ej9f8ab769a09742ed@mail.gmail.com>
+	 <c58a7a270809131023g6c5dad8em8cee2ace3b678209@mail.gmail.com>
+	 <48CE2389.9080205@kernel.org>
+	 <c58a7a270809150249qa0bb8e5ifdbfeb7fb5ef0565@mail.gmail.com>
+	 <48CE3497.4000604@kernel.org>
+	 <c58a7a270809150320qd275503lbd5101eb870511c4@mail.gmail.com>
+	 <48CE37F6.40301@kernel.org>
+	 <c58a7a270809150853mb9e0752x29cdba7e92097f90@mail.gmail.com>
+	 <48CF86DD.6030201@ru.mvista.com>
+	 <c58a7a270809180330h5f715673nbb23f1dfadbec848@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55955 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753478AbYKJJAn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Nov 2008 04:00:43 -0500
-In-Reply-To: <20081107074857.GA6461@dragonheart.kerker.die-welt.net>
+Received: from fk-out-0910.google.com ([209.85.128.189]:17315 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834AbYKJKCf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2008 05:02:35 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so3187770fkq.5
+        for <linux-ide@vger.kernel.org>; Mon, 10 Nov 2008 02:02:32 -0800 (PST)
+In-Reply-To: <c58a7a270809180330h5f715673nbb23f1dfadbec848@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Evgeni Golov <sargentd@die-welt.net>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Evgeni Golov wrote:
-> On Fri, Nov 07, 2008 at 01:08:29PM +0900, Tejun Heo wrote:
->>> This suggests to me that hdparm --idle-unload does indeed trigger a phy
->>> event, but the interrupt handler clears SError. Issuing the unload
->>> command in EH, on the other hand, does not result in a phy event because
->>> event notification is disabled. That way, phyrdy and commwake don't get
->>> cleared in SError in will indicate a hotplug event next time SError is
->>> checked. Does that make sense? If so, what's to be done about it?
->> Hmmm... if ALPM is enabled, it could explain all.  Enabling ALPM does
->> inhibit event notifications but it doesn't prevent autopsy from
->> interpreting SError as if ALPM is not enabled.
+Hi,
+
+I finally have an update on this issue. It all boiled down to an
+errata on the XLR CPU (PA1041.1 - PCI-X host mode can only use BAR0 in
+32-bit mode ). The bootloader had a workaround applied for it, but it
+had a bug when applying the workaround to specific CPU revisions, and
+unfortunately the revision I was using needed the fix but didn't have
+it applied. The result was the PCI subblock sometimes not recognizing
+the correct addressing.
+
+Thanks for your help, really appreciated.
+Alex
+
+On Thu, Sep 18, 2008 at 10:30 AM, Alex Gonzalez <langabe@gmail.com> wrote:
+> Thanks for that Sergei.
+>
+> To this point there is little more information we can get from a
+> software perspective. I am handing this over to hardware design. I'll
+> make sure I'll update the thread when a solution is found, if only to
+> assert it as a hardware design issue.
+>
+> Thanks for all your help,
+> Alex
+>
+> On Tue, Sep 16, 2008 at 11:13 AM, Sergei Shtylyov
+> <sshtylyov@ru.mvista.com> wrote:
+>> Hello.
 >>
->> Evgeni, is ALPM enabled?
-> 
-> You mean Aggressive Link Power Management? As patches from here:
-> http://www.kernel.org/pub/linux/kernel/people/kristen/patches/SATA/alpm/
-> ?
-> Unless they got merged into 2.6.27 and autoenabled, no, I dont use ALPM :)
-
-Heh... I'm fresh out of ideas.  Somehow SError is being set on the
-initial EH head unload.  In general, what EH is doing is harmless in
-itself but EH reset can delay head unloading defeating the purpose of
-unloading.
-
-Is the phy event before or after head unloading?
-
-Thanks.
-
--- 
-tejun
+>> Alex Gonzalez wrote:
+>>
+>>> I got some more information regarding this issue.
+>>>
+>>> After reading "PCI Compatibility and PCI-Native Mode Bus Master
+>>> Adapters" as pointed by Sergei, I printed the Bus Master ATA status
+>>> register (offset 0x2), the PCI status/command (offset 0x4) register
+>>> and the SATA ATA status (offset 0x104), control (offset 0x100) and
+>>> error (offset 0x108) registers looking for clues.
+>>>
+>>> :***sil_freeze()***
+>>> 0:***ata_bmdma_status=00000002
+>>>
+>>
+>>  This status means that transfer ended due to a PCI error.
+>>
+>>> 0:PCI status=02b00016
+>>> 0:SATA status 00000113 ctl 00000310 err 00000000
+>>>
+>>> Everything looks fine to me, except maybe bits 1 and 4 of the PCI
+>>> status. The Silicon Image Sil3512 datasheet specifies that bit 4
+>>> should be hardcoded to zero, and bit 0 (the IO space enable)  is
+>>> strangely zero, maybe it's set dynamically when needed?
+>>>
+>>
+>>  No, it's setn when enabling the dvice if it has BARs in I/O space. Or at
+>> least it should be...
+>>
+>>> Following on Tejun's advise, I found out that just the delay of a
+>>> printk in ata_bmdma_stop(), right after the iowrite8,  gets rid of the
+>>> cache error and it's replaced by this:
+>>>
+>>
+>>   Hm, maybe it was the cache error was what stopped the DMA transfer?
+>>
+>>> [4294671.719000] 0:<7>sata_sil 0000:00:01.0: version 2.1
+>>> [4294671.720000] 0:<6>sata_sil 0000:00:01.0: Applying R_ERR on DMA
+>>> activate FIS errata fix
+>>> [4294671.722000] 0:<6>ata1: SATA max UDMA/100 cmd 0xc0000080 ctl
+>>> 0xc000008a bmdma 0xc0000000 irq 24
+>>> [4294671.724000] 0:<6>ata2: SATA max UDMA/100 cmd 0xc00000c0 ctl
+>>> 0xc00000ca bmdma 0xc0000008 irq 24
+>>>
+>>
+>>  Memory mapped registers are used by the driver. So, probably I/O space was
+>> not enabled on purpose -- can't find the implementation of
+>> pci_enable_device() right now...
+>>
+>>> [4294671.725000] 0:<6>scsi0 : sata_sil
+>>> [4294672.182000] 2:<6>ata1: SATA link up 1.5 Gbps (SStatus 113 SControl
+>>> 310)
+>>> [4294672.205000] 2:drivers/ata/libata-sff.c:368: Delay
+>>> [4294672.219000] 2:<6>ata1.00: ATA-7: ST3160815AS, 4.AAB, max UDMA/133
+>>> [4294672.238000] 2:<6>ata1.00: 312581808 sectors, multi 0: LBA48 NCQ
+>>> (depth 0/32)
+>>> [4294672.259000] 2:drivers/ata/libata-sff.c:368: Delay
+>>> [4294672.277000] 2:drivers/ata/libata-sff.c:368: Delay
+>>> [4294672.291000] 2:<6>ata1.00: configured for UDMA/100
+>>> [4294672.306000] 0:<6>scsi1 : sata_sil
+>>> [4294672.610000] 2:<6>ata2: SATA link down (SStatus 0 SControl 310)
+>>> [4294672.628000] 0:<5>scsi 0:0:0:0: Direct-Access     ATA
+>>> ST3160815AS      4.AA PQ: 0 ANSI: 5
+>>> [4294672.630000] 0:<5>SCSI device sda: 312581808 512-byte hdwr sectors
+>>> (160042 MB)
+>>> [4294672.631000] 0:<5>sda: Write Protect is off
+>>> [4294672.632000] 0:<7>sda: Mode Sense: 00 3a 00 00
+>>> [4294672.633000] 0:<5>SCSI device sda: write cache: enabled, read
+>>> cache: enabled, doesn't support DPO or FUA
+>>> [4294672.634000] 0:<5>SCSI device sda: 312581808 512-byte hdwr sectors
+>>> (160042 MB)
+>>> [4294672.635000] 0:<5>sda: Write Protect is off
+>>> [4294672.636000] 0:<7>sda: Mode Sense: 00 3a 00 00
+>>> [4294672.637000] 0:<5>SCSI device sda: write cache: enabled, read
+>>> cache: enabled, doesn't support DPO or FUA
+>>> [4294672.638000] 0:<6> sda:0:drivers/ata/libata-sff.c:368: Delay
+>>> [4294702.640000] 0:<3>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0
+>>> action 0x0
+>>> [4294702.641000] 0:<3>ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0
+>>> tag 0 cdb 0x0 data 4096 in
+>>>
+>>
+>>  The command failed was READ DMA.
+>>
+>>> [4294702.641000]          res 40/00:00:00:00:00/00:00:00:00:00/00
+>>> Emask 0x20 (host bus error)
+>>>
+>>
+>>  Hum, the output IDE taskfile looks strange... status of 0x40 and all 0s in
+>> other regs...
+>>
+>>> [4294702.646000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
+>>> [4294702.651000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
+>>> [4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
+>>> [4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
+>>> [4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
+>>> [4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
+>>>
+>>
+>>  Hum, it's a status characterisitc for an unfinished PIO transfer.
+>>
+>>> and never comes back.
+>>>
+>>> I'll try to decode the ATA error see where it takes me next.
+>>>
+>>
+>>  Did that for you. :-)
+>>  BTW, the tables at
+>> http://ata.wiki.kernel.org/index.php/Libata_error_messages lack the
+>> explanation of a number after the last slash...
+>>
+>>> Thanks for your continued help and patience,
+>>> Alex
+>>>
+>>
+>> MBR, Sergei
+>>
+>>
+>>
+>
