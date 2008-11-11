@@ -1,46 +1,85 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration
- bugs
-Date: Tue, 11 Nov 2008 11:45:16 +0900
-Message-ID: <4918F1BC.2070602@kernel.org>
-References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca>
+Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
+Date: Tue, 11 Nov 2008 11:56:16 +0900
+Message-ID: <4918F450.50404@kernel.org>
+References: <20081011142735.GB5904@cleopatra.jogback.se> <48F4337A.50307@kernel.org> <20081014201917.GA5974@cleopatra.jogback.se> <48F595DB.4030301@kernel.org> <20081018165209.GA7754@cleopatra.jogback.se> <20081023181443.GA7323@cleopatra.jogback.se> <49056F2C.20101@kernel.org> <49056FEA.4070405@kernel.org> <20081027194038.GA7004@cleopatra.jogback.se> <4917D8F6.4020305@kernel.org> <20081110182628.GA6281@cleopatra.jogback.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060003000808090901030404"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34383 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:53865 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753446AbYKKCpk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Nov 2008 21:45:40 -0500
-In-Reply-To: <49184E1A.3010508@rtr.ca>
+	id S1754096AbYKKC4Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Nov 2008 21:56:25 -0500
+In-Reply-To: <20081110182628.GA6281@cleopatra.jogback.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Michael Guntsche <mike@it-loops.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
+To: Lars Michael Jogback <lm@jogback.se>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
->> On Michael's real old ata_piix, somehow the ERR bit is set on phantom
->> device defeating our phantom device detection logic.  We can relax
->> phantom device condition but that increases the risk of misdetection on
->> actual IDENTIFY errors.  Any ideas how we can nicely work around this
->> one?
-> ..
-> 
-> Mmm.. I'm way out of the loop on this now,
-> so please pardon me suggesting things known not to work, but..
-> 
-> 1. Pay attention to ATA status register on this chipset?
->   Eg. if it has BUSY, or reads 0x7f, then don't IDENTIFY?
-> 2. Check for device signature before trying IDENTIFY?
-> 3. Try a r/w test on the data register first, to see if there's
->   really hardware attached to it?
+This is a multi-part message in MIME format.
+--------------060003000808090901030404
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-We already do 1, 2 and 3.  The problem with phantom device is that the
-existent device on the channel replies to acesses to the other
-non-existent device and the NODEV_HINT detection is the last line of
-defense which successfully evades all the other mechanisms.  And now
-we have this controller/device combination which successfully tricks
-it too.  :-(
+Lars Michael Jogback wrote:
+>> Can you please try the attached patch and see whether anything is
+>> different?
+> 
+> Yes, it made it working.
+
+Heh... Okay, that's unexpected.
+
+> You don't think it has something todo with the spin-up time?
+> 
+> The spin-up time on these disks is quite long:
+> smartctl -a /dev/sdn | grep Spin_Up_Time
+>   3 Spin_Up_Time            0x0007   068   068   011    Pre-fail  Always       -       10240
+
+Maybe but I don't know.  Spin up is usually waited upon by device
+readiness wait after SRST which libata does every time it probes or
+resets a device behind PMP.  The drive is bringing link down briefly
+after SRST is complete.  It doesn't make much sense.  Maybe some
+quirkiness in the firmware?
+
+Can you please try the attached patch?  If it doesn't work, please
+increment the constant 200LU by 100 each time and find out where it
+starts to work.
+
+Thanks.
 
 -- 
 tejun
+
+--------------060003000808090901030404
+Content-Type: text/x-patch;
+ name="deb-debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="deb-debug.patch"
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 0cd3ad4..7f1a469 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3799,10 +3799,17 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
+ int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+ 		       unsigned long deadline)
+ {
+-	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	const unsigned long *t = sata_ehc_deb_timing(&link->eh_context);
++	unsigned long timing[3] = { t[0], t[1], t[2] };
+ 	bool online;
+ 	int rc;
+ 
++	ata_link_printk(link, KERN_INFO, "XXX0 hardreset debounce %lu %lu %lu\n",
++			timing[0], timing[1], timing[2]);
++	timing[1] = max(timing[1], 200LU);
++	ata_link_printk(link, KERN_INFO, "XXX1 hardreset debounce %lu %lu %lu\n",
++			timing[0], timing[1], timing[2]);
++
+ 	/* do hardreset */
+ 	rc = sata_link_hardreset(link, timing, deadline, &online, NULL);
+ 	return online ? -EAGAIN : rc;
+
+--------------060003000808090901030404--
