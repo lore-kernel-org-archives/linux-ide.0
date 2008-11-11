@@ -1,34 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.28-rc3: WARN_ON(ap->nr_active_links) in ata_eh_finish() with
- pata_ali DMA CD-ROM
-Date: Tue, 11 Nov 2008 18:08:31 +0900
-Message-ID: <49194B8F.80104@kernel.org>
-References: <200811042128.10356.arvidjaar@mail.ru>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration
+ bugs
+Date: Tue, 11 Nov 2008 12:19:24 +0300
+Message-ID: <49194E1C.9030800@ru.mvista.com>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59991 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752237AbYKKJIj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Nov 2008 04:08:39 -0500
-In-Reply-To: <200811042128.10356.arvidjaar@mail.ru>
+Received: from homer.mvista.com ([63.81.120.155]:14431 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752593AbYKKJTd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 04:19:33 -0500
+In-Reply-To: <4919038B.8020407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, Michael Guntsche <mike@it-loops.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Andrey Borzenkov wrote:
-> Every now and then I give pata_ali CD-ROM DMA a test. This time I got
-> someting new - not only usual timeouts but also WARN_ON. There was a
-> whole bunch of subsequent WARN_ON's, but they are likely to be just
-> followup errors.
-> 
-> Also, in the past ejecting media from drive would abort processing and
-> all commands waiting for completion would return to prompt. Now they
-> seem to hang forever.
+Hello.
 
-The next -rc should fix this.  Thanks.
+Mark Lord wrote:
 
--- 
-tejun
+>>>> On Michael's real old ata_piix, somehow the ERR bit is set on phantom
+>>>> device defeating our phantom device detection logic.  We can relax
+>>>> phantom device condition but that increases the risk of 
+>>>> misdetection on
+>>>> actual IDENTIFY errors.  Any ideas how we can nicely work around this
+>>>> one?
+>>> ..
+>>>
+>>> Mmm.. I'm way out of the loop on this now,
+>>> so please pardon me suggesting things known not to work, but..
+>>>
+>>> 1. Pay attention to ATA status register on this chipset?
+>>>   Eg. if it has BUSY, or reads 0x7f, then don't IDENTIFY?
+>>> 2. Check for device signature before trying IDENTIFY?
+>>> 3. Try a r/w test on the data register first, to see if there's
+>>>   really hardware attached to it?
+>>
+>> We already do 1, 2 and 3.  The problem with phantom device is that the
+>> existent device on the channel replies to acesses to the other
+>> non-existent device and the NODEV_HINT detection is the last line of
+>> defense which successfully evades all the other mechanisms.  And now
+>> we have this controller/device combination which successfully tricks
+>> it too.  :-(
+> ..
+>
+> Mmm.. but he's using "really old ata_piix" hardware, as in what Intel
+> once called the "Triton" (or Triton II) chipset.
+
+   The "original Triton" IDE is supported by pata_oldpiix.
+
+>   Which I wrote support
+> for in drivers/ide, way back when.. and we never had this problem.
+
+   The support for the "original Triton" is drivers/ide/ is still broken 
+after all these years. The driver assumes that the slave IDE timing 
+register always present -- which the origina 82371FB didn't have. :-(
+
+WBR, Sergei
+
+
