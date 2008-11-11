@@ -1,32 +1,55 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [PATCH] pata_pcmcia: another memory card support
-Date: Tue, 11 Nov 2008 13:25:37 +0100
-Message-ID: <20081111122537.GA9958@comet.dominikbrodowski.net>
-References: <49193C0F.5000908@garzik.org> <20081111084053.GA12965@isilmar.linta.de> <491945D9.2080201@garzik.org> <20081111113738.26a8132b@lxorguk.ukuu.org.uk> <200811061144.35556.marc.pignat@hevs.ch> <49193C0F.5000908@garzik.org> <20081111084053.GA12965@isilmar.linta.de> <491945D9.2080201@garzik.org> <20081111112243.GA6271@comet.dominikbrodowski.net> <20081111115910.54d86403@lxorguk.ukuu.org.uk>
+From: Michael Guntsche <mike@it-loops.com>
+Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
+Date: Tue, 11 Nov 2008 14:34:35 +0100
+Message-ID: <3b5e4132a8abe8d67b4f1701a384a2d4@localhost>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:52805 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755855AbYKKMzS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Nov 2008 07:55:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20081111113738.26a8132b@lxorguk.ukuu.org.uk> <20081111115910.54d86403@lxorguk.ukuu.org.uk>
+Received: from lvps87-230-0-242.dedicated.hosteurope.de ([87.230.0.242]:57300
+	"EHLO lvps87-230-0-242.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755321AbYKKNee (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 08:34:34 -0500
+In-Reply-To: <49194E1C.9030800@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Marc Pignat <marc.pignat@hevs.ch>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-On Tue, Nov 11, 2008 at 11:37:38AM +0000, Alan Cox wrote:
-> > It is not normal practice to merge add-device-id patches through 
-> > bus-specific trees.  We do not do such things with PCI IDs, for example.
+On Tue, 11 Nov 2008 12:19:24 +0300, Sergei Shtylyov
+<sshtylyov@ru.mvista.com> wrote:
+> Hello.
 > 
-> We've also been parallel applying patches via myself through Jeff and via
-> Bart since the beginnings of libata without a problem. So it ain't
-> broke ....
 
-795659ef0ee175d47723f806e7a29427b171e61b . Let's just try to apply new IDs
-to both files, and not cherry-pick parts of such a patch?
+>> Mmm.. but he's using "really old ata_piix" hardware, as in what Intel
+>> once called the "Triton" (or Triton II) chipset.
+> 
+>    The "original Triton" IDE is supported by pata_oldpiix.
+> 
+>>   Which I wrote support
+>> for in drivers/ide, way back when.. and we never had this problem.
+> 
+>    The support for the "original Triton" is drivers/ide/ is still broken 
+> after all these years. The driver assumes that the slave IDE timing 
+> register always present -- which the origina 82371FB didn't have. :-(
 
-Best,
-	Dominik
+00:07.1 IDE interface: Intel Corporation 82371SB PIIX3 IDE [Natoma/Triton
+II]
+
+So apparently I have an "SB" Triton II. Looking at the description of the
+drivers I thought that ata_piix would be the correct driver for it.
+
+... support for PATA on the Intel ESB/ICH/PIIX3/PIIX4 series host
+controllers.
+
+Also looking the the comments in ata_piix it looks like my chipset already
+supports independent timing and therefore ata_piix is the correct driver to
+use.
+
+Please correct me if I am wrong or misunderstood your remarks.
+
+Kind regards,
+Michael
+
+
