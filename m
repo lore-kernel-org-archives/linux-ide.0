@@ -1,47 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET #upstream] libata: improve timeout handling for EH
- commands
-Date: Tue, 11 Nov 2008 11:27:08 +0900
-Message-ID: <4918ED7C.1000605@gmail.com>
-References: <12112174741373-git-send-email-htejun@gmail.com>	 <48458809.1030207@garzik.org> <484621D7.1040607@gmail.com> <c70ff3ad0811100832g39b838fepd214cdc16ee129f4@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration
+ bugs
+Date: Tue, 11 Nov 2008 11:45:16 +0900
+Message-ID: <4918F1BC.2070602@kernel.org>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:15917 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330AbYKKC1P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2008 21:27:15 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so1717054tic.23
-        for <linux-ide@vger.kernel.org>; Mon, 10 Nov 2008 18:27:13 -0800 (PST)
-In-Reply-To: <c70ff3ad0811100832g39b838fepd214cdc16ee129f4@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:34383 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753446AbYKKCpk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Nov 2008 21:45:40 -0500
+In-Reply-To: <49184E1A.3010508@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, liml@rtr.ca
+To: Mark Lord <liml@rtr.ca>
+Cc: Michael Guntsche <mike@it-loops.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-saeed bishara wrote:
-> Hi,
->        This patch is guilty for big delay when I boot my system with
-> marvell soc sata with 4140 pmp (without disks). I added print for the
-> deadline and now variables in the ata_eh_reset.
-> here is the output:
-> ata2: SATA max UDMA/133 irq 29
->  sleep deadline -35455  now -29955
->  sleep done
-> ata1: SATA link down (SStatus 0 SControl 300)
->  sleep deadline -35419  now -29919
->  sleep done
-> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata2.15: Port Multiplier 1.1, 0x11ab:0x4140 r193, 5 ports, feat 0x1/0x1f
->  sleep deadline 500  now -29867
+Mark Lord wrote:
+>> On Michael's real old ata_piix, somehow the ERR bit is set on phantom
+>> device defeating our phantom device detection logic.  We can relax
+>> phantom device condition but that increases the risk of misdetection on
+>> actual IDENTIFY errors.  Any ideas how we can nicely work around this
+>> one?
+> ..
 > 
-> it seems that in may case the ehc->last_reset was not initialized.
+> Mmm.. I'm way out of the loop on this now,
+> so please pardon me suggesting things known not to work, but..
+> 
+> 1. Pay attention to ATA status register on this chipset?
+>   Eg. if it has BUSY, or reads 0x7f, then don't IDENTIFY?
+> 2. Check for device signature before trying IDENTIFY?
+> 3. Try a r/w test on the data register first, to see if there's
+>   really hardware attached to it?
 
-Yeap, it didn't initialize last_reset for new pmp links.  Patch to fix
-already has been posted and pending for upstream and -stable.
-
-Thanks.
+We already do 1, 2 and 3.  The problem with phantom device is that the
+existent device on the channel replies to acesses to the other
+non-existent device and the NODEV_HINT detection is the last line of
+defense which successfully evades all the other mechanisms.  And now
+we have this controller/device combination which successfully tricks
+it too.  :-(
 
 -- 
 tejun
