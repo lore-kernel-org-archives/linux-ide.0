@@ -1,64 +1,93 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration
- bugs
-Date: Tue, 11 Nov 2008 12:19:24 +0300
-Message-ID: <49194E1C.9030800@ru.mvista.com>
-References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.28-rc3 libata: still "failed to IDENTIFY" on bootup
+Date: Tue, 11 Nov 2008 18:36:30 +0900
+Message-ID: <4919521E.2040703@kernel.org>
+References: <20081109130231.GA20290@rhlx01.hs-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:14431 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752593AbYKKJTd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 04:19:33 -0500
-In-Reply-To: <4919038B.8020407@rtr.ca>
+Received: from hera.kernel.org ([140.211.167.34]:40232 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752593AbYKKJgy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Nov 2008 04:36:54 -0500
+In-Reply-To: <20081109130231.GA20290@rhlx01.hs-esslingen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <tj@kernel.org>, Michael Guntsche <mike@it-loops.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
+To: Andreas Mohr <andi@lisas.de>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello.
+Andreas Mohr wrote:
+> on my Inspiron 8000, I keep getting this on bootup (including the
+> ensuing 3 x 5 second delay!):
+> 
+> ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xbfa0 irq 14
+> ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xbfa8 irq 15
+> Switched to high resolution mode on CPU 0
+> ata1.00: ATA-6: IC25N060ATMR04-0, MO3OAD0A, max UDMA/100
+> ata1.00: 117210240 sectors, multi 8: LBA48
+> ata1.01: ATAPI: TOSHIBA DVD-ROM SD-C2402, X021, max UDMA/33
+> ata1.00: configured for UDMA/100
+> ata1.01: configured for UDMA/33
+> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
+> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
+> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x1)
+> ata2.00: ATAPI: SONY    CD-RW  CRX700E, 1.4u, max MWDMA2
+> ata2.00: configured for MWDMA2
+> 
+> This did not occur with kernels <= config-2.6.24-rc6 and did occur
+> with _all_ kernels >= config-2.6.26-rc5, if I'm not entirely
+> mistaken (I believe there has been a large libata update in
+> between).
+> 
+> # hdparm -I /dev/sr1
+> 
+> /dev/sr1:
+> 
+> ATAPI CD-ROM, with removable media
+>         Model Number:       SONY    CD-RW  CRX700E
+>         Firmware Revision:  1.4u
+> Standards:
+>         Likely used CD-ROM ATAPI-1
+> Configuration:
+>         DRQ response: 50us.
+>         Packet size: 12 bytes
+> Capabilities:
+>         LBA, IORDY(can be disabled)
+>         DMA: sdma0 sdma1 sdma2 mdma0 mdma1 *mdma2
+>              Cycle time: min=120ns recommended=120ns
+>         PIO: pio0 pio1 pio2 pio3 pio4
+>              Cycle time: no flow control=180ns  IORDY flow control=120ns
+>   
+> 
+> As you can see, ata2.00 AKA /dev/sr1 is a single-drive controller setup,
+> if only I knew whether it's hardware-configured
+> as Master / Slave or Cable Select...
+> 
+> Earlier kernels did not have any IDENTIFY bootup delay (both old-style ide
+> and my earlier libata configurations!), but I assume this ""problem"" occured
+> due to some _increase_ in verification functionality in later kernels,
+> not due to some stupid bug.
+> 
+> So, since earlier kernels did not annoy me with a 15-second delay
+> since they didn't detect a problematic controller port configuration,
+> what can we do about this now?
+> 
+> How can I figure out my controller configuration? The drive in question
+> is a removeable notebook CD writer.
+> 
+> If this turns out to be (e.g.) an "illegal" Master-only configuration
+> (thus with a "phantom" second drive), then is there a way to blacklist
+> (DMI etc.) my notebook model for this check?
+> And what if this happens to be a "legal" Cable Select setup which thus
+> shouldn't trigger this IDENTIFY problem?
 
-Mark Lord wrote:
+Hmm... this is our second report on phantom device problem.  I thought
+the initial one was controller/device specific but it looks like we
+genuinely screwed up something here.  Can you please post the result
+of "lspci -nn" and full kernel boot log?
 
->>>> On Michael's real old ata_piix, somehow the ERR bit is set on phantom
->>>> device defeating our phantom device detection logic.  We can relax
->>>> phantom device condition but that increases the risk of 
->>>> misdetection on
->>>> actual IDENTIFY errors.  Any ideas how we can nicely work around this
->>>> one?
->>> ..
->>>
->>> Mmm.. I'm way out of the loop on this now,
->>> so please pardon me suggesting things known not to work, but..
->>>
->>> 1. Pay attention to ATA status register on this chipset?
->>>   Eg. if it has BUSY, or reads 0x7f, then don't IDENTIFY?
->>> 2. Check for device signature before trying IDENTIFY?
->>> 3. Try a r/w test on the data register first, to see if there's
->>>   really hardware attached to it?
->>
->> We already do 1, 2 and 3.  The problem with phantom device is that the
->> existent device on the channel replies to acesses to the other
->> non-existent device and the NODEV_HINT detection is the last line of
->> defense which successfully evades all the other mechanisms.  And now
->> we have this controller/device combination which successfully tricks
->> it too.  :-(
-> ..
->
-> Mmm.. but he's using "really old ata_piix" hardware, as in what Intel
-> once called the "Triton" (or Triton II) chipset.
+Thanks.
 
-   The "original Triton" IDE is supported by pata_oldpiix.
-
->   Which I wrote support
-> for in drivers/ide, way back when.. and we never had this problem.
-
-   The support for the "original Triton" is drivers/ide/ is still broken 
-after all these years. The driver assumes that the slave IDE timing 
-register always present -- which the origina 82371FB didn't have. :-(
-
-WBR, Sergei
-
-
+-- 
+tejun
