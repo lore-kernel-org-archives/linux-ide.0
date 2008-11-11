@@ -1,55 +1,109 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Re: Fwd: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
-Date: Tue, 11 Nov 2008 14:34:35 +0100
-Message-ID: <3b5e4132a8abe8d67b4f1701a384a2d4@localhost>
-References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: sata error on ICH8M
+Date: Tue, 11 Nov 2008 23:01:13 +0900
+Message-ID: <49199029.8070802@kernel.org>
+References: <alpine.DEB.2.00.0811040833110.24370@dirac.rather.puzzling.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lvps87-230-0-242.dedicated.hosteurope.de ([87.230.0.242]:57300
-	"EHLO lvps87-230-0-242.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755321AbYKKNee (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 08:34:34 -0500
-In-Reply-To: <49194E1C.9030800@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756689AbYKKOBe@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.0811040833110.24370@dirac.rather.puzzling.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tim Connors <tconnors@rather.puzzling.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-On Tue, 11 Nov 2008 12:19:24 +0300, Sergei Shtylyov
-<sshtylyov@ru.mvista.com> wrote:
-> Hello.
+Hello,
+
+Tim Connors wrote:
+> I'm running a debian 2.6.26-9 kernel (sid) on a new laptop with:
+
+Hmmm...
+
+> 00:1f.2 SATA controller: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Controller (rev 03) (prog-if 01 [AHCI 1.0])
+>         Subsystem: Dell Device 0275
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0
+>         Interrupt: pin B routed to IRQ 378
+>         Region 0: I/O ports at 1c00 [size=8]
+>         Region 1: I/O ports at 18d4 [size=4]
+>         Region 2: I/O ports at 18d8 [size=8]
+>         Region 3: I/O ports at 18d0 [size=4]
+>         Region 4: I/O ports at 18e0 [size=32]
+>         Region 5: Memory at f8504000 (32-bit, non-prefetchable) [size=2K]
+>         Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/2 Enable+
+>                 Address: fee0300c  Data: 41a1
+>         Capabilities: [70] Power Management version 3
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+>                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [a8] SATA HBA <?>
+>         Kernel driver in use: ahci
+>         Kernel modules: ahci
 > 
-
->> Mmm.. but he's using "really old ata_piix" hardware, as in what Intel
->> once called the "Triton" (or Triton II) chipset.
+> Soon after booting, and possibly after the disk had spun down and was
+> asked to spin back up (which it had done successfully a few times so
+> far, with a spinddown timeout of 10 minutes, and using laptop_mode), it
+> had a sata error:
 > 
->    The "original Triton" IDE is supported by pata_oldpiix.
+> Nov  4 01:49:29 gamow kernel: [ 1865.106289] ata1.00: exception Emask 0x10 SAct 0x3ff SErr 0x50000 action 0xe frozen
+> Nov  4 01:50:29 gamow kernel: [ 1865.106307] ata1: SError: { PHYRdyChg CommWake }
+> Nov  4 01:50:29 gamow kernel: [ 1865.106319] ata1.00: cmd 61/08:00:bd:c9:57/00:00:00:00:00/40 tag 0 ncq 4096 out
+> Nov  4 01:50:29 gamow kernel: [ 1865.106322]          res 40/00:00:02:4f:c2/00:00:00:00:00/00 Emask 0x14 (ATA bus error)
+> Nov  4 01:50:29 gamow kernel: [ 1865.106329] ata1.00: status: { DRDY }
+> Nov  4 01:50:29 gamow kernel: [ 1865.106339] ata1.00: cmd 61/08:08:35:7a:73/00:00:00:00:00/40 tag 1 ncq 4096 out
+> Nov  4 01:50:29 gamow kernel: [ 1865.106343]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x14 (ATA bus error)
+> Nov  4 01:50:29 gamow kernel: [ 1865.106350] ata1.00: status: { DRDY }
+> Nov  4 01:50:29 gamow kernel: [ 1865.106361] ata1.00: cmd 61/08:10:35:36:9b/00:00:00:00:00/40 tag 2 ncq 4096 out
+> Nov  4 01:50:29 gamow kernel: [ 1865.106364]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x14 (ATA bus error)
+> Nov  4 01:50:29 gamow kernel: [ 1865.106371] ata1.00: status: { DRDY }
+> Nov  4 01:50:29 gamow kernel: [ 1865.106382] ata1.00: cmd 61/28:18:55:94:e2/00:00:00:00:00/40 tag 3 ncq 20480 out
 > 
->>   Which I wrote support
->> for in drivers/ide, way back when.. and we never had this problem.
+> And then it fails to reset after some time, remounting the devices
+> readonly (although what wasn't already in the cache became unreadable with
+> lots of IO errors rapidly filling up dmesg).  None of the logs made it to
+> disk, naturally enough, and this was what I caught in syslog before syslog
+> bailed.  There were interesting messages that happened after this, but the
+> dmesg buffer filled up before I thought about saving them.
+
+Well, the disk is already a goner at that point so you need to either
+set up a netconsole or plug in a usb stick, mount it and do "while
+true; do dmesg -c >> /mnt/usbstick/dmesg.out; sleep 1; done" to
+capture the kernel log.
+
+> My /sys/class/scsi_host/host0/link_power_management_policy is:
+> min_power
+> .  powertop had earlier (in a previous warm-boot) prompted me
+> to set link_power_management_policy, so I had been tweaking that, but I
+> didn't look at its default setting - I presume it was already at
+> min_power, as it is now from a fresh (cold) bootup.
 > 
->    The support for the "original Triton" is drivers/ide/ is still broken 
-> after all these years. The driver assumes that the slave IDE timing 
-> register always present -- which the origina 82371FB didn't have. :-(
+> Just in case it is related, in each bootup, I earlier get
+> Nov  4 01:20:26 gamow kernel: [  116.217492] CE: hpet increasing min_delta_ns to 15000 nsec
+> Nov  4 01:20:28 gamow kernel: [  118.073078] CE: hpet increasing min_delta_ns to 22500 nsec
+> Nov  4 01:20:30 gamow kernel: [  120.467250] ACPI: EC: missing confirmations, switch off interrupt mode.
+> Nov  4 01:20:30 gamow kernel: [  120.603593] CE: hpet increasing min_delta_ns to 33750 nsec
+> Nov  4 01:20:31 gamow kernel: [  121.004372] ACPI Exception (evregion-0420): AE_TIME, Returned by Handler for [EmbeddedControl] [20080321]
+> Nov  4 01:20:31 gamow kernel: [  121.004372] ACPI Error (psparse-0530): Method parse/execution failed [\_SB_.PCI0.LPCB.BAT1._BST] (Node ffff81013fa6cb90), AE_TIME
+> Nov  4 01:20:31 gamow kernel: [  121.004372] ACPI Exception (battery-0360): AE_TIME, Evaluating _BST [20080321]
+> 
+> and/or
+> 
+> [ 1587.842640] CE: hpet increasing min_delta_ns to 15000 nsec
+> (successively increasing as time goes on)
+> 
+> The sata link went belly up perhaps a few minutes after I went to bed
+> lastnight, and the only thing I can think of that I did before then was to
+> unplug and replug the ethernet and/or the wireless.  The ACPI messages
+> seem to happen around networking events on this laptop, but I haven't had
+> a chance to investigate further.
 
-00:07.1 IDE interface: Intel Corporation 82371SB PIIX3 IDE [Natoma/Triton
-II]
+I really need to see how the recovery attempt failed.  Can you please
+reproduce the problem and report the kernel log?  Also, please report
+how reproducible the problem is.
 
-So apparently I have an "SB" Triton II. Looking at the description of the
-drivers I thought that ata_piix would be the correct driver for it.
+Thanks.
 
-... support for PATA on the Intel ESB/ICH/PIIX3/PIIX4 series host
-controllers.
-
-Also looking the the comments in ata_piix it looks like my chipset already
-supports independent timing and therefore ata_piix is the correct driver to
-use.
-
-Please correct me if I am wrong or misunderstood your remarks.
-
-Kind regards,
-Michael
-
-
+-- 
+tejun
