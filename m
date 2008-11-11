@@ -1,67 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream 1/3] libata: beef up iterators
-Date: Tue, 11 Nov 2008 03:18:57 -0500
-Message-ID: <49193FF1.90708@garzik.org>
-References: <490EDA75.5060703@kernel.org>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [PATCH] pata_pcmcia: another memory card support
+Date: Tue, 11 Nov 2008 09:40:53 +0100
+Message-ID: <20081111084053.GA12965@isilmar.linta.de>
+References: <200811061144.35556.marc.pignat@hevs.ch> <49193C0F.5000908@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:32934 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755360AbYKKITB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Nov 2008 03:19:01 -0500
-In-Reply-To: <490EDA75.5060703@kernel.org>
+Received: from isilmar.linta.de ([213.133.102.198]:46554 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753334AbYKKIkz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Nov 2008 03:40:55 -0500
+Content-Disposition: inline
+In-Reply-To: <49193C0F.5000908@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Elias Oltmanns <eo@nebensachen.de>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Marc Pignat <marc.pignat@hevs.ch>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org
 
-Tejun Heo wrote:
-> There currently are the following looping constructs.
-> 
-> * __ata_port_for_each_link() for all available links
-> * ata_port_for_each_link() for edge links
-> * ata_link_for_each_dev() for all devices
-> * ata_link_for_each_dev_reverse() for all devices in reverse order
-> 
-> Now there's a need for looping construct which is similar to
-> __ata_port_for_each_link() but iterates over PMP links before the host
-> link.  Instead of adding another one with long name, do the following
-> cleanup.
-> 
-> * Implement and export ata_link_next() and ata_dev_next() which take
->   @mode parameter and can be used to build custom loop.
-> * Implement ata_for_each_link() and ata_for_each_dev() which take
->   looping mode explicitly.
-> 
-> The following iteration modes are implemented.
-> 
-> * ATA_LITER_EDGE		: loop over edge links
-> * ATA_LITER_HOST_FIRST		: loop over all links, host link first
-> * ATA_LITER_PMP_FIRST		: loop over all links, PMP links first
-> 
-> * ATA_DITER_ENABLED		: loop over enabled devices
-> * ATA_DITER_ENABLED_REVERSE	: loop over enabled devices in reverse order
-> * ATA_DITER_ALL			: loop over all devices
-> * ATA_DITER_ALL_REVERSE		: loop over all devices in reverse order
-> 
-> This change removes exlicit device enabledness checks from many loops
-> and makes it clear which ones are iterated over in which direction.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
-> Comments added and retargeted for #upstream.
-> 
-> This patchset is on top of
-> 
-> #upstream-fixes (9ce8e3073d9cfd6f859c22a25441db41b85cbf6e)
-> + [1] patches-which-fell-off-the-crack-during-maintainership-handover patchset
-> + [2] mask-off-DET-when-restoring-SControl-for-detach
-> 
-> [1] http://thread.gmane.org/gmane.linux.ide/35783
-> [2] http://article.gmane.org/gmane.linux.ide/35792
+Jeff,
 
-applied to newly created #upstream (on top of just-sent #upstream-fixes)
+On Tue, Nov 11, 2008 at 03:02:23AM -0500, Jeff Garzik wrote:
+> Marc Pignat wrote:
+> > Support for Apacer photo steno pro card.
+> > 
+> > Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+> > ---
+> > 
+> > Hi all!
+> > 
+> > Here is a new ID for ide-cs and pata_pcmcia. I tried all the card
+> > I can find in the labs, only this one was unknown.
+> > 
+> > Best regards
+> > 
+> > Marc
+> > 
+> > 
+> > 
+> > diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+> > index 271cb64..64b2e22 100644
+> > --- a/drivers/ata/pata_pcmcia.c
+> > +++ b/drivers/ata/pata_pcmcia.c
+> > @@ -416,6 +416,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+> >  	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+> >  	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+> >  	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
+> > +	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+> >  	PCMCIA_DEVICE_NULL,
+> >  };
+> >  
+> > diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
+> > index cb199c8..f50210f 100644
+> > --- a/drivers/ide/ide-cs.c
+> > +++ b/drivers/ide/ide-cs.c
+> > @@ -444,6 +444,7 @@ static struct pcmcia_device_id ide_ids[] = {
+> >  	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+> >  	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+> >  	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
+> > +	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
+> >  	PCMCIA_DEVICE_NULL,
+> >  };
+> >  MODULE_DEVICE_TABLE(pcmcia, ide_ids);
+> > --
+> 
+> applied pata_pcmcia bit
 
+could we merge such stuff through pcmcia-git in future, please? (see
+http://git.kernel.org/?p=linux/kernel/git/brodo/pcmcia-2.6.git;a=commitdiff;h=980fc29f20f5cfb8cef29ddfccecb685f299ada4
+) Else the device tables in ide-cs and pata_pcmcia will diverge again.
 
+Thanks,
+	Dominik
