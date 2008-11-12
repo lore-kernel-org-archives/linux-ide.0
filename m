@@ -1,51 +1,42 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq() -> ->clear_irq()
-Date: Tue, 11 Nov 2008 18:01:54 -0800
-Message-ID: <20081112020154.GD231878@sgi.com>
-References: <200808192031.40288.bzolnier@gmail.com> <48AB478B.5040209@ru.mvista.com> <48CEDD89.5060107@ru.mvista.com> <200809151529.50424.bzolnier@gmail.com> <48CF7986.2020302@ru.mvista.com>
+From: Florian Fainelli <florian@openwrt.org>
+Subject: Re: [PATCH] pata-rb532-cf: read/write data in 4-byte blocks
+Date: Wed, 12 Nov 2008 03:25:50 +0100
+Message-ID: <200811120325.51136.florian@openwrt.org>
+References: <1226448783-10047-1-git-send-email-n0-1@freewrt.org> <1226448821-10933-1-git-send-email-n0-1@freewrt.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:38072 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751384AbYKLCB4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 21:01:56 -0500
+Received: from fg-out-1718.google.com ([72.14.220.152]:55192 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488AbYKLCZz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 21:25:55 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so219915fgg.17
+        for <linux-ide@vger.kernel.org>; Tue, 11 Nov 2008 18:25:53 -0800 (PST)
+In-Reply-To: <1226448821-10933-1-git-send-email-n0-1@freewrt.org>
 Content-Disposition: inline
-In-Reply-To: <48CF7986.2020302@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Phil Sutter <n0-1@freewrt.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Tue, Sep 16, 2008 at 01:16:54PM +0400, Sergei Shtylyov wrote:
-> >>>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >>>>        
-> >>>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> >>>      
-> >>   Not feeling sure about this patch -- ->waiting_for_dma probably 
-> >>should've been left where it was...
-> >>    
-> >
-> >Well, it doesn't change behavior and I think having ->clear_irq method
-> >independent from the transfer mode is a preffered approach.
-> >  
-> 
->   But its implementations will have to depend on it anyway. And 
-> clearing the IDE interrupt in general already depends on the transfer 
-> mode -- the BMIDE interrupt which is a (delayed) reflection of INTRQ is 
-> cleared implicitly by the dma_end() method -- except in at least sgiioc4 
-> driver.
->   BTW, sgiioc4 seems another candidate for clear_irq() implementation 
-> -- currently clearing is done implicitly by the read_status() method (I 
-> don't quite understand why it clears DMA error interrupt there). 
-> However, since there's no documentation, I'm not sure how the IDE 
-> interrupt is latched by IOC4.
+Hi Phil,
 
-The person who originally wrote sgiioc4 has been gone for a long time.
+(CC'in Jeff as he is the libata maintainer).
 
-I'm guessing that the DMA error is cleared there, because any DMA error
-status has already been processed above, and it's easier to clear
-unconditionally than to test and clear, and there's no ill effect to
-clearing something that's already clear.
+Le Wednesday 12 November 2008 01:13:41 Phil Sutter, vous avez =E9crit=A0=
+:
+> * rename the offset definition to avoid abiguity with the standard AT=
+A
+>   IO address
+> * read and write four bytes at once like the original driver does
+> * use writesl() and readsl() which implicitly iterate over the data
+>
+> This patch assumes buflen to be a multiple of four, which is true for
+> ATA devices. ATAPI support is not known, though unlikely, as the
+> original driver always transfers 512 Bytes at once.
+>
+> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+> Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
 
-jeremy
+Acked-by: Florian Fainelli <florian@openwrt.org>
