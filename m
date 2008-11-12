@@ -1,40 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [Frequent Head Unloads] ASUS A6B00U Notebook affected
-Date: Wed, 12 Nov 2008 14:29:51 +0900
-Message-ID: <491A69CF.3050308@kernel.org>
-References: <490E7E44.2030206@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: WD3200BEVT frequent head unload
+Date: Wed, 12 Nov 2008 14:30:19 +0900
+Message-ID: <491A69EB.80507@gmail.com>
+References: <39e8b4be0811031614s2c28352ao62a7e937bbf90cc3@mail.gmail.com> <4910825B.8020103@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56291 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751122AbYKLF35 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Nov 2008 00:29:57 -0500
-In-Reply-To: <490E7E44.2030206@gmail.com>
+Received: from ti-out-0910.google.com ([209.85.142.185]:43885 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139AbYKLFa0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Nov 2008 00:30:26 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so121855tic.23
+        for <linux-ide@vger.kernel.org>; Tue, 11 Nov 2008 21:30:24 -0800 (PST)
+In-Reply-To: <4910825B.8020103@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgiBHb8WCxJliaW93c2tp?= <mgol86@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Aleksei Kazantsev <ajk.xyz@gmail.com>, linux-ide@vger.kernel.org
 
-Micha=C5=82 Go=C5=82=C4=99biowski wrote:
-> Hello,
->=20
-> My ASUS A6B00U notebook (in A6U series) is also affected by frequent
-> head unloads, mentioned here:
-> http://ata.wiki.kernel.org/index.php/Known_issues#Drives_which_perfor=
-m_frequent_head_unloads_under_Linux
->=20
->=20
-> I've applied the fix by adding to /etc/rc.local a line:
-> hdparm -B 254 /dev/sda
-> so if these affect attached logs, I can change it for a while and sen=
-d
-> them once more.
+Mark Lord wrote:
+> Aleksei Kazantsev wrote:
+>> drive unloads the head up to 360 times per hour
+> ..
+> 
+>> *    Advanced Power Management feature set
+> ..
+> 
+> Presumably "hdparm -B255 /dev/sda" cures this ?
 
-When idle, how much does the unload count increase per hour?
+Please verify hdparm -B255 or 254 fixes the problem.
 
 Thanks.
 
---=20
+-- 
 tejun
