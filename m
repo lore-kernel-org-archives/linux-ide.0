@@ -1,223 +1,351 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/6] ide: factor out device type classifying from do_identify()
-Date: Wed, 12 Nov 2008 22:16:46 +0100
-Message-ID: <200811122216.47054.bzolnier@gmail.com>
+Subject: [PATCH 5/6] ide: move sysfs support to ide-sysfs.c
+Date: Wed, 12 Nov 2008 22:17:23 +0100
+Message-ID: <200811122217.23385.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:8933 "EHLO
+Received: from ti-out-0910.google.com ([209.85.142.186]:18390 "EHLO
 	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755382AbYKLVdD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Nov 2008 16:33:03 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so351770tic.23
-        for <linux-ide@vger.kernel.org>; Wed, 12 Nov 2008 13:33:02 -0800 (PST)
+	with ESMTP id S1755418AbYKLVdH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Nov 2008 16:33:07 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so351755tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 12 Nov 2008 13:33:06 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-Factor out device type classifying from do_identify()
-to ide_classify_ata_dev() and ide_classify_atapi_dev().
+While at it:
+- media_string() -> ide_media_string()
 
 There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |  154 +++++++++++++++++++++++++-----------------------
- 1 file changed, 81 insertions(+), 73 deletions(-)
+ drivers/ide/Makefile    |    2 
+ drivers/ide/ide-probe.c |   52 -------------------
+ drivers/ide/ide-sysfs.c |  125 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ide/ide.c       |   72 ---------------------------
+ include/linux/ide.h     |    4 +
+ 5 files changed, 132 insertions(+), 123 deletions(-)
 
+Index: b/drivers/ide/Makefile
+===================================================================
+--- a/drivers/ide/Makefile
++++ b/drivers/ide/Makefile
+@@ -5,7 +5,7 @@
+ EXTRA_CFLAGS				+= -Idrivers/ide
+ 
+ ide-core-y += ide.o ide-ioctls.o ide-io.o ide-iops.o ide-lib.o ide-probe.o \
+-	      ide-taskfile.o ide-pm.o ide-park.o ide-pio-blacklist.o
++	      ide-taskfile.o ide-pm.o ide-park.o ide-pio-blacklist.o ide-sysfs.o
+ 
+ # core IDE code
+ ide-core-$(CONFIG_IDE_TIMINGS)		+= ide-timings.o
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -101,6 +101,82 @@ static void ide_disk_init_mult_count(ide
+@@ -1419,58 +1419,6 @@ static void ide_port_cable_detect(ide_hw
  	}
  }
  
-+static void ide_classify_ata_dev(ide_drive_t *drive)
-+{
-+	u16 *id = drive->id;
-+	char *m = (char *)&id[ATA_ID_PROD];
-+	int is_cfa = ata_id_is_cfa(id);
-+
-+	/* CF devices are *not* removable in Linux definition of the term */
-+	if (is_cfa == 0 && (id[ATA_ID_CONFIG] & (1 << 7)))
-+		drive->dev_flags |= IDE_DFLAG_REMOVABLE;
-+
-+	drive->media = ide_disk;
-+
-+	if (!ata_id_has_unload(drive->id))
-+		drive->dev_flags |= IDE_DFLAG_NO_UNLOAD;
-+
-+	printk(KERN_INFO "%s: %s, %s DISK drive\n", drive->name, m,
-+		is_cfa ? "CFA" : "ATA");
-+}
-+
-+static void ide_classify_atapi_dev(ide_drive_t *drive)
-+{
-+	u16 *id = drive->id;
-+	char *m = (char *)&id[ATA_ID_PROD];
-+	u8 type = (id[ATA_ID_CONFIG] >> 8) & 0x1f;
-+
-+	printk(KERN_INFO "%s: %s, ATAPI ", drive->name, m);
-+	switch (type) {
-+	case ide_floppy:
-+		if (!strstr(m, "CD-ROM")) {
-+			if (!strstr(m, "oppy") &&
-+			    !strstr(m, "poyp") &&
-+			    !strstr(m, "ZIP"))
-+				printk(KERN_CONT "cdrom or floppy?, assuming ");
-+			if (drive->media != ide_cdrom) {
-+				printk(KERN_CONT "FLOPPY");
-+				drive->dev_flags |= IDE_DFLAG_REMOVABLE;
-+				break;
-+			}
-+		}
-+		/* Early cdrom models used zero */
-+		type = ide_cdrom;
-+	case ide_cdrom:
-+		drive->dev_flags |= IDE_DFLAG_REMOVABLE;
-+#ifdef CONFIG_PPC
-+		/* kludge for Apple PowerBook internal zip */
-+		if (!strstr(m, "CD-ROM") && strstr(m, "ZIP")) {
-+			printk(KERN_CONT "FLOPPY");
-+			type = ide_floppy;
-+			break;
-+		}
-+#endif
-+		printk(KERN_CONT "CD/DVD-ROM");
-+		break;
-+	case ide_tape:
-+		printk(KERN_CONT "TAPE");
-+		break;
-+	case ide_optical:
-+		printk(KERN_CONT "OPTICAL");
-+		drive->dev_flags |= IDE_DFLAG_REMOVABLE;
-+		break;
-+	default:
-+		printk(KERN_CONT "UNKNOWN (type %d)", type);
-+		break;
-+	}
-+
-+	printk(KERN_CONT " drive\n");
-+	drive->media = type;
-+	/* an ATAPI device ignores DRDY */
-+	drive->ready_stat = 0;
-+	if (ata_id_cdb_intr(id))
-+		drive->atapi_flags |= IDE_AFLAG_DRQ_INTERRUPT;
-+	drive->dev_flags |= IDE_DFLAG_DOORLOCKING;
-+	/* we don't do head unloading on ATAPI devices */
-+	drive->dev_flags |= IDE_DFLAG_NO_UNLOAD;
-+}
-+
- /**
-  *	do_identify	-	identify a drive
-  *	@drive: drive to identify 
-@@ -117,7 +193,7 @@ static void do_identify(ide_drive_t *dri
- 	u16 *id = drive->id;
- 	char *m = (char *)&id[ATA_ID_PROD];
- 	unsigned long flags;
--	int bswap = 1, is_cfa;
-+	int bswap = 1;
- 
- 	/* local CPU only; some systems need this */
- 	local_irq_save(flags);
-@@ -154,91 +230,23 @@ static void do_identify(ide_drive_t *dri
- 	if (strstr(m, "E X A B Y T E N E S T"))
- 		goto err_misc;
- 
--	printk(KERN_INFO "%s: %s, ", drive->name, m);
+-static ssize_t store_delete_devices(struct device *portdev,
+-				    struct device_attribute *attr,
+-				    const char *buf, size_t n)
+-{
+-	ide_hwif_t *hwif = dev_get_drvdata(portdev);
 -
- 	drive->dev_flags |= IDE_DFLAG_PRESENT;
- 	drive->dev_flags &= ~IDE_DFLAG_DEAD;
- 
- 	/*
- 	 * Check for an ATAPI device
- 	 */
--	if (cmd == ATA_CMD_ID_ATAPI) {
--		u8 type = (id[ATA_ID_CONFIG] >> 8) & 0x1f;
+-	if (strncmp(buf, "1", n))
+-		return -EINVAL;
 -
--		printk(KERN_CONT "ATAPI ");
--		switch (type) {
--			case ide_floppy:
--				if (!strstr(m, "CD-ROM")) {
--					if (!strstr(m, "oppy") &&
--					    !strstr(m, "poyp") &&
--					    !strstr(m, "ZIP"))
--						printk(KERN_CONT "cdrom or floppy?, assuming ");
--					if (drive->media != ide_cdrom) {
--						printk(KERN_CONT "FLOPPY");
--						drive->dev_flags |= IDE_DFLAG_REMOVABLE;
--						break;
--					}
--				}
--				/* Early cdrom models used zero */
--				type = ide_cdrom;
--			case ide_cdrom:
--				drive->dev_flags |= IDE_DFLAG_REMOVABLE;
--#ifdef CONFIG_PPC
--				/* kludge for Apple PowerBook internal zip */
--				if (!strstr(m, "CD-ROM") && strstr(m, "ZIP")) {
--					printk(KERN_CONT "FLOPPY");
--					type = ide_floppy;
--					break;
--				}
--#endif
--				printk(KERN_CONT "CD/DVD-ROM");
--				break;
--			case ide_tape:
--				printk(KERN_CONT "TAPE");
--				break;
--			case ide_optical:
--				printk(KERN_CONT "OPTICAL");
--				drive->dev_flags |= IDE_DFLAG_REMOVABLE;
--				break;
--			default:
--				printk(KERN_CONT "UNKNOWN (type %d)", type);
--				break;
--		}
--		printk(KERN_CONT " drive\n");
--		drive->media = type;
--		/* an ATAPI device ignores DRDY */
--		drive->ready_stat = 0;
--		if (ata_id_cdb_intr(id))
--			drive->atapi_flags |= IDE_AFLAG_DRQ_INTERRUPT;
--		drive->dev_flags |= IDE_DFLAG_DOORLOCKING;
--		/* we don't do head unloading on ATAPI devices */
--		drive->dev_flags |= IDE_DFLAG_NO_UNLOAD;
--		return;
+-	ide_port_unregister_devices(hwif);
+-
+-	return n;
+-};
+-
+-static DEVICE_ATTR(delete_devices, S_IWUSR, NULL, store_delete_devices);
+-
+-static ssize_t store_scan(struct device *portdev,
+-			  struct device_attribute *attr,
+-			  const char *buf, size_t n)
+-{
+-	ide_hwif_t *hwif = dev_get_drvdata(portdev);
+-
+-	if (strncmp(buf, "1", n))
+-		return -EINVAL;
+-
+-	ide_port_unregister_devices(hwif);
+-	ide_port_scan(hwif);
+-
+-	return n;
+-};
+-
+-static DEVICE_ATTR(scan, S_IWUSR, NULL, store_scan);
+-
+-static struct device_attribute *ide_port_attrs[] = {
+-	&dev_attr_delete_devices,
+-	&dev_attr_scan,
+-	NULL
+-};
+-
+-static int ide_sysfs_register_port(ide_hwif_t *hwif)
+-{
+-	int i, uninitialized_var(rc);
+-
+-	for (i = 0; ide_port_attrs[i]; i++) {
+-		rc = device_create_file(hwif->portdev, ide_port_attrs[i]);
+-		if (rc)
+-			break;
 -	}
 -
-+	if (cmd == ATA_CMD_ID_ATAPI)
-+		ide_classify_atapi_dev(drive);
-+	else
- 	/*
- 	 * Not an ATAPI device: looks like a "regular" hard disk
- 	 */
+-	return rc;
+-}
 -
--	is_cfa = ata_id_is_cfa(id);
--
--	/* CF devices are *not* removable in Linux definition of the term */
--	if (is_cfa == 0 && (id[ATA_ID_CONFIG] & (1 << 7)))
--		drive->dev_flags |= IDE_DFLAG_REMOVABLE;
--
--	drive->media = ide_disk;
--
--	if (!ata_id_has_unload(drive->id))
--		drive->dev_flags |= IDE_DFLAG_NO_UNLOAD;
--
--	printk(KERN_CONT "%s DISK drive\n", is_cfa ? "CFA" : "ATA");
--
-+		ide_classify_ata_dev(drive);
- 	return;
--
- err_misc:
- 	kfree(id);
- 	drive->dev_flags &= ~IDE_DFLAG_PRESENT;
--	return;
- }
+ static unsigned int ide_indexes;
  
  /**
+Index: b/drivers/ide/ide-sysfs.c
+===================================================================
+--- /dev/null
++++ b/drivers/ide/ide-sysfs.c
+@@ -0,0 +1,125 @@
++#include <linux/kernel.h>
++#include <linux/ide.h>
++
++char *ide_media_string(ide_drive_t *drive)
++{
++	switch (drive->media) {
++	case ide_disk:
++		return "disk";
++	case ide_cdrom:
++		return "cdrom";
++	case ide_tape:
++		return "tape";
++	case ide_floppy:
++		return "floppy";
++	case ide_optical:
++		return "optical";
++	default:
++		return "UNKNOWN";
++	}
++}
++
++static ssize_t media_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	return sprintf(buf, "%s\n", ide_media_string(drive));
++}
++
++static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	return sprintf(buf, "%s\n", drive->name);
++}
++
++static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
++			     char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	return sprintf(buf, "ide:m-%s\n", ide_media_string(drive));
++}
++
++static ssize_t model_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_PROD]);
++}
++
++static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
++			     char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_FW_REV]);
++}
++
++static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
++			   char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_SERNO]);
++}
++
++struct device_attribute ide_dev_attrs[] = {
++	__ATTR_RO(media),
++	__ATTR_RO(drivename),
++	__ATTR_RO(modalias),
++	__ATTR_RO(model),
++	__ATTR_RO(firmware),
++	__ATTR(serial, 0400, serial_show, NULL),
++	__ATTR(unload_heads, 0644, ide_park_show, ide_park_store),
++	__ATTR_NULL
++};
++
++static ssize_t store_delete_devices(struct device *portdev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t n)
++{
++	ide_hwif_t *hwif = dev_get_drvdata(portdev);
++
++	if (strncmp(buf, "1", n))
++		return -EINVAL;
++
++	ide_port_unregister_devices(hwif);
++
++	return n;
++};
++
++static DEVICE_ATTR(delete_devices, S_IWUSR, NULL, store_delete_devices);
++
++static ssize_t store_scan(struct device *portdev,
++			  struct device_attribute *attr,
++			  const char *buf, size_t n)
++{
++	ide_hwif_t *hwif = dev_get_drvdata(portdev);
++
++	if (strncmp(buf, "1", n))
++		return -EINVAL;
++
++	ide_port_unregister_devices(hwif);
++	ide_port_scan(hwif);
++
++	return n;
++};
++
++static DEVICE_ATTR(scan, S_IWUSR, NULL, store_scan);
++
++static struct device_attribute *ide_port_attrs[] = {
++	&dev_attr_delete_devices,
++	&dev_attr_scan,
++	NULL
++};
++
++int ide_sysfs_register_port(ide_hwif_t *hwif)
++{
++	int i, uninitialized_var(rc);
++
++	for (i = 0; ide_port_attrs[i]; i++) {
++		rc = device_create_file(hwif->portdev, ide_port_attrs[i]);
++		if (rc)
++			break;
++	}
++
++	return rc;
++}
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -440,81 +440,13 @@ static int ide_bus_match(struct device *
+ 	return 1;
+ }
+ 
+-static char *media_string(ide_drive_t *drive)
+-{
+-	switch (drive->media) {
+-	case ide_disk:
+-		return "disk";
+-	case ide_cdrom:
+-		return "cdrom";
+-	case ide_tape:
+-		return "tape";
+-	case ide_floppy:
+-		return "floppy";
+-	case ide_optical:
+-		return "optical";
+-	default:
+-		return "UNKNOWN";
+-	}
+-}
+-
+-static ssize_t media_show(struct device *dev, struct device_attribute *attr, char *buf)
+-{
+-	ide_drive_t *drive = to_ide_device(dev);
+-	return sprintf(buf, "%s\n", media_string(drive));
+-}
+-
+-static ssize_t drivename_show(struct device *dev, struct device_attribute *attr, char *buf)
+-{
+-	ide_drive_t *drive = to_ide_device(dev);
+-	return sprintf(buf, "%s\n", drive->name);
+-}
+-
+-static ssize_t modalias_show(struct device *dev, struct device_attribute *attr, char *buf)
+-{
+-	ide_drive_t *drive = to_ide_device(dev);
+-	return sprintf(buf, "ide:m-%s\n", media_string(drive));
+-}
+-
+-static ssize_t model_show(struct device *dev, struct device_attribute *attr,
+-			  char *buf)
+-{
+-	ide_drive_t *drive = to_ide_device(dev);
+-	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_PROD]);
+-}
+-
+-static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
+-			     char *buf)
+-{
+-	ide_drive_t *drive = to_ide_device(dev);
+-	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_FW_REV]);
+-}
+-
+-static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
+-			   char *buf)
+-{
+-	ide_drive_t *drive = to_ide_device(dev);
+-	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_SERNO]);
+-}
+-
+-static struct device_attribute ide_dev_attrs[] = {
+-	__ATTR_RO(media),
+-	__ATTR_RO(drivename),
+-	__ATTR_RO(modalias),
+-	__ATTR_RO(model),
+-	__ATTR_RO(firmware),
+-	__ATTR(serial, 0400, serial_show, NULL),
+-	__ATTR(unload_heads, 0644, ide_park_show, ide_park_store),
+-	__ATTR_NULL
+-};
+-
+ static int ide_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 
+-	add_uevent_var(env, "MEDIA=%s", media_string(drive));
++	add_uevent_var(env, "MEDIA=%s", ide_media_string(drive));
+ 	add_uevent_var(env, "DRIVENAME=%s", drive->name);
+-	add_uevent_var(env, "MODALIAS=ide:m-%s", media_string(drive));
++	add_uevent_var(env, "MODALIAS=ide:m-%s", ide_media_string(drive));
+ 	return 0;
+ }
+ 
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1517,6 +1517,7 @@ void ide_unregister_region(struct gendis
+ void ide_undecoded_slave(ide_drive_t *);
+ 
+ void ide_port_apply_params(ide_hwif_t *);
++int ide_sysfs_register_port(ide_hwif_t *);
+ 
+ struct ide_host *ide_host_alloc(const struct ide_port_info *, hw_regs_t **);
+ void ide_host_free(struct ide_host *);
+@@ -1611,6 +1612,9 @@ extern struct mutex ide_cfg_mtx;
+ 
+ #define local_irq_set(flags)	do { local_save_flags((flags)); local_irq_enable_in_hardirq(); } while (0)
+ 
++char *ide_media_string(ide_drive_t *);
++
++extern struct device_attribute ide_dev_attrs[];
+ extern struct bus_type ide_bus_type;
+ extern struct class *ide_port_class;
+ 
