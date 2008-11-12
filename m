@@ -1,56 +1,62 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: [PATCH 5/6] pcmcia: add another pata/ide ID
-Date: Wed, 12 Nov 2008 11:24:57 +0100
-Message-ID: <1226485498-15754-5-git-send-email-linux@dominikbrodowski.net>
-References: <20081112101725.GA14698@comet.dominikbrodowski.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata-rb532-cf: read/write data in 4-byte blocks
+Date: Wed, 12 Nov 2008 13:50:05 +0300
+Message-ID: <491AB4DD.5080502@ru.mvista.com>
+References: <1226448783-10047-1-git-send-email-n0-1@freewrt.org> <1226448821-10933-1-git-send-email-n0-1@freewrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:46517 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752595AbYKLKZa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Nov 2008 05:25:30 -0500
-In-Reply-To: <20081112101725.GA14698@comet.dominikbrodowski.net>
+Received: from h155.mvista.com ([63.81.120.155]:52747 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751006AbYKLKuN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Nov 2008 05:50:13 -0500
+In-Reply-To: <1226448821-10933-1-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-pcmcia@lists.infradead.org
-Cc: Marc Pignat <marc.pignat@hevs.ch>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-ide@vger.kernel.org
+To: Phil Sutter <n0-1@freewrt.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Florian Fainelli <florian@openwrt.org>
 
-From: Marc Pignat <marc.pignat@hevs.ch>
+Hello.
 
-Support for Apacer photo steno pro card.
+Phil Sutter wrote:
 
-Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-CC: Alan Cox <alan@lxorguk.ukuu.org.uk
-CC: linux-ide@vger.kernel.org
----
- drivers/ata/pata_pcmcia.c |    1 +
- drivers/ide/ide-cs.c      |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+> * rename the offset definition to avoid abiguity with the standard ATA
+>   IO address
+> * read and write four bytes at once like the original driver does
+> * use writesl() and readsl() which implicitly iterate over the data
+>
+> This patch assumes buflen to be a multiple of four, which is true for
+> ATA devices. ATAPI support is not known, though unlikely, as the
+> original driver always transfers 512 Bytes at once.
+>
+> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+> Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
+>   
 
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 271cb64..64b2e22 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -416,6 +416,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
- 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
- 	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
- 	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
-+	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
- 	PCMCIA_DEVICE_NULL,
- };
- 
-diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
-index cb199c8..f50210f 100644
---- a/drivers/ide/ide-cs.c
-+++ b/drivers/ide/ide-cs.c
-@@ -444,6 +444,7 @@ static struct pcmcia_device_id ide_ids[] = {
- 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
- 	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
- 	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
-+	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
- 	PCMCIA_DEVICE_NULL,
- };
- MODULE_DEVICE_TABLE(pcmcia, ide_ids);
--- 
-1.5.6.3
+   The rb532_pata_data_xfer() prototype fix should've been preceding 
+this one, as it was dealing with a real issue, and this one only 
+enhances the driver performance.
+
+> diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+> index 7b11f40..b919012 100644
+> --- a/drivers/ata/pata_rb532_cf.c
+> +++ b/drivers/ata/pata_rb532_cf.c
+>   
+[...]
+> @@ -74,19 +75,16 @@ static void rb532_pata_exec_command(struct ata_port *ap,
+>  	rb532_pata_finish_io(ap);
+>  }
+>  
+> -static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+> -				unsigned int buflen, int write_data)
+> +static void rb532_pata_data_xfer(struct ata_device *adev,
+> +		unsigned char *buf, unsigned int buflen, int write_data)
+>   
+
+   Please avoid doing the "collateral damage" to the code like this. The 
+formatting was pretty good before.
+
+WBR, Sergei
+
 
