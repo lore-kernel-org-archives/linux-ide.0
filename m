@@ -1,71 +1,108 @@
-From: Andreas Mohr <andi@lisas.de>
-Subject: Re: 2.6.28-rc3 libata: still "failed to IDENTIFY" on bootup
-Date: Tue, 11 Nov 2008 18:46:34 +0100
-Message-ID: <20081111174634.GA11632@rhlx01.hs-esslingen.de>
-References: <20081109130231.GA20290@rhlx01.hs-esslingen.de> <4919521E.2040703@kernel.org> <20081111161113.GA4179@rhlx01.hs-esslingen.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: [PATCH] fix pata-rb532-cf
+Date: Wed, 12 Nov 2008 01:13:03 +0100
+Message-ID: <1226448783-10047-1-git-send-email-n0-1@freewrt.org>
+References: <1225403251-15705-1-git-send-email-n0-1@freewrt.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:49720 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbYKKRqg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 12:46:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20081111161113.GA4179@rhlx01.hs-esslingen.de>
+Received: from orbit.nwl.cc ([81.169.176.177]:38301 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbYKLANM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 19:13:12 -0500
+In-Reply-To: <1225403251-15705-1-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Mohr <andi@lisas.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Florian Fainelli <florian@openwrt.org>
 
-Hi,
+The following patch series is a complete updated set of changes I did to
+the pata-rb532-cf driver. In ordered detail: fix functionality, restore
+the behaviour of the original driver when doing transfers and eliminate
+compiler warnings.
 
-On Tue, Nov 11, 2008 at 05:11:13PM +0100, Andreas Mohr wrote:
-> But, yeah, it could just be an illegal factory-shipped hardware config, ya know
-> (need to investigate actual setup here, maybe it turns out to be
-> "combined Master/Slave" jumpering - with one Master drive only...)
+Greetings, Phil
 
-OK, I researched this some more.
+---
 
-When booting with the CDRW removed from the slot the IDENTIFY issue
-does NOT occur!
-This drive (Dell P/N 996NF) does not have any hardware jumper, but
-probably is configured via firmware variants (like many notebook drives
-seem to be).
-Visited BIOS settings, no clues or settings there.
-Not the faintest clue as to what the drive is configured as internally,
-although many notebook drives seem to be shipped as Cable Select (but definitely
-not all!!).
+After applying the following changes I could verify functionality by
+mounting a filesystem on the cfdisk and reading/writing files in it.
 
+The set_irq_type() function must be wrong, as there is no set_type()
+function defined for the rb532 IRQ chip. But as the used IRQ actually is
+being triggered by a GPIO, setting it's interrupt level should be the
+right alternative. Also to clear a GPIO triggered IRQ, the source has to
+be cleared. This is being done at the end of rb532_pata_irq_handler.
 
-At http://www.clave.gr.jp/ml/bsd-nomads/200011/msg00068.html , it's BSD(!)
-which is showing an identify retried exceeded error with the CRX700E !!!!
-Note that this seems to be a THINKPAD here, thus the other OEM (IBM) which there
-are CRX700E firmware updates available for.
+Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+Acked-by: Florian Fainelli <florian@openwrt.org>
+---
+ drivers/ata/pata_rb532_cf.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index f8b3ffc..7b11f40 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_host.h>
+ 
+ #include <asm/gpio.h>
++#include <asm/mach-rc32434/gpio.h>
+ 
+ #define DRV_NAME	"pata-rb532-cf"
+ #define DRV_VERSION	"0.1.0"
+@@ -39,7 +40,8 @@
+ #define RB500_CF_MAXPORTS	1
+ #define RB500_CF_IO_DELAY	400
+ 
+-#define RB500_CF_REG_CMD	0x0800
++#define RB500_CF_REG_BASE	0x0800
++#define RB500_CF_REG_ERR	0x080D
+ #define RB500_CF_REG_CTRL	0x080E
+ #define RB500_CF_REG_DATA	0x0C00
+ 
+@@ -62,7 +64,7 @@ static inline void rb532_pata_finish_io(struct ata_port *ap)
+ 	ata_sff_dma_pause(ap);
+ 	ndelay(RB500_CF_IO_DELAY);
+ 
+-	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
++	rb532_gpio_set_ilevel(1, info->gpio_line);
+ }
+ 
+ static void rb532_pata_exec_command(struct ata_port *ap,
+@@ -109,13 +111,15 @@ static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
+ 	struct rb532_cf_info *info = ah->private_data;
+ 
+ 	if (gpio_get_value(info->gpio_line)) {
+-		set_irq_type(info->irq, IRQ_TYPE_LEVEL_LOW);
++		rb532_gpio_set_ilevel(0, info->gpio_line);
+ 		if (!info->frozen)
+ 			ata_sff_interrupt(info->irq, dev_instance);
+ 	} else {
+-		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
++		rb532_gpio_set_ilevel(1, info->gpio_line);
+ 	}
+ 
++	rb532_gpio_set_istat(0, info->gpio_line);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -146,13 +150,14 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
+ 	ap->pio_mask	= 0x1f; /* PIO4 */
+ 	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
+ 
+-	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
++	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_BASE;
+ 	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
+ 	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
+ 
+ 	ata_sff_std_ports(&ap->ioaddr);
+ 
+ 	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
+ }
+ 
+ static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
+-- 
+1.5.6.4
 
-Some remotely useful (added for reference) URLs might be
-http://forums.techguy.org/hardware/348262-dell-2nd-hd-media-bay.html
-http://www.notebook-doctor.com/it-pi-n-DVD_Writer_for_Dell_Latitude_D510-pId-238000.html
-http://www.motherboardpoint.com/t43872-dimension-8200-is-it-cable-select.html
-http://www.wer-weiss-was.de/theme21/article4243889.html
-
-
-Hmm, now if this drive happened to be configured as Cable Select as I'd guess it is:
-do we have a problem here?? IOW are we mis-handling non-explicitly configured
-(i.e., CSEL) setups?
-
-...but:
-when searching for the "identify retried exceeded" BSD error message
-the CRX700E-mentioning page is the _only_ one that comes up on Google!!
-(IOW, it strongly looks like this issue seems quite isolated to CRX700E drives
-only and we should find a way to implement an IDENTIFY-timeout-related blacklist flag,
-for CRX700E, somehow).
-
-...right?
-
-(BTW, does a drive firmware have to do something special to obey
-Cable Select protocol properly, and would this thus indicate a firmware bug indeed?)
-
-Thanks,
-
-Andreas
