@@ -1,61 +1,57 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/6] ide: remove chipset type fixup from ide_host_register()
-Date: Wed, 12 Nov 2008 22:15:15 +0100
-Message-ID: <200811122215.15671.bzolnier@gmail.com>
+Subject: [PATCH 1/6] tx493x: fix intendation
+Date: Wed, 12 Nov 2008 22:14:12 +0100
+Message-ID: <200811122214.13396.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:18390 "EHLO
+Received: from ti-out-0910.google.com ([209.85.142.185]:8933 "EHLO
 	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755308AbYKLVcz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Nov 2008 16:32:55 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so351755tic.23
-        for <linux-ide@vger.kernel.org>; Wed, 12 Nov 2008 13:32:55 -0800 (PST)
+	with ESMTP id S1751392AbYKLVcx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Nov 2008 16:32:53 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so351770tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 12 Nov 2008 13:32:51 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Atsushi Nemoto <anemo@mba.ocn.ne.jp>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-* Set chipset type explicitly in tx4938ide and tx4939ide host drivers
-  (all other host drivers were updated already).
-
-* Remove no longer used chipset type fixup from ide_host_register().
+Trivial CodingStyle fixup for tx4938ide and tx4939ide drivers.
 
 CC: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |    3 ---
- drivers/ide/tx4938ide.c |    1 +
- drivers/ide/tx4939ide.c |    1 +
- 3 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/ide/tx4938ide.c |   10 +++++-----
+ drivers/ide/tx4939ide.c |   42 +++++++++++++++++++++---------------------
+ 2 files changed, 26 insertions(+), 26 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1654,9 +1654,6 @@ int ide_host_register(struct ide_host *h
- 		if (hwif == NULL)
- 			continue;
- 
--		if (hwif->chipset == ide_unknown)
--			hwif->chipset = ide_generic;
--
- 		if (hwif->present)
- 			hwif_register_devices(hwif);
- 	}
 Index: b/drivers/ide/tx4938ide.c
 ===================================================================
 --- a/drivers/ide/tx4938ide.c
 +++ b/drivers/ide/tx4938ide.c
-@@ -226,6 +226,7 @@ static const struct ide_port_info tx4938
+@@ -216,16 +216,16 @@ static const struct ide_tp_ops tx4938ide
+ #endif	/* __BIG_ENDIAN */
+ 
+ static const struct ide_port_ops tx4938ide_port_ops = {
+-	.set_pio_mode = tx4938ide_set_pio_mode,
++	.set_pio_mode		= tx4938ide_set_pio_mode,
+ };
+ 
+ static const struct ide_port_info tx4938ide_port_info __initdata = {
+-	.port_ops = &tx4938ide_port_ops,
++	.port_ops		= &tx4938ide_port_ops,
+ #ifdef __BIG_ENDIAN
+-	.tp_ops = &tx4938ide_tp_ops,
++	.tp_ops			= &tx4938ide_tp_ops,
  #endif
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
- 	.pio_mask		= ATA_PIO5,
-+	.chipset		= ide_generic,
+-	.host_flags = IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
+-	.pio_mask = ATA_PIO5,
++	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
++	.pio_mask		= ATA_PIO5,
  };
  
  static int __init tx4938ide_probe(struct platform_device *pdev)
@@ -63,11 +59,58 @@ Index: b/drivers/ide/tx4939ide.c
 ===================================================================
 --- a/drivers/ide/tx4939ide.c
 +++ b/drivers/ide/tx4939ide.c
-@@ -644,6 +644,7 @@ static const struct ide_port_info tx4939
- 	.pio_mask		= ATA_PIO4,
- 	.mwdma_mask		= ATA_MWDMA2,
- 	.udma_mask		= ATA_UDMA5,
-+	.chipset		= ide_generic,
+@@ -617,33 +617,33 @@ static const struct ide_tp_ops tx4939ide
+ #endif	/* __LITTLE_ENDIAN */
+ 
+ static const struct ide_port_ops tx4939ide_port_ops = {
+-	.set_pio_mode = tx4939ide_set_pio_mode,
+-	.set_dma_mode = tx4939ide_set_dma_mode,
+-	.clear_irq = tx4939ide_clear_irq,
+-	.cable_detect = tx4939ide_cable_detect,
++	.set_pio_mode		= tx4939ide_set_pio_mode,
++	.set_dma_mode		= tx4939ide_set_dma_mode,
++	.clear_irq		= tx4939ide_clear_irq,
++	.cable_detect		= tx4939ide_cable_detect,
+ };
+ 
+ static const struct ide_dma_ops tx4939ide_dma_ops = {
+-	.dma_host_set = tx4939ide_dma_host_set,
+-	.dma_setup = tx4939ide_dma_setup,
+-	.dma_exec_cmd = ide_dma_exec_cmd,
+-	.dma_start = ide_dma_start,
+-	.dma_end = tx4939ide_dma_end,
+-	.dma_test_irq = tx4939ide_dma_test_irq,
+-	.dma_lost_irq = ide_dma_lost_irq,
+-	.dma_timeout = ide_dma_timeout,
++	.dma_host_set		= tx4939ide_dma_host_set,
++	.dma_setup		= tx4939ide_dma_setup,
++	.dma_exec_cmd		= ide_dma_exec_cmd,
++	.dma_start		= ide_dma_start,
++	.dma_end		= tx4939ide_dma_end,
++	.dma_test_irq		= tx4939ide_dma_test_irq,
++	.dma_lost_irq		= ide_dma_lost_irq,
++	.dma_timeout		= ide_dma_timeout,
+ };
+ 
+ static const struct ide_port_info tx4939ide_port_info __initdata = {
+-	.init_hwif = tx4939ide_init_hwif,
+-	.init_dma = tx4939ide_init_dma,
+-	.port_ops = &tx4939ide_port_ops,
+-	.dma_ops = &tx4939ide_dma_ops,
+-	.tp_ops = &tx4939ide_tp_ops,
+-	.host_flags = IDE_HFLAG_MMIO,
+-	.pio_mask = ATA_PIO4,
+-	.mwdma_mask = ATA_MWDMA2,
+-	.udma_mask = ATA_UDMA5,
++	.init_hwif		= tx4939ide_init_hwif,
++	.init_dma		= tx4939ide_init_dma,
++	.port_ops		= &tx4939ide_port_ops,
++	.dma_ops		= &tx4939ide_dma_ops,
++	.tp_ops			= &tx4939ide_tp_ops,
++	.host_flags		= IDE_HFLAG_MMIO,
++	.pio_mask		= ATA_PIO4,
++	.mwdma_mask		= ATA_MWDMA2,
++	.udma_mask		= ATA_UDMA5,
  };
  
  static int __init tx4939ide_probe(struct platform_device *pdev)
