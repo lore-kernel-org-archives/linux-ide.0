@@ -1,31 +1,46 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Sat, 15 Nov 2008 18:39:04 +0100
-Message-ID: <slrnghu29r.6oa.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
+From: Tomas Kindl <supp@kpo.zcu.cz>
+Subject: Re: Fwd: confusion about libata.force=80c
+Date: Wed, 12 Nov 2008 15:39:56 +0000 (UTC)
+Message-ID: <loom.20081112T153626-485@post.gmane.org>
+References: <57947bf80805141120v615ef957g323114637d171f0a@mail.gmail.com> <57947bf80805200222j19efa2d2n7ff89fe026745ba1@mail.gmail.com> <4833B9B5.7060601@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755368AbYKORj3@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from main.gmane.org ([80.91.229.2]:39392 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751734AbYKORuF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Nov 2008 12:50:05 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1L1PHX-0001sS-3K
+	for linux-ide@vger.kernel.org; Sat, 15 Nov 2008 17:50:03 +0000
+Received: from 130-71-207-85.zapcechy.adsl-llu.static.bluetone.cz ([85.207.71.130])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 15 Nov 2008 17:50:03 +0000
+Received: from supp by 130-71-207-85.zapcechy.adsl-llu.static.bluetone.cz with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 15 Nov 2008 17:50:03 +0000
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> I have enabled debugging in the libata.h file and I find that ata15 is 
-> constantly being accessed for some reason, why is this?
-...
-> Host: scsi14 Channel: 00 Id: 00 Lun: 00
->    Vendor: _NEC     Model: DVD_RW ND-3520A  Rev: 1.04
->    Type:   CD-ROM                           ANSI  SCSI revision: 05
+Tejun Heo <htejun <at> gmail.com> writes:
 
-Well, if ata15 really is the CD-ROM, hal is likely to poll it :/
+> > 
+> > Is force=80c what I want? Should it work?
+> 
+> It should but is overridden by device side cable detection upto 2.6.25. 
+>   2.6.26 will have it fixed.  force=udma66 should work.
+> 
+
+Hi, I get same error (Unknown boot option `libata.force=3:1.5': ignoring
+) although I am trying it on 2.6.27.4 (MDV flavor - but still).
+
+Any help? 
+
+Thanks...
 
 
-regards
-   Mario
--- 
-Evidently men are more intelligent than women. Every woman on earth
-believes that men should be able to read minds. Every man knows this
-is impossible. Ergo, we are more intelligent.
+
+
