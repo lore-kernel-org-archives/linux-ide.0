@@ -1,30 +1,40 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/5] storage-fixup: a Makefile
-Date: Wed, 12 Nov 2008 14:28:31 +0900
-Message-ID: <491A697F.8090808@kernel.org>
-References: <200810290911.51961.kel@otaku42.de>
+Subject: Re: [Frequent Head Unloads] ASUS A6B00U Notebook affected
+Date: Wed, 12 Nov 2008 14:29:51 +0900
+Message-ID: <491A69CF.3050308@kernel.org>
+References: <490E7E44.2030206@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53185 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:56291 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750961AbYKLF2i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Nov 2008 00:28:38 -0500
-In-Reply-To: <200810290911.51961.kel@otaku42.de>
+	id S1751122AbYKLF35 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Nov 2008 00:29:57 -0500
+In-Reply-To: <490E7E44.2030206@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kel Modderman <kel@otaku42.de>
+To: =?UTF-8?B?TWljaGHFgiBHb8WCxJliaW93c2tp?= <mgol86@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Kel Modderman wrote:
-> +dist: clean
-> +	git-archive --format=tar --prefix=$(NAME)-$(VERSION)/ HEAD \
-> +		$(FILES) | tar -C.. -xf -
-> +	tar -czvf ../$(NAME)-$(VERSION).tar.gz -C.. $(NAME)-$(VERSION)/
-> +	$(RM) -r ../$(NAME)-$(VERSION)/
+Micha=C5=82 Go=C5=82=C4=99biowski wrote:
+> Hello,
+>=20
+> My ASUS A6B00U notebook (in A6U series) is also affected by frequent
+> head unloads, mentioned here:
+> http://ata.wiki.kernel.org/index.php/Known_issues#Drives_which_perfor=
+m_frequent_head_unloads_under_Linux
+>=20
+>=20
+> I've applied the fix by adding to /etc/rc.local a line:
+> hdparm -B 254 /dev/sda
+> so if these affect attached logs, I can change it for a while and sen=
+d
+> them once more.
 
-Why untar and tar again?
+When idle, how much does the unload count increase per hour?
 
--- 
+Thanks.
+
+--=20
 tejun
