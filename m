@@ -1,35 +1,91 @@
-From: Florian Fainelli <florian@openwrt.org>
-Subject: Re: [PATCH] pata-rb532-cf: fix signature of the xfer function
-Date: Wed, 12 Nov 2008 03:26:27 +0100
-Message-ID: <200811120326.28136.florian@openwrt.org>
-References: <1226448821-10933-1-git-send-email-n0-1@freewrt.org> <1226448849-11460-1-git-send-email-n0-1@freewrt.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.28-rc3 libata: still "failed to IDENTIFY" on bootup
+Date: Wed, 12 Nov 2008 11:35:02 +0900
+Message-ID: <491A40D6.1000207@kernel.org>
+References: <20081109130231.GA20290@rhlx01.hs-esslingen.de> <4919521E.2040703@kernel.org> <20081111161113.GA4179@rhlx01.hs-esslingen.de> <20081111174634.GA11632@rhlx01.hs-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------090309060308020404010704"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:60154 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546AbYKLC0f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Nov 2008 21:26:35 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so220067fgg.17
-        for <linux-ide@vger.kernel.org>; Tue, 11 Nov 2008 18:26:33 -0800 (PST)
-In-Reply-To: <1226448849-11460-1-git-send-email-n0-1@freewrt.org>
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:49008 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751497AbYKLCfW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Nov 2008 21:35:22 -0500
+In-Reply-To: <20081111174634.GA11632@rhlx01.hs-esslingen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Sutter <n0-1@freewrt.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Andreas Mohr <andi@lisas.de>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hi Phil,
+This is a multi-part message in MIME format.
+--------------090309060308020404010704
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-(CC'in Jeff as he is the libata maintainer).
+Andreas Mohr wrote:
+> when searching for the "identify retried exceeded" BSD error message
+> the CRX700E-mentioning page is the _only_ one that comes up on Google!!
+> (IOW, it strongly looks like this issue seems quite isolated to CRX700E drives
+> only and we should find a way to implement an IDENTIFY-timeout-related blacklist flag,
+> for CRX700E, somehow).
+> 
+> ...right?
+> 
+> (BTW, does a drive firmware have to do something special to obey
+> Cable Select protocol properly, and would this thus indicate a firmware bug indeed?)
 
-Le Wednesday 12 November 2008 01:14:09 Phil Sutter, vous avez =E9crit=A0=
-:
-> Per definition, this function should return the number of bytes
-> consumed. Also take care of the unlikely case when buflen is not a
-> multiple of four; while transferring, the division cuts the remaining
-> bytes, so alter the return value accordingly.
->
-> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
-Acked-by: Florian Fainelli <florian@openwrt.org>
+I think libata screwed up somewhere.  Can you please apply the attached
+patch and report the kernel log?
+
+-- 
+tejun
+
+--------------090309060308020404010704
+Content-Type: text/x-patch;
+ name="phantom-debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="phantom-debug.patch"
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 4b47394..abbb5f0 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1226,11 +1226,16 @@ fsm_start:
+ 		} else {
+ 			/* ATA PIO protocol */
+ 			if (unlikely((status & ATA_DRQ) == 0)) {
++				ata_dev_printk(qc->dev, KERN_INFO, "XXX status=0x%x hdiag=%d\n",
++					       status, qc->dev->horkage & ATA_HORKAGE_DIAGNOSTIC);
++
+ 				/* handle BSY=0, DRQ=0 as error */
+-				if (likely(status & (ATA_ERR | ATA_DF)))
++				if (likely(status & (ATA_ERR | ATA_DF))) {
+ 					/* device stops HSM for abort/error */
+ 					qc->err_mask |= AC_ERR_DEV;
+-				else {
++					if (qc->dev->horkage & ATA_HORKAGE_DIAGNOSTIC)
++						qc->err_mask |= AC_ERR_NODEV_HINT;
++				} else {
+ 					/* HSM violation. Let EH handle this.
+ 					 * Phantom devices also trigger this
+ 					 * condition.  Mark hint.
+@@ -1838,6 +1843,8 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
+ 
+ 	/* determine if device is ATA or ATAPI */
+ 	class = ata_dev_classify(&tf);
++	ata_dev_printk(dev, KERN_INFO, "XXX sff_dev_classify present=%d hdiag=%d tf=%02x:%02x:%02x class=%d\n",
++		       present, dev->horkage & ATA_HORKAGE_DIAGNOSTIC, tf.lbal, tf.lbam, tf.lbah, class);
+ 
+ 	if (class == ATA_DEV_UNKNOWN) {
+ 		/* If the device failed diagnostic, it's likely to
+@@ -1981,6 +1988,7 @@ int ata_sff_softreset(struct ata_link *link, unsigned int *classes,
+ 		devmask |= (1 << 0);
+ 	if (slave_possible && ata_devchk(ap, 1))
+ 		devmask |= (1 << 1);
++	ata_link_printk(link, KERN_INFO, "XXX devmask=%x\n", devmask);
+ 
+ 	/* select device 0 again */
+ 	ap->ops->sff_dev_select(ap, 0);
+
+--------------090309060308020404010704--
