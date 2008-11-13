@@ -1,66 +1,79 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: improve phantom device detection
-Date: Thu, 13 Nov 2008 10:04:46 +0900
-Message-ID: <491B7D2E.5040004@kernel.org>
+From: Evgeni Golov <sargentd@die-welt.net>
+Subject: Re: Odd behaviour of device in response to idleimmediate with
+ unload
+Date: Thu, 13 Nov 2008 12:33:38 +0100
+Message-ID: <20081113113345.12E2D1FD80@chi.die-welt.net>
+References: <491083CC.5050508@rtr.ca>
+	<49108AA0.1080507@rtr.ca>
+	<491090BC.5060403@rtr.ca>
+	<20081104185444.3BE721FDF7@chi.die-welt.net>
+	<4910A509.1030307@rtr.ca>
+	<49116811.5000109@kernel.org>
+	<873ai6cmio.fsf@denkblock.local>
+	<4911A8EA.8030605@kernel.org>
+	<87k5bhxerq.fsf@denkblock.local>
+	<4913BF3D.3090704@kernel.org>
+	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
+	<4917F822.5060204@kernel.org>
+	<20081110102607.094281FD7C@chi.die-welt.net>
+	<87r65ju83r.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__13_Nov_2008_12_33_38_+0100_1XdGKY4kJVhIsb+a"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54475 "EHLO hera.kernel.org"
+Received: from chi.die-welt.net ([84.246.123.210]:44356 "EHLO chi.die-welt.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751505AbYKMBFb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Nov 2008 20:05:31 -0500
+	id S1751715AbYKMLdv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Nov 2008 06:33:51 -0500
+In-Reply-To: <87r65ju83r.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
-Cc: stable@kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Tejun Heo <tj@kernel.org>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Currently libata uses four methods to detect device presence.
+--Signature=_Thu__13_Nov_2008_12_33_38_+0100_1XdGKY4kJVhIsb+a
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-1. PHY status if available.
-2. TF register R/W test (only promotes presence, never demotes)
-3. device signature after reset
-4. IDENTIFY failure detection in SFF state machine
+On Mon, 10 Nov 2008 12:35:20 +0100 Elias Oltmanns wrote:
 
-Combination of the above works well in most cases but recently there
-have been a few reports where a phantom device causes unnecessary
-delay during probe.  In both cases, PHY status wasn't available.  In
-one case, it passed #2 and #3 and failed IDENTIFY with ATA_ERR which
-didn't qualify as #4.  The other failed #2 but as it passed #3 and #4,
-it still caused failure.
+> Evgeni Golov <sargentd@die-welt.net> wrote:
+> > On Mon, 10 Nov 2008 18:00:18 +0900 Tejun Heo wrote:
+> >
+> >> Is the phy event before or after head unloading?
+> >
+> > How do I check this?
+>=20
+> # dmesg
+> # echo 3000 > /sys/block/sda/device/unload_heads &
+> # dmesg
+>=20
+> The first call to dmesg is only to make sure that it is in the cache so
+> the second won't be blocked by the park request.
 
-In both cases, phantom device reported diagnostic failure, so these
-cases can be safely worked around by considering any !ATA_DRQ IDENTIFY
-failure as NODEV_HINT if diagnostic failure is set.
+Okay, I get the following as soon I issue unload:
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xf
+ata1: SError: { PHYRdyChg CommWake }
+ata1: hard resetting link
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: SError: 0x0
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-sff.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+The rest comes a bit later.
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 4b47394..9033d16 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1227,10 +1227,19 @@ fsm_start:
- 			/* ATA PIO protocol */
- 			if (unlikely((status & ATA_DRQ) == 0)) {
- 				/* handle BSY=0, DRQ=0 as error */
--				if (likely(status & (ATA_ERR | ATA_DF)))
-+				if (likely(status & (ATA_ERR | ATA_DF))) {
- 					/* device stops HSM for abort/error */
- 					qc->err_mask |= AC_ERR_DEV;
--				else {
-+
-+					/* If diagnostic failed and this is
-+					 * IDENTIFY, it's likely a phantom
-+					 * device.  Mark hint.
-+					 */
-+					if (qc->dev->horkage &
-+					    ATA_HORKAGE_DIAGNOSTIC)
-+						qc->err_mask |=
-+							AC_ERR_NODEV_HINT;
-+				} else {
- 					/* HSM violation. Let EH handle this.
- 					 * Phantom devices also trigger this
- 					 * condition.  Mark hint.
+HTH
+Evgeni
+
+--Signature=_Thu__13_Nov_2008_12_33_38_+0100_1XdGKY4kJVhIsb+a
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkkcEJIACgkQJKAUGKwVtQxmqACdFvfkD+qk0maZHPc4eeuyTgoj
+ZbMAnjcVC0qXMDnyNJPfPOUIpNTkjyED
+=QdNs
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__13_Nov_2008_12_33_38_+0100_1XdGKY4kJVhIsb+a--
