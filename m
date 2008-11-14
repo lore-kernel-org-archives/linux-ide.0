@@ -1,77 +1,137 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] fix pata-rb532-cf
-Date: Fri, 14 Nov 2008 18:53:44 -0500
-Message-ID: <491E0F88.5000808@garzik.org>
-References: <1225403251-15705-1-git-send-email-n0-1@freewrt.org> <1226448783-10047-1-git-send-email-n0-1@freewrt.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
+Date: Fri, 14 Nov 2008 18:55:42 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38113 "EHLO mail.dvmed.net"
+Received: from lucidpixels.com ([75.144.35.66]:40914 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754231AbYKNXxv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Nov 2008 18:53:51 -0500
-In-Reply-To: <1226448783-10047-1-git-send-email-n0-1@freewrt.org>
+	id S1751598AbYKNXzn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Nov 2008 18:55:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Sutter <n0-1@freewrt.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Florian Fainelli <florian@openwrt.org>
+To: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-Phil Sutter wrote:
-> The following patch series is a complete updated set of changes I did to
-> the pata-rb532-cf driver. In ordered detail: fix functionality, restore
-> the behaviour of the original driver when doing transfers and eliminate
-> compiler warnings.
-> 
-> Greetings, Phil
-> 
-> ---
-> 
-> After applying the following changes I could verify functionality by
-> mounting a filesystem on the cfdisk and reading/writing files in it.
-> 
-> The set_irq_type() function must be wrong, as there is no set_type()
-> function defined for the rb532 IRQ chip. But as the used IRQ actually is
-> being triggered by a GPIO, setting it's interrupt level should be the
-> right alternative. Also to clear a GPIO triggered IRQ, the source has to
-> be cleared. This is being done at the end of rb532_pata_irq_handler.
-> 
-> Signed-off-by: Phil Sutter <n0-1@freewrt.org>
-> Acked-by: Florian Fainelli <florian@openwrt.org>
-> ---
->  drivers/ata/pata_rb532_cf.c |   15 ++++++++++-----
->  1 files changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-> index f8b3ffc..7b11f40 100644
-> --- a/drivers/ata/pata_rb532_cf.c
-> +++ b/drivers/ata/pata_rb532_cf.c
-> @@ -31,6 +31,7 @@
->  #include <scsi/scsi_host.h>
->  
->  #include <asm/gpio.h>
-> +#include <asm/mach-rc32434/gpio.h>
->  
->  #define DRV_NAME	"pata-rb532-cf"
->  #define DRV_VERSION	"0.1.0"
-> @@ -39,7 +40,8 @@
->  #define RB500_CF_MAXPORTS	1
->  #define RB500_CF_IO_DELAY	400
->  
-> -#define RB500_CF_REG_CMD	0x0800
-> +#define RB500_CF_REG_BASE	0x0800
-> +#define RB500_CF_REG_ERR	0x080D
->  #define RB500_CF_REG_CTRL	0x080E
->  #define RB500_CF_REG_DATA	0x0C00
->  
-> @@ -62,7 +64,7 @@ static inline void rb532_pata_finish_io(struct ata_port *ap)
->  	ata_sff_dma_pause(ap);
->  	ndelay(RB500_CF_IO_DELAY);
->  
-> -	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
-> +	rb532_gpio_set_ilevel(1, info->gpio_line);
+I am trying to find out what the root cause of this error/problem is:
+https://bugzilla.redhat.com/show_bug.cgi?id=462425
 
-I'll need to wait for this function to appear upstream... it's not in 
-2.6.28-rc at least
+It seems like every week or other week someone else reports this on the 
+linux-raid mailing list.
 
+I have enabled debugging in the libata.h file and I find that ata15 is 
+constantly being accessed for some reason, why is this?
+
+The first two disks are md/RAID1, the other volume is not being written to or 
+read:
+
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000HLFS-0 Rev: 04.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000HLFS-0 Rev: 04.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi4 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi5 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi6 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi10 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi11 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi12 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi13 Channel: 00 Id: 00 Lun: 00
+   Vendor: ATA      Model: WDC WD3000GLFS-0 Rev: 03.0
+   Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi14 Channel: 00 Id: 00 Lun: 00
+   Vendor: _NEC     Model: DVD_RW ND-3520A  Rev: 1.04
+   Type:   CD-ROM                           ANSI  SCSI revision: 05
+
+What is the purpose of this, what is it doing?
+Also in relation to the "ATAPI" message, is that for ATA or ATAPI, e.g. if 
+I disable CDROM support, will those messages stop?
+
+Nov 14 18:50:41 p34 kernel: [ 1205.558414] ata_sff_host_intr: ata15: protocol 5 task_state 3
+Nov 14 18:50:41 p34 kernel: [ 1205.558420] ata_sff_hsm_move: ata15: protocol 5 task_state 3 (dev_stat 0x51)
+Nov 14 18:50:41 p34 kernel: [ 1205.558422] ata_sff_hsm_move: ata15: protocol 5 task_state 4 (dev_stat 0x51)
+Nov 14 18:50:41 p34 kernel: [ 1205.558433] ata_scsi_timed_out: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558434] ata_scsi_timed_out: EXIT, ret=0
+Nov 14 18:50:41 p34 kernel: [ 1205.558438] ata_scsi_error: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558440] ata_port_flush_task: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558443] ata15: ata_port_flush_task: EXIT
+Nov 14 18:50:41 p34 kernel: [ 1205.558450] ata_eh_link_autopsy: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558452] atapi_eh_request_sense: ATAPI request sense
+Nov 14 18:50:41 p34 kernel: [ 1205.558454] ata15: ata_dev_select: ENTER, device 0, wait 1
+Nov 14 18:50:41 p34 kernel: [ 1205.558494] ata_sff_tf_load: feat 0x0 nsect 0x0 lba 0x0 0x60 0x0
+Nov 14 18:50:41 p34 kernel: [ 1205.558496] ata_sff_tf_load: device 0xA0
+Nov 14 18:50:41 p34 kernel: [ 1205.558509] ata_sff_exec_command: ata15: cmd 0xA0
+Nov 14 18:50:41 p34 kernel: [ 1205.558526] ata_sff_hsm_move: ata15: protocol 6 task_state 1 (dev_stat 0x58)
+Nov 14 18:50:41 p34 kernel: [ 1205.558527] atapi_send_cdb: send cdb
+Nov 14 18:50:41 p34 kernel: [ 1205.558697] ata_sff_host_intr: ata15: protocol 6 task_state 2
+Nov 14 18:50:41 p34 kernel: [ 1205.558703] ata_sff_hsm_move: ata15: protocol 6 task_state 2 (dev_stat 0x58)
+Nov 14 18:50:41 p34 kernel: [ 1205.558713] atapi_pio_bytes: ata15: xfering 18 bytes
+Nov 14 18:50:41 p34 kernel: [ 1205.558715] __atapi_pio_bytes: data read
+Nov 14 18:50:41 p34 kernel: [ 1205.558825] ata_sff_host_intr: ata15: protocol 6 task_state 2
+Nov 14 18:50:41 p34 kernel: [ 1205.558831] ata_sff_hsm_move: ata15: protocol 6 task_state 2 (dev_stat 0x50)
+Nov 14 18:50:41 p34 kernel: [ 1205.558833] ata_sff_hsm_move: ata15: protocol 6 task_state 3 (dev_stat 0x50)
+Nov 14 18:50:41 p34 kernel: [ 1205.558834] ata_sff_hsm_move: ata15: dev 0 command complete, drv_stat 0x50
+Nov 14 18:50:41 p34 kernel: [ 1205.558858] ata_port_flush_task: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558860] ata15: ata_port_flush_task: EXIT
+Nov 14 18:50:41 p34 kernel: [ 1205.558865] ata_eh_link_autopsy: EXIT
+Nov 14 18:50:41 p34 kernel: [ 1205.558866] ata_eh_recover: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558868] ata_eh_revalidate_and_attach: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558869] ata_eh_recover: EXIT, rc=0
+Nov 14 18:50:41 p34 kernel: [ 1205.558870] atapi_qc_complete: ENTER, err_mask 0x0
+Nov 14 18:50:41 p34 kernel: [ 1205.558874] ata_scsi_error: EXIT
+Nov 14 18:50:41 p34 kernel: [ 1205.558882] ata_scsi_dump_cdb: CDB (15:0,0,0) 4a 01 00 00 10 00 00 00 08
+Nov 14 18:50:41 p34 kernel: [ 1205.558883] ata_scsi_translate: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.558885] ata15: ata_dev_select: ENTER, device 0, wait 1
+Nov 14 18:50:41 p34 kernel: [ 1205.558917] ata_sff_tf_load: feat 0x0 nsect 0x0 lba 0x0 0x8 0x0
+Nov 14 18:50:41 p34 kernel: [ 1205.558920] ata_sff_tf_load: device 0xA0
+Nov 14 18:50:41 p34 kernel: [ 1205.558932] ata_sff_exec_command: ata15: cmd 0xA0
+Nov 14 18:50:41 p34 kernel: [ 1205.558937] ata_scsi_translate: EXIT
+Nov 14 18:50:41 p34 kernel: [ 1205.558951] ata_sff_hsm_move: ata15: protocol 6 task_state 1 (dev_stat 0x58)
+Nov 14 18:50:41 p34 kernel: [ 1205.558952] atapi_send_cdb: send cdb
+Nov 14 18:50:41 p34 kernel: [ 1205.559120] ata_sff_host_intr: ata15: protocol 6 task_state 2
+Nov 14 18:50:41 p34 kernel: [ 1205.559126] ata_sff_hsm_move: ata15: protocol 6 task_state 2 (dev_stat 0x58)
+Nov 14 18:50:41 p34 kernel: [ 1205.559126] atapi_pio_bytes: ata15: xfering 8 bytes
+Nov 14 18:50:41 p34 kernel: [ 1205.559126] __atapi_pio_bytes: data read
+Nov 14 18:50:41 p34 kernel: [ 1205.559258] ata_sff_host_intr: ata15: protocol 6 task_state 2
+Nov 14 18:50:41 p34 kernel: [ 1205.559264] ata_sff_hsm_move: ata15: protocol 6 task_state 2 (dev_stat 0x50)
+Nov 14 18:50:41 p34 kernel: [ 1205.559266] ata_sff_hsm_move: ata15: protocol 6 task_state 3 (dev_stat 0x50)
+Nov 14 18:50:41 p34 kernel: [ 1205.559268] ata_sff_hsm_move: ata15: dev 0 command complete, drv_stat 0x50
+Nov 14 18:50:41 p34 kernel: [ 1205.559269] atapi_qc_complete: ENTER, err_mask 0x0
+Nov 14 18:50:41 p34 kernel: [ 1205.559297] ata_scsi_dump_cdb: CDB (15:0,0,0) 1e 00 00 00 00 00 00 00 00
+Nov 14 18:50:41 p34 kernel: [ 1205.559299] ata_scsi_translate: ENTER
+Nov 14 18:50:41 p34 kernel: [ 1205.559301] ata15: ata_dev_select: ENTER, device 0, wait 1
+Nov 14 18:50:41 p34 kernel: [ 1205.559333] ata_sff_tf_load: feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
+Nov 14 18:50:41 p34 kernel: [ 1205.559335] ata_sff_tf_load: device 0xA0
+Nov 14 18:50:41 p34 kernel: [ 1205.559348] ata_sff_exec_command: ata15: cmd 0xA0
+Nov 14 18:50:41 p34 kernel: [ 1205.559352] ata_scsi_translate: EXIT
+Nov 14 18:50:41 p34 kernel: [ 1205.559369] ata_sff_hsm_move: ata15: protocol 5 task_state 1 (dev_stat 0x58)
+Nov 14 18:50:41 p34 kernel: [ 1205.559371] atapi_send_cdb: send cdb
+Nov 14 18:50:41 p34 kernel: [ 1205.559517] ata_sff_host_intr: ata15: protocol 5 task_state 3
+Nov 14 18:50:41 p34 kernel: [ 1205.559523] ata_sff_hsm_move: ata15: protocol 5 task_state 3 (dev_stat 0x50)
+Nov 14 18:50:41 p34 kernel: [ 1205.559525] ata_sff_hsm_move: ata15: dev 0 command complete, drv_stat 0x50
+Nov 14 18:50:41 p34 kernel: [ 1205.559526] atapi_qc_complete: ENTER, err_mask 0x0
 
