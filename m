@@ -1,32 +1,63 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
-Date: Fri, 14 Nov 2008 07:59:35 +0100
-Message-ID: <5595676605432696d80b8394cfd8ae83@localhost>
-References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com> <3b5e4132a8abe8d67b4f1701a384a2d4@localhost> <491996D3.80805@rtr.ca> <4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com> <491A2F65.8030605@rtr.ca> <491A40AB.4070002@kernel.org> <90e002e7b2d47cad80ff952a2a81f0e7@localhost> <491A90BE.9030005@kernel.org> <1741f98465176fff86a1dda48fc965ac@localhost> <491AA18A.9090001@kernel.org> <fdc08450bd57b75c90440beab3d7534a@localhost> <491AA682.2000100@kernel.org> <f6c0b70008a38679e11dff42a0970c9c@localhost> <491CE4A6.90802@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] New IDE/block driver for OCTEON SOC Compact Flash interface.
+Date: Fri, 14 Nov 2008 13:22:45 +0300
+Message-ID: <491D5175.7060207@ru.mvista.com>
+References: <491C7F28.2070507@caviumnetworks.com> <491CC0B6.8020400@ru.mvista.com> <491CC6D4.2080604@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lvps87-230-0-242.dedicated.hosteurope.de ([87.230.0.242]:52577
-	"EHLO lvps87-230-0-242.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751037AbYKNG7l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Nov 2008 01:59:41 -0500
-In-Reply-To: <491CE4A6.90802@rtr.ca>
+Received: from h155.mvista.com ([63.81.120.155]:55263 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752960AbYKNKWx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Nov 2008 05:22:53 -0500
+In-Reply-To: <491CC6D4.2080604@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-kernel@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>, linux-ide@vger.kernel.org
 
-On Thu, 13 Nov 2008 21:38:30 -0500, Mark Lord <liml@rtr.ca> wrote:
+Hello
 
-> One more:  Let's see "hdparm -N" for that drive
-> (note to self: add -N functionality to -I someday..).
+David Daney wrote:
 
-/dev/sda:
- max sectors   = 66055248/15723600, HPA setting seems invalid
+>>> As part of our efforts to get the Cavium OCTEON processor support
+>>> merged (see: http://marc.info/?l=linux-mips&m=122600487218824), we
+>>> have this CF driver for your consideration.
+>>>
+>>> Most OCTEON variants have *no* DMA or interrupt support on the CF
+>>> interface so a simple bit-banging approach is taken.  Although if 
+>>> DMA is
+>>> available, we do take advantage of it.
+>>>
+>>> The register definitions are part of the chip support patch set
+>>> mentioned above, and are not included here.
+>>>
+>>> At this point I would like to get feedback as to whether this is a
+>>> good approach for the CF driver, or perhaps generate ideas about other
+>>> possible approaches.
+>>
+>>   It's totally unacceptable for drivers/ide/ as this is 
+>> self-containeed driver no using IDE core for anything, so this can 
+>> only fit well to drivers/block/.
+>
+> Not quite true, it is using ide_fix_driveid() and ide_fixstring(), but 
+> I get your point.
 
-Hmm, is the "HPA setting seems invalid" an indication that this drive is
-clamped?
+   Overlooked those. I just saw that it looked very alike the version 
+that I've seen -- hidden deep inside arch/mips/ at that time. :-)
 
-Hope that helps,
-Mike
+> OTOH, CF support via self-contained driver is certainly a waste of 
+> code since IDE core and (libata) are here to drive the CF devices as 
+> well. What we need is a "normal" IDE or libata (at your option) driver.
+>
+> I will have to try it to see if the hardware has the necessary support.
+
+   It sure does have the necessary support -- this is a part of CF spec.
+
+> Thanks,
+> David Daney
+
+WBR, Sergei
+
+
