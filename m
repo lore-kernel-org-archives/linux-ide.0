@@ -1,100 +1,42 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: And again help on deciphering an error (continued)
-Date: Fri, 14 Nov 2008 22:33:43 +0100
-Message-ID: <491DEEB7.2000200@rabbit.us>
-References: <4907A5FA.7050903@rabbit.us> <491DC218.9010301@rabbit.us> <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Guntsche Michael <mike@it-loops.com>
+Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
+Date: Fri, 14 Nov 2008 23:26:00 +0100
+Message-ID: <C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com> <3b5e4132a8abe8d67b4f1701a384a2d4@localhost> <491996D3.80805@rtr.ca> <4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com> <491A2F65.8030605@rtr.ca> <491A40AB.4070002@kernel.org> <90e002e7b2d47cad80ff952a2a81f0e7@localhost> <491A90BE.9030005@kernel.org> <1741f98465176fff86a1dda48fc965ac@localhost> <491AA18A.9090001@kernel.org> <fdc08450bd57b75c90440beab3d7534a@localhost> <491AA682.2000100@kernel.org> <f6c0b70008a38679e11dff42a0970c9c@localhost> <491CE4A6.90802@rtr.ca>
+ <5595676605432696d80b8394cfd8ae83@localhost> <491DB3AB.7020306@rtr.ca> <491DB44A.5070701@rtr.ca>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lvps87-230-0-242.dedicated.hosteurope.de ([87.230.0.242]:53320
+	"EHLO lvps87-230-0-242.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753850AbYKNW0G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Nov 2008 17:26:06 -0500
+In-Reply-To: <491DB44A.5070701@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Justin Piszcz wrote:
-> 
-> 
-> On Fri, 14 Nov 2008, Peter Rabbitson wrote:
-> 
->> Peter Rabbitson wrote:
->>> Hello,
->>>
->>> I need help with understanding what is going on here
->>> (full log):
->>>
->>>
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: exception Emask 0x10 SAct 0x0
->>> SErr 0x80000 action 0xe frozen
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: irq_stat 0x01100010, PHY RDY
->>> changed
->>> Oct 27 11:33:41 Arzamas kernel: ata6: SError: { 10B8B }
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: cmd
->>> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->>> Oct 27 11:33:41 Arzamas kernel: res 06/37:00:00:00:00/00:00:00:00:06/00
->>> Emask 0x12 (ATA bus error)
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: error: { IDNF ABRT }
->>> Oct 27 11:33:41 Arzamas kernel: ata6: hard resetting link
->>> Oct 27 11:33:46 Arzamas kernel: ata6: SATA link up 3.0 Gbps (SStatus 123
->>> SControl 0)
->>> Oct 27 11:33:46 Arzamas kernel: ata6.00: configured for UDMA/100
->>> Oct 27 11:33:46 Arzamas kernel: ata6: EH complete
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] 488397168 512-byte
->>> hardware sectors (250059 MB)
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Write Protect is off
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Mode Sense: 00 3a
->>> 00 00
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Write cache: enabled,
->>> read cache: enabled, doesn't support DPO or FUA
->>> Oct 27 11:33:46 Arzamas kernel: end_request: I/O error, dev sde, sector
->>> 488166955
->>
->> The saga continues. After replacing the drive (and I didn't make a
->> mistake as the serial numbers don't match) I got _exaclty_ the same
->> error a week later. I have replaced the cable for the drive in question,
->> will see what happens. The controller is:
->>
->> 02:03.0 Mass storage controller: Silicon Image, Inc. SiI 3124 PCI-X
->> Serial ATA Controller (rev 02)
->>     Subsystem: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV+ VGASnoop- ParErr+
->> Stepping+ SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 64, Cache Line Size: 64 bytes
->>     Interrupt: pin A routed to IRQ 25
->>     Region 0: Memory at fc5fd800 (64-bit, non-prefetchable) [size=128]
->>     Region 2: Memory at fc5f0000 (64-bit, non-prefetchable) [size=32K]
->>     Region 4: I/O ports at b000 [size=16]
->>     Expansion ROM at fc480000 [disabled] [size=512K]
->>     Capabilities: [64] Power Management version 2
->>         Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA
->> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>         Status: D0 PME-Enable- DSel=0 DScale=1 PME-
->>     Capabilities: [40] PCI-X non-bridge device
->>         Command: DPERE- ERO+ RBC=512 OST=12
->>         Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple
->> DMMRBC=2048
->> DMOST=12 DMCRS=128 RSCEM- 266MHz- 533MHz-
->>     Capabilities: [54] Message Signalled Interrupts: Mask- 64bit+
->> Queue=0/0
->> Enable-
->>         Address: 0000000000000000  Data: 0000
->>     Kernel driver in use: sata_sil24
->>
->>
->> Anyone has any bright ideas?
-> 
-> Hm, someone else also has similar problems, maybe we ought to buy new hw or
-> something, I have the same/similar issue as you.
-> 
-> BTW, after that error, if you re-run a short/long test, do they succeed or
-> hang (never complete)?
-> 
 
-They succeed with flying colors. Moreover I had badblocks -svw running
-at the same time (so the drive was really loaded). And I did this
-repeatedly with the first one - no issues.
+On Nov 14, 2008, at 18:24, Mark Lord wrote:
 
-Peter
+> To clarify, the second number reported should NEVER be less than
+> the first number.  If it is, then there's a bug in the low-level
+> libata driver for your SATA/IDE controller -- it's not returning
+> the high-order-bytes from the SAT command.  Several drivers had
+> this bug until 2.6.27 or so, and some may still misbehave.
+>
+> A newer version of hdparm will verify that, and also show the correct
+> value (hopefully) obtained via a completely different mechanism.
+>
+> Thanks
+
+Here the new output, it still does not look right, or am I wrong?
+
+/dev/sda:
+  max sectors   = 66055248/15723600(66055248?), HPA setting seems  
+invalid (buggy kernel device driver?)
+
+Kind regards,
+Michael
