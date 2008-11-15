@@ -1,41 +1,43 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Robert Hancock <hancockr@shaw.ca>
 Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Fri, 14 Nov 2008 19:12:45 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811141912190.6297@p34.internal.lan>
+Date: Fri, 14 Nov 2008 21:22:58 -0600
+Message-ID: <491E4092.5030804@shaw.ca>
 References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753778AbYKODXW@vger.kernel.org>
 In-Reply-To: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.orglinux-raid@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-
-On Fri, 14 Nov 2008, Justin Piszcz wrote:
-
+Justin Piszcz wrote:
 > I am trying to find out what the root cause of this error/problem is:
 > https://bugzilla.redhat.com/show_bug.cgi?id=462425
->
+
+The problem is that people assume that timeouts with DRDY like that bug 
+refers to must be the same problem when it is often not, and so bug 
+reports like this end up conflated with all manner of different issues. 
+It's one of the most generic errors imaginable. Also, as one of the 
+posters mentions, "I think this problem tends to get ignored because 
+there are so many things that can cause it (bad drives, cables, power 
+supplies, or any combination thereof).."  Just because older kernels did 
+work doesn't necessarily prove anything, if they didn't do NCQ (which in 
+the Marvell case, I think older kernels didn't) or are pushing the disk 
+subsystem harder this may expose hardware issues that didn't show up on 
+older kernels.
+
+One really needs to isolate individual problems and try some hardware 
+debugging before looking into the kernel for such problems..
+
+> 
 > It seems like every week or other week someone else reports this on the 
 > linux-raid mailing list.
->
+> 
 > I have enabled debugging in the libata.h file and I find that ata15 is 
 > constantly being accessed for some reason, why is this?
->
-> The first two disks are md/RAID1, the other volume is not being written to or 
-> read:
->
 
-In messages:
-
-Nov 14 19:12:01 p34 kernel: [ 2485.558898] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:01 p34 kernel: [ 2485.559318] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.554449] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.554725] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.555399] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.555746] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.556194] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.556449] ata15: ata_dev_select: ENTER, device 0, wait 1
-
+Presumably ata15 is the port the DVD-RW is connected to, likely HAL is 
+polling for media or something..
