@@ -1,31 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [git patch] libata fix
-Date: Sat, 15 Nov 2008 20:30:36 +0000
-Message-ID: <20081115203036.47da5548@lxorguk.ukuu.org.uk>
-References: <20081114235640.GA3624@havoc.gtf.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
+Date: Sat, 15 Nov 2008 15:43:32 -0500
+Message-ID: <491F3474.2070801@rtr.ca>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com> <3b5e4132a8abe8d67b4f1701a384a2d4@localhost> <491996D3.80805@rtr.ca> <4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com> <491A2F65.8030605@rtr.ca> <491A40AB.4070002@kernel.org> <90e002e7b2d47cad80ff952a2a81f0e7@localhost> <491A90BE.9030005@kernel.org> <1741f98465176fff86a1dda48fc965ac@localhost> <491AA18A.9090001@kernel.org> <fdc08450bd57b75c90440beab3d7534a@localhost> <491AA682.2000100@kernel.org> <f6c0b70008a38679e11dff42a0970c9c@localhost> <491CE4A6.90802@rtr.ca> <5595676605432696d80b8394cfd8ae83@localhost> <491DB3AB.7020306@rtr.ca> <491DB44A.5
+ 070701@rtr.ca> <C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com> <491E4C6B.6030309@rtr.ca> <491E4D62.7060205@rtr.ca> <9D800884-830E-4832-BB31-1B36E2882343@it-loops.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42579 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751518AbYKOUbJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Nov 2008 15:31:09 -0500
-In-Reply-To: <20081114235640.GA3624@havoc.gtf.org>
+Received: from rtr.ca ([76.10.145.34]:56218 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751635AbYKOUmn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Nov 2008 15:42:43 -0500
+In-Reply-To: <9D800884-830E-4832-BB31-1B36E2882343@it-loops.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Guntsche Michael <mike@it-loops.com>
+Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-> Tejun Heo (1):
->       libata: improve phantom device detection
+Guntsche Michael wrote:
 > 
+> On Nov 15, 2008, at 5:17, Mark Lord wrote:
+> 
+>> Mark Lord wrote:
+>>> Which is odd, because google tells me that
+>>> the IC35L040AVER07-0 really is a 40GB drive.
+>>> Mmm..
+> 
+> I found the problem Mark and I am SOOOOOO sorry for wasting your time here.
+> Your remark about the drive being 40GB made me think about it again. As 
+> you know this is a quite old router that's running here.
+> When moving to 2.6 I also replaced the IBM disk with a new one (had 
+> several of them lying around back then).
+> The first one was CLAMPED with ibmsetmax. During the install of the new 
+> harddisk I clamped the new one with the JUMPERS on the DRIVE ond not 
+> with ibmsetmax.
+> I know remember that back then I thought that this would easier and more 
+> hassle free.
+> The libata stack, hdparm and everything else is working correctly it's 
+> the drive that's reporting 32GB!!!!!!!
+..
 
-This seems highly inappropriate for 2.6.28
+Ahh.. that's better.  Thanks for figuring this one out for us all!
 
-It fixes a case where people get a slow boot. It risks users suddenely
-finding some devices and controllers don't detect drives at all. Some are
-very quirky on device probe - eg the IT821x in RAID mode.
-
-This could be tested in -next/-mm/2.6.29-rc and backported without much
-pain.
+Cheers
