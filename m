@@ -1,107 +1,42 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
-Date: Fri, 14 Nov 2008 23:13:31 -0500
-Message-ID: <491E4C6B.6030309@rtr.ca>
+Date: Fri, 14 Nov 2008 23:17:38 -0500
+Message-ID: <491E4D62.7060205@rtr.ca>
 References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <1DE9BF42-39BB-4220-BDF0-62F14C854E77@it-loops.com> <4917DA12.8070307@kernel.org> <07a2f909b249db90ad6bfdddfdd17765@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com> <3b5e4132a8abe8d67b4f1701a384a2d4@localhost> <491996D3.80805@rtr.ca> <4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com> <491A2F65.8030605@rtr.ca> <491A40AB.4070002@kernel.org> <90e002e7b2d47cad80ff952a2a81f0e7@localhost> <491A90BE.9030005@kernel.org> <1741f98465176fff86a1dda48fc965ac@localhost> <491AA18A.9090001@kernel.org> <fdc08450bd57b75c90440beab3d7534a@localhost> <491AA682.2000100@kernel.org> <f6c0b70008a38679e11dff42a0970c9c@localhost> <491CE4A6.90802@rtr.ca>
- <5595676605432696d80b8394cfd8ae83@localhost> <491DB3AB.7020306@rtr.ca> <491DB44A.5070701@rtr.ca> <C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com>
+ <5595676605432696d80b8394cfd8ae83@localhost> <491DB3AB.7020306@rtr.ca> <491DB44A.5070701@rtr.ca> <C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com> <491E4C6B.6030309@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:53704 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:54334 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754159AbYKOEMn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Nov 2008 23:12:43 -0500
-In-Reply-To: <C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com>
+	id S1751888AbYKOEQt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Nov 2008 23:16:49 -0500
+In-Reply-To: <491E4C6B.6030309@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Guntsche Michael <mike@it-loops.com>
 Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Guntsche Michael wrote:
+Mark Lord wrote:
+..
+>>           *    Host Protected Area feature set
+> ..
 > 
-> On Nov 14, 2008, at 18:24, Mark Lord wrote:
+> That last line bothers me -- the '*' indicates that an HPA is in effect,
+> but the -N output indicates otherwise.. mmm...
+> Let's see:  66055248 = 0x3efec50.
+> If we mask off all but the lower 24 bits,
+> we get 0xefec50 = 15723600,
+> which matches what the buggy device driver
+> returned when it dropped the top 24 bits.
 > 
->> To clarify, the second number reported should NEVER be less than
->> the first number.  If it is, then there's a bug in the low-level
->> libata driver for your SATA/IDE controller -- it's not returning
->> the high-order-bytes from the SAT command.  Several drivers had
->> this bug until 2.6.27 or so, and some may still misbehave.
->>
->> A newer version of hdparm will verify that, and also show the correct
->> value (hopefully) obtained via a completely different mechanism.
->>
->> Thanks
+> So probably no bug in hdparm.
+> Which is odd, because google tells me that
+> the IC35L040AVER07-0 really is a 40GB drive.
 > 
-> Here the new output, it still does not look right, or am I wrong?
-> 
-> /dev/sda:
->  max sectors   = 66055248/15723600(66055248?), HPA setting seems invalid 
-> (buggy kernel device driver?)
+> Mmm..
 ..
 
-Ahh, okay, no HPA in effect.
-
-   max sectors = 66055248/ ... (66055248)
-
-That's the entire drive, ignoring the buggy libata driver
-that reports 15723600 (returns zeros for hob_lba[mhl]).
-
-Michael Guntsche wrote:
-> On a side note, since we are already talking about old chipsets and mobos.
-> Since this is a rather old hardware it was not possible to get the 40GB IBM
-> disk running in the first place. 
-> What I did back then (2.4 kernel days) was to use "ibmsetmax" to clamp the
-> disk to a smaller size and enabled the relevent option in the kernel. This
-> way I got past the BIOS (it stopped if the harddisk was saying it was >
-> 32GB??) but the linux kernel correctly saw the right size.
-> Looking ad the dmesg output right now I think that it is only seeing the
-> smaller size.
-> 
-> sd 0:0:0:0: [sda] 66055248 512-byte hardware sectors (33820 MB)
-..
-
-Well, according to the drive, it *is* a 33GB drive, not a 40GB drive.
-So whatever "ibmsetmax" did appears to be outside of the ATA standard
-way of doing it.  Unless I've got a bug in hdparm that I don't know about. :)
-
-> /dev/sda:
-> 
-> ATA device, with non-removable media
-> powers-up in standby; SET FEATURES subcmd spins-up.
->         Model Number:       IC35L040AVER07-0
->         Serial Number:      SXPTXGK0136
->         Firmware Revision:  ER4OA45A
-> Standards:
->         Used: ATA/ATAPI-5 T13 1321D revision 1
->         Supported: 5 4 3 & some of 6
-> Configuration:
->         Logical         max     current
->         cylinders       16383   16383
->         heads           16      16
->         sectors/track   63      63
->         --
->         CHS current addressable sectors:   16514064
->         LBA    user addressable sectors:   66055248
->         device size with M = 1024*1024:       32253 MBytes
->         device size with M = 1000*1000:       33820 MBytes (33 GB)
-..
->           *    Host Protected Area feature set
-..
-
-That last line bothers me -- the '*' indicates that an HPA is in effect,
-but the -N output indicates otherwise.. mmm... 
-
-Let's see:  66055248 = 0x3efec50.
-If we mask off all but the lower 24 bits,
-we get 0xefec50 = 15723600,
-which matches what the buggy device driver
-returned when it dropped the top 24 bits.
-
-So probably no bug in hdparm.
-Which is odd, because google tells me that
-the IC35L040AVER07-0 really is a 40GB drive.
-
-Mmm..
-
-  
+Oh..
+Since you now have hdparm-9.3, what do you get from "hdparm --dco-identify" ??
