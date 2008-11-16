@@ -1,47 +1,91 @@
-From: Harri Olin <harri.olin@gmail.com>
-Subject: Re: sata_mv, io stucks
-Date: Sun, 16 Nov 2008 14:35:13 +0200
-Message-ID: <49201381.9020704@gmail.com>
-References: <48F88449.1000704@ngs.ru> <49003B9C.1010303@ngs.ru> <4900A12F.3030307@rtr.ca> <491EE84B.1010600@gmail.com> <491F4096.9090701@rtr.ca> <491F5E42.8010906@gmail.com> <491FA4D8.1010708@rtr.ca>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: 2.6.28-rc3: WARN_ON(ap->nr_active_links) in ata_eh_finish() with pata_ali DMA CD-ROM
+Date: Sun, 16 Nov 2008 15:59:07 +0300
+Message-ID: <200811161559.08981.arvidjaar@mail.ru>
+References: <200811042128.10356.arvidjaar@mail.ru> <49194B8F.80104@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart7056711.X2z9AYzGiS";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw01.mail.saunalahti.fi ([195.197.172.115]:41046 "EHLO
-	gw01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888AbYKPMfV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 07:35:21 -0500
-In-Reply-To: <491FA4D8.1010708@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753853AbYKPM7Z@vger.kernel.org>
+In-Reply-To: <49194B8F.80104@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, Artem Bokhan <aptem@ngs.ru>
 
-Mark Lord wrote:
-> Harri Olin wrote:
-> ..
->>>>>>> Two marvell controllers, 16 disks, software raid10, IO stucks on 
->>>>>>> different disks, kernel 2.6.26.5.
->>>>>>> With default ubuntu's 8.04 2.6.24 kernel the problem can not be 
->>>>>>> repeated
-> This could very well be due to one/several of the as-yet un-addressed
-> chipset errata for the 6081.  Someday we'll have software workarounds
-> for those, but I'm (still) waiting on Marvell for stuff.
->
+--nextPart7056711.X2z9AYzGiS
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I was going through logs for the last night and noticed something:
-Currently I have only 7 disks connected to 6081 controller, port 5 is 
-free, and now stalls have been happening only on ports 0, 2 and 3. So it 
-seems something on high port is affecting corresponding lower port too.
+On Tuesday 11 November 2008, Tejun Heo wrote:
+> Andrey Borzenkov wrote:
+> > Every now and then I give pata_ali CD-ROM DMA a test. This time I got
+> > someting new - not only usual timeouts but also WARN_ON. There was a
+> > whole bunch of subsequent WARN_ON's, but they are likely to be just
+> > followup errors.
+> >=20
+> > Also, in the past ejecting media from drive would abort processing and
+> > all commands waiting for completion would return to prompt. Now they
+> > seem to hang forever.
+>=20
+> The next -rc should fix this.  Thanks.
+>=20
 
-> Harri / Artem:  what type/speed of slots are your 6081 controllers in?
-> PCI, or PCI-X?   Bus speed?
->
 
-As mentioned earlier, 33MHz, 66MHz and 133MHz. Motherboards are: some 
-Asus board with VIA chipset, Supermicro P4SCI and Supermicro X7SBE. I 
-think P4SCI has 66MHz 64bit PCI, not PCI-X.
+rc5 is the first release ever that correctly falls back to PIO from DMA
+on ATAPI connected to pata_ali. Wow! Thank you!
 
--- 
-Harri.
+[ 5882.999971] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 fr=
+ozen
+[ 5883.000023] ata2.00: cmd a0/01:00:00:00:08/00:00:00:00:00/a0 tag 0 dma 2=
+048 in
+[ 5883.000027]          cdb 28 00 00 00 00 1a 00 00  01 00 00 00 00 00 00 00
+[ 5883.000032]          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (=
+timeout)
+[ 5883.000046] ata2.00: status: { DRDY }
+[ 5883.000162] ata2: soft resetting link
+[ 5883.160062] ata2.00: configured for UDMA/33
+[ 5883.160391] ata2: EH complete
+[ 5913.999844] ata2.00: limiting speed to UDMA/25:PIO4
+[ 5913.999885] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 fr=
+ozen
+[ 5913.999917] ata2.00: cmd a0/01:00:00:00:08/00:00:00:00:00/a0 tag 0 dma 2=
+048 in
+[ 5913.999922]          cdb 28 00 00 00 00 1a 00 00  01 00 00 00 00 00 00 00
+[ 5913.999927]          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (=
+timeout)
+[ 5913.999941] ata2.00: status: { DRDY }
+[ 5914.000064] ata2: soft resetting link
+[ 5914.160239] ata2.00: configured for UDMA/25
+[ 5914.160601] ata2: EH complete
+[ 5944.999646] ata2.00: limiting speed to PIO4
+[ 5944.999682] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 fr=
+ozen
+[ 5944.999715] ata2.00: cmd a0/01:00:00:00:08/00:00:00:00:00/a0 tag 0 dma 2=
+048 in
+[ 5944.999719]          cdb 28 00 00 00 00 1a 00 00  01 00 00 00 00 00 00 00
+[ 5944.999724]          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (=
+timeout)
+[ 5944.999738] ata2.00: status: { DRDY }
+[ 5944.999852] ata2: soft resetting link
+[ 5945.154330] ata2.00: configured for PIO4
+[ 5945.154693] ata2: EH complete
 
+--nextPart7056711.X2z9AYzGiS
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkkgGRwACgkQR6LMutpd94zjDACdG5hVrLHbC2S1W3uYhD/qUpmq
+yAgAn1zFCNlivbEe61S/ZtA6is7ptMFh
+=kdBT
+-----END PGP SIGNATURE-----
+
+--nextPart7056711.X2z9AYzGiS--
