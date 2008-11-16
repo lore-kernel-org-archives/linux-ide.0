@@ -1,40 +1,31 @@
-From: Kel Modderman <kel@otaku42.de>
-Subject: Re: [PATCH 5/5] storage-fixup: a Makefile
-Date: Mon, 17 Nov 2008 03:43:59 +1000
-Message-ID: <200811170343.59740.kel@otaku42.de>
-References: <200810290911.51961.kel@otaku42.de> <491A697F.8090808@kernel.org>
+From: Alexander Clausen <alex@gc-web.de>
+Subject: Re: Suspend w/ sata_promise
+Date: Sun, 16 Nov 2008 19:05:13 +0100
+Message-ID: <492060D9.20808@gc-web.de>
+References: <49202CB0.60507@gc-web.de> <18720.18615.938839.921189@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:35791 "EHLO venema.h4ckr.net"
+Received: from server2.gc-web.de ([88.198.38.110]:55109 "EHLO mail.gc-web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751802AbYKPRoG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Nov 2008 12:44:06 -0500
-In-Reply-To: <491A697F.8090808@kernel.org>
-Content-Disposition: inline
+	id S1752462AbYKPSFS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Nov 2008 13:05:18 -0500
+In-Reply-To: <18720.18615.938839.921189@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Mikael Pettersson <mikpe@it.uu.se>
 Cc: linux-ide@vger.kernel.org
 
-On Wednesday 12 November 2008 15:28:31 Tejun Heo wrote:
-> Kel Modderman wrote:
-> > +dist: clean
-> > +	git-archive --format=tar --prefix=$(NAME)-$(VERSION)/ HEAD \
-> > +		$(FILES) | tar -C.. -xf -
-> > +	tar -czvf ../$(NAME)-$(VERSION).tar.gz -C.. $(NAME)-$(VERSION)/
-> > +	$(RM) -r ../$(NAME)-$(VERSION)/
-> 
-> Why untar and tar again?
-> 
+Mikael Pettersson wrote:
+> Do you have anything connected to that mobo's VIA SATA ports? If not,
+> you could move the disk(s) from the Promise controller to the VIA
+> controller just to see how the machine behaves over repeated suspend/resume
+> cycles. (I'm not suggesting you move the disks permanently, this would
+> just be a data gathering experiment.)
 
-Don't have a reason. This is probably better:
----
-dist: clean
-	git-archive --format=tar --prefix=$(NAME)-$(VERSION)/ HEAD \
-		$(FILES) | gzip > ../$(NAME)-$(VERSION).tar.gz
----
+It works fine (~5 cycles tested) with the PCI (non-onboard) controller (VIA VT6421).
+Of course I'm still interested in getting suspend to work with the promise chip, so I don't
+have to waste money on the addon card (the one used in testing is just borrowed)
 
-Thanks, Kel.
+Alex
