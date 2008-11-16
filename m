@@ -1,54 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Sun, 16 Nov 2008 18:14:24 +0900
-Message-ID: <491FE470.80803@kernel.org>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan> <491E4092.5030804@shaw.ca> <20081115103424.34f01370@lxorguk.ukuu.org.uk> <491FBA29.3000803@kernel.org> <alpine.DEB.1.10.0811160410510.27319@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Michael Guntsche <mike@it-loops.com>
+Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
+Date: Sun, 16 Nov 2008 10:15:08 +0100
+Message-ID: <72DDB628-48A6-4BAC-AFE5-ACCCB1FB6688@it-loops.com>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <49180B2E.6020604@kernel.org> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com> <3b5e4132a8abe8d67b4f1701a384a2d4@localhost> <491996D3.80805@rtr.ca> <4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com> <491A2F65.8030605@rtr.ca> <491A40AB.4070002@kernel.org> <90e002e7b2d47cad80ff952a2a81f0e7@localhost> <491A90BE.9030005@kernel.org> <1741f98465176fff86a1dda48fc965ac@localhost> <491AA18A.9090001@kernel.org> <fdc08450bd57b75c90440beab3d7534a@localhost> <491AA682.2000100@kernel.org> <f6c0b70008a38679e11dff42a0970c9c@localhost> <491CE4A6.90802@rtr.ca> <5595676605432696d80b8394cfd8ae83@localhost> <491DB3AB.7020306@rtr.ca> <491DB44A.5070701@rtr.ca> <C25CB239-E794-4183-9F9D-9AEFE
+ C0FD77F@it-loops.com> <491E4C6B.6030309@rtr.ca> <491E4D62.7060205@rtr.ca> <9D800884-830E-4832-BB31-1B36E2882343@it-loops.com> <491F3474.2070801@r tr.ca> <491FAC33.9080902@kernel.org> <491FB44D.4070604@rtr.ca>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52531 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751661AbYKPJOX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Nov 2008 04:14:23 -0500
-In-Reply-To: <alpine.DEB.1.10.0811160410510.27319@p34.internal.lan>
+Received: from lvps87-230-0-242.dedicated.hosteurope.de ([87.230.0.242]:39429
+	"EHLO lvps87-230-0-242.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751682AbYKPJPN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 04:15:13 -0500
+In-Reply-To: <491FB44D.4070604@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-
-Justin Piszcz wrote:
-> 
-> 
-> On Sun, 16 Nov 2008, Tejun Heo wrote:
-> 
->> Alan Cox wrote:
->>> On Fri, 14 Nov 2008 21:22:58 -0600
->>> Robert Hancock <hancockr@shaw.ca> wrote:
->>>
->>>> Justin Piszcz wrote:
->>>>> I am trying to find out what the root cause of this error/problem is:
->>>>> https://bugzilla.redhat.com/show_bug.cgi?id=462425
->>>> The problem is that people assume that timeouts with DRDY like that bug
->>>> refers to must be the same problem when it is often not
->>>
->>> The first stopping point is to apply the DRQ drain patch I sent to the
->>> list some time ago and is hopefully lined up for 2.6.29. After that
->>> point
->>> you can begin to look at the remaining cases, until then its hardly
->>> worth
->>> it.
->>
->> Is it really?  For many SATA controllers, DRQ draining isn't really
->> necessary.  PATA might be a completely different story tho.
-> 
-> I have been running with the patch for almost 24 hours and running
-> extensive disk tests, so far nothing but sometimes it takes a few days
-> or more to repeat, I am continuing to test to see if the problem recurs..
-
-The patch only kicks in only when EH kicks in so you wouldn't know
-whether it's effective or not till exception occurs.
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
 
--- 
-tejun
+On Nov 16, 2008, at 6:49, Mark Lord wrote:
+> ata_piix works here for me here, too.
+> But I think he's using pata_piix, not ata_piix.
+>
+> Fyi:  sata_sil24 had the HOB bug a few kernels ago,
+> but it's also now fine in 2.6.27.
+
+Forgot to mention that. I also tried it with the old IDE code and got  
+the same results.
+The reason why I am clamping the drive in the first place is that my  
+BIOS/chipset hangs during boot if a larger disk is connected.
+So maybe the results I am seeing here is "normal" since the hardware  
+seems to be at it's limit. I know that clamping with ibmsetmax worked  
+back then, but could it be that the Jumper on the Harddisk is doing it  
+in a different way?
+
+Kind regards,
+Michael
