@@ -1,45 +1,50 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: FYI: BUG in SATA Promise 300 TX4 (2.6.24 - 2.6.27-3) w/Linux
-Date: Sun, 16 Nov 2008 12:08:02 +0100
-Message-ID: <18719.65298.689618.835202@harpo.it.uu.se>
-References: <491C9A4F.1020801@tlinx.org>
-	<491FB7E2.2030105@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
+Date: Sun, 16 Nov 2008 11:23:25 +0000
+Message-ID: <20081116112325.58abc1ae@lxorguk.ukuu.org.uk>
+References: <6ca8fe89c868f95831328d31c27f9cdb@localhost>
+	<4918F1BC.2070602@kernel.org>
+	<4919038B.8020407@rtr.ca>
+	<49194E1C.9030800@ru.mvista.com>
+	<3b5e4132a8abe8d67b4f1701a384a2d4@localhost>
+	<491996D3.80805@rtr.ca>
+	<4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com>
+	<491A2F65.8030605@rtr.ca>
+	<491A40AB.4070002@kernel.org>
+	<90e002e7b2d47cad80ff952a2a81f0e7@localhost>
+	<491A90BE.9030005@kernel.org>
+	<1741f98465176fff86a1dda48fc965ac@localhost>
+	<491AA18A.9090001@kernel.org>
+	<fdc08450bd57b75c90440beab3d7534a@localhost>
+	<491AA682.2000100@kernel.org>
+	<f6c0b70008a38679e11dff42a0970c9c@localhost>
+	<491CE4A6.90802@rtr.ca>
+	<5595676605432696d80b8394cfd8ae83@localhost>
+	<491DB3AB.7020306@rtr.ca>
+	<491DB44A.5070701@rtr.ca>
+	<C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com>
+	<491E4C6B.6030309@rtr.ca>
+	<491E4D62.7060205@rtr.ca>
+	<9D800884-830E-4832-BB31-1B36E2882343@it-loops.com>
+	<491F3474.2070801@r tr.ca>
+	<491FAC33.9080902@kernel.org>
+	<491FB44D.4070604@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:53269 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751366AbYKPLQA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Nov 2008 06:16:00 -0500
-In-Reply-To: <491FB7E2.2030105@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36948 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751706AbYKPLXr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 06:23:47 -0500
+In-Reply-To: <491FB44D.4070604@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linda Walsh <lkml@tlinx.org>, LKML <linux-kernel@vger.kernel.org>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, Guntsche Michael <mike@it-loops.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Tejun Heo writes:
- > > and NOTE: the card or driver (or both) for the Promise 300 TX4 isn't
- > > stable for production use -- and has a repeatable problem of timing out
- > > some drives before it can spin-up from standby (just the drive -- not the
- > > computer).  The error logically removes the drive from the system until
- > > the next boot (unplugging, and replugging in the SATA cable on the drive
- > > would hang the machine within 5 seconds of replugging in the cable).  Not
- > > an instant, hang as might indicated a HW upset plugging in cable, but a
- > > couple second delay after plugin -- before keyboard would lock up --
- > > pointing toward the software trying to re-add+initialize the drive.
- > 
- > Some promise controllers seem to suffer transmission problems when
- > combined with certain drives, which often show up as timeouts.  The
- > hardreset of sata_promise wasn't as robust as it should have been and
- > in some cases it wasn't able to recover a link after error condition
- > causing the system to lose drive after such events.  The hardreset
- > problem was fixed recently by Mikael Pettersson.  Can you please try
- > 2.6.28-rc5 and see whether sata_promise still loses drives after
- > failures?
- > 
- > Mikael, I think the hardreset fix is worthy including into -stable.
- > It should be safe for -stable too, right?
+> ata_piix works here for me here, too.
+> But I think he's using pata_piix, not ata_piix.
 
-The hardreset fix was included in 2.6.27.5. I wanted it in 2.6.26-stable
-too, but that branch seems to have been closed now.
+There is no pata_piix ...
+
