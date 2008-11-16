@@ -1,43 +1,85 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH #upstream-fixes 1/4] libata: fix device iteration bugs
-Date: Sun, 16 Nov 2008 13:48:45 +0300
-Message-ID: <491FFA8D.5000803@ru.mvista.com>
-References: <6ca8fe89c868f95831328d31c27f9cdb@localhost> <49184E1A.3010508@rtr.ca> <4918F1BC.2070602@kernel.org> <4919038B.8020407@rtr.ca> <49194E1C.9030800@ru.mvista.com> <3b5e4132a8abe8d67b4f1701a384a2d4@localhost> <491996D3.80805@rtr.ca> <4D5A0E9F-4931-449F-99F6-38C09C55983A@it-loops.com> <491A2F65.8030605@rtr.ca> <491A40AB.4070002@kernel.org> <90e002e7b2d47cad80ff952a2a81f0e7@localhost> <491A90BE.9030005@kernel.org> <1741f98465176fff86a1dda48fc965ac@localhost> <491AA18A.9090001@kernel.org> <fdc08450bd57b75c90440beab3d7534a@localhost> <491AA682.2000100@kernel.org> <f6c0b70008a38679e11dff42a0970c9c@localhost> <491CE4A6.90802@rtr.ca> <5595676605432696d80b8394cfd8ae83@localhost> <491DB3AB.7020306@rtr.ca> <491DB44A.5070701@rtr.ca> <C25CB239-E794-4183-9F9D-9AEFEC0FD77F@it-loops.com> <491E4C6
- B.6030309@rtr.ca> <491E4D62.7060205@rtr.ca> <9D800884-830E-4832-BB31-1B36E2882343@it-loops.com> <491F3474.2070801@r tr.ca> <491FAC33.9080902@kernel.org> <491FB44D.4070604@rtr.ca>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [RFC PATCH] falconide: remove needless ST-DMA locking
+Date: Sun, 16 Nov 2008 12:07:56 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0811161207460.5978@anakin>
+References: <200810172041.17191.bzolnier@gmail.com> <Pine.LNX.4.64.0810181043550.11796@anakin>
+ <200810181225.48329.bzolnier@gmail.com> <200811092001.05628.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:27203 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751706AbYKPKsz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 05:48:55 -0500
-In-Reply-To: <491FB44D.4070604@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <200811092001.05628.bzolnier@gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org, Michael Schmitz <schmitz@debian.org>, Stephen R Marenka <stephen@marenka.net>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <tj@kernel.org>, Guntsche Michael <mike@it-loops.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Hello.
+On Sun, 9 Nov 2008, Bartlomiej Zolnierkiewicz wrote:
+> On Saturday 18 October 2008, Bartlomiej Zolnierkiewicz wrote:
+> > On Saturday 18 October 2008, Geert Uytterhoeven wrote:
+> > > On Sat, 18 Oct 2008, Michael Schmitz wrote:
+> > > > > While working on ide_do_request() improvements I stumbled upon
+> > > > > mismatched ide_get_lock() / ide_release_lock() calls.
+> > > > > 
+> > > > > [ It seems to be known issue:
+> > > > >  http://marc.info/?l=linux-m68k&m=121423752829622&w=2 ]
+> > > > 
+> > > > It is a known issue, and I submitted a simple fix to Geert a month or so ago.
+> > > > It involves moving the ide_get_lock call inside the request loop instead of
+> > > > doing it once at the start of the function.
+> > > 
+> > > See http://marc.info/?l=linux-ide&m=121473433631934&w=2
+> > > 
+> > > In response to this patch, I wondered:
+> > > 
+> > > > > If hwgroup->busy serves a similar purpose to falconide_intr_lock, what
+> > > > > about
+> > > > > moving the setting/clearing of hwgroup->busy into
+> > > > > ide_{get,release}_lock()
+> > > > > (and possibly renaming ide_{get,release}_lock() to e.g.
+> > > > > ide_hwgroup_{set,clear}_busy())?
+> > > > > 
+> > > > > What about the other places where hwgroup->busy is set/cleared?
+> > > 
+> > > And Michael responsed:
+> > > 
+> > > > Uh - that's where it gets a bit sticky again. hwgroup->busy is set and
+> > > > cleared quite a lot 'preemptively' all over ide-io.c, f.e. in timeout
+> > > > handling. I'm not sure
+> > > > whether this would just reintroduce the bug message.
+> > > > 
+> > > > The lock must be held as long as there are any interrupts to be expected
+> > > > from IDE. If the hwgroup->busy semantics reflects just that, it's worth
+> > > > a try.
+> > > 
+> > > Bart, can you shed a light on the hwgroup->busy semantics?
+> > 
+> > hwgroup->busy means that hwgroup is busy ;-)
+> > 
+> > It protects against any access to the underlying hardware so it is
+> > also used when device is accessed in polling mode (without waiting
+> > for IRQ).  However your proposal still sounds fine.  We can treat
+> > hwgroup->busy as "waiting for IRQ" flag on Falcon and it would be
+> > correct (we will just hold the lock needlessly sometimes but we're
+> > already doing exactly that).
+> > 
+> > [ The one thing that we have to watch out is not to leak IDE core
+> >   specific things to <asm/ide.h> and host/platform specific ones to
+> >   IDE core so some new abstraction level may be needed for handling
+> >   ST-DMA lock itself (->[un]lock_host methods in struct ide_port_ops
+> >   or something along the lines)... ]
+> 
+> Since there was no follow-ups on this I've just applied Michael's
+> patch for now (& will push it to Linus for .28)...
 
-Mark Lord wrote:
+Thank you very much!
 
->>>> The libata stack, hdparm and everything else is working correctly it's
->>>> the drive that's reporting 32GB!!!!!!!
->>> ..
->>>
->>> Ahh.. that's better.  Thanks for figuring this one out for us all!
->>
->> So, the only real bug here is ata_piix not returning HOB registers?
->> That's weird.  It's ata_piix.  It's not likely to be broken.  :-(
-> ..
->
-> ata_piix works here for me here, too.
-> But I think he's using pata_piix, not ata_piix.
+Gr{oetje,eeting}s,
 
-   Huh? IIRC, there has never been pata_piix, just pata_oldpiix that 
-only drives 82371FB.
+						Geert
 
-WBR, Sergei
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
