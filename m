@@ -1,31 +1,64 @@
-From: Alexander Clausen <alex@gc-web.de>
-Subject: Re: Suspend w/ sata_promise
-Date: Sun, 16 Nov 2008 19:05:13 +0100
-Message-ID: <492060D9.20808@gc-web.de>
-References: <49202CB0.60507@gc-web.de> <18720.18615.938839.921189@harpo.it.uu.se>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: FYI: BUG in SATA Promise 300 TX4 (2.6.24 - 2.6.27-3) w/Linux
+Date: Sun, 16 Nov 2008 20:48:42 +0400
+Message-ID: <49204EEA.8030605@wasp.net.au>
+References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org> <18719.65298.689618.835202@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server2.gc-web.de ([88.198.38.110]:55109 "EHLO mail.gc-web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752462AbYKPSFS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Nov 2008 13:05:18 -0500
-In-Reply-To: <18720.18615.938839.921189@harpo.it.uu.se>
+Received: from 50.38.69.212.in-addr.fnarfbargle.com ([93.93.128.63]:38930 "EHLO
+	fnarfbargle.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391AbYKPSIc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 13:08:32 -0500
+In-Reply-To: <18719.65298.689618.835202@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Linda Walsh <lkml@tlinx.org>, LKML <linux-kernel@vger.kernel.org>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
 
 Mikael Pettersson wrote:
-> Do you have anything connected to that mobo's VIA SATA ports? If not,
-> you could move the disk(s) from the Promise controller to the VIA
-> controller just to see how the machine behaves over repeated suspend/resume
-> cycles. (I'm not suggesting you move the disks permanently, this would
-> just be a data gathering experiment.)
+> Tejun Heo writes:
+>  > > and NOTE: the card or driver (or both) for the Promise 300 TX4 isn't
+>  > > stable for production use -- and has a repeatable problem of timing out
+>  > > some drives before it can spin-up from standby (just the drive -- not the
+>  > > computer).  The error logically removes the drive from the system until
+>  > > the next boot (unplugging, and replugging in the SATA cable on the drive
+>  > > would hang the machine within 5 seconds of replugging in the cable).  Not
+>  > > an instant, hang as might indicated a HW upset plugging in cable, but a
+>  > > couple second delay after plugin -- before keyboard would lock up --
+>  > > pointing toward the software trying to re-add+initialize the drive.
+>  > 
+>  > Some promise controllers seem to suffer transmission problems when
+>  > combined with certain drives, which often show up as timeouts.  The
+>  > hardreset of sata_promise wasn't as robust as it should have been and
+>  > in some cases it wasn't able to recover a link after error condition
+>  > causing the system to lose drive after such events.  The hardreset
+>  > problem was fixed recently by Mikael Pettersson.  Can you please try
+>  > 2.6.28-rc5 and see whether sata_promise still loses drives after
+>  > failures?
+>  > 
+>  > Mikael, I think the hardreset fix is worthy including into -stable.
+>  > It should be safe for -stable too, right?
+> 
+> The hardreset fix was included in 2.6.27.5. I wanted it in 2.6.26-stable
+> too, but that branch seems to have been closed now.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-It works fine (~5 cycles tested) with the PCI (non-onboard) controller (VIA VT6421).
-Of course I'm still interested in getting suspend to work with the promise chip, so I don't
-have to waste money on the addon card (the one used in testing is just borrowed)
+Is that likely to do anything for the old SATA150-TX4 ?
+I have 2 of them in a machine and I've been dropping drives under write load recently but it was a 
+2.6.27.4 kernel.
 
-Alex
+Reboot required to pick up the drives again (unless the kernel panics and it reboots itself - which 
+it's been doing also).
+
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
