@@ -1,49 +1,47 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Sun, 16 Nov 2008 11:25:11 +0000
-Message-ID: <20081116112511.3913123a@lxorguk.ukuu.org.uk>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
-	<491E4092.5030804@shaw.ca>
-	<20081115103424.34f01370@lxorguk.ukuu.org.uk>
-	<491FBA29.3000803@kernel.org>
+From: Harri Olin <harri.olin@gmail.com>
+Subject: Re: sata_mv, io stucks
+Date: Sun, 16 Nov 2008 14:35:13 +0200
+Message-ID: <49201381.9020704@gmail.com>
+References: <48F88449.1000704@ngs.ru> <49003B9C.1010303@ngs.ru> <4900A12F.3030307@rtr.ca> <491EE84B.1010600@gmail.com> <491F4096.9090701@rtr.ca> <491F5E42.8010906@gmail.com> <491FA4D8.1010708@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36954 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751731AbYKPLZG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 06:25:06 -0500
-In-Reply-To: <491FBA29.3000803@kernel.org>
+Received: from gw01.mail.saunalahti.fi ([195.197.172.115]:41046 "EHLO
+	gw01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbYKPMfV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 07:35:21 -0500
+In-Reply-To: <491FA4D8.1010708@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, Artem Bokhan <aptem@ngs.ru>
 
-On Sun, 16 Nov 2008 15:14:01 +0900
-Tejun Heo <tj@kernel.org> wrote:
+Mark Lord wrote:
+> Harri Olin wrote:
+> ..
+>>>>>>> Two marvell controllers, 16 disks, software raid10, IO stucks on 
+>>>>>>> different disks, kernel 2.6.26.5.
+>>>>>>> With default ubuntu's 8.04 2.6.24 kernel the problem can not be 
+>>>>>>> repeated
+> This could very well be due to one/several of the as-yet un-addressed
+> chipset errata for the 6081.  Someday we'll have software workarounds
+> for those, but I'm (still) waiting on Marvell for stuff.
+>
 
-> Alan Cox wrote:
-> > On Fri, 14 Nov 2008 21:22:58 -0600
-> > Robert Hancock <hancockr@shaw.ca> wrote:
-> > 
-> >> Justin Piszcz wrote:
-> >>> I am trying to find out what the root cause of this error/problem is:
-> >>> https://bugzilla.redhat.com/show_bug.cgi?id=462425
-> >> The problem is that people assume that timeouts with DRDY like that bug 
-> >> refers to must be the same problem when it is often not
-> > 
-> > The first stopping point is to apply the DRQ drain patch I sent to the
-> > list some time ago and is hopefully lined up for 2.6.29. After that point
-> > you can begin to look at the remaining cases, until then its hardly worth
-> > it.
-> 
-> Is it really?  For many SATA controllers, DRQ draining isn't really
-> necessary.  PATA might be a completely different story tho.
+I was going through logs for the last night and noticed something:
+Currently I have only 7 disks connected to 6081 controller, port 5 is 
+free, and now stalls have been happening only on ports 0, 2 and 3. So it 
+seems something on high port is affecting corresponding lower port too.
 
-It seems to be needed for various devices and some controllers. Given we
-don't know which it seems to be the sensible starting point for almost any
-failure involving a DRQ being left on. It won't fix them all but it is
-the one case that can easily be eliminated.
+> Harri / Artem:  what type/speed of slots are your 6081 controllers in?
+> PCI, or PCI-X?   Bus speed?
+>
 
-Alan
+As mentioned earlier, 33MHz, 66MHz and 133MHz. Motherboards are: some 
+Asus board with VIA chipset, Supermicro P4SCI and Supermicro X7SBE. I 
+think P4SCI has 66MHz 64bit PCI, not PCI-X.
+
+-- 
+Harri.
+
