@@ -1,32 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA DVD drive problem on ICH8M
-Date: Sun, 16 Nov 2008 18:04:28 +0900
-Message-ID: <491FE21C.7020904@kernel.org>
-References: <291f35090811140246y674de2b1p23a9a650f8c7ef3a@mail.gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
+Date: Sun, 16 Nov 2008 04:11:40 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0811160410510.27319@p34.internal.lan>
+References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan> <491E4092.5030804@shaw.ca> <20081115103424.34f01370@lxorguk.ukuu.org.uk> <491FBA29.3000803@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57591 "EHLO hera.kernel.org"
+Received: from lucidpixels.com ([75.144.35.66]:42500 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751541AbYKPJEN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Nov 2008 04:04:13 -0500
-In-Reply-To: <291f35090811140246y674de2b1p23a9a650f8c7ef3a@mail.gmail.com>
+	id S1751572AbYKPJLm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Nov 2008 04:11:42 -0500
+In-Reply-To: <491FBA29.3000803@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maxim Gorbachyov <maxim.gorbachyov@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-Maxim Gorbachyov wrote:
-> Hello.
-> I have a problem with SATA DVD drive and ICH8M on ASUS F80L. I insert
-> a disk, try mounting it, mount fails. Then the drive gets lost, and I
-> can't even eject the tray until power cycle. Kernel is vanilla
-> 2.6.27.6. See dmesg, lspci, lshw output and kernel config attached.
-> Let me know if more info is needed.
 
-Looks like your drive doesn't like hald polling for media presence.
-Does hal-disable-polling /dev/sr0 help?
 
--- 
-tejun
+On Sun, 16 Nov 2008, Tejun Heo wrote:
+
+> Alan Cox wrote:
+>> On Fri, 14 Nov 2008 21:22:58 -0600
+>> Robert Hancock <hancockr@shaw.ca> wrote:
+>>
+>>> Justin Piszcz wrote:
+>>>> I am trying to find out what the root cause of this error/problem is:
+>>>> https://bugzilla.redhat.com/show_bug.cgi?id=462425
+>>> The problem is that people assume that timeouts with DRDY like that bug
+>>> refers to must be the same problem when it is often not
+>>
+>> The first stopping point is to apply the DRQ drain patch I sent to the
+>> list some time ago and is hopefully lined up for 2.6.29. After that point
+>> you can begin to look at the remaining cases, until then its hardly worth
+>> it.
+>
+> Is it really?  For many SATA controllers, DRQ draining isn't really
+> necessary.  PATA might be a completely different story tho.
+
+I have been running with the patch for almost 24 hours and running 
+extensive disk tests, so far nothing but sometimes it takes a few days 
+or more to repeat, I am continuing to test to see if the problem recurs..
+
+Justin.
