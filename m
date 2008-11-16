@@ -1,69 +1,38 @@
-From: Qinghuang Feng <qhfeng.kernel@gmail.com>
-Subject: [PATCH 7/7] drivers/ata/pata_*c: the rest, remove redundant comments
-Date: Sun, 16 Nov 2008 17:44:19 +0800
-Message-ID: <491feb7c.02066e0a.13b3.ffffa19e@mx.google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Fwd: confusion about libata.force=80c
+Date: Sun, 16 Nov 2008 18:45:43 +0900
+Message-ID: <491FEBC7.4090608@kernel.org>
+References: <57947bf80805141120v615ef957g323114637d171f0a@mail.gmail.com> <57947bf80805200222j19efa2d2n7ff89fe026745ba1@mail.gmail.com> <4833B9B5.7060601@gmail.com> <loom.20081112T153626-485@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ag-out-0708.google.com ([72.14.246.242]:46937 "EHLO
-	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109AbYKPJoa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Nov 2008 04:44:30 -0500
-Received: by ag-out-0708.google.com with SMTP id 31so1818690agc.10
-        for <linux-ide@vger.kernel.org>; Sun, 16 Nov 2008 01:44:29 -0800 (PST)
+Received: from hera.kernel.org ([140.211.167.34]:52427 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754006AbYKPJpb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Nov 2008 04:45:31 -0500
+In-Reply-To: <loom.20081112T153626-485@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: qhfeng.kernel@gmail.com, Randy Dunlap <rdunlap@xenotime.net>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tomas Kindl <supp@kpo.zcu.cz>
+Cc: linux-ide@vger.kernel.org
 
-remove some redundant argument comments in pata_*.c
+Tomas Kindl wrote:
+> Tejun Heo <htejun <at> gmail.com> writes:
+> 
+>>> Is force=80c what I want? Should it work?
+>> It should but is overridden by device side cable detection upto 2.6.25. 
+>>   2.6.26 will have it fixed.  force=udma66 should work.
+>>
+> 
+> Hi, I get same error (Unknown boot option `libata.force=3:1.5': ignoring
+> ) although I am trying it on 2.6.27.4 (MDV flavor - but still).
 
-Signed-off-by: Qinghuang Feng <qhfeng.kernel@gmail.com>
----
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 1266924..1050fed 100644
---- a/drivers/ata/pata_bf54x.c
-+++ b/drivers/ata/pata_bf54x.c
-@@ -356,7 +356,6 @@ static void bfin_set_piomode(struct ata_port *ap, struct ata_device *adev)
-  *	bfin_set_dmamode - Initialize host controller PATA DMA timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: um
-- *	@udma: udma mode, 0 - 6
-  *
-  *	Set UDMA mode for device.
-  *
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index cf3707e..d447f1c 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -210,7 +210,6 @@ static void scc_set_piomode (struct ata_port *ap, struct ata_device *adev)
-  *	scc_set_dmamode - Initialize host controller PATA DMA timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: um
-- *	@udma: udma mode, 0 - 6
-  *
-  *	Set UDMA mode for device.
-  *
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index 72e41c9..8d2fd9d 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -138,7 +138,6 @@ static struct sv_cable_table cable_detect[] = {
- /**
-  *	serverworks_cable_detect	-	cable detection
-  *	@ap: ATA port
-- *	@deadline: deadline jiffies for the operation
-  *
-  *	Perform cable detection according to the device and subvendor
-  *	identifications
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 2b24ae5..8691863 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -1836,7 +1836,6 @@ static void mv_unexpected_intr(struct ata_port *ap, int edma_was_enabled)
- /**
-  *      mv_err_intr - Handle error interrupts on the port
-  *      @ap: ATA channel to manipulate
-- *      @qc: affected command (non-NCQ), or NULL
-  *
-  *      Most cases require a full reset of the chip's state machine,
-  *      which also performs a COMRESET.
+That's not a kernel problem but how module parameters are passed to
+modules loaded from initrd and is distro specific.  Please note that
+kernel will spit the message even when the module parameter is later
+picked up by initrd.  So, please ping MDV for instructions on how to
+pass kernel parameter via initrd.
 
+-- 
+tejun
