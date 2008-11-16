@@ -1,36 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.28-rc3: WARN_ON(ap->nr_active_links) in ata_eh_finish() with
- pata_ali DMA CD-ROM
-Date: Mon, 17 Nov 2008 00:29:39 +0900
-Message-ID: <49203C63.4070803@kernel.org>
-References: <200811042128.10356.arvidjaar@mail.ru> <49194B8F.80104@kernel.org> <200811161559.08981.arvidjaar@mail.ru>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Suspend w/ sata_promise
+Date: Sun, 16 Nov 2008 17:22:15 +0100
+Message-ID: <18720.18615.938839.921189@harpo.it.uu.se>
+References: <49202CB0.60507@gc-web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43214 "EHLO hera.kernel.org"
+Received: from aun.it.uu.se ([130.238.12.36]:57028 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752276AbYKPP33 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Nov 2008 10:29:29 -0500
-In-Reply-To: <200811161559.08981.arvidjaar@mail.ru>
+	id S1753175AbYKPQWV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Nov 2008 11:22:21 -0500
+In-Reply-To: <49202CB0.60507@gc-web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Alexander Clausen <alex@gc-web.de>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+Alexander Clausen writes:
+ > Hi,
+ > I'm trying to get suspend to ram working on one of the desktop systems here. The mainboard is a
+ > MSI K8T Neo FIS2R with a Promise PDC20378 (FastTrak 378/SATA 378) (rev 02).
+ > When trying to suspend the first time, everything works just fine, but when trying to suspend a
+ > second time, the computer is unresponsive for a long time and does not complete the suspend
+ > operation. After that, the file systems are not accessible any more, programs don't start etc...
+ > So, then I saw on the wiki that suspend is not supported on sata_promise. Is this still the case, or
+ > am I hitting a bug in the suspend code?
 
-Andrey Borzenkov wrote:
-> On Tuesday 11 November 2008, Tejun Heo wrote:
->> Andrey Borzenkov wrote:
-> rc5 is the first release ever that correctly falls back to PIO from DMA
-> on ATAPI connected to pata_ali. Wow! Thank you!
+There is currently no suspend support in the sata_promise driver, so
+whatever happens at suspend and resume is up to libata and ACPI.
 
-Hmm... this should have worked on 2.6.27 too.  How did it fail on
-2.6.27?
+Do you have anything connected to that mobo's VIA SATA ports? If not,
+you could move the disk(s) from the Promise controller to the VIA
+controller just to see how the machine behaves over repeated suspend/resume
+cycles. (I'm not suggesting you move the disks permanently, this would
+just be a data gathering experiment.)
 
-pata_ali ATAPI dma problem is sad.  I have the hardware and the ide
-driver works fine and I still can't figure out what's wrong.  :-(
-
--- 
-tejun
+/Mikael
