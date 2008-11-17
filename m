@@ -1,112 +1,85 @@
 From: Phil Sutter <n0-1@freewrt.org>
-Subject: [PATCH] fix pata-rb532-cf
-Date: Mon, 17 Nov 2008 21:04:05 +0100
-Message-ID: <1226952247-1328-1-git-send-email-n0-1@freewrt.org>
+Subject: [PATCH] pata-rb532-cf: read/write data in 4-byte blocks
+Date: Mon, 17 Nov 2008 21:04:07 +0100
+Message-ID: <1226952247-1328-3-git-send-email-n0-1@freewrt.org>
+References: <1226952247-1328-1-git-send-email-n0-1@freewrt.org>
+ <1226952247-1328-2-git-send-email-n0-1@freewrt.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:52030 "EHLO
+Received: from orbit.nwl.cc ([81.169.176.177]:40270 "EHLO
 	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbYKQUCE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Nov 2008 15:02:04 -0500
+	with ESMTP id S1751515AbYKQUTS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Nov 2008 15:19:18 -0500
+In-Reply-To: <1226952247-1328-2-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-Hi,
+* rename the offset definition to avoid abiguity with the standard ATA
+  IO address
+* read and write four bytes at once like the original driver does
+* use writesl() and readsl() which implicitly iterate over the data
 
-I applied the latest comments to my set of changes for pata-rb532-cf, i.e.:
-* add missing Acket-by statements
-* switch order of the last two patches
-* have some cosmetics for the 4-byte-blocks patch
-
-The rb532_gpio_set_i{level,stat} symbols aren't upstream yet, though
-Ralf Baechle has the according patch in his linux-mips tree (branch
-master), so they should be available soon.
-
-Greetings, Phil
-
----
-After applying the following changes I could verify functionality by
-mounting a filesystem on the cfdisk and reading/writing files in it.
-
-The set_irq_type() function must be wrong, as there is no set_type()
-function defined for the rb532 IRQ chip. But as the used IRQ actually is
-being triggered by a GPIO, setting it's interrupt level should be the
-right alternative. Also to clear a GPIO triggered IRQ, the source has to
-be cleared. This is being done at the end of rb532_pata_irq_handler.
+This patch assumes buflen to be a multiple of four, which is true for
+ATA devices. ATAPI support is not known, though unlikely, as the
+original driver always transfers 512 Bytes at once. In doubt, do the
+right thing and return the number of bytes actually consumed.
 
 Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
 Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Acked-by: Florian Fainelli <florian@openwrt.org>
 ---
- drivers/ata/pata_rb532_cf.c |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
+ drivers/ata/pata_rb532_cf.c |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index f8b3ffc..7b11f40 100644
+index 576fc99..4479b04 100644
 --- a/drivers/ata/pata_rb532_cf.c
 +++ b/drivers/ata/pata_rb532_cf.c
-@@ -31,6 +31,7 @@
- #include <scsi/scsi_host.h>
- 
- #include <asm/gpio.h>
-+#include <asm/mach-rc32434/gpio.h>
- 
- #define DRV_NAME	"pata-rb532-cf"
- #define DRV_VERSION	"0.1.0"
-@@ -39,7 +40,8 @@
- #define RB500_CF_MAXPORTS	1
- #define RB500_CF_IO_DELAY	400
- 
--#define RB500_CF_REG_CMD	0x0800
-+#define RB500_CF_REG_BASE	0x0800
-+#define RB500_CF_REG_ERR	0x080D
+@@ -43,7 +43,8 @@
+ #define RB500_CF_REG_BASE	0x0800
+ #define RB500_CF_REG_ERR	0x080D
  #define RB500_CF_REG_CTRL	0x080E
- #define RB500_CF_REG_DATA	0x0C00
+-#define RB500_CF_REG_DATA	0x0C00
++/* 32bit buffered data register offset */
++#define RB500_CF_REG_DBUF32	0x0C00
  
-@@ -62,7 +64,7 @@ static inline void rb532_pata_finish_io(struct ata_port *ap)
- 	ata_sff_dma_pause(ap);
- 	ndelay(RB500_CF_IO_DELAY);
+ struct rb532_cf_info {
+ 	void __iomem	*iobase;
+@@ -79,18 +80,14 @@ static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char
+ {
+ 	struct ata_port *ap = adev->link->ap;
+ 	void __iomem *ioaddr = ap->ioaddr.data_addr;
+-	int retlen = buflen;
  
--	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
-+	rb532_gpio_set_ilevel(1, info->gpio_line);
+-	if (write_data) {
+-		for (; buflen > 0; buflen--, buf++)
+-			writeb(*buf, ioaddr);
+-	} else {
+-		for (; buflen > 0; buflen--, buf++)
+-			*buf = readb(ioaddr);
+-	}
++	if (write_data)
++		writesl(ioaddr, buf, buflen / sizeof(u32));
++	else
++		readsl(ioaddr, buf, buflen / sizeof(u32));
+ 
+ 	rb532_pata_finish_io(adev->link->ap);
+-	return retlen;
++	return buflen - buflen % sizeof(u32);
  }
  
- static void rb532_pata_exec_command(struct ata_port *ap,
-@@ -109,13 +111,15 @@ static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
- 	struct rb532_cf_info *info = ah->private_data;
- 
- 	if (gpio_get_value(info->gpio_line)) {
--		set_irq_type(info->irq, IRQ_TYPE_LEVEL_LOW);
-+		rb532_gpio_set_ilevel(0, info->gpio_line);
- 		if (!info->frozen)
- 			ata_sff_interrupt(info->irq, dev_instance);
- 	} else {
--		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
-+		rb532_gpio_set_ilevel(1, info->gpio_line);
- 	}
- 
-+	rb532_gpio_set_istat(0, info->gpio_line);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -146,13 +150,14 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
- 	ap->pio_mask	= 0x1f; /* PIO4 */
- 	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
- 
--	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
-+	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_BASE;
- 	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
- 	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
+ static void rb532_pata_freeze(struct ata_port *ap)
+@@ -158,7 +155,7 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
  
  	ata_sff_std_ports(&ap->ioaddr);
  
- 	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
-+	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
+-	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DBUF32;
+ 	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
  }
  
- static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
 -- 
 1.5.6.4
 
