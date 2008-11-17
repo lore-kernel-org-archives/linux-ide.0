@@ -1,36 +1,44 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv, io stucks
-Date: Mon, 17 Nov 2008 00:22:29 -0500
-Message-ID: <4920FF95.1080808@rtr.ca>
-References: <48F88449.1000704@ngs.ru> <49003B9C.1010303@ngs.ru> <4900A12F.3030307@rtr.ca> <491EE84B.1010600@gmail.com> <491F4096.9090701@rtr.ca> <491F5E42.8010906@gmail.com> <491FA4D8.1010708@rtr.ca> <491FA8C0.2090804@rtr.ca> <alpine.DEB.1.10.0811160412080.27319@p34.internal.lan>
+From: Evgeni Golov <sargentd@die-welt.net>
+Subject: Re: Odd behaviour of device in response to idleimmediate with
+ unload
+Date: Mon, 17 Nov 2008 08:15:51 +0100
+Message-ID: <20081117071552.D25291FD5F@chi.die-welt.net>
+References: <491083CC.5050508@rtr.ca>
+	<49108AA0.1080507@rtr.ca>
+	<491090BC.5060403@rtr.ca>
+	<20081104185444.3BE721FDF7@chi.die-welt.net>
+	<4910A509.1030307@rtr.ca>
+	<49116811.5000109@kernel.org>
+	<873ai6cmio.fsf@denkblock.local>
+	<4911A8EA.8030605@kernel.org>
+	<87k5bhxerq.fsf@denkblock.local>
+	<4913BF3D.3090704@kernel.org>
+	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
+	<4917F822.5060204@kernel.org>
+	<20081110102607.094281FD7C@chi.die-welt.net>
+	<87r65ju83r.fsf@denkblock.local>
+	<20081113113345.12E2D1FD80@chi.die-welt.net>
+	<491FEA3C.4090906@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:41549 "EHLO mail.rtr.ca"
+Received: from chi.die-welt.net ([84.246.123.210]:50166 "EHLO chi.die-welt.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750783AbYKQFVi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Nov 2008 00:21:38 -0500
-In-Reply-To: <alpine.DEB.1.10.0811160412080.27319@p34.internal.lan>
+	id S1752141AbYKQHP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Nov 2008 02:15:57 -0500
+In-Reply-To: <491FEA3C.4090906@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Harri Olin <harri.olin@gmail.com>, linux-ide@vger.kernel.org, Artem Bokhan <aptem@ngs.ru>
+To: Tejun Heo <tj@kernel.org>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Justin Piszcz wrote:
-> ..
-> As I mentioned earlier, it happens on all of my drives, 4 of 12 disks 
-> are connected to a Marvell controller, in my case:
-> 
-> 01:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 
-> PCI-e 4-port SATA-II (rev 02)
-..
+On Sun, 16 Nov 2008 18:39:08 +0900 Tejun Heo wrote:
 
-Whatever problem you are seeing is likely different from what the
-others see.  The 7042 is a much newer rev of the chipset, with a lot
-less in the way of errata and stuff to go wrong.
+> So, this comes before actually issuing the park.  It sounds like it has
+> nothing to do with park command itself.  If you do "echo - - - >
+> /sys/class/scsi_host/host0/scan" right after boot, what does the kernel say?
 
-So, yes, you're apparently seeing some problems, but there's nothing
-to suggest that those are the *same* problems as the 6081 users are seeing.
+# echo - - - > /sys/class/scsi_host/host0/scan
+echo: write error: invalid argument
 
-Cheers
