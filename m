@@ -1,38 +1,31 @@
-From: Bokhan Artem <APTEM@ngs.ru>
-Subject: Re: sata_mv, io stucks
-Date: Mon, 17 Nov 2008 20:10:00 +0600
-Message-ID: <49217B38.8060405@ngs.ru>
-References: <48F88449.1000704@ngs.ru> <49003B9C.1010303@ngs.ru> <4900A12F.3030307@rtr.ca> <491EE84B.1010600@gmail.com> <491F4096.9090701@rtr.ca> <491F5E42.8010906@gmail.com> <491FA4D8.1010708@rtr.ca> <491FA8C0.2090804@rtr.ca>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 1/7] drivers/ata/pata_radisys.c: cleanup kernel-doc
+Date: Mon, 17 Nov 2008 09:43:41 -0800
+Message-ID: <20081117094341.75ec0d7a.randy.dunlap@oracle.com>
+References: <491feb5b.08486e0a.075a.4c48@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout1.ngs.ru ([195.93.186.195]:52807 "EHLO smtpout1.ngs.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752009AbYKQOKJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Nov 2008 09:10:09 -0500
-In-Reply-To: <491FA8C0.2090804@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753227AbYKQRoX@vger.kernel.org>
+In-Reply-To: <491feb5b.08486e0a.075a.4c48@mx.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Qinghuang Feng <qhfeng.kernel@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Harri Olin <harri.olin@gmail.com>, linux-ide@vger.kernel.org
 
-Mark Lord =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
->
-> And Artem said:
->> The controller is AOC-SAT2-MV8 too.
-> ..
->
-> So I guess I need to know if Artem is using PCI-X, and the bus width =
-+=20
-> speed.
->
-The only configuration I tried was 2 controllers on 133 mhz pci-x
-> Cheers
-> --=20
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, 16 Nov 2008 17:43:46 +0800 Qinghuang Feng wrote:
 
+> No argument named @isich in radisys_set_dmamode,
+> remove it.
+> 
+> Signed-off-by: Qinghuang Feng <qhfeng.kernel@gmail.com>
+
+patches 1-7:
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+
+I'll leave them for Jeff to merge.
+
+Thanks.
+
+---
+~Randy
