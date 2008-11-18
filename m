@@ -1,85 +1,61 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: [PATCH] pata-rb532-cf: read/write data in 4-byte blocks
-Date: Mon, 17 Nov 2008 21:04:07 +0100
-Message-ID: <1226952247-1328-3-git-send-email-n0-1@freewrt.org>
-References: <1226952247-1328-1-git-send-email-n0-1@freewrt.org>
- <1226952247-1328-2-git-send-email-n0-1@freewrt.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: FYI: BUG in SATA Promise 300 TX4 (2.6.24 - 2.6.27-3) w/Linux
+Date: Tue, 18 Nov 2008 10:11:58 +0900
+Message-ID: <4922165E.9070203@kernel.org>
+References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org> <18719.65298.689618.835202@harpo.it.uu.se> <492059B1.4030708@how.dk> <49205AD7.3080009@how.dk> <4920D093.2030508@kernel.org> <492159E0.1050804@how.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:40270 "EHLO
-	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbYKQUTS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Nov 2008 15:19:18 -0500
-In-Reply-To: <1226952247-1328-2-git-send-email-n0-1@freewrt.org>
+Received: from hera.kernel.org ([140.211.167.34]:52945 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751076AbYKRBMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Nov 2008 20:12:07 -0500
+In-Reply-To: <492159E0.1050804@how.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Peter Favrholdt <linux-ide@how.dk>
 Cc: linux-ide@vger.kernel.org
 
-* rename the offset definition to avoid abiguity with the standard ATA
-  IO address
-* read and write four bytes at once like the original driver does
-* use writesl() and readsl() which implicitly iterate over the data
+Peter Favrholdt wrote:
+> Hi Tejun,
+> 
+> Thanks for your reply.
+> 
+> Tejun Heo wrote:
+>> Does unloading and reloading sata_promise fix the problem?
+> 
+> I had sata_promise linked into the kernel so I had to recompile and
+> reboot. The reboot fixed it (didn't turn power off - just reboot).
+> 
+> I then tried with sata_promise as a module. Four dd's reading the drives
+> and shortly same problem:
+> 
+> [  700.520101] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000
+> action 0x6 frozen
+> [  700.520112] ata1: SError: { 10B8B Dispar BadCRC TrStaTrns }
+> [  700.520120] ata1.00: cmd c8/00:00:90:0e:e6/00:00:00:00:00/e1 tag 0
+> dma 131072 in
+> [  700.520122]          res 40/00:28:00:00:00/00:00:00:00:00/40 Emask
+> 0x4 (timeout)
+> [  700.520126] ata1.00: status: { DRDY }
+> [  700.520169] ata1: hard resetting link
+> [  705.910331] ata1: link is slow to respond, please be patient (ready=-19)
+> [  710.531474] ata1: COMRESET failed (errno=-16)
+> [  710.531531] ata1: hard resetting link
+> [  715.920526] ata1: link is slow to respond, please be patient (ready=-19)
+> 
+> I tried removing sata_promise the nice way using modprobe:
+> 
+> # modprobe -r -f sata_promise
+> FATAL: Module sata_promise is in use.
+> 
+> then the not-so-nice way using rmmod -f and inserting it again. It
+> doesn't work. Here are the relevant parts from dmesg (removing and
+> inserting):
 
-This patch assumes buflen to be a multiple of four, which is true for
-ATA devices. ATAPI support is not known, though unlikely, as the
-original driver always transfers 512 Bytes at once. In doubt, do the
-right thing and return the number of bytes actually consumed.
+Oh... you first need to wait for the kernel to be done with the devices.
+ ie. unmount all filesystems living on those && wait till EH finishes.
 
-Signed-off-by: Phil Sutter <n0-1@freewrt.org>
-Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Acked-by: Florian Fainelli <florian@openwrt.org>
----
- drivers/ata/pata_rb532_cf.c |   19 ++++++++-----------
- 1 files changed, 8 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index 576fc99..4479b04 100644
---- a/drivers/ata/pata_rb532_cf.c
-+++ b/drivers/ata/pata_rb532_cf.c
-@@ -43,7 +43,8 @@
- #define RB500_CF_REG_BASE	0x0800
- #define RB500_CF_REG_ERR	0x080D
- #define RB500_CF_REG_CTRL	0x080E
--#define RB500_CF_REG_DATA	0x0C00
-+/* 32bit buffered data register offset */
-+#define RB500_CF_REG_DBUF32	0x0C00
- 
- struct rb532_cf_info {
- 	void __iomem	*iobase;
-@@ -79,18 +80,14 @@ static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char
- {
- 	struct ata_port *ap = adev->link->ap;
- 	void __iomem *ioaddr = ap->ioaddr.data_addr;
--	int retlen = buflen;
- 
--	if (write_data) {
--		for (; buflen > 0; buflen--, buf++)
--			writeb(*buf, ioaddr);
--	} else {
--		for (; buflen > 0; buflen--, buf++)
--			*buf = readb(ioaddr);
--	}
-+	if (write_data)
-+		writesl(ioaddr, buf, buflen / sizeof(u32));
-+	else
-+		readsl(ioaddr, buf, buflen / sizeof(u32));
- 
- 	rb532_pata_finish_io(adev->link->ap);
--	return retlen;
-+	return buflen - buflen % sizeof(u32);
- }
- 
- static void rb532_pata_freeze(struct ata_port *ap)
-@@ -158,7 +155,7 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
- 
- 	ata_sff_std_ports(&ap->ioaddr);
- 
--	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
-+	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DBUF32;
- 	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
- }
- 
 -- 
-1.5.6.4
-
+tejun
