@@ -1,55 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] Add SATA GEN3 related messages
-Date: Tue, 18 Nov 2008 20:13:02 +0900
-Message-ID: <4922A33E.2090700@gmail.com>
-References: <1227000818.5631.12.camel@chunhao-desktop>
+From: Lazy <lazy404@gmail.com>
+Subject: AHCI backplane errors in 2.6.27
+Date: Tue, 18 Nov 2008 16:33:31 +0100
+Message-ID: <efeafa350811180733h6115dbc9t5a33abf55e774388@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:43979 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbYKRLNR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Nov 2008 06:13:17 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so1829469tic.23
-        for <linux-ide@vger.kernel.org>; Tue, 18 Nov 2008 03:13:15 -0800 (PST)
-In-Reply-To: <1227000818.5631.12.camel@chunhao-desktop>
+Received: from rn-out-0910.google.com ([64.233.170.187]:37942 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbYKRPde (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Nov 2008 10:33:34 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so2449377rnd.17
+        for <linux-ide@vger.kernel.org>; Tue, 18 Nov 2008 07:33:32 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shane Huang <shane.huang@amd.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Shane Huang wrote:
-> The present AHCI driver seems to support SATA GEN 3 speed, but the related
-> messages should be modified.
-> 
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> 
-> diff -ruN c/drivers/ata/ahci.c d/drivers/ata/ahci.c
-> --- c/drivers/ata/ahci.c	2008-11-07 11:23:24.000000000 +0800
-> +++ d/drivers/ata/ahci.c	2008-11-07 13:47:46.000000000 +0800
-> @@ -2446,6 +2446,8 @@
->  		speed_s = "1.5";
->  	else if (speed == 2)
->  		speed_s = "3";
-> +	else if (speed == 3)
-> +		speed_s = "6";
->  	else
->  		speed_s = "?";
->  
-> diff -ruN c/drivers/ata/libata-core.c d/drivers/ata/libata-core.c
-> --- c/drivers/ata/libata-core.c	2008-11-07 13:46:39.000000000 +0800
-> +++ d/drivers/ata/libata-core.c	2008-11-07 13:46:23.000000000 +0800
-> @@ -930,6 +930,7 @@
->  	static const char * const spd_str[] = {
->  		"1.5 Gbps",
->  		"3.0 Gbps",
-> +		"6.0 Gbps",
->  	};
->  
->  	if (spd == 0 || (spd - 1) >= ARRAY_SIZE(spd_str))
+When booting 2.6.27-rc1 kernel on out intel SR1530HSH ( Quad core Xeon X3320)
+Sata controller is ICH9r running in AHCI mode with newest bios.
 
-Sweeeeettt.  Can you also update the force_tbl and force param handling?
+After loading ahci driver backplane leds go amber which indicates a
+non fatal error according to my intel resseller.
+
+Everything works fine, there is no degradation in performance and
+system boots up and runs correctly (for about 15 minutes after that we
+went back to the old kernel).
+
+I traced it to (introduced in 2.6.27-rc1):
+
+commit b312bf359e20cc39c00d480fd40a24c245d80bf7
+Merge: dc221ea... 2640d7c...
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Jul 15 11:18:10 2008 -0700
+
+    Merge branch 'upstream-linus' of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev
+
+    * 'upstream-linus' of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev:
+      AHCI: Remove an unnecessary flush from ahci_qc_issue
+      AHCI: speed up resume
+      [libata] Add support for VPD page b1
+      ata: endianness annotations in pata drivers
+      libata-eh: update atapi_eh_request_sense() to take @dev instead of @qc
+      [libata] sata_svw: update code comments relating to data corruption
+      libata/ahci: enclosure management support
+      libata: improve EH internal command timeout handling
+      libata: use ULONG_MAX to terminate reset timeout table
+      libata: improve EH retry delay handling
+      libata: consistently use msecs for time durations
+
+my best gues whould be
+      libata/ahci: enclosure management support
+
+I am unable to separate this patches now. Will try some giting tomorrow.
 
 -- 
-tejun
+Michal Grzeidzicki
