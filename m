@@ -1,176 +1,176 @@
-From: Evgeni Golov <sargentd@die-welt.net>
-Subject: Re: Odd behaviour of device in response to idleimmediate with
- unload
-Date: Tue, 18 Nov 2008 08:37:49 +0100
-Message-ID: <20081118073749.D84FD1FD6E@chi.die-welt.net>
-References: <491083CC.5050508@rtr.ca>
-	<49108AA0.1080507@rtr.ca>
-	<491090BC.5060403@rtr.ca>
-	<20081104185444.3BE721FDF7@chi.die-welt.net>
-	<4910A509.1030307@rtr.ca>
-	<49116811.5000109@kernel.org>
-	<873ai6cmio.fsf@denkblock.local>
-	<4911A8EA.8030605@kernel.org>
-	<87k5bhxerq.fsf@denkblock.local>
-	<4913BF3D.3090704@kernel.org>
-	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
-	<4917F822.5060204@kernel.org>
-	<20081110102607.094281FD7C@chi.die-welt.net>
-	<87r65ju83r.fsf@denkblock.local>
-	<20081113113345.12E2D1FD80@chi.die-welt.net>
-	<491FEA3C.4090906@kernel.org>
-	<20081117071552.D25291FD5F@chi.die-welt.net>
-	<49211B1F.7040900@kernel.org>
-	<20081117074825.322BE1FD5F@chi.die-welt.net>
-	<492218D1.5070904@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="Multipart=_Tue__18_Nov_2008_08_37_49_+0100_nF7PfiVw//LCJVlb"
+From: Rusty Conover <rconover@infogears.com>
+Subject: Assistance with error
+Date: Tue, 18 Nov 2008 00:59:19 -0700
+Message-ID: <C907368E-3242-4D88-B879-AF621A17A93A@infogears.com>
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chi.die-welt.net ([84.246.123.210]:60530 "EHLO chi.die-welt.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751197AbYKRHh5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Nov 2008 02:37:57 -0500
-In-Reply-To: <492218D1.5070904@kernel.org>
+Received: from mail.infogears.com ([69.51.90.143]:46172 "EHLO
+	mail.infogears.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbYKRIV2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Nov 2008 03:21:28 -0500
+Received: from mail.infogears.com (localhost.localdomain [127.0.0.1])
+	by mail.infogears.com (Postfix) with ESMTP id 021D030980B1
+	for <linux-ide@vger.kernel.org>; Tue, 18 Nov 2008 00:59:20 -0700 (MST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Hello Linux IDE Guys,
 
---Multipart=_Tue__18_Nov_2008_08_37_49_+0100_nF7PfiVw//LCJVlb
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+I'm encountering this error after a few days of decent load on the  
+disks:
 
-On Tue, 18 Nov 2008 10:22:25 +0900 Tejun Heo wrote:
+ata4.00: exception Emask 0x40 SAct 0x1 SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 61/58:00:8d:40:08/00:00:01:00:00/40 tag 0 ncq 45056 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdd] Write Protect is off
+sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+ata4.00: exception Emask 0x50 SAct 0x1 SErr 0x480900 action 0x6 frozen
+ata4.00: irq_stat 0x08000000, interface fatal error
+ata4: SError: { UnrecovData HostInt 10B8B Handshk }
+ata4.00: cmd 61/08:00:fd:41:08/00:00:01:00:00/40 tag 0 ncq 4096 out
+          res 40/00:00:fd:41:08/00:00:01:00:00/40 Emask 0x50 (ATA bus  
+error)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: qc timeout (cmd 0xec)
+ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata4.00: revalidation failed (errno=-5)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata4: SError: { HostInt 10B8B }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdd] Write Protect is off
+sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+sd 3:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdd] Write Protect is off
+sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+ata4.00: exception Emask 0x40 SAct 0x1 SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 61/08:00:fd:41:08/00:00:01:00:00/40 tag 0 ncq 4096 out
+          res 40/00:00:fd:41:08/00:00:01:00:00/40 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: qc timeout (cmd 0x27)
+ata4.00: failed to read native max address (err_mask=0x4)
+ata4.00: HPA support seems broken, skipping HPA handling
+ata4.00: revalidation failed (errno=-5)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: qc timeout (cmd 0xec)
+ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata4.00: revalidation failed (errno=-5)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata4: SError: { HostInt 10B8B }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdd] Write Protect is off
+sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+sd 3:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdd] Write Protect is off
+sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+ata4: limiting SATA link speed to 1.5 Gbps
+ata4.00: exception Emask 0x40 SAct 0x1fe SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 61/10:08:8d:77:4c/00:00:0f:00:00/40 tag 1 ncq 8192 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/08:10:65:06:b4/00:00:16:00:00/40 tag 2 ncq 4096 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/08:18:15:07:b4/00:00:16:00:00/40 tag 3 ncq 4096 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/10:20:9d:9b:63/00:00:17:00:00/40 tag 4 ncq 8192 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/08:28:25:58:3d/00:00:23:00:00/40 tag 5 ncq 4096 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/08:30:d5:68:7e/00:00:25:00:00/40 tag 6 ncq 4096 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/08:38:f5:ab:9e/00:00:32:00:00/40 tag 7 ncq 4096 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4.00: cmd 61/08:40:25:ac:9e/00:00:32:00:00/40 tag 8 ncq 4096 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata4.00: qc timeout (cmd 0xec)
+ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata4.00: revalidation failed (errno=-5)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4: hard resetting link
+ata4: link is slow to respond, please be patient (ready=0)
+ata4: softreset failed (device not ready)
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
 
-> Can you please attach lspci -nn result and full boot log?
+Its always on the same device sdd, I've swapped out the physical disks  
+and the error persists.  Do you have any ideas what the cause could  
+be?  I've checked connections, could it be a bad SATA cable?
 
-Done :)
+The full dmesg output is available at:
 
-Regards
-Evgeni
+http://www.infogears.com/disk-failure.log
 
---Multipart=_Tue__18_Nov_2008_08_37_49_+0100_nF7PfiVw//LCJVlb
-Content-Type: application/octet-stream;
- name="lspci.gz"
-Content-Disposition: attachment;
- filename="lspci.gz"
-Content-Transfer-Encoding: base64
+Kernel is:
 
-H4sIAJFwIkkCA7WWyW7iQBCG73mKkuYSpMnQ7QUbbmaJQUpPECYzkRAHLw1pjbGjpsmQt5+2HeM1
-KNEQiYORXf9Xf1X1gtAAoR8IpvFegMdZsKWwQj2E1gOYRYKGMIr5c8xdweIISOyxkEJf023SnZOu
-TZzv8p/a7WvIJnfgRkH6cgmT4zOn+z0Quov5qxSJBI/DkHKYHjxYmcjsDRTDRWu45vQFkNq5QjIV
-LFOZj2blTLQLZZLI5s+LOBYwj7koMsHVTLAnM7EOAYshoC/MT3LRkNqai6mYCNtwPRtNDbh1dyx8
-7cCUbZ9gTDcsYulHmVapDjk5MHOykpH9j9aglVu2mTrEBQk1SPiSJKUgKQ2SckmSWpC0Bkm9JEkr
-SL0aKZB9enCGlZ4i/zMzkkQ/TCWyJPGt6JdvNoj4K4hF3/x+g6h8BbHon+82iOpXEIs++l6DaPw/
-UYFJDXni+TUe/dT6zne6JGL4FpEpa1o+H/RNeSOVZ45VVsZnXAxJ5uOGdOBuPkq/4xtX7nVVkOHV
-x2IjB3E2ngA7RawQPsuqVSwJbtsLNw2QAo61tMAvNwej3llbXXtKasBUxHqvRXoDq4JDhod9Ogn6
-x31lQW3OKnOOs0P3l50Y2z1LQU+2uOJRTY9gazmDJfWfojiMt4zuZR4+LNyA5kcgE6/wiDWEYIUR
-UgYG1vT1lXxIARPxRHlERVVaSaWHPHYDSa+Y+knFo+B0J0dgRHRDVwjYbOt6TBRa5T1yhTWqDXAy
-ZyV7akaXYn9j/qcGN9uvFvPFffc34zRMZFV5dFtDG1Z2HLrR+qQkCxtRP/0+K6ymKEaJjPWMPHJ5
-kDSitBAMSV3So5uUcC/4YUcjkV4KjkespAFerXMYaf7ARGp//aaL4VYmmCQpuz6ZTADLPDvpiKCz
-6vfZ3O2eQ+ZGAk6x2a2rjenmTAWIKwuyF7JO29qIYLMdq9+w6EZuHIdQsB0NmJvagwWVc8Ph2hl3
-CRl1iSN/admP405B9nKyXAHjLMEK1EyXw/tenbEFjpDXrwRZeM612sz666t/q2LcTIcKAAA=
+Linux version 2.6.26.6-79.fc9.i686.PAE (mockbuild@) (gcc version 4.3.0  
+20080428 (Red Hat 4.3.0-8) (GCC) ) #1 SMP Fri Oct 17 1
+4:38:28 EDT 2008
 
---Multipart=_Tue__18_Nov_2008_08_37_49_+0100_nF7PfiVw//LCJVlb
-Content-Type: application/octet-stream;
- name="dmesg.gz"
-Content-Disposition: attachment;
- filename="dmesg.gz"
-Content-Transfer-Encoding: base64
+The FAQ mentions power issues being a possibility but I'm not sure if  
+there is a way to tell if that is the cause since it it always the  
+same device in a 6 device array.
 
-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
-rCzJ1wqMVwCMBdUkcDwAAA==
+Any insight would be most appreciated.
 
---Multipart=_Tue__18_Nov_2008_08_37_49_+0100_nF7PfiVw//LCJVlb--
+Thanks,
+
+Rusty
+--
+Rusty Conover
+rconover@infogears.com
+InfoGears Inc / GearBuyer.com / FootwearBuyer.com
+http://www.infogears.com
+http://www.gearbuyer.com
+http://www.footwearbuyer.com
+
