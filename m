@@ -1,59 +1,47 @@
 From: Shane Huang <shane.huang@amd.com>
-Subject: [PATCH] Withdraw IGN_SERR_INTERNAL for SB800 SATA
-Date: Tue, 18 Nov 2008 17:27:31 +0800
-Message-ID: <1227000451.5631.7.camel@chunhao-desktop>
+Subject: [PATCH] Add SATA GEN3 related messages
+Date: Tue, 18 Nov 2008 17:33:38 +0800
+Message-ID: <1227000818.5631.12.camel@chunhao-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-sin.frontbridge.com ([207.46.51.80]:54106 "EHLO
-	SG2EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbYKRJ1v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Nov 2008 04:27:51 -0500
+Received: from outbound-dub.frontbridge.com ([213.199.154.16]:39034 "EHLO
+	IE1EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbYKRJeK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Nov 2008 04:34:10 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, htejun@gmail.com, shane.huang@amd.com
 
-There is an issue in ATI SB600/SB700 SATA that PxSERR.E should not be
-set on some conditions, which will lead to many SATA ODD error messages.
-commit 55a61604cd1354e1783364e1c901034f2f474b7d is the workaround.
-Since SB800 fixed this HW issue, IGN_SERR_INTERNAL should be withdrawn
-for SB800.
+The present AHCI driver seems to support SATA GEN 3 speed, but the related
+messages should be modified.
 
 Signed-off-by: Shane Huang <shane.huang@amd.com>
 
 diff -ruN c/drivers/ata/ahci.c d/drivers/ata/ahci.c
 --- c/drivers/ata/ahci.c	2008-11-07 11:23:24.000000000 +0800
-+++ d/drivers/ata/ahci.c	2008-11-07 11:23:28.000000000 +0800
-@@ -105,7 +105,7 @@
- 	board_ahci_ign_iferr	= 2,
- 	board_ahci_sb600	= 3,
- 	board_ahci_mv		= 4,
--	board_ahci_sb700	= 5,
-+	board_ahci_sb700	= 5, /* for SB700 and SB800 */
- 	board_ahci_mcp65	= 6,
- 	board_ahci_nopmp	= 7,
++++ d/drivers/ata/ahci.c	2008-11-07 13:47:46.000000000 +0800
+@@ -2446,6 +2446,8 @@
+ 		speed_s = "1.5";
+ 	else if (speed == 2)
+ 		speed_s = "3";
++	else if (speed == 3)
++		speed_s = "6";
+ 	else
+ 		speed_s = "?";
  
-@@ -439,7 +439,7 @@
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
--	/* board_ahci_sb700 */
-+	/* board_ahci_sb700, for SB700 and SB800 */
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL),
- 		.flags		= AHCI_FLAG_COMMON,
-@@ -2610,6 +2610,10 @@
- 	    (pdev->revision == 0xa1 || pdev->revision == 0xa2))
- 		hpriv->flags |= AHCI_HFLAG_NO_MSI;
+diff -ruN c/drivers/ata/libata-core.c d/drivers/ata/libata-core.c
+--- c/drivers/ata/libata-core.c	2008-11-07 13:46:39.000000000 +0800
++++ d/drivers/ata/libata-core.c	2008-11-07 13:46:23.000000000 +0800
+@@ -930,6 +930,7 @@
+ 	static const char * const spd_str[] = {
+ 		"1.5 Gbps",
+ 		"3.0 Gbps",
++		"6.0 Gbps",
+ 	};
  
-+	/* SB800 does NOT need the workaround to ignore SERR_INTERNAL */
-+	if (board_id == board_ahci_sb700 && pdev->revision >= 0x40)
-+		hpriv->flags &= ~AHCI_HFLAG_IGN_SERR_INTERNAL;
-+
- 	if ((hpriv->flags & AHCI_HFLAG_NO_MSI) || pci_enable_msi(pdev))
- 		pci_intx(pdev, 1);
- 
+ 	if (spd == 0 || (spd - 1) >= ARRAY_SIZE(spd_str))
 
 
