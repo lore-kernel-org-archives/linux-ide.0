@@ -1,61 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: FYI: BUG in SATA Promise 300 TX4 (2.6.24 - 2.6.27-3) w/Linux
-Date: Tue, 18 Nov 2008 10:11:58 +0900
-Message-ID: <4922165E.9070203@kernel.org>
-References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org> <18719.65298.689618.835202@harpo.it.uu.se> <492059B1.4030708@how.dk> <49205AD7.3080009@how.dk> <4920D093.2030508@kernel.org> <492159E0.1050804@how.dk>
+Subject: Re: Odd behaviour of device in response to idleimmediate with unload
+Date: Tue, 18 Nov 2008 10:22:25 +0900
+Message-ID: <492218D1.5070904@kernel.org>
+References: <491083CC.5050508@rtr.ca>	<49108AA0.1080507@rtr.ca>	<491090BC.5060403@rtr.ca>	<20081104185444.3BE721FDF7@chi.die-welt.net>	<4910A509.1030307@rtr.ca>	<49116811.5000109@kernel.org>	<873ai6cmio.fsf@denkblock.local>	<4911A8EA.8030605@kernel.org>	<87k5bhxerq.fsf@denkblock.local>	<4913BF3D.3090704@kernel.org>	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>	<4917F822.5060204@kernel.org>	<20081110102607.094281FD7C@chi.die-welt.net>	<87r65ju83r.fsf@denkblock.local>	<20081113113345.12E2D1FD80@chi.die-welt.net>	<491FEA3C.4090906@kernel.org>	<20081117071552.D25291FD5F@chi.die-welt.net>	<49211B1F.7040900@kernel.org> <20081117074825.322BE1FD5F@chi.die-welt.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52945 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:39222 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751076AbYKRBMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Nov 2008 20:12:07 -0500
-In-Reply-To: <492159E0.1050804@how.dk>
+	id S1751589AbYKRBWu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Nov 2008 20:22:50 -0500
+In-Reply-To: <20081117074825.322BE1FD5F@chi.die-welt.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Favrholdt <linux-ide@how.dk>
-Cc: linux-ide@vger.kernel.org
+To: Evgeni Golov <sargentd@die-welt.net>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Peter Favrholdt wrote:
-> Hi Tejun,
+Evgeni Golov wrote:
+> On Mon, 17 Nov 2008 16:19:59 +0900 Tejun Heo wrote:
 > 
-> Thanks for your reply.
+>> Evgeni Golov wrote:
+>>> On Sun, 16 Nov 2008 18:39:08 +0900 Tejun Heo wrote:
+>>>
+>>>> So, this comes before actually issuing the park.  It sounds like it has
+>>>> nothing to do with park command itself.  If you do "echo - - - >
+>>>> /sys/class/scsi_host/host0/scan" right after boot, what does the kernel say?
+>>> # echo - - - > /sys/class/scsi_host/host0/scan
+>>> echo: write error: invalid argument
+>> Eh... strange.  It works perfectly fine here.  Can you play with quoting
+>> and -n?
 > 
-> Tejun Heo wrote:
->> Does unloading and reloading sata_promise fix the problem?
+> Heh, did try -n but no quoting, damn - :)
+> Get the same reset too:
 > 
-> I had sata_promise linked into the kernel so I had to recompile and
-> reboot. The reboot fixed it (didn't turn power off - just reboot).
-> 
-> I then tried with sata_promise as a module. Four dd's reading the drives
-> and shortly same problem:
-> 
-> [  700.520101] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000
-> action 0x6 frozen
-> [  700.520112] ata1: SError: { 10B8B Dispar BadCRC TrStaTrns }
-> [  700.520120] ata1.00: cmd c8/00:00:90:0e:e6/00:00:00:00:00/e1 tag 0
-> dma 131072 in
-> [  700.520122]          res 40/00:28:00:00:00/00:00:00:00:00/40 Emask
-> 0x4 (timeout)
-> [  700.520126] ata1.00: status: { DRDY }
-> [  700.520169] ata1: hard resetting link
-> [  705.910331] ata1: link is slow to respond, please be patient (ready=-19)
-> [  710.531474] ata1: COMRESET failed (errno=-16)
-> [  710.531531] ata1: hard resetting link
-> [  715.920526] ata1: link is slow to respond, please be patient (ready=-19)
-> 
-> I tried removing sata_promise the nice way using modprobe:
-> 
-> # modprobe -r -f sata_promise
-> FATAL: Module sata_promise is in use.
-> 
-> then the not-so-nice way using rmmod -f and inserting it again. It
-> doesn't work. Here are the relevant parts from dmesg (removing and
-> inserting):
+> shinkupaddo# dmesg
+> ata1: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xf
+> ata1: SError: { PHYRdyChg CommWake }
 
-Oh... you first need to wait for the kernel to be done with the devices.
- ie. unmount all filesystems living on those && wait till EH finishes.
+Heh... you're not supposed to see these events here, so the PHY event
+and resetting don't have anything to do with head unloading per se.
+It's just discovering previously set SError values.  The question is
+when did they get set and why didn't ahci catch it.  libata EH enables
+enable reporting and then clear SError before finishing up so there
+shouldn't be any window where events can get lost.
+
+Can you please attach lspci -nn result and full boot log?
+
+Thanks.
 
 -- 
 tejun
