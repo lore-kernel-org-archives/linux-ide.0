@@ -1,65 +1,55 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Assistance with error
-Date: Tue, 18 Nov 2008 04:43:01 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811180441170.29263@p34.internal.lan>
-References: <C907368E-3242-4D88-B879-AF621A17A93A@infogears.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] Add SATA GEN3 related messages
+Date: Tue, 18 Nov 2008 20:13:02 +0900
+Message-ID: <4922A33E.2090700@gmail.com>
+References: <1227000818.5631.12.camel@chunhao-desktop>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:43200 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750888AbYKRJnE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Nov 2008 04:43:04 -0500
-In-Reply-To: <C907368E-3242-4D88-B879-AF621A17A93A@infogears.com>
+Received: from ti-out-0910.google.com ([209.85.142.188]:43979 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbYKRLNR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Nov 2008 06:13:17 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so1829469tic.23
+        for <linux-ide@vger.kernel.org>; Tue, 18 Nov 2008 03:13:15 -0800 (PST)
+In-Reply-To: <1227000818.5631.12.camel@chunhao-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rusty Conover <rconover@infogears.com>
-Cc: linux-ide@vger.kernel.org
+To: Shane Huang <shane.huang@amd.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
+Shane Huang wrote:
+> The present AHCI driver seems to support SATA GEN 3 speed, but the related
+> messages should be modified.
+> 
+> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> 
+> diff -ruN c/drivers/ata/ahci.c d/drivers/ata/ahci.c
+> --- c/drivers/ata/ahci.c	2008-11-07 11:23:24.000000000 +0800
+> +++ d/drivers/ata/ahci.c	2008-11-07 13:47:46.000000000 +0800
+> @@ -2446,6 +2446,8 @@
+>  		speed_s = "1.5";
+>  	else if (speed == 2)
+>  		speed_s = "3";
+> +	else if (speed == 3)
+> +		speed_s = "6";
+>  	else
+>  		speed_s = "?";
+>  
+> diff -ruN c/drivers/ata/libata-core.c d/drivers/ata/libata-core.c
+> --- c/drivers/ata/libata-core.c	2008-11-07 13:46:39.000000000 +0800
+> +++ d/drivers/ata/libata-core.c	2008-11-07 13:46:23.000000000 +0800
+> @@ -930,6 +930,7 @@
+>  	static const char * const spd_str[] = {
+>  		"1.5 Gbps",
+>  		"3.0 Gbps",
+> +		"6.0 Gbps",
+>  	};
+>  
+>  	if (spd == 0 || (spd - 1) >= ARRAY_SIZE(spd_str))
 
+Sweeeeettt.  Can you also update the force_tbl and force param handling?
 
-On Tue, 18 Nov 2008, Rusty Conover wrote:
-
-> Hello Linux IDE Guys,
->
-> I'm encountering this error after a few days of decent load on the disks:
->
-> Its always on the same device sdd, I've swapped out the physical disks and 
-> the error persists.  Do you have any ideas what the cause could be?  I've 
-> checked connections, could it be a bad SATA cable?
->
-> The full dmesg output is available at:
->
-> http://www.infogears.com/disk-failure.log
->
-> Kernel is:
->
-> Linux version 2.6.26.6-79.fc9.i686.PAE (mockbuild@) (gcc version 4.3.0 
-> 20080428 (Red Hat 4.3.0-8) (GCC) ) #1 SMP Fri Oct 17 1
-> 4:38:28 EDT 2008
->
-> The FAQ mentions power issues being a possibility but I'm not sure if there 
-> is a way to tell if that is the cause since it it always the same device in a 
-> 6 device array.
->
-> Any insight would be most appreciated.
-
-Try disabling NCQ on the drives, I get the same/similar NCQ errors if I have
-it enabled, on some drives, it just does not work.
-
-# Define DISKS.
-cd /sys/block
-DISKS=$(/bin/ls -1d sd[a-z])
-
-# Disable NCQ on all disks.
-echo "Disabling NCQ on all disks..."
-for i in $DISKS
-do
-   echo "Disabling NCQ on $i"
-   echo 1 > /sys/block/"$i"/device/queue_depth
-done
-
-Then, see if the same problem repeats itself, or if it occurs less often..
-
-Justin.
-
+-- 
+tejun
