@@ -1,106 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: FYI: BUG in SATA Promise 300 TX4 (2.6.24 - 2.6.27-3) w/Linux
-Date: Wed, 19 Nov 2008 10:55:00 +0900
-Message-ID: <492371F4.7020400@kernel.org>
-References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org> <18719.65298.689618.835202@harpo.it.uu.se> <492059B1.4030708@how.dk> <49205AD7.3080009@how.dk> <4920D093.2030508@kernel.org> <492159E0.1050804@how.dk> <4922165E.9070203@kernel.org> <49230361.2010001@how.dk>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: unexpected downspeed of AHCI controller on Intel    Seaburg 5400
+Date: Tue, 18 Nov 2008 20:04:42 -0600
+Message-ID: <4923743A.2050903@shaw.ca>
+References: <6.2.5.6.2.20081118154009.01c8a2d0@binnacle.cx>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010803010005060201010900"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39709 "EHLO hera.kernel.org"
+Received: from main.gmane.org ([80.91.229.2]:35818 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751538AbYKSBzS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Nov 2008 20:55:18 -0500
-In-Reply-To: <49230361.2010001@how.dk>
+	id S1751271AbYKSCE7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Nov 2008 21:04:59 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1L2cR5-000175-Ql
+	for linux-ide@vger.kernel.org; Wed, 19 Nov 2008 02:04:55 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 19 Nov 2008 02:04:55 +0000
+Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 19 Nov 2008 02:04:55 +0000
+In-Reply-To: <6.2.5.6.2.20081118154009.01c8a2d0@binnacle.cx>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Favrholdt <linux-ide@how.dk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010803010005060201010900
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+starlight@binnacle.cx wrote:
+> [prior incomplete message was sent accidently]
+> 
+> Have a relatively recent HP DL160 G5 incorporating the 
+> Seaburg 5400 chipset.  Appears the 5400 is a MCM including
+> a 631xESB/632xESB I/O controller.
+> 
+> Running kernel 2.6.27.1.  Latest HP BIOS.
+> 
+> Strangely the SATA controller seems to be reporting that
+> it can only run at 1.5 Gbps instead of 3 Gbps.
+> 
+> ahci 0000:00:1f.2: version 3.0
+> ahci 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
+> ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 6 ports 1.5 Gbps 0x3f impl SATA mode
 
-Peter Favrholdt wrote:
-> Hi Tejun & list
-> 
-> Tejun Heo wrote:
->> Peter Favrholdt wrote:
->>> I tried removing sata_promise the nice way using modprobe:
->>>
->>> # modprobe -r -f sata_promise
->>> FATAL: Module sata_promise is in use.
->>>
->>> then the not-so-nice way using rmmod -f and inserting it again. It
->>> doesn't work. Here are the relevant parts from dmesg (removing and
->>> inserting):
->>
->> Oh... you first need to wait for the kernel to be done with the devices.
->>  ie. unmount all filesystems living on those && wait till EH finishes.
-> 
-> I didn't have any filesystems mounted but learned that the 4 disks
-> participate in a md raid5 set. To be sure I tried everything again from
-> the beginning (reboot) without enabling md on the four drives. Here are
-> the results:
-> 
-> 1. started the four dd processes which ran to completion without any
-> errors. Started them again and this time sda failed as usual.
-> 
-> 2. modprobe -r sata_promise - no warnings/errors: removed successfully
-> 
-> 3. modprobe sata_promise - only three drives show up
-> 
-> 4. modprobe -r sata_promise - no warnings/errors: removed successfully
-> 
-> 5. modprobe sata_promise - more channels complain - no drives are found
-> 
-> dmesg:
-> 
-> [21626.490086] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000
-> action 0x6 frozen
-> [21626.490096] ata1: SError: { 10B8B Dispar BadCRC TrStaTrns }
-> [21626.490105] ata1.00: cmd 25/00:00:00:1f:e6/00:02:01:00:00/e0 tag 0
-> dma 262144 in
-> [21626.490107]          res 40/00:28:00:00:00/00:00:00:00:00/40 Emask
-> 0x4 (timeout)
-> [21626.490110] ata1.00: status: { DRDY }
-> [21626.490162] ata1: hard resetting link
-> [21631.881055] ata1: link is slow to respond, please be patient (ready=-19)
-> [21636.500030] ata1: COMRESET failed (errno=-16)
-> [21636.500068] ata1: hard resetting link
+That comes right out of the controller's registers, so presumably it is 
+telling the truth. That particular value is only used for display, 
+though - the actual negotiated speed is determined from other registers. 
+So if the controller says it can only do 1.5 and the drives all 
+negotiated at 1.5, well, that's likely all it can do..
 
-COMRESETs are failing with EBUSY while ata_sff_check_ready() is
-returning ENODEV.  Hmmm... Does the attached patch change anything?
+> ahci 0000:00:1f.2: flags: 64bit ncq pm led slum part
+> ahci 0000:00:1f.2: setting latency timer to 64
+> 
+> Looked at the AHCI specification and Intel datasheets for both 
+> the 5400 and the 631xESB/632xESB.  The latter shows the register 
+> but does not include 3 Gpbs in the enumeration.  SATA-II support 
+> is stated in general for the device however.  The SATA links all 
+> are reported as running at 1.5 Gbps.
 
--- 
-tejun
+It doesn't necessarily mean anything that it supports SATA II, that's 
+just a revision of the spec and it defines support for 3 Gbps, but 
+doesn't require it.
 
---------------010803010005060201010900
-Content-Type: text/x-patch;
- name="sata_promise-hrst-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata_promise-hrst-debug.patch"
+> 
+> Definitely did pull the rate-limit jumpers off the Seagate
+> ES.2 drives.
+> 
+> details:
+> 
+> http://binnacle.cx/file/ahci_seaburg_downspeed_dmesg.txt
+> http://binnacle.cx/file/ahci_seaburg_downspeed_dmidecode.txt
+> http://binnacle.cx/file/ahci_seaburg_downspeed_hdparm-I.txt
+> http://binnacle.cx/file/ahci_seaburg_downspeed_lspci-vv.txt
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index ba9a257..a06af2c 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -709,8 +709,13 @@ static int pdc_pata_softreset(struct ata_link *link, unsigned int *class,
- static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
- 			      unsigned long deadline)
- {
-+	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	bool online;
-+	int rc;
-+
- 	pdc_reset_port(link->ap);
--	return sata_sff_hardreset(link, class, deadline);
-+	rc = sata_link_hardreset(link, timing, deadline, &online, NULL);
-+	return online ? -EAGAIN : rc;
- }
- 
- static void pdc_error_handler(struct ata_port *ap)
-
---------------010803010005060201010900--
