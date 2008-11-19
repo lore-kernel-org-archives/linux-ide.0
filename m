@@ -1,142 +1,131 @@
-From: Yan Seiner <yan@seiner.com>
-Subject: Re: Port multiplier resets
-Date: Wed, 19 Nov 2008 07:15:42 -0800
-Message-ID: <49242D9E.4050500@seiner.com>
-References: <490DC300.40703@seiner.com> <49194B20.8000209@kernel.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Oops/Warning report for the week of November 19th, 2008
+Date: Wed, 19 Nov 2008 08:01:06 -0800
+Message-ID: <20081119080106.23943160@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from flatoutfitness.com ([66.178.130.209]:34546 "EHLO www.seiner.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441AbYKSPPn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Nov 2008 10:15:43 -0500
-In-Reply-To: <49194B20.8000209@kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:46778 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752418AbYKSQA2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Nov 2008 11:00:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: torvalds@linux-foundation.org, netdev@vger.kernel.org, akpm@linux-foundation.org, x86@vger.kernel.org, tytso@mit.edu, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Yan Seiner wrote:
->   
->> I'm seeing errors on a new port multiplier install.  The mobo has a
->> J-Micron SATA controller: JMicron Technologies, Inc.  JMicron
->> 20360/20363 AHCI Controller (rev 03) The port multiplier has a SIL
->> 3726 chipset.  AFAICT, this is a supported comnbination.  The kernel
->> recognizes the chipset.  The system has an adaptec SCSI controller
->> w/ 2 15K SCSI drives, 6 internal SATA drives, and 3 external SATA
->> drives using the port multiplier. Because of a broken bios (ARGH!) I
->> have to power up the external drives after the system scans the SCSI
->> bus.  This seems to cause no problems.  Here's a log of a recent
->> boot (scroll down for the error I see after the system is booted):
->>
->> Nov  2 05:26:07 selene kernel: [   28.691524] ata8: SATA max UDMA/133 abar m8192@0xfdcfe000 port 0xfdcfe180 irq 16
->> Nov  2 05:26:07 selene kernel: [   34.104580] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> Nov  2 05:26:07 selene kernel: [   34.104580] ata8.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
->> Nov  2 05:26:07 selene kernel: [   34.104580] ata8.00: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   34.425000] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   34.425003] ata8.01: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   35.001232] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   35.001234] ata8.02: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   35.321389] ata8.02: SATA link down (SStatus 0 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   35.321419] ata8.03: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   35.869739] ata8.03: SATA link down (SStatus 0 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   35.869769] ata8.04: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   36.621491] ata8.04: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   36.621493] ata8.05: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   36.941025] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   36.942522] ata8.00: ATA-8: ST31000340AS, SD15, max UDMA/133
->> Nov  2 05:26:07 selene kernel: [   36.942525] ata8.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
->> Nov  2 05:26:07 selene kernel: [   36.944479] ata8.00: configured for UDMA/133
->> Nov  2 05:26:07 selene kernel: [   53.613888] ata8.01: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
->> Nov  2 05:26:07 selene kernel: [   53.613888] ata8.04: failed to IDENTIFY (I/O error, err_mask=0x100)
->> Nov  2 05:26:07 selene kernel: [   53.613888] ata8: failed to recover some devices, retrying in 5 secs
->> Nov  2 05:26:07 selene kernel: [   61.420677] ata8.01: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   66.420763] ata8.15: qc timeout (cmd 0xe4)
->> Nov  2 05:26:07 selene kernel: [   66.420770] ata8.01: failed to read SCR 2 (Emask=0x4)
->> Nov  2 05:26:07 selene kernel: [   66.420773] ata8.01: failed to read SCR 2 (Emask=0x40)
->> Nov  2 05:26:07 selene kernel: [   66.420775] ata8.01: COMRESET failed (errno=-5)
->> Nov  2 05:26:07 selene kernel: [   66.420804] ata8.01: failed to read SCR 0 (Emask=0x40)
->> Nov  2 05:26:07 selene kernel: [   66.420806] ata8.01: reset failed, giving up
->> Nov  2 05:26:07 selene kernel: [   66.420835] ata8.15: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   68.284883] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> Nov  2 05:26:07 selene kernel: [   68.285116] ata8.00: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   68.604947] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   68.604949] ata8.01: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   69.329438] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   69.329440] ata8.02: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   69.649777] ata8.02: SATA link down (SStatus 0 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   69.649807] ata8.03: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   69.969439] ata8.03: SATA link down (SStatus 0 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   69.969469] ata8.04: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   70.813852] ata8.04: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   70.813855] ata8.05: hard resetting link
->> Nov  2 05:26:07 selene kernel: [   71.377665] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
->> Nov  2 05:26:07 selene kernel: [   71.381475] ata8.00: configured for UDMA/133
->> Nov  2 05:26:07 selene kernel: [   71.381475] ata8.01: ATA-8: ST31000340AS, SD15, max UDMA/133
->> Nov  2 05:26:07 selene kernel: [   71.381475] ata8.01: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
->> Nov  2 05:26:07 selene kernel: [   71.381879] ata8.01: configured for UDMA/133
->> Nov  2 05:26:07 selene kernel: [   71.381879] ata8.04: ATA-8: ST31000340AS, SD15, max UDMA/133
->> Nov  2 05:26:07 selene kernel: [   71.381879] ata8.04: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
->> Nov  2 05:26:07 selene kernel: [   71.381890] ata8.04: configured for UDMA/133
->> Nov  2 05:26:07 selene kernel: [   71.389769] ata8: EH complete
->>     
->
-> The link probably got a PHY event after reset sequence is complete.
-> Maybe our timinig is too aggressive or the PMP is just quirky but as
-> long as detection succeeds in the end, it should be okay.
->
->   
->> Once the system is up and running, I get these errors.  They appear
->> anywhere from several hours to a few minutes apart.  What exactly
->> does this mean?  It doesn't seem to have any impact on the
->> performance of the drives.  Typically, these drives are very heavily
->> loaded; I've been dumping > 1TB of data to them while rebuilding the
->> RAID-5 array, so they're pretty well maxed out.
->>
->> Nov  2 05:40:13 selene kernel: [  984.254543] ata8.15: exception Emask 0x10 SAct 0x0 SErr 0x780101 action 0x7
->> Nov  2 05:40:13 selene kernel: [  984.254549] ata8.15: irq_stat 0x0c000000
->> Nov  2 05:40:13 selene kernel: [  984.254552] ata8: SError: { RecovData UnrecovData 10B8B Dispar BadCRC Handshk }
->> Nov  2 05:40:13 selene kernel: [  984.254557] ata8.01: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x0
->>     
->
-> It indicates that the link experienced ATA bus transmission failure.
-> Heh... Not only that the controller turned on all possible link error
-> bits.  Hmmm... The second device has active commands and it's the same
-> device which caused problem during boot too.  Can you please try the
-> followings?
->
-> 1. Swap the second drive with another one and see whether the error
->    follows the drive or stays with the slot.
->
-> 2. Specify libata.force=8.15:1.5Gbps
->   
 
-Sorry for the delayed response.  I've installed another controller based 
-on the SiI 3132 chipset.  The esata array is the same; I've simply moved 
-the esata cables to the new controller.  My observations:
+This week, a total of 4488 oopses and warnings have been reported,
+compared to 3926 reports in the previous week.
+(Reports prior to 2.6.26 have been omitted in collecting the top 10)
 
-1.  The JMicron 20360/20363 AHCI Controller (rev 03) controller is far, 
-far slower.  hdparm clocks it at 20 mb/sec and a raid check takes about 
-15 hours.
+I'd like to point specifically at numbers 7 and 8 this week, they are new in 
+the top 10 out of nowhere...
 
-2. The JMicron controller experiences the above errors.
 
-3.  The Sil 3132 controller is faster.  hdparm says 110 mb/sec and a 
-raid check takes about 5 hours.  This is confirmed by usage - I can 
-stream 2 videos, record 2 videos, and commercial flag a video in myth 
-with no visible stuttering.  The JMicron controller stutters even with a 
-single video streaming and recording.
+Per file statistics
+463	external/virtualbox/module
+399	kernel/power/main.c
+324	drivers/net/r8169.c
+235	fs/jbd/journal.c
+164	drivers/net/sis900.c
+152	drivers/parport/procfs.c
+150	drivers/ata/libata-sff.c
+99	drivers/net/wireless/iwlwifi/iwl-tx.c
+97	drivers/base/power/main.c
+90	net/sched/sch_generic.c
+77	drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+75	kernel/timer.c
 
-4.  The Sil 3132 controller doesn't have any errors even under high load.
 
-Google says the rev 3 version of the JMicron controller has these 
-issues, and to turn off NCQ on it.  It also indicates that these 
-problems should have been resolved in my kernel - version 2.6.27.4 - but 
-apparently not.  :-(
+Fix availble
+------------
+Rank 4: journal_update_superblock (warning)
+	Reported 239 times (6187 total reports)
+	Likely caused by the user removing a USB stick while mounted
+	Fix available in the -mm tree
+	This warning was last seen in version 2.6.27.5, and first seen in 2.6.24-rc6-git1.
+	More info: http://www.kerneloops.org/searchweek.php?search=journal_update_superblock
 
-Is there a way to turn off NCQ on that controller without impacting the 
-Sil 3132 controller?  Any other things to try?
+Rank 6: parport_device_proc_register (warning)
+	Reported 143 times (5957 total reports)
+	Duplicate /proc registration in the parport driver
+	Alan has a patch that fixes most cases
+	This warning was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.24-rc5.
+	More info: http://www.kerneloops.org/searchweek.php?search=parport_device_proc_register
 
---Yan
+Rank 14: ext3_commit_super (warning)
+	Reported 45 times (1555 total reports)
+	Likely caused by the user removing a USB stick while mounted
+	A fix for this issue is in the -mm tree
+	This warning was last seen in version 2.6.27.6, and first seen in 2.6.24.
+	More info: http://www.kerneloops.org/searchweek.php?search=ext3_commit_super
+
+Not yet fixed
+-------------
+Rank 1: VBoxDrvLinuxIOCtl (warning)
+	Reported 460 times (747 total reports)
+	[external] bug in the VirtualBox drivers
+	This warning was last seen in version 2.6.28-rc3, and first seen in 2.6.25.11.
+	More info: http://www.kerneloops.org/searchweek.php?search=VBoxDrvLinuxIOCtl
+
+Rank 2: suspend_test_finish (warning)
+	Suspend resume test finds drivers that take too long.
+	Linus merged a patch to show which driver it was recently.
+	Reported 408 times (874 total reports)
+	This warning was last seen in version 2.6.28-rc1, and first seen in 2.6.27-rc0-git14.
+	More info: http://www.kerneloops.org/searchweek.php?search=suspend_test_finish
+
+Rank 3: dev_watchdog(r8169) (network timeout)
+	Reported 326 times (1113 total reports)
+	This driver has been consistently high in the reports
+	This timeout was last seen in version 2.6.28-rc2-git7, and first seen in 2.6.26.6.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(r8169)
+
+Rank 5: dev_watchdog(sis900) (warning)
+	Reported 166 times (1337 total reports)
+	This warning was last seen in version 2.6.27.5, and first seen in 2.6.26-rc4-git2.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(sis900)
+
+Rank 7: __atapi_pio_bytes (warning)
+	Reported 108 times
+	This is a new entry this week that started showing up
+	This warning was last seen in version 2.6.27.5, and first seen in 2.6.27.4.
+	More info: http://www.kerneloops.org/searchweek.php?search=__atapi_pio_bytes
+
+Rank 8: iwl_tx_cmd_complete (warning)
+	Reported 99 times (240 total reports)
+	This appears to be a recent regression in the iwlwifi driver
+	This warning was last seen in version 2.6.28-rc4, and first seen in 2.6.27-rc9.
+	More info: http://www.kerneloops.org/searchweek.php?search=iwl_tx_cmd_complete
+
+Rank 10: rs_get_rate (warning)
+	Reported 78 times (894 total reports)
+	Bug in the Intel IWL wireless drivers
+	This warning was last seen in version 2.6.27.5, and first seen in 2.6.25-rc2-git5.
+	More info: http://www.kerneloops.org/searchweek.php?search=rs_get_rate
+
+Rank 11: run_timer_softirq (soft lockup)
+	Reported 62 times (834 total reports)
+	The hope is that the timer rework in 2.6.28 fixes these
+	This oops was last seen in version 2.6.27.5, and first seen in 2.6.25.
+	More info: http://www.kerneloops.org/searchweek.php?search=run_timer_softirq
+
+Rank 12: device_pm_add (warning)
+	Reported 61 times (840 total reports)
+	This got "fixed" by removing the warning
+	This warning was last seen in version 2.6.27-rc4, and first seen in 2.6.26-rc5.
+	More info: http://www.kerneloops.org/searchweek.php?search=device_pm_add
+
+Rank 13: dev_watchdog(cdc_ether) (oops)
+	Reported 59 times (206 total reports)
+	This oops was last seen in version 2.6.27.6, and first seen in 2.6.26.6.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog(cdc_ether)
+
+
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
