@@ -1,15 +1,15 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 1/3] ide-cd: move debug defines into header
-Date: Thu, 20 Nov 2008 06:41:21 +0100
-Message-ID: <1227159683-2487-2-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 2/3] ide: make IDE_AFLAG_.. numbering continuous again
+Date: Thu, 20 Nov 2008 06:41:22 +0100
+Message-ID: <1227159683-2487-3-git-send-email-petkovbb@gmail.com>
 References: <1227159683-2487-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:30022 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754041AbYKTFlW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Nov 2008 00:41:22 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so240445fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 19 Nov 2008 21:41:20 -0800 (PST)
+Received: from fk-out-0910.google.com ([209.85.128.185]:34670 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754068AbYKTFlX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Nov 2008 00:41:23 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so315250fkq.5
+        for <linux-ide@vger.kernel.org>; Wed, 19 Nov 2008 21:41:21 -0800 (PST)
 In-Reply-To: <1227159683-2487-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,48 +18,91 @@ Cc: Borislav Petkov <petkovbb@gmail.com>
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-cd.c |    8 --------
- drivers/ide/ide-cd.h |    8 ++++++++
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ include/linux/ide.h |   48 ++++++++++++++++++++++++------------------------
+ 1 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 5daa4dd..65e5513 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -53,14 +53,6 @@
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index fb81060..efd95e9 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -473,53 +473,53 @@ enum {
  
- #include "ide-cd.h"
+ 	/* ide-cd */
+ 	/* Drive cannot eject the disc. */
+-	IDE_AFLAG_NO_EJECT		= (1 << 3),
++	IDE_AFLAG_NO_EJECT		= (1 << 1),
+ 	/* Drive is a pre ATAPI 1.2 drive. */
+-	IDE_AFLAG_PRE_ATAPI12		= (1 << 4),
++	IDE_AFLAG_PRE_ATAPI12		= (1 << 2),
+ 	/* TOC addresses are in BCD. */
+-	IDE_AFLAG_TOCADDR_AS_BCD	= (1 << 5),
++	IDE_AFLAG_TOCADDR_AS_BCD	= (1 << 3),
+ 	/* TOC track numbers are in BCD. */
+-	IDE_AFLAG_TOCTRACKS_AS_BCD	= (1 << 6),
++	IDE_AFLAG_TOCTRACKS_AS_BCD	= (1 << 4),
+ 	/*
+ 	 * Drive does not provide data in multiples of SECTOR_SIZE
+ 	 * when more than one interrupt is needed.
+ 	 */
+-	IDE_AFLAG_LIMIT_NFRAMES		= (1 << 7),
++	IDE_AFLAG_LIMIT_NFRAMES		= (1 << 5),
+ 	/* Saved TOC information is current. */
+-	IDE_AFLAG_TOC_VALID		= (1 << 9),
++	IDE_AFLAG_TOC_VALID		= (1 << 6),
+ 	/* We think that the drive door is locked. */
+-	IDE_AFLAG_DOOR_LOCKED		= (1 << 10),
++	IDE_AFLAG_DOOR_LOCKED		= (1 << 7),
+ 	/* SET_CD_SPEED command is unsupported. */
+-	IDE_AFLAG_NO_SPEED_SELECT	= (1 << 11),
+-	IDE_AFLAG_VERTOS_300_SSD	= (1 << 12),
+-	IDE_AFLAG_VERTOS_600_ESD	= (1 << 13),
+-	IDE_AFLAG_SANYO_3CD		= (1 << 14),
+-	IDE_AFLAG_FULL_CAPS_PAGE	= (1 << 15),
+-	IDE_AFLAG_PLAY_AUDIO_OK		= (1 << 16),
+-	IDE_AFLAG_LE_SPEED_FIELDS	= (1 << 17),
++	IDE_AFLAG_NO_SPEED_SELECT	= (1 << 8),
++	IDE_AFLAG_VERTOS_300_SSD	= (1 << 9),
++	IDE_AFLAG_VERTOS_600_ESD	= (1 << 10),
++	IDE_AFLAG_SANYO_3CD		= (1 << 11),
++	IDE_AFLAG_FULL_CAPS_PAGE	= (1 << 12),
++	IDE_AFLAG_PLAY_AUDIO_OK		= (1 << 13),
++	IDE_AFLAG_LE_SPEED_FIELDS	= (1 << 14),
  
--#define IDECD_DEBUG_LOG		1
--
--#if IDECD_DEBUG_LOG
--#define ide_debug_log(lvl, fmt, args...) __ide_debug_log(lvl, fmt, args)
--#else
--#define ide_debug_log(lvl, fmt, args...) do {} while (0)
--#endif
--
- static DEFINE_MUTEX(idecd_ref_mutex);
+ 	/* ide-floppy */
+ 	/* Avoid commands not supported in Clik drive */
+-	IDE_AFLAG_CLIK_DRIVE		= (1 << 19),
++	IDE_AFLAG_CLIK_DRIVE		= (1 << 15),
+ 	/* Requires BH algorithm for packets */
+-	IDE_AFLAG_ZIP_DRIVE		= (1 << 20),
++	IDE_AFLAG_ZIP_DRIVE		= (1 << 16),
+ 	/* Supports format progress report */
+-	IDE_AFLAG_SRFP			= (1 << 22),
++	IDE_AFLAG_SRFP			= (1 << 17),
  
- static void ide_cd_release(struct kref *);
-diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
-index d5ce336..389faa4 100644
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -8,6 +8,14 @@
- #include <linux/cdrom.h>
- #include <asm/byteorder.h>
+ 	/* ide-tape */
+-	IDE_AFLAG_IGNORE_DSC		= (1 << 23),
++	IDE_AFLAG_IGNORE_DSC		= (1 << 18),
+ 	/* 0 When the tape position is unknown */
+-	IDE_AFLAG_ADDRESS_VALID		= (1 <<	24),
++	IDE_AFLAG_ADDRESS_VALID		= (1 <<	19),
+ 	/* Device already opened */
+-	IDE_AFLAG_BUSY			= (1 << 25),
++	IDE_AFLAG_BUSY			= (1 << 20),
+ 	/* Attempt to auto-detect the current user block size */
+-	IDE_AFLAG_DETECT_BS		= (1 << 26),
++	IDE_AFLAG_DETECT_BS		= (1 << 21),
+ 	/* Currently on a filemark */
+-	IDE_AFLAG_FILEMARK		= (1 << 27),
++	IDE_AFLAG_FILEMARK		= (1 << 22),
+ 	/* 0 = no tape is loaded, so we don't rewind after ejecting */
+-	IDE_AFLAG_MEDIUM_PRESENT	= (1 << 28),
++	IDE_AFLAG_MEDIUM_PRESENT	= (1 << 23),
  
-+#define IDECD_DEBUG_LOG		0
-+
-+#if IDECD_DEBUG_LOG
-+#define ide_debug_log(lvl, fmt, args...) __ide_debug_log(lvl, fmt, args)
-+#else
-+#define ide_debug_log(lvl, fmt, args...) do {} while (0)
-+#endif
-+
- /*
-  * typical timeout for packet command
-  */
+-	IDE_AFLAG_NO_AUTOCLOSE		= (1 << 29),
++	IDE_AFLAG_NO_AUTOCLOSE		= (1 << 24),
+ };
+ 
+ /* device flags */
 -- 
 1.6.0.4
 
