@@ -1,38 +1,28 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Port multiplier resets
-Date: Thu, 20 Nov 2008 12:24:28 +0900
-Message-ID: <4924D86C.8010107@kernel.org>
-References: <490DC300.40703@seiner.com> <49194B20.8000209@kernel.org> <4924D733.6070005@seiner.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 00/03] ide misc leftovers
+Date: Thu, 20 Nov 2008 06:41:20 +0100
+Message-ID: <1227159683-2487-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56018 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752036AbYKTDYd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Nov 2008 22:24:33 -0500
-In-Reply-To: <4924D733.6070005@seiner.com>
+Received: from fk-out-0910.google.com ([209.85.128.188]:46733 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754075AbYKTFlX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Nov 2008 00:41:23 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so315254fkq.5
+        for <linux-ide@vger.kernel.org>; Wed, 19 Nov 2008 21:41:21 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yan Seiner <yan@seiner.com>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Yan Seiner wrote:
-> Tejun Heo wrote:
->>
->> 2. Specify libata.force=8.15:1.5Gbps
->>   
-> dumb question:
-> 
-> Does this go on the kernel parameter line or can I change it without
-> rebooting the system?
-> 
-> I don't see it in /sys/module/libata/parameters so I'm guessing it needs
-> a reboot?
+Hi Bart,
 
-Yeah, you will need to reboot or reload libata module.  Note that if
-libata.ko is being loaded from initrd, different distros use different
-methods to pass parameters to them.
+here is Linus' reworked ide-floppy reduce-stack-usage patch. It has been tested
+here on current pata tree with your latest 3 patches adding the per-device
+request queue locks. Along with that are 2 small cleanups.
 
--- 
-tejun
+
+ drivers/ide/ide-cd.c           |    8 +++++
+ drivers/ide/ide-cd.h           |    8 -----
+ drivers/ide/ide-floppy.c       |   26 +++++++++---------
+ drivers/ide/ide-floppy_ioctl.c |   58 +++++++++++++++++++--------------------
+ include/linux/ide.h            |   48 ++++++++++++++++----------------
+ 5 files changed, 73 insertions(+), 75 deletions(-)
