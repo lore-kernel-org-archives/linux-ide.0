@@ -1,44 +1,46 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash
  interface.
-Date: Fri, 21 Nov 2008 17:49:44 +0000
-Message-ID: <20081121174944.23a4a7d9@lxorguk.ukuu.org.uk>
+Date: Fri, 21 Nov 2008 18:07:21 +0000
+Message-ID: <20081121180721.357f4c99@lxorguk.ukuu.org.uk>
 References: <49261BE5.2010406@caviumnetworks.com>
 	<20081121102137.634616c5@lxorguk.ukuu.org.uk>
 	<4926EA6A.7040704@caviumnetworks.com>
+	<4926EF55.7080004@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40455 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751205AbYKURtv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 12:49:51 -0500
-In-Reply-To: <4926EA6A.7040704@caviumnetworks.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <4926EF55.7080004@ru.mvista.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
 
-> > Even if you wanted to do it this way you could just use arrays and lookup
-> > tables as many other drivers do - ie
-> > 
-> > 	pio = dev->pio_mode - XFER_PIO_0;
-> > 	t1 = data[pio];
-> > 
+> >> If you get a request for an odd length you should write an extra word
+> >> containing the last byte and one other. See how the standard methods
+> >> handle this.
 > 
-> The timing calculations are based on the CPU clock rate, It is difficult 
-> to encapsulate that in a table.
+> > OK.
+> 
+>     I don't think you need to bother doing that with CF.
 
-The lookup part of the switch you can however. If you can use the
-ata_timing interface then it will also do the clock adjusting for you and
-has a FIT() macro that can be quite handy for clipping.
+Look at it the other way around is the best thing to do given an odd
+sized I/O (eg if a CF format ATAPI drive comes along) to crash the
+machine.
 
-> It appears to be broken.  One would expect ioread16 and ioread16_rep to 
-> do endian swapping in the same manner.  On MIPS they do not.  Perhaps it 
-> would be better to fix the problem at the source.
+> > Perhaps it would be better to fix the problem at the source.
+> 
+>     I don't think there's a problem there. The string versions of the 
+> functions treat memory as a string of bytes.
 
-I think the MIPS tree needs fixing then.
+Double checking the docs you are right. How dumb, but dumb or not that is
+what it is specified to do.
 
+> > Probably nothing.  I will try to sort it out.
+> 
+>     It's the need for the tasklet that seems doubtful to me...
 
-Alan
+I was wondering but assumed it was some kind of hardware feature where
+the end of IRQ occurs too early to do some of the cleanup.
