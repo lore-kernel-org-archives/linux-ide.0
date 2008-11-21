@@ -1,35 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATA timeouts on old thinkpad
-Date: Fri, 21 Nov 2008 00:37:23 +0000
-Message-ID: <20081121003723.03bcef7e@lxorguk.ukuu.org.uk>
-References: <20081121002521.GA12626@flint.arm.linux.org.uk>
+From: David Daney <ddaney@caviumnetworks.com>
+Subject: [PATCH] ata: Remove inline attribute from ata_sff_host_intr()
+Date: Thu, 20 Nov 2008 16:39:03 -0800
+Message-ID: <49260327.8050408@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40237 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755108AbYKUAhV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Nov 2008 19:37:21 -0500
-In-Reply-To: <20081121002521.GA12626@flint.arm.linux.org.uk>
+Received: from mail3.caviumnetworks.com ([12.108.191.235]:18750 "EHLO
+	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755231AbYKUAjt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Nov 2008 19:39:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 21 Nov 2008 00:25:21 +0000
-Russell King <rmk@arm.linux.org.uk> wrote:
+ata: Remove inline attribute from ata_sff_host_intr()
 
-> Hi,
-> 
-> Last weekend I upgraded my old Thinkpad from Fedora Core 2 to F9
-> (a 2.6.9 kernel to a 2.6.25 kernel).  The old 2.6.9 kernel was
-> using the IDE drivers, and there have been no issues with IDE on
-> this hardware until this upgrade.
+ata_sff_host_intr is a public function, it should not be declared inline.
 
-Can you double the timeouts for block I/O commands. The libata core uses
-30 second timeouts for a lot of stuff and some PATA drives really do want
-60.
+Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+---
+ drivers/ata/libata-sff.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Other than that there really isn't any difference in the settings the two
-drivers use as they are all written up exactly in the Intel docs.
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 9033d16..73d7dbb 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1542,8 +1542,8 @@ bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc)
+  *	RETURNS:
+  *	One if interrupt was handled, zero if not (shared irq).
+  */
+-inline unsigned int ata_sff_host_intr(struct ata_port *ap,
+-				      struct ata_queued_cmd *qc)
++unsigned int ata_sff_host_intr(struct ata_port *ap,
++			       struct ata_queued_cmd *qc)
+ {
+ 	struct ata_eh_info *ehi = &ap->link.eh_info;
+ 	u8 status, host_stat = 0;
