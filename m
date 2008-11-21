@@ -1,44 +1,43 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: Frequent head unloading
-Date: Fri, 21 Nov 2008 13:11:03 -0600 (CST)
-Message-ID: <Pine.LNX.4.64.0811211309400.12550@gc.phys.uwm.edu>
-References: <4920292B.5060804@gc-web.de> <4920E909.2030400@kernel.org>
- <4920FA98.5050108@gc-web.de> <4920FE45.1040504@kernel.org> <49214331.4020400@gc-web.de>
- <49266B9E.7050402@kernel.org> <4926A4A5.5070204@gc-web.de> <4926D2E7.60108@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: add SAMSUNG SP0822N with firmware WA100-10 to ivb_list[]
+Date: Fri, 21 Nov 2008 22:40:33 +0100
+Message-ID: <200811212240.34153.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gc.phys.uwm.edu ([129.89.61.147]:40264 "EHLO gc.phys.uwm.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751838AbYKUULx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Nov 2008 15:11:53 -0500
-In-Reply-To: <4926D2E7.60108@kernel.org>
+Received: from ey-out-2122.google.com ([74.125.78.26]:58041 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbYKUVoT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 16:44:19 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so478095eyi.37
+        for <linux-ide@vger.kernel.org>; Fri, 21 Nov 2008 13:44:19 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Matthias B." <haferfrost@web.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Yes, this is hard to do in a general way.  The problem is that you have to 
-correctly find the head load/unload counts in the SMART data.  This is not 
-specified by any standard.  It might be there, it might not be.  I don't 
-see a general solution to this.
+Should fix kernel.org bug #10225:
+http://bugzilla.kernel.org/show_bug.cgi?id=10225
 
+Reported-by: Matthias B. <haferfrost@web.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-iops.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-On Sat, 22 Nov 2008, Tejun Heo wrote:
-
-> Alexander Clausen wrote:
->> Tejun Heo wrote:
->>> So, it's basically a system you assembled, right?
->>
->> Yeah. So the storage-fixup thing only works for ready-made systems,>
->> like laptops or Macs?
->
-> Well, it's basically blacklisting systems w/ certain configuration and
-> is a very static solution by definition, so can't really be applied to
-> random systems.  cc'ing Bruce Allen.  I think we definitely need
-> something more dynamic but still don't have much idea how it should be
-> done.  :-(
->
-> Thanks.
->
->
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -610,6 +610,7 @@ static const struct drive_list_entry ivb
+ 	{ "TSSTcorp CDDVDW SH-S202N"	, "SB01"	},
+ 	{ "TSSTcorp CDDVDW SH-S202H"	, "SB00"	},
+ 	{ "TSSTcorp CDDVDW SH-S202H"	, "SB01"	},
++	{ "SAMSUNG SP0822N"		, "WA100-10"	},
+ 	{ NULL				, NULL		}
+ };
+ 
