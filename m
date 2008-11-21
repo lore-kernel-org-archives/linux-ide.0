@@ -1,173 +1,44 @@
-From: Evgeni Golov <sargentd@die-welt.net>
-Subject: Re: Odd behaviour of device in response to idleimmediate with
- unload
-Date: Fri, 21 Nov 2008 20:40:14 +0100
-Message-ID: <20081121194020.453461FD6E@chi.die-welt.net>
-References: <491083CC.5050508@rtr.ca>
-	<49108AA0.1080507@rtr.ca>
-	<491090BC.5060403@rtr.ca>
-	<20081104185444.3BE721FDF7@chi.die-welt.net>
-	<4910A509.1030307@rtr.ca>
-	<49116811.5000109@kernel.org>
-	<873ai6cmio.fsf@denkblock.local>
-	<4911A8EA.8030605@kernel.org>
-	<87k5bhxerq.fsf@denkblock.local>
-	<4913BF3D.3090704@kernel.org>
-	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
-	<4917F822.5060204@kernel.org>
-	<20081110102607.094281FD7C@chi.die-welt.net>
-	<87r65ju83r.fsf@denkblock.local>
-	<20081113113345.12E2D1FD80@chi.die-welt.net>
-	<491FEA3C.4090906@kernel.org>
-	<20081117071552.D25291FD5F@chi.die-welt.net>
-	<49211B1F.7040900@kernel.org>
-	<20081117074825.322BE1FD5F@chi.die-welt.net>
-	<492218D1.5070904@kernel.org>
-	<20081118073749.D84FD1FD6E@chi.die-welt.net>
-	<49265812.3050902@kernel.org>
+From: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Subject: Re: Frequent head unloading
+Date: Fri, 21 Nov 2008 13:11:03 -0600 (CST)
+Message-ID: <Pine.LNX.4.64.0811211309400.12550@gc.phys.uwm.edu>
+References: <4920292B.5060804@gc-web.de> <4920E909.2030400@kernel.org>
+ <4920FA98.5050108@gc-web.de> <4920FE45.1040504@kernel.org> <49214331.4020400@gc-web.de>
+ <49266B9E.7050402@kernel.org> <4926A4A5.5070204@gc-web.de> <4926D2E7.60108@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__21_Nov_2008_20_40_14_+0100_=OKs_cyJhxHhxMZK"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chi.die-welt.net ([84.246.123.210]:58804 "EHLO chi.die-welt.net"
+Received: from gc.phys.uwm.edu ([129.89.61.147]:40264 "EHLO gc.phys.uwm.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757656AbYKUTk0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Nov 2008 14:40:26 -0500
-In-Reply-To: <49265812.3050902@kernel.org>
+	id S1751838AbYKUULx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Nov 2008 15:11:53 -0500
+In-Reply-To: <4926D2E7.60108@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
 
---Signature=_Fri__21_Nov_2008_20_40_14_+0100_=OKs_cyJhxHhxMZK
-Content-Type: multipart/mixed;
- boundary="Multipart=_Fri__21_Nov_2008_20_40_14_+0100_9Mq4iaqFHiOPS/hV"
+Yes, this is hard to do in a general way.  The problem is that you have to 
+correctly find the head load/unload counts in the SMART data.  This is not 
+specified by any standard.  It might be there, it might not be.  I don't 
+see a general solution to this.
 
 
---Multipart=_Fri__21_Nov_2008_20_40_14_+0100_9Mq4iaqFHiOPS/hV
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Sat, 22 Nov 2008, Tejun Heo wrote:
 
-On Fri, 21 Nov 2008 15:41:22 +0900 Tejun Heo wrote:
-
-> Something strange is going on there.  Can you please apply the attached
-> patch and post resulting kernel log?
-
-Wow, that one is spammy :)
-See relevant part of /var/log/messages attached.
-
---Multipart=_Fri__21_Nov_2008_20_40_14_+0100_9Mq4iaqFHiOPS/hV
-Content-Type: application/octet-stream;
- name="log-2.6.28-rc6.gz"
-Content-Disposition: attachment;
- filename="log-2.6.28-rc6.gz"
-Content-Transfer-Encoding: base64
-
-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
-
---Multipart=_Fri__21_Nov_2008_20_40_14_+0100_9Mq4iaqFHiOPS/hV--
-
---Signature=_Fri__21_Nov_2008_20_40_14_+0100_=OKs_cyJhxHhxMZK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkknDp4ACgkQJKAUGKwVtQyudQCgmn8Gehb9ul1rh/RraZ9l5mjO
-+YgAnjiTmVsZgVp/1rIQG5SCcjf4dK9g
-=kkSN
------END PGP SIGNATURE-----
-
---Signature=_Fri__21_Nov_2008_20_40_14_+0100_=OKs_cyJhxHhxMZK--
+> Alexander Clausen wrote:
+>> Tejun Heo wrote:
+>>> So, it's basically a system you assembled, right?
+>>
+>> Yeah. So the storage-fixup thing only works for ready-made systems,>
+>> like laptops or Macs?
+>
+> Well, it's basically blacklisting systems w/ certain configuration and
+> is a very static solution by definition, so can't really be applied to
+> random systems.  cc'ing Bruce Allen.  I think we definitely need
+> something more dynamic but still don't have much idea how it should be
+> done.  :-(
+>
+> Thanks.
+>
+>
