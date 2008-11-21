@@ -1,111 +1,31 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add ->max_sectors field to struct ide_port_info
-Date: Fri, 21 Nov 2008 22:42:08 +0100
-Message-ID: <200811212242.08182.bzolnier@gmail.com>
+Subject: Re: [PATCH 00/03] ide misc leftovers
+Date: Fri, 21 Nov 2008 21:41:32 +0100
+Message-ID: <200811212141.32809.bzolnier@gmail.com>
+References: <1227159683-2487-1-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:58084 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754402AbYKUVoX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 16:44:23 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so478129eyi.37
-        for <linux-ide@vger.kernel.org>; Fri, 21 Nov 2008 13:44:21 -0800 (PST)
+Received: from ug-out-1314.google.com ([66.249.92.169]:2873 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752623AbYKUVoN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 16:44:13 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so238326ugf.37
+        for <linux-ide@vger.kernel.org>; Fri, 21 Nov 2008 13:44:11 -0800 (PST)
+In-Reply-To: <1227159683-2487-1-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-* Add ->max_sectors field to struct ide_port_info to allow host drivers
-  to specify value used for hwif->rqsize (if smaller than the default).
+On Thursday 20 November 2008, Borislav Petkov wrote:
+> Hi Bart,
+> 
+> here is Linus' reworked ide-floppy reduce-stack-usage patch. It has been tested
+> here on current pata tree with your latest 3 patches adding the per-device
+> request queue locks. Along with that are 2 small cleanups.
 
-* Convert pdc202xx_old to use ->max_sectors and remove no longer needed
-  IDE_HFLAG_RQSIZE_256 flag.
-
-There should be no functional changes caused by this patch.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-goes before "trm290: add IDE_HFLAG_TRM290 host flag" patch in pata-2.6 tree
-
- drivers/ide/ide-probe.c    |    4 ++--
- drivers/ide/pdc202xx_old.c |    9 +++++----
- include/linux/ide.h        |    5 +++--
- 3 files changed, 10 insertions(+), 8 deletions(-)
-
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1442,8 +1442,8 @@ static void ide_init_port(ide_hwif_t *hw
- 			hwif->mate->serialized = hwif->serialized = 1;
- 	}
- 
--	if (d->host_flags & IDE_HFLAG_RQSIZE_256)
--		hwif->rqsize = 256;
-+	if (d->max_sectors)
-+		hwif->rqsize = d->max_sectors;
- 
- 	/* call chipset specific routine for each enabled port */
- 	if (d->init_hwif)
-Index: b/drivers/ide/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pdc202xx_old.c
-+++ b/drivers/ide/pdc202xx_old.c
-@@ -350,16 +350,17 @@ static const struct ide_dma_ops pdc2026x
- 	.dma_timeout		= pdc202xx_dma_timeout,
- };
- 
--#define DECLARE_PDC2026X_DEV(udma, extra_flags) \
-+#define DECLARE_PDC2026X_DEV(udma, sectors) \
- 	{ \
- 		.name		= DRV_NAME, \
- 		.init_chipset	= init_chipset_pdc202xx, \
- 		.port_ops	= &pdc2026x_port_ops, \
- 		.dma_ops	= &pdc2026x_dma_ops, \
--		.host_flags	= IDE_HFLAGS_PDC202XX | extra_flags, \
-+		.host_flags	= IDE_HFLAGS_PDC202XX, \
- 		.pio_mask	= ATA_PIO4, \
- 		.mwdma_mask	= ATA_MWDMA2, \
- 		.udma_mask	= udma, \
-+		.max_sectors	= sectors, \
- 	}
- 
- static const struct ide_port_info pdc202xx_chipsets[] __devinitdata = {
-@@ -376,8 +377,8 @@ static const struct ide_port_info pdc202
- 
- 	/* 1: PDC2026{2,3} */
- 	DECLARE_PDC2026X_DEV(ATA_UDMA4, 0),
--	/* 2: PDC2026{5,7} */
--	DECLARE_PDC2026X_DEV(ATA_UDMA5, IDE_HFLAG_RQSIZE_256),
-+	/* 2: PDC2026{5,7}: UDMA5, limit LBA48 requests to 256 sectors */
-+	DECLARE_PDC2026X_DEV(ATA_UDMA5, 256),
- };
- 
- /**
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1365,8 +1365,6 @@ enum {
- 	IDE_HFLAG_LEGACY_IRQS		= (1 << 21),
- 	/* force use of legacy IRQs */
- 	IDE_HFLAG_FORCE_LEGACY_IRQS	= (1 << 22),
--	/* limit LBA48 requests to 256 sectors */
--	IDE_HFLAG_RQSIZE_256		= (1 << 23),
- 	/* use 32-bit I/O ops */
- 	IDE_HFLAG_IO_32BIT		= (1 << 24),
- 	/* unmask IRQs */
-@@ -1404,6 +1402,9 @@ struct ide_port_info {
- 
- 	ide_pci_enablebit_t	enablebits[2];
- 	hwif_chipset_t		chipset;
-+
-+	u16			max_sectors;	/* if < than the default one */
-+
- 	u32			host_flags;
- 	u8			pio_mask;
- 	u8			swdma_mask;
+Thanks, I applied all patches.
