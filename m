@@ -1,62 +1,161 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstraem-fixes] ata_piix: detect and clear spurious IRQs
-Date: Sat, 22 Nov 2008 02:05:18 +0900
-Message-ID: <4926EA4E.1070605@kernel.org>
-References: <49263552.8090602@kernel.org> <4926E907.20706@ru.mvista.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash interface.
+Date: Fri, 21 Nov 2008 09:05:46 -0800
+Message-ID: <4926EA6A.7040704@caviumnetworks.com>
+References: <49261BE5.2010406@caviumnetworks.com> <20081121102137.634616c5@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42770 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752999AbYKURFK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Nov 2008 12:05:10 -0500
-In-Reply-To: <4926E907.20706@ru.mvista.com>
+Received: from mail3.caviumnetworks.com ([12.108.191.235]:55304 "EHLO
+	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754017AbYKURGG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 12:06:06 -0500
+In-Reply-To: <20081121102137.634616c5@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
 
-Sergei Shtylyov wrote:
-> Hello.
-> 
-> Tejun Heo wrote:
-> 
->> The DMA_IRQ bit in the bmdma status register is always set when IDEIRQ
->> is asserted allowing spurious IRQ detection.  Detect spurious IRQs and
->> clear them.  This protects ata_piix against nobody-cared which gets
->> reported not so rarely.
-> 
->    This should be more generic, as several IDE controllers have the
-> separate IDE interrupt status bits.
-
-Well, this was workaround for ata_piix.  I'll prep a more generic one
-with callback.
-
->> Signed-off-by: Tejun Heo <tj@kernel.org>
-> 
->> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
->> index 8e37be1..b438edc 100644
->> --- a/drivers/ata/ata_piix.c
->> +++ b/drivers/ata/ata_piix.c
->> @@ -922,6 +922,58 @@ static int piix_sidpr_scr_read(struct ata_link
->> *link,
->>      return 0;
->>  }
->>  
->> +static irqreturn_t piix_interrupt(int irq, void *dev_instance)
+Alan Cox wrote:
+>> + * Called to enable the use of DMA based on kernel command line.
+>> + */
+>> +void octeon_cf_enable_dma(void)
 >> +{
-> [...]
->> +        /*
->> +         * Control reaches here if HSM is not expecting IRQ.
->> +         * If the controller is actually asserting IRQ line,
->> +         * this will lead to nobody cared.  Fortuantely,
->> +         * DMA_INTR of PIIX is set whenever IDEIRQ is set so
+>> +	use_cf_dma = 1;
+>> +}
 > 
->    Frankly speaking, I'm not sure about the PIIX chips themselves... Is
-> that documented by Intel?
+> Why not use the standard module parameter interface ?
+> 
 
-Yeap, it is.
+I will do that.
 
--- 
-tejun
+> 
+>> +	/*
+>> +	 * PIO modes 0-4 all allow the device to deassert IORDY to slow down
+>> +	 * the host.
+>> +	 */
+> 
+> See ata_timing_compute() which also knows about master/slave timing,
+> PIO5/6 rules and timing adjustments as well as doing bus clock
+> quantisations and lengthenings for you.
+> 
+
+OK.
+
+>> +	use_iordy = 1;
+> 
+> This depends on the device as well and gets quite complicated. We have
+> ata_pio_need_iordy() to do the work for you.
+> 
+>> +	t1 = (t1 * clocks_us) / 1000 / 2;
+>> +	if (t1)
+>> +		t1--;
+> 
+> Even if you wanted to do it this way you could just use arrays and lookup
+> tables as many other drivers do - ie
+> 
+> 	pio = dev->pio_mode - XFER_PIO_0;
+> 	t1 = data[pio];
+> 
+
+The timing calculations are based on the CPU clock rate, It is difficult 
+to encapsulate that in a table.
+
+[...]
+>> +	/*
+>> +	 * Odd lengths are not supported. We should always be a
+>> +	 * multiple of 512.
+>> +	 */
+>> +	BUG_ON(buflen & 1);
+> 
+> If you get a request for an odd length you should write an extra word
+> containing the last byte and one other. See how the standard methods
+> handle this.
+> 
+
+OK.
+
+> 
+>> +	if (ocd->is16bit) {
+> 
+> Or you could have two methods and two transfer routines defined
+> 
+
+Good idea.
+
+>> +			while (words--) {
+>> +				*(uint16_t *)buffer = ioread16(data_addr);
+>> +				buffer += sizeof(uint16_t);
+> 
+> By definition tht is 2. Do you have an ioread16_rep ?
+> 
+
+It appears to be broken.  One would expect ioread16 and ioread16_rep to 
+do endian swapping in the same manner.  On MIPS they do not.  Perhaps it 
+would be better to fix the problem at the source.
+
+> 
+>> +
+>> +/**
+>> + * Get ready for a dma operation.  We do nothing, as all DMA
+>> + * operations are taken care of in octeon_cf_bmdma_start.
+>> + */
+>> +void octeon_cf_qc_prep(struct ata_queued_cmd *qc)
+>> +{
+>> +}
+> 
+> ata_noop_qc_prep
+> 
+
+OK.
+
+> 
+>> +/**
+>> + * Check if any queued commands have more DMAs, if so start the next
+>> + * transfer, else do standard handling.
+>> + */
+>> +irqreturn_t octeon_cf_interrupt(int irq, void *dev_instance)
+> 
+> A lot of these functions could be static it seems
+
+An oversight on my part.  I will make them all static.
+
+> 
+>> +static void octeon_cf_delayed_irq(unsigned long data)
+>> +{
+> 
+> What stops the following occuring
+> 
+> 	ATA irq
+> 		BUSY still set
+> 		Queue tasklet
+> 
+> 	Other irq on same line
+> 	ATA busy clear
+> 		Handle command
+> 
+> 	Tasklet runs but command was sorted out
+> 
+> (or a reset of the ata controller in the gap)
+> 
+
+Probably nothing.  I will try to sort it out.
+
+
+>> +	base = cs0 + ocd->base_region_bias;
+>> +	if (!ocd->is16bit) {
+> 
+> 	ata_std_
+>> +		ap->ioaddr.cmd_addr	= base + ATA_REG_CMD;
+> 
+> ata_sff_std_ports ? (at least for the 8bit case)
+> 
+
+OK.
+
+Thanks,
+
+David Daney
+
+
