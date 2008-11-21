@@ -1,38 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstraem-fixes] ata_piix: detect and clear spurious IRQs
-Date: Fri, 21 Nov 2008 22:07:17 +0900
-Message-ID: <4926B285.1030702@kernel.org>
-References: <49263552.8090602@kernel.org> <20081121102504.63007bf6@lxorguk.ukuu.org.uk>
+Subject: Re: Frequent head unloading
+Date: Sat, 22 Nov 2008 00:25:27 +0900
+Message-ID: <4926D2E7.60108@kernel.org>
+References: <4920292B.5060804@gc-web.de> <4920E909.2030400@kernel.org> <4920FA98.5050108@gc-web.de> <4920FE45.1040504@kernel.org> <49214331.4020400@gc-web.de> <49266B9E.7050402@kernel.org> <4926A4A5.5070204@gc-web.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58963 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:40671 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752110AbYKUNHd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Nov 2008 08:07:33 -0500
-In-Reply-To: <20081121102504.63007bf6@lxorguk.ukuu.org.uk>
+	id S1752929AbYKUPZN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Nov 2008 10:25:13 -0500
+In-Reply-To: <4926A4A5.5070204@gc-web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alexander Clausen <alex@gc-web.de>
+Cc: linux-ide@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-Alan Cox wrote:
-> On Fri, 21 Nov 2008 13:13:06 +0900
-> Tejun Heo <tj@kernel.org> wrote:
+Alexander Clausen wrote:
+> Tejun Heo wrote:
+>> So, it's basically a system you assembled, right?
 > 
->> The DMA_IRQ bit in the bmdma status register is always set when IDEIRQ
->> is asserted allowing spurious IRQ detection.  Detect spurious IRQs and
->> clear them.  This protects ata_piix against nobody-cared which gets
->> reported not so rarely.
-> 
-> Various controllers have the ability to report the IRQ more reliably in
-> similar fashion, should this not be part of ata_sff_interrupt with an
-> optional ops->irq_pending call ?
+> Yeah. So the storage-fixup thing only works for ready-made systems,>
+> like laptops or Macs?
 
-There are?  That's a good news.  Sure, if it's a common thing, we can
-definitely make it a callback.  It actually goes together with
-->sff_irq_clear pretty well.
+Well, it's basically blacklisting systems w/ certain configuration and
+is a very static solution by definition, so can't really be applied to
+random systems.  cc'ing Bruce Allen.  I think we definitely need
+something more dynamic but still don't have much idea how it should be
+done.  :-(
 
 Thanks.
 
