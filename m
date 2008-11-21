@@ -1,46 +1,31 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash
  interface.
-Date: Fri, 21 Nov 2008 18:07:21 +0000
-Message-ID: <20081121180721.357f4c99@lxorguk.ukuu.org.uk>
+Date: Fri, 21 Nov 2008 18:12:05 +0000
+Message-ID: <20081121181205.7c9da385@lxorguk.ukuu.org.uk>
 References: <49261BE5.2010406@caviumnetworks.com>
-	<20081121102137.634616c5@lxorguk.ukuu.org.uk>
-	<4926EA6A.7040704@caviumnetworks.com>
-	<4926EF55.7080004@ru.mvista.com>
+	<4926F1EB.8090506@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <4926EF55.7080004@ru.mvista.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35121 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751838AbYKUSMF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 13:12:05 -0500
+In-Reply-To: <4926F1EB.8090506@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
-List-Id: linux-ide@vger.kernel.org
 
-> >> If you get a request for an odd length you should write an extra word
-> >> containing the last byte and one other. See how the standard methods
-> >> handle this.
-> 
-> > OK.
-> 
->     I don't think you need to bother doing that with CF.
+>     About the 8-bit mode: you need to issue the Set Features command with 
+> opcode 1 to enable that mode -- libata currently doesn't do that, so it won't 
+> work I suppose...
 
-Look at it the other way around is the best thing to do given an odd
-sized I/O (eg if a CF format ATAPI drive comes along) to crash the
-machine.
+That depends on the hardware interface. I have worked with at least one
+board that is 8bit to the CPU for data transfers and 16bit to the disk.
+Also Set Features 8bit is strictly for TrueIDE mode (see CF 4.0 spec pg
+150).
 
-> > Perhaps it would be better to fix the problem at the source.
-> 
->     I don't think there's a problem there. The string versions of the 
-> functions treat memory as a string of bytes.
-
-Double checking the docs you are right. How dumb, but dumb or not that is
-what it is specified to do.
-
-> > Probably nothing.  I will try to sort it out.
-> 
->     It's the need for the tasklet that seems doubtful to me...
-
-I was wondering but assumed it was some kind of hardware feature where
-the end of IRQ occurs too early to do some of the cleanup.
+Alan
