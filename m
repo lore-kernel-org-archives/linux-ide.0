@@ -1,26 +1,41 @@
-From: Alexander Clausen <alex@gc-web.de>
-Subject: Re: Frequent head unloading
-Date: Fri, 21 Nov 2008 13:08:05 +0100
-Message-ID: <4926A4A5.5070204@gc-web.de>
-References: <4920292B.5060804@gc-web.de> <4920E909.2030400@kernel.org> <4920FA98.5050108@gc-web.de> <4920FE45.1040504@kernel.org> <49214331.4020400@gc-web.de> <49266B9E.7050402@kernel.org>
+From: "Maxim Gorbachyov" <maxim.gorbachyov@gmail.com>
+Subject: Re: SATA DVD drive problem on ICH8M
+Date: Fri, 21 Nov 2008 15:58:42 +0300
+Message-ID: <291f35090811210458o38f45036s9063328bdaeea89b@mail.gmail.com>
+References: <291f35090811140246y674de2b1p23a9a650f8c7ef3a@mail.gmail.com>
+	 <491FE21C.7020904@kernel.org>
+	 <291f35090811170047w7cade8aci2676a878168835df@mail.gmail.com>
+	 <4926734A.5050707@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server2.gc-web.de ([88.198.38.110]:41117 "EHLO mail.gc-web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753360AbYKUMIJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Nov 2008 07:08:09 -0500
-In-Reply-To: <49266B9E.7050402@kernel.org>
+Received: from qb-out-0506.google.com ([72.14.204.228]:47310 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756216AbYKUM6o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 07:58:44 -0500
+Received: by qb-out-0506.google.com with SMTP id f11so1033571qba.17
+        for <linux-ide@vger.kernel.org>; Fri, 21 Nov 2008 04:58:43 -0800 (PST)
+In-Reply-To: <4926734A.5050707@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> So, it's basically a system you assembled, right?
+On Fri, Nov 21, 2008 at 11:37 AM, Tejun Heo <tj@kernel.org> wrote:
 
-Yeah. So the storage-fixup thing only works for ready-made systems, like laptops or Macs?
+> Ehhh... I really don't have much idea at this point.  Does
+> "libata.force=udma4" make any difference?  If not, how about
+> "libata.force=pio4"?  Note that depending on your distro, you need to do
+> different things to pass parameters to modules loaded from initrd.  If
+> ahci is built into the kernel, simple libata.force=xxx on kernel boot
+> prompt will do.
+>
+> Does the drive work in other environments (ie. windows)?
 
-Alex
-
+Well, something is clarified now.. I've just tried OpenBSD 4.4. It
+started from that drive, but after ~1 minute of copying files from cd
+kernel printed a complaint about the device and rebooted. So it seems
+I have to update the drive firmware or the drive.. Thank you for
+advice.
