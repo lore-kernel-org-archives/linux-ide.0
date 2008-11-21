@@ -1,32 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH #upstraem-fixes] ata_piix: detect and clear spurious
- IRQs
-Date: Fri, 21 Nov 2008 10:25:04 +0000
-Message-ID: <20081121102504.63007bf6@lxorguk.ukuu.org.uk>
-References: <49263552.8090602@kernel.org>
+From: Alexander Clausen <alex@gc-web.de>
+Subject: Re: Frequent head unloading
+Date: Fri, 21 Nov 2008 13:08:05 +0100
+Message-ID: <4926A4A5.5070204@gc-web.de>
+References: <4920292B.5060804@gc-web.de> <4920E909.2030400@kernel.org> <4920FA98.5050108@gc-web.de> <4920FE45.1040504@kernel.org> <49214331.4020400@gc-web.de> <49266B9E.7050402@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55457 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752110AbYKUKZD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 05:25:03 -0500
-In-Reply-To: <49263552.8090602@kernel.org>
+Received: from server2.gc-web.de ([88.198.38.110]:41117 "EHLO mail.gc-web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753360AbYKUMIJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Nov 2008 07:08:09 -0500
+In-Reply-To: <49266B9E.7050402@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 21 Nov 2008 13:13:06 +0900
-Tejun Heo <tj@kernel.org> wrote:
+Tejun Heo wrote:
+> So, it's basically a system you assembled, right?
 
-> The DMA_IRQ bit in the bmdma status register is always set when IDEIRQ
-> is asserted allowing spurious IRQ detection.  Detect spurious IRQs and
-> clear them.  This protects ata_piix against nobody-cared which gets
-> reported not so rarely.
+Yeah. So the storage-fixup thing only works for ready-made systems, like laptops or Macs?
 
-Various controllers have the ability to report the IRQ more reliably in
-similar fashion, should this not be part of ata_sff_interrupt with an
-optional ops->irq_pending call ?
+Alex
 
