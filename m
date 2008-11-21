@@ -1,161 +1,102 @@
-From: David Daney <ddaney@caviumnetworks.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash interface.
-Date: Fri, 21 Nov 2008 09:05:46 -0800
-Message-ID: <4926EA6A.7040704@caviumnetworks.com>
-References: <49261BE5.2010406@caviumnetworks.com> <20081121102137.634616c5@lxorguk.ukuu.org.uk>
+Date: Fri, 21 Nov 2008 20:26:45 +0300
+Message-ID: <4926EF55.7080004@ru.mvista.com>
+References: <49261BE5.2010406@caviumnetworks.com> <20081121102137.634616c5@lxorguk.ukuu.org.uk> <4926EA6A.7040704@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.caviumnetworks.com ([12.108.191.235]:55304 "EHLO
-	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754017AbYKURGG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 12:06:06 -0500
-In-Reply-To: <20081121102137.634616c5@lxorguk.ukuu.org.uk>
+Received: from h155.mvista.com ([63.81.120.155]:4187 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751838AbYKUR0o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Nov 2008 12:26:44 -0500
+In-Reply-To: <4926EA6A.7040704@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
 
-Alan Cox wrote:
->> + * Called to enable the use of DMA based on kernel command line.
->> + */
->> +void octeon_cf_enable_dma(void)
->> +{
->> +	use_cf_dma = 1;
->> +}
-> 
-> Why not use the standard module parameter interface ?
-> 
+David Daney wrote:
 
-I will do that.
+>>> +    use_iordy = 1;
 
-> 
->> +	/*
->> +	 * PIO modes 0-4 all allow the device to deassert IORDY to slow down
->> +	 * the host.
->> +	 */
-> 
-> See ata_timing_compute() which also knows about master/slave timing,
-> PIO5/6 rules and timing adjustments as well as doing bus clock
-> quantisations and lengthenings for you.
-> 
+>> This depends on the device as well and gets quite complicated. We have
+>> ata_pio_need_iordy() to do the work for you.
+>>
+>>> +    t1 = (t1 * clocks_us) / 1000 / 2;
+>>> +    if (t1)
+>>> +        t1--;
 
-OK.
+>> Even if you wanted to do it this way you could just use arrays and lookup
+>> tables as many other drivers do - ie
 
->> +	use_iordy = 1;
-> 
-> This depends on the device as well and gets quite complicated. We have
-> ata_pio_need_iordy() to do the work for you.
-> 
->> +	t1 = (t1 * clocks_us) / 1000 / 2;
->> +	if (t1)
->> +		t1--;
-> 
-> Even if you wanted to do it this way you could just use arrays and lookup
-> tables as many other drivers do - ie
-> 
-> 	pio = dev->pio_mode - XFER_PIO_0;
-> 	t1 = data[pio];
-> 
+>>     pio = dev->pio_mode - XFER_PIO_0;
+>>     t1 = data[pio];
 
-The timing calculations are based on the CPU clock rate, It is difficult 
-to encapsulate that in a table.
+> The timing calculations are based on the CPU clock rate, It is difficult 
+> to encapsulate that in a table.
 
-[...]
->> +	/*
->> +	 * Odd lengths are not supported. We should always be a
->> +	 * multiple of 512.
->> +	 */
->> +	BUG_ON(buflen & 1);
-> 
-> If you get a request for an odd length you should write an extra word
-> containing the last byte and one other. See how the standard methods
-> handle this.
-> 
+    Nobody suggests that. You surely can put the timings in ns in a 
+structure/table.
 
-OK.
+> [...]
 
-> 
->> +	if (ocd->is16bit) {
-> 
-> Or you could have two methods and two transfer routines defined
-> 
+>>> +    /*
+>>> +     * Odd lengths are not supported. We should always be a
+>>> +     * multiple of 512.
+>>> +     */
+>>> +    BUG_ON(buflen & 1);
 
-Good idea.
+>> If you get a request for an odd length you should write an extra word
+>> containing the last byte and one other. See how the standard methods
+>> handle this.
 
->> +			while (words--) {
->> +				*(uint16_t *)buffer = ioread16(data_addr);
->> +				buffer += sizeof(uint16_t);
-> 
-> By definition tht is 2. Do you have an ioread16_rep ?
-> 
+> OK.
 
-It appears to be broken.  One would expect ioread16 and ioread16_rep to 
-do endian swapping in the same manner.  On MIPS they do not.  Perhaps it 
-would be better to fix the problem at the source.
+    I don't think you need to bother doing that with CF.
 
-> 
->> +
->> +/**
->> + * Get ready for a dma operation.  We do nothing, as all DMA
->> + * operations are taken care of in octeon_cf_bmdma_start.
->> + */
->> +void octeon_cf_qc_prep(struct ata_queued_cmd *qc)
->> +{
->> +}
-> 
-> ata_noop_qc_prep
-> 
+>>> +            while (words--) {
+>>> +                *(uint16_t *)buffer = ioread16(data_addr);
+>>> +                buffer += sizeof(uint16_t);
 
-OK.
+>> By definition tht is 2. Do you have an ioread16_rep ?
 
-> 
->> +/**
->> + * Check if any queued commands have more DMAs, if so start the next
->> + * transfer, else do standard handling.
->> + */
->> +irqreturn_t octeon_cf_interrupt(int irq, void *dev_instance)
-> 
-> A lot of these functions could be static it seems
+> It appears to be broken.  One would expect ioread16 and ioread16_rep to 
+> do endian swapping in the same manner.  On MIPS they do not.
 
-An oversight on my part.  I will make them all static.
+    And that's actually good.
 
-> 
->> +static void octeon_cf_delayed_irq(unsigned long data)
->> +{
-> 
-> What stops the following occuring
-> 
-> 	ATA irq
-> 		BUSY still set
-> 		Queue tasklet
-> 
-> 	Other irq on same line
-> 	ATA busy clear
-> 		Handle command
-> 
-> 	Tasklet runs but command was sorted out
-> 
-> (or a reset of the ata controller in the gap)
-> 
+> Perhaps it would be better to fix the problem at the source.
 
-Probably nothing.  I will try to sort it out.
+    I don't think there's a problem there. The string versions of the 
+functions treat memory as a string of bytes.
 
+>>> +static void octeon_cf_delayed_irq(unsigned long data)
+>>> +{
 
->> +	base = cs0 + ocd->base_region_bias;
->> +	if (!ocd->is16bit) {
-> 
-> 	ata_std_
->> +		ap->ioaddr.cmd_addr	= base + ATA_REG_CMD;
-> 
-> ata_sff_std_ports ? (at least for the 8bit case)
-> 
+>> What stops the following occuring
 
-OK.
+>>     ATA irq
+>>         BUSY still set
+>>         Queue tasklet
 
-Thanks,
+>>     Other irq on same line
+>>     ATA busy clear
+>>         Handle command
 
-David Daney
+    Is CF interrupt indeed shared with anything?
 
+>>     Tasklet runs but command was sorted out
+
+>> (or a reset of the ata controller in the gap)
+
+> Probably nothing.  I will try to sort it out.
+
+    It's the need for the tasklet that seems doubtful to me...
+
+> Thanks,
+> David Daney
+
+MBR, Sergei
 
