@@ -1,76 +1,147 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA DVD drive problem on ICH8M
-Date: Fri, 21 Nov 2008 17:37:30 +0900
-Message-ID: <4926734A.5050707@kernel.org>
-References: <291f35090811140246y674de2b1p23a9a650f8c7ef3a@mail.gmail.com>	 <491FE21C.7020904@kernel.org> <291f35090811170047w7cade8aci2676a878168835df@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash
+ interface.
+Date: Fri, 21 Nov 2008 10:21:37 +0000
+Message-ID: <20081121102137.634616c5@lxorguk.ukuu.org.uk>
+References: <49261BE5.2010406@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52707 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752487AbYKUIhf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Nov 2008 03:37:35 -0500
-In-Reply-To: <291f35090811170047w7cade8aci2676a878168835df@mail.gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55453 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753050AbYKUKV3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Nov 2008 05:21:29 -0500
+In-Reply-To: <49261BE5.2010406@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maxim Gorbachyov <maxim.gorbachyov@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
 
-Hello,
+> + * Called to enable the use of DMA based on kernel command line.
+> + */
+> +void octeon_cf_enable_dma(void)
+> +{
+> +	use_cf_dma = 1;
+> +}
 
-Sorry about the delay.
+Why not use the standard module parameter interface ?
 
-Maxim Gorbachyov wrote:
-> On Sun, Nov 16, 2008 at 12:04 PM, Tejun Heo <tj@kernel.org> wrote:
-> 
->>> I have a problem with SATA DVD drive and ICH8M on ASUS F80L. I insert
->>> a disk, try mounting it, mount fails. Then the drive gets lost, and I
->>> can't even eject the tray until power cycle. Kernel is vanilla
->>> 2.6.27.6. See dmesg, lspci, lshw output and kernel config attached.
->>> Let me know if more info is needed.
->> Looks like your drive doesn't like hald polling for media presence.
->> Does hal-disable-polling /dev/sr0 help?
-> 
-> It doesn't. The thing changed is I get this:
-> 
-> [145864.448091] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> [145864.448103] ata2.00: cmd a0/01:00:00:00:08/00:00:00:00:00/a0 tag 0
-> dma 2048 in
-> [145864.448104]          cdb 28 00 00 00 00 11 00 00  01 00 00 00 00 00 00 00
-> [145864.448106]          res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask
-> 0x4 (timeout)
-> [145864.448109] ata2.00: status: { DRDY }
-> [145864.448116] ata2: hard resetting link
-> [145869.808081] ata2: link is slow to respond, please be patient (ready=0)
-> [145874.468074] ata2: COMRESET failed (errno=-16)
-> [145874.468084] ata2: hard resetting link
-> [145879.828096] ata2: link is slow to respond, please be patient (ready=0)
-> [145884.476079] ata2: COMRESET failed (errno=-16)
-> [145884.476090] ata2: hard resetting link
-> [145889.836093] ata2: link is slow to respond, please be patient (ready=0)
-> [145919.516093] ata2: COMRESET failed (errno=-16)
-> [145919.516103] ata2: limiting SATA link speed to 1.5 Gbps
-> [145919.516106] ata2: hard resetting link
-> [145924.540080] ata2: COMRESET failed (errno=-16)
-> [145924.540089] ata2: reset failed, giving up
-> [145924.540092] ata2.00: disabled
-> [145924.540107] ata2: EH complete
-> [145924.540148] sr 1:0:0:0: [sr0] Result: hostbyte=DID_BAD_TARGET
-> driverbyte=DRIVER_OK,SUGGEST_OK
-> [145924.540153] end_request: I/O error, dev sr0, sector 68
-> [145924.540181] UDF-fs: No VRS found
-> 
-> after mount attempt (not right after disk is inserted).
 
-Ehhh... I really don't have much idea at this point.  Does
-"libata.force=udma4" make any difference?  If not, how about
-"libata.force=pio4"?  Note that depending on your distro, you need to do
-different things to pass parameters to modules loaded from initrd.  If
-ahci is built into the kernel, simple libata.force=xxx on kernel boot
-prompt will do.
+> +	/*
+> +	 * PIO modes 0-4 all allow the device to deassert IORDY to slow down
+> +	 * the host.
+> +	 */
 
-Does the drive work in other environments (ie. windows)?
+See ata_timing_compute() which also knows about master/slave timing,
+PIO5/6 rules and timing adjustments as well as doing bus clock
+quantisations and lengthenings for you.
 
--- 
-tejun
+> +	use_iordy = 1;
+
+This depends on the device as well and gets quite complicated. We have
+ata_pio_need_iordy() to do the work for you.
+
+> +	t1 = (t1 * clocks_us) / 1000 / 2;
+> +	if (t1)
+> +		t1--;
+
+Even if you wanted to do it this way you could just use arrays and lookup
+tables as many other drivers do - ie
+
+	pio = dev->pio_mode - XFER_PIO_0;
+	t1 = data[pio];
+
+
+> +	mio_boot_reg_tim.s.wr_hld = t4;
+
+What guarantees the computation results always fit the bit fields. This
+is one reason the kerne strongly favours masks - it is a lot easier to
+check such things.
+
+> +static void octeon_cf_set_dmamode(struct ata_port *ap, struct ata_device *dev)
+> +{
+
+> +	case XFER_MW_DMA_0:
+> +		dma_ackh = 20;	/* Tj */
+> +		To = 480;
+> +		Td = 215;
+> +		Tkr = 50;
+> +		break;
+
+Same comments apply as to PIO
+
+
+> +	/*
+> +	 * Odd lengths are not supported. We should always be a
+> +	 * multiple of 512.
+> +	 */
+> +	BUG_ON(buflen & 1);
+
+If you get a request for an odd length you should write an extra word
+containing the last byte and one other. See how the standard methods
+handle this.
+
+
+> +	if (ocd->is16bit) {
+
+Or you could have two methods and two transfer routines defined
+
+> +			while (words--) {
+> +				*(uint16_t *)buffer = ioread16(data_addr);
+> +				buffer += sizeof(uint16_t);
+
+By definition tht is 2. Do you have an ioread16_rep ?
+
+
+> +
+> +/**
+> + * Get ready for a dma operation.  We do nothing, as all DMA
+> + * operations are taken care of in octeon_cf_bmdma_start.
+> + */
+> +void octeon_cf_qc_prep(struct ata_queued_cmd *qc)
+> +{
+> +}
+
+ata_noop_qc_prep
+
+
+> +/**
+> + * Check if any queued commands have more DMAs, if so start the next
+> + * transfer, else do standard handling.
+> + */
+> +irqreturn_t octeon_cf_interrupt(int irq, void *dev_instance)
+
+A lot of these functions could be static it seems
+
+>
+> +static void octeon_cf_delayed_irq(unsigned long data)
+> +{
+
+What stops the following occuring
+
+	ATA irq
+		BUSY still set
+		Queue tasklet
+
+	Other irq on same line
+	ATA busy clear
+		Handle command
+
+	Tasklet runs but command was sorted out
+
+(or a reset of the ata controller in the gap)
+
+> +	base = cs0 + ocd->base_region_bias;
+> +	if (!ocd->is16bit) {
+
+	ata_std_
+> +		ap->ioaddr.cmd_addr	= base + ATA_REG_CMD;
+
+ata_sff_std_ports ? (at least for the 8bit case)
+
+
+Alan
+--
+	"Alan, I'm getting a bit worried about you."
+				-- Linus Torvalds
