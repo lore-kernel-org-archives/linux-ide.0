@@ -1,92 +1,73 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash interface.
-Date: Sat, 22 Nov 2008 18:13:11 +0300
-Message-ID: <49282187.8090602@ru.mvista.com>
-References: <49261BE5.2010406@caviumnetworks.com> <49280FC5.3040608@ru.mvista.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
+Date: Sat, 22 Nov 2008 17:30:47 +0100
+Message-ID: <18728.13239.820847.370384@harpo.it.uu.se>
+References: <491C9A4F.1020801@tlinx.org>
+	<491FB7E2.2030105@kernel.org>
+	<18719.65298.689618.835202@harpo.it.uu.se>
+	<492059B1.4030708@how.dk>
+	<49205AD7.3080009@how.dk>
+	<4920D093.2030508@kernel.org>
+	<492159E0.1050804@how.dk>
+	<4922165E.9070203@kernel.org>
+	<49230361.2010001@how.dk>
+	<492371F4.7020400@kernel.org>
+	<49253A6D.1040202@how.dk>
+	<18725.17831.755158.999770@harpo.it.uu.se>
+	<49263F80.2060607@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:23716 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758012AbYKVPNQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 22 Nov 2008 10:13:16 -0500
-In-Reply-To: <49280FC5.3040608@ru.mvista.com>
+Received: from aun.it.uu.se ([130.238.12.36]:62753 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758536AbYKVQbM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Nov 2008 11:31:12 -0500
+In-Reply-To: <49263F80.2060607@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>, Peter Favrholdt <linux-ide@how.dk>, linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Tejun Heo writes:
+ > sata_promise hardreset doesn't seem to be able to acquire the initial
+ > D2H Reg FIS after hardreset leading to hardreset timeouts.  Request
+ > follow-up SRST.
+ > 
+ >  http://article.gmane.org/gmane.linux.ide/36186
+ > 
+ > Signed-off-by: Tejun Heo <tj@kernel.org>
+ > ---
+ > Peter, can you please test this one too?  It's essentially the same
+ > code just slightly prettier.  Mikael, what do you think about this?
 
->> As part of our efforts to get the Cavium OCTEON processor support
->> merged (see: http://marc.info/?l=linux-mips&m=122704699515601), we
->> have this CF driver for your consideration.
->>
->> Most OCTEON variants have *no* DMA or interrupt support on the CF
->> interface so for these, only PIO is supported.  Although if DMA is
->> available, we do take advantage of it.
->>
->> The register definitions are part of the chip support patch set
->> mentioned above, and are not included here.
->>
->> At this point I would like to get feedback on the patch and would
->> expect that it would merge via the linux-mips tree along with the rest
->> of the chip support.
->>
->> Thanks,
->>
->> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
-> [...]
->> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
->> new file mode 100644
->> index 0000000..e8712c0
->> --- /dev/null
->> +++ b/drivers/ata/pata_octeon_cf.c
->> @@ -0,0 +1,942 @@
-> [...]
->> +/**
->> + * Get the status of the DMA engine. The results of this function
->> + * must emulate the BMDMA engine expected by libata.
->> + *
->> + * @ap:     ATA port to check status on
->> + *
->> + * Returns BMDMA status bits
->> + */
->> +static uint8_t octeon_cf_bmdma_status(struct ata_port *ap)
->> +{
->> +    struct octeon_cf_data *ocd = ap->dev->platform_data;
->> +    cvmx_mio_boot_dma_intx_t mio_boot_dma_int;
->> +    cvmx_mio_boot_dma_cfgx_t mio_boot_dma_cfg;
->> +    uint8_t result = 0;
->> +
->> +    mio_boot_dma_int.u64 =
->> +        cvmx_read_csr(CVMX_MIO_BOOT_DMA_INTX(ocd->dma_engine));
->> +    if (mio_boot_dma_int.s.done)
->> +        result |= ATA_DMA_INTR;
->
->   But if you're saying that there is only DMA completion inetrrupt, 
-> you *cannot* completely emulate SFF-8038i BMDMA since its interrupt 
-> status is the (delayed) IDE INTRQ status. I suggest that you move away 
-> from the emulation -- Alan has said it's possible.
+Works fine in my test machine.
 
-   My suggestion then is not to emulate the ATA_DMA_INTR bit (always 
-returning it as 0) and use:
+Acked-by: Mikael Pettersson <mikpe@it.uu.se>
 
-    mio_boot_dma_int.u64 = 
-cvmx_read_csr(CVMX_MIO_BOOT_DMA_INTX(ocd->dma_engine));
-    if (mio_boot_dma_int.s.done)
-
-directly in octeon_cf_interrupt().
-
-   Also, this fragment of octeon_cf_bmdma_status() looks doubtful to me:
-
-> +    else if (mio_boot_dma_cfg.s.size != 0xfffff)
-> +        result |= ATA_DMA_ERR; 
-
-   I suppose this only makes sense when DMA interrupt is active. What 
-does this bitfield mean?
-
-MBR, Sergei
-
-
+ > Jeff, please commit only after Peter's verification and Mikael's ACK.
+ > 
+ > Thanks.
+ > 
+ >  drivers/ata/sata_promise.c |    7 ++++++-
+ >  1 file changed, 6 insertions(+), 1 deletion(-)
+ > 
+ > diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+ > index ba9a257..917038a 100644
+ > --- a/drivers/ata/sata_promise.c
+ > +++ b/drivers/ata/sata_promise.c
+ > @@ -710,7 +710,12 @@ static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
+ >  			      unsigned long deadline)
+ >  {
+ >  	pdc_reset_port(link->ap);
+ > -	return sata_sff_hardreset(link, class, deadline);
+ > +
+ > +	/* sata_promise can't reliably acquire the first D2H Reg FIS
+ > +	 * after hardreset.  Do non-waiting hardreset and request
+ > +	 * follow-up SRST.
+ > +	 */
+ > +	return sata_std_hardreset(link, class, deadline);
+ >  }
+ >  
+ >  static void pdc_error_handler(struct ata_port *ap)
+ > 
