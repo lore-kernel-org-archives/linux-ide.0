@@ -1,46 +1,29 @@
-From: Gene Heskett <gene.heskett@gmail.com>
-Subject: Drive failure and ASUS
-Date: Sat, 22 Nov 2008 09:01:33 -0500
-Message-ID: <200811220901.33596.gene.heskett@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash
+ interface.
+Date: Sat, 22 Nov 2008 14:52:04 +0000
+Message-ID: <20081122145204.52270dbe@lxorguk.ukuu.org.uk>
+References: <49261BE5.2010406@caviumnetworks.com>
+	<49280FC5.3040608@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f11.google.com ([209.85.217.11]:48331 "EHLO
-	mail-gx0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757968AbYKVOBj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Nov 2008 09:01:39 -0500
-Received: by gxk4 with SMTP id 4so1211906gxk.13
-        for <linux-ide@vger.kernel.org>; Sat, 22 Nov 2008 06:01:37 -0800 (PST)
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44133 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758144AbYKVOwN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Nov 2008 09:52:13 -0500
+In-Reply-To: <49280FC5.3040608@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
 
-Greetings;
+>    But if you're saying that there is only DMA completion inetrrupt, you 
+> *cannot* completely emulate SFF-8038i BMDMA since its interrupt status 
+> is the (delayed) IDE INTRQ status. I suggest that you move away from the 
+> emulation -- Alan has said it's possible.
 
-The only way I can get this box to boot is to disconnect the data cable on a 
-drive with 121 badblocks as somehow ASUS and JMicron-pata all seem to think 
-its /dev/sda when hooked up, and it is no longer bootable.  I'm presently 
-booted from a sata drive on that interface, which this ASUS board has about 8 
-of.
+I don't see whats wrong with treating it that way if it keeps the amount
+of code needed down.
 
-So I've booted with the data cable off, and hooked it up once booted.  Unforch 
-there seems to be no discovery of its presence.
-
-No /dev/sdd stuff was created when I plugged the data cable into the drive.
-
-The install is the August 2008 F8 respin and is uptodate.
-
-How can I make the system aware that it is now there?  It has about 40 Gb of 
-data I'd like to recover if I can.
-
-Thanks.
-
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-Birds are entangled by their feet and men by their tongues.
