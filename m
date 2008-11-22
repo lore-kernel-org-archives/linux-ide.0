@@ -1,57 +1,39 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] amd74xx: workaround unreliable AltStatus register for
-	nVidia controllers
-Date: Sat, 22 Nov 2008 12:33:42 +0100
-Message-ID: <20081122113342.GA8593@gollum.tnic>
-References: <200811212238.51161.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: add ->max_sectors field to struct ide_port_info
+Date: Sat, 22 Nov 2008 16:17:12 +0300
+Message-ID: <49280658.9080606@ru.mvista.com>
+References: <200811212242.08182.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:32962 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756984AbYKVLdi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Nov 2008 06:33:38 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so1039078fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 22 Nov 2008 03:33:37 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200811212238.51161.bzolnier@gmail.com>
+Received: from [63.81.120.155] ([63.81.120.155]:22250 "EHLO imap.sh.mvista.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757631AbYKVNRR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Nov 2008 08:17:17 -0500
+In-Reply-To: <200811212242.08182.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Remy LABENE <remy.labene@free.fr>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Nov 21, 2008 at 10:38:50PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> It seems that on some nVidia controllers using AltStatus register
-> can be unreliable so default to Status register if the PCI device
-> is in Compatibility Mode.  In order to achieve this:
-> 
-> * Add ide_pci_is_in_compatibility_mode() inline helper to <linux/ide.h>.
-> 
-> * Add IDE_HFLAG_BROKEN_ALTSTATUS host flag and set it in amd74xx host
->   driver for nVidia controllers in Compatibility Mode.
-> 
-> * Teach actual_try_to_identify() and drive_is_ready() about the new flag.
-> 
-> This fixes the regression caused by removal of CONFIG_IDEPCI_SHARE_IRQ
-> config option in 2.6.25 and using AltStatus register unconditionally when
-> available (kernel.org bug #11659).  [ Moreover for CONFIG_IDEPCI_SHARE_IRQ=y
-> (which is what most distributions/people use) it never worked correctly. ]
+Hello.
 
-Looks good.
+Bartlomiej Zolnierkiewicz wrote:
 
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
+> * Add ->max_sectors field to struct ide_port_info to allow host drivers
+>   to specify value used for hwif->rqsize (if smaller than the default).
+>
+> * Convert pdc202xx_old to use ->max_sectors and remove no longer needed
+>   IDE_HFLAG_RQSIZE_256 flag.
+>
+> There should be no functional changes caused by this patch.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>   
 
-> 
-> Thanks to Remy LABENE for help with debugging the problem.
-> 
-> More info at:
-> http://bugzilla.kernel.org/show_bug.cgi?id=11659
+Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
 
-Bugzilla entry can be closed now.
+MBR, Sergei
 
-[.. ]
 
--- 
-Regards/Gruss,
-    Boris.
