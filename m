@@ -1,73 +1,68 @@
 From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
-Date: Sat, 22 Nov 2008 17:30:47 +0100
-Message-ID: <18728.13239.820847.370384@harpo.it.uu.se>
-References: <491C9A4F.1020801@tlinx.org>
-	<491FB7E2.2030105@kernel.org>
-	<18719.65298.689618.835202@harpo.it.uu.se>
-	<492059B1.4030708@how.dk>
-	<49205AD7.3080009@how.dk>
-	<4920D093.2030508@kernel.org>
-	<492159E0.1050804@how.dk>
-	<4922165E.9070203@kernel.org>
-	<49230361.2010001@how.dk>
-	<492371F4.7020400@kernel.org>
-	<49253A6D.1040202@how.dk>
-	<18725.17831.755158.999770@harpo.it.uu.se>
-	<49263F80.2060607@kernel.org>
+Subject: Re: Suspend w/ sata_promise
+Date: Sat, 22 Nov 2008 17:38:24 +0100
+Message-ID: <18728.13696.418178.143954@harpo.it.uu.se>
+References: <49202CB0.60507@gc-web.de>
+	<18720.18615.938839.921189@harpo.it.uu.se>
+	<492060D9.20808@gc-web.de>
+	<18723.52001.559166.255589@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:62753 "EHLO aun.it.uu.se"
+Received: from aun.it.uu.se ([130.238.12.36]:62786 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758536AbYKVQbM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 22 Nov 2008 11:31:12 -0500
-In-Reply-To: <49263F80.2060607@kernel.org>
+	id S1758588AbYKVQi3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Nov 2008 11:38:29 -0500
+In-Reply-To: <18723.52001.559166.255589@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>, Peter Favrholdt <linux-ide@how.dk>, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
 
-Tejun Heo writes:
- > sata_promise hardreset doesn't seem to be able to acquire the initial
- > D2H Reg FIS after hardreset leading to hardreset timeouts.  Request
- > follow-up SRST.
+Mikael Pettersson writes:
+ > Alexander Clausen writes:
+ >  > Mikael Pettersson wrote:
+ >  > > Do you have anything connected to that mobo's VIA SATA ports? If not,
+ >  > > you could move the disk(s) from the Promise controller to the VIA
+ >  > > controller just to see how the machine behaves over repeated suspend/resume
+ >  > > cycles. (I'm not suggesting you move the disks permanently, this would
+ >  > > just be a data gathering experiment.)
+ >  > 
+ >  > It works fine (~5 cycles tested) with the PCI (non-onboard) controller (VIA VT6421).
+ >  > Of course I'm still interested in getting suspend to work with the promise chip, so I don't
+ >  > have to waste money on the addon card (the one used in testing is just borrowed)
  > 
- >  http://article.gmane.org/gmane.linux.ide/36186
+ > Based on several other libata sata drivers I think handling suspend in
+ > sata_promise may be as simple as hooking ata_pci_device_{suspend,resume},
+ > which is what the patch below does. If this doesn't work then the most
+ > likely solution is to augment the ->resume op with a Promise-specific
+ > controller reset (again similar to several other sata drivers).
  > 
- > Signed-off-by: Tejun Heo <tj@kernel.org>
- > ---
- > Peter, can you please test this one too?  It's essentially the same
- > code just slightly prettier.  Mikael, what do you think about this?
+ > Care to give it a try? The patch is against 2.6.28-rc5 but should also
+ > work in 2.6.27.
 
-Works fine in my test machine.
+Alexander, have you had a chance to test this? Preferably together
+with Tejun's hardreset improvement patch posted recently.
+<http://marc.info/?l=linux-ide&m=122724338905689&w=2>
 
-Acked-by: Mikael Pettersson <mikpe@it.uu.se>
+With both this and Tejun's hardreset patch applied my Promise test
+machine survives several suspend/resume cycles without problems.
 
- > Jeff, please commit only after Peter's verification and Mikael's ACK.
+ > /Mikael
  > 
- > Thanks.
- > 
- >  drivers/ata/sata_promise.c |    7 ++++++-
- >  1 file changed, 6 insertions(+), 1 deletion(-)
- > 
- > diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
- > index ba9a257..917038a 100644
- > --- a/drivers/ata/sata_promise.c
- > +++ b/drivers/ata/sata_promise.c
- > @@ -710,7 +710,12 @@ static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
- >  			      unsigned long deadline)
- >  {
- >  	pdc_reset_port(link->ap);
- > -	return sata_sff_hardreset(link, class, deadline);
- > +
- > +	/* sata_promise can't reliably acquire the first D2H Reg FIS
- > +	 * after hardreset.  Do non-waiting hardreset and request
- > +	 * follow-up SRST.
- > +	 */
- > +	return sata_std_hardreset(link, class, deadline);
- >  }
+ > diff -rupN linux-2.6.28-rc5/drivers/ata/sata_promise.c linux-2.6.28-rc5.sata_promise-suspend-v1/drivers/ata/sata_promise.c
+ > --- linux-2.6.28-rc5/drivers/ata/sata_promise.c	2008-11-18 09:13:29.000000000 +0100
+ > +++ linux-2.6.28-rc5.sata_promise-suspend-v1/drivers/ata/sata_promise.c	2008-11-18 22:47:46.000000000 +0100
+ > @@ -308,6 +308,10 @@ static struct pci_driver pdc_ata_pci_dri
+ >  	.id_table		= pdc_ata_pci_tbl,
+ >  	.probe			= pdc_ata_init_one,
+ >  	.remove			= ata_pci_remove_one,
+ > +#ifdef CONFIG_PM
+ > +	.suspend		= ata_pci_device_suspend,
+ > +	.resume			= ata_pci_device_resume,
+ > +#endif
+ >  };
  >  
- >  static void pdc_error_handler(struct ata_port *ap)
+ >  static int pdc_common_port_start(struct ata_port *ap)
  > 
