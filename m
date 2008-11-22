@@ -1,8 +1,8 @@
 From: Evgeni Golov <sargentd@die-welt.net>
 Subject: Re: Odd behaviour of device in response to idleimmediate with
  unload
-Date: Sat, 22 Nov 2008 10:51:00 +0100
-Message-ID: <20081122095101.3A09F1FDE0@chi.die-welt.net>
+Date: Sat, 22 Nov 2008 10:58:43 +0100
+Message-ID: <20081122095844.589931FDE0@chi.die-welt.net>
 References: <491083CC.5050508@rtr.ca>
 	<49108AA0.1080507@rtr.ca>
 	<491090BC.5060403@rtr.ca>
@@ -31,10 +31,10 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chi.die-welt.net ([84.246.123.210]:34630 "EHLO chi.die-welt.net"
+Received: from chi.die-welt.net ([84.246.123.210]:33663 "EHLO chi.die-welt.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752453AbYKVJvG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 22 Nov 2008 04:51:06 -0500
+	id S1752032AbYKVJ6q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Nov 2008 04:58:46 -0500
 In-Reply-To: <4927C14F.6050707@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -43,18 +43,9 @@ Cc: Elias Oltmanns <eo@nebensachen.de>, Mark Lord <liml@rtr.ca>, linux-ide@vger.
 
 On Sat, 22 Nov 2008 17:22:39 +0900 Tejun Heo wrote:
 
-> Eh... you have ALPM enabled.
-
-Mh, when did I enable that!?
-
->  What does "cat
+> Eh... you have ALPM enabled.  What does "cat
 > /sys/block/sda/device/link_power_management_policy" tell you?
 
-Nothing as the file does not exits, but
-cat /sys/class/scsi_host/host0/link_power_management_policy
-works and said me "min_power".
-
-I rebooted without setting it, so it now says "max_performance" and I
-still get the reset on scan :/
-
-Regards
+Sorry, when I disable ALPM I get no errors on unload_heads, so it's
+fine now :)
+I still wonder why ALPM was enabled...
