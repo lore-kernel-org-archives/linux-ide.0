@@ -1,67 +1,78 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Suspend w/ sata_promise
-Date: Sun, 23 Nov 2008 23:07:21 +0100
-Message-ID: <18729.54297.692199.41534@harpo.it.uu.se>
-References: <49202CB0.60507@gc-web.de>
-	<18720.18615.938839.921189@harpo.it.uu.se>
-	<492060D9.20808@gc-web.de>
-	<18723.52001.559166.255589@harpo.it.uu.se>
-	<18728.13696.418178.143954@harpo.it.uu.se>
-	<4928569C.9080805@gc-web.de>
+From: Peter Favrholdt <linux-ide@how.dk>
+Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
+Date: Sun, 23 Nov 2008 23:38:31 +0100
+Message-ID: <4929DB67.1090702@how.dk>
+References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org>	<18719.65298.689618.835202@harpo.it.uu.se>	<492059B1.4030708@how.dk>	<49205AD7.3080009@how.dk>	<4920D093.2030508@kernel.org>	<492159E0.1050804@how.dk>	<4922165E.9070203@kernel.org>	<49230361.2010001@how.dk>	<492371F4.7020400@kernel.org>	<49253A6D.1040202@how.dk> <18725.17831.755158.999770@harpo.it.uu.se> <49263F80.2060607@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:39783 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751075AbYKWWH2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 23 Nov 2008 17:07:28 -0500
-In-Reply-To: <4928569C.9080805@gc-web.de>
+Received: from pfepb.post.tele.dk ([195.41.46.236]:37157 "EHLO
+	pfepb.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780AbYKWWic (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Nov 2008 17:38:32 -0500
+In-Reply-To: <49263F80.2060607@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Clausen <alex@gc-web.de>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Alexander Clausen writes:
- > Mikael Pettersson wrote:
- > >  > 
- > >  > Based on several other libata sata drivers I think handling suspend in
- > >  > sata_promise may be as simple as hooking ata_pci_device_{suspend,resume},
- > >  > which is what the patch below does. If this doesn't work then the most
- > >  > likely solution is to augment the ->resume op with a Promise-specific
- > >  > controller reset (again similar to several other sata drivers).
- > >  > 
- > >  > Care to give it a try? The patch is against 2.6.28-rc5 but should also
- > >  > work in 2.6.27.
- > > 
- > > Alexander, have you had a chance to test this? Preferably together
- > > with Tejun's hardreset improvement patch posted recently.
- > > <http://marc.info/?l=linux-ide&m=122724338905689&w=2>
- > > 
- > > With both this and Tejun's hardreset patch applied my Promise test
- > > machine survives several suspend/resume cycles without problems.
- > 
- > Did not work here. I applied both patches to 2.6.27.6, seems to behave exactly as before.
- > dmesg attached.
+Hi Tejun and list,
 
-Are you absolutely certain both patches were applied and the driver rebuilt?
-I'm asking because I would have expected to see
+This mail just to say I'm alive and testing the patch but so far no 
+errors (on my hardware).
 
-[...] sata_promise 0000:00:0d.0: restoring config space at offset 0x1 (...)
+Tejun Heo wrote:
+> sata_promise hardreset doesn't seem to be able to acquire the initial
+> D2H Reg FIS after hardreset leading to hardreset timeouts.  Request
+> follow-up SRST.
+> 
+>  http://article.gmane.org/gmane.linux.ide/36186
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+> Peter, can you please test this one too?  It's essentially the same
+> code just slightly prettier.  Mikael, what do you think about this?
 
-but your kernel log does not contain anything like that. Both machines
-I tested on today consistently included this message after the patch was
-applied, but did not when the patch wasn't applied.
+I'm still testing the new patch (on 2.6.27.7), but so far I haven't had 
+any failures - it seems my hardware has started to behave well - very 
+unfortunate ;-)
 
-I did note some temporary errors (that sata_promise recovered from) on
-one machine after resuming from suspend to ram that did not occur when
-using standby. I'll update the patch to include a controller reinit in
-the ->resume op, which should hopefully fix that.
+I'll keep on testing - hopefully I'll see some of the usual errors soon 
+  - and the new patch recovers alright.
 
-On some possibly unrelated notes, I see that:
-a) all your interrupts seem to be legacy IRQs < 16, aren't you
-   enabling the I/O-APIC?
-b) your kernel includes the nvidia binary-only driver, which puts
-   a big unknown into the picture
+Best regards,
 
-/Mikael
+I'm still testing the new patch (on 2.6.27.7), but so far I haven't had 
+any failures - it seems my hardware has started to behave well - very 
+unfortunate ;-)
+
+ > Jeff, please commit only after Peter's verification and Mikael's ACK.
+
+I'll keep on testing - hopefully I'll see some of the usual errors soon 
+  - and the new patch will recover alright. I'll keep you updated.
+
+Best regards,
+
+Peter
+
+>  drivers/ata/sata_promise.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+> index ba9a257..917038a 100644
+> --- a/drivers/ata/sata_promise.c
+> +++ b/drivers/ata/sata_promise.c
+> @@ -710,7 +710,12 @@ static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
+>  			      unsigned long deadline)
+>  {
+>  	pdc_reset_port(link->ap);
+> -	return sata_sff_hardreset(link, class, deadline);
+> +
+> +	/* sata_promise can't reliably acquire the first D2H Reg FIS
+> +	 * after hardreset.  Do non-waiting hardreset and request
+> +	 * follow-up SRST.
+> +	 */
+> +	return sata_std_hardreset(link, class, deadline);
+>  }
+>  
+>  static void pdc_error_handler(struct ata_port *ap)
