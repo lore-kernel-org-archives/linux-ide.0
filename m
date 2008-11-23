@@ -1,61 +1,34 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: Odd behaviour of device in response to idleimmediate with unload
-Date: Sun, 23 Nov 2008 19:09:50 +0100
-Message-ID: <878wrapb4h.fsf@denkblock.local>
-References: <491083CC.5050508@rtr.ca>
-	<20081104185444.3BE721FDF7@chi.die-welt.net> <4910A509.1030307@rtr.ca>
-	<49116811.5000109@kernel.org> <873ai6cmio.fsf@denkblock.local>
-	<4911A8EA.8030605@kernel.org> <87k5bhxerq.fsf@denkblock.local>
-	<4913BF3D.3090704@kernel.org>
-	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
-	<4917F822.5060204@kernel.org>
-	<20081110102607.094281FD7C@chi.die-welt.net>
-	<87r65ju83r.fsf@denkblock.local>
-	<20081113113345.12E2D1FD80@chi.die-welt.net>
-	<491FEA3C.4090906@kernel.org>
-	<20081117071552.D25291FD5F@chi.die-welt.net>
-	<49211B1F.7040900@kernel.org>
-	<20081117074825.322BE1FD5F@chi.die-welt.net>
-	<492218D1.5070904@kernel.org>
-	<20081118073749.D84FD1FD6E@chi.die-welt.net>
-	<49265812.3050902@kernel.org> <4927C14F.6050707@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10216] kernel from different versions hangs with some CD/DVD drives
+Date: Sun, 23 Nov 2008 13:59:46 -0800 (PST)
+Message-ID: <20081123215947.08745108042@picon.linux-foundation.org>
+References: <bug-10216-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:53143 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752777AbYKWSKR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 23 Nov 2008 13:10:17 -0500
-In-Reply-To: <4927C14F.6050707@kernel.org> (Tejun Heo's message of "Sat, 22
-	Nov 2008 17:22:39 +0900")
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45101 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751062AbYKWV7t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Nov 2008 16:59:49 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mANLxlgo020011
+	for <linux-ide@vger.kernel.org>; Sun, 23 Nov 2008 13:59:48 -0800
+In-Reply-To: <bug-10216-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Evgeni Golov <sargentd@die-welt.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
 
-Tejun Heo <tj@kernel.org> wrote:
-> Evgeni Golov wrote:
->> On Fri, 21 Nov 2008 15:41:22 +0900 Tejun Heo wrote:
->
->> 
->>> Something strange is going on there.  Can you please apply the attached
->>> patch and post resulting kernel log?
->> 
->> Wow, that one is spammy :)
->> See relevant part of /var/log/messages attached.
->
-> Eh... you have ALPM enabled.
+http://bugzilla.kernel.org/show_bug.cgi?id=10216
 
-Quite. The thing that's puzzling me, though, is this: There are a lot of
-phy events occurring during normal operation that get cleared by the
-interrupt handler. However, during link autopsy, phyrdy and comwake are
-set in SError even though event notification has not been disabled yet
-at this point. This suggests to me that not all changes to those bits in
-SError are brought to our attention through event notification, at least
-as long as ALPM is enabled. Besides, I'm wondering whether that many phy
-events are to be expected (i.e. observed on other controllers too) when
-ALPM is enabled.
 
-Regards,
 
-Elias
+
+
+------- Comment #11 from lars.winterfeld@tu-ilmenau.de  2008-11-23 13:59 -------
+Created an attachment (id=18979)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=18979&action=view)
+working .config for 2.6.24-gentoo-r8
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
