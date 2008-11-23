@@ -1,70 +1,61 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash interface.
-Date: Sun, 23 Nov 2008 20:32:49 +0300
-Message-ID: <492993C1.7000509@ru.mvista.com>
-References: <49261BE5.2010406@caviumnetworks.com> <49280FC5.3040608@ru.mvista.com> <49282187.8090602@ru.mvista.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Odd behaviour of device in response to idleimmediate with unload
+Date: Sun, 23 Nov 2008 19:09:50 +0100
+Message-ID: <878wrapb4h.fsf@denkblock.local>
+References: <491083CC.5050508@rtr.ca>
+	<20081104185444.3BE721FDF7@chi.die-welt.net> <4910A509.1030307@rtr.ca>
+	<49116811.5000109@kernel.org> <873ai6cmio.fsf@denkblock.local>
+	<4911A8EA.8030605@kernel.org> <87k5bhxerq.fsf@denkblock.local>
+	<4913BF3D.3090704@kernel.org>
+	<20081107074857.GA6461@dragonheart.kerker.die-welt.net>
+	<4917F822.5060204@kernel.org>
+	<20081110102607.094281FD7C@chi.die-welt.net>
+	<87r65ju83r.fsf@denkblock.local>
+	<20081113113345.12E2D1FD80@chi.die-welt.net>
+	<491FEA3C.4090906@kernel.org>
+	<20081117071552.D25291FD5F@chi.die-welt.net>
+	<49211B1F.7040900@kernel.org>
+	<20081117074825.322BE1FD5F@chi.die-welt.net>
+	<492218D1.5070904@kernel.org>
+	<20081118073749.D84FD1FD6E@chi.die-welt.net>
+	<49265812.3050902@kernel.org> <4927C14F.6050707@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:36782 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751102AbYKWRdA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Nov 2008 12:33:00 -0500
-In-Reply-To: <49282187.8090602@ru.mvista.com>
+Received: from nebensachen.de ([195.34.83.29]:53143 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752777AbYKWSKR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 23 Nov 2008 13:10:17 -0500
+In-Reply-To: <4927C14F.6050707@kernel.org> (Tejun Heo's message of "Sat, 22
+	Nov 2008 17:22:39 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Evgeni Golov <sargentd@die-welt.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello, I wrote:
-
->>> diff --git a/drivers/ata/pata_octeon_cf.c 
->>> b/drivers/ata/pata_octeon_cf.c
->>> new file mode 100644
->>> index 0000000..e8712c0
->>> --- /dev/null
->>> +++ b/drivers/ata/pata_octeon_cf.c
->>> @@ -0,0 +1,942 @@
->> [...]
->>> +/**
->>> + * Get the status of the DMA engine. The results of this function
->>> + * must emulate the BMDMA engine expected by libata.
->>> + *
->>> + * @ap:     ATA port to check status on
->>> + *
->>> + * Returns BMDMA status bits
->>> + */
->>> +static uint8_t octeon_cf_bmdma_status(struct ata_port *ap)
->>> +{
->>> +    struct octeon_cf_data *ocd = ap->dev->platform_data;
->>> +    cvmx_mio_boot_dma_intx_t mio_boot_dma_int;
->>> +    cvmx_mio_boot_dma_cfgx_t mio_boot_dma_cfg;
->>> +    uint8_t result = 0;
->>> +
->>> +    mio_boot_dma_int.u64 =
->>> +        cvmx_read_csr(CVMX_MIO_BOOT_DMA_INTX(ocd->dma_engine));
->>> +    if (mio_boot_dma_int.s.done)
->>> +        result |= ATA_DMA_INTR;
->>
->>   But if you're saying that there is only DMA completion inetrrupt, 
->> you *cannot* completely emulate SFF-8038i BMDMA since its interrupt 
->> status is the (delayed) IDE INTRQ status. I suggest that you move 
->> away from the emulation -- Alan has said it's possible.
-> As part of our efforts to get the Cavium OCTEON processor support
+Tejun Heo <tj@kernel.org> wrote:
+> Evgeni Golov wrote:
+>> On Fri, 21 Nov 2008 15:41:22 +0900 Tejun Heo wrote:
 >
->   My suggestion then is not to emulate the ATA_DMA_INTR bit (always 
-> returning it as 0)
-
-   No, this is not an option because you chain to ata_sff_host_intr(). 
-However, DMA interrupt status is *not* a substitute for SFF-8038i 
-interrupt status (as it gets set on the S/G segment boundaries too), so 
-you should employ the pure software emulation for this bit, only 
-triggering before the control gets passed to ata_sff_host_intr().
-
-> directly in octeon_cf_interrupt().
+>> 
+>>> Something strange is going on there.  Can you please apply the attached
+>>> patch and post resulting kernel log?
+>> 
+>> Wow, that one is spammy :)
+>> See relevant part of /var/log/messages attached.
 >
+> Eh... you have ALPM enabled.
 
-MBR, Sergei
+Quite. The thing that's puzzling me, though, is this: There are a lot of
+phy events occurring during normal operation that get cleared by the
+interrupt handler. However, during link autopsy, phyrdy and comwake are
+set in SError even though event notification has not been disabled yet
+at this point. This suggests to me that not all changes to those bits in
+SError are brought to our attention through event notification, at least
+as long as ALPM is enabled. Besides, I'm wondering whether that many phy
+events are to be expected (i.e. observed on other controllers too) when
+ALPM is enabled.
 
+Regards,
 
+Elias
