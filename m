@@ -1,16 +1,16 @@
 From: bugme-daemon@bugzilla.kernel.org
 Subject: [Bug 10216] kernel from different versions hangs with some CD/DVD drives
-Date: Sun, 23 Nov 2008 14:04:46 -0800 (PST)
-Message-ID: <20081123220446.3BC6D10800E@picon.linux-foundation.org>
+Date: Sun, 23 Nov 2008 14:06:12 -0800 (PST)
+Message-ID: <20081123220612.237E5108042@picon.linux-foundation.org>
 References: <bug-10216-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35700 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37202 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751513AbYKWWEs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Nov 2008 17:04:48 -0500
+	by vger.kernel.org with ESMTP id S1751000AbYKWWGN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Nov 2008 17:06:13 -0500
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mANM4kWm020337
-	for <linux-ide@vger.kernel.org>; Sun, 23 Nov 2008 14:04:47 -0800
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mANM6CoE020383
+	for <linux-ide@vger.kernel.org>; Sun, 23 Nov 2008 14:06:13 -0800
 In-Reply-To: <bug-10216-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,10 +22,10 @@ http://bugzilla.kernel.org/show_bug.cgi?id=10216
 
 
 
-------- Comment #17 from lars.winterfeld@tu-ilmenau.de  2008-11-23 14:04 -------
-Created an attachment (id=18985)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=18985&action=view)
-dmesg from patched kernel 2.6.25-gentoo-r9
+------- Comment #18 from lars.winterfeld@tu-ilmenau.de  2008-11-23 14:06 -------
+Created an attachment (id=18986)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=18986&action=view)
+dmesg from unpatched kernel 2.6.26-gentoo-r3
 
 
 -- 
