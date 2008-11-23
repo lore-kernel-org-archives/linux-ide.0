@@ -1,35 +1,82 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Frequent head unloading
-Date: Sun, 23 Nov 2008 12:16:22 +0900
-Message-ID: <4928CB06.7090708@kernel.org>
-References: <4920292B.5060804@gc-web.de> <4920E909.2030400@kernel.org> <4920FA98.5050108@gc-web.de> <4920FE45.1040504@kernel.org> <49214331.4020400@gc-web.de> <49266B9E.7050402@kernel.org> <4926A4A5.5070204@gc-web.de> <4926D2E7.60108@kernel.org> <Pine.LNX.4.64.0811211309400.12550@gc.phys.uwm.edu>
+Subject: about TRIM/DISCARD support and barriers
+Date: Sun, 23 Nov 2008 13:46:08 +0900
+Message-ID: <4928E010.4090801@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51931 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:52604 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755360AbYKWDQW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 22 Nov 2008 22:16:22 -0500
-In-Reply-To: <Pine.LNX.4.64.0811211309400.12550@gc.phys.uwm.edu>
+	id S1754199AbYKWEqH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Nov 2008 23:46:07 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dwmw2@infradead.org, Nick Piggin <npiggin@suse.de>, Jens Axboe <jens.axboe@oracle.com>, IDE/ATA development list <linux-ide@v>
 
-Bruce Allen wrote:
-> Yes, this is hard to do in a general way.  The problem is that you have
-> to correctly find the head load/unload counts in the SMART data.  This
-> is not specified by any standard.  It might be there, it might not be. 
-> I don't see a general solution to this.
+Hello, all.
 
-Well, till now, all the identifiers I've seen are pretty limited, I'm
-fairly sure we can easily come up with a pattern which will cover most
-devices currently on market.  The more difficult problem seems to be
-what action to take to me since there's no single APM value we can use
-and changing APM setting seems to have quite adverse effect on some
-drives.  Maybe the best thing we can do is to periodically issue
-commands to keep the drive busy (at least for a while).
+Dongjun Shin who works for Samsung SSD dep asked me about libata TRIM
+support and pointed me to the new DISCARD support David Woodhouse got
+merged for 2.6.28.  I took a look at the code and blk-layer
+interface-wise we seemed to be ready both for filesystems and userland
+(so that fsck or something which runs background can mark unused
+blocks) but there doesn't seem to be any low level driver which
+actually implements ->prepare_discard_fn or fs which sets the DISCARD
+flag.
+
+Adding ->prepare_discard_fn wouldn't be difficult at all but I became
+curious about a few things after looking at the DISCARD interface.
+First of all - how to avoid racing aginst reusing and how to schedule
+DISCARDs.
+
+* There are two variants of DISCARD - DISCARD w/o barrier and DISCARD
+  w/ barrier, if a fs uses the former, it would need to make sure that
+  it the DISCARD finishes before re-using the block.  Block layer will
+  make sure order will be kept for the latter but depending on how
+  often those DICARDs are issued it can disrupt IO scheduling.
+
+* It looks like non-barrier DISCARD will be put into the IO sched and
+  scheduled the same way as regular IOs.  I don't relly think this is
+  necessary or a good idea.  DISCARDs probably don't need any kind of
+  sorting anyway and it's likely to disrupt IO sched heuristics.
+  Also, DISCARDs can be postponed w/o affecting correct operation.
+  However, DISCARDs are not likely to take a long time and we might
+  not have to worry about it too much unless it starves regular IOs.
+
+With the above three points, I think it might be better to make block
+layer manage and order DISCARD requests than putting it onto the
+filesystem or barrier mechanism.  If block layer manages map of
+pending DISCARDs and FSes just tell block layer newly freed blocks,
+block layer can schedule DISCARDs as it sees fit and cancels pending
+ones if IO access to it occurs before the DISCARD is issued to the
+drive.  This way, adding DISCARD support to FSes become much easier -
+it can just put blk_discard(lba, range) where it's discarding blocks
+and don't have to worry about ordering or error handling.
+
+What do you think?
+
+Also, I have a question regarding the current barrier implementation.
+When I asked it to Chris Mason some time ago, I was told that btrfs
+doesn't really make use of barrier in that btrfs itself waits for the
+barrier to complete before proceeding.  I've been thinking about
+colored barrier implementation because I heard that the current
+barrier ordering is too crude or heavy handed.  But, then again, if
+the filesystem waits for requests to complete itself and those
+dependent requests are marked SYNC as necessary so that they don't get
+postponed too much, all that's needed is flush cache.  Doing it that
+way will add a bit of latency but as long as things can progress in
+parallel, it will probably perform better than the current barrier.
+
+After all, it's not like we have selective FLUSH on actual devices
+anyway.  Where the selective barriering can make difference is how
+it's handled in the IO scheduler and FS waiting for requests to finish
+and then issuing barrier achieves that quite alright and communicating
+the partitial ordering of requests to block layer wouldn't be much
+simpler than doing it in FS proper and there's also the problem of how
+to communicate or handle when one of the request in the partial
+ordering fails.  So, would selective / more intelligent barrier be
+beneficial to filesystems or is the way things are just fine?
 
 Thanks.
 
