@@ -1,34 +1,52 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10216] kernel from different versions hangs with some CD/DVD drives
-Date: Mon, 24 Nov 2008 00:37:48 -0800 (PST)
-Message-ID: <20081124083748.E3B25108040@picon.linux-foundation.org>
-References: <bug-10216-11633@http.bugzilla.kernel.org/>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: about TRIM/DISCARD support and barriers
+Date: Mon, 24 Nov 2008 09:03:50 +0000
+Message-ID: <1227517430.26957.20.camel@macbook.infradead.org>
+References: <4928E010.4090801@kernel.org> <4929023C.2060302@suse.de>
+	 <20081123123514.GI5707@parisc-linux.org>
+	 <1227447584.4901.405.camel@macbook.infradead.org>
+	 <1227480776.25499.3.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60798 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751107AbYKXIiA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Nov 2008 03:38:00 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAO8bnSC016717
-	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2008 00:37:50 -0800
-In-Reply-To: <bug-10216-11633@http.bugzilla.kernel.org/>
+Received: from bombadil.infradead.org ([18.85.46.34]:35932 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513AbYKXJEY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Nov 2008 04:04:24 -0500
+In-Reply-To: <1227480776.25499.3.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Tejun Heo <teheo@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Nick Piggin <npiggin@suse.de>, Jens Axboe <jens.axboe@oracle.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Dongjun Shin <djshin90@gmail.com>, chris.mason@oracle.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10216
+On Mon, 2008-11-24 at 07:52 +0900, James Bottomley wrote:
+> On Sun, 2008-11-23 at 13:39 +0000, David Woodhouse wrote:
+> > > We don't attempt to put non-contiguous ranges into a single TRIM yet.
+> > 
+> > We don't even merge contiguous ranges -- I still need to fix the
+> > elevators to stop writes crossing writes,
+> 
+> I don't think we want to do that ... it's legal if the write isn't a
+> barrier and it will inhibit merging.  That may be just fine for a SSD,
+> but it's not for spinning media since they get better performance out of
+> merged writes.
 
+No, I just mean writes _to the same sector_. At the moment, we happily
+let those cross each other in the queue.
 
+We do notice this situation and preserve the ordering if the two
+requests cover _precisely_ the same range, but _overlapping_ writes may
+happen in any order.
 
+We should fix that, and it's only for _that_ purpose that I'm saying we
+treat writes and discards as identical. And then we can drop the barrier
+flag on discards.
 
-
-------- Comment #28 from remy.labene@free.fr  2008-11-24 00:37 -------
-Indeed, it seems that it's the same problem as here 
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11659
-
+And _then_ we can think about special cases which let us merge
+non-contiguous discards.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
