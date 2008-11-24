@@ -1,233 +1,202 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Resurrect IT8172 IDE controller driver
-Date: Mon, 24 Nov 2008 13:33:42 +0300
-Message-ID: <492A8306.9000400@ru.mvista.com>
-References: <E1L4UpB-0007ro-1g@localhost>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Suspend w/ sata_promise
+Date: Mon, 24 Nov 2008 13:10:04 +0100
+Message-ID: <18730.39324.527421.503774@harpo.it.uu.se>
+References: <49202CB0.60507@gc-web.de>
+	<18720.18615.938839.921189@harpo.it.uu.se>
+	<492060D9.20808@gc-web.de>
+	<18723.52001.559166.255589@harpo.it.uu.se>
+	<18728.13696.418178.143954@harpo.it.uu.se>
+	<4928569C.9080805@gc-web.de>
+	<18729.54297.692199.41534@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751095AbYKXKeE@vger.kernel.org>
-In-Reply-To: <E1L4UpB-0007ro-1g@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shane McDonald <mcdonald.shane@gmail.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aun.it.uu.se ([130.238.12.36]:47810 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750823AbYKXMKK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Nov 2008 07:10:10 -0500
+In-Reply-To: <18729.54297.692199.41534@harpo.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
 
-Hello.
+Mikael Pettersson writes:
+ > Alexander Clausen writes:
+ >  > Mikael Pettersson wrote:
+ >  > >  > 
+ >  > >  > Based on several other libata sata drivers I think handling suspend in
+ >  > >  > sata_promise may be as simple as hooking ata_pci_device_{suspend,resume},
+ >  > >  > which is what the patch below does. If this doesn't work then the most
+ >  > >  > likely solution is to augment the ->resume op with a Promise-specific
+ >  > >  > controller reset (again similar to several other sata drivers).
+ >  > >  > 
+ >  > >  > Care to give it a try? The patch is against 2.6.28-rc5 but should also
+ >  > >  > work in 2.6.27.
+ >  > > 
+ >  > > Alexander, have you had a chance to test this? Preferably together
+ >  > > with Tejun's hardreset improvement patch posted recently.
+ >  > > <http://marc.info/?l=linux-ide&m=122724338905689&w=2>
+ >  > > 
+ >  > > With both this and Tejun's hardreset patch applied my Promise test
+ >  > > machine survives several suspend/resume cycles without problems.
+ >  > 
+ >  > Did not work here. I applied both patches to 2.6.27.6, seems to behave exactly as before.
+ >  > dmesg attached.
+ > 
+ > Are you absolutely certain both patches were applied and the driver rebuilt?
+ > I'm asking because I would have expected to see
+ > 
+ > [...] sata_promise 0000:00:0d.0: restoring config space at offset 0x1 (...)
+ > 
+ > but your kernel log does not contain anything like that. Both machines
+ > I tested on today consistently included this message after the patch was
+ > applied, but did not when the patch wasn't applied.
+ > 
+ > I did note some temporary errors (that sata_promise recovered from) on
+ > one machine after resuming from suspend to ram that did not occur when
+ > using standby. I'll update the patch to include a controller reinit in
+ > the ->resume op, which should hopefully fix that.
 
-Shane McDonald wrote:
+Here's an updated suspend patch for sata_promise. It will now
+do a HW re-init of the controller and its ports on resume,
+which should help e.g. S2R when all state may have been lost.
 
-> diff -uprN a/drivers/ide/it8172.c b/drivers/ide/it8172.c
-> --- a/drivers/ide/it8172.c	1969-12-31 18:00:00.000000000 -0600
-> +++ b/drivers/ide/it8172.c	2008-11-23 01:06:01.000000000 -0600
-> @@ -0,0 +1,205 @@
-> +/*
-> + *
-> + * BRIEF MODULE DESCRIPTION
-> + *      IT8172 IDE controller support
-> + *
-> + * Copyright 2000 MontaVista Software Inc.
-> + * Author: MontaVista Software, Inc.
-> + *              stevel@mvista.com or source@mvista.com
->   
+Depending on machine, suspend type (standby or mem), and disk
+I do get different results, some cases come up very cleanly
+while others have some transient failures; however in my tests
+libata EH always recovers.
 
-   You can remove the former address, Steve Longerbeam is no longer with 
-MV (quit long ago). And I think you may add your own copyright now.
+Only tested on 2nd gen controllers as my 1st gen is at another site.
 
-> +/*
-> + * Prototypes
-> + */
->   
+If this still doesn't work, try changing the #if 0 in pdc_pci_device_resume()
+to #if 1, that will make it issue a HW reset to all ATA engines before
+reinitialising them (shouldn't be needed, which is why it's disabled).
 
-   I see no prototypes here...
+/Mikael
 
-> +
-> +static void it8172_set_pio_mode(ide_drive_t *drive, const u8 pio)
-> +{
-> +	ide_hwif_t *hwif	= HWIF(drive);
-> +	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-> +	int is_slave		= (&hwif->drives[1] == drive);
->   
-
-    Use simpler "drive->dn & 1" (and drop the useless parens please) -- 
-& can be dropped though as the controller has only a single channel...
-
-> +	spin_lock_irqsave(&ide_lock, flags);
->   
-
-   Don't use ide_lock here please. Moreover, since the controller has 
-only one channel, you don't need any spinlock here.
-
-> +	pci_read_config_word(dev, 0x40, &drive_enables);
-> +	pci_read_config_dword(dev, 0x44, &drive_timing);
-> +
-> +	/*
-> +	 * FIX! The DIOR/DIOW pulse width and recovery times in port 0x44
->   
-
-   It's usually FIXME. :-)
-
-> +	 * are being left at the default values of 8 PCI clocks (242 nsec
-> +	 * for a 33 MHz clock).
-
-   It's 240, not 242 ns as 33 is actually 33.333.
-
->  These can be safely shortened at higher
-> +	 * PIO modes. The DIOR/DIOW pulse width and recovery times only
-> +	 * apply to PIO modes, not to the DMA modes.
-> +	 */
->   
-
-   Not true. They do apply to SW/MW DMA modes -- and if you look at your 
-own code you'll see that.
-
-> +
-> +	/*
-> +	 * Enable port 0x44. The IT8172 spec is confused; it calls
-> +	 * this register the "Slave IDE Timing Register", but in fact,
-> +	 * it controls timing for both master and slave drives.
-> +	 */
-> +	drive_enables |= 0x4000;
->   
-
-   This is strange because this IDE controller seems to be a clone of 
-the one in the Intel PIIX chip. However, the spec. I have tellm it's not 
-an exact clone.
-I suggest that you take a close look at drivers/ide/piix.c...
-
-> +
-> +	if (is_slave) {
-> +		drive_enables &= 0xc006;
-> +		if (pio > 1)
-> +			/* enable prefetch and IORDY sample-point */
-> +			drive_enables |= 0x0060;
->   
-
-   IORDY sampling shouldn't be enabled for PIO mode 2 always, only if 
-the drive supports it.
-   Prefetch should only be enabled for ATA disks, not the ATAPI devices
-
-> +static void it8172_set_dma_mode(ide_drive_t *drive, const u8 speed)
-> +{
-> +	ide_hwif_t *hwif	= HWIF(drive);
-> +	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-> +	int a_speed		= 3 << (drive->dn * 4);
-> +	int u_flag		= 1 << drive->dn;
-> +	int u_speed		= 0;
-> +	u8 reg48, reg4a;
-> +
-> +	const u8 mwdma_to_pio[] = { 0, 3, 4 };
-> +	u8 pio;
-> +
-> +	pci_read_config_byte(dev, 0x48, &reg48);
-> +	pci_read_config_byte(dev, 0x4a, &reg4a);
-> +
-> +	if (speed >= XFER_UDMA_0) {
-> +
-> +		/* Setting the DMA cycle time to 2 or 3 PCI clocks
-> +		 * (60 and 91 nsec at 33 MHz PCI clock) seems to cause
-> +		 * BadCRC errors during DMA transfers on some drives,
->   
-
-   Sigh, such drives should have been blacklisted...
-
-> +		 * even though both numbers meet the minimum ATAPI-4 spec
-> +		 * of 73 and 54 nsec for UDMA 1 and 2 respectively.
-> +		 * So the faster times are not implemented here.
-> +		 * The good news is that the slower cycle time has
-> +		 * very little affect on transfer performance.
->   
-
-   This should only affect the write performance, reads.
-
-> +		 */
-> +
-> +		u_speed = 0 << (drive->dn * 4);
->   
-
-   I think you're actually setting UltraDMA mode 2 timing regardless of 
-the mode selected.
-
-   The below code only applies to non-UltraDMA modes.
-
-> +
-> +	if (speed >= XFER_MW_DMA_0)
-> +		pio = mwdma_to_pio[speed - XFER_MW_DMA_0];
-> +	else
-> +		pio = 2;
-> +
-> +	it8172_set_pio_mode(drive, pio);
->   
-
-   Moreover, I'd suggest to reimplement it as the timing register layout 
-is different from the original PIIX and additional DMA modes can be 
-supported: MWDMA0 and SWDMA1.
-
-> +static unsigned int __devinit init_chipset_it8172(struct pci_dev *dev)
-> +{
-> +	unsigned char progif;
-> +
-> +	/*
-> +	 * Place both IDE interfaces into PCI "native" mode
-> +	 */
-> +	pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
-> +	pci_write_config_byte(dev, PCI_CLASS_PROG, progif | 0x05);
-> +
-> +	return dev->irq;
-> +}
->   
-
-   As Alan have said, you can't do that here.
-
-> +static const struct ide_port_info it8172_chipset __devinitdata = {
-> +	.name		= DRV_NAME,
-> +	.init_chipset	= init_chipset_it8172,
-> +	.port_ops	= &it8172_port_ops,
-> +	.enablebits	= {{0x00, 0x00, 0x00}, {0x40, 0x00, 0x01} },
->   
-
-   Wrong, should be:
-
-	.enablebits	= {{0x41, 0x80, 0x80}, {0x00, 0x00, 0x00}},
-
-  If that doesn't work (firmware doesn't enable the channel), you can leave it all 0s...
-
-> 	.host_flags	= IDE_HFLAG_SINGLE,
-> +	.pio_mask	= ATA_PIO4,
-> +	.swdma_mask	= ATA_SWDMA2_ONLY,
-> +	.mwdma_mask	= ATA_MWDMA12_ONLY,
->   
-
-   More modes are supportable...
-
-> +static const struct ide_port_info it8172_chipset __devinitdata = {
-
-    Please rename this variable to it8172_port_info.
-
-> +};
-> +
-> +static int __devinit it8172_init_one(struct pci_dev *dev,
-> +					const struct pci_device_id *id)
-> +{
-> +	if ((!(PCI_FUNC(dev->devfn) & 1) ||
-> +		(!((dev->class >> 8) == PCI_CLASS_STORAGE_IDE))))
->   
-
-     Please, don't abuse parens, it should be just:
-
-	if (!(PCI_FUNC(dev->devfn) & 1) ||
-	     (dev->class >> 8) != PCI_CLASS_STORAGE_IDE)
-
-
-> +		return -ENODEV; /* IT8172 is more than an IDE controller */
->   
-
-   And I don't get it: why the first check is needed? Is there another 
-IDE controller on function 1 that you want to ignore? I doubt it.
-
-> +MODULE_AUTHOR("SteveL@mvista.com");
->   
-
-   I wonder why Steve didn't specify his full name... :-)
-
-MBR, Sergei
+--- linux-2.6.28-rc6/drivers/ata/sata_promise.c.~1~	2008-11-21 20:28:08.000000000 +0100
++++ linux-2.6.28-rc6/drivers/ata/sata_promise.c	2008-11-24 01:26:12.000000000 +0100
+@@ -56,6 +56,7 @@ enum {
+ 	/* host register offsets (from host->iomap[PDC_MMIO_BAR]) */
+ 	PDC_INT_SEQMASK		= 0x40,	/* Mask of asserted SEQ INTs */
+ 	PDC_FLASH_CTL		= 0x44, /* Flash control register */
++	PDC_PCI_CTL		= 0x48, /* PCI control/status reg */
+ 	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
+ 	PDC2_SATA_PLUG_CSR	= 0x60, /* SATAII Plug control/status reg */
+ 	PDC_TBG_MODE		= 0x41C, /* TBG mode (not SATAII) */
+@@ -161,6 +162,10 @@ static void pdc_error_handler(struct ata
+ static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int pdc_pata_cable_detect(struct ata_port *ap);
+ static int pdc_sata_cable_detect(struct ata_port *ap);
++#ifdef CONFIG_PM
++static int pdc_pci_device_resume(struct pci_dev *pdev);
++static int pdc_sata_port_resume(struct ata_port *ap);
++#endif
+ 
+ static struct scsi_host_template pdc_ata_sht = {
+ 	ATA_BASE_SHT(DRV_NAME),
+@@ -190,6 +195,9 @@ static struct ata_port_operations pdc_sa
+ 	.scr_read		= pdc_sata_scr_read,
+ 	.scr_write		= pdc_sata_scr_write,
+ 	.port_start		= pdc_sata_port_start,
++#ifdef CONFIG_PM
++	.port_resume		= pdc_sata_port_resume,
++#endif
+ 	.hardreset		= pdc_sata_hardreset,
+ };
+ 
+@@ -308,6 +316,10 @@ static struct pci_driver pdc_ata_pci_dri
+ 	.id_table		= pdc_ata_pci_tbl,
+ 	.probe			= pdc_ata_init_one,
+ 	.remove			= ata_pci_remove_one,
++#ifdef CONFIG_PM
++	.suspend		= ata_pci_device_suspend,
++	.resume			= pdc_pci_device_resume,
++#endif
+ };
+ 
+ static int pdc_common_port_start(struct ata_port *ap)
+@@ -333,14 +345,8 @@ static int pdc_common_port_start(struct 
+ 	return 0;
+ }
+ 
+-static int pdc_sata_port_start(struct ata_port *ap)
++static void pdc_sata_init_port(struct ata_port *ap)
+ {
+-	int rc;
+-
+-	rc = pdc_common_port_start(ap);
+-	if (rc)
+-		return rc;
+-
+ 	/* fix up PHYMODE4 align timing */
+ 	if (ap->flags & PDC_FLAG_GEN_II) {
+ 		void __iomem *sata_mmio = ap->ioaddr.scr_addr;
+@@ -350,6 +356,17 @@ static int pdc_sata_port_start(struct at
+ 		tmp = (tmp & ~3) | 1;	/* set bits 1:0 = 0:1 */
+ 		writel(tmp, sata_mmio + PDC_PHYMODE4);
+ 	}
++}
++
++static int pdc_sata_port_start(struct ata_port *ap)
++{
++	int rc;
++
++	rc = pdc_common_port_start(ap);
++	if (rc)
++		return rc;
++
++	pdc_sata_init_port(ap);
+ 
+ 	return 0;
+ }
+@@ -1056,6 +1073,46 @@ static void pdc_host_init(struct ata_hos
+ 	writel(tmp, host_mmio + PDC_SLEW_CTL);
+ }
+ 
++#ifdef CONFIG_PM
++static int pdc_pci_device_resume(struct pci_dev *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
++#if 0
++	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
++		void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
++		void __iomem *pcictl_b1_mmio = host_mmio + PDC_PCI_CTL + 1;
++		u8 tmp;
++
++		tmp = readb(pcictl_b1_mmio);
++		tmp &= 0x0F;
++		writeb(tmp, pcictl_b1_mmio);
++		readb(pcictl_b1_mmio); /* flush */
++		tmp |= 0xF0;
++		writeb(tmp, pcictl_b1_mmio);
++		readb(pcictl_b1_mmio); /* flush */
++	}
++#endif
++
++	pdc_host_init(host);
++
++	ata_host_resume(host);
++
++	return 0;
++}
++
++static int pdc_sata_port_resume(struct ata_port *ap)
++{
++	pdc_sata_init_port(ap);
++	return 0;
++}
++#endif
++
+ static int pdc_ata_init_one(struct pci_dev *pdev,
+ 			    const struct pci_device_id *ent)
+ {
