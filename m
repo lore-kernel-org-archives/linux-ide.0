@@ -1,81 +1,63 @@
 From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Suspend w/ sata_promise
-Date: Tue, 25 Nov 2008 22:05:27 +0100
-Message-ID: <18732.26775.608419.541321@harpo.it.uu.se>
-References: <49202CB0.60507@gc-web.de>
-	<18720.18615.938839.921189@harpo.it.uu.se>
-	<492060D9.20808@gc-web.de>
-	<18723.52001.559166.255589@harpo.it.uu.se>
-	<18728.13696.418178.143954@harpo.it.uu.se>
-	<4928569C.9080805@gc-web.de>
-	<18729.54297.692199.41534@harpo.it.uu.se>
-	<18730.39324.527421.503774@harpo.it.uu.se>
-	<492B2A49.4060904@gc-web.de>
+Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
+Date: Tue, 25 Nov 2008 22:17:14 +0100
+Message-ID: <18732.27482.857421.676802@harpo.it.uu.se>
+References: <491C9A4F.1020801@tlinx.org>
+	<491FB7E2.2030105@kernel.org>
+	<18719.65298.689618.835202@harpo.it.uu.se>
+	<492059B1.4030708@how.dk>
+	<49205AD7.3080009@how.dk>
+	<4920D093.2030508@kernel.org>
+	<492159E0.1050804@how.dk>
+	<4922165E.9070203@kernel.org>
+	<49230361.2010001@how.dk>
+	<492371F4.7020400@kernel.org>
+	<49253A6D.1040202@how.dk>
+	<18725.17831.755158.999770@harpo.it.uu.se>
+	<49263F80.2060607@kernel.org>
+	<492C358C.7030403@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:38367 "EHLO aun.it.uu.se"
+Received: from aun.it.uu.se ([130.238.12.36]:38572 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751193AbYKYVFf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Nov 2008 16:05:35 -0500
-In-Reply-To: <492B2A49.4060904@gc-web.de>
+	id S1751788AbYKYVRd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2008 16:17:33 -0500
+In-Reply-To: <492C358C.7030403@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Clausen <alex@gc-web.de>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <tj@kernel.org>, Mikael Pettersson <mikpe@it.uu.se>, Peter Favrholdt <linux-ide@how.dk>, linux-ide@vger.kernel.org
 
-Alexander Clausen writes:
- > Mikael Pettersson wrote:
- > > Mikael Pettersson writes:
- > >  > 
- > >  > Are you absolutely certain both patches were applied and the driver rebuilt?
- > >  > I'm asking because I would have expected to see
- > >  > 
+Jeff Garzik writes:
+ > hrm....   at this point we have deviated massively from the standard 
+ > Promise method of hard reset...
  > 
- > Yes, pretty sure.
+ > * set PMP port
+ > * make hotplug irqs
+ > * reset port# in PDC_GLOBAL_CTL
+ > * pdc_reset_port()
+ > * reset FPDMA -- probably a good idea even if not doing FPDMA
+ > * clear SATA Error register (0xffffffff)
+ > * clear errors-reported-from-link-layer register
+ > * wait standard length of time for SATA connection
+ > * clear hotplug bits
+ > * set PMP port
  > 
- > >  > [...] sata_promise 0000:00:0d.0: restoring config space at offset 0x1 (...)
- > >  > 
- > >  > but your kernel log does not contain anything like that. Both machines
- > >  > I tested on today consistently included this message after the patch was
- > >  > applied, but did not when the patch wasn't applied.
- > 
- > Ok, that is strange.
- > 
- > >  > 
- > >  > I did note some temporary errors (that sata_promise recovered from) on
- > >  > one machine after resuming from suspend to ram that did not occur when
- > >  > using standby. I'll update the patch to include a controller reinit in
- > >  > the ->resume op, which should hopefully fix that.
- > > 
- > > Here's an updated suspend patch for sata_promise. It will now
- > > do a HW re-init of the controller and its ports on resume,
- > > which should help e.g. S2R when all state may have been lost.
- > > 
- > > Depending on machine, suspend type (standby or mem), and disk
- > > I do get different results, some cases come up very cleanly
- > > while others have some transient failures; however in my tests
- > > libata EH always recovers.
- > > 
- > > Only tested on 2nd gen controllers as my 1st gen is at another site.
- > > 
- > > If this still doesn't work, try changing the #if 0 in pdc_pci_device_resume()
- > > to #if 1, that will make it issue a HW reset to all ATA engines before
- > > reinitialising them (shouldn't be needed, which is why it's disabled).
- > 
- > Ok, I tried this patch (with and without the HW reset). Also, I disabled the NVidia driver, and
- > indeed, I did have APIC disabled (in the .config, no idea why, really), so I enabled it.
- > Same failure, still happens on second suspend, updated dmesgs attached.
+ > The PDC_GLOBAL_CTL bitbang is the most notable missing element in the 
+ > hard reset path, though we also miss clearing an apparently-important 
+ > error register as well.  FPDMA reset would be a good idea I think, even 
+ > if not in use, mainly for paranoia's sake and because that's what 
+ > Promise's driver does.
 
-I tried these patches now on my K8T Neo FIS2R w/ PDC20378.
-I can do several standby suspends (S1) ok, but I can only do one
-mem suspend (S3): while it resumes w/o errors the machine hangs hard
-if I try a second S3 suspend. In that case there are no errors before
-the hang, so I can't tell if sata_promise is involved or not.
+->freeze() masks hotplug irqs, though it seems the events are still
+logged and wrongly interpreted by the irq handler.
 
-Oh well, that machine has other issues as well (hangs during
-reboot if the CPU has been slowed down by cpufreq), so I'm
-considering that particular machine a lost cause wrt suspend.
+The other Promise bits should be easy to do, though FPDMA reset
+will need special-casing for 1st-vs-2nd generation and maybe also
+sata-vs-pata.
+
+I'll look into it.
 
 /Mikael
