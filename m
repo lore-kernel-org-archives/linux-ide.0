@@ -1,96 +1,38 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Promise PDC20376
-Date: Tue, 25 Nov 2008 15:42:41 +0100
-Message-ID: <18732.3809.720247.329641@harpo.it.uu.se>
-References: <30353c3d0810240704n7476cc50y28b3eb8a5f326626@mail.gmail.com>
-	<30353c3d0811250616o733fb7f9ob4af96dd604f78ea@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
+Date: Tue, 25 Nov 2008 11:35:02 -0500
+Message-ID: <492C2936.9080608@rtr.ca>
+References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>	<491E4092.5030804@shaw.ca>	<20081115103424.34f01370@lxorguk.ukuu.org.uk>	<491FBA29.3000803@kernel.org>	<20081116112511.3913123a@lxorguk.ukuu.org.uk>	<492AF06A.8020004@rtr.ca> <20081124183204.2d3734e3@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:64485 "EHLO aun.it.uu.se"
+Received: from rtr.ca ([76.10.145.34]:37730 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750909AbYKYOnx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Nov 2008 09:43:53 -0500
-In-Reply-To: <30353c3d0811250616o733fb7f9ob4af96dd604f78ea@mail.gmail.com>
+	id S1751751AbYKYQeD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2008 11:34:03 -0500
+In-Reply-To: <20081124183204.2d3734e3@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Ellingsworth <david@identd.dyndns.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-David Ellingsworth writes:
- > On Fri, Oct 24, 2008 at 9:04 AM, David Ellingsworth
- > <david@identd.dyndns.org> wrote:
- > > I recently purchased a Seagate 1.5 TB drive to attach to the Promise
- > > Fasttrak SATA 376 (PDC20376) controller on my Asus A7V8X motherboard.
- > > After installing the drive, I went into the FastTrak setup and
- > > configured a simple array which consisted only of this drive. At this
- > > point I noticed the FastTrak setup could not identify the drive's
- > > size, none the less it reported the array as functional upon reboot
- > > and showed what appeared to be the Cylinder/Sectors/Head count for the
- > > array. Next, I proceeded to install a rather recent copy of Kbuntu
- > > with kernel version 2.6.20. The Kbuntu installer found the array and
- > > installed without incident. However upon trying to boot into the newly
- > > installed copy of Linux, Grub stopped at stage 1.5 with an error code
- > > of 17. I've read that this error code is usually the result of Grub
- > > not being able to identify the type of file system or that Grub's
- > > drive mapping didn't match the one used by the bios. As I only have
- > > the one drive in the system, it seems unlikely that Grub was
- > > misconfigured.
- > >
- > > Upon having little success installing Linux, I attempted to install
- > > Windows XP to see if it's boot loader suffered from the same problem.
- > > To my surprise, the Windows boot loader also halted with an error. The
- > > error was "A drive read error has occurred. Please press Ctrl+Alt+Del
- > > to restart." As a result of both Linux and Windows failing to boot, I
- > > believe this problem may be a result of firmware/bios used for the
- > > on-board Promise SATA controller, which unfortunately is embedded in
- > > the system bios.
- > >
- > > Asus's technical support indicated that even if this is the case they
- > > will _not_ release an updated bios for this board. In any event, there
- > > are a few things I have yet to try. Like (1) trying the latest kernel
- > > version and sata_promise driver during install, (2) using a newer
- > > version of Grub, and (3) attempting to boot the drive using another
- > > SATA controller. If neither 1 nor 2 correct the issue and the drive
- > > operates fine under 3 then my only option is to update the
- > > firmware/bios for the on-board controller to see if it resolves the
- > > issue.
- > >
- > > The current firmware/bios version of the controller as reported by
- > > FastTrak is 1.00.0.21 which is provided with the latest Asus bios
- > > release for this motherboard. After a lot of searching I have been
- > > unable to find a firmware/bios revision newer than the one I currently
- > > have for this chip. However, I did see that Promise has a 1.00.0.37
- > > bios/firmware for their FastTrak S150 TX2plus card. This card uses
- > > their PDC20371 chip and the features it provides seem fairly similar
- > > to those of the PDC20376, but it's unknown if its firmware/bios would
- > > be compatible with the PDC20376.
- > >
- > > I'm therefore left wondering what differences exist between these two
- > > chips and whether or not using the firmware/bios for the PDC20371 with
- > > the PDC20376 could cause any major damage. Can anyone familiar with
- > > these chips foresee any issues or problems with doing something like
- > > this?
- > 
- > Since I put this out there, I felt it was important to follow-up on so
- > others could benefit from my experiences. After extensive testing, the
- > cause of the problems I've experienced are a result of a bug in the
- > Fasttrak bios for the Promise 376 controller. Specifically speaking,
- > bios interrupt 13h, AH=42 fails to read the requested sector from the
- > drive despite the fact that bios interrupt 13h, AH=41, BX=0x55AA
- > indicates the drive supports LBA extensions. The only known
- > work-around at this time is to limit the size of the primary boot
- > partition to 8GB or less and place it below the 8GB boundary where LBA
- > extensions are not required to read the drive. I have contacted
- > Promise concerning this issue and will provide more updates if
- > anything metabolizes. Until then any users experiencing similar issues
- > should use the work-around I've described above to boot the operating
- > system of their choice.
+Alan Cox wrote:
+>> Well ata_piix for starters.  Verified here by me.
+> 
+> Some piix are fine (mine are) so maybe its a device property in part.
+> Certainly it is needed for some combinations including current stuff like
+> jmicron PATA ports.
+..
 
-For booting with grub only /boot needs to be accessible by the BIOS,
-so it's common to make /boot a separate partition early on the disk
-with / and other partitions higher up.
+Agreed -- here it was a notebook (Dell Inspiron 9300) with ata_piix
+and a PATA drive.  So the mainboard in the notebook had an onboard bridge
+chip to adapt the PATA drive to the internal SATA port.
 
-This is the first I've heard of any Promise SATA controller having
-such lame limitations.
+The subsequent model notebook (Dell Inspiron 9400) has very similar innards,
+except it now uses SATA drives, so no bridge chip.
+
+The former needs DRQ draining, the latter does not.
+So, yeah, it's probably the bridge chip in this case.
+
+Cheers
