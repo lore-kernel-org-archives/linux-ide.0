@@ -1,44 +1,47 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] libata: Add three more columns to the ata_timing
- table.
-Date: Tue, 25 Nov 2008 17:12:24 +0000
-Message-ID: <20081125171224.297931b2@lxorguk.ukuu.org.uk>
-References: <492B56B0.9030409@caviumnetworks.com>
-	<1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com>
-	<492C2F23.8050105@garzik.org>
+Subject: Re: [PATCH #upstraem-fixes] ata_piix: detect and clear spurious
+ IRQs
+Date: Tue, 25 Nov 2008 17:15:59 +0000
+Message-ID: <20081125171559.222e499f@lxorguk.ukuu.org.uk>
+References: <49263552.8090602@kernel.org>
+	<492C30FC.2090200@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35121 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48534 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752008AbYKYRMh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 12:12:37 -0500
-In-Reply-To: <492C2F23.8050105@garzik.org>
+	with ESMTP id S1752209AbYKYRP4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 12:15:56 -0500
+In-Reply-To: <492C30FC.2090200@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, 25 Nov 2008 12:00:19 -0500
+On Tue, 25 Nov 2008 12:08:12 -0500
 Jeff Garzik <jeff@garzik.org> wrote:
 
-> David Daney wrote:
-> > The forthcoming OCTEON SOC Compact Flash driver needs a few more
-> > timing values than were available in the ata_timing table.  I add new
-> > columns for write_hold, read_hold, and read_holdz times.  The values
-> > were obtained from the Compact Flash specification Rev 4.1.
+> Tejun Heo wrote:
+> > The DMA_IRQ bit in the bmdma status register is always set when IDEIRQ
+> > is asserted allowing spurious IRQ detection.  Detect spurious IRQs and
+> > clear them.  This protects ata_piix against nobody-cared which gets
+> > reported not so rarely.
 > > 
-> > Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
 > > ---
-> >  drivers/ata/libata-core.c |   76 ++++++++++++++++++++++++--------------------
-> >  include/linux/libata.h    |   14 ++++++--
-> >  2 files changed, 52 insertions(+), 38 deletions(-)
+> >  drivers/ata/ata_piix.c |   54 ++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 53 insertions(+), 1 deletion(-)
 > 
-> I would be happy to go ahead and apply this...  Alan, any last minute 
-> objections?
+> It's tough to call this #upstream-fixes material, unfortunately...  For 
+> this late into -rc, I am very nervous about changing the ATA interrupt 
+> path for millions of machines.
 
-Its close but I think Sergei is right about columns with all the same
-value - they can be constants and just computed into the final timing
-data in terms of clocks.
+I would like to go through the PIIX errata first. There are some rules
+about what registers may not be touched during a transfer on some of the
+devices and breaking them is *bad*. I don't think this is a problem but
+it makes me nervous.
 
+Now the DF draining on the other hand ;)
+
+Alan
