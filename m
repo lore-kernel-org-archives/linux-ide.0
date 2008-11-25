@@ -1,42 +1,51 @@
-From: David Daney <ddaney@caviumnetworks.com>
-Subject: Re: [PATCH 1/2] libata: Add three more columns to the ata_timing
- table.
-Date: Tue, 25 Nov 2008 09:04:49 -0800
-Message-ID: <492C3031.2000408@caviumnetworks.com>
-References: <492B56B0.9030409@caviumnetworks.com> <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com> <492C2F23.8050105@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstraem-fixes] ata_piix: detect and clear spurious IRQs
+Date: Tue, 25 Nov 2008 12:07:58 -0500
+Message-ID: <492C30EE.9080600@garzik.org>
+References: <49263552.8090602@kernel.org> <20081121102504.63007bf6@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.caviumnetworks.com ([12.108.191.235]:3833 "EHLO
-	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812AbYKYRFA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 12:05:00 -0500
-In-Reply-To: <492C2F23.8050105@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:56410 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752110AbYKYRIG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2008 12:08:06 -0500
+In-Reply-To: <20081121102504.63007bf6@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> David Daney wrote:
->> The forthcoming OCTEON SOC Compact Flash driver needs a few more
->> timing values than were available in the ata_timing table.  I add new
->> columns for write_hold, read_hold, and read_holdz times.  The values
->> were obtained from the Compact Flash specification Rev 4.1.
->>
->> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
->> ---
->>  drivers/ata/libata-core.c |   76 
->> ++++++++++++++++++++++++--------------------
->>  include/linux/libata.h    |   14 ++++++--
->>  2 files changed, 52 insertions(+), 38 deletions(-)
+Alan Cox wrote:
+> On Fri, 21 Nov 2008 13:13:06 +0900
+> Tejun Heo <tj@kernel.org> wrote:
 > 
-> I would be happy to go ahead and apply this...  Alan, any last minute 
-> objections?
+>> The DMA_IRQ bit in the bmdma status register is always set when IDEIRQ
+>> is asserted allowing spurious IRQ detection.  Detect spurious IRQs and
+>> clear them.  This protects ata_piix against nobody-cared which gets
+>> reported not so rarely.
 > 
+> Various controllers have the ability to report the IRQ more reliably in
+> similar fashion, should this not be part of ata_sff_interrupt with an
+> optional ops->irq_pending call ?
 
-Sergei had some comments that I am trying to address.  Perhaps we should 
-hold off a little, while I figure out how what to do WRT those comments.
+Though I'm in general agreement with this sub-thread of opinions, I do 
+note that, in the past, I have purposefully avoided an ->irq_pending.
 
-David Daney
+I always felt the alternative -- writing a small irq handler function 
+specifically for that controller -- was a much more flexible and 
+powerful method of producing the desired result.
+
+A separate interrupt function can, for example, perform an MMIO read to 
+check irq-pending, outside of a spinlock.  ->irq_pending callback is a 
+bit more constraining.
+
+In terms of implementation, we could probably collapse all the 
+non-controller-specific behavior into a single function call or macro, 
+performed inside the custom interrupt handling routine.
+
+	Jeff
+
+
+
