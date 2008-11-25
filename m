@@ -1,38 +1,42 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Tue, 25 Nov 2008 11:35:02 -0500
-Message-ID: <492C2936.9080608@rtr.ca>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>	<491E4092.5030804@shaw.ca>	<20081115103424.34f01370@lxorguk.ukuu.org.uk>	<491FBA29.3000803@kernel.org>	<20081116112511.3913123a@lxorguk.ukuu.org.uk>	<492AF06A.8020004@rtr.ca> <20081124183204.2d3734e3@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/7] drivers/ata/pata_radisys.c: cleanup kernel-doc
+Date: Tue, 25 Nov 2008 11:39:11 -0500
+Message-ID: <492C2A2F.9070309@garzik.org>
+References: <491feb5b.08486e0a.075a.4c48@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37730 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:40320 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbYKYQeD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Nov 2008 11:34:03 -0500
-In-Reply-To: <20081124183204.2d3734e3@lxorguk.ukuu.org.uk>
+	id S1750823AbYKYQjQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2008 11:39:16 -0500
+In-Reply-To: <491feb5b.08486e0a.075a.4c48@mx.google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: Qinghuang Feng <qhfeng.kernel@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> Well ata_piix for starters.  Verified here by me.
+Qinghuang Feng wrote:
+> No argument named @isich in radisys_set_dmamode,
+> remove it.
 > 
-> Some piix are fine (mine are) so maybe its a device property in part.
-> Certainly it is needed for some combinations including current stuff like
-> jmicron PATA ports.
-..
+> Signed-off-by: Qinghuang Feng <qhfeng.kernel@gmail.com>
+> ---
+> diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
+> index 0b0aa45..695d44a 100644
+> --- a/drivers/ata/pata_radisys.c
+> +++ b/drivers/ata/pata_radisys.c
+> @@ -81,7 +81,6 @@ static void radisys_set_piomode (struct ata_port *ap, struct ata_device *adev)
+>   *	radisys_set_dmamode - Initialize host controller PATA DMA timings
+>   *	@ap: Port whose timings we are configuring
+>   *	@adev: Device to program
+> - *	@isich: True if the device is an ICH and has IOCFG registers
+>   *
+>   *	Set MWDMA mode for device, in host controller PCI config space.
+>   *
 
-Agreed -- here it was a notebook (Dell Inspiron 9300) with ata_piix
-and a PATA drive.  So the mainboard in the notebook had an onboard bridge
-chip to adapt the PATA drive to the internal SATA port.
+applied 1-7 to #upstream, after combining into a single patch.  I felt a 
+single changeset was more appropriate.
 
-The subsequent model notebook (Dell Inspiron 9400) has very similar innards,
-except it now uses SATA drives, so no bridge chip.
 
-The former needs DRQ draining, the latter does not.
-So, yeah, it's probably the bridge chip in this case.
-
-Cheers
