@@ -1,41 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: New libata driver for OCTEON SOC Compact Flash interface.
-Date: Tue, 25 Nov 2008 01:33:34 +0300
-Message-ID: <492B2BBE.4080403@ru.mvista.com>
-References: <49261BE5.2010406@caviumnetworks.com>	<49280FC5.3040608@ru.mvista.com> <20081122145204.52270dbe@lxorguk.ukuu.org.uk> <492B1153.5080001@caviumnetworks.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Subject: [PATCH 0/2] libata: Cavium OCTEON SOC Compact Flash driver (v2)
+Date: Mon, 24 Nov 2008 17:36:48 -0800
+Message-ID: <492B56B0.9030409@caviumnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:9212 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752955AbYKXWdl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Nov 2008 17:33:41 -0500
-In-Reply-To: <492B1153.5080001@caviumnetworks.com>
+Received: from mail3.caviumnetworks.com ([12.108.191.235]:58966 "EHLO
+	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983AbYKYBg7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Nov 2008 20:36:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-mips <linux-mips@linux-mips.org>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: linux-mips <linux-mips@linux-mips.org>
 
-Hello.
+As part of our efforts to get the Cavium OCTEON processor support
+merged (see: http://marc.info/?l=linux-mips&m=122704699515601), I
+have a new version of our CF driver for your consideration.
 
-David Daney wrote:
+This second version I split into two separate patches.  The first adds
+some entries to the ata_timing table in libata-core.  The second is
+the driver proper.
 
->>>    But if you're saying that there is only DMA completion inetrrupt, 
->>> you *cannot* completely emulate SFF-8038i BMDMA since its interrupt 
->>> status is the (delayed) IDE INTRQ status. I suggest that you move 
->>> away from the emulation -- Alan has said it's possible.
->>
->> I don't see whats wrong with treating it that way if it keeps the amount
->> of code needed down.
->>
->
-> For exactly that reason, I intend to continue to try to emulate it.
+I will reply with the two patches.
 
-   "You do or you do not. There is no try." :-D
+David Daney (2):
+   libata: Add three more columns to the ata_timing table.
+   libata: New driver for OCTEON SOC Compact Flash interface (v2).
 
-> David Daney
-
-MBR, Sergei
-
+  drivers/ata/Kconfig          |    9 +
+  drivers/ata/Makefile         |    1 +
+  drivers/ata/libata-core.c    |   76 ++--
+  drivers/ata/pata_octeon_cf.c |  904 
+++++++++++++++++++++++++++++++++++++++++++
+  include/linux/libata.h       |   14 +-
+  5 files changed, 966 insertions(+), 38 deletions(-)
+  create mode 100644 drivers/ata/pata_octeon_cf.c
 
