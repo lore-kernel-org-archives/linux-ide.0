@@ -1,112 +1,137 @@
-From: David Daney <ddaney@caviumnetworks.com>
-Subject: Re: [PATCH 1/2] libata: Add three more columns to the ata_timing
- table.
-Date: Tue, 25 Nov 2008 08:46:06 -0800
-Message-ID: <492C2BCE.60409@caviumnetworks.com>
-References: <492B56B0.9030409@caviumnetworks.com> <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com> <492BDB28.8020103@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2/2] libata: New driver for OCTEON SOC Compact Flash interface
+ (v2).
+Date: Tue, 25 Nov 2008 11:59:14 -0500
+Message-ID: <492C2EE2.3090702@garzik.org>
+References: <492B56B0.9030409@caviumnetworks.com> <1227577181-30206-2-git-send-email-ddaney@caviumnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.caviumnetworks.com ([12.108.191.235]:65434 "EHLO
-	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668AbYKYQqo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 11:46:44 -0500
-In-Reply-To: <492BDB28.8020103@ru.mvista.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:47486 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752078AbYKYQ7U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2008 11:59:20 -0500
+In-Reply-To: <1227577181-30206-2-git-send-email-ddaney@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: David Daney <ddaney@caviumnetworks.com>
 Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-Sergei Shtylyov wrote:
-> Hello.
+David Daney wrote:
+> As part of our efforts to get the Cavium OCTEON processor support
+> merged (see: http://marc.info/?l=linux-mips&m=122704699515601), we
+> have this CF driver for your consideration.
 > 
-> David Daney wrote:
+> Most OCTEON variants have *no* DMA or interrupt support on the CF
+> interface so for these, only PIO is supported.  Although if DMA is
+> available, we do take advantage of it.
 > 
->> The forthcoming OCTEON SOC Compact Flash driver needs a few more
->> timing values than were available in the ata_timing table.  I add new
->> columns for write_hold, read_hold, and read_holdz times.  The values
->> were obtained from the Compact Flash specification Rev 4.1.
->>
->> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
->>   
+> The register definitions are part of the chip support patch set
+> mentioned above, and are not included here.
 > 
->   Not quite correct...
+> In this second version, I think I have addressed all the issued raised
+> by Alan Cox and Sergei Shtylyov.
 > 
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 4214bfb..b29b7df 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -2946,33 +2946,33 @@ int sata_set_spd(struct ata_link *link)
->>   */
->>  
->>  static const struct ata_timing ata_timing[] = {
->>   
-> [...]
->> +/*    { XFER_PIO_SLOW, 120, 290, 240, 960, 290, 240, 30, 5, 30, 
->> 960,   0 }, */
->> +    { XFER_PIO_0,     70, 290, 240, 600, 165, 150, 30, 5, 30, 600,   
->> 0 },
->> +    { XFER_PIO_1,     50, 290,  93, 383, 125, 100, 20, 5, 30, 383,   
->> 0 },
->> +    { XFER_PIO_2,     30, 290,  40, 330, 100,  90, 15, 5, 30, 240,   
->> 0 },
->> +    { XFER_PIO_3,     30,  80,  70, 180,  80,  70, 10, 5, 30, 180,   
->> 0 },
->> +    { XFER_PIO_4,     25,  70,  25, 120,  70,  25, 10, 5, 30, 120,   
->> 0 },
->> +    { XFER_PIO_5,     15,  65,  25, 100,  65,  25,  5, 5, 20, 100,   
->> 0 },
->> +    { XFER_PIO_6,     10,  55,  20,  80,  55,  20,  5, 5, 20,  80,   
->> 0 },
->> +
->> +    { XFER_SW_DMA_0, 120,   0,   0,   0, 480, 480, 30, 5, 0,  960,   
->> 0 },
->> +    { XFER_SW_DMA_1,  90,   0,   0,   0, 240, 240, 30, 5, 0,  480,   
->> 0 },
->> +    { XFER_SW_DMA_2,  60,   0,   0,   0, 120, 120, 15, 5, 0,  240,   
->> 0 },
->> +
->> +    { XFER_MW_DMA_0,  60,   0,   0,   0, 215, 215, 20, 20, 0, 480,   
->> 0 },
->>   
+> Thanks,
 > 
->   Wrong, -DIOR hold time is 5 ns for MWDMA0 as well as for all other modes.
+> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+> ---
+>  drivers/ata/Kconfig          |    9 +
+>  drivers/ata/Makefile         |    1 +
+>  drivers/ata/pata_octeon_cf.c |  904 ++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 914 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/pata_octeon_cf.c
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 78fbec8..b59904b 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -697,6 +697,15 @@ config PATA_IXP4XX_CF
+>  
+>  	  If unsure, say N.
+>  
+> +config PATA_OCTEON_CF
+> +	tristate "OCTEON Boot Bus Compact Flash support"
+> +	depends on CPU_CAVIUM_OCTEON
+> +	help
+> +	  This option enables a polled compact flash driver for use with
+> +	  compact flash cards attached to the OCTEON boot bus.
+> +
+> +	  If unsure, say N.
+> +
+>  config PATA_SCC
+>  	tristate "Toshiba's Cell Reference Set IDE support"
+>  	depends on PCI && PPC_CELLEB
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index 674965f..7f1ecf9 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -69,6 +69,7 @@ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+>  obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
+>  obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
+>  obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+> +obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
+>  obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
+>  obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
+>  obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
+> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+> new file mode 100644
+> index 0000000..a31d999
+> --- /dev/null
+> +++ b/drivers/ata/pata_octeon_cf.c
+> @@ -0,0 +1,904 @@
+> +/*
+> + * Driver for the Octeon bootbus compact flash.
+> + *
+> + * This file is subject to the terms and conditions of the GNU General Public
+> + * License.  See the file "COPYING" in the main directory of this archive
+> + * for more details.
+> + *
+> + * Copyright (C) 2005-2008 Cavium Networks
+> + * Copyright (C) 2008 Wind River Systems
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/libata.h>
+> +#include <linux/irq.h>
+> +#include <linux/platform_device.h>
+> +#include <scsi/scsi_host.h>
+> +
+> +#include <asm/octeon/octeon.h>
+> +
+> +#define DRV_NAME	"pata_octeon_cf"
+> +#define DRV_VERSION	"2.1"
+> +
+> +
+> +struct octeon_cf_port {
+> +	struct tasklet_struct delayed_irq_tasklet;
+> +	int dma_finished;
+> +};
+> +
+> +/* Timing multiple used for configuring the boot bus DMA engine */
+> +#define CF_DMA_TIMING_MULT	4
+> +
+> +static struct scsi_host_template octeon_cf_sht = {
+> +	ATA_PIO_SHT(DRV_NAME),
+> +};
+> +
+> +static int mwdmamodes = 0x1f;	/* Support Multiword DMA 0-4 */
+> +module_param(mwdmamodes, int, 0444);
+> +MODULE_PARM_DESC(mwdmamodes,
+> +		 "Bitmask controlling which MWDMA modes are supported.  "
+> +		 "Default is 0x1f for MWDMA 0-4.");
 
-Point taken.
+Two comments:
 
-> 
->> diff --git a/include/linux/libata.h b/include/linux/libata.h
->> index 59b0f1c..7c44e45 100644
->> --- a/include/linux/libata.h
->> +++ b/include/linux/libata.h
->>   
-> [...]
->> @@ -863,6 +868,9 @@ struct ata_timing {
->>      unsigned short cyc8b;        /* t0 for 8-bit I/O */
->>      unsigned short active;        /* t2 or tD */
->>      unsigned short recover;        /* t2i or tK */
->> +    unsigned short write_hold;    /* t4 */
->> +    unsigned short read_hold;    /* t6 */
->>   
-> 
->   -DIOR hold time is 5 ns for all PIO and MWDMA modes -- there's no 
-> sense in storing it here.
-> 
+* perhaps I missed this, but why is this module param necessary?  In 
+general we avoid things like this.
 
-By storing it here, ata_timing_compute() will compute the bus clock 
-counts for me.  Makes perfect sense to me.
+* I would avoid pretending to be an SFF DMA engine, and just code it in 
+the style of a custom DMA engine with SFF registers/mode, such as 
+sata_mv or sata_promise.
 
+	Jeff
 
->> +    unsigned short read_holdz;    /* t6z  or tj */
->>   
-> 
->   T6z and Tj are not the same timing. Well, you specify it as 0 for  DMA 
-> modes anyway...
-> 
-
-I had intended to overload this column for DMA, but somehow screwed it 
-up.  For my next patch I plan to populate this column for DMA modes.
-
-David Daney
 
