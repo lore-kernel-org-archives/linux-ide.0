@@ -1,80 +1,88 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: about TRIM/DISCARD support and barriers
-Date: Tue, 25 Nov 2008 10:16:49 +0100
-Message-ID: <20081125091649.GT26308@kernel.dk>
-References: <4928E010.4090801@kernel.org> <4929023C.2060302@suse.de> <20081123123514.GI5707@parisc-linux.org> <1227447584.4901.405.camel@macbook.infradead.org> <1227480776.25499.3.camel@localhost.localdomain> <1227517430.26957.20.camel@macbook.infradead.org> <1227552171.25499.30.camel@localhost.localdomain> <1227552765.25385.129.camel@macbook.infradead.org> <20081124185747.GN26308@kernel.dk> <1227553703.25499.40.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] libata: Add three more columns to the ata_timing
+ table.
+Date: Tue, 25 Nov 2008 14:02:00 +0300
+Message-ID: <492BDB28.8020103@ru.mvista.com>
+References: <492B56B0.9030409@caviumnetworks.com> <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:55108 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752133AbYKYJSs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Nov 2008 04:18:48 -0500
-Content-Disposition: inline
-In-Reply-To: <1227553703.25499.40.camel@localhost.localdomain>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:28397 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752358AbYKYLCI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 06:02:08 -0500
+In-Reply-To: <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, Matthew Wilcox <matthew@wil.cx>, Tejun Heo <teheo@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Nick Piggin <npiggin@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Dongjun Shin <djshin90@gmail.com>, chris.mason@oracle.com
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-On Mon, Nov 24 2008, James Bottomley wrote:
-> On Mon, 2008-11-24 at 19:57 +0100, Jens Axboe wrote:
-> > On Mon, Nov 24 2008, David Woodhouse wrote:
-> > > On Mon, 2008-11-24 at 13:42 -0500, James Bottomley wrote:
-> > > > On Mon, 2008-11-24 at 09:03 +0000, David Woodhouse wrote:
-> > > > > On Mon, 2008-11-24 at 07:52 +0900, James Bottomley wrote:
-> > > > > > On Sun, 2008-11-23 at 13:39 +0000, David Woodhouse wrote:
-> > > > > > > > We don't attempt to put non-contiguous ranges into a single TRIM yet.
-> > > > > > > 
-> > > > > > > We don't even merge contiguous ranges -- I still need to fix the
-> > > > > > > elevators to stop writes crossing writes,
-> > > > > > 
-> > > > > > I don't think we want to do that ... it's legal if the write isn't a
-> > > > > > barrier and it will inhibit merging.  That may be just fine for a SSD,
-> > > > > > but it's not for spinning media since they get better performance out of
-> > > > > > merged writes.
-> > > > > 
-> > > > > No, I just mean writes _to the same sector_. At the moment, we happily
-> > > > > let those cross each other in the queue.
-> > >  ...
-> > > > It's not a bug ... but changing it might be feasible ... as long as it
-> > > > doesn't affect write performance too much (which I don't think it will),
-> > > > since it is in the critical path.
-> > > 
-> > > We could argue about how much sense it makes to let two writes to the
-> > > same sector actually happen in reverse order.
-> > > 
-> > > Especially given the fact that we actually _do_ preserve ordering in
-> > > some cases; just not in others. (We preserve ordering only if the start
-> > > and end of the duplicate writes are _precisely_ matching; if it's just
-> > > overlapping (which may well happen in the presence of merges), then this
-> > > check doesn't trigger.
-> > > 
-> > > But that's just semantics. Yes, changing it should be feasible. I talked
-> > > to Jens about that at the kernel summit, and we agreed that it should
-> > > probably be done.
-> > 
-> > The way this currently works is that we sort based on the first sector
-> > in the request. So if you have have an overlap condition between rq1 and
-> > rq2 and then a write gets merged into rq1, then you may have passing
-> > writes. Linux has never guarenteed any write ordering for non-barriers,
-> > so we've never attempted to handle it. Direct aliases (matching first
-> > sectors) are handled as you mention, but that's more of an algorithmic
-> > thing than by design.
-> > 
-> > My main worry is that this will add considerable overhead to request
-> > sorting. For the rbtree based sorting, we'd have to do a rb_next/rb_prev
-> > to look at adjacent requests. For CFQ it's even worse, since there's no
-> > per-queue big rbtree for sorting.
-> 
-> Which is why I suggest special casing:  Only invoke the expensive
-> overlap checking if one of the requests is a discard.  Otherwise use the
-> standard path for writes.
+Hello.
 
-Good point, we can easily track if we have discard requests pending.
-That doesn't really make it a lot better for CFQ though, currently it'll
-still have to dump all queues if a discard comes in.
+David Daney wrote:
 
--- 
-Jens Axboe
+> The forthcoming OCTEON SOC Compact Flash driver needs a few more
+> timing values than were available in the ata_timing table.  I add new
+> columns for write_hold, read_hold, and read_holdz times.  The values
+> were obtained from the Compact Flash specification Rev 4.1.
+>
+> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+>   
+
+   Not quite correct...
+
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4214bfb..b29b7df 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2946,33 +2946,33 @@ int sata_set_spd(struct ata_link *link)
+>   */
+>  
+>  static const struct ata_timing ata_timing[] = {
+>   
+[...]
+> +/*	{ XFER_PIO_SLOW, 120, 290, 240, 960, 290, 240, 30, 5, 30, 960,   0 }, */
+> +	{ XFER_PIO_0,     70, 290, 240, 600, 165, 150, 30, 5, 30, 600,   0 },
+> +	{ XFER_PIO_1,     50, 290,  93, 383, 125, 100, 20, 5, 30, 383,   0 },
+> +	{ XFER_PIO_2,     30, 290,  40, 330, 100,  90, 15, 5, 30, 240,   0 },
+> +	{ XFER_PIO_3,     30,  80,  70, 180,  80,  70, 10, 5, 30, 180,   0 },
+> +	{ XFER_PIO_4,     25,  70,  25, 120,  70,  25, 10, 5, 30, 120,   0 },
+> +	{ XFER_PIO_5,     15,  65,  25, 100,  65,  25,  5, 5, 20, 100,   0 },
+> +	{ XFER_PIO_6,     10,  55,  20,  80,  55,  20,  5, 5, 20,  80,   0 },
+> +
+> +	{ XFER_SW_DMA_0, 120,   0,   0,   0, 480, 480, 30, 5, 0,  960,   0 },
+> +	{ XFER_SW_DMA_1,  90,   0,   0,   0, 240, 240, 30, 5, 0,  480,   0 },
+> +	{ XFER_SW_DMA_2,  60,   0,   0,   0, 120, 120, 15, 5, 0,  240,   0 },
+> +
+> +	{ XFER_MW_DMA_0,  60,   0,   0,   0, 215, 215, 20, 20, 0, 480,   0 },
+>   
+
+   Wrong, -DIOR hold time is 5 ns for MWDMA0 as well as for all other modes.
+
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 59b0f1c..7c44e45 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+>   
+[...]
+> @@ -863,6 +868,9 @@ struct ata_timing {
+>  	unsigned short cyc8b;		/* t0 for 8-bit I/O */
+>  	unsigned short active;		/* t2 or tD */
+>  	unsigned short recover;		/* t2i or tK */
+> +	unsigned short write_hold;	/* t4 */
+> +	unsigned short read_hold;	/* t6 */
+>   
+
+   -DIOR hold time is 5 ns for all PIO and MWDMA modes -- there's no 
+sense in storing it here.
+
+> +	unsigned short read_holdz;	/* t6z  or tj */
+>   
+
+   T6z and Tj are not the same timing. Well, you specify it as 0 for  
+DMA modes anyway...
+
+MBR, Sergei
+
 
