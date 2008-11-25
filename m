@@ -1,32 +1,35 @@
-From: sniper <s3c24xx@gmail.com>
-Subject: Re: [PATCH 1/7] drivers/ata/pata_radisys.c: cleanup kernel-doc
-Date: Wed, 26 Nov 2008 01:00:22 +0800
-Message-ID: <9bd6b5360811250900k144ab802k27687ec52d899ad@mail.gmail.com>
-References: <491feb5b.08486e0a.075a.4c48@mx.google.com>
-	 <492C2A2F.9070309@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] libata: Add three more columns to the ata_timing
+ table.
+Date: Tue, 25 Nov 2008 12:00:19 -0500
+Message-ID: <492C2F23.8050105@garzik.org>
+References: <492B56B0.9030409@caviumnetworks.com> <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:64580 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbYKYRAY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 12:00:24 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so22880nfc.21
-        for <linux-ide@vger.kernel.org>; Tue, 25 Nov 2008 09:00:22 -0800 (PST)
-In-Reply-To: <492C2A2F.9070309@garzik.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:53774 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752588AbYKYRAY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2008 12:00:24 -0500
+In-Reply-To: <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Qinghuang Feng <qhfeng.kernel@gmail.com>, linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-ide@vger.kernel.org
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> applied 1-7 to #upstream, after combining into a single patch.  I felt a
-> single changeset was more appropriate.
->
-Hello sir,
+David Daney wrote:
+> The forthcoming OCTEON SOC Compact Flash driver needs a few more
+> timing values than were available in the ata_timing table.  I add new
+> columns for write_hold, read_hold, and read_holdz times.  The values
+> were obtained from the Compact Flash specification Rev 4.1.
+> 
+> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+> ---
+>  drivers/ata/libata-core.c |   76 ++++++++++++++++++++++++--------------------
+>  include/linux/libata.h    |   14 ++++++--
+>  2 files changed, 52 insertions(+), 38 deletions(-)
 
-That's good, but.
-Andrew Morton have got these patches few days ago, and he forgot to Cc to you.
-These patches are in mm-trees now. I don't know if it will lead to some problem,
-so send this mail to you.
+I would be happy to go ahead and apply this...  Alan, any last minute 
+objections?
+
