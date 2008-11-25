@@ -1,33 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH 1/2] libata: Add three more columns to the ata_timing
  table.
-Date: Tue, 25 Nov 2008 18:47:44 +0000
-Message-ID: <20081125184744.7c012be5@lxorguk.ukuu.org.uk>
-References: <492B56B0.9030409@caviumnetworks.com>
-	<1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com>
-	<492C2F23.8050105@garzik.org>
-	<20081125171224.297931b2@lxorguk.ukuu.org.uk>
-	<492C46E2.90904@ru.mvista.com>
+Date: Tue, 25 Nov 2008 21:51:34 +0300
+Message-ID: <492C4936.2030305@ru.mvista.com>
+References: <492B56B0.9030409@caviumnetworks.com> <1227577181-30206-1-git-send-email-ddaney@caviumnetworks.com> <492BDB28.8020103@ru.mvista.com> <492C2BCE.60409@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <492C46E2.90904@ru.mvista.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>, David Daney <ddaney@caviumnetworks.com>, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:42443 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752279AbYKYSve (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Nov 2008 13:51:34 -0500
+In-Reply-To: <492C2BCE.60409@caviumnetworks.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-> > Its close but I think Sergei is right about columns with all the same
-> > value - they can be constants and just computed into the final timing
-> > data in terms of clocks.
-> 
->     The problem is that there's no exported libata API to compute just one 
-> arbitrary timing.
+David Daney wrote:
 
-To be clear: I agree entirely about adding those fields to the returned
-timing structure. I just don't think adding a field that says 5 in each
-entry of the internal table in the helper function is also useful.
+>>   Wrong, -DIOR hold time is 5 ns for MWDMA0 as well as for all other 
+>> modes.
 
-Alan
+> Point taken.
+
+    Besides, I'm not sure how useful that timing could be for the host 
+controller since it's apparently not determined by the host side -- it's for 
+how long the device holds valid data after -DIOR is released IIRC.
+
+WBR, Sergei
