@@ -1,69 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstraem-fixes] ata_piix: detect and clear spurious IRQs
-Date: Wed, 26 Nov 2008 11:52:53 +0900
-Message-ID: <492CBA05.8000107@kernel.org>
-References: <49263552.8090602@kernel.org> <20081121102504.63007bf6@lxorguk.ukuu.org.uk> <492C30EE.9080600@garzik.org>
+From: Peter Favrholdt <linux-ide@how.dk>
+Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
+Date: Wed, 26 Nov 2008 09:12:53 +0100
+Message-ID: <492D0505.2030704@how.dk>
+References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org>	<18719.65298.689618.835202@harpo.it.uu.se>	<492059B1.4030708@how.dk>	<49205AD7.3080009@how.dk>	<4920D093.2030508@kernel.org>	<492159E0.1050804@how.dk>	<4922165E.9070203@kernel.org>	<49230361.2010001@how.dk>	<492371F4.7020400@kernel.org>	<49253A6D.1040202@how.dk> <18725.17831.755158.999770@harpo.it.uu.se> <49263F80.2060607@kernel.org> <492BF6FB.1050004@how.dk> <492CB89F.4010108@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59872 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752284AbYKZCxJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Nov 2008 21:53:09 -0500
-In-Reply-To: <492C30EE.9080600@garzik.org>
+Received: from pfepb.post.tele.dk ([195.41.46.236]:41254 "EHLO
+	pfepb.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbYKZIM7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Nov 2008 03:12:59 -0500
+In-Reply-To: <492CB89F.4010108@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>
 
-Hello, Jeff.
-
-Jeff Garzik wrote:
-> Alan Cox wrote:
->> On Fri, 21 Nov 2008 13:13:06 +0900
->> Tejun Heo <tj@kernel.org> wrote:
+Tejun Heo wrote:
+> Peter Favrholdt wrote:
+>> Hi Tejun,
 >>
->>> The DMA_IRQ bit in the bmdma status register is always set when IDEIRQ
->>> is asserted allowing spurious IRQ detection.  Detect spurious IRQs and
->>> clear them.  This protects ata_piix against nobody-cared which gets
->>> reported not so rarely.
->>
->> Various controllers have the ability to report the IRQ more reliably in
->> similar fashion, should this not be part of ata_sff_interrupt with an
->> optional ops->irq_pending call ?
+>> After running dd several times finally my setup failed. Unfortunately it
+>> didn't recover :-(
 > 
-> Though I'm in general agreement with this sub-thread of opinions, I do
-> note that, in the past, I have purposefully avoided an ->irq_pending.
+> Eh... crap.
 > 
-> I always felt the alternative -- writing a small irq handler function
-> specifically for that controller -- was a much more flexible and
-> powerful method of producing the desired result.
->
-> A separate interrupt function can, for example, perform an MMIO read to
-> check irq-pending, outside of a spinlock.  ->irq_pending callback is a
-> bit more constraining.
+>> Tejun Heo wrote:
+>>> sata_promise hardreset doesn't seem to be able to acquire the initial
+>>> D2H Reg FIS after hardreset leading to hardreset timeouts.  Request
+>>> follow-up SRST.
+>>>
+>>>  http://article.gmane.org/gmane.linux.ide/36186
+>>>
+>>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>>> ---
+>>> Peter, can you please test this one too?  It's essentially the same
+>>> code just slightly prettier.  Mikael, what do you think about this?
+> 
+> Does unloading and reloading the driver make the device recognized
+> again?
 
-If we call ->irq_pending() only when no qc is in flight, I don't think
-there will be any noticeable performance penalty when the IRQ pending
-register is per-port.  If pending status of all ports can be
-determined by single read, having a separate handler is a good idea.
-It all depends on how controllers actually implement them.
+Yes I tried modprobe -r sata_promise and modprobe sata_promise: It 
+didn't recognize the device. I forgot to post the dmesg output, sorry.
 
-All BMDMA controllers I know about are sata_sil (already has private
-irq handler) and ata_piix (this patch).  Alan, how do other
-controllers do it?
+Best regards,
 
-> In terms of implementation, we could probably collapse all the
-> non-controller-specific behavior into a single function call or macro,
-> performed inside the custom interrupt handling routine.
-
-->irq_clear() is tightly bound to ->irq_pending().  Drivers which
-don't support ->irq_pending() probably wouldn't support or need
-->irq_clear() either, but still, I can't think of one good location.
-What's on your mind?
-
-Thanks.
-
--- 
-tejun
+Peter
