@@ -1,88 +1,68 @@
 From: Phil Sutter <n0-1@freewrt.org>
-Subject: Re: MIPS: RB532: Provide functions for gpio configuration
-Date: Fri, 28 Nov 2008 20:35:57 +0100
-Message-ID: <20081128193322.D103C386DBBE@mail.ifyouseekate.net>
-References: <200811202002.16178.david-b@pacbell.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] pata-rb532-cf: fix and rename register definitions
+Date: Fri, 28 Nov 2008 20:48:26 +0100
+Message-ID: <20081128194550.734FF386DBBE@mail.ifyouseekate.net>
+References: <20081128193322.D103C386DBBE@mail.ifyouseekate.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:37738 "EHLO
+Received: from orbit.nwl.cc ([81.169.176.177]:52454 "EHLO
 	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587AbYK1Td2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Nov 2008 14:33:28 -0500
-Content-Disposition: inline
-In-Reply-To: <200811202002.16178.david-b@pacbell.net>
+	with ESMTP id S1752570AbYK1Tpw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Nov 2008 14:45:52 -0500
+In-Reply-To: <20081128193322.D103C386DBBE@mail.ifyouseekate.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Hi!
+The original standalone driver uses a custom address for the error
+register. Use it in pata-rb532-cf, too.
 
-I fullquote here because of the lists and people added to Cc.
+Rename two register definitions:
+- The address offset 0x0800 in fact is the ATA base, not ATA command
+  address.
+- The offset 0x0C00 is not a regular ATA data address, but a buffered one
+  allowing 4-byte IO.
 
-On Thu, Nov 20, 2008 at 08:02:15PM -0800, David Brownell wrote:
-> I just noticed:
-> 
-> > commit 2e373952cc893207a8b47a5e68c2f5155f912449
-> > Author: Phil Sutter <n0-1@freewrt.org>
-> > Date:   Sat Nov 1 15:13:21 2008 +0100
-> >
-> >     MIPS: RB532: Provide functions for gpio configuration
-> >
-> >     As gpiolib doesn't support pin multiplexing, it provides no way to
-> >     access the GPIOFUNC register. Also there is no support for setting
-> >     interrupt status and level. These functions provide access to them and
-> >     are needed by the CompactFlash driver.
-> >
-> >     Signed-off-by: Phil Sutter <n0-1@freewrt.org>
-> >     Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
-> 
-> The conventional way to do most of that is through the irq_chip
-> associated with that block of IRQ-capable GPIOs.
-> 
-> 
-> So ...
-> 
-> > -       /* Set the interrupt status and level for the CF pin */
-> > -       rb532_gpio_set_int_level(&rb532_gpio_chip->chip, CF_GPIO_NUM, 1);
-> > -       rb532_gpio_set_int_status(&rb532_gpio_chip->chip, CF_GPIO_NUM, 0);
-> > +       /* configure CF_GPIO_NUM as CFRDY IRQ source */
-> > +       rb532_gpio_set_func(0, CF_GPIO_NUM);
-> 
-> ... the pinmux would indeed be a SOC-specific mechanism, kicked in
-> only for boards that use that GPIO in that way, but ...
-> 
-> 
-> > +       rb532_gpio_direction_input(&rb532_gpio_chip->chip, CF_GPIO_NUM);
-> 
-> ... normal gpio_request() + gpio_direction_input() would set the pin up, and ...
-> 
-> 
-> > +       rb532_gpio_set_ilevel(1, CF_GPIO_NUM);
-> > +       rb532_gpio_set_istat(0, CF_GPIO_NUM);
-> 
-> 	status = request_irq(gpio_to_irq(CF_GPIO_NUM), ... )
-> 
-> with appropriate IRQF_TRIGGER_* flags should solve that problem.
-> Or even just set_irq_type().  (At least for one of the two
-> registers updated there ... I can't guess what "istat" would be.)
-> 
-> Just FYI at this point.  Maybe you have a reason not to fit into
-> the genirq framework.
-> 
-> - Dave
+Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+---
+ drivers/ata/pata_rb532_cf.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-Thanks for your hints, Dave. I already had a patch flying around adding
-a set_type() function to the irq_chip (merely a dummy to shut up
-warnings in the boot log). After extending it to cover the needs of the
-mapped GPIO pins and some other work, I could drop that CompactFlash
-initialisation code in gpio.c completely.
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index f8b3ffc..392116c 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -39,9 +39,11 @@
+ #define RB500_CF_MAXPORTS	1
+ #define RB500_CF_IO_DELAY	400
+ 
+-#define RB500_CF_REG_CMD	0x0800
++#define RB500_CF_REG_BASE	0x0800
++#define RB500_CF_REG_ERR	0x080D
+ #define RB500_CF_REG_CTRL	0x080E
+-#define RB500_CF_REG_DATA	0x0C00
++/* 32bit buffered data register offset */
++#define RB500_CF_REG_DBUF32	0x0C00
+ 
+ struct rb532_cf_info {
+ 	void __iomem	*iobase;
+@@ -146,13 +148,14 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
+ 	ap->pio_mask	= 0x1f; /* PIO4 */
+ 	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
+ 
+-	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
++	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_BASE;
+ 	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
+ 	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
+ 
+ 	ata_sff_std_ports(&ap->ioaddr);
+ 
+-	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DBUF32;
++	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
+ }
+ 
+ static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
+-- 
+1.5.6.4
 
-As a side effect, many of my changes to pata-rb532-cf got unnecessary
-which I consider a very good sign.
-
-I'll reply to this mail with the relevant patches for each list and
-maintainer. 
-
-Greetings, Phil
