@@ -1,110 +1,88 @@
-From: "Raz Ben-Yehuda" <razb@bitband.com>
-Subject: RE: about TRIM/DISCARD support and barriers
-Date: Fri, 28 Nov 2008 15:21:45 +0200
-Message-ID: <83CA05F64804AF43B8F733C4ABDFAA51022D04B0@mail1.bitband.com>
-References: <4928E010.4090801@kernel.org>
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: Re: MIPS: RB532: Provide functions for gpio configuration
+Date: Fri, 28 Nov 2008 20:35:57 +0100
+Message-ID: <20081128193322.D103C386DBBE@mail.ifyouseekate.net>
+References: <200811202002.16178.david-b@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.bitband.com ([213.8.50.174]:33410 "EHLO mail.bitband.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751355AbYK1NhL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Nov 2008 08:37:11 -0500
-Content-class: urn:content-classes:message
-In-reply-to: <4928E010.4090801@kernel.org>
+Received: from orbit.nwl.cc ([81.169.176.177]:37738 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbYK1Td2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Nov 2008 14:33:28 -0500
+Content-Disposition: inline
+In-Reply-To: <200811202002.16178.david-b@pacbell.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: David Brownell <david-b@pacbell.net>
+Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Hi!
 
-Tejun Hello
-Is there a WIKI for SSD disk in Linux?
-I want to understand what is the rational for the OS intervention. Why
-and when you discard, fsck changes, why and how IO scheduling is
-changed...
-Thank you
+I fullquote here because of the lists and people added to Cc.
 
------Original Message-----
-From: linux-ide-owner@vger.kernel.org
-[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Tejun Heo
-Sent: Sunday, November 23, 2008 6:46 AM
-To: Linux Kernel Mailing List; dwmw2@infradead.org; Nick Piggin; Jens
-Axboe; IDE/ATA development list; Jeff Garzik; Dongjun Shin;
-chris.mason@oracle.com; Jens Axboe
-Subject: about TRIM/DISCARD support and barriers
+On Thu, Nov 20, 2008 at 08:02:15PM -0800, David Brownell wrote:
+> I just noticed:
+> 
+> > commit 2e373952cc893207a8b47a5e68c2f5155f912449
+> > Author: Phil Sutter <n0-1@freewrt.org>
+> > Date:   Sat Nov 1 15:13:21 2008 +0100
+> >
+> >     MIPS: RB532: Provide functions for gpio configuration
+> >
+> >     As gpiolib doesn't support pin multiplexing, it provides no way to
+> >     access the GPIOFUNC register. Also there is no support for setting
+> >     interrupt status and level. These functions provide access to them and
+> >     are needed by the CompactFlash driver.
+> >
+> >     Signed-off-by: Phil Sutter <n0-1@freewrt.org>
+> >     Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+> 
+> The conventional way to do most of that is through the irq_chip
+> associated with that block of IRQ-capable GPIOs.
+> 
+> 
+> So ...
+> 
+> > -       /* Set the interrupt status and level for the CF pin */
+> > -       rb532_gpio_set_int_level(&rb532_gpio_chip->chip, CF_GPIO_NUM, 1);
+> > -       rb532_gpio_set_int_status(&rb532_gpio_chip->chip, CF_GPIO_NUM, 0);
+> > +       /* configure CF_GPIO_NUM as CFRDY IRQ source */
+> > +       rb532_gpio_set_func(0, CF_GPIO_NUM);
+> 
+> ... the pinmux would indeed be a SOC-specific mechanism, kicked in
+> only for boards that use that GPIO in that way, but ...
+> 
+> 
+> > +       rb532_gpio_direction_input(&rb532_gpio_chip->chip, CF_GPIO_NUM);
+> 
+> ... normal gpio_request() + gpio_direction_input() would set the pin up, and ...
+> 
+> 
+> > +       rb532_gpio_set_ilevel(1, CF_GPIO_NUM);
+> > +       rb532_gpio_set_istat(0, CF_GPIO_NUM);
+> 
+> 	status = request_irq(gpio_to_irq(CF_GPIO_NUM), ... )
+> 
+> with appropriate IRQF_TRIGGER_* flags should solve that problem.
+> Or even just set_irq_type().  (At least for one of the two
+> registers updated there ... I can't guess what "istat" would be.)
+> 
+> Just FYI at this point.  Maybe you have a reason not to fit into
+> the genirq framework.
+> 
+> - Dave
 
-Hello, all.
+Thanks for your hints, Dave. I already had a patch flying around adding
+a set_type() function to the irq_chip (merely a dummy to shut up
+warnings in the boot log). After extending it to cover the needs of the
+mapped GPIO pins and some other work, I could drop that CompactFlash
+initialisation code in gpio.c completely.
 
-Dongjun Shin who works for Samsung SSD dep asked me about libata TRIM
-support and pointed me to the new DISCARD support David Woodhouse got
-merged for 2.6.28.  I took a look at the code and blk-layer
-interface-wise we seemed to be ready both for filesystems and userland
-(so that fsck or something which runs background can mark unused
-blocks) but there doesn't seem to be any low level driver which
-actually implements ->prepare_discard_fn or fs which sets the DISCARD
-flag.
+As a side effect, many of my changes to pata-rb532-cf got unnecessary
+which I consider a very good sign.
 
-Adding ->prepare_discard_fn wouldn't be difficult at all but I became
-curious about a few things after looking at the DISCARD interface.
-First of all - how to avoid racing aginst reusing and how to schedule
-DISCARDs.
+I'll reply to this mail with the relevant patches for each list and
+maintainer. 
 
-* There are two variants of DISCARD - DISCARD w/o barrier and DISCARD
-  w/ barrier, if a fs uses the former, it would need to make sure that
-  it the DISCARD finishes before re-using the block.  Block layer will
-  make sure order will be kept for the latter but depending on how
-  often those DICARDs are issued it can disrupt IO scheduling.
-
-* It looks like non-barrier DISCARD will be put into the IO sched and
-  scheduled the same way as regular IOs.  I don't relly think this is
-  necessary or a good idea.  DISCARDs probably don't need any kind of
-  sorting anyway and it's likely to disrupt IO sched heuristics.
-  Also, DISCARDs can be postponed w/o affecting correct operation.
-  However, DISCARDs are not likely to take a long time and we might
-  not have to worry about it too much unless it starves regular IOs.
-
-With the above three points, I think it might be better to make block
-layer manage and order DISCARD requests than putting it onto the
-filesystem or barrier mechanism.  If block layer manages map of
-pending DISCARDs and FSes just tell block layer newly freed blocks,
-block layer can schedule DISCARDs as it sees fit and cancels pending
-ones if IO access to it occurs before the DISCARD is issued to the
-drive.  This way, adding DISCARD support to FSes become much easier -
-it can just put blk_discard(lba, range) where it's discarding blocks
-and don't have to worry about ordering or error handling.
-
-What do you think?
-
-Also, I have a question regarding the current barrier implementation.
-When I asked it to Chris Mason some time ago, I was told that btrfs
-doesn't really make use of barrier in that btrfs itself waits for the
-barrier to complete before proceeding.  I've been thinking about
-colored barrier implementation because I heard that the current
-barrier ordering is too crude or heavy handed.  But, then again, if
-the filesystem waits for requests to complete itself and those
-dependent requests are marked SYNC as necessary so that they don't get
-postponed too much, all that's needed is flush cache.  Doing it that
-way will add a bit of latency but as long as things can progress in
-parallel, it will probably perform better than the current barrier.
-
-After all, it's not like we have selective FLUSH on actual devices
-anyway.  Where the selective barriering can make difference is how
-it's handled in the IO scheduler and FS waiting for requests to finish
-and then issuing barrier achieves that quite alright and communicating
-the partitial ordering of requests to block layer wouldn't be much
-simpler than doing it in FS proper and there's also the problem of how
-to communicate or handle when one of the request in the partial
-ordering fails.  So, would selective / more intelligent barrier be
-beneficial to filesystems or is the way things are just fine?
-
-Thanks.
-
--- 
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Greetings, Phil
