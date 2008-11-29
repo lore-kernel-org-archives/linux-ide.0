@@ -1,65 +1,59 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: [PATCH] pata-rb532-cf: read/write data in 4-byte blocks
-Date: Fri, 28 Nov 2008 20:48:43 +0100
-Message-ID: <20081128194607.93677386B1A7@mail.ifyouseekate.net>
-References: <20081128193322.D103C386DBBE@mail.ifyouseekate.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] ata_piix: add borked Tecra M4 to broken suspend
+ list
+Date: Sat, 29 Nov 2008 22:37:21 +0900
+Message-ID: <49314591.7060404@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:52464 "EHLO
-	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612AbYK1TqJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Nov 2008 14:46:09 -0500
-In-Reply-To: <20081128193322.D103C386DBBE@mail.ifyouseekate.net>
+Received: from hera.kernel.org ([140.211.167.34]:44349 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751322AbYK2NhD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Nov 2008 08:37:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, a_romanescu@yahoo.co.uk
 
-* rename the offset definition to avoid abiguity with the standard ATA
-  IO address
-* read and write four bytes at once like the original driver does
-* use writesl() and readsl() which implicitly iterate over the data
+Tecra M4 sometimes forget what it is and reports bogus data via DMI
+which makes the machine evade broken suspend matching and thus fail
+suspend/resume.  This patch updates piix_broken_suspend() such that it
+can match such case.  As the borked DMI data is a bit generic,
+matching many entries to make the match more specific is necessary.
+As the usual DMI matching is limited to four entries, this patch uses
+hard coded manual matching.
 
-This patch assumes buflen to be a multiple of four, which is true for
-ATA devices. ATAPI support is not known, though unlikely, as the
-original driver always transfers 512 Bytes at once. In doubt, do the
-right thing and return the number of bytes actually consumed.
+This is reported by Alexandru Romanescu.
 
-Signed-off-by: Phil Sutter <n0-1@freewrt.org>
-Acked-by: Sergei Shtyltov <sshtylyov@ru.mvista.com>
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Acked-by: Florian Fainelli <florian@openwrt.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Alexandru Romanescu <a_romanescu@yahoo.co.uk>
 ---
- drivers/ata/pata_rb532_cf.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/ata/ata_piix.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index c2e6fb9..362af11 100644
---- a/drivers/ata/pata_rb532_cf.c
-+++ b/drivers/ata/pata_rb532_cf.c
-@@ -79,18 +79,14 @@ static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char
- {
- 	struct ata_port *ap = adev->link->ap;
- 	void __iomem *ioaddr = ap->ioaddr.data_addr;
--	int retlen = buflen;
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 8e37be1..d6d97d8 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1066,6 +1066,21 @@ static int piix_broken_suspend(void)
+ 		if (dmi_find_device(DMI_DEV_TYPE_OEM_STRING, oemstrs[i], NULL))
+ 			return 1;
  
--	if (write_data) {
--		for (; buflen > 0; buflen--, buf++)
--			writeb(*buf, ioaddr);
--	} else {
--		for (; buflen > 0; buflen--, buf++)
--			*buf = readb(ioaddr);
--	}
-+	if (write_data)
-+		writesl(ioaddr, buf, buflen / sizeof(u32));
-+	else
-+		readsl(ioaddr, buf, buflen / sizeof(u32));
- 
- 	rb532_pata_finish_io(adev->link->ap);
--	return retlen;
-+	return buflen - buflen % sizeof(u32);
++	/* TECRA M4 sometimes forgets its identify and reports bogus
++	 * DMI information.  As the bogus information is a bit
++	 * generic, match as many entries as possible.  This manual
++	 * matching is necessary because dmi_system_id.matches is
++	 * limited to four entries.
++	 */
++	if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "TOSHIBA") &&
++	    !strcmp(dmi_get_system_info(DMI_PRODUCT_NAME), "000000") &&
++	    !strcmp(dmi_get_system_info(DMI_PRODUCT_VERSION), "000000") &&
++	    !strcmp(dmi_get_system_info(DMI_PRODUCT_SERIAL), "000000") &&
++	    !strcmp(dmi_get_system_info(DMI_BOARD_VENDOR), "TOSHIBA") &&
++	    !strcmp(dmi_get_system_info(DMI_BOARD_NAME), "Portable PC") &&
++	    !strcmp(dmi_get_system_info(DMI_BOARD_VERSION), "Version A0"))
++		return 1;
++
+ 	return 0;
  }
  
- static void rb532_pata_freeze(struct ata_port *ap)
--- 
-1.5.6.4
-
