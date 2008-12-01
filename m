@@ -1,205 +1,174 @@
-From: Peter Favrholdt <linux-ide@how.dk>
-Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
-Date: Sun, 30 Nov 2008 16:06:23 +0100
-Message-ID: <4932ABEF.3080108@how.dk>
-References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org>	<18719.65298.689618.835202@harpo.it.uu.se>	<492059B1.4030708@how.dk>	<49205AD7.3080009@how.dk>	<4920D093.2030508@kernel.org>	<492159E0.1050804@how.dk>	<4922165E.9070203@kernel.org>	<49230361.2010001@how.dk>	<492371F4.7020400@kernel.org>	<49253A6D.1040202@how.dk>	<18725.17831.755158.999770@harpo.it.uu.se>	<49263F80.2060607@kernel.org>	<492C358C.7030403@garzik.org> <18737.47407.218634.726384@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Mon, 1 Dec 2008 14:06:53 -0500
+Message-ID: <20081201190653.GA14848@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:51431 "EHLO
-	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbYK3PKT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Nov 2008 10:10:19 -0500
-In-Reply-To: <18737.47407.218634.726384@harpo.it.uu.se>
+Received: from havoc.gtf.org ([69.61.125.42]:47729 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752558AbYLATGy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Dec 2008 14:06:54 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hi Mikael and list,
 
-Mikael Pettersson wrote:
-> Here's a patch on top of 2.6.28-rc6 that should make sata_promise's
-> reset sequences a closer match to what Promise's drivers do.
- > ...snip...
- > Testers welcome.
+1) pata_rb532_cf significant fixes
+2) laptop- and drive-specific workarounds
 
-I don't have physical access to my system at the moment, and some 
-channels/drives had already failed during previous testing. Without a 
-proper power-cycle the system did not recover the failed channels when 
-rebooted into 2.6.28-rc6 with your patch :-(
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Best regards,
+to receive the following updates:
 
-Peter
+ drivers/ata/ata_piix.c      |   15 +++++++++++++++
+ drivers/ata/libata-core.c   |   21 +++++++++++++++++++++
+ drivers/ata/pata_rb532_cf.c |   15 ++++++++++-----
+ include/linux/libata.h      |    1 +
+ 4 files changed, 47 insertions(+), 5 deletions(-)
 
-> --- linux-2.6.28-rc6/drivers/ata/sata_promise.c.~1~	2008-11-29 16:05:04.000000000 +0100
-> +++ linux-2.6.28-rc6/drivers/ata/sata_promise.c	2008-11-29 20:26:26.000000000 +0100
-> @@ -56,6 +56,7 @@ enum {
->  	/* host register offsets (from host->iomap[PDC_MMIO_BAR]) */
->  	PDC_INT_SEQMASK		= 0x40,	/* Mask of asserted SEQ INTs */
->  	PDC_FLASH_CTL		= 0x44, /* Flash control register */
-> +	PDC_PCI_CTL		= 0x48, /* PCI control/status reg */
->  	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
->  	PDC2_SATA_PLUG_CSR	= 0x60, /* SATAII Plug control/status reg */
->  	PDC_TBG_MODE		= 0x41C, /* TBG mode (not SATAII) */
-> @@ -75,7 +76,17 @@ enum {
->  	PDC_CTLSTAT		= 0x60,	/* IDE control and status (per port) */
->  
->  	/* per-port SATA register offsets (from ap->ioaddr.scr_addr) */
-> +	PDC_SATA_ERROR		= 0x04,
->  	PDC_PHYMODE4		= 0x14,
-> +	PDC_LINK_LAYER_ERRORS	= 0x6C,
-> +	PDC_FPDMA_CTLSTAT	= 0xD8,
-> +	PDC_INTERNAL_DEBUG_1	= 0xF8,	/* also used for PATA */
-> +	PDC_INTERNAL_DEBUG_2	= 0xFC,	/* also used for PATA */
-> +
-> +	/* PDC_FPDMA_CTLSTAT bit definitions */
-> +	PDC_FPDMA_CTLSTAT_RESET			= 1 << 3,
-> +	PDC_FPDMA_CTLSTAT_DMASETUP_INT_FLAG	= 1 << 10,
-> +	PDC_FPDMA_CTLSTAT_SETDB_INT_FLAG	= 1 << 11,
->  
->  	/* PDC_GLOBAL_CTL bit definitions */
->  	PDC_PH_ERR		= (1 <<  8), /* PCI error while loading packet */
-> @@ -354,12 +365,76 @@ static int pdc_sata_port_start(struct at
->  	return 0;
->  }
->  
-> +static void pdc_fpdma_clear_interrupt_flag(struct ata_port *ap)
-> +{
-> +	void __iomem *sata_mmio = ap->ioaddr.scr_addr;
-> +	u32 tmp;
-> +
-> +	tmp = readl(sata_mmio + PDC_FPDMA_CTLSTAT);
-> +	tmp |= PDC_FPDMA_CTLSTAT_DMASETUP_INT_FLAG;
-> +	tmp |= PDC_FPDMA_CTLSTAT_SETDB_INT_FLAG;
-> +
-> +	/* It's not allowed to write to the entire FPDMA_CTLSTAT register
-> +	   when NCQ is running. So do a byte-sized write to bits 10 and 11. */
-> +	writeb(tmp >> 8, sata_mmio + PDC_FPDMA_CTLSTAT + 1);
-> +	readb(sata_mmio + PDC_FPDMA_CTLSTAT + 1); /* flush */
-> +}
-> +
-> +static void pdc_fpdma_reset(struct ata_port *ap)
-> +{
-> +	void __iomem *sata_mmio = ap->ioaddr.scr_addr;
-> +	u8 tmp;
-> +
-> +	tmp = (u8)readl(sata_mmio + PDC_FPDMA_CTLSTAT);
-> +	tmp &= 0x7F;
-> +	tmp |= PDC_FPDMA_CTLSTAT_RESET;
-> +	writeb(tmp, sata_mmio + PDC_FPDMA_CTLSTAT);
-> +	readl(sata_mmio + PDC_FPDMA_CTLSTAT); /* flush */
-> +	udelay(100);
-> +	tmp &= ~PDC_FPDMA_CTLSTAT_RESET;
-> +	writeb(tmp, sata_mmio + PDC_FPDMA_CTLSTAT);
-> +	readl(sata_mmio + PDC_FPDMA_CTLSTAT); /* flush */
-> +
-> +	pdc_fpdma_clear_interrupt_flag(ap);
-> +}
-> +
-> +static void pdc_not_at_command_packet_phase(struct ata_port *ap)
-> +{
-> +	void __iomem *sata_mmio = ap->ioaddr.scr_addr;
-> +	unsigned int i;
-> +	u32 tmp;
-> +
-> +	/* check not at ASIC packet command phase */
-> +	for (i = 0; i < 100; ++i) {
-> +		writel(0, sata_mmio + PDC_INTERNAL_DEBUG_1);
-> +		tmp = readl(sata_mmio + PDC_INTERNAL_DEBUG_2);
-> +		if ((tmp & 0xF) != 1)
-> +			break;
-> +		udelay(100);
-> +	}
-> +}
-> +
-> +static void pdc_clear_internal_debug_record_error_register(struct ata_port *ap)
-> +{
-> +	void __iomem *sata_mmio = ap->ioaddr.scr_addr;
-> +
-> +	writel(0xffffffff, sata_mmio + PDC_SATA_ERROR);
-> +	writel(0xffff0000, sata_mmio + PDC_LINK_LAYER_ERRORS);
-> +}
-> +
->  static void pdc_reset_port(struct ata_port *ap)
->  {
->  	void __iomem *ata_ctlstat_mmio = ap->ioaddr.cmd_addr + PDC_CTLSTAT;
->  	unsigned int i;
->  	u32 tmp;
->  
-> +	if (ap->flags & PDC_FLAG_GEN_II)
-> +		pdc_not_at_command_packet_phase(ap);
-> +
-> +	tmp = readl(ata_ctlstat_mmio);
-> +	tmp |= PDC_RESET;
-> +	writel(tmp, ata_ctlstat_mmio);
-> +
->  	for (i = 11; i > 0; i--) {
->  		tmp = readl(ata_ctlstat_mmio);
->  		if (tmp & PDC_RESET)
-> @@ -374,6 +449,11 @@ static void pdc_reset_port(struct ata_po
->  	tmp &= ~PDC_RESET;
->  	writel(tmp, ata_ctlstat_mmio);
->  	readl(ata_ctlstat_mmio);	/* flush */
-> +
-> +	if (sata_scr_valid(&ap->link) && (ap->flags & PDC_FLAG_GEN_II)) {
-> +		pdc_fpdma_reset(ap);
-> +		pdc_clear_internal_debug_record_error_register(ap);
-> +	}
->  }
->  
->  static int pdc_pata_cable_detect(struct ata_port *ap)
-> @@ -706,11 +786,50 @@ static int pdc_pata_softreset(struct ata
->  	return ata_sff_softreset(link, class, deadline);
->  }
->  
-> +static unsigned int pdc_ata_port_to_ata_no(const struct ata_port *ap)
-> +{
-> +	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
-> +	void __iomem *host_mmio = ap->host->iomap[PDC_MMIO_BAR];
-> +
-> +	/* ata_mmio == host_mmio + 0x200 + ata_no * 0x80 */
-> +	return (ata_mmio - host_mmio - 0x200) / 0x80;
-> +}
-> +
-> +static void pdc_hard_reset_port(struct ata_port *ap)
-> +{
-> +	void __iomem *host_mmio = ap->host->iomap[PDC_MMIO_BAR];
-> +	void __iomem *pcictl_b1_mmio = host_mmio + PDC_PCI_CTL + 1;
-> +	unsigned int ata_no = pdc_ata_port_to_ata_no(ap);
-> +	u8 tmp;
-> +
-> +	spin_lock(&ap->host->lock);
-> +
-> +	tmp = readb(pcictl_b1_mmio);
-> +	tmp &= ~(0x10 << ata_no);
-> +	writeb(tmp, pcictl_b1_mmio);
-> +	readb(pcictl_b1_mmio); /* flush */
-> +	udelay(100);
-> +	tmp |= (0x10 << ata_no);
-> +	writeb(tmp, pcictl_b1_mmio);
-> +	readb(pcictl_b1_mmio); /* flush */
-> +
-> +	spin_unlock(&ap->host->lock);
-> +}
-> +
->  static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
->  			      unsigned long deadline)
->  {
-> +	if (link->ap->flags & PDC_FLAG_GEN_II)
-> +		pdc_not_at_command_packet_phase(link->ap);
-> +	/* hotplug IRQs should have been masked by pdc_sata_freeze() */
-> +	pdc_hard_reset_port(link->ap);
->  	pdc_reset_port(link->ap);
-> -	return sata_sff_hardreset(link, class, deadline);
-> +
-> +	/* sata_promise can't reliably acquire the first D2H Reg FIS
-> +	 * after hardreset.  Do non-waiting hardreset and request
-> +	 * follow-up SRST.
-> +	 */
-> +	return sata_std_hardreset(link, class, deadline);
->  }
->  
->  static void pdc_error_handler(struct ata_port *ap)
+Phil Sutter (2):
+      [libata] pata_rb532_cf: fix and rename register definitions
+      [libata] pata_rb532_cf: fix signature of the xfer function
+
+Tejun Heo (2):
+      ata_piix: add borked Tecra M4 to broken suspend list
+      libata: blacklist Seagate drives which time out FLUSH_CACHE when used with NCQ
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 8e37be1..d6d97d8 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1066,6 +1066,21 @@ static int piix_broken_suspend(void)
+ 		if (dmi_find_device(DMI_DEV_TYPE_OEM_STRING, oemstrs[i], NULL))
+ 			return 1;
+ 
++	/* TECRA M4 sometimes forgets its identify and reports bogus
++	 * DMI information.  As the bogus information is a bit
++	 * generic, match as many entries as possible.  This manual
++	 * matching is necessary because dmi_system_id.matches is
++	 * limited to four entries.
++	 */
++	if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "TOSHIBA") &&
++	    !strcmp(dmi_get_system_info(DMI_PRODUCT_NAME), "000000") &&
++	    !strcmp(dmi_get_system_info(DMI_PRODUCT_VERSION), "000000") &&
++	    !strcmp(dmi_get_system_info(DMI_PRODUCT_SERIAL), "000000") &&
++	    !strcmp(dmi_get_system_info(DMI_BOARD_VENDOR), "TOSHIBA") &&
++	    !strcmp(dmi_get_system_info(DMI_BOARD_NAME), "Portable PC") &&
++	    !strcmp(dmi_get_system_info(DMI_BOARD_VERSION), "Version A0"))
++		return 1;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4214bfb..5e2eb74 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2492,6 +2492,13 @@ int ata_dev_configure(struct ata_device *dev)
+ 		}
+ 	}
+ 
++	if ((dev->horkage & ATA_HORKAGE_FIRMWARE_WARN) && print_info) {
++		ata_dev_printk(dev, KERN_WARNING, "WARNING: device requires "
++			       "firmware update to be fully functional.\n");
++		ata_dev_printk(dev, KERN_WARNING, "         contact the vendor "
++			       "or visit http://ata.wiki.kernel.org.\n");
++	}
++
+ 	return 0;
+ 
+ err_out_nosup:
+@@ -4042,6 +4049,20 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "ST380817AS",		"3.42",		ATA_HORKAGE_NONCQ },
+ 	{ "ST3160023AS",	"3.42",		ATA_HORKAGE_NONCQ },
+ 
++	/* Seagate NCQ + FLUSH CACHE firmware bug */
++	{ "ST31500341AS",	"9JU138",	ATA_HORKAGE_NONCQ |
++						ATA_HORKAGE_FIRMWARE_WARN },
++	{ "ST31000333AS",	"9FZ136",	ATA_HORKAGE_NONCQ |
++						ATA_HORKAGE_FIRMWARE_WARN },
++	{ "ST3640623AS",	"9FZ164",	ATA_HORKAGE_NONCQ |
++						ATA_HORKAGE_FIRMWARE_WARN },
++	{ "ST3640323AS",	"9FZ134",	ATA_HORKAGE_NONCQ |
++						ATA_HORKAGE_FIRMWARE_WARN },
++	{ "ST3320813AS",	"9FZ182",	ATA_HORKAGE_NONCQ |
++						ATA_HORKAGE_FIRMWARE_WARN },
++	{ "ST3320613AS",	"9FZ162",	ATA_HORKAGE_NONCQ |
++						ATA_HORKAGE_FIRMWARE_WARN },
++
+ 	/* Blacklist entries taken from Silicon Image 3124/3132
+ 	   Windows driver .inf file - also several Linux problem reports */
+ 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index f8b3ffc..c2e6fb9 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -39,9 +39,11 @@
+ #define RB500_CF_MAXPORTS	1
+ #define RB500_CF_IO_DELAY	400
+ 
+-#define RB500_CF_REG_CMD	0x0800
++#define RB500_CF_REG_BASE	0x0800
++#define RB500_CF_REG_ERR	0x080D
+ #define RB500_CF_REG_CTRL	0x080E
+-#define RB500_CF_REG_DATA	0x0C00
++/* 32bit buffered data register offset */
++#define RB500_CF_REG_DBUF32	0x0C00
+ 
+ struct rb532_cf_info {
+ 	void __iomem	*iobase;
+@@ -72,11 +74,12 @@ static void rb532_pata_exec_command(struct ata_port *ap,
+ 	rb532_pata_finish_io(ap);
+ }
+ 
+-static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
++static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+ 				unsigned int buflen, int write_data)
+ {
+ 	struct ata_port *ap = adev->link->ap;
+ 	void __iomem *ioaddr = ap->ioaddr.data_addr;
++	int retlen = buflen;
+ 
+ 	if (write_data) {
+ 		for (; buflen > 0; buflen--, buf++)
+@@ -87,6 +90,7 @@ static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+ 	}
+ 
+ 	rb532_pata_finish_io(adev->link->ap);
++	return retlen;
+ }
+ 
+ static void rb532_pata_freeze(struct ata_port *ap)
+@@ -146,13 +150,14 @@ static void rb532_pata_setup_ports(struct ata_host *ah)
+ 	ap->pio_mask	= 0x1f; /* PIO4 */
+ 	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
+ 
+-	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
++	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_BASE;
+ 	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
+ 	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
+ 
+ 	ata_sff_std_ports(&ap->ioaddr);
+ 
+-	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DBUF32;
++	ap->ioaddr.error_addr	= info->iobase + RB500_CF_REG_ERR;
+ }
+ 
+ static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 59b0f1c..ed3f26e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -375,6 +375,7 @@ enum {
+ 	ATA_HORKAGE_BRIDGE_OK	= (1 << 10),	/* no bridge limits */
+ 	ATA_HORKAGE_ATAPI_MOD16_DMA = (1 << 11), /* use ATAPI DMA for commands
+ 						    not multiple of 16 bytes */
++	ATA_HORKAGE_FIRMWARE_WARN = (1 << 12),	/* firwmare update warning */
+ 
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
