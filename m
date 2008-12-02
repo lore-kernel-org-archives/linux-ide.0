@@ -1,48 +1,77 @@
-From: "David Ellingsworth" <david@identd.dyndns.org>
-Subject: Re: Promise PDC20376
-Date: Tue, 2 Dec 2008 08:36:25 -0500
-Message-ID: <30353c3d0812020536t2074842lf4f1a1ef469f914f@mail.gmail.com>
-References: <30353c3d0810240704n7476cc50y28b3eb8a5f326626@mail.gmail.com>
-	 <30353c3d0811250616o733fb7f9ob4af96dd604f78ea@mail.gmail.com>
-	 <18732.3809.720247.329641@harpo.it.uu.se>
-	 <30353c3d0812011743we0bdddk2c9c37dd0191cf2a@mail.gmail.com>
-	 <20081202105053.1bd78897@lxorguk.ukuu.org.uk>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: ST31500341AS vs ICH10, exception Emask 0x50 SAct 0x1 SErr
+	0x280900 action 0x6 frozen
+Date: Tue, 02 Dec 2008 15:05:53 +0100
+Message-ID: <1228226753.4265.5.camel@localhost>
+References: <1228205289.29251.32.camel@localhost>
+	 <alpine.DEB.1.10.0812020448270.10115@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:27003 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141AbYLBNg1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Dec 2008 08:36:27 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so1283001eyi.37
-        for <linux-ide@vger.kernel.org>; Tue, 02 Dec 2008 05:36:25 -0800 (PST)
-In-Reply-To: <20081202105053.1bd78897@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from nn7.de ([85.214.94.156]:58750 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753732AbYLBOF4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Dec 2008 09:05:56 -0500
+In-Reply-To: <alpine.DEB.1.10.0812020448270.10115@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
 
-On Tue, Dec 2, 2008 at 5:50 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> A small update to this. It seems the above mentioned interrupt fails
->> somewhere around the 128GB boundary. Interrupt 13h, AH=42 uses a 64
->> bit sector address and should be capable of addressing the entire
->> drive. For a SATA controller, this limitation seems relatively
->> arbitrary. For IDE controllers, a limitation such as this is
->> apparently common.
->
-> 137GB I would imagine. That is the point at which LBA48 commands must be
-> used not LBA28 and presumably their BIOS code only supports old format
-> commands
->
+On Tue, 2008-12-02 at 04:49 -0500, Justin Piszcz wrote:
+> 
+> On Tue, 2 Dec 2008, Soeren Sonnenburg wrote:
+> 
+> > Dear all,
+> >
+> > I just purchased a seagate 1.5TB drive ST31500341AS, with firmware
+> > revision CC1G (which according to seagate is not affected by the cache
+> > flush bug) and I am getting the errors below (after almost a day of
+> > uptime without problems). The drive is replacing a 750G variant from
+> > seagate with which I had months of uptime and no errors whatsoever.
+> >
+> > I hope anyone has an idea?
+> >
+> > - relevant part of hdparm -I and lspci
+> >
+> > ATA device, with non-removable media
+> > 	Model Number:       ST31500341AS
+> > 	Firmware Revision:  CC1G
+> > 	Transport:          Serial
+> >
+> > 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA
+> > AHCI Controller
+> >
+> > - the error(tm)
+> 
+> A few items:
+> 
+>           res 40/00:00:48:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+>           ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+> 
+> These are usually realted to a bad cable or connector.
 
-Right, with LBA28 addressing you get 2^28 sector addresses = 2^27 KiB
-= 2^17 MiB = 2^7 GiB = 128 GiB which is approximately 137GB. When I
-wrote 128GB I really meant 128 GiB.
+OK, if this happens again I will try a new cable. However, the backplane
+(it is this one:
+http://www.raidsonic.de/en/pages/products/backplanes.php?we_objectID=4251 ) was working nicely with another disk in the same slot (but maybe I did not perfectly insert the disk...)
 
-Regards,
+> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> 
+> Did you remove the 1.5 Gbps jumper so it can run at 3.0 Gbps?
 
-David Ellingsworth
+Yes. This is actually the only difference to the drive before (which was
+1.5 Gbps).
 
-P.S. I hate the "new" binary size notations they only cause confusion.
+For now it is all running nicely and I did a full dd if= ... read of the
+disk:
+
+ata3: SATA max UDMA/133 irq_stat 0x00400040, connection status changed irq 510
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: HPA detected: current 2930277168, native 18446744072344861488
+ata3.00: ATA-8: ST31500341AS, CC1G, max UDMA/133
+ata3.00: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata3.00: configured for UDMA/133
+
+Thank you very much!!
+Soeren
