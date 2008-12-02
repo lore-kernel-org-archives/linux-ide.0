@@ -1,57 +1,433 @@
-From: "David Ellingsworth" <david@identd.dyndns.org>
-Subject: Re: Promise PDC20376
-Date: Mon, 1 Dec 2008 20:43:38 -0500
-Message-ID: <30353c3d0812011743we0bdddk2c9c37dd0191cf2a@mail.gmail.com>
-References: <30353c3d0810240704n7476cc50y28b3eb8a5f326626@mail.gmail.com>
-	 <30353c3d0811250616o733fb7f9ob4af96dd604f78ea@mail.gmail.com>
-	 <18732.3809.720247.329641@harpo.it.uu.se>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: ST31500341AS vs ICH10, exception Emask 0x50 SAct 0x1 SErr 0x280900
+	action 0x6 frozen
+Date: Tue, 02 Dec 2008 09:08:09 +0100
+Message-ID: <1228205289.29251.32.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:13602 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbYLBBnk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Dec 2008 20:43:40 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so2870787ugf.37
-        for <linux-ide@vger.kernel.org>; Mon, 01 Dec 2008 17:43:38 -0800 (PST)
-In-Reply-To: <18732.3809.720247.329641@harpo.it.uu.se>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753434AbYLBII2@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
->  > Since I put this out there, I felt it was important to follow-up on so
->  > others could benefit from my experiences. After extensive testing, the
->  > cause of the problems I've experienced are a result of a bug in the
->  > Fasttrak bios for the Promise 376 controller. Specifically speaking,
->  > bios interrupt 13h, AH=42 fails to read the requested sector from the
->  > drive despite the fact that bios interrupt 13h, AH=41, BX=0x55AA
->  > indicates the drive supports LBA extensions. The only known
->  > work-around at this time is to limit the size of the primary boot
->  > partition to 8GB or less and place it below the 8GB boundary where LBA
->  > extensions are not required to read the drive. I have contacted
->  > Promise concerning this issue and will provide more updates if
->  > anything metabolizes. Until then any users experiencing similar issues
->  > should use the work-around I've described above to boot the operating
->  > system of their choice.
->
-> For booting with grub only /boot needs to be accessible by the BIOS,
-> so it's common to make /boot a separate partition early on the disk
-> with / and other partitions higher up.
->
-> This is the first I've heard of any Promise SATA controller having
-> such lame limitations.
->
+Dear all,
 
-A small update to this. It seems the above mentioned interrupt fails
-somewhere around the 128GB boundary. Interrupt 13h, AH=42 uses a 64
-bit sector address and should be capable of addressing the entire
-drive. For a SATA controller, this limitation seems relatively
-arbitrary. For IDE controllers, a limitation such as this is
-apparently common.
+I just purchased a seagate 1.5TB drive ST31500341AS, with firmware
+revision CC1G (which according to seagate is not affected by the cache
+flush bug) and I am getting the errors below (after almost a day of
+uptime without problems). The drive is replacing a 750G variant from
+seagate with which I had months of uptime and no errors whatsoever.
 
-Regards,
+I hope anyone has an idea?
 
-David Ellingsworth
+- relevant part of hdparm -I and lspci
+
+ATA device, with non-removable media
+	Model Number:       ST31500341AS                            
+	Firmware Revision:  CC1G    
+	Transport:          Serial
+
+00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA
+AHCI Controller
+
+- the error(tm)
+
+ata3.00: exception Emask 0x50 SAct 0x1 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:20:d4:66/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:00:20:d4:66/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x10 SAct 0x1 SErr 0x280100 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:12:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:00:30:12:67/00:00:1e:00:00/40 Emask 0x10 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x10 SAct 0x1 SErr 0x280100 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:17:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:00:30:17:67/00:00:1e:00:00/40 Emask 0x10 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3: limiting SATA link speed to 1.5 Gbps
+ata3.00: exception Emask 0x10 SAct 0x1 SErr 0x280100 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:19:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:00:30:19:67/00:00:1e:00:00/40 Emask 0x10 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata3.00: revalidation failed (errno=-5)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: exception Emask 0x50 SAct 0x0 SErr 0x80800 action 0x7 t3
+ata3: irq_stat 0x08000002, interface fatal error
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x3 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:19:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:08:30:1a:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3.00: cmd 60/00:08:30:1a:67/01:00:1e:00:00/40 tag 1 ncq 131072 in
+         res 40/00:08:30:1a:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x3 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:1a:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:08:30:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3.00: cmd 60/00:08:30:19:67/01:00:1e:00:00/40 tag 1 ncq 131072 in
+         res 40/00:08:30:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: limiting speed to UDMA/100:PIO4
+ata3.00: exception Emask 0x50 SAct 0x3 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:19:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:08:30:1a:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3.00: cmd 60/00:08:30:1a:67/01:00:1e:00:00/40 tag 1 ncq 131072 in
+         res 40/00:08:30:1a:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/100
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/100
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x3 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:1a:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:08:30:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3.00: cmd 60/00:08:30:19:67/01:00:1e:00:00/40 tag 1 ncq 131072 in
+         res 40/00:08:30:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/100
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/100
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: limiting speed to UDMA/33:PIO4
+ata3.00: exception Emask 0x50 SAct 0x3 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:19:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:08:30:1a:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3.00: cmd 60/00:08:30:1a:67/01:00:1e:00:00/40 tag 1 ncq 131072 in
+         res 40/00:08:30:1a:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+sd 2:0:0:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 2:0:0:0: [sdc] Sense Key : Aborted Command [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+        1e 67 1a 30 
+sd 2:0:0:0: [sdc] Add. Sense: No additional sense information
+end_request: I/O error, dev sdc, sector 510073136
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x3 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/00:00:30:1a:67/01:00:1e:00:00/40 tag 0 ncq 131072 in
+         res 40/00:08:30:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3.00: cmd 60/08:08:30:19:67/00:00:1e:00:00/40 tag 1 ncq 4096 in
+         res 40/00:08:30:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata3.00: revalidation failed (errno=-5)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata3.00: revalidation failed (errno=-5)
+ata3.00: limiting speed to UDMA/33:PIO3
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x50 SAct 0x0 SErr 0x80800 action 0x7 t3
+ata3: irq_stat 0x08000002, interface fatal error
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+sd 2:0:0:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 2:0:0:0: [sdc] Sense Key : Aborted Command [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+        1e 67 19 30 
+sd 2:0:0:0: [sdc] Add. Sense: No additional sense information
+end_request: I/O error, dev sdc, sector 510073392
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x1 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/08:00:40:19:67/00:00:1e:00:00/40 tag 0 ncq 4096 in
+         res 40/00:00:40:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x1 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/08:00:48:19:67/00:00:1e:00:00/40 tag 0 ncq 4096 in
+         res 40/00:00:48:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: qc timeout (cmd 0xec)
+ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata3.00: revalidation failed (errno=-5)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t3
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: EH complete
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sdc] 2930277168 512-byte hardware sectors (1500302 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata3.00: exception Emask 0x50 SAct 0x1 SErr 0x280900 action 0x6 frozen
+ata3.00: irq_stat 0x08000000, interface fatal error
+ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata3.00: cmd 60/08:00:48:19:67/00:00:1e:00:00/40 tag 0 ncq 4096 in
+         res 40/00:00:48:19:67/00:00:1e:00:00/40 Emask 0x50 (ATA bus error)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: both IDENTIFYs aborted, assuming NODEV
+ata3.00: revalidation failed (errno=-2)
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x7 t4
+ata3: irq_stat 0x40000001
+ata3: SError: { HostInt 10B8B }
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata3.00: configured for UDMA/33
+ata3: EH complete
+
+Soeren
