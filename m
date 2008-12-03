@@ -1,42 +1,118 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Wed, 03 Dec 2008 09:09:00 -0600
-Message-ID: <1228316941.5551.6.camel@localhost.localdomain>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
-	 <20081203100643.GA29340@infradead.org>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH-mm 2/2] ata: replace byteshifting with unaligned endian
+ helpers
+Date: Wed, 03 Dec 2008 10:13:40 -0800
+Message-ID: <1228328020.5412.24.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:33489 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750845AbYLCPJA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Dec 2008 10:09:00 -0500
-In-Reply-To: <20081203100643.GA29340@infradead.org>
+Received: from qw-out-2122.google.com ([74.125.92.25]:20589 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbYLCSNo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Dec 2008 13:13:44 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so854250qwe.37
+        for <linux-ide@vger.kernel.org>; Wed, 03 Dec 2008 10:13:42 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Wed, 2008-12-03 at 05:06 -0500, Christoph Hellwig wrote:
-> On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
-> > This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
-> > 
-> > It's against linux-next (which seems to has some changes to ide-scsi
-> > for 2.6.29 from the ide tree). 
-> 
-> Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
-> the osst driver?
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+Depends on the unaligned access work in -mm.
 
-Depends.  If you're still using drivers/ide then yes, it is.  With
-libata (which is what most modern distros use), osst just works as an
-ATAPI transport.
+ drivers/ata/libata-scsi.c |   50 ++++++--------------------------------------
+ 1 files changed, 7 insertions(+), 43 deletions(-)
 
-git log tells me ide-scsi has been updated quite a bit recently, but it
-mostly looks to be fallout around the drivers/ide churn.  Can we get ide
-maintainer's buy in for this (I think they've been maintaining ide-tape
-and ide-cd in preference to ide-scsi)?
-
-James
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d763b2b..1c16b63 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -46,6 +46,7 @@
+ #include <linux/libata.h>
+ #include <linux/hdreg.h>
+ #include <linux/uaccess.h>
++#include <asm/unaligned.h>
+ 
+ #include "libata.h"
+ 
+@@ -1384,19 +1385,10 @@ static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc)
+  */
+ static void scsi_6_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ {
+-	u64 lba = 0;
+-	u32 len;
+-
+ 	VPRINTK("six-byte command\n");
+ 
+-	lba |= ((u64)(cdb[1] & 0x1f)) << 16;
+-	lba |= ((u64)cdb[2]) << 8;
+-	lba |= ((u64)cdb[3]);
+-
+-	len = cdb[4];
+-
+-	*plba = lba;
+-	*plen = len;
++	*plba = load_be32_noalign((__be32 *)&cdb[0]) & 0x1fffff;
++	*plen = cdb[4];
+ }
+ 
+ /**
+@@ -1411,21 +1403,10 @@ static void scsi_6_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+  */
+ static void scsi_10_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ {
+-	u64 lba = 0;
+-	u32 len = 0;
+-
+ 	VPRINTK("ten-byte command\n");
+ 
+-	lba |= ((u64)cdb[2]) << 24;
+-	lba |= ((u64)cdb[3]) << 16;
+-	lba |= ((u64)cdb[4]) << 8;
+-	lba |= ((u64)cdb[5]);
+-
+-	len |= ((u32)cdb[7]) << 8;
+-	len |= ((u32)cdb[8]);
+-
+-	*plba = lba;
+-	*plen = len;
++	*plba = load_be32_noalign((__be32 *)&cdb[2]);
++	*plen = load_be16_noalign((__be16 *)&cdb[7]);
+ }
+ 
+ /**
+@@ -1440,27 +1421,10 @@ static void scsi_10_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+  */
+ static void scsi_16_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ {
+-	u64 lba = 0;
+-	u32 len = 0;
+-
+ 	VPRINTK("sixteen-byte command\n");
+ 
+-	lba |= ((u64)cdb[2]) << 56;
+-	lba |= ((u64)cdb[3]) << 48;
+-	lba |= ((u64)cdb[4]) << 40;
+-	lba |= ((u64)cdb[5]) << 32;
+-	lba |= ((u64)cdb[6]) << 24;
+-	lba |= ((u64)cdb[7]) << 16;
+-	lba |= ((u64)cdb[8]) << 8;
+-	lba |= ((u64)cdb[9]);
+-
+-	len |= ((u32)cdb[10]) << 24;
+-	len |= ((u32)cdb[11]) << 16;
+-	len |= ((u32)cdb[12]) << 8;
+-	len |= ((u32)cdb[13]);
+-
+-	*plba = lba;
+-	*plen = len;
++	*plba = load_be64_noalign((__be64 *)&cdb[2]);
++	*plen = load_be32_noalign((__be32 *)&cdb[10]);
+ }
+ 
+ /**
+-- 
+1.6.1.rc1.262.gb6810
 
