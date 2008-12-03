@@ -1,28 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: "Willem Riede" <osst@riede.org>
 Subject: Re: [PATCH] remove ide-scsi
-Date: Wed, 3 Dec 2008 05:06:43 -0500
-Message-ID: <20081203100643.GA29340@infradead.org>
+Date: Wed, 3 Dec 2008 06:31:15 -0700
+Message-ID: <150283e90812030531o764b53b8w5bc655085ca4f106@mail.gmail.com>
 References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	 <20081203100643.GA29340@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40483 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbYLCKGr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Dec 2008 05:06:47 -0500
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20081203100643.GA29340@infradead.org>
 Content-Disposition: inline
-In-Reply-To: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, James.Bottomley@hansenpartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
-> This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
-> 
-> It's against linux-next (which seems to has some changes to ide-scsi
-> for 2.6.29 from the ide tree). 
+On Wed, Dec 3, 2008 at 3:06 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
+> > This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
+> >
+> > It's against linux-next (which seems to has some changes to ide-scsi
+> > for 2.6.29 from the ide tree).
+>
+> Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
+> the osst driver?
+>
+You are right. There are IDE versions of the OnStream drives that need ide-scsi.
+There are also SCSI versions of the OnStream, which work with osst directly.
 
-Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
-the osst driver?
-
+Regards, Willem Riede.
