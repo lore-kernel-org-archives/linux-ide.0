@@ -1,62 +1,28 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ST31500341AS vs ICH10, exception Emask 0x50 SAct 0x1 SErr 0x280900
- action 0x6 frozen
-Date: Wed, 03 Dec 2008 12:00:12 +0900
-Message-ID: <4935F63C.9080207@kernel.org>
-References: <1228205289.29251.32.camel@localhost>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Wed, 3 Dec 2008 05:06:43 -0500
+Message-ID: <20081203100643.GA29340@infradead.org>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59249 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754013AbYLCDAT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Dec 2008 22:00:19 -0500
-In-Reply-To: <1228205289.29251.32.camel@localhost>
+Received: from bombadil.infradead.org ([18.85.46.34]:40483 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121AbYLCKGr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Dec 2008 05:06:47 -0500
+Content-Disposition: inline
+In-Reply-To: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Soeren Sonnenburg <kernel@nn7.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-hello,
-
-Soeren Sonnenburg wrote:
-> I just purchased a seagate 1.5TB drive ST31500341AS, with firmware
-> revision CC1G (which according to seagate is not affected by the cache
-> flush bug) and I am getting the errors below (after almost a day of
-> uptime without problems). The drive is replacing a 750G variant from
-> seagate with which I had months of uptime and no errors whatsoever.
+On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
+> This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
 > 
-> I hope anyone has an idea?
-> 
-> - relevant part of hdparm -I and lspci
-> 
-> ATA device, with non-removable media
-> 	Model Number:       ST31500341AS                            
-> 	Firmware Revision:  CC1G    
-> 	Transport:          Serial
-> 
-> 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA
-> AHCI Controller
-> 
-> - the error(tm)
-> 
-> ata3.00: exception Emask 0x50 SAct 0x1 SErr 0x280900 action 0x6 frozen
-> ata3.00: irq_stat 0x08000000, interface fatal error
-> ata3: SError: { UnrecovData HostInt 10B8B BadCRC }
+> It's against linux-next (which seems to has some changes to ide-scsi
+> for 2.6.29 from the ide tree). 
 
-Your machine seems to be suffering genuine link layer problem.  In
-most cases, this indicates hardware problem and in my experience
-common causes are (in the order of ballpark frequency)...
+Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
+the osst driver?
 
-1. inadequate power supply
-
-2. device and controller don't like each other on 3Gbps
-
-3. cable too long or flaky connector (especially w/ eSATA cables or
-   genders or backplanes)
-
-4. faulty controller or drive
-
--- 
-tejun
