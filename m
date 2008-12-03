@@ -1,25 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] remove ide-scsi
-Date: Wed, 3 Dec 2008 14:02:56 +0000
-Message-ID: <20081203140256.2e414d9c@lxorguk.ukuu.org.uk>
+Date: Wed, 03 Dec 2008 09:09:00 -0600
+Message-ID: <1228316941.5551.6.camel@localhost.localdomain>
 References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
-	<20081203100643.GA29340@infradead.org>
-	<150283e90812030531o764b53b8w5bc655085ca4f106@mail.gmail.com>
-	<20081203135550.GC25548@parisc-linux.org>
+	 <20081203100643.GA29340@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20081203135550.GC25548@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Willem Riede <osst@riede.org>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, James.Bottomley@hansenpartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33489 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750845AbYLCPJA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Dec 2008 10:09:00 -0500
+In-Reply-To: <20081203100643.GA29340@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-> > You are right. There are IDE versions of the OnStream drives that need ide-scsi.
-> > There are also SCSI versions of the OnStream, which work with osst directly.
+On Wed, 2008-12-03 at 05:06 -0500, Christoph Hellwig wrote:
+> On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
+> > This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
+> > 
+> > It's against linux-next (which seems to has some changes to ide-scsi
+> > for 2.6.29 from the ide tree). 
 > 
-> Why can't osst / libata support the IDE versions of the OnStream drives?
-> What code needs to be written?
+> Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
+> the osst driver?
 
-They should work just fine that way.
+Depends.  If you're still using drivers/ide then yes, it is.  With
+libata (which is what most modern distros use), osst just works as an
+ATAPI transport.
+
+git log tells me ide-scsi has been updated quite a bit recently, but it
+mostly looks to be fallout around the drivers/ide churn.  Can we get ide
+maintainer's buy in for this (I think they've been maintaining ide-tape
+and ide-cd in preference to ide-scsi)?
+
+James
+
+
