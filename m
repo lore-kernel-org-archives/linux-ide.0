@@ -1,34 +1,68 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
-Date: Thu,  4 Dec 2008 10:19:55 -0800 (PST)
-Message-ID: <20081204181955.EF73D108048@picon.linux-foundation.org>
-References: <bug-12144-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Resurrect IT8172 IDE controller driver
+Date: Thu, 4 Dec 2008 20:37:21 +0100
+Message-ID: <200812042037.21323.bzolnier@gmail.com>
+References: <E1L4UpB-0007ro-1g@localhost> <b2b2f2320812040601k55ab69a6n5da4d321151f94f@mail.gmail.com> <20081204140742.1d0d8046@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44418 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755695AbYLDSUZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2008 13:20:25 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB4IJucW024775
-	for <linux-ide@vger.kernel.org>; Thu, 4 Dec 2008 10:19:57 -0800
-In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
+Received: from yw-out-2324.google.com ([74.125.46.29]:22996 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755892AbYLDTjf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2008 14:39:35 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so1795933ywe.1
+        for <linux-ide@vger.kernel.org>; Thu, 04 Dec 2008 11:39:33 -0800 (PST)
+In-Reply-To: <20081204140742.1d0d8046@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Shane McDonald <mcdonald.shane@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12144
+On Thursday 04 December 2008, Alan Cox wrote:
+> On Thu, 4 Dec 2008 08:01:49 -0600
+> "Shane McDonald" <mcdonald.shane@gmail.com> wrote:
+> 
+> > Would it be acceptable to claim that these changes are outside the
+> > scope of this patch, and code the IT8172 driver to behave in the same
+> > manner as the other wrong drivers, with a suitable comment indicating
+> > this fact?
+> 
+> I think so..  and if its moved over to libata it can just be fixed then
 
+It shouldn't be necessary...
 
+Shane, you can use helpers from <linux/ata.h> just fine in IDE host drivers
+so looking at what libata-core helper used by ata_piix.c:
 
+        if (ata_pio_need_iordy(adev))
+                control |= 2;   /* IE enable */
 
+is actually doing:
 
-------- Comment #7 from bbpetkov@yahoo.de  2008-12-04 10:19 -------
-Created an attachment (id=19147)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=19147&action=view)
-Add Optiarc BD ROM BC-5500A to the quirks list
+unsigned int ata_pio_need_iordy(const struct ata_device *adev)
+{
+        /* Controller doesn't support  IORDY. Probably a pointless check
+           as the caller should know this */
+        if (adev->link->ap->flags & ATA_FLAG_NO_IORDY)
+                return 0;
+        /* PIO3 and higher it is mandatory */
+        if (adev->pio_mode > XFER_PIO_2)
+                return 1;
+        /* We turn it on when possible */
+        if (ata_id_has_iordy(adev->id))
+                return 1;
+        return 0;
+}
 
+we see that all you need to add in your driver is an additional checking
+for ata_id_has_iordy().
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Thanks,
+Bart
+
+PS when it comes to actually setting the transfer mode on the device
+(done in ide_config_drive_speed() core function) IORDY is also handled
+just fine (thanks to Sergei).
