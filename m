@@ -1,271 +1,109 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 5/6] ide-cd: move cdrom_timer_expiry to ide-atapi.c
-Date: Thu,  4 Dec 2008 07:43:28 +0100
-Message-ID: <1228373010-20249-6-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 3/6] ide-atapi: accomodate transfer length calculation for ide-cd
+Date: Thu,  4 Dec 2008 07:43:26 +0100
+Message-ID: <1228373010-20249-4-git-send-email-petkovbb@gmail.com>
 References: <1228373010-20249-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:46550 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.152]:37205 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755452AbYLDGnk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2008 01:43:40 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2725977fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 03 Dec 2008 22:43:39 -0800 (PST)
+	with ESMTP id S1754943AbYLDGnj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2008 01:43:39 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2725986fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 03 Dec 2008 22:43:37 -0800 (PST)
 In-Reply-To: <1228373010-20249-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-- cdrom_timer_expiry -> ide_cd_expiry
-- remove expiry-arg to ide_issue_pc as it is redundant now
+... by factoring it out of ide_cd_do_request() into a helper, as suggested by
+Bart.
 
 There should be no functionality change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-atapi.c  |   42 ++++++++++++++++++++++++++++++++++++++----
- drivers/ide/ide-cd.c     |   38 +++-----------------------------------
- drivers/ide/ide-cd.h     |    1 -
- drivers/ide/ide-floppy.c |    2 +-
- drivers/ide/ide-tape.c   |    2 +-
- drivers/scsi/ide-scsi.c  |    2 +-
- include/linux/ide.h      |    5 +++--
- 7 files changed, 47 insertions(+), 45 deletions(-)
+ drivers/ide/ide-atapi.c |   15 ++++++++++++++-
+ drivers/ide/ide-cd.c    |    4 ++--
+ include/linux/ide.h     |    2 ++
+ 3 files changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 8884877..bb867a0 100644
+index b6e0aac..7162317 100644
 --- a/drivers/ide/ide-atapi.c
 +++ b/drivers/ide/ide-atapi.c
-@@ -3,6 +3,7 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/cdrom.h>
- #include <linux/delay.h>
- #include <linux/ide.h>
- #include <scsi/scsi.h>
-@@ -250,7 +251,38 @@ int ide_scsi_expiry(ide_drive_t *drive)
- 
- 	return 0; /* we do not want the IDE subsystem to retry */
+@@ -252,6 +252,18 @@ int ide_scsi_expiry(ide_drive_t *drive)
  }
--EXPORT_SYMBOL_GPL(ide_scsi_expiry);
-+
-+int ide_cd_expiry(ide_drive_t *drive)
+ EXPORT_SYMBOL_GPL(ide_scsi_expiry);
+ 
++int ide_cd_get_xferlen(struct request *rq)
 +{
-+	struct request *rq = HWGROUP(drive)->rq;
-+	unsigned long wait = 0;
-+
-+	debug_log("%s: rq->cmd[0]: 0x%x\n", __func__, rq->cmd[0]);
-+
-+	/*
-+	 * Some commands are *slow* and normally take a long time to complete.
-+	 * Usually we can use the ATAPI "disconnect" to bypass this, but not all
-+	 * commands/drives support that. Let ide_timer_expiry keep polling us
-+	 * for these.
-+	 */
-+	switch (rq->cmd[0]) {
-+	case GPCMD_BLANK:
-+	case GPCMD_FORMAT_UNIT:
-+	case GPCMD_RESERVE_RZONE_TRACK:
-+	case GPCMD_CLOSE_TRACK:
-+	case GPCMD_FLUSH_CACHE:
-+		wait = ATAPI_WAIT_PC;
-+		break;
-+	default:
-+		if (!(rq->cmd_flags & REQ_QUIET))
-+			printk(KERN_INFO "cmd 0x%x timed out\n",
-+					 rq->cmd[0]);
-+		wait = 0;
-+		break;
-+	}
-+	return wait;
++	if (blk_fs_request(rq))
++		return 32768;
++	else if (blk_sense_request(rq) || blk_pc_request(rq) ||
++			 rq->cmd_type == REQ_TYPE_ATA_PC)
++		return rq->data_len;
++	else
++		return 0;
 +}
-+EXPORT_SYMBOL_GPL(ide_cd_expiry);
- 
- int ide_cd_get_xferlen(struct request *rq)
- {
-@@ -557,11 +589,11 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
- 	return ide_started;
- }
- 
--ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
--			     ide_expiry_t *expiry)
-+ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout)
- {
++EXPORT_SYMBOL_GPL(ide_cd_get_xferlen);
++
+ /*
+  * This is the usual interrupt handler which will be called during a packet
+  * command.  We will transfer some of the data (as requested by the drive)
+@@ -551,7 +563,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
  	struct ide_atapi_pc *pc = drive->pc;
  	ide_hwif_t *hwif = drive->hwif;
-+	ide_expiry_t *expiry = NULL;
  	u32 tf_flags;
- 	u16 bcount;
+-	u16 bcount = 0;
++	u16 bcount;
  	u8 scsi = !!(drive->dev_flags & IDE_DFLAG_SCSI);
-@@ -573,9 +605,11 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
+ 
+ 	/* We haven't transferred any data yet */
+@@ -560,6 +572,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
+ 
  	if (dev_is_idecd(drive)) {
  		tf_flags = IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL;
- 		bcount = ide_cd_get_xferlen(hwif->hwgroup->rq);
-+		expiry = ide_cd_expiry;
++		bcount = ide_cd_get_xferlen(hwif->hwgroup->rq);
  	} else if (scsi) {
  		tf_flags = 0;
  		bcount = min(pc->req_xfer, 63 * 1024);
-+		expiry = ide_scsi_expiry;
- 	} else {
- 		tf_flags = IDE_TFLAG_OUT_DEVICE;
- 		bcount = ((drive->media == ide_tape) ?
-@@ -606,7 +640,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
- 	/* Issue the packet command */
- 	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
- 		ide_execute_command(drive, ATA_CMD_PACKET, ide_transfer_pc,
--				    timeout, NULL);
-+				    timeout, expiry);
- 		return ide_started;
- 	} else {
- 		ide_execute_pkt_cmd(drive);
 diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 8d3c771..105e4d8 100644
+index 65e5513..8d3c771 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -511,38 +511,6 @@ end_request:
- 	return 1;
- }
+@@ -1214,8 +1214,9 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 		      __func__, rq->cmd[0], rq->cmd_type,
+ 		      (unsigned long long)block);
  
--static int cdrom_timer_expiry(ide_drive_t *drive)
--{
--	struct request *rq = HWGROUP(drive)->rq;
--	unsigned long wait = 0;
--
--	ide_debug_log(IDE_DBG_RQ, "Call %s: rq->cmd[0]: 0x%x\n", __func__,
--		      rq->cmd[0]);
--
--	/*
--	 * Some commands are *slow* and normally take a long time to complete.
--	 * Usually we can use the ATAPI "disconnect" to bypass this, but not all
--	 * commands/drives support that. Let ide_timer_expiry keep polling us
--	 * for these.
--	 */
--	switch (rq->cmd[0]) {
--	case GPCMD_BLANK:
--	case GPCMD_FORMAT_UNIT:
--	case GPCMD_RESERVE_RZONE_TRACK:
--	case GPCMD_CLOSE_TRACK:
--	case GPCMD_FLUSH_CACHE:
--		wait = ATAPI_WAIT_PC;
--		break;
--	default:
--		if (!(rq->cmd_flags & REQ_QUIET))
--			printk(KERN_INFO PFX "cmd 0x%x timed out\n",
--					 rq->cmd[0]);
--		wait = 0;
--		break;
--	}
--	return wait;
--}
--
- /*
-  * Set up the device registers for transferring a packet command on DEV,
-  * expecting to later transfer XFERLEN bytes.  HANDLER is the routine
-@@ -574,7 +542,7 @@ static ide_startstop_t cdrom_start_packet_command(ide_drive_t *drive,
++	xferlen = ide_cd_get_xferlen(rq);
++
+ 	if (blk_fs_request(rq)) {
+-		xferlen = 32768;
+ 		fn = cdrom_start_rw_cont;
  
- 		/* packet command */
- 		ide_execute_command(drive, ATA_CMD_PACKET, handler,
--				    ATAPI_WAIT_PC, cdrom_timer_expiry);
-+				    ATAPI_WAIT_PC, ide_cd_expiry);
- 		return ide_started;
- 	} else {
- 		ide_execute_pkt_cmd(drive);
-@@ -621,7 +589,7 @@ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
- 	}
+ 		if (cdrom_start_rw(drive, rq) == ide_stopped)
+@@ -1225,7 +1226,6 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 			return ide_stopped;
+ 	} else if (blk_sense_request(rq) || blk_pc_request(rq) ||
+ 		   rq->cmd_type == REQ_TYPE_ATA_PC) {
+-		xferlen = rq->data_len;
+ 		fn = cdrom_do_newpc_cont;
  
- 	/* arm the interrupt handler */
--	ide_set_handler(drive, handler, rq->timeout, cdrom_timer_expiry);
-+	ide_set_handler(drive, handler, rq->timeout, ide_cd_expiry);
- 
- 	/* ATAPI commands get padded out to 12 bytes minimum */
- 	cmd_len = COMMAND_SIZE(rq->cmd[0]);
-@@ -1088,7 +1056,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 	} else {
- 		timeout = ATAPI_WAIT_PC;
- 		if (!blk_fs_request(rq))
--			expiry = cdrom_timer_expiry;
-+			expiry = ide_cd_expiry;
- 	}
- 
- 	ide_set_handler(drive, cdrom_newpc_intr, timeout, expiry);
-diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
-index 389faa4..a7a4d00 100644
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -19,7 +19,6 @@
- /*
-  * typical timeout for packet command
-  */
--#define ATAPI_WAIT_PC		(60 * HZ)
- #define ATAPI_WAIT_WRITE_BUSY	(10 * HZ)
- 
- /************************************************************************/
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 1f07f38..fdec729 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -197,7 +197,7 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 
- 	pc->retries++;
- 
--	return ide_issue_pc(drive, WAIT_FLOPPY_CMD, NULL);
-+	return ide_issue_pc(drive, WAIT_FLOPPY_CMD);
- }
- 
- void ide_floppy_create_read_capacity_cmd(struct ide_atapi_pc *pc)
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index a2d470e..ac9e29a 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -694,7 +694,7 @@ static ide_startstop_t idetape_issue_pc(ide_drive_t *drive,
- 
- 	pc->retries++;
- 
--	return ide_issue_pc(drive, WAIT_TAPE_CMD, NULL);
-+	return ide_issue_pc(drive, WAIT_TAPE_CMD);
- }
- 
- /* A mode sense command is used to "sense" tape parameters. */
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index c24140a..7890718 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -315,7 +315,7 @@ static ide_startstop_t idescsi_issue_pc(ide_drive_t *drive,
- 	/* Set the current packet command */
- 	drive->pc = pc;
- 
--	return ide_issue_pc(drive, ide_scsi_get_timeout(pc), ide_scsi_expiry);
-+	return ide_issue_pc(drive, ide_scsi_get_timeout(pc));
- }
- 
- /*
+ 		if (!rq->timeout)
 diff --git a/include/linux/ide.h b/include/linux/ide.h
-index e35ff68..7fce92a 100644
+index eb4c01f..e35ff68 100644
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -396,6 +396,7 @@ enum {
-  * This is used for several packet commands (not for READ/WRITE commands).
-  */
- #define IDE_PC_BUFFER_SIZE	256
-+#define ATAPI_WAIT_PC		(60 * HZ)
+@@ -1254,6 +1254,8 @@ static inline unsigned long ide_scsi_get_timeout(struct ide_atapi_pc *pc)
  
- struct ide_atapi_pc {
- 	/* actual packet bytes */
-@@ -1252,11 +1253,11 @@ static inline unsigned long ide_scsi_get_timeout(struct ide_atapi_pc *pc)
- 	return max_t(unsigned long, WAIT_CMD, pc->timeout - jiffies);
- }
+ int ide_scsi_expiry(ide_drive_t *);
  
--int ide_scsi_expiry(ide_drive_t *);
-+int ide_cd_expiry(ide_drive_t *);
- 
- int ide_cd_get_xferlen(struct request *);
- 
--ide_startstop_t ide_issue_pc(ide_drive_t *, unsigned int, ide_expiry_t *);
-+ide_startstop_t ide_issue_pc(ide_drive_t *, unsigned int);
++int ide_cd_get_xferlen(struct request *);
++
+ ide_startstop_t ide_issue_pc(ide_drive_t *, unsigned int, ide_expiry_t *);
  
  ide_startstop_t do_rw_taskfile(ide_drive_t *, ide_task_t *);
- 
 -- 
 1.6.0.4
 
