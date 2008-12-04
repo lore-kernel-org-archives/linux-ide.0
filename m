@@ -1,35 +1,54 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9994] atiixp ide timeouts
-Date: Thu,  4 Dec 2008 06:41:13 -0800 (PST)
-Message-ID: <20081204144113.D43E610805B@picon.linux-foundation.org>
-References: <bug-9994-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Resurrect IT8172 IDE controller driver
+Date: Thu, 04 Dec 2008 19:10:16 +0300
+Message-ID: <493800E8.7070901@ru.mvista.com>
+References: <E1L4UpB-0007ro-1g@localhost> <492A8306.9000400@ru.mvista.com>	 <492A9A1F.50401@ru.mvista.com>	 <20081124123231.555f2395@lxorguk.ukuu.org.uk>	 <492AAE6C.7000103@ru.mvista.com> <b2b2f2320812031908se18efdft1a94cb2b158f540e@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35974 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754389AbYLDO6F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2008 09:58:05 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB4EvkVh010058
-	for <linux-ide@vger.kernel.org>; Thu, 4 Dec 2008 06:57:47 -0800
-In-Reply-To: <bug-9994-11633@http.bugzilla.kernel.org/>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:23427 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750924AbYLDQKU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2008 11:10:20 -0500
+In-Reply-To: <b2b2f2320812031908se18efdft1a94cb2b158f540e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Shane McDonald <mcdonald.shane@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9994
+Hello.
 
+Shane McDonald wrote:
 
-alan@lxorguk.ukuu.org.uk changed:
+>>Alan Cox wrote:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |CODE_FIX
+>>>>> It's 240, not 242 ns as 33 is actually 33.333.
 
+>>>> The maximum values give cycle time of 480 ns menaing that the controller
+>>>>doesn't support PIO mode 0. Hm...
 
+>>>Even if you clear the enable for the timing register ?
 
+>>  These fast timing bits are documented as reserved.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+> The spec says that PIO mode 0 is supported, but Sergei is correct --
+> the maximum values give a cycle time of 480 ns.  How can this be?  The
+> old driver appeared to have tried to support PIO mode 0 by setting to
+> the maximum.
+
+>   Which fast timing bits are documented as reserved?  My spec has the
+> IDE Drive 0/1 Recovery Time and IDE Drive 0/1 Pulse Width bits in it.
+> Are there other timing bits that aren't documented in my spec?
+
+    Off the top of my head: bits 0, 3, 4, and 7 at offset 0x40 are not 
+reserved in PIIX/ICH -- they enable the programmable timings for PIO and/or 
+DMA. If they were left cleared, 600 ns cycle (PIO mode 0) was used.
+
+>   Please excuse my dumb question -- I'm a little over my head here.
+
+>>>Alan
+
+> Shane
+
+MBR, Sergei
