@@ -1,44 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_sis: Remove bogus cable match
-Date: Fri, 05 Dec 2008 15:31:40 -0500
-Message-ID: <49398FAC.2060301@garzik.org>
-References: <20081205194117.17036.74479.stgit@localhost.localdomain>
+From: David Daney <ddaney@caviumnetworks.com>
+Subject: [PATCH 0/2] libata: Cavium OCTEON SOC Compact Flash driver (v3)
+Date: Fri, 05 Dec 2008 15:06:42 -0800
+Message-ID: <4939B402.9010004@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47317 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbYLEUbo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Dec 2008 15:31:44 -0500
-In-Reply-To: <20081205194117.17036.74479.stgit@localhost.localdomain>
+Received: from mail3.caviumnetworks.com ([12.108.191.235]:39651 "EHLO
+	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755263AbYLEXGx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Dec 2008 18:06:53 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: kai@kaishome.de, linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-mips <linux-mips@linux-mips.org>
 
-Alan Cox wrote:
-> From: Alan Cox <alan@redhat.com>
-> 
-> Some systems report SIS 5513 as both vendor/id and subvendor/id string. In
-> that case we can't distinguish the system by the id svid/sdid and in fact
-> the entry here breaks some boxes. At some point we need to find another way
-> to detect the Targa Visionary 1000, until then this a hang for some users with
-> lower performance for others.
-> 
-> Closes: #12092
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+As part of our efforts to get the Cavium OCTEON processor support
+merged (see: http://marc.info/?l=linux-mips&m=122834773330212), we
+have this CF driver for your consideration.
 
-Should that last sentence be "this SOLVES a hang"?
+This version is split into two separate patches.  The first adds
+some entries to the ata_timing table in libata-core.  The second is
+the driver proper.
 
-As it is currently worded, it is unclear what we are trading off with 
-this patch...
+I will reply with the two patches.
 
 Thanks,
 
-	Jeff
+David Daney (2):
+   libata: Add two more columns to the ata_timing table.
+   libata: New driver for OCTEON SOC Compact Flash interface (v3).
 
-
-
+  drivers/ata/Kconfig          |    9 +
+  drivers/ata/Makefile         |    1 +
+  drivers/ata/libata-core.c    |   74 ++--
+  drivers/ata/pata_octeon_cf.c |  956 
+++++++++++++++++++++++++++++++++++++++++++
+  include/linux/libata.h       |   12 +-
+  5 files changed, 1014 insertions(+), 38 deletions(-)
+  create mode 100644 drivers/ata/pata_octeon_cf.c
 
