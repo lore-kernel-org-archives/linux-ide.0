@@ -1,46 +1,62 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_sis: Remove bogus cable match
-Date: Fri, 05 Dec 2008 19:41:52 +0000
-Message-ID: <20081205194117.17036.74479.stgit@localhost.localdomain>
+Subject: [PATCH 1/7] pata_ninja32: update ID table
+Date: Fri, 05 Dec 2008 19:42:38 +0000
+Message-ID: <20081205194231.17133.42760.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40147 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40152 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755542AbYLETlo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Dec 2008 14:41:44 -0500
+	with ESMTP id S1752320AbYLETm3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Dec 2008 14:42:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: kai@kaishome.de, linux-ide@vger.kernel.org, jeff@garzik.org
 
 From: Alan Cox <alan@redhat.com>
 
-Some systems report SIS 5513 as both vendor/id and subvendor/id string. In
-that case we can't distinguish the system by the id svid/sdid and in fact
-the entry here breaks some boxes. At some point we need to find another way
-to detect the Targa Visionary 1000, until then this a hang for some users with
-lower performance for others.
-
-Closes: #12092
-
 Signed-off-by: Alan Cox <alan@redhat.com>
 ---
 
- drivers/ata/pata_sis.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/ata/pata_ninja32.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index d342366..e4be55e 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -56,7 +56,6 @@ static const struct sis_laptop sis_laptop[] = {
- 	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
- 	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
- 	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
--	{ 0x5513, 0x1039, 0x5513 },	/* Targa Visionary 1000 */
- 	/* end marker */
- 	{ 0, }
+diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
+index 4e466ea..4dd9a3b 100644
+--- a/drivers/ata/pata_ninja32.c
++++ b/drivers/ata/pata_ninja32.c
+@@ -44,7 +44,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_ninja32"
+-#define DRV_VERSION "0.1.1"
++#define DRV_VERSION "0.1.3"
+ 
+ 
+ /**
+@@ -130,7 +130,8 @@ static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		return rc;
+ 	pci_set_master(dev);
+ 
+-	/* Set up the register mappings */
++	/* Set up the register mappings. We use the I/O mapping as only the
++	   older chips also have MMIO on BAR 1 */
+ 	base = host->iomap[0];
+ 	if (!base)
+ 		return -ENOMEM;
+@@ -167,8 +168,12 @@ static int ninja32_reinit_one(struct pci_dev *pdev)
+ #endif
+ 
+ static const struct pci_device_id ninja32[] = {
++	{ 0x10FC, 0x0003, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
++	{ 0x1145, 0x8008, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
++	{ 0x1145, 0xf008, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
++	{ 0x1145, 0xf02C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ },
  };
+ 
 
