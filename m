@@ -1,43 +1,55 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_sis: Remove bogus cable match
-Date: Sat, 6 Dec 2008 00:27:05 +0000
-Message-ID: <20081206002705.46052575@lxorguk.ukuu.org.uk>
-References: <20081205194117.17036.74479.stgit@localhost.localdomain>
-	<49398FAC.2060301@garzik.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH 3/7] ata: Fix experimental tags
+Date: Fri, 05 Dec 2008 19:05:18 -0600
+Message-ID: <4939CFCE.2000901@shaw.ca>
+References: <20081205194231.17133.42760.stgit@localhost.localdomain> <20081205194254.17133.67496.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52568 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752523AbYLFA05 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Dec 2008 19:26:57 -0500
-In-Reply-To: <49398FAC.2060301@garzik.org>
+Received: from main.gmane.org ([80.91.229.2]:55890 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751815AbYLFBFb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Dec 2008 20:05:31 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1L8lbt-0004uW-SR
+	for linux-ide@vger.kernel.org; Sat, 06 Dec 2008 01:05:29 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 06 Dec 2008 01:05:29 +0000
+Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 06 Dec 2008 01:05:29 +0000
+In-Reply-To: <20081205194254.17133.67496.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: kai@kaishome.de, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: kai@kaishome.de, jeff@garzik.org
 
-On Fri, 05 Dec 2008 15:31:40 -0500
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> Alan Cox wrote:
-> > From: Alan Cox <alan@redhat.com>
-> > 
-> > Some systems report SIS 5513 as both vendor/id and subvendor/id string. In
-> > that case we can't distinguish the system by the id svid/sdid and in fact
-> > the entry here breaks some boxes. At some point we need to find another way
-> > to detect the Targa Visionary 1000, until then this a hang for some users with
-> > lower performance for others.
-> > 
-> > Closes: #12092
-> > 
-> > Signed-off-by: Alan Cox <alan@redhat.com>
+Alan Cox wrote:
+> From: Alan Cox <alan@redhat.com>
 > 
-> Should that last sentence be "this SOLVES a hang"?
+> Various tags are now way out of date
+> ---
 > 
-> As it is currently worded, it is unclear what we are trading off with 
-> this patch...
+>  drivers/ata/Kconfig |   44 ++++++++++++++++++++++----------------------
+>  1 files changed, 22 insertions(+), 22 deletions(-)
+> 
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 78fbec8..421b7c7 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -153,7 +153,7 @@ config SATA_PROMISE
+>  	  If unsure, say N.
+>  
+>  config SATA_SX4
+> -	tristate "Promise SATA SX4 support"
+> +	tristate "Promise SATA SX4 support (Experimental)"
+>  	depends on PCI && EXPERIMENTAL
+>  	help
+>  	  This option enables support for Promise Serial ATA SX4.
 
-I missed out the word "trades" ...
+Forgot to remove the EXPERIMENTAL dependency on this one?
 
