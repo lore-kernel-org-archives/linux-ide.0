@@ -1,32 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 00/06] ide-atapi: more leftovers
-Date: Sat, 6 Dec 2008 15:51:20 +0100
-Message-ID: <200812061551.20772.bzolnier@gmail.com>
-References: <1228373010-20249-1-git-send-email-petkovbb@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sat, 6 Dec 2008 15:06:25 +0000
+Message-ID: <20081206150625.224aa97f@lxorguk.ukuu.org.uk>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	<20081203100643.GA29340@infradead.org>
+	<1228316941.5551.6.camel@localhost.localdomain>
+	<200812061551.08525.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:25065 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650AbYLFOyp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Dec 2008 09:54:45 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so216640nfc.21
-        for <linux-ide@vger.kernel.org>; Sat, 06 Dec 2008 06:54:44 -0800 (PST)
-In-Reply-To: <1228373010-20249-1-git-send-email-petkovbb@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200812061551.08525.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 04 December 2008, Borislav Petkov wrote:
-> Hi Bart,
-> 
-> here are the reworked patches of the first batch of ide-cd to generic
-> conversion. They've been lightly tested with ide-floppy only since the
-> ide-cd is still needs rewiring after all is moved to ide-atapi.
+> ide-scsi has been practically a dead code for a long time now (IIRC it has
+> even been broken -- by some general kernel changes -- for few releases and
+> nobody noticed, till Boaz discovered it while doing unrelated SCSI fixes)
+> but I kept it on the live support anyway.  However there needs to be some
+> limit to it, especially given that driver has been officially orphaned for
+> over a year now and nobody stepped in...
 
-Thanks, I applied everything except patch #5 (which needs fixup because
-it goes too far into the future ;-).
+And it basically still works. You've just removed some hardware support
+for folks still trapped with the old IDE legacy drivers and some tape
+drives etc.
+
+I shall certainly be asking Linus not to apply your changeset.
+
+Alan
