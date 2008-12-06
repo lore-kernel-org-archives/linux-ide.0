@@ -1,51 +1,48 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] libata: Add two more columns to the ata_timing table.
-Date: Sat, 06 Dec 2008 23:19:20 +0300
-Message-ID: <493ADE48.6050709@ru.mvista.com>
-References: <4939B402.9010004@caviumnetworks.com> <1228518561-16242-1-git-send-email-ddaney@caviumnetworks.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: MCP55 disk activity LEDs don't flash
+Date: Sat, 06 Dec 2008 14:28:11 -0600
+Message-ID: <493AE05B.2010707@shaw.ca>
+References: <493A8767.5030200@seiner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:7233 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752220AbYLFUTY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 Dec 2008 15:19:24 -0500
-In-Reply-To: <1228518561-16242-1-git-send-email-ddaney@caviumnetworks.com>
+Received: from main.gmane.org ([80.91.229.2]:43070 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752696AbYLFU2Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 Dec 2008 15:28:25 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1L93lG-0006FV-1E
+	for linux-ide@vger.kernel.org; Sat, 06 Dec 2008 20:28:22 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 06 Dec 2008 20:28:22 +0000
+Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 06 Dec 2008 20:28:22 +0000
+In-Reply-To: <493A8767.5030200@seiner.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+Yan Seiner wrote:
+> I have a 6 slot server case with a backplane.  AFAICT the backplane is 
+> passive and there are SATA cables that lead from the backplane to the mobo.
+> 
+> The problem is that the disk activity LEDs for the slots don't flash at 
+> all.  The mobo is an ASUS M2N SLI Deluxe, which has the MCP55 controller.
+> 
+> The drive activity LED which plugs into the mobo works just fine; the 
+> individual LEDs for each of the drives don't flash - they just stay on.  
+> Is there something I can enable to make them work?  Or is the backplane 
+> broken?
 
-David Daney wrote:
-
-> The forthcoming OCTEON SOC Compact Flash driver needs a few more
-> timing values than were available in the ata_timing table.  I add new
-> columns for write_hold and read_holdz times.  The values were obtained
-> from the Compact Flash specification Rev 4.1.
-
-> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
-
-NAK.
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index ed3f26e..95fa9f6 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-[...]
->  enum ata_xfer_mask {
-> @@ -864,6 +868,8 @@ struct ata_timing {
->  	unsigned short cyc8b;		/* t0 for 8-bit I/O */
->  	unsigned short active;		/* t2 or tD */
->  	unsigned short recover;		/* t2i or tK */
-> +	unsigned short write_hold;	/* t4 */
-> +	unsigned short read_holdz;	/* t6z */
-
-    Sorry for failing to notice this before but t6z is again the timing that 
-the host can't control. Therefore I'm seeig no sense in its addition. I don't 
-know how your driver is going to use it -- but most probably incorrectly...
-
-MBR, Sergei
+The backplane may be expecting the host to control the LEDs. You'd have 
+to check with the manufacturer to be sure. As for how it would do this, 
+there's such a thing as enclosure management support in SATA, but the 
+sata_nv driver doesn't support it. If there is a way to use it on that 
+controller, only NVidia would know, since they've provided no 
+documentation for their pre-AHCI controllers. Some AHCI controllers do 
+have support for this..
 
