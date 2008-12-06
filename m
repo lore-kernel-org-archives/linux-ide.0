@@ -1,36 +1,56 @@
-From: Yan Seiner <yan@seiner.com>
-Subject: Making disk activity LEDs flash on demand
-Date: Sat, 06 Dec 2008 06:41:40 -0800
-Message-ID: <493A8F24.3010504@seiner.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sat, 6 Dec 2008 15:51:08 +0100
+Message-ID: <200812061551.08525.bzolnier@gmail.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <20081203100643.GA29340@infradead.org> <1228316941.5551.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from flatoutfitness.com ([66.178.130.209]:57132 "EHLO www.seiner.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755964AbYLFOll (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 Dec 2008 09:41:41 -0500
-Received: from www.seiner.com ([192.168.128.6] ident=yan)
-	by www.seiner.com with esmtp (Exim 4.69)
-	(envelope-from <yan@seiner.com>)
-	id 1L8yLk-0006Ay-Eq
-	for linux-ide@vger.kernel.org; Sat, 06 Dec 2008 06:41:40 -0800
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1228316941.5551.6.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Does anyone know of a way to make a disk activity LED flash on demand?  
-My server has 11 drives connected ATM with more to come.  These are 
-connected in a variety of ways - 2 SCSI drives, 6 SATA drives plugged 
-directly into the mobo, and 3 via port multipliers.
+On Wednesday 03 December 2008, James Bottomley wrote:
+> On Wed, 2008-12-03 at 05:06 -0500, Christoph Hellwig wrote:
+> > On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
+> > > This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
+> > > 
+> > > It's against linux-next (which seems to has some changes to ide-scsi
+> > > for 2.6.29 from the ide tree). 
+> > 
+> > Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
+> > the osst driver?
+> 
+> Depends.  If you're still using drivers/ide then yes, it is.  With
+> libata (which is what most modern distros use), osst just works as an
+> ATAPI transport.
+> 
+> git log tells me ide-scsi has been updated quite a bit recently, but it
+> mostly looks to be fallout around the drivers/ide churn.  Can we get ide
+> maintainer's buy in for this (I think they've been maintaining ide-tape
+> and ide-cd in preference to ide-scsi)?
 
-All of these drives are in various softRAID arrays.  I'd like to be able 
-to identify a specific drive via software, so that when a drive is 
-overheating or failing I can pull just that drive, instead of going 
-through the 'Let's pull this one and see if that's right' routine.
+Certainly, native ide-{cd,gd,tape} drivers are far superior over ide-scsi
+and are actively maintained.
 
-Long ago I had a hardware RAID controller that could do just that.  You 
-could tell it to id a specific drive and it would flash that LED.  Is 
-there any way to do that?
+ide-scsi has been practically a dead code for a long time now (IIRC it has
+even been broken -- by some general kernel changes -- for few releases and
+nobody noticed, till Boaz discovered it while doing unrelated SCSI fixes)
+but I kept it on the live support anyway.  However there needs to be some
+limit to it, especially given that driver has been officially orphaned for
+over a year now and nobody stepped in...
 
---Yan
+I applied the scheduled removal patch to pata-2.6 tree, thanks Tomo!
+
+Thanks,
+Bart
+
+PS If somebody wants to work on OSST support for IDE we can provide an
+assistance into porting osst.c over generic ATAPI code -- it would still
+be much less hassle than trying to figure out remaining ide-scsi issues
+(lifetime rules for IDE / SCSI / IDE-SCSI objects, error handling etc.).
