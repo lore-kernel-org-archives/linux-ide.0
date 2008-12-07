@@ -1,45 +1,50 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: What's with libata and DVDs ?
-Date: Sun, 07 Dec 2008 00:01:13 -0500
-Message-ID: <493B5899.8050803@rtr.ca>
-References: <493B554D.3070403@rtr.ca>
+From: "Yinghai Lu" <yinghai@kernel.org>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sat, 6 Dec 2008 21:07:32 -0800
+Message-ID: <86802c440812062107h37f0d9f1w1304c4f0ab6856ec@mail.gmail.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	 <20081206120001.3580b9e3@tuna> <200812062241.35601.bzolnier@gmail.com>
+	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>
+	 <493B022B.3050406@ru.mvista.com> <493B0A8E.7000506@garzik.org>
+	 <493B0DF2.4090901@ru.mvista.com> <493B0F36.6030509@garzik.org>
+	 <86802c440812061936v4629857ehbd2705e389e4378b@mail.gmail.com>
+	 <493B4E52.6080905@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:59820 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753590AbYLGFAB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Dec 2008 00:00:01 -0500
-Received: from [10.0.0.6] (corey.localnet [10.0.0.6])
-	by mail.rtr.ca (Postfix) with ESMTP id 9A53794679E
-	for <linux-ide@vger.kernel.org>; Sun,  7 Dec 2008 00:01:13 -0500 (EST)
-In-Reply-To: <493B554D.3070403@rtr.ca>
+Received: from rv-out-0506.google.com ([209.85.198.236]:29629 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbYLGFHd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 00:07:33 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so652106rvb.1
+        for <linux-ide@vger.kernel.org>; Sat, 06 Dec 2008 21:07:32 -0800 (PST)
+In-Reply-To: <493B4E52.6080905@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-Mark Lord wrote:
-> Attempting to play a known-good DVD-video in MythTV-0.21
-> using libata in kernel 2.6.27.7 :
-> 
-> sr 4:0:0:0: [sr0] unaligned transfer
-> Buffer I/O error on device sr0, logical block 1080
-> Buffer I/O error on device sr0, logical block 1081
-> Buffer I/O error on device sr0, logical block 1082
-> Buffer I/O error on device sr0, logical block 1083
-> Buffer I/O error on device sr0, logical block 1084
-> Buffer I/O error on device sr0, logical block 1085
-> Buffer I/O error on device sr0, logical block 1086
-> Buffer I/O error on device sr0, logical block 1087
-> Buffer I/O error on device sr0, logical block 1088
-> sr 4:0:0:0: [sr0] unaligned transfer
-> sr 4:0:0:0: [sr0] unaligned transfer
-> sr 4:0:0:0: [sr0] unaligned transfer
-> 
-> This used to work back in 2.6.25 or so.
-> Anyone else out there have similar DVD issues ?
-..
+On Sat, Dec 6, 2008 at 8:17 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>> anyone one is building block layer for USB disk? will get /dev/uda?
+>
+> That already exists -- drivers/block/ub   :)
 
-Mmm.. some DVDs play, others don't.  I'll instrument the code
-and see if anything obvious pops up someday.  Ignore me for now. :)
+this one ?
+
+config BLK_DEV_UB
+        tristate "Low Performance USB Block driver"
+        depends on USB
+        help
+          This driver supports certain USB attached storage devices
+          such as flash keys.
+
+          If you enable this driver, it is recommended to avoid conflicts
+          with usb-storage by enabling USB_LIBUSUAL.
+
+          If unsure, say N.
+
+I was thinking it should be more faster with less one layer.
+
+YH
