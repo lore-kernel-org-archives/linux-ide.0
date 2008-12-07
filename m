@@ -1,46 +1,64 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: What's with libata and DVDs ?
-Date: Sun, 07 Dec 2008 11:13:13 -0500
-Message-ID: <493BF619.7000003@rtr.ca>
-References: <493B554D.3070403@rtr.ca> <20081207112032.25089ac9@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 1/4] ide-atapi: remove ide-scsi remnants from ide_issue_pc
+Date: Sun,  7 Dec 2008 18:21:08 +0100
+Message-ID: <1228670471-3435-2-git-send-email-petkovbb@gmail.com>
+References: <1228670471-3435-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:41830 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754246AbYLGQMD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Dec 2008 11:12:03 -0500
-In-Reply-To: <20081207112032.25089ac9@lxorguk.ukuu.org.uk>
+Received: from mu-out-0910.google.com ([209.85.134.185]:7962 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbYLGRVS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 12:21:18 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so781713muf.1
+        for <linux-ide@vger.kernel.org>; Sun, 07 Dec 2008 09:21:16 -0800 (PST)
+In-Reply-To: <1228670471-3435-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Alan Cox wrote:
-> On Sat, 06 Dec 2008 23:47:09 -0500
-> Mark Lord <liml@rtr.ca> wrote:
-> 
->> Attempting to play a known-good DVD-video in MythTV-0.21
->> using libata in kernel 2.6.27.7 :
->>
->> sr 4:0:0:0: [sr0] unaligned transfer
-> 
-> Your system somehow generated a scsi request which was not 2K aligned.
-> The scsi mid layer then reported that and added padding - which
-> presumably didn't help because the command shouldn't have been misaligned
-> in the first place.
-> 
-> If you strace it do you see any misaligned requests coming from user
-> space - also btw is the cd layer reporting the sector size wrong
-> anywhere ?
-..
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-atapi.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
 
-No complaints from the cd layer -- just that unaligned message.
-I've changed that message to actually *show* the values it is complaining
-about (what a concept, duh..), so next time I reproduce it there will be
-some information as to what was really going on.
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index c110329..ff6b567 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -602,7 +602,6 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout)
+ 	ide_expiry_t *expiry = NULL;
+ 	u32 tf_flags;
+ 	u16 bcount;
+-	u8 scsi = !!(drive->dev_flags & IDE_DFLAG_SCSI);
+ 
+ 	/* We haven't transferred any data yet */
+ 	pc->xferred = 0;
+@@ -612,10 +611,6 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout)
+ 		tf_flags = IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL;
+ 		bcount = ide_cd_get_xferlen(hwif->hwgroup->rq);
+ 		expiry = ide_cd_expiry;
+-	} else if (scsi) {
+-		tf_flags = 0;
+-		bcount = min(pc->req_xfer, 63 * 1024);
+-		expiry = ide_scsi_expiry;
+ 	} else {
+ 		tf_flags = IDE_TFLAG_OUT_DEVICE;
+ 		bcount = ((drive->media == ide_tape) ?
+@@ -630,13 +625,8 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout)
+ 
+ 	if (((pc->flags & PC_FLAG_DMA_OK) &&
+ 		(drive->dev_flags & IDE_DFLAG_USING_DMA)) ||
+-	    drive->dma) {
+-		if (scsi)
+-			hwif->sg_mapped = 1;
++	    drive->dma)
+ 		drive->dma = !hwif->dma_ops->dma_setup(drive);
+-		if (scsi)
+-			hwif->sg_mapped = 0;
+-	}
+ 
+ 	if (!drive->dma)
+ 		pc->flags &= ~PC_FLAG_DMA_OK;
+-- 
+1.6.0.4
 
-Probably just a buggy app, or maybe 64-bit porting error in it.
-
-Cheers
