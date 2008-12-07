@@ -1,43 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Sun, 7 Dec 2008 11:40:40 +0000
-Message-ID: <20081207114040.24bedc8c@lxorguk.ukuu.org.uk>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
-	<200812061551.08525.bzolnier@gmail.com>
-	<20081206120001.3580b9e3@tuna>
-	<200812062241.35601.bzolnier@gmail.com>
-	<20081206222423.04aada70@lxorguk.ukuu.org.uk>
-	<493B022B.3050406@ru.mvista.com>
-	<20081206230227.07b00e2f@lxorguk.ukuu.org.uk>
-	<493B0867.5020700@ru.mvista.com>
-	<20081206233235.2a3f1602@lxorguk.ukuu.org.uk>
-	<493B13E6.3010807@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <493B13E6.3010807@ru.mvista.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Dan =?ISO-8859-14?B?Tm/p?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 5911] siimage.c interrupts screaming
+Date: Sun,  7 Dec 2008 05:30:11 -0800 (PST)
+Message-ID: <20081207133011.2758911D107@picon.linux-foundation.org>
+References: <bug-5911-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33724 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753801AbYLGNaN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 08:30:13 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB7DUBhH020088
+	for <linux-ide@vger.kernel.org>; Sun, 7 Dec 2008 05:30:12 -0800
+In-Reply-To: <bug-5911-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> > Because the chunks of scsi midlayer we inherit (actually nowdays mostly
-> > block) are the pieces you need anyway to do multiple command queues,
-> >   
-> 
->    Er, what does this term mean? Several queues per device or a tagged 
-> queue?
+http://bugzilla.kernel.org/show_bug.cgi?id=5911
 
-Anything beyond issuing one command at a time. The moment you get errors
-with multiple command queues you really need the rest of the block
-supporting logic (small bits of which are still in scsi).
 
->    So, you're just presenting SCSI emulation as a "lesser evil". But 5 
-> years seems a long enough term to unbind all that stuff from SCSI.
+bzolnier@gmail.com changed:
 
-It's being done bit by bit. I wasn't aware it was a race, I always
-thought that being correct, logical, testable and evolutionary bisectable
-steps was more important somehow.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
+             Status|NEW                         |ASSIGNED
 
-Alan
+
+
+
+------- Comment #15 from bzolnier@gmail.com  2008-12-07 05:30 -------
+I'm closing it for now.
+
+[ Please re-open if the problem still happens with recent kernels. ]
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
