@@ -1,40 +1,36 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 0/4] ide: remove ide-scsi remnants
-Date: Sun, 7 Dec 2008 19:43:16 +0100
-Message-ID: <20081207184316.GA30260@gollum.tnic>
-References: <1228670471-3435-1-git-send-email-petkovbb@gmail.com>
-Reply-To: petkovbb@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10216] kernel from different versions hangs with some CD/DVD drives
+Date: Sun,  7 Dec 2008 13:08:07 -0800 (PST)
+Message-ID: <20081207210807.093AA10800C@picon.linux-foundation.org>
+References: <bug-10216-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:9257 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753269AbYLGSnS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 13:43:18 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so803278muf.1
-        for <linux-ide@vger.kernel.org>; Sun, 07 Dec 2008 10:43:15 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1228670471-3435-1-git-send-email-petkovbb@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51730 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751202AbYLGVII (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 16:08:08 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB7L87uA010844
+	for <linux-ide@vger.kernel.org>; Sun, 7 Dec 2008 13:08:08 -0800
+In-Reply-To: <bug-10216-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Dec 07, 2008 at 06:21:07PM +0100, Borislav Petkov wrote:
-> Hi Bart,
-> 
-> here are the patches removing bits and pieces belonging to the late ide-scsi :).
-> 
+http://bugzilla.kernel.org/show_bug.cgi?id=10216
 
-here's the correct (and not reversed :)) diffstat though:
 
- drivers/ide/ide-atapi.c  |   97 +++++++++-------------------------------------
- drivers/ide/ide-io.c     |    3 -
- drivers/ide/ide-ioctls.c |    3 +-
- drivers/ide/ide-probe.c  |    2 -
- include/linux/ide.h      |   34 ++++++----------
- 5 files changed, 33 insertions(+), 106 deletions(-)
+
+
+
+------- Comment #31 from bzolnier@gmail.com  2008-12-07 13:08 -------
+Sergei: I looked into it (under QEMU for now) and adding msleep(1000) +
+printk() to ide_init() causes the "Clocksource tsc unstable" to appear before
+IDE initialization so it seems that the issue is caused by some other kernel
+code and IDE is just unlucky to be initialized at same time as clocksource
+watchdog triggers.
+
 
 -- 
-Regards/Gruss,
-    Boris.
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
