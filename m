@@ -1,75 +1,103 @@
-From: "Andrew Lyon" <andrew.lyon@gmail.com>
-Subject: Re: MCP55 disk activity LEDs don't flash
-Date: Sun, 7 Dec 2008 14:57:15 +0000
-Message-ID: <f4527be0812070657q237924cbq7fe48b35e19c0d6@mail.gmail.com>
-References: <493A8767.5030200@seiner.com> <20081206120533.48025219@tuna>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sun, 07 Dec 2008 09:04:58 -0600
+Message-ID: <1228662298.3501.19.camel@localhost.localdomain>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	 <200812061551.08525.bzolnier@gmail.com>	<20081206120001.3580b9e3@tuna>
+	 <200812062241.35601.bzolnier@gmail.com>
+	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>
+	 <493B022B.3050406@ru.mvista.com>
+	 <20081206230227.07b00e2f@lxorguk.ukuu.org.uk>
+	 <493B0867.5020700@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.176]:14923 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753810AbYLGO5S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 09:57:18 -0500
-Received: by ik-out-1112.google.com with SMTP id c29so575631ika.5
-        for <linux-ide@vger.kernel.org>; Sun, 07 Dec 2008 06:57:16 -0800 (PST)
-In-Reply-To: <20081206120533.48025219@tuna>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <493B0867.5020700@ru.mvista.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Dan =?ISO-8859-1?Q?No=E9?= <dpn@isomerica.net>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>
-Cc: Yan Seiner <yan@seiner.com>, linux-ide@vger.kernel.org
 
-On Sat, Dec 6, 2008 at 5:05 PM, Dan No=E9 <dpn@isomerica.net> wrote:
-> On Sat, 06 Dec 2008 06:08:39 -0800
-> Yan Seiner <yan@seiner.com> wrote:
->
->> I have a 6 slot server case with a backplane.  AFAICT the backplane
->> is passive and there are SATA cables that lead from the backplane to
->> the mobo.
->>
->> The problem is that the disk activity LEDs for the slots don't flash
->> at all.  The mobo is an ASUS M2N SLI Deluxe, which has the MCP55
->> controller.
->>
->> The drive activity LED which plugs into the mobo works just fine; th=
-e
->> individual LEDs for each of the drives don't flash - they just stay
->> on. Is there something I can enable to make them work?  Or is the
->> backplane broken?
->
-> I have a Tyan Transport GT20 and the individual drive bay LEDs don't
-> work at all.  Annoying, but I'm not physically near the system that
-> much.  If I recall correctly, on the GT20 the backplane didn't have t=
-he
-> capability to light the LEDs (although then I don't understand wtf
-> there are LEDs there... perhaps Windows has some way of lighting them=
-).
->
-> Cheers,
-> Dan
+On Sun, 2008-12-07 at 02:19 +0300, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Alan Cox wrote:
+> 
+> >>    Oh, yes. SCSI emulation is just what Linux embedded world is asking 
+> >> for...
+> >>     
+> >
+> > Well ATAPI is SCSI emulation (its a sort of pidgin SCSI admittedly).
+> >   
+> 
+>    ATAPI is SCSI transport (with maybe some quirks at SCSI command level 
+> tho, IIRC). ATA is neither thansport nor does it map to SCSI 1:1.
 
-I have a similar problem with a supermicro system with sc743tq-865-sq
-chassis + x7dwa-n motherboard, the chassis has a 8 drive hot swap
-backplane but the motherboard only has 6 ports, the 6 drives that are
-connected to the m/b have working led's but the 2 remaining drives
-only flash when the drives spin up, the activity and status lights
-remain off the rest of the time.
 
-I've never figured out how the led's are driven, the backplane does
-have two gpio ports which could be connected to gpio on the
-motherboard, but I have never used them and it seems to work ok as it
-is.
+Well, to be wholly accurate, since SCSI-3, SCSI has been separated into
+an architecture, primary command, device specific command and transport
+model (called the SCSI architecture model).  Starting with ATA-8, ATA
+will go this way again.  What ATAPI actually is is a SCSI (really MMC
+for CD and SSC for tape) command transported over ATA using the ATA
+PACKET command.  With ATA-8 it will be much more analogous to SCSI
+command over ATA transport.
 
-Andy
->
-> --
->                    /--------------- - -  -  -   -   -
->                   |  Dan No=E9
->                   |  http://isomerica.net/~dpn/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>  The 
+> code for emulating SCSI on ATA only burdens the kernel (and causes user 
+> complaints about changing disk names from /dev/hdx to /dev/sda :-).
+
+The code for sorting this out is already upstream in the block tree for
+2.6.29.
+
+> > I'm actually seeing two strands of requests (including from embedded)
+> >
+> > - CF only small "dumb as president" type driver that is written to be as
+> > compact as possible and preferably considers IRQs as optional
+> >   
+> 
+>    Yes, support for IRQ-less CF is what IDE core lacks. I must note 
+> however that IRQ-less mode looks inherently risky to me because of the 
+> raciness of tbothe the ATA spec and its implimentatin WRT the "interrupt 
+> pending" state. I may be mistaking but someone of T13 experts (Hale 
+> Landis I guess) told me that the devices require that state to be 
+> cleared to proceed with the command, and that's what the fast polling 
+> host is likely to fail at because it doesn't know if rthe device has 
+> actually entered this state when BSY is cleared... Oh well, that's an 
+> old story...
+> 
+> > - Full SATA and NCQ aware platform support.
+> >   
+> 
+>    I don't see how SATA/NCQ support is connected to SCSI.
+
+They require features that SCSI has had for a long time for TCQ but
+which weren't present in block.
+
+Originally I'd been promised that libata would be out of SCSI within a
+year (that was when it went in).  The slight problem is that having all
+the features it needed, SCSI became a very comfortable host. Getting
+libata out of SCSI was also made difficult by the fact that few people
+cared enough to help.  The only significant external problem is the size
+of the stack and the slight performance penalty for SATA disks going
+over SAT.  Unfortunately for the latter, slight turns out to be pretty
+unmeasurable, so the only hope became people who cared about
+footprint ... and there don't seem to be any of those.
+
+The other problem is that it isn't just moving libata out of SCSI.  To
+do this correctly, SCSI itself needs to be sliced up because lots of
+devices running over ATA transports are genuinely governed by SCSI
+protocols (CD with MMC and tape with SSC), so we have to be able to run
+sr and st over an ATA transport, thus it needs the minimal pieces of
+SCSI to function.  This in turn necessitates splitting the whole of the
+SCSI mid layer into a stand alone upper layer support library and a
+lower layer platform, which is a significant piece of work.
+
+The way it's happening is that people keep thinking of incremental steps
+towards this (ULD separated from SCSI, block timers, sd device
+allocation separation, block error handling) and doing them, but lacking
+a major spur, it's going slowly.
+
+James
+
+
