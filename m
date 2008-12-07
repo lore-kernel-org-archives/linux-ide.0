@@ -1,81 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Sun, 07 Dec 2008 18:21:10 +0300
-Message-ID: <493BE9E6.7050802@ru.mvista.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	 <200812061551.08525.bzolnier@gmail.com>	<20081206120001.3580b9e3@tuna>	 <200812062241.35601.bzolnier@gmail.com>	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>	 <493B022B.3050406@ru.mvista.com>	 <20081206230227.07b00e2f@lxorguk.ukuu.org.uk>	 <493B0867.5020700@ru.mvista.com> <1228662298.3501.19.camel@localhost.localdomain>
+From: Harri Olin <harri.olin@gmail.com>
+Subject: Re: MCP55 disk activity LEDs don't flash
+Date: Sun, 07 Dec 2008 17:57:41 +0200
+Message-ID: <493BF275.8080903@gmail.com>
+References: <493A8767.5030200@seiner.com> <20081206120533.48025219@tuna> <f4527be0812070657q237924cbq7fe48b35e19c0d6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1228662298.3501.19.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gw02.mail.saunalahti.fi ([195.197.172.116]:48628 "EHLO
+	gw02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbYLGP5z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 10:57:55 -0500
+In-Reply-To: <f4527be0812070657q237924cbq7fe48b35e19c0d6@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>, Yan Seiner <yan@seiner.com>, linux-ide@vger.kernel.org
 
-Hello.
-
-James Bottomley wrote:
-
->>>>    Oh, yes. SCSI emulation is just what Linux embedded world is asking 
->>>> for...
->>>>     
->>>>         
->>> Well ATAPI is SCSI emulation (its a sort of pidgin SCSI admittedly).
->>>   
->>>       
->>    ATAPI is SCSI transport (with maybe some quirks at SCSI command level 
->> tho, IIRC). ATA is neither thansport nor does it map to SCSI 1:1.
->>     
->
->
-> Well, to be wholly accurate, since SCSI-3, SCSI has been separated into
-> an architecture, primary command, device specific command and transport
-> model (called the SCSI architecture model).
-
-   Thanks, I'm well aware of all this. :-)
-   My first encounter with SCSI dates back to 1993-94 -- it's a pity 
-that I had to abandon this area (switching to that puny IDE ;-)...
-
-> Starting with ATA-8, ATA
-> will go this way again.
-
-   It's gone that way in ATA/PI-7 actually, being broken into 3 separate 
-documents then, one spoecifying the command set and 2 others PATA and 
-SATA tranports.
-
->   What ATAPI actually is is a SCSI (really MMC
-> for CD and SSC for tape)
-
-   Unfortunately, the initial SFF documents specified both the transport 
-protocol and the command sets (which somewhat diverged form what SCSI-2 
-had, IIRC).
-   Fortunately, once ANSI finally taken over ATAPI work, they dropped 
-that stupid practice and started referring to MMC and SSC.
-
-> command transported over ATA using the ATA
-> PACKET command.  With ATA-8 it will be much more analogous to SCSI
-> command over ATA transport.
+Andrew Lyon wrote:
+> I have a similar problem with a supermicro system with sc743tq-865-sq
+> chassis + x7dwa-n motherboard, the chassis has a 8 drive hot swap
+> backplane but the motherboard only has 6 ports, the 6 drives that are
+> connected to the m/b have working led's but the 2 remaining drives
+> only flash when the drives spin up, the activity and status lights
+> remain off the rest of the time.
 >   
 
-    I don't think "analogous" means that it will be sending SCSI CDBs 
-over PATA/SATA is of native commands and turn ATA into ATAPI. So all 
-this is fine but changes nothing about the SCSI emulation thing.
+Drive activity LED's light up using SATA power connector pin 11. Some 
+hard drives support this, others don't.
 
->> The code for emulating SCSI on ATA only burdens the kernel (and causes user 
->> complaints about changing disk names from /dev/hdx to /dev/sda :-).
->>     
->
-> The code for sorting this out is already upstream in the block tree for
-> 2.6.29.
+I don't have any hard information of which drives support and which 
+don't but I seem to recall that some WD non-raid-edition drives didn't.
+
+Do you have different drives on the remaining 2 slots?
+
+> I've never figured out how the led's are driven, the backplane does
+> have two gpio ports which could be connected to gpio on the
+> motherboard, but I have never used them and it seems to work ok as it
+> is.
 >   
 
-   Sorting out what, emulation?
+On Supermicro TQ backplanes there is bunch of SGPIO connectors, one for 
+4 drives. They are connected to AMI MG9072 chip and are used for 
+blinking red error LED's. The integrated (Intel matrix) RAID on some 
+Supermicro motherboards should support this, but I have never tested it. 
+Also at least some Areca SAS and SATA controllers support it. There is 
+also i2c connector but that works only with some Promise contollers. 
+Note also that the backplane has to be jumpered correctly for it to work.
 
-   I have to cut my response short that that point. I must be totally 
-crazy to allow myself to be dragged into this discussion having so much 
-work to do... :-/
-
-MBR, Sergei
-
+-- 
+Harri.
 
