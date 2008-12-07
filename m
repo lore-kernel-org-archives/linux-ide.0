@@ -1,53 +1,46 @@
-From: Harri Olin <harri.olin@gmail.com>
-Subject: Re: MCP55 disk activity LEDs don't flash
-Date: Sun, 07 Dec 2008 17:57:41 +0200
-Message-ID: <493BF275.8080903@gmail.com>
-References: <493A8767.5030200@seiner.com> <20081206120533.48025219@tuna> <f4527be0812070657q237924cbq7fe48b35e19c0d6@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: What's with libata and DVDs ?
+Date: Sun, 07 Dec 2008 11:13:13 -0500
+Message-ID: <493BF619.7000003@rtr.ca>
+References: <493B554D.3070403@rtr.ca> <20081207112032.25089ac9@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw02.mail.saunalahti.fi ([195.197.172.116]:48628 "EHLO
-	gw02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218AbYLGP5z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 10:57:55 -0500
-In-Reply-To: <f4527be0812070657q237924cbq7fe48b35e19c0d6@mail.gmail.com>
+Received: from rtr.ca ([76.10.145.34]:41830 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754246AbYLGQMD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Dec 2008 11:12:03 -0500
+In-Reply-To: <20081207112032.25089ac9@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lyon <andrew.lyon@gmail.com>
-Cc: =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>, Yan Seiner <yan@seiner.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Andrew Lyon wrote:
-> I have a similar problem with a supermicro system with sc743tq-865-sq
-> chassis + x7dwa-n motherboard, the chassis has a 8 drive hot swap
-> backplane but the motherboard only has 6 ports, the 6 drives that are
-> connected to the m/b have working led's but the 2 remaining drives
-> only flash when the drives spin up, the activity and status lights
-> remain off the rest of the time.
->   
+Alan Cox wrote:
+> On Sat, 06 Dec 2008 23:47:09 -0500
+> Mark Lord <liml@rtr.ca> wrote:
+> 
+>> Attempting to play a known-good DVD-video in MythTV-0.21
+>> using libata in kernel 2.6.27.7 :
+>>
+>> sr 4:0:0:0: [sr0] unaligned transfer
+> 
+> Your system somehow generated a scsi request which was not 2K aligned.
+> The scsi mid layer then reported that and added padding - which
+> presumably didn't help because the command shouldn't have been misaligned
+> in the first place.
+> 
+> If you strace it do you see any misaligned requests coming from user
+> space - also btw is the cd layer reporting the sector size wrong
+> anywhere ?
+..
 
-Drive activity LED's light up using SATA power connector pin 11. Some 
-hard drives support this, others don't.
+No complaints from the cd layer -- just that unaligned message.
+I've changed that message to actually *show* the values it is complaining
+about (what a concept, duh..), so next time I reproduce it there will be
+some information as to what was really going on.
 
-I don't have any hard information of which drives support and which 
-don't but I seem to recall that some WD non-raid-edition drives didn't.
+Probably just a buggy app, or maybe 64-bit porting error in it.
 
-Do you have different drives on the remaining 2 slots?
-
-> I've never figured out how the led's are driven, the backplane does
-> have two gpio ports which could be connected to gpio on the
-> motherboard, but I have never used them and it seems to work ok as it
-> is.
->   
-
-On Supermicro TQ backplanes there is bunch of SGPIO connectors, one for 
-4 drives. They are connected to AMI MG9072 chip and are used for 
-blinking red error LED's. The integrated (Intel matrix) RAID on some 
-Supermicro motherboards should support this, but I have never tested it. 
-Also at least some Areca SAS and SATA controllers support it. There is 
-also i2c connector but that works only with some Promise contollers. 
-Note also that the backplane has to be jumpered correctly for it to work.
-
--- 
-Harri.
-
+Cheers
