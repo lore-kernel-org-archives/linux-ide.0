@@ -1,50 +1,40 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH 1/2] sgiioc4: kill useless address checks
-Date: Sun, 7 Dec 2008 00:03:51 -0800
-Message-ID: <20081207080351.GA332982@sgi.com>
-References: <200810152329.20095.sshtylyov@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sun, 07 Dec 2008 12:59:11 +0300
+Message-ID: <493B9E6F.9080100@ru.mvista.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	<200812061551.08525.bzolnier@gmail.com>	<20081206120001.3580b9e3@tuna>	<200812062241.35601.bzolnier@gmail.com>	<20081206222423.04aada70@lxorguk.ukuu.org.uk>	<493B022B.3050406@ru.mvista.com> <20081206230227.07b00e2f@lxorguk.ukuu.org.uk> <493B1677.5090705@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.sgi.com ([192.48.179.29]:52089 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752830AbYLGID5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Dec 2008 03:03:57 -0500
-Content-Disposition: inline
-In-Reply-To: <200810152329.20095.sshtylyov@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:14817 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753259AbYLGJ7W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Dec 2008 04:59:22 -0500
+In-Reply-To: <493B1677.5090705@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_?= =?ISO-8859-1?Q?No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-On Wed, Oct 15, 2008 at 11:29:19PM +0400, Sergei Shtylyov wrote:
-> - in sgiioc4_read_status(), we always read the IDE status register, so there's
->   no need to check the register's address (must be a leftover from the times
->   when this function implemented the INB() method);
+Hello, I wrote:
 
-Correct.  That code was left over from this:
+>   Actually, embedded world is much more diverse in its IDE 
+> implementations/requirements (you can still encounter a full fledged 
+> UltraDMA/133 PATA contoller embedded within a modern SoC), even to the 
+> point of complete perversions. I know of a flash device which claims 
+> to be IDE compatible (and is indeed registrer level compatible) but 
+> only supports certain standard commands, but implements internal 
+> paritioning scheme with reads/writes done by vendor specific commands 
+> (not even using the standard IDE command execution protocol, IIRC :-).
 
-static u8
-sgiioc4_INB(unsigned long port)
-{
-        u8 reg = (u8) inb(port);
+   Er, no. Judging on the patch that I had to review last year, the 
+command protocol is also compatible, so it could've been "riding" on the 
+IDE core, just like ide-disk.c (probably libata as well). Instead it's 
+driven by a huge out of tree driver (size of a mammoth) -- not sure 
+why... :-)
+>> Alan 
 
-        if ((port & 0xFFF) == 0x11C) {  /* Status register of IOC4 */
-                if (reg & 0x51) {       /* Not busy...check for interrupt */
-                        unsigned long other_ir = port - 0x110;
-                        unsigned int intr_reg = (u32) inl(other_ir);
+MBR, Sergei
 
-                        /* Clear the Interrupt, Error bits on the IOC4 */
-                        if (intr_reg & 0x03) {
-                                outl(0x03, other_ir);
-                                intr_reg = (u32) inl(other_ir);
-                        }
-                }
-        }
 
-        return reg;     
-}
-
-Thanks for the cleanup.
-
-jeremy
