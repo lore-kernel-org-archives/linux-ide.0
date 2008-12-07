@@ -1,68 +1,75 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Sun, 07 Dec 2008 17:46:57 +0300
-Message-ID: <493BE1E1.9020807@ru.mvista.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	<200812061551.08525.bzolnier@gmail.com>	<20081206120001.3580b9e3@tuna>	<200812062241.35601.bzolnier@gmail.com>	<20081206222423.04aada70@lxorguk.ukuu.org.uk>	<493B022B.3050406@ru.mvista.com>	<20081206230227.07b00e2f@lxorguk.ukuu.org.uk>	<493B0867.5020700@ru.mvista.com>	<20081206233235.2a3f1602@lxorguk.ukuu.org.uk>	<493B13E6.3010807@ru.mvista.com> <20081207114040.24bedc8c@lxorguk.ukuu.org.uk>
+From: "Andrew Lyon" <andrew.lyon@gmail.com>
+Subject: Re: MCP55 disk activity LEDs don't flash
+Date: Sun, 7 Dec 2008 14:57:15 +0000
+Message-ID: <f4527be0812070657q237924cbq7fe48b35e19c0d6@mail.gmail.com>
+References: <493A8767.5030200@seiner.com> <20081206120533.48025219@tuna>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:17681 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754090AbYLGOrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Dec 2008 09:47:08 -0500
-In-Reply-To: <20081207114040.24bedc8c@lxorguk.ukuu.org.uk>
+Received: from ik-out-1112.google.com ([66.249.90.176]:14923 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753810AbYLGO5S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 09:57:18 -0500
+Received: by ik-out-1112.google.com with SMTP id c29so575631ika.5
+        for <linux-ide@vger.kernel.org>; Sun, 07 Dec 2008 06:57:16 -0800 (PST)
+In-Reply-To: <20081206120533.48025219@tuna>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_?= =?ISO-8859-1?Q?No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+To: =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>
+Cc: Yan Seiner <yan@seiner.com>, linux-ide@vger.kernel.org
 
-Hello.
-
-Alan Cox wrote:
-
->>> Because the chunks of scsi midlayer we inherit (actually nowdays mostly
->>> block) are the pieces you need anyway to do multiple command queues,
->>>   
->>>       
->>    Er, what does this term mean? Several queues per device or a tagged 
->> queue?
->>     
+On Sat, Dec 6, 2008 at 5:05 PM, Dan No=E9 <dpn@isomerica.net> wrote:
+> On Sat, 06 Dec 2008 06:08:39 -0800
+> Yan Seiner <yan@seiner.com> wrote:
 >
-> Anything beyond issuing one command at a time. The moment you get errors
-> with multiple command queues you really need the rest of the block
-> supporting logic (small bits of which are still in scsi).
->   
-
-   Something like freezing the queue while error handling is done I guess?
-
->>    So, you're just presenting SCSI emulation as a "lesser evil". But 5 
->> years seems a long enough term to unbind all that stuff from SCSI.
->>     
+>> I have a 6 slot server case with a backplane.  AFAICT the backplane
+>> is passive and there are SATA cables that lead from the backplane to
+>> the mobo.
+>>
+>> The problem is that the disk activity LEDs for the slots don't flash
+>> at all.  The mobo is an ASUS M2N SLI Deluxe, which has the MCP55
+>> controller.
+>>
+>> The drive activity LED which plugs into the mobo works just fine; th=
+e
+>> individual LEDs for each of the drives don't flash - they just stay
+>> on. Is there something I can enable to make them work?  Or is the
+>> backplane broken?
 >
-> It's being done bit by bit. I wasn't aware it was a race, I always
->   
+> I have a Tyan Transport GT20 and the individual drive bay LEDs don't
+> work at all.  Annoying, but I'm not physically near the system that
+> much.  If I recall correctly, on the GT20 the backplane didn't have t=
+he
+> capability to light the LEDs (although then I don't understand wtf
+> there are LEDs there... perhaps Windows has some way of lighting them=
+).
+>
+> Cheers,
+> Dan
 
-  5 years seems like libata has been running a marathon distance. :-)
-   IMHO, you're kind of trying to turn that into a race with constant 
-appeals of getting rid of IDE, clearly without enough efforts spent to 
-bring about that step so far (looks like there's just not much interest 
-in doing that now that all major x86 distributions have adopted libata 
-anyway).
+I have a similar problem with a supermicro system with sc743tq-865-sq
+chassis + x7dwa-n motherboard, the chassis has a 8 drive hot swap
+backplane but the motherboard only has 6 ports, the 6 drives that are
+connected to the m/b have working led's but the 2 remaining drives
+only flash when the drives spin up, the activity and status lights
+remain off the rest of the time.
 
-> thought that being correct, logical, testable and evolutionary bisectable
-> steps was more important somehow.
->   
+I've never figured out how the led's are driven, the backplane does
+have two gpio ports which could be connected to gpio on the
+motherboard, but I have never used them and it seems to work ok as it
+is.
 
-    I'd question the "evolutionary" and "bisectable" properties of the 
-major distributions' decision to switch from IDE to libata. Though I 
-guess the state in which IDE code had been at that point contributed to 
-that (well, anyway I don't know exactly what was the history beyond the 
-stopping of active IDE work)...
-
-> Alan
->   
-
-MBR, Sergei
-
-
+Andy
+>
+> --
+>                    /--------------- - -  -  -   -   -
+>                   |  Dan No=E9
+>                   |  http://isomerica.net/~dpn/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
