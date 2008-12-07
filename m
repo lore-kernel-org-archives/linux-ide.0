@@ -1,30 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Sun, 7 Dec 2008 01:56:36 +0100
-Message-ID: <200812070156.37057.bzolnier@gmail.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <200812070040.49377.bzolnier@gmail.com> <20081206235124.00fe60fc@lxorguk.ukuu.org.uk>
+From: Yan Seiner <yan@seiner.com>
+Subject: Re: MCP55 disk activity LEDs don't flash
+Date: Sat, 06 Dec 2008 17:00:10 -0800
+Message-ID: <493B201A.1070404@seiner.com>
+References: <493A8767.5030200@seiner.com> <493AE05B.2010707@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20081206235124.00fe60fc@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Dan =?iso-8859-1?q?No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from flatoutfitness.com ([66.178.130.209]:54205 "EHLO www.seiner.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753004AbYLGBAN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 Dec 2008 20:00:13 -0500
+Received: from www.seiner.com ([192.168.128.6] ident=yan)
+	by www.seiner.com with esmtp (Exim 4.69)
+	(envelope-from <yan@seiner.com>)
+	id 1L980I-00006g-Rv
+	for linux-ide@vger.kernel.org; Sat, 06 Dec 2008 17:00:10 -0800
+In-Reply-To: <493AE05B.2010707@shaw.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sunday 07 December 2008, Alan Cox wrote:
+Robert Hancock wrote:
+>
+> The backplane may be expecting the host to control the LEDs. You'd 
+> have to check with the manufacturer to be sure. As for how it would do 
+> this, there's such a thing as enclosure management support in SATA, 
+> but the sata_nv driver doesn't support it. If there is a way to use it 
+> on that controller, only NVidia would know, since they've provided no 
+> documentation for their pre-AHCI controllers. Some AHCI controllers do 
+> have support for this.. 
 
-> > Still, we can certainly leave ide-scsi there if you or somebody else
-> > want to maintain it (which didn't happen for the last year).  It would
-> > be best to start with fixing years long issues with error handling and
-> > taking the work on updating driver for IDE changes off my shoulder...
-> 
-> You could just stop turning the old IDE driver into an experimental
+This is a Norco DS-600s, a really nice rackmount case which has been 
+discontinued by Norco...  Unfortunately Norco doesn't have any sort of 
+enduser support and that case was mostly sold as a security DVR 
+enclosure to OEMs so I have not been able to find anything on it.
 
-I find your mail offensive/unfair and I'm not going to discuss things
-at such level if you're going to continue in this style.
+Unless there's some easy way to figure out what the backplane is doing 
+I'll just put up with it.  It's rock solid but it's kind of annoying to 
+have all those drives and no blinkie-lights.  :-)
 
-I also regretfully assume that the answer to my question is negative...
+--Yan
