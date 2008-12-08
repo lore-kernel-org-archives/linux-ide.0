@@ -1,55 +1,54 @@
-From: Kai Krakow <kai@kaishome.de>
-Subject: Re: [PATCH] pata_sis: Remove bogus cable match
-Date: Mon, 8 Dec 2008 12:13:56 +0100
-Message-ID: <200812081213.56499.kai@kaishome.de>
-References: <20081205194117.17036.74479.stgit@localhost.localdomain> <49398FAC.2060301@garzik.org> <20081206002705.46052575@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH #upstream-fixes 2/3] pata_hpt366: fix cable detection
+Date: Mon, 08 Dec 2008 14:23:16 +0300
+Message-ID: <493D03A4.1090409@ru.mvista.com>
+References: <493CED7A.2010505@kernel.org> <493CEE74.3060601@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from weser.netactive.de ([193.138.164.58]:37257 "EHLO
-	weser.netactive.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266AbYLHLQW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2008 06:16:22 -0500
-In-Reply-To: <20081206002705.46052575@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:31983 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751181AbYLHLXX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Dec 2008 06:23:23 -0500
+In-Reply-To: <493CEE74.3060601@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
 
-Am Samstag, 06. Dezember 2008 schrieb Alan Cox:
+Hello.
 
-> On Fri, 05 Dec 2008 15:31:40 -0500
+Tejun Heo wrote:
+> hpt366 is strange in that its cable detection register uses the higher
+> bit for master, so the testing should be 2 >> port_no instead of 1 <<
+>   
+
+   For primary -- the cable bits are per-channel, not per-device.
+
+> port_no.  Fix it.
 >
-> Jeff Garzik <jeff@garzik.org> wrote:
-> > Alan Cox wrote:
-> > > From: Alan Cox <alan@redhat.com>
-> > >
-> > > Some systems report SIS 5513 as both vendor/id and subvendor/id string.
-> > > In that case we can't distinguish the system by the id svid/sdid and in
-> > > fact the entry here breaks some boxes. At some point we need to find
-> > > another way to detect the Targa Visionary 1000, until then this a hang
-> > > for some users with lower performance for others.
-> > >
-> > > Closes: #12092
-> > >
-> > > Signed-off-by: Alan Cox <alan@redhat.com>
-> >
-> > Should that last sentence be "this SOLVES a hang"?
-> >
-> > As it is currently worded, it is unclear what we are trading off with
-> > this patch...
+> Info provided by Alan Cox.
 >
-> I missed out the word "trades" ...
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+>   
 
-Is there away to bypass this bogus-detection and force the driver into using 
-high-speed mode on the short 40-wire cable? Maybe by introducing a 
-kernel/module parameter? Or is it there? I found nothing in the docs.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Can I provide any information you need to properly detect the Targa Visionary 
-1000?
+> Index: work/drivers/ata/pata_hpt366.c
+> ===================================================================
+> --- work.orig/drivers/ata/pata_hpt366.c
+> +++ work/drivers/ata/pata_hpt366.c
+> @@ -215,7 +215,7 @@ static int hpt36x_cable_detect(struct at
+>  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+>  
+>  	pci_read_config_byte(pdev, 0x5A, &ata66);
+> -	if (ata66 & (1 << ap->port_no))
+> +	if (ata66 & (2 >> ap->port_no))
+>   
 
-Thanks,
-Kai
+   HPT36x are single channel per function, so the shift can be removed.
+
+MBR, Sergei
+
+
