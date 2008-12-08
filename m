@@ -1,36 +1,49 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: linux-next: Tree for October 24 - powerpc - build failure with
- !CONFIG_BLK_DEV_IDEDMA_PMAC
-Date: Tue, 09 Dec 2008 08:54:29 +1100
-Message-ID: <1228773269.7101.40.camel@pasglop>
-References: <20081024171932.1e8131d0.sfr@canb.auug.org.au>
-	 <1224889818.7654.466.camel@pasglop> <200810251519.57543.bzolnier@gmail.com>
-	 <200812071527.52886.bzolnier@gmail.com>
-	 <20081208090549.GA16544@linux.vnet.ibm.com>
-	 <1228773216.7101.39.camel@pasglop>
+From: "Rob OpenSuSE" <rob.opensuse.linux@googlemail.com>
+Subject: Re: [RFC PATCH] pata_hpt366: fix mode configuration
+Date: Mon, 8 Dec 2008 23:18:03 +0000
+Message-ID: <ce9d8ed60812081518g5d9166baia9fb9531b472dbff@mail.gmail.com>
+References: <493CC897.9080406@kernel.org> <493CF9A8.301@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1228773216.7101.39.camel@pasglop>
-Sender: linux-next-owner@vger.kernel.org
-To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wf-out-1314.google.com ([209.85.200.170]:54600 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848AbYLHXSE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2008 18:18:04 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so1500342wfd.4
+        for <linux-ide@vger.kernel.org>; Mon, 08 Dec 2008 15:18:03 -0800 (PST)
+In-Reply-To: <493CF9A8.301@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
 
-On Tue, 2008-12-09 at 08:53 +1100, Benjamin Herrenschmidt wrote:
-> > > Seems like ppc people are either very busy or don't care...  Oh well...
-> 
-> Very busy will do it :-) Among others, having a second child is a hit on
-> the hacking time !
-> 
-> In any case, I think we should contemplate removing the config option
-> alltogether and make DMA support built unconditionally to simplify the
-> mess, don't you think ?
+> There have been reports of pata_hpt366 locking up the whole machine
+> and as Mark kindly sent me his hpt366 about a year ago, I played with
+> it a bit today.
+>
+> The controller worked perfectly fine with the IDE driver but with
+> pata_hpt366, PIO works but DMA mode locks up the machine solidly.
+> After comparing the sources and lspci outputs, I found the following
+> differences.
 
-Which is just what the patch does .. :-)
+Tejun's patch applied to OpenSUSE 11.1-RC1 kernel solves non-booting
+issues, and has given good  performance (which have been regular since
+2.6.19 introduced PATA experimental drivers have been shipped by
+distros).
 
-So Ack.
+I can't comment on cable speed details, as I haven't seen such messages.
 
-Cheers,
-Ben.
+If parts of it are dubious, please can we start from a minimal
+changeset which delivers a working driver, based on these mods, and
+then move forwards to beautified enhanced code.   Though I do wonder
+how sensible it is, to spend a lot of time on elegant driver
+development for this legacy hardware, as it must be nearing practical
+end of life.
+
+The hang existed in 2.6.22 and 2.6.23 code I tried, then was fixed in
+updates which made there way into the OpenSUSE distro kernel.  So end
+users have been using pata_hpt366 for quite a while, thus the patch
+fixes a regression for them.
