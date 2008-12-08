@@ -1,43 +1,32 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10216] kernel from different versions hangs with some CD/DVD drives
-Date: Sun,  7 Dec 2008 15:23:09 -0800 (PST)
-Message-ID: <20081207232309.130EF108041@picon.linux-foundation.org>
-References: <bug-10216-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34747 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753560AbYLGXXM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2008 18:23:12 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB7NN9rG018219
-	for <linux-ide@vger.kernel.org>; Sun, 7 Dec 2008 15:23:10 -0800
-In-Reply-To: <bug-10216-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: Paul Collins <paul@burly.ondioline.org>
+Subject: [REGRESSION] commit "ide: respect current DMA setting during resume" breaks resume on PowerBook G4
+Date: Mon, 08 Dec 2008 14:47:37 +1300
+Message-ID: <87wseb8mkm.fsf@burly.wgtn.ondioline.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755059AbYLHBrw@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rjw@sisk.pl
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10216
+Commit e9eb8388306364295308132265c00bea685f409f ("ide: respect current
+DMA setting during resume") breaks resume on my PowerBook G4.
 
+I get a stream of the following:
 
+    hda: task_out_intr: status=0x51 { DriveReady SeekComplete Error }
+    hda: task_out_intr: error=0x04 { DriveStatusError }
+    ide: failed opcode was: unknown
 
+and generally the machine hangs, although once it reported
 
+    ide0: reset: success
 
-------- Comment #33 from sshtylyov@ru.mvista.com  2008-12-07 15:23 -------
-(In reply to comment #32)
-> (In reply to comment #31)
-> > Sergei: I looked into it (under QEMU for now) and adding msleep(1000) +
-> > printk() to ide_init() causes the "Clocksource tsc unstable" to appear before
-> > IDE initialization so it seems that the issue is caused by some other kernel
-> > code and IDE is just unlucky to be initialized at same time as clocksource
-> > watchdog triggers.
-
-> I guess it's caused by mspleep(1000) call itself.
-
-Looks like it hasn't been a wild guess. The clocksource watchdog timer handler
-gets run every half second. :-)
-
+and resumed successfully.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Paul Collins
+Wellington, New Zealand
+
+Dag vijandelijk luchtschip de huismeester is dood
