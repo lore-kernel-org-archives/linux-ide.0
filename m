@@ -1,49 +1,48 @@
-From: "Rob OpenSuSE" <rob.opensuse.linux@googlemail.com>
-Subject: Re: [RFC PATCH] pata_hpt366: fix mode configuration
-Date: Mon, 8 Dec 2008 23:18:03 +0000
-Message-ID: <ce9d8ed60812081518g5d9166baia9fb9531b472dbff@mail.gmail.com>
-References: <493CC897.9080406@kernel.org> <493CF9A8.301@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] libata: Add two more columns to the ata_timing table.
+Date: Tue, 09 Dec 2008 02:19:03 +0300
+Message-ID: <493DAB67.3090605@ru.mvista.com>
+References: <4939B402.9010004@caviumnetworks.com> <1228518561-16242-1-git-send-email-ddaney@caviumnetworks.com> <493ADE48.6050709@ru.mvista.com> <493D65C8.2060808@caviumnetworks.com> <493D6C0F.7070809@ru.mvista.com> <493D6DA1.3090801@ru.mvista.com> <493D873C.3020202@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:54600 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848AbYLHXSE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2008 18:18:04 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so1500342wfd.4
-        for <linux-ide@vger.kernel.org>; Mon, 08 Dec 2008 15:18:03 -0800 (PST)
-In-Reply-To: <493CF9A8.301@ru.mvista.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:44009 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753064AbYLHXTK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Dec 2008 18:19:10 -0500
+In-Reply-To: <493D873C.3020202@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-> There have been reports of pata_hpt366 locking up the whole machine
-> and as Mark kindly sent me his hpt366 about a year ago, I played with
-> it a bit today.
+Hello.
+
+David Daney wrote:
+
+>>    OK, t6z is yet longer than t9 but putting it into the table seems 
+>> pointless anyway as it's fixed at 30 ns, at least for the standard 5 
+>> PIO modes (and for other two modes 30 ns would be good anyway).
+>>    Though frankly speaking I don't quite understand your care for 
+>> this timing, if the ATA standard permits -CE deasserted and data bus 
+>> being driven to overlap.
 >
-> The controller worked perfectly fine with the IDE driver but with
-> pata_hpt366, PIO works but DMA mode locks up the machine solidly.
-> After comparing the sources and lspci outputs, I found the following
-> differences.
+> It doesn't matter what the ATA standard permits in this case.  We need 
+> to assure that the OCTEON Boot Bus standard is respected.  There are 
+> several timing parameters that we have to set based on the documented 
+> properties of the device.  Ideally if we try to run bus cycles for 
+> non-ATA/CF devices that share the signal lines of the Boot Bus, they 
+> should  not interfere with the CF interface.
 
-Tejun's patch applied to OpenSUSE 11.1-RC1 kernel solves non-booting
-issues, and has given good  performance (which have been regular since
-2.6.19 introduced PATA experimental drivers have been shipped by
-distros).
+   Well, your driver is free to handle it on its own, and even respect a 
+lesser minimum for PIO5/6. It just doesn't seem practical to add this to 
+the table. In fact, about all PATA hardware on market only permits to 
+control the active/recovery and the address setup times -- that's why 
+the table looks like it looks now.
 
-I can't comment on cable speed details, as I haven't seen such messages.
+> David Daney
 
-If parts of it are dubious, please can we start from a minimal
-changeset which delivers a working driver, based on these mods, and
-then move forwards to beautified enhanced code.   Though I do wonder
-how sensible it is, to spend a lot of time on elegant driver
-development for this legacy hardware, as it must be nearing practical
-end of life.
+MBR, Sergei
 
-The hang existed in 2.6.22 and 2.6.23 code I tried, then was fixed in
-updates which made there way into the OpenSUSE distro kernel.  So end
-users have been using pata_hpt366 for quite a while, thus the patch
-fixes a regression for them.
+
