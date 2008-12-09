@@ -1,46 +1,58 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH #upstream-fixes 2/3] pata_hpt366: no ATAPI DMA
-Date: Tue, 9 Dec 2008 10:28:35 +0000
-Message-ID: <20081209102835.4d264bf9@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH #upstream-fixes 1/3] pata_hpt366: fix cable detection,
+Date: Tue, 09 Dec 2008 18:14:20 +0300
+Message-ID: <493E8B4C.4090604@ru.mvista.com>
 References: <493E289F.1010000@kernel.org>
-	<493E28CC.6070000@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36708 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752129AbYLIK2r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Dec 2008 05:28:47 -0500
-In-Reply-To: <493E28CC.6070000@kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:1438 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753833AbYLIPOX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Dec 2008 10:14:23 -0500
+In-Reply-To: <493E289F.1010000@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
 
-On Tue, 09 Dec 2008 17:14:04 +0900
-Tejun Heo <tj@kernel.org> wrote:
+Tejun Heo wrote:
 
-> IDE hpt366 driver doesn't allow DMA for ATAPI devices and MWDMA2 on
-> ATAPI device locks up pata_hpt366.  Follow the suit.
-> 
+> pata_hpt366 is strange in that its two channels occupy two PCI
+> functions and both are primary channels and bit1 of PCI configuration
+> register 0x5A indicates cable for both channels.
+
 > Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  drivers/ata/pata_hpt366.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+    Alas, NAK.
+
 > Index: work/drivers/ata/pata_hpt366.c
 > ===================================================================
 > --- work.orig/drivers/ata/pata_hpt366.c
 > +++ work/drivers/ata/pata_hpt366.c
-> @@ -183,7 +183,9 @@ static unsigned long hpt366_filter(struc
->  			mask &= ~(0xF8 << ATA_SHIFT_UDMA);
->  		if (hpt_dma_blacklisted(adev, "UDMA4", bad_ata66_4))
->  			mask &= ~(0xF0 << ATA_SHIFT_UDMA);
-> -	}
-> +	} else if (adev->class == ATA_DEV_ATAPI)
-> +		mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+> @@ -211,11 +211,15 @@ static u32 hpt36x_find_mode(struct ata_p
+>  
+>  static int hpt36x_cable_detect(struct ata_port *ap)
+>  {
+> -	u8 ata66;
+>  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	u8 ata66;
+>  
+> +	/*
+> +	 * Each channel of pata_hpt366 occupies separate PCI function
+> +	 * as the primary channel and bit1 indicates the cable type.
+> +	 */
 
-Ack this one
+    No, it doesn't for the secondary channel (which is fucntion 1).
 
-Alan
+>  	pci_read_config_byte(pdev, 0x5A, &ata66);
+> -	if (ata66 & (1 << ap->port_no))
+> +	if (ata66 & 2)
+
+    You need to use (pdev->devfn & 1) as a right shift count instead. Not very 
+sophisticated indeed. :-)
+
+MBR, Sergei
