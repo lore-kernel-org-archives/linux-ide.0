@@ -1,193 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes 3/3] pata_hpt366: reimplement mode programming
-Date: Tue, 09 Dec 2008 17:14:55 +0900
-Message-ID: <493E28FF.8030402@kernel.org>
-References: <493E289F.1010000@kernel.org> <493E28CC.6070000@kernel.org>
+Subject: Re: [PATCH #upstream-fixes 1/3] pata_hpt366: fix cable detection,
+Date: Tue, 09 Dec 2008 17:15:34 +0900
+Message-ID: <493E2926.4050509@kernel.org>
+References: <493E289F.1010000@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37683 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37700 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752105AbYLIIPT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Dec 2008 03:15:19 -0500
-In-Reply-To: <493E28CC.6070000@kernel.org>
+	id S1752031AbYLIIQN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Dec 2008 03:16:13 -0500
+In-Reply-To: <493E289F.1010000@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rt>
 
-Reimplement mode programming logic of pata_hpt366 such that it's
-identical to that of IDE hpt366 driver.  The differences were...
+Tejun Heo wrote:
+> pata_hpt366 is strange in that its two channels occupy two PCI
+> functions and both are primary channels and bit1 of PCI configuration
+> register 0x5A indicates cable for both channels.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-* pata_hpt366 used 0xCFFF8FFFF to mask pio modes and 0x3FFFFFFF dma
-  modes.  IDE hpt366 uses 0xC1F8FFFF for PIO, 0x303800FF for MWDMA and
-  0x30070000 for UDMA.
+I tested this patch for all four combinations of 40/80c cables and it
+always worked correctly.
 
-* pata_hpt366 doesn't set 0x08000000 for PIO unless it's already set
-  and always turns it on for MWDMA/UDMA.  IDE hpt366 doesn't bother
-  with the bit.  It always uses what was there.
+Thanks.
 
-* IDE hpt366 always clears 0xC0000000.  pata_hpt366 doesn't.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
----
-Unified pio/dma paths as per Sergei's suggestion.
-
- drivers/ata/pata_hpt366.c |  109 ++++++++++++++++++----------------------------
- 1 file changed, 44 insertions(+), 65 deletions(-)
-
-Index: work/drivers/ata/pata_hpt366.c
-===================================================================
---- work.orig/drivers/ata/pata_hpt366.c
-+++ work/drivers/ata/pata_hpt366.c
-@@ -30,7 +30,7 @@
- #define DRV_VERSION	"0.6.2"
- 
- struct hpt_clock {
--	u8	xfer_speed;
-+	u8	xfer_mode;
- 	u32	timing;
- };
- 
-@@ -189,28 +189,6 @@ static unsigned long hpt366_filter(struc
- 	return ata_bmdma_mode_filter(adev, mask);
- }
- 
--/**
-- *	hpt36x_find_mode	-	reset the hpt36x bus
-- *	@ap: ATA port
-- *	@speed: transfer mode
-- *
-- *	Return the 32bit register programming information for this channel
-- *	that matches the speed provided.
-- */
--
--static u32 hpt36x_find_mode(struct ata_port *ap, int speed)
--{
--	struct hpt_clock *clocks = ap->host->private_data;
--
--	while(clocks->xfer_speed) {
--		if (clocks->xfer_speed == speed)
--			return clocks->timing;
--		clocks++;
--	}
--	BUG();
--	return 0xffffffffU;	/* silence compiler warning */
--}
--
- static int hpt36x_cable_detect(struct ata_port *ap)
- {
- 	u8 ata66;
-@@ -222,25 +200,16 @@ static int hpt36x_cable_detect(struct at
- 	return ATA_CBL_PATA80;
- }
- 
--/**
-- *	hpt366_set_piomode		-	PIO setup
-- *	@ap: ATA interface
-- *	@adev: device on the interface
-- *
-- *	Perform PIO mode setup.
-- */
--
--static void hpt366_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+static void hpt366_set_mode(struct ata_port *ap, struct ata_device *adev,
-+			    u8 mode)
- {
-+	struct hpt_clock *clocks = ap->host->private_data;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-+	u32 addr2 = 0x51 + 4 * ap->port_no;
-+	u32 mask, reg;
- 	u8 fast;
- 
--	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
--	addr2 = 0x51 + 4 * ap->port_no;
--
- 	/* Fast interrupt prediction disable, hold off interrupt disable */
- 	pci_read_config_byte(pdev, addr2, &fast);
- 	if (fast & 0x80) {
-@@ -248,12 +217,43 @@ static void hpt366_set_piomode(struct at
- 		pci_write_config_byte(pdev, addr2, fast);
- 	}
- 
-+	/* determine timing mask and find matching clock entry */
-+	if (mode < XFER_MW_DMA_0)
-+		mask = 0xc1f8ffff;
-+	else if (mode < XFER_UDMA_0)
-+		mask = 0x303800ff;
-+	else
-+		mask = 0x30070000;
-+
-+	while (clocks->xfer_mode) {
-+		if (clocks->xfer_mode == mode)
-+			break;
-+		clocks++;
-+	}
-+	if (!clocks->xfer_mode)
-+		BUG();
-+
-+	/*
-+	 * Combine new mode bits with old config bits and disable
-+	 * on-chip PIO FIFO/buffer (and PIO MST mode as well) to avoid
-+	 * problems handling I/O errors later.
-+	 */
- 	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt36x_find_mode(ap, adev->pio_mode);
--	mode &= ~0x8000000;	/* No FIFO in PIO */
--	mode &= ~0x30070000;	/* Leave config bits alone */
--	reg &= 0x30070000;	/* Strip timing bits */
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	reg = ((reg & ~mask) | (clocks->timing & mask)) & ~0xc0000000;
-+	pci_write_config_dword(pdev, addr1, reg);
-+}
-+
-+/**
-+ *	hpt366_set_piomode		-	PIO setup
-+ *	@ap: ATA interface
-+ *	@adev: device on the interface
-+ *
-+ *	Perform PIO mode setup.
-+ */
-+
-+static void hpt366_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	hpt366_set_mode(ap, adev, adev->pio_mode);
- }
- 
- /**
-@@ -267,28 +267,7 @@ static void hpt366_set_piomode(struct at
- 
- static void hpt366_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
--	u8 fast;
--
--	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
--	addr2 = 0x51 + 4 * ap->port_no;
--
--	/* Fast interrupt prediction disable, hold off interrupt disable */
--	pci_read_config_byte(pdev, addr2, &fast);
--	if (fast & 0x80) {
--		fast &= ~0x80;
--		pci_write_config_byte(pdev, addr2, fast);
--	}
--
--	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt36x_find_mode(ap, adev->dma_mode);
--	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
--	mode &= ~0xC0000000;	/* Leave config bits alone */
--	reg &= 0xC0000000;	/* Strip timing bits */
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	hpt366_set_mode(ap, adev, adev->dma_mode);
- }
- 
- static struct scsi_host_template hpt36x_sht = {
+-- 
+tejun
