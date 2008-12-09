@@ -1,33 +1,34 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [RFC PATCH] pata_hpt366: fix mode configuration
-Date: Tue, 09 Dec 2008 14:47:56 -0500
-Message-ID: <493ECB6C.3040304@rtr.ca>
-References: <493CC897.9080406@kernel.org> <493CF9A8.301@ru.mvista.com> <ce9d8ed60812081518g5d9166baia9fb9531b472dbff@mail.gmail.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Tue, 09 Dec 2008 14:59:41 -0500
+Message-ID: <493ECE2D.8080404@rtr.ca>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	 <200812061551.08525.bzolnier@gmail.com> <20081206120001.3580b9e3@tuna>	 <200812062241.35601.bzolnier@gmail.com>	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>	 <493B022B.3050406@ru.mvista.com> <493B0A8E.7000506@garzik.org>	 <493B0DF2.4090901@ru.mvista.com> <493B0F36.6030509@garzik.org> <86802c440812061936v4629857ehbd2705e389e4378b@mail.gmail.com> <493B4E52.6080905@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:47383 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:48889 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754599AbYLITqn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Dec 2008 14:46:43 -0500
-In-Reply-To: <ce9d8ed60812081518g5d9166baia9fb9531b472dbff@mail.gmail.com>
+	id S1753564AbYLIT62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Dec 2008 14:58:28 -0500
+In-Reply-To: <493B4E52.6080905@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rob OpenSuSE <rob.opensuse.linux@googlemail.com>, Tejun Heo <tj@kernel.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?UTF-8?B?RGFuIE5vw6k=?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-Rob OpenSuSE wrote:
-> Though I do wonder
-> how sensible it is, to spend a lot of time on elegant driver
-> development for this legacy hardware, as it must be nearing practical
-> end of life.
+Jeff Garzik wrote:
+> Yinghai Lu wrote:
+>> On Sat, Dec 6, 2008 at 3:48 PM, Jeff Garzik <jeff@garzik.org> wrote:
+..
+>> interesting, so will get /dev/ada instead of /dev/sda?
+> 
+> That is an interesting question.  The easiest thing is to allocate a new 
+> 32-bit block major.  But the more compatible (and more controversial) 
+> solution is to allocate from the SCSI disk blkmajor space.
 ..
 
-There are tons of PCI add-on cards still out there with these chips,
-and they will continue to work fine so long as PCI slots
-and PATA drives exist.  So we may as well ensure Linux does the Right Things (tm).
+Perhaps "sdx" and "scdx" should simply be redefined as "System disk"
+and "System CD", and moved under block layer ownership from SCSI ?
 
-:)
-
-Nice work, Tejun!
+Cheers
