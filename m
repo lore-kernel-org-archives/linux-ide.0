@@ -1,25 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 9 Dec 2008 18:28:10 +0000
-Message-ID: <20081209182810.0006dea9@lxorguk.ukuu.org.uk>
-References: <20081209055151.GA26498@havoc.gtf.org>
-	<200812091825.mB9IPRwq027199@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH #upstream-fixes 1/3] pata_hpt366: fix cable detection,
+Date: Tue, 09 Dec 2008 21:50:33 +0300
+Message-ID: <493EBDF9.30107@ru.mvista.com>
+References: <493E289F.1010000@kernel.org> <493E2926.4050509@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58379 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753882AbYLIS2G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Dec 2008 13:28:06 -0500
-In-Reply-To: <200812091825.mB9IPRwq027199@lxorguk.ukuu.org.uk>
+Received: from h155.mvista.com ([63.81.120.155]:5043 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755102AbYLISuh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Dec 2008 13:50:37 -0500
+In-Reply-To: <493E2926.4050509@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
 
-> Not willing to sound as if I'm nitpicking, but it still has issues with ATAPI DMA on some chipsets and runs with ATAPI DMA disabled by default. Should not it be mentioned somehow?
+Hello.
 
-That and a lot of other information is in the libata wiki.
+Tejun Heo wrote:
 
-Alan
+>>pata_hpt366 is strange in that its two channels occupy two PCI
+>>functions and both are primary channels and bit1 of PCI configuration
+>>register 0x5A indicates cable for both channels.
+
+>>Signed-off-by: Tejun Heo <tj@kernel.org>
+>>Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+>>Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> I tested this patch for all four combinations of 40/80c cables and it
+> always worked correctly.
+
+    So that means that the datasheet is wrong. May well be...
+
+> Thanks.
+
+MBR, Sergei
