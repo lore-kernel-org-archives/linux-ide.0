@@ -1,34 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes 1/3] pata_hpt366: fix cable detection,
-Date: Tue, 09 Dec 2008 17:15:34 +0900
-Message-ID: <493E2926.4050509@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes 2/3] pata_hpt366: no ATAPI DMA
+Date: Tue, 9 Dec 2008 10:28:35 +0000
+Message-ID: <20081209102835.4d264bf9@lxorguk.ukuu.org.uk>
 References: <493E289F.1010000@kernel.org>
+	<493E28CC.6070000@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37700 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752031AbYLIIQN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Dec 2008 03:16:13 -0500
-In-Reply-To: <493E289F.1010000@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36708 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752129AbYLIK2r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Dec 2008 05:28:47 -0500
+In-Reply-To: <493E28CC.6070000@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rt>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
 
-Tejun Heo wrote:
-> pata_hpt366 is strange in that its two channels occupy two PCI
-> functions and both are primary channels and bit1 of PCI configuration
-> register 0x5A indicates cable for both channels.
+On Tue, 09 Dec 2008 17:14:04 +0900
+Tejun Heo <tj@kernel.org> wrote:
+
+> IDE hpt366 driver doesn't allow DMA for ATAPI devices and MWDMA2 on
+> ATAPI device locks up pata_hpt366.  Follow the suit.
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> ---
+>  drivers/ata/pata_hpt366.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> Index: work/drivers/ata/pata_hpt366.c
+> ===================================================================
+> --- work.orig/drivers/ata/pata_hpt366.c
+> +++ work/drivers/ata/pata_hpt366.c
+> @@ -183,7 +183,9 @@ static unsigned long hpt366_filter(struc
+>  			mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+>  		if (hpt_dma_blacklisted(adev, "UDMA4", bad_ata66_4))
+>  			mask &= ~(0xF0 << ATA_SHIFT_UDMA);
+> -	}
+> +	} else if (adev->class == ATA_DEV_ATAPI)
+> +		mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
 
-I tested this patch for all four combinations of 40/80c cables and it
-always worked correctly.
+Ack this one
 
-Thanks.
-
--- 
-tejun
+Alan
