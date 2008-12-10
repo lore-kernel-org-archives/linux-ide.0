@@ -1,42 +1,42 @@
 From: David Daney <ddaney@caviumnetworks.com>
-Subject: [PATCH 0/3] libata: Cavium OCTEON SOC Compact Flash driver (v5)
-Date: Wed, 10 Dec 2008 15:37:53 -0800
-Message-ID: <494052D1.10208@caviumnetworks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 2/3] libata: Add special ata_pio_need_iordy() handling for Compact Flash.
+Date: Wed, 10 Dec 2008 15:39:12 -0800
+Message-ID: <1228952353-12323-2-git-send-email-ddaney@caviumnetworks.com>
+References: <494052D1.10208@caviumnetworks.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.caviumnetworks.com ([12.108.191.235]:19083 "EHLO
+Received: from mail3.caviumnetworks.com ([12.108.191.235]:19371 "EHLO
 	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755013AbYLJXiy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 18:38:54 -0500
+	with ESMTP id S1755200AbYLJXjn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 18:39:43 -0500
+In-Reply-To: <494052D1.10208@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: linux-mips <linux-mips@linux-mips.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-mips@linux-mips.org, David Daney <ddaney@caviumnetworks.com>
 
-As part of our efforts to get the Cavium OCTEON processor support
-merged (see: http://marc.info/?l=linux-mips&m=122834773330212), we
-have this CF driver for your consideration.
+According to the Compact Flash specification r4.1, PIO modes 5 and 6
+do not use iordy.
 
-This fifth version is split into three separate patches.  The first
-adds some entries to the ata_timing table in libata-core.c.  The
-Second adds some special handling to ata_pio_need_iordy() for Compact
-Flash devices, The final patch is is the driver proper.
+Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+---
+ drivers/ata/libata-core.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-I will reply with the three patches.
-
-David Daney (3):
-   libata: Add another column to the ata_timing table.
-   libata: Add special ata_pio_need_iordy() handling for Compact Flash.
-   libata: New driver for OCTEON SOC Compact Flash interface (v5).
-
-  drivers/ata/Kconfig          |    9 +
-  drivers/ata/Makefile         |    1 +
-  drivers/ata/libata-core.c    |   76 ++--
-  drivers/ata/pata_octeon_cf.c |  956 
-++++++++++++++++++++++++++++++++++++++++++
-  include/linux/libata.h       |   10 +-
-  5 files changed, 1014 insertions(+), 38 deletions(-)
-  create mode 100644 drivers/ata/pata_octeon_cf.c
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 1be2dde..b4a35d8 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1923,6 +1923,10 @@ unsigned int ata_pio_need_iordy(const struct ata_device *adev)
+ 	   as the caller should know this */
+ 	if (adev->link->ap->flags & ATA_FLAG_NO_IORDY)
+ 		return 0;
++	/* CF spec. r4.1 Table 22 says no iordy on PIO5 and PIO6.  */
++	if (ata_id_is_cfa(adev->id)
++	    && (adev->pio_mode == XFER_PIO_5 || adev->pio_mode == XFER_PIO_6))
++		return 0;
+ 	/* PIO3 and higher it is mandatory */
+ 	if (adev->pio_mode > XFER_PIO_2)
+ 		return 1;
+-- 
+1.5.6.5
 
