@@ -1,36 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes 1/3] pata_hpt366: fix cable detection,
-Date: Wed, 10 Dec 2008 10:58:10 +0900
-Message-ID: <493F2232.8070105@kernel.org>
-References: <493E289F.1010000@kernel.org> <493E8B4C.4090604@ru.mvista.com> <493EBF57.7090200@ru.mvista.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: libata / scsi separation
+Date: Tue, 9 Dec 2008 18:29:34 -0800
+Message-ID: <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	 <20081206120001.3580b9e3@tuna> <200812062241.35601.bzolnier@gmail.com>
+	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>
+	 <493B022B.3050406@ru.mvista.com>
+	 <20081206230227.07b00e2f@lxorguk.ukuu.org.uk>
+	 <493B0867.5020700@ru.mvista.com>
+	 <1228662298.3501.19.camel@localhost.localdomain>
+	 <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47649 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752835AbYLJB6k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Dec 2008 20:58:40 -0500
-In-Reply-To: <493EBF57.7090200@ru.mvista.com>
+Received: from smtp-out.google.com ([216.239.45.13]:23268 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753832AbYLJC3j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Dec 2008 21:29:39 -0500
+Received: from zps36.corp.google.com (zps36.corp.google.com [172.25.146.36])
+	by smtp-out.google.com with ESMTP id mBA2Tb9L006439
+	for <linux-ide@vger.kernel.org>; Tue, 9 Dec 2008 18:29:37 -0800
+Received: from fxm3 (fxm3.prod.google.com [10.184.13.3])
+	by zps36.corp.google.com with ESMTP id mBA2TZm3023401
+	for <linux-ide@vger.kernel.org>; Tue, 9 Dec 2008 18:29:36 -0800
+Received: by fxm3 with SMTP id 3so240091fxm.21
+        for <linux-ide@vger.kernel.org>; Tue, 09 Dec 2008 18:29:35 -0800 (PST)
+In-Reply-To: <493F2151.6010702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello, Sergei.
+On Tue, Dec 9, 2008 at 5:54 PM, Tejun Heo <htejun@gmail.com> wrote:
+> (cc'ing Jens)
+...
+> Is the command issue rate really the bottleneck?
 
-Sergei Shtylyov wrote:
->>    Alas, NAK.
-> 
->    If you say that it does work, then the datasheet appears to be wrong,
-> so have my:
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Not directly. It's the lack of CPU leftover at high transaction rates
+( > 10000 IOPS per disk). So yes, the system does bottle neck on CPU
+utilization.
 
-Yeah, AFAICS, it does work.  The ata66 register is always 0x3 with 40c
-cable and 0x1 with 80c regardless of the PCI function.
+> It seem a bit
+> unlikely unless you're issuing lots of really small IOs but then again
+> those new SSDs are pretty fast.
 
-Thanks.
+That's the whole point of SSDs (lots of small, random IO).
 
--- 
-tejun
+The second desirable attribute SSDs have is consistent response for
+reads. HDs vary from microseconds to 100's of milliseconds. Very long
+tail in the read latency response.
+
+>> (OK, I haven't measured the overhead of the *SCSI* layer, I've measured
+>> the overhead of the *libata* layer.  I think the point here is that you
+>> can't measure the difference at a macro level unless you're sending a
+>> lot of commands.)
+>
+> How did you measure it?
+
+Willy presented how he measured SCSI stack at LSF2008. ISTR he was
+advised to use oprofile in his test application so there is probably
+an updated version of these slides:
+    http://iou.parisc-linux.org/lsf2008/IO-latency-Kristen-Carlson-Accardi.pdf
+
+> The issue path isn't thick at all although
+> command allocation logic there is a bit brain damaged and should use
+> block layer tag management.  All it does is - allocate qc, interpret
+> SCSI command to ATA command and write it to qc, map dma and build dma
+> table and pass it over to the low level issue function.  The only
+> extra step there is the translation part and I don't think that can
+> take a full microsecond on modern processors.
+
+Maybe you are counting instructions and not cycles? Every cache miss
+is 200-300 cycles (say 100ns). When running multiple threads, we will
+miss on nearly every spinlock acquisition and probably on several data
+accesses. 1 microsecond isn't alot when counting this way.
+
+hth,
+grant
