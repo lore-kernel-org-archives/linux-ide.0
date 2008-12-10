@@ -1,52 +1,45 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: libata / scsi separation
-Date: Wed, 10 Dec 2008 09:21:38 -0800
-Message-ID: <da824cf30812100921l58526156u9230650556a36ab9@mail.gmail.com>
-References: <493B022B.3050406@ru.mvista.com> <493B0867.5020700@ru.mvista.com>
-	 <1228662298.3501.19.camel@localhost.localdomain>
-	 <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com>
-	 <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com>
-	 <493F2DA9.7040008@gmail.com>
-	 <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com>
-	 <493F3B33.8010607@gmail.com> <20081210152445.GW25548@parisc-linux.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Wed, 10 Dec 2008 20:46:34 +0300
+Message-ID: <4940007A.6060603@ru.mvista.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <200812061551.08525.bzolnier@gmail.com> <20081206120001.3580b9e3@tuna> <200812062241.35601.bzolnier@gmail.com> <20081206222423.04aada70@lxorguk.ukuu.org.uk> <493B022B.3050406@ru.mvista.com> <20081206230227.07b00e2f@lxorguk.ukuu.org.uk> <20081209214128.GT25548@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20081210152445.GW25548@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:30992 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751660AbYLJRqk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Dec 2008 12:46:40 -0500
+In-Reply-To: <20081209214128.GT25548@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Dan No? <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-On Wed, Dec 10, 2008 at 7:24 AM, Matthew Wilcox <matthew@wil.cx> wrote:
-...
-> This would work, but (ignoring the political / standardisation efforts
-> required to make this happen), this is just a cop-out.  When networking
-> people were first faced with gigabit, they tried the same thing (oooh,
-> 9000 byte packets, oooh, TCP Offload, etc), all in the name of passing
-> larger amounts of data to the card in a single transaction so they
-> didn't have to fix their per-transaction overheads.
+Hello.
 
-Willy,
-I agree with your points except for one: TCP Offload.
+Matthew Wilcox wrote:
 
-James Bottomley gets credit for publicly observing that storage
-protocols have been offloaded for ages. I once worked on a SCSI
-controller that interrupted on every phase change (early 90's). Next
-generation of SCSI controllers had offload. Same thing occured
-to FC in the late 90s and legacy PATA is being replaced with
-equivalent SATA offload engines more recently. Enough examples.
+>>Well ATAPI is SCSI emulation (its a sort of pidgin SCSI admittedly).
 
-> Users weren't interested.  They wanted to keep sending 1500 byte packets
-> (because most equipment couldn't handle jumbo frames) and they wanted
-> netfilter and SACK and all the other goodies that the Linux networking
-> stack offered and the card's TCP stack didn't.
->
-> We should stop denying that users actually want to do 4k IOs and just
-> get on with fixing the storage stack to cope with lots of them.
+> I'm told (by people who work with embedded people) that first the
+> customer says "Oh, I don't need the block layer, I just need MTD", so
+> they disable CONFIG_BLOCK, then the customer says "Oh, I need to support
+> USB storage", so they re-enable CONFIG_BLOCK, add CONFIG_SCSI and scsi
+> disk support and usb-storage.
 
-+1
+    That depends. And that is still not the same as SCSI subsys + SCSI disk 
+driver + libata SCSI emulation.
 
-thanks,
-grant
+> OK, there is now 'ub' so you can do this without SCSI, but still ...
+
+>>I'm actually seeing two strands of requests (including from embedded)
+>>
+>>- CF only small "dumb as president" type driver that is written to be as
+
+> Just six weeks until you can't make that joke any more ...
+
+    You're frightening me... What's going to happen after these 6 weeks?
+
+MBR, Sergei
