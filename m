@@ -1,49 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH] pata_hpt366: fix mode configuration
-Date: Wed, 10 Dec 2008 16:00:22 +0900
-Message-ID: <493F6906.9010407@kernel.org>
-References: <493CC897.9080406@kernel.org> <493CF9A8.301@ru.mvista.com>	 <ce9d8ed60812081518g5d9166baia9fb9531b472dbff@mail.gmail.com>	 <493ECB6C.3040304@rtr.ca> <ce9d8ed60812091302k37b220d1l3dce6878274d8be2@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/3] libata: Add two more columns to the ata_timing table.
+Date: Wed, 10 Dec 2008 14:42:25 +0300
+Message-ID: <493FAB21.2030905@ru.mvista.com>
+References: <493DCBEA.9090007@caviumnetworks.com> <1228786798-20369-1-git-send-email-ddaney@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36859 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820AbYLJHAu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Dec 2008 02:00:50 -0500
-In-Reply-To: <ce9d8ed60812091302k37b220d1l3dce6878274d8be2@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:24583 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752466AbYLJLmb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Dec 2008 06:42:31 -0500
+In-Reply-To: <1228786798-20369-1-git-send-email-ddaney@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rob OpenSuSE <rob.opensuse.linux@googlemail.com>
-Cc: Mark Lord <liml@rtr.ca>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-Rob OpenSuSE wrote:
-> 2008/12/9 Mark Lord <liml@rtr.ca>:
->> Rob OpenSuSE wrote:
->> There are tons of PCI add-on cards still out there with these chips,
->> and they will continue to work fine so long as PCI slots
->> and PATA drives exist.  So we may as well ensure Linux does the Right Things (tm).
-> 
-> Yes, my point was in support of pragmatism; so that new kernel builds
-> and distro installs can have a chance to succeed in boxes with these
-> cards used, without opening case,  reconfiguring, and finding special
-> boot paramters.  Those cards need working code now, not next year.  So
-> "The Right Thing (tm)" would be bad, if it caused perfectly capable
-> kit to be non-functioning, whilst perfection is under discussion and
-> development.
+Hello.
 
-I already pushed those patches into openSUSE and in one form or
-another it will make into upstream and other distros, so no worries.
+David Daney wrote:
 
->> Nice work, Tejun!
-> 
-> Seconded!  If you are the Mark who sent the card, thanks to you to
-> from me to.
+> The forthcoming OCTEON SOC Compact Flash driver needs a few more
+> timing values than were available in the ata_timing table.  I add new
+> columns for write_hold and dmack_hold times.  The values were obtained
+> from the Compact Flash specification Rev 4.1.
+>
+> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
+>   
 
-Yeap, he's the Mark who sends me old and weird hardwares from time to
-time.  :-)
+   Well, you got it right except fot the SWDMA modes. :-)
 
-Thanks.
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 5e2eb74..b156d83 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2953,33 +2953,33 @@ int sata_set_spd(struct ata_link *link) 
+>   
+[...]
+> +	{ XFER_SW_DMA_0, 120,   0,   0,   0, 480, 480, 30, 20, 960,   0 },
+> +	{ XFER_SW_DMA_1,  90,   0,   0,   0, 240, 240, 30, 20, 480,   0 },
+> +	{ XFER_SW_DMA_2,  60,   0,   0,   0, 120, 120, 15, 20, 240,   0 },
+>   
 
--- 
-tejun
+   Well, I don't know what CF 4.1 has but ATA/ATA-2 have minimum -DIOx 
+to -DMACK hold time (tJ) for SW DMA modes always 0 ns, and -DIOW data 
+hold time (tH) of 50, 30, and 20 for modes 0, 1, and 2 respectfully.
+
+> @@ -864,6 +868,8 @@ struct ata_timing {
+>  	unsigned short cyc8b;		/* t0 for 8-bit I/O */
+>  	unsigned short active;		/* t2 or tD */
+>  	unsigned short recover;		/* t2i or tK */
+> +	unsigned short write_hold;	/* t4 */
+>   
+
+   The comment should be "t4 or tH", to be completely correct.
+
+MBR, Sergei
+
+
+
