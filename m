@@ -1,18 +1,18 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 3/28] drivers/ide: Drop return value from platform_driver
+Subject: [PATCH 14/28] drivers/ata: Drop return value from platform_driver
  remove functions
-Date: Wed, 10 Dec 2008 17:27:20 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0812101727000.21998@ask.diku.dk>
+Date: Wed, 10 Dec 2008 17:36:52 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0812101736310.21998@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:54093 "EHLO mgw1.diku.dk"
+Received: from mgw2.diku.dk ([130.225.96.92]:38201 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756080AbYLJQ1Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Dec 2008 11:27:25 -0500
+	id S1757215AbYLJQg4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Dec 2008 11:36:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dmitri.vorobiev@movial.fi, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: dmitri.vorobiev@movial.fi, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
@@ -86,90 +86,198 @@ expression E;
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/ide/ide_platform.c |    6 ++----
- drivers/ide/tx4938ide.c    |    5 ++---
- drivers/ide/tx4939ide.c    |    5 ++---
- 3 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/ata/pata_at32.c      |   10 ++++------
+ drivers/ata/pata_bf54x.c     |    6 ++----
+ drivers/ata/pata_ixp4xx_cf.c |    6 ++----
+ drivers/ata/pata_platform.c  |    6 +++---
+ drivers/ata/pata_rb532_cf.c  |    6 ++----
+ drivers/ata/sata_mv.c        |    7 +++----
+ 6 files changed, 16 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
-index 051b4ab..1b75c18 100644
---- a/drivers/ide/ide_platform.c
-+++ b/drivers/ide/ide_platform.c
-@@ -111,13 +111,11 @@ out:
+diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
+index ab61095..b34f664 100644
+--- a/drivers/ata/pata_at32.c
++++ b/drivers/ata/pata_at32.c
+@@ -357,33 +357,31 @@ static int __init pata_at32_probe(struct platform_device *pdev)
  	return ret;
  }
  
--static int __devexit plat_ide_remove(struct platform_device *pdev)
-+static void __devexit plat_ide_remove(struct platform_device *pdev)
+-static int __exit pata_at32_remove(struct platform_device *pdev)
++static void __exit pata_at32_remove(struct platform_device *pdev)
  {
- 	struct ide_host *host = pdev->dev.driver_data;
+ 	struct ata_host *host = platform_get_drvdata(pdev);
+ 	struct at32_ide_info *info;
  
- 	ide_host_remove(host);
+ 	if (!host)
+-		return 0;
++		return;
+ 
+ 	info = host->private_data;
+ 	ata_host_detach(host);
+ 
+ 	if (!info)
+-		return 0;
++		return;
+ 
+ 	release_resource(&info->res_ide);
+ 	release_resource(&info->res_alt);
+ 
+ 	kfree(info);
 -
 -	return 0;
  }
  
- static struct platform_driver platform_ide_driver = {
-@@ -126,7 +124,7 @@ static struct platform_driver platform_ide_driver = {
+ /* work with hotplug and coldplug */
+ MODULE_ALIAS("platform:at32_ide");
+ 
+ static struct platform_driver pata_at32_driver = {
+-	.remove	       = __exit_p(pata_at32_remove),
++	.remove_new    = __exit_p(pata_at32_remove),
+ 	.driver	       = {
+ 		.name  = "at32_ide",
  		.owner = THIS_MODULE,
- 	},
- 	.probe = plat_ide_probe,
--	.remove = __devexit_p(plat_ide_remove),
-+	.remove_new = __devexit_p(plat_ide_remove),
- };
- 
- static int __init platform_ide_init(void)
-diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-index 9120063..523d95e 100644
---- a/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -289,12 +289,11 @@ static int __init tx4938ide_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
--static int __exit tx4938ide_remove(struct platform_device *pdev)
-+static void __exit tx4938ide_remove(struct platform_device *pdev)
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index 1266924..aa9e086 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1644,7 +1644,7 @@ static int __devinit bfin_atapi_probe(struct platform_device *pdev)
+  *	A bfin atapi device has been unplugged. Perform the needed
+  *	cleanup. Also called on module unload for any active devices.
+  */
+-static int __devexit bfin_atapi_remove(struct platform_device *pdev)
++static void __devexit bfin_atapi_remove(struct platform_device *pdev)
  {
- 	struct ide_host *host = platform_get_drvdata(pdev);
+ 	struct device *dev = &pdev->dev;
+ 	struct ata_host *host = dev_get_drvdata(dev);
+@@ -1653,8 +1653,6 @@ static int __devexit bfin_atapi_remove(struct platform_device *pdev)
+ 	dev_set_drvdata(&pdev->dev, NULL);
  
- 	ide_host_remove(host);
--	return 0;
- }
- 
- static struct platform_driver tx4938ide_driver = {
-@@ -302,7 +301,7 @@ static struct platform_driver tx4938ide_driver = {
- 		.name	= "tx4938ide",
- 		.owner	= THIS_MODULE,
- 	},
--	.remove = __exit_p(tx4938ide_remove),
-+	.remove_new = __exit_p(tx4938ide_remove),
- };
- 
- static int __init tx4938ide_init(void)
-diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
-index bafb7d1..e23d07c 100644
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -706,12 +706,11 @@ static int __init tx4939ide_probe(struct platform_device *pdev)
- 	return 0;
- }
- 
--static int __exit tx4939ide_remove(struct platform_device *pdev)
-+static void __exit tx4939ide_remove(struct platform_device *pdev)
- {
- 	struct ide_host *host = platform_get_drvdata(pdev);
- 
- 	ide_host_remove(host);
+ 	peripheral_free_list(atapi_io_port);
+-
 -	return 0;
  }
  
  #ifdef CONFIG_PM
-@@ -732,7 +731,7 @@ static struct platform_driver tx4939ide_driver = {
- 		.name = MODNAME,
- 		.owner = THIS_MODULE,
+@@ -1690,7 +1688,7 @@ static int bfin_atapi_resume(struct platform_device *pdev)
+ 
+ static struct platform_driver bfin_atapi_driver = {
+ 	.probe			= bfin_atapi_probe,
+-	.remove			= __devexit_p(bfin_atapi_remove),
++	.remove_new		= __devexit_p(bfin_atapi_remove),
+ 	.suspend		= bfin_atapi_suspend,
+ 	.resume			= bfin_atapi_resume,
+ 	.driver = {
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 2014253..c449728 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -189,13 +189,11 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
+ 	return ata_host_activate(host, irq, ata_sff_interrupt, 0, &ixp4xx_sht);
+ }
+ 
+-static __devexit int ixp4xx_pata_remove(struct platform_device *dev)
++static __devexit void ixp4xx_pata_remove(struct platform_device *dev)
+ {
+ 	struct ata_host *host = platform_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
+-
+-	return 0;
+ }
+ 
+ static struct platform_driver ixp4xx_pata_platform_driver = {
+@@ -204,7 +202,7 @@ static struct platform_driver ixp4xx_pata_platform_driver = {
+ 		.owner  = THIS_MODULE,
  	},
--	.remove = __exit_p(tx4939ide_remove),
-+	.remove_new = __exit_p(tx4939ide_remove),
- 	.resume = tx4939ide_resume,
+ 	.probe		= ixp4xx_pata_probe,
+-	.remove		= __devexit_p(ixp4xx_pata_remove),
++	.remove_new	= __devexit_p(ixp4xx_pata_remove),
  };
  
+ static int __init ixp4xx_pata_init(void)
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 77e4e3b..f4bdde8 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -245,14 +245,14 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
+ 				     pio_mask);
+ }
+ 
+-static int __devexit pata_platform_remove(struct platform_device *pdev)
++static void __devexit pata_platform_remove(struct platform_device *pdev)
+ {
+-	return __pata_platform_remove(&pdev->dev);
++	__pata_platform_remove(&pdev->dev);
+ }
+ 
+ static struct platform_driver pata_platform_driver = {
+ 	.probe		= pata_platform_probe,
+-	.remove		= __devexit_p(pata_platform_remove),
++	.remove_new	= __devexit_p(pata_platform_remove),
+ 	.driver = {
+ 		.name		= DRV_NAME,
+ 		.owner		= THIS_MODULE,
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index c2e6fb9..9a8fc19 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -235,15 +235,13 @@ err_free_gpio:
+ 	return ret;
+ }
+ 
+-static __devexit int rb532_pata_driver_remove(struct platform_device *pdev)
++static __devexit void rb532_pata_driver_remove(struct platform_device *pdev)
+ {
+ 	struct ata_host *ah = platform_get_drvdata(pdev);
+ 	struct rb532_cf_info *info = ah->private_data;
+ 
+ 	ata_host_detach(ah);
+ 	gpio_free(info->gpio_line);
+-
+-	return 0;
+ }
+ 
+ /* work with hotplug and coldplug */
+@@ -251,7 +249,7 @@ MODULE_ALIAS("platform:" DRV_NAME);
+ 
+ static struct platform_driver rb532_pata_platform_driver = {
+ 	.probe		= rb532_pata_driver_probe,
+-	.remove		= __devexit_p(rb532_pata_driver_remove),
++	.remove_new	= __devexit_p(rb532_pata_driver_remove),
+ 	.driver	 = {
+ 		.name   = DRV_NAME,
+ 		.owner  = THIS_MODULE,
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 2b24ae5..a139cd7 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -3262,18 +3262,17 @@ static int mv_platform_probe(struct platform_device *pdev)
+  *      A platform bus SATA device has been unplugged. Perform the needed
+  *      cleanup. Also called on module unload for any active devices.
+  */
+-static int __devexit mv_platform_remove(struct platform_device *pdev)
++static void __devexit mv_platform_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
+-	return 0;
+ }
+ 
+ static struct platform_driver mv_platform_driver = {
+ 	.probe			= mv_platform_probe,
+-	.remove			= __devexit_p(mv_platform_remove),
++	.remove_new		= __devexit_p(mv_platform_remove),
+ 	.driver			= {
+ 				   .name = DRV_NAME,
+ 				   .owner = THIS_MODULE,
+@@ -3446,7 +3445,7 @@ static int mv_pci_init_one(struct pci_dev *pdev,
+ #endif
+ 
+ static int mv_platform_probe(struct platform_device *pdev);
+-static int __devexit mv_platform_remove(struct platform_device *pdev);
++static void __devexit mv_platform_remove(struct platform_device *pdev);
+ 
+ static int __init mv_init(void)
+ {
