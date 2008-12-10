@@ -1,37 +1,175 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: libata / scsi separation
-Date: Wed, 10 Dec 2008 09:01:18 -0700
-Message-ID: <20081210160118.GX25548@parisc-linux.org>
-References: <493B0867.5020700@ru.mvista.com> <1228662298.3501.19.camel@localhost.localdomain> <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com> <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com> <493F2DA9.7040008@gmail.com> <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com> <493F3B33.8010607@gmail.com> <20081210152445.GW25548@parisc-linux.org> <493FE15C.4060907@gmail.com>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 3/28] drivers/ide: Drop return value from platform_driver
+ remove functions
+Date: Wed, 10 Dec 2008 17:27:20 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0812101727000.21998@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:55376 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052AbYLJQBf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 11:01:35 -0500
-Content-Disposition: inline
-In-Reply-To: <493FE15C.4060907@gmail.com>
+Received: from mgw1.diku.dk ([130.225.96.91]:54093 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756080AbYLJQ1Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Dec 2008 11:27:25 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Grant Grundler <grundler@google.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: dmitri.vorobiev@movial.fi, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, Dec 11, 2008 at 12:33:48AM +0900, Tejun Heo wrote:
-> And yeap we definitely should try to do that too but I don't think
-> RW_SG would be as useless as jumbo frames (much less compatibility
-> problem and no loss of functionality), and the actual hardware
-> overhead of issuing separate commands for each 4k segment is way
-> higher than anything we do along the block and low level driver layers
-> in terms of IO access, host bus and ATA (or SAS) bus overhead.
+From: Julia Lawall <julia@diku.dk>
 
-You're probably right that there's high overhead at the hardware level,
-and we can't do anything about that.  There is some evidence that Linux
-is the limiting factor in SSD performance right now due to not being
-able to get enough commands to the device.
+The return value of the remove function of a driver structure, and thus of
+a platform_driver structure, is ultimately ignored, and is thus
+unnecessary.  This patch removes the return value for the remove function
+stored in a platform_driver structure.  For the files in this patch, the
+return values are always 0.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+A simplified version of the semantic patch that makes this change is as
+follows: (http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@r@
+struct platform_driver I;
+identifier a,f;
+position p;
+@@
+I.remove = \(f@p\|a(f@p)\);
+
+@void_called@
+identifier r.f;
+position p;
+@@
+f@p(...);
+
+@called@
+identifier r.f;
+position p1 != void_called.p;
+@@
+f@p1(...)
+
+@localfn@
+identifier r.f;
+@@
+static int f(...) { ... }
+
+@depends on !called && localfn@
+struct platform_driver I;
+identifier a,f;
+position r.p;
+@@
+
+I.
+- remove
++ remove_new
+   = \(f@p\|a(f@p)\);
+
+@depends on !called && localfn@
+identifier r.f,i;
+constant C;
+expression E;
+@@
+
+- int
++ void
+       f(...) {
+  <...
+(
+-  return \(C\|i\);
++  return;
+|
+-  return E;
++  E;
++  return;
+)
+  ...>
+}
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/ide/ide_platform.c |    6 ++----
+ drivers/ide/tx4938ide.c    |    5 ++---
+ drivers/ide/tx4939ide.c    |    5 ++---
+ 3 files changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
+index 051b4ab..1b75c18 100644
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -111,13 +111,11 @@ out:
+ 	return ret;
+ }
+ 
+-static int __devexit plat_ide_remove(struct platform_device *pdev)
++static void __devexit plat_ide_remove(struct platform_device *pdev)
+ {
+ 	struct ide_host *host = pdev->dev.driver_data;
+ 
+ 	ide_host_remove(host);
+-
+-	return 0;
+ }
+ 
+ static struct platform_driver platform_ide_driver = {
+@@ -126,7 +124,7 @@ static struct platform_driver platform_ide_driver = {
+ 		.owner = THIS_MODULE,
+ 	},
+ 	.probe = plat_ide_probe,
+-	.remove = __devexit_p(plat_ide_remove),
++	.remove_new = __devexit_p(plat_ide_remove),
+ };
+ 
+ static int __init platform_ide_init(void)
+diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
+index 9120063..523d95e 100644
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -289,12 +289,11 @@ static int __init tx4938ide_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static int __exit tx4938ide_remove(struct platform_device *pdev)
++static void __exit tx4938ide_remove(struct platform_device *pdev)
+ {
+ 	struct ide_host *host = platform_get_drvdata(pdev);
+ 
+ 	ide_host_remove(host);
+-	return 0;
+ }
+ 
+ static struct platform_driver tx4938ide_driver = {
+@@ -302,7 +301,7 @@ static struct platform_driver tx4938ide_driver = {
+ 		.name	= "tx4938ide",
+ 		.owner	= THIS_MODULE,
+ 	},
+-	.remove = __exit_p(tx4938ide_remove),
++	.remove_new = __exit_p(tx4938ide_remove),
+ };
+ 
+ static int __init tx4938ide_init(void)
+diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
+index bafb7d1..e23d07c 100644
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -706,12 +706,11 @@ static int __init tx4939ide_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int __exit tx4939ide_remove(struct platform_device *pdev)
++static void __exit tx4939ide_remove(struct platform_device *pdev)
+ {
+ 	struct ide_host *host = platform_get_drvdata(pdev);
+ 
+ 	ide_host_remove(host);
+-	return 0;
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -732,7 +731,7 @@ static struct platform_driver tx4939ide_driver = {
+ 		.name = MODNAME,
+ 		.owner = THIS_MODULE,
+ 	},
+-	.remove = __exit_p(tx4939ide_remove),
++	.remove_new = __exit_p(tx4939ide_remove),
+ 	.resume = tx4939ide_resume,
+ };
+ 
