@@ -1,70 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata / scsi separation
-Date: Wed, 10 Dec 2008 12:44:51 +0900
-Message-ID: <493F3B33.8010607@gmail.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>	 <493B022B.3050406@ru.mvista.com>	 <20081206230227.07b00e2f@lxorguk.ukuu.org.uk>	 <493B0867.5020700@ru.mvista.com>	 <1228662298.3501.19.camel@localhost.localdomain>	 <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com>	 <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com>	 <493F2DA9.7040008@gmail.com> <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH] pata_hpt366: fix mode configuration
+Date: Wed, 10 Dec 2008 16:00:22 +0900
+Message-ID: <493F6906.9010407@kernel.org>
+References: <493CC897.9080406@kernel.org> <493CF9A8.301@ru.mvista.com>	 <ce9d8ed60812081518g5d9166baia9fb9531b472dbff@mail.gmail.com>	 <493ECB6C.3040304@rtr.ca> <ce9d8ed60812091302k37b220d1l3dce6878274d8be2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:36859 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751820AbYLJHAu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Dec 2008 02:00:50 -0500
+In-Reply-To: <ce9d8ed60812091302k37b220d1l3dce6878274d8be2@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Rob OpenSuSE <rob.opensuse.linux@googlemail.com>
+Cc: Mark Lord <liml@rtr.ca>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello,
-
-Grant Grundler wrote:
->>> Maybe you are counting instructions and not cycles? Every cache miss
->>> is 200-300 cycles (say 100ns). When running multiple threads, we will
->>> miss on nearly every spinlock acquisition and probably on several data
->>> accesses. 1 microsecond isn't alot when counting this way.
->> Yeah, ata uses its own locking and the qc allocation does atomic
->> bitops for each bit for no good reason which can hurt for very hi-ops
->> with NCQ tags filled up.  If serving 4k requests as fast as possible
->> is the goal, I'm not really sure the current SCSI or ATA commands are
->> the best suited ones.  Both SCSI and ATA are focused on rotating media
->> with seek latency
+Rob OpenSuSE wrote:
+> 2008/12/9 Mark Lord <liml@rtr.ca>:
+>> Rob OpenSuSE wrote:
+>> There are tons of PCI add-on cards still out there with these chips,
+>> and they will continue to work fine so long as PCI slots
+>> and PATA drives exist.  So we may as well ensure Linux does the Right Things (tm).
 > 
-> I think existing File Systems and block IO schedulers (except NOOP) are
-> tuned for rotating media and access patterns that benefit this media the most.
+> Yes, my point was in support of pragmatism; so that new kernel builds
+> and distro installs can have a chance to succeed in boxes with these
+> cards used, without opening case,  reconfiguring, and finding special
+> boot paramters.  Those cards need working code now, not next year.  So
+> "The Right Thing (tm)" would be bad, if it caused perfectly capable
+> kit to be non-functioning, whilst perfection is under discussion and
+> development.
 
-Acutally, the whole stack is optimized toward IO devices with seek
-latency, from the hardware to our drivers and the whole block layer
-itself.
+I already pushed those patches into openSUSE and in one form or
+another it will make into upstream and other distros, so no worries.
 
->> and thus have SG on the host bus side in mode cases
->> but never on the device side.
+>> Nice work, Tejun!
 > 
-> SG == scatter-gather? I'm not sure why that is specific to rotating media.
-> Or is this referring to "SCSI-generic" pass through?
+> Seconded!  If you are the Mark who sent the card, thanks to you to
+> from me to.
 
-I was talking about scatter-gather.  All the IO commands are about one
-continuous extent of data on the device and the whole stack from the
-bio is built that way and the overhead of libata is minute compared to
-the whole thing including emitting single command and receiving
-completion for each 4k transfer.
-
-> In any case, only traversing one fewer layers (SCSI or libata) in
-> block code path would help serve 4k requests more efficiently.
-
-Yes, no doubt.
-
->> If getting the maximum random scattered
->> access throughput is a must, the best way would be adding a SG r/w
->> commands to ATA and adapt our storage stack accordingly.
-> 
-> I don't think everyone wants to throw out the entire stack.
-> But adding a passthrough for ATA and connecting that to FUSE might
-> be a performant alternative.
-
-Don't know how FUSE would come into play but if the device can receive
-list of IOs to perform in a single command and reply accordingly, the
-block layer (possibly bio interface too?) can be modified to merge
-random IOs into a single request and things will be really fast and
-whether we grab one more spinlock or not at the bottom of the stack
-wouldn't really matter.
+Yeap, he's the Mark who sends me old and weird hardwares from time to
+time.  :-)
 
 Thanks.
 
