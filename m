@@ -1,52 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] libata: Add two more columns to the ata_timing table.
-Date: Wed, 10 Dec 2008 15:12:41 +0300
-Message-ID: <493FB239.3030506@ru.mvista.com>
-References: <493DCBEA.9090007@caviumnetworks.com> <1228786798-20369-1-git-send-email-ddaney@caviumnetworks.com> <493FAB21.2030905@ru.mvista.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: libata / scsi separation
+Date: Wed, 10 Dec 2008 08:24:45 -0700
+Message-ID: <20081210152445.GW25548@parisc-linux.org>
+References: <493B022B.3050406@ru.mvista.com> <20081206230227.07b00e2f@lxorguk.ukuu.org.uk> <493B0867.5020700@ru.mvista.com> <1228662298.3501.19.camel@localhost.localdomain> <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com> <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com> <493F2DA9.7040008@gmail.com> <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com> <493F3B33.8010607@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25168 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750928AbYLJMMq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Dec 2008 07:12:46 -0500
-In-Reply-To: <493FAB21.2030905@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <493F3B33.8010607@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Grant Grundler <grundler@google.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-Hello, I wrote:
+On Wed, Dec 10, 2008 at 12:44:51PM +0900, Tejun Heo wrote:
+> >> and thus have SG on the host bus side in mode cases
+> >> but never on the device side.
+> > 
+> > SG == scatter-gather? I'm not sure why that is specific to rotating media.
+> > Or is this referring to "SCSI-generic" pass through?
+> 
+> I was talking about scatter-gather.  All the IO commands are about one
+> continuous extent of data on the device and the whole stack from the
+> bio is built that way and the overhead of libata is minute compared to
+> the whole thing including emitting single command and receiving
+> completion for each 4k transfer.
 
->> timing values than were available in the ata_timing table.  I add new
->> columns for write_hold and dmack_hold times.  The values were obtained
->> from the Compact Flash specification Rev 4.1.
->>
->> Signed-off-by: David Daney <ddaney@caviumnetworks.com>
->>   
-> The forthcoming OCTEON SOC Compact Flash driver needs a few more
->
->   Well, you got it right except fot the SWDMA modes. :-)
->
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 5e2eb74..b156d83 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -2953,33 +2953,33 @@ int sata_set_spd(struct ata_link *link)   
-> [...]
->> +    { XFER_SW_DMA_0, 120,   0,   0,   0, 480, 480, 30, 20, 960,   0 },
->> +    { XFER_SW_DMA_1,  90,   0,   0,   0, 240, 240, 30, 20, 480,   0 },
->> +    { XFER_SW_DMA_2,  60,   0,   0,   0, 120, 120, 15, 20, 240,   0 },
->>   
->
->   Well, I don't know what CF 4.1 has but ATA/ATA-2 have minimum -DIOx 
-> to -DMACK hold time (tJ) for SW DMA modes always 0 ns, and -DIOW data 
-> hold time (tH) of 50, 30, and 20 for modes 0, 1, and 2 respectfully.
+I think what Tejun means is add a new command, say READ_SG which would
+transfer a page of LBA ranges (see how TRIM works for details), then the
+drive would do a single transfer which contained the data from all those
+ranges.
 
-   Well, the correctness of these values shouldn't matter much because 
-IIRC libata have dropped support for SWDMA completely...
+This would work, but (ignoring the political / standardisation efforts
+required to make this happen), this is just a cop-out.  When networking
+people were first faced with gigabit, they tried the same thing (oooh,
+9000 byte packets, oooh, TCP Offload, etc), all in the name of passing
+larger amounts of data to the card in a single transaction so they
+didn't have to fix their per-transaction overheads.
 
-MBR, Sergei
+Users weren't interested.  They wanted to keep sending 1500 byte packets
+(because most equipment couldn't handle jumbo frames) and they wanted
+netfilter and SACK and all the other goodies that the Linux networking
+stack offered and the card's TCP stack didn't.
 
+We should stop denying that users actually want to do 4k IOs and just
+get on with fixing the storage stack to cope with lots of them.
 
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
