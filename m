@@ -1,283 +1,59 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 14/28] drivers/ata: Drop return value from platform_driver
- remove functions
-Date: Wed, 10 Dec 2008 17:36:52 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0812101736310.21998@ask.diku.dk>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: libata / scsi separation
+Date: Wed, 10 Dec 2008 09:11:34 -0800
+Message-ID: <da824cf30812100911o1f7f23bbi3277dfa3932f8964@mail.gmail.com>
+References: <493B022B.3050406@ru.mvista.com>
+	 <1228662298.3501.19.camel@localhost.localdomain>
+	 <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com>
+	 <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com>
+	 <493F2DA9.7040008@gmail.com>
+	 <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com>
+	 <493F3B33.8010607@gmail.com> <20081210152445.GW25548@parisc-linux.org>
+	 <493FE15C.4060907@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:38201 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757215AbYLJQg4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Dec 2008 11:36:56 -0500
+Received: from smtp-out.google.com ([216.239.45.13]:59707 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017AbYLJRQv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 12:16:51 -0500
+Received: from spaceape11.eur.corp.google.com (spaceape11.eur.corp.google.com [172.28.16.145])
+	by smtp-out.google.com with ESMTP id mBAHGmgK028317
+	for <linux-ide@vger.kernel.org>; Wed, 10 Dec 2008 09:16:49 -0800
+Received: from bwz10 (bwz10.prod.google.com [10.188.26.10])
+	by spaceape11.eur.corp.google.com with ESMTP id mBAHGkYI004263
+	for <linux-ide@vger.kernel.org>; Wed, 10 Dec 2008 09:16:47 -0800
+Received: by bwz10 with SMTP id 10so1516868bwz.22
+        for <linux-ide@vger.kernel.org>; Wed, 10 Dec 2008 09:16:46 -0800 (PST)
+In-Reply-To: <493FE15C.4060907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dmitri.vorobiev@movial.fi, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+On Wed, Dec 10, 2008 at 7:33 AM, Tejun Heo <htejun@gmail.com> wrote:
+...
+> And yeap we definitely should try to do that too but I don't think
+> RW_SG would be as useless as jumbo frames (much less compatibility
+> problem and no loss of functionality),
 
-The return value of the remove function of a driver structure, and thus of
-a platform_driver structure, is ultimately ignored, and is thus
-unnecessary.  This patch removes the return value for the remove function
-stored in a platform_driver structure.  For the files in this patch, the
-return values are always 0.
+Jumbo frames aren't useless. They just don't apply to the "small message
+passing overhead" problem. Users doing bulk data transfer (NAS, FTP, etc)
+are pretty happy with TCP Segmentation Offloading (cousin of Jumbo Frames).
 
-A simplified version of the semantic patch that makes this change is as
-follows: (http://www.emn.fr/x-info/coccinelle/)
+> and the actual hardware
+> overhead of issuing separate commands for each 4k segment is way
+> higher than anything we do along the block and low level driver layers
+> in terms of IO access, host bus and ATA (or SAS) bus overhead.
 
-// <smpl>
-@r@
-struct platform_driver I;
-identifier a,f;
-position p;
-@@
-I.remove = \(f@p\|a(f@p)\);
+That's true and it was also true gigabit NICs in the 90's. NIC HW vendors
+have figured out host to avoid doing MMIO reads/writes during normal IO.
+Infiniband has an even more efficient interface that's mostly Host RAM based
+(a few MMIO writes). Last time I measured (~2006), TCP stack was 4x the
+CPU cost of the HW interface. I don't know what the current ratio is for
+any given SATA controller vs libata/SCSI stack, but I'm certain it will
+change as new controllers are introduced.
 
-@void_called@
-identifier r.f;
-position p;
-@@
-f@p(...);
-
-@called@
-identifier r.f;
-position p1 != void_called.p;
-@@
-f@p1(...)
-
-@localfn@
-identifier r.f;
-@@
-static int f(...) { ... }
-
-@depends on !called && localfn@
-struct platform_driver I;
-identifier a,f;
-position r.p;
-@@
-
-I.
-- remove
-+ remove_new
-   = \(f@p\|a(f@p)\);
-
-@depends on !called && localfn@
-identifier r.f,i;
-constant C;
-expression E;
-@@
-
-- int
-+ void
-       f(...) {
-  <...
-(
--  return \(C\|i\);
-+  return;
-|
--  return E;
-+  E;
-+  return;
-)
-  ...>
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/ata/pata_at32.c      |   10 ++++------
- drivers/ata/pata_bf54x.c     |    6 ++----
- drivers/ata/pata_ixp4xx_cf.c |    6 ++----
- drivers/ata/pata_platform.c  |    6 +++---
- drivers/ata/pata_rb532_cf.c  |    6 ++----
- drivers/ata/sata_mv.c        |    7 +++----
- 6 files changed, 16 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
-index ab61095..b34f664 100644
---- a/drivers/ata/pata_at32.c
-+++ b/drivers/ata/pata_at32.c
-@@ -357,33 +357,31 @@ static int __init pata_at32_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
--static int __exit pata_at32_remove(struct platform_device *pdev)
-+static void __exit pata_at32_remove(struct platform_device *pdev)
- {
- 	struct ata_host *host = platform_get_drvdata(pdev);
- 	struct at32_ide_info *info;
- 
- 	if (!host)
--		return 0;
-+		return;
- 
- 	info = host->private_data;
- 	ata_host_detach(host);
- 
- 	if (!info)
--		return 0;
-+		return;
- 
- 	release_resource(&info->res_ide);
- 	release_resource(&info->res_alt);
- 
- 	kfree(info);
--
--	return 0;
- }
- 
- /* work with hotplug and coldplug */
- MODULE_ALIAS("platform:at32_ide");
- 
- static struct platform_driver pata_at32_driver = {
--	.remove	       = __exit_p(pata_at32_remove),
-+	.remove_new    = __exit_p(pata_at32_remove),
- 	.driver	       = {
- 		.name  = "at32_ide",
- 		.owner = THIS_MODULE,
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 1266924..aa9e086 100644
---- a/drivers/ata/pata_bf54x.c
-+++ b/drivers/ata/pata_bf54x.c
-@@ -1644,7 +1644,7 @@ static int __devinit bfin_atapi_probe(struct platform_device *pdev)
-  *	A bfin atapi device has been unplugged. Perform the needed
-  *	cleanup. Also called on module unload for any active devices.
-  */
--static int __devexit bfin_atapi_remove(struct platform_device *pdev)
-+static void __devexit bfin_atapi_remove(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ata_host *host = dev_get_drvdata(dev);
-@@ -1653,8 +1653,6 @@ static int __devexit bfin_atapi_remove(struct platform_device *pdev)
- 	dev_set_drvdata(&pdev->dev, NULL);
- 
- 	peripheral_free_list(atapi_io_port);
--
--	return 0;
- }
- 
- #ifdef CONFIG_PM
-@@ -1690,7 +1688,7 @@ static int bfin_atapi_resume(struct platform_device *pdev)
- 
- static struct platform_driver bfin_atapi_driver = {
- 	.probe			= bfin_atapi_probe,
--	.remove			= __devexit_p(bfin_atapi_remove),
-+	.remove_new		= __devexit_p(bfin_atapi_remove),
- 	.suspend		= bfin_atapi_suspend,
- 	.resume			= bfin_atapi_resume,
- 	.driver = {
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 2014253..c449728 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -189,13 +189,11 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
- 	return ata_host_activate(host, irq, ata_sff_interrupt, 0, &ixp4xx_sht);
- }
- 
--static __devexit int ixp4xx_pata_remove(struct platform_device *dev)
-+static __devexit void ixp4xx_pata_remove(struct platform_device *dev)
- {
- 	struct ata_host *host = platform_get_drvdata(dev);
- 
- 	ata_host_detach(host);
--
--	return 0;
- }
- 
- static struct platform_driver ixp4xx_pata_platform_driver = {
-@@ -204,7 +202,7 @@ static struct platform_driver ixp4xx_pata_platform_driver = {
- 		.owner  = THIS_MODULE,
- 	},
- 	.probe		= ixp4xx_pata_probe,
--	.remove		= __devexit_p(ixp4xx_pata_remove),
-+	.remove_new	= __devexit_p(ixp4xx_pata_remove),
- };
- 
- static int __init ixp4xx_pata_init(void)
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 77e4e3b..f4bdde8 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -245,14 +245,14 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 				     pio_mask);
- }
- 
--static int __devexit pata_platform_remove(struct platform_device *pdev)
-+static void __devexit pata_platform_remove(struct platform_device *pdev)
- {
--	return __pata_platform_remove(&pdev->dev);
-+	__pata_platform_remove(&pdev->dev);
- }
- 
- static struct platform_driver pata_platform_driver = {
- 	.probe		= pata_platform_probe,
--	.remove		= __devexit_p(pata_platform_remove),
-+	.remove_new	= __devexit_p(pata_platform_remove),
- 	.driver = {
- 		.name		= DRV_NAME,
- 		.owner		= THIS_MODULE,
-diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index c2e6fb9..9a8fc19 100644
---- a/drivers/ata/pata_rb532_cf.c
-+++ b/drivers/ata/pata_rb532_cf.c
-@@ -235,15 +235,13 @@ err_free_gpio:
- 	return ret;
- }
- 
--static __devexit int rb532_pata_driver_remove(struct platform_device *pdev)
-+static __devexit void rb532_pata_driver_remove(struct platform_device *pdev)
- {
- 	struct ata_host *ah = platform_get_drvdata(pdev);
- 	struct rb532_cf_info *info = ah->private_data;
- 
- 	ata_host_detach(ah);
- 	gpio_free(info->gpio_line);
--
--	return 0;
- }
- 
- /* work with hotplug and coldplug */
-@@ -251,7 +249,7 @@ MODULE_ALIAS("platform:" DRV_NAME);
- 
- static struct platform_driver rb532_pata_platform_driver = {
- 	.probe		= rb532_pata_driver_probe,
--	.remove		= __devexit_p(rb532_pata_driver_remove),
-+	.remove_new	= __devexit_p(rb532_pata_driver_remove),
- 	.driver	 = {
- 		.name   = DRV_NAME,
- 		.owner  = THIS_MODULE,
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 2b24ae5..a139cd7 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -3262,18 +3262,17 @@ static int mv_platform_probe(struct platform_device *pdev)
-  *      A platform bus SATA device has been unplugged. Perform the needed
-  *      cleanup. Also called on module unload for any active devices.
-  */
--static int __devexit mv_platform_remove(struct platform_device *pdev)
-+static void __devexit mv_platform_remove(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ata_host *host = dev_get_drvdata(dev);
- 
- 	ata_host_detach(host);
--	return 0;
- }
- 
- static struct platform_driver mv_platform_driver = {
- 	.probe			= mv_platform_probe,
--	.remove			= __devexit_p(mv_platform_remove),
-+	.remove_new		= __devexit_p(mv_platform_remove),
- 	.driver			= {
- 				   .name = DRV_NAME,
- 				   .owner = THIS_MODULE,
-@@ -3446,7 +3445,7 @@ static int mv_pci_init_one(struct pci_dev *pdev,
- #endif
- 
- static int mv_platform_probe(struct platform_device *pdev);
--static int __devexit mv_platform_remove(struct platform_device *pdev);
-+static void __devexit mv_platform_remove(struct platform_device *pdev);
- 
- static int __init mv_init(void)
- {
+hth,
+grant
