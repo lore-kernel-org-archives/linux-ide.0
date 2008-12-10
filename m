@@ -1,45 +1,29 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Wed, 10 Dec 2008 20:46:34 +0300
-Message-ID: <4940007A.6060603@ru.mvista.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <200812061551.08525.bzolnier@gmail.com> <20081206120001.3580b9e3@tuna> <200812062241.35601.bzolnier@gmail.com> <20081206222423.04aada70@lxorguk.ukuu.org.uk> <493B022B.3050406@ru.mvista.com> <20081206230227.07b00e2f@lxorguk.ukuu.org.uk> <20081209214128.GT25548@parisc-linux.org>
+From: "Raz Ben-Yehuda" <razb@bitband.com>
+Subject: Intel X25-M MLC SSD benchmarks
+Date: Wed, 10 Dec 2008 23:15:12 +0200
+Message-ID: <83CA05F64804AF43B8F733C4ABDFAA51022D04D4@mail1.bitband.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:30992 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751660AbYLJRqk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Dec 2008 12:46:40 -0500
-In-Reply-To: <20081209214128.GT25548@parisc-linux.org>
+Received: from fw.bitband.com ([213.8.50.174]:45508 "EHLO mail.bitband.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754988AbYLJVPT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 16:15:19 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Dan No? <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello.
+Hello
+I am wondering if anyone tried Intel new disks. I benchmark them and I
+am a bit confused.
+According to the spec a single disk should provide 70MB/s write and 250
+MB/s read. Reads are ok. I am reaching this number, but writes are bad.
+With writes I am getting 20MB/s.
+I am using a dd for the test, and a deadline-line scheduler. 
+ 
+Thank you
+Raz
 
-Matthew Wilcox wrote:
-
->>Well ATAPI is SCSI emulation (its a sort of pidgin SCSI admittedly).
-
-> I'm told (by people who work with embedded people) that first the
-> customer says "Oh, I don't need the block layer, I just need MTD", so
-> they disable CONFIG_BLOCK, then the customer says "Oh, I need to support
-> USB storage", so they re-enable CONFIG_BLOCK, add CONFIG_SCSI and scsi
-> disk support and usb-storage.
-
-    That depends. And that is still not the same as SCSI subsys + SCSI disk 
-driver + libata SCSI emulation.
-
-> OK, there is now 'ub' so you can do this without SCSI, but still ...
-
->>I'm actually seeing two strands of requests (including from embedded)
->>
->>- CF only small "dumb as president" type driver that is written to be as
-
-> Just six weeks until you can't make that joke any more ...
-
-    You're frightening me... What's going to happen after these 6 weeks?
-
-MBR, Sergei
