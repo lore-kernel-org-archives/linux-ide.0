@@ -1,163 +1,54 @@
-From: David Daney <ddaney@caviumnetworks.com>
-Subject: [PATCH 1/3] libata: Add another column to the ata_timing table.
-Date: Wed, 10 Dec 2008 18:11:48 -0800
-Message-ID: <494076E4.1090505@caviumnetworks.com>
-References: <494052D1.10208@caviumnetworks.com> <1228952353-12323-1-git-send-email-ddaney@caviumnetworks.com> <49405640.4020205@ru.mvista.com> <494071E9.2010808@caviumnetworks.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Intel X25-M MLC SSD benchmarks
+Date: Wed, 10 Dec 2008 20:44:24 -0700
+Message-ID: <20081211034423.GA26095@parisc-linux.org>
+References: <20081210213937.GC25548@parisc-linux.org> <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.caviumnetworks.com ([12.108.191.235]:20442 "EHLO
-	mail3.caviumnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160AbYLKCMN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 21:12:13 -0500
-In-Reply-To: <494071E9.2010808@caviumnetworks.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:47746 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbYLKDol (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2008 22:44:41 -0500
+Content-Disposition: inline
+In-Reply-To: <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-mips@linux-mips.org
+To: Raz Ben-Yehuda <razb@bitband.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The forthcoming OCTEON SOC Compact Flash driver needs an additional
-timing value that was not available in the ata_timing table.  I add a
-new column for dmack_hold time.  The values were obtained from the
-Compact Flash specification Rev 4.1.
+On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
+> I did not want to dive into details because it does not matter. Whether
+> noop,deadline, deadline parameters...
+> As for the controller I used 4 different controllers. Adaptec,AHCI and
+> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
+> 4-th controller SuperMicro UIO Adaptec aac card.
+> All gave same results for most dd writes commands.
+> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
+> other variants such erase block size ( 128K ) , several erase block size
+> and so on. Kernel is 2.6.18-8.el5.
 
-Signed-off-by: David Daney <ddaney@caviumnetworks.com>
----
+OK, I suspect you aren't giving the drive enough work to do for it to
+perform at its best.  Try doing something like this:
 
-This is a small correction.  In the first version I forgot to
-completely remove a field from the ata_timing struct that was present
-in an earlier version of this patch set.  This one should be good.
+for i in $(seq 0 9); do \
+	dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
+		seek=$(($i * 1000)) & \
+done
 
+> I used all on a supermicro 1025W-UR. Disks have a SAS interface, 80GB. 
+> Also, I would like to note, I have 8 disks in array, while each one
+> perform READS 250 MB/s, together I degrade to 200 MB/s each. As for
 
- drivers/ata/libata-core.c |   72 +++++++++++++++++++++++----------------------
- include/linux/libata.h    |    9 ++++--
- 2 files changed, 43 insertions(+), 38 deletions(-)
+That doesn't surprise me; you're probably hitting a limitation either of 
+the array or the cable itself.  A SAS cable can run up to 6Gbps, which
+will be around 600MB/s.  So three drives should be able to saturate your
+SAS cable.  If you're using an x4 link, that goes up to 2400MB/s which
+should be ample for 8 drives ... maybe you're using a 3Gbps cable which
+would limit each drive to 150MB/s.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 5e2eb74..1be2dde 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2953,33 +2953,33 @@ int sata_set_spd(struct ata_link *link)
-  */
- 
- static const struct ata_timing ata_timing[] = {
--/*	{ XFER_PIO_SLOW, 120, 290, 240, 960, 290, 240, 960,   0 }, */
--	{ XFER_PIO_0,     70, 290, 240, 600, 165, 150, 600,   0 },
--	{ XFER_PIO_1,     50, 290,  93, 383, 125, 100, 383,   0 },
--	{ XFER_PIO_2,     30, 290,  40, 330, 100,  90, 240,   0 },
--	{ XFER_PIO_3,     30,  80,  70, 180,  80,  70, 180,   0 },
--	{ XFER_PIO_4,     25,  70,  25, 120,  70,  25, 120,   0 },
--	{ XFER_PIO_5,     15,  65,  25, 100,  65,  25, 100,   0 },
--	{ XFER_PIO_6,     10,  55,  20,  80,  55,  20,  80,   0 },
--
--	{ XFER_SW_DMA_0, 120,   0,   0,   0, 480, 480, 960,   0 },
--	{ XFER_SW_DMA_1,  90,   0,   0,   0, 240, 240, 480,   0 },
--	{ XFER_SW_DMA_2,  60,   0,   0,   0, 120, 120, 240,   0 },
--
--	{ XFER_MW_DMA_0,  60,   0,   0,   0, 215, 215, 480,   0 },
--	{ XFER_MW_DMA_1,  45,   0,   0,   0,  80,  50, 150,   0 },
--	{ XFER_MW_DMA_2,  25,   0,   0,   0,  70,  25, 120,   0 },
--	{ XFER_MW_DMA_3,  25,   0,   0,   0,  65,  25, 100,   0 },
--	{ XFER_MW_DMA_4,  25,   0,   0,   0,  55,  20,  80,   0 },
--
--/*	{ XFER_UDMA_SLOW,  0,   0,   0,   0,   0,   0,   0, 150 }, */
--	{ XFER_UDMA_0,     0,   0,   0,   0,   0,   0,   0, 120 },
--	{ XFER_UDMA_1,     0,   0,   0,   0,   0,   0,   0,  80 },
--	{ XFER_UDMA_2,     0,   0,   0,   0,   0,   0,   0,  60 },
--	{ XFER_UDMA_3,     0,   0,   0,   0,   0,   0,   0,  45 },
--	{ XFER_UDMA_4,     0,   0,   0,   0,   0,   0,   0,  30 },
--	{ XFER_UDMA_5,     0,   0,   0,   0,   0,   0,   0,  20 },
--	{ XFER_UDMA_6,     0,   0,   0,   0,   0,   0,   0,  15 },
-+/*	{ XFER_PIO_SLOW, 120, 290, 240, 960, 290, 240, 0,  960,   0 }, */
-+	{ XFER_PIO_0,     70, 290, 240, 600, 165, 150, 0,  600,   0 },
-+	{ XFER_PIO_1,     50, 290,  93, 383, 125, 100, 0,  383,   0 },
-+	{ XFER_PIO_2,     30, 290,  40, 330, 100,  90, 0,  240,   0 },
-+	{ XFER_PIO_3,     30,  80,  70, 180,  80,  70, 0,  180,   0 },
-+	{ XFER_PIO_4,     25,  70,  25, 120,  70,  25, 0,  120,   0 },
-+	{ XFER_PIO_5,     15,  65,  25, 100,  65,  25, 0,  100,   0 },
-+	{ XFER_PIO_6,     10,  55,  20,  80,  55,  20, 0,   80,   0 },
-+
-+	{ XFER_SW_DMA_0, 120,   0,   0,   0, 480, 480, 50, 960,   0 },
-+	{ XFER_SW_DMA_1,  90,   0,   0,   0, 240, 240, 30, 480,   0 },
-+	{ XFER_SW_DMA_2,  60,   0,   0,   0, 120, 120, 20, 240,   0 },
-+
-+	{ XFER_MW_DMA_0,  60,   0,   0,   0, 215, 215, 20, 480,   0 },
-+	{ XFER_MW_DMA_1,  45,   0,   0,   0,  80,  50, 5,  150,   0 },
-+	{ XFER_MW_DMA_2,  25,   0,   0,   0,  70,  25, 5,  120,   0 },
-+	{ XFER_MW_DMA_3,  25,   0,   0,   0,  65,  25, 5,  100,   0 },
-+	{ XFER_MW_DMA_4,  25,   0,   0,   0,  55,  20, 5,   80,   0 },
-+
-+/*	{ XFER_UDMA_SLOW,  0,   0,   0,   0,   0,   0, 0,    0, 150 }, */
-+	{ XFER_UDMA_0,     0,   0,   0,   0,   0,   0, 0,    0, 120 },
-+	{ XFER_UDMA_1,     0,   0,   0,   0,   0,   0, 0,    0,  80 },
-+	{ XFER_UDMA_2,     0,   0,   0,   0,   0,   0, 0,    0,  60 },
-+	{ XFER_UDMA_3,     0,   0,   0,   0,   0,   0, 0,    0,  45 },
-+	{ XFER_UDMA_4,     0,   0,   0,   0,   0,   0, 0,    0,  30 },
-+	{ XFER_UDMA_5,     0,   0,   0,   0,   0,   0, 0,    0,  20 },
-+	{ XFER_UDMA_6,     0,   0,   0,   0,   0,   0, 0,    0,  15 },
- 
- 	{ 0xFF }
- };
-@@ -2989,14 +2989,15 @@ static const struct ata_timing ata_timing[] = {
- 
- static void ata_timing_quantize(const struct ata_timing *t, struct ata_timing *q, int T, int UT)
- {
--	q->setup   = EZ(t->setup   * 1000,  T);
--	q->act8b   = EZ(t->act8b   * 1000,  T);
--	q->rec8b   = EZ(t->rec8b   * 1000,  T);
--	q->cyc8b   = EZ(t->cyc8b   * 1000,  T);
--	q->active  = EZ(t->active  * 1000,  T);
--	q->recover = EZ(t->recover * 1000,  T);
--	q->cycle   = EZ(t->cycle   * 1000,  T);
--	q->udma    = EZ(t->udma    * 1000, UT);
-+	q->setup	= EZ(t->setup      * 1000,  T);
-+	q->act8b	= EZ(t->act8b      * 1000,  T);
-+	q->rec8b	= EZ(t->rec8b      * 1000,  T);
-+	q->cyc8b	= EZ(t->cyc8b      * 1000,  T);
-+	q->active	= EZ(t->active     * 1000,  T);
-+	q->recover	= EZ(t->recover    * 1000,  T);
-+	q->dmack_hold	= EZ(t->dmack_hold * 1000,  T);
-+	q->cycle	= EZ(t->cycle      * 1000,  T);
-+	q->udma		= EZ(t->udma       * 1000, UT);
- }
- 
- void ata_timing_merge(const struct ata_timing *a, const struct ata_timing *b,
-@@ -3008,6 +3009,7 @@ void ata_timing_merge(const struct ata_timing *a, const struct ata_timing *b,
- 	if (what & ATA_TIMING_CYC8B  ) m->cyc8b   = max(a->cyc8b,   b->cyc8b);
- 	if (what & ATA_TIMING_ACTIVE ) m->active  = max(a->active,  b->active);
- 	if (what & ATA_TIMING_RECOVER) m->recover = max(a->recover, b->recover);
-+	if (what & ATA_TIMING_DMACK_HOLD) m->dmack_hold = max(a->dmack_hold, b->dmack_hold);
- 	if (what & ATA_TIMING_CYCLE  ) m->cycle   = max(a->cycle,   b->cycle);
- 	if (what & ATA_TIMING_UDMA   ) m->udma    = max(a->udma,    b->udma);
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index ed3f26e..cf24a2a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -399,12 +399,14 @@ enum {
- 				  ATA_TIMING_CYC8B,
- 	ATA_TIMING_ACTIVE	= (1 << 4),
- 	ATA_TIMING_RECOVER	= (1 << 5),
--	ATA_TIMING_CYCLE	= (1 << 6),
--	ATA_TIMING_UDMA		= (1 << 7),
-+	ATA_TIMING_DMACK_HOLD	= (1 << 6),
-+	ATA_TIMING_CYCLE	= (1 << 7),
-+	ATA_TIMING_UDMA		= (1 << 8),
- 	ATA_TIMING_ALL		= ATA_TIMING_SETUP | ATA_TIMING_ACT8B |
- 				  ATA_TIMING_REC8B | ATA_TIMING_CYC8B |
- 				  ATA_TIMING_ACTIVE | ATA_TIMING_RECOVER |
--				  ATA_TIMING_CYCLE | ATA_TIMING_UDMA,
-+				  ATA_TIMING_DMACK_HOLD | ATA_TIMING_CYCLE |
-+				  ATA_TIMING_UDMA,
- };
- 
- enum ata_xfer_mask {
-@@ -864,6 +866,7 @@ struct ata_timing {
- 	unsigned short cyc8b;		/* t0 for 8-bit I/O */
- 	unsigned short active;		/* t2 or tD */
- 	unsigned short recover;		/* t2i or tK */
-+	unsigned short dmack_hold;	/* tj */
- 	unsigned short cycle;		/* t0 */
- 	unsigned short udma;		/* t2CYCTYP/2 */
- };
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
