@@ -1,54 +1,43 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Re: Intel X25-M MLC SSD benchmarks
-Date: Fri, 12 Dec 2008 13:10:42 -0500
-Message-ID: <87f94c370812121010g7d19471en6efb273bd504dad3@mail.gmail.com>
-References: <AclbDGOLOskD7sbdTh+kIygApfPXZg==>
-	 <83CA05F64804AF43B8F733C4ABDFAA51022D04D4@mail1.bitband.com>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Intel X25-E running Linux using XFS
+Date: Fri, 12 Dec 2008 19:58:03 +0100
+Message-ID: <20081212185803.GE11974@elf.ucw.cz>
+References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <83CA05F64804AF43B8F733C4ABDFAA51022D04D4@mail1.bitband.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:49171 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYLLS4V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2008 13:56:21 -0500
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Raz Ben-Yehuda <razb@bitband.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 
-On Wed, Dec 10, 2008 at 4:15 PM, Raz Ben-Yehuda <razb@bitband.com> wrote:
-> Hello
-> I am wondering if anyone tried Intel new disks. I benchmark them and I
-> am a bit confused.
-> According to the spec a single disk should provide 70MB/s write and 250
-> MB/s read. Reads are ok. I am reaching this number, but writes are bad.
-> With writes I am getting 20MB/s.
-> I am using a dd for the test, and a deadline-line scheduler.
+
+Hi!
+
+> Due to the 100k write cycle lifetime, I will not be performing any more 
+> benchmarks on the SSD itself, such benchmarks are available on  
+> techreport.com but just wanted to send out the smart data for the  
+> smartmontools list and point out it is working with linux+ich7+xfs.
 >
-> Thank you
-> Raz
+> Overall, whenever I do anything now its just like the entire machine is
+> sitting in a ramdisk (similar when you boot knoppix and load to ramdisk).
+>
+> The techreport benchmarks are here:
+> http://techreport.com/articles.x/15931
 
-FYI:
-Some recent kernel's have performance bugs in /dev/zero.  (The bug may
-only exist ins SuSE kernels, not sure.)
+Actually I'd like to know... how does it behave during powerfails
+while it is being written to?
 
-Be sure to baseline it before you trust it for any benchmarks.
-
-My current machine/kernel is plenty fast to use but you need to be
-sure and it only takes a minute.
-
-# dd if=/dev/zero of=/dev/null bs=1M count=100000
-100000+0 records in
-100000+0 records out
-104857600000 bytes (105 GB) copied, 33.4257 s, 3.1 GB/s
-
-Greg
+Flashes I seen (USB / SD) developed bad sectors in that case, and
+ext2/ext3 can't handle that. (And I don't think xfs can handle that
+either).
+									Pavel
 -- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
