@@ -1,33 +1,53 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: AHCI problem with hotplug
-Date: Fri, 12 Dec 2008 16:03:17 +0000
-Message-ID: <20081212160317.7ad72603@lxorguk.ukuu.org.uk>
-References: <494178E3.6030305@cybernetics.com>
+From: "Raz Ben-Yehuda" <razb@bitband.com>
+Subject: RE: Intel X25-M MLC SSD benchmarks
+Date: Fri, 12 Dec 2008 19:12:31 +0200
+Message-ID: <83CA05F64804AF43B8F733C4ABDFAA51022D04DE@mail1.bitband.com>
+References: <311601c90812120755s5981a659s2049db14a85f68e6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52860 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757310AbYLLQDN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2008 11:03:13 -0500
-In-Reply-To: <494178E3.6030305@cybernetics.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <311601c90812120755s5981a659s2049db14a85f68e6@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Eric D. Mudama" <edmudama@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Thu, 11 Dec 2008 15:32:35 -0500
-Tony Battersby <tonyb@cybernetics.com> wrote:
 
-> I am having a problem getting Linux to detect hot-plugged SATA disks on my
-> ICH7 AHCI controller (SuperMicro PDSME motherboard).  On any SATA port that
-> already had a disk plugged in during BIOS POST, Linux will see the disk and
-> detect hot-plug and hot-unplug events just fine.  On any SATA port that did
-> not have a disk plugged in during BIOS POST, Linux will not see a disk no
-> matter what.  Here are the different sequences of events that I have tried:
 
-AHCI has a set of BIOS/Firmware set flags used to indicate which ports
-are not hot pluggable and the kernel will honour that data and leave such
-ports powered down.
+-----Original Message-----
+From: Eric D. Mudama [mailto:edmudama@gmail.com] 
+Sent: Friday, December 12, 2008 5:55 PM
+To: Matthew Wilcox
+Cc: Bart Van Assche; Raz Ben-Yehuda; linux-ide@vger.kernel.org;
+linux-scsi@vger.kernel.org
+Subject: Re: Intel X25-M MLC SSD benchmarks
 
+On 12/12/08, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Fri, Dec 12, 2008 at 07:25:18AM -0700, Eric D. Mudama wrote:
+>> Oops, I guess I assumed that by writing a few gigabytes of data it
+>> wouldn't matter that much.  I'll run the test again in a bit once I'm
+>> off this solaris machine.
+>
+> You need to rescale for 2008; people often have 4GB or more RAM in
+their
+> machines ... hell, I have one machine here from 2002 with 14GB in it
+> (I don't power it up very often because it's too noisy).  The test was
+> only writing 1GB of data, which would fit in the page cache of my
+laptop,
+> never mind the kind of machine that's likely to have an 8-way array
+> attached to it.
+
+>>I just retested on a linux box at work, and got 79 MB/s on both the
+>>X18-M and X25-M, and 197MB/s on an X25-E.  All were done with bs=1M
+>>count=1000 oflag=direct.
+
+What is the serial number of your x25.M ? 
+what controller ? 
+How new is it ? 
+Please dd all disk and then retest, just to be sure you used all erase
+blocks. 
+
+--<<eric
