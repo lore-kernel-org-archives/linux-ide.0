@@ -1,39 +1,36 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Intel X25-M MLC SSD benchmarks
-Date: Fri, 12 Dec 2008 08:15:01 +0100
-Message-ID: <e2e108260812112315q5ed1d265q86cf22b1dd59c69d@mail.gmail.com>
-References: <20081210213937.GC25548@parisc-linux.org>
-	 <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com>
-	 <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com>
-	 <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com>
+Date: Fri, 12 Dec 2008 05:15:11 -0700
+Message-ID: <20081212121511.GH26095@parisc-linux.org>
+References: <20081210213937.GC25548@parisc-linux.org> <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com> <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com> <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:18692 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbYLLHPJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2008 02:15:09 -0500
-In-Reply-To: <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:46515 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756151AbYLLMPM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2008 07:15:12 -0500
 Content-Disposition: inline
+In-Reply-To: <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: Raz Ben-Yehuda <razb@bitband.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Raz Ben-Yehuda <razb@bitband.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Dec 12, 2008 at 5:55 AM, Eric D. Mudama <edmudama@gmail.com> wrote:
+On Thu, Dec 11, 2008 at 09:55:56PM -0700, Eric D. Mudama wrote:
 > On 12/11/08, Eric D. Mudama <edmudama@gmail.com> wrote:
->> Out of curiosity, is write cache enabled or disabled on these devices?
->
+> > Out of curiosity, is write cache enabled or disabled on these devices?
+> 
 > Oops, I just noticed the oflag=direct, that can have a huge
 > performance difference depending on the block size.
->
+> 
 > What numbers are you getting without oflag=direct?
 
-IMHO repeating the measurements without oflag=direct does not make
-sense: measurements with oflag=direct tell something about the
-performance of the SSD and the software layers on top of it. Without
-oflag=direct writes are buffered by Linux and data is written
-asynchronously to the SSD.
+Without the oflag=direct option, you're measuring the performance of the
+Linux page cache.  That's not very interesting.
 
-Bart.
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
