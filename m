@@ -1,70 +1,33 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
-Date: Thu, 11 Dec 2008 18:24:51 -0700
-Message-ID: <20081212012451.GG26095@parisc-linux.org>
-References: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: Intel X25-M MLC SSD benchmarks
+Date: Thu, 11 Dec 2008 20:27:38 -0700
+Message-ID: <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com>
+References: <20081210213937.GC25548@parisc-linux.org>
+	 <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39034 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756606AbYLLBZI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Dec 2008 20:25:08 -0500
+Received: from yx-out-2324.google.com ([74.125.44.29]:51130 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbYLLD1k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Dec 2008 22:27:40 -0500
+In-Reply-To: <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com>
 Content-Disposition: inline
-In-Reply-To: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Raz <raziebe@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Raz Ben-Yehuda <razb@bitband.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Dec 11, 2008 at 10:40:41PM +0200, Raz wrote:
-> > ________________________________
-> > From: Matthew Wilcox [mailto:matthew@wil.cx]
-> > Sent: Thu 12/11/2008 5:44 AM
-> > To: Raz Ben-Yehuda
-> > Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
-> > Subject: Re: Intel X25-M MLC SSD benchmarks
-> >
-> > On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
-> >> I did not want to dive into details because it does not matter. Whether
-> >> noop,deadline, deadline parameters...
-> >> As for the controller I used 4 different controllers. Adaptec,AHCI and
-> >> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
-> >> 4-th controller SuperMicro UIO Adaptec aac card.
-> >> All gave same results for most dd writes commands.
-> >> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
-> >> other variants such erase block size ( 128K ) , several erase block size
-> >> and so on. Kernel is 2.6.18-8.el5.
-> >
-> >>>OK, I suspect you aren't giving the drive enough work to do for it to
-> >>>perform at its best.  Try doing something like this:
-> >
-> >>>for i in $(seq 0 9); do \
-> >  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
-> >  >>               seek=$(($i * 1000)) & \
-> >>>done
-> >
-> did that. nothing. also, I would like to note that IO flow is quite
-> weird.iostats reports 70GB/s in the first few seconds, and then it
-> degrades to 20
->  MB/s and less. could it be that I am not erase-block aligment ?
+On 12/10/08, Raz Ben-Yehuda <razb@bitband.com> wrote:
+> All gave same results for most dd writes commands.
+> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
+> other variants such erase block size ( 128K ) , several erase block size
+> and so on. Kernel is 2.6.18-8.el5.
+> I used all on a supermicro 1025W-UR. Disks have a SAS interface, 80GB.
+> Also, I would like to note, I have 8 disks in array, while each one
+> perform READS 250 MB/s, together I degrade to 200 MB/s each. As for
+> writes I always reach 20 MB/s at best, from a single disk or 20x8 in
+> array.
 
-That doesn't sound likely to me.  Erase block size isn't a huge issue
-with these drives.  I've been trying to replicate your problem, but I'm
-not having any luck; unfortunately I only have access to an X25-E drive
-(not an X25-M) and I'm seeing 175-185MB/s when it's attached to an AHCI
-controller, just with a single dd (I haven't even played with the
-elevator).  I'm trying to get hold of an X25-M drive, but I don't know
-when I'll receive one.
-
-> how does SSD aligments interacts with a controller ?
-
-Controllers can generally send down large enough IOs that it isn't a
-problem.  And the Intel SSDs are smart enough that you shouldn't have to
-align to erase block boundaries to make them go fast.
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Out of curiosity, is write cache enabled or disabled on these devices?
