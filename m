@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/6] ide: use per-port IRQ handlers
-Date: Sun, 14 Dec 2008 00:39:45 +0100
-Message-ID: <20081213233945.4653.12564.sendpatchset@localhost.localdomain>
+Subject: [PATCH 5/6] ide: use lock bitops for ports serialization
+Date: Sun, 14 Dec 2008 00:39:58 +0100
+Message-ID: <20081213233958.4653.37722.sendpatchset@localhost.localdomain>
 References: <20081213233925.4653.58008.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:37815 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318AbYLMXkB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Dec 2008 18:40:01 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so1203336fkq.5
-        for <linux-ide@vger.kernel.org>; Sat, 13 Dec 2008 15:39:59 -0800 (PST)
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:43312 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470AbYLMXkO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Dec 2008 18:40:14 -0500
+Received: by mail-bw0-f21.google.com with SMTP id 14so329974bwz.13
+        for <linux-ide@vger.kernel.org>; Sat, 13 Dec 2008 15:40:12 -0800 (PST)
 In-Reply-To: <20081213233925.4653.58008.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,223 +17,253 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: use per-port IRQ handlers
+Subject: [PATCH] ide: use lock bitops for ports serialization
 
-Use hwif instead of hwgroup as {request,free}_irq()'s cookie,
-teach ide_intr() to return early for non-active serialized ports,
-modify unexpected_intr() accordingly and then use per-port IRQ
-handlers instead of per-hwgroup ones.
+* Add ->host_busy field to struct ide_host and use it's first bit
+  together with lock bitops to provide new ports serialization method.
+
+* Convert core IDE code to use new ide_[un]lock_host() helpers.
+
+  This removes the need for taking hwgroup->lock if host is already
+  busy on serialized hosts and makes it possible to merge ide_hwgroup_t
+  into ide_hwif_t (done in the later patch).
+
+* Remove no longer needed ide_hwgroup_t.busy and ide_[un]lock_hwgroup().
+
+* Update do_ide_request() documentation.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c    |   56 ++++++++++++++++++------------------------------
- drivers/ide/ide-probe.c |   21 ++++++------------
- drivers/ide/ide.c       |   17 --------------
- include/linux/ide.h     |    4 +--
- 4 files changed, 33 insertions(+), 65 deletions(-)
+ drivers/ide/ide-io.c |   77 ++++++++++++++++++++++++---------------------------
+ include/linux/ide.h  |   34 +++-------------------
+ 2 files changed, 42 insertions(+), 69 deletions(-)
 
 Index: b/drivers/ide/ide-io.c
 ===================================================================
 --- a/drivers/ide/ide-io.c
 +++ b/drivers/ide/ide-io.c
-@@ -723,7 +723,7 @@ void do_ide_request(struct request_queue
+@@ -666,43 +666,36 @@ void ide_stall_queue (ide_drive_t *drive
+ }
+ EXPORT_SYMBOL(ide_stall_queue);
+ 
++static inline int ide_lock_host(struct ide_host *host, ide_hwif_t *hwif)
++{
++	int rc = 0;
++
++	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
++		rc = test_and_set_bit_lock(IDE_HOST_BUSY, &host->host_busy);
++		if (rc == 0) {
++			/* for atari only */
++			ide_get_lock(ide_intr, hwif);
++		}
++	}
++	return rc;
++}
++
++static inline void ide_unlock_host(struct ide_host *host)
++{
++	/* for atari only */
++	ide_release_lock();
++	if (host->host_flags & IDE_HFLAG_SERIALIZE)
++		clear_bit_unlock(IDE_HOST_BUSY, &host->host_busy);
++}
++
+ /*
+  * Issue a new request to a drive from hwgroup
+- *
+- * A hwgroup is a serialized group of IDE interfaces.  Usually there is
+- * exactly one hwif (interface) per hwgroup, but buggy controllers (eg. CMD640)
+- * may have both interfaces in a single hwgroup to "serialize" access.
+- * Or possibly multiple ISA interfaces can share a common IRQ by being grouped
+- * together into one hwgroup for serialized access.
+- *
+- * Note also that several hwgroups can end up sharing a single IRQ,
+- * possibly along with many other devices.  This is especially common in
+- * PCI-based systems with off-board IDE controller cards.
+- *
+- * The IDE driver uses a per-hwgroup lock to protect the hwgroup->busy flag.
+- *
+- * The first thread into the driver for a particular hwgroup sets the
+- * hwgroup->busy flag to indicate that this hwgroup is now active,
+- * and then initiates processing of the top request from the request queue.
+- *
+- * Other threads attempting entry notice the busy setting, and will simply
+- * queue their new requests and exit immediately.  Note that hwgroup->busy
+- * remains set even when the driver is merely awaiting the next interrupt.
+- * Thus, the meaning is "this hwgroup is busy processing a request".
+- *
+- * When processing of a request completes, the completing thread or IRQ-handler
+- * will start the next request from the queue.  If no more work remains,
+- * the driver will clear the hwgroup->busy flag and exit.
+- *
+- * The per-hwgroup spinlock is used to protect all access to the
+- * hwgroup->busy flag, but is otherwise not needed for most processing in
+- * the driver.  This makes the driver much more friendlier to shared IRQs
+- * than previous designs, while remaining 100% (?) SMP safe and capable.
+  */
+ void do_ide_request(struct request_queue *q)
+ {
+ 	ide_drive_t	*drive = q->queuedata;
+ 	ide_hwif_t	*hwif = drive->hwif;
++	struct ide_host *host = hwif->host;
+ 	ide_hwgroup_t	*hwgroup = hwif->hwgroup;
+ 	struct request	*rq;
+ 	ide_startstop_t	startstop;
+@@ -721,9 +714,13 @@ void do_ide_request(struct request_queue
+ 		blk_remove_plug(q);
+ 
  	spin_unlock_irq(q->queue_lock);
++
++	if (ide_lock_host(host, hwif))
++		goto plug_device_2;
++
  	spin_lock_irq(&hwgroup->lock);
  
--	if (!ide_lock_hwgroup(hwgroup)) {
-+	if (!ide_lock_hwgroup(hwgroup, hwif)) {
+-	if (!ide_lock_hwgroup(hwgroup, hwif)) {
++	if (1) {
  		ide_hwif_t *prev_port;
  repeat:
  		prev_port = hwif->host->cur_port;
-@@ -1002,44 +1002,30 @@ void ide_timer_expiry (unsigned long dat
-  *	before completing the issuance of any new drive command, so we will not
-  *	be accidentally invoked as a result of any valid command completion
-  *	interrupt.
-- *
-- *	Note that we must walk the entire hwgroup here. We know which hwif
-- *	is doing the current command, but we don't know which hwif burped
-- *	mysteriously.
-  */
+@@ -731,7 +728,7 @@ repeat:
  
- static void unexpected_intr(int irq, ide_hwif_t *hwif)
- {
--	ide_hwgroup_t *hwgroup = hwif->hwgroup;
--	u8 stat;
-+	u8 stat = hwif->tp_ops->read_status(hwif);
- 
--	/*
--	 * handle the unexpected interrupt
--	 */
--	do {
--		if (hwif->irq == irq) {
--			stat = hwif->tp_ops->read_status(hwif);
--
--			if (!OK_STAT(stat, ATA_DRDY, BAD_STAT)) {
--				/* Try to not flood the console with msgs */
--				static unsigned long last_msgtime, count;
--				++count;
--				if (time_after(jiffies, last_msgtime + HZ)) {
--					last_msgtime = jiffies;
--					printk(KERN_ERR "%s%s: unexpected interrupt, "
--						"status=0x%02x, count=%ld\n",
--						hwif->name,
--						(hwif->next==hwgroup->hwif) ? "" : "(?)", stat, count);
--				}
--			}
-+	if (!OK_STAT(stat, ATA_DRDY, BAD_STAT)) {
-+		/* Try to not flood the console with msgs */
-+		static unsigned long last_msgtime, count;
-+		++count;
-+
-+		if (time_after(jiffies, last_msgtime + HZ)) {
-+			last_msgtime = jiffies;
-+			printk(KERN_ERR "%s: unexpected interrupt, "
-+				"status=0x%02x, count=%ld\n",
-+				hwif->name, stat, count);
+ 		if (drive->dev_flags & IDE_DFLAG_SLEEPING) {
+ 			if (time_before(drive->sleep, jiffies)) {
+-				ide_unlock_hwgroup(hwgroup);
++				ide_unlock_host(host);
+ 				goto plug_device;
+ 			}
  		}
--	} while ((hwif = hwif->next) != hwgroup->hwif);
+@@ -761,7 +758,7 @@ repeat:
+ 		spin_lock_irq(&hwgroup->lock);
+ 
+ 		if (!rq) {
+-			ide_unlock_hwgroup(hwgroup);
++			ide_unlock_host(host);
+ 			goto out;
+ 		}
+ 
+@@ -782,7 +779,7 @@ repeat:
+ 		    blk_pm_request(rq) == 0 &&
+ 		    (rq->cmd_flags & REQ_PREEMPT) == 0) {
+ 			/* there should be no pending command at this point */
+-			ide_unlock_hwgroup(hwgroup);
++			ide_unlock_host(host);
+ 			goto plug_device;
+ 		}
+ 
+@@ -794,8 +791,7 @@ repeat:
+ 
+ 		if (startstop == ide_stopped)
+ 			goto repeat;
+-	} else
+-		goto plug_device;
 +	}
- }
- 
- /**
-  *	ide_intr	-	default IDE interrupt handler
-  *	@irq: interrupt number
-- *	@dev_id: hwif group
-+ *	@dev_id: hwif
-  *	@regs: unused weirdness from the kernel irq layer
-  *
-  *	This is the default IRQ handler for the IDE layer. You should
-@@ -1063,17 +1049,19 @@ static void unexpected_intr(int irq, ide
-  
- irqreturn_t ide_intr (int irq, void *dev_id)
- {
--	unsigned long flags;
--	ide_hwgroup_t *hwgroup = (ide_hwgroup_t *)dev_id;
--	ide_hwif_t *hwif = hwgroup->hwif;
-+	ide_hwif_t *hwif = (ide_hwif_t *)dev_id;
-+	ide_hwgroup_t *hwgroup = hwif->hwgroup;
- 	ide_drive_t *uninitialized_var(drive);
- 	ide_handler_t *handler;
-+	unsigned long flags;
- 	ide_startstop_t startstop;
- 	irqreturn_t irq_ret = IRQ_NONE;
- 	int plug_device = 0;
- 
--	if (hwif->host->host_flags & IDE_HFLAG_SERIALIZE)
--		hwif = hwif->host->cur_port;
-+	if (hwif->host->host_flags & IDE_HFLAG_SERIALIZE) {
-+		if (hwif != hwif->host->cur_port)
-+			goto out_early;
-+	}
- 
- 	spin_lock_irqsave(&hwgroup->lock, flags);
- 
-@@ -1172,7 +1160,7 @@ out_handled:
- 	irq_ret = IRQ_HANDLED;
  out:
- 	spin_unlock_irqrestore(&hwgroup->lock, flags);
--
-+out_early:
- 	if (plug_device)
- 		ide_plug_device(drive);
+ 	spin_unlock_irq(&hwgroup->lock);
+ 	spin_lock_irq(q->queue_lock);
+@@ -803,6 +799,7 @@ out:
  
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1022,6 +1022,7 @@ static int init_irq (ide_hwif_t *hwif)
- 	unsigned int index;
- 	ide_hwgroup_t *hwgroup;
- 	ide_hwif_t *match = NULL;
-+	int sa = 0;
+ plug_device:
+ 	spin_unlock_irq(&hwgroup->lock);
++plug_device_2:
+ 	spin_lock_irq(q->queue_lock);
  
- 	mutex_lock(&ide_cfg_mtx);
- 	hwif->hwgroup = NULL;
-@@ -1076,24 +1077,18 @@ static int init_irq (ide_hwif_t *hwif)
+ 	if (!elv_queue_empty(q))
+@@ -844,9 +841,9 @@ static ide_startstop_t ide_dma_timeout_r
+ 	ide_dma_off_quietly(drive);
  
- 	ide_ports[hwif->index] = hwif;
+ 	/*
+-	 * un-busy drive etc (hwgroup->busy is cleared on return) and
+-	 * make sure request is sane
++	 * un-busy drive etc and make sure request is sane
+ 	 */
++
+ 	rq = HWGROUP(drive)->rq;
  
--	/*
--	 * Allocate the irq, if not already obtained for another hwif
--	 */
--	if (!match || match->irq != hwif->irq) {
--		int sa = 0;
- #if defined(__mc68000__)
--		sa = IRQF_SHARED;
-+	sa = IRQF_SHARED;
- #endif /* __mc68000__ */
- 
--		if (hwif->chipset == ide_pci)
--			sa = IRQF_SHARED;
-+	if (hwif->chipset == ide_pci)
-+		sa = IRQF_SHARED;
- 
--		if (io_ports->ctl_addr)
--			hwif->tp_ops->set_irq(hwif, 1);
-+	if (io_ports->ctl_addr)
-+		hwif->tp_ops->set_irq(hwif, 1);
- 
--		if (request_irq(hwif->irq,&ide_intr,sa,hwif->name,hwgroup))
--	       		goto out_unlink;
--	}
-+	if (request_irq(hwif->irq, &ide_intr, sa, hwif->name, hwif))
-+		goto out_unlink;
- 
- 	if (!hwif->rqsize) {
- 		if ((hwif->host_flags & IDE_HFLAG_NO_LBA48) ||
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -175,10 +175,6 @@ EXPORT_SYMBOL_GPL(ide_port_unregister_de
- 
- void ide_unregister(ide_hwif_t *hwif)
- {
--	ide_hwif_t *g;
--	ide_hwgroup_t *hwgroup;
--	int irq_count = 0;
--
- 	BUG_ON(in_interrupt());
- 	BUG_ON(irqs_disabled());
- 
-@@ -191,18 +187,7 @@ void ide_unregister(ide_hwif_t *hwif)
- 
- 	ide_proc_unregister_port(hwif);
- 
--	hwgroup = hwif->hwgroup;
--	/*
--	 * free the irq if we were the only hwif using it
--	 */
--	g = hwgroup->hwif;
--	do {
--		if (g->irq == hwif->irq)
--			++irq_count;
--		g = g->next;
--	} while (g != hwgroup->hwif);
--	if (irq_count == 1)
--		free_irq(hwif->irq, hwgroup);
-+	free_irq(hwif->irq, hwif);
- 
- 	ide_remove_port_from_hwgroup(hwif);
- 
+ 	if (!rq)
+@@ -964,7 +961,7 @@ void ide_timer_expiry (unsigned long dat
+ 			spin_lock_irq(&hwgroup->lock);
+ 			enable_irq(hwif->irq);
+ 			if (startstop == ide_stopped) {
+-				ide_unlock_hwgroup(hwgroup);
++				ide_unlock_host(hwif->host);
+ 				plug_device = 1;
+ 			}
+ 		}
+@@ -1150,7 +1147,7 @@ irqreturn_t ide_intr (int irq, void *dev
+ 	 */
+ 	if (startstop == ide_stopped) {
+ 		if (hwgroup->handler == NULL) {	/* paranoia */
+-			ide_unlock_hwgroup(hwgroup);
++			ide_unlock_host(hwif->host);
+ 			plug_device = 1;
+ 		} else
+ 			printk(KERN_ERR "%s: %s: huh? expected NULL handler "
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1274,14 +1274,14 @@ extern void ide_stall_queue(ide_drive_t 
+@@ -851,8 +851,13 @@ struct ide_host {
+ 	unsigned long	host_flags;
+ 	void		*host_priv;
+ 	ide_hwif_t	*cur_port;	/* for hosts requiring serialization */
++
++	/* used for hosts requiring serialization */
++	volatile long	host_busy;
+ };
+ 
++#define IDE_HOST_BUSY 0
++
+ /*
+  *  internal ide interrupt handler type
+  */
+@@ -866,8 +871,6 @@ typedef struct hwgroup_s {
+ 		/* irq handler, if active */
+ 	ide_startstop_t	(*handler)(ide_drive_t *);
+ 
+-		/* BOOL: protects all fields below */
+-	volatile int busy;
+ 		/* BOOL: polling active & poll_timeout field valid */
+ 	unsigned int polling	: 1;
+ 
+@@ -1271,26 +1274,6 @@ extern void ide_stall_queue(ide_drive_t 
+ 
  extern void ide_timer_expiry(unsigned long);
  extern irqreturn_t ide_intr(int irq, void *dev_id);
+-
+-static inline int ide_lock_hwgroup(ide_hwgroup_t *hwgroup, ide_hwif_t *hwif)
+-{
+-	if (hwgroup->busy)
+-		return 1;
+-
+-	hwgroup->busy = 1;
+-	/* for atari only */
+-	ide_get_lock(ide_intr, hwif);
+-
+-	return 0;
+-}
+-
+-static inline void ide_unlock_hwgroup(ide_hwgroup_t *hwgroup)
+-{
+-	/* for atari only */
+-	ide_release_lock();
+-	hwgroup->busy = 0;
+-}
+-
+ extern void do_ide_request(struct request_queue *);
  
--static inline int ide_lock_hwgroup(ide_hwgroup_t *hwgroup)
-+static inline int ide_lock_hwgroup(ide_hwgroup_t *hwgroup, ide_hwif_t *hwif)
- {
- 	if (hwgroup->busy)
- 		return 1;
+ void ide_init_disk(struct gendisk *, ide_drive_t *);
+@@ -1617,13 +1600,6 @@ static inline void ide_set_max_pio(ide_d
  
- 	hwgroup->busy = 1;
- 	/* for atari only */
--	ide_get_lock(ide_intr, hwgroup);
-+	ide_get_lock(ide_intr, hwif);
+ extern spinlock_t ide_lock;
+ extern struct mutex ide_cfg_mtx;
+-/*
+- * Structure locking:
+- *
+- * ide_hwgroup_t->busy: hwgroup->lock
+- * ide_hwif_t->{hwgroup,mate}: constant, no locking
+- * ide_drive_t->hwif: constant, no locking
+- */
  
- 	return 0;
- }
+ #define local_irq_set(flags)	do { local_save_flags((flags)); local_irq_enable_in_hardirq(); } while (0)
+ 
