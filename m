@@ -1,58 +1,42 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12217] New: reading a cdrom hangs the system
-Date: Sat, 13 Dec 2008 14:59:04 -0800 (PST)
-Message-ID: <bug-12217-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/3] ide: add ide_[un]lock_hwgroup() helpers
+Date: Sun, 14 Dec 2008 00:15:51 +0100
+Message-ID: <200812140015.51978.bzolnier@gmail.com>
+References: <200811182116.00351.bzolnier@gmail.com>  <alpine.DEB.1.00.0811190236550.24738@zirkon.biophys.uni-duesseldorf.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44543 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751837AbYLMW7g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Dec 2008 17:59:36 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBDMx4QS032645
-	for <linux-ide@vger.kernel.org>; Sat, 13 Dec 2008 14:59:05 -0800
+Received: from mu-out-0910.google.com ([209.85.134.189]:9435 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062AbYLMXSm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Dec 2008 18:18:42 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so1144816muf.1
+        for <linux-ide@vger.kernel.org>; Sat, 13 Dec 2008 15:18:41 -0800 (PST)
+In-Reply-To: <alpine.DEB.1.00.0811190236550.24738@zirkon.biophys.uni-duesseldorf.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12217
-
-           Summary: reading a cdrom hangs the system
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: > 2.6.22
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: michel.schmid-ms@orange.fr
+To: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Elias Oltmanns <eo@nebensachen.de>
 
 
-Latest working kernel version: 2.6.22
-Earliest failing kernel version: 2.6.24
-Distribution:ubuntu
-Hardware Environment:acer aspire 1310. wifi netgear 
-Software Environment:ubuntu 8.10
-Problem Description:
-Since the upgrade to Ubuntu Hardy, with kernel 2.6.24, attempting to read a
-cdrom results in a system hang after ~ 20 MB read (mouse and keyboard frozen).
-However, burning a CD, or listening to an audio cd works well.
-If I boot with the kernel 2.6.22, No problems of this kind but strange restarts
-of the X session.
+[ Sorry for the late reply. ]
 
-Hardware: laptop Acer Aspire 1310. RAM 512MB. HD IDE 30 GB. Netgear WiFi
-network card.
-tanks & best regards
-Michel.
+On Wednesday 19 November 2008, Michael Schmitz wrote:
+> > -	while (!hwgroup->busy) {
+> > -		hwgroup->busy = 1;
+> > -		/* for atari only */
+> > -		ide_get_lock(ide_intr, hwgroup);
+> > +	while (!ide_lock_hwgroup(hwgroup)) {
+> 
+> Something I've run into while working on the locking stuff: what happens if the 
+> above ide_lock_hwgroup(hwgroup) sleeps for long enough to trigger the request 
+> timer? 
 
+AFAICS this happens before the hwgroup timeout timer is armed and IDE is not
+using block layer request timers yet so we should be fine here..
 
-Steps to reproduce: Insert a CD and copy the content to a directory
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Thanks,
+Bart
