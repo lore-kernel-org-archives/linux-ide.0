@@ -1,34 +1,42 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [PATCH 1/6] ide: fix setting nIEN on idle devices
-Date: Sun, 14 Dec 2008 08:06:21 +0100
-Message-ID: <20081214070620.GB31552@1wt.eu>
-References: <20081213233925.4653.58008.sendpatchset@localhost.localdomain> <20081213233932.4653.97088.sendpatchset@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12217] reading a cdrom hangs the system
+Date: Sun, 14 Dec 2008 01:56:50 -0800 (PST)
+Message-ID: <20081214095650.52773108040@picon.linux-foundation.org>
+References: <bug-12217-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:1677 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750879AbYLNHGZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Dec 2008 02:06:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20081213233932.4653.97088.sendpatchset@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44645 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751793AbYLNJ5U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Dec 2008 04:57:20 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBE9uoZB022432
+	for <linux-ide@vger.kernel.org>; Sun, 14 Dec 2008 01:56:51 -0800
+In-Reply-To: <bug-12217-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Bart,
+http://bugzilla.kernel.org/show_bug.cgi?id=12217
 
-On Sun, Dec 14, 2008 at 12:39:32AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: fix setting nIEN on idle devices
-> 
-> Fix do_ide_request() to operate on previous device / port instead of
-> the current one.  The original code was wrong since at least Feb 2002
-> (2.4.0 timeframe).
 
-What could be the impact of this bug ? Should I backport your fix to 2.4 ?
+bbpetkov@yahoo.de changed:
 
-Thanks,
-Willy
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bbpetkov@yahoo.de
 
+
+
+
+------- Comment #1 from bbpetkov@yahoo.de  2008-12-14 01:56 -------
+Hi,
+
+please send the output of 'dmesg' and 'lspci -vv', the last one run as root.
+
+Thanks.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
