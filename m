@@ -1,42 +1,84 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
-Date: Sun, 14 Dec 2008 22:13:33 -0800 (PST)
-Message-ID: <20081215061333.111AD108042@picon.linux-foundation.org>
-References: <bug-12144-11633@http.bugzilla.kernel.org/>
+From: Raz <raziebe@gmail.com>
+Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
+Date: Mon, 15 Dec 2008 14:59:38 +0200
+Message-ID: <5d96567b0812150459i1aacfa76y1525b28e01891dc4@mail.gmail.com>
+References: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
+	 <20081212012451.GG26095@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57315 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751237AbYLOGOG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Dec 2008 01:14:06 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBF6DXSm005451
-	for <linux-ide@vger.kernel.org>; Sun, 14 Dec 2008 22:13:34 -0800
-In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:56182 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbYLOM7l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Dec 2008 07:59:41 -0500
+In-Reply-To: <20081212012451.GG26095@parisc-linux.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12144
-
-
-
-
-
-------- Comment #11 from bbpetkov@yahoo.de  2008-12-14 22:13 -------
-Hi,
-
-hm, that's strange. Normally, if "Can play audio" is set, you should be able to
-do that and according to, e.g.
-http://www.sony-optiarc.eu/en/exhibits/slim-line-drives/bc-5500a, your hardware
-is capable of playing audio. Well, you could try my patch to see if it fixes
-your problem with ide-cd. However, make sure not to load scsi-cdrom but the
-ide_cd_mod module.
-
-Thanks,
-Boris.
+http://www.tomshardware.com/reviews/Intel-x25-m-SSD,2012-8.html
+they say that write IO fluctuates.
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+
+On 12/12/08, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Thu, Dec 11, 2008 at 10:40:41PM +0200, Raz wrote:
+>  > > ________________________________
+>  > > From: Matthew Wilcox [mailto:matthew@wil.cx]
+>  > > Sent: Thu 12/11/2008 5:44 AM
+>  > > To: Raz Ben-Yehuda
+>  > > Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+>  > > Subject: Re: Intel X25-M MLC SSD benchmarks
+>  > >
+>  > > On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
+>  > >> I did not want to dive into details because it does not matter. Whether
+>  > >> noop,deadline, deadline parameters...
+>  > >> As for the controller I used 4 different controllers. Adaptec,AHCI and
+>  > >> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
+>  > >> 4-th controller SuperMicro UIO Adaptec aac card.
+>  > >> All gave same results for most dd writes commands.
+>  > >> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
+>  > >> other variants such erase block size ( 128K ) , several erase block size
+>  > >> and so on. Kernel is 2.6.18-8.el5.
+>  > >
+>  > >>>OK, I suspect you aren't giving the drive enough work to do for it to
+>  > >>>perform at its best.  Try doing something like this:
+>  > >
+>  > >>>for i in $(seq 0 9); do \
+>  > >  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
+>  > >  >>               seek=$(($i * 1000)) & \
+>  > >>>done
+>  > >
+>  > did that. nothing. also, I would like to note that IO flow is quite
+>  > weird.iostats reports 70GB/s in the first few seconds, and then it
+>  > degrades to 20
+>  >  MB/s and less. could it be that I am not erase-block aligment ?
+>
+>
+> That doesn't sound likely to me.  Erase block size isn't a huge issue
+>  with these drives.  I've been trying to replicate your problem, but I'm
+>  not having any luck; unfortunately I only have access to an X25-E drive
+>  (not an X25-M) and I'm seeing 175-185MB/s when it's attached to an AHCI
+>  controller, just with a single dd (I haven't even played with the
+>  elevator).  I'm trying to get hold of an X25-M drive, but I don't know
+>  when I'll receive one.
+>
+>
+>  > how does SSD aligments interacts with a controller ?
+>
+>
+> Controllers can generally send down large enough IOs that it isn't a
+>  problem.  And the Intel SSDs are smart enough that you shouldn't have to
+>  align to erase block boundaries to make them go fast.
+>
+>
+>  --
+>
+> Matthew Wilcox                          Intel Open Source Technology Centre
+>  "Bill, look, we understand that you're interested in selling us this
+>  operating system, but compare it to ours.  We can't possibly take such
+>  a retrograde step."
+>
