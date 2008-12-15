@@ -1,176 +1,42 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] sata_sil: add Large Block Transfer support
-Date: Sun, 14 Dec 2008 20:16:13 -0600
-Message-ID: <4945BDED.7050205@shaw.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
+Date: Sun, 14 Dec 2008 22:13:33 -0800 (PST)
+Message-ID: <20081215061333.111AD108042@picon.linux-foundation.org>
+References: <bug-12144-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:46536 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbYLOCRI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Dec 2008 21:17:08 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57315 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751237AbYLOGOG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Dec 2008 01:14:06 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBF6DXSm005451
+	for <linux-ide@vger.kernel.org>; Sun, 14 Dec 2008 22:13:34 -0800
+In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-This implements support for the Large Block Transfer feature found in Silicon
-Image 311x SATA controllers. This allows transferring bigger contiguous chunks
-of data from system memory and avoids the 64KB boundary restriction of standard
-SFF controllers.
+http://bugzilla.kernel.org/show_bug.cgi?id=12144
 
-This is based on a patch from Jeff Garzik (from the sii-lbt branch of
-libata-dev) but includes a few bug fixes: Since the bmdma2 register does not
-implement the status bits, the original bmdma register must be used except
-where the bmdma2 register is required. As well, the DMA boundary should be
-31-bit instead of 32-bit since the top bit of the length field is still
-required for the PRD end-of-table flag, and the sg_tablesize can be set to
-the full size of the allocated PRD table since no splitting of entries
-will be required.
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
----
 
-Obviously not 2.6.28 material, but could potentially head into .29.
-I've done some testing with a DVD drive connected to this controller
-and verified that reading off an entire DVD returns correct data
-(and that the controller is actually getting requests that cross
-64K boundaries). More testing would certainly be useful..
 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 031d7b7..92c7315 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -46,7 +46,9 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"sata_sil"
--#define DRV_VERSION	"2.3"
-+#define DRV_VERSION	"2.4"
-+
-+#define SIL_DMA_BOUNDARY	0x7fffffffUL
- 
- enum {
- 	SIL_MMIO_BAR		= 5,
-@@ -118,6 +120,10 @@ static void sil_dev_config(struct ata_device *dev);
- static int sil_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
- static int sil_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
- static int sil_set_mode(struct ata_link *link, struct ata_device **r_failed);
-+static void sil_qc_prep(struct ata_queued_cmd *qc);
-+static void sil_bmdma_setup(struct ata_queued_cmd *qc);
-+static void sil_bmdma_start(struct ata_queued_cmd *qc);
-+static void sil_bmdma_stop(struct ata_queued_cmd *qc);
- static void sil_freeze(struct ata_port *ap);
- static void sil_thaw(struct ata_port *ap);
- 
-@@ -167,13 +173,22 @@ static struct pci_driver sil_pci_driver = {
- };
- 
- static struct scsi_host_template sil_sht = {
--	ATA_BMDMA_SHT(DRV_NAME),
-+	ATA_BASE_SHT(DRV_NAME),
-+	/** These controllers support Large Block Transfer which allows
-+	    transfer chunks up to 2GB and which cross 64KB boundaries,
-+	    therefore the DMA limits are more relaxed than standard ATA SFF. */
-+	.dma_boundary		= SIL_DMA_BOUNDARY,
-+	.sg_tablesize		= ATA_MAX_PRD
- };
- 
- static struct ata_port_operations sil_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
- 	.dev_config		= sil_dev_config,
- 	.set_mode		= sil_set_mode,
-+	.bmdma_setup            = sil_bmdma_setup,
-+	.bmdma_start            = sil_bmdma_start,
-+	.bmdma_stop		= sil_bmdma_stop,
-+	.qc_prep		= sil_qc_prep,
- 	.freeze			= sil_freeze,
- 	.thaw			= sil_thaw,
- 	.scr_read		= sil_scr_read,
-@@ -249,6 +264,84 @@ module_param(slow_down, int, 0444);
- MODULE_PARM_DESC(slow_down, "Sledgehammer used to work around random problems, by limiting commands to 15 sectors (0=off, 1=on)");
- 
- 
-+static void sil_bmdma_stop(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	void __iomem *mmio_base = ap->host->iomap[SIL_MMIO_BAR];
-+	void __iomem *bmdma2 = mmio_base + sil_port[ap->port_no].bmdma2;
-+
-+	/* clear start/stop bit - can safely always write 0 */
-+	writeb(0, bmdma2);
-+
-+	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
-+	ata_sff_dma_pause(ap);
-+}
-+
-+static void sil_bmdma_setup(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	void __iomem *bmdma = ap->ioaddr.bmdma_addr;
-+
-+	/* load PRD table addr. */
-+	mb();	/* make sure PRD table writes are visible to controller */
-+	writel(ap->prd_dma, bmdma + ATA_DMA_TABLE_OFS);
-+
-+	/* issue r/w command */
-+	ap->ops->sff_exec_command(ap, &qc->tf);
-+}
-+
-+static void sil_bmdma_start(struct ata_queued_cmd *qc)
-+{
-+	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
-+	struct ata_port *ap = qc->ap;
-+	void __iomem *mmio_base = ap->host->iomap[SIL_MMIO_BAR];
-+	void __iomem *bmdma2 = mmio_base + sil_port[ap->port_no].bmdma2;
-+	u8 dmactl = ATA_DMA_START;
-+
-+	/* set transfer direction, start host DMA transaction
-+	   Note: For Large Block Transfer to work, the DMA must be started
-+	   using the bmdma2 register. */
-+	if (!rw)
-+		dmactl |= ATA_DMA_WR;
-+	writeb(dmactl, bmdma2);
-+}
-+
-+/* The way God intended PCI IDE scatter/gather lists to look and behave... */
-+static void sil_fill_sg(struct ata_queued_cmd *qc)
-+{
-+	struct scatterlist *sg;
-+	struct ata_port *ap = qc->ap;
-+	struct ata_prd *prd, *last_prd = NULL;
-+	unsigned int si;
-+
-+	prd = &ap->prd[0];
-+	for_each_sg(qc->sg, sg, qc->n_elem, si) {
-+		/* Note h/w doesn't support 64-bit, so we unconditionally
-+		 * truncate dma_addr_t to u32.
-+		 */
-+		u32 addr = (u32) sg_dma_address(sg);
-+		u32 sg_len = sg_dma_len(sg);
-+
-+		prd->addr = cpu_to_le32(addr);
-+		prd->flags_len = cpu_to_le32(sg_len);
-+		VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, sg_len);
-+
-+		last_prd = prd;
-+		prd++;
-+	}
-+
-+	if (likely(last_prd))
-+		last_prd->flags_len |= cpu_to_le32(ATA_PRD_EOT);
-+}
-+
-+static void sil_qc_prep(struct ata_queued_cmd *qc)
-+{
-+	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
-+		return;
-+
-+	sil_fill_sg(qc);
-+}
-+
- static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
- {
- 	u8 cache_line = 0;
+------- Comment #11 from bbpetkov@yahoo.de  2008-12-14 22:13 -------
+Hi,
 
+hm, that's strange. Normally, if "Can play audio" is set, you should be able to
+do that and according to, e.g.
+http://www.sony-optiarc.eu/en/exhibits/slim-line-drives/bc-5500a, your hardware
+is capable of playing audio. Well, you could try my patch to see if it fixes
+your problem with ide-cd. However, make sure not to load scsi-cdrom but the
+ide_cd_mod module.
+
+Thanks,
+Boris.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
