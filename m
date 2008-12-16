@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/9] ide: remove ide_pci_enablebit_t typedef
-Date: Tue, 16 Dec 2008 20:32:04 +0100
-Message-ID: <20081216193204.3959.51518.sendpatchset@localhost.localdomain>
+Subject: [PATCH 4/9] ide: remove local_irq_set() macro
+Date: Tue, 16 Dec 2008 20:31:57 +0100
+Message-ID: <20081216193157.3959.80875.sendpatchset@localhost.localdomain>
 References: <20081216193137.3959.70339.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:64756 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757867AbYLPTcM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 14:32:12 -0500
-Received: by mail-bw0-f21.google.com with SMTP id 14so4417971bwz.13
-        for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2008 11:32:12 -0800 (PST)
+Received: from fk-out-0910.google.com ([209.85.128.187]:48276 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757867AbYLPTcF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 14:32:05 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so1900646fkq.5
+        for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2008 11:32:05 -0800 (PST)
 In-Reply-To: <20081216193137.3959.70339.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,54 +17,53 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove ide_pci_enablebit_t typedef
-
-Remove needless parens while at it.
+Subject: [PATCH] ide: remove local_irq_set() macro
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/setup-pci.c |    2 +-
- include/linux/ide.h     |    7 ++++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/ide/ide-iops.c  |    3 ++-
+ drivers/ide/ide-probe.c |    3 ++-
+ include/linux/ide.h     |    2 --
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Index: b/drivers/ide/setup-pci.c
+Index: b/drivers/ide/ide-iops.c
 ===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -471,7 +471,7 @@ void ide_pci_setup_ports(struct pci_dev 
- 	 */
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -503,7 +503,8 @@ static int __ide_wait_stat(ide_drive_t *
+ 	stat = tp_ops->read_status(hwif);
  
- 	for (port = 0; port < channels; ++port) {
--		const ide_pci_enablebit_t *e = &(d->enablebits[port]);
-+		const struct ide_pci_enablebit *e = &d->enablebits[port];
+ 	if (stat & ATA_BUSY) {
+-		local_irq_set(flags);
++		local_irq_save(flags);
++		local_irq_enable_in_hardirq();
+ 		timeout += jiffies;
+ 		while ((stat = tp_ops->read_status(hwif)) & ATA_BUSY) {
+ 			if (time_after(jiffies, timeout)) {
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -796,7 +796,8 @@ static int ide_probe_port(ide_hwif_t *hw
+ 	if (irqd)
+ 		disable_irq(hwif->irq);
  
- 		if (e->reg && (pci_read_config_byte(dev, e->reg, &tmp) ||
- 		    (tmp & e->mask) != e->val)) {
+-	local_irq_set(flags);
++	local_irq_save(flags);
++	local_irq_enable_in_hardirq();
+ 
+ 	if (ide_port_wait_ready(hwif) == -EBUSY)
+ 		printk(KERN_DEBUG "%s: Wait for ready failed before probe !\n", hwif->name);
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1301,11 +1301,11 @@ static inline int ide_hwif_setup_dma(ide
+@@ -1585,8 +1585,6 @@ static inline void ide_set_max_pio(ide_d
+ 	ide_set_pio(drive, 255);
  }
- #endif
  
--typedef struct ide_pci_enablebit_s {
-+struct ide_pci_enablebit {
- 	u8	reg;	/* byte pci reg holding the enable-bit */
- 	u8	mask;	/* mask to isolate the enable-bit */
- 	u8	val;	/* value of masked reg when "enabled" */
--} ide_pci_enablebit_t;
-+};
+-#define local_irq_set(flags)	do { local_save_flags((flags)); local_irq_enable_in_hardirq(); } while (0)
+-
+ char *ide_media_string(ide_drive_t *);
  
- enum {
- 	/* Uses ISA control ports not PCI ones. */
-@@ -1394,7 +1394,8 @@ struct ide_port_info {
- 	const struct ide_port_ops	*port_ops;
- 	const struct ide_dma_ops	*dma_ops;
- 
--	ide_pci_enablebit_t	enablebits[2];
-+	struct ide_pci_enablebit	enablebits[2];
-+
- 	hwif_chipset_t		chipset;
- 
- 	u16			max_sectors;	/* if < than the default one */
+ extern struct device_attribute ide_dev_attrs[];
