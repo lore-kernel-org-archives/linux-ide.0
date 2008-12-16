@@ -1,32 +1,155 @@
-From: Online Notice <galbraith@sympatico.ca>
-Subject: Claims of 1,000,000GBP
-Date: Mon, 15 Dec 2008 20:13:12 -0500
-Message-ID: <20081216011313.IWFM1652.simmts6-srv.bellnexxia.net@simip9-ac.srvr.bell.ca>
-Reply-To: informationsdepartment912@y7mail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 1/9] ide-atapi: remove PC_FLAG_WRITING atapi flag
+Date: Tue, 16 Dec 2008 08:36:01 +0100
+Message-ID: <1229412969-3552-2-git-send-email-petkovbb@gmail.com>
+References: <1229412969-3552-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from simmts6-qfe0.srvr.bell.ca ([206.47.199.164]:61921 "EHLO
-	simmts6-srv.bellnexxia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752120AbYLPBNO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Dec 2008 20:13:14 -0500
-Received: from simip9-ac.srvr.bell.ca ([206.47.199.87])
-          by simmts6-srv.bellnexxia.net
-          (InterMail vM.5.01.06.13 201-253-122-130-113-20050324) with ESMTP
-          id <20081216011313.IWFM1652.simmts6-srv.bellnexxia.net@simip9-ac.srvr.bell.ca>
-          for <linux-ide@vger.kernel.org>; Mon, 15 Dec 2008 20:13:13 -0500
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:63077 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946AbYLPHgP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 02:36:15 -0500
+Received: by bwz14 with SMTP id 14so3324982bwz.13
+        for <linux-ide@vger.kernel.org>; Mon, 15 Dec 2008 23:36:13 -0800 (PST)
+In-Reply-To: <1229412969-3552-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: info@winner.org
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-1,000,000.00 pounds has been won by you in our Monthly National Promo Bonanza.get back to this office with your details  
-Names
-Address 
-Conntry
+There should be no functionality change resulting from this patch.
 
-Email, informationsdepartment912@y7mail.com
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-atapi.c        |   12 +++++++-----
+ drivers/ide/ide-floppy.c       |    4 ----
+ drivers/ide/ide-floppy_ioctl.c |    1 -
+ drivers/ide/ide-tape.c         |    4 ++--
+ include/linux/ide.h            |    3 +--
+ 5 files changed, 10 insertions(+), 14 deletions(-)
 
-
-Best Regards
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index d412bd2..2f0d5e7 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -296,11 +296,15 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+ 	xfer_func_t *xferfunc;
+ 	unsigned int timeout, temp;
++	int write = 0;
+ 	u16 bcount;
+ 	u8 stat, ireason, dsc = 0;
+ 
+ 	debug_log("Enter %s - interrupt handler\n", __func__);
+ 
++	if (rq)
++		write = (rq_data_dir(rq) == WRITE) ? 1 : 0;
++
+ 	timeout = (drive->media == ide_floppy) ? WAIT_FLOPPY_CMD
+ 					       : WAIT_TAPE_CMD;
+ 
+@@ -389,8 +393,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 		return ide_do_reset(drive);
+ 	}
+ 
+-	if (((ireason & ATAPI_IO) == ATAPI_IO) ==
+-		!!(pc->flags & PC_FLAG_WRITING)) {
++	if (((ireason & ATAPI_IO) == ATAPI_IO) == write) {
+ 		/* Hopefully, we will never get here */
+ 		printk(KERN_ERR "%s: We wanted to %s, but the device wants us "
+ 				"to %s!\n", drive->name,
+@@ -399,7 +402,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 		return ide_do_reset(drive);
+ 	}
+ 
+-	if (!(pc->flags & PC_FLAG_WRITING)) {
++	if (!write) {
+ 		/* Reading - Check that we have enough space */
+ 		temp = pc->xferred + bcount;
+ 		if (temp > pc->req_xfer) {
+@@ -421,8 +424,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 
+ 	if ((drive->media == ide_floppy && !pc->buf) ||
+ 	    (drive->media == ide_tape && pc->bh)) {
+-		int done = drive->pc_io_buffers(drive, pc, bcount,
+-				  !!(pc->flags & PC_FLAG_WRITING));
++		int done = drive->pc_io_buffers(drive, pc, bcount, write);
+ 
+ 		/* FIXME: don't do partial completions */
+ 		if (drive->media == ide_floppy)
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index fdec729..3ebe75a 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -254,8 +254,6 @@ static void idefloppy_create_rw_cmd(ide_drive_t *drive,
+ 
+ 	pc->rq = rq;
+ 	pc->b_count = 0;
+-	if (rq->cmd_flags & REQ_RW)
+-		pc->flags |= PC_FLAG_WRITING;
+ 	pc->buf = NULL;
+ 	pc->req_xfer = pc->buf_size = blocks * floppy->block_size;
+ 	pc->flags |= PC_FLAG_DMA_OK;
+@@ -268,8 +266,6 @@ static void idefloppy_blockpc_cmd(struct ide_disk_obj *floppy,
+ 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
+ 	pc->rq = rq;
+ 	pc->b_count = 0;
+-	if (rq->data_len && rq_data_dir(rq) == WRITE)
+-		pc->flags |= PC_FLAG_WRITING;
+ 	pc->buf = rq->data;
+ 	if (rq->bio)
+ 		pc->flags |= PC_FLAG_DMA_OK;
+diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
+index 8f8be85..513f651 100644
+--- a/drivers/ide/ide-floppy_ioctl.c
++++ b/drivers/ide/ide-floppy_ioctl.c
+@@ -109,7 +109,6 @@ static void ide_floppy_create_format_unit_cmd(struct ide_atapi_pc *pc, int b,
+ 	put_unaligned(cpu_to_be32(b), (unsigned int *)(&pc->buf[4]));
+ 	put_unaligned(cpu_to_be32(l), (unsigned int *)(&pc->buf[8]));
+ 	pc->buf_size = 12;
+-	pc->flags |= PC_FLAG_WRITING;
+ }
+ 
+ static int ide_floppy_get_sfrp_bit(ide_drive_t *drive, struct ide_atapi_pc *pc)
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index ac9e29a..ba89d6a 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -373,10 +373,11 @@ static void idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ static void idetape_update_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc)
+ {
+ 	struct idetape_bh *bh = pc->bh;
++	struct request *rq = drive->hwif->hwgroup->rq;
+ 	int count;
+ 	unsigned int bcount = pc->xferred;
+ 
+-	if (pc->flags & PC_FLAG_WRITING)
++	if (rq_data_dir(rq) == WRITE)
+ 		return;
+ 	while (bcount) {
+ 		if (bh == NULL) {
+@@ -774,7 +775,6 @@ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+ 		atomic_set(&bh->b_count, 0);
+ 	} else if (opcode == WRITE_6) {
+ 		pc->c[0] = WRITE_6;
+-		pc->flags |= PC_FLAG_WRITING;
+ 		pc->b_data = bh->b_data;
+ 		pc->b_count = atomic_read(&bh->b_count);
+ 	}
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index ad57a44..2041073 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -386,9 +386,8 @@ enum {
+ 	PC_FLAG_DMA_OK			= (1 << 3),
+ 	PC_FLAG_DMA_IN_PROGRESS		= (1 << 4),
+ 	PC_FLAG_DMA_ERROR		= (1 << 5),
+-	PC_FLAG_WRITING			= (1 << 6),
+ 	/* command timed out */
+-	PC_FLAG_TIMEDOUT		= (1 << 7),
++	PC_FLAG_TIMEDOUT		= (1 << 6),
+ };
+ 
+ /*
+-- 
+1.6.0.4
 
