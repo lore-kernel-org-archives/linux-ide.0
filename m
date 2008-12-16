@@ -1,40 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes 1/3] pata_hpt366: fix cable detection,
-Date: Tue, 16 Dec 2008 20:15:32 +0900
-Message-ID: <49478DD4.4080404@kernel.org>
-References: <493E289F.1010000@kernel.org> <494785C0.4030106@garzik.org>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: can I freeze I/O for some time to a given disk / md /
+	dm device?
+Date: Tue, 16 Dec 2008 13:01:27 +0100
+Message-ID: <49479897.1080500@wpkg.org>
+Reply-To: LVM general discussion and development <linux-lvm@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55665 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752714AbYLPLPM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Dec 2008 06:15:12 -0500
-In-Reply-To: <494785C0.4030106@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-lvm-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
+	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/linux-lvm>
+List-Post: <mailto:linux-lvm@redhat.com>
+List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
+	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
+Sender: linux-lvm-bounces@redhat.com
+Errors-To: linux-lvm-bounces@redhat.com
+To: Linux IDE <linux-ide@vger.kernel.org>, Linux-Raid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, rob.opensuse.linux@googlemail.com
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> pata_hpt366 is strange in that its two channels occupy two PCI
->> functions and both are primary channels and bit1 of PCI configuration
->> register 0x5A indicates cable for both channels.
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
->> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
->> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->> ---
->>  drivers/ata/pata_hpt366.c |    8 ++++++--
->>  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> applied 1-2 of 3 (the last looked risky for -rc?)
+Is it possible to "freeze I/O" for some time to a given disk / md / dm 
+device?
 
-I think it would be better to postpone it till the -rc1 window
-opens.  As it has been broken for so long, I don't think many
-people will complain much about one more broken release.  :-)
+Say, "freeze I/O" so that userspace waits for any response for 30, 60 
+seconds or more?
+
+If not, is it possible to reset a link repeatedly, like ATA does when it 
+hits certain disk problems? I.e., can I do the below manually?
+
+ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata4.00: cmd 25/00:08:b8:c2:78/00:00:21:00:00/e0 tag 0 dma 4096 in
+          res 40/00:00:bb:c2:78/40:00:21:00:00/e0 Emask 0x4 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+
+
+I need this to trace a problem with a userspace application which 
+segfaults when ATA resets the link repeatedly (i.e. one broken drive in 
+a RAID array).
+
 
 -- 
-tejun
+Tomasz Chmielewski
+http://wpkg.org
+
+_______________________________________________
+linux-lvm mailing list
+linux-lvm@redhat.com
+https://www.redhat.com/mailman/listinfo/linux-lvm
+read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
