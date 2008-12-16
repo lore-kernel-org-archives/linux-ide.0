@@ -1,39 +1,34 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: can I freeze I/O for some time to a given disk / md / dm	device?
-Date: Tue, 16 Dec 2008 17:19:21 +0100
-Message-ID: <4947D509.6080005@wpkg.org>
-References: <49479897.1080500@wpkg.org> <20081216161312.GI18423@boogie.lpds.sztaki.hu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081216161312.GI18423@boogie.lpds.sztaki.hu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux-Raid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
+Date: Tue, 16 Dec 2008 11:12:59 -0800 (PST)
+Message-ID: <20081216191259.76A0A11D107@picon.linux-foundation.org>
+References: <bug-12144-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51772 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752113AbYLPTNc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 14:13:32 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBGJCxvn016928
+	for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2008 11:13:00 -0800
+In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Gabor Gombas schrieb:
-> On Tue, Dec 16, 2008 at 01:01:27PM +0100, Tomasz Chmielewski wrote:
-> 
->> Is it possible to "freeze I/O" for some time to a given disk / md / dm  
->> device?
->>
->> Say, "freeze I/O" so that userspace waits for any response for 30, 60  
->> seconds or more?
-> 
-> For real disks you can use /sys/block/sdX/device/unload_heads to achieve
-> something similar (see Documentation/laptops/disk-shock-protection.txt
-> in the kernel source about how to use it). That won't work for md/dm
-> devices though.
+http://bugzilla.kernel.org/show_bug.cgi?id=12144
 
-Thanks, I think I have enough hints now.
 
-Bryn M. Reeves on linux-lvm list suggested using dmsetup's 
-suspend/resume, which seems to be the easiest way for this purpose 
-(requires device mapper / LVM).
+
+
+
+------- Comment #12 from manoet.ita@gmail.com  2008-12-16 11:12 -------
+Created an attachment (id=19328)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=19328&action=view)
+log of dmesg | grep sr0
 
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
