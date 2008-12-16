@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 8/9] ide-atapi: replace pc->error with drive->pc_error
-Date: Tue, 16 Dec 2008 08:36:08 +0100
-Message-ID: <1229412969-3552-9-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 7/9] ide-atapi: use rq pointer directly instead of pc->rq deref
+Date: Tue, 16 Dec 2008 08:36:07 +0100
+Message-ID: <1229412969-3552-8-git-send-email-petkovbb@gmail.com>
 References: <1229412969-3552-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:50296 "EHLO
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:33630 "EHLO
 	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbYLPHgR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 02:36:17 -0500
-Received: by mail-bw0-f21.google.com with SMTP id 14so3324988bwz.13
+	with ESMTP id S1752150AbYLPHgS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 02:36:18 -0500
+Received: by mail-bw0-f21.google.com with SMTP id 14so3324991bwz.13
         for <linux-ide@vger.kernel.org>; Mon, 15 Dec 2008 23:36:17 -0800 (PST)
 In-Reply-To: <1229412969-3552-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,153 +16,35 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
+There should be no functionality change resulting from this patch.
+
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-atapi.c  |    3 ++-
- drivers/ide/ide-floppy.c |    6 +++---
- drivers/ide/ide-tape.c   |   20 ++++++++++----------
- include/linux/ide.h      |    1 +
- 4 files changed, 16 insertions(+), 14 deletions(-)
+ drivers/ide/ide-atapi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index e514b47..160d085 100644
+index 89ce8f0..e514b47 100644
 --- a/drivers/ide/ide-atapi.c
 +++ b/drivers/ide/ide-atapi.c
-@@ -124,6 +124,7 @@ void ide_init_pc(ide_drive_t *drive, struct ide_atapi_pc *pc)
- 	drive->pc_buf_size = IDE_PC_BUFFER_SIZE;
- 	drive->pc_flags = 0;
- 	drive->pc_req_xfer = 0;
-+	drive->pc_error = 0;
- }
- EXPORT_SYMBOL_GPL(ide_init_pc);
+@@ -332,7 +332,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 		    (drive->media == ide_tape && (stat & ATA_ERR))) {
+ 			if (drive->media == ide_floppy)
+ 				printk(KERN_ERR "%s: DMA %s error\n",
+-					drive->name, rq_data_dir(pc->rq)
++					drive->name, rq_data_dir(rq)
+ 						     ? "write" : "read");
+ 			drive->pc_flags |= PC_FLAG_DMA_ERROR;
+ 		} else {
+@@ -361,7 +361,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 			debug_log("%s: I/O error\n", drive->name);
  
-@@ -377,7 +378,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 			/* queued, but not started */
- 			return ide_stopped;
- 		}
--		pc->error = 0;
-+		drive->pc_error = 0;
+ 			if (drive->media != ide_tape)
+-				pc->rq->errors++;
++				rq->errors++;
  
- 		if ((drive->pc_flags & PC_FLAG_WAIT_FOR_DSC) &&
- 		    (stat & ATA_DSC) == 0)
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 0977229..3d6345e 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -119,7 +119,7 @@ static void ide_floppy_callback(ide_drive_t *drive, int dsc)
- {
- 	struct ide_disk_obj *floppy = drive->driver_data;
- 	struct ide_atapi_pc *pc = drive->pc;
--	int uptodate = pc->error ? 0 : 1;
-+	int uptodate = drive->pc_error ? 0 : 1;
- 
- 	ide_debug_log(IDE_DBG_FUNC, "Call %s\n", __func__);
- 
-@@ -132,7 +132,7 @@ static void ide_floppy_callback(ide_drive_t *drive, int dsc)
- 	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
- 		u8 *buf = pc->buf;
- 
--		if (!pc->error) {
-+		if (!drive->pc_error) {
- 			floppy->sense_key = buf[2] & 0x0F;
- 			floppy->asc = buf[12];
- 			floppy->ascq = buf[13];
-@@ -186,7 +186,7 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 		if (!(drive->pc_flags & PC_FLAG_SUPPRESS_ERROR))
- 			ide_floppy_report_error(floppy, pc);
- 		/* Giving up */
--		pc->error = IDEFLOPPY_ERROR_GENERAL;
-+		drive->pc_error = IDEFLOPPY_ERROR_GENERAL;
- 
- 		floppy->failed_pc = NULL;
- 		drive->pc_callback(drive, 0);
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 2bfa612..015b417 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -429,25 +429,25 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
- 	    && pc->c[4] == 0 && pc->c[3] == 0 && pc->c[2] == 0) {
- 		if (tape->sense_key == 5) {
- 			/* don't report an error, everything's ok */
--			pc->error = 0;
-+			drive->pc_error = 0;
- 			/* don't retry read/write */
- 			drive->pc_flags |= PC_FLAG_ABORT;
- 		}
- 	}
- 	if (pc->c[0] == READ_6 && (sense[2] & 0x80)) {
--		pc->error = IDETAPE_ERROR_FILEMARK;
-+		drive->pc_error = IDETAPE_ERROR_FILEMARK;
- 		drive->pc_flags |= PC_FLAG_ABORT;
- 	}
- 	if (pc->c[0] == WRITE_6) {
- 		if ((sense[2] & 0x40) || (tape->sense_key == 0xd
- 		     && tape->asc == 0x0 && tape->ascq == 0x2)) {
--			pc->error = IDETAPE_ERROR_EOD;
-+			drive->pc_error = IDETAPE_ERROR_EOD;
- 			drive->pc_flags |= PC_FLAG_ABORT;
- 		}
- 	}
- 	if (pc->c[0] == READ_6 || pc->c[0] == WRITE_6) {
- 		if (tape->sense_key == 8) {
--			pc->error = IDETAPE_ERROR_EOD;
-+			drive->pc_error = IDETAPE_ERROR_EOD;
- 			drive->pc_flags |= PC_FLAG_ABORT;
- 		}
- 		if (!(drive->pc_flags & PC_FLAG_ABORT) && rq->data_len)
-@@ -515,7 +515,7 @@ static void ide_tape_callback(ide_drive_t *drive, int dsc)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc *pc = drive->pc;
--	int uptodate = pc->error ? 0 : 1;
-+	int uptodate = drive->pc_error ? 0 : 1;
- 
- 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
- 
-@@ -547,8 +547,8 @@ static void ide_tape_callback(ide_drive_t *drive, int dsc)
- 		tape->first_frame += blocks;
- 		rq->current_nr_sectors -= blocks;
- 
--		if (pc->error)
--			uptodate = pc->error;
-+		if (drive->pc_error)
-+			uptodate = drive->pc_error;
- 	} else if (pc->c[0] == READ_POSITION && uptodate) {
- 		u8 *readpos = pc->buf;
- 
-@@ -685,7 +685,7 @@ static ide_startstop_t idetape_issue_pc(ide_drive_t *drive,
- 						tape->ascq);
- 			}
- 			/* Giving up */
--			pc->error = IDETAPE_ERROR_GENERAL;
-+			drive->pc_error = IDETAPE_ERROR_GENERAL;
- 		}
- 		tape->failed_pc = NULL;
- 		drive->pc_callback(drive, 0);
-@@ -746,9 +746,9 @@ static ide_startstop_t idetape_media_access_finished(ide_drive_t *drive)
- 			ide_retry_pc(drive, tape->disk);
- 			return ide_stopped;
- 		}
--		pc->error = 0;
-+		drive->pc_error = 0;
- 	} else {
--		pc->error = IDETAPE_ERROR_GENERAL;
-+		drive->pc_error = IDETAPE_ERROR_GENERAL;
- 		tape->failed_pc = NULL;
- 	}
- 	drive->pc_callback(drive, 0);
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 0940db9..291600c 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -658,6 +658,7 @@ struct ide_drive_s {
- 	unsigned long pc_flags;
- 	int pc_req_xfer;
- 	int pc_buf_size;
-+	int pc_error;
- 
- 	/* callback for packet commands */
- 	void (*pc_callback)(struct ide_drive_s *, int);
+ 			if (rq->cmd[0] == REQUEST_SENSE) {
+ 				printk(KERN_ERR "%s: I/O error in request sense"
 -- 
 1.6.0.4
 
