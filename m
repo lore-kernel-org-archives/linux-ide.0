@@ -1,130 +1,149 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 9/9] ide: remove ->error method from struct ide_driver
-Date: Tue, 16 Dec 2008 20:32:30 +0100
-Message-ID: <20081216193230.3959.45427.sendpatchset@localhost.localdomain>
+Subject: [PATCH 6/9] ide: remove 'byte' typedef
+Date: Tue, 16 Dec 2008 20:32:10 +0100
+Message-ID: <20081216193210.3959.92852.sendpatchset@localhost.localdomain>
 References: <20081216193137.3959.70339.sendpatchset@localhost.localdomain>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:48156 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756188AbYLPTcj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Dec 2008 14:32:39 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so1900835fkq.5
-        for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2008 11:32:37 -0800 (PST)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758672AbYLPTds@vger.kernel.org>
 In-Reply-To: <20081216193137.3959.70339.sendpatchset@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove ->error method from struct ide_driver
+Subject: [PATCH] ide: remove 'byte' typedef
 
-* Remove (now superfluous) ->error method from struct ide_driver.
-
-* Unexport __ide_error() and make it static.
+Just use u8 instead, also s/__u8/u8/ in ide-cd.h while at it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c   |    1 -
- drivers/ide/ide-gd.c   |    1 -
- drivers/ide/ide-io.c   |   13 ++-----------
- drivers/ide/ide-tape.c |    1 -
- include/linux/ide.h    |    3 ---
- 5 files changed, 2 insertions(+), 17 deletions(-)
+ drivers/ide/ide-cd.h |   26 +++++++++++++-------------
+ drivers/ide/it821x.c |    4 ++--
+ drivers/ide/qd65xx.h |    4 ++--
+ drivers/ide/sc1200.c |    2 +-
+ include/linux/ide.h  |    4 +---
+ 5 files changed, 19 insertions(+), 21 deletions(-)
 
-Index: b/drivers/ide/ide-cd.c
+Index: b/drivers/ide/ide-cd.h
 ===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1952,7 +1952,6 @@ static struct ide_driver ide_cdrom_drive
- 	.version		= IDECD_VERSION,
- 	.do_request		= ide_cd_do_request,
- 	.end_request		= ide_end_request,
--	.error			= __ide_error,
- #ifdef CONFIG_IDE_PROC_FS
- 	.proc_entries		= ide_cd_proc_entries,
- 	.proc_devsets		= ide_cd_proc_devsets,
-Index: b/drivers/ide/ide-gd.c
-===================================================================
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -162,7 +162,6 @@ static struct ide_driver ide_gd_driver =
- 	.version		= IDE_GD_VERSION,
- 	.do_request		= ide_gd_do_request,
- 	.end_request		= ide_gd_end_request,
--	.error			= __ide_error,
- #ifdef CONFIG_IDE_PROC_FS
- 	.proc_entries		= ide_disk_proc_entries,
- 	.proc_devsets		= ide_disk_proc_devsets,
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -291,7 +291,7 @@ static ide_startstop_t ide_atapi_error(i
- 	return ide_stopped;
- }
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -33,33 +33,33 @@
  
--ide_startstop_t
-+static ide_startstop_t
- __ide_error(ide_drive_t *drive, struct request *rq, u8 stat, u8 err)
+ /* Structure of a MSF cdrom address. */
+ struct atapi_msf {
+-	byte reserved;
+-	byte minute;
+-	byte second;
+-	byte frame;
++	u8 reserved;
++	u8 minute;
++	u8 second;
++	u8 frame;
+ };
+ 
+ /* Space to hold the disk TOC. */
+ #define MAX_TRACKS 99
+ struct atapi_toc_header {
+ 	unsigned short toc_length;
+-	byte first_track;
+-	byte last_track;
++	u8 first_track;
++	u8 last_track;
+ };
+ 
+ struct atapi_toc_entry {
+-	byte reserved1;
++	u8 reserved1;
+ #if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 adr     : 4;
+-	__u8 control : 4;
++	u8 adr     : 4;
++	u8 control : 4;
+ #elif defined(__LITTLE_ENDIAN_BITFIELD)
+-	__u8 control : 4;
+-	__u8 adr     : 4;
++	u8 control : 4;
++	u8 adr     : 4;
+ #else
+ #error "Please fix <asm/byteorder.h>"
+ #endif
+-	byte track;
+-	byte reserved2;
++	u8 track;
++	u8 reserved2;
+ 	union {
+ 		unsigned lba;
+ 		struct atapi_msf msf;
+Index: b/drivers/ide/it821x.c
+===================================================================
+--- a/drivers/ide/it821x.c
++++ b/drivers/ide/it821x.c
+@@ -279,7 +279,7 @@ static void it821x_set_pio_mode(ide_driv
+  *	the shared MWDMA/PIO timing register.
+  */
+ 
+-static void it821x_tune_mwdma (ide_drive_t *drive, byte mode_wanted)
++static void it821x_tune_mwdma(ide_drive_t *drive, u8 mode_wanted)
  {
- 	if (drive->media == ide_disk)
-@@ -299,8 +299,6 @@ __ide_error(ide_drive_t *drive, struct r
- 	return ide_atapi_error(drive, rq, stat, err);
- }
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+@@ -316,7 +316,7 @@ static void it821x_tune_mwdma (ide_drive
+  *	controller when doing UDMA modes in pass through.
+  */
  
--EXPORT_SYMBOL_GPL(__ide_error);
--
- /**
-  *	ide_error	-	handle an error on the IDE
-  *	@drive: drive the error occurred on
-@@ -332,15 +330,8 @@ ide_startstop_t ide_error (ide_drive_t *
- 		return ide_stopped;
- 	}
- 
--	if (rq->rq_disk) {
--		struct ide_driver *drv;
--
--		drv = *(struct ide_driver **)rq->rq_disk->private_data;
--		return drv->error(drive, rq, stat, err);
--	} else
--		return __ide_error(drive, rq, stat, err);
-+	return __ide_error(drive, rq, stat, err);
- }
--
- EXPORT_SYMBOL_GPL(ide_error);
- 
- static void ide_tf_set_specify_cmd(ide_drive_t *drive, struct ide_taskfile *tf)
-Index: b/drivers/ide/ide-tape.c
+-static void it821x_tune_udma (ide_drive_t *drive, byte mode_wanted)
++static void it821x_tune_udma(ide_drive_t *drive, u8 mode_wanted)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+Index: b/drivers/ide/qd65xx.h
 ===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -2324,7 +2324,6 @@ static struct ide_driver idetape_driver 
- 	.version		= IDETAPE_VERSION,
- 	.do_request		= idetape_do_request,
- 	.end_request		= idetape_end_request,
--	.error			= __ide_error,
- #ifdef CONFIG_IDE_PROC_FS
- 	.proc_entries		= ide_tape_proc_entries,
- 	.proc_devsets		= ide_tape_proc_devsets,
+--- a/drivers/ide/qd65xx.h
++++ b/drivers/ide/qd65xx.h
+@@ -31,8 +31,8 @@
+ 
+ #define QD_CONFIG(hwif)		((hwif)->config_data & 0x00ff)
+ 
+-#define QD_TIMING(drive)	(byte)(((drive)->drive_data) & 0x00ff)
+-#define QD_TIMREG(drive)	(byte)((((drive)->drive_data) & 0xff00) >> 8)
++#define QD_TIMING(drive)	(u8)(((drive)->drive_data) & 0x00ff)
++#define QD_TIMREG(drive)	(u8)((((drive)->drive_data) & 0xff00) >> 8)
+ 
+ #define QD6500_DEF_DATA		((QD_TIM1_PORT<<8) | (QD_ID3 ? 0x0c : 0x08))
+ #define QD6580_DEF_DATA		((QD_TIM1_PORT<<8) | (QD_ID3 ? 0x0a : 0x00))
+Index: b/drivers/ide/sc1200.c
+===================================================================
+--- a/drivers/ide/sc1200.c
++++ b/drivers/ide/sc1200.c
+@@ -171,7 +171,7 @@ static int sc1200_dma_end(ide_drive_t *d
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	unsigned long dma_base = hwif->dma_base;
+-	byte dma_stat;
++	u8 dma_stat;
+ 
+ 	dma_stat = inb(dma_base+2);		/* get DMA status */
+ 
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1112,7 +1112,6 @@ struct ide_driver {
- 	const char			*version;
- 	ide_startstop_t	(*do_request)(ide_drive_t *, struct request *, sector_t);
- 	int		(*end_request)(ide_drive_t *, int, int);
--	ide_startstop_t	(*error)(ide_drive_t *, struct request *rq, u8, u8);
- 	struct device_driver	gen_driver;
- 	int		(*probe)(ide_drive_t *);
- 	void		(*remove)(ide_drive_t *);
-@@ -1156,8 +1155,6 @@ void ide_execute_pkt_cmd(ide_drive_t *);
+@@ -32,8 +32,6 @@
+ # define SUPPORT_VLB_SYNC 1
+ #endif
  
- void ide_pad_transfer(ide_drive_t *, int, int);
- 
--ide_startstop_t __ide_error(ide_drive_t *, struct request *, u8, u8);
+-typedef unsigned char	byte;	/* used everywhere */
 -
- ide_startstop_t ide_error(ide_drive_t *, const char *, u8);
+ /*
+  * Probably not wise to fiddle with these
+  */
+@@ -1162,7 +1160,7 @@ void ide_pad_transfer(ide_drive_t *, int
+ 
+ ide_startstop_t __ide_error(ide_drive_t *, struct request *, u8, u8);
+ 
+-ide_startstop_t ide_error (ide_drive_t *drive, const char *msg, byte stat);
++ide_startstop_t ide_error(ide_drive_t *, const char *, u8);
  
  void ide_fix_driveid(u16 *);
+ 
