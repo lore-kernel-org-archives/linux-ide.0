@@ -1,177 +1,190 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 3/3] ide: use per-device request queue locks
-Date: Wed, 17 Dec 2008 16:53:56 +0100
-Message-ID: <87skom6bmz.fsf@denkblock.local>
-References: <200811182119.21286.bzolnier@gmail.com>
-	<87vdudjgfm.fsf@denkblock.local>
-	<200812140015.23853.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 0/9] ide-atapi: remove ide_atapi_pc from the irq handler
+Date: Wed, 17 Dec 2008 17:45:41 +0100
+Message-ID: <200812171745.41830.bzolnier@gmail.com>
+References: <1229412969-3552-1-git-send-email-petkovbb@gmail.com> <200812162135.27902.bzolnier@gmail.com> <20081217072543.GA828@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:38884 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750983AbYLQPyO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Dec 2008 10:54:14 -0500
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:62503 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346AbYLQQta (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 11:49:30 -0500
+Received: by bwz14 with SMTP id 14so5888413bwz.13
+        for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 08:49:28 -0800 (PST)
+In-Reply-To: <20081217072543.GA828@gollum.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> [ Once again, sorry for the long delay. ]
 
-Never mind, my responses are rather sluggish these days too.
+Hi,
 
->
-> On Monday 24 November 2008, Elias Oltmanns wrote:
->> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-[...]
->> >  drivers/ide/ide-io.c    | 213 +++++++++++++++---------------------------------
->> >  drivers/ide/ide-park.c  |   13 +-
->> >  drivers/ide/ide-probe.c |    3 
->> >  include/linux/ide.h     |    4 
->> >  4 files changed, 79 insertions(+), 154 deletions(-)
->> >
->> > Index: b/drivers/ide/ide-io.c
->> > ===================================================================
->> > --- a/drivers/ide/ide-io.c
->> > +++ b/drivers/ide/ide-io.c
->> [...]
->> > @@ -780,61 +704,40 @@ repeat:	
->> >   */
->> >  void do_ide_request(struct request_queue *q)
->> >  {
->> > -	ide_drive_t	*orig_drive = q->queuedata;
->> > -	ide_hwgroup_t	*hwgroup = orig_drive->hwif->hwgroup;
->> > -	ide_drive_t	*drive;
->> > -	ide_hwif_t	*hwif;
->> > +	ide_drive_t	*drive = q->queuedata;
->> > +	ide_hwif_t	*hwif = drive->hwif;
->> > +	ide_hwgroup_t	*hwgroup = hwif->hwgroup;
->> >  	struct request	*rq;
->> >  	ide_startstop_t	startstop;
->> >  
->> > -	/* caller must own hwgroup->lock */
->> > -	BUG_ON(!irqs_disabled());
->> > -
->> > -	while (!ide_lock_hwgroup(hwgroup)) {
->> > -		drive = choose_drive(hwgroup);
->> > -		if (drive == NULL) {
->> > -			int sleeping = 0;
->> > -			unsigned long sleep = 0; /* shut up, gcc */
->> > -			hwgroup->rq = NULL;
->> > -			drive = hwgroup->drive;
->> > -			do {
->> > -				if ((drive->dev_flags & IDE_DFLAG_SLEEPING) &&
->> > -				    (sleeping == 0 ||
->> > -				     time_before(drive->sleep, sleep))) {
->> > -					sleeping = 1;
->> > -					sleep = drive->sleep;
->> > -				}
->> > -			} while ((drive = drive->next) != hwgroup->drive);
->> > -			if (sleeping) {
->> > +	/*
->> > +	 * drive is doing pre-flush, ordered write, post-flush sequence. even
->> > +	 * though that is 3 requests, it must be seen as a single transaction.
->> > +	 * we must not preempt this drive until that is complete
->> > +	 */
->> > +	if (blk_queue_flushing(q))
->> >  		/*
->> > -		 * Take a short snooze, and then wake up this hwgroup again.
->> > -		 * This gives other hwgroups on the same a chance to
->> > -		 * play fairly with us, just in case there are big differences
->> > -		 * in relative throughputs.. don't want to hog the cpu too much.
->> > +		 * small race where queue could get replugged during
->> > +		 * the 3-request flush cycle, just yank the plug since
->> > +		 * we want it to finish asap
->> >  		 */
->> > -				if (time_before(sleep, jiffies + WAIT_MIN_SLEEP))
->> > -					sleep = jiffies + WAIT_MIN_SLEEP;
->> > -#if 1
->> > -				if (timer_pending(&hwgroup->timer))
->> > -					printk(KERN_CRIT "ide_set_handler: timer already active\n");
->> > -#endif
->> > -				/* so that ide_timer_expiry knows what to do */
->> > -				hwgroup->sleeping = 1;
->> > -				hwgroup->req_gen_timer = hwgroup->req_gen;
->> > -				mod_timer(&hwgroup->timer, sleep);
->> > -				/* we purposely leave hwgroup locked
->> > -				 * while sleeping */
->> > -			} else
->> > -				ide_unlock_hwgroup(hwgroup);
->> > +		blk_remove_plug(q);
->> 
->> I'm not at all convinced that this works as expected. First of all, I
->> think we can safely assume that the plug is removed when block layer
->> calls into the ->request_fn(). Secondly, since the ide layer doesn't
->> call the ->request_fn() on it's own accord, I rather suspect that this
->> check can be dropped altogether. On the other hand, I'm not sure I agree
->
-> I suspect that this is leftover from the old code and I also think that
-> it can be removed completely.  However mixing too many real code changes
-> in a single patch is not a good practice and the removal can be handled
-> independently of the discussed patch.
->
-> If you would send me a patch with the above change I will be happy to
-> integrate it into pata tree (patch can be against current Linus' tree or
-> linux-next, either one is completely fine with me).
+On Wednesday 17 December 2008, Borislav Petkov wrote:
+> Hi,
+> 
+> > Hmm.  I recall discussing this before and having some concerns about struct
+> > ide_atapi_pc removal idea probably being premature...
+> > 
+> > Looking at the patchset itself -- I'm very sorry but I just cannot apply it
+> > with all these command specific fields going into ide_drive_t:
+> > 
+> >         unsigned long pc_flags;
+> >         int pc_req_xfer;
+> >         int pc_buf_size;
+> >         int pc_error;
+> > 
+> > While they may look similar to the existing pc_* fields:
+> > 
+> >         /* callback for packet commands */
+> >         void (*pc_callback)(struct ide_drive_s *, int);
+> > 
+> >         void (*pc_update_buffers)(struct ide_drive_s *, struct ide_atapi_pc *);
+> >         int  (*pc_io_buffers)(struct ide_drive_s *, struct ide_atapi_pc *,
+> >                               unsigned int, int);
+> > 
+> > they are clearly not.  Existing pc_* callbacks are per-device type (they
+> > should have been probably named drv_*) and new ones are per-command ones.
+> 
+> maybe I didn't express myself clear in the commit messages - those
+> fields are only temporary - the emphasis being on temporary - and was
+> going to remove them after the dust settles.
 
-I'll have a go at it later.
+We accept temporary / hacky solutions as an exception and only when there is
+a justified need, i.e. it fixes real user problem and we are close to release
+date, or it is a standalone issue in a newly merged driver and we don't want
+to delay it more from being used by users just because of it.  This is not
+the case here.  The alone fact that you need such invasive temporary changes
+is a hint that there is a problem with either the implemention or the proposed
+solution.
 
-[...]
->> Finally, some more general blathering on the topic at hand: A while ago,
->> I spent some thought on the possibilities of giving the block layer a
->> notion of linked device queues as an equivalent hwgroups in ide,
->> scsi_hosts or ata_ports and let it take care of time / bandwidth
->> distribution among the queues belonging to one group. This is, as I
->> understand, pretty much what your code is relying on since you have
->> chucked out choose_drive(). However, this turned out not to be too easy
->
-> This is the right way to go and I has always advocated for it.  However
-> after seeing how libata got away with ignoring the issue altogether
-> I'm no longer sure of this.  I haven't seen any bug reports which would
-> indicate that simplified approach has any really negative consequences.
+Looking once again at the patchset, it doesn't seem to remove a single struct
+ide_atapi_pc field.  The problem is just moved from one place into the other
+introducing new design issues, clearly not an improvement.  This again seems
+to come back to the approach taken for removing struct ide_atapi_pc (which is
+a "hard" problem currently) -- if we stop being so focused on the idea that
+struct ide_atapi_pc has to be removed _now_ at all cost and instead look into
+possibilities of solving smaller problems, the big one may solve itself in
+the meantime...
 
-Well, libata can safely ignore it since scsi takes care of that (see
-scsi_run_queue() which is called on command completion).
+[ That being said it still good that you've posted this patchset early so we
+  can still discuss it and potentially choose the other way before investing
+  too much time into it. ]
 
->
-> [ Still would be great to have the control over bandwitch of "queue-group"
->   at the block layer level since we could also use it for distributing the
->   available PCI[-E] bus bandwitch. ]
->
->> and I'm not quite sure whether we really want to go down that road. One
->> major problem is that there is no straight forward way for the block
->> layer to know, whether a ->request_fn() has actually taken a request off
->> the queue and if not (or less than queue_depth anyway), whether it's
->> just the device that couldn't take any more or the controller instead.
->> On the whole, it seems not exactly trivial to get it right and it would
->> probably be a good idea to consult Jens and perhaps James before
->
-> I think that having more information returned by ->request_fn() could be
-> beneficial to the block layer (independently whether we end up adding
-> support for "queue-groups" to the block layer or not) but this definitely
-> needs to be verified with Jens & James.
+> > I also don't see a way for code to differentiate between pc and failed_pc.
+> 
+> This happens only in once place in ide-tape and this is taken care of rather
+> clumsily with an additional flag.
 
-Some time back, I raised this with Jens in connection with your previous
-version of the patchset [1]. I didn't get an answer at the time but
-perhaps it would help to raise it again in its own right and to give
-some more examples of its potential merits.
+Unfortunately no.  Sorry but upon closer look the new code is just broken.
 
->
->> embarking on such a venture. Short of that, I think that ide layer has
->> to keep an appropriate equivalent of choose_drive() and also the while
->> loop in the do_ide_request() function.
->
-> Thank you for your review.  v1->v2 interdiff below.
->
-> v2:
-> * Fixes/improvements based on review from Elias:
->  - take as many requests off the queue as possible
->  - remove now redundant BUG_ON()
+Before the patchset we had separate fields (i.e. pc_flags) for drive->pc
+and floppy->failed_pc.  After the changes we have a _single_ pc_flags for
+both REQUEST SENSE packet command and the original failed packet command.
 
-Looks alright to me.
+[ ->failed_pc is used to keep pointer to the failed packet command while
+  the driver is issuing REQUEST SENSE pc to the device (=> drive->pc now
+  points to REQUEST SENSE pc) ]
 
-Regards,
+Since REQUEST SENSE pc is using exactly the same pc issue code path as any
+other pc [ ide_issue_pc() ] the code will be incorrectly checking pc_flags
+of the original pc (i.e. original pc may have PC_FLAG_DMA_OK set which will
+be incorrect for REQUEST SENSE pc).
 
-Elias
+> > Why attack the "hard" problem first (struct ide_atapi_pc one) while there
+> > are easier ones to deal with?  It may happen that once these easier ones
+> > are fixed we will be able to view the "hard" one from a completely different
+> > perspective (because code's complexity will decrease a lot in the meantime
+> > it no longer will be a "hard" problem) and apply a better solution.
+> > 
+> > Besides I'm not fully convinced that struct ide_atapi_pc has to go first in
+> > order to port ide-cd over ide-atapi -- we can just instead port ide-cd to
+> > use struct ide_atapi_pc (however probably only after converting the driver
+> > to use sg-s for PIO transfers -- otherwise it becomes another "hard" problem)
+> > and then deal with struct ide_atapi_pc for all ATAPI code (be using struct
+> > request fields directly or by merging struct ide_atapi_pc into ide_task_t
+> > and always using the latter structure for ATA[PI] commands -- which is the
+> > option that I personally came to prefer lately)...
+> 
+> Here are the problems i see with ide_atapi_pc, judging by my somewhat limited
+> experience:
+> 
+> 1. ide_issue_pc/ide_transfer_pc and all those other ATAPI functions have to
+> check the pc pointer depending on being entered from ide-cd or from the other
+> drivers, which means that either ide-cd is ported to use ide_atapi_pc's or we
+> have lots of spaghetti if/else checks.
+
+Or use mixed approach.
+
+> 2. But, it really seems too unnatural to have ide_atapi_pc structs representing
+> an ATAPI cmd, IMHO, and doing all those memcpy(rq->cmd, pc->c, BLK_MAX_CDB) and
+> generally mapping the atapi_pc's to an rq - I'd rather much prefer to use the
+> rqs which are pretty much sufficient for most tasks and have maybe a smaller
+> struct which is in rq->buffer or similar handling all the ATAPI specific things
+> like pc->req_xfer and such.
+
+Well, we don't have to port ide-cd over struct ide_atapi_pc completely.
+
+Moreover we can be fixing other drivers as we go (BTW I thought that all ATAPI
+drivers have been already fixed WRT s/pc->c/rq->cmd/).
+
+> 3. I also think that it is kinda not so smart to have a buffer in the atapi_pc
+> and move it all around. True, Linus removed some of the allocations on stack but
+> ide-floppy used to be one of the biggest stack users, ide-tape might still be,
+> haven't checked.
+
+Yes, we have to be very careful with using private buffers by not increasing
+stack usage too much.
+
+> So, to sum up, I think that ide-cd and especially all the logic around
+> ide_cd_queue_pc and its users is much more cleaner, IMHO, than what
+> ide-floppy/tape do by saying
+> 
+> ide_init_pc()
+> ide_create_bla_cmd()
+> ide_queue_pc_head/tail() /* here you unnecessarily map the pc to an rq */
+> ide_issue_pc()
+> 
+> and, in most cases, ide_create_bla_cmd() is used only in one place so
+> it gets inlined by gcc. So, I think using private buffers in all those
+> get_capacity/check_status/read_tocentry and sending them down through an
+> rq is the cleaner solution because you do
+> 
+> cdrom_check_status()
+> ide_cd_queue_pc()
+> 
+> and this might become
+> 
+> ide_atapi_check_status()
+> ide_atapi_queue_pc()
+> 
+> and that's pretty awesome, don't you think?
+
+Sure and I didn't question the goal.
+
+What I was asking in my mail was for you to take your ide-cd maintainer hat
+off for a minute and instead put IDE maintainer one on.  From the perspective
+of the whole subsystem porting ide-cd over to ide-atapi is of much higher
+importance than getting rid of struct ide_atapi_pc.  The former can be pretty
+much done now and shouldn't really be difficult problem once you start working
+towards solving it.  Porting ide-cd over ide-atapi will decrease the amount
+of all ATAPI code and its complexity immediately enabling the possibility of
+other improvements inside IDE subsystem itself (right now they would require
+ide-cd specific changes), which in turn should give a feedback loop into
+ide-cd which may as well help solving the other issue (struct ide_atapi_pc
+removal).  OTOH having struct ide_atapi_pc removed just for the sake of it
+alone wouldn't give us much benetifs, especially looking at the potential
+time it will take to done properly.
+
+[ Yes, I'm a bit disappointed that 2.6.29 is going to be the next release
+  that we will miss on ide-cd -> ide-atapi conversion (I was initially
+  hoping for .28) and the fact that in few weeks this will become a limiting
+  factor to the further progress on core IDE changes (despite few issues
+  to still take care of things are starting to look really well there)... ]
+
+Thanks,
+Bart
