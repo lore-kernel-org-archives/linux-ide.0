@@ -1,138 +1,106 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: [smartmontools-support] Velociraptor biting the dust (9th disk,
- continued to use it, and..)
-Date: Tue, 16 Dec 2008 21:52:13 -0600 (CST)
-Message-ID: <Pine.LNX.4.64.0812162149480.26217@gc.phys.uwm.edu>
-References: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
- <20081122215529.1973f820@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0812160625150.8812@gc.phys.uwm.edu>
- <alpine.DEB.1.10.0812160803170.725@p34.internal.lan>
- <Pine.LNX.4.64.0812160708140.9136@gc.phys.uwm.edu>
- <alpine.DEB.1.10.0812161736360.31132@p34.internal.lan>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [2.6.28-rc] Sata soft reset filling log
+Date: Tue, 16 Dec 2008 21:02:51 -0800
+Message-ID: <20081216210251.138d3e98.akpm@linux-foundation.org>
+References: <494318F5.4060007@gawab.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812161736360.31132@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, Alan Piszcz <ap@solarrain.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54509 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750725AbYLQFET (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 00:04:19 -0500
+In-Reply-To: <494318F5.4060007@gawab.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Hi Justin,
-
-OK, this looks like a problem with the disk.  The disk has 586 million 
-sectors, but is reporting IDNF and end-of-device errors at around sector 
-number 200 million.
-
-Linux kernel jocks: ignore/delete this thread.  Sorry for the noise.
-
-Cheers,
-     Bruce
+To: Justin Madru <bevicm@dslextreme.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 
 
+(cc linux-ide).
 
-On Tue, 16 Dec 2008, Justin Piszcz wrote:
+This is a post-2.6.27 regression.  Panic!
 
->
->
-> On Tue, 16 Dec 2008, Bruce Allen wrote:
->
->>>>>> [632714.975844] ata1.00: status: { DRDY ERR }
->>>>>> [632714.975847] ata1.00: error: { IDNF }
->>
->>>>> IDNF - ID not found, usually these days means 'asked for a sector out of
->>>>> range'
->>
->>>> Justin, was this error provoked for example by you using a 'dd' command to
->>>> try and read stuff past the end of the disk?  Because the md device driver
->>>> should not try and do something like that.  The md device driver knows how
->>>> many LBAs are available on the disk and should never issue a read or write
->>>> past the end of the device.
->>>>
->>>> Justin, I have the impression that this IDNF error was NOT due to you
->>>> issuing
->>>> dd commands or similar, but was part of 'normal' md operation.
->>>>
->> When you say 'the errors occured' do you mean specifically the 'IDNF' errors?
->> Those are the onces I am talking about.  I am NOT talking about other types
->> of errors like UNC or ABORT.  I am ONLY talking about the IDNF errors.
->>
->> It is easy to check if the IDNF errors are from the disk firmware or the
->> Linux kernel.
->>
->> The kernel error message for IDNF should report the LBA which provoked that
->> IDNF error.  Please compare that with the maximum LBA on the disk, which you
->> can get either via hdparm or smartctl -i (divide total capacity in bytes by
->> 512).
->>
->> If the LBA reported in the kernel error message is greater than the maximum
->> LBA on the disk, then the problem is in the Linux kernel.  If the LBA
->> reported by the kernel is less than the maximum LBA on the disk, then the
->> problem is the disk firmware (or perhaps the disk has its capacity 'clipped'
->> with the 'Host Protected Area' feature set.  But the Linux kernel should know
->> about this, so that would be a kernel bug again, not a disk firmware bug).
->>
->
-> Going to plug-in one of the disks to a test system, I dare not use them in
-> a real host anymore.. ok, plugged in:
->
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834250] end_request: I/O error, dev sda, sector 213221352
->
-> smartctl -i
->
-> # smartctl -i /dev/sdg
-> smartctl version 5.38 [x86_64-unknown-linux-gnu] Copyright (C) 2002-8 Bruce Allen
-> Home page is http://smartmontools.sourceforge.net/
->
-> === START OF INFORMATION SECTION ===
-> Device Model:     WDC WD3000GLFS-01F8U0
-> Serial Number:    [ .. ]
-> Firmware Version: 03.03V01
-> User Capacity:    300,069,052,416 bytes
-> Device is:        Not in smartctl database [for details use: -P showall]
-> ATA Version is:   8
-> ATA Standard is:  Exact ATA specification draft version not indicated
-> Local Time is:    Tue Dec 16 17:44:53 2008 EST
-368> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
->
-> 300069052416/512
-> 586072368.000
-> 213221352 <- error on sector (even though WD Diag Tools and smart shows the
-> disk as completely 100% ok)
->
-> hdparm -i
->
-> # hdparm -i /dev/sdg
->
-> /dev/sdg:
->
->  Model=WDC WD3000GLFS-01F8U0                   , FwRev=03.03V01, SerialNo= [..]
->  Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
->  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=52
->  BuffType=unknown, BuffSize=16384kB, MaxMultSect=16, MultSect=?16?
->  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=586072368
->  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
->  PIO modes:  pio0 pio3 pio4
->  DMA modes:  mdma0 mdma1 mdma2
->  UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 udma6
->  AdvancedPM=no WriteCache=enabled
->  Drive conforms to: Unspecified:  ATA/ATAPI-1,2,3,4,5,6,7
->
->  * signifies the current active mode
->
-> hdparm -I
->
-> # hdparm -I /dev/sdg
->
-> /dev/sdg:
->
+On Fri, 12 Dec 2008 18:07:49 -0800 Justin Madru <bevicm@dslextreme.com> wrote:
+
+> I've been testing .28 (currently -rc8) and I've noticed in the logs a 
+> massive amount of the following.
+> I can confirm that the messages doesn't appear when booting into a .27 
+> kernel.
+> 
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> ata2.00: ST_FIRST: !(DRQ|ERR|DF)
+> ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>          cdb 1e 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+>          res 50/00:01:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+> ata2.00: status: { DRDY }
+> ata2: soft resetting link
+> ata2.00: configured for UDMA/33
+> ata2: EH complete
+> 
+> I get this block of messages about every 20 seconds for as long as I'm 
+> booted into a .28 kernel.
+> It seems that the sata link is being soft reseted about every _20_ secs.
+> My drive is a sata drive that should be using UDMA/133 (right?),
+> but the "error" message says configuring for UDMA/33.
+> Does this mean that my drive is running at a slower speed?
+> Should I be worried about the .28 kernel corrupting my hardware? Is this 
+> a known issue?
+> How can I stop it from filling my logs!
+> 
+> Some information about my computer:
+> 
+> $ lspci
+> 00:00.0 Host bridge: Intel Corporation Mobile 945GM/PM/GMS, 943/940GML 
+> and 945GT Express Memory Controller Hub (rev 03)
+> 00:02.0 VGA compatible controller: Intel Corporation Mobile 945GM/GMS, 
+> 943/940GML Express Integrated Graphics Controller (rev 03)
+> 00:02.1 Display controller: Intel Corporation Mobile 945GM/GMS/GME, 
+> 943/940GML Express Integrated Graphics Controller (rev 03)
+> 00:1b.0 Audio device: Intel Corporation 82801G (ICH7 Family) High 
+> Definition Audio Controller (rev 01)
+> 00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
+> Port 1 (rev 01)
+> 00:1c.3 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
+> Port 4 (rev 01)
+> 00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+> Controller #1 (rev 01)
+> 00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+> Controller #2 (rev 01)
+> 00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+> Controller #3 (rev 01)
+> 00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+> Controller #4 (rev 01)
+> 00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2 EHCI 
+> Controller (rev 01)
+> 00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev e1)
+> 00:1f.0 ISA bridge: Intel Corporation 82801GBM (ICH7-M) LPC Interface 
+> Bridge (rev 01)
+> 00:1f.2 IDE interface: Intel Corporation 82801GBM/GHM (ICH7 Family) SATA 
+> IDE Controller (rev 01)
+> 00:1f.3 SMBus: Intel Corporation 82801G (ICH7 Family) SMBus Controller 
+> (rev 01)
+> 03:00.0 Ethernet controller: Broadcom Corporation BCM4401-B0 100Base-TX 
+> (rev 02)
+> 03:01.0 FireWire (IEEE 1394): Ricoh Co Ltd R5C832 IEEE 1394 Controller
+> 03:01.1 SD Host controller: Ricoh Co Ltd R5C822 SD/SDIO/MMC/MS/MSPro 
+> Host Adapter (rev 19)
+> 03:01.2 System peripheral: Ricoh Co Ltd R5C843 MMC Host Controller (rev 0a)
+> 03:01.3 System peripheral: Ricoh Co Ltd R5C592 Memory Stick Bus Host 
+> Adapter (rev 05)
+> 03:01.4 System peripheral: Ricoh Co Ltd xD-Picture Card Controller (rev ff)
+> 0b:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG 
+> [Golan] Network Connection (rev 02)
+> 
+> $ hdparm -I /dev/sda
+> /dev/sda:
 > ATA device, with non-removable media
->         Model Number:       WDC WD3000GLFS-01F8U0
->         Serial Number:      [ .. ]
->         Firmware Revision:  03.03V01
->         Transport:          Serial, SATA 1.0a, SATA II Extensions, SATA Rev 2.5
+>         Model Number:       ST980811AS
+>         Serial Number:      5LY6J1M0
+>         Firmware Revision:  3.CDD
 > Standards:
->         Supported: 8 7 6 5
+>         Supported: 7 6 5 4
 >         Likely used: 8
 > Configuration:
 >         Logical         max     current
@@ -141,20 +109,21 @@ On Tue, 16 Dec 2008, Justin Piszcz wrote:
 >         sectors/track   63      63
 >         --
 >         CHS current addressable sectors:   16514064
->         LBA    user addressable sectors:  268435455
->         LBA48  user addressable sectors:  586072368
->         device size with M = 1024*1024:      286168 MBytes
->         device size with M = 1000*1000:      300069 MBytes (300 GB)
+>         LBA    user addressable sectors:  156301488
+>         LBA48  user addressable sectors:  156301488
+>         device size with M = 1024*1024:       76319 MBytes
+>         device size with M = 1000*1000:       80026 MBytes (80 GB)
 > Capabilities:
 >         LBA, IORDY(can be disabled)
 >         Queue depth: 32
->         Standby timer values: spec'd by Standard, with device specific minimum
->         R/W multiple sector transfer: Max = 16  Current = 16
->         Recommended acoustic management value: 128, current value: 254
->         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5 udma6
+>         Standby timer values: spec'd by Standard, no device specific minimum
+>         R/W multiple sector transfer: Max = 16  Current = 8
+>         Advanced power management level: 128
+>         Recommended acoustic management value: 128, current value: 0
+>         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
 >              Cycle time: min=120ns recommended=120ns
 >         PIO: pio0 pio1 pio2 pio3 pio4
->              Cycle time: no flow control=120ns  IORDY flow control=120ns
+>              Cycle time: no flow control=240ns  IORDY flow control=120ns
 > Commands/features:
 >         Enabled Supported:
 >            *    SMART feature set
@@ -165,86 +134,172 @@ On Tue, 16 Dec 2008, Justin Piszcz wrote:
 >            *    Host Protected Area feature set
 >            *    WRITE_BUFFER command
 >            *    READ_BUFFER command
->            *    NOP cmd
 >            *    DOWNLOAD_MICROCODE
->                 Power-Up In Standby feature set
->            *    SET_FEATURES required to spinup after power up
+>            *    Advanced Power Management feature set
 >                 SET_MAX security extension
->            *    Automatic Acoustic Management feature set
+>                 Automatic Acoustic Management feature set
 >            *    48-bit Address feature set
->            *    Device Configuration Overlay feature set
 >            *    Mandatory FLUSH_CACHE
 >            *    FLUSH_CACHE_EXT
 >            *    SMART error logging
 >            *    SMART self-test
->            *    General Purpose Logging feature set
->            *    WRITE_{DMA|MULTIPLE}_FUA_EXT
->            *    64-bit World wide name
->            *    WRITE_UNCORRECTABLE_EXT command
->            *    {READ,WRITE}_DMA_EXT_GPL commands
->            *    Segmented DOWNLOAD_MICROCODE
+>            *    IDLE_IMMEDIATE with UNLOAD
 >            *    SATA-I signaling speed (1.5Gb/s)
->            *    SATA-II signaling speed (3.0Gb/s)
 >            *    Native Command Queueing (NCQ)
 >            *    Phy event counters
->                 DMA Setup Auto-Activate optimization
+>                 Device-initiated interface power management
 >            *    Software settings preservation
 >            *    SMART Command Transport (SCT) feature set
->            *    SCT Long Sector Access (AC1)
->            *    SCT LBA Segment Access (AC2)
->            *    SCT Error Recovery Control (AC3)
->            *    SCT Features Control (AC4)
->            *    SCT Data Tables (AC5)
->                 unknown 206[12] (vendor specific)
->                 unknown 206[13] (vendor specific)
 > Security:
 >         Master password revision code = 65534
 >                 supported
 >         not     enabled
 >         not     locked
->         not     frozen
+>                 frozen
 >         not     expired: security count
 >         not     supported: enhanced erase
->         48min for SECURITY ERASE UNIT.
-> Logical Unit WWN Device Identifier: 50014ee0ab4e9a45
->         NAA             : 5
->         IEEE OUI        : 14ee
->         Unique ID       : 0ab4e9a45
 > Checksum: correct
->
-> Here is the information from older INDFs:
->
-> syslog-Nov 25 02:53:13 p34 kernel: [842744.785524] ata1: EH complete
-> syslog-Nov 25 02:53:13 p34 kernel: [842744.794100] sd 0:0:0:0: [sda] 586072368 512-byte hardware sectors (300069 MB)
-> syslog-Nov 25 02:53:13 p34 kernel: [842744.794573] sd 0:0:0:0: [sda] Write Protect is off
-> syslog-Nov 25 02:53:13 p34 kernel: [842744.794576] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> syslog-Nov 25 02:53:13 p34 kernel: [842744.795031] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.811091] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.811097] ata1.00: irq_stat 0x40000001
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.811104] ata1.00: cmd 35/00:d0:e8:7f:b5/00:03:0c:00:00/e0 tag 0 dma 499712 out
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.811106]          res 51/10:d0:e8:7f:b5/00:03:0c:00:00/e0 Emask 0x81 (invalid argument)
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.811110] ata1.00: status: { DRDY ERR }
-> syslog:Nov 25 02:53:25 p34 kernel: [842756.811113] ata1.00: error: { IDNF }
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834198] ata1.00: configured for UDMA/133
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834227] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834231] sd 0:0:0:0: [sda] Sense Key : Aborted Command [current] [descriptor]
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834235] Descriptor sense data with sense descriptors (in hex):
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834237]         72 0b 14 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834243]         0c b5 7f e8
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834246] sd 0:0:0:0: [sda] Add. Sense: Recorded entity not found
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834250] end_request: I/O error, dev sda, sector 213221352
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834263] __ratelimit: 118 callbacks suppressed
-> syslog-Nov 25 02:53:25 p34 kernel: [842756.834265] Buffer I/O error on device sda, logical block 26652669
->
->
->
-> ------------------------------------------------------------------------------
-> SF.Net email is Sponsored by MIX09, March 18-20, 2009 in Las Vegas, Nevada.
-> The future of the web can't happen without you.  Join us at MIX09 to help
-> pave the way to the Next Web now. Learn more and register at
-> http://ad.doubleclick.net/clk;208669438;13503038;i?http://2009.visitmix.com/
-> _______________________________________________
-> Smartmontools-support mailing list
-> Smartmontools-support@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/smartmontools-support
->
+> 
+> $ hdparm -fF /dev/sda; hdparm -tT /dev/sda
+> /dev/sda:
+>  Timing cached reads:   1650 MB in  2.00 seconds = 825.06 MB/sec
+>  Timing buffered disk reads:  130 MB in  3.04 seconds =  42.79 MB/sec
+> 
+> $ smartctl -a /dev/sda
+> smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+> Home page is http://smartmontools.sourceforge.net/
+> 
+> === START OF INFORMATION SECTION ===
+> Model Family:     Seagate Momentus 5400.3
+> Device Model:     ST980811AS
+> Serial Number:    5LY6J1M0
+> Firmware Version: 3.CDD
+> User Capacity:    80,026,361,856 bytes
+> Device is:        In smartctl database [for details use: -P show]
+> ATA Version is:   7
+> ATA Standard is:  Exact ATA specification draft version not indicated
+> Local Time is:    Fri Dec 12 17:05:06 2008 PST
+> SMART support is: Available - device has SMART capability.
+> SMART support is: Enabled
+> 
+> === START OF READ SMART DATA SECTION ===
+> SMART overall-health self-assessment test result: PASSED
+> See vendor-specific Attribute list for marginal Attributes.
+> 
+> General SMART Values:
+> Offline data collection status:  (0x82) Offline data collection activity
+>                                         was completed without error.
+>                                         Auto Offline Data Collection: 
+> Enabled.
+> Self-test execution status:      (   0) The previous self-test routine 
+> completed
+>                                         without error or no self-test 
+> has ever
+>                                         been run.
+> Total time to complete Offline
+> data collection:                 ( 426) seconds.
+> Offline data collection
+> capabilities:                    (0x5b) SMART execute Offline immediate.
+>                                         Auto Offline data collection 
+> on/off support.
+>                                         Suspend Offline collection upon new
+>                                         command.
+>                                         Offline surface scan supported.
+>                                         Self-test supported.
+>                                         No Conveyance Self-test supported.
+>                                         Selective Self-test supported.
+> SMART capabilities:            (0x0003) Saves SMART data before entering
+>                                         power-saving mode.
+>                                         Supports SMART auto save timer.
+> Error logging capability:        (0x01) Error logging supported.
+>                                         No General Purpose Logging support.
+> Short self-test routine
+> recommended polling time:        (   2) minutes.
+> Extended self-test routine
+> recommended polling time:        (  84) minutes.
+> SCT capabilities:              (0x0001) SCT Status supported.
+> 
+> SMART Attributes Data Structure revision number: 10
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
+> UPDATED  WHEN_FAILED RAW_VALUE
+>   1 Raw_Read_Error_Rate     0x000f   100   253   006    Pre-fail  
+> Always       -       0
+>   3 Spin_Up_Time            0x0003   099   099   085    Pre-fail  
+> Always       -       0
+>   4 Start_Stop_Count        0x0032   099   099   020    Old_age   
+> Always       -       1142
+>   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  
+> Always       -       0
+>   7 Seek_Error_Rate         0x000f   079   060   030    Pre-fail  
+> Always       -       88807308
+>   9 Power_On_Hours          0x0032   097   097   000    Old_age   
+> Always       -       3420
+>  10 Spin_Retry_Count        0x0013   100   100   034    Pre-fail  
+> Always       -       0
+>  12 Power_Cycle_Count       0x0032   099   099   020    Old_age   
+> Always       -       1180
+> 187 Reported_Uncorrect      0x0032   100   100   000    Old_age   
+> Always       -       0
+> 189 High_Fly_Writes         0x003a   100   100   000    Old_age   
+> Always       -       0
+> 190 Airflow_Temperature_Cel 0x0022   050   042   045    Old_age   
+> Always   In_the_past 50 (0 102 52 25)
+> 192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   
+> Always       -       1076
+> 193 Load_Cycle_Count        0x0032   001   001   000    Old_age   
+> Always       -       241664
+> 194 Temperature_Celsius     0x0022   050   058   000    Old_age   
+> Always       -       50 (0 19 0 0)
+> 195 Hardware_ECC_Recovered  0x001a   061   060   000    Old_age   
+> Always       -       195105625
+> 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   
+> Always       -       0
+> 198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   
+> Offline      -       0
+> 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   
+> Always       -       0
+> 200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   
+> Offline      -       0
+> 202 TA_Increase_Count       0x0032   100   253   000    Old_age   
+> Always       -       0
+> 
+> SMART Error Log Version: 1
+> No Errors Logged
+> 
+> SMART Self-test log structure revision number 1
+> Num  Test_Description    Status                  Remaining  
+> LifeTime(hours)  LBA_of_first_error
+> # 1  Extended offline    Completed without error       00%      
+> 3257         -
+> # 2  Short offline       Completed without error       00%      
+> 3256         -
+> # 3  Short offline       Completed without error       00%      
+> 2659         -
+> # 4  Short offline       Completed without error       00%      
+> 2659         -
+> # 5  Short offline       Completed without error       00%      
+> 1657         -
+> # 6  Short offline       Completed without error       00%      
+> 1621         -
+> # 7  Short offline       Completed without error       00%         
+> 2         -
+> # 8  Short offline       Completed without error       00%         
+> 2         -
+> # 9  Short offline       Completed without error       00%         
+> 1         -
+> #10  Short offline       Completed without error       00%         
+> 0         -
+> 
+> SMART Selective self-test log data structure revision number 1
+>  SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+>     1        0        0  Not_testing
+>     2        0        0  Not_testing
+>     3        0        0  Not_testing
+>     4        0        0  Not_testing
+>     5        0        0  Not_testing
+> Selective self-test flags (0x0):
+>   After scanning selected spans, do NOT read-scan remainder of disk.
+> If Selective self-test is pending on power-up, resume after 0 minute delay.
+> 
+
