@@ -1,94 +1,39 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: How to flush write-back cache in block device driver?
-Date: Wed, 17 Dec 2008 09:35:41 +0100
-Message-ID: <20081217083540.GE32491@kernel.dk>
-References: <38D9F46DFF92C54980D2F2C1E8EE31301CB4E70F@pdsmsx503.ccr.corp.intel.com>
+From: sandra05dikigbo <sandra05dikigbo@gmail.com>
+Subject: hello
+Date: Wed, 17 Dec 2008 10:59:25 +0100
+Message-ID: <59611c2a0812170159r652cbf03k2a99b9675e64882b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:12864 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750834AbYLQIgJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:36:09 -0500
+Received: from qb-out-0506.google.com ([72.14.204.237]:34034 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbYLQJ7q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 04:59:46 -0500
+Received: by qb-out-0506.google.com with SMTP id f11so1959277qba.17
+        for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 01:59:43 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <38D9F46DFF92C54980D2F2C1E8EE31301CB4E70F@pdsmsx503.ccr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Dec 17 2008, Gao, Yunpeng wrote:
-> Hi all,
-> 
-> I'm porting a NAND flash driver to linux 2.6.27. The NAND driver is
-> based on NFTL, not kernel MTD subsystem. That is, it will report to
-> kernel as a standard linux block device, so it can be used as a normal
-> hard disk.
-> 
-> The NAND driver uses an internal write-back cache to improve R/W
-> performance. And it provides a function to force flush the cache. But
-> as it requires in our project that, after a successful umount to ext3
-> file system, even if the system encountered an un-expected power-down,
-> user data stored in NAND still need to be correct after system reboot.
-> 
-> Now I have add some code in the driver like this:
-> -----------------------------------------------------------------------------------
-> static void SBD_prepare_flush(struct request_queue *q, struct request *rq)
-> {
->        rq->cmd_type = REQ_TYPE_LINUX_BLOCK;
->        /* rq->timeout = 5 * HZ; */
->        rq->cmd[0] = REQ_LB_OP_FLUSH;
-> }
-> 
-> ...
->        blk_queue_ordered(dev->queue, QUEUE_ORDERED_DRAIN_FLUSH, SBD_prepare_flush);
-> ...
-> 
->                while (((req = elv_next_request(q)) != NULL)) {
->                                  if (req->cmd_type == REQ_TYPE_LINUX_BLOCK &&
->                                        req->cmd[0] == REQ_LB_OP_FLUSH) {
->                                        printk(KERN_ERR "Will flush cache\n");
->                                        /* Cache flush */
->                                        if (GLOB_FTL_Flush_Cache()) {
->                                                printk(KERN_ERR "Failed to flush FTL cache\n");
->                                                end_request(req, 0);
->                                        } else
->                                                end_request(req, 1);
->                                        continue;
->                                        }
-> 
->                        if (!blk_fs_request(req)) {
->                                nand_dbg_print(NAND_DBG_WARN,
->                                               "Spectra: Skip non-fs request\n");
->                                end_request(req, 0);
->                                continue;
->                        }
-> 
->                        sectors_xferred = SBD_xfer_request(req);
->                        success = (sectors_xferred < 0) ? 0 : 1;
->                        __blk_end_request(req, success ? 0 : -EIO,
->                                          sectors_xferred << 9);
->                }
-> 
-> ...
-> 
-> ----------------------------------------------------------------------------------------------------
-> 
-> But this code doesn't work.  I mounted ext3 file system, copy a file,
-> then wait for serveral minutes, then umount file system and power
-> down. And during the whole process, the flush function is never
-> called. I tested this in a initrd (busybox) environment.
-> 
-> Does I need to do something else to enable barrier support in linux kernel?
-> Or, the driver should flush cache once the 'umount' or 'sync' command
-> is executed? But I don't know how to do it.
-> 
-> It'll be very appreciated if you could give me some suggests or
-> comments about this. Thank you very much.
-
-For ext3, mount the filesystem with -o barrier=1 as an option to enable
-barrier support.
-
--- 
-Jens Axboe
-
+Hello
+in fact, I am very happy to write you at this time when two of us are
+looking for a soulmate. My name is sandra. Write
+me(sandra_4dikigbo@yahoo.com).
+I believe that this love that I came knocking at the door of your
+heart that you open for me to enter. Dear, to be candid with you I
+feel in love with
+you already after going through your profile My mind tells me that
+your are the man that I need in my life. I will be very grateful if we
+can establish this relationship.Hence, I will be expecting your reply
+as soon as possible, alternatively
+you can write me directly through my e-mail address;(sandra_4dikigbo@yahoo.com)
+I am very romantic, caring, passionately and lovely. I have a bright
+future and also very hard working. I believe that you are the man that
+I wiil share
+my dreams, and my future without disapointment. One thing I am
+promising you is that you will never regret of knowing or having me in
+your life.
+I will be stoping so far till I hear from you.
+Is me,
+sandra
