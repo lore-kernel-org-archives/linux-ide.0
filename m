@@ -1,97 +1,94 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [2.6.28-rc] Sata soft reset filling log
-Date: Wed, 17 Dec 2008 02:26:57 -0500
-Message-ID: <4948A9C1.6050900@garzik.org>
-References: <494318F5.4060007@gawab.com> <20081216210251.138d3e98.akpm@linux-foundation.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: How to flush write-back cache in block device driver?
+Date: Wed, 17 Dec 2008 09:35:41 +0100
+Message-ID: <20081217083540.GE32491@kernel.dk>
+References: <38D9F46DFF92C54980D2F2C1E8EE31301CB4E70F@pdsmsx503.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54487 "EHLO mail.dvmed.net"
+Received: from brick.kernel.dk ([93.163.65.50]:12864 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759368AbYLQH1E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Dec 2008 02:27:04 -0500
-In-Reply-To: <20081216210251.138d3e98.akpm@linux-foundation.org>
+	id S1750834AbYLQIgJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Dec 2008 03:36:09 -0500
+Content-Disposition: inline
+In-Reply-To: <38D9F46DFF92C54980D2F2C1E8EE31301CB4E70F@pdsmsx503.ccr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Justin Madru <bevicm@dslextreme.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Andrew Morton wrote:
-> (cc linux-ide).
+On Wed, Dec 17 2008, Gao, Yunpeng wrote:
+> Hi all,
 > 
-> This is a post-2.6.27 regression.  Panic!
+> I'm porting a NAND flash driver to linux 2.6.27. The NAND driver is
+> based on NFTL, not kernel MTD subsystem. That is, it will report to
+> kernel as a standard linux block device, so it can be used as a normal
+> hard disk.
 > 
-> On Fri, 12 Dec 2008 18:07:49 -0800 Justin Madru <bevicm@dslextreme.com> wrote:
+> The NAND driver uses an internal write-back cache to improve R/W
+> performance. And it provides a function to force flush the cache. But
+> as it requires in our project that, after a successful umount to ext3
+> file system, even if the system encountered an un-expected power-down,
+> user data stored in NAND still need to be correct after system reboot.
 > 
->> I've been testing .28 (currently -rc8) and I've noticed in the logs a 
->> massive amount of the following.
->> I can confirm that the messages doesn't appear when booting into a .27 
->> kernel.
->>
->> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->> ata2.00: ST_FIRST: !(DRQ|ERR|DF)
->> ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->>          cdb 1e 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->>          res 50/00:01:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
->> ata2.00: status: { DRDY }
->> ata2: soft resetting link
->> ata2.00: configured for UDMA/33
->> ata2: EH complete
->>
->> I get this block of messages about every 20 seconds for as long as I'm 
->> booted into a .28 kernel.
->> It seems that the sata link is being soft reseted about every _20_ secs.
->> My drive is a sata drive that should be using UDMA/133 (right?),
->> but the "error" message says configuring for UDMA/33.
->> Does this mean that my drive is running at a slower speed?
->> Should I be worried about the .28 kernel corrupting my hardware? Is this 
->> a known issue?
->> How can I stop it from filling my logs!
->>
->> Some information about my computer:
->>
->> $ lspci
->> 00:00.0 Host bridge: Intel Corporation Mobile 945GM/PM/GMS, 943/940GML 
->> and 945GT Express Memory Controller Hub (rev 03)
->> 00:02.0 VGA compatible controller: Intel Corporation Mobile 945GM/GMS, 
->> 943/940GML Express Integrated Graphics Controller (rev 03)
->> 00:02.1 Display controller: Intel Corporation Mobile 945GM/GMS/GME, 
->> 943/940GML Express Integrated Graphics Controller (rev 03)
->> 00:1b.0 Audio device: Intel Corporation 82801G (ICH7 Family) High 
->> Definition Audio Controller (rev 01)
->> 00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
->> Port 1 (rev 01)
->> 00:1c.3 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
->> Port 4 (rev 01)
->> 00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
->> Controller #1 (rev 01)
->> 00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
->> Controller #2 (rev 01)
->> 00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
->> Controller #3 (rev 01)
->> 00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
->> Controller #4 (rev 01)
->> 00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2 EHCI 
->> Controller (rev 01)
->> 00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev e1)
->> 00:1f.0 ISA bridge: Intel Corporation 82801GBM (ICH7-M) LPC Interface 
->> Bridge (rev 01)
->> 00:1f.2 IDE interface: Intel Corporation 82801GBM/GHM (ICH7 Family) SATA 
->> IDE Controller (rev 01)
->> 00:1f.3 SMBus: Intel Corporation 82801G (ICH7 Family) SMBus Controller 
->> (rev 01)
->> 03:00.0 Ethernet controller: Broadcom Corporation BCM4401-B0 100Base-TX 
->> (rev 02)
+> Now I have add some code in the driver like this:
+> -----------------------------------------------------------------------------------
+> static void SBD_prepare_flush(struct request_queue *q, struct request *rq)
+> {
+>        rq->cmd_type = REQ_TYPE_LINUX_BLOCK;
+>        /* rq->timeout = 5 * HZ; */
+>        rq->cmd[0] = REQ_LB_OP_FLUSH;
+> }
+> 
+> ...
+>        blk_queue_ordered(dev->queue, QUEUE_ORDERED_DRAIN_FLUSH, SBD_prepare_flush);
+> ...
+> 
+>                while (((req = elv_next_request(q)) != NULL)) {
+>                                  if (req->cmd_type == REQ_TYPE_LINUX_BLOCK &&
+>                                        req->cmd[0] == REQ_LB_OP_FLUSH) {
+>                                        printk(KERN_ERR "Will flush cache\n");
+>                                        /* Cache flush */
+>                                        if (GLOB_FTL_Flush_Cache()) {
+>                                                printk(KERN_ERR "Failed to flush FTL cache\n");
+>                                                end_request(req, 0);
+>                                        } else
+>                                                end_request(req, 1);
+>                                        continue;
+>                                        }
+> 
+>                        if (!blk_fs_request(req)) {
+>                                nand_dbg_print(NAND_DBG_WARN,
+>                                               "Spectra: Skip non-fs request\n");
+>                                end_request(req, 0);
+>                                continue;
+>                        }
+> 
+>                        sectors_xferred = SBD_xfer_request(req);
+>                        success = (sectors_xferred < 0) ? 0 : 1;
+>                        __blk_end_request(req, success ? 0 : -EIO,
+>                                          sectors_xferred << 9);
+>                }
+> 
+> ...
+> 
+> ----------------------------------------------------------------------------------------------------
+> 
+> But this code doesn't work.  I mounted ext3 file system, copy a file,
+> then wait for serveral minutes, then umount file system and power
+> down. And during the whole process, the flush function is never
+> called. I tested this in a initrd (busybox) environment.
+> 
+> Does I need to do something else to enable barrier support in linux kernel?
+> Or, the driver should flush cache once the 'umount' or 'sync' command
+> is executed? But I don't know how to do it.
+> 
+> It'll be very appreciated if you could give me some suggests or
+> comments about this. Thank you very much.
 
-What driver in use?  ata_piix?  Can you give full dmesg (boot + first 
-few errors)?
+For ext3, mount the filesystem with -o barrier=1 as an option to enable
+barrier support.
 
-Are there any ATAPI devices attached to this controller, in addition to 
-the Seagate ST980811AS ?
-
-	Jeff
-
-
-
+-- 
+Jens Axboe
 
