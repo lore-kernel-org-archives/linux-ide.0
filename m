@@ -1,39 +1,39 @@
-From: sandra05dikigbo <sandra05dikigbo@gmail.com>
-Subject: hello
-Date: Wed, 17 Dec 2008 10:59:25 +0100
-Message-ID: <59611c2a0812170159r652cbf03k2a99b9675e64882b@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [2.6.28-rc] Sata soft reset filling log
+Date: Wed, 17 Dec 2008 10:13:07 +0000
+Message-ID: <20081217101307.4614145d@lxorguk.ukuu.org.uk>
+References: <494318F5.4060007@gawab.com>
+	<20081216210251.138d3e98.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.237]:34034 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083AbYLQJ7q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 04:59:46 -0500
-Received: by qb-out-0506.google.com with SMTP id f11so1959277qba.17
-        for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 01:59:43 -0800 (PST)
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55657 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754773AbYLQKNj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 05:13:39 -0500
+In-Reply-To: <20081216210251.138d3e98.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Justin Madru <bevicm@dslextreme.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-Hello
-in fact, I am very happy to write you at this time when two of us are
-looking for a soulmate. My name is sandra. Write
-me(sandra_4dikigbo@yahoo.com).
-I believe that this love that I came knocking at the door of your
-heart that you open for me to enter. Dear, to be candid with you I
-feel in love with
-you already after going through your profile My mind tells me that
-your are the man that I need in my life. I will be very grateful if we
-can establish this relationship.Hence, I will be expecting your reply
-as soon as possible, alternatively
-you can write me directly through my e-mail address;(sandra_4dikigbo@yahoo.com)
-I am very romantic, caring, passionately and lovely. I have a bright
-future and also very hard working. I believe that you are the man that
-I wiil share
-my dreams, and my future without disapointment. One thing I am
-promising you is that you will never regret of knowing or having me in
-your life.
-I will be stoping so far till I hear from you.
-Is me,
-sandra
+On Tue, 16 Dec 2008 21:02:51 -0800
+Andrew Morton <akpm@linux-foundation.org> wrote:
+
+> 
+> (cc linux-ide).
+> 
+> This is a post-2.6.27 regression.  Panic!
+> 
+> On Fri, 12 Dec 2008 18:07:49 -0800 Justin Madru <bevicm@dslextreme.com> wrote:
+> 
+> > I've been testing .28 (currently -rc8) and I've noticed in the logs a 
+> > massive amount of the following.
+> > I can confirm that the messages doesn't appear when booting into a .27 
+> > kernel.
+> > 
+> > ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> > ata2.00: ST_FIRST: !(DRQ|ERR|DF)
+
+Which is the first 2.6.28-rc that this appears ?
