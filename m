@@ -1,54 +1,177 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12217] reading a cdrom hangs the system
-Date: Wed, 17 Dec 2008 03:33:14 -0800 (PST)
-Message-ID: <20081217113314.B7C6610800F@picon.linux-foundation.org>
-References: <bug-12217-11633@http.bugzilla.kernel.org/>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 3/3] ide: use per-device request queue locks
+Date: Wed, 17 Dec 2008 16:53:56 +0100
+Message-ID: <87skom6bmz.fsf@denkblock.local>
+References: <200811182119.21286.bzolnier@gmail.com>
+	<87vdudjgfm.fsf@denkblock.local>
+	<200812140015.23853.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33264 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750944AbYLQLdR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 06:33:17 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBHBXEJp009505
-	for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 03:33:16 -0800
-In-Reply-To: <bug-12217-11633@http.bugzilla.kernel.org/>
+Received: from nebensachen.de ([195.34.83.29]:38884 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750983AbYLQPyO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Dec 2008 10:54:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12217
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> [ Once again, sorry for the long delay. ]
 
+Never mind, my responses are rather sluggish these days too.
 
-alan@lxorguk.ukuu.org.uk changed:
+>
+> On Monday 24 November 2008, Elias Oltmanns wrote:
+>> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+[...]
+>> >  drivers/ide/ide-io.c    | 213 +++++++++++++++---------------------------------
+>> >  drivers/ide/ide-park.c  |   13 +-
+>> >  drivers/ide/ide-probe.c |    3 
+>> >  include/linux/ide.h     |    4 
+>> >  4 files changed, 79 insertions(+), 154 deletions(-)
+>> >
+>> > Index: b/drivers/ide/ide-io.c
+>> > ===================================================================
+>> > --- a/drivers/ide/ide-io.c
+>> > +++ b/drivers/ide/ide-io.c
+>> [...]
+>> > @@ -780,61 +704,40 @@ repeat:	
+>> >   */
+>> >  void do_ide_request(struct request_queue *q)
+>> >  {
+>> > -	ide_drive_t	*orig_drive = q->queuedata;
+>> > -	ide_hwgroup_t	*hwgroup = orig_drive->hwif->hwgroup;
+>> > -	ide_drive_t	*drive;
+>> > -	ide_hwif_t	*hwif;
+>> > +	ide_drive_t	*drive = q->queuedata;
+>> > +	ide_hwif_t	*hwif = drive->hwif;
+>> > +	ide_hwgroup_t	*hwgroup = hwif->hwgroup;
+>> >  	struct request	*rq;
+>> >  	ide_startstop_t	startstop;
+>> >  
+>> > -	/* caller must own hwgroup->lock */
+>> > -	BUG_ON(!irqs_disabled());
+>> > -
+>> > -	while (!ide_lock_hwgroup(hwgroup)) {
+>> > -		drive = choose_drive(hwgroup);
+>> > -		if (drive == NULL) {
+>> > -			int sleeping = 0;
+>> > -			unsigned long sleep = 0; /* shut up, gcc */
+>> > -			hwgroup->rq = NULL;
+>> > -			drive = hwgroup->drive;
+>> > -			do {
+>> > -				if ((drive->dev_flags & IDE_DFLAG_SLEEPING) &&
+>> > -				    (sleeping == 0 ||
+>> > -				     time_before(drive->sleep, sleep))) {
+>> > -					sleeping = 1;
+>> > -					sleep = drive->sleep;
+>> > -				}
+>> > -			} while ((drive = drive->next) != hwgroup->drive);
+>> > -			if (sleeping) {
+>> > +	/*
+>> > +	 * drive is doing pre-flush, ordered write, post-flush sequence. even
+>> > +	 * though that is 3 requests, it must be seen as a single transaction.
+>> > +	 * we must not preempt this drive until that is complete
+>> > +	 */
+>> > +	if (blk_queue_flushing(q))
+>> >  		/*
+>> > -		 * Take a short snooze, and then wake up this hwgroup again.
+>> > -		 * This gives other hwgroups on the same a chance to
+>> > -		 * play fairly with us, just in case there are big differences
+>> > -		 * in relative throughputs.. don't want to hog the cpu too much.
+>> > +		 * small race where queue could get replugged during
+>> > +		 * the 3-request flush cycle, just yank the plug since
+>> > +		 * we want it to finish asap
+>> >  		 */
+>> > -				if (time_before(sleep, jiffies + WAIT_MIN_SLEEP))
+>> > -					sleep = jiffies + WAIT_MIN_SLEEP;
+>> > -#if 1
+>> > -				if (timer_pending(&hwgroup->timer))
+>> > -					printk(KERN_CRIT "ide_set_handler: timer already active\n");
+>> > -#endif
+>> > -				/* so that ide_timer_expiry knows what to do */
+>> > -				hwgroup->sleeping = 1;
+>> > -				hwgroup->req_gen_timer = hwgroup->req_gen;
+>> > -				mod_timer(&hwgroup->timer, sleep);
+>> > -				/* we purposely leave hwgroup locked
+>> > -				 * while sleeping */
+>> > -			} else
+>> > -				ide_unlock_hwgroup(hwgroup);
+>> > +		blk_remove_plug(q);
+>> 
+>> I'm not at all convinced that this works as expected. First of all, I
+>> think we can safely assume that the plug is removed when block layer
+>> calls into the ->request_fn(). Secondly, since the ide layer doesn't
+>> call the ->request_fn() on it's own accord, I rather suspect that this
+>> check can be dropped altogether. On the other hand, I'm not sure I agree
+>
+> I suspect that this is leftover from the old code and I also think that
+> it can be removed completely.  However mixing too many real code changes
+> in a single patch is not a good practice and the removal can be handled
+> independently of the discussed patch.
+>
+> If you would send me a patch with the above change I will be happy to
+> integrate it into pata tree (patch can be against current Linus' tree or
+> linux-next, either one is completely fine with me).
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |alan@lxorguk.ukuu.org.uk
-             Status|NEW                         |ASSIGNED
+I'll have a go at it later.
 
+[...]
+>> Finally, some more general blathering on the topic at hand: A while ago,
+>> I spent some thought on the possibilities of giving the block layer a
+>> notion of linked device queues as an equivalent hwgroups in ide,
+>> scsi_hosts or ata_ports and let it take care of time / bandwidth
+>> distribution among the queues belonging to one group. This is, as I
+>> understand, pretty much what your code is relying on since you have
+>> chucked out choose_drive(). However, this turned out not to be too easy
+>
+> This is the right way to go and I has always advocated for it.  However
+> after seeing how libata got away with ignoring the issue altogether
+> I'm no longer sure of this.  I haven't seen any bug reports which would
+> indicate that simplified approach has any really negative consequences.
 
+Well, libata can safely ignore it since scsi takes care of that (see
+scsi_run_queue() which is called on command completion).
 
+>
+> [ Still would be great to have the control over bandwitch of "queue-group"
+>   at the block layer level since we could also use it for distributing the
+>   available PCI[-E] bus bandwitch. ]
+>
+>> and I'm not quite sure whether we really want to go down that road. One
+>> major problem is that there is no straight forward way for the block
+>> layer to know, whether a ->request_fn() has actually taken a request off
+>> the queue and if not (or less than queue_depth anyway), whether it's
+>> just the device that couldn't take any more or the controller instead.
+>> On the whole, it seems not exactly trivial to get it right and it would
+>> probably be a good idea to consult Jens and perhaps James before
+>
+> I think that having more information returned by ->request_fn() could be
+> beneficial to the block layer (independently whether we end up adding
+> support for "queue-groups" to the block layer or not) but this definitely
+> needs to be verified with Jens & James.
 
-------- Comment #5 from alan@lxorguk.ukuu.org.uk  2008-12-17 03:33 -------
-Nothing obvious and its a configuration that is common and works for others.
+Some time back, I raised this with Jens in connection with your previous
+version of the patchset [1]. I didn't get an answer at the time but
+perhaps it would help to raise it again in its own right and to give
+some more examples of its potential merits.
 
-Some oddities pointing to laptop funnies - "[    4.523009] pata_via
-0000:00:11.1: can't derive routing for PCI INT A' being one, but if the basic
-CD stuff works clearly IRQ delivery is working.
+>
+>> embarking on such a venture. Short of that, I think that ide layer has
+>> to keep an appropriate equivalent of choose_drive() and also the while
+>> loop in the do_ide_request() function.
+>
+> Thank you for your review.  v1->v2 interdiff below.
+>
+> v2:
+> * Fixes/improvements based on review from Elias:
+>  - take as many requests off the queue as possible
+>  - remove now redundant BUG_ON()
 
-"Kernel driver in use: ndiswrapper."  
+Looks alright to me.
 
-This is a random Ubuntu kernel (which differs a fair bit from the upstream
-Linux kernel), running proprietary window driver support hacks that are not
-upstream or considered as reliable by the community.
+Regards,
 
-Can you reproduce the problem with a standard 2.6.27 kernel and without stuff
-like ndiswrapper ever having been loaded that boot ? If not you need to report
-the bug to the Ubuntu team not here.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+Elias
