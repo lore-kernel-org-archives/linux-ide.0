@@ -1,42 +1,73 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 0/9] ide-atapi: remove ide_atapi_pc from the irq handler
-Date: Wed, 17 Dec 2008 20:29:56 +0100
-Message-ID: <20081217192956.GA6316@gollum.tnic>
-References: <1229412969-3552-1-git-send-email-petkovbb@gmail.com> <200812162135.27902.bzolnier@gmail.com> <20081217072543.GA828@gollum.tnic> <200812171745.41830.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 3/3] ide: use per-device request queue locks
+Date: Wed, 17 Dec 2008 22:22:17 +0100
+Message-ID: <87myeu5wfq.fsf@denkblock.local>
+References: <200811182119.21286.bzolnier@gmail.com>
+	<87vdudjgfm.fsf@denkblock.local>
+	<200812140015.23853.bzolnier@gmail.com>
+	<87skom6bmz.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:36289 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752736AbYLQT34 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 14:29:56 -0500
-Received: by bwz14 with SMTP id 14so204167bwz.13
-        for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 11:29:53 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200812171745.41830.bzolnier@gmail.com>
+Received: from nebensachen.de ([195.34.83.29]:34018 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751169AbYLQVWa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Dec 2008 16:22:30 -0500
+In-Reply-To: <87skom6bmz.fsf@denkblock.local> (Elias Oltmanns's message of
+	"Wed, 17 Dec 2008 16:53:56 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Elias Oltmanns <eo@nebensachen.de> wrote:
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>> On Monday 24 November 2008, Elias Oltmanns wrote:
+[...]
+>>> Finally, some more general blathering on the topic at hand: A while ago,
+>>> I spent some thought on the possibilities of giving the block layer a
+>>> notion of linked device queues as an equivalent hwgroups in ide,
+>>> scsi_hosts or ata_ports and let it take care of time / bandwidth
+>>> distribution among the queues belonging to one group. This is, as I
+>>> understand, pretty much what your code is relying on since you have
+>>> chucked out choose_drive(). However, this turned out not to be too easy
+>>
+>> This is the right way to go and I has always advocated for it.  However
+>> after seeing how libata got away with ignoring the issue altogether
+>> I'm no longer sure of this.  I haven't seen any bug reports which would
+>> indicate that simplified approach has any really negative consequences.
+>
+> Well, libata can safely ignore it since scsi takes care of that (see
+> scsi_run_queue() which is called on command completion).
+>
+>>
+>> [ Still would be great to have the control over bandwitch of "queue-group"
+>>   at the block layer level since we could also use it for distributing the
+>>   available PCI[-E] bus bandwitch. ]
+>>
+>>> and I'm not quite sure whether we really want to go down that road. One
+>>> major problem is that there is no straight forward way for the block
+>>> layer to know, whether a ->request_fn() has actually taken a request off
+>>> the queue and if not (or less than queue_depth anyway), whether it's
+>>> just the device that couldn't take any more or the controller instead.
+>>> On the whole, it seems not exactly trivial to get it right and it would
+>>> probably be a good idea to consult Jens and perhaps James before
+>>
+>> I think that having more information returned by ->request_fn() could be
+>> beneficial to the block layer (independently whether we end up adding
+>> support for "queue-groups" to the block layer or not) but this definitely
+>> needs to be verified with Jens & James.
+>
+> Some time back, I raised this with Jens in connection with your previous
+> version of the patchset [1]. I didn't get an answer at the time but
+> perhaps it would help to raise it again in its own right and to give
+> some more examples of its potential merits.
 
-> [ Yes, I'm a bit disappointed that 2.6.29 is going to be the next release
->   that we will miss on ide-cd -> ide-atapi conversion (I was initially
->   hoping for .28) and the fact that in few weeks this will become a limiting
->   factor to the further progress on core IDE changes (despite few issues
->   to still take care of things are starting to look really well there)... ]
+[1] http://marc.info/?l=linux-ide&m=122470007616121&w=2
 
-ok, I get the idea, and I'm sorry for mis-prioritizing the things we
-have to work on but it's not like I've been idling - as you're well
-aware, we had a couple of nasty bugs in the past months which had to be
-taken care of.
+What ever does it mean that I missed something vital in this email too?
+;-)
 
-Anyways, I don't think it is too late yet for .29 since the merge window
-is not open yet and I might whip up some patches in the next couple of
-days...
+Regards,
 
--- 
-Regards/Gruss,
-    Boris.
+Elias
