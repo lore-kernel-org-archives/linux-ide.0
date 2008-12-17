@@ -1,120 +1,97 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 0/9] ide-atapi: remove ide_atapi_pc from the irq handler
-Date: Wed, 17 Dec 2008 08:25:43 +0100
-Message-ID: <20081217072543.GA828@gollum.tnic>
-References: <1229412969-3552-1-git-send-email-petkovbb@gmail.com> <200812162135.27902.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [2.6.28-rc] Sata soft reset filling log
+Date: Wed, 17 Dec 2008 02:26:57 -0500
+Message-ID: <4948A9C1.6050900@garzik.org>
+References: <494318F5.4060007@gawab.com> <20081216210251.138d3e98.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:33975 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759664AbYLQHZm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 02:25:42 -0500
-Received: by bwz14 with SMTP id 14so5092763bwz.13
-        for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2008 23:25:40 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200812162135.27902.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:54487 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759368AbYLQH1E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Dec 2008 02:27:04 -0500
+In-Reply-To: <20081216210251.138d3e98.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Justin Madru <bevicm@dslextreme.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-Hi,
-
-> Hmm.  I recall discussing this before and having some concerns about struct
-> ide_atapi_pc removal idea probably being premature...
+Andrew Morton wrote:
+> (cc linux-ide).
 > 
-> Looking at the patchset itself -- I'm very sorry but I just cannot apply it
-> with all these command specific fields going into ide_drive_t:
+> This is a post-2.6.27 regression.  Panic!
 > 
->         unsigned long pc_flags;
->         int pc_req_xfer;
->         int pc_buf_size;
->         int pc_error;
+> On Fri, 12 Dec 2008 18:07:49 -0800 Justin Madru <bevicm@dslextreme.com> wrote:
 > 
-> While they may look similar to the existing pc_* fields:
-> 
->         /* callback for packet commands */
->         void (*pc_callback)(struct ide_drive_s *, int);
-> 
->         void (*pc_update_buffers)(struct ide_drive_s *, struct ide_atapi_pc *);
->         int  (*pc_io_buffers)(struct ide_drive_s *, struct ide_atapi_pc *,
->                               unsigned int, int);
-> 
-> they are clearly not.  Existing pc_* callbacks are per-device type (they
-> should have been probably named drv_*) and new ones are per-command ones.
+>> I've been testing .28 (currently -rc8) and I've noticed in the logs a 
+>> massive amount of the following.
+>> I can confirm that the messages doesn't appear when booting into a .27 
+>> kernel.
+>>
+>> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>> ata2.00: ST_FIRST: !(DRQ|ERR|DF)
+>> ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>>          cdb 1e 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+>>          res 50/00:01:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+>> ata2.00: status: { DRDY }
+>> ata2: soft resetting link
+>> ata2.00: configured for UDMA/33
+>> ata2: EH complete
+>>
+>> I get this block of messages about every 20 seconds for as long as I'm 
+>> booted into a .28 kernel.
+>> It seems that the sata link is being soft reseted about every _20_ secs.
+>> My drive is a sata drive that should be using UDMA/133 (right?),
+>> but the "error" message says configuring for UDMA/33.
+>> Does this mean that my drive is running at a slower speed?
+>> Should I be worried about the .28 kernel corrupting my hardware? Is this 
+>> a known issue?
+>> How can I stop it from filling my logs!
+>>
+>> Some information about my computer:
+>>
+>> $ lspci
+>> 00:00.0 Host bridge: Intel Corporation Mobile 945GM/PM/GMS, 943/940GML 
+>> and 945GT Express Memory Controller Hub (rev 03)
+>> 00:02.0 VGA compatible controller: Intel Corporation Mobile 945GM/GMS, 
+>> 943/940GML Express Integrated Graphics Controller (rev 03)
+>> 00:02.1 Display controller: Intel Corporation Mobile 945GM/GMS/GME, 
+>> 943/940GML Express Integrated Graphics Controller (rev 03)
+>> 00:1b.0 Audio device: Intel Corporation 82801G (ICH7 Family) High 
+>> Definition Audio Controller (rev 01)
+>> 00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
+>> Port 1 (rev 01)
+>> 00:1c.3 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
+>> Port 4 (rev 01)
+>> 00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+>> Controller #1 (rev 01)
+>> 00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+>> Controller #2 (rev 01)
+>> 00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+>> Controller #3 (rev 01)
+>> 00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+>> Controller #4 (rev 01)
+>> 00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2 EHCI 
+>> Controller (rev 01)
+>> 00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev e1)
+>> 00:1f.0 ISA bridge: Intel Corporation 82801GBM (ICH7-M) LPC Interface 
+>> Bridge (rev 01)
+>> 00:1f.2 IDE interface: Intel Corporation 82801GBM/GHM (ICH7 Family) SATA 
+>> IDE Controller (rev 01)
+>> 00:1f.3 SMBus: Intel Corporation 82801G (ICH7 Family) SMBus Controller 
+>> (rev 01)
+>> 03:00.0 Ethernet controller: Broadcom Corporation BCM4401-B0 100Base-TX 
+>> (rev 02)
 
-maybe I didn't express myself clear in the commit messages - those
-fields are only temporary - the emphasis being on temporary - and was
-going to remove them after the dust settles.
+What driver in use?  ata_piix?  Can you give full dmesg (boot + first 
+few errors)?
 
-> I also don't see a way for code to differentiate between pc and failed_pc.
+Are there any ATAPI devices attached to this controller, in addition to 
+the Seagate ST980811AS ?
 
-This happens only in once place in ide-tape and this is taken care of rather
-clumsily with an additional flag.
+	Jeff
 
-> Why attack the "hard" problem first (struct ide_atapi_pc one) while there
-> are easier ones to deal with?  It may happen that once these easier ones
-> are fixed we will be able to view the "hard" one from a completely different
-> perspective (because code's complexity will decrease a lot in the meantime
-> it no longer will be a "hard" problem) and apply a better solution.
-> 
-> Besides I'm not fully convinced that struct ide_atapi_pc has to go first in
-> order to port ide-cd over ide-atapi -- we can just instead port ide-cd to
-> use struct ide_atapi_pc (however probably only after converting the driver
-> to use sg-s for PIO transfers -- otherwise it becomes another "hard" problem)
-> and then deal with struct ide_atapi_pc for all ATAPI code (be using struct
-> request fields directly or by merging struct ide_atapi_pc into ide_task_t
-> and always using the latter structure for ATA[PI] commands -- which is the
-> option that I personally came to prefer lately)...
 
-Here are the problems i see with ide_atapi_pc, judging by my somewhat limited
-experience:
 
-1. ide_issue_pc/ide_transfer_pc and all those other ATAPI functions have to
-check the pc pointer depending on being entered from ide-cd or from the other
-drivers, which means that either ide-cd is ported to use ide_atapi_pc's or we
-have lots of spaghetti if/else checks.
 
-2. But, it really seems too unnatural to have ide_atapi_pc structs representing
-an ATAPI cmd, IMHO, and doing all those memcpy(rq->cmd, pc->c, BLK_MAX_CDB) and
-generally mapping the atapi_pc's to an rq - I'd rather much prefer to use the
-rqs which are pretty much sufficient for most tasks and have maybe a smaller
-struct which is in rq->buffer or similar handling all the ATAPI specific things
-like pc->req_xfer and such.
-
-3. I also think that it is kinda not so smart to have a buffer in the atapi_pc
-and move it all around. True, Linus removed some of the allocations on stack but
-ide-floppy used to be one of the biggest stack users, ide-tape might still be,
-haven't checked.
-
-So, to sum up, I think that ide-cd and especially all the logic around
-ide_cd_queue_pc and its users is much more cleaner, IMHO, than what
-ide-floppy/tape do by saying
-
-ide_init_pc()
-ide_create_bla_cmd()
-ide_queue_pc_head/tail() /* here you unnecessarily map the pc to an rq */
-ide_issue_pc()
-
-and, in most cases, ide_create_bla_cmd() is used only in one place so
-it gets inlined by gcc. So, I think using private buffers in all those
-get_capacity/check_status/read_tocentry and sending them down through an
-rq is the cleaner solution because you do
-
-cdrom_check_status()
-ide_cd_queue_pc()
-
-and this might become
-
-ide_atapi_check_status()
-ide_atapi_queue_pc()
-
-and that's pretty awesome, don't you think?
-
-p.s. I'm sure there's something else I'm forgetting.
-
--- 
-Regards/Gruss,
-    Boris.
