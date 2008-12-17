@@ -1,84 +1,120 @@
-From: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-Subject: How to flush write-back cache in block device driver?
-Date: Wed, 17 Dec 2008 14:36:50 +0800
-Message-ID: <38D9F46DFF92C54980D2F2C1E8EE31301CB4E70F@pdsmsx503.ccr.corp.intel.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/9] ide-atapi: remove ide_atapi_pc from the irq handler
+Date: Wed, 17 Dec 2008 08:25:43 +0100
+Message-ID: <20081217072543.GA828@gollum.tnic>
+References: <1229412969-3552-1-git-send-email-petkovbb@gmail.com> <200812162135.27902.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44703 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbYLQGgQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 01:36:16 -0500
-Content-Language: en-US
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:33975 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759664AbYLQHZm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Dec 2008 02:25:42 -0500
+Received: by bwz14 with SMTP id 14so5092763bwz.13
+        for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2008 23:25:40 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <200812162135.27902.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi all,
+Hi,
 
-I'm porting a NAND flash driver to linux 2.6.27. The NAND driver is
-based on NFTL, not kernel MTD subsystem. That is, it will report to
-kernel as a standard linux block device, so it can be used as a normal
-hard disk.
+> Hmm.  I recall discussing this before and having some concerns about struct
+> ide_atapi_pc removal idea probably being premature...
+> 
+> Looking at the patchset itself -- I'm very sorry but I just cannot apply it
+> with all these command specific fields going into ide_drive_t:
+> 
+>         unsigned long pc_flags;
+>         int pc_req_xfer;
+>         int pc_buf_size;
+>         int pc_error;
+> 
+> While they may look similar to the existing pc_* fields:
+> 
+>         /* callback for packet commands */
+>         void (*pc_callback)(struct ide_drive_s *, int);
+> 
+>         void (*pc_update_buffers)(struct ide_drive_s *, struct ide_atapi_pc *);
+>         int  (*pc_io_buffers)(struct ide_drive_s *, struct ide_atapi_pc *,
+>                               unsigned int, int);
+> 
+> they are clearly not.  Existing pc_* callbacks are per-device type (they
+> should have been probably named drv_*) and new ones are per-command ones.
 
-The NAND driver uses an internal write-back cache to improve R/W
-performance. And it provides a function to force flush the cache. But
-as it requires in our project that, after a successful umount to ext3
-file system, even if the system encountered an un-expected power-down,
-user data stored in NAND still need to be correct after system reboot.
+maybe I didn't express myself clear in the commit messages - those
+fields are only temporary - the emphasis being on temporary - and was
+going to remove them after the dust settles.
 
-Now I have add some code in the driver like this:
------------------------------------------------------------------------------------
-static void SBD_prepare_flush(struct request_queue *q, struct request *rq)
-{
-       rq->cmd_type = REQ_TYPE_LINUX_BLOCK;
-       /* rq->timeout = 5 * HZ; */
-       rq->cmd[0] = REQ_LB_OP_FLUSH;
-}
+> I also don't see a way for code to differentiate between pc and failed_pc.
 
-...
-       blk_queue_ordered(dev->queue, QUEUE_ORDERED_DRAIN_FLUSH, SBD_prepare_flush);
-...
+This happens only in once place in ide-tape and this is taken care of rather
+clumsily with an additional flag.
 
-               while (((req = elv_next_request(q)) != NULL)) {
-                                 if (req->cmd_type == REQ_TYPE_LINUX_BLOCK &&
-                                       req->cmd[0] == REQ_LB_OP_FLUSH) {
-                                       printk(KERN_ERR "Will flush cache\n");
-                                       /* Cache flush */
-                                       if (GLOB_FTL_Flush_Cache()) {
-                                               printk(KERN_ERR "Failed to flush FTL cache\n");
-                                               end_request(req, 0);
-                                       } else
-                                               end_request(req, 1);
-                                       continue;
-                                       }
+> Why attack the "hard" problem first (struct ide_atapi_pc one) while there
+> are easier ones to deal with?  It may happen that once these easier ones
+> are fixed we will be able to view the "hard" one from a completely different
+> perspective (because code's complexity will decrease a lot in the meantime
+> it no longer will be a "hard" problem) and apply a better solution.
+> 
+> Besides I'm not fully convinced that struct ide_atapi_pc has to go first in
+> order to port ide-cd over ide-atapi -- we can just instead port ide-cd to
+> use struct ide_atapi_pc (however probably only after converting the driver
+> to use sg-s for PIO transfers -- otherwise it becomes another "hard" problem)
+> and then deal with struct ide_atapi_pc for all ATAPI code (be using struct
+> request fields directly or by merging struct ide_atapi_pc into ide_task_t
+> and always using the latter structure for ATA[PI] commands -- which is the
+> option that I personally came to prefer lately)...
 
-                       if (!blk_fs_request(req)) {
-                               nand_dbg_print(NAND_DBG_WARN,
-                                              "Spectra: Skip non-fs request\n");
-                               end_request(req, 0);
-                               continue;
-                       }
+Here are the problems i see with ide_atapi_pc, judging by my somewhat limited
+experience:
 
-                       sectors_xferred = SBD_xfer_request(req);
-                       success = (sectors_xferred < 0) ? 0 : 1;
-                       __blk_end_request(req, success ? 0 : -EIO,
-                                         sectors_xferred << 9);
-               }
+1. ide_issue_pc/ide_transfer_pc and all those other ATAPI functions have to
+check the pc pointer depending on being entered from ide-cd or from the other
+drivers, which means that either ide-cd is ported to use ide_atapi_pc's or we
+have lots of spaghetti if/else checks.
 
-...
+2. But, it really seems too unnatural to have ide_atapi_pc structs representing
+an ATAPI cmd, IMHO, and doing all those memcpy(rq->cmd, pc->c, BLK_MAX_CDB) and
+generally mapping the atapi_pc's to an rq - I'd rather much prefer to use the
+rqs which are pretty much sufficient for most tasks and have maybe a smaller
+struct which is in rq->buffer or similar handling all the ATAPI specific things
+like pc->req_xfer and such.
 
-----------------------------------------------------------------------------------------------------
+3. I also think that it is kinda not so smart to have a buffer in the atapi_pc
+and move it all around. True, Linus removed some of the allocations on stack but
+ide-floppy used to be one of the biggest stack users, ide-tape might still be,
+haven't checked.
 
-But this code doesn't work.  I mounted ext3 file system, copy a file,
-then wait for serveral minutes, then umount file system and power
-down. And during the whole process, the flush function is never
-called. I tested this in a initrd (busybox) environment.
+So, to sum up, I think that ide-cd and especially all the logic around
+ide_cd_queue_pc and its users is much more cleaner, IMHO, than what
+ide-floppy/tape do by saying
 
-Does I need to do something else to enable barrier support in linux kernel?
-Or, the driver should flush cache once the 'umount' or 'sync' command
-is executed? But I don't know how to do it.
+ide_init_pc()
+ide_create_bla_cmd()
+ide_queue_pc_head/tail() /* here you unnecessarily map the pc to an rq */
+ide_issue_pc()
 
-It'll be very appreciated if you could give me some suggests or
-comments about this. Thank you very much.
+and, in most cases, ide_create_bla_cmd() is used only in one place so
+it gets inlined by gcc. So, I think using private buffers in all those
+get_capacity/check_status/read_tocentry and sending them down through an
+rq is the cleaner solution because you do
+
+cdrom_check_status()
+ide_cd_queue_pc()
+
+and this might become
+
+ide_atapi_check_status()
+ide_atapi_queue_pc()
+
+and that's pretty awesome, don't you think?
+
+p.s. I'm sure there's something else I'm forgetting.
+
+-- 
+Regards/Gruss,
+    Boris.
