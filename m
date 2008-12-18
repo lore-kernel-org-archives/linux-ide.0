@@ -1,46 +1,57 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
-Date: Thu, 18 Dec 2008 07:45:35 -0800 (PST)
-Message-ID: <20081218154535.98134108048@picon.linux-foundation.org>
-References: <bug-12144-11633@http.bugzilla.kernel.org/>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ide: Fix ata_id_has_dword_io to return DWORD I/O support
+ properly
+Date: Thu, 18 Dec 2008 12:08:10 -0500
+Message-ID: <494A837A.50801@garzik.org>
+References: <494A5BBF.8000807@inf.tu-dresden.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43054 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750949AbYLRPqH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2008 10:46:07 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBIFjZPv004373
-	for <linux-ide@vger.kernel.org>; Thu, 18 Dec 2008 07:45:36 -0800
-In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
+Received: from srv5.dvmed.net ([207.36.208.214]:58176 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751666AbYLRRIQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Dec 2008 12:08:16 -0500
+In-Reply-To: <494A5BBF.8000807@inf.tu-dresden.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mario Schwalbe <schwalbe@inf.tu-dresden.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12144
+Mario Schwalbe wrote:
+> This patch fixes ata_id_has_dword_io to return 1 (supported) if
+> the drive is compliant to ATA2 or newer and evaluates the config
+> word for older drives.
+> 
+> Signed-off-by: Mario Schwalbe <schwalbe@inf.tu-dresden.de>
+> ---
+>  include/linux/ata.h |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index a53318b..d0d6a9c 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -700,12 +700,12 @@ static inline int ata_id_has_tpm(const u16 *id)
+> 
+>  static inline int ata_id_has_dword_io(const u16 *id)
+>  {
+> -	/* ATA 8 reuses this flag for "trusted" computing */
+> -	if (ata_id_major_version(id) > 7)
+> -		return 0;
+> -	if (id[ATA_ID_DWORD_IO] & (1 << 0))
+> -		return 1;
+> -	return 0;
+> +	/* This flag is defined up to ATA1 and deprecated since then
+> +	   (ATA 8 reuses this flag for "trusted" computing). */
+> +	if (ata_id_major_version(id) <= 1)
+> +		return (id[ATA_ID_DWORD_IO] & (1 << 0)) != 0;
+> +	/* later revision drives support DWORD I/O just fine */
+> +	return 1;
 
 
+This seems like a risky assumption...
+
+	Jeff
 
 
-
-------- Comment #20 from bbpetkov@yahoo.de  2008-12-18 07:45 -------
-Hi,
-
-you need to disable the loading of the ata_piix.ko kernel module for the 2.6.27
-kernel you're going to test the patch with. If you still don't know what to do,
-just reconfigure your kernel by issuing:
-
-make menuconfig
-
-in the kernel sources, then go to "Device Drivers" -> "Serial ATA (prod) and
-Parallel ATA (experimental) drivers" and disable the menu point "Intel ESB,
-ICH, PIIX3, PIIX4 PATA/SATA support" and then apply the patch, recompile your
-kernel, install it and reboot the machine.
-
-Regards,
-Boris.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
