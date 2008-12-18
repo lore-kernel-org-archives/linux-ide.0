@@ -1,47 +1,29 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: Fix ata_id_has_dword_io to return DWORD I/O
- support properly
-Date: Thu, 18 Dec 2008 22:40:10 +0000
-Message-ID: <20081218224010.45e3ce55@lxorguk.ukuu.org.uk>
-References: <494A5BBF.8000807@inf.tu-dresden.de>
-	<494A837A.50801@garzik.org>
-	<494A8768.4080100@ru.mvista.com>
-	<200812182142.16533.bzolnier@gmail.com>
+Subject: HPT34x progress - and a DMA question
+Date: Thu, 18 Dec 2008 22:51:52 +0000
+Message-ID: <20081218225152.2ad356d1@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36062 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44539 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752694AbYLRWkS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2008 17:40:18 -0500
-In-Reply-To: <200812182142.16533.bzolnier@gmail.com>
+	with ESMTP id S1752460AbYLRWvh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2008 17:51:37 -0500
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by lxorguk.ukuu.org.uk (8.14.2/8.14.2) with ESMTP id mBIMpr8R029935
+	for <linux-ide@vger.kernel.org>; Thu, 18 Dec 2008 22:51:53 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Mario Schwalbe <schwalbe@inf.tu-dresden.de>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-> OTOH the current patch is safe even for 2.6.28 (based on years of experience
-> with the check that we had in IDE subsystem) and will fix some libata drivers
-> (pata_legacy, pata_qdi and pata_winbond) to use dword IO on >= ATA-2 devices.
-> 
-> [ In reality this a regression fix for IDE -> libata conversion as it is a
->   huge performance improvement for the above mentioned DMA-less drivers. ]
+No I don't have DMA working (yet), but I've no intention of being beaten
+by an ATA controller. I have however identified the freeze and lock of
+the box that occurs after a DMA timeout.
 
-The 32bit PIO support is already queued up and went to Jeff a while ago
-so thats all in hand - its btw a big win on some suprising chipset cases
-including Intel ICH chipsets.
-
-> Jeff, I would like to merge it through IDE tree since the other patch depends
-> on it but if you want to go ahead and push it to Linus earlier feel free to
-> do it (or I can include it into the next IDE fixes pull request if you like).
-
-Its still broken. You cannot use the version check for versions below 3.
-I remain unconvinced we should be looking at it anywhere except specific
-pure ISA cycle pass through hardware and thus it belongs as a helper for
-those drivers not as ata_has_mumble stuff as its not ATA - eide_* maybe.
-
-Doubly complicating it is the small detail that ATA1 devices don't
-all respond to IDENTIFY in the first place....
+The 343/363 crashes if you write ->ctl with a live DMA outstanding. Now
+its easy enough to fix in the driver - just wrap ata_sff_freeze. It
+raises an interesting question however - which is should ata_sff_freeze
+stop any running DMA in the general case ?
 
 Alan
