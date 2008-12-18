@@ -1,58 +1,32 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 7/8] ide-atapi: put the rest of non-ide-cd code into the else-clause of ide_transfer_pc
-Date: Thu, 18 Dec 2008 08:40:51 +0100
-Message-ID: <1229586052-3542-8-git-send-email-petkovbb@gmail.com>
-References: <1229586052-3542-1-git-send-email-petkovbb@gmail.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
+Date: Thu, 18 Dec 2008 07:24:11 -0800 (PST)
+Message-ID: <20081218152411.C0774108043@picon.linux-foundation.org>
+References: <bug-12144-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:38264 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbYLRHlE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2008 02:41:04 -0500
-Received: by mail-bw0-f21.google.com with SMTP id 14so1054023bwz.13
-        for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 23:41:03 -0800 (PST)
-In-Reply-To: <1229586052-3542-1-git-send-email-petkovbb@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50689 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751281AbYLRPYo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2008 10:24:44 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBIFOBoq003245
+	for <linux-ide@vger.kernel.org>; Thu, 18 Dec 2008 07:24:13 -0800
+In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: linux-ide@vger.kernel.org
 
-There should be no functionality change resulting from this patch.
+http://bugzilla.kernel.org/show_bug.cgi?id=12144
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-atapi.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index dbed09c..f3dea66 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -534,17 +534,17 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
- 							       : WAIT_TAPE_CMD;
- 			expiry = NULL;
- 		}
--	}
- 
--	ireason = ide_read_ireason(drive);
--	if (drive->media == ide_tape)
--		ireason = ide_wait_ireason(drive, ireason);
-+		ireason = ide_read_ireason(drive);
-+		if (drive->media == ide_tape)
-+			ireason = ide_wait_ireason(drive, ireason);
- 
--	if ((ireason & ATAPI_COD) == 0 || (ireason & ATAPI_IO)) {
--		printk(KERN_ERR "%s: (IO,CoD) != (0,1) while issuing "
--				"a packet command\n", drive->name);
-+		if ((ireason & ATAPI_COD) == 0 || (ireason & ATAPI_IO)) {
-+			printk(KERN_ERR "%s: (IO,CoD) != (0,1) while issuing "
-+					"a packet command\n", drive->name);
- 
--		return ide_do_reset(drive);
-+			return ide_do_reset(drive);
-+		}
- 	}
- 
- 	/* Set the interrupt routine */
+
+
+
+------- Comment #19 from manoet.ita@gmail.com  2008-12-18 07:24 -------
+Sorry, but I don't know how to do that. Could you explain me that, please?
+
+
 -- 
-1.6.0.4
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
