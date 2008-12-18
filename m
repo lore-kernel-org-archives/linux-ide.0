@@ -1,73 +1,35 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 3/3] ide: use per-device request queue locks
-Date: Wed, 17 Dec 2008 22:22:17 +0100
-Message-ID: <87myeu5wfq.fsf@denkblock.local>
-References: <200811182119.21286.bzolnier@gmail.com>
-	<87vdudjgfm.fsf@denkblock.local>
-	<200812140015.23853.bzolnier@gmail.com>
-	<87skom6bmz.fsf@denkblock.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 0/8] ide-cd: first conversion batch
+Date: Thu, 18 Dec 2008 08:40:44 +0100
+Message-ID: <1229586052-3542-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:34018 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751169AbYLQVWa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Dec 2008 16:22:30 -0500
-In-Reply-To: <87skom6bmz.fsf@denkblock.local> (Elias Oltmanns's message of
-	"Wed, 17 Dec 2008 16:53:56 +0100")
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:53293 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888AbYLRHlB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2008 02:41:01 -0500
+Received: by bwz14 with SMTP id 14so1054028bwz.13
+        for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2008 23:40:59 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Elias Oltmanns <eo@nebensachen.de> wrote:
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
->> On Monday 24 November 2008, Elias Oltmanns wrote:
-[...]
->>> Finally, some more general blathering on the topic at hand: A while ago,
->>> I spent some thought on the possibilities of giving the block layer a
->>> notion of linked device queues as an equivalent hwgroups in ide,
->>> scsi_hosts or ata_ports and let it take care of time / bandwidth
->>> distribution among the queues belonging to one group. This is, as I
->>> understand, pretty much what your code is relying on since you have
->>> chucked out choose_drive(). However, this turned out not to be too easy
->>
->> This is the right way to go and I has always advocated for it.  However
->> after seeing how libata got away with ignoring the issue altogether
->> I'm no longer sure of this.  I haven't seen any bug reports which would
->> indicate that simplified approach has any really negative consequences.
->
-> Well, libata can safely ignore it since scsi takes care of that (see
-> scsi_run_queue() which is called on command completion).
->
->>
->> [ Still would be great to have the control over bandwitch of "queue-group"
->>   at the block layer level since we could also use it for distributing the
->>   available PCI[-E] bus bandwitch. ]
->>
->>> and I'm not quite sure whether we really want to go down that road. One
->>> major problem is that there is no straight forward way for the block
->>> layer to know, whether a ->request_fn() has actually taken a request off
->>> the queue and if not (or less than queue_depth anyway), whether it's
->>> just the device that couldn't take any more or the controller instead.
->>> On the whole, it seems not exactly trivial to get it right and it would
->>> probably be a good idea to consult Jens and perhaps James before
->>
->> I think that having more information returned by ->request_fn() could be
->> beneficial to the block layer (independently whether we end up adding
->> support for "queue-groups" to the block layer or not) but this definitely
->> needs to be verified with Jens & James.
->
-> Some time back, I raised this with Jens in connection with your previous
-> version of the patchset [1]. I didn't get an answer at the time but
-> perhaps it would help to raise it again in its own right and to give
-> some more examples of its potential merits.
+Hi Bart,
 
-[1] http://marc.info/?l=linux-ide&m=122470007616121&w=2
+here's the first batch of conversion patches. Now ide_issue_pc/ide_transfer_pc
+are almost completely aligned to their ide-cd counterparts
+cdrom_start_packet_command/cdrom_transfer_packet_command. The only thing
+missing is the setting of the irq handler through ide_set_handler but this
+is not that trivial since if i'd moved ide-cd's irq handler to ide-atapi
+that would suck in a bunch of other ide-cd functions which is not what we
+want, (yes/no)? and I'm going to have to ponder a little bit more on that.
 
-What ever does it mean that I missed something vital in this email too?
-;-)
+Those have been lightly tested with ide-cd and ide-floppy.
 
-Regards,
 
-Elias
+ drivers/ide/ide-atapi.c  |  115 ++++++++++++++++----------------------------
+ drivers/ide/ide-cd.c     |  121 ++++++++++++++++++++++++++++------------------
+ drivers/ide/ide-floppy.c |    2 +-
+ drivers/ide/ide-tape.c   |    2 +-
+ include/linux/ide.h      |    2 +-
+ 5 files changed, 117 insertions(+), 125 deletions(-)
