@@ -1,34 +1,31 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/9] ide: remove ide_pci_enablebit_t typedef
-Date: Fri, 19 Dec 2008 14:58:38 +0300
-Message-ID: <494B8C6E.4070702@ru.mvista.com>
-References: <20081216193137.3959.70339.sendpatchset@localhost.localdomain> <20081216193204.3959.51518.sendpatchset@localhost.localdomain>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: HPT34x progress - and a DMA question
+Date: Fri, 19 Dec 2008 13:04:11 +0100
+Message-ID: <18763.36283.332499.893530@harpo.it.uu.se>
+References: <20081218225152.2ad356d1@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:51749 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750874AbYLSL6m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Dec 2008 06:58:42 -0500
-In-Reply-To: <20081216193204.3959.51518.sendpatchset@localhost.localdomain>
+Received: from aun.it.uu.se ([130.238.12.36]:56432 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750874AbYLSMEV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Dec 2008 07:04:21 -0500
+In-Reply-To: <20081218225152.2ad356d1@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Alan Cox writes:
+ > The 343/363 crashes if you write ->ctl with a live DMA outstanding. Now
+ > its easy enough to fix in the driver - just wrap ata_sff_freeze. It
+ > raises an interesting question however - which is should ata_sff_freeze
+ > stop any running DMA in the general case ?
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: remove ide_pci_enablebit_t typedef
->
-> Remove needless parens while at it.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->   
+FWIW when I added ->freeze and ->thaw to sata_promise I made ->freeze
+stop in-flight DMAs. As I read the documentation the ATA engine should
+be completely idle after ->freeze so this seemed appropriate.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
-
+There was a brief discussion about this at the time, but I don't think
+we ever agreed on a definitive "precise semantics" for ->freeze.
