@@ -1,42 +1,60 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: Fix ata_id_has_dword_io to return DWORD I/O support properly
-Date: Fri, 19 Dec 2008 20:30:34 +0100
-Message-ID: <200812192030.34554.bzolnier@gmail.com>
-References: <494A5BBF.8000807@inf.tu-dresden.de> <200812190013.10156.bzolnier@gmail.com> <20081219105013.0e43c364@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: Fix drive's DWORD-IO handling
+Date: Fri, 19 Dec 2008 20:01:50 +0100
+Message-ID: <200812192001.51335.bzolnier@gmail.com>
+References: <494A5BC9.7000605@inf.tu-dresden.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:57750 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684AbYLSTbJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Dec 2008 14:31:09 -0500
-In-Reply-To: <20081219105013.0e43c364@lxorguk.ukuu.org.uk>
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:61618 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbYLSTid (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Dec 2008 14:38:33 -0500
+Received: by fxm13 with SMTP id 13so250525fxm.13
+        for <linux-ide@vger.kernel.org>; Fri, 19 Dec 2008 11:38:31 -0800 (PST)
+In-Reply-To: <494A5BC9.7000605@inf.tu-dresden.de>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Mario Schwalbe <schwalbe@inf.tu-dresden.de>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Mario Schwalbe <schwalbe@inf.tu-dresden.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On Friday 19 December 2008, Alan Cox wrote:
-> > Sure, we can always improve things further later.  However Mario's patch
-> > is _definitely_ an improvement over the _current_ code.  Don't you agree?
+On Thursday 18 December 2008, Mario Schwalbe wrote:
+> Resubmitted on request.
 > 
-> No actually I don't. The current head dev code checks ATA > 7 as the
-> indicator that this bit is used for treacherous computing. That means the
-> behaviour for all the older drives is clearly back compatible with old
-> Linux behaviour.
+> According the documentation, id[ATA_ID_DWORD_IO] is non-zero if
+> the drive supports dword IO, while the code disables support by
+> setting IDE_DFLAG_NO_IO_32BIT. In addition, this word has been
+> reused by the ATA8 specification. This patch fixes both cases.
 > 
-> Doing it that way around means we don't have any worries about changing
-> existing behaviours.
+> Signed-off-by: Mario Schwalbe <schwalbe@inf.tu-dresden.de>
+> ---
+>  drivers/ide/ide-probe.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+> index c55bdbd..859b0e5 100644
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -856,7 +856,7 @@ static void ide_port_tune_devices(ide_hwif_t *hwif)
+>  		ide_drive_t *drive = &hwif->drives[unit];
+> 
+>  		if ((hwif->host_flags & IDE_HFLAG_NO_IO_32BIT) ||
+> -		    drive->id[ATA_ID_DWORD_IO])
+> +		    !ata_id_has_dword_io(drive->id))
+>  			drive->dev_flags |= IDE_DFLAG_NO_IO_32BIT;
+>  		else
+>  			drive->dev_flags &= ~IDE_DFLAG_NO_IO_32BIT;
 
-Please try to verify old Linux behaviour compatiblity statement with
-some ATA-[2..7] devices...  They have old ATA-1 bit set to _zero_...
+Since it seems that libata developers need more time to fully analyze
+issues with ata_id_has_dword_io() and I don't want to delay this fix
+because if it could you please modify the patch according to Sergei's
+suggestion of removing id[ATA_ID_DWORD_IO] check altogether?
 
-Mario: I don't have anymore time to spend on fixing libata problems so
-I'll be leaving ata_id_has_dword_io() issues up to libata maintainers,
-sorry for inconvenience!
+[ It is a safe thing to do since the old code has been enabling 32-bit
+  I/O _unless_ the ATA-1 dword I/O bit for VU compatibility was set... ]
 
 Thanks,
 Bart
