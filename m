@@ -1,69 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Red leds at harddisk bays on SR1530HSH after update to 2.6.27.x
-Date: Fri, 19 Dec 2008 22:32:46 -0800
-Message-ID: <20081219223246.b0aea84d.akpm@linux-foundation.org>
-References: <494A34CA.9030906@bigtelecom.ru>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: Fix ata_id_has_dword_io to return DWORD I/O   support
+ properly
+Date: Sat, 20 Dec 2008 16:25:05 +0300
+Message-ID: <494CF231.4020000@ru.mvista.com>
+References: <494A5BBF.8000807@inf.tu-dresden.de>	<494A837A.50801@garzik.org> <20081218181015.2e160d5c@lxorguk.ukuu.org.uk> <494C512B.6090304@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33392 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752157AbYLTGcy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Dec 2008 01:32:54 -0500
-In-Reply-To: <494A34CA.9030906@bigtelecom.ru>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:10113 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750933AbYLTNZM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Dec 2008 08:25:12 -0500
+In-Reply-To: <494C512B.6090304@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Badalian Vyacheslav <slavon@bigtelecom.ru>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-(cc linux-ide)
+Hello.
 
-On Thu, 18 Dec 2008 14:32:26 +0300 Badalian Vyacheslav <slavon@bigtelecom.ru> wrote:
+Robert Hancock wrote:
 
-> Hello all.
-> After update from 2.6.26 to 2.6.27 all leds at drive bays now red.
-> SATA controller in AHCI mode.
-> Platform is Intel SR1530HSH
-> 
-> Config attached.
-> 
-> Any patches for test? Any ideas? Any other info needed? Or i must go to
-> bugtracker? ;)
-> 
-> # lspci
-> 00:00.0 Host bridge: Intel Corporation 3200/3210 Chipset DRAM Controller
-> 00:19.0 Ethernet controller: Intel Corporation 82566DM-2 Gigabit Network
-> Connection (rev 02)
-> 00:1a.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
-> Controller #4 (rev 02)
-> 00:1a.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
-> Controller #5 (rev 02)
-> 00:1a.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI
-> Controller #2 (rev 02)
-> 00:1c.0 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express
-> Port 1 (rev 02)
-> 00:1c.4 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express
-> Port 5 (rev 02)
-> 00:1d.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
-> Controller #1 (rev 02)
-> 00:1d.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
-> Controller #2 (rev 02)
-> 00:1d.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
-> Controller #3 (rev 02)
-> 00:1d.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI
-> Controller #1 (rev 02)
-> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
-> 00:1f.0 ISA bridge: Intel Corporation 82801IR (ICH9R) LPC Interface
-> Controller (rev 02)
-> 00:1f.2 SATA controller: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6
-> port SATA AHCI Controller (rev 02)
-> 00:1f.3 SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller
-> (rev 02)
-> 02:00.0 VGA compatible controller: Matrox Graphics, Inc. MGA G200e
-> [Pilot] ServerEngines (SEP1) (rev 02)
-> 03:02.0 Ethernet controller: Intel Corporation 82541GI Gigabit Ethernet
-> Controller (rev 05)
-> 
-> Thanks!
-> 
+>>> This seems like a risky assumption...
+>>
+>> Its wrong on various counts
+>>
+>> - ata_id_major_version can't tell early ATA versions apart
+>> - on anything later than the early ISA IDE paddles (the ones that
+>> basically were just bus decoders) its invisible to the drive
+>>
+>> Except for legacy ISA bus controllers (and even there it is 
+>> questionable)
+>> I would favour simply ignoring it.
+>
+> 32-bit IO wouldn't work on any ISA controller, would it? What happens 
+> if you do 32-bit IO port access on something on the ISA bus?
+
+   TTBOM, depending on what's driven by device on -IOCS16, this will 
+translate into 2, 3, or 4 cycles at the successive addresses. In case of 
+the IDE data register, this should translate into one 16-bit cycle at 
+0x1x0, one 8-bit cycle at 0x1x1, and one 8-bit cycle at 0x1x2 which is 
+of course not what anybody would want...
+
+WBR, Sergei
+
+
