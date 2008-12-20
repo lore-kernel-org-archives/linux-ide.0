@@ -1,34 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: Fix ata_id_has_dword_io to return DWORD I/O
- support properly
-Date: Sat, 20 Dec 2008 00:10:19 +0000
-Message-ID: <20081220001019.5baa08ff@lxorguk.ukuu.org.uk>
-References: <494A5BBF.8000807@inf.tu-dresden.de>
-	<200812190013.10156.bzolnier@gmail.com>
-	<20081219105013.0e43c364@lxorguk.ukuu.org.uk>
-	<200812192030.34554.bzolnier@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] ide: Fix ata_id_has_dword_io to return DWORD I/O   support
+ properly
+Date: Fri, 19 Dec 2008 19:58:03 -0600
+Message-ID: <494C512B.6090304@shaw.ca>
+References: <494A5BBF.8000807@inf.tu-dresden.de>	<494A837A.50801@garzik.org> <20081218181015.2e160d5c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46842 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752105AbYLTALJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Dec 2008 19:11:09 -0500
-In-Reply-To: <200812192030.34554.bzolnier@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:52159 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752373AbYLTB6T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Dec 2008 20:58:19 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LDr6f-0002zd-Vg
+	for linux-ide@vger.kernel.org; Sat, 20 Dec 2008 01:58:17 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 20 Dec 2008 01:58:17 +0000
+Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 20 Dec 2008 01:58:17 +0000
+In-Reply-To: <20081218181015.2e160d5c@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Mario Schwalbe <schwalbe@inf.tu-dresden.de>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-> Mario: I don't have anymore time to spend on fixing libata problems so
-> I'll be leaving ata_id_has_dword_io() issues up to libata maintainers,
-> sorry for inconvenience!
+Alan Cox wrote:
+>> This seems like a risky assumption...
+> 
+> Its wrong on various counts
+> 
+> - ata_id_major_version can't tell early ATA versions apart
+> - on anything later than the early ISA IDE paddles (the ones that
+> basically were just bus decoders) its invisible to the drive
+> 
+> Except for legacy ISA bus controllers (and even there it is questionable)
+> I would favour simply ignoring it.
 
-Having reviewed the docs I plan to either delete it or rename it and make
-it reflect that anything ATA* (controller or device) doesn't need it.
+32-bit IO wouldn't work on any ISA controller, would it? What happens if 
+you do 32-bit IO port access on something on the ISA bus?
 
-The only conceivable case we might want to check it is pata_legacy (and
-its equivalents in old IDE)
-
-Alan
