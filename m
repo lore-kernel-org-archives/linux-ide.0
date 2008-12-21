@@ -1,501 +1,176 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/7] ide: add port and host iterators
-Date: Sun, 21 Dec 2008 22:00:49 +0100
-Message-ID: <20081221210049.23795.39812.sendpatchset@localhost.localdomain>
-References: <20081221210007.23795.27999.sendpatchset@localhost.localdomain>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: ICH10R and Samsung HDS724040KLSA80
+Date: Sun, 21 Dec 2008 16:01:04 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812211556540.24116@p34.internal.lan>
+References: <b1dab3a10812211242q29515f80n54cd3b9d8b3edc34@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:34166 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753269AbYLUVAt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Dec 2008 16:00:49 -0500
-In-Reply-To: <20081221210007.23795.27999.sendpatchset@localhost.localdomain>
+Received: from lucidpixels.com ([75.144.35.66]:48248 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751462AbYLUVBF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 Dec 2008 16:01:05 -0500
+In-Reply-To: <b1dab3a10812211242q29515f80n54cd3b9d8b3edc34@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: n37 <n37lkml@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add port and host iterators
 
-Add ide_port_for_each_dev() / ide_host_for_each_port() iterators
-and update IDE code to use them.
 
-While at it:
-- s/unit/i/ variable in ide_port_wait_ready(), ide_probe_port(),
-  ide_port_tune_devices(), ide_port_init_devices_data(), do_reset1(),
-  ide_acpi_set_state() and scc_dma_end()
-- s/d/i/ variable in ide_proc_port_register_devices()
+On Sun, 21 Dec 2008, n37 wrote:
 
-There should be no functional changes caused by this patch.
+> I have a P5Q Deluxe motherboard which comes with ICH10R. One of my
+> hard disks is a Samsung Deskstar 7K400 HDS724040KLSA80
+> (http://www.hitachigst.com/hdd/support/7k400/7k400.htm). I have set
+> ICH10R in AHCI mode in BIOS. It is almost impossible to get the hard
+> disk to initialize properly. Here is the relevant portion of the
+> kernel log:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-acpi.c  |   14 ++-----
- drivers/ide/ide-iops.c  |   15 +++----
- drivers/ide/ide-probe.c |   96 +++++++++++++++++++-----------------------------
- drivers/ide/ide-proc.c  |    7 +--
- drivers/ide/ide.c       |    5 +-
- drivers/ide/scc_pata.c  |    8 ++--
- include/linux/ide.h     |   11 ++++-
- 7 files changed, 69 insertions(+), 87 deletions(-)
+General question: Is it possible a/the drive is not AHCI-compliant?  For 
+example if one uses older (non-3.0Gbps SATA drives) or IDE->SATA 
+converters, can one use AHCI with these drives or do they have to be true 
+sata drives w/out a bridge?
 
-Index: b/drivers/ide/ide-acpi.c
-===================================================================
---- a/drivers/ide/ide-acpi.c
-+++ b/drivers/ide/ide-acpi.c
-@@ -641,7 +641,8 @@ void ide_acpi_push_timing(ide_hwif_t *hw
-  */
- void ide_acpi_set_state(ide_hwif_t *hwif, int on)
- {
--	int unit;
-+	ide_drive_t *drive;
-+	int i;
- 
- 	if (ide_noacpi || ide_noacpi_psx)
- 		return;
-@@ -655,9 +656,8 @@ void ide_acpi_set_state(ide_hwif_t *hwif
- 	/* channel first and then drives for power on and verse versa for power off */
- 	if (on)
- 		acpi_bus_set_power(hwif->acpidata->obj_handle, ACPI_STATE_D0);
--	for (unit = 0; unit < MAX_DRIVES; ++unit) {
--		ide_drive_t *drive = hwif->devices[unit];
- 
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if (!drive->acpidata->obj_handle)
- 			drive->acpidata->obj_handle = ide_acpi_drive_get_handle(drive);
- 
-@@ -717,9 +717,7 @@ void ide_acpi_port_init_devices(ide_hwif
- 	/*
- 	 * Send IDENTIFY for each drive
- 	 */
--	for (i = 0; i < MAX_DRIVES; i++) {
--		drive = hwif->devices[i];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		memset(drive->acpidata, 0, sizeof(*drive->acpidata));
- 
- 		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
-@@ -744,9 +742,7 @@ void ide_acpi_port_init_devices(ide_hwif
- 	ide_acpi_get_timing(hwif);
- 	ide_acpi_push_timing(hwif);
- 
--	for (i = 0; i < MAX_DRIVES; i++) {
--		drive = hwif->devices[i];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if (drive->dev_flags & IDE_DFLAG_PRESENT)
- 			/* Execute ACPI startup code */
- 			ide_acpi_exec_tfs(drive);
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -1081,8 +1081,9 @@ static ide_startstop_t do_reset1 (ide_dr
- 	struct ide_io_ports *io_ports = &hwif->io_ports;
- 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
- 	const struct ide_port_ops *port_ops;
-+	ide_drive_t *tdrive;
- 	unsigned long flags, timeout;
--	unsigned int unit;
-+	int i;
- 	DEFINE_WAIT(wait);
- 
- 	spin_lock_irqsave(&hwif->lock, flags);
-@@ -1110,11 +1111,9 @@ static ide_startstop_t do_reset1 (ide_dr
- 
- 		prepare_to_wait(&ide_park_wq, &wait, TASK_UNINTERRUPTIBLE);
- 		timeout = jiffies;
--		for (unit = 0; unit < MAX_DRIVES; unit++) {
--			ide_drive_t *tdrive = hwif->devices[unit];
--
--			if (tdrive->dev_flags & IDE_DFLAG_PRESENT &&
--			    tdrive->dev_flags & IDE_DFLAG_PARKED &&
-+		ide_port_for_each_dev(i, tdrive, hwif) {
-+			if (tdrive->dev_flags & IDE_DFLAG_PRESENT &&
-+			    tdrive->dev_flags & IDE_DFLAG_PARKED &&
- 			    time_after(tdrive->sleep, timeout))
- 				timeout = tdrive->sleep;
- 		}
-@@ -1133,8 +1132,8 @@ static ide_startstop_t do_reset1 (ide_dr
- 	 * First, reset any device state data we were maintaining
- 	 * for any of the drives on this interface.
- 	 */
--	for (unit = 0; unit < MAX_DRIVES; ++unit)
--		pre_reset(hwif->devices[unit]);
-+	ide_port_for_each_dev(i, tdrive, hwif)
-+		pre_reset(tdrive);
- 
- 	if (io_ports->ctl_addr == 0) {
- 		spin_unlock_irqrestore(&hwif->lock, flags);
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -697,7 +697,8 @@ out:
- 
- static int ide_port_wait_ready(ide_hwif_t *hwif)
- {
--	int unit, rc;
-+	ide_drive_t *drive;
-+	int i, rc;
- 
- 	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
- 
-@@ -714,9 +715,7 @@ static int ide_port_wait_ready(ide_hwif_
- 		return rc;
- 
- 	/* Now make sure both master & slave are ready */
--	for (unit = 0; unit < MAX_DRIVES; unit++) {
--		ide_drive_t *drive = hwif->devices[unit];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		/* Ignore disks that we will not probe for later. */
- 		if ((drive->dev_flags & IDE_DFLAG_NOPROBE) == 0 ||
- 		    (drive->dev_flags & IDE_DFLAG_PRESENT)) {
-@@ -732,7 +731,7 @@ static int ide_port_wait_ready(ide_hwif_
- 	}
- out:
- 	/* Exit function with master reselected (let's be sane) */
--	if (unit)
-+	if (i)
- 		SELECT_DRIVE(hwif->devices[0]);
- 
- 	return rc;
-@@ -778,9 +777,10 @@ EXPORT_SYMBOL_GPL(ide_undecoded_slave);
- 
- static int ide_probe_port(ide_hwif_t *hwif)
- {
-+	ide_drive_t *drive;
- 	unsigned long flags;
- 	unsigned int irqd;
--	int unit, rc = -ENODEV;
-+	int i, rc = -ENODEV;
- 
- 	BUG_ON(hwif->present);
- 
-@@ -806,9 +806,7 @@ static int ide_probe_port(ide_hwif_t *hw
- 	 * Second drive should only exist if first drive was found,
- 	 * but a lot of cdrom drives are configured as single slaves.
- 	 */
--	for (unit = 0; unit < MAX_DRIVES; ++unit) {
--		ide_drive_t *drive = hwif->devices[unit];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		(void) probe_for_drive(drive);
- 		if (drive->dev_flags & IDE_DFLAG_PRESENT)
- 			rc = 0;
-@@ -829,20 +827,17 @@ static int ide_probe_port(ide_hwif_t *hw
- static void ide_port_tune_devices(ide_hwif_t *hwif)
- {
- 	const struct ide_port_ops *port_ops = hwif->port_ops;
--	int unit;
--
--	for (unit = 0; unit < MAX_DRIVES; unit++) {
--		ide_drive_t *drive = hwif->devices[unit];
-+	ide_drive_t *drive;
-+	int i;
- 
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
- 			if (port_ops && port_ops->quirkproc)
- 				port_ops->quirkproc(drive);
- 		}
- 	}
- 
--	for (unit = 0; unit < MAX_DRIVES; ++unit) {
--		ide_drive_t *drive = hwif->devices[unit];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
- 			ide_set_max_pio(drive);
- 
-@@ -853,9 +848,7 @@ static void ide_port_tune_devices(ide_hw
- 		}
- 	}
- 
--	for (unit = 0; unit < MAX_DRIVES; ++unit) {
--		ide_drive_t *drive = hwif->devices[unit];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if ((hwif->host_flags & IDE_HFLAG_NO_IO_32BIT) ||
- 		    drive->id[ATA_ID_DWORD_IO])
- 			drive->dev_flags |= IDE_DFLAG_NO_IO_32BIT;
-@@ -927,12 +920,11 @@ static DEFINE_MUTEX(ide_cfg_mtx);
-  */
- static int ide_port_setup_devices(ide_hwif_t *hwif)
- {
-+	ide_drive_t *drive;
- 	int i, j = 0;
- 
- 	mutex_lock(&ide_cfg_mtx);
--	for (i = 0; i < MAX_DRIVES; i++) {
--		ide_drive_t *drive = hwif->devices[i];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
- 			continue;
- 
-@@ -1161,10 +1153,10 @@ out:
- 
- static void hwif_register_devices(ide_hwif_t *hwif)
- {
-+	ide_drive_t *drive;
- 	unsigned int i;
- 
--	for (i = 0; i < MAX_DRIVES; i++) {
--		ide_drive_t *drive = hwif->devices[i];
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		struct device *dev = &drive->gendev;
- 		int ret;
- 
-@@ -1187,11 +1179,10 @@ static void hwif_register_devices(ide_hw
- static void ide_port_init_devices(ide_hwif_t *hwif)
- {
- 	const struct ide_port_ops *port_ops = hwif->port_ops;
-+	ide_drive_t *drive;
- 	int i;
- 
--	for (i = 0; i < MAX_DRIVES; i++) {
--		ide_drive_t *drive = hwif->devices[i];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		drive->dn = i + hwif->channel * 2;
- 
- 		if (hwif->host_flags & IDE_HFLAG_IO_32BIT)
-@@ -1282,16 +1273,16 @@ static const u8 ide_hwif_to_major[] =
- 
- static void ide_port_init_devices_data(ide_hwif_t *hwif)
- {
--	int unit;
-+	ide_drive_t *drive;
-+	int i;
- 
--	for (unit = 0; unit < MAX_DRIVES; ++unit) {
--		ide_drive_t *drive = hwif->devices[unit];
--		u8 j = (hwif->index * MAX_DRIVES) + unit;
-+	ide_port_for_each_dev(i, drive, hwif) {
-+		u8 j = (hwif->index * MAX_DRIVES) + i;
- 
- 		memset(drive, 0, sizeof(*drive));
- 
- 		drive->media			= ide_disk;
--		drive->select			= (unit << 4) | ATA_DEVICE_OBS;
-+		drive->select			= (i << 4) | ATA_DEVICE_OBS;
- 		drive->hwif			= hwif;
- 		drive->ready_stat		= ATA_DRDY;
- 		drive->bad_wstat		= BAD_W_STAT;
-@@ -1387,10 +1378,11 @@ static void ide_free_port_slot(int idx)
- 
- static void ide_port_free_devices(ide_hwif_t *hwif)
- {
-+	ide_drive_t *drive;
- 	int i;
- 
--	for (i = 0; i < MAX_DRIVES; i++)
--		kfree(hwif->devices[i]);
-+	ide_port_for_each_dev(i, drive, hwif)
-+		kfree(drive);
- }
- 
- static int ide_port_alloc_devices(ide_hwif_t *hwif, int node)
-@@ -1478,9 +1470,7 @@ int ide_host_register(struct ide_host *h
- 	ide_hwif_t *hwif, *mate = NULL;
- 	int i, j = 0;
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		hwif = host->ports[i];
--
-+	ide_host_for_each_port(i, hwif, host) {
- 		if (hwif == NULL) {
- 			mate = NULL;
- 			continue;
-@@ -1506,9 +1496,7 @@ int ide_host_register(struct ide_host *h
- 		ide_port_init_devices(hwif);
- 	}
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		hwif = host->ports[i];
--
-+	ide_host_for_each_port(i, hwif, host) {
- 		if (hwif == NULL)
- 			continue;
- 
-@@ -1523,9 +1511,7 @@ int ide_host_register(struct ide_host *h
- 			ide_port_tune_devices(hwif);
- 	}
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		hwif = host->ports[i];
--
-+	ide_host_for_each_port(i, hwif, host) {
- 		if (hwif == NULL)
- 			continue;
- 
-@@ -1550,9 +1536,7 @@ int ide_host_register(struct ide_host *h
- 			ide_acpi_port_init_devices(hwif);
- 	}
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		hwif = host->ports[i];
--
-+	ide_host_for_each_port(i, hwif, host) {
- 		if (hwif == NULL)
- 			continue;
- 
-@@ -1560,9 +1544,7 @@ int ide_host_register(struct ide_host *h
- 			hwif_register_devices(hwif);
- 	}
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		hwif = host->ports[i];
--
-+	ide_host_for_each_port(i, hwif, host) {
- 		if (hwif == NULL)
- 			continue;
- 
-@@ -1602,11 +1584,10 @@ EXPORT_SYMBOL_GPL(ide_host_add);
- 
- static void __ide_port_unregister_devices(ide_hwif_t *hwif)
- {
-+	ide_drive_t *drive;
- 	int i;
- 
--	for (i = 0; i < MAX_DRIVES; i++) {
--		ide_drive_t *drive = hwif->devices[i];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
- 			device_unregister(&drive->gendev);
- 			wait_for_completion(&drive->gendev_rel_comp);
-@@ -1675,9 +1656,7 @@ void ide_host_free(struct ide_host *host
- 	ide_hwif_t *hwif;
- 	int i;
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		hwif = host->ports[i];
--
-+	ide_host_for_each_port(i, hwif, host) {
- 		if (hwif == NULL)
- 			continue;
- 
-@@ -1692,11 +1671,12 @@ EXPORT_SYMBOL_GPL(ide_host_free);
- 
- void ide_host_remove(struct ide_host *host)
- {
-+	ide_hwif_t *hwif;
- 	int i;
- 
--	for (i = 0; i < MAX_HOST_PORTS; i++) {
--		if (host->ports[i])
--			ide_unregister(host->ports[i]);
-+	ide_host_for_each_port(i, hwif, host) {
-+		if (hwif)
-+			ide_unregister(hwif);
- 	}
- 
- 	ide_host_free(host);
-Index: b/drivers/ide/ide-proc.c
-===================================================================
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -593,14 +593,13 @@ EXPORT_SYMBOL(ide_proc_unregister_driver
- 
- void ide_proc_port_register_devices(ide_hwif_t *hwif)
- {
--	int	d;
- 	struct proc_dir_entry *ent;
- 	struct proc_dir_entry *parent = hwif->proc;
-+	ide_drive_t *drive;
- 	char name[64];
-+	int i;
- 
--	for (d = 0; d < MAX_DRIVES; d++) {
--		ide_drive_t *drive = hwif->devices[d];
--
-+	ide_port_for_each_dev(i, drive, hwif) {
- 		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0 || drive->proc)
- 			continue;
- 
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -488,6 +488,7 @@ MODULE_PARM_DESC(ignore_cable, "ignore c
- 
- void ide_port_apply_params(ide_hwif_t *hwif)
- {
-+	ide_drive_t *drive;
- 	int i;
- 
- 	if (ide_ignore_cable & (1 << hwif->index)) {
-@@ -496,8 +497,8 @@ void ide_port_apply_params(ide_hwif_t *h
- 		hwif->cbl = ATA_CBL_PATA40_SHORT;
- 	}
- 
--	for (i = 0; i < MAX_DRIVES; i++)
--		ide_dev_apply_params(hwif->devices[i], i);
-+	ide_port_for_each_dev(i, drive, hwif)
-+		ide_dev_apply_params(drive, i);
- }
- 
- /*
-Index: b/drivers/ide/scc_pata.c
-===================================================================
---- a/drivers/ide/scc_pata.c
-+++ b/drivers/ide/scc_pata.c
-@@ -406,17 +406,17 @@ static int scc_dma_end(ide_drive_t *driv
- 			data_loss = 1;
- 			if (retry++) {
- 				struct request *rq = hwif->rq;
--				int unit;
-+				ide_drive_t *drive;
-+				int i;
-+
- 				/* ERROR_RESET and drive->crc_count are needed
- 				 * to reduce DMA transfer mode in retry process.
- 				 */
- 				if (rq)
- 					rq->errors |= ERROR_RESET;
--				for (unit = 0; unit < MAX_DRIVES; unit++) {
--					ide_drive_t *drive = hwif->devices[unit];
- 
-+				ide_port_for_each_dev(i, drive, hwif)
- 					drive->crc_count++;
--				}
- 			}
- 		}
- 	}
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -753,7 +753,7 @@ typedef struct hwif_s {
- 
- 	unsigned long	sata_scr[SATA_NR_PORTS];
- 
--	ide_drive_t	*devices[MAX_DRIVES];
-+	ide_drive_t	*devices[MAX_DRIVES + 1];
- 
- 	u8 major;	/* our major number */
- 	u8 index;	/* 0 for ide0; 1 for ide1; ... */
-@@ -860,7 +860,7 @@ typedef struct hwif_s {
- #define MAX_HOST_PORTS 4
- 
- struct ide_host {
--	ide_hwif_t	*ports[MAX_HOST_PORTS];
-+	ide_hwif_t	*ports[MAX_HOST_PORTS + 1];
- 	unsigned int	n_ports;
- 	struct device	*dev[2];
- 	unsigned int	(*init_chipset)(struct pci_dev *);
-@@ -1603,4 +1603,11 @@ static inline ide_drive_t *ide_get_pair_
- 
- 	return (peer->dev_flags & IDE_DFLAG_PRESENT) ? peer : NULL;
- }
-+
-+#define ide_port_for_each_dev(i, dev, port) \
-+	for ((i) = 0; ((dev) = (port)->devices[i]) || (i) < MAX_DRIVES; (i)++)
-+
-+#define ide_host_for_each_port(i, port, host) \
-+	for ((i) = 0; ((port) = (host)->ports[i]) || (i) < MAX_HOST_PORTS; (i)++)
-+
- #endif /* _IDE_H */
+IBM Hitachi Deskstar 7K400 (HDS724040KLSA80) 400GB Serial ATA U150 7200RPM 8MB Buffer SATA Hard Drive: 0A31944 / 0A30229/14R9337 (OEM, Factory Sealed) ...
+
+>
+> ...
+> ahci 0000:00:1f.2: version 3.0
+> ahci 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
+> ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl SATA mode
+> ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
+> ahci 0000:00:1f.2: setting latency timer to 64
+> scsi0 : ahci
+> scsi1 : ahci
+> scsi2 : ahci
+> scsi3 : ahci
+> scsi4 : ahci
+> scsi5 : ahci
+> ata1: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffe900 irq 219
+> ata2: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffe980 irq 219
+> ata3: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffea00 irq 219
+> ata4: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffea80 irq 219
+> ata5: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffeb00 irq 219
+> ata6: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffeb80 irq 219
+> Switched to high resolution mode on CPU 1
+> Switched to high resolution mode on CPU 0
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ATA-7: SAMSUNG HD400LJ, ZZ100-15, max UDMA7
+> ata1.00: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> ata1.00: configured for UDMA/133
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: qc timeout (cmd 0x27)
+> ata2.00: failed to read native max address (err_mask=0x4)
+> ata2.00: HPA support seems broken, skipping HPA handling
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: qc timeout (cmd 0xef)
+> ata2.00: failed to set xfermode (err_mask=0x4)
+> ata2: limiting SATA link speed to 1.5 Gbps
+> ata2.00: limiting speed to UDMA/100:PIO3
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata2.00: qc timeout (cmd 0xef)
+> ata2.00: failed to set xfermode (err_mask=0x4)
+> ata2.00: disabled
+> ata2: hard resetting link
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata2: EH complete
+> ata3: SATA link down (SStatus 0 SControl 300)
+> ata4: SATA link down (SStatus 0 SControl 300)
+> ata5: SATA link down (SStatus 0 SControl 300)
+> ata6: SATA link down (SStatus 0 SControl 300)
+> scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HD400LJ  ZZ10 PQ: 0 ANSI: 5
+> sd 0:0:0:0: [sda] 781422768 512-byte hardware sectors (400088 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 0:0:0:0: [sda] 781422768 512-byte hardware sectors (400088 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 >
+> sd 0:0:0:0: [sda] Attached SCSI disk
+> ...
+>
+> Consequently there is no device node created. On some extremely rare
+> occasions these errors will not show up and the disk will be usable
+> but these are few and far between.
+> Here is a log when this happens:
+>
+> ...
+> ahci 0000:00:1f.2: version 3.0
+> ahci 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
+> ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl SATA mode
+> ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
+> ahci 0000:00:1f.2: setting latency timer to 64
+> scsi0 : ahci
+> scsi1 : ahci
+> scsi2 : ahci
+> scsi3 : ahci
+> scsi4 : ahci
+> scsi5 : ahci
+> ata1: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffe900 irq 219
+> ata2: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffe980 irq 219
+> ata3: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffea00 irq 219
+> ata4: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffea80 irq 219
+> ata5: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffeb00 irq 219
+> ata6: SATA max UDMA/133 abar m2048@0xfbffe800 port 0xfbffeb80 irq 219
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ATA-7: SAMSUNG HD400LJ, ZZ100-15, max UDMA7
+> ata1.00: 781422768 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> ata1.00: configured for UDMA/133
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: qc timeout (cmd 0x27)
+> ata2.00: failed to read native max address (err_mask=0x4)
+> ata2.00: HPA support seems broken, skipping HPA handling
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: qc timeout (cmd 0xef)
+> ata2.00: failed to set xfermode (err_mask=0x4)
+> ata2: limiting SATA link speed to 1.5 Gbps
+> ata2.00: limiting speed to UDMA/100:PIO3
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata2.00: configured for UDMA/100
+> ata3: SATA link down (SStatus 0 SControl 300)
+> ata4: SATA link down (SStatus 0 SControl 300)
+> ata5: SATA link down (SStatus 0 SControl 300)
+> ata6: SATA link down (SStatus 0 SControl 300)
+> scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HD400LJ  ZZ10 PQ: 0 ANSI: 5
+> sd 0:0:0:0: [sda] 781422768 512-byte hardware sectors (400088 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 0:0:0:0: [sda] 781422768 512-byte hardware sectors (400088 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 >
+> sd 0:0:0:0: [sda] Attached SCSI disk
+> scsi 1:0:0:0: Direct-Access     ATA      HDS724040KLSA80  KFAO PQ: 0 ANSI: 5
+> sd 1:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+> sd 1:0:0:0: [sdb] Write Protect is off
+> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 1:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+> sd 1:0:0:0: [sdb] Write Protect is off
+> t-rex sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sdb: sdb1 sdb2 sdb4 < sdb5 sdb6 >
+> sd 1:0:0:0: [sdb] Attached SCSI disk
+> ...
+>
+> After some googling I found something that might be relevant:
+> http://www.mail-archive.com/linux-ide@vger.kernel.org/msg09294.html.
+> However I am running 2.6.27.10 and afaict this patch is included.
+>
+> B.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
