@@ -1,21 +1,21 @@
 From: <linux-ide@momail.e4ward.com>
 Subject: PIONEER DVD-RW DVRTD08 is disabled if there is no disc present at
  boot time
-Date: Sun, 21 Dec 2008 22:36:03 +0100
-Message-ID: <1229895363.6931.21.camel@Thutmosis>
+Date: Sun, 21 Dec 2008 22:18:35 +0100
+Message-ID: <1229894315.6931.17.camel@Thutmosis>
 Reply-To: linux--ide-momail.e4ward.com-linux--ide-vger.kernel.org-CCD-lt24-4@reply.e4ward.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e4ward.com ([70.85.31.73]:34434 "EHLO e4ward.com"
+Received: from e4ward.com ([70.85.31.73]:47045 "EHLO e4ward.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258AbYLUVgH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 Dec 2008 16:36:07 -0500
+	id S1751358AbYLUVyI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 Dec 2008 16:54:08 -0500
 Received: from localhost ([127.0.0.1])
 	by e4ward.com with smtp (Exim 4.63)
-	id 1LEVy2-0001nI-H2
-	for linux-ide@vger.kernel.org; Sun, 21 Dec 2008 16:36:06 -0500
+	id 1LEVhh-0001hU-PP
+	for linux-ide@vger.kernel.org; Sun, 21 Dec 2008 16:19:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
