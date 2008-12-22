@@ -1,72 +1,66 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/7] it821x: use ide_get_pair_dev() helper
-Date: Mon, 22 Dec 2008 13:11:38 +0300
-Message-ID: <494F67DA.2090903@ru.mvista.com>
-References: <20081221210007.23795.27999.sendpatchset@localhost.localdomain> <20081221210029.23795.66085.sendpatchset@localhost.localdomain>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] sata_sil: add Large Block Transfer support
+Date: Mon, 22 Dec 2008 19:19:48 +0900
+Message-ID: <494F69C4.2060708@kernel.org>
+References: <4945BDED.7050205@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:45154 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750785AbYLVKLo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Dec 2008 05:11:44 -0500
-In-Reply-To: <20081221210029.23795.66085.sendpatchset@localhost.localdomain>
+Received: from hera.kernel.org ([140.211.167.34]:49167 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751483AbYLVKTy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Dec 2008 05:19:54 -0500
+In-Reply-To: <4945BDED.7050205@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+Hello,
 
-> Because presence of the peer device was not checked in
-> it821x_set_pio_mode() PIO0 mode was used for taskfile PIO
-> in single device configurations.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->   
+Robert Hancock wrote:
+> Obviously not 2.6.28 material, but could potentially head into .29.
+> I've done some testing with a DVD drive connected to this controller
+> and verified that reading off an entire DVD returns correct data
+> (and that the controller is actually getting requests that cross
+> 64K boundaries). More testing would certainly be useful..
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Ah... nice.  It would be great to have this in -next for some time.
 
-> Index: b/drivers/ide/it821x.c
-> ===================================================================
-> --- a/drivers/ide/it821x.c
-> +++ b/drivers/ide/it821x.c
-> @@ -167,12 +167,10 @@ static void it821x_clock_strategy(ide_dr
->  	ide_hwif_t *hwif = drive->hwif;
->  	struct pci_dev *dev = to_pci_dev(hwif->dev);
->  	struct it821x_dev *itdev = ide_get_hwifdata(hwif);
-> -	ide_drive_t *pair;
-> +	ide_drive_t *pair = ide_get_pair_dev(drive);
->  	int clock, altclock, sel = 0;
->  	u8 unit = drive->dn & 1, v;
->  
-> -	pair = &hwif->drives[1 - unit];
-> -
->  	if(itdev->want[0][0] > itdev->want[1][0]) {
->  		clock = itdev->want[0][1];
->  		altclock = itdev->want[1][1];
-> @@ -239,15 +237,13 @@ static void it821x_set_pio_mode(ide_driv
->  {
->  	ide_hwif_t *hwif = drive->hwif;
->  	struct it821x_dev *itdev = ide_get_hwifdata(hwif);
-> -	ide_drive_t *pair;
-> +	ide_drive_t *pair = ide_get_pair_dev(drive);
->  	u8 unit = drive->dn & 1, set_pio = pio;
->  
->  	/* Spec says 89 ref driver uses 88 */
->  	static u16 pio_timings[]= { 0xAA88, 0xA382, 0xA181, 0x3332, 0x3121 };
->  	static u8 pio_want[]    = { ATA_66, ATA_66, ATA_66, ATA_66, ATA_ANY };
->  
-> -	pair = &hwif->drives[1 - unit];
-> -
->  	/*
->  	 * Compute the best PIO mode we can for a given device. We must
->  	 * pick a speed that does not cause problems with the other device
+> +static void sil_bmdma_stop(struct ata_queued_cmd *qc)
+> +{
+> +    struct ata_port *ap = qc->ap;
+> +    void __iomem *mmio_base = ap->host->iomap[SIL_MMIO_BAR];
+> +    void __iomem *bmdma2 = mmio_base + sil_port[ap->port_no].bmdma2;
+> +
+> +    /* clear start/stop bit - can safely always write 0 */
+> +    writeb(0, bmdma2);
 
-  I wonder why this driver was testing 'pair', there was absolutely no 
-chance for it being NULL. :-)
+ioread/iowrite?
 
-MBR, Sergei
+> +    /* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+> +    ata_sff_dma_pause(ap);
+> +}
+> +
+> +static void sil_bmdma_setup(struct ata_queued_cmd *qc)
+> +{
+> +    struct ata_port *ap = qc->ap;
+> +    void __iomem *bmdma = ap->ioaddr.bmdma_addr;
+> +
+> +    /* load PRD table addr. */
+> +    mb();    /* make sure PRD table writes are visible to controller */
 
+I know it's not specific to this change but does mb() really make
+sense here?  I don't think we need any barrier here.
 
+> +    writel(ap->prd_dma, bmdma + ATA_DMA_TABLE_OFS);
+> +
+> +    /* issue r/w command */
+> +    ap->ops->sff_exec_command(ap, &qc->tf);
+> +}
+
+Thanks.
+
+-- 
+tejun
