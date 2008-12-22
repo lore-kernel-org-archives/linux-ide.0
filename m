@@ -1,91 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [2.6.28-rc] Sata soft reset filling log
-Date: Mon, 22 Dec 2008 16:14:09 +0900
-Message-ID: <494F3E41.60304@kernel.org>
-References: <494318F5.4060007@gawab.com> <494EFD79.7020008@kernel.org> <494F3AD2.3060201@gawab.com>
+Subject: Re: Red leds at harddisk bays on SR1530HSH after update to 2.6.27.x
+Date: Mon, 22 Dec 2008 16:15:19 +0900
+Message-ID: <494F3E87.1070204@kernel.org>
+References: <494A34CA.9030906@bigtelecom.ru> <20081219223246.b0aea84d.akpm@linux-foundation.org> <494EF9A1.90002@kernel.org> <494F3D7D.9010002@bigtelecom.ru>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050403040100070507020408"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48722 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:48733 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752026AbYLVHPF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Dec 2008 02:15:05 -0500
-In-Reply-To: <494F3AD2.3060201@gawab.com>
+	id S1752056AbYLVHPb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Dec 2008 02:15:31 -0500
+In-Reply-To: <494F3D7D.9010002@bigtelecom.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Madru <jdm64@gawab.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jeff@garzik.org>
+To: Badalian Vyacheslav <slavon@bigtelecom.ru>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050403040100070507020408
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Badalian Vyacheslav wrote:
+> echo 0 > /sys/module/ahci/parameters/ahci_em_messages
+> -bash: /sys/module/ahci/parameters/ahci_em_messages: Permission denied
+> ls -la /sys/module/ahci/parameters/ahci_em_messages
+> -r--r--r-- 1 root root 4096 Dec 22 10:04
+> /sys/module/ahci/parameters/ahci_em_messages
+> 
+> Any other chance to change without it reboot? Or i can change it only at
+> boot? I will reboot server at night.
 
-Hello,
-
-(cc'ing Mark)
-
-Justin Madru wrote:
-> Well, it's good to hear that you don't think my drive is failing (sure
-> hope it's not failing!)
-
-Yeap, it's your DVD drive.
-
-> I posted the full dmesg in reply to Alan in
-> http://lkml.org/lkml/2008/12/19/30.
-
-Ah.. oops, missed the other messages.  Sorry.
-
-> Also, more information about my computer can be found at:
-> http://jdserver.homelinux.org/bugreports/
-> If you need me to run anything else not found in the above links then
-> let me know.
-
-Ah.. strange.  The command protocol is ATAPI_PROT_NODATA and the drive
-should be setting DRQ to receive CDB but it's not doing that.
-Strange.  It could be that the drive is a little bit tardy with DRQ -
-ie. setting DRQ after clearing BUSY and ata_piix is now successfully
-hitting the small window for some reason.
-
-Does the attached patch make any difference?
-
-Thanks.
+You can unload and reload ahci but that often isn't too different
+from rebooting.
 
 -- 
 tejun
-
---------------050403040100070507020408
-Content-Type: text/x-patch;
- name="DRQ-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="DRQ-debug.patch"
-
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 4b47394..0630ac3 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1120,6 +1120,20 @@ fsm_start:
- 		 */
- 		poll_next = (qc->tf.flags & ATA_TFLAG_POLLING);
- 
-+		{
-+			int cnt = 0;
-+
-+			while (!(status & (ATA_DRQ | ATA_ERR | ATA_DF)) &&
-+			       cnt < 100) {
-+				status = ap->ops->sff_check_status(ap);
-+				cnt++;
-+			}
-+
-+			if (cnt)
-+				ata_port_printk(ap, KERN_INFO, "XXX DRQ set after %d tries\n",
-+						cnt);
-+		}
-+
- 		/* check device status */
- 		if (unlikely((status & ATA_DRQ) == 0)) {
- 			/* handle BSY=0, DRQ=0 as error */
-
---------------050403040100070507020408--
