@@ -1,36 +1,44 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9156] IDE DMA <-> CPU HLT <-> EHCI-HCD
-Date: Mon, 22 Dec 2008 21:06:40 -0800 (PST)
-Message-ID: <20081223050640.E604A10800D@picon.linux-foundation.org>
-References: <bug-9156-11633@http.bugzilla.kernel.org/>
+From: Badalian Vyacheslav <slavon@bigtelecom.ru>
+Subject: Re: Red leds at harddisk bays on SR1530HSH after update to 2.6.27.x
+Date: Tue, 23 Dec 2008 09:32:25 +0300
+Message-ID: <495085F9.5090805@bigtelecom.ru>
+References: <494A34CA.9030906@bigtelecom.ru> <20081219223246.b0aea84d.akpm@linux-foundation.org> <494EF9A1.90002@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32967 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750773AbYLWFHN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Dec 2008 00:07:13 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBN56fcQ020127
-	for <linux-ide@vger.kernel.org>; Mon, 22 Dec 2008 21:06:42 -0800
-In-Reply-To: <bug-9156-11633@http.bugzilla.kernel.org/>
+Received: from mail.bigtelecom.ru ([87.255.0.61]:36800 "EHLO
+	mail.bigtelecom.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751944AbYLWGcb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Dec 2008 01:32:31 -0500
+In-Reply-To: <494EF9A1.90002@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9156
-
-
-
-
-
-------- Comment #8 from hancockr@shaw.ca  2008-12-22 21:06 -------
-This should really not be assigned to IDE subsystem, as what seems like is
-needed is some kind of chipset-specific PCI quirk. Disabling halt only during
-IDE transfers is likely no good solution since other DMA accesses can occur at
-any time, often without prior kernel knowledge, and are likely also affected.
-The chipset settings likely need to be fixed to not get into this busted state.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Tejun Heo =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
+> Andrew Morton wrote:
+>  =20
+>> (cc linux-ide)
+>>
+>> On Thu, 18 Dec 2008 14:32:26 +0300 Badalian Vyacheslav <slavon@bigte=
+lecom.ru> wrote:
+>>
+>>    =20
+>>> Hello all.
+>>> After update from 2.6.26 to 2.6.27 all leds at drive bays now red.
+>>> SATA controller in AHCI mode.
+>>> Platform is Intel SR1530HSH
+>>>
+>>> Config attached.
+>>>
+>>> Any patches for test? Any ideas? Any other info needed? Or i must g=
+o to
+>>> bugtracker? ;)
+>>>      =20
+>
+> Does ahci.ahci_em_messages=3D0 help?
+>
+>  =20
+All leds turned off. No green led at bay with hard disk.
