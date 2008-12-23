@@ -1,92 +1,98 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [2.6.28-rc] Sata soft reset filling log
-Date: Tue, 23 Dec 2008 11:23:08 +0900
-Message-ID: <49504B8C.8080907@kernel.org>
-References: <494318F5.4060007@gawab.com> <494EFD79.7020008@kernel.org> <494F3AD2.3060201@gawab.com> <494F3E41.60304@kernel.org> <49500BE2.6050106@gawab.com>
+Subject: Re: PIONEER DVD-RW DVRTD08 is disabled if there is no disc present
+ at   boot time
+Date: Tue, 23 Dec 2008 12:03:28 +0900
+Message-ID: <49505500.8080409@kernel.org>
+References: <1229894315.6931.17.camel@Thutmosis> <494EDDBE.3010306@shaw.ca>	 <494F65C1.80602@kernel.org> <1229947998.6045.10.camel@Thutmosis>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000309010502010406070806"
+ boundary="------------020107030200010501060208"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48488 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:46588 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399AbYLWCXy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Dec 2008 21:23:54 -0500
-In-Reply-To: <49500BE2.6050106@gawab.com>
+	id S1751392AbYLWDDg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Dec 2008 22:03:36 -0500
+In-Reply-To: <1229947998.6045.10.camel@Thutmosis>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Madru <jdm64@gawab.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jeff@garzik.org>
+To: linux--ide-momail.e4ward.com-linux--ide-vger.kernel.org-CCE-pbwz-4@reply.e4ward.com
+Cc: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------000309010502010406070806
+--------------020107030200010501060208
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-Hello,
+linux-ide@momail.e4ward.com wrote:
+> There's no error in dmesg output. But when I boot with a disk in the
+> drive, I get the following errors in the boot screen:
+> * Loading hardware devices
+> [23.927373] end_request: I/O error, dev sr0, sector 1431744
+> [23.927373] Buffer I/O error on device sr0, logical block 178968
+> and then several more with just a different number in the square
+> brackets. However, that does not seem to affect the operation of the
+> drive.
 
-Justin Madru wrote:
->> Ah.. strange.  The command protocol is ATAPI_PROT_NODATA and the drive
->> should be setting DRQ to receive CDB but it's not doing that.
->> Strange.  It could be that the drive is a little bit tardy with DRQ -
->> ie. setting DRQ after clearing BUSY and ata_piix is now successfully
->> hitting the small window for some reason.
->>
->> Does the attached patch make any difference?
->>
->> Thanks.
->>
->>   
-> Ok, I applied your patch. Unfortunately, it didn't fix my problem.
-> I now get a different, but similar message; not sure if it happens less
-> frequently - still often though.
-
-Aiee...
-
-> What changes happened between .27 and .28 could've caused this?
-> Anyways, below is what I get now (with your patch), including the
-> frequency of occurrence.
-
-I have no idea and I'm afraid we'll need a bisection here. :-( Can you
-please try the attached patch?
+Does the attached patch fix the problem?  Please do some data
+integrity checks as it skips setxfermode on the drive.  If it's native
+SATA, it probably should be okay but still it's way out of the spec.
 
 Thanks.
 
 -- 
 tejun
 
---------------000309010502010406070806
+--------------020107030200010501060208
 Content-Type: text/x-patch;
- name="DRQ-debug-1.patch"
+ name="nosetxfer.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="DRQ-debug-1.patch"
+ filename="nosetxfer.patch"
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 4b47394..fcd7d08 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1120,6 +1120,22 @@ fsm_start:
- 		 */
- 		poll_next = (qc->tf.flags & ATA_TFLAG_POLLING);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c71f3ac..d89817a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3303,14 +3303,17 @@ static int ata_dev_set_mode(struct ata_device *dev)
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
+ 	const char *dev_err_whine = "";
+ 	int ign_dev_err = 0;
+-	unsigned int err_mask;
++	unsigned int err_mask = 0;
+ 	int rc;
  
-+		{
-+			int cnt = 0;
+ 	dev->flags &= ~ATA_DFLAG_PIO;
+ 	if (dev->xfer_shift == ATA_SHIFT_PIO)
+ 		dev->flags |= ATA_DFLAG_PIO;
+ 
+-	err_mask = ata_dev_set_xfermode(dev);
++	if (!(dev->horkage & ATA_HORKAGE_NOSETXFER))
++		err_mask = ata_dev_set_xfermode(dev);
++	else
++		dev_err_whine = " (SET_XFERMODE skipped)";
+ 
+ 	if (err_mask & ~AC_ERR_DEV)
+ 		goto fail;
+@@ -4132,6 +4135,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	/* Devices that do not need bridging limits applied */
+ 	{ "MTRON MSP-SATA*",		NULL,	ATA_HORKAGE_BRIDGE_OK, },
+ 
++	{ "PIONEER DVD-RW  DVRTD08",	"1.00",	ATA_HORKAGE_NOSETXFER },
 +
-+			while (!(status & (ATA_DRQ | ATA_ERR | ATA_DF)) &&
-+			       cnt < 100) {
-+				status = ap->ops->sff_check_status(ap);
-+				cnt++;
-+				udelay(10);
-+			}
-+
-+			if (cnt)
-+				ata_port_printk(ap, KERN_INFO,
-+						"XXX status=%02x after %d tries\n",
-+						status, cnt);
-+		}
-+
- 		/* check device status */
- 		if (unlikely((status & ATA_DRQ) == 0)) {
- 			/* handle BSY=0, DRQ=0 as error */
+ 	/* End Marker */
+ 	{ }
+ };
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b79c319..f647d26 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -376,6 +376,7 @@ enum {
+ 	ATA_HORKAGE_BRIDGE_OK	= (1 << 10),	/* no bridge limits */
+ 	ATA_HORKAGE_ATAPI_MOD16_DMA = (1 << 11), /* use ATAPI DMA for commands
+ 						    not multiple of 16 bytes */
++	ATA_HORKAGE_NOSETXFER	= (1 << 12),
+ 
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
 
---------------000309010502010406070806--
+--------------020107030200010501060208--
