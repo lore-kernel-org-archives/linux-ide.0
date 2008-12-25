@@ -1,70 +1,36 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: [PATCH] tx493[89]ide: Fix length for __ide_flush_dcache_range
-Date: Thu, 25 Dec 2008 23:32:38 +0900
-Message-ID: <1230215558-9197-2-git-send-email-anemo@mba.ocn.ne.jp>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12279] 2.6.28 suspend regression - HP 2510p
+Date: Thu, 25 Dec 2008 07:24:56 -0800 (PST)
+Message-ID: <20081225152456.CAC5E108042@picon.linux-foundation.org>
+References: <bug-12279-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:61406 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751614AbYLYOcn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Dec 2008 09:32:43 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36902 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751950AbYLYPZA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Dec 2008 10:25:00 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBPFOuqP004794
+	for <linux-ide@vger.kernel.org>; Thu, 25 Dec 2008 07:24:57 -0800
+In-Reply-To: <bug-12279-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, stable <stable@kernel.org>
 
-This fixes data corruption on PIO mode.
+http://bugzilla.kernel.org/show_bug.cgi?id=12279
 
-Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: stable <stable@kernel.org>
----
- drivers/ide/tx4938ide.c |    4 ++--
- drivers/ide/tx4939ide.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-index 9120063..13b63e7 100644
---- a/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -181,7 +181,7 @@ static void tx4938ide_input_data_swap(ide_drive_t *drive, struct request *rq,
- 
- 	while (count--)
- 		*ptr++ = cpu_to_le16(__raw_readw((void __iomem *)port));
--	__ide_flush_dcache_range((unsigned long)buf, count * 2);
-+	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
- }
- 
- static void tx4938ide_output_data_swap(ide_drive_t *drive, struct request *rq,
-@@ -195,7 +195,7 @@ static void tx4938ide_output_data_swap(ide_drive_t *drive, struct request *rq,
- 		__raw_writew(le16_to_cpu(*ptr), (void __iomem *)port);
- 		ptr++;
- 	}
--	__ide_flush_dcache_range((unsigned long)buf, count * 2);
-+	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
- }
- 
- static const struct ide_tp_ops tx4938ide_tp_ops = {
-diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
-index 30d0d25..97cd9e0 100644
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -564,7 +564,7 @@ static void tx4939ide_input_data_swap(ide_drive_t *drive, struct request *rq,
- 
- 	while (count--)
- 		*ptr++ = cpu_to_le16(__raw_readw((void __iomem *)port));
--	__ide_flush_dcache_range((unsigned long)buf, count * 2);
-+	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
- }
- 
- static void tx4939ide_output_data_swap(ide_drive_t *drive, struct request *rq,
-@@ -578,7 +578,7 @@ static void tx4939ide_output_data_swap(ide_drive_t *drive, struct request *rq,
- 		__raw_writew(le16_to_cpu(*ptr), (void __iomem *)port);
- 		ptr++;
- 	}
--	__ide_flush_dcache_range((unsigned long)buf, count * 2);
-+	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
- }
- 
- static const struct ide_tp_ops tx4939ide_tp_ops = {
+
+
+
+------- Comment #11 from bzolnier@gmail.com  2008-12-25 07:24 -------
+Created an attachment (id=19484)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=19484&action=view)
+[PATCH][DRAFT] ide: fix IDE ACPI regression breaking suspend 
+
+David, please check if this patch helps.  Thanks!
+
+
 -- 
-1.5.6.3
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
