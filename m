@@ -1,35 +1,97 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12279] 2.6.28 suspend regression - HP 2510p
-Date: Thu, 25 Dec 2008 12:58:50 -0800 (PST)
-Message-ID: <20081225205850.8B3BF108043@picon.linux-foundation.org>
-References: <bug-12279-11633@http.bugzilla.kernel.org/>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/8] ide-cd: first conversion batch
+Date: Fri, 26 Dec 2008 14:45:56 +0100
+Message-ID: <20081226134556.GA23503@gollum.tnic>
+References: <1229586052-3542-1-git-send-email-petkovbb@gmail.com> <200812192115.41068.bzolnier@gmail.com> <20081220062849.GA14770@gollum.tnic> <200812212005.56973.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39572 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752180AbYLYU6w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Dec 2008 15:58:52 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBPKwox4017953
-	for <linux-ide@vger.kernel.org>; Thu, 25 Dec 2008 12:58:51 -0800
-In-Reply-To: <bug-12279-11633@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:47186 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621AbYLZNqC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Dec 2008 08:46:02 -0500
+Content-Disposition: inline
+In-Reply-To: <200812212005.56973.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12279
+Hi Bart,
 
+On Sun, Dec 21, 2008 at 08:05:56PM +0100, Bartlomiej Zolnierkiewicz wrote:
 
-roka@dawid.hu changed:
+[.. ]
+> > don't do cdrom_decode_status for DRQ_INTERRUPT devices but this is
+> > probably not that relevant anymore since we busy-wait for DRQ to get set
+> > through ide_wait_stat, as we talked about it before - it being a bugfix for
+> > all atapi devices. If there's still interest for that (and I think it
+> 
+> Yes, this change is OK but for bisectability reasons it would be better
+> to do it in pre-patch (which would fix ide-cd.c accordingly).
+> 
+> [ The other changes in functionality are small and acceptable for this
+>   patch (i.e. ide_wait_stat() prints error message now) except the change
+>   of the ordering between ->dma_start and ->output_data calls -- which
+>   also seems to deserve patch on its own. ]
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |PATCH_ALREADY_AVAILABLE
+sorry for the delay but you know how it is, Christmas and all. Anyway,
+here are the patches attached as you requested, just in time for the
+merge window.
 
+--
+From: Borislav Petkov <petkovbb@gmail.com>
+Date: Thu, 25 Dec 2008 18:12:34 +0100
+Subject: [PATCH 09/11] ide-cd: wait for DRQ to get set per default
 
+... instead of assuming it is set for accelerated DRQ type devices.
+
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-cd.c |   21 +++++++--------------
+ 1 files changed, 7 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 6c7dd8f..1c1ba43 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -572,24 +572,17 @@ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive)
+ 
+ 	ide_debug_log(IDE_DBG_PC, "Call %s\n", __func__);
+ 
+-	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
+-		/*
+-		 * Here we should have been called after receiving an interrupt
+-		 * from the device.  DRQ should how be set.
+-		 */
+-
+-		/* check for errors */
+-		if (cdrom_decode_status(drive, ATA_DRQ, NULL))
+-			return ide_stopped;
++	/* we must wait for DRQ to get set */
++	if (ide_wait_stat(&startstop, drive, ATA_DRQ, ATA_BUSY, WAIT_READY)) {
++		printk(KERN_ERR "%s: timeout while waiting for DRQ to assert\n",
++				drive->name);
++		return startstop;
++	}
+ 
++	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
+ 		/* ok, next interrupt will be DMA interrupt */
+ 		if (drive->dma)
+ 			drive->waiting_for_dma = 1;
+-	} else {
+-		/* otherwise, we must wait for DRQ to get set */
+-		if (ide_wait_stat(&startstop, drive, ATA_DRQ,
+-				  ATA_BUSY, WAIT_READY))
+-			return startstop;
+ 	}
+ 
+ 	/* arm the interrupt handler */
+-- 
+1.6.0.4
 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Regards/Gruss,
+    Boris.
