@@ -1,44 +1,57 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
-Date: Sat, 27 Dec 2008 11:17:32 -0800 (PST)
-Message-ID: <20081227191732.84517108048@picon.linux-foundation.org>
-References: <bug-12144-11633@http.bugzilla.kernel.org/>
+From: Justin Madru <jdm64@gawab.com>
+Subject: Re: [2.6.28-rc] Sata soft reset filling log
+Date: Sat, 27 Dec 2008 12:14:37 -0800
+Message-ID: <49568CAD.7050509@gawab.com>
+References: <494318F5.4060007@gawab.com> <494EFD79.7020008@kernel.org> <494F3AD2.3060201@gawab.com> <494F3E41.60304@kernel.org> <49500BE2.6050106@gawab.com> <49504B8C.8080907@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48017 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753707AbYL0TRe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Dec 2008 14:17:34 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBRJHWmq005166
-	for <linux-ide@vger.kernel.org>; Sat, 27 Dec 2008 11:17:33 -0800
-In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
+Received: from wf-out-1314.google.com ([209.85.200.175]:6338 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753005AbYL0UOo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Dec 2008 15:14:44 -0500
+In-Reply-To: <49504B8C.8080907@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jeff@garzik.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12144
+Tejun Heo wrote:
+>> What changes happened between .27 and .28 could've caused this?
+>> Anyways, below is what I get now (with your patch), including the
+>> frequency of occurrence.
+>>     
+>
+> I have no idea and I'm afraid we'll need a bisection here. :-( Can you
+> please try the attached patch?
+>
+> Thanks.
+>
+>   
 
+I applied the patch and get the following:
 
-hancockr@shaw.ca changed:
+ata2: XXX status=50 after 100 tries
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata2.00: ST_FIRST: !(DRQ|ERR|DF)
+ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+         res 50/00:01:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+ata2.00: status: { DRDY }
+ata2: soft resetting link
+ata2.00: configured for UDMA/33
+ata2: EH complete
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |hancockr@shaw.ca
+I tried to git bisect the problem. First time I thought the error was 
+between rc2 and rc3,
+but the bisect gave inconclusive results because I couldn't tell for 
+sure a good commit from a bad.
+I tried again with .27 to .28-rc3, but I was unable to bisect because of 
+compile errors (in pre-rc1),
+and doing git bisect skip, again landed on a commit with compile errors.
 
+Unless you can think of anything else, I'm just going to wait and see if 
+a commit in .29 will fix the problem.
 
-
-
-------- Comment #31 from hancockr@shaw.ca  2008-12-27 11:17 -------
-Wait a minute. It's quite likely that the drive in fact cannot play audio in
-the way you're trying to make it. Modern systems don't normally play audio in
-this way anymore, this requires an analog audio output from the drive into the
-sound hardware which is unlikely on a laptop. In Windows Media Player, etc.
-when you insert an audio CD it's actually digitally extracting the audio from
-the disc and playing it, which does not involve the "play audio" command. I'm
-sure there is some media player software in Linux which will do the same.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Justin Madru
