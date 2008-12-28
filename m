@@ -1,57 +1,37 @@
-From: Justin Madru <jdm64@gawab.com>
-Subject: Re: [2.6.28-rc] Sata soft reset filling log
-Date: Sat, 27 Dec 2008 12:14:37 -0800
-Message-ID: <49568CAD.7050509@gawab.com>
-References: <494318F5.4060007@gawab.com> <494EFD79.7020008@kernel.org> <494F3AD2.3060201@gawab.com> <494F3E41.60304@kernel.org> <49500BE2.6050106@gawab.com> <49504B8C.8080907@kernel.org>
+From: Peter Klotz <peter.klotz@aon.at>
+Subject: Re: 2.6.28: Timeout problem with AHCI SATA DVD drive
+Date: Sun, 28 Dec 2008 08:00:54 +0100
+Message-ID: <49572426.1070801@aon.at>
+References: <4955F0F9.1030700@aon.at> <49567DFF.4000102@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:6338 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005AbYL0UOo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Dec 2008 15:14:44 -0500
-In-Reply-To: <49504B8C.8080907@kernel.org>
+Received: from WARSL404PIP3.highway.telekom.at ([195.3.96.115]:5655 "EHLO
+	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751305AbYL1HA6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Dec 2008 02:00:58 -0500
+Received: from 212-183-96-186.adsl.highway.telekom.at (HELO [192.168.0.100]) ([212.183.96.186])
+          (envelope-sender <peter.klotz@aon.at>)
+          by smarthub92.highway.telekom.at (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 28 Dec 2008 07:00:55 -0000
+In-Reply-To: <49567DFF.4000102@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
->> What changes happened between .27 and .28 could've caused this?
->> Anyways, below is what I get now (with your patch), including the
->> frequency of occurrence.
->>     
->
-> I have no idea and I'm afraid we'll need a bisection here. :-( Can you
-> please try the attached patch?
->
-> Thanks.
->
->   
+Robert Hancock wrote:
+> OK, so it's a "test unit ready" command that got sent to the drive and 
+> it timed out, then the resets after that all failed. That's essentially 
+> the simplest command there is, so it seems likely that the drive went 
+> off into the weeds and stopped talking to us. Whether or not we can do 
+> anything to prevent it, I'm not sure.
+> 
+> You're sure the drive always detects that same disc properly in Windows?
 
-I applied the patch and get the following:
+You are right. I finally was able to reproduce this behavior in Windows. 
+  The event log filled up with errors while the disc kept spinning.
 
-ata2: XXX status=50 after 100 tries
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata2.00: ST_FIRST: !(DRQ|ERR|DF)
-ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-         res 50/00:01:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
-ata2.00: status: { DRDY }
-ata2: soft resetting link
-ata2.00: configured for UDMA/33
-ata2: EH complete
+So this may be a drive firmware issue?
 
-I tried to git bisect the problem. First time I thought the error was 
-between rc2 and rc3,
-but the bisect gave inconclusive results because I couldn't tell for 
-sure a good commit from a bad.
-I tried again with .27 to .28-rc3, but I was unable to bisect because of 
-compile errors (in pre-rc1),
-and doing git bisect skip, again landed on a commit with compile errors.
-
-Unless you can think of anything else, I'm just going to wait and see if 
-a commit in .29 will fix the problem.
-
-Justin Madru
+Regards, Peter.
