@@ -1,37 +1,38 @@
-From: Peter Klotz <peter.klotz@aon.at>
-Subject: Re: 2.6.28: Timeout problem with AHCI SATA DVD drive
-Date: Sun, 28 Dec 2008 08:00:54 +0100
-Message-ID: <49572426.1070801@aon.at>
-References: <4955F0F9.1030700@aon.at> <49567DFF.4000102@shaw.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12144] optiarc bc-5500A can't read audio cds
+Date: Sun, 28 Dec 2008 00:45:40 -0800 (PST)
+Message-ID: <20081228084540.B1CD6108048@picon.linux-foundation.org>
+References: <bug-12144-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from WARSL404PIP3.highway.telekom.at ([195.3.96.115]:5655 "EHLO
-	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751305AbYL1HA6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Dec 2008 02:00:58 -0500
-Received: from 212-183-96-186.adsl.highway.telekom.at (HELO [192.168.0.100]) ([212.183.96.186])
-          (envelope-sender <peter.klotz@aon.at>)
-          by smarthub92.highway.telekom.at (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 28 Dec 2008 07:00:55 -0000
-In-Reply-To: <49567DFF.4000102@shaw.ca>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45436 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752261AbYL1IqN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Dec 2008 03:46:13 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBS8jepb003099
+	for <linux-ide@vger.kernel.org>; Sun, 28 Dec 2008 00:45:42 -0800
+In-Reply-To: <bug-12144-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> OK, so it's a "test unit ready" command that got sent to the drive and 
-> it timed out, then the resets after that all failed. That's essentially 
-> the simplest command there is, so it seems likely that the drive went 
-> off into the weeds and stopped talking to us. Whether or not we can do 
-> anything to prevent it, I'm not sure.
-> 
-> You're sure the drive always detects that same disc properly in Windows?
+http://bugzilla.kernel.org/show_bug.cgi?id=12144
 
-You are right. I finally was able to reproduce this behavior in Windows. 
-  The event log filled up with errors while the disc kept spinning.
 
-So this may be a drive firmware issue?
 
-Regards, Peter.
+
+
+------- Comment #32 from bbpetkov@yahoo.de  2008-12-28 00:45 -------
+Hi,
+
+yep, that might be the reason, thanks Robert. Marco, can you try playing audio
+with another player which can "Use direct digital playback" - at least this is
+how the option is called in kscd's settings (KDE) I tried here.
+
+Thanks.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
