@@ -1,85 +1,73 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: PIONEER DVD-RW DVRTD08 is disabled if there is no disc present
- at   boot time
-Date: Mon, 29 Dec 2008 17:14:31 +0900
-Message-ID: <495886E7.7050204@kernel.org>
-References: <1229894315.6931.17.camel@Thutmosis> <494EDDBE.3010306@shaw.ca>	 <494F65C1.80602@kernel.org> <1229947998.6045.10.camel@Thutmosis>	 <49505500.8080409@kernel.org> <1230126055.6430.17.camel@Thutmosis>
+Subject: Re: AHCI problem with hotplug
+Date: Mon, 29 Dec 2008 17:17:08 +0900
+Message-ID: <49588784.4020808@kernel.org>
+References: <494178E3.6030305@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47921 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:52737 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752468AbYL2IOk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Dec 2008 03:14:40 -0500
-In-Reply-To: <1230126055.6430.17.camel@Thutmosis>
+	id S1752391AbYL2IR0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Dec 2008 03:17:26 -0500
+In-Reply-To: <494178E3.6030305@cybernetics.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux--ide-momail.e4ward.com-linux--ide-vger.kernel.org-CD0-57es-4@reply.e4ward.com
-Cc: linux-ide@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello,
-
-linux-ide@momail.e4ward.com wrote:
-> Hello,
-> I've tried the patch (thanks a lot for your help) and it works more or
-> less. 
+Tony Battersby wrote:
+> I am having a problem getting Linux to detect hot-plugged SATA disks on my
+> ICH7 AHCI controller (SuperMicro PDSME motherboard).  On any SATA port that
+> already had a disk plugged in during BIOS POST, Linux will see the disk and
+> detect hot-plug and hot-unplug events just fine.  On any SATA port that did
+> not have a disk plugged in during BIOS POST, Linux will not see a disk no
+> matter what.  Here are the different sequences of events that I have tried:
 > 
-> More precisely:
-> when booting without a CD in the drive:
-> * no errors during the boot
-> * the drive is now active (that's a big plus)
-> * it can read about half the CDs that I insert (in a sample of ~7 audio
-> and data, burnt and pressed), I have tested no DVDs yet, and I haven't
-> burnt anything yet
+> 1) boot with SATA disk plugged in
+>    modprobe ahci: disk detected
+>    unplug disk:   disk deleted
+>    plug in disk:  disk detected
+> 
+> 2) boot with SATA disk plugged in
+>    unplug disk
+>    modprobe ahci
+>    plug in disk: disk detected
+>    unplug disk:  disk deleted
+>    plug in disk: disk detected
+>    unplug disk:  disk deleted
+>    plug in disk to any other SATA port    -> not detected
+>    plug in disk to the original SATA port -> disk detected
+> 
+> 3) boot with SATA disk unplugged
+>    plug in disk to any SATA port
+>    modprobe ahci: not detected
+>    grep ahci /proc/interrupts: 0 interrupts
+> 
+> 4) boot with SATA disk unplugged
+>    modprobe ahci
+>    plug in disk to any SATA port: not detected
+>    grep ahci /proc/interrupts: 0 interrupts
+> 
+> 5) keep SATA disk plugged in during BIOS POST but unplug it before the
+>    kernel boots
+>    kernel hangs at "BIOS data check"
+> 
+> I have tried both 2.6.24.7 and 2.6.27.8 with the same result.
+> 
+> The BIOS is configured as follows:
+> Parallel ATA:         [Enabled]
+> Serial ATA:           [Enabled]
+> SATA Controller Mode: [Enhanced]
+> SATA RAID:            [Disabled]
+> SATA AHCI:            [Enabled]
+> 
+> The root filesystem is on a parallel IDE disk using the legacy (non-libata)
+> piix driver.
 
-Hmmm...
-
-> * and the error log when a CD can't be read looks like this (dmesg tail)
-> [  227.213893] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE,SUGGEST_OK
-> [  227.213914] sr 1:0:0:0: [sr0] Sense Key : Medium Error [current] 
-> [  227.213926] Info fld=0x2e81
-> [  227.213930] sr 1:0:0:0: [sr0] Add. Sense: L-EC uncorrectable error
-> [  227.213942] end_request: I/O error, dev sr0, sector 47616
-> [  227.213954] Buffer I/O error on device sr0, logical block 5952
-> [  234.227424] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE,SUGGEST_OK
-> [  234.227446] sr 1:0:0:0: [sr0] Sense Key : Medium Error [current] 
-> [  234.227457] Info fld=0x2e81
-> [  234.227461] sr 1:0:0:0: [sr0] Add. Sense: L-EC uncorrectable error
-> [  234.227473] end_request: I/O error, dev sr0, sector 47616
-> [  234.227484] Buffer I/O error on device sr0, logical block 5952
-> [  241.163142] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE,SUGGEST_OK
-...
-> * When booting with a CD that doesn't work after an 'empty boot', I get
-> similar errors as before (and like the last pair of lines above), but
-> the CD can be read. When I insert another CD that didn't work after an
-> empty boot afterwards, it still doesn't work.
-
-Those errors shouldn't have much to do with how the transport is
-configured.  These are the drive failing to read the media and these
-errors can be quite indetermininstic, so it's possible that the
-pattern really isn't a pattern but then again the drive doesn't seem
-to have much problem being peculiar.  Can you please test more times
-and verify the pattern?
-
-> I guess that this is a state of things I can more or less live with
-> (unless you have a still better idea), I don't know whether the patch
-> should go in the trunk. Though it doesn't completely fix things, for me
-> it's better than before. Obviously, it would be best if the Pioneer
-> people fixed their broken firmware soon, which I hope they will.
-
-As the behavior is so peculiar, one thing I'm worried about is whether
-the problem is common to the model or is specific to the drive.  If
-the former, it should go into mainline.  Do you happen to know anyone
-who has the same model?
-
-> Anyway, thank you very much for your help. With other OSs it's probably
-> not so easy to get developer support ;-)
-
-Happy new year.  :-)
+The BIOS could be tristating the ports.  Does it work if you issue
+manual rescan (echo - - - > /sys/class/scsi_host/hostN/scan)?
 
 -- 
 tejun
