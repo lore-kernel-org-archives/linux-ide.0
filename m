@@ -1,73 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI problem with hotplug
-Date: Mon, 29 Dec 2008 17:17:08 +0900
-Message-ID: <49588784.4020808@kernel.org>
-References: <494178E3.6030305@cybernetics.com>
+Subject: Re: [PATCH] libata: blacklist NCQ on OCZ CORE 2 SSD (resend)
+Date: Mon, 29 Dec 2008 17:39:27 +0900
+Message-ID: <49588CBF.80002@kernel.org>
+References: <494F6D6A.2010406@dsrg.mff.cuni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52737 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44831 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752391AbYL2IR0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Dec 2008 03:17:26 -0500
-In-Reply-To: <494178E3.6030305@cybernetics.com>
+	id S1752583AbYL2Ijo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Dec 2008 03:39:44 -0500
+In-Reply-To: <494F6D6A.2010406@dsrg.mff.cuni.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: =?UTF-8?B?THVib23DrXIgQnVsZWo=?= <lubomir.bulej@dsrg.mff.cuni.cz>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Tony Battersby wrote:
-> I am having a problem getting Linux to detect hot-plugged SATA disks on my
-> ICH7 AHCI controller (SuperMicro PDSME motherboard).  On any SATA port that
-> already had a disk plugged in during BIOS POST, Linux will see the disk and
-> detect hot-plug and hot-unplug events just fine.  On any SATA port that did
-> not have a disk plugged in during BIOS POST, Linux will not see a disk no
-> matter what.  Here are the different sequences of events that I have tried:
-> 
-> 1) boot with SATA disk plugged in
->    modprobe ahci: disk detected
->    unplug disk:   disk deleted
->    plug in disk:  disk detected
-> 
-> 2) boot with SATA disk plugged in
->    unplug disk
->    modprobe ahci
->    plug in disk: disk detected
->    unplug disk:  disk deleted
->    plug in disk: disk detected
->    unplug disk:  disk deleted
->    plug in disk to any other SATA port    -> not detected
->    plug in disk to the original SATA port -> disk detected
-> 
-> 3) boot with SATA disk unplugged
->    plug in disk to any SATA port
->    modprobe ahci: not detected
->    grep ahci /proc/interrupts: 0 interrupts
-> 
-> 4) boot with SATA disk unplugged
->    modprobe ahci
->    plug in disk to any SATA port: not detected
->    grep ahci /proc/interrupts: 0 interrupts
-> 
-> 5) keep SATA disk plugged in during BIOS POST but unplug it before the
->    kernel boots
->    kernel hangs at "BIOS data check"
-> 
-> I have tried both 2.6.24.7 and 2.6.27.8 with the same result.
-> 
-> The BIOS is configured as follows:
-> Parallel ATA:         [Enabled]
-> Serial ATA:           [Enabled]
-> SATA Controller Mode: [Enhanced]
-> SATA RAID:            [Disabled]
-> SATA AHCI:            [Enabled]
-> 
-> The root filesystem is on a parallel IDE disk using the legacy (non-libata)
-> piix driver.
+Hello,
 
-The BIOS could be tristating the ports.  Does it work if you issue
-manual rescan (echo - - - > /sys/class/scsi_host/hostN/scan)?
+Lubom=C3=ADr Bulej wrote:
+> The patchlet below blacklists NCQ on OCZ CORE v2 SSD drive(s). Even
+> though the drive advertises NCQ support with queue depth 1, it respon=
+ds
+> with all-zeroes FIS to NCQ commands which triggers ata error handling
+> several times before the kernel decides to disable NCQ on the drive.
+>=20
+> signed-off-by: Lubomir Bulej <lubomir.bulej@dsrg.mff.cuni.cz>
 
--- 
+Please capitalize the leading s and add --- separator between
+description and the patch body.
+
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 5e2eb74..ba38eb8 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4048,6 +4048,7 @@ static const struct ata_blacklist_entry
+> ata_device_blacklist [] =3D {
+>      { "Maxtor 7V300F0",    "VA111630",    ATA_HORKAGE_NONCQ },
+>      { "ST380817AS",        "3.42",        ATA_HORKAGE_NONCQ },
+>      { "ST3160023AS",    "3.42",        ATA_HORKAGE_NONCQ },
+> +    { "OCZ CORE_SSD",    "02.10104",    ATA_HORKAGE_NONCQ },
+>=20
+>      /* Seagate NCQ + FLUSH CACHE firmware bug */
+>      { "ST31500341AS",    "9JU138",    ATA_HORKAGE_NONCQ |
+
+Other than that,
+
+Acked-by: Tejun Heo <tj@kernel.org>
+
+--=20
 tejun
