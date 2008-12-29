@@ -1,30 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] tx493[89]ide: Fix length for __ide_flush_dcache_range
-Date: Mon, 29 Dec 2008 19:38:54 +0100
-Message-ID: <200812291938.54435.bzolnier@gmail.com>
-References: <1230215558-9197-2-git-send-email-anemo@mba.ocn.ne.jp>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 3/6] ide: remove superfluous hwif variable assignment from ide_timer_expiry()
+Date: Mon, 29 Dec 2008 20:04:29 +0100
+Message-ID: <20081229190429.1020.49267.sendpatchset@localhost.localdomain>
+References: <20081229190415.1020.43119.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:11785 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbYL2TCO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2008 14:02:14 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so1957285muf.1
-        for <linux-ide@vger.kernel.org>; Mon, 29 Dec 2008 11:02:10 -0800 (PST)
-In-Reply-To: <1230215558-9197-2-git-send-email-anemo@mba.ocn.ne.jp>
-Content-Disposition: inline
+Received: from fg-out-1718.google.com ([72.14.220.156]:63827 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752930AbYL2TEJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2008 14:04:09 -0500
+In-Reply-To: <20081229190415.1020.43119.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-ide@vger.kernel.org, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, stable <stable@kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Thursday 25 December 2008, Atsushi Nemoto wrote:
-> This fixes data corruption on PIO mode.
-> 
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-> Cc: stable <stable@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove superfluous hwif variable assignment from ide_timer_expiry()
 
-applied
+There should be no functional changes caused by this patch.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-io.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -946,7 +946,6 @@ void ide_timer_expiry (unsigned long dat
+ 			 * globally mask the specific IRQ:
+ 			 */
+ 			spin_unlock(&hwif->lock);
+-			hwif = drive->hwif;
+ 			/* disable_irq_nosync ?? */
+ 			disable_irq(hwif->irq);
+ 			/* local CPU only,
