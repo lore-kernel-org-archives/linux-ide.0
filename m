@@ -1,165 +1,104 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 6/6] ide: remove now redundant ->cur_dev checks
-Date: Mon, 29 Dec 2008 20:04:49 +0100
-Message-ID: <20081229190449.1020.75781.sendpatchset@localhost.localdomain>
-References: <20081229190415.1020.43119.sendpatchset@localhost.localdomain>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: Frozen drives when using SiI3726
+Date: Mon, 29 Dec 2008 11:20:01 -0800
+Message-ID: <da824cf30812291120x1ed3f554lb7bdfe25427cecb3@mail.gmail.com>
+References: <20E60A0E-48E9-4942-851D-E20C012F5B89@ibink.com>
+	 <495894AB.8010404@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:54079 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753418AbYL2TE2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2008 14:04:28 -0500
-In-Reply-To: <20081229190415.1020.43119.sendpatchset@localhost.localdomain>
+Received: from smtp-out.google.com ([216.239.45.13]:27037 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870AbYL2TUH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2008 14:20:07 -0500
+Received: from wpaz1.hot.corp.google.com (wpaz1.hot.corp.google.com [172.24.198.65])
+	by smtp-out.google.com with ESMTP id mBTJK4V7024569
+	for <linux-ide@vger.kernel.org>; Mon, 29 Dec 2008 11:20:05 -0800
+Received: from bwz13 (bwz13.prod.google.com [10.188.26.13])
+	by wpaz1.hot.corp.google.com with ESMTP id mBTJJdmv027068
+	for <linux-ide@vger.kernel.org>; Mon, 29 Dec 2008 11:20:02 -0800
+Received: by bwz13 with SMTP id 13so13950467bwz.3
+        for <linux-ide@vger.kernel.org>; Mon, 29 Dec 2008 11:20:02 -0800 (PST)
+In-Reply-To: <495894AB.8010404@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Tim Nufire <linux_ide_tim@ibink.com>, linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove now redundant ->cur_dev checks
+On Mon, Dec 29, 2008 at 1:13 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hi,
+>
+> Tim Nufire wrote:
+>> Hello,
+>>
+>> I'm building a server using 9 SiI3726 based port multiplier backplanes
+>> connected to cards using SiI3132 (PCI Express) and SiI3124 (PCI). The
+>> drives are configured into 5 RAID6 groups of 9 drives each such that
+>> each array has 1 drive from each backplane. During the initial RAID
+>> synchronization one of the backplanes failed and restarted (see dmesg
+>> output below). While this did not disrupt the RAID groups this time, the
+>> reset took about 25 seconds and could easily have caused one or more
+>> drives to fail.
+>>
+>> Is there anything I can do to prevent failures like this?
+>
+> The reset was triggered by a timeout which probably have taken around
+> or more than 30 secs, so the array probably experienced disruption
+> which is about a minute long.  The failure latency is a bit
+> unfortunate at the moment.  :-(
+>
+> Also, the timeout is one of the most generic failure mode there is.
+> It can be triggered by virtually anything including transmission
+> failure, power quality issues, drive problems and whatnot.  So, it's
+> impossible to tell what went wrong with the provided information.
 
-* ->cur_dev should now be always valid if ->handler is set so
-  remove redundant checks from ide_intr() and ide_timer_expiry().
+Tejun,
+The only other possible major issue not listed above I can think of is
+Sil3276 firmware rev. The data sheet (*) "EEPROM Speicifications"
+on Page 20 says the firmware is versioned.
+But the data sheet doesn't specify how to read it.
+Can you ask Silicon Image to publish how to read the firmware rev?
 
-* Apply CodingStyle fixups in ide_timer_expiry() while at it.
+(*) Data sheet available from
+http://www.siliconimage.com/docs/SiI-DS-0121-C1.pdf
 
-There should be no functional changes caused by this patch.
+Also SATA_PMP_GSCR_REV  (Spec compliance, not FW rev) seems
+to be used twice:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-io.c |  105 +++++++++++++++++++++------------------------------
- 1 file changed, 45 insertions(+), 60 deletions(-)
+include/linux/ata.h:
+#define sata_pmp_gscr_rev(gscr)         (((gscr)[SATA_PMP_GSCR_REV] >>
+8) & 0xff)
 
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -920,60 +920,55 @@ void ide_timer_expiry (unsigned long dat
- 		 * Either way, we don't really want to complain about anything.
- 		 */
- 	} else {
-+		ide_expiry_t *expiry = hwif->expiry;
-+		ide_startstop_t startstop = ide_stopped;
-+
- 		drive = hwif->cur_dev;
--		if (!drive) {
--			printk(KERN_ERR "%s: ->cur_dev was NULL\n", __func__);
--			hwif->handler = NULL;
--		} else {
--			ide_expiry_t *expiry = hwif->expiry;
--			ide_startstop_t startstop = ide_stopped;
- 
--			if (expiry) {
--				/* continue */
--				if ((wait = expiry(drive)) > 0) {
--					/* reset timer */
--					hwif->timer.expires  = jiffies + wait;
--					hwif->req_gen_timer = hwif->req_gen;
--					add_timer(&hwif->timer);
--					spin_unlock_irqrestore(&hwif->lock, flags);
--					return;
--				}
--			}
--			hwif->handler = NULL;
--			/*
--			 * We need to simulate a real interrupt when invoking
--			 * the handler() function, which means we need to
--			 * globally mask the specific IRQ:
--			 */
--			spin_unlock(&hwif->lock);
--			/* disable_irq_nosync ?? */
--			disable_irq(hwif->irq);
--			/* local CPU only,
--			 * as if we were handling an interrupt */
--			local_irq_disable();
--			if (hwif->polling) {
--				startstop = handler(drive);
--			} else if (drive_is_ready(drive)) {
--				if (drive->waiting_for_dma)
--					hwif->dma_ops->dma_lost_irq(drive);
--				(void)ide_ack_intr(hwif);
--				printk(KERN_WARNING "%s: lost interrupt\n", drive->name);
--				startstop = handler(drive);
--			} else {
--				if (drive->waiting_for_dma) {
--					startstop = ide_dma_timeout_retry(drive, wait);
--				} else
--					startstop =
--					ide_error(drive, "irq timeout",
--						  hwif->tp_ops->read_status(hwif));
--			}
--			spin_lock_irq(&hwif->lock);
--			enable_irq(hwif->irq);
--			if (startstop == ide_stopped) {
--				ide_unlock_port(hwif);
--				plug_device = 1;
-+		if (expiry) {
-+			wait = expiry(drive);
-+			if (wait > 0) { /* continue */
-+				/* reset timer */
-+				hwif->timer.expires = jiffies + wait;
-+				hwif->req_gen_timer = hwif->req_gen;
-+				add_timer(&hwif->timer);
-+				spin_unlock_irqrestore(&hwif->lock, flags);
-+				return;
- 			}
- 		}
-+		hwif->handler = NULL;
-+		/*
-+		 * We need to simulate a real interrupt when invoking
-+		 * the handler() function, which means we need to
-+		 * globally mask the specific IRQ:
-+		 */
-+		spin_unlock(&hwif->lock);
-+		/* disable_irq_nosync ?? */
-+		disable_irq(hwif->irq);
-+		/* local CPU only, as if we were handling an interrupt */
-+		local_irq_disable();
-+		if (hwif->polling) {
-+			startstop = handler(drive);
-+		} else if (drive_is_ready(drive)) {
-+			if (drive->waiting_for_dma)
-+				hwif->dma_ops->dma_lost_irq(drive);
-+			(void)ide_ack_intr(hwif);
-+			printk(KERN_WARNING "%s: lost interrupt\n",
-+				drive->name);
-+			startstop = handler(drive);
-+		} else {
-+			if (drive->waiting_for_dma)
-+				startstop = ide_dma_timeout_retry(drive, wait);
-+			else
-+				startstop = ide_error(drive, "irq timeout",
-+					hwif->tp_ops->read_status(hwif));
-+		}
-+		spin_lock_irq(&hwif->lock);
-+		enable_irq(hwif->irq);
-+		if (startstop == ide_stopped) {
-+			ide_unlock_port(hwif);
-+			plug_device = 1;
-+		}
- 	}
- 	spin_unlock_irqrestore(&hwif->lock, flags);
- 
-@@ -1115,15 +1110,6 @@ irqreturn_t ide_intr (int irq, void *dev
- 	}
- 
- 	drive = hwif->cur_dev;
--	if (!drive) {
--		/*
--		 * This should NEVER happen, and there isn't much
--		 * we could do about it here.
--		 *
--		 * [Note - this can occur if the drive is hot unplugged]
--		 */
--		goto out_handled;
--	}
- 
- 	if (!drive_is_ready(drive))
- 		/*
-@@ -1162,7 +1148,6 @@ irqreturn_t ide_intr (int irq, void *dev
- 		ide_unlock_port(hwif);
- 		plug_device = 1;
- 	}
--out_handled:
- 	irq_ret = IRQ_HANDLED;
- out:
- 	spin_unlock_irqrestore(&hwif->lock, flags);
+drivers/ata/libata-pmp.c:sata_pmp_spec_rev_str()
+
+Would it make sense to rename one or the other so they match?
+The difference is one returns a string and the other a u8 value.
+Both take the same parameter.
+
+thanks,
+grant
+
+>  It
+> could be an one-time fluke - e.g. bad sectors which developed during
+> storage and shipping and RAID sync makes the firmware think what to do
+> about it for a long time - or something more systematic -
+> e.g. slightly bad connection on the backplane side or sub-par power
+> which slightly chokes when all drives are pulling juice out of it.
+>
+> Unfortunately, the only way to debug would be keeping an eye on
+> whether such failures repeat and if so when and where - whether it
+> always happen on the same chassis, slot or drive (by exchaning
+> drives), etc...
+>
+> Please let us know when you find out more.
+>
+> Happy new year.
+>
+> --
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
