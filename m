@@ -1,71 +1,30 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: Fix drive's DWORD-IO handling
-Date: Mon, 29 Dec 2008 19:47:52 +0100
-Message-ID: <200812291947.52537.bzolnier@gmail.com>
-References: <494A5BC9.7000605@inf.tu-dresden.de> <200812192001.51335.bzolnier@gmail.com>
+Subject: Re: [PATCH] tx4939ide: Do not use zero count PRD entry
+Date: Mon, 29 Dec 2008 19:38:14 +0100
+Message-ID: <200812291938.14580.bzolnier@gmail.com>
+References: <1230215558-9197-1-git-send-email-anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: base64
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:32797 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751859AbYL2TCK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2008 14:02:10 -0500
-In-Reply-To: <200812192001.51335.bzolnier@gmail.com>
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:42379 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810AbYL2TCI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2008 14:02:08 -0500
+Received: by fxm13 with SMTP id 13so1033316fxm.13
+        for <linux-ide@vger.kernel.org>; Mon, 29 Dec 2008 11:02:06 -0800 (PST)
+In-Reply-To: <1230215558-9197-1-git-send-email-anemo@mba.ocn.ne.jp>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mario Schwalbe <schwalbe@inf.tu-dresden.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-ide@vger.kernel.org, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, stable <stable@kernel.org>
 
-T24gRnJpZGF5IDE5IERlY2VtYmVyIDIwMDgsIEJhcnRsb21pZWogWm9sbmllcmtpZXdpY3ogd3Jv
-dGU6Cj4gT24gVGh1cnNkYXkgMTggRGVjZW1iZXIgMjAwOCwgTWFyaW8gU2Nod2FsYmUgd3JvdGU6
-Cj4gPiBSZXN1Ym1pdHRlZCBvbiByZXF1ZXN0Lgo+ID4gCj4gPiBBY2NvcmRpbmcgdGhlIGRvY3Vt
-ZW50YXRpb24sIGlkW0FUQV9JRF9EV09SRF9JT10gaXMgbm9uLXplcm8gaWYKPiA+IHRoZSBkcml2
-ZSBzdXBwb3J0cyBkd29yZCBJTywgd2hpbGUgdGhlIGNvZGUgZGlzYWJsZXMgc3VwcG9ydCBieQo+
-ID4gc2V0dGluZyBJREVfREZMQUdfTk9fSU9fMzJCSVQuIEluIGFkZGl0aW9uLCB0aGlzIHdvcmQg
-aGFzIGJlZW4KPiA+IHJldXNlZCBieSB0aGUgQVRBOCBzcGVjaWZpY2F0aW9uLiBUaGlzIHBhdGNo
-IGZpeGVzIGJvdGggY2FzZXMuCj4gPiAKPiA+IFNpZ25lZC1vZmYtYnk6IE1hcmlvIFNjaHdhbGJl
-IDxzY2h3YWxiZUBpbmYudHUtZHJlc2Rlbi5kZT4KPiA+IC0tLQo+ID4gIGRyaXZlcnMvaWRlL2lk
-ZS1wcm9iZS5jIHwgICAgMiArLQo+ID4gIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCsp
-LCAxIGRlbGV0aW9ucygtKQo+ID4gCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9pZGUvaWRlLXBy
-b2JlLmMgYi9kcml2ZXJzL2lkZS9pZGUtcHJvYmUuYwo+ID4gaW5kZXggYzU1YmRiZC4uODU5YjBl
-NSAxMDA2NDQKPiA+IC0tLSBhL2RyaXZlcnMvaWRlL2lkZS1wcm9iZS5jCj4gPiArKysgYi9kcml2
-ZXJzL2lkZS9pZGUtcHJvYmUuYwo+ID4gQEAgLTg1Niw3ICs4NTYsNyBAQCBzdGF0aWMgdm9pZCBp
-ZGVfcG9ydF90dW5lX2RldmljZXMoaWRlX2h3aWZfdCAqaHdpZikKPiA+ICAJCWlkZV9kcml2ZV90
-ICpkcml2ZSA9ICZod2lmLT5kcml2ZXNbdW5pdF07Cj4gPiAKPiA+ICAJCWlmICgoaHdpZi0+aG9z
-dF9mbGFncyAmIElERV9IRkxBR19OT19JT18zMkJJVCkgfHwKPiA+IC0JCSAgICBkcml2ZS0+aWRb
-QVRBX0lEX0RXT1JEX0lPXSkKPiA+ICsJCSAgICAhYXRhX2lkX2hhc19kd29yZF9pbyhkcml2ZS0+
-aWQpKQo+ID4gIAkJCWRyaXZlLT5kZXZfZmxhZ3MgfD0gSURFX0RGTEFHX05PX0lPXzMyQklUOwo+
-ID4gIAkJZWxzZQo+ID4gIAkJCWRyaXZlLT5kZXZfZmxhZ3MgJj0gfklERV9ERkxBR19OT19JT18z
-MkJJVDsKPiAKPiBTaW5jZSBpdCBzZWVtcyB0aGF0IGxpYmF0YSBkZXZlbG9wZXJzIG5lZWQgbW9y
-ZSB0aW1lIHRvIGZ1bGx5IGFuYWx5emUKPiBpc3N1ZXMgd2l0aCBhdGFfaWRfaGFzX2R3b3JkX2lv
-KCkgYW5kIEkgZG9uJ3Qgd2FudCB0byBkZWxheSB0aGlzIGZpeAo+IGJlY2F1c2UgaWYgaXQgY291
-bGQgeW91IHBsZWFzZSBtb2RpZnkgdGhlIHBhdGNoIGFjY29yZGluZyB0byBTZXJnZWkncwo+IHN1
-Z2dlc3Rpb24gb2YgcmVtb3ZpbmcgaWRbQVRBX0lEX0RXT1JEX0lPXSBjaGVjayBhbHRvZ2V0aGVy
-Pwo+IAo+IFsgSXQgaXMgYSBzYWZlIHRoaW5nIHRvIGRvIHNpbmNlIHRoZSBvbGQgY29kZSBoYXMg
-YmVlbiBlbmFibGluZyAzMi1iaXQKPiAgIEkvTyBfdW5sZXNzXyB0aGUgQVRBLTEgZHdvcmQgSS9P
-IGJpdCBmb3IgVlUgY29tcGF0aWJpbGl0eSB3YXMgc2V0Li4uIF0KCkkgbWVyZ2VkIHRoZSBwYXRj
-aCBhbmQgZGlkIHRoZSBtb2RpZmljYXRpb24gd2hpbGUgYXQgaXQ6CgpGcm9tOiBNYXJpbyBTY2h3
-YWxiZSA8c2Nod2FsYmVAaW5mLnR1LWRyZXNkZW4uZGU+ClN1YmplY3Q6IFtQQVRDSF0gaWRlOiBG
-aXggZHJpdmUncyBEV09SRC1JTyBoYW5kbGluZwoKQWNjb3JkaW5nIHRoZSBkb2N1bWVudGF0aW9u
-LCBpZFtBVEFfSURfRFdPUkRfSU9dIGlzIG5vbi16ZXJvIGlmCnRoZSBkcml2ZSBzdXBwb3J0cyBk
-d29yZCBJTywgd2hpbGUgdGhlIGNvZGUgZGlzYWJsZXMgc3VwcG9ydCBieQpzZXR0aW5nIElERV9E
-RkxBR19OT19JT18zMkJJVC4gSW4gYWRkaXRpb24sIHRoaXMgd29yZCBoYXMgYmVlbgpyZXVzZWQg
-YnkgdGhlIEFUQTggc3BlY2lmaWNhdGlvbi4gVGhpcyBwYXRjaCBmaXhlcyBib3RoIGNhc2VzLgoK
-U2lnbmVkLW9mZi1ieTogTWFyaW8gU2Nod2FsYmUgPHNjaHdhbGJlQGluZi50dS1kcmVzZGVuLmRl
-PgpDYzogU2VyZ2VpIFNodHlseW92IDxzc2h0eWx5b3ZAcnUubXZpc3RhLmNvbT4KW2JhcnQ6IHJl
-bW92ZSBpZFtBVEFfSURfRFdPUkRfSU9dIGNoZWNrIGFsdG9nZXRoZXIgcGVyIFNlcmdlaSdzIHN1
-Z2dlc3Rpb25dClNpZ25lZC1vZmYtYnk6IEJhcnRsb21pZWogWm9sbmllcmtpZXdpY3ogPGJ6b2xu
-aWVyQGdtYWlsLmNvbT4KLS0tCiBkcml2ZXJzL2lkZS9pZGUtcHJvYmUuYyB8ICAgIDMgKy0tCiAx
-IGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDIgZGVsZXRpb25zKC0pCgpJbmRleDogYi9k
-cml2ZXJzL2lkZS9pZGUtcHJvYmUuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBhL2RyaXZlcnMvaWRlL2lkZS1w
-cm9iZS5jCisrKyBiL2RyaXZlcnMvaWRlL2lkZS1wcm9iZS5jCkBAIC04NDksOCArODQ5LDcgQEAg
-c3RhdGljIHZvaWQgaWRlX3BvcnRfdHVuZV9kZXZpY2VzKGlkZV9odwogCX0KIAogCWlkZV9wb3J0
-X2Zvcl9lYWNoX2RldihpLCBkcml2ZSwgaHdpZikgewotCQlpZiAoKGh3aWYtPmhvc3RfZmxhZ3Mg
-JiBJREVfSEZMQUdfTk9fSU9fMzJCSVQpIHx8Ci0JCSAgICBkcml2ZS0+aWRbQVRBX0lEX0RXT1JE
-X0lPXSkKKwkJaWYgKGh3aWYtPmhvc3RfZmxhZ3MgJiBJREVfSEZMQUdfTk9fSU9fMzJCSVQpCiAJ
-CQlkcml2ZS0+ZGV2X2ZsYWdzIHw9IElERV9ERkxBR19OT19JT18zMkJJVDsKIAkJZWxzZQogCQkJ
-ZHJpdmUtPmRldl9mbGFncyAmPSB+SURFX0RGTEFHX05PX0lPXzMyQklUOwoACgo=
+On Thursday 25 December 2008, Atsushi Nemoto wrote:
+> This fixes data corruption on some heavy load.
+> 
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+> Cc: stable <stable@kernel.org>
+
+applied
