@@ -1,93 +1,72 @@
-From: raz ben yehuda <razb@bitband.com>
-Subject: Re: AHCI problem with hotplug
-Date: Tue, 30 Dec 2008 15:41:19 +0200
-Message-ID: <200812301541.19939.razb@bitband.com>
-References: <494178E3.6030305@cybernetics.com> <49588784.4020808@kernel.org> <4958E3DC.7080009@cybernetics.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12320] warn_on_slowpath when playing audio CD
+Date: Tue, 30 Dec 2008 03:56:14 -0800 (PST)
+Message-ID: <20081230115614.8AACA10800C@picon.linux-foundation.org>
+References: <bug-12320-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.bitband.com ([213.8.50.174]:40668 "EHLO mail.bitband.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751860AbYL3LlX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Dec 2008 06:41:23 -0500
-In-Reply-To: <4958E3DC.7080009@cybernetics.com>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45458 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751021AbYL3L4n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2008 06:56:43 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBUBuEis003851
+	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 03:56:15 -0800
+In-Reply-To: <bug-12320-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-i have many other problems with SuperMicro. I believe it has to do with the 
-backpanel. I occasions when disks simply vanish.
-I suggest you try the same thing on other machines.
-On Monday 29 December 2008 16:51, Tony Battersby wrote:
-> Tejun Heo wrote:
-> > Tony Battersby wrote:
-> >> I am having a problem getting Linux to detect hot-plugged SATA disks on
-> >> my ICH7 AHCI controller (SuperMicro PDSME motherboard).  On any SATA
-> >> port that already had a disk plugged in during BIOS POST, Linux will see
-> >> the disk and detect hot-plug and hot-unplug events just fine.  On any
-> >> SATA port that did not have a disk plugged in during BIOS POST, Linux
-> >> will not see a disk no matter what.  Here are the different sequences of
-> >> events that I have tried:
-> >>
-> >> 1) boot with SATA disk plugged in
-> >>    modprobe ahci: disk detected
-> >>    unplug disk:   disk deleted
-> >>    plug in disk:  disk detected
-> >>
-> >> 2) boot with SATA disk plugged in
-> >>    unplug disk
-> >>    modprobe ahci
-> >>    plug in disk: disk detected
-> >>    unplug disk:  disk deleted
-> >>    plug in disk: disk detected
-> >>    unplug disk:  disk deleted
-> >>    plug in disk to any other SATA port    -> not detected
-> >>    plug in disk to the original SATA port -> disk detected
-> >>
-> >> 3) boot with SATA disk unplugged
-> >>    plug in disk to any SATA port
-> >>    modprobe ahci: not detected
-> >>    grep ahci /proc/interrupts: 0 interrupts
-> >>
-> >> 4) boot with SATA disk unplugged
-> >>    modprobe ahci
-> >>    plug in disk to any SATA port: not detected
-> >>    grep ahci /proc/interrupts: 0 interrupts
-> >>
-> >> 5) keep SATA disk plugged in during BIOS POST but unplug it before the
-> >>    kernel boots
-> >>    kernel hangs at "BIOS data check"
-> >>
-> >> I have tried both 2.6.24.7 and 2.6.27.8 with the same result.
-> >>
-> >> The BIOS is configured as follows:
-> >> Parallel ATA:         [Enabled]
-> >> Serial ATA:           [Enabled]
-> >> SATA Controller Mode: [Enhanced]
-> >> SATA RAID:            [Disabled]
-> >> SATA AHCI:            [Enabled]
-> >>
-> >> The root filesystem is on a parallel IDE disk using the legacy
-> >> (non-libata) piix driver.
-> >
-> > The BIOS could be tristating the ports.  Does it work if you issue
-> > manual rescan (echo - - - > /sys/class/scsi_host/hostN/scan)?
->
-> No luck.  I get:
->
-> ata1: hard resetting link
-> ata1: SATA link down (SStatus 0 SControl 0)
-> ata1: EH complete
->
-> And the drive isn't seen.
->
-> Tony
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+http://bugzilla.kernel.org/show_bug.cgi?id=12320
+
+
+
+
+
+------- Comment #10 from nm127@freemail.hu  2008-12-30 03:56 -------
+Created an attachment (id=19538)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=19538&action=view)
+revert 9bd27cba1aeacb6b12d05f4e5ed6361072f08fe0
+
+(In reply to comment #6)
+> Created an attachment (id=19528)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=19528&action=view) [details]
+> git bisect log
+> 
+> (In reply to comment #3)
+> > I started to git bisecting the problem but this might take a while.
+> 
+> The result of git bisecting is:
+> 
+> 9bd27cba1aeacb6b12d05f4e5ed6361072f08fe0 is first bad commit
+> commit 9bd27cba1aeacb6b12d05f4e5ed6361072f08fe0
+> Author: Borislav Petkov <petkovbb@gmail.com>
+> Date:   Sun Nov 2 21:40:07 2008 +0100
+> 
+>     ide-cd: fix DMA alignment regression
+> 
+>     e5318b531b008c79d2a0c0df06a7b8628da38e2f ("ide: use the dma safe check for
+>     REQ_TYPE_ATA_PC") introduced a regression which caused some ATAPI drives to
+>     turn off DMA for REQ_TYPE_BLOCK_PC commands while burning and thus
+> degrading
+>     performance and ultimately causing an excessive amount of underruns.
+> 
+>     The issue is documented also in:
+>     http://bugzilla.kernel.org/show_bug.cgi?id=11742.
+> 
+>     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+>     Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>     Tested-by: Valerio Passini <valerio.passini@unicam.it>
+>     [bart: fixup patch description per comments from Sergei Shtylyov]
+>     Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> :040000 040000 998c57acb8e63f2f1d64543f2c03ecfc05beb3a0
+> fef197de8e3c9db1308917eaeb1c10f196a8a8ab M      drivers
+
+Reverting this patch on top of 2.6.28 removes the warn_on_slowpath messages
+from dmesg.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
