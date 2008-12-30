@@ -1,90 +1,65 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: S3 with pata_via fails to resume, ide_via82Cxxx works
-Date: Tue, 30 Dec 2008 18:50:37 +0100
-Message-ID: <20081230185037.7ec94e94@neptune.home>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: SATA hard drive problem when MSI enabled (ahci.c)
+Date: Tue, 30 Dec 2008 12:04:04 -0600
+Message-ID: <495A6294.4020501@shaw.ca>
+References: <612743.49975.qm@web30708.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from main.gmane.org ([80.91.229.2]:51245 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751898AbYL3SEP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Dec 2008 13:04:15 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LHiwu-0004dG-GM
+	for linux-ide@vger.kernel.org; Tue, 30 Dec 2008 18:04:12 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 18:04:12 +0000
+Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 18:04:12 +0000
+In-Reply-To: <612743.49975.qm@web30708.mail.mud.yahoo.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
 
-Hi,
+Steven DuChene wrote:
+> Jeff and others maintaining the ahci.c driver file:
+> I have a current XFX GeForce 8200 motherboard with an
+> on-board SATA controller based around the NVidia GeForce
+> 8200 or MCP78S chipset. If I attempt to boot either a
+> opensuse-11.1 2.6.27.7-9-default kernel or a kernel.org
+> 2.6.28 kernel without passing a "pci=nomsi" the
+> SATA hard drive hung off of the on-board controller chip is
+> not detected. I have the motherboard BIOS set to use a SATA
+> mode of AHCI. If I pass the pci=nomsi to either kernel then
+> the sata hard disks are found just fine.
+> 
+> I see in looking at the code in the ahci.c file in
+> drivers/ata that you do detection of some board IDs and for
+> some boards you set AHCI_HFLAG_NO_MSI. If the code in the
+> ahci.c file would recognize the motherboards with the MCP78S
+> chipset then it might be a good idea to set the
+> AHCI_HFLAG_NO_MSI flag for those boards as well.
+> 
+> If you can tell me how to find that board id that is used
+> to ident boards in ahci.c I can get that information to you
+> if that would help others who have the same problem. I think
+> it must be better to turn off MSI for specific chips or
+> on an individual PCI bridge rather than do it globally for
+> the whole system with pci=nomsi 
+> --
+> Steven DuChene
 
-On a system (Commell LE365) with VIA CX700M chipset I experience
-varying resume results:
+Hmm.. Can you post lspci -vvn output?
 
-When built with IDE subsystem and VIA82CXXX driver the system suspends
-and resumes properly [2.6.28].
------
-CONFIG_HAVE_IDE=y
-CONFIG_IDE=y
-CONFIG_IDE_TIMINGS=y
-CONFIG_IDE_GD=y
-CONFIG_IDE_GD_ATA=y
-CONFIG_BLK_DEV_IDEACPI=y
-CONFIG_BLK_DEV_IDEDMA_SFF=y
-CONFIG_BLK_DEV_IDEPCI=y
-CONFIG_BLK_DEV_IDEDMA_PCI=y
-CONFIG_BLK_DEV_VIA82CXXX=y
-CONFIG_BLK_DEV_IDEDMA=y
-# CONFIG_ATA is not set
------
-When built with ATA subsystem and PATA_VIA driver the system suspends
-but hangs during resume (HDD LED remains active) [2.6.28] though it
-manages to resume when the CompactFlash card is disconnected [2.6.27].
------
-# CONFIG_IDE is not set
-CONFIG_ATA=y
-CONFIG_ATA_ACPI=y
-CONFIG_SATA_AHCI=y
-CONFIG_ATA_SFF=y
-CONFIG_SATA_VIA=y
-CONFIG_PATA_VIA=y
------
+CCing some NVIDIA people. Is there anything known about MSI being broken 
+on MCP78S AHCI controller? Currently the only known NVIDIA AHCI problems 
+with MSI are with MCP65 revisions A1 and A2. I'm not actually sure what 
+chipset listed in the driver would match with MCP78S, that particular 
+one isn't listed..
 
-Is there some known bigger difference between behavior of both drivers?
-I might start comparing behavior of both drivers and try to adjust
-PATA_VIA to successfully resume the system, though any hint/suggestion
-is welcome!
-
-- SATA HDD with system partition  [seen as IDE Primary master]
-- CompactFlash card               [seen as IDE Secondary slave]
-
-lspci output:
-00:00.0 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:0324] (rev 03)
-00:00.1 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:1324]
-00:00.2 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:2324]
-00:00.3 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:3324]
-00:00.4 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:4324]
-00:00.7 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:7324]
-00:01.0 PCI bridge [0604]: VIA Technologies, Inc. VT8237 PCI Bridge [1106:b198]
-00:0f.0 IDE interface [0101]: VIA Technologies, Inc. Device [1106:0581]
-00:10.0 USB Controller [0c03]: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller [1106:3038] (rev 90)
-00:10.1 USB Controller [0c03]: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller [1106:3038] (rev 90)
-00:10.2 USB Controller [0c03]: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller [1106:3038] (rev 90)
-00:10.4 USB Controller [0c03]: VIA Technologies, Inc. USB 2.0 [1106:3104] (rev 90)
-00:11.0 ISA bridge [0601]: VIA Technologies, Inc. CX700 PCI to ISA Bridge [1106:8324]
-00:11.7 Host bridge [0600]: VIA Technologies, Inc. CX700 Internal Module Bus [1106:324e]
-00:13.0 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:324b]
-00:13.1 PCI bridge [0604]: VIA Technologies, Inc. CX700 PCI to PCI Bridge [1106:324a]
-01:00.0 VGA compatible controller [0300]: VIA Technologies, Inc. CX700M2 UniChrome PRO II Graphics [1106:3157] (rev 03)
-02:08.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL-8169 Gigabit Ethernet [10ec:8169] (rev 10)
-80:01.0 Audio device [0403]: VIA Technologies, Inc. VIA High Definition Audio Controller [1106:3288] (rev 10)
-
-
-
-
-Secondary note, with ATA subsystem it is possible to discover hot-plugged
-second SATA drive with issuing
-  echo '- - -' > host0/scsi_host/host0/scan
-though the same action causes the access to first SATA drive to fail after
-removing second drive. (unfortunately BIOS does only allows configuring
-the chipset in IDE mode - so not possible to use SATA_VIA or AHCI).
-I guess this is caused by some incorrect detection of speed settings.
-
-What is the way to ask driver to rescan with IDE driver?
-
-Bruno
