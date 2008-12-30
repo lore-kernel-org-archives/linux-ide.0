@@ -1,60 +1,90 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: 2.6.27.10: ata1.00: HPA detected: current 293044655, native
-  293046768
-Date: Tue, 30 Dec 2008 11:30:07 -0600
-Message-ID: <495A5A9F.9020406@shaw.ca>
-References: <alpine.DEB.1.10.0812300657050.11356@p34.internal.lan>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: S3 with pata_via fails to resume, ide_via82Cxxx works
+Date: Tue, 30 Dec 2008 18:50:37 +0100
+Message-ID: <20081230185037.7ec94e94@neptune.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:55669 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751898AbYL3RfF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Dec 2008 12:35:05 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1LHiUg-0003SM-82
-	for linux-ide@vger.kernel.org; Tue, 30 Dec 2008 17:35:02 +0000
-Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 17:35:02 +0000
-Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 17:35:02 +0000
-In-Reply-To: <alpine.DEB.1.10.0812300657050.11356@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.orglinux-kernel@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Justin Piszcz wrote:
-> On one system, two Raptor 150s:
-> 
-> [    0.739402] ata1.00: HPA detected: current 293044655, native 293046768
-> [    0.739491] ata1.00: ATA-7: WDC WD1500ADFD-00NLR5, 21.07QR5, max 
-> UDMA/133
-> [    0.739577] ata1.00: 293044655 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [    0.742454] ata1.00: configured for UDMA/133
-> 
-> [    1.059146] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [    1.061406] ata2.00: ATA-7: WDC WD1500ADFD-00NLR5, 21.07QR5, max 
-> UDMA/133
-> [    1.061494] ata2.00: 293046768 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [    1.064360] ata2.00: configured for UDMA/133
-> 
-> Two disks in a RAID-1 (mdadm) configuration, how come the first one
-> has an issue w/HPA as the firmware of both disks is the same..?
-> 
-> l1:~# smartctl -a /dev/sda | grep -i bytes
-> User Capacity:    150,038,863,360 bytes
-> l1:~# smartctl -a /dev/sdb | grep -i bytes
-> User Capacity:    150,039,945,216 bytes
-> l1:~#
-> 
-> Why does this occur?
+Hi,
 
-Presumably somebody or something set up a host protected area on one 
-drive and not the other.. I believe there are some utilities out there 
-that can be used to disable the HPA and allow the full capacity to be used.
+On a system (Commell LE365) with VIA CX700M chipset I experience
+varying resume results:
 
+When built with IDE subsystem and VIA82CXXX driver the system suspends
+and resumes properly [2.6.28].
+-----
+CONFIG_HAVE_IDE=y
+CONFIG_IDE=y
+CONFIG_IDE_TIMINGS=y
+CONFIG_IDE_GD=y
+CONFIG_IDE_GD_ATA=y
+CONFIG_BLK_DEV_IDEACPI=y
+CONFIG_BLK_DEV_IDEDMA_SFF=y
+CONFIG_BLK_DEV_IDEPCI=y
+CONFIG_BLK_DEV_IDEDMA_PCI=y
+CONFIG_BLK_DEV_VIA82CXXX=y
+CONFIG_BLK_DEV_IDEDMA=y
+# CONFIG_ATA is not set
+-----
+When built with ATA subsystem and PATA_VIA driver the system suspends
+but hangs during resume (HDD LED remains active) [2.6.28] though it
+manages to resume when the CompactFlash card is disconnected [2.6.27].
+-----
+# CONFIG_IDE is not set
+CONFIG_ATA=y
+CONFIG_ATA_ACPI=y
+CONFIG_SATA_AHCI=y
+CONFIG_ATA_SFF=y
+CONFIG_SATA_VIA=y
+CONFIG_PATA_VIA=y
+-----
+
+Is there some known bigger difference between behavior of both drivers?
+I might start comparing behavior of both drivers and try to adjust
+PATA_VIA to successfully resume the system, though any hint/suggestion
+is welcome!
+
+- SATA HDD with system partition  [seen as IDE Primary master]
+- CompactFlash card               [seen as IDE Secondary slave]
+
+lspci output:
+00:00.0 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:0324] (rev 03)
+00:00.1 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:1324]
+00:00.2 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:2324]
+00:00.3 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:3324]
+00:00.4 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:4324]
+00:00.7 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:7324]
+00:01.0 PCI bridge [0604]: VIA Technologies, Inc. VT8237 PCI Bridge [1106:b198]
+00:0f.0 IDE interface [0101]: VIA Technologies, Inc. Device [1106:0581]
+00:10.0 USB Controller [0c03]: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller [1106:3038] (rev 90)
+00:10.1 USB Controller [0c03]: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller [1106:3038] (rev 90)
+00:10.2 USB Controller [0c03]: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller [1106:3038] (rev 90)
+00:10.4 USB Controller [0c03]: VIA Technologies, Inc. USB 2.0 [1106:3104] (rev 90)
+00:11.0 ISA bridge [0601]: VIA Technologies, Inc. CX700 PCI to ISA Bridge [1106:8324]
+00:11.7 Host bridge [0600]: VIA Technologies, Inc. CX700 Internal Module Bus [1106:324e]
+00:13.0 Host bridge [0600]: VIA Technologies, Inc. CX700 Host Bridge [1106:324b]
+00:13.1 PCI bridge [0604]: VIA Technologies, Inc. CX700 PCI to PCI Bridge [1106:324a]
+01:00.0 VGA compatible controller [0300]: VIA Technologies, Inc. CX700M2 UniChrome PRO II Graphics [1106:3157] (rev 03)
+02:08.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL-8169 Gigabit Ethernet [10ec:8169] (rev 10)
+80:01.0 Audio device [0403]: VIA Technologies, Inc. VIA High Definition Audio Controller [1106:3288] (rev 10)
+
+
+
+
+Secondary note, with ATA subsystem it is possible to discover hot-plugged
+second SATA drive with issuing
+  echo '- - -' > host0/scsi_host/host0/scan
+though the same action causes the access to first SATA drive to fail after
+removing second drive. (unfortunately BIOS does only allows configuring
+the chipset in IDE mode - so not possible to use SATA_VIA or AHCI).
+I guess this is caused by some incorrect detection of speed settings.
+
+What is the way to ask driver to rescan with IDE driver?
+
+Bruno
