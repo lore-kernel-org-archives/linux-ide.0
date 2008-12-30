@@ -1,65 +1,77 @@
-From: hongbinghu <huhb@lemote.com>
-Subject: STD problem about IDE
-Date: Tue, 30 Dec 2008 21:12:08 +0800
-Message-ID: <495A1E28.3000405@lemote.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020102020000030401070705"
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12320] warn_on_slowpath when playing audio CD
+Date: Tue, 30 Dec 2008 05:51:20 -0800 (PST)
+Message-ID: <20081230135120.24A3710800E@picon.linux-foundation.org>
+References: <bug-12320-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.92.8.141] ([222.92.8.141]:45822 "EHLO lemote.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751551AbYL3NXS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Dec 2008 08:23:18 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by lemote.com (Postfix) with ESMTP id EEC6731C925
-	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 20:58:22 +0800 (CST)
-Received: from lemote.com ([127.0.0.1])
-	by localhost (www.lemote.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id Ec0k4iQm800V for <linux-ide@vger.kernel.org>;
-	Tue, 30 Dec 2008 20:58:16 +0800 (CST)
-Received: from [172.16.2.246] (unknown [222.92.8.142])
-	by lemote.com (Postfix) with ESMTP id A27F531C924
-	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 20:58:16 +0800 (CST)
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47261 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751677AbYL3NvW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2008 08:51:22 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBUDpKs5009082
+	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2008 05:51:21 -0800
+In-Reply-To: <bug-12320-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020102020000030401070705
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
-
-hi, everyone.
-
-I want to ask some problems.
-
-when i use Hitachi disk, STD(suspend to disk) works ok.
-I debug it ,and find when the IDE resumes, it issues many many interrupts
-and these interrups don't be handled. Finally, kernel disable the irq.
-
-why ? and what happened?
-
-Thanks.
+http://bugzilla.kernel.org/show_bug.cgi?id=12320
 
 
---------------020102020000030401070705
-Content-Type: text/x-vcard; charset=utf-8;
- name="huhb.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="huhb.vcf"
 
-YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6PUU4PTgzPUExPUU2PUI0PUFBPUU1
-PTg1PUI1DQpuO3F1b3RlZC1wcmludGFibGU6Oz1FOD04Mz1BMT1FNj1CND1BQT1FNT04NT1C
-NQ0Kb3JnO3F1b3RlZC1wcmludGFibGU7cXVvdGVkLXByaW50YWJsZTo9RTQ9Qjg9QUQ9RTc9
-QTc9OTE9RTk9QkU9OTk9RTY9QTI9QTY9RTc9QTc9OTE9RTY9OEE9ODA9RTY9OUM9ODk9RTk9
-OTk9OTA9RTU9DQoJPTg1PUFDPUU1PThGPUI4Oz1FOT04Mz1BOD1FOT05Nz1BODo9RTg9QkQ9
-QUY9RTQ9QkI9QjY9RTk9ODM9QTgNCmFkcjtxdW90ZWQtcHJpbnRhYmxlO2RvbTo7Oz1FNj1C
-MT05Rj1FOD04Qj04Rj1FNz05Qz04MT1FNT1COD1COD1FNz04Nj05Rj1FNT1COD04Mj1FOD05
-OT05RT1FNT1CMT1CMT1FOT0NCgk9OTU9ODc9RTY9QTI9QTY9RTU9ODU9QjA9RTU9Qjc9QTU9
-RTQ9Qjg9OUE9RTU9OUI9QUQNCmVtYWlsO2ludGVybmV0OkUtbWFpbDpodWhiQGxlbW90ZS5j
-b20NCnRpdGxlO3F1b3RlZC1wcmludGFibGU6PUU4PTgxPThDPUU1PThBPUExOj1FOD1CRD1B
-Rj1FND1CQj1CNj1FNT1CNz1BNT1FNz1BOD04Qj1FNT1COD04OA0KdGVsO3dvcms6VGVsOjEz
-MDYzNzcyNzQ3DQp0ZWw7aG9tZTpNU046aHVoYjA0QGdtYWlsLmNvbQ0KdmVyc2lvbjoyLjEN
-CmVuZDp2Y2FyZA0KDQo=
---------------020102020000030401070705--
+
+
+------- Comment #12 from bbpetkov@yahoo.de  2008-12-30 05:51 -------
+(In reply to comment #11)
+> (In reply to comment #9)
+> > (In reply to comment #8)
+
+[.. ]
+
+> > > Borislav, it seems that ide_map_sg() need to check for REQ_TYPE_ATA_PC now that
+> > > DMA is allowed for such requests (so it can use sg_init_one() path for them
+> > > instead of the usual blk_rq_map_sg() one)?
+> > 
+> > Hmm,
+> > 
+> > shouldn't we do that for all rq's which aren't bio-backed? As a means to handle
+> > the more general case?
+> 
+> It would be even better...
+
+How about something similar to the following:
+
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index cc35d6d..4bee817 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -574,14 +574,15 @@ void ide_map_sg(ide_drive_t *drive, struct request *rq)
+        ide_hwif_t *hwif = drive->hwif;
+        struct scatterlist *sg = hwif->sg_table;
+
+-       if (hwif->sg_mapped)    /* needed by ide-scsi */
+-               return;
+-
+-       if (rq->cmd_type != REQ_TYPE_ATA_TASKFILE) {
+-               hwif->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
+-       } else {
++       if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
+                sg_init_one(sg, rq->buffer, rq->nr_sectors * SECTOR_SIZE);
+                hwif->sg_nents = 1;
++       } else if (!rq->bio) {
++               sg_init_one(sg, rq->data, rq->data_len);
++               hwif->sg_nents = 1;
++       }
++       else {
++               hwif->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
+        }
+ }
+
+?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
