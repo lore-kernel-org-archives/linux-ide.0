@@ -1,42 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: blacklist NCQ on OCZ CORE 2 SSD (resend)
-Date: Tue, 30 Dec 2008 09:35:06 +0900
-Message-ID: <49596CBA.8090903@kernel.org>
-References: <494F6D6A.2010406@dsrg.mff.cuni.cz> <49588CBF.80002@kernel.org> <495899A9.8030507@ru.mvista.com>
+Subject: Re: AHCI problem with hotplug
+Date: Tue, 30 Dec 2008 09:38:54 +0900
+Message-ID: <49596D9E.3040904@kernel.org>
+References: <494178E3.6030305@cybernetics.com> <49588784.4020808@kernel.org> <4958E3DC.7080009@cybernetics.com> <49591710.7040102@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50475 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:50541 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751709AbYL3Afn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Dec 2008 19:35:43 -0500
-In-Reply-To: <495899A9.8030507@ru.mvista.com>
+	id S1752416AbYL3AjD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Dec 2008 19:39:03 -0500
+In-Reply-To: <49591710.7040102@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: =?UTF-8?B?THVib23DrXIgQnVsZWo=?= <lubomir.bulej@dsrg.mff.cuni.cz>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tony Battersby <tonyb@cybernetics.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Sergei Shtylyov wrote:
-> Hello.
-> 
-> Tejun Heo wrote:
-> 
->>> The patchlet below blacklists NCQ on OCZ CORE v2 SSD drive(s). Even
->>> though the drive advertises NCQ support with queue depth 1, it responds
->>> with all-zeroes FIS to NCQ commands which triggers ata error handling
->>> several times before the kernel decides to disable NCQ on the drive.
->>>
->>> signed-off-by: Lubomir Bulej <lubomir.bulej@dsrg.mff.cuni.cz>
->>>     
+Robert Hancock wrote:
+> Tony Battersby wrote:
+>>> The BIOS could be tristating the ports.  Does it work if you issue
+>>> manual rescan (echo - - - > /sys/class/scsi_host/hostN/scan)?
+>>>   
+>> No luck.  I get:
 >>
->> Please capitalize the leading s and add --- separator between
->> description and the patch body.
+>> ata1: hard resetting link
+>> ata1: SATA link down (SStatus 0 SControl 0)
+>> ata1: EH complete
+>>
+>> And the drive isn't seen.
 > 
->   Why Lubomir needs to add --- if there's no diffstat or comments? :-
+> Well, if the controller reports link down there likely isn't much the
+> kernel can do about it. I assume that ata1 is in fact where that drive
+> gets detected if it's plugged in at boot - you could try all the other
+> hosts to be sure..
 
-Hmm... now come to think of it, you're right.  I guess I'm now just
-too accustomed to seeing it.
+This is consistent with the BIOS tristating those ports.  I don't
+remember the name of the register.  I'll look it up later.
 
 Thanks.
 
