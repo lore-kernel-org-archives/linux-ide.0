@@ -1,51 +1,94 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PIO with SSDs: needs a long DRQ-after-command timeout for WRITEs
-Date: Wed, 31 Dec 2008 19:38:08 +0100
-Message-ID: <200812311938.08916.bzolnier@gmail.com>
-References: <495A27E3.50801@rtr.ca> <20081230135902.560267dc@lxorguk.ukuu.org.uk> <495B9DDD.2020109@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/4] ide: don't set hwif->dma_ops in init_dma() method
+Date: Wed, 31 Dec 2008 22:52:47 +0400
+Message-ID: <200812312152.48007.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:47046 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756199AbYLaSjU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Dec 2008 13:39:20 -0500
-Received: by bwz14 with SMTP id 14so18734370bwz.13
-        for <linux-ide@vger.kernel.org>; Wed, 31 Dec 2008 10:39:17 -0800 (PST)
-In-Reply-To: <495B9DDD.2020109@rtr.ca>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:12288 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752551AbYLaSwX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Dec 2008 13:52:23 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Wednesday 31 December 2008, Mark Lord wrote:
-> Alan Cox wrote:
-> >> So.. how long does libata and current IDE allow for initial DRQ assertion?
-> >> It should probably be at least 500msec or more now.
-> > 
-> > I think we need to rewrite the PIO code paths to use disable/enable_irq
-> > masking first before getting into adding long delays on PIO paths.
-> ..
-> 
-> Yeah, that would be a good thing to do.
+Replace setting of 'hwif->dma_ops' in the 'alim16x3' and 'palm_bk3710' drivers'
+init_dma() methods with initializing the corresponding member of their 'struct
+ide_port_info' instances and remove such setting from the 'hpt366' driver that
+just doesn't use 'sff_dma_ops'. Along with some code save, this prepares us for
+the next patch...
 
-Unless shared IRQs come into the picture -- in such case disabling IRQ
-for 0.5sec doesn't sound too sexy...
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-> But in the meanwhile, a longer timeout there doesn't affect
-> any currently working systems -- they'll still wait only as long
-> as they currently do.  And a longer timeout *will* enable these
-> SSDs to work where they otherwise would not.
-> 
-> But perhaps the timeout is already long enough?
-> I don't know where the current timeout is hiding in libata.  :)
+---
+Here are the unfortunate series of patches that hadn't gotten into 2.6.28 --
+I decided not to leave it to the next year despite an extreme overload I had
+during the past several months... :-)
+The patch is atop of the current pata-2.6 series...
+                                          
+ drivers/ide/alim15x3.c    |    3 +--
+ drivers/ide/hpt366.c      |    2 --
+ drivers/ide/palm_bk3710.c |    3 +--
+ 3 files changed, 2 insertions(+), 6 deletions(-)
 
-When it comes to IDE the timeout is defined by WAIT_DRQ in <linux/ide.h>
-and is currently set to 100ms.  There should be no problem with increasing
-it if it would help to get some devices to work (please just send a patch).
+Index: linux-2.6/drivers/ide/alim15x3.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/alim15x3.c
++++ linux-2.6/drivers/ide/alim15x3.c
+@@ -490,8 +490,6 @@ static int __devinit init_dma_ali15x3(id
+ 	if (ide_allocate_dma_engine(hwif))
+ 		return -1;
+ 
+-	hwif->dma_ops = &sff_dma_ops;
+-
+ 	return 0;
+ }
+ 
+@@ -519,6 +517,7 @@ static const struct ide_port_info ali15x
+ 	.init_hwif	= init_hwif_ali15x3,
+ 	.init_dma	= init_dma_ali15x3,
+ 	.port_ops	= &ali_port_ops,
++	.dma_ops	= &sff_dma_ops,
+ 	.pio_mask	= ATA_PIO5,
+ 	.swdma_mask	= ATA_SWDMA2,
+ 	.mwdma_mask	= ATA_MWDMA2,
+Index: linux-2.6/drivers/ide/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/hpt366.c
++++ linux-2.6/drivers/ide/hpt366.c
+@@ -1349,8 +1349,6 @@ static int __devinit init_dma_hpt366(ide
+ 	if (ide_allocate_dma_engine(hwif))
+ 		return -1;
+ 
+-	hwif->dma_ops = &sff_dma_ops;
+-
+ 	return 0;
+ }
+ 
+Index: linux-2.6/drivers/ide/palm_bk3710.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/palm_bk3710.c
++++ linux-2.6/drivers/ide/palm_bk3710.c
+@@ -324,8 +324,6 @@ static int __devinit palm_bk3710_init_dm
+ 
+ 	hwif->dma_base = hwif->io_ports.data_addr - IDE_PALM_ATA_PRI_REG_OFFSET;
+ 
+-	hwif->dma_ops = &sff_dma_ops;
+-
+ 	return 0;
+ }
+ 
+@@ -338,6 +336,7 @@ static const struct ide_port_ops palm_bk
+ static struct ide_port_info __devinitdata palm_bk3710_port_info = {
+ 	.init_dma		= palm_bk3710_init_dma,
+ 	.port_ops		= &palm_bk3710_ports_ops,
++	.dma_ops		= &sff_dma_ops,
+ 	.host_flags		= IDE_HFLAG_MMIO,
+ 	.pio_mask		= ATA_PIO4,
+ 	.mwdma_mask		= ATA_MWDMA2,
 
-Thanks,
-Bart
