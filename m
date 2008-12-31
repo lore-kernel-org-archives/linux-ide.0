@@ -1,55 +1,57 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: PIO with SSDs: needs a long DRQ-after-command timeout for WRITEs
-Date: Wed, 31 Dec 2008 15:30:17 -0500
-Message-ID: <495BD659.6000604@rtr.ca>
-References: <495A27E3.50801@rtr.ca> <20081230135902.560267dc@lxorguk.ukuu.org.uk> <495B9DDD.2020109@rtr.ca> <200812311938.08916.bzolnier@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.28: Is there a way to disable sata probing for certain
+ ports?
+Date: Wed, 31 Dec 2008 16:01:42 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812311601130.25367@p34.internal.lan>
+References: <alpine.DEB.1.10.0812300605250.11356@p34.internal.lan> <da824cf30812300908x3ff6061cn569203d5163664ea@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:58637 "EHLO mail.rtr.ca"
+Received: from lucidpixels.com ([75.144.35.66]:43651 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750846AbYLaU2s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Dec 2008 15:28:48 -0500
-In-Reply-To: <200812311938.08916.bzolnier@gmail.com>
+	id S1751957AbYLaVBo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Dec 2008 16:01:44 -0500
+In-Reply-To: <da824cf30812300908x3ff6061cn569203d5163664ea@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Grant Grundler <grundler@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 31 December 2008, Mark Lord wrote:
->> Alan Cox wrote:
->>>> So.. how long does libata and current IDE allow for initial DRQ assertion?
->>>> It should probably be at least 500msec or more now.
->>> I think we need to rewrite the PIO code paths to use disable/enable_irq
->>> masking first before getting into adding long delays on PIO paths.
->> ..
+
+
+On Tue, 30 Dec 2008, Grant Grundler wrote:
+
+> On Tue, Dec 30, 2008 at 4:24 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>> When I boot from an Intel X25-E SSD, it takes roughly a few seconds;
+>> however, items such as:
 >>
->> Yeah, that would be a good thing to do.
-> 
-> Unless shared IRQs come into the picture -- in such case disabling IRQ
-> for 0.5sec doesn't sound too sexy...
-> 
->> But in the meanwhile, a longer timeout there doesn't affect
->> any currently working systems -- they'll still wait only as long
->> as they currently do.  And a longer timeout *will* enable these
->> SSDs to work where they otherwise would not.
+>> $ dmesg|grep link\ down
+>> [    2.447030] ata4: SATA link down (SStatus 0 SControl 300)
+>> [    4.481288] ata5: SATA link down (SStatus 0 SControl 0)
+>> [    6.501288] ata6: SATA link down (SStatus 0 SControl 0)
+>> [    8.522038] ata7: SATA link down (SStatus 0 SControl 0)
+>> [   10.552288] ata8: SATA link down (SStatus 0 SControl 0)
 >>
->> But perhaps the timeout is already long enough?
->> I don't know where the current timeout is hiding in libata.  :)
-> 
-> When it comes to IDE the timeout is defined by WAIT_DRQ in <linux/ide.h>
-> and is currently set to 100ms.  There should be no problem with increasing
-> it if it would help to get some devices to work (please just send a patch).
-..
+>> Scanning for devices on channels that have nothing connected adds to the
+>> boot time, is there anyway to turn off/disable scanning for certain ports to
+>> help speed the boot process?
+>
+> Some BIOSs allow one to enable/disable each port individually.
+> Have you checked the BIOS config menus for such an option?
+>
+> drivers/ata/libata-core.c declares "ata_force_param_buf" but I don't
+> see any documentation for it despite the reference to
+> Documentation/kernel-parameters.txt .
+>
+> hth,
+> grant
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-That's probably enough.  50msec wasn't, so we just bumped to a few seconds
-in the custom kernel and sent them on their way happy.
+Disabling the additional controllers helped a bit but for AHCI on a few 
+boards its all or nothing, AHCI enabled/disabled.
 
-But if it pops up again here (timeout waiting for initial DRQ),
-then we all know what to do about it, I suppose.
-Most people will never notice a problem, because most systems
-aren't stuck in the PIO-only dark ages now.  :)
-
-Cheers
+Justin.
