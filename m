@@ -1,168 +1,118 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
-Date: Tue, 30 Dec 2008 21:59:53 +0100
-Message-ID: <20081230215953.235ce1b4@neptune.home>
-References: <20081230185037.7ec94e94@neptune.home>
+From: "Shane McDonald" <mcdonald.shane@gmail.com>
+Subject: Re: [PATCH v3] Resurrect IT8172 IDE controller driver
+Date: Tue, 30 Dec 2008 21:20:07 -0600
+Message-ID: <b2b2f2320812301920y551371b7u2292fbccc73f4fec@mail.gmail.com>
+References: <E1LEfcO-0007lL-Mq@localhost> <49580131.6090006@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752866AbYL3VAQ@vger.kernel.org>
-In-Reply-To: <20081230185037.7ec94e94@neptune.home>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from yx-out-2324.google.com ([74.125.44.30]:12433 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753205AbYLaDUJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2008 22:20:09 -0500
+In-Reply-To: <49580131.6090006@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 30 December 2008 Bruno Pr=C3=A9mont wrote:
-> Secondary note, with ATA subsystem it is possible to discover
-> hot-plugged second SATA drive with issuing
->   echo '- - -' > host0/scsi_host/host0/scan
-> though the same action causes the access to first SATA drive to fail
-> after removing second drive. (unfortunately BIOS does only allows
-> configuring the chipset in IDE mode - so not possible to use SATA_VIA
-> or AHCI). I guess this is caused by some incorrect detection of speed
-> settings.
->=20
-> What is the way to ask driver to rescan with IDE driver?
-I found:
-  Documentation/ide/warm-plug-howto.txt
+I have made the changes you have suggested.  See resolution below.
+A v4 patch follows shortly.
 
+On Sun, Dec 28, 2008 at 4:44 PM, Sergei Shtylyov
+<sshtylyov@ru.mvista.com> wrote:
+> Shane McDonald wrote:
+>
+>  Well, you're close. :-)
 
-Doing just:
-  echo -n "1" > /sys/class/ide_port/idex/scan
-causes the following BUG():
-<<<< during boot
-Dec 30 18:19:50 venus [    3.909946] Uniform Multi-Platform E-IDE drive=
-r
-Dec 30 18:19:50 venus [    3.913075] via82cxxx 0000:00:0f.0: VIA cx700 =
-(rev 00) IDE UDMA133
-Dec 30 18:19:50 venus [    3.916069] via82cxxx 0000:00:0f.0: IDE contro=
-ller (0x1106:0x0581 rev 0x00)
-Dec 30 18:19:50 venus [    3.919138] via82cxxx 0000:00:0f.0: not 100% n=
-ative mode: will probe irqs later
-Dec 30 18:19:50 venus [    3.924945]     ide0: BM-DMA at 0xff00-0xff07
-Dec 30 18:19:50 venus [    3.927990]     ide1: BM-DMA at 0xff08-0xff0f
-Dec 30 18:19:50 venus [    3.930901] Probing IDE interface ide0...
-Dec 30 18:19:50 venus [    4.050047] Marking TSC unstable due to cpufre=
-q changes
-Dec 30 18:19:50 venus [    4.370099] hda: FUJITSU MHY2250BH, ATA DISK d=
-rive
-Dec 30 18:19:50 venus [    4.390026] Clocksource tsc unstable (delta =3D=
- -215834270 ns)
-Dec 30 18:19:50 venus [    4.730309] hda: host max PIO5 wanted PIO255(a=
-uto-tune) selected PIO4
-Dec 30 18:19:50 venus [    4.730462] hda: UDMA/100 mode selected
-Dec 30 18:19:50 venus [    4.735541] Probing IDE interface ide1...
-Dec 30 18:19:50 venus [    5.420127] hdd: , ATA DISK drive
-Dec 30 18:19:50 venus [    5.480288] hdd: host max PIO5 wanted PIO255(a=
-uto-tune) selected PIO2
-Dec 30 18:19:50 venus [    5.480330] hdd: UDMA/66 mode selected
-Dec 30 18:19:50 venus [    5.485099] ide0 at 0x1f0-0x1f7,0x3f6 on irq 1=
-4
-Dec 30 18:19:50 venus [    5.565605] ide1 at 0x170-0x177,0x376 on irq 1=
-5
-Dec 30 18:19:50 venus [    5.573072] ide-gd driver 1.18
-Dec 30 18:19:50 venus [    5.577684] hda: max request size: 512KiB
-Dec 30 18:19:50 venus [    5.582339] hda: 488397168 sectors (250059 MB)=
- w/8192KiB Cache, CHS=3D30401/255/63
-Dec 30 18:19:50 venus [    5.592346] hda: cache flushes supported
-Dec 30 18:19:50 venus [    5.597500]  hda: hda1 hda2 hda3 hda4 hda5 hda=
-6
-Dec 30 18:19:50 venus [    5.646208] hdd: max request size: 128KiB
-Dec 30 18:19:50 venus [    5.651361] hdd: 8043840 sectors (4118 MB) w/1=
-KiB Cache, CHS=3D7980/16/63
-Dec 30 18:19:50 venus [    5.656901]  hdd: hdd1
--- snip --
-<<<< some time later, triggering the scan
-Dec 30 21:35:55 venus [ 7866.335247] Probing IDE interface ide0...
-Dec 30 21:35:55 venus [ 7866.650105] hda: FUJITSU MHY2250BH, ATA DISK d=
-rive
-Dec 30 21:35:56 venus [ 7867.370055] hda: host max PIO5 wanted PIO255(a=
-uto-tune) selected PIO4
-Dec 30 21:35:56 venus [ 7867.370221] hda: UDMA/100 mode selected
-Dec 30 21:35:56 venus [ 7867.370375] BUG: unable to handle kernel NULL =
-pointer dereference at 0000000c
-Dec 30 21:35:56 venus [ 7867.370400] IP: [<c0248bf6>] elv_may_queue+0x6=
-/0x20
-Dec 30 21:35:56 venus [ 7867.370440] *pde =3D 00000000=20
-Dec 30 21:35:56 venus [ 7867.370459] Oops: 0000 [#1]=20
-Dec 30 21:35:56 venus [ 7867.375572] last sysfs file: /sys/devices/pci0=
-000:00/0000:00:0f.0/ide0/ide_port/ide0/scan
-Dec 30 21:35:56 venus [ 7867.380014] Modules linked in: snd_hda_intel s=
-nd_pcm snd_timer snd soundcore snd_page_alloc via_agp agpgart
-Dec 30 21:35:56 venus [ 7867.380014]=20
-Dec 30 21:35:56 venus [ 7867.380014] Pid: 1855, comm: bash Not tainted =
-(2.6.28-ide #3) CX700+W697HG
-Dec 30 21:35:56 venus [ 7867.380014] EIP: 0060:[<c0248bf6>] EFLAGS: 000=
-10046 CPU: 0
-Dec 30 21:35:56 venus [ 7867.380014] EIP is at elv_may_queue+0x6/0x20
-Dec 30 21:35:56 venus [ 7867.380014] EAX: 00000000 EBX: 00000000 ECX: 0=
-0000000 EDX: 00000000
-Dec 30 21:35:56 venus [ 7867.380014] ESI: 00000000 EDI: 00000010 EBP: f=
-6bb3e28 ESP: f6bb3e24
-Dec 30 21:35:56 venus [ 7867.380014]  DS: 007b ES: 007b FS: 0000 GS: 00=
-33 SS: 0068
-Dec 30 21:35:56 venus [ 7867.380014] Process bash (pid: 1855, ti=3Df6bb=
-3000 task=3Df7110d80 task.ti=3Df6bb3000)
-Dec 30 21:35:56 venus [ 7867.380014] Stack:
-Dec 30 21:35:56 venus [ 7867.380014]  00000000 f6bb3e50 c024b40b 000000=
-00 000000e1 f7005890 00000078 00000282
-Dec 30 21:35:56 venus [ 7867.380014]  00000000 f73d0020 00000000 f6bb3e=
-80 c024b82c 00000010 00000000 f6bb3e7c
-Dec 30 21:35:56 venus [ 7867.380014]  00000282 00000001 000000e1 000000=
-e1 00000001 f73d0020 f6bb3ee4 f6bb3e8c
-Dec 30 21:35:56 venus [ 7867.380014] Call Trace:
-Dec 30 21:35:56 venus [ 7867.380014]  [<c024b40b>] ? get_request+0x1b/0=
-x240
-Dec 30 21:35:56 venus [ 7867.380014]  [<c024b82c>] ? get_request_wait+0=
-x1c/0xd0
-Dec 30 21:35:56 venus [ 7867.380014]  [<c024bc48>] ? blk_get_request+0x=
-18/0x30
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02e2d3a>] ? ide_raw_taskfile+0=
-x2a/0x90
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02e2e21>] ? taskfile_lib_get_i=
-dentify+0x61/0x70
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02e5ff0>] ? ide_acpi_port_init=
-_devices+0x90/0xe0
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02e2379>] ? ide_port_scan+0x39=
-/0x50
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02e23d1>] ? store_scan+0x41/0x=
-60
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02e2390>] ? store_scan+0x0/0x6=
-0
-Dec 30 21:35:56 venus [ 7867.380014]  [<c02cc03c>] ? dev_attr_store+0x2=
-c/0x40
-Dec 30 21:35:56 venus [ 7867.380014]  [<c01a468d>] ? sysfs_write_file+0=
-x9d/0x100
-Dec 30 21:35:56 venus [ 7867.380014]  [<c016b215>] ? vfs_write+0x95/0x1=
-20
-Dec 30 21:35:56 venus [ 7867.380014]  [<c01a45f0>] ? sysfs_write_file+0=
-x0/0x100
-Dec 30 21:35:56 venus [ 7867.380014]  [<c016b34d>] ? sys_write+0x3d/0x7=
-0
-Dec 30 21:35:56 venus [ 7867.380014]  [<c0103b01>] ? sysenter_do_call+0=
-x12/0x25
-Dec 30 21:35:56 venus [ 7867.380014] Code: bf 00 00 00 00 55 8b 40 0c 8=
-9 e5 8b 00 8b 48 34 85 c9 74 04 89 d0 ff d1 5d c3 8d 74 26 00 8d bc 27 =
-00 00 00 00 55 89 e5 53 89 c3 <8b> 40 0c 8b 00 8b 48 38 31 c0 85 c9 74 =
-04 89 d8 ff d1 5b 5d c3=20
-Dec 30 21:35:56 venus [ 7867.380014] EIP: [<c0248bf6>] elv_may_queue+0x=
-6/0x20 SS:ESP 0068:f6bb3e24
-Dec 30 21:35:56 venus [ 7867.380014] ---[ end trace b966cf347b1167e4 ]-=
---
-Dec 30 21:36:15 venus [ 7886.330025] ide_timer_expiry: hwgroup->drive w=
-as NULL
-Dec 30 21:36:29 venus [ 7899.770239] Buffer I/O error on device hda3, l=
-ogical block 115511
-Dec 30 21:36:29 venus [ 7899.777078] lost page write due to I/O error o=
-n hda3
-Dec 30 21:36:29 venus [ 7899.783856] Buffer I/O error on device hda3, l=
-ogical block 115512
-Dec 30 21:36:29 venus [ 7899.790570] lost page write due to I/O error o=
-n hda3
+Just 3 more iterations... :-)
 
-Same effect with:
-  cd /sys/class/ide_port/ide0/
-  sync; sleep 1; echo -n 1 > delete_devices; sleep 1; echo -n 1 > scan
+>> diff -uprN a/drivers/ide/it8172.c b/drivers/ide/it8172.c
+>> --- a/drivers/ide/it8172.c      1969-12-31 18:00:00.000000000 -0600
+>> +++ b/drivers/ide/it8172.c      2008-12-22 01:23:15.000000000 -0600
+>> @@ -0,0 +1,188 @@
+>> +                                    /* RTx  PWx */
+>> +       static const u8 timings[][2] =3D {
+>> +                                       { 7, 7 },
+>> +                                       { 3, 4 },
+>
+>  This is not enough for PIO mode 1, as this only gives 150 ns active =
++ 120
+> ns recovery =3D 270 ns where minimum is 383 ns
 
-Bruno
+OK, I think I understand the required timings now.  I will update PIO m=
+ode 1
+to set RTx to 7 and PWx to 4, giving 150 ns active + 240 ns recovery
+=3D 390 ns (> minimum 383 ns).
+
+>> +       if (drive->dn) {
+>
+>  Would have been good to collapse both branches...
+
+Yes, the code is quite repetitive.  I've collapsed it into a single
+chunk of code.
+
+>> +               if (pio > 2 || ata_id_has_iordy(drive->id))
+>
+>  You can actually skip "pio > 2" test.
+
+Agreed.
+
+>> +       if (speed >=3D XFER_UDMA_0) {
+>> +               u8 udma =3D speed - XFER_UDMA_0;
+>> +               u_speed =3D min_t(u8, 2 - (udma & 1), udma) << (driv=
+e->dn *
+>> 4);
+>
+>  There's no need to use such complex math when the chip only supports
+> UltraDMA modes 0 thru 2. Be simple:
+>
+>                u_speed =3D udma << (drive->dn * 4);
+
+Suggested change has been implemented.
+
+>> +               if (speed >=3D XFER_MW_DMA_0)
+>
+>  We dropped support for SWDMA, so the check  should not be needed...
+
+Yes.  Check will be removed.
+
+>> +                       pio =3D mwdma_to_pio[speed - XFER_MW_DMA_0];
+>> +               else
+>> +                       pio =3D 2;
+>>
+>
+>  ... and *else* branch is pointless.
+
+and is now removed.
+
+>> +               it8172_set_pio_mode(drive, pio);
+>
+>  Well, not the best place in the PIIX driver -- DMA modes shouldn't a=
+ffect
+> prefetch and IORDY settings (regardless of what the Intel's programmi=
+ng
+> manuals say :-).
+> =C0lthough, it's probably OK to continue abusing the set_pio_mode() m=
+ethod.
+
+I will continue to abuse set_pio_mode().
+
+>
+>> +static const struct ide_port_info it8172_port_info __devinitdata =3D=
+ {
+>> +       .name           =3D DRV_NAME,
+>> +       .port_ops       =3D &it8172_port_ops,
+>> +       .enablebits     =3D {{0x41, 0x80, 0x80}, {0x00, 0x00, 0x00} =
+},
+>>
+>
+>  Inconsistent spacing, add space after first {...
+
+I will correct the spacing.
+
+> MBR, Sergei
+
+Shane
