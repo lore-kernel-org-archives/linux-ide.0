@@ -1,62 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Frozen drives when using SiI3726
-Date: Fri, 02 Jan 2009 12:28:40 +0900
-Message-ID: <495D89E8.2020307@kernel.org>
-References: <20E60A0E-48E9-4942-851D-E20C012F5B89@ibink.com>	 <495894AB.8010404@kernel.org> <da824cf30812291120x1ed3f554lb7bdfe25427cecb3@mail.gmail.com>
+From: Andreas Mohr <andi@lisas.de>
+Subject: Re: [PATCH #upstream-fixes] ata_piix: save, use saved and restore
+	IOCFG
+Date: Fri, 2 Jan 2009 09:29:33 +0100
+Message-ID: <20090102082933.GA7881@rhlx01.hs-esslingen.de>
+References: <495D8450.6070505@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51071 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750911AbZABD2v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Jan 2009 22:28:51 -0500
-In-Reply-To: <da824cf30812291120x1ed3f554lb7bdfe25427cecb3@mail.gmail.com>
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:42985 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbZABIiM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jan 2009 03:38:12 -0500
+Content-Disposition: inline
+In-Reply-To: <495D8450.6070505@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Tim Nufire <linux_ide_tim@ibink.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, michal@physics.ubc.ca, IDE/ATA development list <linux-ide@vger.kernel.org>, Andreas Mohr <andi@lisas.de>
 
-Hello, Grant.
+Hi,
 
-Grant Grundler wrote:
->> Also, the timeout is one of the most generic failure mode there is.
->> It can be triggered by virtually anything including transmission
->> failure, power quality issues, drive problems and whatnot.  So, it's
->> impossible to tell what went wrong with the provided information.
+On Fri, Jan 02, 2009 at 12:04:48PM +0900, Tejun Heo wrote:
+> Certain ACPI implementations mess up IOCFG on _STM making libata
+> detect cable type incorrectly after a suspend/resume cycle.  This
+> patch makes ata_piix save IOCFG on attach, use the saved value for
+> things which aren't dynamic and restore it on detach so that the next
+> driver also gets the BIOS initialized value.
 > 
-> Tejun,
-> The only other possible major issue not listed above I can think of is
-> Sil3276 firmware rev. The data sheet (*) "EEPROM Speicifications"
-> on Page 20 says the firmware is versioned.
-> But the data sheet doesn't specify how to read it.
-
-I haven't seen firmware related transmission failures yet but it's not
-like I have lots of 3726s with different revision firmwares.
-
-> Can you ask Silicon Image to publish how to read the firmware rev?
-
-IIRC, you can read it from the steelvine management utility.  You'll
-probably need a Windows installation tho.
-
-> Also SATA_PMP_GSCR_REV  (Spec compliance, not FW rev) seems
-> to be used twice:
+> This patch contains the following changes.
 > 
-> include/linux/ata.h:
-> #define sata_pmp_gscr_rev(gscr)         (((gscr)[SATA_PMP_GSCR_REV] >>
-> 8) & 0xff)
+> * makes ich_pata_cable_detect() use saved_iocfg.
 > 
-> drivers/ata/libata-pmp.c:sata_pmp_spec_rev_str()
+> * make piix_iocfg_bit18_quirk() take @host and use saved_iocfg.
 > 
-> Would it make sense to rename one or the other so they match?
-> The difference is one returns a string and the other a u8 value.
-> Both take the same parameter.
+> * hpriv allocation moved upwards to save iocfg before doing anything
+>   else.
+> 
+> This fixes bz#11879.  Andreas Mohr reported and diagnosed the problem.
 
-No, spec_rev_str() returns spec compliance string (lower bits) while
-gscr_rev() returns revision level of port multiplier (whatever that
-means).
+I'm mighty unhappy ;-)
 
-Thanks.
+First, I still think prime cause was a weak disk implementation of Word 93
+and not BIOS ACPI handling itself (bug #12202 is a PATA SSD, too!).
+(unless one thinks that BIOS should know about SSD variants of PATA
+and actively do special-case them itself)
+Second, you've been keeping silent about the duplicate processing
+for too long (I didn't know about it at all until marked duplicate),
+thus nobody else could derive any hard facts from the doubled information.
+Third, it was not just me who reported it, Carl Michal did >= 10 reports
+in his bug.
+Fourth, "bz#11879" may seem a precise indication, but when writing this
+within Bugzilla instead of a plain "bug #11879", you probably won't have it
+hyperlinked, thus I'd always prefer the usual writing. </nitpick>
 
--- 
-tejun
+
+Patch seems fine to me, thanks a helluva lot for your hard work!
+(probably will test, later)
+
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+
+Acked-by: Andreas Mohr <andi@lisas.de>
