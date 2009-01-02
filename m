@@ -1,38 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/4] ide: don't set hwif->dma_ops in init_dma() method
-Date: Fri, 2 Jan 2009 23:32:45 +0100
-Message-ID: <200901022332.46065.bzolnier@gmail.com>
-References: <200812312152.48007.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH v5] Resurrect IT8172 IDE controller driver
+Date: Fri, 2 Jan 2009 23:25:04 +0100
+Message-ID: <200901022325.04782.bzolnier@gmail.com>
+References: <E1LIkqz-00021S-O5@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:49617 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756668AbZABWd4 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:7099 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015AbZABWd4 (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jan 2009 17:33:56 -0500
-Received: by mail-bw0-f21.google.com with SMTP id 14so20505353bwz.13
-        for <linux-ide@vger.kernel.org>; Fri, 02 Jan 2009 14:33:55 -0800 (PST)
-In-Reply-To: <200812312152.48007.sshtylyov@ru.mvista.com>
+In-Reply-To: <E1LIkqz-00021S-O5@localhost>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Shane McDonald <mcdonald.shane@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, sshtylyov@ru.mvista.com, linux-kernel@vger.kernel.org
 
-On Wednesday 31 December 2008, Sergei Shtylyov wrote:
-> Replace setting of 'hwif->dma_ops' in the 'alim16x3' and 'palm_bk3710' drivers'
-> init_dma() methods with initializing the corresponding member of their 'struct
-> ide_port_info' instances and remove such setting from the 'hpt366' driver that
-> just doesn't use 'sff_dma_ops'. Along with some code save, this prepares us for
-> the next patch...
+On Friday 02 January 2009, Shane McDonald wrote:
+> Support for the IT8172 IDE controller was removed from the kernel
+> sometime after 2.6.18.  Support for the only boards that used the IT8172
+> was removed from the kernel after 2.6.18, as they had never compiled
+> since 2.6.0.  However, there are a couple of platforms that use this
+> chip: the PMC-Sierra Xiao Hu thin-client computer, which is no longer
+> in production, and the Linksys NSS4000 Network Attached Storage box,
+> which is based on the Xiao Hu board.  I am attempting to add support
+> for the Xiao Hu to the kernel, and this IT8172 IDE controller is the
+> first bit of code in this effort.
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> This patch resurrects the IT8172 IDE controller code.  I began with
+> the 2.6.18 version of the it8172.c file, and have moved it forward so
+> that it works with the latest version of the kernel.  I have run this
+> driver on a PMC-Sierra Xiao Hu board with the 2.6.28 kernel, and
+> I have had no problems with it in my configuration.  The attached patch
+> applies cleanly against 2.6.28.
 > 
-> ---
-> Here are the unfortunate series of patches that hadn't gotten into 2.6.28 --
-> I decided not to leave it to the next year despite an extreme overload I had
-> during the past several months... :-)
+> Signed-off-by: Shane McDonald <mcdonald.shane@gmail.com>
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Cool, I applied whole series (it indeed makes code a lot saner/cleaner :).
+applied, thanks!
