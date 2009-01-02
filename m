@@ -1,23 +1,44 @@
-From: "Jason" <aerber@adconn.com>
-Subject: Happy New Year Wishes!
-Date: Fri, 2 Jan 2009 12:36:08 +0100
-Message-ID: <20090102123608.5010801@adconn.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH v4] Resurrect IT8172 IDE controller driver
+Date: Fri, 02 Jan 2009 17:12:44 +0300
+Message-ID: <495E20DC.2040606@ru.mvista.com>
+References: <E1LHrff-0007jd-Rp@localhost> <495B6080.7020802@ru.mvista.com> <b2b2f2320812311835t36b67cbdlba1fd6e537158c24@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [80.31.74.83] ([80.31.74.83]:1552 "HELO wergvan"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1756941AbZABLoC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jan 2009 06:44:02 -0500
+Received: from h155.mvista.com ([63.81.120.155]:10673 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751895AbZABOMv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jan 2009 09:12:51 -0500
+In-Reply-To: <b2b2f2320812311835t36b67cbdlba1fd6e537158c24@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Shane McDonald <mcdonald.shane@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jason just mailed to you a New Year postcard.
-It is waiting for you at our card site, click on the following link to see your 
-Ecard: http://newyearcardservice.com/?cardnum=8aa3a6a03a9b11
-Copyright (c) Crosscards.com All Rights Reserved
-X-Antivirus: avast! (VPS 090101-0, 01/01/2009), Outbound message
-X-Antivirus-Status: Clean
+Hello.
+
+Shane McDonald wrote:
+
+>>> Signed-off-by: Shane McDonald <mcdonald.shane@gmail.com>
+>>>       
+>> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>>     
+>
+> Please forgive my ignorance -- this is my first non-trivial patch...
+> I have made a new patch incorporating your suggestions as described below.
+> Do I include your Acked-by line in my re-spun patch, or do I need you
+>   
+
+   Yes, you can. I can always take my AXK back. :-)
+
+> to Ack it again?
+> I will post the new patch when I receive guidance on this.
+>   
+
+   Oh, that's really a minor matter -- don't let it delay you. :-)
+
+MBR, Sergei
+
 
