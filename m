@@ -1,54 +1,40 @@
-From: Jody Belka <lists-lkml@pimb.org>
-Subject: Re: marvell sata status?
-Date: Thu, 1 Jan 2009 19:43:02 +0000
-Message-ID: <20090101194302.GH3386@pimb.org>
-References: <20090101051038.GD3386@pimb.org> <alpine.DEB.1.10.0901010444440.427@p34.internal.lan> <495CCE0F.7010002@rtr.ca> <20090101184450.GG3386@pimb.org> <alpine.DEB.1.10.0901011411140.20575@p34.internal.lan>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [git patches] libata hibernation fixes
+Date: Fri, 02 Jan 2009 11:36:57 +0900
+Message-ID: <495D7DC9.8070101@kernel.org>
+References: <20081104062734.GA4420@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus.pimb.org ([80.68.88.21]:42182 "EHLO zeus.pimb.org"
+Received: from hera.kernel.org ([140.211.167.34]:49460 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750722AbZAATn2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Jan 2009 14:43:28 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0901011411140.20575@p34.internal.lan>
+	id S1755483AbZABChd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Jan 2009 21:37:33 -0500
+In-Reply-To: <20081104062734.GA4420@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, Jan 01, 2009 at 02:11:37PM -0500, Justin Piszcz wrote:
-> On Thu, 1 Jan 2009, Jody Belka wrote:
-> >Cool, I think I'll go for that card then (Adaptec 1430SA). They're
-> >x4, so good bandwidth, and i'll use the x16 slots on my board for
-> >them. Only need one for now, but two eventually. And they're a good
-> >price, at only =A377 each.
->=20
-> Does the card 'recognize' disks as SATA or do you have to export them=
- as=20
-> JBOD? The star tech card allows you to see the sata drives directly.
+Jeff Garzik wrote:
+> This adds code at a late stage (heading towards -rc4), but does
+> eliminate a particular spin-up overcycling behavior associated with
+> hibernation.
+> 
+> Rafael's extended description below...  Separated to make it easier to
+> pull-or-not, separate from the other libata fixes.  There shouldn't be
+> any merge trouble between the two.
+> 
+> SATA: Blacklist systems that spin off disks during ACPI power off
 
-Well, it's just fake-raid, so surely you can always see the individual =
-drives?
-Are there actually cards out there that don't? *boggle*
+Jeff, I think this should be merged into 2.6.29 unless Linus still
+objects.  Linus, as discussed in this thread, this is workaround for a
+hardware / firmware problem and vanilla windows also suffers the
+problem, so as ugly as it is, we need this to prevent double spin down
+on the machine.
 
-Hmm.... ok, checking the Adaptec knowledgebase:
+Thanks and happy new year.
 
-Q: Can drives be used on an Adaptec RAID controller but not be used as
-   part of a RAID array?
-
-A: Hard drives attached to an Adaptec RAID controller do not have to be
-   configured as an array member to work properly. The RAID controller
-   will recognize and access single disks. Please refer to your control=
-ler
-   documentation for instructions on accessing drives that are not a me=
-mber
-   of any RAID array.=20
-
-
-
-J
---=20
-Jody Belka
-knew (at) pimb (dot) org
+-- 
+tejun
