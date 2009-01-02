@@ -1,171 +1,80 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Re: RFC: detection of silent corruption via ATA long sector reads
-Date: Fri, 2 Jan 2009 17:41:50 -0500
-Message-ID: <87f94c370901021441t5ba1b758qa34b474755835257@mail.gmail.com>
-References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>
-	 <fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>
-	 <49580061.9060506@yahoo.com>
-	 <87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com>
-	 <yq13ag174af.fsf@sermon.lab.mkp.net>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
+Date: Fri, 2 Jan 2009 23:50:34 +0100
+Message-ID: <20090102235034.5660b85a@neptune.home>
+References: <20081230185037.7ec94e94@neptune.home>
+	<20081231201535.4d86c159@neptune.home>
+	<20081231232412.173c87a7@neptune.home>
+	<200901022213.53606.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:58964 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755906AbZABWlx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jan 2009 17:41:53 -0500
-In-Reply-To: <yq13ag174af.fsf@sermon.lab.mkp.net>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200901022213.53606.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sitsofe Wheeler <sitsofe@yahoo.com>, Mark Lord <liml@rtr.ca>, Redeeman <redeeman@metanurb.dk>, piergiorgio.sartor@nexgo.de, neilb@suse.de, linux-raid@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Thanks Martin, comments interspersed
+On Fri, 02 January 2009 Bartlomiej Zolnierkiewicz wrote:
+-snip-
+> >=20
+> > I guess the binfmt-0000 is cause by XFS reading at wrong location
+> > on disc and kernel seeing random data as bin format signature.
+> >=20
+> >=20
+> > On reboot no more bootloader.
+> > hexdump with rescue system showed XFS magic in very first sector of
+> > the disc, (rescuing the GPT worked - I assume parted used copy at
+> > end of disc) though the first partition also got corrupted.
+> >=20
+> > This looks like the scan is pretty dangerous in case anything has a
+> > reference to a disc/partition on the scanned channel :(
 
-On Fri, Jan 2, 2009 at 5:04 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Greg" == Greg Freemyer <greg.freemyer@gmail.com> writes:
->
-<snip>
+That's fine with me - eventually it would even be worth adding a
+printk() as reminder on code path for "scan" and "delete_devices"
+triggered when there exists an active user of the bus/device being
+probed.
 
-> The status is:
->
->  - The infrastructure in the kernel is in place as of .27.  Hoping to
->   get MD/DM support in .29 but I'm running late wrt. the merge window.
+This way there is at least a notice in case something goes wrong (and
+when the locking is fixed a reminder to adjust the documentation)
 
-I haven't seen any MD patches at all.  Will the MD support verify the
-CRC on read and trigger a RAID re-read other mirror on failure?
-
->  - We recently announced an early adopter program for Oracle DB
->   customers.  The ASM component of the database now supports the
->   integrity hooks so we can true end-to-end integrity protection of DB
->   I/O.
-
-Very cool.
-
->  - btrfs support is work in progress.
->
->  - Other people have expressed interest in adding support to ext4 and
->   XFS.
-
-Nice, but it seems the block layer will capture that vast majority of issues.
-
-> Greg> especially as it relates to ATA devices?
->
-> ATA support was put on hold in the T13 committee because the drive
-> vendors don't feel like adding a big, intrusive feature to their
-> firmware.  I'm still hoping we can eventually get support added to
-> nearline class drives but it'll be a while.  Market demand needs to be
-> there first.  I.e. the array vendors that use SATA drives will need to
-> start asking for it.
->
-> We're just, just, just starting to push out FC support.  Then comes SAS.
-> And then hopefully ATA.
-
-The LHC (Large Hadron Collider) people put out a white paper on silent
-corruption a year or two ago.   They were very concerned that it could
-negatively impact there results.  I don't remember the details, or how
-they worked around it.
-
-If they are not already part of your integrity team, you might want to
-reach out to them.  And I think they bought / are buying huge amounts
-of hardware.
-
->
-> Greg> ie.  Do actual ATA hardware devices that support "T13/ATA External
-> Greg> Path Protection" exist yet?  Does it require HDD and controller
-> Greg> support?  Or just HDD?
->
-> Both.  You could emulate some of the DIX features in software (like
-> scatterlist interleaving) and then plug in the long commands on the back
-> end.  But as Mark said the checksum formats differ between drive
-> vendors/models.
-
-The linux kernel obviously supports a large amount of vendor specific code.
-
-Maybe the INTEGRITY crc could be calculated on the fly by libata for
-at least a few hard drive vendors that have known CRC algorithms used
-with the current long sector reads.
-
-ie. When INTEGRITY is enabled and supported hard drives are being read
-from, libata requests the long sector with proprietary  CRC and
-verifies the vendor specific CRC.  If it looks good, then the vendor
-specific CRC is replaced by the SCSI Spec CRC and the sector / bios
-are passed up the line just like a supported SCSI device would do.
-
-If those drives started selling well, maybe the drive manufactures
-could be persuaded to implement the full end-to-end protocol.
-
-> On SCSI you could conceivably use the block integrity stuff to store an
-> LVM/MD checksum when used with devices that expose the application tag.
->
-> However, it's only a 16-bit field (16 bits - 1 to be exact) so it's not
-> exactly a lot of space.  And only dumb drives are going to make it
-> available.  Some RAID controllers are going to keep those 16-bits for
-> their own internal use.
->
-> The main purpose of the block integrity stuff is to protect in-flight
-> I/O.  Persistence is an optional feature and a side-effect.
-
-In-flight is my concern as well.  All of the silent corruption I've
-seen and taken the time to troubleshoot was caused by in-flight
-errors.  I've seen it be cables, power supply, controller, ram, and
-CPU cache at a minimum.
-
-> So I think it would be much more worthwhile to implement checksumming in
-> MD/DM without relying on special hardware.  I did some experiments in
-> that department a few years ago when we were investigating how to go
-> about fixing some of the data integrity problems in Linux.
->
-> I wrote something akin to DIF in software by doing 64 512-byte blocks +
-> 512 bytes of checksums.  The disadvantage there is having to do
-> read-modify-write for small writes.  I tried several other approaches
-> sacrificing both space and locality but performance was still anemic.
->
-> The reason DIF is implemented the way it is (with 520 byte sectors: 512
-> bytes followed by 8 bytes of checksum) is to prevent the cost of seeking
-> to write the protection information elsewhere.  With solid state devices
-> that seek penalty doesn't exist so this may become less of an issue
-> going forward.
->
-> The beauty of checksumming in btrfs is that the checksum is stored in
-> the filesystem metadata which is read/written anyway.  So the only
-> overhead is in calculating the actual checksum.  That's something
-> virtual block devices have a much harder time providing because they
-> don't have metadata describing individual blocks.
->
-> That doesn't mean it can't be done but it's a lot more work.  I'm
-> personally much more interested in adding support for adding a
-> retry-other-mirror interface to MD/DM and leave the checksumming to the
-> filesystems.
-
-That makes sense as well, but given the most filesystems won't have
-inherent INTEGRITY support, then the block layer should also be able
-to make retry-other-mirror requests of MD / DM.
-
-> --
-> Martin K. Petersen      Oracle Linux Engineering
->
-
-Also is there any effort to add diagnostic messages at the various tiers.
-
-You describe this as end-to-end protection, but when it fails, it
-would be extremely useful to check dmesg or something and be able to
-see that a sector came in from the controller fine, but was corrupted
-later, so CPU / memory is suspected vs. sector came in bad from the
-controller, so suspect a problem in the controller / cable / power
-supply area.
-
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+> I'm really sorry to hear it but "delete_devices" / "scan" interfaces
+> are currently not ready for use on actively used devices (there are
+> still some locking issues with the core code that need to be
+> addressed before this can be allowed).
+>=20
+> Even though HOWTO only mentions use for replacing devices (not
+> rescaning) I admit that it should be more clear about the above:
+>=20
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: update warm-plug HOWTO
+>=20
+> Reported-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  Documentation/ide/warm-plug-howto.txt |    5 +++++
+>  1 file changed, 5 insertions(+)
+>=20
+> Index: b/Documentation/ide/warm-plug-howto.txt
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- a/Documentation/ide/warm-plug-howto.txt
+> +++ b/Documentation/ide/warm-plug-howto.txt
+> @@ -11,3 +11,8 @@ unplug old device(s) and plug new device
+>  # echo -n "1" > /sys/class/ide_port/idex/scan
+> =20
+>  done
+> +
+> +NOTE: please make sure that partitions are unmounted and that there
+> are +no other active references to devices before doing
+> "delete_devices" step, +also do not attempt "scan" step on devices
+> currently in use -- otherwise +results may be unpredictable and lead
+> to data loss if you're unlucky
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
