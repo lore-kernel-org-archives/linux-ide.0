@@ -1,104 +1,74 @@
-From: Bernd Schubert <bs@q-leap.de>
+From: Twigathy <twigathy@gmail.com>
 Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Fri, 2 Jan 2009 22:30:07 +0100
-Message-ID: <20090102213007.GA4349@lanczos.q-leap.de>
-References: <495E01E3.9060903@sm7jqb.se> <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
+Date: Fri, 2 Jan 2009 21:47:29 +0000
+Message-ID: <1f0f1a960901021347ja5da16dgb0d42ddbdfb6853b@mail.gmail.com>
+References: <495E01E3.9060903@sm7jqb.se>
+	 <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
+	 <20090102213007.GA4349@lanczos.q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:45184 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758374AbZABVrc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jan 2009 16:47:32 -0500
+In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello Bengt,
-
-sil3114 is known to cause data corruption with some disks. So far I onl=
-y know
-about Seagate, but maybe there issues with newer Samsungs as well?
-
-http://lkml.indiana.edu/hypermail/linux/kernel/0710.2/2035.html
-
-Unfortuntely this issue has been simply ignored by the SATA developers =
-:(
-So if you want to be on the safe side, go an get another controller.=20
-
-I hope I won't frighten you too much, but it also might be possible one=
- of=20
-your disks has a problem,  I have also seen a few broken disks, which d=
-on't=20
-return what you write to it...
-
-
-Cheers,
-Bernd
-
-
-On Fri, Jan 02, 2009 at 07:42:30AM -0500, Justin Piszcz wrote:
->
->
-> On Fri, 2 Jan 2009, Bengt Samuelsson wrote:
->
->>
->> Hi,
->>
->> I need some support for this soft-raid system.
->>
->> I am running it as RAID5 with 4 samsung spinpoint 500G SATA300 tot 1=
-=2E3T byte
->>
->> And it runs in http://sm7jqb.dnsalias.com
->> I use mdadm sytem in a Debian Linux
->> CPU 1.2Mhz 1G memory ( my older 433Mhz / 512M dont work at all )
->>
->> I have 'some courrupt' data. And I don't understand whay and how to =
-fix it.
->> Mybee slow it down more, but how slow it down?
->>
->> Any with experents from this cheep way of RAID systems.
->>
->> Ask for more information and I can get it, logs, setup files and wha=
-t=20
->> you want
->> to know.
->>
->> --=20
->> Bengt Samuelsson
->> Nydalav=C3=A4gen 30 A
->> 352 48 V=C3=A4xj=C3=B6
->>
->> +46(0)703686441
->>
->> http://sm7jqb.se
->>
->>
->> --=20
->> To UNSUBSCRIBE, email to debian-user-REQUEST@lists.debian.org with a=
-=20
->> subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.o=
-rg
->>
->
-> If this is an mdadm-related raid (not dmraid) please show all relevan=
-t md=20
-> info, mdadm -D /dev/md0, I have cc'd linux-raid on this thread for yo=
-u.
->
-> You'll want to read md.txt in /usr/src/linux/Documentation and read o=
-n=20
-> the check and repair commands.
->
-> In addition, have you run memtest86 on your system first to make sure=
- its=20
-> not memory related?
->
-> Justin.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGksCgpJIGFsc28gaGFkIHByb2JsZW1zIHdpdGggdGhlIHNhdGFfc2lsIGRyaXZlciB3aXRoIG1v
+cmUgdGhhbiBvbmUKc2lsaWNvbiBpbWFnZSBjYXJkIGluIHRoZSBzYW1lIG1hY2hpbmUgYWJvdXQg
+YSB5ZWFyIG9yIHR3byBiYWNrLiBEb24ndApyZW1lbWJlciB0aGUgc3BlY2lmaWNzLCBidXQgYmFz
+aWNhbGx5IHRoZSBjYXJkcyB3b3VsZCBvY2Nhc2lvbmFsbHkKZHJvcCB0aGUgU0FUQSBsaW5rLiBU
+aGlzIHdhcyB3aXRoIFdlc3Rlcm4gRGlnaXRhbCBkcml2ZXMuIFdpdGggYQpTYW1zdW5nIDc1MEdC
+IGRpc2sgdGhlIGRpc2sgYW5kIGNvbnRyb2xsZXIgYWJzb2x1dGVseSByZWZ1c2VkIHRvIHRhbGsK
+dG8gZWFjaCBvdGhlci4KCkkndmUgc2luY2UgZ290IHJpZCBvZiBhbGwgYnV0IG9uZSBzaWxpY29u
+IGltYWdlIGNhcmQgYW5kIGhhdmVuJ3QgaGFkCnByb2JsZW1zIHNpbmNlIGFuZCBzd2FwcGVkIG91
+dCBjYWJsZXMuIENvaW5jaWRlbmNlPyBObyBpZGVhLgoKMDQ6MDEuMCBSQUlEIGJ1cyBjb250cm9s
+bGVyOiBTaWxpY29uIEltYWdlLCBJbmMuIFNpSSAzNTEyCltTQVRBTGluay9TQVRBUmFpZF0gU2Vy
+aWFsIEFUQSBDb250cm9sbGVyIChyZXYgMDEpCkN1cnJlbnRseSBydW5uaW5nIGtlcm5lbCAyLjYu
+MjQtMjEKCk5vdCBtdWNoIGZ1biB3aGVuIGRpc2tzIGRvbid0IHdvcmsgcHJvcGVybHksIGlzIGl0
+PyA6LSgKClQKCjIwMDkvMS8yIEJlcm5kIFNjaHViZXJ0IDxic0BxLWxlYXAuZGU+Ogo+IEhlbGxv
+IEJlbmd0LAo+Cj4gc2lsMzExNCBpcyBrbm93biB0byBjYXVzZSBkYXRhIGNvcnJ1cHRpb24gd2l0
+aCBzb21lIGRpc2tzLiBTbyBmYXIgSSBvbmx5IGtub3cKPiBhYm91dCBTZWFnYXRlLCBidXQgbWF5
+YmUgdGhlcmUgaXNzdWVzIHdpdGggbmV3ZXIgU2Ftc3VuZ3MgYXMgd2VsbD8KPgo+IGh0dHA6Ly9s
+a21sLmluZGlhbmEuZWR1L2h5cGVybWFpbC9saW51eC9rZXJuZWwvMDcxMC4yLzIwMzUuaHRtbAo+
+Cj4gVW5mb3J0dW50ZWx5IHRoaXMgaXNzdWUgaGFzIGJlZW4gc2ltcGx5IGlnbm9yZWQgYnkgdGhl
+IFNBVEEgZGV2ZWxvcGVycyA6KAo+IFNvIGlmIHlvdSB3YW50IHRvIGJlIG9uIHRoZSBzYWZlIHNp
+ZGUsIGdvIGFuIGdldCBhbm90aGVyIGNvbnRyb2xsZXIuCj4KPiBJIGhvcGUgSSB3b24ndCBmcmln
+aHRlbiB5b3UgdG9vIG11Y2gsIGJ1dCBpdCBhbHNvIG1pZ2h0IGJlIHBvc3NpYmxlIG9uZSBvZgo+
+IHlvdXIgZGlza3MgaGFzIGEgcHJvYmxlbSwgIEkgaGF2ZSBhbHNvIHNlZW4gYSBmZXcgYnJva2Vu
+IGRpc2tzLCB3aGljaCBkb24ndAo+IHJldHVybiB3aGF0IHlvdSB3cml0ZSB0byBpdC4uLgo+Cj4K
+PiBDaGVlcnMsCj4gQmVybmQKPgo+Cj4gT24gRnJpLCBKYW4gMDIsIDIwMDkgYXQgMDc6NDI6MzBB
+TSAtMDUwMCwgSnVzdGluIFBpc3pjeiB3cm90ZToKPj4KPj4KPj4gT24gRnJpLCAyIEphbiAyMDA5
+LCBCZW5ndCBTYW11ZWxzc29uIHdyb3RlOgo+Pgo+Pj4KPj4+IEhpLAo+Pj4KPj4+IEkgbmVlZCBz
+b21lIHN1cHBvcnQgZm9yIHRoaXMgc29mdC1yYWlkIHN5c3RlbS4KPj4+Cj4+PiBJIGFtIHJ1bm5p
+bmcgaXQgYXMgUkFJRDUgd2l0aCA0IHNhbXN1bmcgc3BpbnBvaW50IDUwMEcgU0FUQTMwMCB0b3Qg
+MS4zVCBieXRlCj4+Pgo+Pj4gQW5kIGl0IHJ1bnMgaW4gaHR0cDovL3NtN2pxYi5kbnNhbGlhcy5j
+b20KPj4+IEkgdXNlIG1kYWRtIHN5dGVtIGluIGEgRGViaWFuIExpbnV4Cj4+PiBDUFUgMS4yTWh6
+IDFHIG1lbW9yeSAoIG15IG9sZGVyIDQzM01oeiAvIDUxMk0gZG9udCB3b3JrIGF0IGFsbCApCj4+
+Pgo+Pj4gSSBoYXZlICdzb21lIGNvdXJydXB0JyBkYXRhLiBBbmQgSSBkb24ndCB1bmRlcnN0YW5k
+IHdoYXkgYW5kIGhvdyB0byBmaXggaXQuCj4+PiBNeWJlZSBzbG93IGl0IGRvd24gbW9yZSwgYnV0
+IGhvdyBzbG93IGl0IGRvd24/Cj4+Pgo+Pj4gQW55IHdpdGggZXhwZXJlbnRzIGZyb20gdGhpcyBj
+aGVlcCB3YXkgb2YgUkFJRCBzeXN0ZW1zLgo+Pj4KPj4+IEFzayBmb3IgbW9yZSBpbmZvcm1hdGlv
+biBhbmQgSSBjYW4gZ2V0IGl0LCBsb2dzLCBzZXR1cCBmaWxlcyBhbmQgd2hhdAo+Pj4geW91IHdh
+bnQKPj4+IHRvIGtub3cuCj4+Pgo+Pj4gLS0KPj4+IEJlbmd0IFNhbXVlbHNzb24KPj4+IE55ZGFs
+YXbDpGdlbiAzMCBBCj4+PiAzNTIgNDggVsOkeGrDtgo+Pj4KPj4+ICs0NigwKTcwMzY4NjQ0MQo+
+Pj4KPj4+IGh0dHA6Ly9zbTdqcWIuc2UKPj4+Cj4+Pgo+Pj4gLS0KPj4+IFRvIFVOU1VCU0NSSUJF
+LCBlbWFpbCB0byBkZWJpYW4tdXNlci1SRVFVRVNUQGxpc3RzLmRlYmlhbi5vcmcgd2l0aCBhCj4+
+PiBzdWJqZWN0IG9mICJ1bnN1YnNjcmliZSIuIFRyb3VibGU/IENvbnRhY3QgbGlzdG1hc3RlckBs
+aXN0cy5kZWJpYW4ub3JnCj4+Pgo+Pgo+PiBJZiB0aGlzIGlzIGFuIG1kYWRtLXJlbGF0ZWQgcmFp
+ZCAobm90IGRtcmFpZCkgcGxlYXNlIHNob3cgYWxsIHJlbGV2YW50IG1kCj4+IGluZm8sIG1kYWRt
+IC1EIC9kZXYvbWQwLCBJIGhhdmUgY2MnZCBsaW51eC1yYWlkIG9uIHRoaXMgdGhyZWFkIGZvciB5
+b3UuCj4+Cj4+IFlvdSdsbCB3YW50IHRvIHJlYWQgbWQudHh0IGluIC91c3Ivc3JjL2xpbnV4L0Rv
+Y3VtZW50YXRpb24gYW5kIHJlYWQgb24KPj4gdGhlIGNoZWNrIGFuZCByZXBhaXIgY29tbWFuZHMu
+Cj4+Cj4+IEluIGFkZGl0aW9uLCBoYXZlIHlvdSBydW4gbWVtdGVzdDg2IG9uIHlvdXIgc3lzdGVt
+IGZpcnN0IHRvIG1ha2Ugc3VyZSBpdHMKPj4gbm90IG1lbW9yeSByZWxhdGVkPwo+Pgo+PiBKdXN0
+aW4uCj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
+ICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
+YWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4K
