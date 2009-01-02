@@ -1,17 +1,17 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: marvell sata status?
-Date: Fri, 02 Jan 2009 11:09:54 -0500
-Message-ID: <495E3C52.9090108@rtr.ca>
+Date: Fri, 02 Jan 2009 11:10:58 -0500
+Message-ID: <495E3C92.2070304@rtr.ca>
 References: <20090101051038.GD3386@pimb.org> <alpine.DEB.1.10.0901010444440.427@p34.internal.lan> <495CCE0F.7010002@rtr.ca> <20090101184450.GG3386@pimb.org> <alpine.DEB.1.10.0901011411140.20575@p34.internal.lan> <20090101194302.GH3386@pimb.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:48954 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:48959 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753356AbZABQIX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jan 2009 11:08:23 -0500
+	id S1751141AbZABQJ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jan 2009 11:09:27 -0500
 In-Reply-To: <20090101194302.GH3386@pimb.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -50,15 +50,11 @@ member
 >    of any RAID array.=20
 =2E.
 
-One caveat with any such cards:  the onboard BIOS of many "RAID" cards
-will scribble over a sector on the drive, to store metadata.
+I suppose, of all of the vendors, Adaptec probably has the best chance
+of getting that part right, and probably without randomly writing metad=
+ata
+somewhere on the drive simply for JBOD.
 
-Sometimes *even when the drive is not configured as RAID*,
-and sometimes *even when the drive is explicitly set as JBOD*.
-
-The HighPoint RocketRAID cards do this, for example, forcing the
-end-user to take great care not to include the overwritten sector(s)
-in any partitions or filesystems.  The overwriting happens long before
-the Linux kernel is ever loaded, and again at each power-on.
+Anyone know for sure ?
 
 Cheers
