@@ -1,68 +1,24 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
 Subject: Re: RFC: detection of silent corruption via ATA long sector reads
-Date: Fri, 2 Jan 2009 15:26:38 -0500
-Message-ID: <87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com>
-References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>
-	 <fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>
-	 <49580061.9060506@yahoo.com>
+Date: Fri, 2 Jan 2009 12:43:22 -0800 (PST)
+Message-ID: <124360.23007.qm@web110612.mail.gq1.yahoo.com>
+References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>  <fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>  <49580061.9060506@yahoo.com> <87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:36573 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757727AbZABU0l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jan 2009 15:26:41 -0500
-In-Reply-To: <49580061.9060506@yahoo.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Redeeman <redeeman@metanurb.dk>, piergiorgio.sartor@nexgo.de, neilb@suse.de, linux-raid@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Mark Lord <liml@rtr.ca>, Redeeman <redeeman@metanurb.dk>, piergiorgio.sartor@nexgo.de, neilb@suse.de, linux-raid@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sun, Dec 28, 2008 at 5:40 PM, Sitsofe Wheeler <sitsofe@yahoo.com> wrote:
-> Mark Lord wrote:
->
->> There's a separate effort, involving drive vendors and kernel hackers,
->> to provide end-to-end CRC protection of data.  I forget what it was
->> called,
->> but that's the future of this stuff for high-reliability requirements.
->
-> Are you thinking of BLK_DEV_INTEGRITY which tries to support T10/SCSI Data
-> Integrity Field or the T13/ATA External Path Protection?
->
+> Is there a more comprehensive write-up / resource that describes the
+> current status of the overall INTEGRITY support is, especially as it
+> relates to ATA devices?
 
-I see that my Opensuse kernel has CONFIG_BLK_DEV_INTEGRITY enabled and
-that block layer changes have been implemented and documented in
 
-Documentation/block/data-integrity.txt
+Did you check the kernel notes on kernelnewbies when the feature went in - 
+http://kernelnewbies.org/Linux_2_6_27 ?
 
-I also see Device Mapper support was discussed in Oct.  (My 2.6.27
-kernel does not have those patches).
 
-Is there a more comprehensive write-up / resource that describes the
-current status of the overall INTEGRITY support is, especially as it
-relates to ATA devices?
-
-ie.
-Do actual ATA hardware devices that support "T13/ATA External Path
-Protection" exist yet?  Does it require HDD and controller support?
-Or just HDD?
-
-Does libata support those devices and the extra INTEGRITY bio that
-holds the CRC field.
-
-Does mdraid?  Device Mapper?
-
-Thanks
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+      
