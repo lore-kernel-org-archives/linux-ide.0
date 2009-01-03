@@ -1,78 +1,60 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: marvell sata status?
-Date: Sat, 03 Jan 2009 09:46:59 -0500
-Message-ID: <495F7A63.9010509@rtr.ca>
-References: <20090101051038.GD3386@pimb.org> <alpine.DEB.1.10.0901010444440.427@p34.internal.lan> <495CCE0F.7010002@rtr.ca> <20090101184450.GG3386@pimb.org> <alpine.DEB.1.10.0901011411140.20575@p34.internal.lan> <20090101194302.GH3386@pimb.org> <495E3C92.2070304@rtr.ca> <alpine.DEB.1.10.0901021302560.26159@p34.internal.lan> <495E769B.8000407@rtr.ca> <alpine.DEB.1.10.0901021518150.8210@p34.internal.lan> <495EF1D5.1020106@rtr.ca> <alpine.DEB.1.10.0901030411510.11184@p34.internal.lan> <495F79B4.2050309@rtr.ca>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sat, 3 Jan 2009 17:20:46 +0100
+Message-ID: <20090103162046.GA29292@lanczos.q-leap.de>
+References: <495E01E3.9060903@sm7jqb.se> <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan> <20090102213007.GA4349@lanczos.q-leap.de> <20090103133936.0f6a3d2c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:43649 "EHLO mail.rtr.ca"
+Received: from ns2.q-leap.de ([88.79.172.217]:51970 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751151AbZACOp2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jan 2009 09:45:28 -0500
-In-Reply-To: <495F79B4.2050309@rtr.ca>
+	id S1750960AbZACQU5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Jan 2009 11:20:57 -0500
+Content-Disposition: inline
+In-Reply-To: <20090103133936.0f6a3d2c@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Jody Belka <lists-lkml@pimb.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Justin Piszcz wrote:
->>
-> ..
->> One would think if the controller overwrites bits on the device when 
->> mdadm assembles the raid device it would kick it out of the array for 
->> being unclean or find a lot of mismatches on the array or is that the 
->> wrong idea?
-> ..
+On Sat, Jan 03, 2009 at 01:39:36PM +0000, Alan Cox wrote:
+> On Fri, 2 Jan 2009 22:30:07 +0100
+> Bernd Schubert <bs@q-leap.de> wrote:
 > 
-> No, there's nothing in mdadm that I know of which will detect this.
-> You'd basically need to run a job in the background, reading/comparing
-> all of the mirrors with each other.
+> > Hello Bengt,
+> > 
+> > sil3114 is known to cause data corruption with some disks. 
 > 
-> But even that mightn't work, since the BIOS would have corrupted the
-> exact same sector on every drive attached to it, quite possibly with
-> the same contents, so the mirror-compare wouldn't see anything different.
-> 
-> The only way to know for sure is to test it manually,
-> by zeroing the entire drive, power/reboot, scan the entire
-> drive for non-zero.  Then repeat with a different pattern
-> just in case "zero" is what the BIOS wrote.
-> 
-> Very very messy, at least for the Highpoint RAID cards.
-> But we really don't know about what the others do,
-> apart from some historical data in the dm code.
-..
+> News to me. There are a few people with lots of SI and other devices
 
-Oh, and from the existing sata_mv.c driver code:
+No no, you just forgot about it, since you even reviewed the patches ;)
 
-if (pdev->vendor == PCI_VENDOR_ID_TTI &&
-    (pdev->device == 0x2300 || pdev->device == 0x2310))
-{
-   /*
-    * Highpoint RocketRAID PCIe 23xx series cards:
-    *
-    * Unconfigured drives are treated as "Legacy"
-    * by the BIOS, and it overwrites sector 8 with
-    * a "Lgcy" metadata block prior to Linux boot.
-    *
-    * Configured drives (RAID or JBOD) leave sector 8
-    * alone, but instead overwrite a high numbered
-    * sector for the RAID metadata.  This sector can
-    * be determined exactly, by truncating the physical
-    * drive capacity to a nice even GB value.
-    *
-    * RAID metadata is at: (dev->n_sectors & ~0xfffff)
-    *
-    * Warn the user, lest they think we're just buggy.
-    */
-   printk(KERN_WARNING DRV_NAME ": Highpoint RocketRAID"
-           " BIOS CORRUPTS DATA on all attached drives,"
-           " regardless of if/how they are configured."
-           " BEWARE!\n");
-   printk(KERN_WARNING DRV_NAME ": For data safety, do not"
-           " use sectors 8-9 on \"Legacy\" drives,"
-           " and avoid the final two gigabytes on"
-           " all RocketRAID BIOS initialized drives.\n");
-}
+http://lkml.org/lkml/2007/10/11/137
+
+> jammed into the same mainboard who had problems but that doesn't appear
+> to be an SI problem as far as I can tell.
+> 
+> There are some incompatibilities between certain silicon image chips and
+> Nvidia chipsets needing BIOS workarounds according to the errata docs.
+
+Well, I already posted the the links to the discussion we had in the past.
+The corruption issue is easily reproducible on Tyan S2882 with AMD-8111,
+SiI 3114 and ST3250820AS disks. This is on a compute cluster, and we run into 
+the problem, when a few ST3200822AS failed and got replaced by newer 250GB 
+disks. The 200GB ST3200822AS work perfectly fine, while the 250GB ST3250820AS 
+disks cause data corrution. 
+
+Presently the cluster is empty, so if you want do help me, your help to 
+properly solve the issue would be highly appreciated (*).
+
+
+Cheers,
+Bernd
+
+PS: The patches I posted work fine on these systems, but they are not upstream 
+and I really would prefer to find a way in vanilla linux to prevent this
+data corruption.
+
+PPS: Its a bit funny with this cluster, since it is located at my university 
+group and I did and do many calculations on it myself.  But presently I work 
+for the company we bought it from and which is responsible to maintain it... ;)
