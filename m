@@ -1,74 +1,49 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: marvell sata status?
-Date: Sat, 3 Jan 2009 04:13:10 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901030411510.11184@p34.internal.lan>
-References: <20090101051038.GD3386@pimb.org> <alpine.DEB.1.10.0901010444440.427@p34.internal.lan> <495CCE0F.7010002@rtr.ca> <20090101184450.GG3386@pimb.org> <alpine.DEB.1.10.0901011411140.20575@p34.internal.lan> <20090101194302.GH3386@pimb.org>
- <495E3C92.2070304@rtr.ca> <alpine.DEB.1.10.0901021302560.26159@p34.internal.lan> <495E769B.8000407@rtr.ca> <alpine.DEB.1.10.0901021518150.8210@p34.internal.lan> <495EF1D5.1020106@rtr.ca>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sat, 3 Jan 2009 14:13:02 +0100
+Message-ID: <200901031413.03623.bs@q-leap.de>
+References: <495E01E3.9060903@sm7jqb.se> <20090102213007.GA4349@lanczos.q-leap.de> <1230949917.21115.4.camel@localhost>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:56821 "EHLO lucidpixels.com"
+Received: from ns2.q-leap.de ([88.79.172.217]:36324 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924AbZACJNM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jan 2009 04:13:12 -0500
-In-Reply-To: <495EF1D5.1020106@rtr.ca>
+	id S1750739AbZACNNJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Jan 2009 08:13:09 -0500
+In-Reply-To: <1230949917.21115.4.camel@localhost>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jody Belka <lists-lkml@pimb.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Redeeman <redeeman@metanurb.dk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-
-On Sat, 3 Jan 2009, Mark Lord wrote:
-
-> Justin Piszcz wrote:
->> 
->> 
->> On Fri, 2 Jan 2009, Mark Lord wrote:
->> 
->>> Justin Piszcz wrote:
->>>> On Fri, 2 Jan 2009, Mark Lord wrote:
->>> 
->>>>> I suppose, of all of the vendors, Adaptec probably has the best chance
->>>>> of getting that part right, and probably without randomly writing 
->>>>> metadata
->>>>> somewhere on the drive simply for JBOD.
->>>>> 
->>>>> Anyone know for sure ?
->>>>> 
->>>>> Cheers
->>>>> -- 
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>> 
->>>> 
->>>> The Star Tech seems to work right, you plug in the disks and they're 
->>>> recognized as regular sata disks, as if on your on-board controller.  No 
->>>> special modifications required.
->>> ..
->>> 
->>> Inconclusive.  The Highpoint cards behave like that, too,
->>> except they silently corrupt a sector (or more) on the drive
->>> at every boot, whether or not one ever "configures" the drive
->>> through the built-in RAID/JBOD BIOS.
-> ..
+On Saturday 03 January 2009 03:31:57 Redeeman wrote:
+> On Fri, 2009-01-02 at 22:30 +0100, Bernd Schubert wrote:
+> > Hello Bengt,
+> >
+> > sil3114 is known to cause data corruption with some disks. So far I only
+> > know about Seagate, but maybe there issues with newer Samsungs as well?
+> >
+> > http://lkml.indiana.edu/hypermail/linux/kernel/0710.2/2035.html
+> >
+> > Unfortuntely this issue has been simply ignored by the SATA developers :(
+> > So if you want to be on the safe side, go an get another controller.
 >
-> Well.. what do *you* think the answer is?
->
-> Unless you've zeroed the entire drive beforehand,
-> and then inserted it into a given controller,
-> and then scanned for non-zero sectors.. how can you tell?
->
-> That's what we ended up having to do with the Highpoint ones,
-> and the result was rather shocking at the time.
->
-> Cheers
+> Are you sure? is this not the "15" or "slow_down" thing mentioned here:
+> http://ata.wiki.kernel.org/index.php/Sata_sil ?
 >
 
-One would think if the controller overwrites bits on the device when 
-mdadm assembles the raid device it would kick it out of the array for 
-being unclean or find a lot of mismatches on the array or is that the 
-wrong idea?
+According to Jeff Garzik and Tejun Heo 3114 is not affected by the mod15 bug. 
+The mod15 also help in our case, but probably we are just luckily.
 
-Justin.
+https://kerneltrap.org/mailarchive/linux-kernel/2007/10/11/334985/thread
+
+
+Cheers,
+Bernd
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
