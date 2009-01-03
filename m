@@ -1,80 +1,32 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.27.10: ata1.00: HPA detected: current 293044655, native  
- 293046768
-Date: Sat, 3 Jan 2009 08:15:52 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901030813410.31871@p34.internal.lan>
-References: <alpine.DEB.1.10.0812300657050.11356@p34.internal.lan> <495A5A9F.9020406@shaw.ca> <495B9ED3.8050008@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sat, 3 Jan 2009 13:39:36 +0000
+Message-ID: <20090103133936.0f6a3d2c@lxorguk.ukuu.org.uk>
+References: <495E01E3.9060903@sm7jqb.se>
+	<alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
+	<20090102213007.GA4349@lanczos.q-leap.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:56517 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751620AbZACNPz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jan 2009 08:15:55 -0500
-In-Reply-To: <495B9ED3.8050008@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Fri, 2 Jan 2009 22:30:07 +0100
+Bernd Schubert <bs@q-leap.de> wrote:
 
+> Hello Bengt,
+> 
+> sil3114 is known to cause data corruption with some disks. 
 
-On Wed, 31 Dec 2008, Mark Lord wrote:
+News to me. There are a few people with lots of SI and other devices
+jammed into the same mainboard who had problems but that doesn't appear
+to be an SI problem as far as I can tell.
 
-> Robert Hancock wrote:
->> Justin Piszcz wrote:
->>> On one system, two Raptor 150s:
->>> 
->>> [    0.739402] ata1.00: HPA detected: current 293044655, native 293046768
-> ..
->> Presumably somebody or something set up a host protected area on one drive 
->> and not the other.. I believe there are some utilities out there that can 
->> be used to disable the HPA and allow the full capacity to be used.
-> ..
->
-> "hdparm -N" can do this, temporarily or permanently.
-> Get the latest version from Sourceforge, and see the manpage for details.
->
-> -ml
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+There are some incompatibilities between certain silicon image chips and
+Nvidia chipsets needing BIOS workarounds according to the errata docs.
 
-Just incase someone Google's this later on, this is what it looks like,
-for my case:
-
-The /dev/sda (first disk) is the one with the problem.
-
-root@Knoppix:~/hpa# hdparm -N /dev/sda
-
-/dev/sda:
-  max sectors   = 293044655/293046768, HPA is enabled
-root@Knoppix:~/hpa# hdparm -N /dev/sdb
-
-/dev/sdb:
-  max sectors   = 293046768/293046768, HPA is disabled
-root@Knoppix:~/hpa# hdparm -N p293046768 /dev/sda
-
-/dev/sda:
-  setting max visible sectors to 293046768 (permanent)
-  max sectors   = 293046768/293046768, HPA is disabled
-root@Knoppix:~/hpa#
-
-root@Knoppix:~# hdparm -N /dev/sda
-
-/dev/sda:
-  max sectors   = 293046768/293046768, HPA is disabled
-root@Knoppix:~#
-
-1. I backed up the volume of the RAID-1 array.
-2. Failed out the disk with the problem.
-3. Then ran the commands above.
-4. Reboot back to the OS.
-5. Re-add the disk back into the RAID-1.
-
-
-Justin.
-
+Alan
