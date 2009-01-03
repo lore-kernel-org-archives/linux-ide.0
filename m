@@ -1,80 +1,115 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
-Date: Fri, 2 Jan 2009 23:50:34 +0100
-Message-ID: <20090102235034.5660b85a@neptune.home>
-References: <20081230185037.7ec94e94@neptune.home>
-	<20081231201535.4d86c159@neptune.home>
-	<20081231232412.173c87a7@neptune.home>
-	<200901022213.53606.bzolnier@gmail.com>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sat, 03 Jan 2009 03:31:57 +0100
+Message-ID: <1230949917.21115.4.camel@localhost>
+References: <495E01E3.9060903@sm7jqb.se>
+	 <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
+	 <20090102213007.GA4349@lanczos.q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200901022213.53606.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, 02 January 2009 Bartlomiej Zolnierkiewicz wrote:
--snip-
-> >=20
-> > I guess the binfmt-0000 is cause by XFS reading at wrong location
-> > on disc and kernel seeing random data as bin format signature.
-> >=20
-> >=20
-> > On reboot no more bootloader.
-> > hexdump with rescue system showed XFS magic in very first sector of
-> > the disc, (rescuing the GPT worked - I assume parted used copy at
-> > end of disc) though the first partition also got corrupted.
-> >=20
-> > This looks like the scan is pretty dangerous in case anything has a
-> > reference to a disc/partition on the scanned channel :(
+On Fri, 2009-01-02 at 22:30 +0100, Bernd Schubert wrote:
+> Hello Bengt,
+>=20
+> sil3114 is known to cause data corruption with some disks. So far I o=
+nly know
+> about Seagate, but maybe there issues with newer Samsungs as well?
+>=20
+> http://lkml.indiana.edu/hypermail/linux/kernel/0710.2/2035.html
+>=20
+> Unfortuntely this issue has been simply ignored by the SATA developer=
+s :(
+> So if you want to be on the safe side, go an get another controller.=20
 
-That's fine with me - eventually it would even be worth adding a
-printk() as reminder on code path for "scan" and "delete_devices"
-triggered when there exists an active user of the bus/device being
-probed.
+Are you sure? is this not the "15" or "slow_down" thing mentioned here:
+http://ata.wiki.kernel.org/index.php/Sata_sil ?
+>=20
+> I hope I won't frighten you too much, but it also might be possible o=
+ne of=20
+> your disks has a problem,  I have also seen a few broken disks, which=
+ don't=20
+> return what you write to it...
+>=20
+>=20
+> Cheers,
+> Bernd
+>=20
+>=20
+> On Fri, Jan 02, 2009 at 07:42:30AM -0500, Justin Piszcz wrote:
+> >
+> >
+> > On Fri, 2 Jan 2009, Bengt Samuelsson wrote:
+> >
+> >>
+> >> Hi,
+> >>
+> >> I need some support for this soft-raid system.
+> >>
+> >> I am running it as RAID5 with 4 samsung spinpoint 500G SATA300 tot=
+ 1.3T byte
+> >>
+> >> And it runs in http://sm7jqb.dnsalias.com
+> >> I use mdadm sytem in a Debian Linux
+> >> CPU 1.2Mhz 1G memory ( my older 433Mhz / 512M dont work at all )
+> >>
+> >> I have 'some courrupt' data. And I don't understand whay and how t=
+o fix it.
+> >> Mybee slow it down more, but how slow it down?
+> >>
+> >> Any with experents from this cheep way of RAID systems.
+> >>
+> >> Ask for more information and I can get it, logs, setup files and w=
+hat=20
+> >> you want
+> >> to know.
+> >>
+> >> --=20
+> >> Bengt Samuelsson
+> >> Nydalav=E4gen 30 A
+> >> 352 48 V=E4xj=F6
+> >>
+> >> +46(0)703686441
+> >>
+> >> http://sm7jqb.se
+> >>
+> >>
+> >> --=20
+> >> To UNSUBSCRIBE, email to debian-user-REQUEST@lists.debian.org with=
+ a=20
+> >> subject of "unsubscribe". Trouble? Contact listmaster@lists.debian=
+=2Eorg
+> >>
+> >
+> > If this is an mdadm-related raid (not dmraid) please show all relev=
+ant md=20
+> > info, mdadm -D /dev/md0, I have cc'd linux-raid on this thread for =
+you.
+> >
+> > You'll want to read md.txt in /usr/src/linux/Documentation and read=
+ on=20
+> > the check and repair commands.
+> >
+> > In addition, have you run memtest86 on your system first to make su=
+re its=20
+> > not memory related?
+> >
+> > Justin.
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-This way there is at least a notice in case something goes wrong (and
-when the locking is fixed a reminder to adjust the documentation)
-
-> I'm really sorry to hear it but "delete_devices" / "scan" interfaces
-> are currently not ready for use on actively used devices (there are
-> still some locking issues with the core code that need to be
-> addressed before this can be allowed).
->=20
-> Even though HOWTO only mentions use for replacing devices (not
-> rescaning) I admit that it should be more clear about the above:
->=20
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: update warm-plug HOWTO
->=20
-> Reported-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  Documentation/ide/warm-plug-howto.txt |    5 +++++
->  1 file changed, 5 insertions(+)
->=20
-> Index: b/Documentation/ide/warm-plug-howto.txt
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/Documentation/ide/warm-plug-howto.txt
-> +++ b/Documentation/ide/warm-plug-howto.txt
-> @@ -11,3 +11,8 @@ unplug old device(s) and plug new device
->  # echo -n "1" > /sys/class/ide_port/idex/scan
-> =20
->  done
-> +
-> +NOTE: please make sure that partitions are unmounted and that there
-> are +no other active references to devices before doing
-> "delete_devices" step, +also do not attempt "scan" step on devices
-> currently in use -- otherwise +results may be unpredictable and lead
-> to data loss if you're unlucky
->=20
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
