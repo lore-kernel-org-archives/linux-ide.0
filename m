@@ -1,32 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Sat, 3 Jan 2009 13:39:36 +0000
-Message-ID: <20090103133936.0f6a3d2c@lxorguk.ukuu.org.uk>
-References: <495E01E3.9060903@sm7jqb.se>
-	<alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
-	<20090102213007.GA4349@lanczos.q-leap.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: marvell sata status?
+Date: Sat, 03 Jan 2009 09:44:04 -0500
+Message-ID: <495F79B4.2050309@rtr.ca>
+References: <20090101051038.GD3386@pimb.org> <alpine.DEB.1.10.0901010444440.427@p34.internal.lan> <495CCE0F.7010002@rtr.ca> <20090101184450.GG3386@pimb.org> <alpine.DEB.1.10.0901011411140.20575@p34.internal.lan> <20090101194302.GH3386@pimb.org> <495E3C92.2070304@rtr.ca> <alpine.DEB.1.10.0901021302560.26159@p34.internal.lan> <495E769B.8000407@rtr.ca> <alpine.DEB.1.10.0901021518150.8210@p34.internal.lan> <495EF1D5.1020106@rtr.ca> <alpine.DEB.1.10.0901030411510.11184@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:34707 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751079AbZACOmf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Jan 2009 09:42:35 -0500
+In-Reply-To: <alpine.DEB.1.10.0901030411510.11184@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Jody Belka <lists-lkml@pimb.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Fri, 2 Jan 2009 22:30:07 +0100
-Bernd Schubert <bs@q-leap.de> wrote:
-
-> Hello Bengt,
+Justin Piszcz wrote:
 > 
-> sil3114 is known to cause data corruption with some disks. 
+..
+> One would think if the controller overwrites bits on the device when 
+> mdadm assembles the raid device it would kick it out of the array for 
+> being unclean or find a lot of mismatches on the array or is that the 
+> wrong idea?
+..
 
-News to me. There are a few people with lots of SI and other devices
-jammed into the same mainboard who had problems but that doesn't appear
-to be an SI problem as far as I can tell.
+No, there's nothing in mdadm that I know of which will detect this.
+You'd basically need to run a job in the background, reading/comparing
+all of the mirrors with each other.
 
-There are some incompatibilities between certain silicon image chips and
-Nvidia chipsets needing BIOS workarounds according to the errata docs.
+But even that mightn't work, since the BIOS would have corrupted the
+exact same sector on every drive attached to it, quite possibly with
+the same contents, so the mirror-compare wouldn't see anything different.
 
-Alan
+The only way to know for sure is to test it manually,
+by zeroing the entire drive, power/reboot, scan the entire
+drive for non-zero.  Then repeat with a different pattern
+just in case "zero" is what the BIOS wrote.
+
+Very very messy, at least for the Highpoint RAID cards.
+But we really don't know about what the others do,
+apart from some historical data in the dm code.
+
+Cheers
