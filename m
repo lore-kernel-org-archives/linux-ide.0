@@ -1,207 +1,77 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: motherboard-info based blacklist for ide-dma
-Date: Mon, 05 Jan 2009 02:34:35 +0300
-Message-ID: <4961478B.9060005@ru.mvista.com>
-References: <1230651239-29388-1-git-send-email-kirr@mns.spb.ru> <495A4CC0.6000000@ru.mvista.com> <200812312012.46496.bzolnier@gmail.com> <49611CF4.9030103@ru.mvista.com>
+From: "Darrick Burch" <darrick@tuffmail.com>
+Subject: SB600 in AHCI mode will not run SATA optical drive
+Date: Sun, 4 Jan 2009 18:33:06 -0500 (EST)
+Message-ID: <21155.72.218.132.189.1231111986.squirrel@webmail.tuffmail.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:39489 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751561AbZADXeo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2009 18:34:44 -0500
-In-Reply-To: <49611CF4.9030103@ru.mvista.com>
+Received: from fallback-out1.mxes.net ([216.86.168.190]:2403 "EHLO
+	fallback-in1.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751496AbZADXvy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2009 18:51:54 -0500
+Received: from mxout-03.mxes.net (mxout-03.mxes.net [216.86.168.178])
+	by fallback-in1.mxes.net (Postfix) with ESMTP id 88955164687
+	for <linux-ide@vger.kernel.org>; Sun,  4 Jan 2009 18:35:25 -0500 (EST)
+Received: from wm1.irbs.net (wm1.irbs.net [216.86.168.168])
+	by smtp.mxes.net (Postfix) with ESMTP id B39DC23E3F7
+	for <linux-ide@vger.kernel.org>; Sun,  4 Jan 2009 18:33:06 -0500 (EST)
+Received: from webmail.tuffmail.net (wm1.irbs.net [216.86.168.168])
+	by wm1.irbs.net (Postfix) with ESMTPA id 8D0231156B9
+	for <linux-ide@vger.kernel.org>; Sun,  4 Jan 2009 18:33:06 -0500 (EST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Kirill Smelkov <kirr@mns.spb.ru>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kirr@landau.phys.spbu.ru, Dmitry Gryazin <gdu@mns.spb.ru>, jordan.crouse@amd.com
+To: linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Hey, all:
 
->>>>       As it turned out, some boards don't have proper IDE DMA 
->>>> support for
->>>> CompactFlash (CF) adaptors, because pin connectors which relate to 
->>>> DMA are left
->>>> unsoldered (*).
->>>>       To verify this we even bought external IDE CF adaptor which 
->>>> showed the same
->>>> symthoms, and then manually soldered pins that were left dangling, 
->>>> and voila,
->>>> DMA started to work!
->>>>       Again, as they say, lots of manufacturers of not-so-new 
->>>> hardware did CF
->>>> soldering by the wrong way with respect to DMA, so we need a 
->>>> workaround.
->>>>       For this __ide_dma_bad_drive function is enhance to check not 
->>>> only drives
->>>> blacklist but motherboards blacklist too.
->>>>       Please apply before 2.6.29
->>>>       (*) On IEI PCISA-C3/EDEN the kernel boots _very_ slowly, 
->>>> becuase we have lots
->>>> of DMA timer expiry:
->>>>           <~30s pause>
->>>>     hdc: dma_timer_epiry: dma_status == 0x21
->>>>     hdc: DMA timeout error
->>>>     ...
->>>>     hdc: DMA disabled
->>>>     ide1: dma reset
->>>>
->>>>     <and the whole story repeats:>
->>>>     <~30s pause>
->>>>     hdc: dma_timer_epiry: dma_status == 0x21
->>>>     ...
->>>>       
->>>     Are you aware of ide_core.nodma= option which allows disabling 
->>> DMA per interface/drive? Read Documentation/ide/ide.txt please. I 
->>> should note that nodma option has been there for ages in one or 
->>> other form.
->>>     
->>
->> While it can be workarounded manually using "ide_core.nodma" we 
->> should really
->> be aiming at ease of use for the end users and always let the code 
->> handle such
->> issues automatically if possible.
->>   
->
->   I'd agree. The patch didn't seem to provide an accpetable form of 
-> such workaround though... although looks like I wasn't looking 
-> attentively enough.
->
->>>> diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
->>>> index fffd117..adb5d9d 100644
->>>> --- a/drivers/ide/ide-dma.c
->>>> +++ b/drivers/ide/ide-dma.c
->>>> @@ -33,6 +33,21 @@
->>>>  #include <linux/ide.h>
->>>>  #include <linux/scatterlist.h>
->>>>  #include <linux/dma-mapping.h>
->>>> +#include <linux/dmi.h>
->>>> +
->>>> +/* Internal structure for blacklisted boards */
->>>> +struct board_blacklist_entry {
->>>> +    const char *board_vendor;
->>>> +    const char *board_name;
->>>> +    const char *drive_name;
->>>> +};
->>>> +
->>>> +/* Blacklisted boards which have problems with DMA */
->>>> +static const struct board_blacklist_entry board_blacklist[] = {
->>>> +    /* on IEI PCISA-C3 CF adapter pin connectors for DMA are 
->>>> missing */
->>>> +    { "FIC"        ,    "PT-2200"    ,    "hdc"    },
->>>>       
->
->   I don't get it... FIC PT-2200 was Pentium class motherboard with 
-> Intel's 430HX chipset not having CF slot at all (as googling for its 
-> name has revealed). How it is connected to the (relatively modern) 
-> PCISA-C3/EPIC board?! What are you trying to smuggle into kernel? :-) 
-> Or this board just reports the bogus DMI IDs?
->
->>>> @@ -207,6 +222,30 @@ void ide_dma_on(ide_drive_t *drive)
->>>>      drive->hwif->dma_ops->dma_host_set(drive, 1);
->>>>  }
->>>>  
->>>> +static int __ide_dma_bad_adaptor(ide_drive_t *drive)
->>>> +{
->>>> +    const struct board_blacklist_entry *table = board_blacklist;
->>>> +
->>>> +    const char *board_vendor = dmi_get_system_info(DMI_BOARD_VENDOR);
->>>> +    const char *board_name   = dmi_get_system_info(DMI_BOARD_NAME);
->>>> +
->>>> +    if (!board_vendor || !board_name)
->>>> +        return 0;
->>>> +
->>>> +    for ( ; table->board_name ; table++)
->>>> +        if ((!strcmp(board_vendor, table->board_vendor)) &&
->>>> +            (!strcmp(board_name,   table->board_name))   &&
->>>> +            (!strcmp(drive->name,  table->drive_name))) {
->>>> +            printk(KERN_WARNING "%s: Disabling (U)DMA for %s "
->>>> +                "(Board %s %s is blacklisted)\n", drive->name,
->>>> +                (char *)&drive->id[ATA_ID_PROD], board_vendor,
->>>> +                board_name);
->>>> +            return 1;
->>>> +        }
->>>> +
->>>> +    return 0;
->>>> +}
->>>> +
->>>>       
->>>     This code doesn't anyhow discriminate the case of on-board CF 
->>> and say     
->
->   Hm, previously I failed to notice that the patch tries to 
-> discriminate this case based on applying the workaround only to the 
-> drive with certain name ("hdc"). However, it still seems wrong to 
-> place this workaround in __ide_dma_bad_drive() as it's not actually 
-> connected to the deficiency of a specific drive but to the definciency 
-> of the CF slot itself. Moreover, depending on the PCI cards plugged, 
-> the drive's name may change...
->
->>> normal IDE PCI card plugged into such board -- with latter having no 
->>> issues     
->
->   And the PT-2200 board did have PCI and even ISA slots... oh wait, 
-> that's really another board. :-) That EPIC board is PICMG however, so 
-> can have a backplane with PCI slots.
->
->>> with DMA whatsoever. E.g. AMD Geode GX2 dev. board (DB2301) has CF 
->>> slot (with unsoldered DMA pins, IIRC) and 3 PCI slots where you can 
->>> plug a normal IDE card.    
->>
->> True.  However it should be possible to handle it correctly by adding 
->> the
->> DMA quirk to the respective host drivers (seems to be via82cxxx.c in 
->> case of
->> IEI PCISA-C3/EDEN).  
->
->   Yeah, this seems a viable approach...
->
->> Kirill, could you please look into adding such quirk to via82cxxx 
->> instead?
->>
->> [ It seems the best place to add it would be via_init_one() as we 
->> could just
->>   
->
->   No, not really -- the issue is not at all as simple as this patch 
-> tried to present it. Looking at its "Quick Startup Reference" 
-> (http://f.ipc2u.ru/files/add/doc/496/M_PCISA-C800EV_ENG.pdf), the EPIC 
-> board has *two* normal IDE connectors in addition to the CF slot 
-> (connected to the secondary port -- and it seems possible that a hard 
-> drive can be connected to the same port as CF), so the right place 
-> seems to rather be in [mu]dma_filter() methods -- and the decision 
-> should be strictly based on the drive type indicating CF, i.e. by 
-> calling ata_id_is_cfa().
->
->> Sergei, care to handle AMD Geode GX2 case?
->>   
->
->   Eh... the DB2301 board I had on my desk for a long time died in my 
-> hands 12/31, that same day when I NAKed this patch -- sort of NY 
-> present/ :-) Well, actually it stopped to boot the BIOS several weeks 
-> before that, then it just stopped to power up. We probably have 
-> another one (not sure if it's alive still) but all MV's development 
-> work for Geode GX2 stoped like 3 years ago. And now I'm not even sure 
-> that CF DMA issue really existed there -- I wasn't directly involved 
-> with CF related issues we had at the time of the active development, 
-> so my memory might be wrong. What I can say for sure is that the CF 
-> slot on DB2301 board coexisted with the normal IDE connector on 
-> CS5535's single channel and both CF and hard disk worked 
-> simultaneously (if you were lucky :-). I'll see if I have the board 
-> schematics from which I may be able to tell if the issue really existed.
+I'm having a bit of an issue with running my Pioneer BDC-202BK BD-ROM
+drive on my motherboard's (MSI K9A2-CF) AMD SB600-based SATA controller
+and I was wondering if anyone has seen anything similar.
 
-   Finally found the schematics on AMD developers' site. Yes, the issue 
-existed on DM2301 -- they didn't wire CF pins 43/44 for DMA. If only my 
-board was alive... :-)
-   CCing Jordan, AMD Geode guru (not sure if he's still active). Jordan, 
-do you by chance know if the Insyde BIOS for Geode GX2 supported DMI at 
-all so that we can identify it easily?
+The problem is that the drive does not initialize at all under Linux.  I
+get errors from the ahci driver which, from what I've read from the wiki,
+is the only driver under which the SATA ports on the SB600 are supported.
 
->> Thanks,
->> Bart   
+The errors I'm getting loop infinitely until I remove the drive data cable:
 
-MBR, Sergei
+Nov  9 21:51:51 linux kernel: ata3: soft resetting link
+Nov  9 21:51:51 linux kernel: ata3: SATA link down (SStatus 1 SControl 300)
+Nov  9 21:51:51 linux kernel: ata3: EH complete
+Nov  9 21:51:51 linux kernel: ata3: exception Emask 0x10 SAct 0x0 SErr
+0x40c0000 action 0xa frozen
+Nov  9 21:51:51 linux kernel: ata3: irq_stat 0x00000040, connection status
+changed
+Nov  9 21:51:51 linux kernel: ata3: SError: { CommWake 10B8B DevExch }
+Nov  9 21:51:51 linux kernel: ata3: soft resetting link
+Nov  9 21:51:51 linux kernel: ata3: SATA link down (SStatus 1 SControl 300)
+Nov  9 21:51:51 linux kernel: ata3: EH complete
+Nov  9 21:51:51 linux kernel: ata3: exception Emask 0x10 SAct 0x0 SErr
+0x40c0000 action 0xa frozen
+Nov  9 21:51:51 linux kernel: ata3: irq_stat 0x00000040, connection status
+changed
+Nov  9 21:51:51 linux kernel: ata3: SError: { CommWake 10B8B DevExch }
 
+I've been able to get around this problem (which prevents me from booting
+completely) by commenting the PCI_VDEVICE definition for the SB600.  Of
+course, this means that the controller is effectively disabled.  I'm not
+in desperate need for my optical drive in Linux at the moment, but it
+would be nice to have access to it someday.
+
+I suppose my questions are the following:
+
+1. Is it possible that the drive simply does not want to run under AHCI
+mode?  I should note that the drive works correctly under Windows XP with
+the controller set to IDE emulation mode.
+
+2. I'm thinking that the best thing for me to do is to get another PCIe
+SATA controller and dedicate it to this one drive.  Does anyone want to
+give their opinion on this?
+
+Thanks in advance,
+-Darrick
+
+PS - I have no other devices on the SATA controller; my two hard drives
+are PATA and they're connected to the single PATA header available on the
+motherboard.  These, of course, are working fine.
 
