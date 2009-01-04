@@ -1,67 +1,38 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: motherboard-info based blacklist for ide-dma
-Date: Mon, 05 Jan 2009 00:13:18 +0300
-Message-ID: <4961266E.9000505@ru.mvista.com>
-References: <1230651239-29388-1-git-send-email-kirr@mns.spb.ru> <495A4CC0.6000000@ru.mvista.com> <200812312012.46496.bzolnier@gmail.com> <49611CF4.9030103@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Sun, 4 Jan 2009 21:44:38 +0000
+Message-ID: <20090104214438.196ff4ff@lxorguk.ukuu.org.uk>
+References: <20090104092430.7ffd2c41@infradead.org>
+	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:38638 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751893AbZADVN0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2009 16:13:26 -0500
-In-Reply-To: <49611CF4.9030103@ru.mvista.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59961 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751541AbZADVog (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2009 16:44:36 -0500
+In-Reply-To: <alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Kirill Smelkov <kirr@mns.spb.ru>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kirr@landau.phys.spbu.ru, Dmitry Gryazin <gdu@mns.spb.ru>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
 
-Hello, I wrote:
+> I _think_ it's the irq auto-probing, but that's just a guess. The 8250 
+> driver does some historical crud, like
+> 
+> 	probe_irq_off(probe_irq_on());
+> 
+> to get rid of any pending irq's, but that should be entirely pointless 
+> these days. I bet that line basically goes back to pre-history, before we 
+> made the auto-probing much stabler.
 
->>>>      drive->hwif->dma_ops->dma_host_set(drive, 1);
->>>>  }
->>>>  
->>>> +static int __ide_dma_bad_adaptor(ide_drive_t *drive)
->>>> +{
->>>> +    const struct board_blacklist_entry *table = board_blacklist;
->>>> +
->>>> +    const char *board_vendor = dmi_get_system_info(DMI_BOARD_VENDOR);
->>>> +    const char *board_name   = dmi_get_system_info(DMI_BOARD_NAME);
->>>> +
->>>> +    if (!board_vendor || !board_name)
->>>> +        return 0;
->>>> +
->>>> +    for ( ; table->board_name ; table++)
->>>> +        if ((!strcmp(board_vendor, table->board_vendor)) &&
->>>> +            (!strcmp(board_name,   table->board_name))   &&
->>>> +            (!strcmp(drive->name,  table->drive_name))) {
->>>> +            printk(KERN_WARNING "%s: Disabling (U)DMA for %s "
->>>> +                "(Board %s %s is blacklisted)\n", drive->name,
->>>> +                (char *)&drive->id[ATA_ID_PROD], board_vendor,
->>>> +                board_name);
->>>> +            return 1;
->>>> +        }
->>>> +
->>>> +    return 0;
->>>> +}
->>>> +
->>>>       
->>>     This code doesn't anyhow discriminate the case of on-board CF 
->>> and say     
-> @@ -207,6 +222,30 @@ void ide_dma_on(ide_drive_t *drive)
->
->   Hm, previously I failed to notice that the patch tries to 
-> discriminate this case based on applying the workaround only to the 
-> drive with certain name ("hdc"). However, it still seems wrong to 
-> place this workaround in __ide_dma_bad_drive() as it's not actually 
-> connected to the deficiency of a specific drive but to the definciency 
-> of the CF slot itself. Moreover, depending on the PCI cards plugged, 
-> the drive's name may change...
+For non ISA boxes we shouldn't be - but this old code. The IRQ for the
+built in ports is defined by convention, in the BIOS PnP tables or with
+ACPI in the ACPI tables. So we shouldn't even be autoprobing the IRQ.
 
-   Oh, and the master/slave mode of the CF drive is selectable by 
-on-board switch -- via the -CSEL signal I guess. :-)
+We *do* have to wait one transmission timeout or so to detect buggy uarts
+but in theory that could be moved down into the open path.
 
-MBR, Sergei
-
+Alan
 
