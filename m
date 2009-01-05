@@ -1,61 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] block: export SSD/non-rotational queue flag through sysfs
-Date: Mon, 5 Jan 2009 19:52:57 +0100
-Message-ID: <200901051952.58029.bzolnier@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
+Date: Mon, 05 Jan 2009 13:44:19 -0500
+Message-ID: <yq1wsd91tks.fsf@sermon.lab.mkp.net>
+References: <49615667.9020408@iwl.com> <yq1vdsu317m.fsf@sermon.lab.mkp.net>
+	<496200A3.2000906@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:53317 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312AbZAESxX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 13:53:23 -0500
-Content-Disposition: inline
+Received: from rcsinet14.oracle.com ([148.87.113.126]:55276 "EHLO
+	rgminet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830AbZAESxe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 13:53:34 -0500
+Received: from rgminet13.oracle.com (rcsinet13.oracle.com [148.87.113.125])
+	by rgminet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n05ItccT021385
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-ide@vger.kernel.org>; Mon, 5 Jan 2009 18:55:40 GMT
+In-Reply-To: <496200A3.2000906@ru.mvista.com> (Sergei Shtylyov's message of "Mon\, 05 Jan 2009 15\:44\:19 +0300")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Karl Auerbach <karl@iwl.com>, linux-ide@vger.kernel.org, karl@cavebear.com
 
-RnJvbTogQmFydGxvbWllaiBab2xuaWVya2lld2ljeiA8YnpvbG5pZXJAZ21haWwuY29tPgpTdWJq
-ZWN0OiBbUEFUQ0hdIGJsb2NrOiBleHBvcnQgU1NEL25vbi1yb3RhdGlvbmFsIHF1ZXVlIGZsYWcg
-dGhyb3VnaCBzeXNmcwoKRm9yIHNvbWUgZGV2aWNlcyAoaS5lLiBDRkEgQVRBKSB3ZSBjYW4ndCBy
-ZWxpYWJseSBkZXRlY3Qgd2hldGhlcgp0aGUgZGV2aWNlIGlzIG9mIHJvdGF0aW9uYWwgb3Igbm9u
-LXJvdGF0aW9uYWwgdHlwZSBzbyB3ZSBuZWVkIHRvCmxlYXZlIHRoZSBmaW5hbCBkZWNpc2lvbiBh
-Ym91dCB0aGlzIHNldHRpbmcgdG8gdGhlIHVzZXItc3BhY2UuCgpTdWdnZXN0ZWQtYnk6IEFsYW4g
-Q294IDxhbGFuQGx4b3JndWsudWt1dS5vcmcudWs+ClNpZ25lZC1vZmYtYnk6IEJhcnRsb21pZWog
-Wm9sbmllcmtpZXdpY3ogPGJ6b2xuaWVyQGdtYWlsLmNvbT4KLS0tCiBibG9jay9ibGstc3lzZnMu
-YyB8ICAgMzAgKysrKysrKysrKysrKysrKysrKysrKysrKysrKystCiAxIGZpbGUgY2hhbmdlZCwg
-MjkgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoKSW5kZXg6IGIvYmxvY2svYmxrLXN5c2Zz
-LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PQotLS0gYS9ibG9jay9ibGstc3lzZnMuYworKysgYi9ibG9jay9ibGstc3lz
-ZnMuYwpAQCAtMTMwLDYgKzEzMCwyNyBAQCBzdGF0aWMgc3NpemVfdCBxdWV1ZV9tYXhfaHdfc2Vj
-dG9yc19zaG93CiAJcmV0dXJuIHF1ZXVlX3Zhcl9zaG93KG1heF9od19zZWN0b3JzX2tiLCAocGFn
-ZSkpOwogfQogCitzdGF0aWMgc3NpemVfdCBxdWV1ZV9ub25yb3Rfc2hvdyhzdHJ1Y3QgcmVxdWVz
-dF9xdWV1ZSAqcSwgY2hhciAqcGFnZSkKK3sKKwlyZXR1cm4gcXVldWVfdmFyX3Nob3coYmxrX3F1
-ZXVlX25vbnJvdChxKSwgcGFnZSk7Cit9CisKK3N0YXRpYyBzc2l6ZV90IHF1ZXVlX25vbnJvdF9z
-dG9yZShzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgY29uc3QgY2hhciAqcGFnZSwKKwkJCQkgIHNp
-emVfdCBjb3VudCkKK3sKKwl1bnNpZ25lZCBsb25nIG5tOworCXNzaXplX3QgcmV0ID0gcXVldWVf
-dmFyX3N0b3JlKCZubSwgcGFnZSwgY291bnQpOworCisJc3Bpbl9sb2NrX2lycShxLT5xdWV1ZV9s
-b2NrKTsKKwlpZiAobm0pCisJCXF1ZXVlX2ZsYWdfc2V0KFFVRVVFX0ZMQUdfTk9OUk9ULCBxKTsK
-KwllbHNlCisJCXF1ZXVlX2ZsYWdfY2xlYXIoUVVFVUVfRkxBR19OT05ST1QsIHEpOworCXNwaW5f
-dW5sb2NrX2lycShxLT5xdWV1ZV9sb2NrKTsKKworCXJldHVybiByZXQ7Cit9CisKIHN0YXRpYyBz
-c2l6ZV90IHF1ZXVlX25vbWVyZ2VzX3Nob3coc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIGNoYXIg
-KnBhZ2UpCiB7CiAJcmV0dXJuIHF1ZXVlX3Zhcl9zaG93KGJsa19xdWV1ZV9ub21lcmdlcyhxKSwg
-cGFnZSk7CkBAIC0xNDYsOCArMTY3LDggQEAgc3RhdGljIHNzaXplX3QgcXVldWVfbm9tZXJnZXNf
-c3RvcmUoc3RydQogCQlxdWV1ZV9mbGFnX3NldChRVUVVRV9GTEFHX05PTUVSR0VTLCBxKTsKIAll
-bHNlCiAJCXF1ZXVlX2ZsYWdfY2xlYXIoUVVFVUVfRkxBR19OT01FUkdFUywgcSk7Ci0KIAlzcGlu
-X3VubG9ja19pcnEocS0+cXVldWVfbG9jayk7CisKIAlyZXR1cm4gcmV0OwogfQogCkBAIC0yMTAs
-NiArMjMxLDEyIEBAIHN0YXRpYyBzdHJ1Y3QgcXVldWVfc3lzZnNfZW50cnkgcXVldWVfaHcKIAku
-c2hvdyA9IHF1ZXVlX2h3X3NlY3Rvcl9zaXplX3Nob3csCiB9OwogCitzdGF0aWMgc3RydWN0IHF1
-ZXVlX3N5c2ZzX2VudHJ5IHF1ZXVlX25vbnJvdF9lbnRyeSA9IHsKKwkuYXR0ciA9IHsubmFtZSA9
-ICJub25yb3QiLCAubW9kZSA9IFNfSVJVR08gfCBTX0lXVVNSIH0sCisJLnNob3cgPSBxdWV1ZV9u
-b25yb3Rfc2hvdywKKwkuc3RvcmUgPSBxdWV1ZV9ub25yb3Rfc3RvcmUsCit9OworCiBzdGF0aWMg
-c3RydWN0IHF1ZXVlX3N5c2ZzX2VudHJ5IHF1ZXVlX25vbWVyZ2VzX2VudHJ5ID0gewogCS5hdHRy
-ID0gey5uYW1lID0gIm5vbWVyZ2VzIiwgLm1vZGUgPSBTX0lSVUdPIHwgU19JV1VTUiB9LAogCS5z
-aG93ID0gcXVldWVfbm9tZXJnZXNfc2hvdywKQEAgLTIyOSw2ICsyNTYsNyBAQCBzdGF0aWMgc3Ry
-dWN0IGF0dHJpYnV0ZSAqZGVmYXVsdF9hdHRyc1tdCiAJJnF1ZXVlX21heF9zZWN0b3JzX2VudHJ5
-LmF0dHIsCiAJJnF1ZXVlX2lvc2NoZWRfZW50cnkuYXR0ciwKIAkmcXVldWVfaHdfc2VjdG9yX3Np
-emVfZW50cnkuYXR0ciwKKwkmcXVldWVfbm9ucm90X2VudHJ5LmF0dHIsCiAJJnF1ZXVlX25vbWVy
-Z2VzX2VudHJ5LmF0dHIsCiAJJnF1ZXVlX3JxX2FmZmluaXR5X2VudHJ5LmF0dHIsCiAJTlVMTCwK
-AAo=
+>>>>> "Sergei" == Sergei Shtylyov <sshtylyov@ru.mvista.com> writes:
+
+>> The driver was developed on a Soekris net5501.  To my knowledge it's
+>> working fine on ALIX boards.  If that's not the case there may be a
+>> problem with the ALIX BIOS VSA PCI config space emulation.  In that
+>> case you can load the driver with msr=1 to force it to program the
+>> IDE function using machine specific registers instead of relying on
+>> PCI.
+>> 
+
+Sergei> It's stange that the driver is using CPI config. space by
+Sergei> default which not even documented in the datasheet.
+
+Using PCI config space was explicitly requested by AMD for the reasons
+Alan pointed out.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
