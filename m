@@ -1,45 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata hibernation fixes
-Date: Mon, 05 Jan 2009 03:34:22 -0500
-Message-ID: <4961C60E.9030506@garzik.org>
-References: <20081104062734.GA4420@havoc.gtf.org> <495D7DC9.8070101@kernel.org>
+From: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Mon, 5 Jan 2009 09:47:04 +0100
+Message-ID: <20090105084703.GA5741@nowhere>
+References: <20090104092430.7ffd2c41@infradead.org> <1231135294.8179.45.camel@nigel-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42372 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751464AbZAEIee (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Jan 2009 03:34:34 -0500
-In-Reply-To: <495D7DC9.8070101@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1231135294.8179.45.camel@nigel-laptop>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Nigel Cunningham <ncunningham-lkml@crca.org.au>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> This adds code at a late stage (heading towards -rc4), but does
->> eliminate a particular spin-up overcycling behavior associated with
->> hibernation.
->>
->> Rafael's extended description below...  Separated to make it easier to
->> pull-or-not, separate from the other libata fixes.  There shouldn't be
->> any merge trouble between the two.
->>
->> SATA: Blacklist systems that spin off disks during ACPI power off
+On Mon, Jan 05, 2009 at 05:01:34PM +1100, Nigel Cunningham wrote:
+> Hi Arjan.
 > 
-> Jeff, I think this should be merged into 2.6.29 unless Linus still
-> objects.  Linus, as discussed in this thread, this is workaround for a
-> hardware / firmware problem and vanilla windows also suffers the
-> problem, so as ugly as it is, we need this to prevent double spin down
-> on the machine.
+> Great work, and valuable too. I'm just wondering if the header file name
+> "async.h" is a little too generic? Something like async_init.h perhaps?
+> 
+> Regards,
+> 
+> Nigel
+>
 
-(Just returned from New Year's holiday)
+Hi Nigel,
 
-Yes, I definitely want to put it in as well.
-
-	Jeff
-
-
+That's what I thought too at first. But I guess there could be other
+users of these async functions than the initcalls.
+It looks like out of order workqueues that can synchronize themselves.
+It seems a bit more costly than workqueues (since the concept comes along
+a loop of creation/destroying of several threads) but more efficient for the
+same reason as the number of active threads adapts to the number of CPU and jobs to perform.
+The purpose is not the same. But I guess it's more reliable
+than workqueues for pathes that require mutiple parallel jobs which need
+to locally synchronize on critical pathes.
 
