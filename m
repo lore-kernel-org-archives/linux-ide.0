@@ -1,109 +1,44 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH v5] Resurrect IT8172 IDE controller driver
-Date: Mon, 05 Jan 2009 15:46:55 +0300
-Message-ID: <4962013F.9090900@ru.mvista.com>
-References: <E1LIkqz-00021S-O5@localhost>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
+Date: Mon, 5 Jan 2009 13:33:40 +0000
+Message-ID: <20090105133340.050858bb@lxorguk.ukuu.org.uk>
+References: <49615667.9020408@iwl.com>
+	<yq1vdsu317m.fsf@sermon.lab.mkp.net>
+	<496200A3.2000906@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:56625 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750877AbZAEMrC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Jan 2009 07:47:02 -0500
-In-Reply-To: <E1LIkqz-00021S-O5@localhost>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56486 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751286AbZAENeA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 08:34:00 -0500
+In-Reply-To: <496200A3.2000906@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shane McDonald <mcdonald.shane@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Karl Auerbach <karl@iwl.com>, linux-ide@vger.kernel.org, karl@cavebear.com
 
-Hello.
+> > The IDE interface of the Geode CS5536 companion chip is a completely
+> > different beast.  It's a more or less standard AMD 8111 PCI IDE device
+> > with slightly different timings.
+> 
+>    I'm not sure I uderstand the passage about "slightly different 
+> timings"...
 
-Shane McDonald wrote:
+The timing values used are different to those on the AMD 8111 even though
+the interface is similar.
 
-> Support for the IT8172 IDE controller was removed from the kernel
-> sometime after 2.6.18.  Support for the only boards that used the IT8172
-> was removed from the kernel after 2.6.18, as they had never compiled
-> since 2.6.0.  However, there are a couple of platforms that use this
-> chip: the PMC-Sierra Xiao Hu thin-client computer, which is no longer
-> in production, and the Linksys NSS4000 Network Attached Storage box,
-> which is based on the Xiao Hu board.  I am attempting to add support
-> for the Xiao Hu to the kernel, and this IT8172 IDE controller is the
-> first bit of code in this effort.
->
-> This patch resurrects the IT8172 IDE controller code.  I began with
-> the 2.6.18 version of the it8172.c file, and have moved it forward so
-> that it works with the latest version of the kernel.  I have run this
-> driver on a PMC-Sierra Xiao Hu board with the 2.6.28 kernel, and
-> I have had no problems with it in my configuration.  The attached patch
-> applies cleanly against 2.6.28.
->
-> Signed-off-by: Shane McDonald <mcdonald.shane@gmail.com>
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->   
-[...]
-> diff -uprN a/drivers/ide/it8172.c b/drivers/ide/it8172.c
-> --- a/drivers/ide/it8172.c	1969-12-31 18:00:00.000000000 -0600
-> +++ b/drivers/ide/it8172.c	2008-12-31 17:49:41.000000000 -0600
-> @@ -0,0 +1,166 @@
-> +/*
-> + *
-> + * BRIEF MODULE DESCRIPTION
-> + *      IT8172 IDE controller support
-> + *
-> + * Copyright (C) 2000 MontaVista Software Inc.
-> + * Copyright (C) 2008 Shane McDonald
-> + *
-> + *  This program is free software; you can redistribute  it and/or modify it
-> + *  under  the terms of  the GNU General  Public License as published by the
-> + *  Free Software Foundation;  either version 2 of the  License, or (at your
-> + *  option) any later version.
-> + *
-> + *  THIS  SOFTWARE  IS PROVIDED   ``AS  IS'' AND   ANY  EXPRESS OR IMPLIED
-> + *  WARRANTIES,   INCLUDING, BUT NOT  LIMITED  TO, THE IMPLIED WARRANTIES OF
-> + *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN
-> + *  NO  EVENT  SHALL   THE AUTHOR  BE    LIABLE FOR ANY   DIRECT, INDIRECT,
-> + *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-> + *  NOT LIMITED   TO, PROCUREMENT OF  SUBSTITUTE GOODS  OR SERVICES; LOSS OF
-> + *  USE, DATA,  OR PROFITS; OR  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-> + *  ANY THEORY OF LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT
-> + *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-> + *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + *
-> + *  You should have received a copy of the  GNU General Public License along
-> + *  with this program; if not, write  to the Free Software Foundation, Inc.,
-> + *  675 Mass Ave, Cambridge, MA 02139, USA.
-> + */
-> +
-> +#include <linux/module.h>
-> +#include <linux/types.h>
-> +#include <linux/kernel.h>
-> +#include <linux/ioport.h>
-> +#include <linux/pci.h>
-> +#include <linux/ide.h>
-> +#include <linux/init.h>
-> +
-> +#define DRV_NAME "IT8172"
-> +
-> +static void it8172_set_pio_mode(ide_drive_t *drive, const u8 pio)
-> +{
-> +	ide_hwif_t *hwif	= HWIF(drive);
-> +	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-> +	u16 drive_enables;
-> +	u32 drive_timing;
-> +
-> +	/*
-> +	 * The highest value of DIOR/DIOW pulse width and recovery time
-> +	 * that can be set in the IT8172 is 8 PCI clock cycles.  As a result,
-> +	 * it cannot be configured for PIO mode 0.  This table sets these
-> +	 * parameters to the maximum supported by the IT8172.
-> +	 */
-> +	static const u8 timings[] = { 0x3f, 0x3c, 0x1b, 0x12, 0x0a };
->   
+>    It's stange that the driver is using CPI config. space by default 
+> which not even documented in the datasheet. I guess the MSR accesses are 
 
-   The octal literals would fit this case better (3-bit field == octal 
-digit). Oh well... :-)
+The PCI configuration is the portable way to drive it.
 
-MBR, Sergei
+> also somewhat faster because one doesn't have to access the address/data 
+> register pair at ports 0xcf8/0xcfc...
 
+This is a Geode. What makes you think there is even a PCI bus or that the
+8111 interface isn't entirely a software construct. Geode PCI hardware
+is mostly smoke and mirrors ;)
 
+Alan
