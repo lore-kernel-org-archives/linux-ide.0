@@ -1,41 +1,59 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
-Date: Mon, 05 Jan 2009 13:44:19 -0500
-Message-ID: <yq1wsd91tks.fsf@sermon.lab.mkp.net>
-References: <49615667.9020408@iwl.com> <yq1vdsu317m.fsf@sermon.lab.mkp.net>
-	<496200A3.2000906@ru.mvista.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
+Date: Mon, 5 Jan 2009 19:54:29 +0100
+Message-ID: <20090105185428.GS32491@kernel.dk>
+References: <200901051952.58029.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet14.oracle.com ([148.87.113.126]:55276 "EHLO
-	rgminet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830AbZAESxe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 13:53:34 -0500
-Received: from rgminet13.oracle.com (rcsinet13.oracle.com [148.87.113.125])
-	by rgminet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n05ItccT021385
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-ide@vger.kernel.org>; Mon, 5 Jan 2009 18:55:40 GMT
-In-Reply-To: <496200A3.2000906@ru.mvista.com> (Sergei Shtylyov's message of "Mon\, 05 Jan 2009 15\:44\:19 +0300")
+Received: from brick.kernel.dk ([93.163.65.50]:14846 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751373AbZAESzd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Jan 2009 13:55:33 -0500
+Content-Disposition: inline
+In-Reply-To: <200901051952.58029.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Karl Auerbach <karl@iwl.com>, linux-ide@vger.kernel.org, karl@cavebear.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
->>>>> "Sergei" == Sergei Shtylyov <sshtylyov@ru.mvista.com> writes:
+On Mon, Jan 05 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] block: export SSD/non-rotational queue flag through sysfs
+> 
+> For some devices (i.e. CFA ATA) we can't reliably detect whether
+> the device is of rotational or non-rotational type so we need to
+> leave the final decision about this setting to the user-space.
 
->> The driver was developed on a Soekris net5501.  To my knowledge it's
->> working fine on ALIX boards.  If that's not the case there may be a
->> problem with the ALIX BIOS VSA PCI config space emulation.  In that
->> case you can load the driver with msr=1 to force it to program the
->> IDE function using machine specific registers instead of relying on
->> PCI.
->> 
+I agree with that, was actually planning on doing that myself.
 
-Sergei> It's stange that the driver is using CPI config. space by
-Sergei> default which not even documented in the datasheet.
+> @@ -146,8 +167,8 @@ static ssize_t queue_nomerges_store(stru
+>  		queue_flag_set(QUEUE_FLAG_NOMERGES, q);
+>  	else
+>  		queue_flag_clear(QUEUE_FLAG_NOMERGES, q);
+> -
+>  	spin_unlock_irq(q->queue_lock);
+> +
+>  	return ret;
+>  }
+>  
 
-Using PCI config space was explicitly requested by AMD for the reasons
-Alan pointed out.
+Hmm?
+
+> @@ -210,6 +231,12 @@ static struct queue_sysfs_entry queue_hw
+>  	.show = queue_hw_sector_size_show,
+>  };
+>  
+> +static struct queue_sysfs_entry queue_nonrot_entry = {
+> +	.attr = {.name = "nonrot", .mode = S_IRUGO | S_IWUSR },
+> +	.show = queue_nonrot_show,
+> +	.store = queue_nonrot_store,
+> +};
+> +
+
+Lets please use a better name for export reasons, non-rotational is a
+lot better. Nobody will know what nonrot means :-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
+
