@@ -1,16 +1,16 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH 1/7] pata_hpt3x3: Workarounds for chipset
-Date: Mon, 05 Jan 2009 14:12:51 +0000
-Message-ID: <20090105141220.28189.53195.stgit@localhost.localdomain>
+Subject: [PATCH 2/7] pata_ali: force initialise a few bits
+Date: Mon, 05 Jan 2009 14:13:22 +0000
+Message-ID: <20090105141256.28189.96010.stgit@localhost.localdomain>
 References: <20090105141102.28189.44312.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56418 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56421 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754083AbZAEOMh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 09:12:37 -0500
+	with ESMTP id S1754286AbZAEONJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 09:13:09 -0500
 In-Reply-To: <20090105141102.28189.44312.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,112 +18,166 @@ To: jeff@garzik.org, linux-ide@vger.kernel.org
 
 From: Alan Cox <alan@redhat.com>
 
-Correct the DMA bit flags (UDMA and MWDMA were swapped)
-Add workarounds so that we clear ERR and INTR bits before issuing a DMA
-Add workarounds so that we stop a live DMA before touching the CTL register
+We can't assume some of the setup here on non x86 boxes.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 ---
 
- drivers/ata/pata_hpt3x3.c |   51 ++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 45 insertions(+), 6 deletions(-)
+ drivers/ata/pata_ali.c |   71 ++++++++++++++++++++++++++----------------------
+ 1 files changed, 38 insertions(+), 33 deletions(-)
 
 
-diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
-index f11a320..1c9016e 100644
---- a/drivers/ata/pata_hpt3x3.c
-+++ b/drivers/ata/pata_hpt3x3.c
-@@ -23,7 +23,7 @@
- #include <linux/libata.h>
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 73c466e..d2ea2db 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -19,7 +19,9 @@
+  *
+  *  TODO/CHECK
+  *	Cannot have ATAPI on both master & slave for rev < c2 (???) but
+- *	otherwise should do atapi DMA.
++ *	otherwise should do atapi DMA (For now for old we do PIO only for
++ *	ATAPI)
++ *	Review Sunblade workaround.
+  */
  
- #define DRV_NAME	"pata_hpt3x3"
--#define DRV_VERSION	"0.5.3"
-+#define DRV_VERSION	"0.6.1"
+ #include <linux/kernel.h>
+@@ -33,12 +35,14 @@
+ #include <linux/dmi.h>
  
- /**
-  *	hpt3x3_set_piomode		-	PIO setup
-@@ -80,14 +80,48 @@ static void hpt3x3_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 	r2 &= ~(0x11 << dn);	/* Clear MWDMA and UDMA bits */
+ #define DRV_NAME "pata_ali"
+-#define DRV_VERSION "0.7.5"
++#define DRV_VERSION "0.7.7"
  
- 	if (adev->dma_mode >= XFER_UDMA_0)
--		r2 |= (0x10 << dn);	/* Ultra mode */
-+		r2 |= (0x01 << dn);	/* Ultra mode */
- 	else
--		r2 |= (0x01 << dn);	/* MWDMA */
-+		r2 |= (0x10 << dn);	/* MWDMA */
+ static int ali_atapi_dma = 0;
+ module_param_named(atapi_dma, ali_atapi_dma, int, 0644);
+ MODULE_PARM_DESC(atapi_dma, "Enable ATAPI DMA (0=disable, 1=enable)");
  
- 	pci_write_config_dword(pdev, 0x44, r1);
- 	pci_write_config_dword(pdev, 0x48, r2);
++static struct pci_dev *isa_bridge;
++
+ /*
+  *	Cable special cases
+  */
+@@ -401,52 +405,49 @@ static struct ata_port_operations ali_c5_port_ops = {
+ static void ali_init_chipset(struct pci_dev *pdev)
+ {
+ 	u8 tmp;
+-	struct pci_dev *north, *isa_bridge;
++	struct pci_dev *north;
+ 
+ 	/*
+ 	 * The chipset revision selects the driver operations and
+ 	 * mode data.
+ 	 */
+ 
+-	if (pdev->revision >= 0x20 && pdev->revision < 0xC2) {
+-		/* 1543-E/F, 1543C-C, 1543C-D, 1543C-E */
+-		pci_read_config_byte(pdev, 0x4B, &tmp);
+-		/* Clear CD-ROM DMA write bit */
+-		tmp &= 0x7F;
+-		pci_write_config_byte(pdev, 0x4B, tmp);
+-	} else if (pdev->revision >= 0xC2) {
+-		/* Enable cable detection logic */
++	if (pdev->revision <= 0x20) {
++		pci_read_config_byte(pdev, 0x53, &tmp);
++		tmp |= 0x03;
++		pci_write_config_byte(pdev, 0x53, tmp);
++	} else {
++		pci_read_config_byte(pdev, 0x4a, &tmp);
++		pci_write_config_byte(pdev, 0x4a, tmp | 0x20);
+ 		pci_read_config_byte(pdev, 0x4B, &tmp);
+-		pci_write_config_byte(pdev, 0x4B, tmp | 0x08);
+-	}
+-	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
+-	isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
+-
+-	if (north && north->vendor == PCI_VENDOR_ID_AL && isa_bridge) {
+-		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
+-		   Set the south bridge enable bit */
+-		pci_read_config_byte(isa_bridge, 0x79, &tmp);
+-		if (pdev->revision == 0xC2)
+-			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x04);
+-		else if (pdev->revision > 0xC2 && pdev->revision < 0xC5)
+-			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x02);
+-	}
+-	if (pdev->revision >= 0x20) {
++		if (pdev->revision < 0xC2)
++			/* 1543-E/F, 1543C-C, 1543C-D, 1543C-E */
++			/* Clear CD-ROM DMA write bit */
++			tmp &= 0x7F;
++		/* Cable and UDMA */
++		pci_write_config_byte(pdev, 0x4B, tmp | 0x09);
+ 		/*
+ 		 * CD_ROM DMA on (0x53 bit 0). Enable this even if we want
+ 		 * to use PIO. 0x53 bit 1 (rev 20 only) - enable FIFO control
+ 		 * via 0x54/55.
+ 		 */
+ 		pci_read_config_byte(pdev, 0x53, &tmp);
+-		if (pdev->revision <= 0x20)
+-			tmp &= ~0x02;
+ 		if (pdev->revision >= 0xc7)
+ 			tmp |= 0x03;
+ 		else
+ 			tmp |= 0x01;	/* CD_ROM enable for DMA */
+ 		pci_write_config_byte(pdev, 0x53, tmp);
+ 	}
+-	pci_dev_put(isa_bridge);
++	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
++	if (north && north->vendor == PCI_VENDOR_ID_AL && isa_bridge) {
++		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
++		   Set the south bridge enable bit */
++		pci_read_config_byte(isa_bridge, 0x79, &tmp);
++		if (pdev->revision == 0xC2)
++			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x04);
++		else if (pdev->revision > 0xC2 && pdev->revision < 0xC5)
++			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x02);
++	}
+ 	pci_dev_put(north);
+ 	ata_pci_bmdma_clear_simplex(pdev);
  }
--#endif /* CONFIG_PATA_HPT3X3_DMA */
-+
-+/**
-+ *	hpt3x3_freeze		-	DMA workaround
-+ *	@ap: port to freeze
-+ *
-+ *	When freezing an HPT3x3 we must stop any pending DMA before
-+ *	writing to the control register or the chip will hang
-+ */
-+
-+static int hpt3x3_freeze(struct ata_port *ap)
-+{
-+	void __iomem *mmio = ap->ioaddr.bmdma_addr;
-+
-+	iowrite8(ioread8(mmio + ATA_DMA_CMD) & ~ ATA_DMA_START,
-+			mmio + ATA_DMA_CMD);
-+	ata_sff_dma_pause(ap);
-+	ata_sff_freeze(ap);
-+}
-+
-+/**
-+ *	hpt3x3_bmdma_setup	-	DMA workaround
-+ *	@qc: Queued command
-+ *
-+ *	When issuing BMDMA we must clean up the error/active bits in
-+ *	software on this device
-+ */
-+
-+static void hpt3x3_bmdma_setup(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	u8 r = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
-+	r |= ATA_DMA_INTR | ATA_DMA_ERR;
-+	iowrite8(r, ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
-+	return ata_bmdma_setup(qc);
-+}
+@@ -516,7 +517,6 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
  
- /**
-  *	hpt3x3_atapi_dma	-	ATAPI DMA check
-@@ -101,18 +135,23 @@ static int hpt3x3_atapi_dma(struct ata_queued_cmd *qc)
- 	return 1;
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+ 	u8 tmp;
+-	struct pci_dev *isa_bridge;
+ 	int rc;
+ 
+ 	rc = pcim_enable_device(pdev);
+@@ -543,14 +543,12 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	ali_init_chipset(pdev);
+ 
+-	isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
+ 	if (isa_bridge && pdev->revision >= 0x20 && pdev->revision < 0xC2) {
+ 		/* Are we paired with a UDMA capable chip */
+ 		pci_read_config_byte(isa_bridge, 0x5E, &tmp);
+ 		if ((tmp & 0x1E) == 0x12)
+ 	        	ppi[0] = &info_20_udma;
+ 	}
+-	pci_dev_put(isa_bridge);
+ 
+ 	return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL);
+ }
+@@ -590,13 +588,20 @@ static struct pci_driver ali_pci_driver = {
+ 
+ static int __init ali_init(void)
+ {
+-	return pci_register_driver(&ali_pci_driver);
++	int ret;
++	isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
++
++	ret = pci_register_driver(&ali_pci_driver);
++	if (ret < 0)
++		pci_dev_put(isa_bridge);
++	return ret;
  }
  
-+#endif /* CONFIG_PATA_HPT3X3_DMA */
-+
- static struct scsi_host_template hpt3x3_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
  
- static struct ata_port_operations hpt3x3_port_ops = {
- 	.inherits	= &ata_bmdma_port_ops,
--	.check_atapi_dma= hpt3x3_atapi_dma,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= hpt3x3_set_piomode,
- #if defined(CONFIG_PATA_HPT3X3_DMA)
- 	.set_dmamode	= hpt3x3_set_dmamode,
-+	.bmdma_setup	= hpt3x3_bmdma_setup,
-+	.check_atapi_dma= hpt3x3_atapi_dma,
-+	.freeze		= hpt3x3_freeze,
- #endif
-+	
- };
+ static void __exit ali_exit(void)
+ {
+ 	pci_unregister_driver(&ali_pci_driver);
++	pci_dev_put(isa_bridge);
+ }
  
- /**
-@@ -257,4 +296,4 @@ MODULE_DEVICE_TABLE(pci, hpt3x3);
- MODULE_VERSION(DRV_VERSION);
  
- module_init(hpt3x3_init);
--module_exit(hpt3x3_exit);
-+module_exit(hpt3x3_exit);
-\ No newline at end of file
 
