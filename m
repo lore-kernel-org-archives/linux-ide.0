@@ -1,45 +1,43 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 4/4] fastboot: make ACPI bus drivers probe asynchronous
-Date: Sun, 4 Jan 2009 18:51:03 -0800
-Message-ID: <20090104185103.06e2f531@infradead.org>
-References: <20090104092430.7ffd2c41@infradead.org>
-	<20090104093103.46167d23@infradead.org>
-	<1231120992.3967.18.camel@yakui_zhao.sh.intel.com>
-	<20090104175830.7a7e279e@infradead.org>
-	<1231123910.3967.34.camel@yakui_zhao.sh.intel.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
+Date: Sun, 04 Jan 2009 22:01:49 -0500
+Message-ID: <yq1vdsu317m.fsf@sermon.lab.mkp.net>
+References: <49615667.9020408@iwl.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1231123910.3967.34.camel@yakui_zhao.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Zhao Yakui <yakui.zhao@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "mingo@elte.hu" <mingo@elte.hu>, "fweisbec@gmail.com" <fweisbec@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from acsinet14.oracle.com ([141.146.126.236]:41950 "EHLO
+	acsinet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbZAEDDO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2009 22:03:14 -0500
+Received: from acsinet11.oracle.com (acsinet11.oracle.com [141.146.126.233])
+	by acsinet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n0536reD025170
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-ide@vger.kernel.org>; Mon, 5 Jan 2009 03:06:54 GMT
+In-Reply-To: <49615667.9020408@iwl.com> (Karl Auerbach's message of "Sun\, 04 Jan 2009 16\:37\:59 -0800")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Karl Auerbach <karl@iwl.com>
+Cc: linux-ide@vger.kernel.org, karl@cavebear.com
 
-On Mon, 05 Jan 2009 10:51:50 +0800
-Zhao Yakui <yakui.zhao@intel.com> wrote:
+>>>>> "Karl" == Karl Auerbach <karl@iwl.com> writes:
 
-> > because of the async_synchronize_cookie() call!
-> After the async_synchronize_cookie is called, the register sequence
-> will become strict. 
-> But there exist multiple threads. It is possible that the function of
-> acpi_bus_register_async is called on different threads. In such case
-> the dependency can't be guaranteed. 
+Karl> 2. The cs5535 ide driver doesn't seem to be able to recognize the
+Karl> newer CS5536 controller for IDE.
 
-this is not correct.
-when the async_synchronize_cookie() call returns, all previous
-acpi_bus_register_async() calls have completed. So no older ones can be
-running.
+The IDE interface of the Geode CS5536 companion chip is a completely
+different beast.  It's a more or less standard AMD 8111 PCI IDE device
+with slightly different timings.  There's a dedicated driver called
+pata_cs5536.c (CONFIG_PATA_CS5536).
 
-there also can be no newer ones, because newer ones will wait for the
-current one to entirely complete before they will return from
-acpi_bus_register_async()
+The driver was developed on a Soekris net5501.  To my knowledge it's
+working fine on ALIX boards.  If that's not the case there may be a
+problem with the ALIX BIOS VSA PCI config space emulation.  In that case
+you can load the driver with msr=1 to force it to program the IDE
+function using machine specific registers instead of relying on PCI.
 
-so.. since all older ones are complete, and no new ones can happen..
-the sequence is strictly followed.
+Let me know how it goes.
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Martin K. Petersen	Oracle Linux Engineering
+
