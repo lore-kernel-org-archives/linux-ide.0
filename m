@@ -1,39 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
-Date: Mon, 5 Jan 2009 18:15:24 +0100
-Message-ID: <200901051815.24847.bzolnier@gmail.com>
-References: <49615667.9020408@iwl.com> <200901051736.18026.bzolnier@gmail.com> <20090105165238.616e5186@lxorguk.ukuu.org.uk>
+Date: Mon, 5 Jan 2009 17:19:35 +0000
+Message-ID: <20090105171935.4e0c077e@lxorguk.ukuu.org.uk>
+References: <49615667.9020408@iwl.com>
+	<200901051736.18026.bzolnier@gmail.com>
+	<20090105165238.616e5186@lxorguk.ukuu.org.uk>
+	<200901051815.24847.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:58815 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532AbZAERO7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 12:14:59 -0500
-Received: by bwz14 with SMTP id 14so22890145bwz.13
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2009 09:14:56 -0800 (PST)
-In-Reply-To: <20090105165238.616e5186@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33837 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751870AbZAERTo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 12:19:44 -0500
+In-Reply-To: <200901051815.24847.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Karl Auerbach <karl@iwl.com>, linux-ide@vger.kernel.org, karl@cavebear.com, "Martin K. Petersen" <mkp@mkp.net>
 
-On Monday 05 January 2009, Alan Cox wrote:
-> > * CS5536 is used mostly for driving CF cards and this allows use of
-> >   IDE features which are unavailable under libata (32-bit I/O support,
-> >   non-rotational media optimizations, etc).
-> 
-> Non rotational media handling is done by the block layer and so works for
-> everything. Just set the right queue according to the device policy you
-> want in hal/udev.
+> Both are done by block layer.  The former is controlled by the user-space
+> while the latter is controlled by the block driver.
 
-You seem to confuse no merges policy with non rotational media support.
+And in the old IDE case erroneously set for any device reporting CFA via
+the kernel. Queue flag management belongs in user space because its far
+more complex than you seem to think to get it right.
 
-Both are done by block layer.  The former is controlled by the user-space
-while the latter is controlled by the block driver.
-
-Thanks,
-Bart
+Alan
