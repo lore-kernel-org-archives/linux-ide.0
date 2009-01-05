@@ -1,16 +1,16 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH 2/7] pata_ali: force initialise a few bits
-Date: Mon, 05 Jan 2009 14:13:22 +0000
-Message-ID: <20090105141256.28189.96010.stgit@localhost.localdomain>
+Subject: [PATCH 3/7] pata_ali: Fix and workaround for FIFO DMA bug
+Date: Mon, 05 Jan 2009 14:13:53 +0000
+Message-ID: <20090105141327.28189.88640.stgit@localhost.localdomain>
 References: <20090105141102.28189.44312.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56421 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56424 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754286AbZAEONJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 09:13:09 -0500
+	with ESMTP id S1754327AbZAEONj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 09:13:39 -0500
 In-Reply-To: <20090105141102.28189.44312.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,166 +18,78 @@ To: jeff@garzik.org, linux-ide@vger.kernel.org
 
 From: Alan Cox <alan@redhat.com>
 
-We can't assume some of the setup here on non x86 boxes.
+In very obscure cases this can cause problems. We need to help the hardware
+out a bit to avoid DMA problems on a reset.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 ---
 
- drivers/ata/pata_ali.c |   71 ++++++++++++++++++++++++++----------------------
- 1 files changed, 38 insertions(+), 33 deletions(-)
+ drivers/ata/pata_ali.c |   32 ++++++++++++++++++++++++++++++--
+ 1 files changed, 30 insertions(+), 2 deletions(-)
 
 
 diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 73c466e..d2ea2db 100644
+index d2ea2db..a4f9e39 100644
 --- a/drivers/ata/pata_ali.c
 +++ b/drivers/ata/pata_ali.c
-@@ -19,7 +19,9 @@
-  *
-  *  TODO/CHECK
-  *	Cannot have ATAPI on both master & slave for rev < c2 (???) but
-- *	otherwise should do atapi DMA.
-+ *	otherwise should do atapi DMA (For now for old we do PIO only for
-+ *	ATAPI)
-+ *	Review Sunblade workaround.
-  */
- 
- #include <linux/kernel.h>
-@@ -33,12 +35,14 @@
+@@ -35,7 +35,7 @@
  #include <linux/dmi.h>
  
  #define DRV_NAME "pata_ali"
--#define DRV_VERSION "0.7.5"
-+#define DRV_VERSION "0.7.7"
+-#define DRV_VERSION "0.7.7"
++#define DRV_VERSION "0.7.8"
  
  static int ali_atapi_dma = 0;
  module_param_named(atapi_dma, ali_atapi_dma, int, 0644);
- MODULE_PARM_DESC(atapi_dma, "Enable ATAPI DMA (0=disable, 1=enable)");
+@@ -341,6 +341,23 @@ static int ali_check_atapi_dma(struct ata_queued_cmd *qc)
+ 	return 0;
+ }
  
-+static struct pci_dev *isa_bridge;
++static void ali_c2_c3_postreset(struct ata_link *link, unsigned int *classes)
++{
++	u8 r;
++	int port_bit = 4 << link->ap->port_no;
 +
- /*
-  *	Cable special cases
-  */
-@@ -401,52 +405,49 @@ static struct ata_port_operations ali_c5_port_ops = {
- static void ali_init_chipset(struct pci_dev *pdev)
- {
- 	u8 tmp;
--	struct pci_dev *north, *isa_bridge;
-+	struct pci_dev *north;
- 
- 	/*
- 	 * The chipset revision selects the driver operations and
- 	 * mode data.
- 	 */
- 
--	if (pdev->revision >= 0x20 && pdev->revision < 0xC2) {
--		/* 1543-E/F, 1543C-C, 1543C-D, 1543C-E */
--		pci_read_config_byte(pdev, 0x4B, &tmp);
--		/* Clear CD-ROM DMA write bit */
--		tmp &= 0x7F;
--		pci_write_config_byte(pdev, 0x4B, tmp);
--	} else if (pdev->revision >= 0xC2) {
--		/* Enable cable detection logic */
-+	if (pdev->revision <= 0x20) {
-+		pci_read_config_byte(pdev, 0x53, &tmp);
-+		tmp |= 0x03;
-+		pci_write_config_byte(pdev, 0x53, tmp);
-+	} else {
-+		pci_read_config_byte(pdev, 0x4a, &tmp);
-+		pci_write_config_byte(pdev, 0x4a, tmp | 0x20);
- 		pci_read_config_byte(pdev, 0x4B, &tmp);
--		pci_write_config_byte(pdev, 0x4B, tmp | 0x08);
--	}
--	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
--	isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
--
--	if (north && north->vendor == PCI_VENDOR_ID_AL && isa_bridge) {
--		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
--		   Set the south bridge enable bit */
--		pci_read_config_byte(isa_bridge, 0x79, &tmp);
--		if (pdev->revision == 0xC2)
--			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x04);
--		else if (pdev->revision > 0xC2 && pdev->revision < 0xC5)
--			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x02);
--	}
--	if (pdev->revision >= 0x20) {
-+		if (pdev->revision < 0xC2)
-+			/* 1543-E/F, 1543C-C, 1543C-D, 1543C-E */
-+			/* Clear CD-ROM DMA write bit */
-+			tmp &= 0x7F;
-+		/* Cable and UDMA */
-+		pci_write_config_byte(pdev, 0x4B, tmp | 0x09);
- 		/*
- 		 * CD_ROM DMA on (0x53 bit 0). Enable this even if we want
- 		 * to use PIO. 0x53 bit 1 (rev 20 only) - enable FIFO control
- 		 * via 0x54/55.
- 		 */
- 		pci_read_config_byte(pdev, 0x53, &tmp);
--		if (pdev->revision <= 0x20)
--			tmp &= ~0x02;
- 		if (pdev->revision >= 0xc7)
- 			tmp |= 0x03;
- 		else
- 			tmp |= 0x01;	/* CD_ROM enable for DMA */
- 		pci_write_config_byte(pdev, 0x53, tmp);
- 	}
--	pci_dev_put(isa_bridge);
-+	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
-+	if (north && north->vendor == PCI_VENDOR_ID_AL && isa_bridge) {
-+		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
-+		   Set the south bridge enable bit */
-+		pci_read_config_byte(isa_bridge, 0x79, &tmp);
-+		if (pdev->revision == 0xC2)
-+			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x04);
-+		else if (pdev->revision > 0xC2 && pdev->revision < 0xC5)
-+			pci_write_config_byte(isa_bridge, 0x79, tmp | 0x02);
++	/* If our bridge is an ALI 1533 then do the extra work */
++	if (isa_bridge) {
++		/* Tristate and re-enable the bus signals */
++		pci_read_config_byte(isa_bridge, 0x58, &r);
++		r &= ~port_bit;
++		pci_write_config_byte(isa_bridge, 0x58, r);
++		r |= port_bit;
++		pci_write_config_byte(isa_bridge, 0x58, r);
 +	}
- 	pci_dev_put(north);
- 	ata_pci_bmdma_clear_simplex(pdev);
- }
-@@ -516,7 +517,6 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	const struct ata_port_info *ppi[] = { NULL, NULL };
- 	u8 tmp;
--	struct pci_dev *isa_bridge;
- 	int rc;
- 
- 	rc = pcim_enable_device(pdev);
-@@ -543,14 +543,12 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	ali_init_chipset(pdev);
- 
--	isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
- 	if (isa_bridge && pdev->revision >= 0x20 && pdev->revision < 0xC2) {
- 		/* Are we paired with a UDMA capable chip */
- 		pci_read_config_byte(isa_bridge, 0x5E, &tmp);
- 		if ((tmp & 0x1E) == 0x12)
- 	        	ppi[0] = &info_20_udma;
- 	}
--	pci_dev_put(isa_bridge);
- 
- 	return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL);
- }
-@@ -590,13 +588,20 @@ static struct pci_driver ali_pci_driver = {
- 
- static int __init ali_init(void)
- {
--	return pci_register_driver(&ali_pci_driver);
-+	int ret;
-+	isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
++	ata_sff_postreset(link, classes);
++}
 +
-+	ret = pci_register_driver(&ali_pci_driver);
-+	if (ret < 0)
-+		pci_dev_put(isa_bridge);
-+	return ret;
- }
+ static struct scsi_host_template ali_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
+@@ -381,6 +398,17 @@ static struct ata_port_operations ali_c2_port_ops = {
+ 	.check_atapi_dma = ali_check_atapi_dma,
+ 	.cable_detect	= ali_c2_cable_detect,
+ 	.dev_config	= ali_lock_sectors,
++	.postreset	= ali_c2_c3_postreset,
++};
++
++/*
++ *	Port operations for DMA capable ALi with cable detect
++ */
++static struct ata_port_operations ali_c4_port_ops = {
++	.inherits	= &ali_dma_base_ops,
++	.check_atapi_dma = ali_check_atapi_dma,
++	.cable_detect	= ali_c2_cable_detect,
++	.dev_config	= ali_lock_sectors,
+ };
  
- 
- static void __exit ali_exit(void)
- {
- 	pci_unregister_driver(&ali_pci_driver);
-+	pci_dev_put(isa_bridge);
- }
- 
- 
+ /*
+@@ -504,7 +532,7 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = ATA_UDMA5,
+-		.port_ops = &ali_c2_port_ops
++		.port_ops = &ali_c4_port_ops
+ 	};
+ 	/* Revision 0xC5 is UDMA133 with LBA48 DMA */
+ 	static const struct ata_port_info info_c5 = {
 
