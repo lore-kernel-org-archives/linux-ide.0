@@ -1,38 +1,39 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
-Date: Mon, 5 Jan 2009 13:21:45 -0800 (PST)
-Message-ID: <alpine.LFD.2.00.0901051317450.3057@localhost.localdomain>
-References: <20090104092430.7ffd2c41@infradead.org> <alpine.LFD.2.00.0901041009060.3179@localhost.localdomain> <20090104103104.6fdda9f2@infradead.org> <alpine.LFD.2.00.0901041038570.3179@localhost.localdomain> <20090104110559.306186c4@infradead.org>
- <20090105162125.093b4adf@lxorguk.ukuu.org.uk> <20090105131350.66408a4f@infradead.org>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
+Date: Mon, 5 Jan 2009 22:47:22 +0100
+Message-ID: <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com>
+References: <200901051952.58029.bzolnier@gmail.com>
+	 <20090105185428.GS32491@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090105131350.66408a4f@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.231]:28569 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752449AbZAEVrX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 16:47:23 -0500
+In-Reply-To: <20090105185428.GS32491@kernel.dk>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+On Mon, Jan 5, 2009 at 19:54, Jens Axboe <jens.axboe@oracle.com> wrote:
+> On Mon, Jan 05 2009, Bartlomiej Zolnierkiewicz wrote:
 
-
-On Mon, 5 Jan 2009, Arjan van de Ven wrote:
+>> +static struct queue_sysfs_entry queue_nonrot_entry = {
+>> +     .attr = {.name = "nonrot", .mode = S_IRUGO | S_IWUSR },
+>> +     .show = queue_nonrot_show,
+>> +     .store = queue_nonrot_store,
+>> +};
+>> +
 >
-> ok I had that enabled somehow....
+> Lets please use a better name for export reasons, non-rotational is a
+> lot better. Nobody will know what nonrot means :-)
 
-Well, it's not just "somehow".
+What's that negation good for? Can't we just have "rotational", like
+we have "removable" and not "non-removable"? :)
 
-It's the x86 def_config value, and it's also the default in at least the 
-Fedora kernels.
-
-Probably for a very good - although these days probably historical - 
-reason: on older hardware, it really wasn't all that unusual to have the 
-serial port at other interrupts.
-
-And Alan may point to the help text, but that doesn't really matter since 
-everybody clearly ignores it, and it's not what has been tested.
-
-But yeah, we probably should disable it at least for modern machines. And 
-even if it doesn't autodetect the irq, "setserial" hopefully still does 
-work (and was always required for some machines anyway)
-
-			Linus
+Thanks?
+Kay
