@@ -1,77 +1,184 @@
-From: "Darrick Burch" <darrick@tuffmail.com>
-Subject: SB600 in AHCI mode will not run SATA optical drive
-Date: Sun, 4 Jan 2009 18:33:06 -0500 (EST)
-Message-ID: <21155.72.218.132.189.1231111986.squirrel@webmail.tuffmail.net>
+From: Karl Auerbach <karl@iwl.com>
+Subject: Some IDE issues with 2.6.28 on PC-Engines ALIX2
+Date: Sun, 04 Jan 2009 16:37:59 -0800
+Message-ID: <49615667.9020408@iwl.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback-out1.mxes.net ([216.86.168.190]:2403 "EHLO
-	fallback-in1.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751496AbZADXvy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jan 2009 18:51:54 -0500
-Received: from mxout-03.mxes.net (mxout-03.mxes.net [216.86.168.178])
-	by fallback-in1.mxes.net (Postfix) with ESMTP id 88955164687
-	for <linux-ide@vger.kernel.org>; Sun,  4 Jan 2009 18:35:25 -0500 (EST)
-Received: from wm1.irbs.net (wm1.irbs.net [216.86.168.168])
-	by smtp.mxes.net (Postfix) with ESMTP id B39DC23E3F7
-	for <linux-ide@vger.kernel.org>; Sun,  4 Jan 2009 18:33:06 -0500 (EST)
-Received: from webmail.tuffmail.net (wm1.irbs.net [216.86.168.168])
-	by wm1.irbs.net (Postfix) with ESMTPA id 8D0231156B9
-	for <linux-ide@vger.kernel.org>; Sun,  4 Jan 2009 18:33:06 -0500 (EST)
+Received: from puck.iwl.com ([64.62.206.91]:51644 "EHLO puck.iwl.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751921AbZAEA6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Jan 2009 19:58:51 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, karl@cavebear.com
 
-Hey, all:
+I've found what I believe are some problems with the IDE drivers on the 
+2.6.8 kernel on
+the PC-Engines ALIX2 platform.
 
-I'm having a bit of an issue with running my Pioneer BDC-202BK BD-ROM
-drive on my motherboard's (MSI K9A2-CF) AMD SB600-based SATA controller
-and I was wondering if anyone has seen anything similar.
+There are two points in particular:
 
-The problem is that the drive does not initialize at all under Linux.  I
-get errors from the ahci driver which, from what I've read from the wiki,
-is the only driver under which the SATA ports on the SB600 are supported.
+1. The ide_generic driver no longer finds the IDE drive (an EXT3
+formatted compact flash on an IDE channel on an AMD CS5536 controller)
+unless the kernel is given the ide_generic.probe_mask=0x## command
+line parameter.  (I'll get to the values of ## later.)
 
-The errors I'm getting loop infinitely until I remove the drive data cable:
+2. The cs5535 ide driver doesn't seem to be able to recognize the
+newer CS5536 controller for IDE.
 
-Nov  9 21:51:51 linux kernel: ata3: soft resetting link
-Nov  9 21:51:51 linux kernel: ata3: SATA link down (SStatus 1 SControl 300)
-Nov  9 21:51:51 linux kernel: ata3: EH complete
-Nov  9 21:51:51 linux kernel: ata3: exception Emask 0x10 SAct 0x0 SErr
-0x40c0000 action 0xa frozen
-Nov  9 21:51:51 linux kernel: ata3: irq_stat 0x00000040, connection status
-changed
-Nov  9 21:51:51 linux kernel: ata3: SError: { CommWake 10B8B DevExch }
-Nov  9 21:51:51 linux kernel: ata3: soft resetting link
-Nov  9 21:51:51 linux kernel: ata3: SATA link down (SStatus 1 SControl 300)
-Nov  9 21:51:51 linux kernel: ata3: EH complete
-Nov  9 21:51:51 linux kernel: ata3: exception Emask 0x10 SAct 0x0 SErr
-0x40c0000 action 0xa frozen
-Nov  9 21:51:51 linux kernel: ata3: irq_stat 0x00000040, connection status
-changed
-Nov  9 21:51:51 linux kernel: ata3: SError: { CommWake 10B8B DevExch }
+I will provide more details below.
 
-I've been able to get around this problem (which prevents me from booting
-completely) by commenting the PCI_VDEVICE definition for the SB600.  Of
-course, this means that the controller is effectively disabled.  I'm not
-in desperate need for my optical drive in Linux at the moment, but it
-would be nice to have access to it someday.
+I'd submit these directly into the bugzilla but as I'm not familar
+with the process and conventions I thought I'd begin with this email.
 
-I suppose my questions are the following:
+Thanks,
+                 --karl--
+                 Karl Auerbach (Santa Cruz, CA)
+                 karl@cavebear.com
 
-1. Is it possible that the drive simply does not want to run under AHCI
-mode?  I should note that the drive works correctly under Windows XP with
-the controller set to IDE emulation mode.
+=================================================
 
-2. I'm thinking that the best thing for me to do is to get another PCIe
-SATA controller and dedicate it to this one drive.  Does anyone want to
-give their opinion on this?
+Here's the scripts/ver_linux output:
 
-Thanks in advance,
--Darrick
+[root@board-1 linux-2.6.28]# sh scripts/ver_linux If some fields are
+empty or look unusual you may have an old version.  Compare to the
+current minimal requirements in Documentation/Changes.
 
-PS - I have no other devices on the SATA controller; my two hard drives
-are PATA and they're connected to the single PATA header available on the
-motherboard.  These, of course, are working fine.
+Linux board-1.cavebear.com 2.6.28-ALIX2 #1 Fri Jan 2 16:58:36 PST 2009 
+i586 unknown
+
+Gnu C                  4.2.4
+Gnu make               3.81
+binutils               2.19
+util-linux             fdformat: unrecognized option `--version'
+BusyBox v1.13.1 (2009-01-02 17:00:22 PST) multi-call binary
+
+Usage: fdformat [-n] DEVICE
+
+Format floppy disk
+
+Options:
+         -n      Don't verify after format
+
+mount                  (rw
+(rw,errors=continue,data=ordered
+(rw
+(rw
+(rw,size=1024k,mode=755
+(rw
+(rw,gid=5,mode=620
+(rw
+(rw,size=32768k
+(ro,noatime,nodiratime,errors=continue,data=ordered
+(rw,vers=3,rsize=8192,wsize=8192,namlen=255,hard,nointr,nolock,proto=udp,timeo=7,retrans=3,sec=sys,addr=192.203.17.130
+module-init-tools      found
+e2fsprogs              1.41.3
+Linux C Library        2.6.1
+Dynamic linker (ldd)   2.6.1
+Procps                 `--version'
+Kbd                    78:
+Sh-utils               --v
+Modules Loaded         ebtable_filter ebtables x_tables bridge stp llc 
+geodewdt cs5535_gpio geode_rng
+
+=================================================
+
+I. The ide_generic issue:
+
+[1.] One line summary of the problem:
+
+ide_generic driver under 2.6.28 no longer finds IDE drives on
+PC-Engines ALIX2.
+
+[2.] Full description of the problem/report:
+
+The PC-Engines ALIX2 platform uses an AMD Geode LX processor with the
+AMD CS5536 companion chip for things like IDE support.  The IDE drive
+is a compact flash.
+
+On the 2.6.27.8 kernel the ide_generic driver found the IDE and
+compact flash without the need for any kernel command line parameters.
+
+On the 2.6.28 kernel the ide_generic driver no longer finds the IDE
+drive unless a ide_generic.probe_mask=0x## command line parameter is
+given to the kernel.
+
+I've tried several values for ##, I have not yet found one that
+exactly replicates the behaviour of the 2.6.27.8 kernel.
+
+However, values 0x3f, 0x31, and 0x11 all seem to work, although the
+last of these (0x11 has the closest behaviour to the 2.6.27.8 kernel.)
+
+Here's the relevant kernel output when using the 0x11 value in the
+following kernel command line.  (The 0x31 value gives the same
+results.  The 0x3f value finds several more IDE items.)
+
+Kernel command line: console=ttyS0,38400 root=/dev/hda2 
+ramdisk_size=16384 initrd=/initrd.gz rw ide_generic.probe_mask=0x11 
+BOOT_IMAGE=/linux
+
+Uniform Multi-Platform E-IDE driver
+ide_generic: enforcing probing of I/O ports upon user request
+hda: TRANSCEND, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x1e0-0x1e7,0x3e6 on irq 8
+ide2 at 0x160-0x167,0x366 on irq 12
+ide-gd driver 1.18
+hda: max request size: 128KiB
+hda: 3915072 sectors (2004 MB) w/1KiB Cache, CHS=3884/16/63
+  hda: hda1 hda2 hda3
+Driver 'sd' needs updating - please use bus_type methods
+
+When the ide_generic.probe_mask=0x11 is not given no ide items are
+found under 2.6.28 (although they were found under 2.6.27.8)
+
+[3.] Keywords (i.e., modules, networking, kernel):
+
+ide_generic, ALIX2
+
+[4.] Kernel version (from /proc/version):
+
+2.6.28
+
+
+[7.7.] Other information that might be relevant to the problem
+        (please look in /proc and include all information that you
+        think to be relevant):
+
+I can provide kernel .config files if you want.
+
+=================================================
+
+II. The cs5536 controller issue.
+
+[1.] One line summary of the problem:
+
+The cs5535 ide driver doesn't seem to recognize the AMD CS5536
+controller.
+
+[2.] Full description of the problem/report
+
+The old AMD Geode used the CS5535 companion chipset for several
+purposes including IDE.
+
+The newer AMD Geode LX uses the CS5536 companion chipset.
+
+It is not clear that the cs5535 ide kernel driver is supposed to
+handle the newer chipset.  But in any event, it seems that the cs5535
+driver, when it is looking for the hardware, is not seeing anything it
+recognizes.
+
+There is some ambiguity created becaause at least one "cs5535" driver
+works on the The CS5536: cs5535_gpio
+
+This is not a particularly signifcant issue - the ide_generic driver
+handles the CS5536 IDE just fine (modulo the command line issue I
+reported above.)  But it would be nice if any ambiguity about what the
+cs5535 driver supports and what it does not support were clarified.
+
+
+	Thanks,
+		--karl--
 
