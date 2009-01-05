@@ -1,43 +1,74 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
-Date: Mon, 5 Jan 2009 18:38:37 +0100
-Message-ID: <200901051838.37608.bzolnier@gmail.com>
-References: <49615667.9020408@iwl.com> <200901051815.24847.bzolnier@gmail.com> <20090105171935.4e0c077e@lxorguk.ukuu.org.uk>
+Date: Mon, 05 Jan 2009 20:47:22 +0300
+Message-ID: <496247AA.1040809@ru.mvista.com>
+References: <49615667.9020408@iwl.com>	<yq1vdsu317m.fsf@sermon.lab.mkp.net>	<496200A3.2000906@ru.mvista.com> <20090105133340.050858bb@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:44458 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336AbZAERj1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 12:39:27 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so2894266muf.1
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2009 09:39:24 -0800 (PST)
-In-Reply-To: <20090105171935.4e0c077e@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:61650 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752137AbZAERqr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Jan 2009 12:46:47 -0500
+In-Reply-To: <20090105133340.050858bb@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Karl Auerbach <karl@iwl.com>, linux-ide@vger.kernel.org, karl@cavebear.com, "Martin K. Petersen" <mkp@mkp.net>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Karl Auerbach <karl@iwl.com>, linux-ide@vger.kernel.org, karl@cavebear.com
 
-On Monday 05 January 2009, Alan Cox wrote:
-> > Both are done by block layer.  The former is controlled by the user-space
-> > while the latter is controlled by the block driver.
-> 
-> And in the old IDE case erroneously set for any device reporting CFA via
-> the kernel. Queue flag management belongs in user space because its far
-> more complex than you seem to think to get it right.
+Hello.
 
-Please stop playing straw man in almost every your mail.  Doing it once
-in a while can be intriguing or even enjoyable but doing it on daily basis
-kills any sensible debate...
+Alan Cox wrote:
 
-There is nothing incorrect in setting non-rotational queue flag for CF
-devices [1] and I wasn't suggesting where it should belong -- I was solely
-describing how things look up currently.
+>>>The IDE interface of the Geode CS5536 companion chip is a completely
+>>>different beast.  It's a more or less standard AMD 8111 PCI IDE device
+>>>with slightly different timings.
 
-[1] in fact some SSD devices present themselves as CF devices
+>>   I'm not sure I uderstand the passage about "slightly different 
+>>timings"...
 
-Thanks,
-Bart
+> The timing values used are different to those on the AMD 8111 even though
+> the interface is similar.
+
+    What do you mean by timing values anyway, clock counts or the register 
+encoding itself?
+
+>>   It's stange that the driver is using CPI config. space by default 
+>>which not even documented in the datasheet. I guess the MSR accesses are 
+
+> The PCI configuration is the portable way to drive it.
+
+    Portable to what? As you have yorself noted below, this is Geode -- and I 
+highly doubt that CS5536 will be used for anything else.
+
+>>also somewhat faster because one doesn't have to access the address/data 
+>>register pair at ports 0xcf8/0xcfc...
+
+> This is a Geode.
+
+    I know. :-)
+    I have hacked on older Geode GX2 for some time back in 2004 (although not 
+on something related to PCI); my "toy" board has RIP just recently.)
+
+> What makes you think there is even a PCI bus 
+
+    I sure know that it's not PCI (IIUC, it's the common tendency in the x86 
+north-to-south-bridge busses has been emulating the PCI config. space with 
+less and less PCI compatible "physical layer"). That does mean emulating PCI 
+config. space mechanism #1 and Geode's not an exception here, see:
+
+http://www.amd.com/files/connectivitysolutions/geode/geode_gx/32663C_lx_gx_pciconfig.pdf
+
+> or that the 8111 interface isn't entirely a software construct.
+
+    If that's the case (looks like so), it makes using it even appealing...
+
+> Geode PCI hardware is mostly smoke and mirrors ;)
+
+    When it comes to their internal controllers, yes (though e.g. their OHCI 
+seem to have the real PCI config. space).
+
+> Alan
+
+WBR, Sergei
