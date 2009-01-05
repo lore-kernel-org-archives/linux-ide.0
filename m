@@ -1,151 +1,98 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
-Date: Mon, 5 Jan 2009 20:10:16 +0100
-Message-ID: <20090105191016.GU32491@kernel.dk>
-References: <200901051952.58029.bzolnier@gmail.com> <20090105185428.GS32491@kernel.dk> <200901052002.15984.bzolnier@gmail.com> <1231182486.3324.54.camel@localhost.localdomain>
+From: Brandon Philips <brandon@ifup.org>
+Subject: [PATCH v2] it821x: Add ultra_mask quirk for Vortex86SX
+Date: Mon, 5 Jan 2009 11:08:58 -0800
+Message-ID: <20090105190858.GC22062@jenkins.ifup.org>
+References: <20090105165811.GF29255@jenkins.ifup.org> <20090105171104.5db48c74@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:27460 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754331AbZAETLV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Jan 2009 14:11:21 -0500
+Received: from rv-out-0506.google.com ([209.85.198.232]:17563 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754705AbZAETL0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 14:11:26 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so6972289rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2009 11:11:24 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1231182486.3324.54.camel@localhost.localdomain>
+In-Reply-To: <20090105171104.5db48c74@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Shawn Lin <shawn@dmp.com.tw>
 
-On Mon, Jan 05 2009, James Bottomley wrote:
-> On Mon, 2009-01-05 at 20:02 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > On Monday 05 January 2009, Jens Axboe wrote:
-> > > On Mon, Jan 05 2009, Bartlomiej Zolnierkiewicz wrote:
-> > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > Subject: [PATCH] block: export SSD/non-rotational queue flag through sysfs
-> > > > 
-> > > > For some devices (i.e. CFA ATA) we can't reliably detect whether
-> > > > the device is of rotational or non-rotational type so we need to
-> > > > leave the final decision about this setting to the user-space.
-> > > 
-> > > I agree with that, was actually planning on doing that myself.
-> > > 
-> > > > @@ -146,8 +167,8 @@ static ssize_t queue_nomerges_store(stru
-> > > >  		queue_flag_set(QUEUE_FLAG_NOMERGES, q);
-> > > >  	else
-> > > >  		queue_flag_clear(QUEUE_FLAG_NOMERGES, q);
-> > > > -
-> > > >  	spin_unlock_irq(q->queue_lock);
-> > > > +
-> > > >  	return ret;
-> > > >  }
-> > > >  
-> > > 
-> > > Hmm?
-> > 
-> > This is just a "bonus". :)
-> > 
-> > > > @@ -210,6 +231,12 @@ static struct queue_sysfs_entry queue_hw
-> > > >  	.show = queue_hw_sector_size_show,
-> > > >  };
-> > > >  
-> > > > +static struct queue_sysfs_entry queue_nonrot_entry = {
-> > > > +	.attr = {.name = "nonrot", .mode = S_IRUGO | S_IWUSR },
-> > > > +	.show = queue_nonrot_show,
-> > > > +	.store = queue_nonrot_store,
-> > > > +};
-> > > > +
-> > > 
-> > > Lets please use a better name for export reasons, non-rotational is a
-> > > lot better. Nobody will know what nonrot means :-)
-> > 
-> > Yeah...
-> > 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH v2] block: export SSD/non-rotational queue flag through sysfs
-> > 
-> > For some devices (i.e. CFA ATA) we can't reliably detect whether
-> > the device is of rotational or non-rotational type so we need to
-> > leave the final decision about this setting to the user-space.
-> > 
-> > As a bonus do a minor CodingStyle fixup in queue_nomerges_store().
-> > 
-> > Suggested-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  block/blk-sysfs.c |   30 +++++++++++++++++++++++++++++-
-> >  1 file changed, 29 insertions(+), 1 deletion(-)
-> > 
-> > Index: b/block/blk-sysfs.c
-> > ===================================================================
-> > --- a/block/blk-sysfs.c
-> > +++ b/block/blk-sysfs.c
-> > @@ -130,6 +130,27 @@ static ssize_t queue_max_hw_sectors_show
-> >  	return queue_var_show(max_hw_sectors_kb, (page));
-> >  }
-> >  
-> > +static ssize_t queue_nonrot_show(struct request_queue *q, char *page)
-> > +{
-> > +	return queue_var_show(blk_queue_nonrot(q), page);
-> > +}
-> > +
-> > +static ssize_t queue_nonrot_store(struct request_queue *q, const char *page,
-> > +				  size_t count)
-> > +{
-> > +	unsigned long nm;
-> > +	ssize_t ret = queue_var_store(&nm, page, count);
-> > +
-> > +	spin_lock_irq(q->queue_lock);
-> > +	if (nm)
-> > +		queue_flag_set(QUEUE_FLAG_NONROT, q);
-> > +	else
-> > +		queue_flag_clear(QUEUE_FLAG_NONROT, q);
-> > +	spin_unlock_irq(q->queue_lock);
-> > +
-> > +	return ret;
-> > +}
-> > +
-> >  static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
-> >  {
-> >  	return queue_var_show(blk_queue_nomerges(q), page);
-> > @@ -146,8 +167,8 @@ static ssize_t queue_nomerges_store(stru
-> >  		queue_flag_set(QUEUE_FLAG_NOMERGES, q);
-> >  	else
-> >  		queue_flag_clear(QUEUE_FLAG_NOMERGES, q);
-> > -
-> >  	spin_unlock_irq(q->queue_lock);
-> > +
-> >  	return ret;
-> >  }
-> >  
-> > @@ -210,6 +231,12 @@ static struct queue_sysfs_entry queue_hw
-> >  	.show = queue_hw_sector_size_show,
-> >  };
-> >  
-> > +static struct queue_sysfs_entry queue_nonrot_entry = {
-> > +	.attr = {.name = "non-rotational", .mode = S_IRUGO | S_IWUSR },
-> > +	.show = queue_nonrot_show,
-> > +	.store = queue_nonrot_store,
-> > +};
-> > +
-> >  static struct queue_sysfs_entry queue_nomerges_entry = {
-> >  	.attr = {.name = "nomerges", .mode = S_IRUGO | S_IWUSR },
-> >  	.show = queue_nomerges_show,
-> > @@ -229,6 +256,7 @@ static struct attribute *default_attrs[]
-> >  	&queue_max_sectors_entry.attr,
-> >  	&queue_iosched_entry.attr,
-> >  	&queue_hw_sector_size_entry.attr,
-> > +	&queue_nonrot_entry.attr,
-> >  	&queue_nomerges_entry.attr,
-> >  	&queue_rq_affinity_entry.attr,
-> >  	NULL,
-> 
-> Almost all block devices might find this useful.  Ought not this flag to
-> be in the block layer appearing under /sys/block/<dev>?
+On Vortex86SX with IDE controller revision 0x11 ultra DMA must be
+disabled. This patch was tested by DMP and seems to work.
 
-The block layer only uses it for scheduling purposes, in which case it
-fits well in queue/ since you need the io scheduler.
+It is a cleaned up version of their older Kernel patch: 
+ http://www.dmp.com.tw/tech/vortex86sx/patch-2.6.24-DMP.gz
 
--- 
-Jens Axboe
+Tested-by: Shawn Lin <shawn@dmp.com.tw>
+Signed-off-by: Brandon Philips <bphilips@suse.de>
 
+---
+ drivers/ide/it821x.c    |   12 ++++++++++++
+ include/linux/pci_ids.h |    1 +
+ 2 files changed, 13 insertions(+)
+
+Index: linux-2.6/drivers/ide/it821x.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/it821x.c
++++ linux-2.6/drivers/ide/it821x.c
+@@ -68,6 +68,8 @@
+ 
+ #define DRV_NAME "it821x"
+ 
++#define QUIRK_VORTEX86 1
++
+ struct it821x_dev
+ {
+ 	unsigned int smart:1,		/* Are we in smart raid mode */
+@@ -79,6 +81,7 @@ struct it821x_dev
+ 	u16	pio[2];			/* Cached PIO values */
+ 	u16	mwdma[2];		/* Cached MWDMA values */
+ 	u16	udma[2];		/* Cached UDMA values (per drive) */
++	u16	quirks;
+ };
+ 
+ #define ATA_66		0
+@@ -580,6 +583,12 @@ static void __devinit init_hwif_it821x(i
+ 
+ 	hwif->ultra_mask = ATA_UDMA6;
+ 	hwif->mwdma_mask = ATA_MWDMA2;
++
++	/* Vortex86SX quirk: prevent Ultra-DMA mode to fix BadCRC issue */
++	if (idev->quirks & QUIRK_VORTEX86) {
++		if (dev->revision == 0x11)
++			hwif->ultra_mask = 0;
++	}
+ }
+ 
+ static void it8212_disable_raid(struct pci_dev *dev)
+@@ -652,6 +661,8 @@ static int __devinit it821x_init_one(str
+ 		return -ENOMEM;
+ 	}
+ 
++	itdevs->quirks = id->driver_data;
++
+ 	rc = ide_pci_init_one(dev, &it821x_chipset, itdevs);
+ 	if (rc)
+ 		kfree(itdevs);
+@@ -671,6 +682,7 @@ static void __devexit it821x_remove(stru
+ static const struct pci_device_id it821x_pci_tbl[] = {
+ 	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8211), 0 },
+ 	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8212), 0 },
++	{ PCI_VDEVICE(RDC, PCI_DEVICE_ID_RDC_D1010), QUIRK_VORTEX86 },
+ 	{ 0, },
+ };
+ 
+Index: linux-2.6/include/linux/pci_ids.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci_ids.h
++++ linux-2.6/include/linux/pci_ids.h
+@@ -2173,6 +2173,7 @@
+ #define PCI_DEVICE_ID_RDC_R6040		0x6040
+ #define PCI_DEVICE_ID_RDC_R6060		0x6060
+ #define PCI_DEVICE_ID_RDC_R6061		0x6061
++#define PCI_DEVICE_ID_RDC_D1010		0x1010
+ 
+ #define PCI_VENDOR_ID_LENOVO		0x17aa
+ 
