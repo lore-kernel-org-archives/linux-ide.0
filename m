@@ -1,38 +1,56 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12320] warn_on_slowpath when playing audio CD
-Date: Mon,  5 Jan 2009 12:21:04 -0800 (PST)
-Message-ID: <20090105202104.E38CE10800E@picon.linux-foundation.org>
-References: <bug-12320-11633@http.bugzilla.kernel.org/>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Mon, 5 Jan 2009 13:13:50 -0800
+Message-ID: <20090105131350.66408a4f@infradead.org>
+References: <20090104092430.7ffd2c41@infradead.org>
+	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
+	<20090104103104.6fdda9f2@infradead.org>
+	<alpine.LFD.2.00.0901041038570.3179@localhost.localdomain>
+	<20090104110559.306186c4@infradead.org>
+	<20090105162125.093b4adf@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46450 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752116AbZAEUVX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 15:21:23 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n05KL5wW008458
-	for <linux-ide@vger.kernel.org>; Mon, 5 Jan 2009 12:21:06 -0800
-In-Reply-To: <bug-12320-11633@http.bugzilla.kernel.org/>
+Received: from casper.infradead.org ([85.118.1.10]:59883 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbZAEVMB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 16:12:01 -0500
+In-Reply-To: <20090105162125.093b4adf@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12320
+On Mon, 5 Jan 2009 16:21:25 +0000
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-
-
-
-
-------- Comment #15 from nm127@freemail.hu  2009-01-05 12:21 -------
-Created an attachment (id=19666)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=19666&action=view)
-dmesg 2.6.28 + patches from comment #5 & comment #13
-
-I booted the system, inserted an audio CD. The kaffeine application started and
-tried to play the tracks but nothing was played, instead, after 3..5 seconds
-kaffeine jumped to the next track. Then I stopped kaffeine and removed the CD.
+> > Right now I don't think I have time for it (this is going to take
+> > time.. there's so many weird things with serial ports that it's
+> > bound to break stuff in the beginning etc)
+> 
+> I can't duplicate this. Can you check you don't have
+> 
+> config SERIAL_8250_DETECT_IRQ
+>         bool "Autodetect IRQ on standard ports (unsafe)"
+>         depends on SERIAL_8250_EXTENDED
+>         help
+>           Say Y here if you want the kernel to try to guess which IRQ
+>           to use for your serial port.
+> 
+>           This is considered unsafe; it is far better to configure the
+> IRQ in a boot script using the setserial command.
+> 
+>           If unsure, say N.
+> 
+> 
+> enabled
+> 
+ok I had that enabled somehow....
+retesting now
 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
