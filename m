@@ -1,35 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 7/7] libata: Add 32bit PIO support
-Date: Tue, 6 Jan 2009 09:46:21 +0000
-Message-ID: <20090106094621.4de3c8ed@lxorguk.ukuu.org.uk>
-References: <20090105141102.28189.44312.stgit@localhost.localdomain>
-	<20090105141619.28189.6174.stgit@localhost.localdomain>
-	<4962AE92.5060401@shaw.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/9] via82cxxx: fix cable warning message
+Date: Tue, 06 Jan 2009 19:35:20 +0100
+Message-ID: <20090106183520.21193.63704.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33771 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751321AbZAFS0V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 13:26:21 -0500
-In-Reply-To: <4962AE92.5060401@shaw.ca>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:59930 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbZAFSei (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 13:34:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-> >  include/linux/libata.h    |    3 +++
-> >  7 files changed, 66 insertions(+), 9 deletions(-)
-> 
-> This can likely be enabled for more controllers (presumably all the 
-> SFF-based SATA controllers as well 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] via82cxxx: fix cable warning message
 
-It can - but I'm doing them as they get tested and documentation
-confirmation where possible.
+Remove reference to the removed old-style kernel parameter.
 
-> Don't some of the VLB controller drivers have their own private 32-bit 
-> PIO implementation? Those should likely be updated to use this support.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+minor fixes/cleanups for pata-2.6 tree
 
-Most VLB 32bit requires a sync sequence start and end so its not quite so
-simple but yes.
+ drivers/ide/via82cxxx.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+Index: b/drivers/ide/via82cxxx.c
+===================================================================
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -432,8 +432,6 @@ static int __devinit via_init_one(struct
+ 	if (via_clock < 20000 || via_clock > 50000) {
+ 		printk(KERN_WARNING DRV_NAME ": User given PCI clock speed "
+ 			"impossible (%d), using 33 MHz instead.\n", via_clock);
+-		printk(KERN_WARNING DRV_NAME ": Use ide0=ata66 if you want "
+-			"to assume 80-wire cable.\n");
+ 		via_clock = 33333;
+ 	}
+ 
