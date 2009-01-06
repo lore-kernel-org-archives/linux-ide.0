@@ -1,48 +1,41 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 1/6] fastboot: Asynchronous function calls to speed up
- kernel boot
-Date: Mon, 5 Jan 2009 20:37:06 -0800
-Message-ID: <20090105203706.426cdc1f@infradead.org>
-References: <20090105200959.04a626ac@infradead.org>
-	<20090105201041.3289d3dd@infradead.org>
-	<20090105202514.399da36e.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20090105202514.399da36e.akpm@linux-foundation.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12320] warn_on_slowpath when playing audio CD
+Date: Mon,  5 Jan 2009 20:58:38 -0800 (PST)
+Message-ID: <20090106045838.11F2D108043@picon.linux-foundation.org>
+References: <bug-12320-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41301 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750845AbZAFE6k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 23:58:40 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n064wcvx005714
+	for <linux-ide@vger.kernel.org>; Mon, 5 Jan 2009 20:58:39 -0800
+In-Reply-To: <bug-12320-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 5 Jan 2009 20:25:14 -0800
-Andrew Morton <akpm@linux-foundation.org> wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=12320
 
-> On Mon, 5 Jan 2009 20:10:41 -0800 Arjan van de Ven
-> <arjan@infradead.org> wrote:
-> 
-> >  kernel/async.c         |  307
-> > ++++++++++++++++++++++++++++++++++++++++++++++++
-> 
-> Am still wondering if this is unacceptably duplicative of dhowells's
-> slow-work infrastructure: http://lkml.org/lkml/2008/11/20/193
-> 
-> 
 
-I talked to David about this today (as I wrote in 0/6). 
-Based on that discussion we got to the conclusion we have incompatible
-requirements. He needs priorities to be honored (which means rather out
-of order execution of the tasks) while I need strict ordering (for the
-synchronization). While it's not entirely impossible to combine those
-two into one system, the resulting complexity isn't really worth it yet.
 
-Of the 307 lines, only 100 are actual thread pool code (the rest is
-synchronization and admin code), and about half of those 100 lines are
-comments.
+
+
+------- Comment #16 from bbpetkov@yahoo.de  2009-01-05 20:58 -------
+Hi,
+
+thanks for testing. Hmm, I can reproduce it here with kaffeine. Can you retry
+playing the audio cd with kscd with "Use direct digital playback" enabled,
+under Settings? 
+
+P.S. I'll be away until Sa. and will able to look into it more seriously then.
+
+Thanks,
+Boris.
 
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
