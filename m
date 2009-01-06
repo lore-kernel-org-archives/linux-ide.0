@@ -1,53 +1,71 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 8/9] ide: move ->lock and ->timer init from init_irq() to ide_init_port_data()
-Date: Tue, 06 Jan 2009 19:36:09 +0100
-Message-ID: <20090106183609.21193.78752.sendpatchset@localhost.localdomain>
-References: <20090106183520.21193.63704.sendpatchset@localhost.localdomain>
+Subject: [RESEND][PATCH 3/9] ide: remove unused CONFIG_BLK_DEV_IDE_AU1-[Triple-X]_SEQTS_PER_RQ
+Date: Tue, 6 Jan 2009 19:52:25 +0100
+Message-ID: <200901061952.25889.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:63672 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754767AbZAFSf2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 13:35:28 -0500
-In-Reply-To: <20090106183520.21193.63704.sendpatchset@localhost.localdomain>
+Received: from fk-out-0910.google.com ([209.85.128.185]:16055 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbZAFSw1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 13:52:27 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: move ->lock and ->timer init from init_irq() to ide_init_port_data()
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-probe.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -939,11 +939,6 @@ static int init_irq (ide_hwif_t *hwif)
- 	int sa = 0;
- 
- 	mutex_lock(&ide_cfg_mtx);
--	spin_lock_init(&hwif->lock);
--
--	init_timer(&hwif->timer);
--	hwif->timer.function = &ide_timer_expiry;
--	hwif->timer.data = (unsigned long)hwif;
- 
- #if defined(__mc68000__)
- 	sa = IRQF_SHARED;
-@@ -1299,6 +1294,12 @@ static void ide_init_port_data(ide_hwif_
- 	hwif->name[2]	= 'e';
- 	hwif->name[3]	= '0' + index;
- 
-+	spin_lock_init(&hwif->lock);
-+
-+	init_timer(&hwif->timer);
-+	hwif->timer.function = &ide_timer_expiry;
-+	hwif->timer.data = (unsigned long)hwif;
-+
- 	init_completion(&hwif->gendev_rel_comp);
- 
- 	hwif->tp_ops = &default_tp_ops;
+ClJlYXNvbiBmb3IgcmVzZW5kOiB2Z2VyIGRvZXNuJ3QgbGlrZSBYWFgKClRoaXMgaXMgYW4gYXV0
+b21hdGljYWxseSBnZW5lcmF0ZWQgRGVsaXZlcnkgU3RhdHVzIE5vdGlmaWNhdGlvbgoKRGVsaXZl
+cnkgdG8gdGhlIGZvbGxvd2luZyByZWNpcGllbnQgZmFpbGVkIHBlcm1hbmVudGx5OgoKICAgIGxp
+bnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcKClRlY2huaWNhbCBkZXRhaWxzIG9mIHBlcm1hbmVu
+dCBmYWlsdXJlOgpHb29nbGUgdHJpZWQgdG8gZGVsaXZlciB5b3VyIG1lc3NhZ2UsIGJ1dCBpdCB3
+YXMgcmVqZWN0ZWQgYnkgdGhlIHJlY2lwaWVudCBkb21haW4uIFdlIHJlY29tbWVuZCBjb250YWN0
+aW5nIHRoZSBvdGhlciBlbWFpbCBwcm92aWRlciBmb3IgZnVydGhlciBpbmZvcm1hdGlvbiBhYm91
+dCB0aGUgY2F1c2Ugb2YgdGhpcyBlcnJvci4gVGhlIGVycm9yIHRoYXQgdGhlIG90aGVyIHNlcnZl
+ciByZXR1cm5lZCB3YXM6IDU1MCA1NTAgNS43LjEgQ29udGVudC1Qb2xpY3kgcmVqZWN0IG1zZzog
+VGhlIGNhcGl0YWwgVHJpcGxlLVggaW4gc3ViamVjdCBpcyB3YXkgdG9vIG9mdGVuIGFzc29jaWF0
+ZWQgd2l0aCBqdW5rIGVtYWlsLCBwbGVhc2UgcmVwaHJhc2UuICBCRjo8SCA2LjE1MDY0ZS0xND47
+IFMxNzU0NzkxQWJaQUZTZXYgKHN0YXRlIDE4KS4KCkZyb206IEJhcnRsb21pZWogWm9sbmllcmtp
+ZXdpY3ogPGJ6b2xuaWVyQGdtYWlsLmNvbT4KU3ViamVjdDogW1BBVENIXSBpZGU6IHJlbW92ZSB1
+bnVzZWQgQ09ORklHX0JMS19ERVZfSURFX0FVMV9YWFhfU0VRVFNfUEVSX1JRCgpTaWduZWQtb2Zm
+LWJ5OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiem9sbmllckBnbWFpbC5jb20+Ci0tLQpB
+VTF4eHhfSURFLlJFQURNRSBuZWVkcyBtb3JlIChvdXQgb2Ygc2NvcGUgZm9yIHRoaXMgcGF0Y2gp
+IHVwZGF0ZXMuCgogRG9jdW1lbnRhdGlvbi9taXBzL0FVMXh4eF9JREUuUkVBRE1FIHwgICAgNiAr
+LS0tLS0KIGRyaXZlcnMvaWRlL0tjb25maWcgICAgICAgICAgICAgICAgICB8ICAgIDUgLS0tLS0K
+IDIgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEwIGRlbGV0aW9ucygtKQoKSW5kZXg6
+IGIvRG9jdW1lbnRhdGlvbi9taXBzL0FVMXh4eF9JREUuUkVBRE1FCj09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGEv
+RG9jdW1lbnRhdGlvbi9taXBzL0FVMXh4eF9JREUuUkVBRE1FCisrKyBiL0RvY3VtZW50YXRpb24v
+bWlwcy9BVTF4eHhfSURFLlJFQURNRQpAQCAtNTIsMTQgKzUyLDEyIEBAIFR3byBmaWxlcyBhcmUg
+aW50cm9kdWNlZDoKICAgYikgJ2RyaXZlcnMvaWRlL21pcHMvYXUxeHh4LWlkZS5jJwogICAgICBj
+b250YWlucyB0aGUgZnVuY3Rpb25hbGl0eSBvZiB0aGUgQVUxWFhYIElERSBkcml2ZXIKIAotRm91
+ciBjb25maWdzIHZhcmlhYmxlcyBhcmUgaW50cm9kdWNlZDoKK0ZvbGxvd2luZyBleHRyYSBjb25m
+aWdzIHZhcmlhYmxlcyBhcmUgaW50cm9kdWNlZDoKIAogICBDT05GSUdfQkxLX0RFVl9JREVfQVUx
+WFhYX1BJT19EQkRNQSAgICAtIGVuYWJsZSB0aGUgUElPK0RCRE1BIG1vZGUKICAgQ09ORklHX0JM
+S19ERVZfSURFX0FVMVhYWF9NRE1BMl9EQkRNQSAgLSBlbmFibGUgdGhlIE1XRE1BIG1vZGUKICAg
+Q09ORklHX0JMS19ERVZfSURFX0FVMVhYWF9CVVJTVEFCTEVfT04gLSBzZXQgQnVyc3RhYmxlIEZJ
+Rk8gaW4gREJETUEKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBj
+b250cm9sbGVyCi0gIENPTkZJR19CTEtfREVWX0lERV9BVTFYWFhfU0VRVFNfUEVSX1JRIC0gbWF4
+aW11bSB0cmFuc2ZlciBzaXplCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgcGVyIGRlc2NyaXB0b3IKIAogCiBTVVBQT1JURUQgSURFIE1PREVTCkBAIC04Nyw3ICs4
+NSw2IEBAIENPTkZJR19CTEtfREVWX0lERURNQV9QQ0k9eQogQ09ORklHX0lERURNQV9QQ0lfQVVU
+Tz15CiBDT05GSUdfQkxLX0RFVl9JREVfQVUxWFhYPXkKIENPTkZJR19CTEtfREVWX0lERV9BVTFY
+WFhfTURNQTJfREJETUE9eQotQ09ORklHX0JMS19ERVZfSURFX0FVMVhYWF9TRVFUU19QRVJfUlE9
+MTI4CiBDT05GSUdfQkxLX0RFVl9JREVETUE9eQogQ09ORklHX0lERURNQV9BVVRPPXkKIApAQCAt
+MTA1LDcgKzEwMiw2IEBAIENPTkZJR19CTEtfREVWX0lERURNQV9QQ0k9eQogQ09ORklHX0lERURN
+QV9QQ0lfQVVUTz15CiBDT05GSUdfQkxLX0RFVl9JREVfQVUxWFhYPXkKIENPTkZJR19CTEtfREVW
+X0lERV9BVTFYWFhfTURNQTJfREJETUE9eQotQ09ORklHX0JMS19ERVZfSURFX0FVMVhYWF9TRVFU
+U19QRVJfUlE9MTI4CiBDT05GSUdfQkxLX0RFVl9JREVETUE9eQogQ09ORklHX0lERURNQV9BVVRP
+PXkKIApJbmRleDogYi9kcml2ZXJzL2lkZS9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGEvZHJpdmVy
+cy9pZGUvS2NvbmZpZworKysgYi9kcml2ZXJzL2lkZS9LY29uZmlnCkBAIC03MDEsMTEgKzcwMSw2
+IEBAIGNvbmZpZyBCTEtfREVWX0lERV9BVTFYWFhfTURNQTJfREJETUEKICAgICAgICBkZXBlbmRz
+IG9uIFNPQ19BVTEyMDAgJiYgQkxLX0RFVl9JREVfQVUxWFhYCiBlbmRjaG9pY2UKIAotY29uZmln
+IEJMS19ERVZfSURFX0FVMVhYWF9TRVFUU19QRVJfUlEKLSAgICAgICBpbnQgIk1heGltdW0gdHJh
+bnNmZXIgc2l6ZSAoS0IpIHBlciByZXF1ZXN0ICh1cCB0byAxMjgpIgotICAgICAgIGRlZmF1bHQg
+IjEyOCIKLSAgICAgICBkZXBlbmRzIG9uIEJMS19ERVZfSURFX0FVMVhYWAotCiBjb25maWcgQkxL
+X0RFVl9JREVfVFg0OTM4CiAJdHJpc3RhdGUgIlRYNDkzOCBpbnRlcm5hbCBJREUgc3VwcG9ydCIK
+IAlkZXBlbmRzIG9uIFNPQ19UWDQ5MzgKAAo=
