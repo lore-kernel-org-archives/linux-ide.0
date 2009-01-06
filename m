@@ -1,44 +1,30 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH 7/7] libata: Add 32bit PIO support
-Date: Mon, 05 Jan 2009 19:06:26 -0600
-Message-ID: <4962AE92.5060401@shaw.ca>
-References: <20090105141102.28189.44312.stgit@localhost.localdomain> <20090105141619.28189.6174.stgit@localhost.localdomain>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
+Date: Tue, 06 Jan 2009 02:25:59 +0100
+Message-ID: <4962B327.1020209@s5r6.in-berlin.de>
+References: <fa.+H1UnEqOmFht/vMPmVy8ellbQi0@ifi.uio.no> <fa.RLz5WOGorLui5GRkc963Ww1kXqg@ifi.uio.no> <fa.x4ejZ7Kj7ZZRu88Sond1Cap6XxY@ifi.uio.no> <49628720.6050101@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:34777 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbZAFBG3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 20:06:29 -0500
-In-Reply-To: <20090105141619.28189.6174.stgit@localhost.localdomain>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:55687 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbZAFB0j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2009 20:26:39 -0500
+In-Reply-To: <49628720.6050101@yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Alan Cox wrote:
-> From: Alan Cox <alan@redhat.com>
-> 
-> This matters for some controllers and in one or two cases almost doubles
-> PIO performance. Add a bmdma32 operations set we can inherit and activate
-> it for some controllers
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> ---
-> 
->  drivers/ata/ata_piix.c    |    2 +-
->  drivers/ata/libata-sff.c  |   53 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/ata/pata_ali.c    |    6 +++--
->  drivers/ata/pata_amd.c    |    4 ++-
->  drivers/ata/pata_mpiix.c  |    3 ++-
->  drivers/ata/pata_sil680.c |    4 ++-
->  include/linux/libata.h    |    3 +++
->  7 files changed, 66 insertions(+), 9 deletions(-)
+Sitsofe Wheeler wrote:
+> How about cheapseek? fastrandom? flash? ssd? However the internal flag
+> is called QUEUE_FLAG_NONROT so it kind of makes sense just to leave it
+> as nonrot...
 
-This can likely be enabled for more controllers (presumably all the 
-SFF-based SATA controllers as well as any other PATA that couldn't be on 
-a physical ISA bus). This is a start though.
-
-Don't some of the VLB controller drivers have their own private 32-bit 
-PIO implementation? Those should likely be updated to use this support.
+It is not necessary to obfuscate an interface to userspace just because
+some internally used cpp macro got an awkward name.
+-- 
+Stefan Richter
+-=====-==--= ---= --==-
+http://arcgraph.de/sr/
