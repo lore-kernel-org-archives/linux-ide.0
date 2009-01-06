@@ -1,42 +1,50 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
-Date: Tue, 6 Jan 2009 08:35:15 +0100
-Message-ID: <20090106073515.GY32491@kernel.dk>
-References: <200901051952.58029.bzolnier@gmail.com> <20090105185428.GS32491@kernel.dk> <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com>
+From: Giovanni Pancotti <gpanco@tiscali.it>
+Subject: Re:  [Bugme-new] [Bug 12351] New: sata_nv hotplug not work in
+	2.6.27.10
+Date: Tue, 6 Jan 2009 11:27:58 +0100
+Message-ID: <20090106102758.GA7309@libero.it>
+References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca>
+Reply-To: gpanco@tiscali.it
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:17517 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750846AbZAFHgU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jan 2009 02:36:20 -0500
+Received: from cp-out11.libero.it ([212.52.84.111]:37785 "EHLO
+	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbZAFKfb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 05:35:31 -0500
 Content-Disposition: inline
-In-Reply-To: <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com>
+In-Reply-To: <4962AC5C.1000605@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, stable@kernel.org, Tejun Heo <tj@kernel.org>
 
-On Mon, Jan 05 2009, Kay Sievers wrote:
-> On Mon, Jan 5, 2009 at 19:54, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > On Mon, Jan 05 2009, Bartlomiej Zolnierkiewicz wrote:
-> 
-> >> +static struct queue_sysfs_entry queue_nonrot_entry = {
-> >> +     .attr = {.name = "nonrot", .mode = S_IRUGO | S_IWUSR },
-> >> +     .show = queue_nonrot_show,
-> >> +     .store = queue_nonrot_store,
-> >> +};
-> >> +
-> >
-> > Lets please use a better name for export reasons, non-rotational is a
-> > lot better. Nobody will know what nonrot means :-)
-> 
-> What's that negation good for? Can't we just have "rotational", like
-> we have "removable" and not "non-removable"? :)
+On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
 
-Non-rotational is the term typically used, since rotational is the norm
-(still). So I think the negation actually makes sense in this case :-)
+>>> Hardware Environment:x86 ASUS M2N-E
+>
+> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
+> on hotplug and apparently that doesn't work. Thing is that:
 
--- 
-Jens Axboe
+no, it is not MCP61, but MCP55:
+
+dual ~ # lspci
+00:00.0 RAM memory: nVidia Corporation MCP55 Memory Controller (rev a1)
+00:01.0 ISA bridge: nVidia Corporation MCP55 LPC Bridge (rev a2)
+00:01.1 SMBus: nVidia Corporation MCP55 SMBus (rev a2)
+00:02.0 USB Controller: nVidia Corporation MCP55 USB Controller (rev a1)
+00:02.1 USB Controller: nVidia Corporation MCP55 USB Controller (rev a2)
+00:04.0 IDE interface: nVidia Corporation MCP55 IDE (rev a1)
+00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
+
+dual ~ # dmidecode
+# dmidecode 2.9
+SMBIOS 2.4 present.
+72 structures occupying 2069 bytes.
+Table at 0x000F0000.
+
+Handle 0x0000, DMI type 0, 24 bytes
+BIOS Information
+        Vendor: Phoenix Technologies, LTD
+                Version: ASUS M2N-E ACPI BIOS Revision 1601
 
