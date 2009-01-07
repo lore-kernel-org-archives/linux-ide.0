@@ -1,38 +1,29 @@
-From: "Ryan Hope" <rmh3093@gmail.com>
-Subject: Re: [PATCH 0/6] v2: Asynchronous function calls to speed up booting and more
-Date: Wed, 7 Jan 2009 12:44:03 -0500
-Message-ID: <48f7fe350901070944y558366f0j9a23b12a993c4355@mail.gmail.com>
-References: <20090105201508.23e98b4b@infradead.org>
-	 <48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
-	 <20090107070810.675799a5@infradead.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] it821x.c: use dev->revision instead of pci_read_config_byte
+Date: Wed, 7 Jan 2009 21:22:12 +0100
+Message-ID: <200901072122.13577.bzolnier@gmail.com>
+References: <20090105165811.GF29255@jenkins.ifup.org> <20090105171104.5db48c74@lxorguk.ukuu.org.uk> <20090105191006.GD22062@jenkins.ifup.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20090107070810.675799a5@infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:56404 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589AbZAGUcW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 15:32:22 -0500
+Received: by bwz14 with SMTP id 14so26259050bwz.13
+        for <linux-ide@vger.kernel.org>; Wed, 07 Jan 2009 12:32:20 -0800 (PST)
+In-Reply-To: <20090105191006.GD22062@jenkins.ifup.org>
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brandon Philips <brandon@ifup.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Shawn Lin <shawn@dmp.com.tw>
 
-yes it boots with out the acpi patch
+On Monday 05 January 2009, Brandon Philips wrote:
+> Minor cleanup.
+> 
+> Signed-off-by: Brandon Philips <bphilips@suse.de>
 
-On 1/7/09, Arjan van de Ven <arjan@infradead.org> wrote:
-> On Tue, 6 Jan 2009 22:19:33 -0500
-> "Ryan Hope" <rmh3093@gmail.com> wrote:
->
->> i can't boot with these patches... the kernel panic was something
->> along the line of:
->>
->> ata_piix: device unavailable because of BAR 0 collisions
->
-> ok as a hunch.. could you try this but without the ACPI part of the
-> patch?
->
->
-> --
-> Arjan van de Ven 	Intel Open Source Technology Centre
-> For development, discussion and tips for power savings,
-> visit http://www.lesswatts.org
->
+applied
