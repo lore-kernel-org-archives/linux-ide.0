@@ -1,16 +1,16 @@
 From: "Moritz Rigler" <moritz1234567@gmx.de>
 Subject: Re: [PATCH #upstream-fixes] libata: implement and use
  HORKAGE_NOSETXFER
-Date: Wed, 07 Jan 2009 15:15:36 +0100
-Message-ID: <20090107141536.231980@gmx.net>
+Date: Wed, 07 Jan 2009 15:18:44 +0100
+Message-ID: <20090107141844.232020@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51186 "HELO mail.gmx.net"
+Received: from mail.gmx.net ([213.165.64.20]:52792 "HELO mail.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752844AbZAGOPj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Jan 2009 09:15:39 -0500
+	id S1753429AbZAGOSq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Jan 2009 09:18:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -51,6 +51,8 @@ Hope you like this one better.
 
 Regards,
 Moritz
+
+
 --=20
 Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
 f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
