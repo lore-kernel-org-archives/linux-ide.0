@@ -1,53 +1,116 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [Bugme-new] [Bug 12351] New: sata_nv hotplug not work in	2.6.27.10
-Date: Tue, 06 Jan 2009 18:19:44 -0600
-Message-ID: <4963F520.4060500@shaw.ca>
-References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca> <20090106102758.GA7309@libero.it>
+Subject: Re: [PATCH 5/7] libata: Improve timeout handling
+Date: Tue, 06 Jan 2009 18:29:44 -0600
+Message-ID: <4963F778.5090209@shaw.ca>
+References: <20090105141102.28189.44312.stgit@localhost.localdomain> <20090105141532.28189.58209.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:18145 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbZAGATq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 19:19:46 -0500
-In-Reply-To: <20090106102758.GA7309@libero.it>
+Received: from main.gmane.org ([80.91.229.2]:50448 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883AbZAGA36 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Jan 2009 19:29:58 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LKMJ3-0000Fd-4m
+	for linux-ide@vger.kernel.org; Wed, 07 Jan 2009 00:29:57 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 07 Jan 2009 00:29:57 +0000
+Received: from hancockr by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 07 Jan 2009 00:29:57 +0000
+In-Reply-To: <20090105141532.28189.58209.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gpanco@tiscali.it
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, stable@kernel.org, Tejun Heo <tj@kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: jeff@garzik.org
 
-Giovanni Pancotti wrote:
-> On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
+Alan Cox wrote:
+> From: Alan Cox <alan@redhat.com>
 > 
->>>> Hardware Environment:x86 ASUS M2N-E
->> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
->> on hotplug and apparently that doesn't work. Thing is that:
+> On a timeout call a device specific handler early in the recovery so that
+> we can complete and process successful commands which timed out due to IRQ
+> loss or the like rather more elegantly.
 > 
-> no, it is not MCP61, but MCP55:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-Ahh, ok, that is less contradictory then :-) Presumably we should still 
-be using hardreset on that chipset.
+(snip)
 
-> 
-> dual ~ # lspci
-> 00:00.0 RAM memory: nVidia Corporation MCP55 Memory Controller (rev a1)
-> 00:01.0 ISA bridge: nVidia Corporation MCP55 LPC Bridge (rev a2)
-> 00:01.1 SMBus: nVidia Corporation MCP55 SMBus (rev a2)
-> 00:02.0 USB Controller: nVidia Corporation MCP55 USB Controller (rev a1)
-> 00:02.1 USB Controller: nVidia Corporation MCP55 USB Controller (rev a2)
-> 00:04.0 IDE interface: nVidia Corporation MCP55 IDE (rev a1)
-> 00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
-> 
-> dual ~ # dmidecode
-> # dmidecode 2.9
-> SMBIOS 2.4 present.
-> 72 structures occupying 2069 bytes.
-> Table at 0x000F0000.
-> 
-> Handle 0x0000, DMI type 0, 24 bytes
-> BIOS Information
->         Vendor: Phoenix Technologies, LTD
->                 Version: ASUS M2N-E ACPI BIOS Revision 1601
-> 
-> 
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index e74b3db..e9c09cd 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -65,6 +65,8 @@ const struct ata_port_operations ata_sff_port_ops = {
+>  	.sff_irq_on		= ata_sff_irq_on,
+>  	.sff_irq_clear		= ata_sff_irq_clear,
+>  
+> +	.lost_interrupt		= ata_sff_lost_interrupt,
+> +
+>  	.port_start		= ata_sff_port_start,
+>  };
+>  
+> @@ -1543,7 +1545,7 @@ bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc)
+>   *	RETURNS:
+>   *	One if interrupt was handled, zero if not (shared irq).
+>   */
+> -inline unsigned int ata_sff_host_intr(struct ata_port *ap,
+> +unsigned int ata_sff_host_intr(struct ata_port *ap,
+>  				      struct ata_queued_cmd *qc)
+>  {
+>  	struct ata_eh_info *ehi = &ap->link.eh_info;
+> @@ -1670,6 +1672,47 @@ irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
+>  }
+>  
+>  /**
+> + *	ata_sff_lost_interrupt	-	Check for an apparent lost interrupt
+> + *	@ap: port that appears to have timed out
+> + *
+> + *	Called from the libata error handlers when the core code suspects
+> + *	an interrupt has been lost. If it has complete anything we can and
+> + *	then return. Interface must support altstatus for this faster
+> + *	recovery to occur.
+> + *
+> + *	Locking:
+> + *	Caller holds host lock
+> + */
+> +
+> +void ata_sff_lost_interrupt(struct ata_port *ap)
+> +{
+> +	u8 status;
+> +	struct ata_queued_cmd *qc;
+> +
+> +	/* Only one outstanding command per SFF channel */
+> +	qc = ata_qc_from_tag(ap, ap->link.active_tag);
+> +	/* Check we have a live one.. */
+> +	if (qc == NULL ||  !(qc->flags & ATA_QCFLAG_ACTIVE))
+> +		return;
+> +	/* We cannot lose an interrupt on a polled command */
+> +	if (qc->tf.flags & ATA_TFLAG_POLLING)
+> +		return;
+> +	/* See if the controller thinks it is still busy - if so the command
+> +	   isn't a lost IRQ but is still in progress */
+> +	status = ata_sff_altstatus(ap);
+> +	if (status & ATA_BUSY)
+> +		return;
+> +
+> +	/* There was a command running, we are no longer busy and we have
+> +	   no interrupt. */
+> +	ata_port_printk(ap, KERN_WARNING, "lost interrupt (Status 0x%x)\n",
+> +								status);
+> +	/* Run the host interrupt logic as if the interrupt had not been
+> +	   lost */
+> +	ata_sff_host_intr(ap, qc);
+> +}
+> +
+> +/**
+
+I suspect this may have to be more of an opt-in thing or else all 
+drivers inheriting the SFF port ops will have to be checked to make sure 
+it will work. Looking at sata_nv ADMA, it inherits from the SFF 
+operations but the above code won't work as expected if the timeout 
+happened while the controller was in ADMA mode (we're not allowed to 
+access the taskfile registers for one thing). There may be others that 
+have similar problems.
+
