@@ -1,147 +1,78 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Wed, 7 Jan 2009 16:31:59 +0100
-Message-ID: <200901071632.02264.bs@q-leap.de>
-References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through
+	sysfs
+Date: Wed, 07 Jan 2009 09:34:33 -0600
+Message-ID: <1231342473.3282.19.camel@localhost.localdomain>
+References: <200901051952.58029.bzolnier@gmail.com>
+	 <20090105185428.GS32491@kernel.dk>
+	 <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com>
+	 <20090106073515.GY32491@kernel.dk>  <4964866D.8010503@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.q-leap.de ([88.79.172.217]:48748 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751810AbZAGPcH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Jan 2009 10:32:07 -0500
-In-Reply-To: <49643FD4.9080100@shaw.ca>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48332 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752109AbZAGPei (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 10:34:38 -0500
+In-Reply-To: <4964866D.8010503@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Kay Sievers <kay.sievers@vrfy.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Wednesday 07 January 2009 06:38:28 Robert Hancock wrote:
-> Tejun Heo wrote:
-> > Hello,
-> >
-> > Bernd Schubert wrote:
-> >> But now more than a year has passed again without doing anything
-> >> about it and actually this is what I strongly criticize. Most people
-> >> don't know about issues like that and don't run file checksum tests
-> >> as I now always do before taking a disk into production. So users
-> >> are exposed to known data corruption problems without even being
-> >> warned about it. Usually even backups don't help, since one creates
-> >> a backup of the corrupted data.
-> >
-> > sata_sil being one of the most popular controllers && data corruption
-> > reports seem to be concentrated on certain chipsets, I don't think
-> > it's a wide spread problem.  In some cases, the corruption was very
-> > reproducible too.
-> >
-> > I think it's something related to setting up the PCI side of things.
-> > There have been hints that incorrect CLS setting was the culprit and I
-> > tried thte combinations but without any success and unfortunately the
-> > problem wasn't reproducible with the hardware I have here.  :-(
->
-> As far as the cache line size register, the only thing the documentation
-> says it controls _directly_ is "With the SiI3114 as a master, initiating
-> a read transaction, it issues PCI command Read Multiple in place, when
-> empty space in its FIFO is larger than the value programmed in this
-> register."
->
-> The interesting thing is the commit (log below) that added code to the
-> driver to check the PCI cache line size register and set up the FIFO
-> thresholds:
->
->    2005/03/24 23:32:42-05:00 Carlos.Pardo
->    [PATCH] sata_sil: Fix FIFO PCI Bus Arbitration
->
->    This patch set default values for the FIFO PCI Bus Arbitration to
->    avoid data corruption. The root cause is due to our PCI bus master
->    handling mismatch with the chipset PCI bridge during DMA xfer (write
->    data to the device). The patch is to setup the DMA fifo threshold so
->    that there is no chance for the DMA engine to change protocol. We have
->    seen this problem only on one motherboard.
->
->    Signed-off-by: Silicon Image Corporation <cpardo@siliconimage.com>
->    Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
->
-> What the code's doing is setting the FIFO thresholds, used to assign
-> priority when requesting a PCI bus read or write operation, based on the
-> cache line size somehow. It seems to be trusting that the chip's cache
-> line size register has been set properly by the BIOS. The kernel should
-> know what the cache line size is but AFAIK normally only sets it when
-> the driver requests MWI. This chip doesn't support MWI, but it looks
-> like pci_set_mwi would fix up the CLS register as a side effect..
->
-> > Anyways, there was an interesting report that updating the BIOS on the
-> > controller fixed the problem.
-> >
-> >   http://bugzilla.kernel.org/show_bug.cgi?id=10480
-> >
-> > Taking "lspci -nnvvvxxx" output of before and after such BIOS update
-> > will shed some light on what's really going on.  Can you please try
-> > that?
->
-> Yes, that would be quite interesting.. the output even with the current
-> BIOS would be useful to see if the BIOS set some stupid cache line size
-> value..
+On Wed, 2009-01-07 at 13:39 +0300, Michael Tokarev wrote:
+> Jens Axboe wrote:
+> > On Mon, Jan 05 2009, Kay Sievers wrote:
+> >> On Mon, Jan 5, 2009 at 19:54, Jens Axboe <jens.axboe@oracle.com> wrote:
+> >>> On Mon, Jan 05 2009, Bartlomiej Zolnierkiewicz wrote:
+> >>>> +static struct queue_sysfs_entry queue_nonrot_entry = {
+> >>>> +     .attr = {.name = "nonrot", .mode = S_IRUGO | S_IWUSR },
+> >>>> +     .show = queue_nonrot_show,
+> >>>> +     .store = queue_nonrot_store,
+> >>>> +};
+> >>>> +
+> >>> Lets please use a better name for export reasons, non-rotational is a
+> >>> lot better. Nobody will know what nonrot means :-)
+> >> What's that negation good for? Can't we just have "rotational", like
+> >> we have "removable" and not "non-removable"? :)
+> > 
+> > Non-rotational is the term typically used, since rotational is the norm
+> > (still). So I think the negation actually makes sense in this case :-)
+> 
+> You used the word "still" yourself.  I mean, in 5 years SSD will be more
+> common than rotational media, and "the norm" will be !rotational..
+> So let's name them correctly and uniformly from the beginning.. ;)
 
-Unfortunately I can't update the bios/firmware of the Sil3114 directly, it is 
-onboard and the firmware is included into the mainboard bios. There is not 
-the most recent bios version installed, but when we initially had the 
-problems, we first tried a bios update, but it didn't help.
+I'm afraid that's pretty much marketing coolaid.  Rotational storage
+will dominate for the forseeable future: just do a simple back of the
+envelope calculation:
 
-As suggested by Robert, I'm presently trying to figure out the corruption 
-pattern. Actually our test tool easily provides these data. Unfortunately, it 
-so far didn't report anything, although the reiserfs already got corrupted. 
-Might be my colleague, who wrote that tool, recently broke something (as it 
-is the second time, it doesn't report corruptions), in the past it did work 
-reliably. Please give me a few more days...
+      * Total shipped spinning storage in 2008: 128EB (Gartner figures)
+      * If all the chip FABs in all the world were turned solely to
+        flash production, they'd be able to ship about 16EB per year (or
+        about 13%  of the total 2008 consumption [estimate from Steve
+        Hetzler, IBM]), assuming any given FAB can produce about 0.5EB
+        per year).
+      * Then factor in that storage requirements are growing
+        exponentially (the 2009 estimated requirement is 400EB).
+      * Given that it costs ~$3-7bn for one fab plant and that we're in
+        an economic depression, no-one is making the necessary trillion
+        dollar capital investment to even make Flash be a significant
+        fraction of the current storage market ... it's not even clear
+        that it will be able to break the 1% barrier, let alone the 10%
+        one.
+
+That's not to say flash isn't important, it is; it's just to remind
+everyone that storage subsystems will be focused on rotating media.  Any
+flash features we add have to make sure they don't impact our rotating
+performance.
+
+Sorry, now we can go back to regularly scheduled programming.  This
+isn't the first "everything will be flash and we should be planning for
+it" type statement, but I thought a little reality injection would be
+appropriate at this juncture.
+
+James
 
 
-03:05.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3114 
-[SATALink/SATARaid] Serial ATA Controller [1095:3114] (rev 02)
-        Subsystem: Silicon Image, Inc. SiI 3114 SATALink Controller 
-[1095:3114]
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR+ FastB2B-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 19
-        Region 0: I/O ports at bc00 [size=8]
-        Region 1: I/O ports at b880 [size=4]
-        Region 2: I/O ports at b800 [size=8]
-        Region 3: I/O ports at ac00 [size=4]
-        Region 4: I/O ports at a880 [size=16]
-        Region 5: Memory at feafec00 (32-bit, non-prefetchable) [size=1K]
-        Expansion ROM at fea00000 [disabled] [size=512K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
-00: 95 10 14 31 07 01 b0 02 02 00 80 01 10 40 00 00
-10: 01 bc 00 00 81 b8 00 00 01 b8 00 00 01 ac 00 00
-20: 81 a8 00 00 00 ec af fe 00 00 00 00 95 10 14 31
-30: 00 00 a0 fe 60 00 00 00 00 00 00 00 0a 01 00 00
-40: 02 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 01 00 22 06 00 40 00 64 00 00 00 00 00 00 00 00
-70: 00 00 60 00 d0 d0 09 00 00 00 60 00 00 00 00 00
-80: 03 00 00 00 22 00 00 00 00 00 00 00 c8 93 7f ef
-90: 00 00 00 09 ff ff 00 00 00 00 00 19 00 00 00 00
-a0: 01 31 15 65 dd 62 dd 62 92 43 92 43 09 40 09 40
-b0: 01 21 15 65 dd 62 dd 62 92 43 92 43 09 40 09 40
-c0: 84 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-
-Cheers,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
