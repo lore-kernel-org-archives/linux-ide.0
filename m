@@ -1,37 +1,38 @@
-From: "Motorola Company" <info@winner.com>
-Subject: MOTOROLA  PROMOTION
-Date: Wed, 07 Jan 2009 18:23:18 +0600
-Message-ID: <uthBVP91.1231330998.0557090.redcamif@cablenet.com.ni>
-Reply-To: "Motorola Company" <motorolaprom129@yahoo.com.hk>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 0/6] v2: Asynchronous function calls to speed up booting
+ and more
+Date: Wed, 7 Jan 2009 05:21:25 -0800
+Message-ID: <20090107052125.276307d0@infradead.org>
+References: <20090105201508.23e98b4b@infradead.org>
+	<48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.cablenet.com.ni ([165.98.148.3]:49921 "EHLO
-	mail.cablenet.com.ni" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755407AbZAGMfF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 07:35:05 -0500
+Received: from casper.infradead.org ([85.118.1.10]:40818 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756628AbZAGNT3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 08:19:29 -0500
+In-Reply-To: <48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: info@winner.com
+To: Ryan Hope <rmh3093@gmail.com>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-=46rom the online email ballot
-promotions held by
-Motorola Company, your email have been
-approved to claim the
-sum of =A3400,000 (Four hundred thousand pounds) .
+On Tue, 6 Jan 2009 22:19:33 -0500
+"Ryan Hope" <rmh3093@gmail.com> wrote:
 
-To file for claim, you are required to
-provide us with the information below for verification:
+> i can't boot with these patches... the kernel panic was something
+> along the line of:
+> 
+> ata_piix: device unavailable because of BAR 0 collisions
+> 
 
-=46ull Name:
-Mailing address:
-Permanent house address:
-Country of resident:
-Phone Number:
-Age:
-Occupation:
+interesting
+can you send me the "lspci" output of a normal boot?
 
-Reply this email with the information
-for claim
-(motorolaprom129@yahoo.com.hk)
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
