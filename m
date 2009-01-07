@@ -1,38 +1,57 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 0/6] v2: Asynchronous function calls to speed up booting
- and more
-Date: Wed, 7 Jan 2009 05:21:25 -0800
-Message-ID: <20090107052125.276307d0@infradead.org>
-References: <20090105201508.23e98b4b@infradead.org>
-	<48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
+From: "Moritz Rigler" <moritz1234567@gmx.de>
+Subject: Re: [PATCH #upstream-fixes] libata: implement and use
+ HORKAGE_NOSETXFER
+Date: Wed, 07 Jan 2009 15:15:36 +0100
+Message-ID: <20090107141536.231980@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:40818 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756628AbZAGNT3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 08:19:29 -0500
-In-Reply-To: <48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:51186 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752844AbZAGOPj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Jan 2009 09:15:39 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ryan Hope <rmh3093@gmail.com>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, 6 Jan 2009 22:19:33 -0500
-"Ryan Hope" <rmh3093@gmail.com> wrote:
+>There are two more reports linked from the thread.
 
-> i can't boot with these patches... the kernel panic was something
-> along the line of:
-> 
-> ata_piix: device unavailable because of BAR 0 collisions
-> 
+>  http://ubuntuforums.org/showthread.php?t=3D986871
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/299865
 
-interesting
-can you send me the "lspci" output of a normal boot?
+There are also
+https://bugs.launchpad.net/ubuntu/+bug/305724
+http://ubuntuforums.org/showthread.php?t=3D1031170
+http://forum.ubuntu-it.org/index.php?topic=3D230995.msg1741414
+The problem appears at least on two models (Sony Vaio FW and Sony Vaio =
+VGN-NS11S). So I really don't agree with your "one report, from one use=
+r, with one configuration, on one controller, using one firmware set" s=
+tatement, Alan.
 
+I think that the particular laptop model I have (Sony Vaio VGN-NS11S) h=
+as sold in large numbers only recently. So if you decide to do nothing =
+there will likely be more reports soon. If you wait for that to happen =
+a good share of the users encountering the problem will (unjustly) blam=
+e it on Linux and just turn back to using preinstalled Vista (where the=
+ drive works). I've already thought myself that it was perhaps unwise t=
+o run Linux on a newly bought computer (where issues like this have not=
+ been fixed yet).
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+>That said, Moritz, can you please post the output of "hdparm -I" with
+>and without the quirk applied? =20
+unpatched:
+http://article.gmane.org/gmane.linux.ide/36819
+patched:
+http://article.gmane.org/gmane.linux.ide/36840
+
+>And can you please use a preoper mail
+>address?
+Hope you like this one better.
+
+Regards,
+Moritz
+--=20
+Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
+69a
