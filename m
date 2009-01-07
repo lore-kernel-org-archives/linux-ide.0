@@ -1,48 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] sata_sil24: remove unused sil24_port_multiplier
-Date: Wed, 07 Jan 2009 11:26:40 +0900
-Message-ID: <496412E0.20605@kernel.org>
-References: <da824cf30901061759j60d5f700q9e5ca190040d94d2@mail.gmail.com>	 <49640D33.1010202@kernel.org> <da824cf30901061822p7e3407epbffedb9455faaccd@mail.gmail.com>
+From: Shaohua Li <shaohua.li@intel.com>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Wed, 7 Jan 2009 10:41:06 +0800
+Message-ID: <20090107024105.GA20931@sli10-desk.sh.intel.com>
+References: <20090104092430.7ffd2c41@infradead.org> <1231135294.8179.45.camel@nigel-laptop> <20090105025300.3afbec23@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46125 "EHLO hera.kernel.org"
+Received: from mga09.intel.com ([134.134.136.24]:26760 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752161AbZAGC05 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jan 2009 21:26:57 -0500
-In-Reply-To: <da824cf30901061822p7e3407epbffedb9455faaccd@mail.gmail.com>
+	id S1752918AbZAGClR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Jan 2009 21:41:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20090105025300.3afbec23@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: "ncunningham-lkml@crca.org.au" <ncunningham-lkml@crca.org.au>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "mingo@elte.hu" <mingo@elte.hu>, "fweisbec@gmail.com" <fweisbec@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
-From: Grant Grundler <grundler@google.com>
+On Mon, Jan 05, 2009 at 06:53:00PM +0800, Arjan van de Ven wrote:
+> On Mon, 05 Jan 2009 17:01:34 +1100
+> Nigel Cunningham <ncunningham-lkml@crca.org.au> wrote:
+> 
+> > Hi Arjan.
+> > 
+> > Great work, and valuable too. I'm just wondering if the header file
+> > name "async.h" is a little too generic? Something like async_init.h
+> > perhaps?
+> > 
+> 
+> while the users I have in mind are during init, the concept and
+> infrastructure of asynchronous function calls is by no means limited to
+> that use case... I hope there are many other uses for this :)
+This can be used for shutdown too. Some drivers like sata and serio
+shutdown time is long.
 
-AFAICT, struct sil24_port_multiplier isn't used anywhere. Remove it.
-
-Signed-off-by: Grant Grundler <grundler@google.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
-Sure thing.  Here you go.
-
- drivers/ata/sata_sil24.c |    7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index ccee930..2590c22 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -51,13 +51,6 @@ struct sil24_sge {
- 	__le32	flags;
- };
- 
--/*
-- * Port multiplier
-- */
--struct sil24_port_multiplier {
--	__le32	diag;
--	__le32	sactive;
--};
- 
- enum {
- 	SIL24_HOST_BAR		= 0,
+Thanks,
+Shaohua
