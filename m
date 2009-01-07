@@ -1,54 +1,37 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
-Date: Wed, 7 Jan 2009 12:19:36 +0100
-Message-ID: <20090107111936.GL32491@kernel.dk>
-References: <200901051952.58029.bzolnier@gmail.com> <20090105185428.GS32491@kernel.dk> <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com> <20090106073515.GY32491@kernel.dk> <4964866D.8010503@msgid.tls.msk.ru>
+From: "Motorola Company" <info@winner.com>
+Subject: MOTOROLA  PROMOTION
+Date: Wed, 07 Jan 2009 18:23:18 +0600
+Message-ID: <uthBVP91.1231330998.0557090.redcamif@cablenet.com.ni>
+Reply-To: "Motorola Company" <motorolaprom129@yahoo.com.hk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:13368 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751856AbZAGLUm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:20:42 -0500
-Content-Disposition: inline
-In-Reply-To: <4964866D.8010503@msgid.tls.msk.ru>
+Received: from mail.cablenet.com.ni ([165.98.148.3]:49921 "EHLO
+	mail.cablenet.com.ni" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755407AbZAGMfF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 07:35:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: info@winner.com
 
-On Wed, Jan 07 2009, Michael Tokarev wrote:
-> Jens Axboe wrote:
-> > On Mon, Jan 05 2009, Kay Sievers wrote:
-> >> On Mon, Jan 5, 2009 at 19:54, Jens Axboe <jens.axboe@oracle.com> wrote:
-> >>> On Mon, Jan 05 2009, Bartlomiej Zolnierkiewicz wrote:
-> >>>> +static struct queue_sysfs_entry queue_nonrot_entry = {
-> >>>> +     .attr = {.name = "nonrot", .mode = S_IRUGO | S_IWUSR },
-> >>>> +     .show = queue_nonrot_show,
-> >>>> +     .store = queue_nonrot_store,
-> >>>> +};
-> >>>> +
-> >>> Lets please use a better name for export reasons, non-rotational is a
-> >>> lot better. Nobody will know what nonrot means :-)
-> >> What's that negation good for? Can't we just have "rotational", like
-> >> we have "removable" and not "non-removable"? :)
-> > 
-> > Non-rotational is the term typically used, since rotational is the norm
-> > (still). So I think the negation actually makes sense in this case :-)
-> 
-> You used the word "still" yourself.  I mean, in 5 years SSD will be more
-> common than rotational media, and "the norm" will be !rotational..
-> So let's name them correctly and uniformly from the beginning.. ;)
+=46rom the online email ballot
+promotions held by
+Motorola Company, your email have been
+approved to claim the
+sum of =A3400,000 (Four hundred thousand pounds) .
 
-Not sure I agree with your SSD adoption rate, but that's beside the
-point :-)
+To file for claim, you are required to
+provide us with the information below for verification:
 
-But I'm inclined to agree with you and Kay after all, lets just call it
-'rotational'. I think alternatives like 'cheapseek' are truly horrible,
-nobody will know what that means - how cheap is cheap?
+=46ull Name:
+Mailing address:
+Permanent house address:
+Country of resident:
+Phone Number:
+Age:
+Occupation:
 
-I'll fixup the patch.
-
--- 
-Jens Axboe
-
+Reply this email with the information
+for claim
+(motorolaprom129@yahoo.com.hk)
