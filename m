@@ -1,59 +1,101 @@
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: BUG in latest GIT 2.6.28-0658-g637b180
-Date: Tue, 06 Jan 2009 23:06:49 -0600
-Message-ID: <49643869.8000500@lwfinger.net>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Tue, 06 Jan 2009 23:38:28 -0600
+Message-ID: <49643FD4.9080100@shaw.ca>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756507AbZAGFHP@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <496436C4.4070305@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The latest GIT generates the following BUG.
+Tejun Heo wrote:
+> Hello,
+> 
+> Bernd Schubert wrote:
+>> But now more than a year has passed again without doing anything
+>> about it and actually this is what I strongly criticize. Most people
+>> don't know about issues like that and don't run file checksum tests
+>> as I now always do before taking a disk into production. So users
+>> are exposed to known data corruption problems without even being
+>> warned about it. Usually even backups don't help, since one creates
+>> a backup of the corrupted data.
+> 
+> sata_sil being one of the most popular controllers && data corruption
+> reports seem to be concentrated on certain chipsets, I don't think
+> it's a wide spread problem.  In some cases, the corruption was very
+> reproducible too.
+> 
+> I think it's something related to setting up the PCI side of things.
+> There have been hints that incorrect CLS setting was the culprit and I
+> tried thte combinations but without any success and unfortunately the
+> problem wasn't reproducible with the hardware I have here.  :-(
 
+As far as the cache line size register, the only thing the documentation 
+says it controls _directly_ is "With the SiI3114 as a master, initiating 
+a read transaction, it issues PCI command Read Multiple in place, when 
+empty space in its FIFO is larger than the value programmed in this 
+register."
 
-BUG: sleeping function called from invalid context at mm/slab.c:3046
-in_atomic(): 0, irqs_disabled(): 1, pid: 523, name: modprobe
-no locks held by modprobe/523.
-irq event stamp: 17802
-hardirqs last  enabled at (17801): [<ffffffff8045dd99>]
-_spin_unlock_irqrestore+0x44/0x4c
-hardirqs last disabled at (17802): [<ffffffffa00a4792>]
-ide_probe_port+0x6c/0x469 [ide_core]
-softirqs last  enabled at (17796): [<ffffffff802431f3>]
-__do_softirq+0x159/0x166
-softirqs last disabled at (17789): [<ffffffff8020d4bc>]
-call_softirq+0x1c/0x28
-Pid: 523, comm: modprobe Not tainted 2.6.28-Linus-06858-g637b180 #31
-Call Trace:
- [<ffffffff8025dbdd>] ? print_irqtrace_events+0xd0/0xd4
- [<ffffffff80236bcd>] __might_sleep+0xf9/0xfb
- [<ffffffff802b5469>] kmem_cache_alloc+0x2d/0x142
- [<ffffffffa00a489b>] ide_probe_port+0x175/0x469 [ide_core]
- [<ffffffffa00a5750>] ide_host_register+0x2b8/0x611 [ide_core]
- [<ffffffffa00a8526>] ? do_ide_setup_pci_device+0x70/0xd3 [ide_core]
- [<ffffffffa00a8f1d>] ide_pci_init_one+0xcc/0xee [ide_core]
- [<ffffffff8025e852>] ? trace_hardirqs_off+0xd/0xf
- [<ffffffff8045dd92>] ? _spin_unlock_irqrestore+0x3d/0x4c
- [<ffffffff8023e3ec>] ? release_console_sem+0x1b0/0x1e5
- [<ffffffff8045aac8>] ? printk+0x41/0x49
- [<ffffffffa00bf604>] amd74xx_probe+0x13e/0x145 [amd74xx]
- [<ffffffffa00bf340>] ? init_chipset_amd74xx+0x0/0x160 [amd74xx]
- [<ffffffffa00bf4a0>] ? init_hwif_amd74xx+0x0/0x26 [amd74xx]
- [<ffffffff80345fb6>] pci_device_probe+0xc6/0x11d
- [<ffffffff803b7f1d>] driver_probe_device+0xc3/0x168
- [<ffffffff803b801f>] __driver_attach+0x5d/0x80
- [<ffffffff803b7fc2>] ? __driver_attach+0x0/0x80
- [<ffffffff803b7794>] bus_for_each_dev+0x59/0x90
- [<ffffffff803b7d60>] driver_attach+0x21/0x23
- [<ffffffff803b703b>] bus_add_driver+0xbf/0x20c
- [<ffffffff803b822e>] driver_register+0xb0/0x130
- [<ffffffff8034628d>] __pci_register_driver+0x68/0xa3
- [<ffffffffa0023000>] ? amd74xx_ide_init+0x0/0x20 [amd74xx]
- [<ffffffffa002301e>] amd74xx_ide_init+0x1e/0x20 [amd74xx]
- [<ffffffff8020905b>] _stext+0x5b/0x135
- [<ffffffff802561b0>] ? __blocking_notifier_call_chain+0x5d/0x6f
- [<ffffffff8026af0c>] sys_init_module+0xb0/0x1d3
- [<ffffffff8020c2cb>] system_call_fastpath+0x16/0x1b
+The interesting thing is the commit (log below) that added code to the 
+driver to check the PCI cache line size register and set up the FIFO 
+thresholds:
+
+   2005/03/24 23:32:42-05:00 Carlos.Pardo
+   [PATCH] sata_sil: Fix FIFO PCI Bus Arbitration
+
+   This patch set default values for the FIFO PCI Bus Arbitration to
+   avoid data corruption. The root cause is due to our PCI bus master
+   handling mismatch with the chipset PCI bridge during DMA xfer (write
+   data to the device). The patch is to setup the DMA fifo threshold so
+   that there is no chance for the DMA engine to change protocol. We have
+   seen this problem only on one motherboard.
+
+   Signed-off-by: Silicon Image Corporation <cpardo@siliconimage.com>
+   Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+
+What the code's doing is setting the FIFO thresholds, used to assign 
+priority when requesting a PCI bus read or write operation, based on the 
+cache line size somehow. It seems to be trusting that the chip's cache 
+line size register has been set properly by the BIOS. The kernel should 
+know what the cache line size is but AFAIK normally only sets it when 
+the driver requests MWI. This chip doesn't support MWI, but it looks 
+like pci_set_mwi would fix up the CLS register as a side effect..
+
+> 
+> Anyways, there was an interesting report that updating the BIOS on the
+> controller fixed the problem.
+> 
+>   http://bugzilla.kernel.org/show_bug.cgi?id=10480  
+> 
+> Taking "lspci -nnvvvxxx" output of before and after such BIOS update
+> will shed some light on what's really going on.  Can you please try
+> that?
+
+Yes, that would be quite interesting.. the output even with the current 
+BIOS would be useful to see if the BIOS set some stupid cache line size 
+value..
+
+> 
+>> So IMHO, the driver should be deactived for sil3114 until a real
+>> solution is found. And it only should be possible to force activate
+>> it by a kernel flag, which then also would print a huuuge warning
+>> about possible data corruption (unfortunately most distributions
+>> disables inital kernel messages *grumble*).
+> 
+> The problem is serious but the scope is quite limited and we can't
+> tell where the problem lies, so I'm not too sure about taking such
+> drastic measure.  Grumble...
+> 
+> Yeah, I really want to see this long standing problem fixed.  To my
+> knowledge, this is one of two still open data corruption bugs - the
+> other one being via putting CDB bytes into burnt CD/DVDs.
+> 
+> So, if you can try the BIOS update thing, please give it a shot.
+> 
+> Thanks.
+> 
