@@ -1,59 +1,93 @@
-From: "Moritz Rigler" <moritz1234567@gmx.de>
-Subject: Re: [PATCH #upstream-fixes] libata: implement and use
- HORKAGE_NOSETXFER
-Date: Wed, 07 Jan 2009 15:18:44 +0100
-Message-ID: <20090107141844.232020@gmx.net>
+From: Yong Wang <yong.y.wang@linux.intel.com>
+Subject: Re: [PATCH 4/6] fastboot: make ACPI bus drivers probe asynchronous
+Date: Wed, 7 Jan 2009 22:12:56 +0800
+Message-ID: <20090107141256.GA22902@ywang-moblin2.bj.intel.com>
+References: <20090105200959.04a626ac@infradead.org> <20090105201239.0784606e@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52792 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753429AbZAGOSq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Jan 2009 09:18:46 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090105201239.0784606e@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
->There are two more reports linked from the thread.
+On Mon, Jan 05, 2009 at 08:12:39PM -0800, Arjan van de Ven wrote:
+> 
+> >From 34c47dd38f49e29eb7cd7fa2078efc6b8b258bb9 Mon Sep 17 00:00:00 2001
+> From: Arjan van de Ven <arjan@linux.intel.com>
+> Date: Sun, 4 Jan 2009 05:32:28 -0800
+> Subject: [PATCH] fastboot: make ACPI bus drivers probe asynchronous
+> 
+> the various ACPI bus drivers have non-overlapping devices and can
+> each be run asynchronous. Some of the ACPI drivers (especially the
+> battery one, but others as well) can take quite a long time to probe.
+> 
+> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> ---
+>  drivers/acpi/scan.c |   23 ++++++++++++++++-------
+>  1 files changed, 16 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 39b7233..a9e542d 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -8,6 +8,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/signal.h>
+>  #include <linux/kthread.h>
+> +#include <linux/async.h>
+>  
+>  #include <acpi/acpi_drivers.h>
+>  #include <acpi/acinterp.h>	/* for acpi_ex_eisa_id_to_string() */
+> @@ -578,6 +579,19 @@ static int acpi_start_single_object(struct acpi_device *device)
+>  	return result;
+>  }
+>  
+> +static void acpi_bus_register_async(void *data, async_cookie_t cookie)
+> +{
+> +	int ret;
+> +	struct acpi_driver *driver = data;
+> +	driver->drv.name = driver->name;
+> +	driver->drv.bus = &acpi_bus_type;
+> +	driver->drv.owner = driver->owner;
+> +
+> +	async_synchronize_cookie(cookie);
+> +
+> +	ret = driver_register(&driver->drv);
+> +	WARN_ON(ret != 0);
+> +}
+>  /**
+>   * acpi_bus_register_driver - register a driver with the ACPI bus
+>   * @driver: driver being registered
+> @@ -588,16 +602,11 @@ static int acpi_start_single_object(struct acpi_device *device)
+>   */
+>  int acpi_bus_register_driver(struct acpi_driver *driver)
+>  {
+> -	int ret;
+>  
+>  	if (acpi_disabled)
+>  		return -ENODEV;
+> -	driver->drv.name = driver->name;
+> -	driver->drv.bus = &acpi_bus_type;
+> -	driver->drv.owner = driver->owner;
+> -
+> -	ret = driver_register(&driver->drv);
+> -	return ret;
+> +	async_schedule(acpi_bus_register_async, driver);
+> +	return 0;
+>  }
+>  
+>  EXPORT_SYMBOL(acpi_bus_register_driver);
 
->  http://ubuntuforums.org/showthread.php?t=3D986871
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/299865
+For ACPI battery, button and thermal drivers whose init funtion immediately ends
+right after calling acpi_bus_register_driver, it might be OK. But for other drivers
+whose init function has more work to do and depends on acpi_bus_register_driver
+having *really* done its job, it is certainly not OK. In the latter case, the
+'return 0' in acpi_bus_register_driver is effectively cheating those drivers that
+acpi_bus_register_driver has already done its job which is unfortunately not
+the case. Example drivers include eeepc_laptop and asus_laptop. At least I am
+seeing a kernel oops on eeepc because of that.
 
-There are also
-https://bugs.launchpad.net/ubuntu/+bug/305724
-http://ubuntuforums.org/showthread.php?t=3D1031170
-http://forum.ubuntu-it.org/index.php?topic=3D230995.msg1741414
-The problem appears at least on two models (Sony Vaio FW and Sony Vaio =
-VGN-NS11S). So I really don't agree with your "one report, from one use=
-r, with one configuration, on one controller, using one firmware set" s=
-tatement, Alan.
-
-I think that the particular laptop model I have (Sony Vaio VGN-NS11S) h=
-as sold in large numbers only recently. So if you decide to do nothing =
-there will likely be more reports soon. If you wait for that to happen =
-a good share of the users encountering the problem will (unjustly) blam=
-e it on Linux and just turn back to using preinstalled Vista (where the=
- drive works). I've already thought myself that it was perhaps unwise t=
-o run Linux on a newly bought computer (where issues like this have not=
- been fixed yet).
-
->That said, Moritz, can you please post the output of "hdparm -I" with
->and without the quirk applied? =20
-unpatched:
-http://article.gmane.org/gmane.linux.ide/36819
-patched:
-http://article.gmane.org/gmane.linux.ide/36840
-
->And can you please use a preoper mail
->address?
-Hope you like this one better.
-
-Regards,
-Moritz
-
-
---=20
-Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
-69a
+-Yong
