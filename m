@@ -1,48 +1,113 @@
-From: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
-Subject: Re: problems with sata_nv and MV88SX5081 under 2.6.28, fine
-	under2.6.17.6
-Date: Wed, 07 Jan 2009 15:46:51 +0000
-Message-ID: <1231343211.20422.105.camel@ukabzc383.uk.saic.com>
-References: <1231340005.20422.84.camel@ukabzc383.uk.saic.com>
-	 <20090107154546.07c8bba8@lxorguk.ukuu.org.uk>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 4/6] fastboot: make ACPI bus drivers probe asynchronous
+Date: Wed, 7 Jan 2009 09:25:55 -0800
+Message-ID: <20090107092555.6e89e9c7@infradead.org>
+References: <20090105200959.04a626ac@infradead.org>
+	<20090105201239.0784606e@infradead.org>
+	<20090107141256.GA22902@ywang-moblin2.bj.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpmx2.mail.saic.com ([139.121.17.172]:54742 "EHLO
-	cpmx2.mail.saic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099AbZAGQCn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2009 11:02:43 -0500
-In-Reply-To: <20090107154546.07c8bba8@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20090107141256.GA22902@ywang-moblin2.bj.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Yong Wang <yong.y.wang@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
 
-2.6.28, unfortunately :(
+On Wed, 7 Jan 2009 22:12:56 +0800
+Yong Wang <yong.y.wang@linux.intel.com> wrote:
 
-I've really got to get a handle on this typing thing ...
-
-
-On Wed, 2009-01-07 at 15:45 +0000, Alan Cox wrote:
-> On Wed, 07 Jan 2009 14:53:25 +0000
-> "Eamonn Hamilton" <EAMONN.HAMILTON@saic.com> wrote:
-> 
-> > Hi,
+> On Mon, Jan 05, 2009 at 08:12:39PM -0800, Arjan van de Ven wrote:
 > > 
-> > I look after a server with a bunch of drives hooked up to two 8 port
-> > PCI-X sata cards, detected as above.
+> > >From 34c47dd38f49e29eb7cd7fa2078efc6b8b258bb9 Mon Sep 17 00:00:00
+> > >2001
+> > From: Arjan van de Ven <arjan@linux.intel.com>
+> > Date: Sun, 4 Jan 2009 05:32:28 -0800
+> > Subject: [PATCH] fastboot: make ACPI bus drivers probe asynchronous
 > > 
-> > The server was running 2.6.17.6 which has sata_mv version 0.7, which
-> > worked fine. I recently upgraded the kernel to 2.6.18 with version 1.24,
-> > and started getting
+> > the various ACPI bus drivers have non-overlapping devices and can
+> > each be run asynchronous. Some of the ACPI drivers (especially the
+> > battery one, but others as well) can take quite a long time to
+> > probe.
+> > 
+> > Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> > ---
+> >  drivers/acpi/scan.c |   23 ++++++++++++++++-------
+> >  1 files changed, 16 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > index 39b7233..a9e542d 100644
+> > --- a/drivers/acpi/scan.c
+> > +++ b/drivers/acpi/scan.c
+> > @@ -8,6 +8,7 @@
+> >  #include <linux/acpi.h>
+> >  #include <linux/signal.h>
+> >  #include <linux/kthread.h>
+> > +#include <linux/async.h>
+> >  
+> >  #include <acpi/acpi_drivers.h>
+> >  #include <acpi/acinterp.h>	/* for
+> > acpi_ex_eisa_id_to_string() */ @@ -578,6 +579,19 @@ static int
+> > acpi_start_single_object(struct acpi_device *device) return result;
+> >  }
+> >  
+> > +static void acpi_bus_register_async(void *data, async_cookie_t
+> > cookie) +{
+> > +	int ret;
+> > +	struct acpi_driver *driver = data;
+> > +	driver->drv.name = driver->name;
+> > +	driver->drv.bus = &acpi_bus_type;
+> > +	driver->drv.owner = driver->owner;
+> > +
+> > +	async_synchronize_cookie(cookie);
+> > +
+> > +	ret = driver_register(&driver->drv);
+> > +	WARN_ON(ret != 0);
+> > +}
+> >  /**
+> >   * acpi_bus_register_driver - register a driver with the ACPI bus
+> >   * @driver: driver being registered
+> > @@ -588,16 +602,11 @@ static int acpi_start_single_object(struct
+> > acpi_device *device) */
+> >  int acpi_bus_register_driver(struct acpi_driver *driver)
+> >  {
+> > -	int ret;
+> >  
+> >  	if (acpi_disabled)
+> >  		return -ENODEV;
+> > -	driver->drv.name = driver->name;
+> > -	driver->drv.bus = &acpi_bus_type;
+> > -	driver->drv.owner = driver->owner;
+> > -
+> > -	ret = driver_register(&driver->drv);
+> > -	return ret;
+> > +	async_schedule(acpi_bus_register_async, driver);
+> > +	return 0;
+> >  }
+> >  
+> >  EXPORT_SYMBOL(acpi_bus_register_driver);
 > 
-> 2.6.18 or 2.6.28 ? - if its 2.6.18 then you might want to check if 2.6.28
-> is ok before doing the work.
+> For ACPI battery, button and thermal drivers whose init funtion
+> immediately ends right after calling acpi_bus_register_driver, it
+> might be OK. But for other drivers whose init function has more work
+> to do and depends on acpi_bus_register_driver having *really* done
+> its job, it is certainly not OK. In the latter case, the 'return 0'
+> in acpi_bus_register_driver is effectively cheating those drivers
+> that acpi_bus_register_driver has already done its job which is
+> unfortunately not the case. Example drivers include eeepc_laptop and
+> asus_laptop. At least I am seeing a kernel oops on eeepc because of
+> that.
+
+ok I've dropped the ACPI part for now; I'll work with you and Len to
+see how we can solve the ACPI side, but for now it seems to have too
+many issues
+
+> 
+> -Yong
 
 
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
