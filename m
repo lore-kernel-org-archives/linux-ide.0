@@ -1,49 +1,53 @@
-From: <linux-ide@momail.e4ward.com>
-Subject: Re: PIONEER DVD-RW DVRTD08 is disabled if there is no disc present
- at   boot time
-Date: Tue, 06 Jan 2009 23:51:16 +0100
-Message-ID: <1231282276.6376.13.camel@Thutmosis>
-References: <1229894315.6931.17.camel@Thutmosis> <494EDDBE.3010306@shaw.ca>
-	 <494F65C1.80602@kernel.org> <1229947998.6045.10.camel@Thutmosis>
-	 <49505500.8080409@kernel.org> <1230126055.6430.17.camel@Thutmosis>
-	 <495886E7.7050204@kernel.org>  <1230586376.11130.46.camel@Thutmosis>
-Reply-To: linux--ide-momail.e4ward.com-linux--ide-vger.kernel.org-CDD-6w99-4@reply.e4ward.com
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [Bugme-new] [Bug 12351] New: sata_nv hotplug not work in	2.6.27.10
+Date: Tue, 06 Jan 2009 18:19:44 -0600
+Message-ID: <4963F520.4060500@shaw.ca>
+References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca> <20090106102758.GA7309@libero.it>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e4ward.com ([70.85.31.73]:56470 "EHLO e4ward.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754102AbZAFXYi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jan 2009 18:24:38 -0500
-Received: from localhost ([127.0.0.1])
-	by e4ward.com with smtp (Exim 4.63)
-	id 1LKKlb-0007Lw-2r
-	for linux-ide@vger.kernel.org; Tue, 06 Jan 2009 17:51:19 -0500
-In-Reply-To: <1230586376.11130.46.camel@Thutmosis>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:18145 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbZAGATq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2009 19:19:46 -0500
+In-Reply-To: <20090106102758.GA7309@libero.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: gpanco@tiscali.it
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, stable@kernel.org, Tejun Heo <tj@kernel.org>
 
-
-Am Montag, den 29.12.2008, 22:32 +0100 schrieb ein unbekannter Absender:
+Giovanni Pancotti wrote:
+> On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
 > 
-> Am Montag, den 29.12.2008, 17:14 +0900 schrieb
-> linux-ide@vger.kernel.org:
+>>>> Hardware Environment:x86 ASUS M2N-E
+>> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
+>> on hotplug and apparently that doesn't work. Thing is that:
 > 
-> I have randomly tested a few CDs and DVDs since my last post, and there
-> were none that didn't work (after an "empty boot"). 
->  But afterwards I plan to do some more
-> systematic tests, and I will also attempt to burn a CD and a DVD. 
-Hi, I have successfully burnt several Video-DVDs (with growisofs; on
-DVD-R and DVD+RW media), an Audio-CD (brasero) and a Data-CD (brasero).
-Also, I have not experienced any more problems reading CDs or DVDs. I
-guess that the CDs that did not work after I applied the patch were
-damaged.
-Therefore, I tend to regard the problem as fixed by tejun's patch and I
-would recommend to let it go into mainline.
-Thank you once more for your valuable help.
-Moritz
- 
+> no, it is not MCP61, but MCP55:
 
+Ahh, ok, that is less contradictory then :-) Presumably we should still 
+be using hardreset on that chipset.
 
+> 
+> dual ~ # lspci
+> 00:00.0 RAM memory: nVidia Corporation MCP55 Memory Controller (rev a1)
+> 00:01.0 ISA bridge: nVidia Corporation MCP55 LPC Bridge (rev a2)
+> 00:01.1 SMBus: nVidia Corporation MCP55 SMBus (rev a2)
+> 00:02.0 USB Controller: nVidia Corporation MCP55 USB Controller (rev a1)
+> 00:02.1 USB Controller: nVidia Corporation MCP55 USB Controller (rev a2)
+> 00:04.0 IDE interface: nVidia Corporation MCP55 IDE (rev a1)
+> 00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
+> 
+> dual ~ # dmidecode
+> # dmidecode 2.9
+> SMBIOS 2.4 present.
+> 72 structures occupying 2069 bytes.
+> Table at 0x000F0000.
+> 
+> Handle 0x0000, DMI type 0, 24 bytes
+> BIOS Information
+>         Vendor: Phoenix Technologies, LTD
+>                 Version: ASUS M2N-E ACPI BIOS Revision 1601
+> 
+> 
