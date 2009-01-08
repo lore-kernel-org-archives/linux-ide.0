@@ -1,53 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [ANNOUNCE] 2009 Linux Storage and Filesystem Summit
-Date: Thu, 08 Jan 2009 13:18:01 -0600
-Message-ID: <1231442281.3237.53.camel@localhost.localdomain>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Too async libata breakage
+Date: Thu, 8 Jan 2009 11:28:40 -0800
+Message-ID: <20090108112840.46e3f063@infradead.org>
+References: <b6fcc0a0901081115n1174aebj5f6a3fbb8adea789@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53797 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761109AbZAHTSE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jan 2009 14:18:04 -0500
+Received: from casper.infradead.org ([85.118.1.10]:53262 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759933AbZAHT0n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jan 2009 14:26:43 -0500
+In-Reply-To: <b6fcc0a0901081115n1174aebj5f6a3fbb8adea789@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: torvalds@osdl.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hello everyone,
+On Thu, 8 Jan 2009 22:15:56 +0300
+"Alexey Dobriyan" <adobriyan@gmail.com> wrote:
 
-Planning for the next Linux storage and filesystem workshop is underway.
-Mark those calendars!
+> commit f29d3b23238e1955a8094e038c72546e99308e61 aka
+> "fastboot: Make libata initialization even more async"
+> results in no findable /dev/sda2 to mount / here.
+> 
+> Kernel correctly sees sda as 750GB drive and the rest too.
+> 
+> CONFIG_ATA_PIIX is in use, everything built-in, plain partitions,
+> no initrd, DM, MD etc.
 
-        April 6-7, 2009
-        Hotel Kabuki (http://www.jdvhotels.com/kabuki/)
-        San Francisco
+hmm. 
+no initrd; 
 
-The workshop is intended to bring together developers and researchers to
-improve the Linux storage and file system stacks in the next year or
-two.  The workshop is by invitation and focuses on collaboration and
-implementation.
+can you try an experiment?
+if you edit init/do_mounts.c and find the "async_synchronize_full" call.
+that is just after a while() loop. 
+Can you put another call to synchronize_full to also just before that
+while loop and see if that fixes it ?
 
-This workshop is being held in the two days immediately preceding the
-Linux Foundation Collaboration Summit so that people have the option of
-attending both events.
-
-The two days of the workshop are made up of a mix of separate file
-system and storage sessions and a combined plenary session.  This year
-we're adding scheduled time for hands-on collaborative engineering.
-
-The content is driven by the attendees.  In a number of weeks we'll be
-announcing a web site hosted by the Linux Foundation.  This site will
-let people register their interest in attending and raise topics for
-discussion.  From these submissions we will choose attendees, discussion
-topics, and session leaders.
-
-This mail is intended to give people a chance to reserve the date and
-think about topics to discuss before the site goes live.  I'll be
-sending out more email announcements at that time.
-
-Please feel free to ask me any questions that you might have.  Thanks!
-
-James
-
-
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
