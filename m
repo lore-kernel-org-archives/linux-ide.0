@@ -1,46 +1,53 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: AHCI problem with hotplug
-Date: Thu, 08 Jan 2009 09:20:15 -0500
-Message-ID: <49660B9F.4010408@cybernetics.com>
-References: <494178E3.6030305@cybernetics.com> <49588784.4020808@kernel.org> <4958E3DC.7080009@cybernetics.com> <49591710.7040102@shaw.ca> <49596D9E.3040904@kernel.org> <495D8606.5070807@kernel.org> <4964CCBF.5030408@cybernetics.com> <49655FBA.3060005@kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [ANNOUNCE] 2009 Linux Storage and Filesystem Summit
+Date: Thu, 08 Jan 2009 13:18:01 -0600
+Message-ID: <1231442281.3237.53.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([98.174.209.230]:2977 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbZAHOUV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jan 2009 09:20:21 -0500
-In-Reply-To: <49655FBA.3060005@kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:53797 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761109AbZAHTSE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jan 2009 14:18:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Hello,
->
-> Tony Battersby wrote:
->   
->> Sorry it took so long.  I have attached the output of lspci when booting
->> without a SATA disk attached, and also when booting with a SATA disk
->> attached.
->>     
->
-> 00:1f.2 SATA controller [0106]: Intel Corporation 82801GR/GH (ICH7 Family) SATA AHCI Controller [8086:27c1] (rev 01) (prog-if 01 [AHCI 1.0])
-> ...
-> 90: 40 00 11 10 80 01 00 40 00 00 00 00 00 00 00 00
->           ^^^^^
-> 	  PCS 0x1011
->
-> Port 0 and 4 enabled and 4 present.  Does "setpci -s 1f.2 93b=f" fix
-> hotplugging?
->
->   
-setpci gives the following error:
+Hello everyone,
 
-pcilib: sysfs_write: tried to write 1 bytes at 2363, but only 0 succeeded
+Planning for the next Linux storage and filesystem workshop is underway.
+Mark those calendars!
 
-lspci shows no difference before and after.
+        April 6-7, 2009
+        Hotel Kabuki (http://www.jdvhotels.com/kabuki/)
+        San Francisco
 
-Tony
+The workshop is intended to bring together developers and researchers to
+improve the Linux storage and file system stacks in the next year or
+two.  The workshop is by invitation and focuses on collaboration and
+implementation.
+
+This workshop is being held in the two days immediately preceding the
+Linux Foundation Collaboration Summit so that people have the option of
+attending both events.
+
+The two days of the workshop are made up of a mix of separate file
+system and storage sessions and a combined plenary session.  This year
+we're adding scheduled time for hands-on collaborative engineering.
+
+The content is driven by the attendees.  In a number of weeks we'll be
+announcing a web site hosted by the Linux Foundation.  This site will
+let people register their interest in attending and raise topics for
+discussion.  From these submissions we will choose attendees, discussion
+topics, and session leaders.
+
+This mail is intended to give people a chance to reserve the date and
+think about topics to discuss before the site goes live.  I'll be
+sending out more email announcements at that time.
+
+Please feel free to ask me any questions that you might have.  Thanks!
+
+James
+
+
