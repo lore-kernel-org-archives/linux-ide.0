@@ -1,59 +1,101 @@
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: Re: todays git: WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
-Date: Fri, 9 Jan 2009 14:09:55 +0100
-Message-ID: <200901091409.55628.borntraeger@de.ibm.com>
-References: <200901091334.55823.borntraeger@de.ibm.com> <20090109124412.619330ea@lxorguk.ukuu.org.uk>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Do ICH10+AHCI-driver support port-multiplying on a eSATA port?
+Date: Fri, 09 Jan 2009 16:01:27 +0100
+Message-ID: <1231513287.2631.68.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:44357 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbZAINKB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2009 08:10:01 -0500
-In-Reply-To: <20090109124412.619330ea@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754935AbZAIPBl@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>
 
-Am Freitag, 9. Januar 2009 schrieb Alan Cox:
-> On Fri, 9 Jan 2009 13:34:55 +0100
-> Christian Borntraeger <borntraeger@de.ibm.com> wrote:
-> 
-> > Hello,
-> > 
-> > with todays git I lots of these warnings:
-> > 
-> > [    1.246807] ata1.00: ATA-7: ST910021AS, 4.06, max UDMA/100
-> > [    1.253066] ata1.00: 195371568 sectors, multi 16: LBA48
-> > [    1.262561] ata2.00: ATAPI: HL-DT-ST DVDRAM GSA-U10N, 1.05, max UDMA/33
-> > [    1.273159] ata1.00: configured for UDMA/100
-> > [    1.275279] ata2.00: configured for UDMA/33
-> > [    1.285546] scsi 0:0:0:0: Direct-Access     ATA      ST910021AS       4.06 PQ: 0 ANSI: 5
-> > [    1.292049] sd 0:0:0:0: Attached scsi generic sg0 type 0
-> > [    1.298427] sd 0:0:0:0: [sda] 195371568 512-byte hardware sectors: (100 GB/93.1 GiB)
-> > [    1.299631] scsi 1:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-U10N  1.05 PQ: 0 ANSI: 5
-> > [    1.311059] sd 0:0:0:0: [sda] Write Protect is off
-> > [    1.317409] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > [    1.317426] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > [    1.318378] ------------[ cut here ]------------
-> > [    1.318380] WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
-> > [    1.318381] Hardware name: 64575GG
-> 
-> Can you see if this goes away if you back out all Arjan's async stuff.
-> Then if not can you back out my 32bit PIO patch and see if that is the
-> trigger.
-> 
-> Alan
+Dear all,
 
-Sure.
-Since I could not revert arjans patches without conflicts, I started 
-checking out older versions. My first try was 
-e427fe042cf90c0652eed9a85e57a8fd8af89890 (without PIO, with async patched)
-was successful. The problem went away. So it was triggered by the 32bit PIO patch.
-Do you still need a test result without the async patches?
+I am trying to connect an external 2-disk case (eCube II  see
+http://www.one-tech.com/EN/htm_ecube.htm) to an ICH10 skyburg dp45sg
+board via eSATA. As the case requires a port-multiplying sata card, I am
+wondering if ich10+ahci support it?
 
-Christian
+At least with 2.6.27.10 I am seeing only one drive. Connecting the case
+via usb gives two (dmesg parts below).
+
+So is port multiplying not yet available for ahci or not at all or does
+the the ich10 not support it and I should rather try a sil 3132 or so?
+
+Thanks,
+Soeren
+
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xe frozen
+ata4: irq_stat 0x00000040, connection status changed
+ata4: SError: { PHYRdyChg CommWake DevExch }
+ata4: hard resetting link
+ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata4.00: ATA-7: ST3400832AS, 3.01, max UDMA/133
+ata4.00: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+scsi 3:0:0:0: Direct-Access     ATA      ST3400832AS      3.01 PQ: 0 ANSI: 5
+sd 3:0:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
+sd 3:0:0:0: [sde] Write Protect is off
+sd 3:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 3:0:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
+sd 3:0:0:0: [sde] Write Protect is off
+sd 3:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sde: unknown partition table
+sd 3:0:0:0: [sde] Attached SCSI disk
+sd 3:0:0:0: Attached scsi generic sg5 type 0
+ata4: exception Emask 0x50 SAct 0x0 SErr 0x4490801 action 0xe frozen
+ata4: irq_stat 0x00400040, connection status changed
+ata4: SError: { RecovData HostInt PHYRdyChg 10B8B Handshk DevExch }
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4.00: disabled
+ata4: EH complete
+ata4.00: detaching (SCSI 3:0:0:0)
+sd 3:0:0:0: [sde] Synchronizing SCSI cache
+sd 3:0:0:0: [sde] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+sd 3:0:0:0: [sde] Stopping disk
+sd 3:0:0:0: [sde] START_STOP FAILED
+sd 3:0:0:0: [sde] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+usb 1-4: new high speed USB device using ehci_hcd and address 6
+usb 1-4: configuration #1 chosen from 1 choice
+scsi7 : SCSI emulation for USB Mass Storage devices
+usb 1-4: New USB device found, idVendor=1a4a, idProduct=1670
+usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 1-4: Product: 5744 FW:1.1516
+usb 1-4: Manufacturer: Silicon Image, Inc
+usb 1-4: SerialNumber: 9999999999999999999
+usb-storage: device found at 6
+usb-storage: waiting for device to settle before scanning
+scsi 7:0:0:0: Direct-Access     ST340083             3NF0      PQ: 0 ANSI: 2
+sd 7:0:0:0: [sde] 781422769 512-byte hardware sectors (400088 MB)
+sd 7:0:0:0: [sde] Write Protect is off
+sd 7:0:0:0: [sde] Mode Sense: 1a 0c 00 00
+sd 7:0:0:0: [sde] Assuming drive cache: write through
+sd 7:0:0:0: [sde] 781422769 512-byte hardware sectors (400088 MB)
+sd 7:0:0:0: [sde] Write Protect is off
+sd 7:0:0:0: [sde] Mode Sense: 1a 0c 00 00
+sd 7:0:0:0: [sde] Assuming drive cache: write through
+ sde: unknown partition table
+sd 7:0:0:0: [sde] Attached SCSI disk
+sd 7:0:0:0: Attached scsi generic sg5 type 0
+scsi 7:0:0:1: Direct-Access     ST340062             5QG0      PQ: 0 ANSI: 2
+sd 7:0:0:1: [sdf] 781422769 512-byte hardware sectors (400088 MB)
+sd 7:0:0:1: [sdf] Write Protect is off
+sd 7:0:0:1: [sdf] Mode Sense: 1a 0c 00 00
+sd 7:0:0:1: [sdf] Assuming drive cache: write through
+sd 7:0:0:1: [sdf] 781422769 512-byte hardware sectors (400088 MB)
+sd 7:0:0:1: [sdf] Write Protect is off
+sd 7:0:0:1: [sdf] Mode Sense: 1a 0c 00 00
+sd 7:0:0:1: [sdf] Assuming drive cache: write through
+ sdf: unknown partition table
+sd 7:0:0:1: [sdf] Attached SCSI disk
+sd 7:0:0:1: Attached scsi generic sg6 type 0
