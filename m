@@ -1,40 +1,74 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: use WARN_ON_ONCE on hot paths
-Date: Fri, 9 Jan 2009 12:07:30 +0000
-Message-ID: <20090109120730.5c80fc68@lxorguk.ukuu.org.uk>
-References: <b6fcc0a0901081202m30be591fse66e7f38477e0c0c@mail.gmail.com>
-	<20090108221753.78648cd6@daedalus.pq.iki.fi>
-	<20090108125317.648397d2@infradead.org>
-	<49667C36.4080300@gmail.com>
-	<20090108143127.437c15de@infradead.org>
-	<4966974B.3090700@gmail.com>
-	<49672166.4050606@gmail.com>
-	<496724A2.5030400@kernel.org>
-	<c4e36d110901090331r7c1cf06cy25c4a3a3579e47de@mail.gmail.com>
-	<49673D02.6000002@garzik.org>
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: todays git: WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
+Date: Fri, 9 Jan 2009 13:34:55 +0100
+Message-ID: <200901091334.55823.borntraeger@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47300 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752694AbZAIMIR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2009 07:08:17 -0500
-In-Reply-To: <49673D02.6000002@garzik.org>
+Received: from mtagate7.uk.ibm.com ([195.212.29.140]:63611 "EHLO
+	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbZAIMfs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2009 07:35:48 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Zdenek Kabelac <zdenek.kabelac@gmail.com>, Tejun Heo <tj@kernel.org>, "Justin P. Mattock" <justinmattock@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>
+To: linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>
 
-> If I had to guess, I would say that Arjan's patches assume it is OK to 
-> treat two ports on a single IDE controller as completely independent, 
-> when that is not really the reality of the hardware.
+Hello,
 
-The PCI probe paths and the setup paths of several of the PATA
-controller drivers know they are single threaded in a few spots so it
-wouldn't suprise me in the slightest. Really this async stuff needs to
-spend 2 or 3 months in -next getting the kinks worked out so that driver
-assumptions can be pinned down and fixed, and someone can give it an API
-with names that anyone but Arjan understands ;)
+with todays git I lots of these warnings:
 
-Alan
+[    1.246807] ata1.00: ATA-7: ST910021AS, 4.06, max UDMA/100
+[    1.253066] ata1.00: 195371568 sectors, multi 16: LBA48
+[    1.262561] ata2.00: ATAPI: HL-DT-ST DVDRAM GSA-U10N, 1.05, max UDMA/33
+[    1.273159] ata1.00: configured for UDMA/100
+[    1.275279] ata2.00: configured for UDMA/33
+[    1.285546] scsi 0:0:0:0: Direct-Access     ATA      ST910021AS       4.06 PQ: 0 ANSI: 5
+[    1.292049] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    1.298427] sd 0:0:0:0: [sda] 195371568 512-byte hardware sectors: (100 GB/93.1 GiB)
+[    1.299631] scsi 1:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-U10N  1.05 PQ: 0 ANSI: 5
+[    1.311059] sd 0:0:0:0: [sda] Write Protect is off
+[    1.317409] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    1.317426] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    1.318378] ------------[ cut here ]------------
+[    1.318380] WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
+[    1.318381] Hardware name: 64575GG
+[    1.318382] Modules linked in:
+[    1.318384] Pid: 0, comm: swapper Not tainted 2.6.28-self-07939-g2150edc #66
+[    1.318386] Call Trace:
+[    1.318390]  [<c05412ac>] ? printk+0x18/0x1a
+[    1.318393]  [<c014c803>] warn_slowpath+0x73/0xd0
+[    1.318397]  [<c02b370f>] ? blk_complete_request+0x1f/0x30
+[    1.318399]  [<c03857ab>] ? scsi_done+0xb/0x10
+[    1.318401]  [<c03a49d4>] ? atapi_qc_complete+0x64/0x310
+[    1.318405]  [<c039cd94>] ? __ata_qc_complete+0x64/0xd0
+[    1.318407]  [<c039e565>] ? ata_qc_complete+0x95/0x1d0
+[    1.318409]  [<c014863b>] ? default_wake_function+0xb/0x10
+[    1.318411]  [<c03ad8f5>] ? ata_sff_data_xfer32+0x75/0xc0
+[    1.318413]  [<c03ad40e>] ata_sff_hsm_move+0x45e/0x750
+[    1.318416]  [<c03ae99a>] ata_sff_interrupt+0x14a/0x220
+[    1.318419]  [<c017cd49>] handle_IRQ_event+0x39/0x70
+[    1.318421]  [<c017e548>] handle_edge_irq+0xa8/0x130
+[    1.318423]  [<c017e4a0>] ? handle_edge_irq+0x0/0x130
+[    1.318425]  <IRQ>  [<c0151885>] ? irq_exit+0x75/0x90
+[    1.318429]  [<c0120ae7>] ? common_interrupt+0x27/0x2c
+[    1.318432]  [<c0127902>] ? mwait_idle+0x42/0x50
+[    1.318434]  [<c011ec01>] ? cpu_idle+0x71/0xd0
+[    1.318437]  [<c053e704>] ? start_secondary+0x18f/0x1fb
+[    1.318440]  [<c0538084>] ? i8042_probe+0x586/0x5fa
+[    1.318444] ---[ end trace d41a74a84afec9c1 ]---
+
+cborntra@cborntra:/sys/bus/scsi$ cat /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: ST910021AS       Rev: 4.06
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+  Vendor: HL-DT-ST Model: DVDRAM GSA-U10N  Rev: 1.05
+  Type:   CD-ROM                           ANSI  SCSI revision: 05
+
+
+Christian
