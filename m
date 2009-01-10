@@ -1,43 +1,54 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: libata: make parallel port scan a per-host opt-in feature
-Date: Fri, 9 Jan 2009 17:00:47 -0800 (PST)
-Message-ID: <alpine.LFD.2.00.0901091659180.6528@localhost.localdomain>
-References: <20090109161455.08d5a54c@infradead.org> <alpine.LFD.2.00.0901091655530.6528@localhost.localdomain> <alpine.LFD.2.00.0901091657090.6528@localhost.localdomain>
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: Re: todays git: WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
+Date: Sat, 10 Jan 2009 10:09:13 +0100
+Message-ID: <200901101009.13699.borntraeger@de.ibm.com>
+References: <200901091334.55823.borntraeger@de.ibm.com> <20090109124412.619330ea@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32969 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754213AbZAJBA4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2009 20:00:56 -0500
-In-Reply-To: <alpine.LFD.2.00.0901091657090.6528@localhost.localdomain>
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:65274 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbZAJJJR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jan 2009 04:09:17 -0500
+In-Reply-To: <20090109124412.619330ea@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jgarzik@pobox.net
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>
 
-
-
-On Fri, 9 Jan 2009, Linus Torvalds wrote:
+Am Freitag 09 Januar 2009 schrieb Alan Cox:
+> On Fri, 9 Jan 2009 13:34:55 +0100
+> Christian Borntraeger <borntraeger@de.ibm.com> wrote:
 > 
-> On Fri, 9 Jan 2009, Linus Torvalds wrote:
+> > Hello,
 > > 
-> > On Fri, 9 Jan 2009, Arjan van de Ven wrote:
-> > >  
-> > > +	if (!hpriv->cap & HOST_CAP_SSS)
-> > > +		host->flags |= ATA_HOST_PARALLEL_SCAN;
-> > > +
+> > with todays git I lots of these warnings:
 > > 
-> > I don't think that does what you think it does.
+> > [    1.246807] ata1.00: ATA-7: ST910021AS, 4.06, max UDMA/100
+> > [    1.253066] ata1.00: 195371568 sectors, multi 16: LBA48
+> > [    1.262561] ata2.00: ATAPI: HL-DT-ST DVDRAM GSA-U10N, 1.05, max UDMA/33
+> > [    1.273159] ata1.00: configured for UDMA/100
+> > [    1.275279] ata2.00: configured for UDMA/33
+> > [    1.285546] scsi 0:0:0:0: Direct-Access     ATA      ST910021AS       4.06 PQ: 0 ANSI: 5
+> > [    1.292049] sd 0:0:0:0: Attached scsi generic sg0 type 0
+> > [    1.298427] sd 0:0:0:0: [sda] 195371568 512-byte hardware sectors: (100 GB/93.1 GiB)
+> > [    1.299631] scsi 1:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-U10N  1.05 PQ: 0 ANSI: 5
+> > [    1.311059] sd 0:0:0:0: [sda] Write Protect is off
+> > [    1.317409] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> > [    1.317426] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> > [    1.318378] ------------[ cut here ]------------
+> > [    1.318380] WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
+> > [    1.318381] Hardware name: 64575GG
 > 
-> And furthermore I'm surprised gcc doesn't warn about it. It would seem to 
-> be an obvious thing to warn about. I'll see what a sparse warning would 
-> look like.
+> Can you see if this goes away if you back out all Arjan's async stuff.
+> Then if not can you back out my 32bit PIO patch and see if that is the
+> trigger.
 
-Heh. sparse already warns:
+I did some printk debugging. 
+__atapi_pio_bytes is called with bytes=18. That means with 32bit transfers
+there is a 2 byte trailing transfer, which triggers this WARN_ON.
 
-	warning: dubious: !x & y
-
-although I'm not sure that's necessarily the most readable warning ever.
-
-			Linus
+Christian
