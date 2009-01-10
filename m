@@ -1,60 +1,71 @@
-From: "Greg Freemyer" <greg.freemyer@norcrossgroup.com>
-Subject: Data Recovery from SSDs - Impact of trim?
-Date: Fri, 9 Jan 2009 17:27:16 -0500
-Message-ID: <87f94c370901091427n74fc8d9apa569c44df12dc099@mail.gmail.com>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: Re: Do ICH10+AHCI-driver support port-multiplying on a eSATA port?
+Date: Fri, 9 Jan 2009 16:01:06 -0800
+Message-ID: <20090110000106.GD32364@curie-int.orbis-terrarum.net>
+References: <1231513287.2631.68.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:53811 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759468AbZAIW1S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2009 17:27:18 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so8708893qwe.37
-        for <linux-ide@vger.kernel.org>; Fri, 09 Jan 2009 14:27:16 -0800 (PST)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lWZ9pouYHbrmKLtT"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932346AbZAJADq@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1231513287.2631.68.camel@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Dongjun Shin <d.j.shin@samsung.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Dongjun (with linux-ide in copy),
 
-I got your name from a Linux Kernel posting and I was wondering if you
-could help me understand if data recovery will be possible with SSDs
-in the future.
+--lWZ9pouYHbrmKLtT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I work a lot with data recovery and forensic imaging.  With both,
-access to what the filesystem considers unallocated sectors / blocks /
-clusters is key to the process.  ie. A user deletes a file, but needs
-to restore it. Lots of recovery tools exist to assist in this, but
-obviously they need to be able to read the no longer allocated
-clusters.
+On Fri, Jan 09, 2009 at 04:01:27PM +0100, Soeren Sonnenburg wrote:
+> I am trying to connect an external 2-disk case (eCube II  see
+> http://www.one-tech.com/EN/htm_ecube.htm) to an ICH10 skyburg dp45sg
+> board via eSATA. As the case requires a port-multiplying sata card, I am
+> wondering if ich10+ahci support it?
+Look at the portion of your dmesg where AHCI is loaded:
+You'll see some lines like this:
 
-With a DISCARD enabled filesystem / kernel and with both current and
-future generation SSDs, I'm curious if our tools are going to be able
-to read this information anymore.
+[3675853.416077] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo p=
+mp pio slum part ems=20
+[3675855.666834] ahci 0000:04:00.0: flags: 64bit stag led slum part=20
+Relevant lspci bits:
+00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI=
+ Controller
+04:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6121 SATA II Contr=
+oller (rev b1)
 
-Per the proposed spec Tejun posted a link to a couple months ago, the
-response to a ATA read request of a trimmed sector can either be the
-original data or all zeros.
+Notice the 'pmp' flag on the first one. From what I understand, the AHCI
+BIOS portions can choose to enable or disable things like PMP support,
+and that's why it's reflected in the inquiry data.
 
-http://t13.org/Documents/UploadedDocuments/docs2007/e07154r3-Data_Set_Management_Proposal_for_ATA-ACS2.pdf
+Another box:
+[    4.396835] ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part=
+=20
 
->From my industries perspective we would very much like the original
-data to be returned as long as it is available.
+And the lspci:
+00:1f.2 SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) SATA AH=
+CI Controller (rev 01)
 
-Can you provide any insight into how the manufacturers are planning to
-implement such reads?
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer & Infra Guy
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
 
-Thanks
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+--lWZ9pouYHbrmKLtT
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iEYEARECAAYFAkln5UIACgkQPpIsIjIzwiyi4gCfYv+mxA56INgq1c7lwrMVT6wh
+2acAoO8XWpeRGA7kFQk7nyJ3Jdizd/Ly
+=OrGY
+-----END PGP SIGNATURE-----
+
+--lWZ9pouYHbrmKLtT--
