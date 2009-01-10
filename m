@@ -1,42 +1,86 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] tx4938ide: Fix build error due to read_sff_dma_status
- moving
-Date: Sat, 10 Jan 2009 20:25:47 +0300
-Message-ID: <4968DA1B.2020702@ru.mvista.com>
-References: <1231608019-28679-1-git-send-email-anemo@mba.ocn.ne.jp>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: Re: [PATCH,RFC] sata_mv: don't avoid clearing interrupt status on
+	SoC host adapters
+Date: Sat, 10 Jan 2009 19:41:27 +0100
+Message-ID: <20090110184127.GA18111@deprecation.cyrius.com>
+References: <20080824030429.GA10230@xi.wantstofly.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:65506 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752638AbZAJRZN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jan 2009 12:25:13 -0500
-In-Reply-To: <1231608019-28679-1-git-send-email-anemo@mba.ocn.ne.jp>
+Received: from sorrow.cyrius.com ([65.19.161.204]:1342 "EHLO sorrow.cyrius.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750755AbZAJTIO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jan 2009 14:08:14 -0500
+Content-Disposition: inline
+In-Reply-To: <20080824030429.GA10230@xi.wantstofly.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>
 
-Atsushi Nemoto wrote:
+* Lennert Buytenhek <buytenh@wantstofly.org> [2008-08-24 05:04]:
+> For some reason, sata_mv doesn't clear interrupt status during init
+> when it's running on an SoC host adapter.  If the bootloader has
+> touched the SATA controller before starting Linux, Linux can end up
+> enabling the SATA interrupt with events pending, which will cause the
+> interrupt to be marked as spurious and then be disabled, which then
+> breaks all further accesses to the controller.
+> 
+> This patch makes the SoC path clear interrupt status on init like in
+> the non-SoC case.
 
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+What's the status of this patch?  Saeed said that the patch is correct [1]
+and Mark asked for his Signed-off-by.  Saeed, can you add your
+Signed-off-by, so this can go in?
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+[1] http://www.spinics.net/lists/linux-ide/msg25686.html
 
-> diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-> index b4ef218..d909534 100644
-> --- a/drivers/ide/tx4938ide.c
-> +++ b/drivers/ide/tx4938ide.c
-> @@ -202,7 +202,6 @@ static const struct ide_tp_ops tx4938ide_tp_ops = {
->  	.exec_command		= ide_exec_command,
->  	.read_status		= ide_read_status,
->  	.read_altstatus		= ide_read_altstatus,
-> -	.read_sff_dma_status	= ide_read_sff_dma_status,
+> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> ---
+>  drivers/ata/sata_mv.c |   21 ++++++++++-----------
+>  1 files changed, 10 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index ad169ff..e829a3a 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -3131,19 +3131,18 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
+>  		writelfl(0, hc_mmio + HC_IRQ_CAUSE_OFS);
+>  	}
 >  
->  	.set_irq		= ide_set_irq,
+> -	if (!IS_SOC(hpriv)) {
+> -		/* Clear any currently outstanding host interrupt conditions */
+> -		writelfl(0, mmio + hpriv->irq_cause_ofs);
+> +	/* Clear any currently outstanding host interrupt conditions */
+> +	writelfl(0, mmio + hpriv->irq_cause_ofs);
 >  
+> -		/* and unmask interrupt generation for host regs */
+> -		writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
+> +	/* and unmask interrupt generation for host regs */
+> +	writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
+> +
+> +	/*
+> +	 * enable only global host interrupts for now.
+> +	 * The per-port interrupts get done later as ports are set up.
+> +	 */
+> +	mv_set_main_irq_mask(host, 0, PCI_ERR);
+>  
+> -		/*
+> -		 * enable only global host interrupts for now.
+> -		 * The per-port interrupts get done later as ports are set up.
+> -		 */
+> -		mv_set_main_irq_mask(host, 0, PCI_ERR);
+> -	}
+>  done:
+>  	return rc;
+>  }
+> -- 
+> 1.5.6.4
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-    Oops. Don;t know how I managed to miss this one...
-
-MBR, Sergei
+-- 
+Martin Michlmayr
+http://www.cyrius.com/
