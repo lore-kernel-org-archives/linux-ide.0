@@ -1,86 +1,80 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: [PATCH,RFC] sata_mv: don't avoid clearing interrupt status on
-	SoC host adapters
-Date: Sat, 10 Jan 2009 19:41:27 +0100
-Message-ID: <20090110184127.GA18111@deprecation.cyrius.com>
-References: <20080824030429.GA10230@xi.wantstofly.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [bisected] Re: todays git: WARNING: at drivers/ata/libata-sff.c:1017
+ ata_sff_hsm_move+0x45e/0x750()
+Date: Sat, 10 Jan 2009 23:06:47 +0300
+Message-ID: <4968FFD7.6070302@ru.mvista.com>
+References: <200901091334.55823.borntraeger@de.ibm.com>	<200901101009.13699.borntraeger@de.ibm.com>	<20090110104114.633cacd8@lxorguk.ukuu.org.uk>	<200901101242.05203.borntraeger@de.ibm.com>	<49688B63.5030105@ru.mvista.com>	<20090110122130.318cf168@lxorguk.ukuu.org.uk>	<20090110130745.GA14049@elte.hu>	<49689EA8.20506@garzik.org>	<20090110132412.GB14049@elte.hu>	<20090110133617.GA22304@elte.hu>	<20090110135731.0da08c90@lxorguk.ukuu.org.uk>	<4968BA6F.8050207@ru.mvista.com> <20090110152800.44308491@lxorguk.ukuu.org.uk> <4968C5CA.6010508@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:1342 "EHLO sorrow.cyrius.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750755AbZAJTIO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jan 2009 14:08:14 -0500
-Content-Disposition: inline
-In-Reply-To: <20080824030429.GA10230@xi.wantstofly.org>
+Received: from h155.mvista.com ([63.81.120.155]:2037 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751005AbZAJUGy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jan 2009 15:06:54 -0500
+In-Reply-To: <4968C5CA.6010508@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jeff@garzik.org>, Christian Borntraeger <borntraeger@de.ibm.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-* Lennert Buytenhek <buytenh@wantstofly.org> [2008-08-24 05:04]:
-> For some reason, sata_mv doesn't clear interrupt status during init
-> when it's running on an SoC host adapter.  If the bootloader has
-> touched the SATA controller before starting Linux, Linux can end up
-> enabling the SATA interrupt with events pending, which will cause the
-> interrupt to be marked as spurious and then be disabled, which then
-> breaks all further accesses to the controller.
-> 
-> This patch makes the SoC path clear interrupt status on init like in
-> the non-SoC case.
+Hello, I wrote:
 
-What's the status of this patch?  Saeed said that the patch is correct [1]
-and Mark asked for his Signed-off-by.  Saeed, can you add your
-Signed-off-by, so this can go in?
+>>>    All the S/G counts printed out were divisible by 4 (36 for 
+>>> INQUIRY and 96 for REQUSET SENSE). It's the *actual* byte count for 
+>>> the REQUEST SENSE that's no divisible. The SCSI/ATAPI devices are 
+>>> free to sent less data than requested on non block transfer commands.
+>
+>> That is just fine - if the sg list is not corrupt or being mishandled 
+>> and
+>> the atapi pio code is not buggy.
+>
+>> RTFS a bit and it becomes obvious that the core libata code has a bug:
+>
+>    Oh, I have already... and saw where the issue could be. It just 
+> wasn't obvious why 32-bit PIO triggered it.
 
-[1] http://www.spinics.net/lists/linux-ide/msg25686.html
+  Got it now, however the issue doesn't seem as evident simple to me...
 
-> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
-> ---
->  drivers/ata/sata_mv.c |   21 ++++++++++-----------
->  1 files changed, 10 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index ad169ff..e829a3a 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -3131,19 +3131,18 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
->  		writelfl(0, hc_mmio + HC_IRQ_CAUSE_OFS);
->  	}
->  
-> -	if (!IS_SOC(hpriv)) {
-> -		/* Clear any currently outstanding host interrupt conditions */
-> -		writelfl(0, mmio + hpriv->irq_cause_ofs);
-> +	/* Clear any currently outstanding host interrupt conditions */
-> +	writelfl(0, mmio + hpriv->irq_cause_ofs);
->  
-> -		/* and unmask interrupt generation for host regs */
-> -		writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
-> +	/* and unmask interrupt generation for host regs */
-> +	writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
-> +
-> +	/*
-> +	 * enable only global host interrupts for now.
-> +	 * The per-port interrupts get done later as ports are set up.
-> +	 */
-> +	mv_set_main_irq_mask(host, 0, PCI_ERR);
->  
-> -		/*
-> -		 * enable only global host interrupts for now.
-> -		 * The per-port interrupts get done later as ports are set up.
-> -		 */
-> -		mv_set_main_irq_mask(host, 0, PCI_ERR);
-> -	}
->  done:
->  	return rc;
->  }
-> -- 
-> 1.5.6.4
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> From libata-sff.c:
+>>         /* consumed can be larger than count only for the last 
+>> transfer */
+>>         WARN_ON_ONCE(qc->cursg && count != consumed);
+>>
+>> The big clue turns out to be that the code doesn't match the comment.
+>>
+>> Next note the check on qc->cursg. If my input sg list is a 36 byte 
+>> single
+>> sg entry then qc->cursg should be NULL by the WARN_ON() - but it isn't.
+>
+>    I think it's still not NULL because qc->cursg_ofs == sg->length 
+> check was *not* true right above, hence sg_next() wasn't called...
+>
+>> If qc->cursg is NULL when the sg_next() is run then we don't warn 
+>> because
+>> we are quite happy with the last segment being padded or underrunning.
+>
+>    I don't think that sg_next() is called on an underrun segment. And 
+> here lies the mistake.
+>
+>> What we actually want to explode on is a case where we transfer more
+>> bytes than are wanted and where there are more sg entries to perform 
+>> - at
+>> that point we would corrupt.
+>
+>> So at least one failure case is
+>
+>>     Core code issues an SG list for 96 bytes
+>>     Drive indicates it wishes to return 18 bytes
+>
+>>     data_xfer transfers 18 bytes + 2 padding (correctly) -> 20 bytes
 
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+   Correctly indeed? I'm not at all sure it's correct to read an extra 
+16-bit word off the device when it thinks it's already done with the 
+data transfer. This is not the same as to read 16-bit word and ignore 
+its MSB as it happened. The same concern about the writes... Note that 
+the IDE code doesn't do this...
+
+MBR, Sergei
+
+
