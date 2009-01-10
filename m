@@ -1,62 +1,87 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: todays git: WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
-Date: Sat, 10 Jan 2009 18:29:18 +0300
-Message-ID: <4968BECE.8070304@ru.mvista.com>
-References: <200901091334.55823.borntraeger@de.ibm.com>	<200901101009.13699.borntraeger@de.ibm.com>	<20090110104114.633cacd8@lxorguk.ukuu.org.uk>	<200901101242.05203.borntraeger@de.ibm.com>	<49688B63.5030105@ru.mvista.com>	<20090110122130.318cf168@lxorguk.ukuu.org.uk>	<1231598170.3642.12.camel@localhost.localdomain> <20090110151248.063199d2@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [bisected] Re: todays git: WARNING: at
+ drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x45e/0x750()
+Date: Sat, 10 Jan 2009 15:28:00 +0000
+Message-ID: <20090110152800.44308491@lxorguk.ukuu.org.uk>
+References: <200901091334.55823.borntraeger@de.ibm.com>
+	<200901101009.13699.borntraeger@de.ibm.com>
+	<20090110104114.633cacd8@lxorguk.ukuu.org.uk>
+	<200901101242.05203.borntraeger@de.ibm.com>
+	<49688B63.5030105@ru.mvista.com>
+	<20090110122130.318cf168@lxorguk.ukuu.org.uk>
+	<20090110130745.GA14049@elte.hu>
+	<49689EA8.20506@garzik.org>
+	<20090110132412.GB14049@elte.hu>
+	<20090110133617.GA22304@elte.hu>
+	<20090110135731.0da08c90@lxorguk.ukuu.org.uk>
+	<4968BA6F.8050207@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:64737 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751733AbZAJP2o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jan 2009 10:28:44 -0500
-In-Reply-To: <20090110151248.063199d2@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40124 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752531AbZAJP3M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jan 2009 10:29:12 -0500
+In-Reply-To: <4968BA6F.8050207@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christian Borntraeger <borntraeger@de.ibm.com>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jeff@garzik.org>, Christian Borntraeger <borntraeger@de.ibm.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-Alan Cox wrote:
+>     All the S/G counts printed out were divisible by 4 (36 for INQUIRY and 96 
+> for REQUSET SENSE). It's the *actual* byte count for the REQUEST SENSE that's 
+> no divisible. The SCSI/ATAPI devices are free to sent less data than requested 
+> on non block transfer commands.
 
-> O> Your problem is that the *device* is wanting to transfer a set of bytes
+That is just fine - if the sg list is not corrupt or being mishandled and
+the atapi pio code is not buggy.
 
->>not divisible by four.  If you want to use word based PIO, you'll have
->>to fall back to collecting bytes for the last two.  Alternatively, you
+RTFS a bit and it becomes obvious that the core libata code has a bug:
 
-> Nope.. you can't do that with ATA block transfers - it isn't the same as
-> SCSI
 
-   ATA block transfers are always mutliple of 512 bytes (except read/write 
-long), so this shouldn't be an issue... unless the code is trying to split a 
-sector between 2 pages on an arbitrary boundary -- in this case, even if the 
-both resulting byte counts divide by 2, you may be busted because of prefetch 
-that (as the Intel docs say), should have the initial (start of sector) and 
-all subsequent reads of the same size (either 16- or 32-bit). I don't know if 
-this situation is actually possible with libata -- but beware...
+>From libata-sff.c:
 
->>could just do byte PIO for all reply lengths like this ... they occur
->>all over the SCSI standard, but not usually in critical paths.
+        /* consumed can be larger than count only for the last transfer */
+        WARN_ON_ONCE(qc->cursg && count != consumed);
 
-> The problem we have is that the sg list the drivers were given had a
-> segment which was not divisible in length by four and was *NOT* the last
-> segment in the sg list
+The big clue turns out to be that the code doesn't match the comment.
 
-> The logic in the ATA PIO code is basically
+Next note the check on qc->cursg. If my input sg list is a 36 byte single
+sg entry then qc->cursg should be NULL by the WARN_ON() - but it isn't.
 
-> 	for each sg entry
+If qc->cursg is NULL when the sg_next() is run then we don't warn because
+we are quite happy with the last segment being padded or underrunning.
+What we actually want to explode on is a case where we transfer more
+bytes than are wanted and where there are more sg entries to perform - at
+that point we would corrupt.
 
-> 		compute the number of bytes to transfer staying within
-> the page
-> 		transfer that many bytes (but may be more)
-> 
-> 		if and only if the transfer is NOT the last segment but is
-> 			more than the bytes requested - WARN
 
-    The ATAPI logic is more complex since it has to take into account the 
-arbitrary byte count that a device want to transfer on each INTRQ (read from 
-the byte count low/high regs).
+So at least one failure case is
 
-> Alan
+	Core code issues an SG list for 96 bytes
+	Drive indicates it wishes to return 18 bytes
 
-MBR, Sergei
+	data_xfer transfers 18 bytes + 2 padding (correctly) -> 20 bytes
+
+	
+At this point __atapi_pio_bytes breaks
+
+	it updates qc->curbytes by 18
+	it updates the offset by 18
+
+	The last segment is not exhausted so it does not update qc->cursg
+
+	qc->cursg is not updated and the WARN erroneously uses !=
+
+The bogus WARN_ON_ONCE() triggers.
+
+So the bug is the WARN_ON being wrong. In fact __atapi_pio_bytes doesn't
+know enough to do the WARN check correctly as it doesn't know if it is
+the last request being made. It just happens it didn't break before
+because all our transfers are word aligned.
+
+We can remove the WARN for the moment, but someone should probably fix
+the sanity check logic.
+
+Alan
