@@ -1,71 +1,89 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: Do ICH10+AHCI-driver support port-multiplying on a eSATA port?
-Date: Fri, 9 Jan 2009 16:01:06 -0800
-Message-ID: <20090110000106.GD32364@curie-int.orbis-terrarum.net>
-References: <1231513287.2631.68.camel@localhost>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: libata: make parallel port scan a per-host opt-in feature
+Date: Fri, 9 Jan 2009 16:14:55 -0800
+Message-ID: <20090109161455.08d5a54c@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lWZ9pouYHbrmKLtT"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932346AbZAJADq@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1231513287.2631.68.camel@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:35570 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbZAJAMw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2009 19:12:52 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, jgarzik@pobox.net
+
+>From 17f458c7d9d7a25a04d448aef22b134135857018 Mon Sep 17 00:00:00 2001
+From: Arjan van de Ven <arjan@linux.intel.com>
+Date: Fri, 9 Jan 2009 15:54:07 -0800
+Subject: [PATCH] libata: Add a per-host flag to opt-in into parallel port probes
+
+This patch adds a per host flag that allows drivers to opt in into
+having its busses scanned in parallel.
+
+Drivers that do not set this flag get their ports scanned in
+the "original" sequence.
+
+Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+---
+ drivers/ata/ahci.c        |    3 +++
+ drivers/ata/libata-core.c |    9 +++++++++
+ include/linux/libata.h    |    1 +
+ 3 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7f701cb..1fc2d4b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2660,6 +2660,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	host->iomap = pcim_iomap_table(pdev);
+ 	host->private_data = hpriv;
+ 
++	if (!hpriv->cap & HOST_CAP_SSS)
++		host->flags |= ATA_HOST_PARALLEL_SCAN;
++
+ 	if (pi.flags & ATA_FLAG_EM)
+ 		ahci_reset_em(host);
+ 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c507a9a..31c0f22 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5920,6 +5920,15 @@ static void async_port_probe(void *data, async_cookie_t cookie)
+ {
+ 	int rc;
+ 	struct ata_port *ap = data;
++
++	/*
++	 * If we're not allowed to scan this host in parallel,
++	 * we need to wait until all previous scans have completed
++	 * before going further.
++	 */
++	if (!(ap->host->flags & ATA_HOST_PARALLEL_SCAN))
++		async_synchronize_cookie(cookie);
++	
+ 	/* probe */
+ 	if (ap->ops->error_handler) {
+ 		struct ata_eh_info *ehi = &ap->link.eh_info;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 4f7c8fb..b6b8a7f 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -239,6 +239,7 @@ enum {
+ 	/* host set flags */
+ 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+ 	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
++	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
+ 
+ 	/* bits 24:31 of host->flags are reserved for LLD specific flags */
+ 
+-- 
+1.6.0.6
 
 
---lWZ9pouYHbrmKLtT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jan 09, 2009 at 04:01:27PM +0100, Soeren Sonnenburg wrote:
-> I am trying to connect an external 2-disk case (eCube II  see
-> http://www.one-tech.com/EN/htm_ecube.htm) to an ICH10 skyburg dp45sg
-> board via eSATA. As the case requires a port-multiplying sata card, I am
-> wondering if ich10+ahci support it?
-Look at the portion of your dmesg where AHCI is loaded:
-You'll see some lines like this:
-
-[3675853.416077] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo p=
-mp pio slum part ems=20
-[3675855.666834] ahci 0000:04:00.0: flags: 64bit stag led slum part=20
-Relevant lspci bits:
-00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI=
- Controller
-04:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6121 SATA II Contr=
-oller (rev b1)
-
-Notice the 'pmp' flag on the first one. From what I understand, the AHCI
-BIOS portions can choose to enable or disable things like PMP support,
-and that's why it's reflected in the inquiry data.
-
-Another box:
-[    4.396835] ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part=
-=20
-
-And the lspci:
-00:1f.2 SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) SATA AH=
-CI Controller (rev 01)
-
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer & Infra Guy
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---lWZ9pouYHbrmKLtT
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
-
-iEYEARECAAYFAkln5UIACgkQPpIsIjIzwiyi4gCfYv+mxA56INgq1c7lwrMVT6wh
-2acAoO8XWpeRGA7kFQk7nyJ3Jdizd/Ly
-=OrGY
------END PGP SIGNATURE-----
-
---lWZ9pouYHbrmKLtT--
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
