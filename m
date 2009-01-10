@@ -1,35 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: todays git: WARNING: at drivers/ata/libata-sff.c:1017
- ata_sff_hsm_move+0x45e/0x750()
-Date: Sat, 10 Jan 2009 15:32:00 +0000
-Message-ID: <20090110153200.51d76a0c@lxorguk.ukuu.org.uk>
-References: <200901091334.55823.borntraeger@de.ibm.com>
-	<200901101009.13699.borntraeger@de.ibm.com>
-	<20090110104114.633cacd8@lxorguk.ukuu.org.uk>
-	<200901101242.05203.borntraeger@de.ibm.com>
-	<49688B63.5030105@ru.mvista.com>
-	<20090110122130.318cf168@lxorguk.ukuu.org.uk>
-	<1231598170.3642.12.camel@localhost.localdomain>
-	<20090110151248.063199d2@lxorguk.ukuu.org.uk>
-	<4968BECE.8070304@ru.mvista.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Support for Marvel 6141 in ahci.c
+Date: Sat, 10 Jan 2009 23:55:52 +0900
+Message-ID: <4968B6F8.9050005@wasp.net.au>
+References: <49686AE8.1050209@digadd.de> <20090110122438.0992c319@lxorguk.ukuu.org.uk> <49689A9B.2070508@digadd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48284 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751997AbZAJPdy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jan 2009 10:33:54 -0500
-In-Reply-To: <4968BECE.8070304@ru.mvista.com>
+Received: from 50.38.69.212.in-addr.fnarfbargle.com ([93.93.128.63]:44311 "EHLO
+	fnarfbargle.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbZAJPin (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jan 2009 10:38:43 -0500
+In-Reply-To: <49689A9B.2070508@digadd.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christian Borntraeger <borntraeger@de.ibm.com>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>
+To: "Christian P. Schmidt" <schmidt@digadd.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
->     The ATAPI logic is more complex since it has to take into account the 
-> arbitrary byte count that a device want to transfer on each INTRQ (read from 
-> the byte count low/high regs).
+Christian P. Schmidt wrote:
+> Hi Alan,
+> 
+> Alan Cox wrote:
+>> On Sat, 10 Jan 2009 12:31:20 +0300
+>> "Christian P. Schmidt" <schmidt@digadd.de> wrote:
+>>
+>>> Hi all,
+>>>
+>>> The Marvell 6141
+>>> 08:00.0 SATA controller: Marvell Technology Group Ltd. 88SE614x SATA 
+>>> II PCI-E controller (rev 01)
+>>> 08:00.0 0106: 11ab:6141 (rev 01)
+>>> seems to work with the ahci driver with the attached patch:
+>>
+>> Try using the PATA port.
+> 
+> Sorry, can't do - the chip is on an ASUS M2N32 WS Professional mainboard 
+> where the PATA is only on the MCP55.
 
-Actually our ATAPI logic plain doesn't work for arbitary byte counts but
-that is another story that needs looking into now the can of worms has
-been noticed and opened.
+How is that working for you? I did the same style of patch back in 2.6.26 (on the same board) and 
+found it died _hard_ when writing to more than one port at a time. It worked with only one drive 
+attached though, although I could not get hot plugging to work either.
+
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
