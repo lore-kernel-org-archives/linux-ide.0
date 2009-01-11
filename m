@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/8] ide: add ide_for_each_present_dev() iterator
-Date: Sun, 11 Jan 2009 20:11:40 +0100
-Message-ID: <20090111191140.17361.43805.sendpatchset@localhost.localdomain>
+Subject: [PATCH 8/8] ide-acpi: remove taskfile_load_raw()
+Date: Sun, 11 Jan 2009 20:12:07 +0100
+Message-ID: <20090111191207.17361.76977.sendpatchset@localhost.localdomain>
 References: <20090111191120.17361.69981.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:36460 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753910AbZAKTKq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:10:46 -0500
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:63185 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753429AbZAKTLN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:11:13 -0500
 In-Reply-To: <20090111191120.17361.69981.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,196 +15,120 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add ide_for_each_present_dev() iterator
+Subject: [PATCH] ide-acpi: remove taskfile_load_raw()
 
-* Add ide_for_each_present_dev() iterator and convert IDE code to use it.
+* taskfile_load_raw() is used only by do_drive_set_taskfiles()
+  so inline it there.
 
-* Do some drive-by CodingStyle fixups in ide-acpi.c while at it.
-
-There should be no functional changes caused by this patch.
+While at it:
+- rename 'args' variable to 'task'
+- remove struct taskfile_array
+- do ide_acpigtf check early
+- use REGS_PER_GTF
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-acpi.c  |   30 ++++++++++--------------------
- drivers/ide/ide-iops.c  |    5 ++---
- drivers/ide/ide-probe.c |   38 +++++++++++++-------------------------
- include/linux/ide.h     |    4 ++++
- 4 files changed, 29 insertions(+), 48 deletions(-)
+ drivers/ide/ide-acpi.c |   69 ++++++++++++++++---------------------------------
+ 1 file changed, 23 insertions(+), 46 deletions(-)
 
 Index: b/drivers/ide/ide-acpi.c
 ===================================================================
 --- a/drivers/ide/ide-acpi.c
 +++ b/drivers/ide/ide-acpi.c
-@@ -614,17 +614,17 @@ void ide_acpi_set_state(ide_hwif_t *hwif
- 		DEBPRINT("no ACPI data for %s\n", hwif->name);
- 		return;
- 	}
+@@ -26,9 +26,6 @@
+ #include <acpi/actypes.h>
+ 
+ #define REGS_PER_GTF		7
+-struct taskfile_array {
+-	u8	tfa[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
+-};
+ 
+ struct GTM_buffer {
+ 	u32	PIO_speed0;
+@@ -291,43 +288,6 @@ out:
+ }
+ 
+ /**
+- * taskfile_load_raw - send taskfile registers to drive
+- * @drive: drive to which output is sent
+- * @gtf: raw ATA taskfile register set (0x1f1 - 0x1f7)
+- *
+- * Outputs IDE taskfile to the drive.
+- */
+-static int taskfile_load_raw(ide_drive_t *drive,
+-			      const struct taskfile_array *gtf)
+-{
+-	ide_task_t args;
+-	int err = 0;
+-
+-	DEBPRINT("(0x1f1-1f7): hex: "
+-	       "%02x %02x %02x %02x %02x %02x %02x\n",
+-	       gtf->tfa[0], gtf->tfa[1], gtf->tfa[2],
+-	       gtf->tfa[3], gtf->tfa[4], gtf->tfa[5], gtf->tfa[6]);
+-
+-	memset(&args, 0, sizeof(ide_task_t));
+-
+-	/* convert gtf to IDE Taskfile */
+-	memcpy(&args.tf_array[7], &gtf->tfa, 7);
+-	args.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
+-
+-	if (!ide_acpigtf) {
+-		DEBPRINT("_GTF execution disabled\n");
+-		return err;
+-	}
+-
+-	err = ide_no_data_taskfile(drive, &args);
+-	if (err)
+-		printk(KERN_ERR "%s: ide_no_data_taskfile failed: %u\n",
+-		       __func__, err);
+-
+-	return err;
+-}
+-
+-/**
+  * do_drive_set_taskfiles - write the drive taskfile settings from _GTF
+  * @drive: the drive to which the taskfile command should be sent
+  * @gtf_length: total number of bytes of _GTF taskfiles
+@@ -343,19 +303,36 @@ static int do_drive_set_taskfiles(ide_dr
+ 	int			rc = 0, err;
+ 	int			gtf_count = gtf_length / REGS_PER_GTF;
+ 	int			ix;
+-	struct taskfile_array	*gtf;
+ 
+ 	DEBPRINT("total GTF bytes=%u (0x%x), gtf_count=%d, addr=0x%lx\n",
+ 		 gtf_length, gtf_length, gtf_count, gtf_address);
+ 
++	/* send all taskfile registers (0x1f1-0x1f7) *in*that*order* */
+ 	for (ix = 0; ix < gtf_count; ix++) {
+-		gtf = (struct taskfile_array *)
+-			(gtf_address + ix * REGS_PER_GTF);
++		u8 *gtf = (u8 *)(gtf_address + ix * REGS_PER_GTF);
++		ide_task_t task;
+ 
+-		/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
+-		err = taskfile_load_raw(drive, gtf);
+-		if (err)
++		DEBPRINT("(0x1f1-1f7): "
++			 "hex: %02x %02x %02x %02x %02x %02x %02x\n",
++			 gtf[0], gtf[1], gtf[2],
++			 gtf[3], gtf[4], gtf[5], gtf[6]);
 +
- 	/* channel first and then drives for power on and verse versa for power off */
- 	if (on)
- 		acpi_bus_set_power(hwif->acpidata->obj_handle, ACPI_STATE_D0);
- 
--	ide_port_for_each_dev(i, drive, hwif) {
--		if (drive->acpidata->obj_handle &&
--		    (drive->dev_flags & IDE_DFLAG_PRESENT)) {
-+	ide_port_for_each_present_dev(i, drive, hwif) {
-+		if (drive->acpidata->obj_handle)
- 			acpi_bus_set_power(drive->acpidata->obj_handle,
--				on? ACPI_STATE_D0: ACPI_STATE_D3);
--		}
-+					   on ? ACPI_STATE_D0 : ACPI_STATE_D3);
- 	}
++		if (!ide_acpigtf) {
++			DEBPRINT("_GTF execution disabled\n");
++			continue;
++		}
 +
- 	if (!on)
- 		acpi_bus_set_power(hwif->acpidata->obj_handle, ACPI_STATE_D3);
- }
-@@ -673,12 +673,9 @@ void ide_acpi_port_init_devices(ide_hwif
- 	hwif->devices[1]->acpidata = &hwif->acpidata->slave;
- 
- 	/* get _ADR info for each device */
--	ide_port_for_each_dev(i, drive, hwif) {
-+	ide_port_for_each_present_dev(i, drive, hwif) {
- 		acpi_handle dev_handle;
- 
--		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
--			continue;
--
- 		DEBPRINT("ENTER: %s at channel#: %d port#: %d\n",
- 			 drive->name, hwif->channel, drive->dn & 1);
- 
-@@ -691,13 +688,8 @@ void ide_acpi_port_init_devices(ide_hwif
- 		drive->acpidata->obj_handle = dev_handle;
- 	}
- 
--	/*
--	 * Send IDENTIFY for each drive
--	 */
--	ide_port_for_each_dev(i, drive, hwif) {
--		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
--			continue;
--
-+	/* send IDENTIFY for each device */
-+	ide_port_for_each_present_dev(i, drive, hwif) {
- 		err = taskfile_lib_get_identify(drive, drive->acpidata->idbuff);
- 		if (err)
- 			DEBPRINT("identify device %s failed (%d)\n",
-@@ -717,9 +709,7 @@ void ide_acpi_port_init_devices(ide_hwif
- 	ide_acpi_get_timing(hwif);
- 	ide_acpi_push_timing(hwif);
- 
--	ide_port_for_each_dev(i, drive, hwif) {
--		if (drive->dev_flags & IDE_DFLAG_PRESENT)
--			/* Execute ACPI startup code */
--			ide_acpi_exec_tfs(drive);
-+	ide_port_for_each_present_dev(i, drive, hwif) {
-+		ide_acpi_exec_tfs(drive);
- 	}
- }
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -1101,9 +1101,8 @@ static ide_startstop_t do_reset1 (ide_dr
- 
- 		prepare_to_wait(&ide_park_wq, &wait, TASK_UNINTERRUPTIBLE);
- 		timeout = jiffies;
--		ide_port_for_each_dev(i, tdrive, hwif) {
--			if (tdrive->dev_flags & IDE_DFLAG_PRESENT &&
--			    tdrive->dev_flags & IDE_DFLAG_PARKED &&
-+		ide_port_for_each_present_dev(i, tdrive, hwif) {
-+			if ((tdrive->dev_flags & IDE_DFLAG_PARKED) &&
- 			    time_after(tdrive->sleep, timeout))
- 				timeout = tdrive->sleep;
- 		}
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -824,22 +824,18 @@ static void ide_port_tune_devices(ide_hw
- 	ide_drive_t *drive;
- 	int i;
- 
--	ide_port_for_each_dev(i, drive, hwif) {
--		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
--			if (port_ops && port_ops->quirkproc)
--				port_ops->quirkproc(drive);
--		}
-+	ide_port_for_each_present_dev(i, drive, hwif) {
-+		if (port_ops && port_ops->quirkproc)
-+			port_ops->quirkproc(drive);
- 	}
- 
--	ide_port_for_each_dev(i, drive, hwif) {
--		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
--			ide_set_max_pio(drive);
-+	ide_port_for_each_present_dev(i, drive, hwif) {
-+		ide_set_max_pio(drive);
- 
--			drive->dev_flags |= IDE_DFLAG_NICE1;
-+		drive->dev_flags |= IDE_DFLAG_NICE1;
- 
--			if (hwif->dma_ops)
--				ide_set_dma(drive);
--		}
-+		if (hwif->dma_ops)
-+			ide_set_dma(drive);
- 	}
- }
- 
-@@ -910,10 +906,7 @@ static int ide_port_setup_devices(ide_hw
- 	int i, j = 0;
- 
- 	mutex_lock(&ide_cfg_mtx);
--	ide_port_for_each_dev(i, drive, hwif) {
--		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
--			continue;
--
-+	ide_port_for_each_present_dev(i, drive, hwif) {
- 		if (ide_init_queue(drive)) {
- 			printk(KERN_ERR "ide: failed to init %s\n",
- 					drive->name);
-@@ -1125,13 +1118,10 @@ static void hwif_register_devices(ide_hw
- 	ide_drive_t *drive;
- 	unsigned int i;
- 
--	ide_port_for_each_dev(i, drive, hwif) {
-+	ide_port_for_each_present_dev(i, drive, hwif) {
- 		struct device *dev = &drive->gendev;
- 		int ret;
- 
--		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
--			continue;
--
- 		dev_set_name(dev, "%u.%u", hwif->index, i);
- 		dev->parent = &hwif->gendev;
- 		dev->bus = &ide_bus_type;
-@@ -1574,11 +1564,9 @@ static void __ide_port_unregister_device
- 	ide_drive_t *drive;
- 	int i;
- 
--	ide_port_for_each_dev(i, drive, hwif) {
--		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
--			device_unregister(&drive->gendev);
--			wait_for_completion(&drive->gendev_rel_comp);
--		}
-+	ide_port_for_each_present_dev(i, drive, hwif) {
-+		device_unregister(&drive->gendev);
-+		wait_for_completion(&drive->gendev_rel_comp);
- 	}
- }
- 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1607,6 +1607,10 @@ static inline ide_drive_t *ide_get_pair_
- #define ide_port_for_each_dev(i, dev, port) \
- 	for ((i) = 0; ((dev) = (port)->devices[i]) || (i) < MAX_DRIVES; (i)++)
- 
-+#define ide_port_for_each_present_dev(i, dev, port) \
-+	for ((i) = 0; ((dev) = (port)->devices[i]) || (i) < MAX_DRIVES; (i)++) \
-+		if ((dev)->dev_flags & IDE_DFLAG_PRESENT)
++		/* convert GTF to taskfile */
++		memset(&task, 0, sizeof(ide_task_t));
++		memcpy(&task.tf_array[7], gtf, REGS_PER_GTF);
++		task.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
 +
- #define ide_host_for_each_port(i, port, host) \
- 	for ((i) = 0; ((port) = (host)->ports[i]) || (i) < MAX_HOST_PORTS; (i)++)
++		err = ide_no_data_taskfile(drive, &task);
++		if (err) {
++			printk(KERN_ERR "%s: ide_no_data_taskfile failed: %u\n",
++					__func__, err);
+ 			rc = err;
++		}
+ 	}
  
+ 	return rc;
