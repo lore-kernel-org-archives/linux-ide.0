@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/8] ide: sanitize ACPI initialization
-Date: Sun, 11 Jan 2009 20:11:46 +0100
-Message-ID: <20090111191146.17361.22612.sendpatchset@localhost.localdomain>
+Subject: [PATCH 7/8] ide-acpi: cleanup do_drive_set_taskfiles()
+Date: Sun, 11 Jan 2009 20:12:00 +0100
+Message-ID: <20090111191200.17361.86841.sendpatchset@localhost.localdomain>
 References: <20090111191120.17361.69981.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:63185 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754088AbZAKTKy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:10:54 -0500
+Received: from mu-out-0910.google.com ([209.85.134.186]:36460 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754136AbZAKTLH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:11:07 -0500
 In-Reply-To: <20090111191120.17361.69981.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,111 +15,66 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: sanitize ACPI initialization
+Subject: [PATCH] ide-acpi: cleanup do_drive_set_taskfiles()
 
-* ide_acpi_init() -> ide_acpi_init_port()
+* ide_noacpi is already checked by ide_acpi_exec_tfs()
+  which is the only user of do_drive_set_taskfiles().
 
-* ide_acpi_blacklist() -> ide_acpi_init()
+* ide_acpi_exec_tfs() prints sufficient debug info about the
+  device so no need to do it again.
 
-* Call ide_acpi_init() only once (do it during IDE core
-  initialization) and cleanup the function accordingly.
+* do_drive_get_GTF() + ide_acpi_exec_tfs() make sure that this
+  function will never be called with incorrect gtf_length argument
+  or if device is not present.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-acpi.c  |   12 +++---------
- drivers/ide/ide-probe.c |    2 +-
- drivers/ide/ide.c       |    2 ++
- include/linux/ide.h     |    6 ++++--
- 4 files changed, 10 insertions(+), 12 deletions(-)
+ drivers/ide/ide-acpi.c |   21 +--------------------
+ 1 file changed, 1 insertion(+), 20 deletions(-)
 
 Index: b/drivers/ide/ide-acpi.c
 ===================================================================
 --- a/drivers/ide/ide-acpi.c
 +++ b/drivers/ide/ide-acpi.c
-@@ -95,12 +95,8 @@ static const struct dmi_system_id ide_ac
- 	{ }	/* terminate list */
- };
- 
--static int ide_acpi_blacklist(void)
-+int ide_acpi_init(void)
+@@ -340,32 +340,14 @@ static int do_drive_set_taskfiles(ide_dr
+ 				  unsigned int gtf_length,
+ 				  unsigned long gtf_address)
  {
--	static int done;
--	if (done)
+-	int			rc = -ENODEV, err;
++	int			rc = 0, err;
+ 	int			gtf_count = gtf_length / REGS_PER_GTF;
+ 	int			ix;
+ 	struct taskfile_array	*gtf;
+ 
+-	if (ide_noacpi)
 -		return 0;
--	done = 1;
- 	dmi_check_system(ide_acpi_dmi_table);
- 	return 0;
- }
-@@ -630,7 +626,7 @@ void ide_acpi_set_state(ide_hwif_t *hwif
- }
- 
- /**
-- * ide_acpi_init - initialize the ACPI link for an IDE interface
-+ * ide_acpi_init_port - initialize the ACPI link for an IDE interface
-  * @hwif: target IDE interface (channel)
-  *
-  * The ACPI spec is not quite clear when the drive identify buffer
-@@ -640,10 +636,8 @@ void ide_acpi_set_state(ide_hwif_t *hwif
-  * So we get the information during startup; but this means that
-  * any changes during run-time will be lost after resume.
-  */
--void ide_acpi_init(ide_hwif_t *hwif)
-+void ide_acpi_init_port(ide_hwif_t *hwif)
- {
--	ide_acpi_blacklist();
 -
- 	hwif->acpidata = kzalloc(sizeof(struct ide_acpi_hwif_link), GFP_KERNEL);
- 	if (!hwif->acpidata)
- 		return;
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1507,7 +1507,7 @@ int ide_host_register(struct ide_host *h
+-	DEBPRINT("ENTER: %s, hard_port#: %d\n", drive->name, drive->dn);
+-
+-	if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
+-		goto out;
+-
+-	if (!gtf_count)		/* shouldn't be here */
+-		goto out;
+-
+ 	DEBPRINT("total GTF bytes=%u (0x%x), gtf_count=%d, addr=0x%lx\n",
+ 		 gtf_length, gtf_length, gtf_count, gtf_address);
  
- 		j++;
- 
--		ide_acpi_init(hwif);
-+		ide_acpi_init_port(hwif);
- 
- 		if (hwif->present)
- 			ide_acpi_port_init_devices(hwif);
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -522,6 +522,8 @@ static int __init ide_init(void)
- 		goto out_port_class;
+-	if (gtf_length % REGS_PER_GTF) {
+-		printk(KERN_ERR "%s: unexpected GTF length (%d)\n",
+-		       __func__, gtf_length);
+-		goto out;
+-	}
+-
+-	rc = 0;
+ 	for (ix = 0; ix < gtf_count; ix++) {
+ 		gtf = (struct taskfile_array *)
+ 			(gtf_address + ix * REGS_PER_GTF);
+@@ -376,7 +358,6 @@ static int do_drive_set_taskfiles(ide_dr
+ 			rc = err;
  	}
  
-+	ide_acpi_init();
-+
- 	proc_ide_create();
+-out:
+ 	return rc;
+ }
  
- 	return 0;
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1482,17 +1482,19 @@ static inline void ide_release_dma_engin
- #endif /* CONFIG_BLK_DEV_IDEDMA */
- 
- #ifdef CONFIG_BLK_DEV_IDEACPI
-+int ide_acpi_init(void);
- extern int ide_acpi_exec_tfs(ide_drive_t *drive);
- extern void ide_acpi_get_timing(ide_hwif_t *hwif);
- extern void ide_acpi_push_timing(ide_hwif_t *hwif);
--extern void ide_acpi_init(ide_hwif_t *hwif);
-+void ide_acpi_init_port(ide_hwif_t *);
- void ide_acpi_port_init_devices(ide_hwif_t *);
- extern void ide_acpi_set_state(ide_hwif_t *hwif, int on);
- #else
-+static inline int ide_acpi_init(void) { return 0; }
- static inline int ide_acpi_exec_tfs(ide_drive_t *drive) { return 0; }
- static inline void ide_acpi_get_timing(ide_hwif_t *hwif) { ; }
- static inline void ide_acpi_push_timing(ide_hwif_t *hwif) { ; }
--static inline void ide_acpi_init(ide_hwif_t *hwif) { ; }
-+static inline void ide_acpi_init_port(ide_hwif_t *hwif) { ; }
- static inline void ide_acpi_port_init_devices(ide_hwif_t *hwif) { ; }
- static inline void ide_acpi_set_state(ide_hwif_t *hwif, int on) {}
- #endif
