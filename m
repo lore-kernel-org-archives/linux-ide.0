@@ -1,62 +1,107 @@
-From: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
-Subject: Re: [PATCH] libata: use WARN_ON_ONCE on hot paths
-Date: Sun, 11 Jan 2009 20:58:02 +0100
-Message-ID: <c4e36d110901111158u6a9c0f82wad1441ab3f1db182@mail.gmail.com>
-References: <b6fcc0a0901081202m30be591fse66e7f38477e0c0c@mail.gmail.com>
-	 <49667C36.4080300@gmail.com> <20090108143127.437c15de@infradead.org>
-	 <4966974B.3090700@gmail.com> <49672166.4050606@gmail.com>
-	 <496724A2.5030400@kernel.org>
-	 <c4e36d110901090331r7c1cf06cy25c4a3a3579e47de@mail.gmail.com>
-	 <49673D02.6000002@garzik.org>
-	 <20090109120730.5c80fc68@lxorguk.ukuu.org.uk>
-	 <496799C8.1060804@gmail.com>
+From: "Gerhard Pircher" <gerhard_pircher@gmx.net>
+Subject: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne
+ boards
+Date: Sun, 11 Jan 2009 21:05:30 +0100
+Message-ID: <20090111200530.113910@gmx.net>
+References: <20090107135457.234150@gmx.net>
+ <fa686aa40901070713kca10b27y6c6aac03e6224fac@mail.gmail.com>
+ <20090107152722.140970@gmx.net> <200901111751.55757.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:49727 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbZAKT6F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:58:05 -0500
-In-Reply-To: <496799C8.1060804@gmail.com>
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:58718 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752260AbZAKUFe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 11 Jan 2009 15:05:34 -0500
+In-Reply-To: <200901111751.55757.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>
-
-Hi
-
-I've booted  2.6.29-rc1 (c59765042f53a79a7a65585042ff463b69cb248c)
-
-This time I've got only this warning:
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, grant.likely@secretlab.ca
 
 
-input: ThinkPad Extra Buttons as /devices/virtual/input/input5
-Driver 'sr' needs updating - please use bus_type methods
-------------[ cut here ]------------
-WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x6b0/0x7f0()
-Hardware name: 6464CTO
-Modules linked in: sr_mod(+) cdrom thinkpad_acpi rfkill backlight
-nvram button led_class battery intel_agp ac uhci_hcd ohci_hcd ehci_hcd
-usbcore [last unloaded: scsi_wait_scan]
-Pid: 1150, comm: udevd Not tainted 2.6.29-rc1 #6
-Call Trace:
- <IRQ>  [<ffffffff80244d8f>] warn_slowpath+0xaf/0x110
- [<ffffffff8026fdc9>] ? __lock_acquire+0x5e9/0x1db0
- [<ffffffff80472316>] ? ata_sff_data_xfer32+0xa6/0xe0
- [<ffffffff80471b90>] ata_sff_hsm_move+0x6b0/0x7f0
- [<ffffffff80472029>] ata_sff_interrupt+0x1a9/0x2b0
- [<ffffffff80294ee5>] handle_IRQ_event+0x35/0x70
- [<ffffffff8029675c>] handle_edge_irq+0xbc/0x160
- [<ffffffff8020ec55>] do_IRQ+0xb5/0x1b0
- [<ffffffff8020cf53>] ret_from_intr+0x0/0xf
- <EOI> <4>---[ end trace 701c93e34e726fd9 ]---
-sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-PM: Adding info for No Bus:sr0
-PM: Adding info for No Bus:11:0
-sr 3:0:0:0: Attached scsi CD-ROM sr0
+-------- Original-Nachricht --------
+> Datum: Sun, 11 Jan 2009 17:51:55 +0100
+> Von: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> An: "Gerhard Pircher" <gerhard_pircher@gmx.net>
+> CC: "Grant Likely" <grant.likely@secretlab.ca>, linuxppc-dev@ozlabs.o=
+rg, linux-ide@vger.kernel.org
+> Betreff: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for Ami=
+gaOne boards
 
+> On Wednesday 07 January 2009, Gerhard Pircher wrote:
+> >=20
+> > -------- Original-Nachricht --------
+> > > Datum: Wed, 7 Jan 2009 08:13:06 -0700
+> > > Von: "Grant Likely" <grant.likely@secretlab.ca>
+> > > An: "Gerhard Pircher" <gerhard_pircher@gmx.net>
+> > > CC: linuxppc-dev@ozlabs.org, bzolnier@gmail.com
+> > > Betreff: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for
+> AmigaOne boards
+> >=20
+> > > On Wed, Jan 7, 2009 at 7:12 AM, Gerhard Pircher
+> <gerhard_pircher@gmx.net>
+> > > wrote:
+> > > > The AmigaOne uses the onboard VIA IDE controller in legacy mode
+> > > >(like the Pegasos).
+> > > >
+> > > > Signed-off-by: Gerhard Pircher <gerhard_pircher@gmx.net>
+> > > > ---
+> > > >  drivers/ide/via82cxxx.c |    5 +++++
+> > > >  1 files changed, 5 insertions(+), 0 deletions(-)
+> > >=20
+> > > This patch needs to also be posted on the linux-ide mailing list.
+> > Ouch, I only sent it to the maintainer. I'll fix that.
+>=20
+> [ Please also keep all previous recipients on cc: when doing so. ]
+Okay, I'll keep that in mind.
 
-Zdenek
+> > > > diff --git a/drivers/ide/via82cxxx.c b/drivers/ide/via82cxxx.c
+> > > > index 2a812d3..086f476 100644
+> > > > --- a/drivers/ide/via82cxxx.c
+> > > > +++ b/drivers/ide/via82cxxx.c
+> > > > @@ -450,6 +450,11 @@ static int __devinit via_init_one(struct
+> pci_dev
+> > > *dev, const struct pci_device_i
+> > > >                d.host_flags |=3D IDE_HFLAG_FORCE_LEGACY_IRQS;
+> > > >  #endif
+> > > >
+> > > > +#ifdef CONFIG_AMIGAONE
+> > > > +       if (machine_is(amigaone))
+> > > > +               d.host_flags |=3D IDE_HFLAG_FORCE_LEGACY_IRQS;
+> > > > +#endif
+> > > > +
+> > >=20
+> > > I know you're just following the example of the PEGASOS workaroun=
+d
+> > > immediately above; but the #defines are really ugly.  I wonder if
+> > > there is there a cleaner way to manipulate the flags.
+> > AFAIK the via82cxxx driver doesn't make use of the
+> > pci_get_legacy_ide_irq approach.
+>=20
+> I applied your patch for 2.6.29 but for 2.6.30 I would ask you to cle=
+an
+> up #ifdefs by using ide_pci_is_in_compatibility_mode() helper instead=
+ for
+> checking if IDE_HFLAG_FORCE_LEGACY_IRQS should be set.
+Wouldn't it be better, if I clean this up now? (I have to resend my Ami=
+gaOne
+platform patches anyway).
+
+> [ Some time ago Pegasos got PCI quirk to put controller in the legacy=
+ mode
+>   (arch/powerpc/platforms/chrp/pci.c) so it is OK to also remove Pega=
+sos'
+>   special case while at it. ]
+Okay, so the change shouldn't break IDE for Pegasos machines (I don't h=
+ave
+a Pegasos for testing).
+
+Thanks!
+
+Gerhard
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
