@@ -1,78 +1,62 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_it821x: Update RDC UDMA handling
-Date: Sun, 11 Jan 2009 19:51:08 +0000
-Message-ID: <20090111195052.16272.22844.stgit@localhost.localdomain>
+From: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
+Subject: Re: [PATCH] libata: use WARN_ON_ONCE on hot paths
+Date: Sun, 11 Jan 2009 20:58:02 +0100
+Message-ID: <c4e36d110901111158u6a9c0f82wad1441ab3f1db182@mail.gmail.com>
+References: <b6fcc0a0901081202m30be591fse66e7f38477e0c0c@mail.gmail.com>
+	 <49667C36.4080300@gmail.com> <20090108143127.437c15de@infradead.org>
+	 <4966974B.3090700@gmail.com> <49672166.4050606@gmail.com>
+	 <496724A2.5030400@kernel.org>
+	 <c4e36d110901090331r7c1cf06cy25c4a3a3579e47de@mail.gmail.com>
+	 <49673D02.6000002@garzik.org>
+	 <20090109120730.5c80fc68@lxorguk.ukuu.org.uk>
+	 <496799C8.1060804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52109 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752375AbZAKTuz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:50:55 -0500
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:49727 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbZAKT6F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:58:05 -0500
+In-Reply-To: <496799C8.1060804@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>
 
-From: Alan Cox <alan@redhat.com>
+Hi
 
-The UDMA affliction is apparently specific to revision 0x11. Keeps us in sync
-with drivers/ide current.
+I've booted  2.6.29-rc1 (c59765042f53a79a7a65585042ff463b69cb248c)
 
-Signed-off-by: Alan Cox <alan@redhat.com>
----
-
- drivers/ata/pata_it821x.c |   17 +++++++++++++----
- 1 files changed, 13 insertions(+), 4 deletions(-)
+This time I've got only this warning:
 
 
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index f828a29..f1bb2f9 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -80,7 +80,7 @@
- 
- 
- #define DRV_NAME "pata_it821x"
--#define DRV_VERSION "0.4.0"
-+#define DRV_VERSION "0.4.2"
- 
- struct it821x_dev
- {
-@@ -494,8 +494,6 @@ static int it821x_smart_set_mode(struct ata_link *link, struct ata_device **unus
-  *	special. In our case we need to lock the sector count to avoid
-  *	blowing the brains out of the firmware with large LBA48 requests
-  *
-- *	FIXME: When FUA appears we need to block FUA too. And SMART and
-- *	basically we need to filter commands for this chip.
-  */
- 
- static void it821x_dev_config(struct ata_device *adev)
-@@ -890,6 +888,13 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
-+		.udma_mask = ATA_UDMA6,
-+		.port_ops = &it821x_rdc_port_ops
-+	};
-+	static const struct ata_port_info info_rdc_11 = {
-+		.flags = ATA_FLAG_SLAVE_POSS,
-+		.pio_mask = 0x1f,
-+		.mwdma_mask = 0x07,
- 		/* No UDMA */
- 		.port_ops = &it821x_rdc_port_ops
- 	};
-@@ -903,7 +908,11 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return rc;
- 		
- 	if (pdev->vendor == PCI_VENDOR_ID_RDC) {
--		ppi[0] = &info_rdc;
-+		/* Deal with Vortex86SX */
-+		if (pdev->revision == 0x11)
-+			ppi[0] = &info_rdc_11;
-+		else
-+			ppi[0] = &info_rdc;
- 	} else {
- 		/* Force the card into bypass mode if so requested */
- 		if (it8212_noraid) {
+input: ThinkPad Extra Buttons as /devices/virtual/input/input5
+Driver 'sr' needs updating - please use bus_type methods
+------------[ cut here ]------------
+WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x6b0/0x7f0()
+Hardware name: 6464CTO
+Modules linked in: sr_mod(+) cdrom thinkpad_acpi rfkill backlight
+nvram button led_class battery intel_agp ac uhci_hcd ohci_hcd ehci_hcd
+usbcore [last unloaded: scsi_wait_scan]
+Pid: 1150, comm: udevd Not tainted 2.6.29-rc1 #6
+Call Trace:
+ <IRQ>  [<ffffffff80244d8f>] warn_slowpath+0xaf/0x110
+ [<ffffffff8026fdc9>] ? __lock_acquire+0x5e9/0x1db0
+ [<ffffffff80472316>] ? ata_sff_data_xfer32+0xa6/0xe0
+ [<ffffffff80471b90>] ata_sff_hsm_move+0x6b0/0x7f0
+ [<ffffffff80472029>] ata_sff_interrupt+0x1a9/0x2b0
+ [<ffffffff80294ee5>] handle_IRQ_event+0x35/0x70
+ [<ffffffff8029675c>] handle_edge_irq+0xbc/0x160
+ [<ffffffff8020ec55>] do_IRQ+0xb5/0x1b0
+ [<ffffffff8020cf53>] ret_from_intr+0x0/0xf
+ <EOI> <4>---[ end trace 701c93e34e726fd9 ]---
+sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+PM: Adding info for No Bus:sr0
+PM: Adding info for No Bus:11:0
+sr 3:0:0:0: Attached scsi CD-ROM sr0
 
+
+Zdenek
