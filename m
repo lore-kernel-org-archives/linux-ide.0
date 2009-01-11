@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 8/8] ide-acpi: remove taskfile_load_raw()
-Date: Sun, 11 Jan 2009 20:12:07 +0100
-Message-ID: <20090111191207.17361.76977.sendpatchset@localhost.localdomain>
+Subject: [PATCH 6/8] ide-acpi: cleanup do_drive_get_GTF()
+Date: Sun, 11 Jan 2009 20:11:53 +0100
+Message-ID: <20090111191153.17361.73267.sendpatchset@localhost.localdomain>
 References: <20090111191120.17361.69981.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:63185 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbZAKTLN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:11:13 -0500
+Received: from fk-out-0910.google.com ([209.85.128.185]:63160 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754136AbZAKTLB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 14:11:01 -0500
 In-Reply-To: <20090111191120.17361.69981.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,120 +15,64 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-acpi: remove taskfile_load_raw()
+Subject: [PATCH] ide-acpi: cleanup do_drive_get_GTF()
 
-* taskfile_load_raw() is used only by do_drive_set_taskfiles()
-  so inline it there.
+* ide_noacpi is already checked by ide_acpi_exec_tfs()
+  which is the only user of do_drive_get_GTF().
 
-While at it:
-- rename 'args' variable to 'task'
-- remove struct taskfile_array
-- do ide_acpigtf check early
-- use REGS_PER_GTF
+* ide_acpi_exec_tfs() prints sufficient debug info about the
+  device so no need to have excessive data about port/host.
+
+* It is sufficient to check for drive->acpidata->obj_handle
+  as it will be NULL if dev == NULL or hwif->acpidata == NULL
+  or device is not present.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-acpi.c |   69 ++++++++++++++++---------------------------------
- 1 file changed, 23 insertions(+), 46 deletions(-)
+ drivers/ide/ide-acpi.c |   27 ---------------------------
+ 1 file changed, 27 deletions(-)
 
 Index: b/drivers/ide/ide-acpi.c
 ===================================================================
 --- a/drivers/ide/ide-acpi.c
 +++ b/drivers/ide/ide-acpi.c
-@@ -26,9 +26,6 @@
- #include <acpi/actypes.h>
+@@ -225,39 +225,12 @@ static int do_drive_get_GTF(ide_drive_t 
+ 	acpi_status			status;
+ 	struct acpi_buffer		output;
+ 	union acpi_object 		*out_obj;
+-	ide_hwif_t			*hwif = drive->hwif;
+-	struct device			*dev = hwif->gendev.parent;
+ 	int				err = -ENODEV;
+-	int				port;
  
- #define REGS_PER_GTF		7
--struct taskfile_array {
--	u8	tfa[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
--};
+ 	*gtf_length = 0;
+ 	*gtf_address = 0UL;
+ 	*obj_loc = 0UL;
  
- struct GTM_buffer {
- 	u32	PIO_speed0;
-@@ -291,43 +288,6 @@ out:
- }
- 
- /**
-- * taskfile_load_raw - send taskfile registers to drive
-- * @drive: drive to which output is sent
-- * @gtf: raw ATA taskfile register set (0x1f1 - 0x1f7)
-- *
-- * Outputs IDE taskfile to the drive.
-- */
--static int taskfile_load_raw(ide_drive_t *drive,
--			      const struct taskfile_array *gtf)
--{
--	ide_task_t args;
--	int err = 0;
+-	if (ide_noacpi)
+-		return 0;
 -
--	DEBPRINT("(0x1f1-1f7): hex: "
--	       "%02x %02x %02x %02x %02x %02x %02x\n",
--	       gtf->tfa[0], gtf->tfa[1], gtf->tfa[2],
--	       gtf->tfa[3], gtf->tfa[4], gtf->tfa[5], gtf->tfa[6]);
--
--	memset(&args, 0, sizeof(ide_task_t));
--
--	/* convert gtf to IDE Taskfile */
--	memcpy(&args.tf_array[7], &gtf->tfa, 7);
--	args.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
--
--	if (!ide_acpigtf) {
--		DEBPRINT("_GTF execution disabled\n");
--		return err;
+-	if (!dev) {
+-		DEBPRINT("no PCI device for %s\n", hwif->name);
+-		goto out;
 -	}
 -
--	err = ide_no_data_taskfile(drive, &args);
--	if (err)
--		printk(KERN_ERR "%s: ide_no_data_taskfile failed: %u\n",
--		       __func__, err);
+-	if (!hwif->acpidata) {
+-		DEBPRINT("no ACPI data for %s\n", hwif->name);
+-		goto out;
+-	}
 -
--	return err;
--}
+-	port = hwif->channel ? drive->dn - 2: drive->dn;
 -
--/**
-  * do_drive_set_taskfiles - write the drive taskfile settings from _GTF
-  * @drive: the drive to which the taskfile command should be sent
-  * @gtf_length: total number of bytes of _GTF taskfiles
-@@ -343,19 +303,36 @@ static int do_drive_set_taskfiles(ide_dr
- 	int			rc = 0, err;
- 	int			gtf_count = gtf_length / REGS_PER_GTF;
- 	int			ix;
--	struct taskfile_array	*gtf;
- 
- 	DEBPRINT("total GTF bytes=%u (0x%x), gtf_count=%d, addr=0x%lx\n",
- 		 gtf_length, gtf_length, gtf_count, gtf_address);
- 
-+	/* send all taskfile registers (0x1f1-0x1f7) *in*that*order* */
- 	for (ix = 0; ix < gtf_count; ix++) {
--		gtf = (struct taskfile_array *)
--			(gtf_address + ix * REGS_PER_GTF);
-+		u8 *gtf = (u8 *)(gtf_address + ix * REGS_PER_GTF);
-+		ide_task_t task;
- 
--		/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
--		err = taskfile_load_raw(drive, gtf);
--		if (err)
-+		DEBPRINT("(0x1f1-1f7): "
-+			 "hex: %02x %02x %02x %02x %02x %02x %02x\n",
-+			 gtf[0], gtf[1], gtf[2],
-+			 gtf[3], gtf[4], gtf[5], gtf[6]);
-+
-+		if (!ide_acpigtf) {
-+			DEBPRINT("_GTF execution disabled\n");
-+			continue;
-+		}
-+
-+		/* convert GTF to taskfile */
-+		memset(&task, 0, sizeof(ide_task_t));
-+		memcpy(&task.tf_array[7], gtf, REGS_PER_GTF);
-+		task.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
-+
-+		err = ide_no_data_taskfile(drive, &task);
-+		if (err) {
-+			printk(KERN_ERR "%s: ide_no_data_taskfile failed: %u\n",
-+					__func__, err);
- 			rc = err;
-+		}
- 	}
- 
- 	return rc;
+-	DEBPRINT("ENTER: %s at %s, port#: %d, hard_port#: %d\n",
+-		 hwif->name, dev->bus_id, port, hwif->channel);
+-
+-	if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0) {
+-		DEBPRINT("%s drive %d:%d not present\n",
+-			 hwif->name, hwif->channel, port);
+-		goto out;
+-	}
+-
+ 	if (!drive->acpidata->obj_handle) {
+ 		DEBPRINT("No ACPI object found for %s\n", drive->name);
+ 		goto out;
