@@ -1,43 +1,50 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: Re: [PATCH] fix pata-rb532-cf
-Date: Sun, 11 Jan 2009 21:47:07 +0100
-Message-ID: <20090111204355.D9E91400B700@mail.nwl.cc>
-References: <1225403251-15705-1-git-send-email-n0-1@freewrt.org> <1226448783-10047-1-git-send-email-n0-1@freewrt.org> <491E0F88.5000808@garzik.org> <200901111713.28716.florian@openwrt.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/9] ide: move ->rqsize init from init_irq() to ide_init_port()
+Date: Sun, 11 Jan 2009 23:58:12 +0300
+Message-ID: <496A5D64.6030007@ru.mvista.com>
+References: <20090106183520.21193.63704.sendpatchset@localhost.localdomain> <20090106183602.21193.67001.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ks361647.kimsufi.com ([91.121.169.95]:55139 "EHLO mail.nwl.cc"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752433AbZAKUym (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Jan 2009 15:54:42 -0500
-Content-Disposition: inline
-In-Reply-To: <200901111713.28716.florian@openwrt.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:13097 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751468AbZAKU6W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 15:58:22 -0500
+In-Reply-To: <20090106183602.21193.67001.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Fainelli <florian@openwrt.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Hello.
 
-On Sun, Jan 11, 2009 at 05:13:28PM +0100, Florian Fainelli wrote:
-> Hello Jeff,
->=20
-> Le Saturday 15 November 2008 00:53:44 Jeff Garzik, vous avez =C3=A9cr=
-it=C2=A0:
-> > I'll need to wait for this function to appear upstream... it's not =
-in
-> > 2.6.28-rc at least
->=20
-> I just checked that you now got this function in your libata-dev tree=
-, this=20
-> patch still applies, can you merge it ? Thanks a lot.
+Bartlomiej Zolnierkiewicz wrote:
 
-No, please not! In fact these changes are obsolete and useless, see my
-later mail to the linux-ide list.
-(Message-ID: 20081128193322.D103C386DBBE@mail.ifyouseekate.net)
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>   
 
-Accessing the IRQ this generic way is fine, we just needed code for the
-GPIO mapped IRQs to be handled correctly.
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+>   
+[...]
+> @@ -1242,6 +1234,13 @@ static void ide_init_port(ide_hwif_t *hw
+>  
+>  	if (d->max_sectors)
+>  		hwif->rqsize = d->max_sectors;
+> +	else {
+> +		if ((hwif->host_flags & IDE_HFLAG_NO_LBA48) ||
+> +		    (hwif->host_flags & IDE_HFLAG_NO_LBA48_DMA))
+>   
 
-Greetings, Phil
+   Er, why not:
+
+		if (hwif->host_flags &
+		    (IDE_HFLAG_NO_LBA48 | IDE_HFLAG_NO_LBA48_DMA))
+
+
+MBR, Sergei
+
+
