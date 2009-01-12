@@ -1,28 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/1] pata_via.c: Support VX855 and future chips whose
- IDE controller use 0x0571.
-Date: Mon, 12 Jan 2009 11:02:04 +0000
-Message-ID: <20090112110204.67e3ff72@lxorguk.ukuu.org.uk>
-References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087369D7@exchtp03.taipei.via.com.tw>
-	<496B226E.60108@ru.mvista.com>
+From: Florian Fainelli <florian@openwrt.org>
+Subject: Re: [PATCH] fix pata-rb532-cf
+Date: Mon, 12 Jan 2009 15:32:34 +0100
+Message-ID: <200901121532.34970.florian@openwrt.org>
+References: <1225403251-15705-1-git-send-email-n0-1@freewrt.org> <200901111713.28716.florian@openwrt.org> <20090111204355.D9E91400B700@mail.nwl.cc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:32995 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752299AbZALLCW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jan 2009 06:02:22 -0500
-In-Reply-To: <496B226E.60108@ru.mvista.com>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:62691 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753508AbZALOcp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jan 2009 09:32:45 -0500
+Received: by bwz14 with SMTP id 14so32207445bwz.13
+        for <linux-ide@vger.kernel.org>; Mon, 12 Jan 2009 06:32:42 -0800 (PST)
+In-Reply-To: <20090111204355.D9E91400B700@mail.nwl.cc>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: JosephChan@via.com.tw, linux-ide@vger.kernel.org, HaraldWelte@viatech.com, tj@kernel.org, BruceChang@via.com.tw
+To: Phil Sutter <n0-1@freewrt.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
->    Why not:
-> 
-> 	if (pdev->device == 0xC409)
-> 		if (ap->port_no == 0) {
-> 			pci_read_config_dword(pdev, 0x52, &ata66);
+Hi Phil
 
-More to the point - why not just register it as a single port device ?
+Le Sunday 11 January 2009 21:47:07 Phil Sutter, vous avez =C3=A9crit=C2=
+=A0:
+> No, please not! In fact these changes are obsolete and useless, see m=
+y
+> later mail to the linux-ide list.
+> (Message-ID: 20081128193322.D103C386DBBE@mail.ifyouseekate.net)
+>
+> Accessing the IRQ this generic way is fine, we just needed code for t=
+he
+> GPIO mapped IRQs to be handled correctly.
+
+Right, I now remember. Is the pata_rb532_cf in Jeff's tree missing any =
+fix=20
+from you ?
+--=20
+Best regards, Florian Fainelli
+Email : florian@openwrt.org
+http://openwrt.org
+-------------------------------
