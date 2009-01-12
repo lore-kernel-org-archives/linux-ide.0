@@ -1,61 +1,83 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: 2.6.28-mmotm0109 WARNING: at drivers/ata/libata-sff.c:1017
-Date: Sun, 11 Jan 2009 18:44:59 -0500
-Message-ID: <4967.1231717499@turing-police.cc.vt.edu>
+From: Dongjun Shin <d.j.shin@samsung.com>
+Subject: Re: Data Recovery from SSDs - Impact of trim?
+Date: Mon, 12 Jan 2009 00:21:12 +0000 (GMT)
+Message-ID: <16517792.86041231719671929.JavaMail.weblogic@epml02>
+Reply-To: d.j.shin@samsung.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1231717499_4563P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:56629 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116AbZALAHA (ORCPT
-	<RFC822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 19:07:00 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:45158 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbZALAbi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 19:31:38 -0500
+Received: from ep_ms12_bk (mailout4.samsung.com [203.254.224.34])
+ by mailout4.samsung.com
+ (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0KDC00D8W0ZBIX@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Mon, 12 Jan 2009 09:21:11 +0900 (KST)
+Received: from ep_spt04 (ms12.samsung.com [203.254.225.99])
+ by ms12.samsung.com (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0KDC0051Y0ZBOU@ms12.samsung.com> for linux-ide@vger.kernel.org;
+ Mon, 12 Jan 2009 09:21:11 +0900 (KST)
+Content-return: prohibited
+MIME-version: 1.0
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: =?windows-1252?Q?=3F=3F=3F?= <d.j.shin@samsung.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
---==_Exmh_1231717499_4563P
-Content-Type: text/plain; charset=us-ascii
+R3JlZywgDQoNClRoZSBzaG9ydCBhbnN3ZXIgaXMgIml0J3MgZGVwZW5kZW50IG9uIHRoZSBtYW51
+ZmFjdHVyZXIncyBpbXBsZW1lbnRhdGlvbiIuDQogDQpUaGUgdGVjaG5pY2FsIGRldGFpbHMgYXJl
+IGFzIGZvbGxvd3MuDQogDQpTU0QgdHJhbnNsYXRlcyB0aGUgTEJBIGZyb20gaG9zdCBpbnRvIHRo
+ZSBwaHlzaWNhbCBhZGRyZXNzIChmbGFzaCBibG9jay9wYWdlKQ0KdXNpbmcgdGhlIG1hcHBpbmcg
+dGFibGUgd2hpY2ggYWN0cyBsaWtlIHRoZSBtZXRhZGF0YSBvZiBmaWxlc3lzdGVtLg0KRm9yIHRo
+ZSByZWNvdmVyeSB0byB3b3JrLCBib3RoIHRoZSBtYXBwaW5nIHRhYmxlIG9mIHRoZSBvcmlnaW5h
+bCBkYXRhIF9hbmRfDQp0aGUgcGh5c2ljYWwgZGF0YSBzaG91bGQgYmUgYXZhaWxhYmxlLg0KIA0K
+VGhlIHRyaW0gY29tbWFuZCBjYW4gaW52YWxpZGF0ZSB0aGUgbWFwcGluZyBvbmx5IF9vcl8gdGhl
+IG1hcHBpbmcgYW5kIA0KdGhlIHBoeXNpY2FsIGRhdGEgYXMgd2VsbC4gVGhpcyBpcyBtYW51ZmFj
+dHVyZXItc3BlY2lmaWMgb3Igc29tZXRpbWVzDQpyZXF1ZXN0ZWQgYXMgc3BlYyAoZXguIGVudGVy
+cHJpc2Ugbm90ZWJvb2sgd2hlcmUgc2VjdXJpdHkgaXMgaW1wb3J0YW50KS4NCkZyb20gdGhlIHBl
+cnNwZWN0aXZlIG9mIGhvc3QsIHRoZSB0cmltbWVkIGFyZSBjYW4gYmUgc2VlbiBhcyAoMSkgb3Jp
+Z2luYWwgZGF0YQ0KKDIpIGFsbCB6ZXJvIG9yIDB4ZmYgKDMpIGluZGV0ZXJtaW5hdGUuDQoNClRo
+ZXJlIGFyZSBmb2xsb3dpbmcgZGlzY3Vzc2lvbiBhbmQgcHJvcG9zYWwgYWJvdXQgdGhlIGJlaGF2
+aW9yIG9mIHRyaW0gYXQgVDEzLg0KKG5hbWVkICJkZXRlcm1pbmlzdGljIHJlYWQgYWZ0ZXIgdHJp
+bSIpDQoNCmh0dHA6Ly93d3cudDEwLm9yZy9mdHAvdDEwL2RvY3VtZW50LjA4LzA4LTM0N3IxLnBk
+Zg0KaHR0cDovL3d3dy50MTMub3JnL0RvY3VtZW50cy9VcGxvYWRlZERvY3VtZW50cy9kb2NzMjAw
+OC9lMDgxMzdyMi1EUkFUXy1fRGV0ZXJtaW5pc3RpY19SZWFkX0FmdGVyX1RyaW0ucGRmDQoNCkhv
+d2V2ZXIsIHRoaXMgc3BlYyBhbHNvIGRvZXMgbm90IG1lZXQgeW91ciBleHBlY3RhdGlvbiBiZWNh
+dXNlIGl0IGRvZXMgbm90DQpndWFyYW50ZWUgdGhlIHNhZmV0eSBvZiB0aGUgb3JpZ2luYWwgZGF0
+YS4NCg0KUmVnYXJkcywNCkRvbmdqdW4NCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0t
+LS0NClNlbmRlciA6IEdyZWcgRnJlZW15ZXI8Z3JlZy5mcmVlbXllckBub3Jjcm9zc2dyb3VwLmNv
+bT4NCkRhdGUgICA6IDIwMDktMDEtMTAgMDc6MjcgKEdNVCswOTowMCkNClRpdGxlICA6IERhdGEg
+UmVjb3ZlcnkgZnJvbSBTU0RzIC0gSW1wYWN0IG9mIHRyaW0/DQoNCkRvbmdqdW4gKHdpdGggbGlu
+dXgtaWRlIGluIGNvcHkpLA0KDQpJIGdvdCB5b3VyIG5hbWUgZnJvbSBhIExpbnV4IEtlcm5lbCBw
+b3N0aW5nIGFuZCBJIHdhcyB3b25kZXJpbmcgaWYgeW91DQpjb3VsZCBoZWxwIG1lIHVuZGVyc3Rh
+bmQgaWYgZGF0YSByZWNvdmVyeSB3aWxsIGJlIHBvc3NpYmxlIHdpdGggU1NEcw0KaW4gdGhlIGZ1
+dHVyZS4NCg0KSSB3b3JrIGEgbG90IHdpdGggZGF0YSByZWNvdmVyeSBhbmQgZm9yZW5zaWMgaW1h
+Z2luZy4gIFdpdGggYm90aCwNCmFjY2VzcyB0byB3aGF0IHRoZSBmaWxlc3lzdGVtIGNvbnNpZGVy
+cyB1bmFsbG9jYXRlZCBzZWN0b3JzIC8gYmxvY2tzIC8NCmNsdXN0ZXJzIGlzIGtleSB0byB0aGUg
+cHJvY2Vzcy4gIGllLiBBIHVzZXIgZGVsZXRlcyBhIGZpbGUsIGJ1dCBuZWVkcw0KdG8gcmVzdG9y
+ZSBpdC4gTG90cyBvZiByZWNvdmVyeSB0b29scyBleGlzdCB0byBhc3Npc3QgaW4gdGhpcywgYnV0
+DQpvYnZpb3VzbHkgdGhleSBuZWVkIHRvIGJlIGFibGUgdG8gcmVhZCB0aGUgbm8gbG9uZ2VyIGFs
+bG9jYXRlZA0KY2x1c3RlcnMuDQoNCldpdGggYSBESVNDQVJEIGVuYWJsZWQgZmlsZXN5c3RlbSAv
+IGtlcm5lbCBhbmQgd2l0aCBib3RoIGN1cnJlbnQgYW5kDQpmdXR1cmUgZ2VuZXJhdGlvbiBTU0Rz
+LCBJJiMzOTttIGN1cmlvdXMgaWYgb3VyIHRvb2xzIGFyZSBnb2luZyB0byBiZSBhYmxlDQp0byBy
+ZWFkIHRoaXMgaW5mb3JtYXRpb24gYW55bW9yZS4NCg0KUGVyIHRoZSBwcm9wb3NlZCBzcGVjIFRl
+anVuIHBvc3RlZCBhIGxpbmsgdG8gYSBjb3VwbGUgbW9udGhzIGFnbywgdGhlDQpyZXNwb25zZSB0
+byBhIEFUQSByZWFkIHJlcXVlc3Qgb2YgYSB0cmltbWVkIHNlY3RvciBjYW4gZWl0aGVyIGJlIHRo
+ZQ0Kb3JpZ2luYWwgZGF0YSBvciBhbGwgemVyb3MuDQoNCmh0dHA6Ly90MTMub3JnL0RvY3VtZW50
+cy9VcGxvYWRlZERvY3VtZW50cy9kb2NzMjAwNy9lMDcxNTRyMy1EYXRhX1NldF9NYW5hZ2VtZW50
+X1Byb3Bvc2FsX2Zvcl9BVEEtQUNTMi5wZGYNCg0KRnJvbSBteSBpbmR1c3RyaWVzIHBlcnNwZWN0
+aXZlIHdlIHdvdWxkIHZlcnkgbXVjaCBsaWtlIHRoZSBvcmlnaW5hbA0KZGF0YSB0byBiZSByZXR1
+cm5lZCBhcyBsb25nIGFzIGl0IGlzIGF2YWlsYWJsZS4NCg0KQ2FuIHlvdSBwcm92aWRlIGFueSBp
+bnNpZ2h0IGludG8gaG93IHRoZSBtYW51ZmFjdHVyZXJzIGFyZSBwbGFubmluZyB0bw0KaW1wbGVt
+ZW50IHN1Y2ggcmVhZHM/DQoNClRoYW5rcw0KR3JlZw0KLS0gDQpHcmVnIEZyZWVteWVyDQpMaXRp
+Z2F0aW9uIFRyaWFnZSBTb2x1dGlvbnMgU3BlY2lhbGlzdA0KaHR0cDovL3d3dy5saW5rZWRpbi5j
+b20vaW4vZ3JlZ2ZyZWVteWVyDQpGaXJzdCA5OSBEYXlzIExpdGlnYXRpb24gV2hpdGUgUGFwZXIg
+LQ0KaHR0cDovL3d3dy5ub3Jjcm9zc2dyb3VwLmNvbS9mb3Jtcy93aGl0ZXBhcGVycy85OSYjMzc7
+MjBEYXlzJiMzNzsyMHdoaXRlcGFwZXIucGRmDQoNClRoZSBOb3Jjcm9zcyBHcm91cA0KVGhlIElu
+dGVyc2VjdGlvbiBvZiBFdmlkZW5jZSAmIFRlY2hub2xvZ3kNCmh0dHA6Ly93d3cubm9yY3Jvc3Nn
+cm91cC5jb20NCg==
 
-Seeing lots of these in my dmesg (149  in first 7 minutes of uptime):
 
-[    0.885878] ------------[ cut here ]------------
-[    0.885881] WARNING: at drivers/ata/libata-sff.c:1017 ata_sff_hsm_move+0x477/0x677()
-[    0.885883] Hardware name: Latitude D820
-[    0.885885] Modules linked in:
-[    0.885889] Pid: 0, comm: swapper Not tainted 2.6.28-mmotm0109 #1
-[    0.885891] Call Trace:
-[    0.885894]  <IRQ>  [<ffffffff8023532d>] warn_slowpath+0xb1/0xed
-[    0.885906]  [<ffffffff80548eea>] ? _spin_unlock_irqrestore+0x53/0x58
-[    0.885910]  [<ffffffff803f8f9e>] ? scsi_eh_scmd_add+0x96/0xa6
-[    0.885913]  [<ffffffff803f9002>] ? scsi_times_out+0x54/0x70
-[    0.885917]  [<ffffffff8036294d>] ? kobject_put+0x47/0x4b
-[    0.885921]  [<ffffffff80356ead>] ? blk_rq_timed_out+0x16/0x55
-[    0.885926]  [<ffffffff803d9fd8>] ? put_device+0x12/0x14
-[    0.885932]  [<ffffffff8024d185>] ? sched_clock_cpu+0x138/0x144
-[    0.885935]  [<ffffffff8041457a>] ? ata_sff_data_xfer32+0x62/0xa6
-[    0.885938]  [<ffffffff80414091>] ata_sff_hsm_move+0x477/0x677
-[    0.885942]  [<ffffffff80414376>] ata_sff_host_intr+0xe5/0x131
-[    0.885945]  [<ffffffff80414448>] ata_sff_interrupt+0x86/0xc2
-[    0.885949]  [<ffffffff80269465>] handle_IRQ_event+0x2c/0x61
-[    0.885952]  [<ffffffff8026a7f2>] handle_edge_irq+0xce/0x114
-[    0.885957]  [<ffffffff8020dd21>] do_IRQ+0xdc/0x153
-[    0.885960]  [<ffffffff8020c2d3>] ret_from_intr+0x0/0xf
-[    0.885962]  <EOI> <4>---[ end trace 515a9d577eac5d9e ]---
-
-
---==_Exmh_1231717499_4563P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFJaoR7cC3lWbTT17ARAskhAJ9eSxGmjnqSqDBIi2LrNS06Xkar2wCgkEUC
-atqD5/ZLCiHMK1g5Da3M0Yw=
-=u18f
------END PGP SIGNATURE-----
-
---==_Exmh_1231717499_4563P--
