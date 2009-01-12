@@ -1,83 +1,29 @@
-From: Dongjun Shin <d.j.shin@samsung.com>
-Subject: Re: Data Recovery from SSDs - Impact of trim?
-Date: Mon, 12 Jan 2009 00:21:12 +0000 (GMT)
-Message-ID: <16517792.86041231719671929.JavaMail.weblogic@epml02>
-Reply-To: d.j.shin@samsung.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Mon, 12 Jan 2009 10:30:42 +0900
+Message-ID: <496A9D42.4000302@kernel.org>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:45158 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905AbZALAbi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2009 19:31:38 -0500
-Received: from ep_ms12_bk (mailout4.samsung.com [203.254.224.34])
- by mailout4.samsung.com
- (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
- with ESMTP id <0KDC00D8W0ZBIX@mailout4.samsung.com> for
- linux-ide@vger.kernel.org; Mon, 12 Jan 2009 09:21:11 +0900 (KST)
-Received: from ep_spt04 (ms12.samsung.com [203.254.225.99])
- by ms12.samsung.com (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
- with ESMTP id <0KDC0051Y0ZBOU@ms12.samsung.com> for linux-ide@vger.kernel.org;
- Mon, 12 Jan 2009 09:21:11 +0900 (KST)
-Content-return: prohibited
-MIME-version: 1.0
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <49694094.60501@shaw.ca>
+Sender: linux-raid-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
-Cc: =?windows-1252?Q?=3F=3F=3F?= <d.j.shin@samsung.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-R3JlZywgDQoNClRoZSBzaG9ydCBhbnN3ZXIgaXMgIml0J3MgZGVwZW5kZW50IG9uIHRoZSBtYW51
-ZmFjdHVyZXIncyBpbXBsZW1lbnRhdGlvbiIuDQogDQpUaGUgdGVjaG5pY2FsIGRldGFpbHMgYXJl
-IGFzIGZvbGxvd3MuDQogDQpTU0QgdHJhbnNsYXRlcyB0aGUgTEJBIGZyb20gaG9zdCBpbnRvIHRo
-ZSBwaHlzaWNhbCBhZGRyZXNzIChmbGFzaCBibG9jay9wYWdlKQ0KdXNpbmcgdGhlIG1hcHBpbmcg
-dGFibGUgd2hpY2ggYWN0cyBsaWtlIHRoZSBtZXRhZGF0YSBvZiBmaWxlc3lzdGVtLg0KRm9yIHRo
-ZSByZWNvdmVyeSB0byB3b3JrLCBib3RoIHRoZSBtYXBwaW5nIHRhYmxlIG9mIHRoZSBvcmlnaW5h
-bCBkYXRhIF9hbmRfDQp0aGUgcGh5c2ljYWwgZGF0YSBzaG91bGQgYmUgYXZhaWxhYmxlLg0KIA0K
-VGhlIHRyaW0gY29tbWFuZCBjYW4gaW52YWxpZGF0ZSB0aGUgbWFwcGluZyBvbmx5IF9vcl8gdGhl
-IG1hcHBpbmcgYW5kIA0KdGhlIHBoeXNpY2FsIGRhdGEgYXMgd2VsbC4gVGhpcyBpcyBtYW51ZmFj
-dHVyZXItc3BlY2lmaWMgb3Igc29tZXRpbWVzDQpyZXF1ZXN0ZWQgYXMgc3BlYyAoZXguIGVudGVy
-cHJpc2Ugbm90ZWJvb2sgd2hlcmUgc2VjdXJpdHkgaXMgaW1wb3J0YW50KS4NCkZyb20gdGhlIHBl
-cnNwZWN0aXZlIG9mIGhvc3QsIHRoZSB0cmltbWVkIGFyZSBjYW4gYmUgc2VlbiBhcyAoMSkgb3Jp
-Z2luYWwgZGF0YQ0KKDIpIGFsbCB6ZXJvIG9yIDB4ZmYgKDMpIGluZGV0ZXJtaW5hdGUuDQoNClRo
-ZXJlIGFyZSBmb2xsb3dpbmcgZGlzY3Vzc2lvbiBhbmQgcHJvcG9zYWwgYWJvdXQgdGhlIGJlaGF2
-aW9yIG9mIHRyaW0gYXQgVDEzLg0KKG5hbWVkICJkZXRlcm1pbmlzdGljIHJlYWQgYWZ0ZXIgdHJp
-bSIpDQoNCmh0dHA6Ly93d3cudDEwLm9yZy9mdHAvdDEwL2RvY3VtZW50LjA4LzA4LTM0N3IxLnBk
-Zg0KaHR0cDovL3d3dy50MTMub3JnL0RvY3VtZW50cy9VcGxvYWRlZERvY3VtZW50cy9kb2NzMjAw
-OC9lMDgxMzdyMi1EUkFUXy1fRGV0ZXJtaW5pc3RpY19SZWFkX0FmdGVyX1RyaW0ucGRmDQoNCkhv
-d2V2ZXIsIHRoaXMgc3BlYyBhbHNvIGRvZXMgbm90IG1lZXQgeW91ciBleHBlY3RhdGlvbiBiZWNh
-dXNlIGl0IGRvZXMgbm90DQpndWFyYW50ZWUgdGhlIHNhZmV0eSBvZiB0aGUgb3JpZ2luYWwgZGF0
-YS4NCg0KUmVnYXJkcywNCkRvbmdqdW4NCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0t
-LS0NClNlbmRlciA6IEdyZWcgRnJlZW15ZXI8Z3JlZy5mcmVlbXllckBub3Jjcm9zc2dyb3VwLmNv
-bT4NCkRhdGUgICA6IDIwMDktMDEtMTAgMDc6MjcgKEdNVCswOTowMCkNClRpdGxlICA6IERhdGEg
-UmVjb3ZlcnkgZnJvbSBTU0RzIC0gSW1wYWN0IG9mIHRyaW0/DQoNCkRvbmdqdW4gKHdpdGggbGlu
-dXgtaWRlIGluIGNvcHkpLA0KDQpJIGdvdCB5b3VyIG5hbWUgZnJvbSBhIExpbnV4IEtlcm5lbCBw
-b3N0aW5nIGFuZCBJIHdhcyB3b25kZXJpbmcgaWYgeW91DQpjb3VsZCBoZWxwIG1lIHVuZGVyc3Rh
-bmQgaWYgZGF0YSByZWNvdmVyeSB3aWxsIGJlIHBvc3NpYmxlIHdpdGggU1NEcw0KaW4gdGhlIGZ1
-dHVyZS4NCg0KSSB3b3JrIGEgbG90IHdpdGggZGF0YSByZWNvdmVyeSBhbmQgZm9yZW5zaWMgaW1h
-Z2luZy4gIFdpdGggYm90aCwNCmFjY2VzcyB0byB3aGF0IHRoZSBmaWxlc3lzdGVtIGNvbnNpZGVy
-cyB1bmFsbG9jYXRlZCBzZWN0b3JzIC8gYmxvY2tzIC8NCmNsdXN0ZXJzIGlzIGtleSB0byB0aGUg
-cHJvY2Vzcy4gIGllLiBBIHVzZXIgZGVsZXRlcyBhIGZpbGUsIGJ1dCBuZWVkcw0KdG8gcmVzdG9y
-ZSBpdC4gTG90cyBvZiByZWNvdmVyeSB0b29scyBleGlzdCB0byBhc3Npc3QgaW4gdGhpcywgYnV0
-DQpvYnZpb3VzbHkgdGhleSBuZWVkIHRvIGJlIGFibGUgdG8gcmVhZCB0aGUgbm8gbG9uZ2VyIGFs
-bG9jYXRlZA0KY2x1c3RlcnMuDQoNCldpdGggYSBESVNDQVJEIGVuYWJsZWQgZmlsZXN5c3RlbSAv
-IGtlcm5lbCBhbmQgd2l0aCBib3RoIGN1cnJlbnQgYW5kDQpmdXR1cmUgZ2VuZXJhdGlvbiBTU0Rz
-LCBJJiMzOTttIGN1cmlvdXMgaWYgb3VyIHRvb2xzIGFyZSBnb2luZyB0byBiZSBhYmxlDQp0byBy
-ZWFkIHRoaXMgaW5mb3JtYXRpb24gYW55bW9yZS4NCg0KUGVyIHRoZSBwcm9wb3NlZCBzcGVjIFRl
-anVuIHBvc3RlZCBhIGxpbmsgdG8gYSBjb3VwbGUgbW9udGhzIGFnbywgdGhlDQpyZXNwb25zZSB0
-byBhIEFUQSByZWFkIHJlcXVlc3Qgb2YgYSB0cmltbWVkIHNlY3RvciBjYW4gZWl0aGVyIGJlIHRo
-ZQ0Kb3JpZ2luYWwgZGF0YSBvciBhbGwgemVyb3MuDQoNCmh0dHA6Ly90MTMub3JnL0RvY3VtZW50
-cy9VcGxvYWRlZERvY3VtZW50cy9kb2NzMjAwNy9lMDcxNTRyMy1EYXRhX1NldF9NYW5hZ2VtZW50
-X1Byb3Bvc2FsX2Zvcl9BVEEtQUNTMi5wZGYNCg0KRnJvbSBteSBpbmR1c3RyaWVzIHBlcnNwZWN0
-aXZlIHdlIHdvdWxkIHZlcnkgbXVjaCBsaWtlIHRoZSBvcmlnaW5hbA0KZGF0YSB0byBiZSByZXR1
-cm5lZCBhcyBsb25nIGFzIGl0IGlzIGF2YWlsYWJsZS4NCg0KQ2FuIHlvdSBwcm92aWRlIGFueSBp
-bnNpZ2h0IGludG8gaG93IHRoZSBtYW51ZmFjdHVyZXJzIGFyZSBwbGFubmluZyB0bw0KaW1wbGVt
-ZW50IHN1Y2ggcmVhZHM/DQoNClRoYW5rcw0KR3JlZw0KLS0gDQpHcmVnIEZyZWVteWVyDQpMaXRp
-Z2F0aW9uIFRyaWFnZSBTb2x1dGlvbnMgU3BlY2lhbGlzdA0KaHR0cDovL3d3dy5saW5rZWRpbi5j
-b20vaW4vZ3JlZ2ZyZWVteWVyDQpGaXJzdCA5OSBEYXlzIExpdGlnYXRpb24gV2hpdGUgUGFwZXIg
-LQ0KaHR0cDovL3d3dy5ub3Jjcm9zc2dyb3VwLmNvbS9mb3Jtcy93aGl0ZXBhcGVycy85OSYjMzc7
-MjBEYXlzJiMzNzsyMHdoaXRlcGFwZXIucGRmDQoNClRoZSBOb3Jjcm9zcyBHcm91cA0KVGhlIElu
-dGVyc2VjdGlvbiBvZiBFdmlkZW5jZSAmIFRlY2hub2xvZ3kNCmh0dHA6Ly93d3cubm9yY3Jvc3Nn
-cm91cC5jb20NCg==
+Robert Hancock wrote:
+>> There are apparently some reports of issues on NVidia chipsets as
+>> well, though I don't have any details at hand.
+> 
+> Well, Carlos' email bounces, so much for that one. Anyone have any other
+> contacts at Silicon Image?
 
+I'll ping my SIMG contacts but I've pinged about this problem in the
+past but it didn't get anywhere.
 
+Thanks.
+
+-- 
+tejun
