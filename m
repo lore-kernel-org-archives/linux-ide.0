@@ -1,64 +1,38 @@
-From: "Gerhard Pircher" <gerhard_pircher@gmx.net>
-Subject: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne
- boards
-Date: Tue, 13 Jan 2009 00:39:09 +0100
-Message-ID: <20090112233909.221080@gmx.net>
+From: Justin Madru <jdm64-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug #12263] Sata soft reset filling log
+Date: Mon, 12 Jan 2009 15:53:17 -0800
+Message-ID: <496BD7ED.1010909@gawab.com>
+References: <nn3SOLVZ28H.A.bY.CafaJB@chimera> <nHCfeC0YLrE.A.tiC.4afaJB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:32973 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751316AbZALXjL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jan 2009 18:39:11 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <nHCfeC0YLrE.A.tiC.4afaJB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux IDE <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: grant.likely@secretlab.ca, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-
--------- Original-Nachricht --------
-> Datum: Mon, 12 Jan 2009 18:55:55 +0100
-> Von: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> An: "Gerhard Pircher" <gerhard_pircher@gmx.net>
-> CC: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, grant.likely@=
-secretlab.ca
-> Betreff: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for Ami=
-gaOne boards
-
-> > > checking if IDE_HFLAG_FORCE_LEGACY_IRQS should be set.
-> > Wouldn't it be better, if I clean this up now? (I have to resend my
-> > AmigaOne platform patches anyway).
->=20
-> Replacement patch instead of incremental one is also fine with me -- =
-given
-> that it can wait for 2.6.30.
-Yes, it can wait.
-Although I would like to know from the powerpc maintainer, if my platfo=
-rm
-patches could still go in 2.6.29, if I resend them in the next days? I =
-guess it's
-too late, right?
-
-> > Okay, so the change shouldn't break IDE for Pegasos machines (I don=
-'t
-> > have a Pegasos for testing).
->=20
-> Yes but there may be some other platforms (not necessarily powerpc on=
-es)
-> that may be affected (i.e. they can depend indirectly on IRQ auto-pro=
-bing
-> during IDE probe) so cleanup patch needs to spend some time in linux-=
-next.
-I think the VIA libata driver simply checks the progif register, too. I=
- guess you
-don't like the idea of a "#ifdef PPC32" or so around the
-ide_pci_is_in_compatibility_mode() check?
-
-Thanks!
-
-Gerhard
-
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
+Rafael J. Wysocki wrote:
+> This message has been generated automatically as a part of a report
+> of regressions introduced between 2.6.27 and 2.6.28.
+>
+> The following bug entry is on the current list of known regressions
+> introduced between 2.6.27 and 2.6.28.  Please verify if it still should
+> be listed and let me know (either way).
+>
+>
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12263
+> Subject		: Sata soft reset filling log
+> Submitter	: Justin Madru <bevicm-QP1aEjBt37AFQeE35raUng@public.gmane.org>
+> Date		: 2008-12-13 2:07 (30 days old)
+> References	: http://marc.info/?l=linux-kernel&m=122913412608533&w=4
+>
+>
+>
+>   
+Yes, I'm still seeing this on .28 and even on .29-rc1.
+I checked again and couldn't trigger the regression on a .27 kernel (at 
+least with my hardware and config).
+So, I'm fairly confident that it's a regression, not just a bug that's 
+always been there.
