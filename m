@@ -1,45 +1,82 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: [Bug #12263] Sata soft reset filling log
-Date: Tue, 13 Jan 2009 01:18:50 +0100
-Message-ID: <200901130118.50674.rjw@sisk.pl>
-References: <nn3SOLVZ28H.A.bY.CafaJB@chimera> <nHCfeC0YLrE.A.tiC.4afaJB@chimera> <496BD7ED.1010909@gawab.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/1] pata_via.c: Support VX855 and future chips whose
+ IDE controller use 0x0571.
+Date: Tue, 13 Jan 2009 12:58:55 +0900
+Message-ID: <496C117F.8050202@kernel.org>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087369D7@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <496BD7ED.1010909-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Justin Madru <jdm64-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux IDE <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:32911 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbZAMD7B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jan 2009 22:59:01 -0500
+In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087369D7@exchtp03.taipei.via.com.tw>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: JosephChan@via.com.tw
+Cc: linux-ide@vger.kernel.org, HaraldWelte@viatech.com, BruceChang@via.com.tw
 
-On Tuesday 13 January 2009, Justin Madru wrote:
-> Rafael J. Wysocki wrote:
-> > This message has been generated automatically as a part of a report
-> > of regressions introduced between 2.6.27 and 2.6.28.
-> >
-> > The following bug entry is on the current list of known regressions
-> > introduced between 2.6.27 and 2.6.28.  Please verify if it still should
-> > be listed and let me know (either way).
-> >
-> >
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12263
-> > Subject		: Sata soft reset filling log
-> > Submitter	: Justin Madru <bevicm-QP1aEjBt37AFQeE35raUng@public.gmane.org>
-> > Date		: 2008-12-13 2:07 (30 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=122913412608533&w=4
-> >
-> >
-> >
-> >   
-> Yes, I'm still seeing this on .28 and even on .29-rc1.
-> I checked again and couldn't trigger the regression on a .27 kernel (at 
-> least with my hardware and config).
-> So, I'm fairly confident that it's a regression, not just a bug that's 
-> always been there.
+Hello, Joseph.
 
-Thanks for the update.
+JosephChan@via.com.tw wrote:
+> This patch based on 2.6.28-git10.
+> It supports VX855 and future chips whose IDE controller use 0x0571.
+> 
+> Signed-off-by: Joseph Chan <josephchan@via.com.tw>
+> 
+> --- a/drivers/ata/pata_via.c	2009-01-10 00:35:04.000000000 +0800
+> +++ b/drivers/ata/pata_via.c	2009-01-10 00:35:15.000000000 +0800
+> @@ -97,6 +97,8 @@
+>  	u8 rev_max;
+>  	u16 flags;
+>  } via_isa_bridges[] = {
+> +	{ "vtxxxx",	PCI_DEVICE_ID_VIA_ANON,    0x00, 0x2f, VIA_UDMA_133 |
+> +	VIA_BAD_AST },
+>  	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, VIA_UDMA_133 |
+>  	VIA_BAD_AST | VIA_SATA_PATA },
+>  	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+> @@ -176,6 +178,14 @@
+>  	if ((config->flags & VIA_SATA_PATA) && ap->port_no == 0)
+>  		return ATA_CBL_SATA;
+>  
+> +	if (ap->port_no == 0 && pdev->device == 0xC409) {
+> +		pci_read_config_dword(pdev, 0x52, &ata66);
+> +		return (ata66 & 0x10)  ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+> +	} else if (ap->port_no == 1 && pdev->device == 0xC409) {
+> +		DPRINTK("C409 only has one pata channel\n");
+> +		return ATA_CBL_PATA_UNK;
+> +	}
 
-Rafael
+Eh.. can you add 0xC409 entry like other controllers and put necessary
+restrictions there?
+
+>  	/* Early chips are 40 wire */
+>  	if ((config->flags & VIA_UDMA) < VIA_UDMA_66)
+>  		return ATA_CBL_PATA40;
+> @@ -335,13 +345,13 @@
+>   */
+>  static void via_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+>  {
+> -	struct ata_taskfile tmp_tf;
+> +	struct ata_ioports *ioaddr = &ap->ioaddr;
+>  
+> -	if (ap->ctl != ap->last_ctl && !(tf->flags & ATA_TFLAG_DEVICE)) {
+> -		tmp_tf = *tf;
+> -		tmp_tf.flags |= ATA_TFLAG_DEVICE;
+> -		tf = &tmp_tf;
+> +	if (tf->ctl != ap->last_ctl) {
+> +		iowrite8(tf->ctl, ioaddr->ctl_addr);
+> +		iowrite8(tf->device, ioaddr->device_addr);
+>  	}
+> +
+>  	ata_sff_tf_load(ap, tf);
+
+Can you please explain why this change is necessary?  And if it's
+necessary, please put it in a separate patch.
+
+Thanks.
+
+-- 
+tejun
