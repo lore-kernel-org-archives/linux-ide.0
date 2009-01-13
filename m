@@ -1,102 +1,80 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 13 Jan 2009 10:39:34 -0500
-Message-ID: <20090113153934.GA24208@havoc.gtf.org>
+From: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
+Subject: Re: problems with sata_nv and MV88SX5081 under 2.6.28, fine
+	under2.6.17.6
+Date: Tue, 13 Jan 2009 17:01:07 +0000
+Message-ID: <1231866067.20422.296.camel@ukabzc383.uk.saic.com>
+References: <1231340005.20422.84.camel@ukabzc383.uk.saic.com>
+	 <496B9130.2000708@pobox.com>
+	 <D1CE94B2C9BA8C42AC5C7BBCD82D5DAE672F13@0602-its-exmb01.eu.saic.com>
+	 <496BA7C5.2020802@pobox.com>
+	 <D1CE94B2C9BA8C42AC5C7BBCD82D5DAE672F14@0602-its-exmb01.eu.saic.com>
+	 <496BAA1F.5030802@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:56110 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751531AbZAMPjf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Jan 2009 10:39:35 -0500
-Content-Disposition: inline
+Received: from cpmx2.mail.saic.com ([139.121.17.172]:60435 "EHLO
+	cpmx2.mail.saic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753208AbZAMRBs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2009 12:01:48 -0500
+In-Reply-To: <496BAA1F.5030802@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Mark Lord <mlord@pobox.com>
+Cc: linux-ide@vger.kernel.org
+
+Hi Mark.
+
+It bisected down to the following:
+
+e3472cbe5c10a91c737405cd706142787736392c is first bad commit
+commit e3472cbe5c10a91c737405cd706142787736392c
+Author: Albert Lee <albertcc@tw.ibm.com>
+Date:   Thu Dec 7 11:37:58 2006 +0800
+
+    [PATCH] libata: let ATA_FLAG_PIO_POLLING use polling pio for
+ATA_PROT_NODATA
+    
+    Even if ATA_FLAG_PIO_POLLING is set, libata uses irq pio for the
+ATA_PROT_NODATA protocol.
+    This patch let ATA_FLAG_PIO_POLLING use polling pio for the
+ATA_PROT_NODATA protocol.
+    
+    Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Now, why it dies after that, I don't know, it's one flag being added.
 
-to receive the following updates:
+I guess I could try the latest kernel with that removed and see what
+happens?
 
- drivers/ata/libata-sff.c  |    9 ++++++---
- drivers/ata/pata_it821x.c |   17 +++++++++++++----
- 2 files changed, 19 insertions(+), 7 deletions(-)
+Cheers,
+Eamonn
 
-Alan Cox (1):
-      pata_it821x: Update RDC UDMA handling
 
-Christian Borntraeger (1):
-      ata: fix wrong WARN_ON_ONCE
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 0eae9b4..5a4aad1 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1013,9 +1013,12 @@ next_sg:
- 		qc->cursg_ofs = 0;
- 	}
- 
--	/* consumed can be larger than count only for the last transfer */
--	WARN_ON_ONCE(qc->cursg && count != consumed);
--
-+	/*
-+	 * There used to be a  WARN_ON_ONCE(qc->cursg && count != consumed);
-+	 * Unfortunately __atapi_pio_bytes doesn't know enough to do the WARN
-+	 * check correctly as it doesn't know if it is the last request being
-+	 * made. Somebody should implement a proper sanity check.
-+	 */
- 	if (bytes)
- 		goto next_sg;
- 	return 0;
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index f828a29..f1bb2f9 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -80,7 +80,7 @@
- 
- 
- #define DRV_NAME "pata_it821x"
--#define DRV_VERSION "0.4.0"
-+#define DRV_VERSION "0.4.2"
- 
- struct it821x_dev
- {
-@@ -494,8 +494,6 @@ static int it821x_smart_set_mode(struct ata_link *link, struct ata_device **unus
-  *	special. In our case we need to lock the sector count to avoid
-  *	blowing the brains out of the firmware with large LBA48 requests
-  *
-- *	FIXME: When FUA appears we need to block FUA too. And SMART and
-- *	basically we need to filter commands for this chip.
-  */
- 
- static void it821x_dev_config(struct ata_device *adev)
-@@ -890,6 +888,13 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
-+		.udma_mask = ATA_UDMA6,
-+		.port_ops = &it821x_rdc_port_ops
-+	};
-+	static const struct ata_port_info info_rdc_11 = {
-+		.flags = ATA_FLAG_SLAVE_POSS,
-+		.pio_mask = 0x1f,
-+		.mwdma_mask = 0x07,
- 		/* No UDMA */
- 		.port_ops = &it821x_rdc_port_ops
- 	};
-@@ -903,7 +908,11 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return rc;
- 		
- 	if (pdev->vendor == PCI_VENDOR_ID_RDC) {
--		ppi[0] = &info_rdc;
-+		/* Deal with Vortex86SX */
-+		if (pdev->revision == 0x11)
-+			ppi[0] = &info_rdc_11;
-+		else
-+			ppi[0] = &info_rdc;
- 	} else {
- 		/* Force the card into bypass mode if so requested */
- 		if (it8212_noraid) {
+
+
+
+
+
+On Mon, 2009-01-12 at 15:37 -0500, Mark Lord wrote:
+> Hamilton, Eamonn [OS-IE] wrote:
+> > 
+> > 
+> > With any luck I'll be able to bisect it down in the next day or so, git 
+> > willing - I've never used the thing, but I hear good reports ;)
+> ..
+> 
+> Okay, no changes whatsoever in sata_mv between .19 and .20.
+> Are you sure about those two kernel versions?
+> 
+> Cheers
+
+
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
