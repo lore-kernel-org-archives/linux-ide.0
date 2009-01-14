@@ -1,39 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI problem with hotplug
-Date: Wed, 14 Jan 2009 15:33:25 +0900
-Message-ID: <496D8735.4030005@kernel.org>
-References: <494178E3.6030305@cybernetics.com> <49588784.4020808@kernel.org> <4958E3DC.7080009@cybernetics.com> <49591710.7040102@shaw.ca> <49596D9E.3040904@kernel.org> <495D8606.5070807@kernel.org> <4964CCBF.5030408@cybernetics.com> <49655FBA.3060005@kernel.org> <49660B9F.4010408@cybernetics.com> <496696B2.7010006@shaw.ca> <49677B8D.7060807@cybernetics.com>
+From: <JosephChan@via.com.tw>
+Subject: RE: [PATCH 1/1] pata_via.c: Support VX855 and future chips whose IDE controller use 0x0571.
+Date: Wed, 14 Jan 2009 15:37:07 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087B5AEC@exchtp03.taipei.via.com.tw>
+References: <20090112110204.67e3ff72@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35791 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752182AbZANGdi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jan 2009 01:33:38 -0500
-In-Reply-To: <49677B8D.7060807@cybernetics.com>
+Received: from exchtp08.via.com.tw ([61.66.243.7]:61102 "EHLO
+	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754995AbZANHhM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 02:37:12 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20090112110204.67e3ff72@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: alan@lxorguk.ukuu.org.uk, sshtylyov@ru.mvista.com
+Cc: linux-ide@vger.kernel.org, HaraldWelte@viatech.com, tj@kernel.org, BruceChang@via.com.tw
 
-Hello,
-
-Tony Battersby wrote:
-> I am not really familiar with setpci,
-
-Apparently neither am I.  :-)
-
-> but apparently 93b and 93.b mean different things, and I suspect you
-> probably meant 93.b.  Also, if the goal is to set the indicated PCS
-> register to the same value it has when hotplugging does work, then
-> the command that does that is "setpci -s 1f.2 92.b=01" or "setpci -s
-> 1f.2 92.b=11".  However, this command still does not help.  Below
-> are some more details of what I tried.
-
-Can you please give a shot at "setpci -s 1f.2 92.b=7f"?
-
-Thanks.
-
--- 
-tejun
+PiA+ICAgIFdoeSBub3Q6DQo+ID4gDQo+ID4gCWlmIChwZGV2LT5kZXZpY2UgPT0gMHhDNDA5KQ0K
+PiA+IAkJaWYgKGFwLT5wb3J0X25vID09IDApIHsNCj4gPiAJCQlwY2lfcmVhZF9jb25maWdfZHdv
+cmQocGRldiwgMHg1MiwgJmF0YTY2KTsNCj4gDQo+IE1vcmUgdG8gdGhlIHBvaW50IC0gd2h5IG5v
+dCBqdXN0IHJlZ2lzdGVyIGl0IGFzIGEgc2luZ2xlIHBvcnQgZGV2aWNlID8NCj4gDQoNClRoYW5r
+cyBBbGFuLg0KV2UncmUgY2hlY2tpbmcgdGhpcyBub3csIGFuZCBtYWtlIHN1cmUgdGhlcmUgaXMg
+YSBmaXhlZCByZWdpc3RlciBmb3IgZnV0dXJlIGNoaXBzLg0K
