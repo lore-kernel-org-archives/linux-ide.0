@@ -1,57 +1,31 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Wed, 14 Jan 2009 15:35:12 +0100
-Message-ID: <200901141535.13189.stf_xl@wp.pl>
-References: <200901141345.42583.stf_xl@wp.pl> <20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
+Date: Wed, 14 Jan 2009 15:14:09 +0000
+Message-ID: <20090114151409.383e76a1@lxorguk.ukuu.org.uk>
+References: <200901141345.42583.stf_xl@wp.pl>
+	<20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
+	<200901141535.13189.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:28154 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755041AbZANOfR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 09:35:17 -0500
-In-Reply-To: <20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36335 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755355AbZANPOH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 10:14:07 -0500
+In-Reply-To: <200901141535.13189.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-Wednesday 14 January 2009 14:17:27 Alan Cox napisa=C5=82(a):
-> > +#ifdef AT91_GPIO_IRQ_HACK
-> > +#define NR_TRIES 10
-> > +	int ntries =3D 0;
-> > +	int pin_val1, pin_val2;=09
-> > +	do {
-> > +		pin_val1 =3D at91_get_gpio_value(AT91_PIN_PB20);
-> > +		pin_val2 =3D at91_get_gpio_value(AT91_PIN_PB20);
-> > +	} while (pin_val1 !=3D pin_val2 && ntries++ < NR_TRIES);
->=20
-> You really don't want to put special board specific code in generic
-> locations. In the libata case you don't need to and I think in the id=
-e
-> case you can avoid it too by wrapping the IRQ handler. Libata also
-> supports polled mode.
-I was thinking about that and don't know why I refused idea of=20
-wrapping irq handler.
+> > I see nothing guaranteeing atomicity here and I suspect you either need
+> > locks or (for single processor only) some carefully arranged scheme to
+> > 'stack' the 8/16bit select status.
+> I thought ide_port callbacks are serialized by IDE layer. I will use locks, I think.
 
-> Now one other question - you use the 8/16bit set to flip between regi=
-ster
-> write sizes. Can you explain exactly what guarantees you don't take a=
-n
-> IRQ between setting the size and a write and having the IRQ handler o=
-r a
-> timer run in the middle, call other IDE routines and mess up because =
-of
-> this.
-> I see nothing guaranteeing atomicity here and I suspect you either ne=
-ed
-> locks or (for single processor only) some carefully arranged scheme t=
-o
-> 'stack' the 8/16bit select status.
-I thought ide_port callbacks are serialized by IDE layer. I will use lo=
-cks, I think.
+So all your accesses are within the various IDE locks so you never
+taken an interrupt or timer at the wrong moment. Ok - that should be
+documented though.
 
-Thanks
-Stanislaw Gruszka
+Alan
