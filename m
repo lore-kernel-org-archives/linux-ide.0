@@ -1,51 +1,47 @@
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-Subject: [PATCH] sata_fsl: Return non-zero on error in probe()
-Date: Wed, 14 Jan 2009 14:02:38 +0100
-Message-ID: <200901141402.38174.sojkam1@fel.cvut.cz>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Wed, 14 Jan 2009 13:17:27 +0000
+Message-ID: <20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
+References: <200901141345.42583.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from max.feld.cvut.cz ([147.32.192.36]:38571 "EHLO max.feld.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754822AbZANNLk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 08:11:40 -0500
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45883 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755365AbZANNRd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 08:17:33 -0500
+In-Reply-To: <200901141345.42583.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ashish Kalra <ashish.kalra@freescale.com>
-Cc: Li Yang <leoli@freescale.com>, linux-ide@vger.kernel.org
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-Hi,
+> +#ifdef AT91_GPIO_IRQ_HACK
+> +#define NR_TRIES 10
+> +	int ntries = 0;
+> +	int pin_val1, pin_val2;	
+> +	do {
+> +		pin_val1 = at91_get_gpio_value(AT91_PIN_PB20);
+> +		pin_val2 = at91_get_gpio_value(AT91_PIN_PB20);
+> +	} while (pin_val1 != pin_val2 && ntries++ < NR_TRIES);
 
-while I was looking over kernel sources I've found this small bug.
+You really don't want to put special board specific code in generic
+locations. In the libata case you don't need to and I think in the ide
+case you can avoid it too by wrapping the IRQ handler. Libata also
+supports polled mode.
 
->From 898778bad600f107f45be3cf959033efdcdd13c2 Mon Sep 17 00:00:00 2001
-From: Michal Sojka <sojkam1@fel.cvut.cz>
-Date: Wed, 14 Jan 2009 13:20:36 +0100
-Subject: [PATCH] sata_fsl: Return non-zero on error in probe()
+Now one other question - you use the 8/16bit set to flip between register
+write sizes. Can you explain exactly what guarantees you don't take an
+IRQ between setting the size and a write and having the IRQ handler or a
+timer run in the middle, call other IDE routines and mess up because of
+this.
 
-Formerly, zero was returned even if an error happened.
+I see nothing guaranteeing atomicity here and I suspect you either need
+locks or (for single processor only) some carefully arranged scheme to
+'stack' the 8/16bit select status.
 
-Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
----
- drivers/ata/sata_fsl.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 1a56db9..55bc88c 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1288,7 +1288,7 @@ static const struct ata_port_info sata_fsl_port_info[] = {
- static int sata_fsl_probe(struct of_device *ofdev,
- 			const struct of_device_id *match)
- {
--	int retval = 0;
-+	int retval = -ENXIO;
- 	void __iomem *hcr_base = NULL;
- 	void __iomem *ssr_base = NULL;
- 	void __iomem *csr_base = NULL;
--- 
-1.5.6.5
+Other comments:
+	- The old and new ATA layers both have timing tables and timing
+functions so you don't need all the duplicated timing table logic. 
 
