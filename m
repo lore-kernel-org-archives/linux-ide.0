@@ -1,40 +1,35 @@
-From: Haavard Skinnemoen <haavard.skinnemoen@atmel.com>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Wed, 14 Jan 2009 13:58:32 +0100
-Message-ID: <20090114135832.7718055f@hskinnemoen-d830>
-References: <200901141345.42583.stf_xl@wp.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12320] warn_on_slowpath when playing audio CD
+Date: Wed, 14 Jan 2009 05:08:22 -0800 (PST)
+Message-ID: <20090114130822.8BC5210800D@picon.linux-foundation.org>
+References: <bug-12320-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat-132.atmel.no ([80.232.32.132]:61262 "EHLO relay.atmel.no"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752723AbZANM6m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jan 2009 07:58:42 -0500
-In-Reply-To: <200901141345.42583.stf_xl@wp.pl>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57438 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754371AbZANNIz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 08:08:55 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0ED8M1a018165
+	for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2009 05:08:23 -0800
+In-Reply-To: <bug-12320-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Stanislaw Gruszka wrote:
-> Some issues with driver:
-> 
-> * Why not platform driver
-> Generic pata/ide_platform driver will not work with AT91 as we need to 
-> do special things before access Task File and Data Register (functions 
-> set_8bit_mode() and set_16bit_mode()). Also extra things needs to be
-> done when changing PIO mode.
+http://bugzilla.kernel.org/show_bug.cgi?id=12320
 
-Why not use libata? There's already a pata_at32 driver there which
-should be usable on at91 with perhaps a few minor changes.
 
-> * Maintenance
-> After inclusion, when I finish the driver, I hope someone from Atmel: 
-> Nicolas or Haavard could take maintenance of it.
 
-I'm not really involved with AT91 in any way except that I want to
-share as many drivers as possible between AT91 and AVR32. So I don't
-think I can take responsibility for an AT91-only driver.
 
-Haavard
+
+------- Comment #21 from bbpetkov@yahoo.de  2009-01-14 05:08 -------
+Ok,
+
+let me put in another way: does it work after you revert
+9bd27cba1aeacb6b12d05f4e5ed6361072f08fe0?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
