@@ -1,31 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Wed, 14 Jan 2009 15:14:09 +0000
-Message-ID: <20090114151409.383e76a1@lxorguk.ukuu.org.uk>
-References: <200901141345.42583.stf_xl@wp.pl>
-	<20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
-	<200901141535.13189.stf_xl@wp.pl>
+Date: Wed, 14 Jan 2009 20:05:34 +0300
+Message-ID: <496E1B5E.2010106@ru.mvista.com>
+References: <200901141345.42583.stf_xl@wp.pl> <20090114135832.7718055f@hskinnemoen-d830>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36335 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755355AbZANPOH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 10:14:07 -0500
-In-Reply-To: <200901141535.13189.stf_xl@wp.pl>
+Received: from h155.mvista.com ([63.81.120.155]:45417 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1764679AbZANRFB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jan 2009 12:05:01 -0500
+In-Reply-To: <20090114135832.7718055f@hskinnemoen-d830>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: Haavard Skinnemoen <haavard.skinnemoen@atmel.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-ide@vger.kernel.org
 
-> > I see nothing guaranteeing atomicity here and I suspect you either need
-> > locks or (for single processor only) some carefully arranged scheme to
-> > 'stack' the 8/16bit select status.
-> I thought ide_port callbacks are serialized by IDE layer. I will use locks, I think.
+Hello.
 
-So all your accesses are within the various IDE locks so you never
-taken an interrupt or timer at the wrong moment. Ok - that should be
-documented though.
+Haavard Skinnemoen wrote:
 
-Alan
+>>* Why not platform driver
+>>Generic pata/ide_platform driver will not work with AT91 as we need to 
+>>do special things before access Task File and Data Register (functions 
+>>set_8bit_mode() and set_16bit_mode()). Also extra things needs to be
+>>done when changing PIO mode.
+
+> Why not use libata?
+
+    Why libata? You absolutely need the larger code footprint with the added 
+"bonus" of SCSI disk emulation? :-)
+
+> There's already a pata_at32 driver there which
+> should be usable on at91 with perhaps a few minor changes.
+
+    Well, if there's already close driver, it changes the matter...
+
+MBR, Sergei
