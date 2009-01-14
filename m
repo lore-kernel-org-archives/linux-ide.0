@@ -1,35 +1,51 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12320] warn_on_slowpath when playing audio CD
-Date: Wed, 14 Jan 2009 05:08:22 -0800 (PST)
-Message-ID: <20090114130822.8BC5210800D@picon.linux-foundation.org>
-References: <bug-12320-11633@http.bugzilla.kernel.org/>
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+Subject: [PATCH] sata_fsl: Return non-zero on error in probe()
+Date: Wed, 14 Jan 2009 14:02:38 +0100
+Message-ID: <200901141402.38174.sojkam1@fel.cvut.cz>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57438 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754371AbZANNIz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 08:08:55 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0ED8M1a018165
-	for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2009 05:08:23 -0800
-In-Reply-To: <bug-12320-11633@http.bugzilla.kernel.org/>
+Received: from max.feld.cvut.cz ([147.32.192.36]:38571 "EHLO max.feld.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754822AbZANNLk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 08:11:40 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Ashish Kalra <ashish.kalra@freescale.com>
+Cc: Li Yang <leoli@freescale.com>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12320
+Hi,
 
+while I was looking over kernel sources I've found this small bug.
 
+>From 898778bad600f107f45be3cf959033efdcdd13c2 Mon Sep 17 00:00:00 2001
+From: Michal Sojka <sojkam1@fel.cvut.cz>
+Date: Wed, 14 Jan 2009 13:20:36 +0100
+Subject: [PATCH] sata_fsl: Return non-zero on error in probe()
 
+Formerly, zero was returned even if an error happened.
 
+Signed-off-by: Michal Sojka <sojkam1@fel.cvut.cz>
+---
+ drivers/ata/sata_fsl.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-------- Comment #21 from bbpetkov@yahoo.de  2009-01-14 05:08 -------
-Ok,
-
-let me put in another way: does it work after you revert
-9bd27cba1aeacb6b12d05f4e5ed6361072f08fe0?
-
-
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 1a56db9..55bc88c 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1288,7 +1288,7 @@ static const struct ata_port_info sata_fsl_port_info[] = {
+ static int sata_fsl_probe(struct of_device *ofdev,
+ 			const struct of_device_id *match)
+ {
+-	int retval = 0;
++	int retval = -ENXIO;
+ 	void __iomem *hcr_base = NULL;
+ 	void __iomem *ssr_base = NULL;
+ 	void __iomem *csr_base = NULL;
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.6.5
+
