@@ -1,28 +1,76 @@
-From: <JosephChan@via.com.tw>
-Subject: RE: [PATCH 1/1] pata_via.c: Support VX855 and future chips whose IDE controller use 0x0571.
-Date: Wed, 14 Jan 2009 15:39:16 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087B5AF5@exchtp03.taipei.via.com.tw>
-References: <496B226E.60108@ru.mvista.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH][ATA] Add ide-disk led-trigger to ATA subsystem
+Date: Wed, 14 Jan 2009 00:25:22 -0800
+Message-ID: <20090114002522.d2388f7a.akpm@linux-foundation.org>
+References: <1231600107.10065.4.camel@kplaws107lx>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:61197 "EHLO
-	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758692AbZANHjT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 02:39:19 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <496B226E.60108@ru.mvista.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43017 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752658AbZANIZh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2009 03:25:37 -0500
+In-Reply-To: <1231600107.10065.4.camel@kplaws107lx>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: linux-ide@vger.kernel.org, HaraldWelte@viatech.com, tj@kernel.org, BruceChang@via.com.tw
+To: Carsten Schlote <c.schlote@konzeptpark.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-DQo+ICAgIFdoeSBub3Q6DQo+IA0KPiAJaWYgKHBkZXYtPmRldmljZSA9PSAweEM0MDkpDQo+IAkJ
-aWYgKGFwLT5wb3J0X25vID09IDApIHsNCj4gCQkJcGNpX3JlYWRfY29uZmlnX2R3b3JkKHBkZXYs
-IDB4NTIsICZhdGE2Nik7DQo+IAkJCXJldHVybiAoYXRhNjYgJiAweDEwKSAgPyBBVEFfQ0JMX1BB
-VEE4MCANCj4gOiBBVEFfQ0JMX1BBVEE0MDsNCj4gCQl9IGVsc2UgaWYgKGFwLT5wb3J0X25vID09
-IDEpIHsNCj4gCQkJRFBSSU5USygiQzQwOSBvbmx5IGhhcyBvbmUgcGF0YSBjaGFubmVsXG4iKTsN
-Cj4gCQkJcmV0dXJuIEFUQV9DQkxfUEFUQV9VTks7DQo+IAl9DQo+IA0KPiANCg0KVGh4IFNlcmdl
-aS4gV2UgbWlnaHQgcmVmZXIgdG8gQWxhbidzIG9waW5pb24gZm9yIG5leHQgcGF0Y2guDQo=
+(cc linux-ide)
+
+On Sat, 10 Jan 2009 16:08:27 +0100 Carsten Schlote <c.schlote@konzeptpark.de> wrote:
+
+> - Adds a call to ide-disk LED trigger to libata-sff.c
+> - Changed Kconfig to allow for ide-disk LED trigger when ATA drivers
+>   are enabled.
+> 
+> Open Issue:
+> - There might be more suitable place to call the trigger function.
+>   Only devices using libata-sff.c trigger LEDs right now.
+> 
+> Signed-off-by: Carsten Schlote <c.schlote@konzeptpark.de>
+> ---
+>  drivers/ata/libata-sff.c |    3 +++
+>  drivers/leds/Kconfig     |    2 +-
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> Index: .kernel/drivers/leds/Kconfig
+> ===================================================================
+> --- .kernel.orig/drivers/leds/Kconfig	2009-01-07 22:13:40.000000000
+> +0100
+> +++ .kernel/drivers/leds/Kconfig	2009-01-07 22:14:46.000000000 +0100
+> @@ -185,7 +185,7 @@
+>  
+>  config LEDS_TRIGGER_IDE_DISK
+>  	bool "LED IDE Disk Trigger"
+> -	depends on LEDS_TRIGGERS && BLK_DEV_IDEDISK
+> +	depends on LEDS_TRIGGERS && BLK_DEV_IDEDISK || ATA
+>  	help
+>  	  This allows LEDs to be controlled by IDE disk activity.
+>  	  If unsure, say Y.
+> Index: .kernel/drivers/ata/libata-sff.c
+> ===================================================================
+> --- .kernel.orig/drivers/ata/libata-sff.c	2009-01-07 22:14:09.000000000
+> +0100
+> +++ .kernel/drivers/ata/libata-sff.c	2009-01-07 22:14:46.000000000 +0100
+> @@ -36,6 +36,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/libata.h>
+>  #include <linux/highmem.h>
+> +#include <linux/leds.h>
+>  
+>  #include "libata.h"
+>  
+> @@ -647,6 +648,8 @@
+>   */
+>  void ata_sff_exec_command(struct ata_port *ap, const struct
+> ata_taskfile *tf)
+>  {
+> +	ledtrig_ide_activity();
+> +
+>  	DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
+>  
+>  	iowrite8(tf->command, ap->ioaddr.command_addr);
+> 
+
