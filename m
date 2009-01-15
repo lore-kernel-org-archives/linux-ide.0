@@ -1,74 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through
-	sysfs
-Date: Thu, 15 Jan 2009 14:00:39 -0500
-Message-ID: <1232046039.5966.54.camel@localhost.localdomain>
-References: <200901051952.58029.bzolnier@gmail.com>
-	 <20090105185428.GS32491@kernel.dk>
-	 <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com>
-	 <20090106073515.GY32491@kernel.dk> <4964866D.8010503@msgid.tls.msk.ru>
-	 <1231342473.3282.19.camel@localhost.localdomain> <496ECBA0.60209@gmail.com>
-	 <87f94c370901150707h10506e99reaa40c23e32ab18c@mail.gmail.com>
-	 <1232035561.5966.48.camel@localhost.localdomain>
-	 <da824cf30901151055o2385ef74x918e8390e576d807@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [Bugme-new] [Bug 12351] New: sata_nv hotplug not work
+	in 2.6.27.10
+Date: Thu, 15 Jan 2009 10:45:02 -0800
+Message-ID: <20090115184502.GC10674@kroah.com>
+References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca> <20090106102758.GA7309@libero.it> <4963F520.4060500@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59077 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753889AbZAOTAp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 14:00:45 -0500
-In-Reply-To: <da824cf30901151055o2385ef74x918e8390e576d807@mail.gmail.com>
+Received: from kroah.org ([198.145.64.141]:44271 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755421AbZAOTDY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jan 2009 14:03:24 -0500
+Content-Disposition: inline
+In-Reply-To: <4963F520.4060500@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Greg Freemyer <greg.freemyer@gmail.com>, Tejun Heo <htejun@gmail.com>, Michael Tokarev <mjt@tls.msk.ru>, Kay Sievers <kay.sievers@vrfy.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: gpanco@tiscali.it, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org, bugme-daemon@bugzilla.kernel.org
 
-On Thu, 2009-01-15 at 10:55 -0800, Grant Grundler wrote:
-> On Thu, Jan 15, 2009 at 8:06 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> ...
-> > Right, this is the flash cache idea that's been floating around for a
-> > while.  It's even been suggested as a way of avoiding the IDE barrier
-> > flush penalties.  I think Seagate went as far as making hybrid drives
-> > that were a large flash cache backed by rotational storage.
+On Tue, Jan 06, 2009 at 06:19:44PM -0600, Robert Hancock wrote:
+> Giovanni Pancotti wrote:
+> > On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
+> > 
+> >>>> Hardware Environment:x86 ASUS M2N-E
+> >> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
+> >> on hotplug and apparently that doesn't work. Thing is that:
+> > 
+> > no, it is not MCP61, but MCP55:
 > 
-> "inline" RAM caches  were implemented 10+ years ago for SCSI devices
-> to avoid seek *and* rotational delay penalties. These were transperent
-> SCSI devices that would cache and prefetch content from disks.
-> For the given dataset size, the seek cost was effectively zero. This is
-> mostly true today for high-end disk arrays which have large RAM
-> front-end's (TB) and very smart data placement strategies (reduced seek).
+> Ahh, ok, that is less contradictory then :-) Presumably we should still 
+> be using hardreset on that chipset.
 
-RAM caches are different from flash caches: they're volatile.
-Essentially they're the cause of our barrier flush issues.  The point
-about flash caches is they're non volatile.  You can pull power from the
-disk as soon as the data is in flash cache; the disc can commit it again
-as soon as it powers up.
+So, do we know how to solve this in the 2.6.27.y tree?
 
-> Back to the bikeshed painting: I prefer two flags: "AVGREADCOST" and
-> "AVGWRITECOST as the flag. This isn't just about seek. Rotational delay
-> @7200 RPM is 8.3ms. Making both non-zero implies rotational media.
-> Different devices have different read and write characteristics.
-> Flash typically has a much higher write cost than read cost.
-> Disks (because of WCE) can be the opposite.
-> 
-> Code can test for zero/nonzero or (preferably) more fine grained.
-> e.g. "avgreadcost > 1ms" or "avgwritecost". I'm hoping this test
-> can be abstracted into a macro.
+thanks,
 
-Um these really have to be things we can get out of the device at boot
-time without effort (as in part of the data the device can give in a
-single command).  I'll be shot for increasing boot time so we can work
-out these parameters ...
-
-> I'm hoping longterm, the values could be "self tuning" but don't know
-> how that might work - e.g. 1 minute avg? 10 minute avg? Cost
-> of collecting/maintaining the stats? Feels like a CONFIG option.
-
-CONFIG_SLOW_YOUR_BOOT?
-
-James
-
-
+greg k-h
