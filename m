@@ -1,61 +1,70 @@
-From: Artem Bokhan <aptem@ngs.ru>
-Subject: Re: sata_mv: trial fix for lost NCQ interrupts
-Date: Thu, 15 Jan 2009 19:06:07 +0600
-Message-ID: <496F34BF.5010701@ngs.ru>
-References: <496D04EB.3060803@rtr.ca> <496E53DD.6040408@gmail.com> <496E61E8.5010602@rtr.ca> <496E72D7.2070206@gmail.com> <496EA53F.7000605@rtr.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/1] pata_via.c: Support VX855 and future chips whose
+ IDE controller use 0x0571.
+Date: Thu, 15 Jan 2009 22:27:32 +0900
+Message-ID: <496F39C4.8050603@kernel.org>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC568@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout1.ngs.ru ([195.93.186.195]:48968 "EHLO smtpout1.ngs.ru"
+Received: from hera.kernel.org ([140.211.167.34]:37296 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759901AbZAONKN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Jan 2009 08:10:13 -0500
-In-Reply-To: <496EA53F.7000605@rtr.ca>
+	id S1756943AbZAON1h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jan 2009 08:27:37 -0500
+In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC568@exchtp03.taipei.via.com.tw>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Harri Olin <harri.olin@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Brian Rademacher <rad@radfiles.net>, Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
+To: JosephChan@via.com.tw
+Cc: linux-ide@vger.kernel.org, HaraldWelte@viatech.com, BruceChang@via.com.tw
 
-Sounds great! Sorry, but I can't check the patch in the near future, I=20
-don't have necessary hardware at the moment :(
+JosephChan@via.com.tw wrote:
+>>> +	if (ap->port_no == 0 && pdev->device == 0xC409) {
+>>> +		pci_read_config_dword(pdev, 0x52, &ata66);
+>>> +		return (ata66 & 0x10)  ? ATA_CBL_PATA80 : 
+>> ATA_CBL_PATA40;
+>>> +	} else if (ap->port_no == 1 && pdev->device == 0xC409) {
+>>> +		DPRINTK("C409 only has one pata channel\n");
+>>> +		return ATA_CBL_PATA_UNK;
+>>> +	}
+>> Eh.. can you add 0xC409 entry like other controllers and put 
+>> necessary restrictions there?
+>>
+> 
+> It's a pity that we don't have corresponding registers for
+> identifying the single port controller. So, we just can do this by
+> checking the device ID at present.
 
-Mark Lord =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
-> Harri Olin wrote:
->> ..
->> After first 55 minutes of testing, no timeouts yet, so I'm quite sur=
-e=20
->> it works ok now (yay!). Without this patch, timeouts happened every=20
->> couple minutes on similar load. I think I'll let it run for a day an=
-d=20
->> report back tomorrow how things are by then.
-> ..
->
-> Okay, we have a winner!
-> I just need to get the "okay" from Marvell,
-> and then I'll feed this patch for 2.6.29 and earlier -stable streams.
->
->> Note that I didn't apply the previous patch as they don't apply on=20
->> each other. If needed, I can test it separately after running this=20
->> for a while.
-> ..
->
-> No need. The earlier patch has no effect, other than speeding up your=
-=20
-> system
-> by a slight amount. I'll submit that for upstream separately, along=20
-> with a
-> fix for another "duh!" I noticed in the code.
->
-> In the meanwhile, you should keep the working patch (obviously)
-> in your kernels -- the same/similar patch will apply to earlier
-> kernels if needed.
->
-> Thanks to you and Brian for the legwork!
-> --=20
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+I feel a bit confused so please correct me if I'm babbling.  Can't you
+add { PCI_VDEVICE(VIA, 0xC409), FLAGS_OR_IDENTIFIER } to pci_device_id
+table and use different port_info on it?  If that's too different from
+how other devices are beign identified, you can just add the
+corresponding logic to init_one() and use, say, via_single_port_info
+there instead of doing it deep in the reset sequence.
 
+>>>  static void via_tf_load(struct ata_port *ap, const struct 
+>>> ata_taskfile *tf)  {
+>>> -	struct ata_taskfile tmp_tf;
+>>> +	struct ata_ioports *ioaddr = &ap->ioaddr;
+>>>  
+>>> -	if (ap->ctl != ap->last_ctl && !(tf->flags & 
+>> ATA_TFLAG_DEVICE)) {
+>>> -		tmp_tf = *tf;
+>>> -		tmp_tf.flags |= ATA_TFLAG_DEVICE;
+>>> -		tf = &tmp_tf;
+>>> +	if (tf->ctl != ap->last_ctl) {
+>>> +		iowrite8(tf->ctl, ioaddr->ctl_addr);
+>>> +		iowrite8(tf->device, ioaddr->device_addr);
+>>>  	}
+>>> +
+>>>  	ata_sff_tf_load(ap, tf);
+>> Can you please explain why this change is necessary?  And if 
+>> it's necessary, please put it in a separate patch.
+>>
+> 
+> Yes,  I will separate it.
+
+Thanks.
+
+-- 
+tejun
