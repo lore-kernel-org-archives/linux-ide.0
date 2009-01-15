@@ -1,42 +1,61 @@
-From: <JosephChan@via.com.tw>
-Subject: [PATCH 2/2 v1] pata_via.c:  Patch the behavior of via chipsets.
-Date: Thu, 15 Jan 2009 21:05:32 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC56D@exchtp03.taipei.via.com.tw>
+From: Artem Bokhan <aptem@ngs.ru>
+Subject: Re: sata_mv: trial fix for lost NCQ interrupts
+Date: Thu, 15 Jan 2009 19:06:07 +0600
+Message-ID: <496F34BF.5010701@ngs.ru>
+References: <496D04EB.3060803@rtr.ca> <496E53DD.6040408@gmail.com> <496E61E8.5010602@rtr.ca> <496E72D7.2070206@gmail.com> <496EA53F.7000605@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:1463 "EHLO
-	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754668AbZAONFf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 08:05:35 -0500
-Content-class: urn:content-classes:message
+Received: from smtpout1.ngs.ru ([195.93.186.195]:48968 "EHLO smtpout1.ngs.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759901AbZAONKN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jan 2009 08:10:13 -0500
+In-Reply-To: <496EA53F.7000605@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, tj@kernel.org, sshtylyov@ru.mvista.com, JosephChan@via.com.tw
+To: Mark Lord <liml@rtr.ca>
+Cc: Harri Olin <harri.olin@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Brian Rademacher <rad@radfiles.net>, Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
 
-VGhpcyBwYXRjaCBpcyB0byBwYXRjaCB0aGUgYmVoYXZpb3Igb2YgdmlhIGNoaXBzZXRzLCB3aGlj
-aCB3aWxsIHJlc2V0IHRoZSBERVYgDQpyZWdpc3RlciB0byBiZSByZXNldCB2YWx1ZSBhZnRlciBj
-aGFuZ2luZyB0aGUgSUVOIGJpdCBvbiBDVEwgcmVnaXN0ZXIgdG8gY2F1c2UNCmNoYW5uZWwgcmVz
-ZXQuIEZvciBzb21lIGNvbnRyb2xsZXJzLCB0aGUgcGF0YV92aWEgZGVmYXVsdCBwcm9jZXNzaW5n
-IGZsb3cgd2lsbA0Kd29yayBPSywgYmVjYXVzZSB0aGUgY29udHJvbGxlciB3aWxsIGNhY2hlIHRo
-ZSB2YWx1ZSBvZiB0aGUgcmVnaXN0ZXJzIHVudGlsIGl0DQpyZWNlaXZlcyBhIHNldCBkZXZpY2Ug
-b3BlcmF0aW9uICh3cml0ZSB0aGUgZGV2aWNlIHJlZ2lzdGVyKS4gQnkgZm9sbG93aW5nIHRoZQ0K
-QVRBL0FUQVBJIHByb3RvY29sLCBERVYgYml0IHNob3VsZCBiZSBzZXQgYmVmb3JlIGlzc3Vpbmcg
-QVRBL0FUQVBJIGNvbW1hbmRzIHRvDQpkZXZpY2UuIEFuZCB0aGlzIHBhdGNoIGlzIHRvIHNldCBE
-RVYgYml0IGFmdGVyIElFTiBiaXQgaXMgc2V0IG9mIFZJQSBjaGlwc2V0DQpWWDcwMC9DWDcwMCwg
-Vlg4MDAvVjgyMCBhbmQgVlg4NTUgc2VyaWVzLg0KDQoNClNpZ25lZC1vZmYtYnk6IEpvc2VwaCBD
-aGFuIDxqb3NlcGhjaGFuQHZpYS5jb20udHc+DQoNCi0tLSBhL2RyaXZlcnMvYXRhL3BhdGFfdmlh
-LmMJMjAwOS0wMS0xNiAwMjozNjo1OC4wMDAwMDAwMDAgKzA4MDANCisrKyBhL2RyaXZlcnMvYXRh
-L3BhdGFfdmlhLmMJMjAwOS0wMS0xNiAwMjozOTowNC4wMDAwMDAwMDAgKzA4MDANCkBAIC0zNDcs
-MTIgKzM0NywxMSBAQA0KICAqLw0KIHN0YXRpYyB2b2lkIHZpYV90Zl9sb2FkKHN0cnVjdCBhdGFf
-cG9ydCAqYXAsIGNvbnN0IHN0cnVjdCBhdGFfdGFza2ZpbGUgKnRmKQ0KIHsNCi0Jc3RydWN0IGF0
-YV90YXNrZmlsZSB0bXBfdGY7DQorCXN0cnVjdCBhdGFfaW9wb3J0cyAqaW9hZGRyID0gJmFwLT5p
-b2FkZHI7DQogDQotCWlmIChhcC0+Y3RsICE9IGFwLT5sYXN0X2N0bCAmJiAhKHRmLT5mbGFncyAm
-IEFUQV9URkxBR19ERVZJQ0UpKSB7DQotCQl0bXBfdGYgPSAqdGY7DQotCQl0bXBfdGYuZmxhZ3Mg
-fD0gQVRBX1RGTEFHX0RFVklDRTsNCi0JCXRmID0gJnRtcF90ZjsNCisJaWYgKHRmLT5jdGwgIT0g
-YXAtPmxhc3RfY3RsKSB7DQorCQlpb3dyaXRlOCh0Zi0+Y3RsLCBpb2FkZHItPmN0bF9hZGRyKTsN
-CisJCWlvd3JpdGU4KHRmLT5kZXZpY2UsIGlvYWRkci0+ZGV2aWNlX2FkZHIpOw0KIAl9DQogCWF0
-YV9zZmZfdGZfbG9hZChhcCwgdGYpOw0KIH0gDQo=
+Sounds great! Sorry, but I can't check the patch in the near future, I=20
+don't have necessary hardware at the moment :(
+
+Mark Lord =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
+> Harri Olin wrote:
+>> ..
+>> After first 55 minutes of testing, no timeouts yet, so I'm quite sur=
+e=20
+>> it works ok now (yay!). Without this patch, timeouts happened every=20
+>> couple minutes on similar load. I think I'll let it run for a day an=
+d=20
+>> report back tomorrow how things are by then.
+> ..
+>
+> Okay, we have a winner!
+> I just need to get the "okay" from Marvell,
+> and then I'll feed this patch for 2.6.29 and earlier -stable streams.
+>
+>> Note that I didn't apply the previous patch as they don't apply on=20
+>> each other. If needed, I can test it separately after running this=20
+>> for a while.
+> ..
+>
+> No need. The earlier patch has no effect, other than speeding up your=
+=20
+> system
+> by a slight amount. I'll submit that for upstream separately, along=20
+> with a
+> fix for another "duh!" I noticed in the code.
+>
+> In the meanwhile, you should keep the working patch (obviously)
+> in your kernels -- the same/similar patch will apply to earlier
+> kernels if needed.
+>
+> Thanks to you and Brian for the legwork!
+> --=20
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+
