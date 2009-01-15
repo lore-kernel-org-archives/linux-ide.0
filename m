@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/9] ide: move drive_is_ready() to ide-io.c
-Date: Thu, 15 Jan 2009 21:00:53 +0100
-Message-ID: <20090115200053.17294.47740.sendpatchset@localhost.localdomain>
+Subject: [PATCH 7/9] ide: move ide_do_park_unpark() to ide-park.c
+Date: Thu, 15 Jan 2009 21:01:22 +0100
+Message-ID: <20090115200122.17294.13465.sendpatchset@localhost.localdomain>
 References: <20090115200032.17294.84745.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-ew0-f17.google.com ([209.85.219.17]:56109 "EHLO
 	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765939AbZAOUAl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 15:00:41 -0500
+	with ESMTP id S932078AbZAOUBI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 15:01:08 -0500
 In-Reply-To: <20090115200032.17294.84745.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,99 +15,102 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: move drive_is_ready() to ide-io.c
-
-Move drive_is_ready() to ide-io.c, then make it static.
-
-Also make some minor CodingStyle fixups while at it.
+Subject: [PATCH] ide: move ide_do_park_unpark() to ide-park.c
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c   |   23 +++++++++++++++++++++++
- drivers/ide/ide-iops.c |   25 -------------------------
- include/linux/ide.h    |    2 --
- 3 files changed, 23 insertions(+), 27 deletions(-)
+ drivers/ide/ide-io.c   |   24 ------------------------
+ drivers/ide/ide-park.c |   25 +++++++++++++++++++++++++
+ include/linux/ide.h    |    2 ++
+ 3 files changed, 27 insertions(+), 24 deletions(-)
 
 Index: b/drivers/ide/ide-io.c
 ===================================================================
 --- a/drivers/ide/ide-io.c
 +++ b/drivers/ide/ide-io.c
-@@ -884,6 +884,29 @@ static void ide_plug_device(ide_drive_t 
- 	spin_unlock_irqrestore(q->queue_lock, flags);
+@@ -524,30 +524,6 @@ static ide_startstop_t ide_do_devset(ide
+ 	return ide_stopped;
  }
  
-+static int drive_is_ready(ide_drive_t *drive)
-+{
-+	ide_hwif_t *hwif = drive->hwif;
-+	u8 stat = 0;
-+
-+	if (drive->waiting_for_dma)
-+		return hwif->dma_ops->dma_test_irq(drive);
-+
-+	if (hwif->io_ports.ctl_addr &&
-+	    (hwif->host_flags & IDE_HFLAG_BROKEN_ALTSTATUS) == 0)
-+		stat = hwif->tp_ops->read_altstatus(hwif);
-+	else
-+		/* Note: this may clear a pending IRQ!! */
-+		stat = hwif->tp_ops->read_status(hwif);
-+
-+	if (stat & ATA_BUSY)
-+		/* drive busy: definitely not interrupting */
-+		return 0;
-+
-+	/* drive ready: *might* be interrupting */
-+	return 1;
-+}
-+
- /**
-  *	ide_timer_expiry	-	handle lack of an IDE interrupt
-  *	@data: timer callback magic (hwif)
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -436,31 +436,6 @@ void ide_fixstring (u8 *s, const int byt
- 
- EXPORT_SYMBOL(ide_fixstring);
- 
--int drive_is_ready (ide_drive_t *drive)
+-static ide_startstop_t ide_do_park_unpark(ide_drive_t *drive, struct request *rq)
 -{
--	ide_hwif_t *hwif	= drive->hwif;
--	u8 stat			= 0;
+-	ide_task_t task;
+-	struct ide_taskfile *tf = &task.tf;
 -
--	if (drive->waiting_for_dma)
--		return hwif->dma_ops->dma_test_irq(drive);
+-	memset(&task, 0, sizeof(task));
+-	if (rq->cmd[0] == REQ_PARK_HEADS) {
+-		drive->sleep = *(unsigned long *)rq->special;
+-		drive->dev_flags |= IDE_DFLAG_SLEEPING;
+-		tf->command = ATA_CMD_IDLEIMMEDIATE;
+-		tf->feature = 0x44;
+-		tf->lbal = 0x4c;
+-		tf->lbam = 0x4e;
+-		tf->lbah = 0x55;
+-		task.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
+-	} else		/* cmd == REQ_UNPARK_HEADS */
+-		tf->command = ATA_CMD_CHK_POWER;
 -
--	if (hwif->io_ports.ctl_addr &&
--	    (hwif->host_flags & IDE_HFLAG_BROKEN_ALTSTATUS) == 0)
--		stat = hwif->tp_ops->read_altstatus(hwif);
--	else
--		/* Note: this may clear a pending IRQ!! */
--		stat = hwif->tp_ops->read_status(hwif);
--
--	if (stat & ATA_BUSY)
--		/* drive busy:  definitely not interrupting */
--		return 0;
--
--	/* drive ready: *might* be interrupting */
--	return 1;
+-	task.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
+-	task.rq = rq;
+-	drive->hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
+-	return do_rw_taskfile(drive, &task);
 -}
 -
--EXPORT_SYMBOL(drive_is_ready);
--
- /*
-  * This routine busy-waits for the drive status to be not "busy".
-  * It then checks the status for all of the "good" bits and none
+ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
+ {
+ 	u8 cmd = rq->cmd[0];
+Index: b/drivers/ide/ide-park.c
+===================================================================
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -1,5 +1,6 @@
+ #include <linux/kernel.h>
+ #include <linux/ide.h>
++#include <linux/hdreg.h>
+ #include <linux/jiffies.h>
+ #include <linux/blkdev.h>
+ 
+@@ -60,6 +61,30 @@ out:
+ 	return;
+ }
+ 
++ide_startstop_t ide_do_park_unpark(ide_drive_t *drive, struct request *rq)
++{
++	ide_task_t task;
++	struct ide_taskfile *tf = &task.tf;
++
++	memset(&task, 0, sizeof(task));
++	if (rq->cmd[0] == REQ_PARK_HEADS) {
++		drive->sleep = *(unsigned long *)rq->special;
++		drive->dev_flags |= IDE_DFLAG_SLEEPING;
++		tf->command = ATA_CMD_IDLEIMMEDIATE;
++		tf->feature = 0x44;
++		tf->lbal = 0x4c;
++		tf->lbam = 0x4e;
++		tf->lbah = 0x55;
++		task.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
++	} else		/* cmd == REQ_UNPARK_HEADS */
++		tf->command = ATA_CMD_CHK_POWER;
++
++	task.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
++	task.rq = rq;
++	drive->hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
++	return do_rw_taskfile(drive, &task);
++}
++
+ ssize_t ide_park_show(struct device *dev, struct device_attribute *attr,
+ 		      char *buf)
+ {
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1198,8 +1198,6 @@ void SELECT_MASK(ide_drive_t *, int);
- u8 ide_read_error(ide_drive_t *);
- void ide_read_bcount_and_ireason(ide_drive_t *, u16 *, u8 *);
+@@ -1167,6 +1167,8 @@ int ide_busy_sleep(ide_hwif_t *, unsigne
  
--extern int drive_is_ready(ide_drive_t *);
--
- int ide_check_atapi_device(ide_drive_t *, const char *);
+ int ide_wait_stat(ide_startstop_t *, ide_drive_t *, u8, u8, unsigned long);
  
- void ide_init_pc(struct ide_atapi_pc *);
++ide_startstop_t ide_do_park_unpark(ide_drive_t *, struct request *);
++
+ extern ide_startstop_t ide_do_reset (ide_drive_t *);
+ 
+ extern int ide_devset_execute(ide_drive_t *drive,
