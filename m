@@ -1,35 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/2] libata: New driver for OCTEON SOC Compact Flash
- interface (v6).
-Date: Thu, 15 Jan 2009 21:13:33 +0000
-Message-ID: <20090115211333.1440db46@lxorguk.ukuu.org.uk>
-References: <496FA2E9.9030403@caviumnetworks.com>
-	<1232053053-16232-2-git-send-email-ddaney@caviumnetworks.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through sysfs
+Date: Thu, 15 Jan 2009 14:45:01 -0800
+Message-ID: <da824cf30901151445q6b54c0b1nbf24f03849e1a5b3@mail.gmail.com>
+References: <200901051952.58029.bzolnier@gmail.com>
+	 <ac3eb2510901051347r6593d0fmd64702b1689716c1@mail.gmail.com>
+	 <20090106073515.GY32491@kernel.dk> <4964866D.8010503@msgid.tls.msk.ru>
+	 <1231342473.3282.19.camel@localhost.localdomain>
+	 <496ECBA0.60209@gmail.com>
+	 <87f94c370901150707h10506e99reaa40c23e32ab18c@mail.gmail.com>
+	 <1232035561.5966.48.camel@localhost.localdomain>
+	 <da824cf30901151055o2385ef74x918e8390e576d807@mail.gmail.com>
+	 <1232046039.5966.54.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53845 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751159AbZAOVNW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 16:13:22 -0500
-In-Reply-To: <1232053053-16232-2-git-send-email-ddaney@caviumnetworks.com>
+Received: from smtp-out.google.com ([216.239.45.13]:10037 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758495AbZAOWpH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 17:45:07 -0500
+In-Reply-To: <1232046039.5966.54.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, David Daney <ddaney@caviumnetworks.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Greg Freemyer <greg.freemyer@gmail.com>, Tejun Heo <htejun@gmail.com>, Michael Tokarev <mjt@tls.msk.ru>, Kay Sievers <kay.sievers@vrfy.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> +	reg_cfg.s.orbit = 0;	/* Don't combine with previos region */
+On Thu, Jan 15, 2009 at 11:00 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+...
+>> Code can test for zero/nonzero or (preferably) more fine grained.
+>> e.g. "avgreadcost > 1ms" or "avgwritecost". I'm hoping this test
+>> can be abstracted into a macro.
+>
+> Um these really have to be things we can get out of the device at boot
+> time without effort (as in part of the data the device can give in a
+> single command).  I'll be shot for increasing boot time so we can work
+> out these parameters ...
 
-previous ...
+No. The whole point is we should not care what it is at boot time.
+It should be based on recent history of what is going on.
+At boot time we read the partition table and we superblocks to mount
+file systems.
+That's fine to start with. So I don't see any need to add some synthetic test
+to establish initial values.
 
+The rest of the code should work regardless of what the values start out to be.
+This is true for the previous proposed patch too when user space has
+to decide what the right policy is.
 
-> +static unsigned int octeon_cf_qc_issue(struct ata_queued_cmd *qc)
-> +	case ATAPI_PROT_DMA:
-> +		dev_err(ap->dev, "Error, ATAPI not supported\n");
-> +		BUG();
+>> I'm hoping longterm, the values could be "self tuning" but don't know
+>> how that might work - e.g. 1 minute avg? 10 minute avg? Cost
+>> of collecting/maintaining the stats? Feels like a CONFIG option.
+>
+> CONFIG_SLOW_YOUR_BOOT?
 
-Looks as if you should also have a check_atapi_dma function that always
-returns non zero (or a mode filter for atapi -> pio)
+maybe CONFIG_AUTOTUNE_RWCOST.
 
-
-Looks good to me.
+thanks,
+grant
