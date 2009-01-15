@@ -1,44 +1,24 @@
 From: <JosephChan@via.com.tw>
-Subject: RE: [PATCH 1/1] pata_via.c: Support VX855 and future chips whose IDE controller use 0x0571.
-Date: Thu, 15 Jan 2009 21:01:40 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC568@exchtp03.taipei.via.com.tw>
-References: <496C117F.8050202@kernel.org>
+Subject: [PATCH 0/2 v1] pata_via.c
+Date: Thu, 15 Jan 2009 21:03:33 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC569@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:1388 "EHLO
+Received: from exchtp08.via.com.tw ([61.66.243.7]:1418 "EHLO
 	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753597AbZAONBo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 08:01:44 -0500
+	with ESMTP id S1753987AbZAONDh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 08:03:37 -0500
 Content-class: urn:content-classes:message
-In-Reply-To: <496C117F.8050202@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, HaraldWelte@viatech.com, BruceChang@via.com.tw
+To: linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, tj@kernel.org, sshtylyov@ru.mvista.com, JosephChan@via.com.tw
 
-DQo+ID4gKwlpZiAoYXAtPnBvcnRfbm8gPT0gMCAmJiBwZGV2LT5kZXZpY2UgPT0gMHhDNDA5KSB7
-DQo+ID4gKwkJcGNpX3JlYWRfY29uZmlnX2R3b3JkKHBkZXYsIDB4NTIsICZhdGE2Nik7DQo+ID4g
-KwkJcmV0dXJuIChhdGE2NiAmIDB4MTApICA/IEFUQV9DQkxfUEFUQTgwIDogDQo+IEFUQV9DQkxf
-UEFUQTQwOw0KPiA+ICsJfSBlbHNlIGlmIChhcC0+cG9ydF9ubyA9PSAxICYmIHBkZXYtPmRldmlj
-ZSA9PSAweEM0MDkpIHsNCj4gPiArCQlEUFJJTlRLKCJDNDA5IG9ubHkgaGFzIG9uZSBwYXRhIGNo
-YW5uZWxcbiIpOw0KPiA+ICsJCXJldHVybiBBVEFfQ0JMX1BBVEFfVU5LOw0KPiA+ICsJfQ0KPiAN
-Cj4gRWguLiBjYW4geW91IGFkZCAweEM0MDkgZW50cnkgbGlrZSBvdGhlciBjb250cm9sbGVycyBh
-bmQgcHV0IA0KPiBuZWNlc3NhcnkgcmVzdHJpY3Rpb25zIHRoZXJlPw0KPiANCg0KSXQncyBhIHBp
-dHkgdGhhdCB3ZSBkb24ndCBoYXZlIGNvcnJlc3BvbmRpbmcgcmVnaXN0ZXJzIGZvciBpZGVudGlm
-eWluZyB0aGUgc2luZ2xlDQpwb3J0IGNvbnRyb2xsZXIuIFNvLCB3ZSBqdXN0IGNhbiBkbyB0aGlz
-IGJ5IGNoZWNraW5nIHRoZSBkZXZpY2UgSUQgYXQgcHJlc2VudC4NCg0KDQo+ID4gIHN0YXRpYyB2
-b2lkIHZpYV90Zl9sb2FkKHN0cnVjdCBhdGFfcG9ydCAqYXAsIGNvbnN0IHN0cnVjdCANCj4gPiBh
-dGFfdGFza2ZpbGUgKnRmKSAgew0KPiA+IC0Jc3RydWN0IGF0YV90YXNrZmlsZSB0bXBfdGY7DQo+
-ID4gKwlzdHJ1Y3QgYXRhX2lvcG9ydHMgKmlvYWRkciA9ICZhcC0+aW9hZGRyOw0KPiA+ICANCj4g
-PiAtCWlmIChhcC0+Y3RsICE9IGFwLT5sYXN0X2N0bCAmJiAhKHRmLT5mbGFncyAmIA0KPiBBVEFf
-VEZMQUdfREVWSUNFKSkgew0KPiA+IC0JCXRtcF90ZiA9ICp0ZjsNCj4gPiAtCQl0bXBfdGYuZmxh
-Z3MgfD0gQVRBX1RGTEFHX0RFVklDRTsNCj4gPiAtCQl0ZiA9ICZ0bXBfdGY7DQo+ID4gKwlpZiAo
-dGYtPmN0bCAhPSBhcC0+bGFzdF9jdGwpIHsNCj4gPiArCQlpb3dyaXRlOCh0Zi0+Y3RsLCBpb2Fk
-ZHItPmN0bF9hZGRyKTsNCj4gPiArCQlpb3dyaXRlOCh0Zi0+ZGV2aWNlLCBpb2FkZHItPmRldmlj
-ZV9hZGRyKTsNCj4gPiAgCX0NCj4gPiArDQo+ID4gIAlhdGFfc2ZmX3RmX2xvYWQoYXAsIHRmKTsN
-Cj4gDQo+IENhbiB5b3UgcGxlYXNlIGV4cGxhaW4gd2h5IHRoaXMgY2hhbmdlIGlzIG5lY2Vzc2Fy
-eT8gIEFuZCBpZiANCj4gaXQncyBuZWNlc3NhcnksIHBsZWFzZSBwdXQgaXQgaW4gYSBzZXBhcmF0
-ZSBwYXRjaC4NCj4gDQoNClllcywgIEkgd2lsbCBzZXBhcmF0ZSBpdC4NCg==
+SGkgYWxsDQoNClRoZWVzIHBhdGNoZXMgYXJlIHRvIHN1cHBvcnQgVlg4NTUgYW5kIGZ1dHVyZSBj
+aGlwcyB3aG9zZSBJREUgY29udHJvbGxlciB1c2UgMHgwNTcxLg0KQW5kIHBhdGNoIHRoZSBiZWhh
+dmlvciBvZiB2aWEgY2hpcHNldHMsIHdoaWNoIHdpbGwgcmVzZXQgdGhlIERFViByZWdpc3RlciB0
+byBiZSByZXNldA0KdmFsdWUgYWZ0ZXIgY2hhbmdpbmcgdGhlIElFTiBiaXQgb24gQ1RMIHJlZ2lz
+dGVyIHRvIGNhdXNlIGNoYW5uZWwgcmVzZXQuDQoNCkJScywNCkpvc2VwaCBDaGFuIA0K
