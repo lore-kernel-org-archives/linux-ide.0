@@ -1,70 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Another Seagate SATA drive with the NCQ+FLUSH_CACHE bug
-Date: Thu, 15 Jan 2009 15:36:27 +0900
-Message-ID: <496ED96B.2050901@kernel.org>
-References: <f73f7ab80901131154n2a734a50h21b0aeadf3daab9c@mail.gmail.com> <20090114213451.3395e8d1.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [BUG] 2.6.29-rc1: ata_piix boot hang due to bmdma32 change
+Date: Thu, 15 Jan 2009 09:42:51 +0100 (MET)
+Message-ID: <200901150842.n0F8gpZb014365@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47829 "EHLO hera.kernel.org"
+Received: from aun.it.uu.se ([130.238.12.36]:50212 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753927AbZAOGhI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Jan 2009 01:37:08 -0500
-In-Reply-To: <20090114213451.3395e8d1.akpm@linux-foundation.org>
+	id S1757139AbZAOInD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jan 2009 03:43:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kyle Moffett <kyle@moffetthome.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org
 
-Hello, Kyle, Andrew.
+One of my machines is an Intel 815EP chipset box with
+an 82801BA IDE controller (8086:244b rev 05) and two
+ATAPI devices on the second channel (the boot disk is
+connected to a PDC20269).
 
-Andrew Morton wrote:
-> (cc linux-ide)
-> 
-> On Tue, 13 Jan 2009 14:54:51 -0500 "Kyle Moffett" <kyle@moffetthome.net> wrote:
-> 
->> I've got a 250GB Seagate Barracuda 7200.10 (ST3250820AS) with firmware
->> 3.AAE on it here that seems to suffer from the same problem hang
->> problem as a number of similar seagate drives.  What information do I
->> need to provide to get it added to the blacklist?  Beyond that I'm
->> also going through seagate support to try to get a firmware upgrade
->> for the thing, as performance without NCQ tends to be not-so-good.
->>
->> Kernel messages of the SATA error below (it's on an ICH controller of
->> some variety).
->>
->> Cheers,
->> Kyle Moffett
->>
->> [100226.331199] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->> [100226.331241] ata1.01: cmd ea/00:00:00:00:00/00:00:00:00:00/b0 tag 0
->> [100226.331244]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
->> 0x4 (timeout)
->> [100226.331821] ata1.01: status: { DRDY }
->> [100231.371102] ata1: link is slow to respond, please be patient (ready=0)
->> [100236.353120] ata1: device not ready (errno=-16), forcing hardreset
->> [100236.353156] ata1: soft resetting link
->> [100241.551827] ata1: link is slow to respond, please be patient (ready=0)
->> [100246.367827] ata1: SRST failed (errno=-16)
->> [100246.367859] ata1: soft resetting link
->> [100251.563827] ata1: link is slow to respond, please be patient (ready=0)
->> [100256.377083] ata1: SRST failed (errno=-16)
->> [100256.377116] ata1: soft resetting link
->> [100261.575827] ata1: link is slow to respond, please be patient (ready=0)
->> [100291.423827] ata1: SRST failed (errno=-16)
->> [100291.423861] ata1: soft resetting link
->> [100296.451826] ata1: SRST failed (errno=-16)
->> [100296.451855] ata1: reset failed, giving up
->> [100296.451881] ata1.00: disabled
->> [100296.451906] ata1.01: disabled
->> [100296.451950] ata1: EH complete
+With 2.6.29-rc1 this machine hangs hard during boot, when
+init starts udev. There are no messages on the console and
+not even sysrq gets any reaction.
 
-I don't think it's the same problem.  The disk doesn't go down on the
-drives with SD1[5-9] firmwares.  More likely a broken drive, I think.
-How reproducible is the problem?
+Reverting the 2.6.29-rc1 change which made ata_piix inherit
+the bmdma32 port ops makes the machine boot ok again. (Patch below.)
+I'm guessing the 32-bit I/O stuff doesn't work on this controller
+or these ATAPI devices.
 
-Thanks.
+Partial dmesg from 2.6.29-rc1 with the bmdma32 change reverted:
 
--- 
-tejun
+ata_piix 0000:00:1f.1: version 2.12
+ata_piix 0000:00:1f.1: setting latency timer to 64
+scsi0 : ata_piix
+scsi1 : ata_piix
+ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
+ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
+ata2.00: ATAPI: CRD-8320B, 1.12, max MWDMA2
+ata2.01: ATAPI: Hewlett-Packard CD-Writer Plus 9100, 1.0c, max UDMA/33
+ata2.00: configured for MWDMA2
+ata2.01: configured for UDMA/33
+scsi 1:0:0:0: CD-ROM            GoldStar CD-ROM CRD-8320B 1.12 PQ: 0 ANSI: 5
+scsi 1:0:1:0: CD-ROM            HP       CD-Writer+ 9100  1.0c PQ: 0 ANSI: 5
+
+/Mikael
+
+--- linux-2.6.29-rc1/drivers/ata/ata_piix.c.~1~	2009-01-13 23:35:23.000000000 +0100
++++ linux-2.6.29-rc1/drivers/ata/ata_piix.c	2009-01-14 22:57:37.000000000 +0100
+@@ -310,7 +310,7 @@ static struct scsi_host_template piix_sh
+ };
+ 
+ static struct ata_port_operations piix_pata_ops = {
+-	.inherits		= &ata_bmdma32_port_ops,
++	.inherits		= &ata_bmdma_port_ops,
+ 	.cable_detect		= ata_cable_40wire,
+ 	.set_piomode		= piix_set_piomode,
+ 	.set_dmamode		= piix_set_dmamode,
