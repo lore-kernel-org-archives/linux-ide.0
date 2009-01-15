@@ -1,47 +1,63 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] tx4938ide: Fix build error due to read_sff_dma_status
- moving
-Date: Thu, 15 Jan 2009 16:52:32 +0300
-Message-ID: <496F3FA0.8060807@ru.mvista.com>
-References: <1231608019-28679-1-git-send-email-anemo@mba.ocn.ne.jp> <4968DA1B.2020702@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2 v1] pata_via.c:  Patch the behavior of via chipsets.
+Date: Thu, 15 Jan 2009 22:54:50 +0900
+Message-ID: <496F402A.2090704@kernel.org>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC56D@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:13217 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754698AbZAONv5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2009 08:51:57 -0500
-In-Reply-To: <4968DA1B.2020702@ru.mvista.com>
+Received: from hera.kernel.org ([140.211.167.34]:49335 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754773AbZAONzK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jan 2009 08:55:10 -0500
+In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC56D@exchtp03.taipei.via.com.tw>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: JosephChan@via.com.tw
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, sshtylyov@ru.mvista.com
 
-Hello, I wrote:
+Hello, Joseph.
 
->> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
->> diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
->> index b4ef218..d909534 100644
->> --- a/drivers/ide/tx4938ide.c
->> +++ b/drivers/ide/tx4938ide.c
->> @@ -202,7 +202,6 @@ static const struct ide_tp_ops tx4938ide_tp_ops = {
->>      .exec_command        = ide_exec_command,
->>      .read_status        = ide_read_status,
->>      .read_altstatus        = ide_read_altstatus,
->> -    .read_sff_dma_status    = ide_read_sff_dma_status,
->>  
->>      .set_irq        = ide_set_irq,
->>  
+JosephChan@via.com.tw wrote:
+> This patch is to patch the behavior of via chipsets, which will reset the DEV 
+> register to be reset value after changing the IEN bit on CTL register to cause
+> channel reset. For some controllers, the pata_via default processing flow will
+> work OK, because the controller will cache the value of the registers until it
+> receives a set device operation (write the device register). By following the
+> ATA/ATAPI protocol, DEV bit should be set before issuing ATA/ATAPI commands to
+> device. And this patch is to set DEV bit after IEN bit is set of VIA chipset
+> VX700/CX700, VX800/V820 and VX855 series.
 > 
+> Signed-off-by: Joseph Chan <josephchan@via.com.tw>
 > 
->    Oops. Don;t know how I managed to miss this one...
+> --- a/drivers/ata/pata_via.c	2009-01-16 02:36:58.000000000 +0800
+> +++ a/drivers/ata/pata_via.c	2009-01-16 02:39:04.000000000 +0800
+> @@ -347,12 +347,11 @@
+>   */
+>  static void via_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+>  {
+> -	struct ata_taskfile tmp_tf;
+> +	struct ata_ioports *ioaddr = &ap->ioaddr;
+>  
+> -	if (ap->ctl != ap->last_ctl && !(tf->flags & ATA_TFLAG_DEVICE)) {
+> -		tmp_tf = *tf;
+> -		tmp_tf.flags |= ATA_TFLAG_DEVICE;
+> -		tf = &tmp_tf;
+> +	if (tf->ctl != ap->last_ctl) {
+> +		iowrite8(tf->ctl, ioaddr->ctl_addr);
+> +		iowrite8(tf->device, ioaddr->device_addr);
 
-    Ah, I know how: this driver was added after I created my patch, and I 
-didn't re-check for the missing pieces several months later, when preparing 
-the patch for submission. :-/
+Oh, I see.  So the controller requires that the DEVICE register is
+always loaded whenever ctl changes && it should be loaded before the
+LBA regs.  Interesting.  Please note that the device select bit is
+always loaded before any of these happens.
 
-MBR, Sergei
+Can you please add comments to explain it?  Also, it would be nice if
+you do ap->ctl = ap->last_ctl and turn off ATA_TFLAG_DEVICE to avoid
+loading them yet again.
+
+Thanks.
+
+-- 
+tejun
