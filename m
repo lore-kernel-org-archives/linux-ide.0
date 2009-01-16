@@ -1,65 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Fri, 16 Jan 2009 16:32:05 +0300
-Message-ID: <49708C55.1020204@ru.mvista.com>
-References: <200901141345.42583.stf_xl@wp.pl> <20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH] tx4939ide: Do not use zero count PRD entry
+Date: Fri, 16 Jan 2009 23:25:27 +0900 (JST)
+Message-ID: <20090116.232527.59651191.anemo@mba.ocn.ne.jp>
+References: <1230215558-9197-1-git-send-email-anemo@mba.ocn.ne.jp>
+	<497082D1.5030504@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49114 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758849AbZAPNcN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Jan 2009 08:32:13 -0500
-In-Reply-To: <20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
+Received: from mba.ocn.ne.jp ([122.1.235.107]:64550 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936116AbZAPOZa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jan 2009 09:25:30 -0500
+In-Reply-To: <497082D1.5030504@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ddaney@caviumnetworks.com
+To: sshtylyov@ru.mvista.com
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, linux-mips@linux-mips.org, stable@kernel.org
 
-Hello.
+On Fri, 16 Jan 2009 15:51:29 +0300, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> > +			 * This workaround for zero count seems required.
+> > +			 * (standard ide_build_dmatable do it too)
+> 
+>     s/do/does/
 
-Alan Cox wrote:
+Thanks!
 
->> +#ifdef AT91_GPIO_IRQ_HACK
->> +#define NR_TRIES 10
->> +	int ntries = 0;
->> +	int pin_val1, pin_val2;	
->> +	do {
->> +		pin_val1 = at91_get_gpio_value(AT91_PIN_PB20);
->> +		pin_val2 = at91_get_gpio_value(AT91_PIN_PB20);
->> +	} while (pin_val1 != pin_val2 && ntries++ < NR_TRIES);
->>     
->
-> You really don't want to put special board specific code in generic
-> locations. In the libata case you don't need to and I think in the ide
-> case you can avoid it too by wrapping the IRQ handler.
+> > +			if ((bcount & 0xffff) == 0x0000)
+> 
+>    Why not just bcount == 0x10000?
 
-   Unfortunately, it seems you can't wrap ide_intr(), at least with the 
-current code.
+Indeed.  It is just because ide_build_dmatable does so :)
 
-> Libata also supports polled mode.
->   
+I will prepare another patch, while the patch is already mainlined and
+queued for stable, and this time changes are not suitable for stable
+tree.
 
-   Yeah. Stanslaw, I'd (have to) advise going the libata way in this 
-case -- in case you want to avoid the additional trouble of porting this 
-broken-minded IRQ implementation to the IDE core... although the real 
-issue seems to olny be with the development board.
-
-> Other comments:
-> 	- The old and new ATA layers both have timing tables and timing
-> functions so you don't need all the duplicated timing table logic.
->   
-
-   Stanislaw's patch is adding the DIOx- to address hold time (t9) to 
-the existing ones. While there's has been already a patch by David Daney 
-adding this timing to libata (however, the author have ditched this idea 
-finally), the table in ide-timings.c still misses it, as well as the PIO 
-mode 6 timings...
-   Hm, besides the address setup and active/recovery times there seem 
-wrong for the PIO mode 5: they should be 15 and 65/25, not 20 and 50/30. 
-Bart, are you reading this? :-)
-
-WBR, Sergei
-
-
+---
+Atsushi Nemoto
