@@ -1,75 +1,112 @@
-From: Gavin Cameron <gavin@gavsworld.net>
-Subject: Re: libata problems
-Date: Fri, 16 Jan 2009 16:30:55 +0000
-Message-ID: <4970B63F.40208@gavsworld.net>
-References: <4880BDCD.4030104@gavsworld.net> <4892CDED.6080302@kernel.org> <4898BD4F.90709@gavsworld.net> <4898F11D.1080902@kernel.org> <4899EE03.3060204@gavsworld.net> <48A2AA73.6010901@kernel.org> <495F5AB3.1090800@gavsworld.net> <496D72A2.3050005@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Fri, 16 Jan 2009 17:58:37 +0100
+Message-ID: <200901161758.38037.bzolnier@gmail.com>
+References: <200901141345.42583.stf_xl@wp.pl> <20090114131727.5b0e5193@lxorguk.ukuu.org.uk> <49708C55.1020204@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ptb-relay02.plus.net ([212.159.14.146]:43572 "EHLO
-	ptb-relay02.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934066AbZAPQbD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 11:31:03 -0500
-In-Reply-To: <496D72A2.3050005@kernel.org>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:42032 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753812AbZAPQ73 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 11:59:29 -0500
+Received: by bwz14 with SMTP id 14so5324011bwz.13
+        for <linux-ide@vger.kernel.org>; Fri, 16 Jan 2009 08:59:27 -0800 (PST)
+In-Reply-To: <49708C55.1020204@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
-
-Tejun Heo wrote:
-> Gavin Cameron wrote:
->> Hello,
->>
->> Happy new year first of all :-)
->>
->> It's been a while since I've heard anything on this libata problem, so I
->> thought I'd see what's happening.
->>
->> I have some good news though: one of my PCs is working fine now - kirk
->> (which I've recently switched from Fedora to Ubuntu)
->>
->>     * Gigabyte GA-7DX M/B (AMD 761 / VIA 686B chipset)
->>     * AMD Althlon XP 2100+
->>     * PATA LiteOn DVD-RW
->>     * Ubuntu 8.10 - kernel 2.6.27-9-generic
->>
->> However, picard is still not working:
->>     * ASUS M2V M/B (VIA K8T890 / VIA VT8237A chipset)
->>     * AMD Athlon 64 X2 6000+
->>     * PATA LiteOn DVD RAM/RW
->>     * Fedora 10 - kernel 2.6.27.9-159.fc10.x86_64
->>
->> I'm currently booting with this from grub:
->> title Fedora (2.6.27.9-159.fc10.x86_64)
->>     root (hd0,2)
->>     kernel /vmlinuz-2.6.27.9-159.fc10.x86_64 ro
->> root=UUID=5d9cfdad-6c2f-4f95-840f-99080642519c rhgb quiet pci=noacpi
->>     initrd /initrd-2.6.27.9-159.fc10.x86_64.img
->>
->> Which is the standard Fedora option (plus the noacpi).
->>
->> I've attached some log files to assist in further debug.
->>
->> The /var/log/messages file is very long (so appologies for this), but I
->> noticed something interesting: on 2nd of Jan, there were no CDs inserted
->> into the drive at all that day, yet there is trouble communicating with
->> the drive. Today is the 3rd and the ata messages at the end are when I
->> inserted a CD.
->>
->> The problem with picard is that it refuses to read CDs/DVDs placed in
->> the PATA drive (unless it has been within a few minutes of powering up)
->> and also that the PATA hard drive still performs frequent head unloads.
->>
->> If you require any other information, please let me know.
-> 
-> Does irqpoll help?
-> 
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Stanislaw Gruszka <stf_xl@wp.pl>, Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org, ddaney@caviumnetworks.com
 
 Hi,
 
-I've just tried adding "irqpoll" to my kernel options and it makes no 
-difference.
+On Friday 16 January 2009, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Alan Cox wrote:
+> 
+> >> +#ifdef AT91_GPIO_IRQ_HACK
+> >> +#define NR_TRIES 10
+> >> +	int ntries = 0;
+> >> +	int pin_val1, pin_val2;	
+> >> +	do {
+> >> +		pin_val1 = at91_get_gpio_value(AT91_PIN_PB20);
+> >> +		pin_val2 = at91_get_gpio_value(AT91_PIN_PB20);
+> >> +	} while (pin_val1 != pin_val2 && ntries++ < NR_TRIES);
+> >>     
+> >
+> > You really don't want to put special board specific code in generic
+> > locations. In the libata case you don't need to and I think in the ide
+> > case you can avoid it too by wrapping the IRQ handler.
+> 
+>    Unfortunately, it seems you can't wrap ide_intr(), at least with the 
+> current code.
 
-Regards,
-Gavin.
+Well... there shouldn't be much problem with:
+
+* adding ->irq_handler method to struct ide_port_info and struct ide_host
+
+  [ which reminds me that struct ide_port_info would be better named struct
+    ide_host_info and IIRC somebody has already noticed it in the past ;-) ]
+
+* exporting ide_intr()
+
+* adding ide_interrupt() wrapper around ide_intr() which will do sth like:
+
+	if (host->irq_handler)
+		return host->irq_handler()
+	else
+		return ide_intr()
+
+  and then passing &ide_interrupt instead of &ide_intr to request_irq()
+
+* implementing at91_irq_handler()
+
+* Et Voila!
+
+In the longer term it would also be useful for other purposes
+(like adding ATA-like flash devices support to IDE).
+
+> > Libata also supports polled mode.
+> >   
+> 
+>    Yeah. Stanslaw, I'd (have to) advise going the libata way in this 
+> case -- in case you want to avoid the additional trouble of porting this 
+> broken-minded IRQ implementation to the IDE core... although the real 
+> issue seems to olny be with the development board.
+
+Enhancing pata_at32 seems to be also a good idea but at91_ide
+looks almost ready for merge, is clean and relatively simple.
+
+I think that the only things needing fixing before merge are:
+
+- IRQ hack
+
+- not using IDE_TIMINGS
+
+and both should be easy to address IMHO.
+
+> > Other comments:
+> > 	- The old and new ATA layers both have timing tables and timing
+> > functions so you don't need all the duplicated timing table logic.
+> >   
+> 
+>    Stanislaw's patch is adding the DIOx- to address hold time (t9) to 
+> the existing ones. While there's has been already a patch by David Daney 
+> adding this timing to libata (however, the author have ditched this idea 
+> finally), the table in ide-timings.c still misses it, as well as the PIO 
+> mode 6 timings...
+
+Indeed... should be easy and quick to fix though.
+
+>    Hm, besides the address setup and active/recovery times there seem 
+> wrong for the PIO mode 5: they should be 15 and 65/25, not 20 and 50/30. 
+> Bart, are you reading this? :-)
+
+Yeah.  Where's the patch? :-)
+
+Thanks,
+Bart
