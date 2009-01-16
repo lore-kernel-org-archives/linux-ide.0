@@ -1,51 +1,100 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2 v1] pata_via.c:  support VX855 and future chips whose
- IDE controller use 0x0571.
-Date: Fri, 16 Jan 2009 15:15:27 +0300
-Message-ID: <49707A5F.7030109@ru.mvista.com>
-References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC5C6@exchtp03.taipei.via.com.tw>
+Subject: Re: [PATCH] ide: motherboard-info based blacklist for ide-dma
+Date: Fri, 16 Jan 2009 15:35:44 +0300
+Message-ID: <49707F20.4030600@ru.mvista.com>
+References: <1230651239-29388-1-git-send-email-kirr@mns.spb.ru> <49611CF4.9030103@ru.mvista.com> <4961478B.9060005@ru.mvista.com> <200901151448.52900.gdu@mns.spb.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:47155 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:47819 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755102AbZAPMPe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Jan 2009 07:15:34 -0500
-In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC5C6@exchtp03.taipei.via.com.tw>
+	id S1758351AbZAPMft (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jan 2009 07:35:49 -0500
+In-Reply-To: <200901151448.52900.gdu@mns.spb.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: JosephChan@via.com.tw
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, tj@kernel.org
+To: Dmitry Gryazin <gdu@mns.spb.ru>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kirill Smelkov <kirr@mns.spb.ru>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, navy-patches@mns.spb.ru
 
 Hello.
 
-JosephChan@via.com.tw wrote:
+Dmitry Gryazin wrote:
 
->> The patch adds entries for 0xFFFF (is that really right) as a 
->> bridge and
->> 0xC409 - I see nothing for 0x0571.
->>     
+>>>> True.  However it should be possible to handle it correctly by adding
+>>>> the
+>>>> DMA quirk to the respective host drivers (seems to be via82cxxx.c in
+>>>> case of
+>>>> IEI PCISA-C3/EDEN).
+>>>>         
+>>>   Yeah, this seems a viable approach...
+>>>       
+>>>> Kirill, could you please look into adding such quirk to via82cxxx
+>>>> instead?
+>>>>
+>>>> [ It seems the best place to add it would be via_init_one() as we
+>>>> could just
+>>>>         
+>>>   No, not really -- the issue is not at all as simple as this patch
+>>> tried to present it. Looking at its "Quick Startup Reference"
+>>> (http://f.ipc2u.ru/files/add/doc/496/M_PCISA-C800EV_ENG.pdf), the EPIC
+>>> board has *two* normal IDE connectors in addition to the CF slot
+>>> (connected to the secondary port -- and it seems possible that a hard
+>>> drive can be connected to the same port as CF), so the right place
+>>> seems to rather be in [mu]dma_filter() methods -- and the decision
+>>> should be strictly based on the drive type indicating CF, i.e. by
+>>> calling ata_id_is_cfa().
+>>>       
 >
-> PCI_DEVICE_ID_VIA_ANON is used to stand for Unknown South Bridge for VX855
-> and future chips, since the pata_via has a southbridge check, which is redundant.
-
-   If it was redundant, it wouldn't have been there...
-
-> If we may VIA has a new SB with new bridge ID which in not in the check list, whose 
-> IDE controller is 0x0571. Linux default pata_via can not drive IDE controller of 402, since
-> the southbridge check in pata_via can not pass. 
->   
-> So we add PCI_DEVICE_ID_VIA_ANON to stand for our future southbridge,
-> and this will help to pass southbridge check.
+> As you suggest, we could use the following criterions:
+>
+>     Board vendor="FIC"		&&
+>     Board name="PT-2200"	&&
+>     VIA-family IDE controller	&&
+>     drive type=CF
 >   
 
-   Why not just add the new and future SB device IDs to the list?
+   Yes, but in almost exactly opposite order (well one check shoud be added)
 
-> Is it possible to do this way? And can it be acceptable in kernel policy?
+    VT82C686 (or whatever) and
+    secondary channel and
+    CFA device and
+    DMI ID is FIC PT2200
+
+> It should work good enough.
+>
+> To test it I also tried to install external IDE CF adaptor to the secondary 
+> IDE controller (both master and slave).
+
+   You mean that this adaptor is directly connected to IDE slot with the 
+cable... hm, haven't seen those.
+
+> And it's also identified as CF drive 
+> type. And we turn off DMA for it. But since external CF adaptor could be 
+> wired right, turning DMA off would be incorrect in some cases.
+>
+> Yes, _that_ particular external IDE/CF adaptor that we bought, has the same  
+> problem, so turning DMA off on it should be correct. We even decided to 
+> verify ourselves that wrong soldering is the cause of problems, and wired 
+> manually necessary pins, and, voila, DMA works. So the question is:
+>
+>     Is it right to implement the above-mentioned criterion, which would work 
+>     correctly in 99 cases of 100, but will pessimistically turn DMA off in
+>     rare cases (e.g. rightly wired external IDE/CF adaptor attached to
+>     PCISA/C3), or is the whole problem unsolvable?
 >   
 
-   I doubt it...
+   Good question. However, with the on-board CF adapter already present 
+on the seconary channel it seems improbable that the user will need to 
+connect another (external) CF adapter. Even if he'd need it, he'd still 
+be able to use the primary port.
+
+> We could not come up with the right criterion which selects exactly on-board 
+> CF slot, so if there is no satisfactory 100% reliable solution maybe it 
+> doesn't make sense to continue...
+>   
+
+   I think it still does make sense.
 
 MBR, Sergei
 
