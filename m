@@ -1,55 +1,52 @@
-From: <JosephChan@via.com.tw>
-Subject: RE: [PATCH 1/2 v1] pata_via.c:  support VX855 and future chips whose IDE controller use 0x0571.
-Date: Fri, 16 Jan 2009 19:46:50 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087ECECE@exchtp03.taipei.via.com.tw>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2 v1] pata_via.c:  support VX855 and future chips whose
+ IDE controller use 0x0571.
+Date: Fri, 16 Jan 2009 15:15:27 +0300
+Message-ID: <49707A5F.7030109@ru.mvista.com>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC5C6@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:58144 "EHLO
-	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760296AbZAPLqw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 06:46:52 -0500
-Content-class: urn:content-classes:message
+Received: from h155.mvista.com ([63.81.120.155]:47155 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755102AbZAPMPe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jan 2009 07:15:34 -0500
+In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087EC5C6@exchtp03.taipei.via.com.tw>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: linux-ide@vger.kernel.org, tj@kernel.org
+To: JosephChan@via.com.tw
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, tj@kernel.org
 
-PiANCj4gPiBBbHNvIGFsbCB0aGUgc2Vjb25kIHBvcnQgc3R1ZmYgaXMgdW5uZWVkZWQ6IEp1c3Qg
-ZG8NCj4gPiANCj4gPiAJaWYgKGhhc19vbmVfcG9ydCkNCj4gPiAJCXBwaVsxXSA9ICZhdGFfZHVt
-bXlfcG9ydF9pbmZvOw0KPiA+IA0KPiA+IGFuZCBvbmx5IHRoZSBmaXJzdCBwb3J0IHdpbGwgYmUg
-cHJvYmVkLg0KPiA+IA0KPiANCj4gV2Ugd2lsbCBjaGVjayBpdCBvdXQuIFRoYW5rcy4gOikNCg0K
-SG93IGFib3V0IHRoaXMgb25lPyBUaGFua3MuDQoNCi0tLSBhL2RyaXZlcnMvYXRhL3BhdGFfdmlh
-LmMJMjAwOC0xMi0yNSAwNzoyNjozNy4wMDAwMDAwMDAgKzA4MDANCisrKyBiL2RyaXZlcnMvYXRh
-L3BhdGFfdmlhLmMJMjAwOS0wMS0xNyAwMzozNDo1NS4wMDAwMDAwMDAgKzA4MDANCkBAIC02Myw2
-ICs2Myw3IEBADQogDQogI2RlZmluZSBEUlZfTkFNRSAicGF0YV92aWEiDQogI2RlZmluZSBEUlZf
-VkVSU0lPTiAiMC4zLjMiDQorI2RlZmluZSBTSU5HTEUJMSAvKiBUbyBpZGVudGlmeSBzaW5nbGUg
-Y2hhbm5lbCBjb250cm9sbGVycyAqLw0KIA0KIC8qDQogICoJVGhlIGZvbGxvd2luZyBjb21lcyBk
-aXJlY3RseSBmcm9tIFZvanRlY2ggUGF2bGlrJ3MgaWRlL3BjaS92aWE4MmN4eHgNCkBAIC05Nyw2
-ICs5OCw4IEBADQogCXU4IHJldl9tYXg7DQogCXUxNiBmbGFnczsNCiB9IHZpYV9pc2FfYnJpZGdl
-c1tdID0gew0KKwl7ICJ2dHh4eHgiLAlQQ0lfREVWSUNFX0lEX1ZJQV9BTk9OLCAgICAgMHgwMCwg
-MHgyZiwgVklBX1VETUFfMTMzIHwNCisJVklBX0JBRF9BU1QgfSwNCiAJeyAidng4MDAiLAlQQ0lf
-REVWSUNFX0lEX1ZJQV9WWDgwMCwgICAgMHgwMCwgMHgyZiwgVklBX1VETUFfMTMzIHwNCiAJVklB
-X0JBRF9BU1QgfCBWSUFfU0FUQV9QQVRBIH0sDQogCXsgInZ0ODIzN3MiLAlQQ0lfREVWSUNFX0lE
-X1ZJQV84MjM3UywgICAgMHgwMCwgMHgyZiwgVklBX1VETUFfMTMzIHwgVklBX0JBRF9BU1QgfSwN
-CkBAIC00NjAsNiArNDYzLDcgQEANCiAJc3RhdGljIGludCBwcmludGVkX3ZlcnNpb247DQogCXU4
-IGVuYWJsZTsNCiAJdTMyIHRpbWluZzsNCisJaW50IHNpbmdsZV9wb3J0ID0gKGludCkgaWQtPmRy
-aXZlcl9kYXRhOw0KIAlpbnQgcmM7DQogDQogCWlmICghcHJpbnRlZF92ZXJzaW9uKyspDQpAQCAt
-NDY5LDYgKzQ3Myw5IEBADQogCWlmIChyYykNCiAJCXJldHVybiByYzsNCiANCisJaWYgKHNpbmds
-ZV9wb3J0KQ0KKwkJcHBpWzFdID0gJmF0YV9kdW1teV9wb3J0X2luZm87DQorCQ0KIAkvKiBUbyBm
-aW5kIG91dCBob3cgdGhlIElERSB3aWxsIGJlaGF2ZSBhbmQgd2hhdCBmZWF0dXJlcyB3ZQ0KIAkg
-ICBhY3R1YWxseSBoYXZlIHRvIGxvb2sgYXQgdGhlIGJyaWRnZSBub3QgdGhlIElERSBjb250cm9s
-bGVyICovDQogCWZvciAoY29uZmlnID0gdmlhX2lzYV9icmlkZ2VzOyBjb25maWctPmlkOyBjb25m
-aWcrKykNCkBAIC00ODMsMTAgKzQ5MCwxMCBAQA0KIAkJfQ0KIA0KIAlpZiAoIWNvbmZpZy0+aWQp
-IHsNCi0JCXByaW50ayhLRVJOX1dBUk5JTkcgInZpYTogVW5rbm93biBWSUEgU291dGhCcmlkZ2Us
-IGRpc2FibGluZy5cbiIpOw0KLQkJcmV0dXJuIC1FTk9ERVY7DQotCX0NCi0JcGNpX2Rldl9wdXQo
-aXNhKTsNCisJCXByaW50ayhLRVJOX1dBUk5JTkcgInZpYTogVW5rbm93biBWSUEgU291dGhCcmlk
-Z2UuXG4iKTsNCisJCWNvbmZpZyA9IHZpYV9pc2FfYnJpZGdlczsNCisJfSBlbHNlDQorCQlwY2lf
-ZGV2X3B1dChpc2EpOw0KIA0KIAlpZiAoIShjb25maWctPmZsYWdzICYgVklBX05PX0VOQUJMRVMp
-KSB7DQogCQkvKiAweDQwIGxvdyBiaXRzIGluZGljYXRlIGVuYWJsZWQgY2hhbm5lbHMgKi8NCkBA
-IC01ODcsNiArNTk0LDcgQEANCiAJeyBQQ0lfVkRFVklDRShWSUEsIDB4MTU3MSksIH0sDQogCXsg
-UENJX1ZERVZJQ0UoVklBLCAweDMxNjQpLCB9LA0KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHg1MzI0
-KSwgfSwNCisJeyBQQ0lfVkRFVklDRShWSUEsIDB4QzQwOSksIFNJTkdMRSB9LA0KIA0KIAl7IH0s
-DQogfTsNCg==
+Hello.
+
+JosephChan@via.com.tw wrote:
+
+>> The patch adds entries for 0xFFFF (is that really right) as a 
+>> bridge and
+>> 0xC409 - I see nothing for 0x0571.
+>>     
+>
+> PCI_DEVICE_ID_VIA_ANON is used to stand for Unknown South Bridge for VX855
+> and future chips, since the pata_via has a southbridge check, which is redundant.
+
+   If it was redundant, it wouldn't have been there...
+
+> If we may VIA has a new SB with new bridge ID which in not in the check list, whose 
+> IDE controller is 0x0571. Linux default pata_via can not drive IDE controller of 402, since
+> the southbridge check in pata_via can not pass. 
+>   
+> So we add PCI_DEVICE_ID_VIA_ANON to stand for our future southbridge,
+> and this will help to pass southbridge check.
+>   
+
+   Why not just add the new and future SB device IDs to the list?
+
+> Is it possible to do this way? And can it be acceptable in kernel policy?
+>   
+
+   I doubt it...
+
+MBR, Sergei
+
+
