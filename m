@@ -1,119 +1,36 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Fri, 16 Jan 2009 18:43:19 +0100
-Message-ID: <200901161843.19487.bzolnier@gmail.com>
-References: <200901141345.42583.stf_xl@wp.pl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] libata fixes
+Date: Fri, 16 Jan 2009 18:21:28 +0000
+Message-ID: <20090116182128.35b63bf7@lxorguk.ukuu.org.uk>
+References: <20090116152721.GA6994@havoc.gtf.org>
+	<20090116093101.6d77b69b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:62605 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757594AbZAPRnj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 12:43:39 -0500
-Received: by bwz14 with SMTP id 14so5393699bwz.13
-        for <linux-ide@vger.kernel.org>; Fri, 16 Jan 2009 09:43:37 -0800 (PST)
-In-Reply-To: <200901141345.42583.stf_xl@wp.pl>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55916 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S936651AbZAPSVs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 13:21:48 -0500
+In-Reply-To: <20090116093101.6d77b69b.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+
+> > +	for (i = 0; i < 2; i++)
+> 
+> s/2/ARRAY_SIZE/
+
+It's 2. It's always 2 for a SFF controller. ARRAY_SIZE is just confusing
+in this case as the array won't change size.
 
 
-Czesc,
+> There's a 64-bit divide in there.  Will it link on 32-bit platforms?
+> Or is this all 64-bit-only code?
+> 
+> wtf is an octeon anyway?  (greps).  Some MIPS thing.  I guess it's
+> 64-bit-only.
 
-Just some minor nitpicks:
+Board specific driver anyway
 
-On Wednesday 14 January 2009, Stanislaw Gruszka wrote:
-
-[...]
-
-> +static const struct ide_tp_ops at91_ide_tp_ops = {
-> +	.exec_command = ide_exec_command,
-> +	.read_status = ide_read_status,
-> +	.read_altstatus = ide_read_altstatus,
-> +	.set_irq = ide_set_irq,
-> +
-> +	.tf_load = at91_ide_tf_load,
-> +	.tf_read = at91_ide_tf_read,
-> +
-> +	.input_data = at91_ide_input_data,
-> +	.output_data = at91_ide_output_data,
-> +};
-
-no strong feelings about CodingStyle but we usually do:
-
-...
-	.exec_command	= ide_exec_command,
-	.read_status	= ide_read_status,
-...
-
-which helps code readability and consistency
-
-> +static void at91_ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
-> +{
-> +	u8 chipselect = drive->hwif->extra_base;
-> +
-> +	pdbg("pio %u\n", pio);
-> +
-> +	if (pio > 6) {
-> +		perr("can't set PIO %d mode\n", pio);
-> +		return;
-> +	}
-
-no need for this check (core code guarantees that it won't happen)
-
-> +static const struct ide_port_info at91_ide_port_info __initdata = {
-> +	.port_ops = &at91_ide_port_ops,
-> +	.tp_ops = &at91_ide_tp_ops,
-> +	.host_flags = IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA | IDE_HFLAG_SINGLE,
-> +	.pio_mask = ATA_PIO6,
-> +};
-
-AFAICS IDE_HFLAG_NO_IO_32BIT should also be set here,
-you may also want to set IDE_HFLAG_UNMASK_IRQS while at it
-
-and CodingStyle fixup would be a nice bonus
-
-> +#if 0
-> +	/* In 12-0275-01 version of the PCB address
-> +	 * lines CF_A0 and CF_A2 are swapped */
-> +	hw.io_ports.data_addr =	tf_base + 0;
-> +	hw.io_ports.error_addr = tf_base + 4;
-> +	hw.io_ports.nsect_addr = tf_base + 2;
-> +	hw.io_ports.lbal_addr = tf_base + 6;
-> +	hw.io_ports.lbam_addr = tf_base + 1;
-> +	hw.io_ports.lbah_addr = tf_base + 5;
-> +	hw.io_ports.device_addr = tf_base + 3;
-> +	hw.io_ports.command_addr = tf_base + 7;
-> +#else
-> +	/* Proper lines addresses */
-> +	hw.io_ports.data_addr = tf_base + 0;
-> +	hw.io_ports.error_addr = tf_base + 1;
-> +	hw.io_ports.nsect_addr = tf_base + 2;
-> +	hw.io_ports.lbal_addr = tf_base + 3;
-> +	hw.io_ports.lbam_addr = tf_base + 4;
-> +	hw.io_ports.lbah_addr =	tf_base + 5;
-> +	hw.io_ports.device_addr = tf_base + 6;
-> +	hw.io_ports.command_addr = tf_base + 7;
-> +#endif
-
-How's about using enums for offsets, i.e.
-
-enum {
-#if 0
-...
-	AT91_IDE_ERROR_ADDR_OFFSET = 4,
-...
-#else
-...
-	AT91_IDE_ERROR_ADDR_OFFSET = 1,
-...
-#endif
-};
-
-?
-
-otherwise (except issues already discussed in the other mail) it looks fine
