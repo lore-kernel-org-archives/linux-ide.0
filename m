@@ -1,48 +1,39 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [stable] [Bugme-new] [Bug 12351] New: sata_nv hotplug not work
-   in 2.6.27.10
-Date: Fri, 16 Jan 2009 20:38:18 -0600
-Message-ID: <4971449A.9010601@shaw.ca>
-References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca> <20090106102758.GA7309@libero.it> <4963F520.4060500@shaw.ca> <20090115184502.GC10674@kroah.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [Patch 1/1] sata_via.c: Add VT8261 support
+Date: Sat, 17 Jan 2009 06:09:42 -0500
+Message-ID: <4971BC76.4030605@garzik.org>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB8087ECECA@exchtp03.taipei.via.com.tw> <49712974.2020208@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:32611 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934048AbZAQCiY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 21:38:24 -0500
-In-Reply-To: <20090115184502.GC10674@kroah.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:52514 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755512AbZAQLJz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Jan 2009 06:09:55 -0500
+In-Reply-To: <49712974.2020208@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: gpanco@tiscali.it, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org, bugme-daemon@bugzilla.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: JosephChan@via.com.tw, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Greg KH wrote:
-> On Tue, Jan 06, 2009 at 06:19:44PM -0600, Robert Hancock wrote:
->> Giovanni Pancotti wrote:
->>> On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
->>>
->>>>>> Hardware Environment:x86 ASUS M2N-E
->>>> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
->>>> on hotplug and apparently that doesn't work. Thing is that:
->>> no, it is not MCP61, but MCP55:
->> Ahh, ok, that is less contradictory then :-) Presumably we should still 
->> be using hardreset on that chipset.
+Tejun Heo wrote:
+> JosephChan@via.com.tw wrote:
+>> Add VT8261SATA support .
+>>
+>> BRs,
+>> Joseph Chan 
+>>
+>>
+>> Signed-off-by: Joseph Chan <josephchan@via.com.tw>
 > 
-> So, do we know how to solve this in the 2.6.27.y tree?
+> Looks fine to me but please resend with Jeff on the to list.  Jeff is
+> the maintainer, so every patch goes through him.
 
-Can you try reverting this patch?
+This is already in 2.6.29-rc2, actually <grin>
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=3c324283e6cdb79210cf7975c3e40d3ba3e672b2
+	Jeff
 
-This likely isn't a proper fix as it will probably re-break some other 
-chipsets but it will confirm what the problem is in this case. It looks 
-like this patch changed MCP55 to inherit from generic_ops instead of 
-common_ops which caused it to use soft reset instead of hard reset. Not 
-sure if that was intentional or not.. Tejun?
 
-We really ought to fix up some of the naming in this driver to be less 
-confusing. Especially the "generic" stuff should be renamed, it's not 
-generic at all (it seems to only apply to MCP61 currently) yet it's used 
-as a base operations for other chipset types.
+
+
