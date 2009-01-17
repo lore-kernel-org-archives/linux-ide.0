@@ -1,58 +1,48 @@
-From: "Brian Rademacher" <rad@radfiles.net>
-Subject: Re: [PATCH] sata_mv: fix timeouts on lower ports of 508x/6081 chips
-Date: Fri, 16 Jan 2009 19:10:59 -0700
-Message-ID: <A666BC21CBD54A26AA83459EB26EA4BA@909927SOSLA>
-References: <496D04EB.3060803@rtr.ca> <496E53DD.6040408@gmail.com> <496E61E8.5010602@rtr.ca> <496E72D7.2070206@gmail.com> <496EA53F.7000605@rtr.ca> <496F34BF.5010701@ngs.ru> <4970BDC6.7020201@rtr.ca> <4970E958.1040800@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [stable] [Bugme-new] [Bug 12351] New: sata_nv hotplug not work
+   in 2.6.27.10
+Date: Fri, 16 Jan 2009 20:38:18 -0600
+Message-ID: <4971449A.9010601@shaw.ca>
+References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca> <20090106102758.GA7309@libero.it> <4963F520.4060500@shaw.ca> <20090115184502.GC10674@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="UTF-8";
-	reply-type=response
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qmta05.emeryville.ca.mail.comcast.net ([76.96.30.48]:41999 "EHLO
-	QMTA05.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755617AbZAQCLK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 21:11:10 -0500
-In-Reply-To: <4970E958.1040800@gmail.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:32611 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934048AbZAQCiY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2009 21:38:24 -0500
+In-Reply-To: <20090115184502.GC10674@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harri Olin <harri.olin@gmail.com>, Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Artem Bokhan <aptem@ngs.ru>, Eamonn Hamilton <EAMONN.HAMILTON@saic.com>, stable@kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: gpanco@tiscali.it, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org, bugme-daemon@bugzilla.kernel.org
 
-A little over 2 days here on 2.6.27 with no problems....
+Greg KH wrote:
+> On Tue, Jan 06, 2009 at 06:19:44PM -0600, Robert Hancock wrote:
+>> Giovanni Pancotti wrote:
+>>> On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
+>>>
+>>>>>> Hardware Environment:x86 ASUS M2N-E
+>>>> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
+>>>> on hotplug and apparently that doesn't work. Thing is that:
+>>> no, it is not MCP61, but MCP55:
+>> Ahh, ok, that is less contradictory then :-) Presumably we should still 
+>> be using hardreset on that chipset.
+> 
+> So, do we know how to solve this in the 2.6.27.y tree?
 
------ Original Message ----- 
-From: "Harri Olin" <harri.olin@gmail.com>
-To: "Mark Lord" <liml@rtr.ca>
-Cc: "IDE/ATA development list" <linux-ide@vger.kernel.org>; "Jeff Garzik" 
-<jgarzik@pobox.com>; "Artem Bokhan" <aptem@ngs.ru>; "Brian Rademacher" 
-<rad@radfiles.net>; "Eamonn Hamilton" <EAMONN.HAMILTON@saic.com>; 
-<stable@kernel.org>
-Sent: Friday, January 16, 2009 1:08 PM
-Subject: Re: [PATCH] sata_mv: fix timeouts on lower ports of 508x/6081 chips
+Can you try reverting this patch?
 
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=3c324283e6cdb79210cf7975c3e40d3ba3e672b2
 
-> Mark Lord wrote:
->> Fix a longstanding bug for the 8-port Marvell Sata controllers 
->> (508x/6081),
->> where accesses to the upper 4 ports would cause lost-interrupts / 
->> timeouts
->> for the lower 4-ports.  With this patch, the 6081 boards should finally 
->> be
->> reliable enough for mainstream use with Linux.
->>
->> This patch is for 2.6.29, but should also get reviewed/released
->> for the -stable branches of 2.6.28, 2.6.27, and 2.6.26.
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
->>
->
-> After patching no timeouts have occurred for 22 hours on 2.6.28 and 24 
-> hours on 2.6.27.6.
->
-> Tested-by: Harri Olin <harri.olin@gmail.com>
->
-> -- 
-> Harri. 
+This likely isn't a proper fix as it will probably re-break some other 
+chipsets but it will confirm what the problem is in this case. It looks 
+like this patch changed MCP55 to inherit from generic_ops instead of 
+common_ops which caused it to use soft reset instead of hard reset. Not 
+sure if that was intentional or not.. Tejun?
 
+We really ought to fix up some of the naming in this driver to be less 
+confusing. Especially the "generic" stuff should be renamed, it's not 
+generic at all (it seems to only apply to MCP61 currently) yet it's used 
+as a base operations for other chipset types.
