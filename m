@@ -1,31 +1,72 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Sat, 17 Jan 2009 20:20:36 +0000
-Message-ID: <20090117202036.610cdcb5@lxorguk.ukuu.org.uk>
-References: <200901141345.42583.stf_xl@wp.pl>
-	<20090114131727.5b0e5193@lxorguk.ukuu.org.uk>
-	<49708C55.1020204@ru.mvista.com>
-	<200901161603.03699.stf_xl@wp.pl>
-	<4970A8FF.4080404@ru.mvista.com>
-	<20090116161342.4229667f@lxorguk.ukuu.org.uk>
-	<49723AB5.7000809@ru.mvista.com>
+From: Andreas Schwab <schwab@suse.de>
+Subject: Re: [PATCH 3/6] ide: small ide_register_port() cleanup
+Date: Sun, 18 Jan 2009 02:23:18 +0100
+Message-ID: <jeocy58l15.fsf@sykes.suse.de>
+References: <200811122216.06257.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50276 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754465AbZAQUZg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Jan 2009 15:25:36 -0500
-In-Reply-To: <49723AB5.7000809@ru.mvista.com>
+Received: from ns2.suse.de ([195.135.220.15]:38322 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754685AbZARBXU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Jan 2009 20:23:20 -0500
+In-Reply-To: <200811122216.06257.bzolnier@gmail.com> (Bartlomiej
+	Zolnierkiewicz's message of "Wed, 12 Nov 2008 22:16:06 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ddaney@caviumnetworks.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> (many years ago) with and without 32-bit access enabled in the BIOS 
-> Setup and not seeing any significant differences. Perhpas it's worth to 
-> re-benchmark this in Linux if I find the time...
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> writes:
 
-On the intel chipsets I have it nearly doubles PIO speed, ditto on the
-Delkin cardbus.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-probe.c |    9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+>
+> Index: b/drivers/ide/ide-probe.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -640,14 +640,9 @@ static int ide_register_port(ide_hwif_t=20
+>  	/* register with global device tree */
+>  	dev_set_name(&hwif->gendev, hwif->name);
+>  	hwif->gendev.driver_data =3D hwif;
+> -	if (hwif->gendev.parent =3D=3D NULL) {
+> -		if (hwif->dev)
+> -			hwif->gendev.parent =3D hwif->dev;
+> -		else
+> -			/* Would like to do =3D &device_legacy */
+> -			hwif->gendev.parent =3D NULL;
+> -	}
+> +	hwif->gendev.parent =3D hwif->dev;
+
+This breaks ide-pmac.  It overwrites the parent that
+pmac_ide_macio_attach has set.
+
+Signed-off-by: Andreas Schwab <schwab@suse.de>
+
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 312127e..0db1ed9 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -649,7 +649,8 @@ static int ide_register_port(ide_hwif_t *hwif)
+ 	/* register with global device tree */
+ 	dev_set_name(&hwif->gendev, hwif->name);
+ 	hwif->gendev.driver_data =3D hwif;
+-	hwif->gendev.parent =3D hwif->dev;
++	if (hwif->gendev.parent =3D=3D NULL)
++		hwif->gendev.parent =3D hwif->dev;
+ 	hwif->gendev.release =3D hwif_release_dev;
+=20
+ 	ret =3D device_register(&hwif->gendev);
+
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
