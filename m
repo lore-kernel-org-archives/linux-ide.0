@@ -1,43 +1,52 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [git patches] libata hibernation fixes
-Date: Sun, 18 Jan 2009 11:20:07 +0100
-Message-ID: <200901181120.08992.elendil@planet.nl>
-References: <20081104062734.GA4420@havoc.gtf.org> <495D7DC9.8070101@kernel.org> <49698739.6010003@garzik.org> <49698739.6010003@garzik.org> <200901111343.49901.rjw@sisk.pl>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Sun, 18 Jan 2009 13:58:43 +0300
+Message-ID: <49730B63.4080500@ru.mvista.com>
+References: <200901141345.42583.stf_xl@wp.pl>	<20090114131727.5b0e5193@lxorguk.ukuu.org.uk>	<49708C55.1020204@ru.mvista.com>	<200901161603.03699.stf_xl@wp.pl>	<4970A8FF.4080404@ru.mvista.com> <20090116161342.4229667f@lxorguk.ukuu.org.uk> <49723AB5.7000809@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933379AbZARKU3@vger.kernel.org>
-In-reply-To: <200901111343.49901.rjw@sisk.pl>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: jeff@garzik.org, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:20030 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761043AbZARK6y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Jan 2009 05:58:54 -0500
+In-Reply-To: <49723AB5.7000809@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ddaney@caviumnetworks.com
 
-Rafael J. Wysocki wrote:
-> There is a name conflict with a change applied after this patchset ha=
-d
-> been created. =C2=A0The appended patch fixes it for me.
-[...]
-> @@ -483,7 +483,7 @@ const struct dmi_system_id *dmi_first_match(const=
- struct dmi_system_id *list)
->         const struct dmi_system_id *d;=20
->=20
->         for (d =3D list; d->ident; d++)
-> -               if (dmi_match(d))
-> +               if (dmi_matches(d))
->                         return d;
+Hello, I wrote:
 
-I get two warnings when compiling your patch with this correction on to=
-p:
-drivers/firmware/dmi_scan.c: In function =E2=80=98dmi_first_match=E2=80=
-=99:
-drivers/firmware/dmi_scan.c:488: warning: return discards qualifiers fr=
-om pointer target type
-drivers/firmware/dmi_scan.c:483: warning: unused variable =E2=80=98i=E2=
-=80=99
+>>> the PIO transfer speeds (very significantly) though I'm not sure of 
+>>> the current state of affairs...
+>>>     
+>>
+>> 16bit only performance is identical (as you'd expect)
+>
+>   Well, I don't know what to expect, having seen figures like 0.5 (or 
+> 1.5) MB/s cited on this list...
 
-The second is trivial, but the first is beyond me :-/
+   Instead of going to bed, I tried booting FC8 (2.6.23.y) off DVD in 
+rescue mode and suppressing libata's DMA use: hdparm -t topped at around 
+1 MB/s from both SATA hard drive and PATA DVD drive with sata_sil driven 
+the former and pata_atiixp the latter... I wasn't able to compare 
+results with IDE core of course.
 
-Cheers,
-=46JP
+>> identical with the 32bit pio patches applied
+>>   
+> 32bit is now
+>
+>   Hm, I didn't realize 32-bit I/O really can really boost the IDE 
+> speed. I vaguely remember (or misremember) benchmarking drives under 
+> DOS (many years ago) with and without 32-bit access enabled in the 
+> BIOS Setup and not seeing any significant differences. Perhpas it's 
+> worth to re-benchmark this in Linux if I find the time...
+
+   With hdparm being able to control that via its -c option when using 
+IDE driver, it shouldn't take much time...
+
+MBR, Sergei
+
+
