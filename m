@@ -1,31 +1,65 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Mon, 19 Jan 2009 12:51:25 +0100
-Message-ID: <200901191251.25880.stf_xl@wp.pl>
-References: <200901141345.42583.stf_xl@wp.pl> <200901161603.03699.stf_xl@wp.pl> <4970A8FF.4080404@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git pull] IDE fixes
+Date: Mon, 19 Jan 2009 13:50:05 +0100
+Message-ID: <200901191350.06538.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:18182 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754552AbZASLo6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 06:44:58 -0500
-In-Reply-To: <4970A8FF.4080404@ru.mvista.com>
+Received: from nf-out-0910.google.com ([64.233.182.186]:25395 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759045AbZASMxB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 07:53:01 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ddaney@caviumnetworks.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Friday 16 January 2009 16:34, Sergei Shtylyov wrote:
-> > I use t9 for calculating memory controller settings, but maybe it is
-> > unneeded, pata_at91 don't use this value.
->
->     You mean pata_at32? It might have been that this detail was missed...
-Yes at32 of course. Now I'm trying to figure out difference between settings
-in at32 and my code. They differ, so one driver (I suspect my) is probably 
-wrong.
-
-Stanislaw Gruszka
+CkxpbnVzLCBwbGVhc2UgcHVsbCBmcm9tOgoKbWFzdGVyLmtlcm5lbC5vcmc6L3B1Yi9zY20vbGlu
+dXgva2VybmVsL2dpdC9iYXJ0L2lkZS0yLjYuZ2l0LwoKdG8gcmVjZWl2ZSB0aGUgZm9sbG93aW5n
+IHVwZGF0ZXM6CgogZHJpdmVycy9pZGUvZmFsY29uaWRlLmMgICB8ICAgIDIgKy0KIGRyaXZlcnMv
+aWRlL2lkZS1wcm9iZS5jICAgfCAgICAzICsrLQogZHJpdmVycy9pZGUvcGFsbV9iazM3MTAuYyB8
+ICAgMTEgKysrKysrKy0tLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgNiBk
+ZWxldGlvbnMoLSkKCgpBbmRyZWFzIFNjaHdhYiAoMSk6CiAgICAgIGlkZTogZml4IElERSBQTUFD
+IGJyZWFrYWdlCgpEYXZpZCBCcm93bmVsbCAoMSk6CiAgICAgIGRyaXZlcnMvaWRlL3BhbG1fYmsz
+NzEwLmMgYnVpbGRmaXgKCk1pY2hhZWwgU2NobWl0eiAoMSk6CiAgICAgIGlkZTogZml4IEZhbGNv
+biBJREUgYnJlYWthZ2UKCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9pZGUvZmFsY29uaWRlLmMgYi9k
+cml2ZXJzL2lkZS9mYWxjb25pZGUuYwppbmRleCBhNWJhODIwLi5hNjM4ZTk1IDEwMDY0NAotLS0g
+YS9kcml2ZXJzL2lkZS9mYWxjb25pZGUuYworKysgYi9kcml2ZXJzL2lkZS9mYWxjb25pZGUuYwpA
+QCAtODIsNyArODIsNyBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGlkZV90cF9vcHMgZmFsY29uaWRl
+X3RwX29wcyA9IHsKIAogc3RhdGljIGNvbnN0IHN0cnVjdCBpZGVfcG9ydF9pbmZvIGZhbGNvbmlk
+ZV9wb3J0X2luZm8gPSB7CiAJLnRwX29wcwkJCT0gJmZhbGNvbmlkZV90cF9vcHMsCi0JLmhvc3Rf
+ZmxhZ3MJCT0gSURFX0hGTEFHX05PX0RNQSwKKwkuaG9zdF9mbGFncwkJPSBJREVfSEZMQUdfTk9f
+RE1BIHwgSURFX0hGTEFHX1NFUklBTElaRSwKIH07CiAKIHN0YXRpYyB2b2lkIF9faW5pdCBmYWxj
+b25pZGVfc2V0dXBfcG9ydHMoaHdfcmVnc190ICpodykKZGlmZiAtLWdpdCBhL2RyaXZlcnMvaWRl
+L2lkZS1wcm9iZS5jIGIvZHJpdmVycy9pZGUvaWRlLXByb2JlLmMKaW5kZXggMzEyMTI3ZS4uMGRi
+MWVkOSAxMDA2NDQKLS0tIGEvZHJpdmVycy9pZGUvaWRlLXByb2JlLmMKKysrIGIvZHJpdmVycy9p
+ZGUvaWRlLXByb2JlLmMKQEAgLTY0OSw3ICs2NDksOCBAQCBzdGF0aWMgaW50IGlkZV9yZWdpc3Rl
+cl9wb3J0KGlkZV9od2lmX3QgKmh3aWYpCiAJLyogcmVnaXN0ZXIgd2l0aCBnbG9iYWwgZGV2aWNl
+IHRyZWUgKi8KIAlkZXZfc2V0X25hbWUoJmh3aWYtPmdlbmRldiwgaHdpZi0+bmFtZSk7CiAJaHdp
+Zi0+Z2VuZGV2LmRyaXZlcl9kYXRhID0gaHdpZjsKLQlod2lmLT5nZW5kZXYucGFyZW50ID0gaHdp
+Zi0+ZGV2OworCWlmIChod2lmLT5nZW5kZXYucGFyZW50ID09IE5VTEwpCisJCWh3aWYtPmdlbmRl
+di5wYXJlbnQgPSBod2lmLT5kZXY7CiAJaHdpZi0+Z2VuZGV2LnJlbGVhc2UgPSBod2lmX3JlbGVh
+c2VfZGV2OwogCiAJcmV0ID0gZGV2aWNlX3JlZ2lzdGVyKCZod2lmLT5nZW5kZXYpOwpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9pZGUvcGFsbV9iazM3MTAuYyBiL2RyaXZlcnMvaWRlL3BhbG1fYmszNzEw
+LmMKaW5kZXggYTdhYzQ5MC4uZjM4YWFjNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9pZGUvcGFsbV9i
+azM3MTAuYworKysgYi9kcml2ZXJzL2lkZS9wYWxtX2JrMzcxMC5jCkBAIC0zNDYsNyArMzQ2LDgg
+QEAgc3RhdGljIGludCBfX2luaXQgcGFsbV9iazM3MTBfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2Rl
+dmljZSAqcGRldikKIHsKIAlzdHJ1Y3QgY2xrICpjbGs7CiAJc3RydWN0IHJlc291cmNlICptZW0s
+ICppcnE7Ci0JdW5zaWduZWQgbG9uZyBiYXNlLCByYXRlOworCXZvaWQgX19pb21lbSAqYmFzZTsK
+Kwl1bnNpZ25lZCBsb25nIHJhdGU7CiAJaW50IGksIHJjOwogCWh3X3JlZ3NfdCBodywgKmh3c1td
+ID0geyAmaHcsIE5VTEwsIE5VTEwsIE5VTEwgfTsKIApAQCAtMzgyLDExICszODMsMTMgQEAgc3Rh
+dGljIGludCBfX2luaXQgcGFsbV9iazM3MTBfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAq
+cGRldikKIAliYXNlID0gSU9fQUREUkVTUyhtZW0tPnN0YXJ0KTsKIAogCS8qIENvbmZpZ3VyZSB0
+aGUgUGFsbSBDaGlwIGNvbnRyb2xsZXIgKi8KLQlwYWxtX2JrMzcxMF9jaGlwaW5pdCgodm9pZCBf
+X2lvbWVtICopYmFzZSk7CisJcGFsbV9iazM3MTBfY2hpcGluaXQoYmFzZSk7CiAKIAlmb3IgKGkg
+PSAwOyBpIDwgSURFX05SX1BPUlRTIC0gMjsgaSsrKQotCQlody5pb19wb3J0c19hcnJheVtpXSA9
+IGJhc2UgKyBJREVfUEFMTV9BVEFfUFJJX1JFR19PRkZTRVQgKyBpOwotCWh3LmlvX3BvcnRzLmN0
+bF9hZGRyID0gYmFzZSArIElERV9QQUxNX0FUQV9QUklfQ1RMX09GRlNFVDsKKwkJaHcuaW9fcG9y
+dHNfYXJyYXlbaV0gPSAodW5zaWduZWQgbG9uZykKKwkJCQkoYmFzZSArIElERV9QQUxNX0FUQV9Q
+UklfUkVHX09GRlNFVCArIGkpOworCWh3LmlvX3BvcnRzLmN0bF9hZGRyID0gKHVuc2lnbmVkIGxv
+bmcpCisJCQkoYmFzZSArIElERV9QQUxNX0FUQV9QUklfQ1RMX09GRlNFVCk7CiAJaHcuaXJxID0g
+aXJxLT5zdGFydDsKIAlody5kZXYgPSAmcGRldi0+ZGV2OwogCWh3LmNoaXBzZXQgPSBpZGVfcGFs
+bTM3MTA7CgAK
