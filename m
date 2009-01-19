@@ -1,49 +1,32 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
-Date: Mon, 19 Jan 2009 22:35:22 +0100
-Message-ID: <200901192235.23677.rjw@sisk.pl>
-References: <20081104062734.GA4420@havoc.gtf.org> <200901192054.55536.rjw@sisk.pl> <20090119212428.GB6194@nowhere>
+Subject: Re: Another libata error related to OCZ SSD
+Date: Mon, 19 Jan 2009 22:39:24 +0100
+Message-ID: <200901192239.25071.rjw@sisk.pl>
+References: <20090111174159.GC4250@ics.muni.cz>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:39743 "EHLO ogre.sisk.pl"
+Received: from ogre.sisk.pl ([217.79.144.158]:39773 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755702AbZASVgC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 16:36:02 -0500
-In-Reply-To: <20090119212428.GB6194@nowhere>
+	id S1753390AbZASVjr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2009 16:39:47 -0500
+In-Reply-To: <20090111174159.GC4250@ics.muni.cz>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Monday 19 January 2009, Frederic Weisbecker wrote:
-> On Mon, Jan 19, 2009 at 08:54:54PM +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > Introduce boolean function system_entering_hibernation() returning
-> > 'true' during the last phase of hibernation, in which devices are
-> > being put into low power states and the sleep state (for example,
-> > ACPI S4) is finally entered.
-> > 
-> > Some device drivers need such a function to check if the system is
-> > in the final phase of hibernation.  In particular, some SATA drivers
-> > are going to use it for blacklisting systems in which the disks
-> > should not be spun down during the last phase of hibernation (the
-> > BIOS will do that anyway).
-> >
+(CCing ACPI and IDE).
+
+On Sunday 11 January 2009, Lukas Hejtmanek wrote:
+> Hello,
 > 
-> Hi Rafael,
+> I encountered another problem with the OCZ SSD disk. If I suspend to ram while
+> running from batteries, my disk disappears. I had no problem with suspends on
+> AC power.
 > 
-> Why not using the power event notifier?
-
-I'm not sure what you mean exactly, care to elaborate?
-
-Anyway, however, this is a pretty old patch series and I'm not very much
-interested in reworking it once again.  If you think it can be made better,
-please go on. :-)
-
-Thanks,
-Rafael
+> I created a screenshot of dmesg mesages:
+> http://www.fi.muni.cz/~xhejtman/IMG_3221.JPG
