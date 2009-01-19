@@ -1,47 +1,163 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
-Date: Mon, 19 Jan 2009 22:53:11 +0300
-Message-ID: <4974DA27.90709@ru.mvista.com>
-References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain> <4974CA81.1050506@ru.mvista.com> <20090119184951.35a52184@lxorguk.ukuu.org.uk> <200901192012.51422.bzolnier@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [PATCH 2/6] DMI: Introduce dmi_first_match to make the interface more flexible
+Date: Mon, 19 Jan 2009 20:55:50 +0100
+Message-ID: <200901192055.51108.rjw@sisk.pl>
+References: <20081104062734.GA4420@havoc.gtf.org> <49739371.5030107@garzik.org> <200901192053.50831.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:60719 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752624AbZASTwj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 14:52:39 -0500
-In-Reply-To: <200901192012.51422.bzolnier@gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:39380 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517AbZASUAw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2009 15:00:52 -0500
+In-Reply-To: <200901192053.50831.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
->>>    Tried looking at how in*()/out*() are defined on x86?
+Some notebooks from HP have the problem that their BIOSes attempt to
+spin down hard drives before entering ACPI system states S4 and S5.
+This leads to a yo-yo effect during system power-off shutdown and the
+last phase of hibernation when the disk is first spun down by the
+kernel and then almost immediately turned on and off by the BIOS.
+This, in turn, may result in shortening the disk's life times.
 
->>Tried looking at how ide_mm_inb is defined on x86
+To prevent this from happening we can blacklist the affected systems
+using DMI information.  However, only the on-board controlles should
+be blacklisted and their PCI slot numbers can be used for this
+purpose.  Unfortunately the existing interface for checking DMI
+information of the system is not very convenient for this purpose,
+because to use it, we would have to define special callback functions
+or create a separate struct dmi_system_id table for each blacklisted
+system.
 
->>>>It's already making function calls, without the benefit of inlining and
+To overcome this difficulty introduce a new function
+dmi_first_match() returning a pointer to the first entry in an array
+of struct dmi_system_id elements that matches the system DMI
+information.  Then, we can use this pointer to access the entry's
+.driver_data field containing the additional information, such as
+the PCI slot number, allowing us to do the desired blacklisting.
 
->>>    I'm afraid you're wrong here.
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/firmware/dmi_scan.c |   72 +++++++++++++++++++++++++++++++++-----------
+ include/linux/dmi.h         |    1 
+ 2 files changed, 55 insertions(+), 18 deletions(-)
 
->>I'm afraid you are the one who is wrong. The IDE layer is duplicating a
->>generic level of indirection with its own code - purely because IDE
->>pre-dates that core functionality. The whole IDE layer indirection can go
->>away because Linux has caught up with the needs of the IDE layer.
+Index: linux-2.6/drivers/firmware/dmi_scan.c
+===================================================================
+--- linux-2.6.orig/drivers/firmware/dmi_scan.c
++++ linux-2.6/drivers/firmware/dmi_scan.c
+@@ -415,6 +415,29 @@ void __init dmi_scan_machine(void)
+ }
+ 
+ /**
++ *	dmi_matches - check if dmi_system_id structure matches system DMI data
++ *	@dmi: pointer to the dmi_system_id structure to check
++ */
++static bool dmi_matches(const struct dmi_system_id *dmi)
++{
++	int i;
++
++	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
++
++	for (i = 0; i < ARRAY_SIZE(dmi->matches); i++) {
++		int s = dmi->matches[i].slot;
++		if (s == DMI_NONE)
++			continue;
++		if (dmi_ident[s]
++		    && strstr(dmi_ident[s], dmi->matches[i].substr))
++			continue;
++		/* No match */
++		return false;
++	}
++	return true;
++}
++
++/**
+  *	dmi_check_system - check system DMI data
+  *	@list: array of dmi_system_id structures to match against
+  *		All non-null elements of the list must match
+@@ -429,32 +452,45 @@ void __init dmi_scan_machine(void)
+  */
+ int dmi_check_system(const struct dmi_system_id *list)
+ {
+-	int i, count = 0;
+-	const struct dmi_system_id *d = list;
++	int count = 0;
++	const struct dmi_system_id *d;
+ 
+-	WARN(!dmi_initialized, KERN_ERR "dmi check: not initialized yet.\n");
+-
+-	while (d->ident) {
+-		for (i = 0; i < ARRAY_SIZE(d->matches); i++) {
+-			int s = d->matches[i].slot;
+-			if (s == DMI_NONE)
+-				continue;
+-			if (dmi_ident[s] && strstr(dmi_ident[s], d->matches[i].substr))
+-				continue;
+-			/* No match */
+-			goto fail;
++	for (d = list; d->ident; d++)
++		if (dmi_matches(d)) {
++			count++;
++			if (d->callback && d->callback(d))
++				break;
+ 		}
+-		count++;
+-		if (d->callback && d->callback(d))
+-			break;
+-fail:		d++;
+-	}
+ 
+ 	return count;
+ }
+ EXPORT_SYMBOL(dmi_check_system);
+ 
+ /**
++ *	dmi_first_match - find dmi_system_id structure matching system DMI data
++ *	@list: array of dmi_system_id structures to match against
++ *		All non-null elements of the list must match
++ *		their slot's (field index's) data (i.e., each
++ *		list string must be a substring of the specified
++ *		DMI slot's string data) to be considered a
++ *		successful match.
++ *
++ *	Walk the blacklist table until the first match is found.  Return the
++ *	pointer to the matching entry or NULL if there's no match.
++ */
++const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
++{
++	const struct dmi_system_id *d;
++
++	for (d = list; d->ident; d++)
++		if (dmi_matches(d))
++			return d;
++
++	return NULL;
++}
++EXPORT_SYMBOL(dmi_first_match);
++
++/**
+  *	dmi_get_system_info - return DMI data value
+  *	@field: data index (see enum dmi_field)
+  *
+Index: linux-2.6/include/linux/dmi.h
+===================================================================
+--- linux-2.6.orig/include/linux/dmi.h
++++ linux-2.6/include/linux/dmi.h
+@@ -38,6 +38,7 @@ struct dmi_device {
+ #ifdef CONFIG_DMI
+ 
+ extern int dmi_check_system(const struct dmi_system_id *list);
++const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list);
+ extern const char * dmi_get_system_info(int field);
+ extern const struct dmi_device * dmi_find_device(int type, const char *name,
+ 	const struct dmi_device *from);
 
-> I wish it would be so simple as I would have removed the said indirection
-> long time ago.  Unfortunately:
-
-> - not all archs support ioread() & co.
-
-> - there is still issue with cache aliasing on some CPUs
-
-    Yep, look at MIPS for an example.
-
-> Thanks,
-> Bart
-
-MBR, Sergei
