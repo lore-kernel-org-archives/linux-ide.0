@@ -1,43 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [patch 2.6.29-rc2] palm_bk3710 buildfix
-Date: Mon, 19 Jan 2009 11:57:46 +0300
-Message-ID: <4974408A.9050608@ru.mvista.com>
-References: <200901180833.53969.david-b@pacbell.net> <4973635A.2050302@ru.mvista.com> <200901181629.48348.david-b@pacbell.net> <49743B36.90909@ru.mvista.com>
+From: <JosephChan@via.com.tw>
+Subject: RE: [Patch 1/1] sata_via.c: Add VT8261 support
+Date: Mon, 19 Jan 2009 17:16:40 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB8088311A6@exchtp03.taipei.via.com.tw>
+References: <4971BC76.4030605@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:42069 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753417AbZASI5w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 03:57:52 -0500
-In-Reply-To: <49743B36.90909@ru.mvista.com>
+Received: from exchtp08.via.com.tw ([61.66.243.7]:40043 "EHLO
+	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755069AbZASJQo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 04:16:44 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <4971BC76.4030605@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Kevin Hilman <khilman@deeprootsystems.com>
+To: jeff@garzik.org, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Hello, I wrote:
-
->>>> Someone should fix hw_regs_t to neither be a typedef, nor
->>>> use "unsigned long" where it should use "void __iomem *".
->>>>       
->>>     It cannot use pointers of course -- as the addresses can be I/O 
->>> ports.
->>>     
->>
->> It could use the ioread*() calls, which take pointers
->> and handle both types of I/O in a type-safe manner.
->>   
->
->   Probably they can... though using those would only slow down 
-> register access on x86.
-
-   ... and cause code bloat due to switching to real function calls from 
-inlines which now should render into in/out isns.
-
-> - Dave
-
-WBR, Sergei
-
-
+VGhhbmtzLCBKZWZmLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpl
+ZmYgR2FyemlrIFttYWlsdG86amVmZkBnYXJ6aWsub3JnXSANCj4gU2VudDogU2F0dXJkYXksIEph
+bnVhcnkgMTcsIDIwMDkgNzoxMCBQTQ0KPiBUbzogVGVqdW4gSGVvDQo+IENjOiBKb3NlcGggQ2hh
+bjsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgYWxhbkBseG9yZ3VrLnVrdXUub3JnLnVrDQo+
+IFN1YmplY3Q6IFJlOiBbUGF0Y2ggMS8xXSBzYXRhX3ZpYS5jOiBBZGQgVlQ4MjYxIHN1cHBvcnQN
+Cj4gDQo+IFRlanVuIEhlbyB3cm90ZToNCj4gPiBKb3NlcGhDaGFuQHZpYS5jb20udHcgd3JvdGU6
+DQo+ID4+IEFkZCBWVDgyNjFTQVRBIHN1cHBvcnQgLg0KPiA+Pg0KPiA+PiBCUnMsDQo+ID4+IEpv
+c2VwaCBDaGFuDQo+ID4+DQo+ID4+DQo+ID4+IFNpZ25lZC1vZmYtYnk6IEpvc2VwaCBDaGFuIDxq
+b3NlcGhjaGFuQHZpYS5jb20udHc+DQo+ID4gDQo+ID4gTG9va3MgZmluZSB0byBtZSBidXQgcGxl
+YXNlIHJlc2VuZCB3aXRoIEplZmYgb24gdGhlIHRvIA0KPiBsaXN0LiAgSmVmZiBpcyANCj4gPiB0
+aGUgbWFpbnRhaW5lciwgc28gZXZlcnkgcGF0Y2ggZ29lcyB0aHJvdWdoIGhpbS4NCj4gDQo+IFRo
+aXMgaXMgYWxyZWFkeSBpbiAyLjYuMjktcmMyLCBhY3R1YWxseSA8Z3Jpbj4NCj4gDQo+IAlKZWZm
+DQo+IA0KPiANCj4gDQo+IA0KPiANCg==
