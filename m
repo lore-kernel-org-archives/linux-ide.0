@@ -1,39 +1,135 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
-Date: Mon, 19 Jan 2009 21:02:24 +0300
-Message-ID: <4974C030.5020509@ru.mvista.com>
-References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>	<49748B95.9080105@ru.mvista.com>	<200901191523.15240.bzolnier@gmail.com>	<49748E43.4030009@ru.mvista.com> <20090119173701.13fd24c6@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/2] ide: remove pciirq argument from ide_pci_setup_ports()
+Date: Mon, 19 Jan 2009 19:30:32 +0100
+Message-ID: <200901191930.33078.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:58449 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751208AbZASSBy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 13:01:54 -0500
-In-Reply-To: <20090119173701.13fd24c6@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757858AbZASSjc@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove pciirq argument from ide_pci_setup_ports()
 
-Alan Cox wrote:
+* Set ->irq explicitly in cs5520.c.
 
->>>[ I'm also not happy with the naming but couldn't think of a better one. ]
+* Remove irq argument from ide_hw_configure().
 
->>    Legacy perhaps?
+* Remove pciirq argument from ide_pci_setup_ports().
 
-> Legacy to most people means either ISA/VLB or the PCI legacy
-> compatibility mode so that would be confusing.
+There should be no functional changes caused by this patch.
 
-    That's what this code is for (minus the MMIO accessors perhaps).
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+on top of http://lkml.org/lkml/2009/1/19/163
 
-> BTW if you moved to ioreadX you could get rid of almost all the readb/inb
-> special casing.
+ drivers/ide/cs5520.c    |    3 ++-
+ drivers/ide/setup-pci.c |   13 +++++--------
+ include/linux/ide.h     |    2 +-
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
-    And burden the driver code with function calls ISO in/out instructions, at 
-least on x86. It's somewhat arguable move.
-
-MBR, Sergei
+Index: b/drivers/ide/cs5520.c
+===================================================================
+--- a/drivers/ide/cs5520.c
++++ b/drivers/ide/cs5520.c
+@@ -133,7 +133,8 @@ static int __devinit cs5520_init_one(str
+ 	 *	do all the device setup for us
+ 	 */
+ 
+-	ide_pci_setup_ports(dev, d, 14, &hw[0], &hws[0]);
++	ide_pci_setup_ports(dev, d, &hw[0], &hws[0]);
++	hw[0].irq = 14;
+ 
+ 	return ide_host_add(d, hws, NULL);
+ }
+Index: b/drivers/ide/setup-pci.c
+===================================================================
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -305,7 +305,6 @@ static int ide_pci_check_iomem(struct pc
+  *	@dev: PCI device holding interface
+  *	@d: IDE port info
+  *	@port: port number
+- *	@irq: PCI IRQ
+  *	@hw: hw_regs_t instance corresponding to this port
+  *
+  *	Perform the initial set up for the hardware interface structure. This
+@@ -316,7 +315,7 @@ static int ide_pci_check_iomem(struct pc
+  */
+ 
+ static int ide_hw_configure(struct pci_dev *dev, const struct ide_port_info *d,
+-			    unsigned int port, int irq, hw_regs_t *hw)
++			    unsigned int port, hw_regs_t *hw)
+ {
+ 	unsigned long ctl = 0, base = 0;
+ 
+@@ -344,7 +343,6 @@ static int ide_hw_configure(struct pci_d
+ 	}
+ 
+ 	memset(hw, 0, sizeof(*hw));
+-	hw->irq = irq;
+ 	hw->dev = &dev->dev;
+ 	hw->chipset = d->chipset ? d->chipset : ide_pci;
+ 	ide_std_init_ports(hw, base, ctl | 2);
+@@ -448,7 +446,6 @@ out:
+  *	ide_pci_setup_ports	-	configure ports/devices on PCI IDE
+  *	@dev: PCI device
+  *	@d: IDE port info
+- *	@pciirq: IRQ line
+  *	@hw: hw_regs_t instances corresponding to this PCI IDE device
+  *	@hws: hw_regs_t pointers table to update
+  *
+@@ -462,7 +459,7 @@ out:
+  */
+ 
+ void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d,
+-			 int pciirq, hw_regs_t *hw, hw_regs_t **hws)
++			 hw_regs_t *hw, hw_regs_t **hws)
+ {
+ 	int channels = (d->host_flags & IDE_HFLAG_SINGLE) ? 1 : 2, port;
+ 	u8 tmp;
+@@ -481,7 +478,7 @@ void ide_pci_setup_ports(struct pci_dev 
+ 			continue;	/* port not enabled */
+ 		}
+ 
+-		if (ide_hw_configure(dev, d, port, pciirq, hw + port))
++		if (ide_hw_configure(dev, d, port, hw + port))
+ 			continue;
+ 
+ 		*(hws + port) = hw + port;
+@@ -549,7 +546,7 @@ int ide_pci_init_one(struct pci_dev *dev
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ide_pci_setup_ports(dev, d, 0, &hw[0], &hws[0]);
++	ide_pci_setup_ports(dev, d, &hw[0], &hws[0]);
+ 
+ 	host = ide_host_alloc(d, hws);
+ 	if (host == NULL) {
+@@ -595,7 +592,7 @@ int ide_pci_init_two(struct pci_dev *dev
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		ide_pci_setup_ports(pdev[i], d, 0, &hw[i*2], &hws[i*2]);
++		ide_pci_setup_ports(pdev[i], d, &hw[i*2], &hws[i*2]);
+ 	}
+ 
+ 	host = ide_host_alloc(d, hws);
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1263,7 +1263,7 @@ static inline int ide_pci_is_in_compatib
+ 	return 0;
+ }
+ 
+-void ide_pci_setup_ports(struct pci_dev *, const struct ide_port_info *, int,
++void ide_pci_setup_ports(struct pci_dev *, const struct ide_port_info *,
+ 			 hw_regs_t *, hw_regs_t **);
+ void ide_setup_pci_noise(struct pci_dev *, const struct ide_port_info *);
+ 
