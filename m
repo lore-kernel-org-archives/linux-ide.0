@@ -1,44 +1,34 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [git patches] libata hibernation fixes
-Date: Sun, 18 Jan 2009 23:52:09 +0100
-Message-ID: <200901182352.10036.rjw@sisk.pl>
-References: <20081104062734.GA4420@havoc.gtf.org> <200901182125.04060.rjw@sisk.pl> <200901182159.13329.elendil@planet.nl>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [patch 2.6.29-rc2] palm_bk3710 buildfix
+Date: Sun, 18 Jan 2009 16:29:48 -0800
+Message-ID: <200901181629.48348.david-b@pacbell.net>
+References: <200901180833.53969.david-b@pacbell.net> <4973635A.2050302@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59457 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752210AbZARWwd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 18 Jan 2009 17:52:33 -0500
-In-Reply-To: <200901182159.13329.elendil@planet.nl>
+Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:36949 "HELO
+	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754084AbZASA3u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jan 2009 19:29:50 -0500
+In-Reply-To: <4973635A.2050302@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: jeff@garzik.org, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Kevin Hilman <khilman@deeprootsystems.com>
 
-On Sunday 18 January 2009, Frans Pop wrote:
-> On Sunday 18 January 2009, Rafael J. Wysocki wrote:
-> > > I get two warnings when compiling your patch with this correction on
-> > > top:
-> >
-> > Hm, there were more patches than one, so I'm not sure.  When I apply
-> > all of them, I don't see these error, but perhaps I should resend the
-> > entire series. Will do tomorrow.
-> 
-> It's possible that I do not have the very latest version of your patches. 
-> If you send your latest version I'll check, and test them.
-> 
-> Thanks,
-> FJP
-> 
-> P.S. .29-rc2 is failing both STR and STD on my HP 2510p :-(
->      Will mail details sometime this week.
+On Sunday 18 January 2009, Sergei Shtylyov wrote:
+> > Someone should fix hw_regs_t to neither be a typedef, nor
+> > use "unsigned long" where it should use "void __iomem *".
+>=20
+> =A0 =A0 It cannot use pointers of course -- as the addresses can be I=
+/O ports.
 
-There are some known problems, so please watch the next report of recent
-regressions (most probably tomorrow).
+It could use the ioread*() calls, which take pointers
+and handle both types of I/O in a type-safe manner.
 
-Thanks,
-Rafael
+- Dave
+
+
+
