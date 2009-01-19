@@ -1,16 +1,16 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 6/6] SATA PIIX: Blacklist system that spins off disks during ACPI power off
-Date: Mon, 19 Jan 2009 20:59:22 +0100
-Message-ID: <200901192059.23448.rjw@sisk.pl>
+Subject: [PATCH 5/6] SATA Sil: Blacklist system that spins off disks during ACPI power off
+Date: Mon, 19 Jan 2009 20:58:29 +0100
+Message-ID: <200901192058.30489.rjw@sisk.pl>
 References: <20081104062734.GA4420@havoc.gtf.org> <49739371.5030107@garzik.org> <200901192053.50831.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:39390 "EHLO ogre.sisk.pl"
+Received: from ogre.sisk.pl ([217.79.144.158]:39389 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753403AbZASUA4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1753361AbZASUA4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Mon, 19 Jan 2009 15:00:56 -0500
 In-Reply-To: <200901192053.50831.rjw@sisk.pl>
 Content-Disposition: inline
@@ -31,32 +31,32 @@ This, in turn, may result in shortening the disk's life times.
 To prevent this from happening we can blacklist the affected systems
 using DMI information.
 
-Blacklist HP 2510p that uses the ata_piix driver.
+Blacklist HP nx6325 that uses the sata_sil driver.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/ata/ata_piix.c |   34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/ata/sata_sil.c |   36 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 35 insertions(+), 1 deletion(-)
 
-Index: linux-2.6/drivers/ata/ata_piix.c
+Index: linux-2.6/drivers/ata/sata_sil.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/ata_piix.c
-+++ linux-2.6/drivers/ata/ata_piix.c
-@@ -1387,6 +1387,32 @@ static void piix_iocfg_bit18_quirk(struc
+--- linux-2.6.orig/drivers/ata/sata_sil.c
++++ linux-2.6/drivers/ata/sata_sil.c
+@@ -695,11 +695,38 @@ static void sil_init_controller(struct a
  	}
  }
  
-+static bool piix_broken_system_poweroff(struct pci_dev *pdev)
++static bool sil_broken_system_poweroff(struct pci_dev *pdev)
 +{
 +	static const struct dmi_system_id broken_systems[] = {
 +		{
-+			.ident = "HP Compaq 2510p",
++			.ident = "HP Compaq nx6325",
 +			.matches = {
 +				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
 +			},
 +			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x1FUL,
++			.driver_data = (void *)0x12UL,
 +		},
 +
 +		{ }	/* terminate list */
@@ -72,22 +72,28 @@ Index: linux-2.6/drivers/ata/ata_piix.c
 +	return false;
 +}
 +
- /**
-  *	piix_init_one - Register PIIX ATA PCI device with kernel services
-  *	@pdev: PCI device to register
-@@ -1422,6 +1448,14 @@ static int __devinit piix_init_one(struc
- 	if (!in_module_init)
- 		return -ENODEV;
+ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+ 	int board_id = ent->driver_data;
+-	const struct ata_port_info *ppi[] = { &sil_port_info[board_id], NULL };
++	struct ata_port_info pi = sil_port_info[board_id];
++	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ata_host *host;
+ 	void __iomem *mmio_base;
+ 	int n_ports, rc;
+@@ -713,6 +740,13 @@ static int sil_init_one(struct pci_dev *
+ 	if (board_id == sil_3114)
+ 		n_ports = 4;
  
-+	if (piix_broken_system_poweroff(pdev)) {
-+		piix_port_info[ent->driver_data].flags |=
-+				ATA_FLAG_NO_POWEROFF_SPINDOWN |
++	if (sil_broken_system_poweroff(pdev)) {
++		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN |
 +					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
 +		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
 +				"on poweroff and hibernation\n");
 +	}
 +
- 	port_info[0] = piix_port_info[ent->driver_data];
- 	port_info[1] = piix_port_info[ent->driver_data];
- 
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
 
