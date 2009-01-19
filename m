@@ -1,65 +1,63 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 03/04] sata_mv: remove bogus nsect restriction
-Date: Mon, 19 Jan 2009 18:06:28 -0500
-Message-ID: <49750774.1070005@rtr.ca>
-References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca>
+Subject: [PATCH 04/04] sata_mv: msi masking
+Date: Mon, 19 Jan 2009 18:07:43 -0500
+Message-ID: <497507BF.3090608@rtr.ca>
+References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca> <49750774.1070005@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:43423 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:43425 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752525AbZASXG3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:06:29 -0500
-In-Reply-To: <49750746.3010709@rtr.ca>
+	id S1752525AbZASXHo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2009 18:07:44 -0500
+In-Reply-To: <49750774.1070005@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Remove unneeded nsect restriction from GenII NCQ path,
-and improve comments to explain why this is not a problem.
+Enable reliable use of Message Switched Interrupts (MSI) in sata_mv
+by masking further chip interrupts within the main interrupt handler.
+Based upon a suggestion by Grant Grundler.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2009-01-19 17:15:48.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-01-19 17:18:31.000000000 -0500
-@@ -349,8 +349,6 @@
+--- old/drivers/ata/sata_mv.c	2009-01-19 17:18:31.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2009-01-19 17:12:51.000000000 -0500
+@@ -33,8 +33,6 @@
+  *
+  * --> ATAPI support (Marvell claims the 60xx/70xx chips can do it).
+  *
+- * --> Investigate problems with PCI Message Signalled Interrupts (MSI).
+- *
+  * --> Develop a low-power-consumption strategy, and implement it.
+  *
+  * --> [Experiment, low priority] Investigate interrupt coalescing.
+@@ -2199,9 +2197,15 @@
+ 	struct ata_host *host = dev_instance;
+ 	struct mv_host_priv *hpriv = host->private_data;
+ 	unsigned int handled = 0;
++	int using_msi = hpriv->hp_flags & MV_HP_FLAG_MSI;
+ 	u32 main_irq_cause, pending_irqs;
  
- 	EDMA_HALTCOND_OFS	= 0x60,		/* GenIIe halt conditions */
- 
--	GEN_II_NCQ_MAX_SECTORS	= 256,		/* max sects/io on Gen2 w/NCQ */
--
- 	/* Host private flags (hp_flags) */
- 	MV_HP_FLAG_MSI		= (1 << 0),
- 	MV_HP_ERRATA_50XXB0	= (1 << 1),
-@@ -1093,20 +1091,12 @@
- 	 *
- 	 * Gen-II does not support NCQ over a port multiplier
- 	 *  (no FIS-based switching).
--	 *
--	 * We don't have hob_nsect when doing NCQ commands on Gen-II.
--	 * See mv_qc_prep() for more info.
- 	 */
- 	if (adev->flags & ATA_DFLAG_NCQ) {
- 		if (sata_pmp_attached(adev->link->ap)) {
- 			adev->flags &= ~ATA_DFLAG_NCQ;
- 			ata_dev_printk(adev, KERN_INFO,
- 				"NCQ disabled for command-based switching\n");
--		} else if (adev->max_sectors > GEN_II_NCQ_MAX_SECTORS) {
--			adev->max_sectors = GEN_II_NCQ_MAX_SECTORS;
--			ata_dev_printk(adev, KERN_INFO,
--				"max_sectors limited to %u for NCQ\n",
--				adev->max_sectors);
- 		}
+ 	spin_lock(&host->lock);
++
++	/* for MSI:  block new interrupts while in here */
++	if (using_msi)
++		writel(0, hpriv->main_irq_mask_addr);
++
+ 	main_irq_cause = readl(hpriv->main_irq_cause_addr);
+ 	pending_irqs   = main_irq_cause & hpriv->main_irq_mask;
+ 	/*
+@@ -2215,6 +2219,11 @@
+ 			handled = mv_host_intr(host, pending_irqs);
  	}
+ 	spin_unlock(&host->lock);
++
++	/* for MSI: unblock interupts; anything pending will hit us now */
++	if (using_msi)
++		writel(hpriv->main_irq_mask, hpriv->main_irq_mask_addr);
++
+ 	return IRQ_RETVAL(handled);
  }
-@@ -1444,7 +1434,8 @@
- 	 * only 11 bytes...so we must pick and choose required
- 	 * registers based on the command.  So, we drop feature and
- 	 * hob_feature for [RW] DMA commands, but they are needed for
--	 * NCQ.  NCQ will drop hob_nsect.
-+	 * NCQ.  NCQ will drop hob_nsect, which is not needed there
-+	 * (nsect is used only for the tag; feat/hob_feat hold true nsect).
- 	 */
- 	switch (tf->command) {
- 	case ATA_CMD_READ:
+ 
