@@ -1,45 +1,109 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [PATCH 2/6] DMI: Introduce dmi_first_match to make the interface more flexible
-Date: Mon, 19 Jan 2009 22:15:24 +0100
-Message-ID: <200901192215.27650.elendil@planet.nl>
-References: <20081104062734.GA4420@havoc.gtf.org> <200901192053.50831.rjw@sisk.pl> <200901192055.51108.rjw@sisk.pl>
+From: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
+Date: Mon, 19 Jan 2009 22:25:20 +0100
+Message-ID: <20090119212428.GB6194@nowhere>
+References: <20081104062734.GA4420@havoc.gtf.org> <49739371.5030107@garzik.org> <200901192053.50831.rjw@sisk.pl> <200901192054.55536.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hpsmtp-eml19.KPNXCHANGE.COM ([213.75.38.84]:30838 "EHLO
-	hpsmtp-eml19.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753250AbZASVPa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 16:15:30 -0500
-In-Reply-To: <200901192055.51108.rjw@sisk.pl>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:34445 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbZASVZ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 16:25:26 -0500
 Content-Disposition: inline
+In-Reply-To: <200901192054.55536.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jeff Garzik <jeff@garzik.org>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 19 January 2009, Rafael J. Wysocki wrote:
-> +const struct dmi_system_id *dmi_first_match(const struct dmi_system_id
-> *list)
-> +{ 
-> +       const struct dmi_system_id *d;
+On Mon, Jan 19, 2009 at 08:54:54PM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
+> 
+> Introduce boolean function system_entering_hibernation() returning
+> 'true' during the last phase of hibernation, in which devices are
+> being put into low power states and the sleep state (for example,
+> ACPI S4) is finally entered.
+> 
+> Some device drivers need such a function to check if the system is
+> in the final phase of hibernation.  In particular, some SATA drivers
+> are going to use it for blacklisting systems in which the disks
+> should not be spun down during the last phase of hibernation (the
+> BIOS will do that anyway).
+>
+
+Hi Rafael,
+
+Why not using the power event notifier?
+
+Frederic.
+
+ 
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> ---
+>  include/linux/suspend.h |    2 ++
+>  kernel/power/disk.c     |   10 ++++++++++
+>  2 files changed, 12 insertions(+)
+> 
+> Index: linux-2.6/include/linux/suspend.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/suspend.h
+> +++ linux-2.6/include/linux/suspend.h
+> @@ -237,6 +237,7 @@ extern int hibernate_nvs_alloc(void);
+>  extern void hibernate_nvs_free(void);
+>  extern void hibernate_nvs_save(void);
+>  extern void hibernate_nvs_restore(void);
+> +extern bool system_entering_hibernation(void);
+>  #else /* CONFIG_HIBERNATION */
+>  static inline int swsusp_page_is_forbidden(struct page *p) { return 0; }
+>  static inline void swsusp_set_page_free(struct page *p) {}
+> @@ -252,6 +253,7 @@ static inline int hibernate_nvs_alloc(vo
+>  static inline void hibernate_nvs_free(void) {}
+>  static inline void hibernate_nvs_save(void) {}
+>  static inline void hibernate_nvs_restore(void) {}
+> +static inline bool system_entering_hibernation(void) { return false; }
+>  #endif /* CONFIG_HIBERNATION */
+>  
+>  #ifdef CONFIG_PM_SLEEP
+> Index: linux-2.6/kernel/power/disk.c
+> ===================================================================
+> --- linux-2.6.orig/kernel/power/disk.c
+> +++ linux-2.6/kernel/power/disk.c
+> @@ -71,6 +71,14 @@ void hibernation_set_ops(struct platform
+>  	mutex_unlock(&pm_mutex);
+>  }
+>  
+> +static bool entering_platform_hibernation;
 > +
-> +       for (d = list; d->ident; d++)
-> +               if (dmi_matches(d))
-> +                       return d;
-> +
-> +       return NULL;
+> +bool system_entering_hibernation(void)
+> +{
+> +	return entering_platform_hibernation;
 > +}
-> +EXPORT_SYMBOL(dmi_first_match);
+> +EXPORT_SYMBOL(system_entering_hibernation);
+> +
+>  #ifdef CONFIG_PM_DEBUG
+>  static void hibernation_debug_sleep(void)
+>  {
+> @@ -411,6 +419,7 @@ int hibernation_platform_enter(void)
+>  	if (error)
+>  		goto Close;
+>  
+> +	entering_platform_hibernation = true;
+>  	suspend_console();
+>  	error = device_suspend(PMSG_HIBERNATE);
+>  	if (error) {
+> @@ -445,6 +454,7 @@ int hibernation_platform_enter(void)
+>   Finish:
+>  	hibernation_ops->finish();
+>   Resume_devices:
+> +	entering_platform_hibernation = false;
+>  	device_resume(PMSG_RESTORE);
+>  	resume_console();
+>   Close:
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-I did indeed have an older version of the patches (before you split them 
-out) and that was missing the "const" in the first quoted line, so that 
-explains the warning I had.
-
-If I compare the version I've been running with the past months and this 
-series I see only minor changes and I don't expect any problems from 
-them. If I notice anything I'll let you know. No news is good news :-)
-
-Thanks,
-FJP
