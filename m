@@ -1,66 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/2] mn10300: remove <asm/ide.h>
-Date: Mon, 19 Jan 2009 19:34:02 +0100
-Message-ID: <200901191934.02370.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
+Date: Mon, 19 Jan 2009 18:49:51 +0000
+Message-ID: <20090119184951.35a52184@lxorguk.ukuu.org.uk>
+References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>
+	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>
+	<49748B95.9080105@ru.mvista.com>
+	<200901191523.15240.bzolnier@gmail.com>
+	<49748E43.4030009@ru.mvista.com>
+	<20090119173701.13fd24c6@lxorguk.ukuu.org.uk>
+	<4974C030.5020509@ru.mvista.com>
+	<20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
+	<4974CA81.1050506@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753339AbZASSfC@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34704 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753858AbZASSyo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 13:54:44 -0500
+In-Reply-To: <4974CA81.1050506@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-RnJvbTogQmFydGxvbWllaiBab2xuaWVya2lld2ljeiA8YnpvbG5pZXJAZ21haWwuY29tPgpTdWJq
-ZWN0OiBbUEFUQ0hdIG1uMTAzMDA6IHJlbW92ZSA8YXNtL2lkZS5oPgoKKiBSZW1vdmUgc3VwZXJm
-bHVvdXMgPGFzbS9pbnRjdGwtcmVncy5oPiBpbmNsdWRlLgoKKiBSZW1vdmUgbm8gbG9uZ2VyIHVz
-ZWQgU1VQUE9SVF9TTE9XX0RBVEFfUE9SVFMgZGVmaW5lLgoKKiBNb3ZlIGRlZmluaW5nIFNVUFBP
-UlRfVkxCX1NZTkMgdG8gPGxpbnV4L2lkZS5oPi4KCiogVXNlIF9faWRlX21tXyooKSBtYWNyb3Mg
-ZnJvbSA8YXNtLWdlbmVyaWMvaWRlX2lvcHMuaD4KICAoTU4xMDMwMCB1c2VzIG9ubHkgbWVtb3J5
-LW1hcHBlZCBJL08pLgoKKiBSZW1vdmUgPGFzbS9pZGUuaD4uCgpXaGlsZSBhdCBpdDoKCiogUmVt
-b3ZlIHN1cGVyZmx1b3VzIFNQQVJDNjQgI2lmZGVmIGZyb20gPGxpbnV4L2lkZS5oPi4KCkNjOiBE
-YXZpZCBIb3dlbGxzIDxkaG93ZWxsc0ByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBCYXJ0bG9t
-aWVqIFpvbG5pZXJraWV3aWN6IDxiem9sbmllckBnbWFpbC5jb20+Ci0tLQogaW5jbHVkZS9hc20t
-bW4xMDMwMC9pZGUuaCB8ICAgMzkgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCiBpbmNsdWRlL2xpbnV4L2lkZS5oICAgICAgIHwgICAgNSArKy0tLQogMiBmaWxlcyBjaGFu
-Z2VkLCAyIGluc2VydGlvbnMoKyksIDQyIGRlbGV0aW9ucygtKQoKSW5kZXg6IGIvaW5jbHVkZS9h
-c20tbW4xMDMwMC9pZGUuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBhL2luY2x1ZGUvYXNtLW1uMTAzMDAvaWRl
-LmgKKysrIC9kZXYvbnVsbApAQCAtMSwzOSArMCwwIEBACi0vKiBNTjEwMzAwIEFyY2gtc3BlY2lm
-aWMgSURFIGNvZGUKLSAqCi0gKiBDb3B5cmlnaHQgKEMpIDIwMDcgUmVkIEhhdCwgSW5jLiBBbGwg
-UmlnaHRzIFJlc2VydmVkLgotICogV3JpdHRlbiBieSBEYXZpZCBIb3dlbGxzIChkaG93ZWxsc0By
-ZWRoYXQuY29tKQotICogLSBEZXJpdmVkIGZyb20gaW5jbHVkZS9hc20taTM4Ni9pZGUuaAotICoK
-LSAqIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBp
-dCBhbmQvb3IKLSAqIG1vZGlmeSBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFs
-IFB1YmxpYyBMaWNlbmNlCi0gKiBhcyBwdWJsaXNoZWQgYnkgdGhlIEZyZWUgU29mdHdhcmUgRm91
-bmRhdGlvbjsgZWl0aGVyIHZlcnNpb24KLSAqIDIgb2YgdGhlIExpY2VuY2UsIG9yIChhdCB5b3Vy
-IG9wdGlvbikgYW55IGxhdGVyIHZlcnNpb24uCi0gKi8KLQotI2lmbmRlZiBfQVNNX0lERV9ICi0j
-ZGVmaW5lIF9BU01fSURFX0gKLQotI2lmZGVmIF9fS0VSTkVMX18KLQotI2luY2x1ZGUgPGFzbS9p
-bnRjdGwtcmVncy5oPgotCi0jdW5kZWYgU1VQUE9SVF9TTE9XX0RBVEFfUE9SVFMKLSNkZWZpbmUg
-U1VQUE9SVF9TTE9XX0RBVEFfUE9SVFMgMAotCi0jdW5kZWYgU1VQUE9SVF9WTEJfU1lOQwotI2Rl
-ZmluZSBTVVBQT1JUX1ZMQl9TWU5DIDAKLQotLyoKLSAqIHNvbWUgYml0cyBuZWVkZWQgZm9yIHBh
-cnRzIG9mIHRoZSBJREUgc3Vic3lzdGVtIHRvIGNvbXBpbGUKLSAqLwotI2RlZmluZSBfX2lkZV9t
-bV9pbnN3KHBvcnQsIGFkZHIsIG4pIFwKLQlpbnN3KCh1bnNpZ25lZCBsb25nKSAocG9ydCksIChh
-ZGRyKSwgKG4pKQotI2RlZmluZSBfX2lkZV9tbV9pbnNsKHBvcnQsIGFkZHIsIG4pIFwKLQlpbnNs
-KCh1bnNpZ25lZCBsb25nKSAocG9ydCksIChhZGRyKSwgKG4pKQotI2RlZmluZSBfX2lkZV9tbV9v
-dXRzdyhwb3J0LCBhZGRyLCBuKSBcCi0Jb3V0c3coKHVuc2lnbmVkIGxvbmcpIChwb3J0KSwgKGFk
-ZHIpLCAobikpCi0jZGVmaW5lIF9faWRlX21tX291dHNsKHBvcnQsIGFkZHIsIG4pIFwKLQlvdXRz
-bCgodW5zaWduZWQgbG9uZykgKHBvcnQpLCAoYWRkciksIChuKSkKLQotI2VuZGlmIC8qIF9fS0VS
-TkVMX18gKi8KLSNlbmRpZiAvKiBfQVNNX0lERV9IICovCkluZGV4OiBiL2luY2x1ZGUvbGludXgv
-aWRlLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PQotLS0gYS9pbmNsdWRlL2xpbnV4L2lkZS5oCisrKyBiL2luY2x1ZGUv
-bGludXgvaWRlLmgKQEAgLTI2LDcgKzI2LDcgQEAKICNpbmNsdWRlIDxhc20vaW8uaD4KICNpbmNs
-dWRlIDxhc20vbXV0ZXguaD4KIAotI2lmIGRlZmluZWQoQ09ORklHX0NSSVMpIHx8IGRlZmluZWQo
-Q09ORklHX0ZSVikKKyNpZiBkZWZpbmVkKENPTkZJR19DUklTKSB8fCBkZWZpbmVkKENPTkZJR19G
-UlYpIHx8IGRlZmluZWQoQ09ORklHX01OMTAzMDApCiAjIGRlZmluZSBTVVBQT1JUX1ZMQl9TWU5D
-IDAKICNlbHNlCiAjIGRlZmluZSBTVVBQT1JUX1ZMQl9TWU5DIDEKQEAgLTE5NCw4ICsxOTQsNyBA
-QCBzdGF0aWMgaW5saW5lIHZvaWQgaWRlX3N0ZF9pbml0X3BvcnRzKGh3CiB9CiAKICNpZiBkZWZp
-bmVkKENPTkZJR19BUk0pIHx8IGRlZmluZWQoQ09ORklHX002OEspIHx8IGRlZmluZWQoQ09ORklH
-X01JUFMpIHx8IFwKLSAgICBkZWZpbmVkKENPTkZJR19NTjEwMzAwKSB8fCBkZWZpbmVkKENPTkZJ
-R19QQVJJU0MpIFwKLSAgICB8fCBkZWZpbmVkKENPTkZJR19QUEMpIHx8IGRlZmluZWQoQ09ORklH
-X1NQQVJDKSB8fCBkZWZpbmVkKENPTkZJR19TUEFSQzY0KQorICAgIGRlZmluZWQoQ09ORklHX1BB
-UklTQykgfHwgZGVmaW5lZChDT05GSUdfUFBDKSB8fCBkZWZpbmVkKENPTkZJR19TUEFSQykKICNp
-bmNsdWRlIDxhc20vaWRlLmg+CiAjZWxzZQogI2luY2x1ZGUgPGFzbS1nZW5lcmljL2lkZV9pb3Bz
-Lmg+CgAK
+>     Tried looking at how in*()/out*() are defined on x86?
+
+Tried looking at how ide_mm_inb is defined on x86
+
+> > It's already making function calls, without the benefit of inlining and
+> 
+>     I'm afraid you're wrong here.
+
+I'm afraid you are the one who is wrong. The IDE layer is duplicating a
+generic level of indirection with its own code - purely because IDE
+pre-dates that core functionality. The whole IDE layer indirection can go
+away because Linux has caught up with the needs of the IDE layer.
+
+Alan
