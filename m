@@ -1,34 +1,42 @@
-From: David Brownell <david-b@pacbell.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [patch 2.6.29-rc2] palm_bk3710 buildfix
-Date: Sun, 18 Jan 2009 16:29:48 -0800
-Message-ID: <200901181629.48348.david-b@pacbell.net>
-References: <200901180833.53969.david-b@pacbell.net> <4973635A.2050302@ru.mvista.com>
+Date: Mon, 19 Jan 2009 11:35:02 +0300
+Message-ID: <49743B36.90909@ru.mvista.com>
+References: <200901180833.53969.david-b@pacbell.net> <4973635A.2050302@ru.mvista.com> <200901181629.48348.david-b@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:36949 "HELO
-	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754084AbZASA3u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jan 2009 19:29:50 -0500
-In-Reply-To: <4973635A.2050302@ru.mvista.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:41396 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757376AbZASIfL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2009 03:35:11 -0500
+In-Reply-To: <200901181629.48348.david-b@pacbell.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: David Brownell <david-b@pacbell.net>
 Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Kevin Hilman <khilman@deeprootsystems.com>
 
-On Sunday 18 January 2009, Sergei Shtylyov wrote:
-> > Someone should fix hw_regs_t to neither be a typedef, nor
-> > use "unsigned long" where it should use "void __iomem *".
->=20
-> =A0 =A0 It cannot use pointers of course -- as the addresses can be I=
-/O ports.
+Hello.
 
-It could use the ioread*() calls, which take pointers
-and handle both types of I/O in a type-safe manner.
+David Brownell wrote:
+> On Sunday 18 January 2009, Sergei Shtylyov wrote:
+>   
+>>> Someone should fix hw_regs_t to neither be a typedef, nor
+>>> use "unsigned long" where it should use "void __iomem *".
+>>>       
+>>     It cannot use pointers of course -- as the addresses can be I/O ports.
+>>     
+>
+> It could use the ioread*() calls, which take pointers
+> and handle both types of I/O in a type-safe manner.
+>   
 
-- Dave
+   Probably they can... though using those would only slow down register 
+access on x86.
 
+> - Dave
+
+WBR, Sergei
 
 
