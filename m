@@ -1,36 +1,45 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
-Date: Mon, 19 Jan 2009 21:50:58 +0100
-Message-ID: <200901192150.59438.rjw@sisk.pl>
-References: <20090119202423.GA7070@ucw.cz>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: [PATCH 2/6] DMI: Introduce dmi_first_match to make the interface more flexible
+Date: Mon, 19 Jan 2009 22:15:24 +0100
+Message-ID: <200901192215.27650.elendil@planet.nl>
+References: <20081104062734.GA4420@havoc.gtf.org> <200901192053.50831.rjw@sisk.pl> <200901192055.51108.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:39581 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752249AbZASUvW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 15:51:22 -0500
-In-Reply-To: <20090119202423.GA7070@ucw.cz>
+Received: from hpsmtp-eml19.KPNXCHANGE.COM ([213.75.38.84]:30838 "EHLO
+	hpsmtp-eml19.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753250AbZASVPa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 16:15:30 -0500
+In-Reply-To: <200901192055.51108.rjw@sisk.pl>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jeff Garzik <jeff@garzik.org>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 19 January 2009, Pavel Machek wrote:
-> Hi!
-> 
-> In 2.6.29 (and probably earlier) kernels, booting in docking station
-> results in undocked s2ram failing.
-> 
-> Problem seems to be that hda (cdrom in dock) is not deregistered
-> during undock, and that hda driver loops spitting error messages at
-> 'too-fast-to-read' rate when suspend with missing hda is attempted.
+On Monday 19 January 2009, Rafael J. Wysocki wrote:
+> +const struct dmi_system_id *dmi_first_match(const struct dmi_system_id
+> *list)
+> +{ 
+> +       const struct dmi_system_id *d;
+> +
+> +       for (d = list; d->ident; d++)
+> +               if (dmi_matches(d))
+> +                       return d;
+> +
+> +       return NULL;
+> +}
+> +EXPORT_SYMBOL(dmi_first_match);
 
-What driver do you mean exactly?  Old-IDE I would guess.
+I did indeed have an older version of the patches (before you split them 
+out) and that was missing the "const" in the first quoted line, so that 
+explains the warning I had.
 
-Does this also happen with a PATA/libata driver?
+If I compare the version I've been running with the past months and this 
+series I see only minor changes and I don't expect any problems from 
+them. If I notice anything I'll let you know. No news is good news :-)
 
-Rafael
+Thanks,
+FJP
