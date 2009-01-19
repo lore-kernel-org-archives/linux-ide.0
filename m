@@ -1,32 +1,81 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
-Date: Mon, 19 Jan 2009 21:46:25 +0300
-Message-ID: <4974CA81.1050506@ru.mvista.com>
-References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>	<49748B95.9080105@ru.mvista.com>	<200901191523.15240.bzolnier@gmail.com>	<49748E43.4030009@ru.mvista.com>	<20090119173701.13fd24c6@lxorguk.ukuu.org.uk>	<4974C030.5020509@ru.mvista.com> <20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Mon, 19 Jan 2009 13:43:04 -0500
+Message-ID: <20090119184304.GB30365@redhat.com>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758385AbZASSqa@vger.kernel.org>
-In-Reply-To: <20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <496A9D42.4000302@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+On Mon, Jan 12, 2009 at 10:30:42AM +0900, Tejun Heo wrote:
+ > Robert Hancock wrote:
+ > >> There are apparently some reports of issues on NVidia chipsets as
+ > >> well, though I don't have any details at hand.
+ > > 
+ > > Well, Carlos' email bounces, so much for that one. Anyone have any other
+ > > contacts at Silicon Image?
+ > 
+ > I'll ping my SIMG contacts but I've pinged about this problem in the
+ > past but it didn't get anywhere.
 
->>>BTW if you moved to ioreadX you could get rid of almost all the readb/inb
->>>special casing.
+I wish I'd read this thread last week.. I've been beating my head
+against this problem all weekend.
 
->>    And burden the driver code with function calls ISO in/out instructions, at 
->>least on x86. It's somewhat arguable move.
+I picked up a cheap 3114 card, and found that when I created a filesystem
+with it on a 250GB disk, it got massive corruption very quickly.
 
-> And exactly how do you think the IDE accessors in the file get called ?
+My experience echos most the other peoples in this thread, but here's
+a few data points I've been able to figure out..
 
-    Tried looking at how in*()/out*() are defined on x86?
+I ran badblocks -v -w -s on the disk, and after running
+for nearly 24 hours, it reported a huge number of blocks
+failing at the upper part of the disk.
 
-> It's already making function calls, without the benefit of inlining and
+I created a partition in this bad area to speed up testing..
 
-    I'm afraid you're wrong here.
+   Device Boot      Start         End	   Blocks   Id  System
+/dev/sde1               1	30000   240974968+  83  Linux
+/dev/sde2           30001	30200     1606500   83  Linux
+/dev/sde3           30201	30401     1614532+  83  Linux
 
-MBR, Sergei
+Rerunning badblocks on /dev/sde2 consistently fails when
+it gets to the reading back 0x00 stage.
+(Somehow it passes reading back 0xff, 0xaa and 0x55)
+
+I was beginning to suspect the disk may be bad, but when I
+moved it to a box with Intel sata, the badblocks run on that
+same partition succeeds with no problems at all.
+
+Given the corruption happens at high block numbers, I'm wondering
+if maybe there's some kind of wraparound bug happening here.
+(Though why only the 0x00 pattern fails would still be a mystery).
+
+
+After reading about the firmware update fixing it, I thought I'd
+give that a shot.  This was pretty much complete fail.
+
+The DOS utility for flashing claims I'm running BIOS 5.0.39,
+which looking at http://www.siliconimage.com/support/searchresults.aspx?pid=28&cat=15
+is quite ancient.  So I tried the newer ones.
+Same experience with both 5.4.0.3, and 5.0.73
+
+"BIOS version in the input file is not a newer version"
+
+Forcing it to write anyway gets..
+
+"Data is different at address 65f6h"
+
+
+
+
+	Dave 
+
+
+-- 
+http://www.codemonkey.org.uk
