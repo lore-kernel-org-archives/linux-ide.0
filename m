@@ -1,57 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [patch 2.6.29-rc2] palm_bk3710 buildfix
-Date: Mon, 19 Jan 2009 16:06:47 +0300
-Message-ID: <49747AE7.7060908@ru.mvista.com>
-References: <200901180833.53969.david-b@pacbell.net> <49743B36.90909@ru.mvista.com> <4974408A.9050608@ru.mvista.com> <200901191307.33405.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] mn10300: add pci_get_legacy_ide_irq() to <asm/pci.h>
+Date: Mon, 19 Jan 2009 14:04:51 +0100
+Message-ID: <200901191404.51686.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:51085 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761182AbZASNGO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 08:06:14 -0500
-In-Reply-To: <200901191307.33405.bzolnier@gmail.com>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:42026 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759914AbZASNJ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 08:09:26 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Brownell <david-b@pacbell.net>, linux-ide@vger.kernel.org, Kevin Hilman <khilman@deeprootsystems.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-Bartlomiej Zolnierkiewicz wrote:
-
->>>>>>Someone should fix hw_regs_t to neither be a typedef, nor
->>>>>>use "unsigned long" where it should use "void __iomem *".
-
->>>>>    It cannot use pointers of course -- as the addresses can be I/O 
->>>>>ports.
-
->>>>It could use the ioread*() calls, which take pointers
->>>>and handle both types of I/O in a type-safe manner.
-
->>>  Probably they can... though using those would only slow down 
->>>register access on x86.
-
->>   ... and cause code bloat due to switching to real function calls from 
->>inlines which now should render into in/out isns.
-
-> OTOH it would allow to unify a lot of 'if (hwif->host_flags & IDE_HFLAG_MMIO)'
-> cases so the code may even shrink.
-
-    It won't shrink as much as it will grow.
-
-> I also suspect that register access slow
-> down is most likely negligable (we can always measure and check it).
-
-    I'd agree here but code bloat won't be as negligible considering the IDE 
-code's predominant use of I/O ports on x86.
-
-> The real reason for not using ioread*() and co. is that not all archs support
-> them (though I checked some time ago, maybe they do now?) and we don't want to
-> break IDE support for them.
-
-    Sure. :-)
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+RnJvbTogQmFydGxvbWllaiBab2xuaWVya2lld2ljeiA8YnpvbG5pZXJAZ21haWwuY29tPgpTdWJq
+ZWN0OiBbUEFUQ0hdIG1uMTAzMDA6IGFkZCBwY2lfZ2V0X2xlZ2FjeV9pZGVfaXJxKCkgdG8gPGFz
+bS9wY2kuaD4KCkFkZCBtaXNzaW5nIHBjaV9nZXRfbGVnYWN5X2lkZV9pcnEoKSBpbXBsZW1lbnRh
+dGlvbgpiZWZvcmUgaXQgYmVjb21lcyByZXF1aXJlZCBieSBjb3JlIElERSBQQ0kgY29kZS4KCkNj
+OiBEYXZpZCBIb3dlbGxzIDxkaG93ZWxsc0ByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBCYXJ0
+bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiem9sbmllckBnbWFpbC5jb20+Ci0tLQogaW5jbHVkZS9h
+c20tbW4xMDMwMC9wY2kuaCB8ICAgIDUgKysrKysKIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlv
+bnMoKykKCkluZGV4OiBiL2luY2x1ZGUvYXNtLW1uMTAzMDAvcGNpLmgKPT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0g
+YS9pbmNsdWRlL2FzbS1tbjEwMzAwL3BjaS5oCisrKyBiL2luY2x1ZGUvYXNtLW1uMTAzMDAvcGNp
+LmgKQEAgLTEyMSw0ICsxMjEsOSBAQCBwY2liaW9zX3NlbGVjdF9yb290KHN0cnVjdCBwY2lfZGV2
+ICpwZGV2CiAKICNkZWZpbmUgcGNpYmlvc19zY2FuX2FsbF9mbnMoYSwgYikJMAogCitzdGF0aWMg
+aW5saW5lIGludCBwY2lfZ2V0X2xlZ2FjeV9pZGVfaXJxKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGlu
+dCBjaGFubmVsKQoreworCXJldHVybiBjaGFubmVsID8gMTUgOiAxNDsKK30KKwogI2VuZGlmIC8q
+IF9BU01fUENJX0ggKi8KAAo=
