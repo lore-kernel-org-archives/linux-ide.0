@@ -1,79 +1,44 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/2] frv: remove <asm/ide.h>
-Date: Mon, 19 Jan 2009 19:33:11 +0100
-Message-ID: <200901191933.11757.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
+Date: Mon, 19 Jan 2009 22:04:37 +0300
+Message-ID: <4974CEC5.9050402@ru.mvista.com>
+References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>	<49748B95.9080105@ru.mvista.com>	<200901191523.15240.bzolnier@gmail.com>	<49748E43.4030009@ru.mvista.com>	<20090119173701.13fd24c6@lxorguk.ukuu.org.uk>	<4974C030.5020509@ru.mvista.com>	<20090119183607.5ee804e1@lxorguk.ukuu.org.uk>	<4974CA81.1050506@ru.mvista.com> <20090119184951.35a52184@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:14827 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557AbZASSlE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 13:41:04 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so1367951fgg.17
-        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2009 10:41:01 -0800 (PST)
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756637AbZASTEW@vger.kernel.org>
+In-Reply-To: <20090119184951.35a52184@lxorguk.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] frv: remove <asm/ide.h>
+Alan Cox wrote:
 
-* Remove superfluous <asm/{setup,io,irq}.h> includes.
+>>    Tried looking at how in*()/out*() are defined on x86?
 
-* Remove <asm/ide.h>.
+> Tried looking at how ide_mm_inb is defined on x86
 
-Cc: David Howells <dhowells@redhat.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- include/asm-frv/ide.h |   24 ------------------------
- include/linux/ide.h   |    4 ++--
- 2 files changed, 2 insertions(+), 26 deletions(-)
+    That's a bogus argument because:
+- MMIO isn't much used by the IDE drivers much (normally the inline
+   ins*()/outs*() accessors are used;
+- that's used only by generic IDE code, not by the drivers about which
+   I'veargued;
 
-Index: b/include/asm-frv/ide.h
-===================================================================
---- a/include/asm-frv/ide.h
-+++ /dev/null
-@@ -1,24 +0,0 @@
--/* ide.h: FRV IDE declarations
-- *
-- * Copyright (C) 2004 Red Hat, Inc. All Rights Reserved.
-- * Written by David Howells (dhowells@redhat.com)
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version
-- * 2 of the License, or (at your option) any later version.
-- */
--
--#ifndef _ASM_IDE_H
--#define _ASM_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm/setup.h>
--#include <asm/io.h>
--#include <asm/irq.h>
--
--#include <asm-generic/ide_iops.h>
--
--#endif /* __KERNEL__ */
--#endif /* _ASM_IDE_H */
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -193,8 +193,8 @@ static inline void ide_std_init_ports(hw
- 	hw->io_ports.ctl_addr = ctl_addr;
- }
- 
--#if defined(CONFIG_ARM) || defined(CONFIG_FRV) || defined(CONFIG_M68K) || \
--    defined(CONFIG_MIPS) || defined(CONFIG_MN10300) || defined(CONFIG_PARISC) \
-+#if defined(CONFIG_ARM) || defined(CONFIG_M68K) || defined(CONFIG_MIPS) || \
-+    defined(CONFIG_MN10300) || defined(CONFIG_PARISC) \
-     || defined(CONFIG_PPC) || defined(CONFIG_SPARC) || defined(CONFIG_SPARC64)
- #include <asm/ide.h>
- #else
+I've already agreed that the generic code would probably win from using 
+ioread*()/iowrite*().
+
+>>>It's already making function calls, without the benefit of inlining and
+
+>>    I'm afraid you're wrong here.
+
+> I'm afraid you are the one who is wrong. The IDE layer is duplicating a
+> generic level of indirection with its own code - purely because IDE
+> pre-dates that core functionality. The whole IDE layer indirection can go
+> away because Linux has caught up with the needs of the IDE layer.
+
+    What IDE indirection you're talking about anyway?
+
+> Alan
+
+MBR, Sergei
