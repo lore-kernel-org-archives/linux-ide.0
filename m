@@ -1,63 +1,90 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 04/04] sata_mv: msi masking
-Date: Mon, 19 Jan 2009 18:07:43 -0500
-Message-ID: <497507BF.3090608@rtr.ca>
-References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca> <49750774.1070005@rtr.ca>
+From: Diego Calleja <diegocg@gmail.com>
+Subject: Faulty seagate drives, are going to be blacklisted?
+Date: Tue, 20 Jan 2009 00:29:23 +0100
+Message-ID: <20090120002923.065f24ca@diego-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:43425 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752525AbZASXHo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:07:44 -0500
-In-Reply-To: <49750774.1070005@rtr.ca>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:35296 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753445AbZASX3K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 18:29:10 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Enable reliable use of Message Switched Interrupts (MSI) in sata_mv
-by masking further chip interrupts within the main interrupt handler.
-Based upon a suggestion by Grant Grundler.
+Tech sites are reporting everywhere a massive flaw in seagate drives that
+can lock up the drive and make it unusable (the bios doesn't detect it, you
+can't read the data). Haven't read anything about it here on the lists.
+Seagate has ack'ed the problem:
+http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207931
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
+So, apparently there're a lot of drives on the market (including mine)
+that can die any day. Are those drives going to be blacklisted? It's
+still not clear if the firmware update is safe (some affected but
+working drives are dying after the firmware update), so some people
+like me is still waiting (and hoping that the drive doesn't die) for
+more stable firmware updates...
 
---- old/drivers/ata/sata_mv.c	2009-01-19 17:18:31.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-01-19 17:12:51.000000000 -0500
-@@ -33,8 +33,6 @@
-  *
-  * --> ATAPI support (Marvell claims the 60xx/70xx chips can do it).
-  *
-- * --> Investigate problems with PCI Message Signalled Interrupts (MSI).
-- *
-  * --> Develop a low-power-consumption strategy, and implement it.
-  *
-  * --> [Experiment, low priority] Investigate interrupt coalescing.
-@@ -2199,9 +2197,15 @@
- 	struct ata_host *host = dev_instance;
- 	struct mv_host_priv *hpriv = host->private_data;
- 	unsigned int handled = 0;
-+	int using_msi = hpriv->hp_flags & MV_HP_FLAG_MSI;
- 	u32 main_irq_cause, pending_irqs;
- 
- 	spin_lock(&host->lock);
-+
-+	/* for MSI:  block new interrupts while in here */
-+	if (using_msi)
-+		writel(0, hpriv->main_irq_mask_addr);
-+
- 	main_irq_cause = readl(hpriv->main_irq_cause_addr);
- 	pending_irqs   = main_irq_cause & hpriv->main_irq_mask;
- 	/*
-@@ -2215,6 +2219,11 @@
- 			handled = mv_host_intr(host, pending_irqs);
- 	}
- 	spin_unlock(&host->lock);
-+
-+	/* for MSI: unblock interupts; anything pending will hit us now */
-+	if (using_msi)
-+		writel(hpriv->main_irq_mask, hpriv->main_irq_mask_addr);
-+
- 	return IRQ_RETVAL(handled);
- }
- 
+Here is the list of drives+firmware affected, according to the support site
+as of now. Some models are still being diagnosed.
+
+
+Seagate Barracuda 7200.11 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207951)
+
+Models Affected:
+ ST3500320AS
+ ST3640330AS
+ ST3750330AS
+ ST31000340AS
+Firmware Affected
+ SD15, SD16, SD17, SD18, SD19, AD14
+Recommended Firmware Update
+ SD1A
+
+Seagate Barracuda 7200.11, page 2 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207957)
+Models Affected:
+ ST31500341AS
+ ST31000333AS
+ ST3640323AS
+ ST3640623AS
+ ST3320613AS
+ ST3320813AS
+ ST3160813AS
+Firmware Affected
+ Still Unknow
+Recommended Firmware Update
+ Still Unknow
+
+
+Seagate Barracuda ES.2 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207963)
+Models Affected:
+ ST3250310NS
+ ST3500320NS
+ ST3750330NS
+ ST31000340NS
+Firmware Affected
+ Still Unknow
+Recommended Firmware Update
+ Still Unknow
+
+DiamondMax 22 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207969)
+Models Affected:
+ STM3500320AS
+ STM3750330AS
+ STM31000340AS
+Firmware Affected
+ MX15 (or higher)
+Recommended Firmware Update
+ MX1A
+
+DiamondMax 22 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207975)
+Models Affected:
+ STM31000334AS
+ STM3320614AS
+ STM3160813AS
+Firmware Affected
+ Still Unknow
+Recommended Firmware Update
+ Still Unknow
