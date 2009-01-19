@@ -1,100 +1,62 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
-Date: Mon, 19 Jan 2009 22:44:11 +0100
-Message-ID: <20090119214410.GA2016@elf.ucw.cz>
-References: <20090119202423.GA7070@ucw.cz> <200901192150.59438.rjw@sisk.pl>
+From: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
+Date: Mon, 19 Jan 2009 22:48:05 +0100
+Message-ID: <20090119214804.GC6194@nowhere>
+References: <20081104062734.GA4420@havoc.gtf.org> <200901192054.55536.rjw@sisk.pl> <20090119212428.GB6194@nowhere> <200901192235.23677.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:53889 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753819AbZASVmG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 16:42:06 -0500
+Received: from fg-out-1718.google.com ([72.14.220.155]:2911 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754467AbZASVsK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 16:48:10 -0500
 Content-Disposition: inline
-In-Reply-To: <200901192150.59438.rjw@sisk.pl>
+In-Reply-To: <200901192235.23677.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 2009-01-19 21:50:58, Rafael J. Wysocki wrote:
-> On Monday 19 January 2009, Pavel Machek wrote:
-> > Hi!
+On Mon, Jan 19, 2009 at 10:35:22PM +0100, Rafael J. Wysocki wrote:
+> On Monday 19 January 2009, Frederic Weisbecker wrote:
+> > On Mon, Jan 19, 2009 at 08:54:54PM +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rjw@sisk.pl>
+> > > 
+> > > Introduce boolean function system_entering_hibernation() returning
+> > > 'true' during the last phase of hibernation, in which devices are
+> > > being put into low power states and the sleep state (for example,
+> > > ACPI S4) is finally entered.
+> > > 
+> > > Some device drivers need such a function to check if the system is
+> > > in the final phase of hibernation.  In particular, some SATA drivers
+> > > are going to use it for blacklisting systems in which the disks
+> > > should not be spun down during the last phase of hibernation (the
+> > > BIOS will do that anyway).
+> > >
 > > 
-> > In 2.6.29 (and probably earlier) kernels, booting in docking station
-> > results in undocked s2ram failing.
+> > Hi Rafael,
 > > 
-> > Problem seems to be that hda (cdrom in dock) is not deregistered
-> > during undock, and that hda driver loops spitting error messages at
-> > 'too-fast-to-read' rate when suspend with missing hda is attempted.
+> > Why not using the power event notifier?
 > 
-> What driver do you mean exactly?  Old-IDE I would guess.
+> I'm not sure what you mean exactly, care to elaborate?
 
-piix. hda, so I guess it is old-ide:
 
-piix 0000:00:1f.1: IDE controller (0x8086:0x27df rev 0x02)
-pci 0000:00:1f.1: PCI INT C -> GSI 16 (level, low) -> IRQ 16
-piix 0000:00:1f.1: IDE port disabled
-piix 0000:00:1f.1: not 100% native mode: will probe irqs later
-    ide0: BM-DMA at 0x1810-0x1817
-Probing IDE interface ide0...
-hda: UJDA765 DVD/CDRW, ATAPI CD/DVD-ROM drive
-hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-hda: UDMA/33 mode selected
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-ide_generic: please use "probe_mask=0x3f" module parameter for probing
-all legacy ISA IDE ports
-ide-gd driver 1.18
-ide-cd driver 5.00
-ide-cd: hda: ATAPI 24X DVD-ROM CD-R/RW drive, 2048kB Cache
-Uniform CD-ROM driver Revision: 3.20
+Sorry, I just thought about using the pm_notifier to listen on the suspend/resume
+events to check the current hibernation state.
 
-If I try to access cdrom after undocking, I get:
+ 
+> Anyway, however, this is a pretty old patch series and I'm not very much
+> interested in reworking it once again.  If you think it can be made better,
+> please go on. :-)
 
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hda: drive not ready for command
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-ide-cd: hda: weird block size 0
-ide-cd: hda: default to 2kb block size
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
-hda: status error: status=0x20 { DeviceFault }
-ide: failed opcode was: unknown
-hda: Strange, packet command initiated yet DRQ isn't asserted
 
-...something similar scrolls when it hangs during s2ram, but it is too
-fast to read.
+It was just a suggestion, or more likely a question for curiosity, not really
+a criticism since I didn't follow the discussions about these patches and the
+problem they solve :-)
 
-> Does this also happen with a PATA/libata driver?
+Thanks.
 
-Will try...
-									Pavel
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+> Thanks,
+> Rafael
+
