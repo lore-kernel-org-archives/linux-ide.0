@@ -1,135 +1,54 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/2] ide: remove pciirq argument from ide_pci_setup_ports()
-Date: Mon, 19 Jan 2009 19:30:32 +0100
-Message-ID: <200901191930.33078.bzolnier@gmail.com>
+Subject: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne boards
+Date: Mon, 19 Jan 2009 19:28:35 +0100
+Message-ID: <200901191928.35474.bzolnier@gmail.com>
+References: <20090112233909.221080@gmx.net> <1231822958.22571.38.camel@pasglop> <20090113123337.199060@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757858AbZASSjc@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f18.google.com ([209.85.218.18]:48512 "EHLO
+	mail-bw0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756913AbZASSio (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 13:38:44 -0500
+Received: by bwz11 with SMTP id 11so1458586bwz.17
+        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2009 10:38:42 -0800 (PST)
+In-Reply-To: <20090113123337.199060@gmx.net>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gerhard Pircher <gerhard_pircher@gmx.net>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, grant.likely@secretlab.ca
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove pciirq argument from ide_pci_setup_ports()
+On Tuesday 13 January 2009, Gerhard Pircher wrote:
+> 
+> -------- Original-Nachricht --------
+> > Datum: Tue, 13 Jan 2009 16:02:38 +1100
+> > Von: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > An: Gerhard Pircher <gerhard_pircher@gmx.net>
+> > CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, grant.likely@secretlab.ca, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+> > Betreff: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne boards
+> 
+> > > Yes, it can wait.
+> > > Although I would like to know from the powerpc maintainer, if my
+> > > platform patches could still go in 2.6.29, if I resend them in the next days? I
+> > > guess it's too late, right?
+> > 
+> > Yes it is. I'll put them in -next after -rc2 or later, when we are happy
+> > with them. That gives us a bit of time to do extra polishing.
+> Good, then I'll send out a new patch for the IDE driver and the current one
+> can be reverted.
 
-* Set ->irq explicitly in cs5520.c.
+The following patchset fixes core IDE PCI code to always use
+pci_get_legacy_ide_irq() and ide_pci_is_in_compatibility_mode():
 
-* Remove irq argument from ide_hw_configure().
+http://lkml.org/lkml/2009/1/19/163
 
-* Remove pciirq argument from ide_pci_setup_ports().
+so via82cxxx specific solution is no longer necessary.
 
-There should be no functional changes caused by this patch.
+[ IOW I'll keep your previous patch and the #ifdef issue will
+  solve itself after the above patchset is merged. ]
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-on top of http://lkml.org/lkml/2009/1/19/163
-
- drivers/ide/cs5520.c    |    3 ++-
- drivers/ide/setup-pci.c |   13 +++++--------
- include/linux/ide.h     |    2 +-
- 3 files changed, 8 insertions(+), 10 deletions(-)
-
-Index: b/drivers/ide/cs5520.c
-===================================================================
---- a/drivers/ide/cs5520.c
-+++ b/drivers/ide/cs5520.c
-@@ -133,7 +133,8 @@ static int __devinit cs5520_init_one(str
- 	 *	do all the device setup for us
- 	 */
- 
--	ide_pci_setup_ports(dev, d, 14, &hw[0], &hws[0]);
-+	ide_pci_setup_ports(dev, d, &hw[0], &hws[0]);
-+	hw[0].irq = 14;
- 
- 	return ide_host_add(d, hws, NULL);
- }
-Index: b/drivers/ide/setup-pci.c
-===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -305,7 +305,6 @@ static int ide_pci_check_iomem(struct pc
-  *	@dev: PCI device holding interface
-  *	@d: IDE port info
-  *	@port: port number
-- *	@irq: PCI IRQ
-  *	@hw: hw_regs_t instance corresponding to this port
-  *
-  *	Perform the initial set up for the hardware interface structure. This
-@@ -316,7 +315,7 @@ static int ide_pci_check_iomem(struct pc
-  */
- 
- static int ide_hw_configure(struct pci_dev *dev, const struct ide_port_info *d,
--			    unsigned int port, int irq, hw_regs_t *hw)
-+			    unsigned int port, hw_regs_t *hw)
- {
- 	unsigned long ctl = 0, base = 0;
- 
-@@ -344,7 +343,6 @@ static int ide_hw_configure(struct pci_d
- 	}
- 
- 	memset(hw, 0, sizeof(*hw));
--	hw->irq = irq;
- 	hw->dev = &dev->dev;
- 	hw->chipset = d->chipset ? d->chipset : ide_pci;
- 	ide_std_init_ports(hw, base, ctl | 2);
-@@ -448,7 +446,6 @@ out:
-  *	ide_pci_setup_ports	-	configure ports/devices on PCI IDE
-  *	@dev: PCI device
-  *	@d: IDE port info
-- *	@pciirq: IRQ line
-  *	@hw: hw_regs_t instances corresponding to this PCI IDE device
-  *	@hws: hw_regs_t pointers table to update
-  *
-@@ -462,7 +459,7 @@ out:
-  */
- 
- void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d,
--			 int pciirq, hw_regs_t *hw, hw_regs_t **hws)
-+			 hw_regs_t *hw, hw_regs_t **hws)
- {
- 	int channels = (d->host_flags & IDE_HFLAG_SINGLE) ? 1 : 2, port;
- 	u8 tmp;
-@@ -481,7 +478,7 @@ void ide_pci_setup_ports(struct pci_dev 
- 			continue;	/* port not enabled */
- 		}
- 
--		if (ide_hw_configure(dev, d, port, pciirq, hw + port))
-+		if (ide_hw_configure(dev, d, port, hw + port))
- 			continue;
- 
- 		*(hws + port) = hw + port;
-@@ -549,7 +546,7 @@ int ide_pci_init_one(struct pci_dev *dev
- 	if (ret < 0)
- 		goto out;
- 
--	ide_pci_setup_ports(dev, d, 0, &hw[0], &hws[0]);
-+	ide_pci_setup_ports(dev, d, &hw[0], &hws[0]);
- 
- 	host = ide_host_alloc(d, hws);
- 	if (host == NULL) {
-@@ -595,7 +592,7 @@ int ide_pci_init_two(struct pci_dev *dev
- 		if (ret < 0)
- 			goto out;
- 
--		ide_pci_setup_ports(pdev[i], d, 0, &hw[i*2], &hws[i*2]);
-+		ide_pci_setup_ports(pdev[i], d, &hw[i*2], &hws[i*2]);
- 	}
- 
- 	host = ide_host_alloc(d, hws);
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1263,7 +1263,7 @@ static inline int ide_pci_is_in_compatib
- 	return 0;
- }
- 
--void ide_pci_setup_ports(struct pci_dev *, const struct ide_port_info *, int,
-+void ide_pci_setup_ports(struct pci_dev *, const struct ide_port_info *,
- 			 hw_regs_t *, hw_regs_t **);
- void ide_setup_pci_noise(struct pci_dev *, const struct ide_port_info *);
- 
+Thanks,
+Bart
