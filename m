@@ -1,61 +1,81 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Mon, 19 Jan 2009 12:20:24 +0100
-Message-ID: <200901191220.24410.stf_xl@wp.pl>
-References: <200901141345.42583.stf_xl@wp.pl> <200901161843.19487.bzolnier@gmail.com>
+From: <JosephChan@via.com.tw>
+Subject: RE: [PATCH 1/2 v1] pata_via.c:  support VX855 and future chips whose IDE controller use 0x0571.
+Date: Mon, 19 Jan 2009 19:26:00 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB808831374@exchtp03.taipei.via.com.tw>
+References: <49709AF4.4010505@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:28704 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245AbZASLN5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 06:13:57 -0500
-In-Reply-To: <200901161843.19487.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from exchtp08.via.com.tw ([61.66.243.7]:45958 "EHLO
+	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540AbZASL0F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 06:26:05 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <49709AF4.4010505@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, sshtylyov@ru.mvista.com
 
-On Friday 16 January 2009 18:43, Bartlomiej Zolnierkiewicz wrote:
-> > +#if 0
-> > +	/* In 12-0275-01 version of the PCB address
-> > +	 * lines CF_A0 and CF_A2 are swapped */
-> > +	hw.io_ports.data_addr =	tf_base + 0;
-> > +	hw.io_ports.error_addr = tf_base + 4;
-> > +	hw.io_ports.nsect_addr = tf_base + 2;
-> > +	hw.io_ports.lbal_addr = tf_base + 6;
-> > +	hw.io_ports.lbam_addr = tf_base + 1;
-> > +	hw.io_ports.lbah_addr = tf_base + 5;
-> > +	hw.io_ports.device_addr = tf_base + 3;
-> > +	hw.io_ports.command_addr = tf_base + 7;
-> > +#else
-> > +	/* Proper lines addresses */
-> > +	hw.io_ports.data_addr = tf_base + 0;
-> > +	hw.io_ports.error_addr = tf_base + 1;
-> > +	hw.io_ports.nsect_addr = tf_base + 2;
-> > +	hw.io_ports.lbal_addr = tf_base + 3;
-> > +	hw.io_ports.lbam_addr = tf_base + 4;
-> > +	hw.io_ports.lbah_addr =	tf_base + 5;
-> > +	hw.io_ports.device_addr = tf_base + 6;
-> > +	hw.io_ports.command_addr = tf_base + 7;
-> > +#endif
->
-> How's about using enums for offsets, i.e.
->
-> enum {
-> #if 0
-> ...
-> 	AT91_IDE_ERROR_ADDR_OFFSET = 4,
-> ...
-> #else
-> ...
-> 	AT91_IDE_ERROR_ADDR_OFFSET = 1,
-> ...
-> #endif
-> };
-Oh, I remove this code. It is just workaround for stupid
-hardware bug.
- 
+PiANCj4gQWxzbywgeW91IGNhbiBqdXN0IGJ5cGFzcyB3aG9sZSBzb3V0aGJyaWRnZSB0aGluZy4g
+IEFkZCANCj4gYW5vdGhlciBmbGFnLCBzYXksIFZJQV9JREZMQUdfSUdOX1NPVVRIIG9yIHNvbWV0
+aGluZyBhbmQganVzdCANCj4gc2tpcCB0aGUgd2hvbGUgdGhpbmcgaWYgdGhlIGZsYWdzIGlzIHNl
+dC4NCj4gDQoNClRoaXMgaXMgb3VyIG5leHQgZ29hbCBmb3IgdGhpcy4gOikNCg0KQWNjb3JkaW5n
+IHRvIHlvdXIgc3VnZ2VzdGlvbnMsIGhvdyBhYm91dCB0aGlzIG9uZT8NCg0KLS0tIGEvaW5jbHVk
+ZS9saW51eC9wY2lfaWRzLmgJMjAwOS0wMS0xNiAwMzoxNzozNS4wMDAwMDAwMDAgKzA4MDANCisr
+KyBiL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCTIwMDktMDEtMjAgMDI6MjE6NTQuMDAwMDAwMDAw
+ICswODAwDQpAQCAtMTM1Nyw2ICsxMzU3LDcgQEANCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklB
+Xzg3ODNfMAkweDMyMDgNCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgyMzcJCTB4MzIyNw0K
+ICNkZWZpbmUgUENJX0RFVklDRV9JRF9WSUFfODI1MQkJMHgzMjg3DQorI2RlZmluZSBQQ0lfREVW
+SUNFX0lEX1ZJQV84MjYxCQkweDM0MDINCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgyMzdB
+CQkweDMzMzcNCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgyMzdTCQkweDMzNzINCiAjZGVm
+aW5lIFBDSV9ERVZJQ0VfSURfVklBX1NBVEFfRUlERQkweDUzMjQNCkBAIC0xMzY2LDEwICsxMzY3
+LDEzIEBADQogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV9DWDcwMAkJMHg4MzI0DQogI2RlZmlu
+ZSBQQ0lfREVWSUNFX0lEX1ZJQV9DWDcwMF9JREUJMHgwNTgxDQogI2RlZmluZSBQQ0lfREVWSUNF
+X0lEX1ZJQV9WWDgwMAkJMHg4MzUzDQorI2RlZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV9WWDg1NQkJ
+MHg4NDA5DQogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV84MzcxXzEJMHg4MzkxDQogI2RlZmlu
+ZSBQQ0lfREVWSUNFX0lEX1ZJQV84MkM1OThfMQkweDg1OTgNCiAjZGVmaW5lIFBDSV9ERVZJQ0Vf
+SURfVklBXzgzOFhfMQkweEIxODgNCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgzXzg3WFhf
+MQkweEIxOTgNCisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBX0M0MDlfSURFCTBYQzQwOQ0KKyNk
+ZWZpbmUgUENJX0RFVklDRV9JRF9WSUFfQU5PTgkJMHhGRkZGDQogDQogI2RlZmluZSBQQ0lfVkVO
+RE9SX0lEX1NJRU1FTlMgICAgICAgICAgIDB4MTEwQQ0KICNkZWZpbmUgUENJX0RFVklDRV9JRF9T
+SUVNRU5TX0RTQ0M0ICAgICAweDIxMDINCi0tLSBhL2RyaXZlcnMvYXRhL3BhdGFfdmlhLmMJMjAw
+OC0xMi0yNSAwNzoyNjozNy4wMDAwMDAwMDAgKzA4MDANCisrKyBiL2RyaXZlcnMvYXRhL3BhdGFf
+dmlhLmMJMjAwOS0wMS0yMCAwMjo1OTowNS4wMDAwMDAwMDAgKzA4MDANCkBAIC04Niw2ICs4Niwx
+MCBAQA0KIAlWSUFfU0FUQV9QQVRBCT0gMHg4MDAsIC8qIFNBVEEvUEFUQSBjb21iaW5lZCBjb25m
+aWd1cmF0aW9uICovDQogfTsNCiANCitlbnVtIHsNCisJVklBX0lERkxBR19TSU5HTEUgPSAoMSA8
+PCAwKSwgLyogc2luZ2xlIGNoYW5uZWwgY29udHJvbGxlcikgKi8NCit9Ow0KKw0KIC8qDQogICog
+VklBIFNvdXRoQnJpZGdlIGNoaXBzLg0KICAqLw0KQEAgLTk3LDggKzEwMSwxNCBAQA0KIAl1OCBy
+ZXZfbWF4Ow0KIAl1MTYgZmxhZ3M7DQogfSB2aWFfaXNhX2JyaWRnZXNbXSA9IHsNCisJeyAidnR4
+eHh4IiwJUENJX0RFVklDRV9JRF9WSUFfQU5PTiwgICAgMHgwMCwgMHgyZiwgVklBX1VETUFfMTMz
+IHwNCisJVklBX0JBRF9BU1QgfSwNCisJeyAidng4NTUiLAlQQ0lfREVWSUNFX0lEX1ZJQV9WWDg1
+NSwgICAgMHgwMCwgMHgyZiwgVklBX1VETUFfMTMzIHwNCisJVklBX0JBRF9BU1QgfCBWSUFfU0FU
+QV9QQVRBIH0sDQogCXsgInZ4ODAwIiwJUENJX0RFVklDRV9JRF9WSUFfVlg4MDAsICAgIDB4MDAs
+IDB4MmYsIFZJQV9VRE1BXzEzMyB8DQogCVZJQV9CQURfQVNUIHwgVklBX1NBVEFfUEFUQSB9LA0K
+Kwl7ICJ2dDgyNjEiLAlQQ0lfREVWSUNFX0lEX1ZJQV84MjYxLCAgICAgMHgwMCwgMHgyZiwgVklB
+X1VETUFfMTMzIHwNCisJVklBX0JBRF9BU1QgfSwNCiAJeyAidnQ4MjM3cyIsCVBDSV9ERVZJQ0Vf
+SURfVklBXzgyMzdTLCAgICAweDAwLCAweDJmLCBWSUFfVURNQV8xMzMgfCBWSUFfQkFEX0FTVCB9
+LA0KIAl7ICJ2dDgyNTEiLAlQQ0lfREVWSUNFX0lEX1ZJQV84MjUxLCAgICAgMHgwMCwgMHgyZiwg
+VklBX1VETUFfMTMzIHwgVklBX0JBRF9BU1QgfSwNCiAJeyAiY3g3MDAiLAlQQ0lfREVWSUNFX0lE
+X1ZJQV9DWDcwMCwgICAgMHgwMCwgMHgyZiwgVklBX1VETUFfMTMzIHwgVklBX0JBRF9BU1QgfCBW
+SUFfU0FUQV9QQVRBIH0sDQpAQCAtNDYwLDYgKzQ3MCw3IEBADQogCXN0YXRpYyBpbnQgcHJpbnRl
+ZF92ZXJzaW9uOw0KIAl1OCBlbmFibGU7DQogCXUzMiB0aW1pbmc7DQorCXVuc2lnbmVkIGxvbmcg
+ZmxhZ3MgPSBpZC0+ZHJpdmVyX2RhdGE7DQogCWludCByYzsNCiANCiAJaWYgKCFwcmludGVkX3Zl
+cnNpb24rKykNCkBAIC00NjksNiArNDgwLDkgQEANCiAJaWYgKHJjKQ0KIAkJcmV0dXJuIHJjOw0K
+IA0KKwlpZiAoZmxhZ3MgJiBWSUFfSURGTEFHX1NJTkdMRSkNCisJCXBwaVsxXSA9ICZhdGFfZHVt
+bXlfcG9ydF9pbmZvOw0KKwkNCiAJLyogVG8gZmluZCBvdXQgaG93IHRoZSBJREUgd2lsbCBiZWhh
+dmUgYW5kIHdoYXQgZmVhdHVyZXMgd2UNCiAJICAgYWN0dWFsbHkgaGF2ZSB0byBsb29rIGF0IHRo
+ZSBicmlkZ2Ugbm90IHRoZSBJREUgY29udHJvbGxlciAqLw0KIAlmb3IgKGNvbmZpZyA9IHZpYV9p
+c2FfYnJpZGdlczsgY29uZmlnLT5pZDsgY29uZmlnKyspDQpAQCAtNDgzLDEwICs0OTcsMTAgQEAN
+CiAJCX0NCiANCiAJaWYgKCFjb25maWctPmlkKSB7DQotCQlwcmludGsoS0VSTl9XQVJOSU5HICJ2
+aWE6IFVua25vd24gVklBIFNvdXRoQnJpZGdlLCBkaXNhYmxpbmcuXG4iKTsNCi0JCXJldHVybiAt
+RU5PREVWOw0KLQl9DQotCXBjaV9kZXZfcHV0KGlzYSk7DQorCQlwcmludGsoS0VSTl9XQVJOSU5H
+ICJ2aWE6IFVua25vd24gVklBIFNvdXRoQnJpZGdlLlxuIik7DQorCQljb25maWcgPSB2aWFfaXNh
+X2JyaWRnZXM7DQorCX0gZWxzZQ0KKwkJcGNpX2Rldl9wdXQoaXNhKTsNCiANCiAJaWYgKCEoY29u
+ZmlnLT5mbGFncyAmIFZJQV9OT19FTkFCTEVTKSkgew0KIAkJLyogMHg0MCBsb3cgYml0cyBpbmRp
+Y2F0ZSBlbmFibGVkIGNoYW5uZWxzICovDQpAQCAtNTg3LDYgKzYwMSw3IEBADQogCXsgUENJX1ZE
+RVZJQ0UoVklBLCAweDE1NzEpLCB9LA0KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHgzMTY0KSwgfSwN
+CiAJeyBQQ0lfVkRFVklDRShWSUEsIDB4NTMyNCksIH0sDQorCXsgUENJX1ZERVZJQ0UoVklBLCAw
+eEM0MDkpLCBWSUFfSURGTEFHX1NJTkdMRSB9LA0KIA0KIAl7IH0sDQogfTsNCg==
