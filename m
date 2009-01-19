@@ -1,41 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
-Date: Mon, 19 Jan 2009 18:49:51 +0000
-Message-ID: <20090119184951.35a52184@lxorguk.ukuu.org.uk>
-References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>
-	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>
-	<49748B95.9080105@ru.mvista.com>
-	<200901191523.15240.bzolnier@gmail.com>
-	<49748E43.4030009@ru.mvista.com>
-	<20090119173701.13fd24c6@lxorguk.ukuu.org.uk>
-	<4974C030.5020509@ru.mvista.com>
-	<20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
-	<4974CA81.1050506@ru.mvista.com>
+Date: Mon, 19 Jan 2009 21:46:25 +0300
+Message-ID: <4974CA81.1050506@ru.mvista.com>
+References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>	<49748B95.9080105@ru.mvista.com>	<200901191523.15240.bzolnier@gmail.com>	<49748E43.4030009@ru.mvista.com>	<20090119173701.13fd24c6@lxorguk.ukuu.org.uk>	<4974C030.5020509@ru.mvista.com> <20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34704 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753858AbZASSyo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 13:54:44 -0500
-In-Reply-To: <4974CA81.1050506@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758385AbZASSqa@vger.kernel.org>
+In-Reply-To: <20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
->     Tried looking at how in*()/out*() are defined on x86?
+Alan Cox wrote:
 
-Tried looking at how ide_mm_inb is defined on x86
+>>>BTW if you moved to ioreadX you could get rid of almost all the readb/inb
+>>>special casing.
 
-> > It's already making function calls, without the benefit of inlining and
-> 
->     I'm afraid you're wrong here.
+>>    And burden the driver code with function calls ISO in/out instructions, at 
+>>least on x86. It's somewhat arguable move.
 
-I'm afraid you are the one who is wrong. The IDE layer is duplicating a
-generic level of indirection with its own code - purely because IDE
-pre-dates that core functionality. The whole IDE layer indirection can go
-away because Linux has caught up with the needs of the IDE layer.
+> And exactly how do you think the IDE accessors in the file get called ?
 
-Alan
+    Tried looking at how in*()/out*() are defined on x86?
+
+> It's already making function calls, without the benefit of inlining and
+
+    I'm afraid you're wrong here.
+
+MBR, Sergei
