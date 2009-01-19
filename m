@@ -1,54 +1,31 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne boards
-Date: Mon, 19 Jan 2009 19:28:35 +0100
-Message-ID: <200901191928.35474.bzolnier@gmail.com>
-References: <20090112233909.221080@gmx.net> <1231822958.22571.38.camel@pasglop> <20090113123337.199060@gmx.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
+Date: Mon, 19 Jan 2009 18:36:07 +0000
+Message-ID: <20090119183607.5ee804e1@lxorguk.ukuu.org.uk>
+References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain>
+	<20090119130322.24745.76137.sendpatchset@localhost.localdomain>
+	<49748B95.9080105@ru.mvista.com>
+	<200901191523.15240.bzolnier@gmail.com>
+	<49748E43.4030009@ru.mvista.com>
+	<20090119173701.13fd24c6@lxorguk.ukuu.org.uk>
+	<4974C030.5020509@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f18.google.com ([209.85.218.18]:48512 "EHLO
-	mail-bw0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756913AbZASSio (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 13:38:44 -0500
-Received: by bwz11 with SMTP id 11so1458586bwz.17
-        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2009 10:38:42 -0800 (PST)
-In-Reply-To: <20090113123337.199060@gmx.net>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753724AbZASSgT@vger.kernel.org>
+In-Reply-To: <4974C030.5020509@ru.mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gerhard Pircher <gerhard_pircher@gmx.net>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, grant.likely@secretlab.ca
 
-On Tuesday 13 January 2009, Gerhard Pircher wrote:
+> > BTW if you moved to ioreadX you could get rid of almost all the readb/inb
+> > special casing.
 > 
-> -------- Original-Nachricht --------
-> > Datum: Tue, 13 Jan 2009 16:02:38 +1100
-> > Von: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > An: Gerhard Pircher <gerhard_pircher@gmx.net>
-> > CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, grant.likely@secretlab.ca, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
-> > Betreff: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne boards
-> 
-> > > Yes, it can wait.
-> > > Although I would like to know from the powerpc maintainer, if my
-> > > platform patches could still go in 2.6.29, if I resend them in the next days? I
-> > > guess it's too late, right?
-> > 
-> > Yes it is. I'll put them in -next after -rc2 or later, when we are happy
-> > with them. That gives us a bit of time to do extra polishing.
-> Good, then I'll send out a new patch for the IDE driver and the current one
-> can be reverted.
+>     And burden the driver code with function calls ISO in/out instructions, at 
+> least on x86. It's somewhat arguable move.
 
-The following patchset fixes core IDE PCI code to always use
-pci_get_legacy_ide_irq() and ide_pci_is_in_compatibility_mode():
-
-http://lkml.org/lkml/2009/1/19/163
-
-so via82cxxx specific solution is no longer necessary.
-
-[ IOW I'll keep your previous patch and the #ifdef issue will
-  solve itself after the above patchset is merged. ]
-
-Thanks,
-Bart
+And exactly how do you think the IDE accessors in the file get called ?
+It's already making function calls, without the benefit of inlining and
+sharing common paths across architectures that can handle more than just
+PIO v MMIO but also other addressing modes.
