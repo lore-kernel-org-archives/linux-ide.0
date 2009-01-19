@@ -1,68 +1,65 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 02/04] sata_mv: don't read hc_irq_cause
-Date: Mon, 19 Jan 2009 18:05:42 -0500
-Message-ID: <49750746.3010709@rtr.ca>
-References: <49750705.7010709@rtr.ca>
+Subject: [PATCH 03/04] sata_mv: remove bogus nsect restriction
+Date: Mon, 19 Jan 2009 18:06:28 -0500
+Message-ID: <49750774.1070005@rtr.ca>
+References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:43421 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:43423 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752125AbZASXFn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:05:43 -0500
-In-Reply-To: <49750705.7010709@rtr.ca>
+	id S1752525AbZASXG3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2009 18:06:29 -0500
+In-Reply-To: <49750746.3010709@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Remove silly read-modify-write sequences when clearing interrupts in hc_irq_cause.
-This gets rid of unneeded MMIO reads, resulting in a slight performance boost
-when switching between EDMA and non-EDMA modes (eg. for cache flushes).
+Remove unneeded nsect restriction from GenII NCQ path,
+and improve comments to explain why this is not a problem.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2009-01-16 11:52:17.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-01-19 16:47:24.000000000 -0500
-@@ -35,8 +35,6 @@
-  *
-  * --> Investigate problems with PCI Message Signalled Interrupts (MSI).
-  *
-- * --> Cache frequently-accessed registers in mv_port_priv to reduce overhead.
-- *
-  * --> Develop a low-power-consumption strategy, and implement it.
-  *
-  * --> [Experiment, low priority] Investigate interrupt coalescing.
-@@ -884,18 +882,14 @@
- 		int hardport = mv_hardport_from_port(ap->port_no);
- 		void __iomem *hc_mmio = mv_hc_base_from_port(
- 					mv_host_base(ap->host), ap->port_no);
--		u32 hc_irq_cause, ipending;
-+		u32 hc_irq_cause;
+--- old/drivers/ata/sata_mv.c	2009-01-19 17:15:48.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2009-01-19 17:18:31.000000000 -0500
+@@ -349,8 +349,6 @@
  
- 		/* clear EDMA event indicators, if any */
- 		writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 	EDMA_HALTCOND_OFS	= 0x60,		/* GenIIe halt conditions */
  
--		/* clear EDMA interrupt indicator, if any */
--		hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
--		ipending = (DEV_IRQ | DMA_IRQ) << hardport;
--		if (hc_irq_cause & ipending) {
--			writelfl(hc_irq_cause & ~ipending,
--				 hc_mmio + HC_IRQ_CAUSE_OFS);
--		}
-+		/* clear pending irq events */
-+		hc_irq_cause = ~((DEV_IRQ | DMA_IRQ) << hardport);
-+		writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
- 
- 		mv_edma_cfg(ap, want_ncq);
- 
-@@ -2821,8 +2815,7 @@
- 	writel(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
- 
- 	/* clear pending irq events */
--	hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
--	hc_irq_cause &= ~((DEV_IRQ | DMA_IRQ) << hardport);
-+	hc_irq_cause = ~((DEV_IRQ | DMA_IRQ) << hardport);
- 	writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
- 
- 	mv_enable_port_irqs(ap, ERR_IRQ);
+-	GEN_II_NCQ_MAX_SECTORS	= 256,		/* max sects/io on Gen2 w/NCQ */
+-
+ 	/* Host private flags (hp_flags) */
+ 	MV_HP_FLAG_MSI		= (1 << 0),
+ 	MV_HP_ERRATA_50XXB0	= (1 << 1),
+@@ -1093,20 +1091,12 @@
+ 	 *
+ 	 * Gen-II does not support NCQ over a port multiplier
+ 	 *  (no FIS-based switching).
+-	 *
+-	 * We don't have hob_nsect when doing NCQ commands on Gen-II.
+-	 * See mv_qc_prep() for more info.
+ 	 */
+ 	if (adev->flags & ATA_DFLAG_NCQ) {
+ 		if (sata_pmp_attached(adev->link->ap)) {
+ 			adev->flags &= ~ATA_DFLAG_NCQ;
+ 			ata_dev_printk(adev, KERN_INFO,
+ 				"NCQ disabled for command-based switching\n");
+-		} else if (adev->max_sectors > GEN_II_NCQ_MAX_SECTORS) {
+-			adev->max_sectors = GEN_II_NCQ_MAX_SECTORS;
+-			ata_dev_printk(adev, KERN_INFO,
+-				"max_sectors limited to %u for NCQ\n",
+-				adev->max_sectors);
+ 		}
+ 	}
+ }
+@@ -1444,7 +1434,8 @@
+ 	 * only 11 bytes...so we must pick and choose required
+ 	 * registers based on the command.  So, we drop feature and
+ 	 * hob_feature for [RW] DMA commands, but they are needed for
+-	 * NCQ.  NCQ will drop hob_nsect.
++	 * NCQ.  NCQ will drop hob_nsect, which is not needed there
++	 * (nsect is used only for the tag; feat/hob_feat hold true nsect).
+ 	 */
+ 	switch (tf->command) {
+ 	case ATA_CMD_READ:
