@@ -1,65 +1,97 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git pull] IDE fixes
-Date: Mon, 19 Jan 2009 13:50:05 +0100
-Message-ID: <200901191350.06538.bzolnier@gmail.com>
+Subject: Re: [patch 2.6.29-rc2] palm_bk3710 buildfix
+Date: Mon, 19 Jan 2009 13:00:48 +0100
+Message-ID: <200901191300.48836.bzolnier@gmail.com>
+References: <200901180833.53969.david-b@pacbell.net> <4973635A.2050302@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from nf-out-0910.google.com ([64.233.182.186]:25395 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759045AbZASMxB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 07:53:01 -0500
+	with ESMTP id S1759001AbZASMwx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 07:52:53 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so409193nfc.21
+        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2009 04:52:51 -0800 (PST)
+In-Reply-To: <4973635A.2050302@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: David Brownell <david-b@pacbell.net>, linux-ide@vger.kernel.org, Kevin Hilman <khilman@deeprootsystems.com>
 
-CkxpbnVzLCBwbGVhc2UgcHVsbCBmcm9tOgoKbWFzdGVyLmtlcm5lbC5vcmc6L3B1Yi9zY20vbGlu
-dXgva2VybmVsL2dpdC9iYXJ0L2lkZS0yLjYuZ2l0LwoKdG8gcmVjZWl2ZSB0aGUgZm9sbG93aW5n
-IHVwZGF0ZXM6CgogZHJpdmVycy9pZGUvZmFsY29uaWRlLmMgICB8ICAgIDIgKy0KIGRyaXZlcnMv
-aWRlL2lkZS1wcm9iZS5jICAgfCAgICAzICsrLQogZHJpdmVycy9pZGUvcGFsbV9iazM3MTAuYyB8
-ICAgMTEgKysrKysrKy0tLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgNiBk
-ZWxldGlvbnMoLSkKCgpBbmRyZWFzIFNjaHdhYiAoMSk6CiAgICAgIGlkZTogZml4IElERSBQTUFD
-IGJyZWFrYWdlCgpEYXZpZCBCcm93bmVsbCAoMSk6CiAgICAgIGRyaXZlcnMvaWRlL3BhbG1fYmsz
-NzEwLmMgYnVpbGRmaXgKCk1pY2hhZWwgU2NobWl0eiAoMSk6CiAgICAgIGlkZTogZml4IEZhbGNv
-biBJREUgYnJlYWthZ2UKCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9pZGUvZmFsY29uaWRlLmMgYi9k
-cml2ZXJzL2lkZS9mYWxjb25pZGUuYwppbmRleCBhNWJhODIwLi5hNjM4ZTk1IDEwMDY0NAotLS0g
-YS9kcml2ZXJzL2lkZS9mYWxjb25pZGUuYworKysgYi9kcml2ZXJzL2lkZS9mYWxjb25pZGUuYwpA
-QCAtODIsNyArODIsNyBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGlkZV90cF9vcHMgZmFsY29uaWRl
-X3RwX29wcyA9IHsKIAogc3RhdGljIGNvbnN0IHN0cnVjdCBpZGVfcG9ydF9pbmZvIGZhbGNvbmlk
-ZV9wb3J0X2luZm8gPSB7CiAJLnRwX29wcwkJCT0gJmZhbGNvbmlkZV90cF9vcHMsCi0JLmhvc3Rf
-ZmxhZ3MJCT0gSURFX0hGTEFHX05PX0RNQSwKKwkuaG9zdF9mbGFncwkJPSBJREVfSEZMQUdfTk9f
-RE1BIHwgSURFX0hGTEFHX1NFUklBTElaRSwKIH07CiAKIHN0YXRpYyB2b2lkIF9faW5pdCBmYWxj
-b25pZGVfc2V0dXBfcG9ydHMoaHdfcmVnc190ICpodykKZGlmZiAtLWdpdCBhL2RyaXZlcnMvaWRl
-L2lkZS1wcm9iZS5jIGIvZHJpdmVycy9pZGUvaWRlLXByb2JlLmMKaW5kZXggMzEyMTI3ZS4uMGRi
-MWVkOSAxMDA2NDQKLS0tIGEvZHJpdmVycy9pZGUvaWRlLXByb2JlLmMKKysrIGIvZHJpdmVycy9p
-ZGUvaWRlLXByb2JlLmMKQEAgLTY0OSw3ICs2NDksOCBAQCBzdGF0aWMgaW50IGlkZV9yZWdpc3Rl
-cl9wb3J0KGlkZV9od2lmX3QgKmh3aWYpCiAJLyogcmVnaXN0ZXIgd2l0aCBnbG9iYWwgZGV2aWNl
-IHRyZWUgKi8KIAlkZXZfc2V0X25hbWUoJmh3aWYtPmdlbmRldiwgaHdpZi0+bmFtZSk7CiAJaHdp
-Zi0+Z2VuZGV2LmRyaXZlcl9kYXRhID0gaHdpZjsKLQlod2lmLT5nZW5kZXYucGFyZW50ID0gaHdp
-Zi0+ZGV2OworCWlmIChod2lmLT5nZW5kZXYucGFyZW50ID09IE5VTEwpCisJCWh3aWYtPmdlbmRl
-di5wYXJlbnQgPSBod2lmLT5kZXY7CiAJaHdpZi0+Z2VuZGV2LnJlbGVhc2UgPSBod2lmX3JlbGVh
-c2VfZGV2OwogCiAJcmV0ID0gZGV2aWNlX3JlZ2lzdGVyKCZod2lmLT5nZW5kZXYpOwpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9pZGUvcGFsbV9iazM3MTAuYyBiL2RyaXZlcnMvaWRlL3BhbG1fYmszNzEw
-LmMKaW5kZXggYTdhYzQ5MC4uZjM4YWFjNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9pZGUvcGFsbV9i
-azM3MTAuYworKysgYi9kcml2ZXJzL2lkZS9wYWxtX2JrMzcxMC5jCkBAIC0zNDYsNyArMzQ2LDgg
-QEAgc3RhdGljIGludCBfX2luaXQgcGFsbV9iazM3MTBfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2Rl
-dmljZSAqcGRldikKIHsKIAlzdHJ1Y3QgY2xrICpjbGs7CiAJc3RydWN0IHJlc291cmNlICptZW0s
-ICppcnE7Ci0JdW5zaWduZWQgbG9uZyBiYXNlLCByYXRlOworCXZvaWQgX19pb21lbSAqYmFzZTsK
-Kwl1bnNpZ25lZCBsb25nIHJhdGU7CiAJaW50IGksIHJjOwogCWh3X3JlZ3NfdCBodywgKmh3c1td
-ID0geyAmaHcsIE5VTEwsIE5VTEwsIE5VTEwgfTsKIApAQCAtMzgyLDExICszODMsMTMgQEAgc3Rh
-dGljIGludCBfX2luaXQgcGFsbV9iazM3MTBfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAq
-cGRldikKIAliYXNlID0gSU9fQUREUkVTUyhtZW0tPnN0YXJ0KTsKIAogCS8qIENvbmZpZ3VyZSB0
-aGUgUGFsbSBDaGlwIGNvbnRyb2xsZXIgKi8KLQlwYWxtX2JrMzcxMF9jaGlwaW5pdCgodm9pZCBf
-X2lvbWVtICopYmFzZSk7CisJcGFsbV9iazM3MTBfY2hpcGluaXQoYmFzZSk7CiAKIAlmb3IgKGkg
-PSAwOyBpIDwgSURFX05SX1BPUlRTIC0gMjsgaSsrKQotCQlody5pb19wb3J0c19hcnJheVtpXSA9
-IGJhc2UgKyBJREVfUEFMTV9BVEFfUFJJX1JFR19PRkZTRVQgKyBpOwotCWh3LmlvX3BvcnRzLmN0
-bF9hZGRyID0gYmFzZSArIElERV9QQUxNX0FUQV9QUklfQ1RMX09GRlNFVDsKKwkJaHcuaW9fcG9y
-dHNfYXJyYXlbaV0gPSAodW5zaWduZWQgbG9uZykKKwkJCQkoYmFzZSArIElERV9QQUxNX0FUQV9Q
-UklfUkVHX09GRlNFVCArIGkpOworCWh3LmlvX3BvcnRzLmN0bF9hZGRyID0gKHVuc2lnbmVkIGxv
-bmcpCisJCQkoYmFzZSArIElERV9QQUxNX0FUQV9QUklfQ1RMX09GRlNFVCk7CiAJaHcuaXJxID0g
-aXJxLT5zdGFydDsKIAlody5kZXYgPSAmcGRldi0+ZGV2OwogCWh3LmNoaXBzZXQgPSBpZGVfcGFs
-bTM3MTA7CgAK
+On Sunday 18 January 2009, Sergei Shtylyov wrote:
+> Hello.
+> 
+> David Brownell wrote:
+> 
+> >   CC      drivers/ide/palm_bk3710.o
+> > drivers/ide/palm_bk3710.c: In function 'palm_bk3710_probe':
+> > drivers/ide/palm_bk3710.c:382: warning: assignment makes integer from pointer without a cast
+> 
+> > Someone should fix hw_regs_t to neither be a typedef, nor
+> > use "unsigned long" where it should use "void __iomem *".
+> 
+>     It cannot use pointers of course -- as the addresses can be I/O ports.
+> 
+> > Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
+> 
+> > --- a/drivers/ide/palm_bk3710.c
+> > +++ b/drivers/ide/palm_bk3710.c
+> > @@ -346,7 +346,8 @@ static int __init palm_bk3710_probe(stru
+> >  {
+> >  	struct clk *clk;
+> >  	struct resource *mem, *irq;
+> > -	unsigned long base, rate;
+> > +	void __iomem *base;
+> > +	unsigned long rate;
+> >  	int i, rc;
+> >  	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
+> >  
+> > @@ -382,11 +383,13 @@ static int __init palm_bk3710_probe(stru
+> >  	base = IO_ADDRESS(mem->start);
+> >  
+> >  	/* Configure the Palm Chip controller */
+> > -	palm_bk3710_chipinit((void __iomem *)base);
+> > +	palm_bk3710_chipinit(base);
+> >  
+> >  	for (i = 0; i < IDE_NR_PORTS - 2; i++)
+> > -		hw.io_ports_array[i] = base + IDE_PALM_ATA_PRI_REG_OFFSET + i;
+> > -	hw.io_ports.ctl_addr = base + IDE_PALM_ATA_PRI_CTL_OFFSET;
+> > +		hw.io_ports_array[i] = (unsigned long)
+> > +				(base + IDE_PALM_ATA_PRI_REG_OFFSET + i);
+> > +	hw.io_ports.ctl_addr = (unsigned long)
+> > +			(base + IDE_PALM_ATA_PRI_CTL_OFFSET);
+> 
+>     Ugh. I suggest adding another variable...
+> 
+> --- a/drivers/ide/palm_bk3710.c
+> +++ b/drivers/ide/palm_bk3710.c
+> @@ -346,7 +346,8 @@ static int __init palm_bk3710_probe(stru
+>   {
+>   	struct clk *clk;
+>   	struct resource *mem, *irq;
+>   	unsigned long base, rate;
+> +	void __iomem *regs;
+>   	int i, rc;
+>   	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
+> 
+> @@ -379,11 +380,11 @@ static int __init palm_bk3710_probe(stru
+>   		return -EBUSY;
+>   	}
+> 
+> - 	base = IO_ADDRESS(mem->start);
+> + 	regs = IO_ADDRESS(mem->start);
+> 
+>   	/* Configure the Palm Chip controller */
+> -	palm_bk3710_chipinit((void __iomem *)base);
+> +	palm_bk3710_chipinit(regs);
+> 
+> +	base = (unsigned long)regs;
+>   	for (i = 0; i < IDE_NR_PORTS - 2; i++)
+>   		hw.io_ports_array[i] = base + IDE_PALM_ATA_PRI_REG_OFFSET + i;
+>   	hw.io_ports.ctl_addr = base + IDE_PALM_ATA_PRI_CTL_OFFSET;
+
+I applied original patch since having one additional cast has overally lower
+complexity than having an additional variable...
