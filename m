@@ -1,91 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/12] ide: remove no longer needed IRQ auto-probing from try_to_identify()
-Date: Mon, 19 Jan 2009 15:15:03 +0100
-Message-ID: <20090119141503.27613.57510.sendpatchset@localhost.localdomain>
-References: <20090119141330.27613.34546.sendpatchset@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/6] ide: move SFF I/O code to ide-io-sff.c
+Date: Mon, 19 Jan 2009 17:17:57 +0300
+Message-ID: <49748B95.9080105@ru.mvista.com>
+References: <20090119130309.24745.40877.sendpatchset@localhost.localdomain> <20090119130322.24745.76137.sendpatchset@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:49200 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbZASOOk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 09:14:40 -0500
-In-Reply-To: <20090119141330.27613.34546.sendpatchset@localhost.localdomain>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:52971 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755308AbZASORY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 09:17:24 -0500
+In-Reply-To: <20090119130322.24745.76137.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove no longer needed IRQ auto-probing from try_to_identify()
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-probe.c |   46 ++++++----------------------------------------
- 1 file changed, 6 insertions(+), 40 deletions(-)
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -334,56 +334,22 @@ static int actual_try_to_identify (ide_d
-  *	@drive: drive to probe
-  *	@cmd: command to use
-  *
-- *	Issue the identify command and then do IRQ probing to
-- *	complete the identification when needed by finding the
-- *	IRQ the drive is attached to
-+ *	Issue the identify command.
-  */
-  
- static int try_to_identify (ide_drive_t *drive, u8 cmd)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
--	int retval;
--	int autoprobe = 0;
--	unsigned long cookie = 0;
- 
- 	/*
--	 * Disable device irq unless we need to
--	 * probe for it. Otherwise we'll get spurious
--	 * interrupts during the identify-phase that
--	 * the irq handler isn't expecting.
-+	 * Disable device IRQ.  Otherwise we'll get spurious interrupts
-+	 * during the identify phase that the IRQ handler isn't expecting.
- 	 */
--	if (hwif->io_ports.ctl_addr) {
--		if (!hwif->irq) {
--			autoprobe = 1;
--			cookie = probe_irq_on();
--		}
--		tp_ops->set_irq(hwif, autoprobe);
--	}
--
--	retval = actual_try_to_identify(drive, cmd);
--
--	if (autoprobe) {
--		int irq;
--
-+	if (hwif->io_ports.ctl_addr)
- 		tp_ops->set_irq(hwif, 0);
--		/* clear drive IRQ */
--		(void)tp_ops->read_status(hwif);
--		udelay(5);
--		irq = probe_irq_off(cookie);
--		if (!hwif->irq) {
--			if (irq > 0) {
--				hwif->irq = irq;
--			} else {
--				/* Mmmm.. multiple IRQs..
--				 * don't know which was ours
--				 */
--				printk(KERN_ERR "%s: IRQ probe failed (0x%lx)\n",
--					drive->name, cookie);
--			}
--		}
--	}
--	return retval;
-+
-+	return actual_try_to_identify(drive, cmd);
- }
- 
- int ide_busy_sleep(ide_hwif_t *hwif, unsigned long timeout, int altstatus)
+    Gah, what in the world is that SFF I/O code?
+
+> Index: b/drivers/ide/ide-io-sff.c
+> ===================================================================
+> --- /dev/null
+> +++ b/drivers/ide/ide-io-sff.c
+> @@ -0,0 +1,314 @@
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/ide.h>
+> +
+> +/*
+> + *	Conventional PIO operations for ATA devices
+> + */
+> +
+> +static u8 ide_inb(unsigned long port)
+> +{
+> +	return (u8) inb(port);
+> +}
+> +
+> +static void ide_outb(u8 val, unsigned long port)
+> +{
+> +	outb(val, port);
+> +}
+> +
+> +/*
+> + *	MMIO operations, typically used for SATA controllers
+> + */
+> +
+> +static u8 ide_mm_inb(unsigned long port)
+> +{
+> +	return (u8) readb((void __iomem *) port);
+> +}
+> +
+> +static void ide_mm_outb(u8 value, unsigned long port)
+> +{
+> +	writeb(value, (void __iomem *) port);
+> +}
+
+    Ah, I see. Can we finally stop abusing the SFF name? Or are we bound to 
+copy every mistake that libata has made? :-/
+
+MBR, Sergei
