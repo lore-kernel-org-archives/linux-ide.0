@@ -1,53 +1,46 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: Faulty seagate drives, are going to be blacklisted?
-Date: Mon, 19 Jan 2009 22:32:25 -0500
-Message-ID: <85346.1232422345@turing-police.cc.vt.edu>
-References: <20090120002923.065f24ca@diego-desktop>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
+Date: Tue, 20 Jan 2009 08:30:05 +0100
+Message-ID: <8db1092f0901192330n43ba88bbk20f79233aad48c0a@mail.gmail.com>
+References: <20081104062734.GA4420@havoc.gtf.org> <49739371.5030107@garzik.org>
+	 <200901192053.50831.rjw@sisk.pl> <200901192054.55536.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1232422345_3870P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:39026 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753248AbZATDce (ORCPT
-	<RFC822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2009 22:32:34 -0500
-In-Reply-To: Your message of "Tue, 20 Jan 2009 00:29:23 +0100."
-             <20090120002923.065f24ca@diego-desktop>
+Received: from fg-out-1718.google.com ([72.14.220.159]:49944 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753526AbZATHaH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 02:30:07 -0500
+In-Reply-To: <200901192054.55536.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Diego Calleja <diegocg@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
---==_Exmh_1232422345_3870P
-Content-Type: text/plain; charset=us-ascii
+2009/1/19 Rafael J. Wysocki <rjw@sisk.pl>:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
+>
+> Introduce boolean function system_entering_hibernation() returning
+> 'true' during the last phase of hibernation, in which devices are
+> being put into low power states and the sleep state (for example,
+> ACPI S4) is finally entered.
+>
+> Some device drivers need such a function to check if the system is
+> in the final phase of hibernation.  In particular, some SATA drivers
+> are going to use it for blacklisting systems in which the disks
+> should not be spun down during the last phase of hibernation (the
+> BIOS will do that anyway).
+>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-On Tue, 20 Jan 2009 00:29:23 +0100, Diego Calleja said:
-> Tech sites are reporting everywhere a massive flaw in seagate drives that
-> can lock up the drive and make it unusable (the bios doesn't detect it, you
-> can't read the data). Haven't read anything about it here on the lists.
-> Seagate has ack'ed the problem:
-> http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207931
-> 
-> So, apparently there're a lot of drives on the market (including mine)
-> that can die any day. Are those drives going to be blacklisted?
+Tested-by: Maciej Rutecki <maciej.rutecki@gmail.com>
 
-The $64 question is, of course: What exactly should the operating system
-*do* if it detects one of these drives?  Prohibit it from bricking later
-by essentially bricking it *now*?   What if the drive already has a lot of
-production data on it?
+Tested on HP Compaq nx6310
 
+Thanks for patches
 
---==_Exmh_1232422345_3870P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFJdUXJcC3lWbTT17ARAgSBAJ9lYdzmH4bNILEuzidr5rpMZsT+PACg81mX
-pZh6YQzWDxeyMx6UWTgHzoY=
-=LQ4L
------END PGP SIGNATURE-----
-
---==_Exmh_1232422345_3870P--
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
