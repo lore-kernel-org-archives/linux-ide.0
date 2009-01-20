@@ -1,33 +1,73 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Tue, 20 Jan 2009 15:07:41 -0500
-Message-ID: <20090120200741.GA1020@redhat.com>
-References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org> <20090119184304.GB30365@redhat.com> <49753BDE.8050403@shaw.ca>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
+Date: Tue, 20 Jan 2009 21:45:41 +0100
+Message-ID: <200901202145.41923.rjw@sisk.pl>
+References: <20090119202423.GA7070@ucw.cz> <200901200036.14640.rjw@sisk.pl> <49759D0E.804@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:47848 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760376AbZATUqU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jan 2009 15:46:20 -0500
+In-Reply-To: <49759D0E.804@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <49753BDE.8050403@shaw.ca>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Pavel Machek <pavel@suse.cz>, kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-On Mon, Jan 19, 2009 at 08:50:06PM -0600, Robert Hancock wrote:
- 
- > > Given the corruption happens at high block numbers, I'm wondering
- > > if maybe there's some kind of wraparound bug happening here.
- > > (Though why only the 0x00 pattern fails would still be a mystery).
- > 
- > Yeah, that seems a bit bizarre.. Apparently somehow zeros are being 
- > converted into non-zero.. Can you try zeroing out the partition by 
- > dd'ing into it from /dev/zero or something, then dumping it back out to 
- > see what kind of data is showing up?
+On Tuesday 20 January 2009, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Rafael J. Wysocki wrote:
+> 
+> >>>> In 2.6.29 (and probably earlier) kernels, booting in docking station
+> >>>> results in undocked s2ram failing.
+> >>>>
+> >>>> Problem seems to be that hda (cdrom in dock) is not deregistered
+> >>>> during undock, and that hda driver loops spitting error messages at
+> >>>> 'too-fast-to-read' rate when suspend with missing hda is attempted.
+> >>>>         
+> >>> What driver do you mean exactly?  Old-IDE I would guess.
+> >>>
+> >>> Does this also happen with a PATA/libata driver?
+> >>>       
+> >> I guess I'm confused. I tried:
+> >>
+> >> --- config.ok	2009-01-19 11:40:42.000000000 +0100
+> >> +++ ../b-linux/.config	2009-01-19 22:45:03.000000000 +0100
+> >> @@ -1022,7 +1022,7 @@
+> >>  # CONFIG_SATA_SIL24 is not set
+> >>  CONFIG_ATA_SFF=y
+> >>  CONFIG_SATA_SVW=y
+> >> -CONFIG_ATA_PIIX=y
+> >> +# CONFIG_ATA_PIIX is not set
+> >>  # CONFIG_SATA_MV is not set
+> >>  # CONFIG_SATA_NV is not set
+> >>  # CONFIG_PDC_ADMA is not set
+> >> @@ -1058,8 +1058,8 @@
+> >>  # CONFIG_PATA_JMICRON is not set
+> >>  # CONFIG_PATA_TRIFLEX is not set
+> >>  # CONFIG_PATA_MARVELL is not set
+> >> -# CONFIG_PATA_MPIIX is not set
+> >> -# CONFIG_PATA_OLDPIIX is not set
+> >> +CONFIG_PATA_MPIIX=y
+> >> +CONFIG_PATA_OLDPIIX=y
+> >>  # CONFIG_PATA_NETCELL is not set
+> >>  # CONFIG_PATA_NINJA32 is not set
+> >>  # CONFIG_PATA_NS87410 is not set
+> >>
+> >> ...but cdrom is still detected as hda.
+> >>     
+> >
+> > Er, CONFIG_ATA_PIIX is a SATA driver.
+> 
+>    Not really, it drives both SATA and PATA controllers.
 
-Hmm, it seems the failed firmware update has killed the eeprom.
-It no longer reports the right PCI vendor ID.
+What I wanted to say it's not old-IDE.
 
-	Dave
-
--- 
-http://www.codemonkey.org.uk
+Thanks,
+Rafael
