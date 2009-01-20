@@ -1,47 +1,72 @@
-From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
-Subject: Re: [PATCH 6/6] SATA PIIX: Blacklist system that spins off disks during ACPI power off
-Date: Tue, 20 Jan 2009 08:33:07 +0100
-Message-ID: <8db1092f0901192333p31d7b924o6a00084851376578@mail.gmail.com>
-References: <20081104062734.GA4420@havoc.gtf.org> <49739371.5030107@garzik.org>
-	 <200901192053.50831.rjw@sisk.pl> <200901192059.23448.rjw@sisk.pl>
+From: "Peer Chen" <pchen@nvidia.com>
+Subject: RE: [PATCH] SCSI: Add the SGPIO support for sata_nv.c
+Date: Tue, 20 Jan 2009 15:36:25 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B3A916D81@hkemmail01.nvidia.com>
+References: <20061031104055.GA8898@infradead.org>	 <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>	 <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com> <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com> <49733386.6000604@seiner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:50249 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754521AbZATHdJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 02:33:09 -0500
-In-Reply-To: <200901192059.23448.rjw@sisk.pl>
-Content-Disposition: inline
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:19901 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397AbZATHnV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 02:43:21 -0500
+In-Reply-To: <49733386.6000604@seiner.com>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yan Seiner <yan@seiner.com>
+Cc: linux-ide@vger.kernel.org
 
-2009/1/19 Rafael J. Wysocki <rjw@sisk.pl>:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
->
-> Some notebooks from HP have the problem that their BIOSes attempt to
-> spin down hard drives before entering ACPI system states S4 and S5.
-> This leads to a yo-yo effect during system power-off shutdown and the
-> last phase of hibernation when the disk is first spun down by the
-> kernel and then almost immediately turned on and off by the BIOS.
-> This, in turn, may result in shortening the disk's life times.
->
-> To prevent this from happening we can blacklist the affected systems
-> using DMI information.
->
-> Blacklist HP 2510p that uses the ata_piix driver.
->
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Yes, I think it's possible to drive the LED from user space utility.
 
-Tested-by: Maciej Rutecki <maciej.rutecki@gmail.com>
+BRs
+Peer Chen
+ 
 
-Tested on HP Compaq nx6310
-
-Thanks for patches
-
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+> -----Original Message-----
+> From: Yan Seiner [mailto:yan@seiner.com] 
+> Sent: Sunday, January 18, 2009 9:50 PM
+> To: Peer Chen
+> Cc: linux-ide@vger.kernel.org
+> Subject: Re: [PATCH] SCSI: Add the SGPIO support for sata_nv.c
+> 
+> Yinghai Lu wrote:
+> > On Tue, Nov 6, 2007 at 8:09 PM, Yinghai Lu 
+> <yhlu.kernel@gmail.com> wrote:
+> >   
+> >> On Nov 7, 2006 1:55 AM, Peer Chen <pchen@nvidia.com> wrote:
+> >>     
+> >>> Modified and resent out the patch as attachment.
+> >>> Description about the patch:
+> >>> Add SGPIO support in sata_nv.c.
+> >>> SGPIO (Serial General Purpose Input Output) is a sideband serial 
+> >>> 4-wire interface that a storage controller uses to 
+> communicate with 
+> >>> a storage enclosure management controller, primarily to control 
+> >>> activity and status LEDs that are located within drive 
+> bays or on a 
+> >>> storage backplane. SGPIO is defined by [SFF8485].
+> >>> In this patch,we drive the LEDs to blink when read/write 
+> operation 
+> >>> happen on SATA drives connect the corresponding ports on 
+> MCP55 board.
+> >>>       
+> I missed the start of  this thread....  Is it possible to 
+> blink the lights from user space?  This is very useful when 
+> trying to locate a 
+> dead or dying drive.   for example, /dev/sdc dies, but I have 
+> no way of 
+> knowing which one it is without unplugging all the cables one 
+> at a time.  A userspace utility that would allow me to blink 
+> a drive activity light would be very useful.
+> 
+> --Yan
+> 
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
