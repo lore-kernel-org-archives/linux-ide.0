@@ -1,72 +1,64 @@
-From: "Peer Chen" <pchen@nvidia.com>
-Subject: RE: [PATCH] SCSI: Add the SGPIO support for sata_nv.c
-Date: Tue, 20 Jan 2009 15:36:25 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B3A916D81@hkemmail01.nvidia.com>
-References: <20061031104055.GA8898@infradead.org>	 <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>	 <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com> <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com> <49733386.6000604@seiner.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [BUG] 2.6.29-rc1: ata_piix boot hang due to bmdma32 change
+Date: Tue, 20 Jan 2009 09:33:30 +0100
+Message-ID: <18805.35930.588019.518198@harpo.it.uu.se>
+References: <200901150842.n0F8gpZb014365@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:19901 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbZATHnV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 02:43:21 -0500
-In-Reply-To: <49733386.6000604@seiner.com>
-Content-class: urn:content-classes:message
+Received: from aun.it.uu.se ([130.238.12.36]:40960 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754175AbZATIdm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jan 2009 03:33:42 -0500
+In-Reply-To: <200901150842.n0F8gpZb014365@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yan Seiner <yan@seiner.com>
-Cc: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Yes, I think it's possible to drive the LED from user space utility.
+Mikael Pettersson writes:
+ > One of my machines is an Intel 815EP chipset box with
+ > an 82801BA IDE controller (8086:244b rev 05) and two
+ > ATAPI devices on the second channel (the boot disk is
+ > connected to a PDC20269).
+ > 
+ > With 2.6.29-rc1 this machine hangs hard during boot, when
+ > init starts udev. There are no messages on the console and
+ > not even sysrq gets any reaction.
+ > 
+ > Reverting the 2.6.29-rc1 change which made ata_piix inherit
+ > the bmdma32 port ops makes the machine boot ok again. (Patch below.)
+ > I'm guessing the 32-bit I/O stuff doesn't work on this controller
+ > or these ATAPI devices.
+ > 
+ > Partial dmesg from 2.6.29-rc1 with the bmdma32 change reverted:
+ > 
+ > ata_piix 0000:00:1f.1: version 2.12
+ > ata_piix 0000:00:1f.1: setting latency timer to 64
+ > scsi0 : ata_piix
+ > scsi1 : ata_piix
+ > ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
+ > ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
+ > ata2.00: ATAPI: CRD-8320B, 1.12, max MWDMA2
+ > ata2.01: ATAPI: Hewlett-Packard CD-Writer Plus 9100, 1.0c, max UDMA/33
+ > ata2.00: configured for MWDMA2
+ > ata2.01: configured for UDMA/33
+ > scsi 1:0:0:0: CD-ROM            GoldStar CD-ROM CRD-8320B 1.12 PQ: 0 ANSI: 5
+ > scsi 1:0:1:0: CD-ROM            HP       CD-Writer+ 9100  1.0c PQ: 0 ANSI: 5
 
-BRs
-Peer Chen
- 
+The problem is still present in 2.6.29-rc2.
 
-> -----Original Message-----
-> From: Yan Seiner [mailto:yan@seiner.com] 
-> Sent: Sunday, January 18, 2009 9:50 PM
-> To: Peer Chen
-> Cc: linux-ide@vger.kernel.org
-> Subject: Re: [PATCH] SCSI: Add the SGPIO support for sata_nv.c
-> 
-> Yinghai Lu wrote:
-> > On Tue, Nov 6, 2007 at 8:09 PM, Yinghai Lu 
-> <yhlu.kernel@gmail.com> wrote:
-> >   
-> >> On Nov 7, 2006 1:55 AM, Peer Chen <pchen@nvidia.com> wrote:
-> >>     
-> >>> Modified and resent out the patch as attachment.
-> >>> Description about the patch:
-> >>> Add SGPIO support in sata_nv.c.
-> >>> SGPIO (Serial General Purpose Input Output) is a sideband serial 
-> >>> 4-wire interface that a storage controller uses to 
-> communicate with 
-> >>> a storage enclosure management controller, primarily to control 
-> >>> activity and status LEDs that are located within drive 
-> bays or on a 
-> >>> storage backplane. SGPIO is defined by [SFF8485].
-> >>> In this patch,we drive the LEDs to blink when read/write 
-> operation 
-> >>> happen on SATA drives connect the corresponding ports on 
-> MCP55 board.
-> >>>       
-> I missed the start of  this thread....  Is it possible to 
-> blink the lights from user space?  This is very useful when 
-> trying to locate a 
-> dead or dying drive.   for example, /dev/sdc dies, but I have 
-> no way of 
-> knowing which one it is without unplugging all the cables one 
-> at a time.  A userspace utility that would allow me to blink 
-> a drive activity light would be very useful.
-> 
-> --Yan
-> 
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+More debugging first showed that only the specific machine mentioned
+above is affected, as I've tested -rc1 on several other ata_piix boxes
+with various oldish disks and cdroms and none of the others triggered
+the hang.
+
+Secondly, the hang is due to the HP CD-Writer drive as having only it
+on the second port suffices to produce the hang. It doesn't matter if
+it's configured as master or slave.
+
+In any event, this shows that using 32-bit I/O ops should also be a
+function of the drive you're talking to, not just the controller.
+
+/Mikael
