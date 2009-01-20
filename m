@@ -1,104 +1,64 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
-Date: Tue, 20 Jan 2009 13:47:11 +0100
-Message-ID: <20090120124711.GA1920@elf.ucw.cz>
-References: <20090119202423.GA7070@ucw.cz> <200901192150.59438.rjw@sisk.pl> <20090119221508.GA2576@elf.ucw.cz> <20090120000305.7895eff9@lxorguk.ukuu.org.uk>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Tue, 20 Jan 2009 15:49:30 +0100
+Message-ID: <200901201549.31211.stf_xl@wp.pl>
+References: <200901141345.42583.stf_xl@wp.pl> <4975B065.6030705@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33641 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753463AbZATMpI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 07:45:08 -0500
+Received: from mx1.wp.pl ([212.77.101.5]:29079 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754967AbZATOtj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 09:49:39 -0500
+In-Reply-To: <4975B065.6030705@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <20090120000305.7895eff9@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, hmacht@novell.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-On Tue 2009-01-20 00:03:05, Alan Cox wrote:
-> > I guess I'm confused. I tried:
-> 
-> You want CONFIG_IDE = n, CONFIG_ATA_SFF = y, CONFIG_ATA_PIIX = y
+Tuesday 20 January 2009 12:07:17 Sergei Shtylyov napisa=C5=82(a):
+> > do special things before access Task File and Data Register (functi=
+ons=20
+> > set_8bit_mode() and set_16bit_mode()).
+>=20
+>    That part really doesn't look well -- Atmel should have put more=20
+> though into it and make the register stride 2 bytes, so that 16-bit=20
+> access could alwys be used...
+Actually it is possible (I realize when seeing pata_at32) when address
+lines are connected in diffrent way, h/w trick is described in AVR32 AT=
+A
+application note. Only register addresses are multiplied by 2 then.
+However Atmel reference documents for AT91 don't describe such
+connection. I suppose AT91 evaluation boards are designed without the t=
+rick.
+=20
+>   I then don't understand how are you submitting this as a part of=20
+> SAM9623EK board code...
+I asked for comment not for submition (yet) :)
 
-Thanks.
+> > We did not tests on Atmel sam9263ek board, because we have no prope=
+r connector
+> > for 1,8'' HDD.
+>=20
+>    Not sure I've understood that. You have 1,8'' drive and the board =
+has=20
+> stndard IDE connector?
+Board has 44-pin male IDE connector (rather non standard one), we have =
+no cable
+or any device to connect. Kelvatek's board has Compact Flash connector,=
+ we use CF
+card for testing. We currently ordered proper cable and IDE->CF adapter=
+, so
+I'll do tests on sam9263ek.
 
-With those options, cdrom moved from hda to sr0, and is correctly
-unregistered when undocking. Unfortunately, it is not correctly
-re-registered when I insert machine back into the dock :-(... so
-something is still not right in docking area.
+> > On PIO4 mode I achieve 4,5MB/s
+>=20
+>    Seems a good result actually. How it was measured?
+hdparm -t /dev/hda
 
-							Pavel
+I will comment other things soon.
 
-coda: Unexpected interruption.
-Failure of coda_cnode_make for root: error -4
-ata5.00: disabled
-ata5.00: detaching (SCSI 4:0:0:0)
-sr 4:0:0:0: rejecting I/O to dead device
-sr 4:0:0:0: rejecting I/O to dead device
-ACPI: \_SB_.GDCK - undocking
-usb usb1: usb resume
-ehci_hcd 0000:00:1d.7: resume root hub
-hub 1-0:1.0: hub_resume
-ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001002 POWER sig=se0
-CSC
-hub 1-0:1.0: port 6: status 0100 change 0001
-hub 1-0:1.0: state 7 ports 8 chg 0040 evt fe00
-hub 1-0:1.0: port 6, status 0100, change 0000, 12 Mb/s
-usb 1-6: USB disconnect, address 2
-usb 1-6: unregistering device
-usb 1-6: usb_disable_device nuking all URBs
-usb 1-6: unregistering interface 1-6:1.0
-usb 1-6:1.0: uevent
-usb 1-6: uevent
-hub 1-0:1.0: hub_suspend
-usb usb1: bus auto-suspend
-ehci_hcd 0000:00:1d.7: suspend root hub
-usb usb1: usb resume
-ehci_hcd 0000:00:1d.7: resume root hub
-hub 1-0:1.0: hub_resume
-ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001803 POWER sig=j CSC
-CONNECT
-hub 1-0:1.0: port 6: status 0501 change 0001
-hub 1-0:1.0: state 7 ports 8 chg 0040 evt fe00
-hub 1-0:1.0: port 6, status 0501, change 0000, 480 Mb/s
-ehci_hcd 0000:00:1d.7: port 6 high speed
-ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001005 POWER sig=se0 PE
-CONNECT
-usb 1-6: new high speed USB device using ehci_hcd and address 5
-ehci_hcd 0000:00:1d.7: port 6 high speed
-ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001005 POWER sig=se0 PE
-CONNECT
-usb 1-6: New USB device found, idVendor=17ef, idProduct=1000
-usb 1-6: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-usb 1-6: uevent
-usb 1-6: usb_probe_device
-usb 1-6: configuration #1 chosen from 1 choice
-usb 1-6: adding 1-6:1.0 (config #1, interface 0)
-usb 1-6:1.0: uevent
-hub 1-6:1.0: usb_probe_interface
-hub 1-6:1.0: usb_probe_interface - got id
-hub 1-6:1.0: USB hub found
-hub 1-6:1.0: 4 ports detected
-hub 1-6:1.0: standalone hub
-hub 1-6:1.0: individual port power switching
-hub 1-6:1.0: individual port over-current protection
-hub 1-6:1.0: TT per port
-hub 1-6:1.0: TT requires at most 8 FS bit times (666 ns)
-hub 1-6:1.0: power on to power good time: 100ms
-hub 1-6:1.0: local power source is good
-hub 1-6:1.0: enabling power on all ports
-/data/l/linux/drivers/usb/core/inode.c: creating file '005'
-usb 1-6: link qh256-0001/f6238080 start 255 [1/0 us]
-hub 1-6:1.0: state 7 ports 4 chg 0000 evt 0000
-hub 1-6:1.0: hub_suspend
-usb 1-6: unlink qh256-0001/f6238080 start 255 [1/0 us]
-usb 1-6: usb auto-suspend
-hub 1-0:1.0: hub_suspend
-usb usb1: bus auto-suspend
-ehci_hcd 0000:00:1d.7: suspend root hub
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Cheers
+Stanislaw Gruszka
