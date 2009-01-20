@@ -1,35 +1,69 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12437] My DVD+\-RW ROM can not write any disc
-Date: Tue, 20 Jan 2009 01:42:12 -0800 (PST)
-Message-ID: <20090120094212.256AA10800C@picon.linux-foundation.org>
-References: <bug-12437-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
+Date: Tue, 20 Jan 2009 12:44:46 +0300
+Message-ID: <49759D0E.804@ru.mvista.com>
+References: <20090119202423.GA7070@ucw.cz> <200901192150.59438.rjw@sisk.pl> <20090119221508.GA2576@elf.ucw.cz> <200901200036.14640.rjw@sisk.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35951 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754540AbZATJmo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 04:42:44 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0K9gClZ016753
-	for <linux-ide@vger.kernel.org>; Tue, 20 Jan 2009 01:42:13 -0800
-In-Reply-To: <bug-12437-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:16760 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754756AbZATJo4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jan 2009 04:44:56 -0500
+In-Reply-To: <200901200036.14640.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Pavel Machek <pavel@suse.cz>, kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12437
+Hello.
+
+Rafael J. Wysocki wrote:
+
+>>>> In 2.6.29 (and probably earlier) kernels, booting in docking station
+>>>> results in undocked s2ram failing.
+>>>>
+>>>> Problem seems to be that hda (cdrom in dock) is not deregistered
+>>>> during undock, and that hda driver loops spitting error messages at
+>>>> 'too-fast-to-read' rate when suspend with missing hda is attempted.
+>>>>         
+>>> What driver do you mean exactly?  Old-IDE I would guess.
+>>>
+>>> Does this also happen with a PATA/libata driver?
+>>>       
+>> I guess I'm confused. I tried:
+>>
+>> --- config.ok	2009-01-19 11:40:42.000000000 +0100
+>> +++ ../b-linux/.config	2009-01-19 22:45:03.000000000 +0100
+>> @@ -1022,7 +1022,7 @@
+>>  # CONFIG_SATA_SIL24 is not set
+>>  CONFIG_ATA_SFF=y
+>>  CONFIG_SATA_SVW=y
+>> -CONFIG_ATA_PIIX=y
+>> +# CONFIG_ATA_PIIX is not set
+>>  # CONFIG_SATA_MV is not set
+>>  # CONFIG_SATA_NV is not set
+>>  # CONFIG_PDC_ADMA is not set
+>> @@ -1058,8 +1058,8 @@
+>>  # CONFIG_PATA_JMICRON is not set
+>>  # CONFIG_PATA_TRIFLEX is not set
+>>  # CONFIG_PATA_MARVELL is not set
+>> -# CONFIG_PATA_MPIIX is not set
+>> -# CONFIG_PATA_OLDPIIX is not set
+>> +CONFIG_PATA_MPIIX=y
+>> +CONFIG_PATA_OLDPIIX=y
+>>  # CONFIG_PATA_NETCELL is not set
+>>  # CONFIG_PATA_NINJA32 is not set
+>>  # CONFIG_PATA_NS87410 is not set
+>>
+>> ...but cdrom is still detected as hda.
+>>     
+>
+> Er, CONFIG_ATA_PIIX is a SATA driver.
+
+   Not really, it drives both SATA and PATA controllers.
+
+MBR, Sergei
 
 
-
-
-
-------- Comment #8 from eiskalt.erwischt@mail.ru  2009-01-20 01:42 -------
-I burn iso-image to disk and try to read it on Windows PC. Windows report me
-that disk is empty. It was hardware problem at windows pc, not linux.
-
-Thanks.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
