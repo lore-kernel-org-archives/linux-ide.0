@@ -1,46 +1,104 @@
-From: "Gerhard Pircher" <gerhard_pircher@gmx.net>
-Subject: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for AmigaOne
- boards
-Date: Tue, 20 Jan 2009 12:25:06 +0100
-Message-ID: <20090120112506.278840@gmx.net>
-References: <3a68e478a75.2662f91@smtp.lizzy.com.au>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
+Date: Tue, 20 Jan 2009 13:47:11 +0100
+Message-ID: <20090120124711.GA1920@elf.ucw.cz>
+References: <20090119202423.GA7070@ucw.cz> <200901192150.59438.rjw@sisk.pl> <20090119221508.GA2576@elf.ucw.cz> <20090120000305.7895eff9@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44704 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756779AbZATLZJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Jan 2009 06:25:09 -0500
-In-Reply-To: <3a68e478a75.2662f91@smtp.lizzy.com.au>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33641 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753463AbZATMpI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 07:45:08 -0500
+Content-Disposition: inline
+In-Reply-To: <20090120000305.7895eff9@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: grant.likely@secretlab.ca, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, benh@kernel.crashing.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, hmacht@novell.com
 
+On Tue 2009-01-20 00:03:05, Alan Cox wrote:
+> > I guess I'm confused. I tried:
+> 
+> You want CONFIG_IDE = n, CONFIG_ATA_SFF = y, CONFIG_ATA_PIIX = y
 
--------- Original-Nachricht --------
-> Datum: Mon, 19 Jan 2009 19:28:35 +0100
-> Von: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> An: "Gerhard Pircher" <gerhard_pircher@gmx.net>
-> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger=
-=2Ekernel.org, linuxppc-dev@ozlabs.org, grant.likely@secretlab.ca
-> Betreff: Re: [PATCH 5/5] ide: Force VIA IDE legacy interrupts for Ami=
-gaOne boards
+Thanks.
 
-> The following patchset fixes core IDE PCI code to always use
-> pci_get_legacy_ide_irq() and ide_pci_is_in_compatibility_mode():
->=20
-> http://lkml.org/lkml/2009/1/19/163
->=20
-> so via82cxxx specific solution is no longer necessary.
->=20
-> [ IOW I'll keep your previous patch and the #ifdef issue will
->   solve itself after the above patchset is merged. ]
-Thanks a lot! That's much better than the simple fix I had planned.
+With those options, cdrom moved from hda to sr0, and is correctly
+unregistered when undocking. Unfortunately, it is not correctly
+re-registered when I insert machine back into the dock :-(... so
+something is still not right in docking area.
 
-Gerhard
+							Pavel
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
+coda: Unexpected interruption.
+Failure of coda_cnode_make for root: error -4
+ata5.00: disabled
+ata5.00: detaching (SCSI 4:0:0:0)
+sr 4:0:0:0: rejecting I/O to dead device
+sr 4:0:0:0: rejecting I/O to dead device
+ACPI: \_SB_.GDCK - undocking
+usb usb1: usb resume
+ehci_hcd 0000:00:1d.7: resume root hub
+hub 1-0:1.0: hub_resume
+ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001002 POWER sig=se0
+CSC
+hub 1-0:1.0: port 6: status 0100 change 0001
+hub 1-0:1.0: state 7 ports 8 chg 0040 evt fe00
+hub 1-0:1.0: port 6, status 0100, change 0000, 12 Mb/s
+usb 1-6: USB disconnect, address 2
+usb 1-6: unregistering device
+usb 1-6: usb_disable_device nuking all URBs
+usb 1-6: unregistering interface 1-6:1.0
+usb 1-6:1.0: uevent
+usb 1-6: uevent
+hub 1-0:1.0: hub_suspend
+usb usb1: bus auto-suspend
+ehci_hcd 0000:00:1d.7: suspend root hub
+usb usb1: usb resume
+ehci_hcd 0000:00:1d.7: resume root hub
+hub 1-0:1.0: hub_resume
+ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001803 POWER sig=j CSC
+CONNECT
+hub 1-0:1.0: port 6: status 0501 change 0001
+hub 1-0:1.0: state 7 ports 8 chg 0040 evt fe00
+hub 1-0:1.0: port 6, status 0501, change 0000, 480 Mb/s
+ehci_hcd 0000:00:1d.7: port 6 high speed
+ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001005 POWER sig=se0 PE
+CONNECT
+usb 1-6: new high speed USB device using ehci_hcd and address 5
+ehci_hcd 0000:00:1d.7: port 6 high speed
+ehci_hcd 0000:00:1d.7: GetStatus port 6 status 001005 POWER sig=se0 PE
+CONNECT
+usb 1-6: New USB device found, idVendor=17ef, idProduct=1000
+usb 1-6: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+usb 1-6: uevent
+usb 1-6: usb_probe_device
+usb 1-6: configuration #1 chosen from 1 choice
+usb 1-6: adding 1-6:1.0 (config #1, interface 0)
+usb 1-6:1.0: uevent
+hub 1-6:1.0: usb_probe_interface
+hub 1-6:1.0: usb_probe_interface - got id
+hub 1-6:1.0: USB hub found
+hub 1-6:1.0: 4 ports detected
+hub 1-6:1.0: standalone hub
+hub 1-6:1.0: individual port power switching
+hub 1-6:1.0: individual port over-current protection
+hub 1-6:1.0: TT per port
+hub 1-6:1.0: TT requires at most 8 FS bit times (666 ns)
+hub 1-6:1.0: power on to power good time: 100ms
+hub 1-6:1.0: local power source is good
+hub 1-6:1.0: enabling power on all ports
+/data/l/linux/drivers/usb/core/inode.c: creating file '005'
+usb 1-6: link qh256-0001/f6238080 start 255 [1/0 us]
+hub 1-6:1.0: state 7 ports 4 chg 0000 evt 0000
+hub 1-6:1.0: hub_suspend
+usb 1-6: unlink qh256-0001/f6238080 start 255 [1/0 us]
+usb 1-6: usb auto-suspend
+hub 1-0:1.0: hub_suspend
+usb usb1: bus auto-suspend
+ehci_hcd 0000:00:1d.7: suspend root hub
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
