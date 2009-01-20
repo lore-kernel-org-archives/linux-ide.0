@@ -1,33 +1,55 @@
-From: Diego Calleja <diegocg@gmail.com>
-Subject: Re: Faulty seagate drives, are going to be blacklisted?
-Date: Tue, 20 Jan 2009 16:30:28 +0100
-Message-ID: <20090120163028.63efeb1a@diego-desktop>
-References: <20090120002923.065f24ca@diego-desktop>
-	<85346.1232422345@turing-police.cc.vt.edu>
+From: Mark Lord <liml@rtr.ca>
+Subject: libata, devm_*, and MSI ?
+Date: Tue, 20 Jan 2009 11:03:13 -0500
+Message-ID: <4975F5C1.8090107@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760901AbZATPjW@vger.kernel.org>
-In-Reply-To: <85346.1232422345@turing-police.cc.vt.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-El Mon, 19 Jan 2009 22:32:25 -0500, Valdis.Kletnieks@vt.edu escribi=C3=B3=
-:
+Tejun / Jeff,
 
-> The $64 question is, of course: What exactly should the operating sys=
-tem
-> *do* if it detects one of these drives?  Prohibit it from bricking la=
-ter
-> by essentially bricking it *now*?   What if the drive already has a l=
-ot of
-> production data on it?
+I am working on MSI support for sata_mv, and am trying to puzzle out
+exactly what the kernel expects for this.  Looking at other drivers,
+both libata and otherwise, yields a variety of conflicting implementations.
 
-Yeah, that's why I asked. Now that I think about it, it should probably=
- be
-the HAL people who should add one of those desktop "bubbles" warning th=
-e
-users about the possible failure (they already do it for faulty batteri=
-es)
+For starters, the MSI HOW-TO suggests that drivers must be careful
+to invoke pci_disable_msi() on module unload, but I don't see that
+happening anywhere in libata.
+
+Unless, Tejun, the devm_* routines automatically do this.. do they?
+
+Next, there's no mention of a need for invoking pci_intx() in the HOW-TO,
+yet some device drivers call it, and others do not.
+
+Eg. from ahci.c, we have this:
+
+        if ((hpriv->flags & AHCI_HFLAG_NO_MSI) || pci_enable_msi(pdev))
+                pci_intx(pdev, 1);
+
+Which agrees with the existing code in sata_mv:
+
+        if (msi && pci_enable_msi(pdev))
+                pci_intx(pdev, 1);
+
+Which seems to call pci_intx() only when MSI is *not* used.  Fine.
+But then in sata_vsc.c, we do sort of the opposite:
+
+        if (pci_enable_msi(pdev) == 0)
+                pci_intx(pdev, 0);
+
+Either that one is wrong, or pci_intx() is unnecessary in all cases.
+Again, the MSI HOW-TO doesn't even mention this routine.
+
+Looking through the network drivers, it seems that some of them
+do the pci_intx(pdev,1) call for the cases where pci_enable_msi() fails,
+similar to ahci.c and sata_mv.c.
+
+But not all of them do that.
+
+Perhaps somebody from the PCI side of things might enlighten us all.
+
+Thanks
