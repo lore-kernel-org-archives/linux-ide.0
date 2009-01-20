@@ -1,32 +1,42 @@
-From: Diego Calleja <diegocg@gmail.com>
-Subject: Re: Faulty seagate drives, are going to be blacklisted?
-Date: Tue, 20 Jan 2009 19:18:36 +0100
-Message-ID: <20090120191836.71582cbe@diego-desktop>
-References: <20090120002923.065f24ca@diego-desktop>
-	<85346.1232422345@turing-police.cc.vt.edu>
-	<20090120163028.63efeb1a@diego-desktop>
-	<125975.1232472247@turing-police.cc.vt.edu>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: 2.6.29-rc2: thinkpad dock -- cdrom vs. s2ram
+Date: Tue, 20 Jan 2009 19:39:19 +0100
+Message-ID: <1232476759.5286.6.camel@homac.suse.de>
+References: <20090119202423.GA7070@ucw.cz> <200901192150.59438.rjw@sisk.pl>
+	 <20090119221508.GA2576@elf.ucw.cz>
+	 <20090120000305.7895eff9@lxorguk.ukuu.org.uk>
+	 <20090120124711.GA1920@elf.ucw.cz>
+Reply-To: hmacht@suse.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:11718 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbZATSUD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 13:20:03 -0500
-In-Reply-To: <125975.1232472247@turing-police.cc.vt.edu>
+Received: from ns2.suse.de ([195.135.220.15]:34628 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757069AbZATSkS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jan 2009 13:40:18 -0500
+In-Reply-To: <20090120124711.GA1920@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>, kernel list <linux-kernel@vger.kernel.org>, teheo@novell.com, trenn@suse.de, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-El Tue, 20 Jan 2009 12:24:07 -0500, Valdis.Kletnieks@vt.edu escribi=C3=B3=
-:
+Am Dienstag, den 20.01.2009, 13:47 +0100 schrieb Pavel Machek:
+> On Tue 2009-01-20 00:03:05, Alan Cox wrote:
+> > > I guess I'm confused. I tried:
+> > 
+> > You want CONFIG_IDE = n, CONFIG_ATA_SFF = y, CONFIG_ATA_PIIX = y
+> 
+> Thanks.
+> 
+> With those options, cdrom moved from hda to sr0, and is correctly
+> unregistered when undocking. Unfortunately, it is not correctly
+> re-registered when I insert machine back into the dock :-(... so
+> something is still not right in docking area.
 
-> Probably a better approach, as long as we leave enough info visible i=
-n various
-> /sys files for HAL to figure it out - but I'm pretty sure we already =
-do that...
+Does this work when you try without the dock station, just removing and
+inserting the cdrom?
 
-Yeah, it's all there already, and HAL has support for it. It just needs
-the neccesary .fdi files.
+Regards,
+	Holger
+
