@@ -1,61 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata, devm_*, and MSI ?
-Date: Tue, 20 Jan 2009 14:54:25 -0500
-Message-ID: <49762BF1.2050101@rtr.ca>
-References: <4975F5C1.8090107@rtr.ca>	 <da824cf30901200944x545431b2va0233abc14e81f9b@mail.gmail.com>	 <497614F5.6000301@rtr.ca> <da824cf30901201051v66ae13c4i3476097ee31db281@mail.gmail.com>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Tue, 20 Jan 2009 15:07:41 -0500
+Message-ID: <20090120200741.GA1020@redhat.com>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org> <20090119184304.GB30365@redhat.com> <49753BDE.8050403@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:46992 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756217AbZATTy2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Jan 2009 14:54:28 -0500
-In-Reply-To: <da824cf30901201051v66ae13c4i3476097ee31db281@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <49753BDE.8050403@shaw.ca>
+Sender: linux-raid-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
 
-Grant Grundler wrote:
-> On Tue, Jan 20, 2009 at 10:16 AM, Mark Lord <liml@rtr.ca> wrote:
-> ...
->>> I don't think that's necessary if free_irq() or disable_irq() are called.
->>> However, I'm not seeing those get called either.
-> ...
->> The linux/Documentation/PCI/MSI-HOWTO.txt information is rather explicit
->> about it, and the pci core code does seem to expect it.
-> 
-> It looks like pci_disable_msi() requires free_irq() to be called first in order
-> to guarantee the vectors are no longer in use. But I didn't see any code to
-> enforce that. Which code was "expecting free_irq()" to be called?
-..
+On Mon, Jan 19, 2009 at 08:50:06PM -0600, Robert Hancock wrote:
+ 
+ > > Given the corruption happens at high block numbers, I'm wondering
+ > > if maybe there's some kind of wraparound bug happening here.
+ > > (Though why only the 0x00 pattern fails would still be a mystery).
+ > 
+ > Yeah, that seems a bit bizarre.. Apparently somehow zeros are being 
+ > converted into non-zero.. Can you try zeroing out the partition by 
+ > dd'ing into it from /dev/zero or something, then dumping it back out to 
+ > see what kind of data is showing up?
 
-The devres subsystem automatically frees resources on device removal,
-including calling free_irq() as necessary for any interrupt handler
-that was registered with devm_request_irq(), as done in libata.
-See linux/drivers/base/devres.c for the actual call to free_irq().
+Hmm, it seems the failed firmware update has killed the eeprom.
+It no longer reports the right PCI vendor ID.
 
-But it doesn't handle pci_disable_msi() in there.
+	Dave
 
-Thus this code from latest sata_mv:
-
-+static void mv_pci_remove_one(struct pci_dev *pdev)
-+{
-+       struct device *dev = &pdev->dev;
-+       struct ata_host *host = dev_get_drvdata(dev);
-+       struct mv_host_priv *hpriv = host->private_data;
-+
-+       if (hpriv->hp_flags & MV_HP_FLAG_MSI) {
-+               devm_free_irq(host->dev, pdev->irq, host);
-+               pci_disable_msi(pdev);
-+       }
-+       ata_pci_remove_one(pdev);
-+}
-
-I believe that other MSI users might want something similar,
-or perhaps Tejun could extend devres to include a pair
-of suitable functions, devm_enable_msi() and  devm_disable_msi().
-Then it would be just automatic for drivers, without any fuss.
-
-Cheers
+-- 
+http://www.codemonkey.org.uk
