@@ -1,52 +1,47 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH -next] libata: fix kernel-doc warnings
-Date: Tue, 20 Jan 2009 16:28:59 -0800
-Message-ID: <20090120162859.022628c1.randy.dunlap@oracle.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Faulty seagate drives, are going to be blacklisted?
+Date: Tue, 20 Jan 2009 18:30:27 -0600
+Message-ID: <49766CA3.7090508@shaw.ca>
+References: <20090120002923.065f24ca@diego-desktop> <49753D09.8060503@shaw.ca> <20090120162612.7473aadf@diego-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:31132 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756875AbZAUA30 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 19:29:26 -0500
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:13652 "EHLO
+	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758799AbZAUAaa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jan 2009 19:30:30 -0500
+In-Reply-To: <20090120162612.7473aadf@diego-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: jgarzik <jgarzik@pobox.com>
+To: Diego Calleja <diegocg@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Diego Calleja wrote:
+> El Mon, 19 Jan 2009 20:55:05 -0600, Robert Hancock <hancockr@shaw.ca>=
+ escribi=C3=B3:
+>=20
+>> There are a few drives which are currently marked to disable NCQ and=
+=20
+>> warn the user that the firmware that should be upgraded:
+>>
+>> ST31500341AS
+>> ST31000333AS
+>> ST3640623AS
+>> ST3640323AS
+>> ST3320813AS
+>> ST3320613AS
+>>
+>> all for firmware versions SD15 through SD19.
+>=20
+>=20
+> Yes, I saw them, but apparently the NCQ bug is unrelated to this one.
 
-Fix libata kernel-doc warnings:
+I suspect it might be related, given that the firmware versions seem to=
+=20
+partially overlap.
 
-Warning(linux-next-20090120//drivers/ata/libata-core.c:4720): Excess function parameter 'dev' description in 'ata_qc_new'
-Warning(linux-next-20090120//drivers/ata/libata-scsi.c:428): No description found for parameter 'ap'
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/libata-core.c |    3 +--
- drivers/ata/libata-scsi.c |    1 +
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
---- linux-next-20090120.orig/drivers/ata/libata-core.c
-+++ linux-next-20090120/drivers/ata/libata-core.c
-@@ -4709,8 +4709,7 @@ void swap_buf_le16(u16 *buf, unsigned in
- 
- /**
-  *	ata_qc_new - Request an available ATA command, for queueing
-- *	@ap: Port associated with device @dev
-- *	@dev: Device from whom we request an available command structure
-+ *	@ap: target port
-  *
-  *	LOCKING:
-  *	None.
---- linux-next-20090120.orig/drivers/ata/libata-scsi.c
-+++ linux-next-20090120/drivers/ata/libata-scsi.c
-@@ -414,6 +414,7 @@ int ata_std_bios_param(struct scsi_devic
- 
- /**
-  *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
-+ *	@ap: target port
-  *	@sdev: SCSI device to get identify data for
-  *	@arg: User buffer area for identify data
-  *
+With this issue though, there isn't anything the kernel can do about th=
+e=20
+problem, so blacklisting doesn't seem to really make much sense.
