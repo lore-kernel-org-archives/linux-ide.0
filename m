@@ -1,91 +1,230 @@
-From: Michael Ellerman <michael@ellerman.id.au>
-Subject: Re: libata, devm_*, and MSI ?
-Date: Wed, 21 Jan 2009 15:16:18 +1100
-Message-ID: <1232511378.11241.64.camel@localhost>
-References: <4975F5C1.8090107@rtr.ca>
-	 <alpine.LNX.1.00.0901201626090.19665@iabervon.org>
-	 <497698E2.7090807@rtr.ca>
-	 <da824cf30901202002g52fb73f9v8229fb702dcd033d@mail.gmail.com>
-Reply-To: michael@ellerman.id.au
+From: Patrick Horn <patrick.horn@gmail.com>
+Subject: Re: Faulty seagate drives, are going to be blacklisted?
+Date: Wed, 21 Jan 2009 02:27:38 -0800
+Message-ID: <4976F89A.1040405@gmail.com>
+References: <20090120002923.065f24ca@diego-desktop>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6hFOVLbQUuoGpdJZCFxO"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:57589 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756782AbZAUEQV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Jan 2009 23:16:21 -0500
-In-Reply-To: <da824cf30901202002g52fb73f9v8229fb702dcd033d@mail.gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.169]:11270 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752931AbZAUK1l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jan 2009 05:27:41 -0500
+In-Reply-To: <20090120002923.065f24ca@diego-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Mark Lord <liml@rtr.ca>, Daniel Barkalow <barkalow@iabervon.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
+To: Diego Calleja <diegocg@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+Diego Calleja wrote:
+> Tech sites are reporting everywhere a massive flaw in seagate drives that
+> can lock up the drive and make it unusable (the bios doesn't detect it, you
+> can't read the data). Haven't read anything about it here on the lists.
+> Seagate has ack'ed the problem:
+> http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207931
+> 
+> So, apparently there're a lot of drives on the market (including mine)
+> that can die any day. Are those drives going to be blacklisted? It's
+> still not clear if the firmware update is safe (some affected but
+> working drives are dying after the firmware update), so some people
+> like me is still waiting (and hoping that the drive doesn't die) for
+> more stable firmware updates...
+> 
+> Here is the list of drives+firmware affected, according to the support site
+> as of now. Some models are still being diagnosed.
+> 
+> 
+> Seagate Barracuda 7200.11 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207951)
+> 
+> Models Affected:
+>  ST3500320AS
+>  ST3640330AS
+>  ST3750330AS
+>  ST31000340AS
+> Firmware Affected
+>  SD15, SD16, SD17, SD18, SD19, AD14
+> Recommended Firmware Update
+>  SD1A
+> 
+> Seagate Barracuda 7200.11, page 2 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207957)
+> Models Affected:
+>  ST31500341AS
+>  ST31000333AS
+>  ST3640323AS
+>  ST3640623AS
+>  ST3320613AS
+>  ST3320813AS
+>  ST3160813AS
+> Firmware Affected
+>  Still Unknow
+> Recommended Firmware Update
+>  Still Unknow
+> 
+> 
+> Seagate Barracuda ES.2 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207963)
+> Models Affected:
+>  ST3250310NS
+>  ST3500320NS
+>  ST3750330NS
+>  ST31000340NS
+> Firmware Affected
+>  Still Unknow
+> Recommended Firmware Update
+>  Still Unknow
+> 
+> DiamondMax 22 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207969)
+> Models Affected:
+>  STM3500320AS
+>  STM3750330AS
+>  STM31000340AS
+> Firmware Affected
+>  MX15 (or higher)
+> Recommended Firmware Update
+>  MX1A
+> 
+> DiamondMax 22 (http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207975)
+> Models Affected:
+>  STM31000334AS
+>  STM3320614AS
+>  STM3160813AS
+> Firmware Affected
+>  Still Unknow
+> Recommended Firmware Update
+>  Still Unknow
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+Hi,
+
+I have another drive which doesn't seem to be on any list, and a google search 
+comes up with very little information about this one.
+
+I have two raided SATA 1TB "MAXTOR STM31000333AS" drives, firmware MX15, one of 
+which "failed" last weekend.  I have since rebuilt the array and it has had no 
+further problems, but I know it's only a matter of time before it happens again.
+
+I checked SMART, and both drives are essentially identical with nothing anywhere 
+near failure.
+I am on Ubuntu kernel 2.6.28-4-generic #5-Ubuntu but I will be happy to build a 
+kernel if this becomes at all reproducible.
+
+At first I thought that this NCQ problem might apply to me, but my drive is 
+(gasp) one letter different from two of those listed (both seagate and maxtor 
+variants):
+http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207931
+And MX15 is listed as a faulty firmware for the STM31000340AS/334AS
+
+I have been using these drives for just three weeks up to now, before having the 
+one drive fail (and later it gave a bunch of errors at bootup, which was solved 
+when it reset the SATA link). The other drive has luckily not had any issues.
+
+Is this error just coincidence, or did Seagate forget to mention my drive?
+(And what happened to the firmware updates--they seem to be "In Validation")
+Is seagate the only site with information about this? Any public blacklist of 
+every affected drive? What can I see in dmesg that indicates that NCQ is the cause?
 
 
---=-6hFOVLbQUuoGpdJZCFxO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks,
+-Patrick
 
-On Tue, 2009-01-20 at 20:02 -0800, Grant Grundler wrote:
-> On Tue, Jan 20, 2009 at 7:39 PM, Mark Lord <liml@rtr.ca> wrote:
-> ...
-> > Next.. who knows something about debugging MSI across PCI bridges ?
-> > I've got a 64-bit box here, PCIe near the core, but with full PCI-X
-> > slots on the far side of two bridges.
-> >
-> > The kernel happily allows my driver to setup MSI, but the interrupts
-> > never arrive.  So something somewhere in between is either
-> >
-> > (1) not set up or quirked quite right, or
-> > (2) one of the bridges won't pass MSI and we don't detect that.
-> >
-> > I'll poke more at it later and post some info, if somebody out there
-> > knows enough about this kind of thing to provide some basic hints.
->=20
->=20
-> Basic Hints:
-> 1) post lspci -v output to verify device (and bridges) is programmed corr=
-ectly.
-> 2) look for chipset quirks that disable global msi
+(I'll paste my dmesg as I don't know enough to tell if this is the same issue as 
+the other seagate drives--I trimmed the repetitive parts)
 
-The kernel shouldn't let you enable MSI if that's the case, ie.
-pci_enable_msi() should fail.
+[ 7520.699730] ata2.00: exception Emask 0x10 SAct 0x7ff4f SErr 0x400100 action 
+0x6 frozen
+[ 7520.699734] ata2.00: irq_stat 0x08000000, interface fatal error
+[ 7520.699738] ata2: SError: { UnrecovData Handshk }
+[ 7520.699743] ata2.00: cmd 61/50:00:89:4b:c0/00:00:01:00:00/40 tag 0 ncq 40960 out
+[ 7520.699745]          res 40/00:30:91:60:c0/00:00:01:00:00/40 Emask 0x10 (ATA 
+bus error)
+[ 7520.699748] ata2.00: status: { DRDY }
+[ 7520.699752] ata2.00: cmd 61/40:08:b1:4f:c0/00:00:01:00:00/40 tag 1 ncq 32768 out
+[ 7520.699753]          res 40/00:30:91:60:c0/00:00:01:00:00/40 Emask 0x10 (ATA 
+bus error)
+[ 7520.699756] ata2.00: status: { DRDY }
+[ 7520.699875] ata2: hard resetting link
+[ 7521.180020] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 7521.250673] ata2.00: configured for UDMA/133
+[ 7521.250724] ata2: EH complete
+[ 7521.250812] sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors: (1.00 
+TB/931 GiB)
+[ 7521.250832] sd 1:0:0:0: [sdb] Write Protect is off
+[ 7521.250835] sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 7521.250865] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, 
+doesn't support DPO or FUA
+[ 7521.258968] ata2.00: exception Emask 0x10 SAct 0x7ffff SErr 0x400100 action 
+0x6 frozen
+[ 7521.258972] ata2.00: irq_stat 0x08000000, interface fatal error
+[ 7521.258975] ata2: SError: { UnrecovData Handshk }
+... it then goes down to 1.5 Gbps but continues to give errors until it is 
+kicked from the raid array an hour later
 
-It might still be worth looking at the quirks though, in case there's
-one for a previous revision of your bridge or something.
+[10477.764175] ata2.00: status: { DRDY }
+[10477.764179] ata2: hard resetting link
+[10478.248019] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[10478.318670] ata2.00: configured for UDMA/33
+[10478.318679] end_request: I/O error, dev sdb, sector 989067690
+[10478.318685] raid1: Disk failure on sdb3, disabling device.
+[10478.318686] raid1: Operation continuing on 1 devices.
 
-> 3) Make sure MMIO ranges for 0xfee00000 are routed to local APIC
->    ie each bridge needs to route that address somehow (negative decode
-> is common for upstream).
-> 4) manually trigger the MSI by doing a MMIO write to the correct
-> 0xfee00000 address with the assigned vector in order to see if your
-> interrupt handler gets called.
 
-And can you plug something directly into the PCIe bus? If so does MSI
-work on that?
+This drive also encountered a similar error on bootup the next day:
+[    9.389771] ata2.00: exception Emask 0x10 SAct 0xf SErr 0xc00000 action 0x6 
+frozen
+[    9.389774] ata2.00: irq_stat 0x0c000000, interface fatal error
+[    9.389776] ata2: SError: { Handshk LinkSeq }
+[    9.389780] ata2.00: cmd 60/02:00:3f:af:4e/00:00:00:00:00/40 tag 0 ncq 1024 in
+[    9.389781]          res 40/00:10:41:af:4e/00:00:00:00:00/40 Emask 0x10 (ATA 
+bus error)
+[    9.389783] ata2.00: status: { DRDY }
 
-cheers
 
---=20
-Michael Ellerman
-OzLabs, IBM Australia Development Lab
+ From lspci -vvv:
 
-wwweb: http://michael.ellerman.id.au
-phone: +61 2 6212 1183 (tie line 70 21183)
+0:1f.2 SATA controller: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port 
+SATA AHCI Controller (rev 02) (prog-if 01)
+         Subsystem: ASUSTeK Computer Inc. Device 8277 
 
-We do not inherit the earth from our ancestors,
-we borrow it from our children. - S.M.A.R.T Person
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx+
+         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0 
 
---=-6hFOVLbQUuoGpdJZCFxO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+         Interrupt: pin B routed to IRQ 2299 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+         Region 0: I/O ports at 9c00 [size=8] 
 
-iEYEABECAAYFAkl2oZIACgkQdSjSd0sB4dJaEACcCACK7vKL8nNO9nqngcgS/NF8
-U1YAnRJiI54ZAV+aLuha7HtHSyxzZBGm
-=DiPW
------END PGP SIGNATURE-----
+         Region 1: I/O ports at 9880 [size=4] 
 
---=-6hFOVLbQUuoGpdJZCFxO--
+         Region 2: I/O ports at 9800 [size=8] 
+
+         Region 3: I/O ports at 9480 [size=4] 
+
+         Region 4: I/O ports at 9400 [size=32] 
+
+         Region 5: Memory at f9ffe800 (32-bit, non-prefetchable) [size=2K] 
+
+         Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/4 
+Enable+
+                 Address: fee0f00c  Data: 4181 
+
+         Capabilities: [70] Power Management version 3 
+
+                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot+,D3cold-)
+                 Status: D0 PME-Enable- DSel=0 DScale=0 PME- 
+
+         Capabilities: [a8] SATA HBA <?> 
+
+         Capabilities: [b0] Vendor Specific Information <?> 
+
+         Kernel driver in use: ahci 
+
+         Kernel modules: ahci 
+
 
