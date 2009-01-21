@@ -1,142 +1,114 @@
-From: Greg Freemyer <greg.freemyer@norcrossgroup.com>
-Subject: Re: Data Recovery from SSDs - Impact of trim?
-Date: Wed, 21 Jan 2009 10:56:50 -0500
-Message-ID: <87f94c370901210756q532f69f8v605f6c45c07b1290@mail.gmail.com>
-References: <16517792.86041231719671929.JavaMail.weblogic@epml02>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH 04/05] sata_mv: msi masking fix (v2)
+Date: Wed, 21 Jan 2009 09:03:29 -0800
+Message-ID: <da824cf30901210903t1276a237ob6501377696ad070@mail.gmail.com>
+References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca>
+	 <49750774.1070005@rtr.ca> <49773FD1.3040101@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:55360 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbZAUP4x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jan 2009 10:56:53 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so1689914qwe.37
-        for <linux-ide@vger.kernel.org>; Wed, 21 Jan 2009 07:56:51 -0800 (PST)
-In-Reply-To: <16517792.86041231719671929.JavaMail.weblogic@epml02>
+Received: from smtp-out.google.com ([216.239.45.13]:41152 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091AbZAURDd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jan 2009 12:03:33 -0500
+Received: from wpaz9.hot.corp.google.com (wpaz9.hot.corp.google.com [172.24.198.73])
+	by smtp-out.google.com with ESMTP id n0LH3WR4003220
+	for <linux-ide@vger.kernel.org>; Wed, 21 Jan 2009 09:03:32 -0800
+Received: from qyk14 (qyk14.prod.google.com [10.241.83.142])
+	by wpaz9.hot.corp.google.com with ESMTP id n0LH3Hl7022664
+	for <linux-ide@vger.kernel.org>; Wed, 21 Jan 2009 09:03:29 -0800
+Received: by qyk14 with SMTP id 14so5686362qyk.4
+        for <linux-ide@vger.kernel.org>; Wed, 21 Jan 2009 09:03:29 -0800 (PST)
+In-Reply-To: <49773FD1.3040101@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: d.j.shin@samsung.com
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-On Sun, Jan 11, 2009 at 7:21 PM, Dongjun Shin <d.j.shin@samsung.com> wrote:
-> Greg,
+On Wed, Jan 21, 2009 at 7:31 AM, Mark Lord <liml@rtr.ca> wrote:
+> Enable reliable use of Message-Signaled Interrupts (MSI) in sata_mv
+> by masking further chip interrupts within the main interrupt handler.
 >
-> The short answer is "it's dependent on the manufacturer's implementation".
->
-> The technical details are as follows.
->
-> SSD translates the LBA from host into the physical address (flash block/page)
-> using the mapping table which acts like the metadata of filesystem.
-> For the recovery to work, both the mapping table of the original data _and_
-> the physical data should be available.
->
-> The trim command can invalidate the mapping only _or_ the mapping and
-> the physical data as well. This is manufacturer-specific or sometimes
-> requested as spec (ex. enterprise notebook where security is important).
-> From the perspective of host, the trimmed are can be seen as (1) original data
-> (2) all zero or 0xff (3) indeterminate.
->
-> There are following discussion and proposal about the behavior of trim at T13.
-> (named "deterministic read after trim")
->
-> http://www.t10.org/ftp/t10/document.08/08-347r1.pdf
-> http://www.t13.org/Documents/UploadedDocuments/docs2008/e08137r2-DRAT_-_Deterministic_Read_After_Trim.pdf
->
-> However, this spec also does not meet your expectation because it does not
-> guarantee the safety of the original data.
->
-> Regards,
-> Dongjun
->
-> ------- Original Message -------
-> Sender : Greg Freemyer<greg.freemyer@norcrossgroup.com>
-> Date   : 2009-01-10 07:27 (GMT+09:00)
-> Title  : Data Recovery from SSDs - Impact of trim?
->
-> Dongjun (with linux-ide in copy),
->
-> I got your name from a Linux Kernel posting and I was wondering if you
-> could help me understand if data recovery will be possible with SSDs
-> in the future.
->
-> I work a lot with data recovery and forensic imaging.  With both,
-> access to what the filesystem considers unallocated sectors / blocks /
-> clusters is key to the process.  ie. A user deletes a file, but needs
-> to restore it. Lots of recovery tools exist to assist in this, but
-> obviously they need to be able to read the no longer allocated
-> clusters.
->
-> With a DISCARD enabled filesystem / kernel and with both current and
-> future generation SSDs, I&#39;m curious if our tools are going to be able
-> to read this information anymore.
->
-> Per the proposed spec Tejun posted a link to a couple months ago, the
-> response to a ATA read request of a trimmed sector can either be the
-> original data or all zeros.
->
-> http://t13.org/Documents/UploadedDocuments/docs2007/e07154r3-Data_Set_Management_Proposal_for_ATA-ACS2.pdf
->
-> From my industries perspective we would very much like the original
-> data to be returned as long as it is available.
->
-> Can you provide any insight into how the manufacturers are planning to
-> implement such reads?
->
-> Thanks
-> Greg
+> Based upon a suggestion by Grant Grundler.
+> MSI is working reliably in all of my test systems here now.
 
-Dongjun,
+Excellent.
 
-I just read the T13/e08137r2 draft you linked to and the powerpoint
-which addresses security issues caused by the 2007 proposed specs
-implementations.
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 
-I'm very concerned not with the discarded sectors, but with the fact
-that I see no way to know which sectors hold valid / reliable data vs.
-those that have been discarded and thus hold unreliable data.
+Reviewed-by: Grant Grundler <grundler@google.com>
 
-The T13/e08137r2 draft It is not strong enough to address this issue
-in my opinion.
+thanks,
+grant
 
-== Details
-
-As I understand it there is no way for a OS / kernel / etc. to know
-whether a given sector on a SSD contains reliable data or not.  And
-even for SSDs that provide "deterministic" data in response to sector
-reads, the data itself could have been randomly modified/corrupted by
-the SSD, but the data returned regardless with no indication from the
-SSD that it is not the original data associated with that sector.
-
-The spec merely says that once a determistic SSD has a sector read,
-all subsequent sector reads from that sector will provide the same
-data.  That does not prevent the SSD from randomly modifying the
-discarded sectors prior to the first read.
-
-Lacking any specific indication from the SSD that data read from it is
-reliable vs. junk seems to make it unusable for many needs.  ie. I am
-talking about all sectors here, not just the discarded ones.  The
-kernel can't tell the difference between them anyway.
-
-In particular I am very concerned about using a SSD to hold data that
-would eventually be used in a court of law.  How could I testify that
-the data retrieved from the SSD is the same as the data written to the
-SSD since per the spec. the SSD does not even have a way to
-communicate the validity of data back to the kernel.
-
-I would far prefer that reads from "discarded" sectors be flagged in
-some way.  Then tools, kernels, etc. could be modified to check the
-flag and only depend on sector data retrieved from the SSD that is
-flagged reliable.  Or inversely, not tagged unreliable.
-
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+> ---
+>
+> This replaces the originally posted [PATCH 05/04] version.
+>
+> --- old/drivers/ata/sata_mv.c   2009-01-21 10:16:59.000000000 -0500
+> +++ linux/drivers/ata/sata_mv.c 2009-01-21 10:22:28.000000000 -0500
+> @@ -33,8 +33,6 @@
+>  *
+>  * --> ATAPI support (Marvell claims the 60xx/70xx chips can do it).
+>  *
+> - * --> Investigate problems with PCI Message Signalled Interrupts (MSI).
+> - *
+>  * --> Develop a low-power-consumption strategy, and implement it.
+>  *
+>  * --> [Experiment, low priority] Investigate interrupt coalescing.
+> @@ -70,7 +68,7 @@
+> #include <linux/libata.h>
+>
+> #define DRV_NAME        "sata_mv"
+> -#define DRV_VERSION    "1.24"
+> +#define DRV_VERSION    "1.25"
+>
+> enum {
+>        /* BAR's are enumerated in terms of pci_resource_start() terms */
+> @@ -2199,9 +2197,15 @@
+>        struct ata_host *host = dev_instance;
+>        struct mv_host_priv *hpriv = host->private_data;
+>        unsigned int handled = 0;
+> +       int using_msi = hpriv->hp_flags & MV_HP_FLAG_MSI;
+>        u32 main_irq_cause, pending_irqs;
+>
+>        spin_lock(&host->lock);
+> +
+> +       /* for MSI:  block new interrupts while in here */
+> +       if (using_msi)
+> +               writel(0, hpriv->main_irq_mask_addr);
+> +
+>        main_irq_cause = readl(hpriv->main_irq_cause_addr);
+>        pending_irqs   = main_irq_cause & hpriv->main_irq_mask;
+>        /*
+> @@ -2215,6 +2219,11 @@
+>                        handled = mv_host_intr(host, pending_irqs);
+>        }
+>        spin_unlock(&host->lock);
+> +
+> +       /* for MSI: unmask; interrupt cause bits will retrigger now */
+> +       if (using_msi)
+> +               writel(hpriv->main_irq_mask, hpriv->main_irq_mask_addr);
+> +
+>        return IRQ_RETVAL(handled);
+> }
+>
+> @@ -3414,9 +3423,9 @@
+>        if (rc)
+>                return rc;
+>
+> -       /* Enable interrupts */
+> -       if (msi && pci_enable_msi(pdev))
+> -               pci_intx(pdev, 1);
+> +       /* Enable message-switched interrupts, if requested */
+> +       if (msi && 0 == pci_enable_msi(pdev))
+> +               hpriv->hp_flags |= MV_HP_FLAG_MSI;
+>
+>        mv_dump_pci_cfg(pdev, 0x68);
+>        mv_print_info(host);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
