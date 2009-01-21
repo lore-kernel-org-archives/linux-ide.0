@@ -1,53 +1,94 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] sata_nv: sgpio for nvidia mcp55 -v2
-Date: Wed, 21 Jan 2009 10:48:27 -0800
-Message-ID: <49776DFB.8090506@kernel.org>
-References: <20061031104055.GA8898@infradead.org>	 <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>	 <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com> <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com> <4972F4E5.3030203@kernel.org> <49768355.4040301@kernel.org> <49773189.6050009@seiner.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
+Date: Wed, 21 Jan 2009 21:11:05 +0100
+Message-ID: <18807.33113.550070.329912@harpo.it.uu.se>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39948 "EHLO hera.kernel.org"
+Received: from aun.it.uu.se ([130.238.12.36]:36197 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750768AbZAUStB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jan 2009 13:49:01 -0500
-In-Reply-To: <49773189.6050009@seiner.com>
+	id S1751319AbZAUULv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jan 2009 15:11:51 -0500
+In-Reply-To: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yan Seiner <yan@seiner.com>
-Cc: Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Yan Seiner wrote:
-> Yinghai Lu wrote:
->> Impact: new features
->>
->> based on patch on
->>     http://marc.info/?l=linux-ide&m=116289338705418&w=2
->>
->> 1. update the patch for 2.6.19 to latest upstream ( 2.6.28?)
->> 2. fix shared sgpio to support several mcp55 + io55, so every mcp55 have
->>    seperate spinlock
->> 3. use scratch_source as numbering of sgpio instead of address of struct,
->>    so could go through kexec/kdump
->>
->> v2: revert NV_ON and NV_OFF, so turn on Activity LED all the time when
->> disk is idle.
->>   
-> I've tried both this patch and the previous version; neither does
-> anything for me.  I am patching a vanilla 2.6.28.1 kernel.  :-(
-> 
-> I am running an Asus M2N-SLI Deluxe:
-> 
-> 00:04.0 IDE interface: nVidia Corporation MCP55 IDE (rev a1)
-> 00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
-> 00:05.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
-> 00:05.2 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
-> 
-> All 6 channels are in use.  All of the drive activity lights are lit all
-> the time.
+Hugh Dickins writes:
+ > I've a Dell Precision 670 here (four-year-old EM64T Xeon with ata_piix)
+ > which doesn't like your commit 871af1210f13966ab911ed2166e4ab2ce775b99d
+ > libata: Add 32bit PIO support.  Full dmesg (and .config) attached, but
+ > here's an extract showing the start of the error messages on ata2:
+ > 
+ > ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xffa0 irq 14
+ > ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xffa8 irq 15
+ > ata1: port disabled. ignoring.
+ > ata2.00: ATAPI: GCR-8483B, 1.07, max UDMA/33
+ > ata2.00: configured for UDMA/33
+ > scsi 1:0:0:0: CD-ROM            HL-DT-ST CD-ROM GCR-8483B 1.07 PQ: 0 ANSI: 5
+ > ata2.00: qc timeout (cmd 0xa0)
+ > ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ > ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+ >          cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ >          res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
+ > ata2.00: status: { DRDY ERR }
+ > ata2: soft resetting link
+ > ata2.00: configured for UDMA/33
+ > ata2: EH complete
+ > 
+ > linux-next behaved the same, so I played around, and the patch below seems
+ > to fix it fine (though I've not yet tried it on other, working machines);
+ > but I can well imagine you may prefer to do it differently.  Or was I just
+ > wrong to move that box's CD handling from ide to libata a few months ago?
+ > 
+ > [PATCH] libata sff: 32bit PIO use 16bit on slop
+ > 
+ > 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
+ > causes errors on a four-year-old ata_piix Dell Precision 670.  Using
+ > 16bit PIO instead of 32bit PIO on the odd 1, 2 or 3 chars fixes that.
+ > 
+ > Signed-off-by: Hugh Dickins <hugh@veritas.com>
+ > ---
+ > 
+ >  drivers/ata/libata-sff.c |   18 +++++++++++-------
+ >  1 file changed, 11 insertions(+), 7 deletions(-)
+ > 
+ > --- 2.6.29-rc2/drivers/ata/libata-sff.c	2009-01-17 10:40:12.000000000 +0000
+ > +++ linux/drivers/ata/libata-sff.c	2009-01-21 12:32:01.000000000 +0000
+ > @@ -774,17 +774,21 @@ unsigned int ata_sff_data_xfer32(struct 
+ >  		iowrite32_rep(data_addr, buf, words);
+ >  
+ >  	if (unlikely(slop)) {
+ > -		__le32 pad;
+ > +		unsigned char slop_buf[4];
+ > +		unsigned char *trailing_buf = buf + buflen - slop;
+ > +
+ > +		words = (slop + 1) >> 1;
+ >  		if (rw == READ) {
+ > -			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
+ > -			memcpy(buf + buflen - slop, &pad, slop);
+ > +			ioread16_rep(data_addr, slop_buf, words);
+ > +			memcpy(trailing_buf, slop_buf, slop);
+ >  		} else {
+ > -			memcpy(&pad, buf + buflen - slop, slop);
+ > -			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
+ > +			memcpy(slop_buf, trailing_buf, slop);
+ > +			slop_buf[slop] = 0;
+ > +			iowrite16_rep(data_addr, slop_buf, words);
+ >  		}
+ > -		words++;
+ >  	}
+ > -	return words << 2;
+ > +
+ > +	return buflen + (slop & 1);
+ >  }
+ >  EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
 
-can you boot with "debug" in command line?
+Thanks, this patch also fixes the 2.6.29-rc bmdma32-related ata_piix regression
+I reported, where having a specific CD drive connected causes a complete system
+hang when init starts udev <http://marc.info/?l=linux-ide&m=123244042628229&w=2>.
 
-wonder if your system has SGPIO etc backplane.
-
-YH
+Tested-by: Mikael Pettersson <mikpe@it.uu.se>
