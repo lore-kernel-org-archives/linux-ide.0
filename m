@@ -1,49 +1,48 @@
-From: Yan Seiner <yan@seiner.com>
-Subject: Re: [PATCH] sata_nv: sgpio for nvidia mcp55 -v2
-Date: Wed, 21 Jan 2009 06:30:33 -0800
-Message-ID: <49773189.6050009@seiner.com>
-References: <20061031104055.GA8898@infradead.org>	 <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>	 <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com> <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com> <4972F4E5.3030203@kernel.org> <49768355.4040301@kernel.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata, devm_*, and MSI ?
+Date: Wed, 21 Jan 2009 10:05:03 -0500
+Message-ID: <4977399F.7000104@rtr.ca>
+References: <4975F5C1.8090107@rtr.ca>	 <alpine.LNX.1.00.0901201626090.19665@iabervon.org>	 <497698E2.7090807@rtr.ca>	 <da824cf30901202002g52fb73f9v8229fb702dcd033d@mail.gmail.com> <1232511378.11241.64.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from flatoutfitness.com ([66.178.130.209]:55047 "EHLO www.seiner.com"
+Received: from rtr.ca ([76.10.145.34]:52840 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758228AbZAUOah (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jan 2009 09:30:37 -0500
-In-Reply-To: <49768355.4040301@kernel.org>
+	id S1754145AbZAUPFG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jan 2009 10:05:06 -0500
+In-Reply-To: <1232511378.11241.64.camel@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org
+To: michael@ellerman.id.au
+Cc: Grant Grundler <grundler@google.com>, Daniel Barkalow <barkalow@iabervon.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
 
-Yinghai Lu wrote:
-> Impact: new features
->
-> based on patch on
->     http://marc.info/?l=linux-ide&m=116289338705418&w=2
->
-> 1. update the patch for 2.6.19 to latest upstream ( 2.6.28?)
-> 2. fix shared sgpio to support several mcp55 + io55, so every mcp55 have
->    seperate spinlock
-> 3. use scratch_source as numbering of sgpio instead of address of struct,
->    so could go through kexec/kdump
->
-> v2: revert NV_ON and NV_OFF, so turn on Activity LED all the time when disk is idle.
->   
-I've tried both this patch and the previous version; neither does 
-anything for me.  I am patching a vanilla 2.6.28.1 kernel.  :-(
+Michael Ellerman wrote:
+> On Tue, 2009-01-20 at 20:02 -0800, Grant Grundler wrote:
+..
+>> 1) post lspci -v output to verify device (and bridges) is programmed correctly.
+>> 2) look for chipset quirks that disable global msi
+> 
+> The kernel shouldn't let you enable MSI if that's the case, ie.
+> pci_enable_msi() should fail.
+..
 
-I am running an Asus M2N-SLI Deluxe:
+Exactly.  So it shouldn't be that, then.
 
-00:04.0 IDE interface: nVidia Corporation MCP55 IDE (rev a1)
-00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
-00:05.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
-00:05.2 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
+> It might still be worth looking at the quirks though, in case there's
+> one for a previous revision of your bridge or something.
+> 
+>> 3) Make sure MMIO ranges for 0xfee00000 are routed to local APIC
+>>    ie each bridge needs to route that address somehow (negative decode
+>> is common for upstream).
+>> 4) manually trigger the MSI by doing a MMIO write to the correct
+>> 0xfee00000 address with the assigned vector in order to see if your
+>> interrupt handler gets called.
+> 
+> And can you plug something directly into the PCIe bus? If so does MSI
+> work on that?
+..
 
-All 6 channels are in use.  All of the drive activity lights are lit all 
-the time.
+Yup.  PCIe cards have no problem with MSI in that box.
 
-Anything I can test?
-
---Yan
+More later..
