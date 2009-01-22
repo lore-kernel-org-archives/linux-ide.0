@@ -1,46 +1,83 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 04/05] sata_mv: msi masking fix (v2)
-Date: Thu, 22 Jan 2009 10:02:29 +0900
-Message-ID: <4977C5A5.8070202@gmail.com>
-References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca> <49750774.1070005@rtr.ca> <49773FD1.3040101@rtr.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2 v1] pata_via.c:  support VX855 and future chips whose
+ IDE controller use 0x0571.
+Date: Thu, 22 Jan 2009 10:19:26 +0900
+Message-ID: <4977C99E.1000102@kernel.org>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB808831374@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:54998 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754645AbZAVBCa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jan 2009 20:02:30 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so1805504qwe.37
-        for <linux-ide@vger.kernel.org>; Wed, 21 Jan 2009 17:02:28 -0800 (PST)
-In-Reply-To: <49773FD1.3040101@rtr.ca>
+Received: from hera.kernel.org ([140.211.167.34]:43090 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754973AbZAVBTl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jan 2009 20:19:41 -0500
+In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB808831374@exchtp03.taipei.via.com.tw>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: JosephChan@via.com.tw
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, sshtylyov@ru.mvista.com
 
-Hello, Mark.
+Hello, Joseph.
 
-Mark Lord wrote:
-> Enable reliable use of Message-Signaled Interrupts (MSI) in sata_mv
-> by masking further chip interrupts within the main interrupt handler.
+JosephChan@via.com.tw wrote:
+>> Also, you can just bypass whole southbridge thing.  Add 
+>> another flag, say, VIA_IDFLAG_IGN_SOUTH or something and just 
+>> skip the whole thing if the flags is set.
+>>
 > 
-> Based upon a suggestion by Grant Grundler.
-> MSI is working reliably in all of my test systems here now.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+> This is our next goal for this. :)
 
-Generally looks good, but...
+:-)
 
-> +    /* Enable message-switched interrupts, if requested */
-> +    if (msi && 0 == pci_enable_msi(pdev))
-> +        hpriv->hp_flags |= MV_HP_FLAG_MSI;
+> @@ -97,8 +101,14 @@
+>  	u8 rev_max;
+>  	u16 flags;
+>  } via_isa_bridges[] = {
+> +	{ "vtxxxx",	PCI_DEVICE_ID_VIA_ANON,    0x00, 0x2f, VIA_UDMA_133 |
+> +	VIA_BAD_AST },
 
-I just don't like CONSTANT OP EXPRESSION construct.  The only possible
-upside it has is that it would make the compiler fail if '=' is used
-instead of '==' but compiler has been smart enough to whine about
-LVALUE = EXPRESSION for a very long time now.  How about plain
-!pci_enable_msi(pdev) or pci_enable_msi(pdev) == 0?
+More usual line breaking / indenting style would be...
+
+	{ "vtxxxx",	PCI_DEVICE_ID_VIA_ANON,    0x00, 0x2f,
+	  VIA_UDMA_133 | VIA_BAD_AST },
+
+> @@ -460,6 +470,7 @@
+>  	static int printed_version;
+>  	u8 enable;
+>  	u32 timing;
+> +	unsigned long flags = id->driver_data;
+>  	int rc;
+>  
+>  	if (!printed_version++)
+> @@ -469,6 +480,9 @@
+>  	if (rc)
+>  		return rc;
+>  
+> +	if (flags & VIA_IDFLAG_SINGLE)
+> +		ppi[1] = &ata_dummy_port_info;
+> +	
+
+Yay.
+
+> @@ -483,10 +497,10 @@
+>  		}
+>  
+>  	if (!config->id) {
+> -		printk(KERN_WARNING "via: Unknown VIA SouthBridge, disabling.\n");
+> -		return -ENODEV;
+> -	}
+> -	pci_dev_put(isa);
+> +		printk(KERN_WARNING "via: Unknown VIA SouthBridge.\n");
+> +		config = via_isa_bridges;
+
+Heh.. a bit confusing.  Can you please put the wildcard entry at the
+end of the list and make the loop condition
+
+ for (config = via_isa_bridges; config->id != PCI_DEVICE_ID_VIA_ANON; config++)
+
+That way, you won't need any special handling and just use "UNKNOWN"
+as the name of the wildcard entry.
 
 Thanks.
 
