@@ -1,62 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
-Date: Thu, 22 Jan 2009 03:20:13 +0300
-Message-ID: <4977BBBD.90704@ru.mvista.com>
-References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>	<18807.33113.550070.329912@harpo.it.uu.se>	<20090121214746.2b15d1de@lxorguk.ukuu.org.uk>	<4977A6E5.6080506@ru.mvista.com> <20090121225808.1f5ffac1@lxorguk.ukuu.org.uk> <4977B10B.5050904@ru.mvista.com> <4977B1D1.2010305@ru.mvista.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: libata, devm_*, and MSI ?
+Date: Wed, 21 Jan 2009 18:33:24 -0600
+Message-ID: <4977BED4.6010702@shaw.ca>
+References: <4975F5C1.8090107@rtr.ca>	 <alpine.LNX.1.00.0901201626090.19665@iabervon.org>	 <497698E2.7090807@rtr.ca>	 <da824cf30901202002g52fb73f9v8229fb702dcd033d@mail.gmail.com> <1232511378.11241.64.camel@localhost> <4977399F.7000104@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:6264 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754798AbZAVAUV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jan 2009 19:20:21 -0500
-In-Reply-To: <4977B1D1.2010305@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4977399F.7000104@rtr.ca>
+Sender: linux-pci-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: michael@ellerman.id.au, Grant Grundler <grundler@google.com>, Daniel Barkalow <barkalow@iabervon.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Hugh Dickins <hugh@veritas.com>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, I wrote:
-
->>>>>>  > I've a Dell Precision 670 here (four-year-old EM64T Xeon with 
->>>>>> ata_piix)
->>>>>>  > which doesn't like your commit 
->>>>>> 871af1210f13966ab911ed2166e4ab2ce775b99d
->>>>>>  > libata: Add 32bit PIO support.  Full dmesg (and .config) 
->>>>>> attached, but
->>>>>>  > here's an extract showing the start of the error messages on 
->>>>>> ata2:
->>>>>>             
->>>>> Cool - so we need two different 32bit PIO methods - at least 
->>>>> according to
->>>>> the docs for the AMD we should use entirely 32bit I/O there. Fun fun
->>>>>         
->>>>    Could you refer me to the exact AMD doc that requires that?
->>>>     
->>>
->>> AMD762 page 82, under DevB:1x40 bit 14 and bit 12
->>>   
+Mark Lord wrote:
+> Michael Ellerman wrote:
+>> On Tue, 2009-01-20 at 20:02 -0800, Grant Grundler wrote:
+> ..
+>>> 1) post lspci -v output to verify device (and bridges) is programmed 
+>>> correctly.
+>>> 2) look for chipset quirks that disable global msi
 >>
->>   What exactly AMD-762 document has this? I'm not seeing it in either 
->> stasheet ot software/BIOS design guide. Besides, AMD-762 is a north 
->> bridge and doesn't include IDE.
->
->  Finally found it in the AMD-768 datasheet.
->
->>> "Note: only 32-bit writes to the data port are allowed when this bit is
->>> set."
->>>   
->>  
->>   Now tell me who forces you to set that bit (I assume it's the write 
->> buffer enable) for the ATAPI devices?
->
->   Yes, it's the write buffer enable (about which I have written already).
+>> The kernel shouldn't let you enable MSI if that's the case, ie.
+>> pci_enable_msi() should fail.
+> ..
+> 
+> Exactly.  So it shouldn't be that, then.
+> 
+>> It might still be worth looking at the quirks though, in case there's
+>> one for a previous revision of your bridge or something.
+>>
+>>> 3) Make sure MMIO ranges for 0xfee00000 are routed to local APIC
+>>>    ie each bridge needs to route that address somehow (negative decode
+>>> is common for upstream).
+>>> 4) manually trigger the MSI by doing a MMIO write to the correct
+>>> 0xfee00000 address with the assigned vector in order to see if your
+>>> interrupt handler gets called.
+>>
+>> And can you plug something directly into the PCIe bus? If so does MSI
+>> work on that?
+> ..
+> 
+> Yup.  PCIe cards have no problem with MSI in that box.
+> 
+> More later..
 
-   IMHO, this is the same situation as with the prefetch -- you want to 
-avoid additional data read (write in this case) cycles to with an ATAPI 
-device, so you have to turn it off.
-
-MBR, Sergei
-
-
+What kind of PCI-X bridge does that machine have? I know some AMD 
+HyperTransport to PCI-X bridges have broken MSI, but those should be 
+blacklisted already in the kernel..
