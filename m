@@ -1,46 +1,70 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Thu, 22 Jan 2009 16:38:58 +0300
-Message-ID: <497876F2.3070405@ru.mvista.com>
-References: <200901141345.42583.stf_xl@wp.pl> <497863B6.4040306@ru.mvista.com> <49786572.1030408@ru.mvista.com> <200901221357.27247.stf_xl@wp.pl>
+Subject: Re: [PATCH] ide: motherboard-info based blacklist for ide-dma
+Date: Thu, 22 Jan 2009 16:43:11 +0300
+Message-ID: <497877EF.5070100@ru.mvista.com>
+References: <1230651239-29388-1-git-send-email-kirr@mns.spb.ru> <200901151448.52900.gdu@mns.spb.ru> <49707F20.4030600@ru.mvista.com> <200901221543.03763.gdu@mns.spb.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:26992 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:27087 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751886AbZAVNi0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Jan 2009 08:38:26 -0500
-In-Reply-To: <200901221357.27247.stf_xl@wp.pl>
+	id S1752401AbZAVNmk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Jan 2009 08:42:40 -0500
+In-Reply-To: <200901221543.03763.gdu@mns.spb.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: Dmitry Gryazin <gdu@mns.spb.ru>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kirill Smelkov <kirr@mns.spb.ru>, linux-ide@vger.kernel.org, navy-patches@mns.spb.ru
 
-Stanislaw Gruszka wrote:
+Hello.
 
->>>>>>>+            t9 = t2i - t1;
+Dmitry Gryazin wrote:
 
->>>>>>   It  more sense to calculate such things *after* quantizing the 
->>>>>>timings with calc_mck_cycles()...
+>>>>>>True.  However it should be possible to handle it correctly by adding
+>>>>>>the
+>>>>>>DMA quirk to the respective host drivers (seems to be via82cxxx.c in
+>>>>>>case of
+>>>>>>IEI PCISA-C3/EDEN).
 
->>>>>Why?
+>>>>>  Yeah, this seems a viable approach...
 
->>>>  More precise result -- matching the clock being used.
+>>>>>>Kirill, could you please look into adding such quirk to via82cxxx
+>>>>>>instead?
 
->>>  However, I don't understand now why you need to stretch t9...
+>>>>>>[ It seems the best place to add it would be via_init_one() as we
+>>>>>>could just
 
->>  Ah, I do again. t0 *should be equal* to t1 + t2 + t9 for the better 
->>speeds.
+>>>>>  No, not really -- the issue is not at all as simple as this patch
+>>>>>tried to present it. Looking at its "Quick Startup Reference"
+>>>>>(http://f.ipc2u.ru/files/add/doc/496/M_PCISA-C800EV_ENG.pdf), the EPIC
+>>>>>board has *two* normal IDE connectors in addition to the CF slot
+>>>>>(connected to the secondary port -- and it seems possible that a hard
+>>>>>drive can be connected to the same port as CF), so the right place
+>>>>>seems to rather be in [mu]dma_filter() methods -- and the decision
+>>>>>should be strictly based on the drive type indicating CF, i.e. by
+>>>>>calling ata_id_is_cfa().
 
-    Moreover, t1 + t2 + t9 must be no less that t0 minimum, otherwise it would 
-be a timing violation.
+> I have tried my old Trancend 64Mb, RamStar 521Mb and NCP 64Mb cards. My old 
+> cards returned right id[ATA_ID_CONFIG] = 0x848A.
 
-> And hold time should meet min t2i requirement, so t9 = max(t9_orig, t2i - t1).
+> But I have to use Kingston CF Card 1Gb 2008.
+> ata_id_is_cfa() returns 0 for it and
+> id[ATA_ID_MAJOR_VER]	= 0
+> id[ATA_ID_CONFIG]		= 0x044A
 
-    There's no direct connection between these in ATA/CF specs.
+    That seems non-standard CF as ATA specifies that it must have 0x848A there.
 
-> Stanislaw Gruszka
+> I have only CF+ specification revision 2.0,  but I've found in wiki:
+
+    Try googling for cfspc_41.pdf (and other versions), you'll be surprised in 
+a good way. ;-)
+
+> (http://en.wikipedia.org/wiki/CompactFlash#CF.2B_specification_revisions)
+> "... While the current revision 4.1 from 2004 works only in ATA mode, ..."
+
+> So I have reached an impasse. How to identify modern CF cards?
+
+    Hm, I should consult the specs...
 
 WBR, Sergei
-
