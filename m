@@ -1,53 +1,75 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Thu, 22 Jan 2009 12:19:19 +0100
-Message-ID: <200901221219.19504.stf_xl@wp.pl>
-References: <200901141345.42583.stf_xl@wp.pl> <20090114135832.7718055f@hskinnemoen-d830>
+From: <JosephChan@via.com.tw>
+Subject: RE: [PATCH 1/2 v1] pata_via.c:  support VX855 and future chips whose IDE controller use 0x0571.
+Date: Thu, 22 Jan 2009 19:37:06 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB80889B843@exchtp03.taipei.via.com.tw>
+References: <4977C99E.1000102@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:16823 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753863AbZAVLT2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2009 06:19:28 -0500
-In-Reply-To: <20090114135832.7718055f@hskinnemoen-d830>
-Content-Disposition: inline
+Received: from exchtp08.via.com.tw ([61.66.243.7]:21788 "EHLO
+	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbZAVLhK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2009 06:37:10 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <4977C99E.1000102@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Haavard Skinnemoen <haavard.skinnemoen@atmel.com>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, sshtylyov@ru.mvista.com
 
-Wednesday 14 January 2009 13:58:32 Haavard Skinnemoen napisa=C5=82(a):
-> Stanislaw Gruszka wrote:
-> > Some issues with driver:
-> >=20
-> > * Why not platform driver
-> > Generic pata/ide_platform driver will not work with AT91 as we need=
- to=20
-> > do special things before access Task File and Data Register (functi=
-ons=20
-> > set_8bit_mode() and set_16bit_mode()). Also extra things needs to b=
-e
-> > done when changing PIO mode.
->=20
-> Why not use libata? There's already a pata_at32 driver there which
-> should be usable on at91 with perhaps a few minor changes.
-
-I will submit at91_ide for the mainline and not touch pata_at32  for re=
-ason
-listed below (some of them was already mentioned in this thread):
-
-* there are difference in h/w attend=20
-  - AT91 and AT32 static memory controller h/w is the same, but linux s=
-oftware=20
-    interface to programing SMC is diffrent (in this driver we need to =
-program SMC)
-  - AT91 have to switch between 8/16 bit data bus width, AT32 not
-  - AT32 not need to have GPIO IRQ quirk
-* libata have more overhead due to SCSI emulation
-* ide maintainer is likely to accept at91_ide
-* my company want to use it in production with older kernel
-
-Cheers
-Stanislaw Gruszka
+PiAgZm9yIChjb25maWcgPSB2aWFfaXNhX2JyaWRnZXM7IGNvbmZpZy0+aWQgIT0gDQo+IFBDSV9E
+RVZJQ0VfSURfVklBX0FOT047IGNvbmZpZysrKQ0KPiANCj4gVGhhdCB3YXksIHlvdSB3b24ndCBu
+ZWVkIGFueSBzcGVjaWFsIGhhbmRsaW5nIGFuZCBqdXN0IHVzZSAiVU5LTk9XTiINCj4gYXMgdGhl
+IG5hbWUgb2YgdGhlIHdpbGRjYXJkIGVudHJ5Lg0KPiANCg0KSG93IGFib3V0IHRoaXM/IDopIA0K
+SSBhbHNvIGZvdW5kIHRoYXQgaWYgSSBtb2RpZmllZCB0byB0aGUgZm9sbG93aW5nIGxpbmUuDQpm
+b3IgKGNvbmZpZyA9IHZpYV9pc2FfYnJpZGdlczsgY29uZmlnLT5pZCAhPSBQQ0lfREVWSUNFX0lE
+X1ZJQV9BTk9OOyBjb25maWcrKykNCkkgbmVlZCB0byBtb3ZlIHRoZSBQQ0lfREVWSUNFX0lEX1ZJ
+QV9BTk9OIHRvIHRoZSBlbmQgb2YgdmlhX2lzYV9icmlkZ2VzLg0KT3IgdGhlIGZvciBsb29wIHdp
+bGwgZXhpdCBhdCAxc3QgY2hlY2suDQoNCg0KLS0tIGEvZHJpdmVycy9hdGEvcGF0YV92aWEuYwky
+MDA5LTAxLTIzIDAzOjI1OjUwLjAwMDAwMDAwMCArMDgwMA0KKysrIGIvZHJpdmVycy9hdGEvcGF0
+YV92aWEuYwkyMDA5LTAxLTIzIDAzOjI1OjExLjAwMDAwMDAwMCArMDgwMA0KQEAgLTg2LDYgKzg2
+LDEwIEBADQogCVZJQV9TQVRBX1BBVEEJPSAweDgwMCwgLyogU0FUQS9QQVRBIGNvbWJpbmVkIGNv
+bmZpZ3VyYXRpb24gKi8NCiB9Ow0KIA0KK2VudW0gew0KKwlWSUFfSURGTEFHX1NJTkdMRSA9ICgx
+IDw8IDApLCAvKiBzaW5nbGUgY2hhbm5lbCBjb250cm9sbGVyKSAqLw0KK307DQorDQogLyoNCiAg
+KiBWSUEgU291dGhCcmlkZ2UgY2hpcHMuDQogICovDQpAQCAtOTcsOCArMTAxLDEyIEBADQogCXU4
+IHJldl9tYXg7DQogCXUxNiBmbGFnczsNCiB9IHZpYV9pc2FfYnJpZGdlc1tdID0gew0KKwl7ICJ2
+eDg1NSIsCVBDSV9ERVZJQ0VfSURfVklBX1ZYODU1LCAgICAweDAwLCAweDJmLCANCisJICBWSUFf
+VURNQV8xMzMgfCBWSUFfQkFEX0FTVCB8IFZJQV9TQVRBX1BBVEEgfSwgDQogCXsgInZ4ODAwIiwJ
+UENJX0RFVklDRV9JRF9WSUFfVlg4MDAsICAgIDB4MDAsIDB4MmYsIFZJQV9VRE1BXzEzMyB8DQog
+CVZJQV9CQURfQVNUIHwgVklBX1NBVEFfUEFUQSB9LA0KKwl7ICJ2dDgyNjEiLAlQQ0lfREVWSUNF
+X0lEX1ZJQV84MjYxLCAgICAgMHgwMCwgMHgyZiwNCisJICBWSUFfVURNQV8xMzMgfCBWSUFfQkFE
+X0FTVCB9LA0KIAl7ICJ2dDgyMzdzIiwJUENJX0RFVklDRV9JRF9WSUFfODIzN1MsICAgIDB4MDAs
+IDB4MmYsIFZJQV9VRE1BXzEzMyB8IFZJQV9CQURfQVNUIH0sDQogCXsgInZ0ODI1MSIsCVBDSV9E
+RVZJQ0VfSURfVklBXzgyNTEsICAgICAweDAwLCAweDJmLCBWSUFfVURNQV8xMzMgfCBWSUFfQkFE
+X0FTVCB9LA0KIAl7ICJjeDcwMCIsCVBDSV9ERVZJQ0VfSURfVklBX0NYNzAwLCAgICAweDAwLCAw
+eDJmLCBWSUFfVURNQV8xMzMgfCBWSUFfQkFEX0FTVCB8IFZJQV9TQVRBX1BBVEEgfSwNCkBAIC0x
+MjIsNiArMTMwLDggQEANCiAJeyAidnQ4MmM1ODYiLAlQQ0lfREVWSUNFX0lEX1ZJQV84MkM1ODZf
+MCwgMHgwMCwgMHgwZiwgVklBX1VETUFfTk9ORSB8IFZJQV9TRVRfRklGTyB9LA0KIAl7ICJ2dDgy
+YzU3NiIsCVBDSV9ERVZJQ0VfSURfVklBXzgyQzU3NiwgICAweDAwLCAweDJmLCBWSUFfVURNQV9O
+T05FIHwgVklBX1NFVF9GSUZPIHwgVklBX05PX1VOTUFTSyB9LA0KIAl7ICJ2dDgyYzU3NiIsCVBD
+SV9ERVZJQ0VfSURfVklBXzgyQzU3NiwgICAweDAwLCAweDJmLCBWSUFfVURNQV9OT05FIHwgVklB
+X1NFVF9GSUZPIHwgVklBX05PX1VOTUFTSyB8IFZJQV9CQURfSUQgfSwNCisJeyAidnR4eHh4IiwJ
+UENJX0RFVklDRV9JRF9WSUFfQU5PTiwgICAgMHgwMCwgMHgyZiwNCisJICBWSUFfVURNQV8xMzMg
+fCBWSUFfQkFEX0FTVCB9LA0KIAl7IE5VTEwgfQ0KIH07DQogDQpAQCAtNDYwLDYgKzQ3MCw3IEBA
+DQogCXN0YXRpYyBpbnQgcHJpbnRlZF92ZXJzaW9uOw0KIAl1OCBlbmFibGU7DQogCXUzMiB0aW1p
+bmc7DQorCXVuc2lnbmVkIGxvbmcgZmxhZ3MgPSBpZC0+ZHJpdmVyX2RhdGE7DQogCWludCByYzsN
+CiANCiAJaWYgKCFwcmludGVkX3ZlcnNpb24rKykNCkBAIC00NjksOSArNDgwLDEzIEBADQogCWlm
+IChyYykNCiAJCXJldHVybiByYzsNCiANCisJaWYgKGZsYWdzICYgVklBX0lERkxBR19TSU5HTEUp
+DQorCQlwcGlbMV0gPSAmYXRhX2R1bW15X3BvcnRfaW5mbzsNCisJDQogCS8qIFRvIGZpbmQgb3V0
+IGhvdyB0aGUgSURFIHdpbGwgYmVoYXZlIGFuZCB3aGF0IGZlYXR1cmVzIHdlDQogCSAgIGFjdHVh
+bGx5IGhhdmUgdG8gbG9vayBhdCB0aGUgYnJpZGdlIG5vdCB0aGUgSURFIGNvbnRyb2xsZXIgKi8N
+Ci0JZm9yIChjb25maWcgPSB2aWFfaXNhX2JyaWRnZXM7IGNvbmZpZy0+aWQ7IGNvbmZpZysrKQ0K
+Kwlmb3IgKGNvbmZpZyA9IHZpYV9pc2FfYnJpZGdlczsgY29uZmlnLT5pZCAhPSBQQ0lfREVWSUNF
+X0lEX1ZJQV9BTk9OOw0KKwkgICAgIGNvbmZpZysrKQ0KIAkJaWYgKChpc2EgPSBwY2lfZ2V0X2Rl
+dmljZShQQ0lfVkVORE9SX0lEX1ZJQSArDQogCQkJISEoY29uZmlnLT5mbGFncyAmIFZJQV9CQURf
+SUQpLA0KIAkJCWNvbmZpZy0+aWQsIE5VTEwpKSkgew0KQEAgLTQ4MiwxMCArNDk3LDYgQEANCiAJ
+CQlwY2lfZGV2X3B1dChpc2EpOw0KIAkJfQ0KIA0KLQlpZiAoIWNvbmZpZy0+aWQpIHsNCi0JCXBy
+aW50ayhLRVJOX1dBUk5JTkcgInZpYTogVW5rbm93biBWSUEgU291dGhCcmlkZ2UsIGRpc2FibGlu
+Zy5cbiIpOw0KLQkJcmV0dXJuIC1FTk9ERVY7DQotCX0NCiAJcGNpX2Rldl9wdXQoaXNhKTsNCiAN
+CiAJaWYgKCEoY29uZmlnLT5mbGFncyAmIFZJQV9OT19FTkFCTEVTKSkgew0KQEAgLTU4Nyw2ICs1
+OTgsNyBAQA0KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHgxNTcxKSwgfSwNCiAJeyBQQ0lfVkRFVklD
+RShWSUEsIDB4MzE2NCksIH0sDQogCXsgUENJX1ZERVZJQ0UoVklBLCAweDUzMjQpLCB9LA0KKwl7
+IFBDSV9WREVWSUNFKFZJQSwgMHhDNDA5KSwgVklBX0lERkxBR19TSU5HTEUgfSwNCiANCiAJeyB9
+LA0KIH07DQo=
