@@ -1,56 +1,116 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 04/05] sata_mv: msi masking fix (v2)
-Date: Thu, 22 Jan 2009 14:22:21 +0900
-Message-ID: <4978028D.3020501@gmail.com>
-References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca> <49750774.1070005@rtr.ca> <49773FD1.3040101@rtr.ca> <4977C5A5.8070202@gmail.com> <49780167.1060208@rtr.ca> <497801F9.2070009@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Thu, 22 Jan 2009 12:44:10 +0300
+Message-ID: <49783FEA.3010302@ru.mvista.com>
+References: <200901141345.42583.stf_xl@wp.pl> <4975B065.6030705@ru.mvista.com> <200901211133.05095.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:48480 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbZAVFWb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2009 00:22:31 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so3967073rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 21 Jan 2009 21:22:30 -0800 (PST)
-In-Reply-To: <497801F9.2070009@rtr.ca>
+Received: from h155.mvista.com ([63.81.120.155]:18811 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752817AbZAVJoR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Jan 2009 04:44:17 -0500
+In-Reply-To: <200901211133.05095.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Mark Lord wrote:
->> Tejun Heo wrote:
->>> Mark Lord wrote:
->> ..
->>>> +    /* Enable message-switched interrupts, if requested */
->>>> +    if (msi && 0 == pci_enable_msi(pdev))
->>>> +        hpriv->hp_flags |= MV_HP_FLAG_MSI;
->>>
->>> I just don't like CONSTANT OP EXPRESSION construct.
->> ..
->>
->> Heh.. Myself, I would normally just write it this way:
->>
->>     if (msi && !pci_enable_msi(pdev))
->>
->> But the "coding correctness police" might point out that
->> it reads funny (negatives and all that).
->>
->> But whatever way Jeff likes it, really.
-> ..
-> 
-> .. perhaps keeping in mind that every little nit-picky revision
-> like that requires me to go back to the deities at Marvell for
-> re-approval before I can again present it for your blessings here.
+Hello.
 
-Hey, we can con the system then by you submitting the original patch
-and me following up with a nit picking patch right away, so if
-changing the patch is too much of a hassle, please just go ahead with
-the current patch.  :-)
+Stanislaw Gruszka wrote:
 
-Thanks.
+>>    Besides, we have ide_timing_compute() doing the same thing.
+>>     
+> I'm trying use it, but have too bigger results - 1 or 2 cycles is added.
+>   
 
--- 
-tejun
+   That's most probably because ide_timing_compute() assumes non-zero 
+minimum recovery time for PIO modes 0 to 2 (libata does the same) -- 
+that actually smells of over-caution. It then tries to stretch the 
+active time if the sum of active and recovery times is less than cycle 
+time (all quantized already).
+
+> I'm doing something wrong.
+>   
+
+   Well, you don't compute t2i. And you use recover field returend by 
+ide_timing_compute() instead of rev8b.
+
+>         T = 1000000000 / (mck_hz / 1000);
+>         pdbg("pio %u T %u\n", pio, T);
+>         ret = ide_timing_compute(drive, pio + XFER_PIO_0, &timing, T, 1);
+>
+>         t0 = timing->cyc8b;
+>         t1 = timing->setup;
+>         t2 = timing->act8b;
+>         t2i = timing->recover;
+>   
+
+   No, you should use rec8b.
+
+>         t9 = 0;
+>         pdbg("1: t0=%02u t1=%02u t2=%02u t2i=%02u t9=%02u\n", t0, t1, t2, t2i, t9);
+>
+> Clock is approx 100MHz , results should be the same as in standard 
+> divided by 10.
+>
+> hda: host max PIO5 wanted PIO0 selected PIO0
+> at91_ide_set_pio_mode pio 0 T 10004
+> set_ebi_timings 1: t0=60 t1=07 t2=32 t2i=29 t9=00
+> set_ebi_timings 2: t0=60 t1=07 t2=29 t2i=00 t9=02
+>   
+
+   Yeah, with the PIO0 active time 290 ns + revovery time 240 ns giving 
+530 ns, the function should stretch the active time.
+
+> hda: host max PIO5 wanted PIO1 selected PIO1
+> at91_ide_set_pio_mode pio 1 T 10004
+> set_ebi_timings 1: t0=39 t1=05 t2=29 t2i=18 t9=00
+> set_ebi_timings 2: t0=39 t1=05 t2=29 t2i=00 t9=02
+>   
+
+   Here 290 + 100 gives 390, so no stretching occurs.
+
+> hda: host max PIO5 wanted PIO2 selected PIO2
+> at91_ide_set_pio_mode pio 2 T 10004
+> set_ebi_timings 1: t0=33 t1=03 t2=29 t2i=12 t9=00
+> set_ebi_timings 2: t0=24 t1=03 t2=29 t2i=00 t9=01
+>   
+
+   Here 290 + 40 gives 330, so no stretching occurs.
+
+> hda: host max PIO5 wanted PIO3 selected PIO3
+> at91_ide_set_pio_mode pio 3 T 10004
+> set_ebi_timings 1: t0=18 t1=03 t2=09 t2i=09 t9=00
+> set_ebi_timings 2: t0=18 t1=03 t2=08 t2i=07 t9=04
+>   
+
+   Here 80 + 70 gives 150, so the active time is stretched.
+
+> hda: host max PIO5 wanted PIO4 selected PIO4
+> at91_ide_set_pio_mode pio 4 T 10004
+> set_ebi_timings 1: t0=12 t1=03 t2=08 t2i=04 t9=00
+> set_ebi_timings 2: t0=12 t1=03 t2=07 t2i=03 t9=01
+>   
+
+   Here 70 + 30 gives 100, so the active time is stretched.
+
+> hda: host max PIO5 wanted PIO5 selected PIO5
+> at91_ide_set_pio_mode pio 5 T 10004
+> set_ebi_timings 1: t0=12 t1=02 t2=07 t2i=05 t9=00
+> set_ebi_timings 2: t0=10 t1=02 t2=07 t2i=03 t9=01
+>   
+
+   Here 50 + 30 gives 80 (the IDE core doesn't know about CF extended 
+modes, so uses non-standard PIO5 timings), so the active time is 
+stretched again.
+
+> Cheers
+> Stanislaw Gruszka
+>   
+
+MBR, Sergei
+
+
