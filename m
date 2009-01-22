@@ -1,87 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: motherboard-info based blacklist for ide-dma
-Date: Thu, 22 Jan 2009 16:58:48 +0300
-Message-ID: <49787B98.8060106@ru.mvista.com>
-References: <1230651239-29388-1-git-send-email-kirr@mns.spb.ru> <200901151448.52900.gdu@mns.spb.ru> <49707F20.4030600@ru.mvista.com> <200901221543.03763.gdu@mns.spb.ru> <497877EF.5070100@ru.mvista.com> <49787A85.6000001@ru.mvista.com>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Thu, 22 Jan 2009 15:13:29 +0100
+Message-ID: <200901221513.29755.stf_xl@wp.pl>
+References: <200901141345.42583.stf_xl@wp.pl> <200901221414.39802.stf_xl@wp.pl> <49787929.2010305@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:27416 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753339AbZAVN6R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Jan 2009 08:58:17 -0500
-In-Reply-To: <49787A85.6000001@ru.mvista.com>
+Received: from mx1.wp.pl ([212.77.101.5]:31723 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754766AbZAVONi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2009 09:13:38 -0500
+In-Reply-To: <49787929.2010305@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Gryazin <gdu@mns.spb.ru>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kirill Smelkov <kirr@mns.spb.ru>, linux-ide@vger.kernel.org, navy-patches@mns.spb.ru
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Thursday 22 January 2009 14:48:25 Sergei Shtylyov napisa=C5=82(a):
+> Stanislaw Gruszka wrote:
+>=20
+> >>>>>+/* Proper CS address space will be added */
+> >>>>>+#define AT91_IDE_TASK_FILE	0x00c00000
+> >>>>>+#define AT91_IDE_CTRL_REG	0x00e00000
+>=20
+> >>   Besides, I'm not sure: these 2 address range are decoded via 1 S=
+MC=20
+> >>chip select or 2?
+>=20
+> > These are in one chip select address space.
+>=20
+>     Then some external circutry converts the single nCS into -CS0 and=
+ -CS1?
 
->>>>>>>> True.  However it should be possible to handle it correctly by 
->>>>>>>> adding
->>>>>>>> the
->>>>>>>> DMA quirk to the respective host drivers (seems to be 
->>>>>>>> via82cxxx.c in
->>>>>>>> case of
->>>>>>>> IEI PCISA-C3/EDEN).
+-CS0 -CS1 are controlled by address lines A[23:21]
+0x00c00000 give -CS1=3D1 -CS1=3D0=20
+0x00e00000 give -CS0=3D0 -CS1=3D1=20
 
->>>>>>>  Yeah, this seems a viable approach...
-
->>>>>>>> Kirill, could you please look into adding such quirk to via82cxxx
->>>>>>>> instead?
-
->>>>>>>> [ It seems the best place to add it would be via_init_one() as we
->>>>>>>> could just
-
->>>>>>>  No, not really -- the issue is not at all as simple as this patch
->>>>>>> tried to present it. Looking at its "Quick Startup Reference"
->>>>>>> (http://f.ipc2u.ru/files/add/doc/496/M_PCISA-C800EV_ENG.pdf), the 
->>>>>>> EPIC
->>>>>>> board has *two* normal IDE connectors in addition to the CF slot
->>>>>>> (connected to the secondary port -- and it seems possible that a 
->>>>>>> hard
->>>>>>> drive can be connected to the same port as CF), so the right place
->>>>>>> seems to rather be in [mu]dma_filter() methods -- and the decision
->>>>>>> should be strictly based on the drive type indicating CF, i.e. by
->>>>>>> calling ata_id_is_cfa().
-
->>> I have tried my old Trancend 64Mb, RamStar 521Mb and NCP 64Mb cards. 
->>> My old cards returned right id[ATA_ID_CONFIG] = 0x848A.
-
->>> But I have to use Kingston CF Card 1Gb 2008.
->>> ata_id_is_cfa() returns 0 for it and
->>> id[ATA_ID_MAJOR_VER]    = 0
->>> id[ATA_ID_CONFIG]        = 0x044A
-
->>    That seems non-standard CF as ATA specifies that it must have 
->> 0x848A there.
-
->>> I have only CF+ specification revision 2.0,  but I've found in wiki:
-
->>    Try googling for cfspc_41.pdf (and other versions), you'll be 
->> surprised in a good way. ;-)
-
->>> (http://en.wikipedia.org/wiki/CompactFlash#CF.2B_specification_revisions) 
-
->>> "... While the current revision 4.1 from 2004 works only in ATA mode, 
->>> ..."
-
->>> So I have reached an impasse. How to identify modern CF cards?
-
->>    Hm, I should consult the specs...
-
->    ATA/PI-7 rev. 4b has this in 4.10:
-
-> Devices reporting the value 848Ah in IDENTIFY DEVICE data word 0 or 
-> devices having bit 2 of IDENTIFY DEVICE data word 83 set to one shall 
-> support the CFA feature Set. If the CFA feature set is implemented, all 
-> five commands shall be implemented.
-
->    Alan, looks like the libata's CF criterion needs to be enhanced.
-
-    Oops, my bad -- I should've looked first. :-<
-    Dmitry, just use the modern version of ata_id_is_cfa().
-
-MBR, Sergei
+Stanislaw Gruszka
