@@ -1,59 +1,29 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata, devm_*, and MSI ?
-Date: Fri, 23 Jan 2009 13:11:02 -0500
-Message-ID: <497A0836.5060707@rtr.ca>
-References: <4975F5C1.8090107@rtr.ca>	 <alpine.LNX.1.00.0901201626090.19665@iabervon.org>	 <497698E2.7090807@rtr.ca>	 <da824cf30901202002g52fb73f9v8229fb702dcd033d@mail.gmail.com> <1232511378.11241.64.camel@localhost> <4977399F.7000104@rtr.ca> <4977BED4.6010702@shaw.ca>
+Subject: Re: sata_mv: basic PIO-only ATAPI support?
+Date: Fri, 23 Jan 2009 13:37:25 -0500
+Message-ID: <497A0E65.90905@rtr.ca>
+References: <49750705.7010709@rtr.ca>	<49750746.3010709@rtr.ca>	<49750774.1070005@rtr.ca>	<49773FD1.3040101@rtr.ca>	<4977C5A5.8070202@gmail.com>	<49780167.1060208@rtr.ca>	<497801F9.2070009@rtr.ca>	<4978028D.3020501@gmail.com>	<4979FC55.1000904@rtr.ca>	<4979FD22.8040407@rtr.ca> <20090123175217.353654de@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <4977BED4.6010702@shaw.ca>
-Sender: linux-pci-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: michael@ellerman.id.au, Grant Grundler <grundler@google.com>, Daniel Barkalow <barkalow@iabervon.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:43953 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757057AbZAWSh1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jan 2009 13:37:27 -0500
+In-Reply-To: <20090123175217.353654de@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Robert Hancock wrote:
-> Mark Lord wrote:
->> Michael Ellerman wrote:
->>> On Tue, 2009-01-20 at 20:02 -0800, Grant Grundler wrote:
->> ..
+Alan Cox wrote:
 ..
->>> The kernel shouldn't let you enable MSI if that's the case, ie.
->>> pci_enable_msi() should fail.
->> ..
->> Exactly.  So it shouldn't be that, then.
->>
->>> It might still be worth looking at the quirks though, in case there's
->>> one for a previous revision of your bridge or something.
->>>
->>>> 3) Make sure MMIO ranges for 0xfee00000 are routed to local APIC
->>>>    ie each bridge needs to route that address somehow (negative decode
->>>> is common for upstream).
->>>> 4) manually trigger the MSI by doing a MMIO write to the correct
->>>> 0xfee00000 address with the assigned vector in order to see if your
->>>> interrupt handler gets called.
->>>
->>> And can you plug something directly into the PCIe bus? If so does MSI
->>> work on that?
->> ..
->>
->> Yup.  PCIe cards have no problem with MSI in that box.
->>
->> More later..
-> 
-> What kind of PCI-X bridge does that machine have? I know some AMD 
-> HyperTransport to PCI-X bridges have broken MSI, but those should be 
-> blacklisted already in the kernel..
+> If you want to just force some types of command into using PIO (eg by
+> direction, length etc) then use ->check_atapi_dma(qc) - see pata_it821x
+> for a worked example.
 ..
 
-Okay, I'm back looking at this now.  In the interim, the box has undergone
-a complete re-install, and I think the original boot logs are gone for good.
+Perfect.  That hook will let me add things very gradually.
 
-Now (with 2.6.28.1), the boot code identifies a quirk, and pci_enable_msi()
-does indeed fail where it once succeeded.  So all is well, but I don't know
-why it wasn't working correctly earlier.
-
-Oh well.
-
-Cheers
+Thanks!
