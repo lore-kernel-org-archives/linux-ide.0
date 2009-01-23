@@ -1,57 +1,49 @@
-From: Ian Campbell <Ian.Campbell@citrix.com>
-Subject: [PATCH] IDE: Unregister devices if initialization fails.
-Date: Fri, 23 Jan 2009 13:04:29 +0000
-Message-ID: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ide/libata: fix ata_id_is_cfa()
+Date: Fri, 23 Jan 2009 17:15:37 +0400
+Message-ID: <200901231615.38011.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:42802 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755962AbZAWNFB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2009 08:05:01 -0500
+Received: from rtsoft3.corbina.net ([85.21.88.6]:58224 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755402AbZAWNPH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2009 08:15:07 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Ian Campbell <Ian.Campbell@citrix.com>, Ian Campbell <ian.campbell@citrix.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: bzolnier@gmail.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, gdu@mns.spb.ru
 
-On reboot the loop in device_shutdown gets confused by these devices
-and goes into an infinite loop. I think this is because they don't
-have dev->bus or dev->driver which is because hwif_register_devices
-doesn't get called if !hwif->present.
+When checking for CFA feature set support, ata_id_is_cfa() tests bit 2 in word
+82 of the identify data instead the word 83.  It also checks the ATA revision
+in the  word 80 instead of usual validity check for the words 82-83 -- word 83
+bit 14 set, bit 15 cleared.
 
-Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
 ---
- drivers/ide/ide-probe.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+I'm not sure who should queue this patch... it's against Linus' tree.
 
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 312127e..120f65b 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1520,6 +1520,8 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
- 		if (hwif_init(hwif) == 0) {
- 			printk(KERN_INFO "%s: failed to initialize IDE "
- 					 "interface\n", hwif->name);
-+			device_unregister(&hwif->gendev);
-+			device_destroy(ide_port_class, MKDEV(0, 0));
- 			hwif->present = 0;
- 			continue;
- 		}
-@@ -1550,11 +1552,11 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
- 		if (hwif == NULL)
- 			continue;
- 
--		ide_sysfs_register_port(hwif);
--		ide_proc_register_port(hwif);
--
--		if (hwif->present)
-+		if (hwif->present) {
-+			ide_sysfs_register_port(hwif);
-+			ide_proc_register_port(hwif);
- 			ide_proc_port_register_devices(hwif);
-+		}
- 	}
- 
- 	return j ? 0 : -1;
--- 
-1.5.6.5
+ include/linux/ata.h |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+Index: linux-2.6/include/linux/ata.h
+===================================================================
+--- linux-2.6.orig/include/linux/ata.h
++++ linux-2.6/include/linux/ata.h
+@@ -734,9 +734,8 @@ static inline int ata_id_is_cfa(const u1
+ 	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
+ 		return 1;
+ 	/* Could be CF hiding as standard ATA */
+-	if (ata_id_major_version(id) >= 3 &&
+-	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
+-	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) == 0x4000 &&
++	    (id[ATA_ID_COMMAND_SET_2] & (1 << 2)))
+ 		return 1;
+ 	return 0;
+ }
 
