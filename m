@@ -1,92 +1,85 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] sata_nv: sgpio for nvidia mcp55 -v2
-Date: Thu, 22 Jan 2009 23:30:55 -0800
-Message-ID: <4979722F.8010403@kernel.org>
-References: <20061031104055.GA8898@infradead.org>    <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>    <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com>    <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com>    <4972F4E5.3030203@kernel.org> <49768355.4040301@kernel.org>    <49773189.6050009@seiner.com> <49776DFB.8090506@kernel.org>    <4977FA12.6050103@seiner.com> <4977FF09.50808@kernel.org> <a20f505b0186b360ea9eecefba08aceb.squirrel@www.datavault.us> <4978AC29.8080308@kernel.org> <49792115.1070803@seiner.com> <4979242D.2010309@kernel.org> <497936FE.5040809@seiner.com>
+From: <JosephChan@via.com.tw>
+Subject: [PATCH 1/1 v2] pata_via.c: support VX855 and future chips whose IDE controller use 0x0571.
+Date: Fri, 23 Jan 2009 15:37:39 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB80889BD23@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54202 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793AbZAWHbW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Jan 2009 02:31:22 -0500
-In-Reply-To: <497936FE.5040809@seiner.com>
+Received: from exchtp08.via.com.tw ([61.66.243.7]:63483 "EHLO
+	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753013AbZAWHhm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2009 02:37:42 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yan Seiner <yan@seiner.com>
-Cc: Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: tj@kernel.org, alan@lxorguk.ukuu.org.uk, jeff@garzik.org
 
-Yan Seiner wrote:
-> Yinghai Lu wrote:
->> Yan Seiner wrote:
->>  
->>> To recap, I've applied the latest patch (-v3) that's supposed to make
->>> the SGPIO work.  I am using a LIB-700 backplane from Norco:
->>>
->>> http://www.ipcdirect.net/servlet/Detail?no=75
->>> http://www.norco.net.cn/UpLoadFile/Datasheet/DS-600S-EN.pdf
->>>
->>> The disk activity LEDs stay lit all the time.
->>>
->>> I am running a vanilla kernel, not a debian kernel,. although it was
->>> built using debian's kbuild.
->>>
->>> title           Debian GNU/Linux, kernel 2.6.28.1
->>> root            (hd0,1)
->>> kernel          /vmlinuz-2.6.28.1 root=/dev/md0 ro debug
->>> initrd          /initrd.img-2.6.28.1
->>>
->>> log files are at
->>>
->>> http://seiner.com/sata_nv/syslog
->>> http://seiner.com/sata_nv/dmesg.log
->>>     
->>
->> [   19.306367] sata_nv 0000:00:05.0: PCI INT A -> Link[APSI] -> GSI 23
->> (level, low) -> IRQ 23
->> [   19.306472] sata_nv 0000:00:05.0: Using SWNCQ mode
->> [   19.306895] sata_nv 0000:00:05.0: setting latency timer to 64
->> [   19.311020] scsi5 : sata_nv
->>
->>
->> it seems that your system HW is not using SGPIO...
->> my setup has more print out...
->>   
-> selene:/home/www/seiner/html/sata_nv# modinfo sata_nv
-> filename:       /lib/modules/2.6.28.1/kernel/drivers/ata/sata_nv.ko
-> version:        3.5
-> license:        GPL
-> description:    low-level driver for NVIDIA nForce SATA controller
-> author:         NVIDIA
-> srcversion:     4D85D19ABB1359D28F97C6E
-> alias:          pci:v000010DEd000003F7sv*sd*bc*sc*i*
-> ...
-> depends:        libata
-> vermagic:       2.6.28.1 SMP mod_unload modversions
-> parm:           adma:Enable use of ADMA (Default: true) (bool)
-> parm:           swncq:Enable use of SWNCQ (Default: true) (bool)
-> 
-> Do I have the right version?  Should I be seeing a parameter for sgpio?
-> 
-
-boot log should like
-
-[   13.410117] calling  nv_init+0x0/0x1b @ 1
-[   13.414129] sata_nv 0000:00:05.0: version 3.5
-[   13.418488] sata_nv 0000:00:05.0: PCI INT A -> Link[LSA0] -> GSI 20 (level, low) -> IRQ 20
-[   13.426740] sata_nv 0000:00:05.0: Using SWNCQ mode
-[   13.431539] sata_nv 0000:00:05.0: using 32bit DMA mask
-[   13.436671] sata_nv 0000:00:05.0: using 32bit consistent DMA mask
-[   13.442771] sata_nv 0000:00:05.0: CSR 0xeb00 CB 0x9cc00
-[   13.447995] sata_nv 0000:00:05.0: using sgpio 1
-[   13.452522] sata_nv 0000:00:05.0: setting latency timer to 64
-[   13.458389] scsi0 : sata_nv
-[   13.461428] scsi1 : sata_nv
-[   13.464526] ata1: SATA max UDMA/133 cmd 0xa480 ctl 0xa400 bmdma 0x9c00 irq 20
-[   13.471651] ata2: SATA max UDMA/133 cmd 0xa080 ctl 0xa000 bmdma 0x9c08 irq 20
-
-is will say "using sgpio 1"...
-
-YH
-
+VGhpcyBwYXRjaCBiYXNlZCBvbiAyLjYuMjktcmMyLg0KSXQgc3VwcG9ydHMgVlg4NTUgYW5kIGZ1
+dHVyZSBjaGlwcyB3aG9zZSBJREUgY29udHJvbGxlciB1c2UgMHgwNTcxLg0KDQoNClNpZ25lZC1v
+ZmYtYnk6IEpvc2VwaCBDaGFuIDxqb3NlcGhjaGFuQHZpYS5jb20udHc+DQoNCg0KLS0tIGEvaW5j
+bHVkZS9saW51eC9wY2lfaWRzLmgJMjAwOS0wMS0xNiAwMzoxNzozNS4wMDAwMDAwMDAgKzA4MDAN
+CisrKyBiL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCTIwMDktMDEtMjAgMDI6MjE6NTQuMDAwMDAw
+MDAwICswODAwDQpAQCAtMTM1Nyw2ICsxMzU3LDcgQEANCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURf
+VklBXzg3ODNfMAkweDMyMDgNCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgyMzcJCTB4MzIy
+Nw0KICNkZWZpbmUgUENJX0RFVklDRV9JRF9WSUFfODI1MQkJMHgzMjg3DQorI2RlZmluZSBQQ0lf
+REVWSUNFX0lEX1ZJQV84MjYxCQkweDM0MDINCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgy
+MzdBCQkweDMzMzcNCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgyMzdTCQkweDMzNzINCiAj
+ZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBX1NBVEFfRUlERQkweDUzMjQNCkBAIC0xMzY2LDEwICsx
+MzY3LDEzIEBADQogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV9DWDcwMAkJMHg4MzI0DQogI2Rl
+ZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV9DWDcwMF9JREUJMHgwNTgxDQogI2RlZmluZSBQQ0lfREVW
+SUNFX0lEX1ZJQV9WWDgwMAkJMHg4MzUzDQorI2RlZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV9WWDg1
+NQkJMHg4NDA5DQogI2RlZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV84MzcxXzEJMHg4MzkxDQogI2Rl
+ZmluZSBQQ0lfREVWSUNFX0lEX1ZJQV84MkM1OThfMQkweDg1OTgNCiAjZGVmaW5lIFBDSV9ERVZJ
+Q0VfSURfVklBXzgzOFhfMQkweEIxODgNCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBXzgzXzg3
+WFhfMQkweEIxOTgNCisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfVklBX0M0MDlfSURFCTBYQzQwOQ0K
+KyNkZWZpbmUgUENJX0RFVklDRV9JRF9WSUFfQU5PTgkJMHhGRkZGDQogDQogI2RlZmluZSBQQ0lf
+VkVORE9SX0lEX1NJRU1FTlMgICAgICAgICAgIDB4MTEwQQ0KICNkZWZpbmUgUENJX0RFVklDRV9J
+RF9TSUVNRU5TX0RTQ0M0ICAgICAweDIxMDINCi0tLSBhL2RyaXZlcnMvYXRhL3BhdGFfdmlhLmMJ
+MjAwOS0wMS0yMyAwMzoyNTo1MC4wMDAwMDAwMDAgKzA4MDANCisrKyBiL2RyaXZlcnMvYXRhL3Bh
+dGFfdmlhLmMJMjAwOS0wMS0yMyAwMzoyNToxMS4wMDAwMDAwMDAgKzA4MDANCkBAIC04Niw2ICs4
+NiwxMCBAQA0KIAlWSUFfU0FUQV9QQVRBCT0gMHg4MDAsIC8qIFNBVEEvUEFUQSBjb21iaW5lZCBj
+b25maWd1cmF0aW9uICovDQogfTsNCiANCitlbnVtIHsNCisJVklBX0lERkxBR19TSU5HTEUgPSAo
+MSA8PCAwKSwgLyogc2luZ2xlIGNoYW5uZWwgY29udHJvbGxlcikgKi8NCit9Ow0KKw0KIC8qDQog
+ICogVklBIFNvdXRoQnJpZGdlIGNoaXBzLg0KICAqLw0KQEAgLTk3LDggKzEwMSwxMiBAQA0KIAl1
+OCByZXZfbWF4Ow0KIAl1MTYgZmxhZ3M7DQogfSB2aWFfaXNhX2JyaWRnZXNbXSA9IHsNCisJeyAi
+dng4NTUiLAlQQ0lfREVWSUNFX0lEX1ZJQV9WWDg1NSwgICAgMHgwMCwgMHgyZiwgDQorCSAgVklB
+X1VETUFfMTMzIHwgVklBX0JBRF9BU1QgfCBWSUFfU0FUQV9QQVRBIH0sIA0KIAl7ICJ2eDgwMCIs
+CVBDSV9ERVZJQ0VfSURfVklBX1ZYODAwLCAgICAweDAwLCAweDJmLCBWSUFfVURNQV8xMzMgfA0K
+IAlWSUFfQkFEX0FTVCB8IFZJQV9TQVRBX1BBVEEgfSwNCisJeyAidnQ4MjYxIiwJUENJX0RFVklD
+RV9JRF9WSUFfODI2MSwgICAgIDB4MDAsIDB4MmYsDQorCSAgVklBX1VETUFfMTMzIHwgVklBX0JB
+RF9BU1QgfSwNCiAJeyAidnQ4MjM3cyIsCVBDSV9ERVZJQ0VfSURfVklBXzgyMzdTLCAgICAweDAw
+LCAweDJmLCBWSUFfVURNQV8xMzMgfCBWSUFfQkFEX0FTVCB9LA0KIAl7ICJ2dDgyNTEiLAlQQ0lf
+REVWSUNFX0lEX1ZJQV84MjUxLCAgICAgMHgwMCwgMHgyZiwgVklBX1VETUFfMTMzIHwgVklBX0JB
+RF9BU1QgfSwNCiAJeyAiY3g3MDAiLAlQQ0lfREVWSUNFX0lEX1ZJQV9DWDcwMCwgICAgMHgwMCwg
+MHgyZiwgVklBX1VETUFfMTMzIHwgVklBX0JBRF9BU1QgfCBWSUFfU0FUQV9QQVRBIH0sDQpAQCAt
+MTIyLDYgKzEzMCw4IEBADQogCXsgInZ0ODJjNTg2IiwJUENJX0RFVklDRV9JRF9WSUFfODJDNTg2
+XzAsIDB4MDAsIDB4MGYsIFZJQV9VRE1BX05PTkUgfCBWSUFfU0VUX0ZJRk8gfSwNCiAJeyAidnQ4
+MmM1NzYiLAlQQ0lfREVWSUNFX0lEX1ZJQV84MkM1NzYsICAgMHgwMCwgMHgyZiwgVklBX1VETUFf
+Tk9ORSB8IFZJQV9TRVRfRklGTyB8IFZJQV9OT19VTk1BU0sgfSwNCiAJeyAidnQ4MmM1NzYiLAlQ
+Q0lfREVWSUNFX0lEX1ZJQV84MkM1NzYsICAgMHgwMCwgMHgyZiwgVklBX1VETUFfTk9ORSB8IFZJ
+QV9TRVRfRklGTyB8IFZJQV9OT19VTk1BU0sgfCBWSUFfQkFEX0lEIH0sDQorCXsgInZ0eHh4eCIs
+CVBDSV9ERVZJQ0VfSURfVklBX0FOT04sICAgIDB4MDAsIDB4MmYsDQorCSAgVklBX1VETUFfMTMz
+IHwgVklBX0JBRF9BU1QgfSwNCiAJeyBOVUxMIH0NCiB9Ow0KIA0KQEAgLTQ2MCw2ICs0NzAsNyBA
+QA0KIAlzdGF0aWMgaW50IHByaW50ZWRfdmVyc2lvbjsNCiAJdTggZW5hYmxlOw0KIAl1MzIgdGlt
+aW5nOw0KKwl1bnNpZ25lZCBsb25nIGZsYWdzID0gaWQtPmRyaXZlcl9kYXRhOw0KIAlpbnQgcmM7
+DQogDQogCWlmICghcHJpbnRlZF92ZXJzaW9uKyspDQpAQCAtNDY5LDkgKzQ4MCwxMyBAQA0KIAlp
+ZiAocmMpDQogCQlyZXR1cm4gcmM7DQogDQorCWlmIChmbGFncyAmIFZJQV9JREZMQUdfU0lOR0xF
+KQ0KKwkJcHBpWzFdID0gJmF0YV9kdW1teV9wb3J0X2luZm87DQorCQ0KIAkvKiBUbyBmaW5kIG91
+dCBob3cgdGhlIElERSB3aWxsIGJlaGF2ZSBhbmQgd2hhdCBmZWF0dXJlcyB3ZQ0KIAkgICBhY3R1
+YWxseSBoYXZlIHRvIGxvb2sgYXQgdGhlIGJyaWRnZSBub3QgdGhlIElERSBjb250cm9sbGVyICov
+DQotCWZvciAoY29uZmlnID0gdmlhX2lzYV9icmlkZ2VzOyBjb25maWctPmlkOyBjb25maWcrKykN
+CisJZm9yIChjb25maWcgPSB2aWFfaXNhX2JyaWRnZXM7IGNvbmZpZy0+aWQgIT0gUENJX0RFVklD
+RV9JRF9WSUFfQU5PTjsNCisJICAgICBjb25maWcrKykNCiAJCWlmICgoaXNhID0gcGNpX2dldF9k
+ZXZpY2UoUENJX1ZFTkRPUl9JRF9WSUEgKw0KIAkJCSEhKGNvbmZpZy0+ZmxhZ3MgJiBWSUFfQkFE
+X0lEKSwNCiAJCQljb25maWctPmlkLCBOVUxMKSkpIHsNCkBAIC00ODIsMTAgKzQ5Nyw2IEBADQog
+CQkJcGNpX2Rldl9wdXQoaXNhKTsNCiAJCX0NCiANCi0JaWYgKCFjb25maWctPmlkKSB7DQotCQlw
+cmludGsoS0VSTl9XQVJOSU5HICJ2aWE6IFVua25vd24gVklBIFNvdXRoQnJpZGdlLCBkaXNhYmxp
+bmcuXG4iKTsNCi0JCXJldHVybiAtRU5PREVWOw0KLQl9DQogCXBjaV9kZXZfcHV0KGlzYSk7DQog
+DQogCWlmICghKGNvbmZpZy0+ZmxhZ3MgJiBWSUFfTk9fRU5BQkxFUykpIHsNCkBAIC01ODcsNiAr
+NTk4LDcgQEANCiAJeyBQQ0lfVkRFVklDRShWSUEsIDB4MTU3MSksIH0sDQogCXsgUENJX1ZERVZJ
+Q0UoVklBLCAweDMxNjQpLCB9LA0KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHg1MzI0KSwgfSwNCisJ
+eyBQQ0lfVkRFVklDRShWSUEsIDB4QzQwOSksIFZJQV9JREZMQUdfU0lOR0xFIH0sDQogDQogCXsg
+fSwNCiB9Ow0K
