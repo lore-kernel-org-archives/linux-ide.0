@@ -1,31 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1 v2] pata_via.c: support VX855 and future chips whose
- IDE controller use 0x0571.
-Date: Fri, 23 Jan 2009 16:48:11 +0900
-Message-ID: <4979763B.5030704@kernel.org>
-References: <C80EF34A3D2E494DBAF9AC29C7AE4EB80889BD23@exchtp03.taipei.via.com.tw>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Ian Campbell <Ian.Campbell@citrix.com>
+Subject: [PATCH] IDE: Unregister devices if initialization fails.
+Date: Fri, 23 Jan 2009 13:04:29 +0000
+Message-ID: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54381 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbZAWHs2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Jan 2009 02:48:28 -0500
-In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB80889BD23@exchtp03.taipei.via.com.tw>
+Received: from smtp02.citrix.com ([66.165.176.63]:42802 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755962AbZAWNFB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2009 08:05:01 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: JosephChan@via.com.tw
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, jeff@garzik.org
+To: linux-ide@vger.kernel.org
+Cc: Ian Campbell <Ian.Campbell@citrix.com>, Ian Campbell <ian.campbell@citrix.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-JosephChan@via.com.tw wrote:
-> This patch based on 2.6.29-rc2.
-> It supports VX855 and future chips whose IDE controller use 0x0571.
-> 
-> 
-> Signed-off-by: Joseph Chan <josephchan@via.com.tw>
+On reboot the loop in device_shutdown gets confused by these devices
+and goes into an infinite loop. I think this is because they don't
+have dev->bus or dev->driver which is because hwif_register_devices
+doesn't get called if !hwif->present.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-probe.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 312127e..120f65b 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1520,6 +1520,8 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
+ 		if (hwif_init(hwif) == 0) {
+ 			printk(KERN_INFO "%s: failed to initialize IDE "
+ 					 "interface\n", hwif->name);
++			device_unregister(&hwif->gendev);
++			device_destroy(ide_port_class, MKDEV(0, 0));
+ 			hwif->present = 0;
+ 			continue;
+ 		}
+@@ -1550,11 +1552,11 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
+ 		if (hwif == NULL)
+ 			continue;
+ 
+-		ide_sysfs_register_port(hwif);
+-		ide_proc_register_port(hwif);
+-
+-		if (hwif->present)
++		if (hwif->present) {
++			ide_sysfs_register_port(hwif);
++			ide_proc_register_port(hwif);
+ 			ide_proc_port_register_devices(hwif);
++		}
+ 	}
+ 
+ 	return j ? 0 : -1;
 -- 
-tejun
+1.5.6.5
+
