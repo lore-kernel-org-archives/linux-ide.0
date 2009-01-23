@@ -1,43 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Fri, 23 Jan 2009 17:53:29 +0000
-Message-ID: <20090123175329.222418cc@lxorguk.ukuu.org.uk>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
-	<20090123133352.60add80e@lxorguk.ukuu.org.uk>
-	<4979FE03.9060806@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata, devm_*, and MSI ?
+Date: Fri, 23 Jan 2009 13:11:02 -0500
+Message-ID: <497A0836.5060707@rtr.ca>
+References: <4975F5C1.8090107@rtr.ca>	 <alpine.LNX.1.00.0901201626090.19665@iabervon.org>	 <497698E2.7090807@rtr.ca>	 <da824cf30901202002g52fb73f9v8229fb702dcd033d@mail.gmail.com> <1232511378.11241.64.camel@localhost> <4977399F.7000104@rtr.ca> <4977BED4.6010702@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34289 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754851AbZAWRxu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2009 12:53:50 -0500
-In-Reply-To: <4979FE03.9060806@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4977BED4.6010702@shaw.ca>
+Sender: linux-pci-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: michael@ellerman.id.au, Grant Grundler <grundler@google.com>, Daniel Barkalow <barkalow@iabervon.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-On Fri, 23 Jan 2009 20:27:31 +0300
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-
-> Alan Cox wrote:
+Robert Hancock wrote:
+> Mark Lord wrote:
+>> Michael Ellerman wrote:
+>>> On Tue, 2009-01-20 at 20:02 -0800, Grant Grundler wrote:
+>> ..
+..
+>>> The kernel shouldn't let you enable MSI if that's the case, ie.
+>>> pci_enable_msi() should fail.
+>> ..
+>> Exactly.  So it shouldn't be that, then.
+>>
+>>> It might still be worth looking at the quirks though, in case there's
+>>> one for a previous revision of your bridge or something.
+>>>
+>>>> 3) Make sure MMIO ranges for 0xfee00000 are routed to local APIC
+>>>>    ie each bridge needs to route that address somehow (negative decode
+>>>> is common for upstream).
+>>>> 4) manually trigger the MSI by doing a MMIO write to the correct
+>>>> 0xfee00000 address with the assigned vector in order to see if your
+>>>> interrupt handler gets called.
+>>>
+>>> And can you plug something directly into the PCIe bus? If so does MSI
+>>> work on that?
+>> ..
+>>
+>> Yup.  PCIe cards have no problem with MSI in that box.
+>>
+>> More later..
 > 
-> >>When checking for CFA feature set support, ata_id_is_cfa() tests bit 2 in word
-> >>82 of the identify data instead the word 83.  It also checks the ATA revision
-> >>in the  word 80 instead of usual validity check for the words 82-83 -- word 83
-> >>bit 14 set, bit 15 cleared.
-> 
-> > The word 82 validity bit is not sufficient as that bit is itself not
-> > defined in ATA < 3. Otherwise the change looks correct.
-> 
->     Besides, I find the necessity of ATA revison check somewhat arguable. 
-> Words 64-127 were reserved since ATA-1 which meant that they shall be set to 0.
+> What kind of PCI-X bridge does that machine have? I know some AMD 
+> HyperTransport to PCI-X bridges have broken MSI, but those should be 
+> blacklisted already in the kernel..
+..
 
-One reason for the 0xC000/0x4000 check is that they were not - various
-very old devices like to return 0xFFFF for all the spare bits as do a
-fair number of EIDE devices.
+Okay, I'm back looking at this now.  In the interim, the box has undergone
+a complete re-install, and I think the original boot logs are gone for good.
 
-Yes it's probably paranoia but this is ATA ;)
+Now (with 2.6.28.1), the boot code identifies a quirk, and pci_enable_msi()
+does indeed fail where it once succeeded.  So all is well, but I don't know
+why it wasn't working correctly earlier.
 
+Oh well.
+
+Cheers
