@@ -1,31 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Fri, 23 Jan 2009 13:33:52 +0000
-Message-ID: <20090123133352.60add80e@lxorguk.ukuu.org.uk>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
+Date: Fri, 23 Jan 2009 16:53:05 +0300
+Message-ID: <4979CBC1.3040106@ru.mvista.com>
+References: <200901231615.38011.sshtylyov@ru.mvista.com> <20090123133352.60add80e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42209 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755898AbZAWNe0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2009 08:34:26 -0500
-In-Reply-To: <200901231615.38011.sshtylyov@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:60505 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753818AbZAWNwf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jan 2009 08:52:35 -0500
+In-Reply-To: <20090123133352.60add80e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-On Fri, 23 Jan 2009 17:15:37 +0400
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+Hello.
 
-> When checking for CFA feature set support, ata_id_is_cfa() tests bit 2 in word
-> 82 of the identify data instead the word 83.  It also checks the ATA revision
-> in the  word 80 instead of usual validity check for the words 82-83 -- word 83
-> bit 14 set, bit 15 cleared.
+Alan Cox wrote:
 
-The word 82 validity bit is not sufficient as that bit is itself not
-defined in ATA < 3. Otherwise the change looks correct.
+>>When checking for CFA feature set support, ata_id_is_cfa() tests bit 2 in word
+>>82 of the identify data instead the word 83.  It also checks the ATA revision
+>>in the  word 80 instead of usual validity check for the words 82-83 -- word 83
+>>bit 14 set, bit 15 cleared.
 
-Alan
+> The word 82 validity bit is not sufficient as that bit is itself not
+
+    There's no word 82 validity bits, its validity bits are in word 83.
+
+> defined in ATA < 3. Otherwise the change looks correct.
+
+    Well, then we need to fix every case of using *only* the validity bits in 
+ata.h. Go ahead. ;-)
+
+> Alan
+
+WBR, Sergei
