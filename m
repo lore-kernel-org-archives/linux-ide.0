@@ -1,72 +1,68 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] sata_nv: sgpio for nvidia mcp55 -v2
-Date: Thu, 22 Jan 2009 17:58:05 -0800
-Message-ID: <4979242D.2010309@kernel.org>
-References: <20061031104055.GA8898@infradead.org>    <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>    <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com>    <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com>    <4972F4E5.3030203@kernel.org> <49768355.4040301@kernel.org>    <49773189.6050009@seiner.com> <49776DFB.8090506@kernel.org>    <4977FA12.6050103@seiner.com> <4977FF09.50808@kernel.org> <a20f505b0186b360ea9eecefba08aceb.squirrel@www.datavault.us> <4978AC29.8080308@kernel.org> <49792115.1070803@seiner.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream] ahci/sata_vsc: drop intx manipulation on msi enable
+Date: Fri, 23 Jan 2009 11:31:39 +0900
+Message-ID: <49792C0B.6070602@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57283 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:56483 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753796AbZAWB6a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Jan 2009 20:58:30 -0500
-In-Reply-To: <49792115.1070803@seiner.com>
+	id S1753747AbZAWCby (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Jan 2009 21:31:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yan Seiner <yan@seiner.com>
-Cc: Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 
-Yan Seiner wrote:
-> Yinghai Lu wrote:
->> Yan Seiner wrote:
->>  
->>> On Wed, January 21, 2009 9:07 pm, Yinghai Lu wrote:
->>>    
->>>> please try -v3 and boot with debug in command line, then post bootlog.
->>>>       
->>> Dumb question:
->>>
->>> Where does the debug parameter go?  Kernel command line?
->>>     
->>
->> in your /boot/grub/grub.conf
->> every boot entry will have append line to let you add some boot
->> parameter. add "debug" in those line, and remove quiet etc.
->>
->> YH
->>
->> !DSPAM:4978ac48230791804284693!
->>
->>   
-> To recap, I've applied the latest patch (-v3) that's supposed to make
-> the SGPIO work.  I am using a LIB-700 backplane from Norco:
-> 
-> http://www.ipcdirect.net/servlet/Detail?no=75
-> http://www.norco.net.cn/UpLoadFile/Datasheet/DS-600S-EN.pdf
-> 
-> The disk activity LEDs stay lit all the time.
-> 
-> I am running a vanilla kernel, not a debian kernel,. although it was
-> built using debian's kbuild.
-> 
-> title           Debian GNU/Linux, kernel 2.6.28.1
-> root            (hd0,1)
-> kernel          /vmlinuz-2.6.28.1 root=/dev/md0 ro debug
-> initrd          /initrd.img-2.6.28.1
-> 
-> log files are at
-> 
-> http://seiner.com/sata_nv/syslog
-> http://seiner.com/sata_nv/dmesg.log
+There's no need to turn off intx explicitly on msi enable.  This is
+automatically handled by pci.  Drop it.
 
-[   19.306367] sata_nv 0000:00:05.0: PCI INT A -> Link[APSI] -> GSI 23 (level, low) -> IRQ 23
-[   19.306472] sata_nv 0000:00:05.0: Using SWNCQ mode
-[   19.306895] sata_nv 0000:00:05.0: setting latency timer to 64
-[   19.311020] scsi5 : sata_nv
+Note that, in sata_vsc's case, it was completely redundant; however,
+for ahci, it might be needed on machines if the BIOS turns intx off
+during boot.  However, there's no evidence of such behavior for ahci
+and the only such case seems to be ICH5 PATA according to ata_piix.
+Also, given the way ahci operates, it's highly unlikely BIOS ever
+disables IRQ for the controller.  However, as this change has slight
+possibility of introducing failure, please schedule it for #upstream.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+There are similar places in sata_sis and sata_uli.  I have no idea
+whether they're there because they're needed or just copied over from
+other drivers.  Eh...
 
-it seems that your system HW is not using SGPIO...
-my setup has more print out...
+Thanks.
 
-YH
+ drivers/ata/ahci.c     |    4 ++--
+ drivers/ata/sata_vsc.c |    3 +--
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7f701cb..18fac60 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2616,8 +2616,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (board_id == board_ahci_sb700 && pdev->revision >= 0x40)
+ 		hpriv->flags &= ~AHCI_HFLAG_IGN_SERR_INTERNAL;
+ 
+-	if ((hpriv->flags & AHCI_HFLAG_NO_MSI) || pci_enable_msi(pdev))
+-		pci_intx(pdev, 1);
++	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI))
++		pci_enable_msi(pdev);
+ 
+ 	/* save initial config */
+ 	ahci_save_initial_config(pdev, hpriv);
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index c57cdff..398328a 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -411,8 +411,7 @@ static int __devinit vsc_sata_init_one(struct pci_dev *pdev,
+ 	if (cls == 0x00)
+ 		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
+ 
+-	if (pci_enable_msi(pdev) == 0)
+-		pci_intx(pdev, 0);
++	pci_enable_msi(pdev);
+ 
+ 	/*
+ 	 * Config offset 0x98 is "Extended Control and Status Register 0"
