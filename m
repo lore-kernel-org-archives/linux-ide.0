@@ -1,22 +1,23 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: sata_mv: basic PIO-only ATAPI support?
-Date: Fri, 23 Jan 2009 12:20:21 -0500
-Message-ID: <4979FC55.1000904@rtr.ca>
-References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca> <49750774.1070005@rtr.ca> <49773FD1.3040101@rtr.ca> <4977C5A5.8070202@gmail.com> <49780167.1060208@rtr.ca> <497801F9.2070009@rtr.ca> <4978028D.3020501@gmail.com>
+Date: Fri, 23 Jan 2009 12:23:46 -0500
+Message-ID: <4979FD22.8040407@rtr.ca>
+References: <49750705.7010709@rtr.ca> <49750746.3010709@rtr.ca> <49750774.1070005@rtr.ca> <49773FD1.3040101@rtr.ca> <4977C5A5.8070202@gmail.com> <49780167.1060208@rtr.ca> <497801F9.2070009@rtr.ca> <4978028D.3020501@gmail.com> <4979FC55.1000904@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:48305 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:59088 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbZAWRUW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:20:22 -0500
-In-Reply-To: <4978028D.3020501@gmail.com>
+	id S1753608AbZAWRXr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jan 2009 12:23:47 -0500
+In-Reply-To: <4979FC55.1000904@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+(resending, with different email address for Alan).
 
 Tejun / Alan,
 
