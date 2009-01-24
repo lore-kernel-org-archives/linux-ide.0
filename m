@@ -1,44 +1,55 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [PATCH] icside: use struct ide_port_info also for PCB version 5
-Date: Sat, 24 Jan 2009 14:50:51 +0000
-Message-ID: <20090124145051.GA26833@flint.arm.linux.org.uk>
-References: <200901241514.23036.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [Bug 12320] warn_on_slowpath when playing audio CD
+Date: Sat, 24 Jan 2009 15:54:20 +0100
+Message-ID: <200901241554.21294.bzolnier@gmail.com>
+References: <20090124141937.3205910800F@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:58094 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754700AbZAXOvD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:51:03 -0500
+Received: from fk-out-0910.google.com ([209.85.128.186]:2419 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355AbZAXOyS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:54:18 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so1722817fkf.5
+        for <linux-ide@vger.kernel.org>; Sat, 24 Jan 2009 06:54:16 -0800 (PST)
+In-Reply-To: <20090124141937.3205910800F@picon.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <200901241514.23036.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Sat, Jan 24, 2009 at 03:14:22PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] icside: use struct ide_port_info also for PCB version 5
-> 
-> This fixes hwif->channel and drive->dn assignments.
+On Saturday 24 January 2009, bugme-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=3D12320
+>=20
+>=20
+> bbpetkov@yahoo.de changed:
+>=20
+>            What    |Removed                     |Added
+> ---------------------------------------------------------------------=
+-------
+>          AssignedTo|io_ide@kernel-bugs.osdl.org |bbpetkov@yahoo.de
+>              Status|NEW                         |ASSIGNED
+>=20
+>=20
+>=20
+>=20
+> ------- Comment #23 from bbpetkov@yahoo.de  2009-01-24 06:19 -------
+> Hi,
+>=20
+> here's a fix, finally. It is against 29-rc2 + current (24.01) pata-tr=
+ee.
+>=20
+> @M=C3=A1rton: can you please apply and test, thanks. The patch applie=
+s on plain
+> 2.6.28 too, albeit with a little fuzz.
+>=20
+> @Bart: We should probably backport that one to 2.6.28 after enough te=
+sting,
+> right?
 
-I really don't care about this driver anymore - people should
-be using the PATA version instead.
+That's correct -- it is a regression and fix is rather non-invasive.
 
-Nevertheless, this patch looks broken.
-
-> @@ -534,7 +538,7 @@ icside_register_v6(struct icside_state *
-                      ^^^^^^^^^^^^^^^^^^ v6 function
-
->  		d.dma_ops = NULL;
->  	}
->  
-> -	ret = ide_host_register(host, NULL, hws);
-> +	ret = ide_host_register(host, &icside_v5_port_info, hws);
-                                      ^^^^^^^^^^^^^^^^^^^^^ v5 info
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Thanks,
+Bart
