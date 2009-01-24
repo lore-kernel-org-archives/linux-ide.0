@@ -1,55 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Bug 12320] warn_on_slowpath when playing audio CD
-Date: Sat, 24 Jan 2009 15:54:20 +0100
-Message-ID: <200901241554.21294.bzolnier@gmail.com>
-References: <20090124141937.3205910800F@picon.linux-foundation.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [regression] sata_mv: harddisk activity led no longer responsive
+ on QNAP TS-109
+Date: Sat, 24 Jan 2009 09:57:36 -0500
+Message-ID: <497B2C60.60608@rtr.ca>
+References: <200808261124.39282.elendil@planet.nl> <200808261225.46315.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:2419 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbZAXOyS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:54:18 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so1722817fkf.5
-        for <linux-ide@vger.kernel.org>; Sat, 24 Jan 2009 06:54:16 -0800 (PST)
-In-Reply-To: <20090124141937.3205910800F@picon.linux-foundation.org>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:58863 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751169AbZAXO5k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jan 2009 09:57:40 -0500
+In-Reply-To: <200808261225.46315.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Mark Lord <liml@rtr.ca>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
 
-On Saturday 24 January 2009, bugme-daemon@bugzilla.kernel.org wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D12320
->=20
->=20
-> bbpetkov@yahoo.de changed:
->=20
->            What    |Removed                     |Added
-> ---------------------------------------------------------------------=
--------
->          AssignedTo|io_ide@kernel-bugs.osdl.org |bbpetkov@yahoo.de
->              Status|NEW                         |ASSIGNED
->=20
->=20
->=20
->=20
-> ------- Comment #23 from bbpetkov@yahoo.de  2009-01-24 06:19 -------
-> Hi,
->=20
-> here's a fix, finally. It is against 29-rc2 + current (24.01) pata-tr=
-ee.
->=20
-> @M=C3=A1rton: can you please apply and test, thanks. The patch applie=
-s on plain
-> 2.6.28 too, albeit with a little fuzz.
->=20
-> @Bart: We should probably backport that one to 2.6.28 after enough te=
-sting,
-> right?
+Frans Pop wrote:
+> On Tuesday 26 August 2008, Frans Pop wrote:
+>> After booting the system I did 'echo 1 >/sys/block/sdX/device/queue_depth'
+>> and after that the HDD led showed disk activity again.
+> 
+> And to confirm that, applying the following patch to sata_mv for 2.6.26.3
+> makes the HDD led work again as well:
+> 
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+..
+>                                   ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
+> -                                 ATA_FLAG_NCQ | ATA_FLAG_AN,
+> +                                 ATA_FLAG_AN,
+..
+> So somehow enabling NCQ is at the root of the issue.
+..
 
-That's correct -- it is a regression and fix is rather non-invasive.
+Pardon me digging up this old thread again,
+but I'm back working on sata_mv now.
 
-Thanks,
-Bart
+There is a reported chipset errata for *exactly* this symptom,
+though the errata is supposedly for the older 6041/6081 variants.
+But it is possible that the same problem still exists in the
+chip you are using there (SOC, right?).
+
+The problem is exactly as you described it:  turning on NCQ
+causes the activity LEDs to remain on constantly.
+No known workaround or fix is available from Marvell,
+so "just live with it" is the only solution.  :)
+
+Cheers
+
