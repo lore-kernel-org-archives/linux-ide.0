@@ -1,54 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] macide: use struct ide_port_info
-Date: Sat, 24 Jan 2009 15:18:30 +0100
-Message-ID: <200901241518.30926.bzolnier@gmail.com>
+Subject: Re: review of pata-rb532-cf
+Date: Sat, 24 Jan 2009 15:12:11 +0100
+Message-ID: <200901241512.11657.bzolnier@gmail.com>
+References: <20081128194607.93677386B1A7@mail.ifyouseekate.net> <20090120164314.07AD3400E137@mail.nwl.cc>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:28108 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755063AbZAXOVZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:21:25 -0500
+Received: from mu-out-0910.google.com ([209.85.134.187]:62674 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175AbZAXOVS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:21:18 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so3284609muf.1
+        for <linux-ide@vger.kernel.org>; Sat, 24 Jan 2009 06:21:15 -0800 (PST)
+In-Reply-To: <20090120164314.07AD3400E137@mail.nwl.cc>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+To: Phil Sutter <n0-1@freewrt.org>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org, florian@openwrt.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] macide: use struct ide_port_info
 
-This fixes hwif->channel and drive->dn assignments.
+Hi,
 
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/macide.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+On Tuesday 20 January 2009, Phil Sutter wrote:
+> 
+> Hi,
+> 
+> I did some review of pata-rb532-cf in order to simplify the code a bit
+> in which I think have succeeded.
+> 
+> After finding the first patch by accident, patches two and three were
+> quite obvious. Patch four also solves the discussed changes to
+> rb532_pata_data_xfer() as it drops it completely, replacing it by
+> a standard libata function. Patch 5 is rather experimental and hopefully
+> triggers a discussion about the changes it introduces.
 
-Index: b/drivers/ide/macide.c
-===================================================================
---- a/drivers/ide/macide.c
-+++ b/drivers/ide/macide.c
-@@ -80,6 +80,10 @@ static void __init macide_setup_ports(hw
- 	hw->chipset = ide_generic;
- }
- 
-+static const struct ide_port_info macide_port_info = {
-+	.host_flags		= IDE_HFLAG_NO_DMA,
-+};
-+
- static const char *mac_ide_name[] =
- 	{ "Quadra", "Powerbook", "Powerbook Baboon" };
- 
-@@ -122,7 +126,7 @@ static int __init macide_init(void)
- 
- 	macide_setup_ports(&hw, base, irq, ack_intr);
- 
--	return ide_host_add(NULL, hws, NULL);
-+	return ide_host_add(&macide_port_info, hws, NULL);
- }
- 
- module_init(macide_init);
+FWIW patches 1-4 look OK to me.
+
+Thanks,
+Bart
