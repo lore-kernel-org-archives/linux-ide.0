@@ -1,77 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] icside: use struct ide_port_info also for PCB version 5
-Date: Sat, 24 Jan 2009 16:46:35 +0100
-Message-ID: <200901241646.35558.bzolnier@gmail.com>
-References: <200901241514.23036.bzolnier@gmail.com>
+From: Thomas Reitmayr <treitmayr@devbase.at>
+Subject: [PATCH] sata_mv: Properly initialize main irq mask
+Date: Sat, 24 Jan 2009 20:24:58 +0100
+Message-ID: <1232825098.13899.52.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:43829 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386AbZAXPq2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 10:46:28 -0500
-In-Reply-To: <200901241514.23036.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from smtpgw01.world4you.com ([80.243.163.21]:46908 "EHLO
+	smtpgw01.world4you.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752895AbZAXUp1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 15:45:27 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+Cc: Saeed Bishara <saeed@marvell.com>, Lennert Buytenhek <buytenh@marvell.com>, Martin Michlmayr <tbm@cyrius.com>
 
-On Saturday 24 January 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] icside: use struct ide_port_info also for PCB version 5
-> 
-> This fixes hwif->channel and drive->dn assignments.
-> 
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Hi,
+I noticed that during initialization sata_mv.c assumes that the main
+interrupt mask has its default value of 0. The function
+mv_platform_probe(..) initializes a shadow irq mask with 0 assuming
+that's the value of the controller's register. Now
+mv_set_main_irq_mask(..) only writes the controller's register if the
+new value differs from the "shadowed" value. This is fatal when trying
+to disable all interrupts in mv_init_host(..), i.e. the following
+function call does not write anything to the main irq mask register:
+  mv_set_main_irq_mask(host, ~0, 0);
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] icside: use struct ide_port_info also for PCB version 5 (v2)
+The effect I see on my machine (QNAP TS-109 II) with booting via kexec
+(with Linux as a 2nd-stage boot loader) is that if the sata_mv module
+was still loaded when performing kexec, then the new kernel's sata_mv
+module starts up with interrupts enabled. This results in an unhandled
+IRQ and breaks the boot process.
 
-This fixes hwif->channel and drive->dn assignments.
+The unhandled interrupt itself might also be fixed by Lennert's patch
+proposed at http://markmail.org/message/kwvzxstnlsa3s26w which I did not
+try yet.
+However I still propose to additionally initialize the shadow variable
+with the current contents of the main irq mask register to get both in
+sync and allow proper disabling the main irq mask. This fixes the
+unhandled irq on my machine.
 
-v2:
-Fix v5/v6 mismatch noticed by Russell.
 
-Cc: Russell King <rmk@arm.linux.org.uk>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/icside.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Signed-off-by: Thomas Reitmayr <treitmayr@devbase.at>
 
-Index: b/drivers/ide/icside.c
-===================================================================
---- a/drivers/ide/icside.c
-+++ b/drivers/ide/icside.c
-@@ -419,6 +419,10 @@ static void icside_setup_ports(hw_regs_t
- 	hw->chipset = ide_acorn;
- }
+--- a/drivers/ata/sata_mv.c	2008-12-25 00:26:37.000000000 +0100
++++ b/drivers/ata/sata_mv.c	2009-01-24 18:48:17.000000000 +0100
+@@ -3076,6 +3076,9 @@ static int mv_init_host(struct ata_host 
+ 		hpriv->main_irq_mask_addr  = mmio + PCI_HC_MAIN_IRQ_MASK_OFS;
+ 	}
  
-+static const struct ide_port_info icside_v5_port_info = {
-+	.host_flags		= IDE_HFLAG_NO_DMA,
-+};
++	/* initialize shadow irq mask with register's value */
++	hpriv->main_irq_mask = readl(hpriv->main_irq_mask_addr);
 +
- static int __devinit
- icside_register_v5(struct icside_state *state, struct expansion_card *ec)
- {
-@@ -445,7 +449,7 @@ icside_register_v5(struct icside_state *
+ 	/* global interrupt mask: 0 == mask everything */
+ 	mv_set_main_irq_mask(host, ~0, 0);
  
- 	icside_setup_ports(&hw, base, &icside_cardinfo_v5, ec);
- 
--	host = ide_host_alloc(NULL, hws);
-+	host = ide_host_alloc(&icside_v5_port_info, hws);
- 	if (host == NULL)
- 		return -ENODEV;
- 
-@@ -453,7 +457,7 @@ icside_register_v5(struct icside_state *
- 
- 	ecard_set_drvdata(ec, state);
- 
--	ret = ide_host_register(host, NULL, hws);
-+	ret = ide_host_register(host, &icside_v5_port_info, hws);
- 	if (ret)
- 		goto err_free;
- 
+--
+Best regards,
+Thomas
+
