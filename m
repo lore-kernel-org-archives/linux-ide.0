@@ -1,54 +1,62 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide_arm: use struct ide_port_info
-Date: Sat, 24 Jan 2009 15:15:22 +0100
-Message-ID: <200901241515.22288.bzolnier@gmail.com>
+Subject: [PATCH] ide-generic: use struct ide_port_info
+Date: Sat, 24 Jan 2009 15:16:10 +0100
+Message-ID: <200901241516.10142.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:65257 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754552AbZAXOVW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:21:22 -0500
+Received: from mu-out-0910.google.com ([209.85.134.187]:62674 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400AbZAXOVV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:21:21 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+Cc: linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide_arm: use struct ide_port_info
+Subject: [PATCH] ide-generic: use struct ide_port_info
 
 This fixes hwif->channel and drive->dn assignments.
 
-Cc: Russell King <rmk@arm.linux.org.uk>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide_arm.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/ide/ide-generic.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/ide_arm.c
+Index: b/drivers/ide/ide-generic.c
 ===================================================================
---- a/drivers/ide/ide_arm.c
-+++ b/drivers/ide/ide_arm.c
-@@ -18,6 +18,10 @@
- #define IDE_ARM_IO	0x1f0
- #define IDE_ARM_IRQ	IRQ_HARDDISK
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -32,6 +32,10 @@ static int probe_mask;
+ module_param(probe_mask, int, 0);
+ MODULE_PARM_DESC(probe_mask, "probe mask for legacy ISA IDE ports");
  
-+static const struct ide_port_info ide_arm_port_info = {
++static const struct ide_port_info ide_generic_port_info = {
 +	.host_flags		= IDE_HFLAG_NO_DMA,
 +};
 +
- static int __init ide_arm_init(void)
+ static ssize_t store_add(struct class *cls, const char *buf, size_t n)
  {
- 	unsigned long base = IDE_ARM_IO, ctl = IDE_ARM_IO + 0x206;
-@@ -41,7 +45,7 @@ static int __init ide_arm_init(void)
- 	hw.irq = IDE_ARM_IRQ;
+ 	unsigned int base, ctl;
+@@ -46,7 +50,7 @@ static ssize_t store_add(struct class *c
+ 	hw.irq = irq;
  	hw.chipset = ide_generic;
  
--	return ide_host_add(NULL, hws, NULL);
-+	return ide_host_add(&ide_arm_port_info, hws, NULL);
- }
+-	rc = ide_host_add(NULL, hws, NULL);
++	rc = ide_host_add(&ide_generic_port_info, hws, NULL);
+ 	if (rc)
+ 		return rc;
  
- module_init(ide_arm_init);
+@@ -184,7 +188,7 @@ static int __init ide_generic_init(void)
+ #endif
+ 			hw.chipset = ide_generic;
+ 
+-			rc = ide_host_add(NULL, hws, NULL);
++			rc = ide_host_add(&ide_generic_port_info, hws, NULL);
+ 			if (rc) {
+ 				release_region(io_addr + 0x206, 1);
+ 				release_region(io_addr, 8);
