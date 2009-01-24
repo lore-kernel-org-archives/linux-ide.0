@@ -1,43 +1,54 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: review of pata-rb532-cf
-Date: Sat, 24 Jan 2009 15:12:11 +0100
-Message-ID: <200901241512.11657.bzolnier@gmail.com>
-References: <20081128194607.93677386B1A7@mail.ifyouseekate.net> <20090120164314.07AD3400E137@mail.nwl.cc>
+Subject: [PATCH] ide_arm: use struct ide_port_info
+Date: Sat, 24 Jan 2009 15:15:22 +0100
+Message-ID: <200901241515.22288.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:62674 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175AbZAXOVS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:21:18 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so3284609muf.1
-        for <linux-ide@vger.kernel.org>; Sat, 24 Jan 2009 06:21:15 -0800 (PST)
-In-Reply-To: <20090120164314.07AD3400E137@mail.nwl.cc>
+Received: from fk-out-0910.google.com ([209.85.128.191]:65257 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754552AbZAXOVW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 09:21:22 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Sutter <n0-1@freewrt.org>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org, florian@openwrt.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide_arm: use struct ide_port_info
 
-Hi,
+This fixes hwif->channel and drive->dn assignments.
 
-On Tuesday 20 January 2009, Phil Sutter wrote:
-> 
-> Hi,
-> 
-> I did some review of pata-rb532-cf in order to simplify the code a bit
-> in which I think have succeeded.
-> 
-> After finding the first patch by accident, patches two and three were
-> quite obvious. Patch four also solves the discussed changes to
-> rb532_pata_data_xfer() as it drops it completely, replacing it by
-> a standard libata function. Patch 5 is rather experimental and hopefully
-> triggers a discussion about the changes it introduces.
+Cc: Russell King <rmk@arm.linux.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide_arm.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-FWIW patches 1-4 look OK to me.
-
-Thanks,
-Bart
+Index: b/drivers/ide/ide_arm.c
+===================================================================
+--- a/drivers/ide/ide_arm.c
++++ b/drivers/ide/ide_arm.c
+@@ -18,6 +18,10 @@
+ #define IDE_ARM_IO	0x1f0
+ #define IDE_ARM_IRQ	IRQ_HARDDISK
+ 
++static const struct ide_port_info ide_arm_port_info = {
++	.host_flags		= IDE_HFLAG_NO_DMA,
++};
++
+ static int __init ide_arm_init(void)
+ {
+ 	unsigned long base = IDE_ARM_IO, ctl = IDE_ARM_IO + 0x206;
+@@ -41,7 +45,7 @@ static int __init ide_arm_init(void)
+ 	hw.irq = IDE_ARM_IRQ;
+ 	hw.chipset = ide_generic;
+ 
+-	return ide_host_add(NULL, hws, NULL);
++	return ide_host_add(&ide_arm_port_info, hws, NULL);
+ }
+ 
+ module_init(ide_arm_init);
