@@ -1,53 +1,54 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [regression] sata_mv: harddisk activity led no longer responsive
- on QNAP TS-109
-Date: Sat, 24 Jan 2009 09:57:36 -0500
-Message-ID: <497B2C60.60608@rtr.ca>
-References: <200808261124.39282.elendil@planet.nl> <200808261225.46315.elendil@planet.nl>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] icside: use struct ide_port_info also for PCB version 5
+Date: Sat, 24 Jan 2009 16:44:16 +0100
+Message-ID: <200901241644.16601.bzolnier@gmail.com>
+References: <200901241514.23036.bzolnier@gmail.com> <20090124145051.GA26833@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:58863 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751169AbZAXO5k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jan 2009 09:57:40 -0500
-In-Reply-To: <200808261225.46315.elendil@planet.nl>
+Received: from mu-out-0910.google.com ([209.85.134.187]:5703 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbZAXPoS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jan 2009 10:44:18 -0500
+In-Reply-To: <20090124145051.GA26833@flint.arm.linux.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Mark Lord <liml@rtr.ca>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Frans Pop wrote:
-> On Tuesday 26 August 2008, Frans Pop wrote:
->> After booting the system I did 'echo 1 >/sys/block/sdX/device/queue_depth'
->> and after that the HDD led showed disk activity again.
+On Saturday 24 January 2009, Russell King wrote:
+> On Sat, Jan 24, 2009 at 03:14:22PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] icside: use struct ide_port_info also for PCB version 5
+> > 
+> > This fixes hwif->channel and drive->dn assignments.
 > 
-> And to confirm that, applying the following patch to sata_mv for 2.6.26.3
-> makes the HDD led work again as well:
+> I really don't care about this driver anymore - people should
+> be using the PATA version instead.
+
+I really don't see major technical arguments for using libata version
+(especially after 2.6.29 IDE changes) but it's your call so if you want
+icside removed just send me a patch and I'll apply it (given that there
+are no complaints from users).
+
+[ No strong feelings here as it will allow me to better use my time
+  and concentrate on working on code that people care about. ]
+
+> Nevertheless, this patch looks broken.
 > 
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-..
->                                   ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
-> -                                 ATA_FLAG_NCQ | ATA_FLAG_AN,
-> +                                 ATA_FLAG_AN,
-..
-> So somehow enabling NCQ is at the root of the issue.
-..
+> > @@ -534,7 +538,7 @@ icside_register_v6(struct icside_state *
+>                       ^^^^^^^^^^^^^^^^^^ v6 function
+> 
+> >  		d.dma_ops = NULL;
+> >  	}
+> >  
+> > -	ret = ide_host_register(host, NULL, hws);
+> > +	ret = ide_host_register(host, &icside_v5_port_info, hws);
+>                                       ^^^^^^^^^^^^^^^^^^^^^ v5 info
 
-Pardon me digging up this old thread again,
-but I'm back working on sata_mv now.
+Grrr.. and the other icside patch has v5->v6 mismatch.
 
-There is a reported chipset errata for *exactly* this symptom,
-though the errata is supposedly for the older 6041/6081 variants.
-But it is possible that the same problem still exists in the
-chip you are using there (SOC, right?).
-
-The problem is exactly as you described it:  turning on NCQ
-causes the activity LEDs to remain on constantly.
-No known workaround or fix is available from Marvell,
-so "just live with it" is the only solution.  :)
-
-Cheers
-
+Thanks for noticing.  I'll post corrected patches in few minutes.
