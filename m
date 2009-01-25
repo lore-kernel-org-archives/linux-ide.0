@@ -1,42 +1,27 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
-Date: Sun, 25 Jan 2009 15:22:11 +0000
-Message-ID: <20090125152211.18a838f9@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
-	<18807.33113.550070.329912@harpo.it.uu.se>
-	<20090121214746.2b15d1de@lxorguk.ukuu.org.uk>
-	<4977A6E5.6080506@ru.mvista.com>
-	<20090121225808.1f5ffac1@lxorguk.ukuu.org.uk>
-	<4977B10B.5050904@ru.mvista.com>
-	<4977B1D1.2010305@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Sun, 25 Jan 2009 13:04:28 -0500
+Message-ID: <497CA9AC.7030208@rtr.ca>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40739 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754051AbZAYPWz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 10:22:55 -0500
-In-Reply-To: <4977B1D1.2010305@ru.mvista.com>
+Received: from rtr.ca ([76.10.145.34]:55615 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750774AbZAYSEc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jan 2009 13:04:32 -0500
+In-Reply-To: <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Mikael Pettersson <mikpe@it.uu.se>, Hugh Dickins <hugh@veritas.com>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> >> "Note: only 32-bit writes to the data port are allowed when this bit is
-> >> set."
-> >>   
-> >  
-> >   Now tell me who forces you to set that bit (I assume it's the write 
-> > buffer enable) for the ATAPI devices?
-> 
->    Yes, it's the write buffer enable (about which I have written already).
+Alan Cox wrote:
+..
+> Mount by label also means you can flip back and forth between the
+> different drivers and kernel revisions.
+..
 
-Yeah that seems the best way to go - not I note that the old drivers/ide
-driver programs it right for 16bit I/O or doing mixed 16/32 ..
-
-Patch added to my tree which together with Hugh's change should do the
-trick. The others I've checked seem to have no such rule except in VLB
-space. Never tried ATAPI in anger on a VLB box but it's easy enough to
-address and I'll do a third patch for those.
-
-Alan
+That only works with an initrd or initramfs,
+not with kernel-only boots.  Real P.I.T.A. that is.
