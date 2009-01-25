@@ -1,62 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Sun, 25 Jan 2009 02:06:12 +0300
-Message-ID: <497B9EE4.8010807@ru.mvista.com>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Another libata error related to OCZ SSD
+Date: Sun, 25 Jan 2009 10:00:43 +0900
+Message-ID: <497BB9BB.4040608@kernel.org>
+References: <20090111174159.GC4250@ics.muni.cz> <200901192239.25071.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.mvista.com ([63.81.120.155]:32538 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751209AbZAXXGS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jan 2009 18:06:18 -0500
-In-Reply-To: <200901231615.38011.sshtylyov@ru.mvista.com>
+Received: from hera.kernel.org ([140.211.167.34]:55942 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754004AbZAYBBW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jan 2009 20:01:22 -0500
+In-Reply-To: <200901192239.25071.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, gdu@mns.spb.ru
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Lukas Hejtmanek <xhejtman@ics.muni.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hello, I wrote:
-> When checking for CFA feature set support, ata_id_is_cfa() tests bit 2 in word
-> 82 of the identify data instead the word 83.  It also checks the ATA revision
-> in the  word 80 instead of usual validity check for the words 82-83 -- word 83
-> bit 14 set, bit 15 cleared.
->
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->
-> ---
-> I'm not sure who should queue this patch... it's against Linus' tree.
->
->  include/linux/ata.h |    5 ++---
->  1 files changed, 2 insertions(+), 3 deletions(-)
->
-> Index: linux-2.6/include/linux/ata.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/ata.h
-> +++ linux-2.6/include/linux/ata.h
-> @@ -734,9 +734,8 @@ static inline int ata_id_is_cfa(const u1
->  	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
->  		return 1;
->  	/* Could be CF hiding as standard ATA */
-> -	if (ata_id_major_version(id) >= 3 &&
-> -	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
-> -	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
-> +	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) == 0x4000 &&
-> +	    (id[ATA_ID_COMMAND_SET_2] & (1 << 2)))
->  		return 1;
->  	return 0;
->  }
+Rafael J. Wysocki wrote:
+> (CCing ACPI and IDE).
+> 
+> On Sunday 11 January 2009, Lukas Hejtmanek wrote:
+>> Hello,
+>>
+>> I encountered another problem with the OCZ SSD disk. If I suspend to ram while
+>> running from batteries, my disk disappears. I had no problem with suspends on
+>> AC power.
+>>
+>> I created a screenshot of dmesg mesages:
+>> http://www.fi.muni.cz/~xhejtman/IMG_3221.JPG
 
-   Jeff, Bart, I've changed my mind about recasting this patch as Alan 
-has requested, as I do consider it correct now. The version check should 
-be unnecessary since I'm adding the validity bits check (hte fact that 
-ata_id_major_complex() is quite cumbesome way of checking the minumum 
-revision # -- this can be done with a single comparison instead of the 
-bit scan). Note that words 64-127 were marked reserved, and must be set 
-to 0 since ATA-1. Have your say please -- do I still need to recast the 
-patch?
+Does the following command make any difference?
 
-MBR, Sergei
+ echo 0 > /sys/class/scsi_disk/h:c:i:l/manage_start_stop
 
+The h:c:i:l part needs to be adjusted to point to the OCZ disk.  lscsi
+will show which value to use.
 
+Thanks.
+
+-- 
+tejun
