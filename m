@@ -1,60 +1,73 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: 2.6.28: Moved to SATA driver (w/PATA support), kernel OOPS at
- boot
-Date: Sun, 25 Jan 2009 14:18:19 -0600
-Message-ID: <497CC90B.1010605@shaw.ca>
-References: <alpine.DEB.1.10.0901250741300.11258__18268.0605132648$1232890652$gmane$org@p34.internal.lan>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Sun, 25 Jan 2009 16:13:23 -0500
+Message-ID: <497CD5F3.8030901@tmr.com>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan> <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <alpine.DEB.1.10.0901250726530.10805__44823.8515914001$1232890466$gmane$org@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:22643 "EHLO
-	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752275AbZAYUSW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 15:18:22 -0500
-In-Reply-To: <alpine.DEB.1.10.0901250741300.11258__18268.0605132648$1232890652$gmane$org@p34.internal.lan>
+Received: from mail.tmr.com ([64.65.253.246]:44727 "EHLO partygirl.tmr.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751408AbZAYVNg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jan 2009 16:13:36 -0500
+In-Reply-To: <alpine.DEB.1.10.0901250726530.10805__44823.8515914001$1232890466$gmane$org@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
 Justin Piszcz wrote:
-> Switched from the old IDE interface (disabled it) to SATA only in the 
-> kernel:
 > 
-> [    1.788921] irq 11: nobody cared (try booting with the "irqpoll" option)
-> [    1.788978] Pid: 0, comm: swapper Not tainted 2.6.28 #4
-> [    1.789031] Call Trace:
-> [    1.789085]  [<c0134153>] __report_bad_irq+0x24/0x81
-> [    1.789138]  [<c01342df>] note_interrupt+0x12f/0x170
-> [    1.789191]  [<c01338dc>] handle_IRQ_event+0x25/0x4a
-> [    1.789244]  [<c01348c4>] handle_level_irq+0x7a/0x90
-> [    1.789299]  [<c0104e07>] do_IRQ+0x6f/0x88
-> [    1.789352]  [<c012c1c4>] getnstimeofday+0x3b/0xd1
-> [    1.789407]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
-> [    1.789461]  [<c0103973>] common_interrupt+0x23/0x28
-> [    1.789515]  [<c011c9bf>] __do_softirq+0x2d/0xea
-> [    1.789535]  [<c011caa2>] do_softirq+0x26/0x2e
-> [    1.789535]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
-> [    1.789535]  [<c01039a0>] apic_timer_interrupt+0x28/0x30
-> [    1.789535]  [<c0108362>] default_idle+0x36/0x42
-> [    1.789535]  [<c0101f7c>] cpu_idle+0x4b/0x5f
-> [    1.789535]  [<c0586925>] start_kernel+0x221/0x261
-> [    1.789535]  [<c05864d3>] unknown_bootoption+0x0/0x1e3
-> [    1.789535] handlers:
-> [    1.789535] [<c039e087>] (ata_sff_interrupt+0x0/0x242)
-> [    1.789535] Disabling IRQ #11
 > 
-> Full dmesg:
-> http://home.comcast.net/~jpiszcz/20090125/dmesg20090125.txt
+> On Sun, 25 Jan 2009, Justin Piszcz wrote:
 > 
-> Kernel config:
-> http://home.comcast.net/~jpiszcz/20090125/2.6.28-config.txt
+>>
+>>
+>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>>
+>>>
+>>>
+>>> On Sun, 25 Jan 2009, Alan Cox wrote:
+>>>
+>>>> Easiest is to use labels. Old ide will keep hda,b,c,d constant
+>>>> providing you have interfaces using the legacy IDE port mappings (0x1f0
+>>>> and 0x170). Libata doesn't do that as pretty much every distribution 
+>>>> had
+>>>> already switched to volume labels, and the user space can do the job 
+>>>> far
+>>>> better than the kernel - especially as the newer devices with modern
+>>>> interfaces don't have the old BIOS/DOS legacy ideas any more.
+>>>>
+>>>> Mount by label also means you can flip back and forth between the
+>>>> different drivers and kernel revisions.
+>>>>
+>>>> Alan
+>>>>
+>> It comes with one :)
+>> # xfs_admin -u  /dev/sdd2
+>> UUID = 77ae4251-631f-4656-a365-c5723f5c5da8
+>>
+>> Will try to use this to boot; however, I'd prefer the labels over the 
+>> UUID, wish there was an easy way to set it.
+>>
+>> Justin.
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
 > 
-> This never happened with the old IDE layer.
+> One final question, without udev, how does one determine the UUID of a 
+> non-XFS
+> partition, e.g., swap?
 > 
-> Justin.
-> 
+One uses blkid. Which suggests that you can solve your name problem by not using 
+names and switching to UUID.
 
-That presumably is some kind of bug, yes, or oddity of that controller.. 
-OK, who knows pata_pdc2027x hardware? :-)
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+   "We have more to fear from the bungling of the incompetent than from
+the machinations of the wicked."  - from Slashdot
