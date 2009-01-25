@@ -1,113 +1,26 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/2 #upstream-fixes] sata_nv: fix MCP5x reset
-Date: Sun, 25 Jan 2009 11:29:38 +0900
-Message-ID: <497BCE92.6010501@kernel.org>
-References: <497BCD92.2050707@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
+Date: Sun, 25 Jan 2009 10:50:45 +0000
+Message-ID: <20090125105045.65021406@lxorguk.ukuu.org.uk>
+References: <200901231615.38011.sshtylyov@ru.mvista.com>
+	<497B9EE4.8010807@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49530 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755154AbZAYC3p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jan 2009 21:29:45 -0500
-In-Reply-To: <497BCD92.2050707@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38990 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752055AbZAYKuv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 05:50:51 -0500
+In-Reply-To: <497B9EE4.8010807@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Robert Hancock <hancockr@shaw.ca>, gpanco@tiscali.it
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-MCP5x family of controllers seem to share much more with nf2's as far
-as reset protocol is concerned.  It requires heardreset to get the PHY
-going and classfication code report after hardreset is unreliable.
-Create a new board type MCP5x and use noclassify hardreset.  SWNCQ is
-modified to inherit from this new type.
+> bit scan). Note that words 64-127 were marked reserved, and must be set 
+> to 0 since ATA-1. Have your say please -- do I still need to recast the 
+> patch?
 
-This fixes hotplug regression reported in kernel bz#12351.
+"Must be" but were not.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/sata_nv.c |   42 +++++++++++++++++++++++++++++-------------
- 1 file changed, 29 insertions(+), 13 deletions(-)
-
-Index: work1/drivers/ata/sata_nv.c
-===================================================================
---- work1.orig/drivers/ata/sata_nv.c
-+++ work1/drivers/ata/sata_nv.c
-@@ -352,6 +352,7 @@ enum nv_host_type
- 	NFORCE3 = NFORCE2,	/* NF2 == NF3 as far as sata_nv is concerned */
- 	CK804,
- 	ADMA,
-+	MCP5x,
- 	SWNCQ,
- };
- 
-@@ -363,10 +364,10 @@ static const struct pci_device_id nv_pci
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_SATA2), CK804 },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_SATA), CK804 },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_SATA2), CK804 },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2), SWNCQ },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA), MCP5x },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2), MCP5x },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA), MCP5x },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2), MCP5x },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), GENERIC },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), GENERIC },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), GENERIC },
-@@ -467,8 +468,19 @@ static struct ata_port_operations nv_adm
- 	.host_stop		= nv_adma_host_stop,
- };
- 
-+/* Kernel bz#12351 reports that when SWNCQ is enabled, for hotplug to
-+ * work, hardreset should be used and hardreset can't report proper
-+ * signature, which suggests that mcp5x is closer to nf2 as long as
-+ * reset quirkiness is concerned.  Define separate ops for mcp5x with
-+ * nv_noclassify_hardreset().
-+ */
-+static struct ata_port_operations nv_mcp5x_ops = {
-+	.inherits		= &nv_common_ops,
-+	.hardreset		= nv_noclassify_hardreset,
-+};
-+
- static struct ata_port_operations nv_swncq_ops = {
--	.inherits		= &nv_generic_ops,
-+	.inherits		= &nv_mcp5x_ops,
- 
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_swncq_qc_prep,
-@@ -531,6 +543,15 @@ static const struct ata_port_info nv_por
- 		.port_ops	= &nv_adma_ops,
- 		.private_data	= NV_PI_PRIV(nv_adma_interrupt, &nv_adma_sht),
- 	},
-+	/* MCP5x */
-+	{
-+		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
-+		.pio_mask	= NV_PIO_MASK,
-+		.mwdma_mask	= NV_MWDMA_MASK,
-+		.udma_mask	= NV_UDMA_MASK,
-+		.port_ops	= &nv_mcp5x_ops,
-+		.private_data	= NV_PI_PRIV(nv_generic_interrupt, &nv_sht),
-+	},
- 	/* SWNCQ */
- 	{
- 		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-@@ -2355,14 +2376,9 @@ static int nv_init_one(struct pci_dev *p
- 	if (type == CK804 && adma_enabled) {
- 		dev_printk(KERN_NOTICE, &pdev->dev, "Using ADMA mode\n");
- 		type = ADMA;
--	}
--
--	if (type == SWNCQ) {
--		if (swncq_enabled)
--			dev_printk(KERN_NOTICE, &pdev->dev,
--				   "Using SWNCQ mode\n");
--		else
--			type = GENERIC;
-+	} else if (type == MCP5x && swncq_enabled) {
-+		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n");
-+		type = SWNCQ;
- 	}
- 
- 	ppi[0] = &nv_port_info[type];
