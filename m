@@ -1,60 +1,79 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [BUG] 2.6.29-rc1: ata_piix boot hang due to bmdma32 change
-Date: Sun, 25 Jan 2009 11:23:10 +0100
-Message-ID: <18812.15758.77573.752769@harpo.it.uu.se>
-References: <200901150842.n0F8gpZb014365@harpo.it.uu.se>
-	<18805.35930.588019.518198@harpo.it.uu.se>
-	<497BBA46.3000605@kernel.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Sun, 25 Jan 2009 07:09:15 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:57990 "EHLO aun.it.uu.se"
+Received: from lucidpixels.com ([75.144.35.66]:45998 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751903AbZAYKXd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jan 2009 05:23:33 -0500
-In-Reply-To: <497BBA46.3000605@kernel.org>
+	id S1753178AbZAYMJQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jan 2009 07:09:16 -0500
+In-Reply-To: <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com
 
-Tejun Heo writes:
- > Hello,
- > 
- > Mikael Pettersson wrote:
- > > The problem is still present in 2.6.29-rc2.
- > > 
- > > More debugging first showed that only the specific machine mentioned
- > > above is affected, as I've tested -rc1 on several other ata_piix boxes
- > > with various oldish disks and cdroms and none of the others triggered
- > > the hang.
- > > 
- > > Secondly, the hang is due to the HP CD-Writer drive as having only it
- > > on the second port suffices to produce the hang. It doesn't matter if
- > > it's configured as master or slave.
- > > 
- > > In any event, this shows that using 32-bit I/O ops should also be a
- > > function of the drive you're talking to, not just the controller.
- > 
- > If you connect the writer to another machine, does it make the machine
- > hang too?
 
-I haven't tried it since that machine is at a different geographical
-location from my other machines. But I can try it next weekend.
 
-My hang goes away with Hugh Dickins' fix for ata_sff_data_xfer32 [1]
-which fixed a CD-ROM error (not hang) on his ata_piix box, and his
-patch also fixed a CD-ROM error on a another person's pata_ali box [2].
+On Sun, 25 Jan 2009, Alan Cox wrote:
 
-The patch changes ata_sff_data_xfer32 to use 16-bit PIO instead of 32-bit
-on any 1/2/3 byte "slop" after the main payload. But Alan thinks that
-AMD chipsets cannot handle that [3]. (One of my test boxes is an old
-AMD-chipset Athlon, I can test both my problematic CD-writer and the
-possibly AMD-incompatible fix on it next weekend.)
+> Easiest is to use labels. Old ide will keep hda,b,c,d constant
+> providing you have interfaces using the legacy IDE port mappings (0x1f0
+> and 0x170). Libata doesn't do that as pretty much every distribution had
+> already switched to volume labels, and the user space can do the job far
+> better than the kernel - especially as the newer devices with modern
+> interfaces don't have the old BIOS/DOS legacy ideas any more.
+>
+> Mount by label also means you can flip back and forth between the
+> different drivers and kernel revisions.
+>
+> Alan
+>
 
-[1] <http://marc.info/?l=linux-kernel&m=123254501314058&w=2>
-[2] <http://marc.info/?l=linux-ide&m=123277213928172&w=2>
-[3] <http://marc.info/?l=linux-kernel&m=123257958112434&w=2>
+That works well with ext* filesystems as one can set it anytime with 
+e2label if I recall; however, how can one do this with XFS, is it 
+possible without booting off a boot-cd etc?
 
-/Mikael
+Here is the filesystem information:
+p254:~# xfs_info /dev/sdd2
+meta-data=/dev/root              isize=256    agcount=16, agsize=1186676 blks
+          =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=18986816, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096 
+log      =internal               bsize=4096   blocks=9270, version=1
+          =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+When I try to label it:
+p254:~# xfs_admin -L "root" /dev/sdd2
+xfs_admin: /dev/sdd2 contains a mounted filesystem
+
+fatal error -- couldn't initialize XFS library
+
+The label is currently not set:
+p254:~# xfs_admin -l  /dev/sdd2
+label = ""
+p254:~#
+
+I guess my next step is to try UUID?
+
+        Instead of giving the device explicitly, one may indicate the (ext2  or
+        xfs)  filesystem that is to be mounted by its UUID or volume label (cf.
+        e2label(8) or  xfs_admin(8)),  writing  LABEL=<label>  or  UUID=<uuid>,
+        e.g.,   `LABEL=Boot'   or  `UUID=3e6be9de-8139-11d1-9106-a43f08d823a6'.
+        This will make the system more robust: adding or removing a  SCSI  disk
+        changes the disk device name but not the filesystem volume label.
+
+p254:~# xfs_admin -U generate /dev/sdd2
+xfs_admin: /dev/sdd2 contains a mounted filesystem
+
+fatal error -- couldn't initialize XFS library
+p254:~#
+
+Hmm, am I out of luck?
+
+Justin.
