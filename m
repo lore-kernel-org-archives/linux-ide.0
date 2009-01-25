@@ -1,32 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Sun, 25 Jan 2009 10:52:50 +0000
-Message-ID: <20090125105250.6f309335@lxorguk.ukuu.org.uk>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
-	<497B9EE4.8010807@ru.mvista.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Sun, 25 Jan 2009 05:56:32 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39003 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752076AbZAYKwo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 05:52:44 -0500
-In-Reply-To: <497B9EE4.8010807@ru.mvista.com>
+Received: from lucidpixels.com ([75.144.35.66]:57391 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752055AbZAYK4d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jan 2009 05:56:33 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
->    Jeff, Bart, I've changed my mind about recasting this patch as Alan 
-> has requested, as I do consider it correct now. The version check should 
-> be unnecessary since I'm adding the validity bits check (hte fact that 
-> ata_id_major_complex() is quite cumbesome way of checking the minumum 
-> revision # -- this can be done with a single comparison instead of the 
-> bit scan)
+When switching (removing IDE support) in favor of the new PATA support 
+under the SATA menu, is there any best practice/or method of knowing what 
+the new root hdd will be upon reboot?
 
-If you want to just do a specific check yes. I agree there it would make
-some sense to have a ata_has_version(ATA_VER_BITFOO); that was a single
-inline & check for ATA3+
+Example:
+If I have 10 sata disks and 2 IDE disks on various cards/controllers, how 
+do I know /dev/hda will become /dev/sda?  In one test on a system I have 
+here, /dev/hda became /dev/sdb2 after reboot, not an issue if the box is 
+local, but if the box is remote, how do you cope with this?  I ask now 
+because some IDE drivers have been removed (nvidia I believe? in 2.6.28) 
+and I cannot upgrade the kernel anymore unless I move to the 
+PATA-supported SATA driver, but I have no idea what the root disk will be 
+after a reboot and there is a high probability it will not come back after 
+a reboot..
 
-Alan
+Justin.
