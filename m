@@ -1,49 +1,69 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
-Date: Sun, 25 Jan 2009 09:45:59 -0600
-Message-ID: <497C8937.8080102@sandeen.net>
-References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan>	<20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>	<alpine.DEB.1.10.0901250705300.6888@p34.internal.lan>	<alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: 2.6.28: Moved to SATA driver (w/PATA support), kernel OOPS at
+	boot
+Date: Sun, 25 Jan 2009 12:47:47 -0200
+Message-ID: <20090125144747.GD12776__2679.99099237404$1232900293$gmane$org@khazad-dum.debian.net>
+References: <alpine.DEB.1.10.0901250741300.11258@p34.internal.lan> <alpine.DEB.1.10.0901250822320.15602@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sandeen.net ([209.173.210.139]:15835 "EHLO mail.sandeen.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753231AbZAYPqB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jan 2009 10:46:01 -0500
-In-Reply-To: <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:45632 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752085AbZAYPEu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 10:04:50 -0500
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0901250822320.15602@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Justin Piszcz wrote:
+On Sun, 25 Jan 2009, Justin Piszcz wrote:
+> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>> Switched from the old IDE interface (disabled it) to SATA only in the kernel:
+>>
+>> [    1.788921] irq 11: nobody cared (try booting with the "irqpoll" option)
+>> [    1.788978] Pid: 0, comm: swapper Not tainted 2.6.28 #4
+>> [    1.789031] Call Trace:
+>> [    1.789085]  [<c0134153>] __report_bad_irq+0x24/0x81
+>> [    1.789138]  [<c01342df>] note_interrupt+0x12f/0x170
+>> [    1.789191]  [<c01338dc>] handle_IRQ_event+0x25/0x4a
+>> [    1.789244]  [<c01348c4>] handle_level_irq+0x7a/0x90
+>> [    1.789299]  [<c0104e07>] do_IRQ+0x6f/0x88
+>> [    1.789352]  [<c012c1c4>] getnstimeofday+0x3b/0xd1
+>> [    1.789407]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
+>> [    1.789461]  [<c0103973>] common_interrupt+0x23/0x28
+>> [    1.789515]  [<c011c9bf>] __do_softirq+0x2d/0xea
+>> [    1.789535]  [<c011caa2>] do_softirq+0x26/0x2e
+>> [    1.789535]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
+>> [    1.789535]  [<c01039a0>] apic_timer_interrupt+0x28/0x30
+>> [    1.789535]  [<c0108362>] default_idle+0x36/0x42
+>> [    1.789535]  [<c0101f7c>] cpu_idle+0x4b/0x5f
+>> [    1.789535]  [<c0586925>] start_kernel+0x221/0x261
+>> [    1.789535]  [<c05864d3>] unknown_bootoption+0x0/0x1e3
+>> [    1.789535] handlers:
+>> [    1.789535] [<c039e087>] (ata_sff_interrupt+0x0/0x242)
+>> [    1.789535] Disabling IRQ #11
+>>
+>> Full dmesg:
+>> http://home.comcast.net/~jpiszcz/20090125/dmesg20090125.txt
+>>
+>> Kernel config:
+>> http://home.comcast.net/~jpiszcz/20090125/2.6.28-config.txt
+>>
+>> This never happened with the old IDE layer.
+>>
+>> Justin.
+>>
+>>
+>
+> Disregard, this was because of a root=UUID option and another root= 
+> option (via LILO cmdline) to get the machine to boot.
 
-> One final question, without udev, how does one determine the UUID of a non-XFS
-> partition, e.g., swap?
-> 
-> $ ls -l
-> total 0
-> lrwxrwxrwx 1 root root  9 2009-01-25 01:54 203fcd30-4e56-40e9-a8e5-93ddc8eb536a -> ../../md0
-> lrwxrwxrwx 1 root root 10 2009-01-25 01:54 2ef862e1-cf78-4065-a205-d1784716d633 -> ../../sdd1
-> lrwxrwxrwx 1 root root 10 2009-01-25 01:54 77ae4251-631f-4656-a365-c5723f5c5da8 -> ../../sdd2
-> 
-> p254:~# find /proc/|grep -i uuid
-> /proc/sys/kernel/random/uuid
-> p254:~# find /sys/|grep -i uuid 
-> p254:~#
+Are you sure it is not a bug that should be fixed, anyway?
 
-blkid:
-
-[root@mythbox ~]# blkid /dev/sda?
-/dev/sda1: LABEL="/movies" UUID="38da660b-3600-4508-a608-2e1a20041ecb"
-TYPE="xfs"
-/dev/sda2: LABEL="/video" UUID="7b5583ae-cd42-4db1-9868-d96a5ccd3fea"
-TYPE="xfs"
-/dev/sda3: LABEL="/boot" UUID="379dbe60-1988-47b9-9891-17038abcc1f0"
-TYPE="ext3" SEC_TYPE="ext2"
-/dev/sda5: LABEL="/" UUID="c7bd2307-e067-4185-a7a0-d8d54057f3b9" TYPE="xfs"
-/dev/sda6: TYPE="swap" LABEL="SWAP-sda6"
-UUID="ea3f5dae-2509-4764-a93e-b777e72fdfbd"
-
--Eric
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
