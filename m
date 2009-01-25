@@ -1,47 +1,68 @@
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-Subject: Re: Another libata error related to OCZ SSD
-Date: Sun, 25 Jan 2009 12:08:39 +0100
-Message-ID: <20090125110839.GA4691@ics.muni.cz>
-References: <20090111174159.GC4250@ics.muni.cz> <200901192239.25071.rjw@sisk.pl> <497BB9BB.4040608@kernel.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+ (found solution (scratch that))
+Date: Sun, 25 Jan 2009 16:15:16 +0300
+Message-ID: <497C65E4.2040302@msgid.tls.msk.ru>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan> <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan> <alpine.DEB.1.10.0901250740360.11258@p34.internal.lan> <alpine.DEB.1.10.0901250752020.11258@p34.internal.lan> <alpine.DEB.1.10.0901250808020.15073@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:50536 "EHLO minas.ics.muni.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752098AbZAYLIx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jan 2009 06:08:53 -0500
-Content-Disposition: inline
-In-Reply-To: <497BB9BB.4040608@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757144AbZAYNPf@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0901250808020.15073@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Sun, Jan 25, 2009 at 10:00:43AM +0900, Tejun Heo wrote:
->=20
-> Does the following command make any difference?
->=20
->  echo 0 > /sys/class/scsi_disk/h:c:i:l/manage_start_stop
->=20
-> The h:c:i:l part needs to be adjusted to point to the OCZ disk.  lscs=
-i
-> will show which value to use.
+Justin Piszcz wrote:
+> 
+> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>>>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>>>>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
 
-Well, the real problem seems to be in touching link power management po=
-licy
-(it did not happen with ata_piix driver thus the driver seemed to be ok=
-)
+Wow, that's quite some ping-pong!.. ;)
 
-If I touch power management with theses commands:
-echo max_performance > /sys/class/scsi_host/host0/link_power_management=
-_policy
-echo medium_power > /sys/class/scsi_host/host0/link_power_management_po=
-licy
+[]
+> Hm, I may have spoke too fast:
+> 
+> Added: (IDE ONLY), no SATA:
+> image=/boot/2.6.26-6
+>         label=2.6.26-6
+>         read-only
+>         root=current
+> 
+> p254:/boot# lilo
+> Added 2.6.26-6 *
+> Added 2.6.28-4
+> p254:/boot#
+> 
+> Set to current.
+> 
+> p254:/boot# grep =current /etc/lilo.conf
+> root=current
+>         root=current
+> p254:/boot#
+> 
+> The reason current may have worked before is because I manually booted with
+> root=/dev/sdd2 (after I saw the error that it could not find root,302, etc)
+> 
+> So I am booting the old kernel without the SATA drivers with root=current
+> to see if it works..
+> 
+> Nope, so I need to figure out how to get the UUID= option working in LILO.
 
-the suspend fails.
+There's no way without using initramfs.  Lilo only records the unix device
+number (like 8:1 for /dev/sda1) and passes it to kernel (replacing `current'
+with that number).  But for different kernels (IDE vs PATA drivers) the
+number will be different.  Lilo itself - when booting at least - can not
+know which device it will be.
 
-I always restore max_performance policy before the suspend.
+The only universal solution is to use smart initramfs that will populate
+/dev/disk/by-label/ etc (using udev maybe).
 
---=20
-Luk=E1=B9 Hejtm=E1nek
+Another solution is to explicitly specify root=/dev/sda1 or root=/dev/hda1
+when using pata- or ide-enabled kernels, in lilo.conf.
+
+/mjt
