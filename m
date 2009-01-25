@@ -1,70 +1,60 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Sun, 25 Jan 2009 20:04:18 +0100
-Message-ID: <200901252004.18486.bzolnier@gmail.com>
-References: <200901231615.38011.sshtylyov@ru.mvista.com> <497B9EE4.8010807@ru.mvista.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: 2.6.28: Moved to SATA driver (w/PATA support), kernel OOPS at
+ boot
+Date: Sun, 25 Jan 2009 14:18:19 -0600
+Message-ID: <497CC90B.1010605@shaw.ca>
+References: <alpine.DEB.1.10.0901250741300.11258__18268.0605132648$1232890652$gmane$org@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:37217 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935AbZAYTfi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 14:35:38 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so964279nfc.21
-        for <linux-ide@vger.kernel.org>; Sun, 25 Jan 2009 11:35:36 -0800 (PST)
-In-Reply-To: <497B9EE4.8010807@ru.mvista.com>
-Content-Disposition: inline
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:22643 "EHLO
+	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752275AbZAYUSW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 15:18:22 -0500
+In-Reply-To: <alpine.DEB.1.10.0901250741300.11258__18268.0605132648$1232890652$gmane$org@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, gdu@mns.spb.ru
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sunday 25 January 2009, Sergei Shtylyov wrote:
-> Hello, I wrote:
-> > When checking for CFA feature set support, ata_id_is_cfa() tests bit 2 in word
-> > 82 of the identify data instead the word 83.  It also checks the ATA revision
-> > in the  word 80 instead of usual validity check for the words 82-83 -- word 83
-> > bit 14 set, bit 15 cleared.
-> >
-> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> >
-> > ---
-> > I'm not sure who should queue this patch... it's against Linus' tree.
-> >
-> >  include/linux/ata.h |    5 ++---
-> >  1 files changed, 2 insertions(+), 3 deletions(-)
-> >
-> > Index: linux-2.6/include/linux/ata.h
-> > ===================================================================
-> > --- linux-2.6.orig/include/linux/ata.h
-> > +++ linux-2.6/include/linux/ata.h
-> > @@ -734,9 +734,8 @@ static inline int ata_id_is_cfa(const u1
-> >  	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
-> >  		return 1;
-> >  	/* Could be CF hiding as standard ATA */
-> > -	if (ata_id_major_version(id) >= 3 &&
-> > -	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
-> > -	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
-> > +	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) == 0x4000 &&
-> > +	    (id[ATA_ID_COMMAND_SET_2] & (1 << 2)))
-> >  		return 1;
-> >  	return 0;
-> >  }
+Justin Piszcz wrote:
+> Switched from the old IDE interface (disabled it) to SATA only in the 
+> kernel:
 > 
->    Jeff, Bart, I've changed my mind about recasting this patch as Alan 
-> has requested, as I do consider it correct now. The version check should 
-> be unnecessary since I'm adding the validity bits check (hte fact that 
-> ata_id_major_complex() is quite cumbesome way of checking the minumum 
-> revision # -- this can be done with a single comparison instead of the 
-> bit scan). Note that words 64-127 were marked reserved, and must be set 
-> to 0 since ATA-1. Have your say please -- do I still need to recast the 
-> patch?
+> [    1.788921] irq 11: nobody cared (try booting with the "irqpoll" option)
+> [    1.788978] Pid: 0, comm: swapper Not tainted 2.6.28 #4
+> [    1.789031] Call Trace:
+> [    1.789085]  [<c0134153>] __report_bad_irq+0x24/0x81
+> [    1.789138]  [<c01342df>] note_interrupt+0x12f/0x170
+> [    1.789191]  [<c01338dc>] handle_IRQ_event+0x25/0x4a
+> [    1.789244]  [<c01348c4>] handle_level_irq+0x7a/0x90
+> [    1.789299]  [<c0104e07>] do_IRQ+0x6f/0x88
+> [    1.789352]  [<c012c1c4>] getnstimeofday+0x3b/0xd1
+> [    1.789407]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
+> [    1.789461]  [<c0103973>] common_interrupt+0x23/0x28
+> [    1.789515]  [<c011c9bf>] __do_softirq+0x2d/0xea
+> [    1.789535]  [<c011caa2>] do_softirq+0x26/0x2e
+> [    1.789535]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
+> [    1.789535]  [<c01039a0>] apic_timer_interrupt+0x28/0x30
+> [    1.789535]  [<c0108362>] default_idle+0x36/0x42
+> [    1.789535]  [<c0101f7c>] cpu_idle+0x4b/0x5f
+> [    1.789535]  [<c0586925>] start_kernel+0x221/0x261
+> [    1.789535]  [<c05864d3>] unknown_bootoption+0x0/0x1e3
+> [    1.789535] handlers:
+> [    1.789535] [<c039e087>] (ata_sff_interrupt+0x0/0x242)
+> [    1.789535] Disabling IRQ #11
+> 
+> Full dmesg:
+> http://home.comcast.net/~jpiszcz/20090125/dmesg20090125.txt
+> 
+> Kernel config:
+> http://home.comcast.net/~jpiszcz/20090125/2.6.28-config.txt
+> 
+> This never happened with the old IDE layer.
+> 
+> Justin.
+> 
 
-I'm fine with the current version -- validity checking should take care of
-handling reserved words (even if they are set to 0xff) and we can always add
-more detailed checks later if necessary (which is very unlikely)...
-
-Thanks,
-Bart
+That presumably is some kind of bug, yes, or oddity of that controller.. 
+OK, who knows pata_pdc2027x hardware? :-)
