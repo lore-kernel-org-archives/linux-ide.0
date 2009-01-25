@@ -1,71 +1,42 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH 1/2] [libata] add fields to store TaskFile before error handling kicks.
-Date: Sun, 25 Jan 2009 14:26:54 -0800
-Message-ID: <1232922415-23836-1-git-send-email-gwendal@google.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: ide: struct device - replace bus_id with dev_name(), dev_set_name()
+Date: Sun, 25 Jan 2009 23:46:28 +0100
+Message-ID: <1232923588.2924.10.camel@nga>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:3335 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbZAYW1F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 17:27:05 -0500
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:50130 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbZAYWrU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 17:47:20 -0500
+Received: by fxm13 with SMTP id 13so1446381fxm.13
+        for <linux-ide@vger.kernel.org>; Sun, 25 Jan 2009 14:47:18 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: liml@rtr.ca, linux-ide@vger.kernel.org
-Cc: Gwendal Grignou <gwendal@google.com>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, gregkh <gregkh@suse.de>
 
-Sometimes, it is useful to store ATA Task File in qc->result_tf
-while still on the data path, instead of the error handler triggering
-it.
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: ide: struct device - replace bus_id with dev_name(), dev_set_name()
 
-
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
+Cc: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
+Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
 ---
- drivers/ata/libata-core.c |    7 +++++--
- drivers/ata/libata-eh.c   |    1 +
- include/linux/libata.h    |    1 +
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/ide/ide-acpi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 88c2428..9559d25 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4829,8 +4829,11 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
+--- a/drivers/ide/ide-acpi.c
++++ b/drivers/ide/ide-acpi.c
+@@ -282,7 +282,7 @@ static int do_drive_get_GTF(ide_drive_t
+ 	port = hwif->channel ? drive->dn - 2: drive->dn;
  
--	qc->result_tf.flags = qc->tf.flags;
--	ap->ops->qc_fill_rtf(qc);
-+	if ((qc->flags & ATA_QCFLAG_RTF_VALID) == 0) {
-+		qc->result_tf.flags = qc->tf.flags;
-+		qc->flags |= ATA_QCFLAG_RTF_VALID;
-+		ap->ops->qc_fill_rtf(qc);
-+	}
- }
+ 	DEBPRINT("ENTER: %s at %s, port#: %d, hard_port#: %d\n",
+-		 hwif->name, dev->bus_id, port, hwif->channel);
++		 hwif->name, dev_name(dev), port, hwif->channel);
  
- static void ata_verify_xfer(struct ata_queued_cmd *qc)
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 8147a83..5490608 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1585,6 +1585,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 	memcpy(&qc->result_tf, &tf, sizeof(tf));
- 	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
- 	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
-+	qc->flags |= ATA_QCFLAG_RTF_VALID;
- 	ehc->i.err_mask &= ~AC_ERR_DEV;
- }
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2c6bd66..c9defdf 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -235,6 +235,7 @@ enum {
- 	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
- 	ATA_QCFLAG_EH_SCHEDULED = (1 << 18), /* EH scheduled (obsolete) */
-+	ATA_QCFLAG_RTF_VALID	= (1 << 19), /* set when result_tf is valid */
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
--- 
-1.5.4.5
+ 	if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0) {
+ 		DEBPRINT("%s drive %d:%d not present\n",
 
