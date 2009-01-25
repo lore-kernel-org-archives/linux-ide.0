@@ -1,69 +1,42 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: 2.6.28: Moved to SATA driver (w/PATA support), kernel OOPS at
-	boot
-Date: Sun, 25 Jan 2009 12:47:47 -0200
-Message-ID: <20090125144747.GD12776__2679.99099237404$1232900293$gmane$org@khazad-dum.debian.net>
-References: <alpine.DEB.1.10.0901250741300.11258@p34.internal.lan> <alpine.DEB.1.10.0901250822320.15602@p34.internal.lan>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
+Date: Sun, 25 Jan 2009 15:22:11 +0000
+Message-ID: <20090125152211.18a838f9@lxorguk.ukuu.org.uk>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
+	<18807.33113.550070.329912@harpo.it.uu.se>
+	<20090121214746.2b15d1de@lxorguk.ukuu.org.uk>
+	<4977A6E5.6080506@ru.mvista.com>
+	<20090121225808.1f5ffac1@lxorguk.ukuu.org.uk>
+	<4977B10B.5050904@ru.mvista.com>
+	<4977B1D1.2010305@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:45632 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752085AbZAYPEu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 10:04:50 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0901250822320.15602@p34.internal.lan>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40739 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754051AbZAYPWz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2009 10:22:55 -0500
+In-Reply-To: <4977B1D1.2010305@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Mikael Pettersson <mikpe@it.uu.se>, Hugh Dickins <hugh@veritas.com>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 25 Jan 2009, Justin Piszcz wrote:
-> On Sun, 25 Jan 2009, Justin Piszcz wrote:
->> Switched from the old IDE interface (disabled it) to SATA only in the kernel:
->>
->> [    1.788921] irq 11: nobody cared (try booting with the "irqpoll" option)
->> [    1.788978] Pid: 0, comm: swapper Not tainted 2.6.28 #4
->> [    1.789031] Call Trace:
->> [    1.789085]  [<c0134153>] __report_bad_irq+0x24/0x81
->> [    1.789138]  [<c01342df>] note_interrupt+0x12f/0x170
->> [    1.789191]  [<c01338dc>] handle_IRQ_event+0x25/0x4a
->> [    1.789244]  [<c01348c4>] handle_level_irq+0x7a/0x90
->> [    1.789299]  [<c0104e07>] do_IRQ+0x6f/0x88
->> [    1.789352]  [<c012c1c4>] getnstimeofday+0x3b/0xd1
->> [    1.789407]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
->> [    1.789461]  [<c0103973>] common_interrupt+0x23/0x28
->> [    1.789515]  [<c011c9bf>] __do_softirq+0x2d/0xea
->> [    1.789535]  [<c011caa2>] do_softirq+0x26/0x2e
->> [    1.789535]  [<c010f150>] smp_apic_timer_interrupt+0x41/0x71
->> [    1.789535]  [<c01039a0>] apic_timer_interrupt+0x28/0x30
->> [    1.789535]  [<c0108362>] default_idle+0x36/0x42
->> [    1.789535]  [<c0101f7c>] cpu_idle+0x4b/0x5f
->> [    1.789535]  [<c0586925>] start_kernel+0x221/0x261
->> [    1.789535]  [<c05864d3>] unknown_bootoption+0x0/0x1e3
->> [    1.789535] handlers:
->> [    1.789535] [<c039e087>] (ata_sff_interrupt+0x0/0x242)
->> [    1.789535] Disabling IRQ #11
->>
->> Full dmesg:
->> http://home.comcast.net/~jpiszcz/20090125/dmesg20090125.txt
->>
->> Kernel config:
->> http://home.comcast.net/~jpiszcz/20090125/2.6.28-config.txt
->>
->> This never happened with the old IDE layer.
->>
->> Justin.
->>
->>
->
-> Disregard, this was because of a root=UUID option and another root= 
-> option (via LILO cmdline) to get the machine to boot.
+> >> "Note: only 32-bit writes to the data port are allowed when this bit is
+> >> set."
+> >>   
+> >  
+> >   Now tell me who forces you to set that bit (I assume it's the write 
+> > buffer enable) for the ATAPI devices?
+> 
+>    Yes, it's the write buffer enable (about which I have written already).
 
-Are you sure it is not a bug that should be fixed, anyway?
+Yeah that seems the best way to go - not I note that the old drivers/ide
+driver programs it right for 16bit I/O or doing mixed 16/32 ..
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Patch added to my tree which together with Hugh's change should do the
+trick. The others I've checked seem to have no such rule except in VLB
+space. Never tried ATAPI in anger on a VLB box but it's easy enough to
+address and I'll do a third patch for those.
+
+Alan
