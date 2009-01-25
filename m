@@ -1,74 +1,49 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
- (found solution (scratch that))
-Date: Sun, 25 Jan 2009 08:08:32 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901250808020.15073@p34.internal.lan>
-References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan> <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
- <alpine.DEB.1.10.0901250740360.11258@p34.internal.lan> <alpine.DEB.1.10.0901250752020.11258@p34.internal.lan>
+Date: Sun, 25 Jan 2009 09:45:59 -0600
+Message-ID: <497C8937.8080102@sandeen.net>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan>	<20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>	<alpine.DEB.1.10.0901250705300.6888@p34.internal.lan>	<alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:49407 "EHLO lucidpixels.com"
+Received: from sandeen.net ([209.173.210.139]:15835 "EHLO mail.sandeen.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754020AbZAYNId (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jan 2009 08:08:33 -0500
-In-Reply-To: <alpine.DEB.1.10.0901250752020.11258@p34.internal.lan>
+	id S1753231AbZAYPqB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jan 2009 10:46:01 -0500
+In-Reply-To: <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
+Justin Piszcz wrote:
 
+> One final question, without udev, how does one determine the UUID of a non-XFS
+> partition, e.g., swap?
+> 
+> $ ls -l
+> total 0
+> lrwxrwxrwx 1 root root  9 2009-01-25 01:54 203fcd30-4e56-40e9-a8e5-93ddc8eb536a -> ../../md0
+> lrwxrwxrwx 1 root root 10 2009-01-25 01:54 2ef862e1-cf78-4065-a205-d1784716d633 -> ../../sdd1
+> lrwxrwxrwx 1 root root 10 2009-01-25 01:54 77ae4251-631f-4656-a365-c5723f5c5da8 -> ../../sdd2
+> 
+> p254:~# find /proc/|grep -i uuid
+> /proc/sys/kernel/random/uuid
+> p254:~# find /sys/|grep -i uuid 
+> p254:~#
 
-On Sun, 25 Jan 2009, Justin Piszcz wrote:
+blkid:
 
->
->
-> On Sun, 25 Jan 2009, Justin Piszcz wrote:
->
->> 
->> 
->> On Sun, 25 Jan 2009, Justin Piszcz wrote:
->> 
->>> 
->>> 
->>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
->>> 
->>>> 
->>>> 
->>>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
->>>> 
->>>>> 
->>>>> 
->>>>> On Sun, 25 Jan 2009, Alan Cox wrote:
+[root@mythbox ~]# blkid /dev/sda?
+/dev/sda1: LABEL="/movies" UUID="38da660b-3600-4508-a608-2e1a20041ecb"
+TYPE="xfs"
+/dev/sda2: LABEL="/video" UUID="7b5583ae-cd42-4db1-9868-d96a5ccd3fea"
+TYPE="xfs"
+/dev/sda3: LABEL="/boot" UUID="379dbe60-1988-47b9-9891-17038abcc1f0"
+TYPE="ext3" SEC_TYPE="ext2"
+/dev/sda5: LABEL="/" UUID="c7bd2307-e067-4185-a7a0-d8d54057f3b9" TYPE="xfs"
+/dev/sda6: TYPE="swap" LABEL="SWAP-sda6"
+UUID="ea3f5dae-2509-4764-a93e-b777e72fdfbd"
 
-Hm, I may have spoke too fast:
-
-Added: (IDE ONLY), no SATA:
-image=/boot/2.6.26-6
-         label=2.6.26-6
-         read-only
-         root=current
-
-p254:/boot# lilo
-Added 2.6.26-6 *
-Added 2.6.28-4
-p254:/boot#
-
-Set to current.
-
-p254:/boot# grep =current /etc/lilo.conf
-root=current
-         root=current
-p254:/boot#
-
-The reason current may have worked before is because I manually booted with
-root=/dev/sdd2 (after I saw the error that it could not find root,302, etc)
-
-So I am booting the old kernel without the SATA drivers with root=current
-to see if it works..
-
-Nope, so I need to figure out how to get the UUID= option working in LILO.
-
-Justin.
-
+-Eric
