@@ -1,45 +1,50 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Mon, 26 Jan 2009 21:22:12 +0000
-Message-ID: <20090126212212.3d52781f@lxorguk.ukuu.org.uk>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
-	<497B9EE4.8010807@ru.mvista.com>
-	<497E0548.80904@ru.mvista.com>
-	<20090126190801.7d198246@lxorguk.ukuu.org.uk>
-	<497E0EF3.2000201@ru.mvista.com>
-	<497E101C.9040008@ru.mvista.com>
-	<20090126194237.4897b6ce@lxorguk.ukuu.org.uk>
-	<497E1550.1000501@ru.mvista.com>
-	<20090126200143.733b0cec@lxorguk.ukuu.org.uk>
-	<497E1DBB.80709@ru.mvista.com>
-	<497E242C.3040307@ru.mvista.com>
+From: Felix Miata <mrmazda@ij.net>
+Subject: Re: Faulty seagate drives, are going to be blacklisted?
+Date: Mon, 26 Jan 2009 16:34:53 -0500
+Message-ID: <497E2C7D.3090101@ij.net>
+References: <20090120002923.065f24ca@diego-desktop> <497E0940.3020409@ij.net> <497E14DD.20506@rtr.ca> <200901261557.42752.gene.heskett@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40916 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751703AbZAZVWL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 16:22:11 -0500
-In-Reply-To: <497E242C.3040307@ru.mvista.com>
+Received: from pop-satin.atl.sa.earthlink.net ([207.69.195.63]:50279 "EHLO
+	pop-satin.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752003AbZAZVev (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 16:34:51 -0500
+Received: from user-142gt2m.cable.mindspring.com ([72.40.116.86] helo=[192.168.0.51])
+	by pop-satin.atl.sa.earthlink.net with esmtp (Exim 3.36 #1)
+	id 1LRZ6Y-0002v3-00
+	for linux-ide@vger.kernel.org; Mon, 26 Jan 2009 16:34:50 -0500
+In-Reply-To: <200901261557.42752.gene.heskett@verizon.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: linux-ide@vger.kernel.org
 
->     I'm sorry, that was totally off base. I've misread this whole paragraph in 
-> haste. :-<
->     The rest of my evening was wasted, sigh.
+On 2009/01/26 15:57 (GMT-0500) Gene Heskett composed:
 
-If it got the CF code fixed it wasn't a waste.
+> On Monday 26 January 2009, Mark Lord wrote:
 
-Do I understand rightly that the agreed things to do are
+>>Under Linux, use this:  hdparm -I /dev/sd? | head -8
 
-- redo the version check patch using the signed check as you suggested
-and remove the changes to the CFA check from it
-- make the CFA code check word 80 == 0 as a sanity check
-- apply your change to check the bit in the right command word for CFA
+Thanks much! :-)
 
-?
+> Should I be worried about this one? Seagate 500GB sata
 
-Alan
+> /dev/sdb:
+
+> ATA device, with non-removable media
+>         Model Number:       ST3500320AS
+>         Serial Number:      9QM5BB7Y
+>         Firmware Revision:  SD15
+>         Transport:          Serial
+
+Based upon
+http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207951 I
+would contact Seagate support ASAP.
+-- 
+"Train a child in the way he should go, and when he
+is old he will not turn from it." Proverbs 22:6 NIV
+
+ Team OS/2 ** Reg. Linux User #211409
+
+Felix Miata  ***  http://fm.no-ip.com/
