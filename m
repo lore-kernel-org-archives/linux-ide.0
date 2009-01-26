@@ -1,58 +1,63 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Mon, 26 Jan 2009 23:41:27 +0300
-Message-ID: <497E1FF7.9000900@ru.mvista.com>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>	<497B9EE4.8010807@ru.mvista.com>	<497E0548.80904@ru.mvista.com>	<20090126190801.7d198246@lxorguk.ukuu.org.uk>	<497E0F76.6020606@ru.mvista.com>	<20090126193550.27eef301@lxorguk.ukuu.org.uk>	<497E12BC.1080809@ru.mvista.com>	<20090126195430.3a8aa1ce@lxorguk.ukuu.org.uk>	<497E1700.8090206@ru.mvista.com>	<497E191A.1040902@pobox.com>	<497E1BB8.8010408@ru.mvista.com> <20090126203319.783b0d2d@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 3/3] ide-cd: fix DMA for non bio-backed requests
+Date: Mon, 26 Jan 2009 21:40:40 +0100
+Message-ID: <1233002440-4325-3-git-send-email-petkovbb@gmail.com>
+References: <1233002440-4325-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:4935 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754837AbZAZUk5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jan 2009 15:40:57 -0500
-In-Reply-To: <20090126203319.783b0d2d@lxorguk.ukuu.org.uk>
+Received: from fg-out-1718.google.com ([72.14.220.155]:49604 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950AbZAZUkr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 15:40:47 -0500
+In-Reply-To: <1233002440-4325-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Alan Cox wrote:
+This one fixes http://bugzilla.kernel.org/show_bug.cgi?id=12320.
 
->>totally wrong in that part from the very start -- CF devices don't report ATA 
->>standard support in word 80, that's forbidden (!) by the CF specs since at 
->>least 2.1.
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-cd.c |    3 +++
+ drivers/ide/ide-io.c |    9 ++++++---
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-> And the ATA world says that if word 80 doesn't report any standards then
-> the word is potentially undefined....
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 94981f9..84bc370 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -784,6 +784,9 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 		if (blk_fs_request(rq)) {
+ 			ide_end_request(drive, 1, rq->nr_sectors);
+ 			return ide_stopped;
++		} else if (rq->cmd_type == REQ_TYPE_ATA_PC && !rq->bio) {
++			ide_end_request(drive, 1, 1);
++			return ide_stopped;
+ 		}
+ 		goto end_request;
+ 	}
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 9927b03..615b6e7 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -291,11 +291,14 @@ void ide_map_sg(ide_drive_t *drive, struct request *rq)
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct scatterlist *sg = hwif->sg_table;
+ 
+-	if (rq->cmd_type != REQ_TYPE_ATA_TASKFILE) {
+-		hwif->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
+-	} else {
++	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
+ 		sg_init_one(sg, rq->buffer, rq->nr_sectors * SECTOR_SIZE);
+ 		hwif->sg_nents = 1;
++	} else if (!rq->bio) {
++		sg_init_one(sg, rq->data, rq->data_len);
++		hwif->sg_nents = 1;
++	} else {
++		hwif->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
+ 	}
+ }
+ 
+-- 
+1.6.0.4
 
-    It's all your fantasy this time. :-D
-    Do start reading the specs attentively. All ATA standards only have that 
-if bits 14:15 are not 1:0, the words are not valid (as a variant, if the word 
-is 0 or 0xFFFF).
-
- > welcome to PC hell
-
-    I've started on PCs, and spent "the best years of my life" with them -- no 
-need to welcome me. :-)
-
-> Perhaps the best we can do is to test
-
-> 	word 80 == 0 && word 83 bit set && word 83 valid
-
-> Fortunately the use is almost entirely to print the right CFA/ATA string
-> at boot ?
-
-    What about PIO/DMA modes?
-
-> Now Sergei if you'd said that explicitly (or if you did before I didn't
-> see it) it would have been a bit simpler to work out why you were arguing
-> the needed for these changes.
-
-    If you think that I now have plenty of time to look into all the CF and 
-ATA standard, you are very wrong. However, you caused me to lose much time on 
-that pointless argument...
-
-> Alan
-
-MBR, Sergei
