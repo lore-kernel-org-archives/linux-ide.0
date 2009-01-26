@@ -1,131 +1,201 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Mon, 26 Jan 2009 19:08:01 +0000
-Message-ID: <20090126190801.7d198246@lxorguk.ukuu.org.uk>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
-	<497B9EE4.8010807@ru.mvista.com>
-	<497E0548.80904@ru.mvista.com>
+Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
+Date: Mon, 26 Jan 2009 19:11:51 +0000
+Message-ID: <20090126191151.18b094e6@lxorguk.ukuu.org.uk>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:43310 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:43313 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751464AbZAZTNN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 14:13:13 -0500
-In-Reply-To: <497E0548.80904@ru.mvista.com>
+	with ESMTP id S1752029AbZAZTNY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 14:13:24 -0500
+In-Reply-To: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is what I would favour:
+> [PATCH] libata sff: 32bit PIO use 16bit on slop
+> 
+> 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
+> causes errors on a four-year-old ata_piix Dell Precision 670.  Using
+> 16bit PIO instead of 32bit PIO on the odd 1, 2 or 3 chars fixes that.
+> 
+> Signed-off-by: Hugh Dickins <hugh@veritas.com>
 
-libata: Fix CFA detection & improve version inlines
+For the 3 bytes of slop it should use a single iowrite32 but otherwise
+that seems ok. We do need to handle the FIFO setup on the AMD differently
+if we do this - something like this:
 
-From: Alan Cox <alan@redhat.com>
+pata_amd: Program FIFO
 
-Sergei Shtylyov noticed thae ata_id_is_cfa checked the wrong word for the
-secondary CFA test and posted a patch set to improve this, but which
-removed the version checks.
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-This patch keeps the version checks but incorporates the other suggestions
-Sergei made including a better ata version check for the usual case where
-we want to know "is version >= x" rather than "what version do you
-support".
+With 32bit PIO we can use the posted write buffers, but only for 32bit I/O
+cycles. This means we must disable the FIFO for ATAPI where a final 16bit
+cycle may occur.
+
+Rework the FIFO logic so that we disable the FIFO then selectively re-enable
+it when we set the timings on AMD devices. Also fix a case where we scribbled
+on PCI config 0x41 of Nvidia chips when we shouldn't.
 
 Signed-off-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 ---
 
- drivers/ata/libata-core.c |    2 +-
- include/linux/ata.h       |   22 +++++++++++++++-------
- 2 files changed, 16 insertions(+), 8 deletions(-)
+ drivers/ata/pata_amd.c |   78 +++++++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 60 insertions(+), 18 deletions(-)
 
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 88c2428..c17b62a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2212,7 +2212,7 @@ retry:
- 		 * Note that ATA4 says lba is mandatory so the second check
- 		 * shoud never trigger.
- 		 */
--		if (ata_id_major_version(id) < 4 || !ata_id_has_lba(id)) {
-+		if (!ata_id_has_version(id, 4) || !ata_id_has_lba(id)) {
- 			err_mask = ata_dev_init_params(dev, id[3], id[6]);
- 			if (err_mask) {
- 				rc = -EIO;
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index a53318b..e35d8de 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -675,6 +675,13 @@ static inline unsigned int ata_id_major_version(const u16 *id)
- 	return mver;
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 63719ab..c380a4e 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_amd"
+-#define DRV_VERSION "0.3.11"
++#define DRV_VERSION "0.4.1"
+ 
+ /**
+  *	timing_setup		-	shared timing computation and load
+@@ -145,6 +145,13 @@ static int amd_pre_reset(struct ata_link *link, unsigned long deadline)
+ 	return ata_sff_prereset(link, deadline);
  }
  
-+static inline int ata_id_has_version(const u16 *id, int v)
-+{
-+	if (id[ATA_ID_MAJOR_VER] == 0xFFFF)
-+		return 0;
-+	return (id[ATA_ID_MAJOR_VER] & (1 << v)) ? 1 : 0;
-+}
-+ 
- static inline int ata_id_is_sata(const u16 *id)
++/**
++ *	amd_cable_detect	-	report cable type
++ *	@ap: port
++ *
++ *	AMD controller/BIOS setups record the cable type in word 0x42
++ */
++
+ static int amd_cable_detect(struct ata_port *ap)
  {
- 	/*
-@@ -691,7 +698,7 @@ static inline int ata_id_is_sata(const u16 *id)
- static inline int ata_id_has_tpm(const u16 *id)
- {
- 	/* The TPM bits are only valid on ATA8 */
--	if (ata_id_major_version(id) < 8)
-+	if (!ata_id_has_version(id, 8))
- 		return 0;
- 	if ((id[48] & 0xC000) != 0x4000)
- 		return 0;
-@@ -701,7 +708,7 @@ static inline int ata_id_has_tpm(const u16 *id)
- static inline int ata_id_has_dword_io(const u16 *id)
- {
- 	/* ATA 8 reuses this flag for "trusted" computing */
--	if (ata_id_major_version(id) > 7)
-+	if (ata_id_has_version(id, 8))
- 		return 0;
- 	if (id[ATA_ID_DWORD_IO] & (1 << 0))
- 		return 1;
-@@ -710,7 +717,7 @@ static inline int ata_id_has_dword_io(const u16 *id)
+ 	static const u32 bitmask[2] = {0x03, 0x0C};
+@@ -158,6 +165,40 @@ static int amd_cable_detect(struct ata_port *ap)
+ }
  
- static inline int ata_id_has_unload(const u16 *id)
+ /**
++ *	amd_fifo_setup		-	set the PIO FIFO for ATA/ATAPI
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ *
++ *	Set the PCI fifo for this device according to the devices present
++ *	on the bus at this point in time. We need to turn the post write buffer
++ *	off for ATAPI devices as we may need to issue a word sized write to the
++ *	device as the final I/O
++ */
++
++static void amd_fifo_setup(struct ata_port *ap)
++{
++	struct ata_device *adev;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	static const u8 fifobit[2] = { 0xC0, 0x30};
++	u8 fifo = fifobit[ap->port_no];
++	u8 r;
++
++
++	ata_for_each_dev(adev, &ap->link, ENABLED) {
++		if (adev->class == ATA_DEV_ATAPI)
++			fifo = 0;
++	}
++	if (pdev->device == PCI_DEVICE_ID_AMD_VIPER_7411) /* FIFO is broken */
++		fifo = 0;
++
++	/* On the later chips the read prefetch bits become no-op bits */
++	pci_read_config_byte(pdev, 0x41, &r);
++	r &= ~fifobit[ap->port_no];
++	r |= fifo;
++	pci_write_config_byte(pdev, 0x41, r);
++}
++
++/**
+  *	amd33_set_piomode	-	set initial PIO mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+@@ -167,21 +208,25 @@ static int amd_cable_detect(struct ata_port *ap)
+ 
+ static void amd33_set_piomode(struct ata_port *ap, struct ata_device *adev)
  {
--	if (ata_id_major_version(id) >= 7 &&
-+	if (ata_id_has_version(id, 7) &&
- 	    (id[ATA_ID_CFSSE] & 0xC000) == 0x4000 &&
- 	    id[ATA_ID_CFSSE] & (1 << 13))
- 		return 1;
-@@ -734,15 +741,16 @@ static inline int ata_id_is_cfa(const u16 *id)
- 	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
- 		return 1;
- 	/* Could be CF hiding as standard ATA */
--	if (ata_id_major_version(id) >= 3 &&
--	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
--	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
-+	if (ata_id_has_version(id, 3) &&
-+	   (id[ATA_ID_COMMAND_SET_2] & 0xC000) == 0x4000 &&
-+	   (id[ATA_ID_COMMAND_SET_2] & (1 << 2)))
- 		return 1;
++	amd_fifo_setup(ap);
+ 	timing_setup(ap, adev, 0x40, adev->pio_mode, 1);
+ }
+ 
+ static void amd66_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
++	amd_fifo_setup(ap);
+ 	timing_setup(ap, adev, 0x40, adev->pio_mode, 2);
+ }
+ 
+ static void amd100_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
++	amd_fifo_setup(ap);
+ 	timing_setup(ap, adev, 0x40, adev->pio_mode, 3);
+ }
+ 
+ static void amd133_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
++	amd_fifo_setup(ap);
+ 	timing_setup(ap, adev, 0x40, adev->pio_mode, 4);
+ }
+ 
+@@ -397,6 +442,16 @@ static struct ata_port_operations nv133_port_ops = {
+ 	.set_dmamode	= nv133_set_dmamode,
+ };
+ 
++static void amd_clear_fifo(struct pci_dev *pdev)
++{
++	u8 fifo;
++	/* Disable the FIFO, the FIFO logic will re-enable it as
++	   appropriate */
++	pci_read_config_byte(pdev, 0x41, &fifo);
++	fifo &= 0x0F;
++	pci_write_config_byte(pdev, 0x41, fifo);
++}
++
+ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	static const struct ata_port_info info[10] = {
+@@ -503,14 +558,8 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	if (type < 3)
+ 		ata_pci_bmdma_clear_simplex(pdev);
+-
+-	/* Check for AMD7411 */
+-	if (type == 3)
+-		/* FIFO is broken */
+-		pci_write_config_byte(pdev, 0x41, fifo & 0x0F);
+-	else
+-		pci_write_config_byte(pdev, 0x41, fifo | 0xF0);
+-
++	if (pdev->vendor == PCI_VENDOR_ID_AMD)
++		amd_clear_fifo(pdev);
+ 	/* Cable detection on Nvidia chips doesn't work too well,
+ 	 * cache BIOS programmed UDMA mode.
+ 	 */
+@@ -534,20 +583,13 @@ static int amd_reinit_one(struct pci_dev *pdev)
+ 	rc = ata_pci_device_do_resume(pdev);
+ 	if (rc)
+ 		return rc;
+-
++	
+ 	if (pdev->vendor == PCI_VENDOR_ID_AMD) {
+-		u8 fifo;
+-		pci_read_config_byte(pdev, 0x41, &fifo);
+-		if (pdev->device == PCI_DEVICE_ID_AMD_VIPER_7411)
+-			/* FIFO is broken */
+-			pci_write_config_byte(pdev, 0x41, fifo & 0x0F);
+-		else
+-			pci_write_config_byte(pdev, 0x41, fifo | 0xF0);
++		amd_clear_fifo(pdev);
+ 		if (pdev->device == PCI_DEVICE_ID_AMD_VIPER_7409 ||
+ 		    pdev->device == PCI_DEVICE_ID_AMD_COBRA_7401)
+ 			ata_pci_bmdma_clear_simplex(pdev);
+ 	}
+-
+ 	ata_host_resume(host);
  	return 0;
  }
- 
- static inline int ata_id_is_ssd(const u16 *id)
- {
-+	/* FIXME: Check validity of version */
- 	return id[ATA_ID_ROT_SPEED] == 0x01;
- }
- 
-@@ -779,7 +787,7 @@ static inline int atapi_command_packet_set(const u16 *dev_id)
- 
- static inline int atapi_id_dmadir(const u16 *dev_id)
- {
--	return ata_id_major_version(dev_id) >= 7 && (dev_id[62] & 0x8000);
-+	return ata_id_has_version(dev_id, 7) && (dev_id[62] & 0x8000);
- }
- 
- /*
