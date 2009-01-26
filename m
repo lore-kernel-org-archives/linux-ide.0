@@ -1,44 +1,33 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Tue, 27 Jan 2009 00:43:24 +0300
-Message-ID: <497E2E7C.8040407@ru.mvista.com>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>	<497B9EE4.8010807@ru.mvista.com>	<497E0548.80904@ru.mvista.com>	<20090126190801.7d198246@lxorguk.ukuu.org.uk>	<497E0EF3.2000201@ru.mvista.com>	<497E101C.9040008@ru.mvista.com>	<20090126194237.4897b6ce@lxorguk.ukuu.org.uk>	<497E1550.1000501@ru.mvista.com>	<20090126200143.733b0cec@lxorguk.ukuu.org.uk>	<497E1DBB.80709@ru.mvista.com>	<497E242C.3040307@ru.mvista.com> <20090126212212.3d52781f@lxorguk.ukuu.org.uk> <497E2D6F.3070605@ru.mvista.com>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Mon, 26 Jan 2009 17:02:11 -0500
+Message-ID: <20090126220210.GB26064@csclub.uwaterloo.ca>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan> <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:5834 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755225AbZAZVmy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jan 2009 16:42:54 -0500
-In-Reply-To: <497E2D6F.3070605@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753123AbZAZWC3@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-Hello, I wrote:
+On Sun, Jan 25, 2009 at 07:15:40AM -0500, Justin Piszcz wrote:
+> It comes with one :)
+> # xfs_admin -u  /dev/sdd2
+> UUID = 77ae4251-631f-4656-a365-c5723f5c5da8
+> 
+> Will try to use this to boot; however, I'd prefer the labels over the 
+> UUID, wish there was an easy way to set it.
 
->>>    I'm sorry, that was totally off base. I've misread this whole 
->>> paragraph in haste. :-<
->>>    The rest of my evening was wasted, sigh.
+I prefer UUIDs.
 
->> If it got the CF code fixed it wasn't a waste.
+Much mroe likely to have the same label on multiple drives than the same
+UUID.  I don't want to have to worry about what label some usb device
+might have if I happen to have it plugged in during a reboot.
 
->> Do I understand rightly that the agreed things to do are
+Labels do tend to be shorter and more human readable of though.
 
->> - redo the version check patch using the signed check as you suggested
->> and remove the changes to the CFA check from it
-
->    Yes, those shouldn't have been intermixed from the very start.
-
->> - make the CFA code check word 80 == 0 as a sanity check
-
->    That'll work unless we bump into a drive that does follow ATA in that 
-> matter.
-
-    ... because it also does specify the CFA feature set (minus the exotic 
-PIO/DMA modes). That's what you get for the closed standards. And yet there 
-seem to be CF drives in the wild that follow neither... :-/
-
-MBR, Sergei
+-- 
+Len Sorensen
