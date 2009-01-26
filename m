@@ -1,48 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Mon, 26 Jan 2009 20:33:19 +0000
-Message-ID: <20090126203319.783b0d2d@lxorguk.ukuu.org.uk>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>
-	<497B9EE4.8010807@ru.mvista.com>
-	<497E0548.80904@ru.mvista.com>
-	<20090126190801.7d198246@lxorguk.ukuu.org.uk>
-	<497E0F76.6020606@ru.mvista.com>
-	<20090126193550.27eef301@lxorguk.ukuu.org.uk>
-	<497E12BC.1080809@ru.mvista.com>
-	<20090126195430.3a8aa1ce@lxorguk.ukuu.org.uk>
-	<497E1700.8090206@ru.mvista.com>
-	<497E191A.1040902@pobox.com>
-	<497E1BB8.8010408@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa() (take 2)
+Date: Mon, 26 Jan 2009 23:34:17 +0300
+Message-ID: <497E1E49.1090409@ru.mvista.com>
+References: <200901262309.31771.sshtylyov@ru.mvista.com> <20090126201905.43e57378@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45701 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751968AbZAZUeP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 15:34:15 -0500
-In-Reply-To: <497E1BB8.8010408@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:4823 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753053AbZAZUdr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jan 2009 15:33:47 -0500
+In-Reply-To: <20090126201905.43e57378@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-> totally wrong in that part from the very start -- CF devices don't report ATA 
-> standard support in word 80, that's forbidden (!) by the CF specs since at 
-> least 2.1.
+Alan Cox wrote:
 
-And the ATA world says that if word 80 doesn't report any standards then
-the word is potentially undefined....welcome to PC hell
+>>When checking for the CFA feature set support, ata_id_is_cfa() tests bit 2 in
+>>word 82 of the identify data instead the word 83;  it also checks the ATA/PI
+>>standard support in the word 80 -- which the CompactFlash specification has
+>>as reserved, this having no slightest chance to work on CF drives that don't
+>>have 0x848A in the word 0. Use instead the usual validity check: word 83 bit
+>>14 must be set, bit 15 cleared.
 
-Perhaps the best we can do is to test
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-	word 80 == 0 && word 83 bit set && word 83 valid
+> NAK please stop mixing corrections with bugs that have been explained.
 
-Fortunately the use is almost entirely to print the right CFA/ATA string
-at boot ?
+    Huh? You haven't explained anything. Your ATA base explanation is simply 
+not valid in the CF world.
 
-Now Sergei if you'd said that explicitly (or if you did before I didn't
-see it) it would have been a bit simpler to work out why you were arguing
-the needed for these changes.
+> You can't exercise logic in the id_is_cfa check that relies upon the
+> device being CFA, which is what your comment says you are doing.
 
-Alan
+    Otherwise it has no chance to detect a CF drive *following the CF specs* 
+and not having 0x848A in word 0. Please suggest a better solution. Perhaps we 
+could check for word 80 being 0?
+
+MBR, Sergei
