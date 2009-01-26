@@ -1,36 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Mon, 26 Jan 2009 23:47:26 +0300
-Message-ID: <497E215E.20007@ru.mvista.com>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>	<497B9EE4.8010807@ru.mvista.com>	<497E0548.80904@ru.mvista.com>	<20090126190801.7d198246@lxorguk.ukuu.org.uk>	<497E0EF3.2000201@ru.mvista.com>	<497E101C.9040008@ru.mvista.com>	<20090126194237.4897b6ce@lxorguk.ukuu.org.uk>	<497E1550.1000501@ru.mvista.com> <20090126200143.733b0cec@lxorguk.ukuu.org.uk>
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: Re: Faulty seagate drives, are going to be blacklisted?
+Date: Mon, 26 Jan 2009 15:57:42 -0500
+Message-ID: <200901261557.42752.gene.heskett@verizon.net>
+References: <20090120002923.065f24ca@diego-desktop> <497E0940.3020409@ij.net>
+ <497E14DD.20506@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:5002 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752056AbZAZUq5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jan 2009 15:46:57 -0500
-In-Reply-To: <20090126200143.733b0cec@lxorguk.ukuu.org.uk>
+Received: from vms173001pub.verizon.net ([206.46.173.1]:41060 "EHLO
+	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbZAZU6J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2009 15:58:09 -0500
+Received: from coyote.coyote.den ([141.153.72.151]) by vms173001.mailsrvcs.net
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTPA id <0KE300KIBJK76MO7@vms173001.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Mon, 26 Jan 2009 14:57:43 -0600 (CST)
+In-reply-to: <497E14DD.20506@rtr.ca>
+Content-disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: Mark Lord <liml@rtr.ca>
+Cc: Felix Miata <mrmazda@ij.net>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+On Monday 26 January 2009, Mark Lord wrote:
+>Felix Miata wrote:
+>..
+>
+>> The "Drive Detect software" that
+>> http://seagate.custkb.com/seagate/crm/selfservice/search.jsp?DocId=207957
+>> directs to use to discover the firmware revision requires windoz. Anyone
+>> know if it works under Wine? Instead I used a bootable Seatools CD that
+>> came in a retail Seagate HD package.
+>
+>..
+>
+>Under Linux, use this:  hdparm -I /dev/sd? | head -8
+>
+Should I be worried about this one? Seagate 500GB sata
 
->>    I have explained everything in the prior mail. I hadn't expect you to 
->>start the patch fencing.
+/dev/sdb:
 
-> I don't see an explanation just points I queried. I shall draw the obvious
-> conclusion from the fact you don't feel like providing one
+ATA device, with non-removable media
+        Model Number:       ST3500320AS
+        Serial Number:      9QM5BB7Y
+        Firmware Revision:  SD15
+        Transport:          Serial
 
-> The logic is this
+Thank you
 
-> ATA-3 or higher - that word has a defined meaning
-> ATA < 3 that word should be 0x0000
-
-    Dunno why but I removed my remark: they are reserved and so "shall be 
-zero" starting aith ATA-1. I've already stated that.
-
-MBR, Sergei
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+QOTD:
+	"I used to be an idealist, but I got mugged by reality."
