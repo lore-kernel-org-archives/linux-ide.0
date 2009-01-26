@@ -1,38 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
-Date: Mon, 26 Jan 2009 21:11:33 +0300
-Message-ID: <497DFCD5.8040708@ru.mvista.com>
-References: <200901231615.38011.sshtylyov@ru.mvista.com>	<497B9EE4.8010807@ru.mvista.com>	<20090125105045.65021406@lxorguk.ukuu.org.uk>	<497DA356.2090206@ru.mvista.com> <20090126120107.20345a75@lxorguk.ukuu.org.uk>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Mon, 26 Jan 2009 13:21:14 -0500
+Message-ID: <497DFF1A.2050401@rtr.ca>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <497A2B3C.3060603@redhat.com>	 <1232749447.3250.146.camel@localhost.localdomain>	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <497DF807.7010600@rtr.ca> <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:2787 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753949AbZAZSLD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jan 2009 13:11:03 -0500
-In-Reply-To: <20090126120107.20345a75@lxorguk.ukuu.org.uk>
+Received: from rtr.ca ([76.10.145.34]:33524 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751606AbZAZSVQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jan 2009 13:21:16 -0500
+In-Reply-To: <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
+To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
+Greg Freemyer wrote:
+>
+> Just so I know and before I try to find the right way to comment to
+> the T13 and T10 committees:
+> 
+> What is the negative of adding a ATA/SCSI command to allow the storage
+> device to be interrogated to see what sectors/blocks/erase-units are
+> in a mapped vs. unmapped state?
+> 
+> For T13 (ATA), it would actually be a tri-state flag I gather:
+> 
+>   Mapped - last data written available
+>   unmapped - no data values assigned
+>   unmapped - deterministic data values
+> 
+> Surely the storage device has to be keeping this data internally.  Why
+> not expose it?
+..
 
->>why we have to check for ATA revision prior to that -- unless we're 
->>trying to guard against pre ATA-3 values other than 0 or 0xFFFF.
+That's a good approach.  One problem on the drive end, is that they
+may not be maintain central lists of these.  Rather, it might be stored
+as local flags in each affected sector.
 
-> Which we are.
+So any attempt to query "all" is probably not feasible,
+but it should be simple enough to "query one" sector at a time
+for that info.  If one wants them all, the just loop over
+the entire device doing the "query one" for each sector.
 
-    On what grounds? Note that ATA-3 only names 0 and 0xFFFF as inappropriate 
-values.
+Another drawback to the "query all", is the size of data (the list)
+returned is unknown in advance.  We generally don't have commands
+that work like that.
 
-> At the point we first use this function we are poking
-> blindly at a device we have not done any other analysis of.
-
-    Do you mean ata_dev_readid()? I'm seeing no issue with checking for ATA 
-version there directly if you insist it should be done.
-
-> Alan
-
-MBR, Sergei
+Cheers
