@@ -1,41 +1,58 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
-Date: Tue, 27 Jan 2009 02:36:40 +0300
-Message-ID: <497E4908.9060705@ru.mvista.com>
-References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan> <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <20090126220210.GB26064@csclub.uwaterloo.ca>
+Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
+Date: Tue, 27 Jan 2009 02:53:43 +0300
+Message-ID: <497E4D07.2090109@ru.mvista.com>
+References: <200901231615.38011.sshtylyov@ru.mvista.com>	<497B9EE4.8010807@ru.mvista.com>	<497E0548.80904@ru.mvista.com>	<20090126190801.7d198246@lxorguk.ukuu.org.uk>	<497E0F76.6020606@ru.mvista.com>	<20090126193550.27eef301@lxorguk.ukuu.org.uk>	<497E12BC.1080809@ru.mvista.com>	<20090126195430.3a8aa1ce@lxorguk.ukuu.org.uk>	<497E1700.8090206@ru.mvista.com>	<497E191A.1040902@pobox.com>	<497E1BB8.8010408@ru.mvista.com> <20090126203319.783b0d2d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:7460 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:7650 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752966AbZAZXgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jan 2009 18:36:47 -0500
-In-Reply-To: <20090126220210.GB26064@csclub.uwaterloo.ca>
+	id S1754269AbZAZXxt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jan 2009 18:53:49 -0500
+In-Reply-To: <20090126203319.783b0d2d@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
 Hello.
 
-Lennart Sorensen wrote:
+Alan Cox wrote:
 
->> It comes with one :)
->> # xfs_admin -u  /dev/sdd2
->> UUID = 77ae4251-631f-4656-a365-c5723f5c5da8
->>
->> Will try to use this to boot; however, I'd prefer the labels over the 
->> UUID, wish there was an easy way to set it.
+>> totally wrong in that part from the very start -- CF devices don't report ATA 
+>> standard support in word 80, that's forbidden (!) by the CF specs since at 
+>> least 2.1.
 >>     
 >
-> I prefer UUIDs.
+> And the ATA world says that if word 80 doesn't report any standards then
+> the word is potentially undefined....welcome to PC hell
 >
-> Much mroe likely to have the same label on multiple drives than the same
-> UUID.
+> Perhaps the best we can do is to test
+>
+> 	word 80 == 0 && word 83 bit set && word 83 valid
+>
+> Fortunately the use is almost entirely to print the right CFA/ATA string
+> at boot ?
+>   
 
-   For example, CentOS 4.3 went crazy in such case, being unable to 
-mount anything but root IIRC.
+    There was intent to use it for filtering out DMA modes on incapable 
+CF slots, for the lack of better criterion -- these slots usually has a 
+master/slave switch connected, so can't be tied to the drive #, only to 
+the channel # and the board's DMI ID.
+
+> Now Sergei if you'd said that explicitly (or if you did before I didn't
+> see it) it would have been a bit simpler to work out why you were arguing
+> the needed for these changes.
+>   
+
+   I was arguing entirely out of thinking that the version check is not 
+really needed. The fact that CF spec. forbids reporting it was a 
+surprise to me as well.
+
+> Alan
+>   
 
 MBR, Sergei
 
