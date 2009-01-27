@@ -1,72 +1,65 @@
 From: Phil Sutter <n0-1@freewrt.org>
-Subject: [PATCH 4/5] pata-rb532-cf: use ata_sff_data_xfer32()
-Date: Tue, 27 Jan 2009 14:35:52 +0100
-Message-ID: <20090127133601.B96534CD65@mail.nwl.cc>
+Subject: [PATCH 2/5] pata-rb532-cf: replace rb532_pata_finish_io()
+Date: Tue, 27 Jan 2009 14:35:50 +0100
+Message-ID: <20090127133616.8A6C14CD65@mail.nwl.cc>
 References: <20090127133329.3A3F04CD65@mail.nwl.cc>
- <1233063353-12770-1-git-send-email-n0-1@freewrt.org>
- <1233063353-12770-2-git-send-email-n0-1@freewrt.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([91.121.169.95]:35218 "EHLO mail.nwl.cc"
+Received: from orbit.nwl.cc ([91.121.169.95]:35234 "EHLO mail.nwl.cc"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752741AbZA0NgD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jan 2009 08:36:03 -0500
-In-Reply-To: <1233063353-12770-2-git-send-email-n0-1@freewrt.org>
+	id S1753290AbZA0NgS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Jan 2009 08:36:18 -0500
+In-Reply-To: <20090127133329.3A3F04CD65@mail.nwl.cc>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, florian@openwrt.org
 
-The biggest difference between rb532_pata_data_xfer() and
-ata_sff_data_xfer32() is the call to ata_sff_pause() at the end of
-rb532_pata_data_xfer() which I suppose to be unnecessary since it works
-without. I've also tested using ata_sff_data_xfer() as replacement, but
-since we know that the driver supports 32bit IO, using the optimised
-version should be safe.
+Since the delay used internally is just the same as ata_sff_pause()
+uses, rb532_pata_finish_io() does exactly the same as ata_sff_pause()
+and thus can be replaced by the later one.
 
 Signed-off-by: Phil Sutter <n0-1@freewrt.org>
 ---
- drivers/ata/pata_rb532_cf.c |   21 +--------------------
- 1 files changed, 1 insertions(+), 20 deletions(-)
+ drivers/ata/pata_rb532_cf.c |   15 ++-------------
+ 1 files changed, 2 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index 9d61ce5..9fb91e4 100644
+index ebfcda2..6fe660b 100644
 --- a/drivers/ata/pata_rb532_cf.c
 +++ b/drivers/ata/pata_rb532_cf.c
-@@ -54,25 +54,6 @@ struct rb532_cf_info {
+@@ -54,22 +54,11 @@ struct rb532_cf_info {
  
  /* ------------------------------------------------------------------------ */
  
--static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
--				unsigned int buflen, int write_data)
+-static inline void rb532_pata_finish_io(struct ata_port *ap)
 -{
--	struct ata_port *ap = adev->link->ap;
--	void __iomem *ioaddr = ap->ioaddr.data_addr;
--	int retlen = buflen;
+-	struct ata_host *ah = ap->host;
+-	struct rb532_cf_info *info = ah->private_data;
 -
--	if (write_data) {
--		for (; buflen > 0; buflen--, buf++)
--			writeb(*buf, ioaddr);
--	} else {
--		for (; buflen > 0; buflen--, buf++)
--			*buf = readb(ioaddr);
--	}
--
--	ata_sff_pause(ap);
--	return retlen;
+-	/* FIXME: Keep previous delay. If this is merely a fence then
+-	   ata_sff_sync might be sufficient. */
+-	ata_sff_dma_pause(ap);
+-	ndelay(RB500_CF_IO_DELAY);
 -}
 -
- static void rb532_pata_freeze(struct ata_port *ap)
+ static void rb532_pata_exec_command(struct ata_port *ap,
+ 				const struct ata_taskfile *tf)
  {
- 	struct rb532_cf_info *info = ap->host->private_data;
-@@ -105,7 +86,7 @@ static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
+ 	writeb(tf->command, ap->ioaddr.command_addr);
+-	rb532_pata_finish_io(ap);
++	ata_sff_pause(ap);
+ }
  
- static struct ata_port_operations rb532_pata_port_ops = {
- 	.inherits		= &ata_sff_port_ops,
--	.sff_data_xfer		= rb532_pata_data_xfer,
-+	.sff_data_xfer		= ata_sff_data_xfer32,
- 	.freeze			= rb532_pata_freeze,
- 	.thaw			= rb532_pata_thaw,
- };
+ static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+@@ -87,7 +76,7 @@ static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char
+ 			*buf = readb(ioaddr);
+ 	}
+ 
+-	rb532_pata_finish_io(adev->link->ap);
++	ata_sff_pause(ap);
+ 	return retlen;
+ }
+ 
 -- 
 1.5.6.4
 
