@@ -1,158 +1,94 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE: Unregister devices if initialization fails.
-Date: Tue, 27 Jan 2009 17:41:44 +0100
-Message-ID: <200901271741.44704.bzolnier@gmail.com>
-References: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 1/3] ide-cd: use ide_drive_t's rq in cdrom_queue_request_sense
+Date: Tue, 27 Jan 2009 17:47:47 +0100
+Message-ID: <9ea470500901270847m40264331le1092dc1589ec9de@mail.gmail.com>
+References: <1233002440-4325-1-git-send-email-petkovbb@gmail.com>
+	 <200901271607.10869.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:62111 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753811AbZA0QmN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 11:42:13 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so1471163eye.37
-        for <linux-ide@vger.kernel.org>; Tue, 27 Jan 2009 08:42:12 -0800 (PST)
-In-Reply-To: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com>
-Content-Disposition: inline
+Received: from rn-out-0910.google.com ([64.233.170.186]:25580 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752803AbZA0Qru (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 11:47:50 -0500
+In-Reply-To: <200901271607.10869.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ian Campbell <Ian.Campbell@citrix.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Tue, Jan 27, 2009 at 4:07 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Monday 26 January 2009, Borislav Petkov wrote:
+>> There should be no functionality change resulting from this patch.
+>>
+>> Suggested-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+>> ---
+>>  drivers/ide/ide-cd.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+>> index d3d5fb6..3907466 100644
+>> --- a/drivers/ide/ide-cd.c
+>> +++ b/drivers/ide/ide-cd.c
+>> @@ -207,7 +207,7 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+>>                                     struct request *failed_command)
+>>  {
+>>       struct cdrom_info *info         = drive->driver_data;
+>> -     struct request *rq              = &info->request_sense_request;
+>> +     struct request *rq              = &drive->request_sense_rq;
+>
+> Don't we want to also remove now unused ->request_sense_request?
 
-Hi,
+sure we do :)
 
-On Friday 23 January 2009, Ian Campbell wrote:
-> On reboot the loop in device_shutdown gets confused by these devices
-> and goes into an infinite loop. I think this is because they don't
-> have dev->bus or dev->driver which is because hwif_register_devices
-> doesn't get called if !hwif->present.
-> 
-> Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-probe.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-> index 312127e..120f65b 100644
-> --- a/drivers/ide/ide-probe.c
-> +++ b/drivers/ide/ide-probe.c
-> @@ -1520,6 +1520,8 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
->  		if (hwif_init(hwif) == 0) {
->  			printk(KERN_INFO "%s: failed to initialize IDE "
->  					 "interface\n", hwif->name);
-> +			device_unregister(&hwif->gendev);
-> +			device_destroy(ide_port_class, MKDEV(0, 0));
->  			hwif->present = 0;
+--
+From: Borislav Petkov <petkovbb@gmail.com>
+Date: Tue, 27 Jan 2009 17:42:28 +0100
+Subject: [PATCH 1/3] ide-cd: use ide_drive_t's rq in cdrom_queue_request_sense
 
-I've been wondering about this a bit and I think that we should just nuke
-port from struct ide_host in such situation so I added ide_disable_port()
-helper for this (+ fixed ide_register_port() handling while at it).
+There should be no functionality change resulting from this patch.
 
-Could you please re-base your fix on top of attached patch?
-
-Please also remove superflous device_destroy() call -- device_unregister()
-should be enough and if it is not we need to fix ide_register_port() to
-use unique dev_t instead of MKDEV(0, 0).
-
->  			continue;
->  		}
-> @@ -1550,11 +1552,11 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
->  		if (hwif == NULL)
->  			continue;
->  
-> -		ide_sysfs_register_port(hwif);
-> -		ide_proc_register_port(hwif);
-> -
-> -		if (hwif->present)
-> +		if (hwif->present) {
-> +			ide_sysfs_register_port(hwif);
-> +			ide_proc_register_port(hwif);
->  			ide_proc_port_register_devices(hwif);
-
-This code have to stay unchanged for proper warm-plug support
-(luckily after re-basing this chunk shouldn't be needed).
-
-Here is the ide_disable_port() patch:
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix ide_register_port() failure handling
-
-* Factor out port freeing from ide_host_free() to ide_free_port().
-
-* Add ide_disable_port() and use it on ide_register_port() failure.
-
-Cc: Ian Campbell <Ian.Campbell@citrix.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Suggested-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-probe.c |   40 ++++++++++++++++++++++++++++++++--------
- 1 file changed, 32 insertions(+), 8 deletions(-)
+ drivers/ide/ide-cd.c |    2 +-
+ drivers/ide/ide-cd.h |    2 --
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1466,6 +1466,30 @@ struct ide_host *ide_host_alloc(const st
- }
- EXPORT_SYMBOL_GPL(ide_host_alloc);
- 
-+static void ide_port_free(ide_hwif_t *hwif)
-+{
-+	ide_port_free_devices(hwif);
-+	ide_free_port_slot(hwif->index);
-+	kfree(hwif);
-+}
-+
-+static void ide_disable_port(ide_hwif_t *hwif)
-+{
-+	struct ide_host *host = hwif->host;
-+	int i;
-+
-+	printk(KERN_INFO "%s: disabling port\n", hwif->name);
-+
-+	for (i = 0; i < MAX_HOST_PORTS; i++) {
-+		if (host->ports[i] == hwif) {
-+			host->ports[i] = NULL;
-+			host->n_ports--;
-+		}
-+	}
-+
-+	ide_port_free(hwif);
-+}
-+
- int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
- 		      hw_regs_t **hws)
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 3554dc4..bf4e7a0 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -205,7 +205,7 @@ static void cdrom_queue_request_sense(ide_drive_t
+*drive, void *sense,
+ 				      struct request *failed_command)
  {
-@@ -1506,8 +1530,12 @@ int ide_host_register(struct ide_host *h
- 			hwif->present = 1;
- 
- 		if (hwif->chipset != ide_4drives || !hwif->mate ||
--		    !hwif->mate->present)
--			ide_register_port(hwif);
-+		    !hwif->mate->present) {
-+			if (ide_register_port(hwif)) {
-+				ide_disable_port(hwif);
-+				continue;
-+			}
-+		}
- 
- 		if (hwif->present)
- 			ide_port_tune_devices(hwif);
-@@ -1659,12 +1687,8 @@ void ide_host_free(struct ide_host *host
- 	int i;
- 
- 	ide_host_for_each_port(i, hwif, host) {
--		if (hwif == NULL)
--			continue;
+ 	struct cdrom_info *info		= drive->driver_data;
+-	struct request *rq		= &info->request_sense_request;
++	struct request *rq		= &drive->request_sense_rq;
+
+ 	ide_debug_log(IDE_DBG_SENSE, "enter");
+
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 0b82233..b26d305 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -91,8 +91,6 @@ struct cdrom_info {
+ 	   on this device. */
+ 	struct request_sense sense_data;
+
+-	struct request request_sense_request;
 -
--		ide_port_free_devices(hwif);
--		ide_free_port_slot(hwif->index);
--		kfree(hwif);
-+		if (hwif)
-+			ide_port_free(hwif);
- 	}
- 
- 	kfree(host);
+ 	u8 max_speed;		/* Max speed of the drive. */
+ 	u8 current_speed;	/* Current speed of the drive. */
+
+-- 
+1.6.0.4
+
+-- 
+Regards/Gruss,
+Boris
