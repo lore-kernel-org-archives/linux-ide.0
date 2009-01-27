@@ -1,43 +1,61 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] sata_mv: Fix chip type for Hightpoint RocketRaid 1740/1742
-Date: Tue, 27 Jan 2009 16:33:13 -0500
-Message-ID: <497F7D99.4060108@rtr.ca>
-References: <20070709143841.133abb71@the-village.bc.nu> <4696965E.70403@garzik.org> <497F795D.8090600@rtr.ca> <497F7AC8.7070700@rtr.ca>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: [PATCH] ide/net: flip the order of SATA and network init
+Date: Tue, 27 Jan 2009 14:19:52 -0800
+Message-ID: <20090127141952.51785b4f@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:56906 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751908AbZA0VdO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jan 2009 16:33:14 -0500
-In-Reply-To: <497F7AC8.7070700@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, stable@kernel.org
 
-Fix chip type for the Highpoint RocketRAID 1740 and 1742 PCI cards.
-These really do have Marvell 6042 chips on them, rather than the 5081 chip.
+>From e89d6840ad685a3c61f72367d4ac5bfed69ead0c Mon Sep 17 00:00:00 2001
+From: Arjan van de Ven <arjan@linux.intel.com>
+Date: Mon, 26 Jan 2009 18:58:11 -0800
+Subject: [PATCH] ide/net: flip the order of SATA and network init
 
-Confirmed by multiple (two) users (for the 1740), and by examining
-the product photographs from Highpoint's web site.
+this patch flips the order in which sata and network drivers are initialized.
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
+SATA probing takes quite a bit of time, and with the asynchronous infrastructure
+other drivers that run after it can execute in parallel. Network drivers do tend
+to take some real time talking to the hardware, so running these later is
+a good thing (the sata probe then runs concurrent)
+
+This saves about 15% of my kernels boot time.
+
+Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 ---
-This replaces the earlier 1740-only version of the patch.
-This patch is a candidate for linux-stable as well.
+ drivers/Makefile |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
---- old/drivers/ata/sata_mv.c	2009-01-27 16:03:08.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-01-27 16:28:15.000000000 -0500
-@@ -663,8 +663,8 @@
- 	{ PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
- 	/* RocketRAID 1720/174x have different identifiers */
- 	{ PCI_VDEVICE(TTI, 0x1720), chip_6042 },
--	{ PCI_VDEVICE(TTI, 0x1740), chip_508x },
--	{ PCI_VDEVICE(TTI, 0x1742), chip_508x },
-+	{ PCI_VDEVICE(TTI, 0x1740), chip_6042 },
-+	{ PCI_VDEVICE(TTI, 0x1742), chip_6042 },
+diff --git a/drivers/Makefile b/drivers/Makefile
+index c1bf417..2618a61 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -36,13 +36,14 @@ obj-$(CONFIG_FB_INTEL)          += video/intelfb/
  
- 	{ PCI_VDEVICE(MARVELL, 0x6040), chip_604x },
- 	{ PCI_VDEVICE(MARVELL, 0x6041), chip_604x },
+ obj-y				+= serial/
+ obj-$(CONFIG_PARPORT)		+= parport/
+-obj-y				+= base/ block/ misc/ mfd/ net/ media/
++obj-y				+= base/ block/ misc/ mfd/ media/
+ obj-$(CONFIG_NUBUS)		+= nubus/
+-obj-$(CONFIG_ATM)		+= atm/
+ obj-y				+= macintosh/
+ obj-$(CONFIG_IDE)		+= ide/
+ obj-$(CONFIG_SCSI)		+= scsi/
+ obj-$(CONFIG_ATA)		+= ata/
++obj-y				+= net/
++obj-$(CONFIG_ATM)		+= atm/
+ obj-$(CONFIG_FUSION)		+= message/
+ obj-$(CONFIG_FIREWIRE)		+= firewire/
+ obj-y				+= ieee1394/
+-- 
+1.6.0.5
+
+
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
