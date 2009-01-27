@@ -1,111 +1,74 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
-  SSDs - Impact of trim?]
-Date: Tue, 27 Jan 2009 06:23:46 -0500
-Message-ID: <497EEEC2.1040907@redhat.com>
-References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	<497A2B3C.3060603@redhat.com>	<1232749447.3250.146.camel@localhost.localdomain>	<87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	<497A542C.1040900@redhat.com>	<7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	<497DE35C.6090308@redhat.com>	<87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	<1232992065.3248.38.camel@localhost.localdomain> <18814.39074.194781.490676@notabene.brown>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa()
+Date: Tue, 27 Jan 2009 14:29:51 +0300
+Message-ID: <497EF02F.4060109@ru.mvista.com>
+References: <200901231615.38011.sshtylyov@ru.mvista.com>	<497B9EE4.8010807@ru.mvista.com>	<497E0548.80904@ru.mvista.com> <20090126190801.7d198246@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54055 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752526AbZA0LX4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jan 2009 06:23:56 -0500
-In-Reply-To: <18814.39074.194781.490676@notabene.brown>
+Received: from h155.mvista.com ([63.81.120.155]:27610 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752462AbZA0L35 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Jan 2009 06:29:57 -0500
+In-Reply-To: <20090126190801.7d198246@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Freemyer <greg.freemyer@norcrossgroup.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-Neil Brown wrote:
-> On Monday January 26, James.Bottomley@HansenPartnership.com wrote:
+Hello.
+
+Alan Cox wrote:
+
+> This patch keeps the version checks but incorporates the other suggestions
+> Sergei made including a better ata version check for the usual case where
+> we want to know "is version >= x" rather than "what version do you
+> support".
+>
+> Signed-off-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 >   
->> On Mon, 2009-01-26 at 12:34 -0500, Greg Freemyer wrote:
->>     
->>> Adding mdraid list:
->>>
->>> Top post as a recap for mdraid list (redundantly at end of email if
->>> anyone wants to respond to any of this).:
->>>
->>> == Start RECAP
->>> With proposed spec changes for both T10 and T13 a new "unmap" or
->>> "trim" command is proposed respectively.  The linux kernel is
->>> implementing this as a sector discard and will be called by various
->>> file systems as they delete data files.  Ext4 will be one of the first
->>> to support this. (At least via out of kernel patches.)
->>>
->>> SCSI - see http://www.t10.org/cgi-bin/ac.pl?t=d&f=08-356r5.pdf
->>> ATA - see T13/e08137r2 draft
->>>
->>> Per the proposed spec changes, the underlying SSD device can
->>> optionally modify the unmapped data.  SCSI T10 at least restricts the
->>> way the modification happens, but data modification of unmapped data
->>> is still definitely allowed for both classes of SSD.
->>>
->>> Thus if a filesystem "discards" a sector, the contents of the sector
->>> can change and thus parity values are no longer meaningful for the
->>> stripe.
->>>       
->> This isn't correct.  The implementation is via bio and request discard
->> flags.  linux raid as a bio->bio mapping entity can choose to drop or
->> implement the discard flag (by default it will be dropped unless the
->> raid layer is modified).
->>     
->
-> That's good.  I would be worried if they could slip through without
-> md/raid noticing.
->
+[...]
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 88c2428..c17b62a 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2212,7 +2212,7 @@ retry:
+>  		 * Note that ATA4 says lba is mandatory so the second check
+>  		 * shoud never trigger.
+>  		 */
+> -		if (ata_id_major_version(id) < 4 || !ata_id_has_lba(id)) {
+> +		if (!ata_id_has_version(id, 4) || !ata_id_has_lba(id)) {
+>  			err_mask = ata_dev_init_params(dev, id[3], id[6]);
+>  			if (err_mask) {
+>  				rc = -EIO;
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index a53318b..e35d8de 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -675,6 +675,13 @@ static inline unsigned int ata_id_major_version(const u16 *id)
+>  	return mver;
+>  }
+>  
+> +static inline int ata_id_has_version(const u16 *id, int v)
+> +{
+> +	if (id[ATA_ID_MAJOR_VER] == 0xFFFF)
+> +		return 0;
+> +	return (id[ATA_ID_MAJOR_VER] & (1 << v)) ? 1 : 0;
+> +}
+> + 
 >   
->>> ie. If the unmap-ed blocks don't exactly correlate with the Raid-5 / 6
->>> stripping, then the integrity of a stripe containing both mapped and
->>> unmapped data is lost.
->>>
->>> Thus it seems that either the filesystem will have to understand the
->>> raid 5 / 6 stripping / chunking setup and ensure it never issues a
->>> discard command unless an entire stripe is being discarded.  Or that
->>> the raid implementation must must snoop the discard commands and take
->>> appropriate actions.
->>>       
->> No.  It only works if the discard is supported all the way through the
->> stack to the controller and device ... any point in the stack can drop
->> the discard.  It's also theoretically possible that any layer could
->> accumulate them as well (i.e. up to stripe size for raid).
->>     
->
-> Accumulating them in the raid level would probably be awkward.
->
-> It was my understanding that filesystems would (try to) send the
-> largest possible 'discard' covering any surrounding blocks that had
-> already been discarded.  Then e.g. raid5 could just round down any
-> discard request to an aligned number of complete stripes and just
-> discard those.  i.e. have all the accumulation done in the filesystem.
->
-> To be able to safely discard stripes, raid5 would need to remember
-> which stripes were discarded so that it could be sure to write out the
-> whole stripe when updating any block on it, thus ensuring that parity
-> will be correct again and will remain correct.
->
-> Probably the only practical data structure for this would be a bitmap
-> similar to the current write-intent bitmap.
->
-> Is it really worth supporting this in raid5?   Are the sorts of
-> devices that will benefit from 'discard' requests likely to be used
-> inside an md/raid5 array I wonder....
->
-> raid1 and raid10 are much easier to handle, so supporting 'discard'
-> there certainly makes sense.
->
-> NeilBrown
-> --
->   
+> @@ -691,7 +698,7 @@ static inline int ata_id_is_sata(const u16 *id)
+>  static inline int ata_id_has_tpm(const u16 *id)
+>  {
+>  	/* The TPM bits are only valid on ATA8 */
+> -	if (ata_id_major_version(id) < 8)
+> +	if (!ata_id_has_version(id, 8))
+>  		return 0;
 
-The benefit is also seen by SSD devices (T13) and high end arrays 
-(T10).  On the array end, they almost universally do RAID support 
-internally.
+   Note that this is not equivalent to the old code which didn't require 
+the bit v to be set, just some bits above it.
 
-I suppose that people might make RAID5 devices out of SSD's locally, but 
-it is probably not an immediate priority....
+MBR, Sergei
 
-ric
 
