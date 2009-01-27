@@ -1,121 +1,36 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: motherboard-info based blacklist for ide-dma
-Date: Tue, 27 Jan 2009 13:30:22 +0300
-Message-ID: <497EE23E.5080306@ru.mvista.com>
-References: <1230651239-29388-1-git-send-email-kirr@mns.spb.ru> <49789605.9090707@ru.mvista.com> <497E4883.4030307@ru.mvista.com> <200901271050.08369.gdu@mns.spb.ru>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Tue, 27 Jan 2009 10:49:08 +0000
+Message-ID: <497EE6A4.7030406@anonymous.org.uk>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	<497A2B3C.3060603@redhat.com>	<1232749447.3250.146.camel@localhost.localdomain>	<87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	<497A542C.1040900@redhat.com>	<7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	<497DE35C.6090308@redhat.com>	<87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	<1232992065.3248.38.camel@localhost.localdomain> <18814.39074.194781.490676@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25792 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752728AbZA0Kaa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jan 2009 05:30:30 -0500
-In-Reply-To: <200901271050.08369.gdu@mns.spb.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18814.39074.194781.490676@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Freemyer <greg.freemyer@norcrossgroup.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Gryazin <gdu@mns.spb.ru>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kirill Smelkov <kirr@mns.spb.ru>, linux-ide@vger.kernel.org, navy-patches@mns.spb.ru
 
-Hello.
+On 27/01/2009 05:16, Neil Brown wrote:
+[...]
+> Probably the only practical data structure for this would be a bitmap
+> similar to the current write-intent bitmap.
+> 
+> Is it really worth supporting this in raid5?   Are the sorts of
+> devices that will benefit from 'discard' requests likely to be used
+> inside an md/raid5 array I wonder....
 
-Dmitry Gryazin wrote:
+Assuming I've understood correctly, this usage map sounds to me like a 
+useful thing to have for all RAIDs. When building the array in the first 
+place, the initial sync is just writing a usage map saying it's all 
+empty. Filesystem writes and discards update it appropriately. Then when 
+we get failing sectors reported via e.g. SMART or a scrub operation we 
+know whether they're on used or unused areas so whether it's worth 
+attempting recovery.
 
->>>>>>>>>>>> True.  However it should be possible to handle it correctly by
->>>>>>>>>>>> adding
->>>>>>>>>>>> the
->>>>>>>>>>>> DMA quirk to the respective host drivers (seems to be
->>>>>>>>>>>> via82cxxx.c
->>>>>>>>>>>> in case of
->>>>>>>>>>>> IEI PCISA-C3/EDEN).
->>>>>>>>>>>>                         
->>>>>>>>>>> Yeah, this seems a viable approach...
->>>>>>>>>>>
->>>>>>>>>>>                       
->>>>>>>>>>>> Kirill, could you please look into adding such quirk to
->>>>>>>>>>>> via82cxxx
->>>>>>>>>>>> instead?
->>>>>>>>>>>>
->>>>>>>>>>>> [ It seems the best place to add it would be via_init_one()
->>>>>>>>>>>> as we
->>>>>>>>>>>> could just
->>>>>>>>>>>>                         
->>>>>>>>>>> No, not really -- the issue is not at all as simple as this patch
->>>>>>>>>>> tried to present it. Looking at its "Quick Startup Reference"
->>>>>>>>>>> (http://f.ipc2u.ru/files/add/doc/496/M_PCISA-C800EV_ENG.pdf), the
->>>>>>>>>>> EPIC
->>>>>>>>>>> board has *two* normal IDE connectors in addition to the CF slot
->>>>>>>>>>> (connected to the secondary port -- and it seems possible that a
->>>>>>>>>>> hard drive can be connected to the same port as CF), so the right
->>>>>>>>>>> place seems to rather be in [mu]dma_filter() methods -- and the
->>>>>>>>>>> decision should be strictly based on the drive type indicating
->>>>>>>>>>> CF,
->>>>>>>>>>> i.e. by calling ata_id_is_cfa().
->>>>>>>>>>>                       
->>>>>>> I have tried my old Trancend 64Mb, RamStar 521Mb and NCP 64Mb cards.
->>>>>>> My old cards returned right id[ATA_ID_CONFIG] = 0x848A.
->>>>>>>
->>>>>>> But I have to use Kingston CF Card 1Gb 2008.
->>>>>>> ata_id_is_cfa() returns 0 for it and
->>>>>>> id[ATA_ID_MAJOR_VER]    = 0
->>>>>>>               
->>   That turned to be the requirement of the CF spec... :-/
->>
->>     
->>>>>>> id[ATA_ID_CONFIG]        = 0x044A
->>>>>>>               
->>    CF 4.x lists this value as "CF preferred altrernate", along with 0x0040.
->>     
->>>>>>   That seems non-standard CF as ATA specifies that it must have 0x848A
->>>>>> there.
->>>>>>
->>>>>>             
->>>>>>> I have only CF+ specification revision 2.0,  but I've found in wiki:
->>>>>>>               
->>>>>>   Try googling for cfspc_41.pdf (and other versions), you'll be
->>>>>> surprised in a good way. ;-)
->>>>>>
->>>>>>             
->>>>>>> (http://en.wikipedia.org/wiki/CompactFlash#CF.2B_specification_revisi
->>>>>>> ons
->>>>>>>
->>>>>>> ) "... While the current revision 4.1 from 2004 works only in ATA
->>>>>>> mode,
->>>>>>> ..."
->>>>>>> So I have reached an impasse. How to identify modern CF cards?
->>>>>>>               
->>>>>>   Hm, I should consult the specs...
->>>>>>             
->>>>>    ATA/PI-7 rev. 4b has this in 4.10:
->>>>> Devices reporting the value 848Ah in IDENTIFY DEVICE data word 0 or
->>>>> devices
->>>>> having bit 2 of IDENTIFY DEVICE data word 83 set to one shall
->>>>> support the
->>>>> CFA feature Set. If the CFA feature set is implemented, all five
->>>>> commands
->>>>> shall be implemented.
->>>>>           
->>>> id[ATA_ID_COMMAND_SET_2] = 0 /* For my Kingston 1Gb CF card, kernel
->>>> v2.6.28.1 */
->>>>         
->>>    Then I guess we need a new quirk. :-/
->>>       
->>    BTW, CF 4.x says that the drive reporting word 0 bits 12:15 as 0 "is
->> required to support for the CFA command set and report that in bit 2 of
->> Word 83". So thank Kingston for being CF incompatible. :-)
->>     
->
-> I couldn't find the right way to identify CFA correctly (thanks Kingston very 
-> much inter alia). So I suggest to put off the discussion about this patch. 
-> Please CC to gdu@mns.spb.ru and kirr@mns.spb.ru when you would find the 
-> solution of "identify CFA" problem.
->   
+Cheers,
 
-   We kind of found the solution for the CF cards *following the spec* 
--- that required fixing ata_id_is_cfa(). For the incompatible cards, I'm 
-seeing no other way other than adding a quirk list... :-/
-
-MBR, Sergei
-
-
-
+John.
