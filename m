@@ -1,61 +1,63 @@
-From: "Ian Atkin" <ian.atkin@ict.ox.ac.uk>
-Subject: Compiling ahci.c as a module for the 2.6.18.8 kernel
-Date: Tue, 27 Jan 2009 12:19:36 -0000
-Message-ID: <02c701c98079$852d0c90$d1664381@oucsiana2>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ide/libata: fix ata_id_is_cfa() (take 3)
+Date: Tue, 27 Jan 2009 17:19:52 +0400
+Message-ID: <200901271619.53025.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback0.mail.ox.ac.uk ([129.67.1.175]:38260 "EHLO
-	fallback0.mail.ox.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755187AbZA0NQW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 08:16:22 -0500
-Received: from relay9.mail.ox.ac.uk ([163.1.2.169])
-	by fallback0.mail.ox.ac.uk with esmtp (Exim 4.69)
-	(envelope-from <ian.atkin@ict.ox.ac.uk>)
-	id 1LRn3u-0001u2-1l
-	for linux-ide@vger.kernel.org; Tue, 27 Jan 2009 12:29:02 +0000
-Received: from smtp0.mail.ox.ac.uk ([129.67.1.205])
-	by relay9.mail.ox.ac.uk with esmtp (Exim 4.69)
-	(envelope-from <ian.atkin@ict.ox.ac.uk>)
-	id 1LRmui-0006LZ-T8
-	for linux-ide@vger.kernel.org; Tue, 27 Jan 2009 12:19:32 +0000
-Received: from oucs-iana2.oucs.ox.ac.uk ([129.67.102.209] helo=oucsiana2)
-	by smtp0.mail.ox.ac.uk with esmtpsa (TLSv1:RC4-MD5:128)
-	(Exim 4.69)
-	(envelope-from <ian.atkin@ict.ox.ac.uk>)
-	id 1LRmuh-0002I7-2H
-	for linux-ide@vger.kernel.org; Tue, 27 Jan 2009 12:19:31 +0000
+Received: from rtsoft3.corbina.net ([85.21.88.6]:23191 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753255AbZA0NTY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 08:19:24 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, gdu@mns.spb.ru
 
-Hi,
+When checking for the CFA feature set support, ata_id_is_cfa() tests bit 2 in
+word 82 of the identify data instead the word 83;  it also checks the ATA/PI
+version support in the word 80 (which the CompactFlash specifications have as
+reserved), this having no slightest chance to work on the modern CF cards that
+don't have 0x848A in the word 0...
 
-I am trying to compile ahci.c as a loadable module for the 2.6.18.8 kernel
-which I used a PXE environment. This is so that I can see disks on the new
-generation of hardware coming out with the ICH10 SATA controllers.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-I've downloaded my Linux 2.6.28 source, and have tried compiling the ahci
-module against the 2.6.18.8 source tree, by the following steps:
+---
+The patch has been updated to keep Alan feeling safe; there's a hope however
+that his paranoia will assume more consistent form. :-)
+I'm not sure who should queue this patch... it's against Linus' tree.
 
-1) Built the 2.6.18.8 kernel with modules
-   `make bzImage modules`
+ include/linux/ata.h |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-2) grabbed the ata folder from /usr/src/linux-2.6.28/drivers and tried
-compiling against the /usr/src/linux-2.6.18.28 source,
-  `make -C /usr/src/linux-2/6/18/8 SUBDIRS=$PWD modules`
-
-  make: Entering directory `/usr/src/linux-2.6.18.8'
-  Building modules, stage 2
-  MODPOST
-  make: Leaving directory `/usr/src/linux-2.6.18.8'
-
-I just can't appear to build the module -the ata folder doesn't appear to
-have been touched. I used to use Linux a long time ago, and have never been
-expert.  Apologies in advance if this is a dummy post.
-
-Kind Regards,
-Ian./
+Index: linux-2.6/include/linux/ata.h
+===================================================================
+--- linux-2.6.orig/include/linux/ata.h
++++ linux-2.6/include/linux/ata.h
+@@ -731,12 +731,17 @@ static inline int ata_id_current_chs_val
+ 
+ static inline int ata_id_is_cfa(const u16 *id)
+ {
+-	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
++	if (id[ATA_ID_CONFIG] == 0x848A)	/* Traditional CF */
+ 		return 1;
+-	/* Could be CF hiding as standard ATA */
+-	if (ata_id_major_version(id) >= 3 &&
+-	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
+-	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
++	/*
++	 * CF specs don't require specific value in the word 0 anymore and yet
++	 * they forbid to report the ATA version in the word 80 and require the
++	 * CFA feature set support to be indicated in the word 83 in this case.
++	 * Let's hope that the modern cards at least follow the word 80 rule
++	 * because some certainly don't follow the word 83 rule... :-/
++	 */
++	if (!id[ATA_ID_MAJOR_VER] &&
++	    (id[ATA_ID_COMMAND_SET_2] & 0xC004) == 0x4004)
+ 		return 1;
+ 	return 0;
+ }
 
