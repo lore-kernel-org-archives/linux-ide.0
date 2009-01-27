@@ -1,64 +1,79 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa() (take 3)
-Date: Tue, 27 Jan 2009 12:41:16 -0500
-Message-ID: <497F473C.70305@rtr.ca>
-References: <200901271619.53025.sshtylyov@ru.mvista.com> <20090127133841.2405e649@lxorguk.ukuu.org.uk> <497F2EAD.4080705@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37597 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753175AbZA0RlT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jan 2009 12:41:19 -0500
-In-Reply-To: <497F2EAD.4080705@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/4] ide: remove IDE_ARCH_INTR
+Date: Tue, 27 Jan 2009 19:02:52 +0100
+Message-ID: <20090127180252.28089.70513.sendpatchset@localhost.localdomain>
+References: <20090127180246.28089.2981.sendpatchset@localhost.localdomain>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20090127180246.28089.2981.sendpatchset@localhost.localdomain>
+Sender: linux-m68k-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitz@debian.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-m68k@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-Mark Lord wrote:
->
-> Any chance you two could figure out this one below?
-> It *is* a CF card, but doesn't show up as such.
-> 
-> /dev/sda:
-> 044a 3fff 0000 000f 0000 0240 003f 03bc
-> 0000 0000 5052 4554 4543 2020 2020 2020
-> 3031 3233 3541 4545 0002 0002 0004 3230
-> 3038 3038 3035 4346 2020 2020 2020 2020
-> 2020 2020 2020 2020 2020 2020 2020 2020
-> 2020 2020 2020 2020 2020 2020 2020 8001
-> 0000 0300 0000 0200 0000 0007 3fff 000f
-> 003f 3c4f 00ec 0100 0000 03bc 0000 0007
-> 0003 0078 0078 0078 0078 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0010 0000 700b 400c 4003 0001 0000 0003
-> 207f 0001 0000 0000 fffe 600f 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0009 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 81f4 0000 0000 0092 001b 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-..
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove IDE_ARCH_INTR
 
-Speaking of which.. these cards retail for only $99 delivered (eBay),
-in case anyone was looking for a cheap-ish SSD for an older notebook.
-Reads at up to 40+MBytes/sec, writes are in the 20MB/sec range.
+This micro-optimization is not worth it.  Just always check for
+existence of ->ack_intr method in ide_intr() and ide_timer_expiry().
 
-Cheers
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Michael Schmitz <schmitz@debian.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-io.c   |    5 +++--
+ include/asm-m68k/ide.h |    3 ---
+ include/linux/ide.h    |    5 -----
+ 3 files changed, 3 insertions(+), 10 deletions(-)
+
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -736,7 +736,8 @@ void ide_timer_expiry (unsigned long dat
+ 		} else if (drive_is_ready(drive)) {
+ 			if (drive->waiting_for_dma)
+ 				hwif->dma_ops->dma_lost_irq(drive);
+-			(void)ide_ack_intr(hwif);
++			if (hwif->ack_intr(hwif))
++				hwif->ack_intr(hwif);
+ 			printk(KERN_WARNING "%s: lost interrupt\n",
+ 				drive->name);
+ 			startstop = handler(drive);
+@@ -851,7 +852,7 @@ irqreturn_t ide_intr (int irq, void *dev
+ 
+ 	spin_lock_irqsave(&hwif->lock, flags);
+ 
+-	if (!ide_ack_intr(hwif))
++	if (hwif->ack_intr && hwif->ack_intr(hwif) == 0)
+ 		goto out;
+ 
+ 	handler = hwif->handler;
+Index: b/include/asm-m68k/ide.h
+===================================================================
+--- a/include/asm-m68k/ide.h
++++ b/include/asm-m68k/ide.h
+@@ -123,8 +123,5 @@ ide_get_lock(irq_handler_t handler, void
+ }
+ #endif /* CONFIG_BLK_DEV_FALCON_IDE */
+ 
+-#define IDE_ARCH_ACK_INTR
+-#define ide_ack_intr(hwif)	((hwif)->ack_intr ? (hwif)->ack_intr(hwif) : 1)
+-
+ #endif /* __KERNEL__ */
+ #endif /* _M68K_IDE_H */
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -202,11 +202,6 @@ static inline void ide_std_init_ports(hw
+ 
+ #define MAX_HWIFS	10
+ 
+-/* Currently only m68k, apus and m8xx need it */
+-#ifndef IDE_ARCH_ACK_INTR
+-# define ide_ack_intr(hwif) (1)
+-#endif
+-
+ /* Currently only Atari needs it */
+ #ifndef IDE_ARCH_LOCK
+ # define ide_release_lock()			do {} while (0)
