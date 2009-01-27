@@ -1,41 +1,70 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 27 Jan 2009 07:50:23 -0800 (PST)
-Message-ID: <alpine.LFD.2.00.0901270748290.3123@localhost.localdomain>
-References: <20090127073055.GA30360@havoc.gtf.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] ide/libata: fix ata_id_is_cfa() (take 3)
+Date: Tue, 27 Jan 2009 10:56:29 -0500
+Message-ID: <497F2EAD.4080705@rtr.ca>
+References: <200901271619.53025.sshtylyov@ru.mvista.com> <20090127133841.2405e649@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756195AbZA0PvO@vger.kernel.org>
-In-Reply-To: <20090127073055.GA30360@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:35606 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751461AbZA0P4b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Jan 2009 10:56:31 -0500
+In-Reply-To: <20090127133841.2405e649@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, gdu@mns.spb.ru
 
-
-
-On Tue, 27 Jan 2009, Jeff Garzik wrote:
+Alan Cox wrote:
+> On Tue, 27 Jan 2009 17:19:52 +0400
+> Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 > 
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+>> When checking for the CFA feature set support, ata_id_is_cfa() tests bit 2 in
+>> word 82 of the identify data instead the word 83;  it also checks the ATA/PI
+>> version support in the word 80 (which the CompactFlash specifications have as
+>> reserved), this having no slightest chance to work on the modern CF cards that
+>> don't have 0x848A in the word 0...
+>>
+>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 > 
-> to receive the following updates:
-> 
->  drivers/ata/Kconfig              |    6 ++--
->  drivers/ata/libata-sff.c         |   12 ++++++-
->  drivers/ata/pata_rb532_cf.c      |    2 -
->  drivers/ata/pata_via.c           |   22 +++++++++---
->  drivers/ata/sata_mv.c            |   56 ++++++++++++++----------------
->  drivers/ata/sata_nv.c            |   70 +++++++++++++++++++++++--------------
->  include/linux/pci_ids.h          |    4 ++
->  7 files changed, 104 insertions(+), 68 deletions(-)
->  delete mode 100644 arch/arm/mach-integrator/clock.h
+> Acked-by: Alan Cox <number6@the-village.bc.nu>
+..
 
-Hmm. That delete of the empty file is "correct" (and probably came as a 
-result of somebody doing "make distclean" which deletes empty files), but 
-should not have been committed as part of "libata-sff: fix incorrect EH 
-message".
+Any chance you two could figure out this one below?
+It *is* a CF card, but doesn't show up as such.
 
-Seems to be a mistake, and a small one, but still.. Be more careful.
-
-			Linus
+/dev/sda:
+044a 3fff 0000 000f 0000 0240 003f 03bc
+0000 0000 5052 4554 4543 2020 2020 2020
+3031 3233 3541 4545 0002 0002 0004 3230
+3038 3038 3035 4346 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 8001
+0000 0300 0000 0200 0000 0007 3fff 000f
+003f 3c4f 00ec 0100 0000 03bc 0000 0007
+0003 0078 0078 0078 0078 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0010 0000 700b 400c 4003 0001 0000 0003
+207f 0001 0000 0000 fffe 600f 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0009 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+81f4 0000 0000 0092 001b 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
