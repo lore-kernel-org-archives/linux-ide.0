@@ -1,129 +1,65 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
-  SSDs - Impact of trim?]
-Date: Wed, 28 Jan 2009 15:28:22 -0500
-Message-ID: <4980BFE6.1060704@tmr.com>
-References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	<497A2B3C.3060603@redhat.com>	<1232749447.3250.146.camel@localhost.localdomain>	<87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	<497A542C.1040900@redhat.com>	<7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	<497DE35C.6090308@redhat.com>	<87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	<1232992065.3248.38.camel@localhost.localdomain> <18814.39074.194781.490676@notabene.brown> <497EEEC2.1040907@redhat.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] dmi: Fix build breakage
+Date: Wed, 28 Jan 2009 23:24:59 +0100
+Message-ID: <200901282325.00215.rjw@sisk.pl>
+References: <1233122840-24142-1-git-send-email-galak@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:40096 "EHLO partygirl.tmr.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:39321 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755156AbZA1U26 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jan 2009 15:28:58 -0500
-In-Reply-To: <497EEEC2.1040907@redhat.com>
+	id S1753082AbZA1WZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jan 2009 17:25:43 -0500
+In-Reply-To: <1233122840-24142-1-git-send-email-galak@kernel.crashing.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Freemyer <greg.freemyer@norcrossgroup.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Kumar Gala <galak@kernel.crashing.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Ric Wheeler wrote:
-> Neil Brown wrote:
->> On Monday January 26, James.Bottomley@HansenPartnership.com wrote:
->>  
->>> On Mon, 2009-01-26 at 12:34 -0500, Greg Freemyer wrote:
->>>    
->>>> Adding mdraid list:
->>>>
->>>> Top post as a recap for mdraid list (redundantly at end of email if
->>>> anyone wants to respond to any of this).:
->>>>
->>>> == Start RECAP
->>>> With proposed spec changes for both T10 and T13 a new "unmap" or
->>>> "trim" command is proposed respectively.  The linux kernel is
->>>> implementing this as a sector discard and will be called by various
->>>> file systems as they delete data files.  Ext4 will be one of the first
->>>> to support this. (At least via out of kernel patches.)
->>>>
->>>> SCSI - see http://www.t10.org/cgi-bin/ac.pl?t=d&f=08-356r5.pdf
->>>> ATA - see T13/e08137r2 draft
->>>>
->>>> Per the proposed spec changes, the underlying SSD device can
->>>> optionally modify the unmapped data.  SCSI T10 at least restricts the
->>>> way the modification happens, but data modification of unmapped data
->>>> is still definitely allowed for both classes of SSD.
->>>>
->>>> Thus if a filesystem "discards" a sector, the contents of the sector
->>>> can change and thus parity values are no longer meaningful for the
->>>> stripe.
->>>>       
->>> This isn't correct.  The implementation is via bio and request discard
->>> flags.  linux raid as a bio->bio mapping entity can choose to drop or
->>> implement the discard flag (by default it will be dropped unless the
->>> raid layer is modified).
->>>     
->>
->> That's good.  I would be worried if they could slip through without
->> md/raid noticing.
->>
->>  
->>>> ie. If the unmap-ed blocks don't exactly correlate with the Raid-5 / 6
->>>> stripping, then the integrity of a stripe containing both mapped and
->>>> unmapped data is lost.
->>>>
->>>> Thus it seems that either the filesystem will have to understand the
->>>> raid 5 / 6 stripping / chunking setup and ensure it never issues a
->>>> discard command unless an entire stripe is being discarded.  Or that
->>>> the raid implementation must must snoop the discard commands and take
->>>> appropriate actions.
->>>>       
->>> No.  It only works if the discard is supported all the way through the
->>> stack to the controller and device ... any point in the stack can drop
->>> the discard.  It's also theoretically possible that any layer could
->>> accumulate them as well (i.e. up to stripe size for raid).
->>>     
->>
->> Accumulating them in the raid level would probably be awkward.
->>
->> It was my understanding that filesystems would (try to) send the
->> largest possible 'discard' covering any surrounding blocks that had
->> already been discarded.  Then e.g. raid5 could just round down any
->> discard request to an aligned number of complete stripes and just
->> discard those.  i.e. have all the accumulation done in the filesystem.
->>
->> To be able to safely discard stripes, raid5 would need to remember
->> which stripes were discarded so that it could be sure to write out the
->> whole stripe when updating any block on it, thus ensuring that parity
->> will be correct again and will remain correct.
->>
->> Probably the only practical data structure for this would be a bitmap
->> similar to the current write-intent bitmap.
->>
->> Is it really worth supporting this in raid5?   Are the sorts of
->> devices that will benefit from 'discard' requests likely to be used
->> inside an md/raid5 array I wonder....
->>
->> raid1 and raid10 are much easier to handle, so supporting 'discard'
->> there certainly makes sense.
->>
->> NeilBrown
->> -- 
->>   
->
-> The benefit is also seen by SSD devices (T13) and high end arrays 
-> (T10).  On the array end, they almost universally do RAID support 
-> internally.
->
-> I suppose that people might make RAID5 devices out of SSD's locally, 
-> but it is probably not an immediate priority....
+On Wednesday 28 January 2009, Kumar Gala wrote:
+> The following commit introduced:
+> 
+> commit d7b1956fed33d30c4815e848fd7a143722916868
+> Author: Rafael J. Wysocki <rjw@sisk.pl>
+> Date:   Mon Jan 19 20:55:50 2009 +0100
+> 
+>     DMI: Introduce dmi_first_match to make the interface more flexible
+> 
+> compile errors like the following when !CONFIG_DMI
+> 
+>     drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
+>     drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
+>     drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
+> 
+> We just need a dummy version of dmi_first_match() to fix this all up.
 
-Depends on how you define "priority" here. It probably would not make 
-much of a performance difference, it might make a significant lifetime 
-difference in the devices.
+Well, my bad.  Thanks for the fix!
 
-Not RAID5, RAID6. As seek times shrink things which were performance 
-limited become practical, journaling file systems are not a problem just 
-a solution, mounting with atime disabled isn't needed, etc. I was given 
-some CF to PATA adapters to test, and as soon as I grab some 16GB CFs I 
-intend to try a 32GB RAID6. I have a perfect application for it, and if 
-it works well after I test I can put journal files on it. I just wish I 
-had a file system which could put the journal, inodes, and directories 
-all on the fast device and leaves the files (data) on something cheap.
+> Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
+> ---
+> 
+> This should supercede the driver specific patches I posted earlier.
+> 
+> - k
+> 
+>  include/linux/dmi.h |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+> index aea2310..d741b9c 100644
+> --- a/include/linux/dmi.h
+> +++ b/include/linux/dmi.h
+> @@ -65,6 +65,8 @@ static inline int dmi_walk(void (*decode)(const struct dmi_header *))
+>  	{ return -1; }
+>  static inline bool dmi_match(enum dmi_field f, const char *str)
+>  	{ return false; }
+> +static inline const struct dmi_system_id *
+> +	dmi_first_match(const struct dmi_system_id *list) { return NULL; }
+>  
+>  #endif
+>  
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
+Rafael
