@@ -1,12 +1,15 @@
 From: Kumar Gala <galak@kernel.crashing.org>
-Subject: [PATCH] ahci: Fix build breakage
-Date: Tue, 27 Jan 2009 23:02:00 -0600
-Message-ID: <1233118922-15350-1-git-send-email-galak@kernel.crashing.org>
+Subject: [PATCH] sata_sil: Fix build breakage
+Date: Tue, 27 Jan 2009 23:02:02 -0600
+Message-ID: <1233118922-15350-3-git-send-email-galak@kernel.crashing.org>
+References: <1233118922-15350-1-git-send-email-galak@kernel.crashing.org>
+ <1233118922-15350-2-git-send-email-galak@kernel.crashing.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50595 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:50599 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750732AbZA1FCk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jan 2009 00:02:40 -0500
+	id S1752703AbZA1FCs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jan 2009 00:02:48 -0500
+In-Reply-To: <1233118922-15350-2-git-send-email-galak@kernel.crashing.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
@@ -14,36 +17,36 @@ Cc: Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@
 
 The following commit introduces:
 
-commit 1fd684346d41f6be2487c161f60d03a7feb68911
+commit e57db7bde7bff95ae812736ca00c73bd5271455b
 Author: Rafael J. Wysocki <rjw@sisk.pl>
-Date:   Mon Jan 19 20:57:36 2009 +0100
+Date:   Mon Jan 19 20:58:29 2009 +0100
 
-    SATA AHCI: Blacklist system that spins off disks during ACPI power off
+    SATA Sil: Blacklist system that spins off disks during ACPI power off
 
-the following errors on non-x86 systems:
+the following build errors on non-x86 systems:
 
-drivers/ata/ahci.c: In function 'ahci_broken_system_poweroff':
-drivers/ata/ahci.c:2566: error: implicit declaration of function 'dmi_first_match'
-drivers/ata/ahci.c:2566: warning: initialization makes pointer from integer without a cast
+drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
+drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
+drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
 
 Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
 ---
- drivers/ata/ahci.c |    2 ++
+ drivers/ata/sata_sil.c |    2 ++
  1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 77bba4c..2c84f53 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2550,6 +2550,7 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index bfd55b0..3f0549d 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -697,6 +697,7 @@ static void sil_init_controller(struct ata_host *host)
  
- static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
+ static bool sil_broken_system_poweroff(struct pci_dev *pdev)
  {
 +#ifdef CONFIG_DMI
  	static const struct dmi_system_id broken_systems[] = {
  		{
- 			.ident = "HP Compaq nx6310",
-@@ -2570,6 +2571,7 @@ static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
+ 			.ident = "HP Compaq nx6325",
+@@ -717,6 +718,7 @@ static bool sil_broken_system_poweroff(struct pci_dev *pdev)
  		/* apply the quirk only to on-board controllers */
  		return slot == PCI_SLOT(pdev->devfn);
  	}
