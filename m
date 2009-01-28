@@ -1,30 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH] ide/net: flip the order of SATA and network init
-Date: Tue, 27 Jan 2009 18:35:37 -0500
-Message-ID: <497F9A49.6060601@garzik.org>
+Date: Wed, 28 Jan 2009 01:22:20 +0100
+Message-ID: <200901280122.24499.bzolnier@gmail.com>
 References: <20090127141952.51785b4f@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53626 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750919AbZA0Xfm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jan 2009 18:35:42 -0500
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:53604 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbZA1AW1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 19:22:27 -0500
 In-Reply-To: <20090127141952.51785b4f@infradead.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Arjan van de Ven <arjan@infradead.org>
 Cc: linux-ide@vger.kernel.org, netdev@vger.kernel.org
 
-Arjan van de Ven wrote:
->>From e89d6840ad685a3c61f72367d4ac5bfed69ead0c Mon Sep 17 00:00:00 2001
+On Tuesday 27 January 2009, Arjan van de Ven wrote:
+> From e89d6840ad685a3c61f72367d4ac5bfed69ead0c Mon Sep 17 00:00:00 2001
 > From: Arjan van de Ven <arjan@linux.intel.com>
 > Date: Mon, 26 Jan 2009 18:58:11 -0800
 > Subject: [PATCH] ide/net: flip the order of SATA and network init
 > 
 > this patch flips the order in which sata and network drivers are initialized.
-> 
+
+it seems to affect much more than that, please see below
+
 > SATA probing takes quite a bit of time, and with the asynchronous infrastructure
 > other drivers that run after it can execute in parallel. Network drivers do tend
 > to take some real time talking to the hardware, so running these later is
@@ -52,12 +56,14 @@ Arjan van de Ven wrote:
 >  obj-y				+= macintosh/
 >  obj-$(CONFIG_IDE)		+= ide/
 >  obj-$(CONFIG_SCSI)		+= scsi/
+
+scsi, ide, macintosh and nubus will be now init-ed after network.
+
+No problem for ide but I'm not really sure about scsi...
+
 >  obj-$(CONFIG_ATA)		+= ata/
 > +obj-y				+= net/
 > +obj-$(CONFIG_ATM)		+= atm/
 >  obj-$(CONFIG_FUSION)		+= message/
 >  obj-$(CONFIG_FIREWIRE)		+= firewire/
 >  obj-y				+= ieee1394/
-
-ACK, ok with me too
-
