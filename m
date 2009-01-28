@@ -1,69 +1,36 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [PATCH] ide/net: flip the order of SATA and network init
-Date: Wed, 28 Jan 2009 01:22:20 +0100
-Message-ID: <200901280122.24499.bzolnier@gmail.com>
+Date: Tue, 27 Jan 2009 16:48:42 -0800
+Message-ID: <20090127164842.0b73cc46@infradead.org>
 References: <20090127141952.51785b4f@infradead.org>
+	<497F9A49.6060601@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:53604 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751524AbZA1AW1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 19:22:27 -0500
-In-Reply-To: <20090127141952.51785b4f@infradead.org>
-Content-Disposition: inline
+Received: from casper.infradead.org ([85.118.1.10]:44558 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbZA1Asn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2009 19:48:43 -0500
+In-Reply-To: <497F9A49.6060601@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org, netdev@vger.kernel.org
 
-On Tuesday 27 January 2009, Arjan van de Ven wrote:
-> From e89d6840ad685a3c61f72367d4ac5bfed69ead0c Mon Sep 17 00:00:00 2001
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Mon, 26 Jan 2009 18:58:11 -0800
-> Subject: [PATCH] ide/net: flip the order of SATA and network init
+On Tue, 27 Jan 2009 18:35:37 -0500
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> ACK, ok with me too
 > 
-> this patch flips the order in which sata and network drivers are initialized.
 
-it seems to affect much more than that, please see below
+ok so... which tree should this go via?
 
-> SATA probing takes quite a bit of time, and with the asynchronous infrastructure
-> other drivers that run after it can execute in parallel. Network drivers do tend
-> to take some real time talking to the hardware, so running these later is
-> a good thing (the sata probe then runs concurrent)
-> 
-> This saves about 15% of my kernels boot time.
-> 
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> ---
->  drivers/Makefile |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index c1bf417..2618a61 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -36,13 +36,14 @@ obj-$(CONFIG_FB_INTEL)          += video/intelfb/
->  
->  obj-y				+= serial/
->  obj-$(CONFIG_PARPORT)		+= parport/
-> -obj-y				+= base/ block/ misc/ mfd/ net/ media/
-> +obj-y				+= base/ block/ misc/ mfd/ media/
->  obj-$(CONFIG_NUBUS)		+= nubus/
-> -obj-$(CONFIG_ATM)		+= atm/
->  obj-y				+= macintosh/
->  obj-$(CONFIG_IDE)		+= ide/
->  obj-$(CONFIG_SCSI)		+= scsi/
+I would guess jgarzik's because he deals with both sata and net ;)
 
-scsi, ide, macintosh and nubus will be now init-ed after network.
+Jeff... how do you want to handle this?
 
-No problem for ide but I'm not really sure about scsi...
-
->  obj-$(CONFIG_ATA)		+= ata/
-> +obj-y				+= net/
-> +obj-$(CONFIG_ATM)		+= atm/
->  obj-$(CONFIG_FUSION)		+= message/
->  obj-$(CONFIG_FIREWIRE)		+= firewire/
->  obj-y				+= ieee1394/
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
