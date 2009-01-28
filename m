@@ -1,66 +1,47 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: Seagate disk freeze for 30 seconds then comes back (RecovComm 10B8B)
-Date: Wed, 28 Jan 2009 10:31:41 -0500
-Message-ID: <20090128153141.GC26064@csclub.uwaterloo.ca>
-References: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Wed, 28 Jan 2009 15:11:19 -0500
+Message-ID: <4980BBE7.30808@tmr.com>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	<497A2B3C.3060603@redhat.com>	<1232749447.3250.146.camel@localhost.localdomain>	<87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	<497A542C.1040900@redhat.com>	<7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	<497DE35C.6090308@redhat.com>	<87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	<1232992065.3248.38.camel@localhost.localdomain> <18814.39074.194781.490676@notabene.brown> <497EE6A4.7030406@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:50583 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751453AbZA1Pbm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Jan 2009 10:31:42 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <497EE6A4.7030406@anonymous.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Neil Brown <neilb@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Freemyer <greg.freemyer@norcrossgroup.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Jan 28, 2009 at 11:30:42AM +0200, Catalin(ux) M. BOIE wrote:
-> I have a ST9160821AS drive, firmware 3.BHE, and I experience some seldom 
-> problems with it. It is in a HP 6715s HP laptop, kernel 2.6.27.5.
-> 
-> The error message is:
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x80002 action 0x6 frozen
-> ata1: SError: { RecovComm 10B8B }
-> ata1.00: cmd ca/00:f8:11:b8:38/00:00:00:00:00/ec tag 0 dma 126976 out
-> res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: hard resetting link
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
-> ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> 
-> When it happens, the system freezes for around 30 seconds.
-> 
-> Seagate told me that there is no firmware update for this drive.
-> 
-> Please, let me know if it is a software issue.
+John Robinson wrote:
+> On 27/01/2009 05:16, Neil Brown wrote:
+> [...]
+>> Probably the only practical data structure for this would be a bitmap
+>> similar to the current write-intent bitmap.
+>>
+>> Is it really worth supporting this in raid5?   Are the sorts of
+>> devices that will benefit from 'discard' requests likely to be used
+>> inside an md/raid5 array I wonder....
+>
+> Assuming I've understood correctly, this usage map sounds to me like a 
+> useful thing to have for all RAIDs. When building the array in the 
+> first place, the initial sync is just writing a usage map saying it's 
+> all empty. Filesystem writes and discards update it appropriately. 
+> Then when we get failing sectors reported via e.g. SMART or a scrub 
+> operation we know whether they're on used or unused areas so whether 
+> it's worth attempting recovery.
 
-This sounds like a very widely known and discussed firmware problem.  It
-happens with Linux, Windows, and Mac OS X, as well as various NAS boxes.
-It is seagate's fault.  Of course I had only seen it mentioned for the
-500GB, 750GB, 1TB and 1.5TB drives.  Somehow yours seems like it should
-be a different series, but then again why should a firmware bug not be
-duplicated on all their drives.
-
-One discussion is here: http://techreport.com/discussions.x/15863
-
-Seriously annoying for raid users of course when a drive falls out of
-the raid for no good reason.
-
-
-I seem to recall some people had found that if you disabled some part of
-the drive caching the problem seemed to go away (as did a lot of the
-drive's performance of course).
+It would seem that this could really speed initialization. A per-stripe 
+"unused" bitmap could save a lot of time in init, but also in the check 
+operation on partially used media. It's not just being nice to SDD, but 
+being nice to power consumption, performance impact, rebuild time... 
+other than the initial coding and testing required, I can't see any 
+downside to this.
 
 -- 
-Len Sorensen
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
