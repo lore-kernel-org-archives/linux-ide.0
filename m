@@ -1,51 +1,28 @@
-From: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
-Subject: Seagate disk freeze for 30 seconds then comes back (RecovComm
- 10B8B)
-Date: Wed, 28 Jan 2009 11:30:42 +0200 (EET)
-Message-ID: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ide/libata: fix ata_id_is_cfa() ..  hdparm-9.10
+Date: Wed, 28 Jan 2009 10:03:30 -0500
+Message-ID: <498073C2.3040106@rtr.ca>
+References: <200901271619.53025.sshtylyov@ru.mvista.com> <497F2EAD.4080705@rtr.ca> <497F3366.5020608@ru.mvista.com> <200901281051.35030.gdu@mns.spb.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.embedromix.ro ([82.78.144.6]:46677 "EHLO
-	mail.embedromix.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbZA1KNg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Jan 2009 05:13:36 -0500
+Received: from rtr.ca ([76.10.145.34]:57648 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751586AbZA1PDd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jan 2009 10:03:33 -0500
+In-Reply-To: <200901281051.35030.gdu@mns.spb.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Dmitry Gryazin <gdu@mns.spb.ru>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, navy-patches@mns.spb.ru
 
-Hello!
+For the convenience of folks looking at CF cards and other issues here,
+I've just put out hdparm-9.10 https://sourceforge.net/projects/hdparm/
+with improved CF card detection, and corrected reporting of CF mwdma modes.
 
-I have a ST9160821AS drive, firmware 3.BHE, and I experience some seldom 
-problems with it. It is in a HP 6715s HP laptop, kernel 2.6.27.5.
+If you haven't upgraded in a while, this might be an excuse to do so.
 
-The error message is:
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x80002 action 0x6 frozen
-ata1: SError: { RecovComm 10B8B }
-ata1.00: cmd ca/00:f8:11:b8:38/00:00:00:00:00/ec tag 0 dma 126976 out
-res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata1.00: status: { DRDY }
-ata1: hard resetting link
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
-ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
-ata1.00: configured for UDMA/100
-ata1: EH complete
-sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
+Cheers
 
-When it happens, the system freezes for around 30 seconds.
-
-Seagate told me that there is no firmware update for this drive.
-
-Please, let me know if it is a software issue.
-
-Thank you very much!
-
---
-Catalin(ux) M. BOIE
-http://kernel.embedromix.ro/
+Mark
