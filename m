@@ -1,164 +1,125 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 5/8] libata: add @spd_limit to sata_down_spd_limit()
-Date: Thu, 29 Jan 2009 20:31:33 +0900
-Message-ID: <1233228696-10562-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/8] libata: clear dev->ering in smarter way
+Date: Thu, 29 Jan 2009 20:31:32 +0900
+Message-ID: <1233228696-10562-5-git-send-email-tj@kernel.org>
 References: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34103 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34105 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752651AbZA2LcE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jan 2009 06:32:04 -0500
+	id S1753071AbZA2LcF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jan 2009 06:32:05 -0500
 In-Reply-To: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-Add @spd_limit to sata_down_spd_limit() so that the caller can specify
-the SPD limit it wants.  This parameter doesn't get in the way even
-when it's too low.  The closest possible limit is applied.
+dev->ering used to be cleared together with the rest of ata_device in
+ata_dev_init() which is called whenever a probing event occurs.
+dev->ering is about to be used to track probing failures so it needs
+to remain persistent over multiple porbing events.  This patch
+achieves this by doing the following.
+
+* Instead of CLEAR_OFFSET, define CLEAR_BEGIN and CLEAR_END and only
+  clear between BEGIN and END.  ering is moved after END.  The split
+  of persistent area is to allow hotter items remain at the head.
+
+* ering is explicitly cleared on ata_dev_disable() and when device
+  attach succeeds.  So, ering is persistent throug a device's life
+  time (unless explicitly cleared of course) and also through periods
+  inbetween disablement of an attached device and successful detection
+  of the next one.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-core.c |   25 ++++++++++++++++++++-----
- drivers/ata/libata-eh.c   |   10 +++++-----
- drivers/ata/libata-pmp.c  |    2 +-
- drivers/ata/libata.h      |    2 +-
- 4 files changed, 27 insertions(+), 12 deletions(-)
+ drivers/ata/libata-core.c |    4 ++--
+ drivers/ata/libata-eh.c   |    7 +++++++
+ include/linux/libata.h    |   18 ++++++++++--------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6a5b8e2..0cc0d8f 100644
+index daf0dec..6a5b8e2 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2777,7 +2777,7 @@ int ata_bus_probe(struct ata_port *ap)
- 			/* This is the last chance, better to slow
- 			 * down than lose it.
- 			 */
--			sata_down_spd_limit(&ap->link);
-+			sata_down_spd_limit(&ap->link, 0);
- 			ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
- 		}
- 	}
-@@ -2873,21 +2873,27 @@ void ata_port_disable(struct ata_port *ap)
- /**
-  *	sata_down_spd_limit - adjust SATA spd limit downward
-  *	@link: Link to adjust SATA spd limit for
-+ *	@spd_limit: Additional limit
-  *
-  *	Adjust SATA spd limit of @link downward.  Note that this
-  *	function only adjusts the limit.  The change must be applied
-  *	using sata_set_spd().
-  *
-+ *	If @spd_limit is non-zero, the speed is limited to equal to or
-+ *	lower than @spd_limit if such speed is supported.  If
-+ *	@spd_limit is slower than any supported speed, only the lowest
-+ *	supported speed is allowed.
-+ *
-  *	LOCKING:
-  *	Inherited from caller.
-  *
-  *	RETURNS:
-  *	0 on success, negative errno on failure
-  */
--int sata_down_spd_limit(struct ata_link *link)
-+int sata_down_spd_limit(struct ata_link *link, u32 spd_limit)
- {
- 	u32 sstatus, spd, mask;
--	int rc, highbit;
-+	int rc, bit;
+@@ -5403,8 +5403,8 @@ void ata_dev_init(struct ata_device *dev)
+ 	dev->horkage = 0;
+ 	spin_unlock_irqrestore(ap->lock, flags);
  
- 	if (!sata_scr_valid(link))
- 		return -EOPNOTSUPP;
-@@ -2906,8 +2912,8 @@ int sata_down_spd_limit(struct ata_link *link)
- 		return -EINVAL;
- 
- 	/* unconditionally mask off the highest bit */
--	highbit = fls(mask) - 1;
--	mask &= ~(1 << highbit);
-+	bit = fls(mask) - 1;
-+	mask &= ~(1 << bit);
- 
- 	/* Mask off all speeds higher than or equal to the current
- 	 * one.  Force 1.5Gbps if current SPD is not available.
-@@ -2921,6 +2927,15 @@ int sata_down_spd_limit(struct ata_link *link)
- 	if (!mask)
- 		return -EINVAL;
- 
-+	if (spd_limit) {
-+		if (mask & ((1 << spd_limit) - 1))
-+			mask &= (1 << spd_limit) - 1;
-+		else {
-+			bit = ffs(mask) - 1;
-+			mask = 1 << bit;
-+		}
-+	}
-+
- 	link->sata_spd_limit = mask;
- 
- 	ata_link_printk(link, KERN_WARNING, "limiting SATA link speed to %s\n",
+-	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
+-	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
++	memset((void *)dev + ATA_DEVICE_CLEAR_BEGIN, 0,
++	       ATA_DEVICE_CLEAR_END - ATA_DEVICE_CLEAR_BEGIN);
+ 	dev->pio_mask = UINT_MAX;
+ 	dev->mwdma_mask = UINT_MAX;
+ 	dev->udma_mask = UINT_MAX;
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 90092c1..685509b 100644
+index aafe82b..90092c1 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1875,7 +1875,7 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
- 	/* speed down? */
- 	if (verdict & ATA_EH_SPDN_SPEED_DOWN) {
- 		/* speed down SATA link speed if possible */
--		if (sata_down_spd_limit(link) == 0) {
-+		if (sata_down_spd_limit(link, 0) == 0) {
- 			action |= ATA_EH_RESET;
- 			goto done;
- 		}
-@@ -2627,11 +2627,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	}
+@@ -1194,6 +1194,11 @@ void ata_dev_disable(struct ata_device *dev)
+ 	ata_acpi_on_disable(dev);
+ 	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
+ 	dev->class++;
++
++	/* From now till the next successful probe, ering is used to
++	 * track probe failures.  Clear accumulated device error info.
++	 */
++	ata_ering_clear(&dev->ering);
+ }
  
- 	if (try == max_tries - 1) {
--		sata_down_spd_limit(link);
-+		sata_down_spd_limit(link, 0);
- 		if (slave)
--			sata_down_spd_limit(slave);
-+			sata_down_spd_limit(slave, 0);
- 	} else if (rc == -EPIPE)
--		sata_down_spd_limit(failed_link);
-+		sata_down_spd_limit(failed_link, 0);
+ /**
+@@ -2765,6 +2770,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 						     readid_flags, dev->id);
+ 			switch (rc) {
+ 			case 0:
++				/* clear error info accumulated during probe */
++				ata_ering_clear(&dev->ering);
+ 				new_mask |= 1 << dev->devno;
+ 				break;
+ 			case -ENOENT:
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b6b8a7f..7d7bc11 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -576,7 +576,7 @@ struct ata_device {
+ 	acpi_handle		acpi_handle;
+ 	union acpi_object	*gtf_cache;
+ #endif
+-	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
++	/* n_sector is CLEAR_BEGIN, read comment above CLEAR_BEGIN */
+ 	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	unsigned long		unpark_deadline;
+@@ -601,20 +601,22 @@ struct ata_device {
+ 	u16			heads;		/* Number of heads */
+ 	u16			sectors;	/* Number of sectors per track */
  
- 	if (hardreset)
- 		reset = hardreset;
-@@ -3011,7 +3011,7 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
- 			/* This is the last chance, better to slow
- 			 * down than lose it.
- 			 */
--			sata_down_spd_limit(ata_dev_phys_link(dev));
-+			sata_down_spd_limit(ata_dev_phys_link(dev), 0);
- 			if (dev->pio_mode > XFER_PIO_0)
- 				ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
- 		}
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 98ca07a..619f2c3 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -729,7 +729,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 		if (tries) {
- 			/* consecutive revalidation failures? speed down */
- 			if (reval_failed)
--				sata_down_spd_limit(link);
-+				sata_down_spd_limit(link, 0);
- 			else
- 				reval_failed = 1;
+-	/* error history */
+-	int			spdn_cnt;
+-	struct ata_ering	ering;
+-
+ 	union {
+ 		u16		id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
+ 	};
++
++	/* error history */
++	int			spdn_cnt;
++	/* ering is CLEAR_END, read comment above CLEAR_END */
++	struct ata_ering	ering;
+ };
  
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 0a6f5be..cea8014 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -99,7 +99,7 @@ extern int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags);
- extern int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 			      unsigned int readid_flags);
- extern int ata_dev_configure(struct ata_device *dev);
--extern int sata_down_spd_limit(struct ata_link *link);
-+extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
- extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
+-/* Offset into struct ata_device.  Fields above it are maintained
+- * acress device init.  Fields below are zeroed.
++/* Fields between ATA_DEVICE_CLEAR_BEGIN and ATA_DEVICE_CLEAR_END are
++ * cleared to zero on ata_dev_init().
+  */
+-#define ATA_DEVICE_CLEAR_OFFSET		offsetof(struct ata_device, n_sectors)
++#define ATA_DEVICE_CLEAR_BEGIN		offsetof(struct ata_device, n_sectors)
++#define ATA_DEVICE_CLEAR_END		offsetof(struct ata_device, ering)
+ 
+ struct ata_eh_info {
+ 	struct ata_device	*dev;		/* offending device */
 -- 
 1.6.0.2
 
