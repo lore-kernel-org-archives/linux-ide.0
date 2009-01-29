@@ -1,42 +1,85 @@
-From: Kevin Hilman <khilman@deeprootsystems.com>
-Subject: [PATCH] IDE: palm_bk3710: use ioremap instead of arch-specific IO_ADDRESS()
-Date: Thu, 29 Jan 2009 15:05:57 -0800
-Message-ID: <1233270357-604-1-git-send-email-khilman@deeprootsystems.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:4453 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756914AbZA2XGP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 18:06:15 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so171457wfd.4
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jan 2009 15:06:14 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Thu, 29 Jan 2009 18:44:09 -0500
+Message-ID: <49823F49.4000407@tmr.com>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <20090125110742.4ba54c0b@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0901250705300.6888@p34.internal.lan> <alpine.DEB.1.10.0901250715030.10379@p34.internal.lan> <alpine.DEB.1.10.0901250726530.10805__44823.8515914001$1232890466$gmane$org@p34.internal.lan> <497CD5F3.8030901@tmr.com> <alpine.DEB.1.10.0901251614160.16676@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759756AbZA2Xoa@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0901251614160.16676@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: davinci-linux-open-source@linux.davincidsp.com, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
----
- drivers/ide/palm_bk3710.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Justin Piszcz wrote:
+> 
+> 
+> On Sun, 25 Jan 2009, Bill Davidsen wrote:
+> 
+>> Justin Piszcz wrote:
+>>>
+>>>
+>>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>>>
+>>>>
+>>>>
+>>>> On Sun, 25 Jan 2009, Justin Piszcz wrote:
+>>>>
+>>>>>
+>>>>>
+>>>>> On Sun, 25 Jan 2009, Alan Cox wrote:
+>>>>>
+>>>>>> Easiest is to use labels. Old ide will keep hda,b,c,d constant
+>>>>>> providing you have interfaces using the legacy IDE port mappings 
+>>>>>> (0x1f0
+>>>>>> and 0x170). Libata doesn't do that as pretty much every 
+>>>>>> distribution had
+>>>>>> already switched to volume labels, and the user space can do the 
+>>>>>> job far
+>>>>>> better than the kernel - especially as the newer devices with modern
+>>>>>> interfaces don't have the old BIOS/DOS legacy ideas any more.
+>>>>>>
+>>>>>> Mount by label also means you can flip back and forth between the
+>>>>>> different drivers and kernel revisions.
+>>>>>>
+>>>>>> Alan
+>>>>>>
+>>>> It comes with one :)
+>>>> # xfs_admin -u  /dev/sdd2
+>>>> UUID = 77ae4251-631f-4656-a365-c5723f5c5da8
+>>>>
+>>>> Will try to use this to boot; however, I'd prefer the labels over 
+>>>> the UUID, wish there was an easy way to set it.
+>>>>
+>>>> Justin.
+>>>>
+>>>> _______________________________________________
+>>>> xfs mailing list
+>>>> xfs@oss.sgi.com
+>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>>
+>>>
+>>> One final question, without udev, how does one determine the UUID of 
+>>> a non-XFS
+>>> partition, e.g., swap?
+>>>
+>> One uses blkid. Which suggests that you can solve your name problem by 
+>> not using names and switching to UUID.
+> 
+> This will fix the /etc/fstab issue but not LILO/boot one, per the 
+> earlier poster, need an initrd/etc for that.
+> 
+Good point, I have not used LILO since about Slackware 8.1, or any system w/o 
+initrd in ages. I suppose there is a benefit to running without initrd, but I 
+confess that I can't remember what it is. So I don't immediately consider the 
+issues and limitations if you run without initrd.
 
-diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
-index f38aac7..be9c904 100644
---- a/drivers/ide/palm_bk3710.c
-+++ b/drivers/ide/palm_bk3710.c
-@@ -380,7 +380,11 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
- 		return -EBUSY;
- 	}
- 
--	base = IO_ADDRESS(mem->start);
-+	base = ioremap(mem->start, mem->end);
-+	if (!base) {
-+		printk(KERN_ERR "failed to map IO memory\n");
-+		return -ENOMEM;
-+	}
- 
- 	/* Configure the Palm Chip controller */
- 	palm_bk3710_chipinit(base);
+Well I answered how to GET the UUID, he didn't ask me how to USE it. And I 
+certainly didn't think of it, even though the info was there. :-(
+
 -- 
-1.6.1
-
+Bill Davidsen <davidsen@tmr.com>
+   "We have more to fear from the bungling of the incompetent than from
+the machinations of the wicked."  - from Slashdot
