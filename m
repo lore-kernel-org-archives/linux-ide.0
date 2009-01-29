@@ -1,58 +1,73 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: [PATCHSET #upstream-fixes] libata: improve flaky link handling
-Date: Thu, 29 Jan 2009 09:07:49 -0500
-Message-ID: <87f94c370901290607t4cef87ack43fd456d1703d1ca@mail.gmail.com>
-References: <1233228696-10562-1-git-send-email-tj@kernel.org>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Thu, 29 Jan 2009 15:48:32 +0100
+Message-ID: <200901291548.33238.stf_xl@wp.pl>
+References: <200901141345.42583.stf_xl@wp.pl> <49787929.2010305@ru.mvista.com> <497F2C5E.9020205@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:56291 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbZA2OHw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 09:07:52 -0500
-Received: by qyk4 with SMTP id 4so8672180qyk.13
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jan 2009 06:07:50 -0800 (PST)
-In-Reply-To: <1233228696-10562-1-git-send-email-tj@kernel.org>
+Received: from mx1.wp.pl ([212.77.101.5]:57857 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753528AbZA2Oso convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 09:48:44 -0500
+In-Reply-To: <497F2C5E.9020205@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-On Thu, Jan 29, 2009 at 6:31 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> This patchset is kicked off by kernel bz#9913 which reports hot
-> plugging and general detection problems with WD My Book drives.  WD
-> was kind enough to provide me with these drives and I played quite a
-> bit with a few controllers and weird cabling configurations including
-> long cables and several genders.
->
-> It was surprisingly easy to trigger link layer problems.  eSATA ports
-> often go through extra cable and gender.  eSATA cables tend to be
-> longer than internal ones and as the cables are much stiffer touching
-> or moving the cable can easily cause enough wiggle at the connectors
-> to cause temporary transmission problems and being outside, it's much
-> more likely to be moved.
->
-> So, with abundant link quality problems, the following problems have
-> been identified.
-Tejun,
+Tuesday 27 January 2009 16:46:38 Sergei Shtylyov napisa=C5=82(a):
+> Hello, I wrote:
+>=20
+> >>>> Well, we could add #ifdef with diffrent implementation of=20
+> >>>> init_smc_mode(), set_8bit_mode(), etc...=20
+>=20
+> >>>   No, #ifdef'ery is certainly not an option.
+>=20
+> >> Why?
+>=20
+> >    It's totally ugly and unacceptable way of doing things. It seems=
+ also=20
+> > totally wrong to add support for totally incompatible SMC to this d=
+river=20
+> > (especially with #ifdef's). Another driver should be written if CF=20
+> > support is required.
+>=20
+> >> Other option is create some header files and implement and exporti=
+ng=20
+> >> these
+> >> functions from processor specific code. This add files dependencie=
+s=20
+> >> and spread
+> >> things across sources, FWIW.
+>=20
+> >    I don't think it's feasible as that SMC is just too different.
+>=20
+>     Besides, AT91RM9200 code turned out to already be registering a p=
+latform=20
+> device called at91_cf -- driver for which I have located in drivers/p=
+cmcia/,=20
+> so apparently they're not interested in True IDE mode support (and ha=
+ve=20
+> overgeneralized the name as well :-).
+There can be AT91RM9200 boards where is only IDE hardware instead
+"full" Compact Flash support.
 
-This looks like an important patchset for those of us that use eSata.
-Any chance these can get into the opensuse 11.1 kernels?  Or lacking
-that, the os factory kernels?
+Atmel publish application note with description how connect HDD to AT91=
+RM9200.
+Connection is very similar as for SAM9, the major difference is using G=
+PIO to control=20
+CF ~CSx signals. Here is document:
 
-Thanks
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+http://www.atmel.com/dyn/resources/prod_documents/doc6023.pdf
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+Currently people at at91.com forum did board with HDD. As driver
+they use pata_platform with some hacks, which look very similar
+as things in this driver, except they use polling and not need irq quir=
+k:
+
+http://www.at91.com/samphpbb/viewtopic.php?f=3D9&t=3D4528&p=3D15739
+
+Stanislaw Gruszka
