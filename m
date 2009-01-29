@@ -1,68 +1,71 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
-Date: Thu, 29 Jan 2009 15:51:08 +0100
-Message-ID: <200901291551.09238.rjw@sisk.pl>
-References: <20081104062734.GA4420@havoc.gtf.org> <200901192054.55536.rjw@sisk.pl> <20090129130435.GB1425@ucw.cz>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Thu, 29 Jan 2009 18:22:05 +0300
+Message-ID: <4981C99D.3090801@ru.mvista.com>
+References: <200901141345.42583.stf_xl@wp.pl> <49787929.2010305@ru.mvista.com> <497F2C5E.9020205@ru.mvista.com> <200901291548.33238.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43357 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752580AbZA2Ov3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jan 2009 09:51:29 -0500
-In-Reply-To: <20090129130435.GB1425@ucw.cz>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:43558 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753556AbZA2PVj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 10:21:39 -0500
+In-Reply-To: <200901291548.33238.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-On Thursday 29 January 2009, Pavel Machek wrote:
-> On Mon 2009-01-19 20:54:54, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > Introduce boolean function system_entering_hibernation() returning
-> > 'true' during the last phase of hibernation, in which devices are
-> > being put into low power states and the sleep state (for example,
-> > ACPI S4) is finally entered.
-> 
-> ...this paragraph...
-> 
-> > Index: linux-2.6/kernel/power/disk.c
-> > ===================================================================
-> > --- linux-2.6.orig/kernel/power/disk.c
-> > +++ linux-2.6/kernel/power/disk.c
-> > @@ -71,6 +71,14 @@ void hibernation_set_ops(struct platform
-> >  	mutex_unlock(&pm_mutex);
-> >  }
-> 
-> ....should go somewhere here. Because the name does not imply it is
-> for last phases, only...
-> 
-> > +static bool entering_platform_hibernation;
-> > +
-> > +bool system_entering_hibernation(void)
-> > +{
-> > +	return entering_platform_hibernation;
-> > +}
-> > +EXPORT_SYMBOL(system_entering_hibernation);
-> > +
-> >  #ifdef CONFIG_PM_DEBUG
-> >  static void hibernation_debug_sleep(void)
-> >  {
-> > @@ -411,6 +419,7 @@ int hibernation_platform_enter(void)
-> >  	if (error)
-> >  		goto Close;
-> >  
-> > +	entering_platform_hibernation = true;
-> >  	suspend_console();
-> 
-> Why entering _platform_ hibernation? It will not be set for echo
-> shutdown > disk case?
+Hello.
 
-If I remember correctly, no, it won't.
+Stanislaw Gruszka wrote:
 
-Thanks,
-Rafael
+>>>>>>Well, we could add #ifdef with diffrent implementation of 
+>>>>>>init_smc_mode(), set_8bit_mode(), etc... 
+
+>>>>>  No, #ifdef'ery is certainly not an option.
+
+>>>>Why?
+
+>>>   It's totally ugly and unacceptable way of doing things. It seems also 
+>>>totally wrong to add support for totally incompatible SMC to this driver 
+>>>(especially with #ifdef's). Another driver should be written if CF 
+>>>support is required.
+
+>>>>Other option is create some header files and implement and exporting 
+>>>>these
+>>>>functions from processor specific code. This add files dependencies 
+>>>>and spread
+>>>>things across sources, FWIW.
+
+>>>   I don't think it's feasible as that SMC is just too different.
+
+>>    Besides, AT91RM9200 code turned out to already be registering a platform 
+>>device called at91_cf -- driver for which I have located in drivers/pcmcia/, 
+>>so apparently they're not interested in True IDE mode support (and have 
+>>overgeneralized the name as well :-).
+
+> There can be AT91RM9200 boards where is only IDE hardware instead
+> "full" Compact Flash support.
+
+> Atmel publish application note with description how connect HDD to AT91RM9200.
+> Connection is very similar as for SAM9, the major difference is using GPIO to control 
+> CF ~CSx signals. Here is document:
+
+    Horror... Frankly speaking, I don't see why they had to use GPIO and not 
+the same decoding scheme as on AT91SAM9xxx.
+
+> http://www.atmel.com/dyn/resources/prod_documents/doc6023.pdf
+
+> Currently people at at91.com forum did board with HDD. As driver
+> they use pata_platform with some hacks, which look very similar
+> as things in this driver, except they use polling and not need irq quirk:
+
+> http://www.at91.com/samphpbb/viewtopic.php?f=9&t=4528&p=15739
+
+    It's not clear why they define IRQ resource not having IRQ.
+
+> Stanislaw Gruszka
+
+MBR, Sergei
