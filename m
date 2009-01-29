@@ -1,82 +1,58 @@
-From: Dongjun Shin <djshin90@gmail.com>
-Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
-	SSDs - Impact of trim?]
-Date: Thu, 29 Jan 2009 23:07:27 +0900
-Message-ID: <7fe698080901290607n86b054q20cb830286d7a6d0@mail.gmail.com>
-References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>
-	 <1232749447.3250.146.camel@localhost.localdomain>
-	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>
-	 <497A542C.1040900@redhat.com>
-	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>
-	 <497DE35C.6090308@redhat.com>
-	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>
-	 <497DF807.7010600@rtr.ca>
-	 <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>
-	 <497DFF1A.2050401@rtr.ca>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: [PATCHSET #upstream-fixes] libata: improve flaky link handling
+Date: Thu, 29 Jan 2009 09:07:49 -0500
+Message-ID: <87f94c370901290607t4cef87ack43fd456d1703d1ca@mail.gmail.com>
+References: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.190]:13152 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758057AbZA2OH3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 09:07:29 -0500
-In-Reply-To: <497DFF1A.2050401@rtr.ca>
+Received: from mail-qy0-f11.google.com ([209.85.221.11]:56291 "EHLO
+	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752553AbZA2OHw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 09:07:52 -0500
+Received: by qyk4 with SMTP id 4so8672180qyk.13
+        for <linux-ide@vger.kernel.org>; Thu, 29 Jan 2009 06:07:50 -0800 (PST)
+In-Reply-To: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Greg Freemyer <greg.freemyer@norcrossgroup.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Tue, Jan 27, 2009 at 3:21 AM, Mark Lord <liml@rtr.ca> wrote:
-> Greg Freemyer wrote:
->>
->> Just so I know and before I try to find the right way to comment to
->> the T13 and T10 committees:
->>
->> What is the negative of adding a ATA/SCSI command to allow the storage
->> device to be interrogated to see what sectors/blocks/erase-units are
->> in a mapped vs. unmapped state?
->>
->> For T13 (ATA), it would actually be a tri-state flag I gather:
->>
->>  Mapped - last data written available
->>  unmapped - no data values assigned
->>  unmapped - deterministic data values
->>
->> Surely the storage device has to be keeping this data internally.  Why
->> not expose it?
+On Thu, Jan 29, 2009 at 6:31 AM, Tejun Heo <tj@kernel.org> wrote:
 >
-> ..
+> Hello,
 >
-> That's a good approach.  One problem on the drive end, is that they
-> may not be maintain central lists of these.  Rather, it might be stored
-> as local flags in each affected sector.
+> This patchset is kicked off by kernel bz#9913 which reports hot
+> plugging and general detection problems with WD My Book drives.  WD
+> was kind enough to provide me with these drives and I played quite a
+> bit with a few controllers and weird cabling configurations including
+> long cables and several genders.
 >
-> So any attempt to query "all" is probably not feasible,
-> but it should be simple enough to "query one" sector at a time
-> for that info.  If one wants them all, the just loop over
-> the entire device doing the "query one" for each sector.
+> It was surprisingly easy to trigger link layer problems.  eSATA ports
+> often go through extra cable and gender.  eSATA cables tend to be
+> longer than internal ones and as the cables are much stiffer touching
+> or moving the cable can easily cause enough wiggle at the connectors
+> to cause temporary transmission problems and being outside, it's much
+> more likely to be moved.
 >
-> Another drawback to the "query all", is the size of data (the list)
-> returned is unknown in advance.  We generally don't have commands
-> that work like that.
->
+> So, with abundant link quality problems, the following problems have
+> been identified.
+Tejun,
 
-I'm not sure if the map/unmap flag will help the situation for the
-forensic examiner.
-What if SSD always returns zero for the unmapped area? (it's not
-violating the spec)
-Although the flag will tell you the exact state of the sectors, there
-is no hint for
-the forensic analysis if these are filled with zero.
+This looks like an important patchset for those of us that use eSata.
+Any chance these can get into the opensuse 11.1 kernels?  Or lacking
+that, the os factory kernels?
 
-My personal opinion is that the flag for map/unmap will result in
-unnecessary overhead
-considering the common use cases.
-
-Please also consider that, although not directly related with trim,
-features like
-Full-Disk-Encryption are also making things difficult for you.
-
+Thanks
+Greg
 -- 
-Dongjun
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
