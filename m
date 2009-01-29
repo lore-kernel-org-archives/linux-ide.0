@@ -1,54 +1,77 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/8] libata: fix EH device failure handling
-Date: Thu, 29 Jan 2009 20:31:29 +0900
-Message-ID: <1233228696-10562-2-git-send-email-tj@kernel.org>
-References: <1233228696-10562-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET #upstream-fixes] libata: improve flaky link handling
+Date: Thu, 29 Jan 2009 20:31:28 +0900
+Message-ID: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34084 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34094 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752268AbZA2Lbw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jan 2009 06:31:52 -0500
-In-Reply-To: <1233228696-10562-1-git-send-email-tj@kernel.org>
+	id S1752386AbZA2Lb6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jan 2009 06:31:58 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
 
-The dev->pio_mode > XFER_PIO_0 test is there to avoid unnecessary
-speed down warning messages but it accidentally disabled SATA link spd
-down during configuration phase after reset where PIO mode is always
-zero.
 
-This patch fixes the problem by moving the test where it belongs.
-This makes libata probing sequence behave better when the connection
-is flaky at higher link speeds which isn't too uncommon for eSATA
-devices.
+Hello,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-eh.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+This patchset is kicked off by kernel bz#9913 which reports hot
+plugging and general detection problems with WD My Book drives.  WD
+was kind enough to provide me with these drives and I played quite a
+bit with a few controllers and weird cabling configurations including
+long cables and several genders.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 8147a83..c15572d 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2979,12 +2979,13 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
- 		/* give it just one more chance */
- 		ehc->tries[dev->devno] = min(ehc->tries[dev->devno], 1);
- 	case -EIO:
--		if (ehc->tries[dev->devno] == 1 && dev->pio_mode > XFER_PIO_0) {
-+		if (ehc->tries[dev->devno] == 1) {
- 			/* This is the last chance, better to slow
- 			 * down than lose it.
- 			 */
- 			sata_down_spd_limit(ata_dev_phys_link(dev));
--			ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
-+			if (dev->pio_mode > XFER_PIO_0)
-+				ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
- 		}
- 	}
- 
--- 
-1.6.0.2
+It was surprisingly easy to trigger link layer problems.  eSATA ports
+often go through extra cable and gender.  eSATA cables tend to be
+longer than internal ones and as the cables are much stiffer touching
+or moving the cable can easily cause enough wiggle at the connectors
+to cause temporary transmission problems and being outside, it's much
+more likely to be moved.
 
+So, with abundant link quality problems, the following problems have
+been identified.
+
+a. Our link speed down logic on device probing failure is broken.  It
+   somehow got masked off by a condition test which is there to
+   prevent spurious warning messages.  This prevented repeated
+   IDENTIFY failures from triggering link speed down.
+
+b. When the condition is right (or wrong), devices succeed at
+   negotiating 3.0Gbps but fails to actually establish link over it.
+   This leads to frustrating repetition of hotplug events followed by
+   failed reset attempts.  libata EH needs to remember failed probe
+   trials and speed the link down to work around this problem.
+
+c. Certain WD My Book's react badly to certain transmission errors.
+   After a link error, it often completely shuts down the eSATA port
+   and power down.  The only way to wake it up is to remove and
+   re-apply power.  With the right cabling, this almost renders the
+   device unusable as it completely shuts down when the host tries to
+   transfer data.
+
+This patchset contains patches to address the above three problems.
+
+ 0001-libata-fix-EH-device-failure-handling.patch
+ 0002-libata-move-ata_dev_disable-to-libata-eh.c.patch
+ 0003-libata-check-onlineness-before-using-SPD-in-sata_do.patch
+ 0004-libata-clear-dev-ering-in-smarter-way.patch
+ 0005-libata-add-spd_limit-to-sata_down_spd_limit.patch
+ 0006-libata-improve-probe-failure-handling.patch
+ 0007-libata-add-no-penalty-retry-request-for-EH-device-h.patch
+ 0008-libata-implement-HORKAGE_1_5_GBPS-and-apply-it-to-W.patch
+
+0001 fixes #a.  0002-0006 implement workaround for #b and 0007-0008
+for #c.  This patchset is on top of the current upstream-fixes[1].
+
+Thanks.
+
+ drivers/ata/libata-core.c |   93 +++++++++++++++++++++++++++++++++++-----------
+ drivers/ata/libata-eh.c   |   87 +++++++++++++++++++++++++++++++++++++++----
+ drivers/ata/libata-pmp.c  |    2 
+ drivers/ata/libata.h      |    4 -
+ include/linux/libata.h    |   19 +++++----
+ 5 files changed, 164 insertions(+), 41 deletions(-)
+
+--
+tejun
+
+[1] 4a99d95fa836e254d17910e52663ba2be7b880e7
