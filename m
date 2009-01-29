@@ -1,77 +1,104 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET #upstream-fixes] libata: improve flaky link handling
-Date: Thu, 29 Jan 2009 20:31:28 +0900
-Message-ID: <1233228696-10562-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/8] libata: move ata_dev_disable() to libata-eh.c
+Date: Thu, 29 Jan 2009 20:31:30 +0900
+Message-ID: <1233228696-10562-3-git-send-email-tj@kernel.org>
+References: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34094 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34095 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752386AbZA2Lb6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jan 2009 06:31:58 -0500
+	id S1752507AbZA2LcA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jan 2009 06:32:00 -0500
+In-Reply-To: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 
+ata_dev_disable() is about to be more tightly integrated into EH
+logic.  Move it to libata-eh.c.
 
-Hello,
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/libata-core.c |   12 ------------
+ drivers/ata/libata-eh.c   |   21 +++++++++++++++++++++
+ drivers/ata/libata.h      |    2 +-
+ 3 files changed, 22 insertions(+), 13 deletions(-)
 
-This patchset is kicked off by kernel bz#9913 which reports hot
-plugging and general detection problems with WD My Book drives.  WD
-was kind enough to provide me with these drives and I played quite a
-bit with a few controllers and weird cabling configurations including
-long cables and several genders.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 71218d7..20d0e27 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1015,18 +1015,6 @@ static const char *sata_spd_string(unsigned int spd)
+ 	return spd_str[spd - 1];
+ }
+ 
+-void ata_dev_disable(struct ata_device *dev)
+-{
+-	if (ata_dev_enabled(dev)) {
+-		if (ata_msg_drv(dev->link->ap))
+-			ata_dev_printk(dev, KERN_WARNING, "disabled\n");
+-		ata_acpi_on_disable(dev);
+-		ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 |
+-					     ATA_DNXFER_QUIET);
+-		dev->class++;
+-	}
+-}
+-
+ static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
+ {
+ 	struct ata_link *link = dev->link;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index c15572d..aafe82b 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1176,6 +1176,27 @@ void ata_eh_qc_retry(struct ata_queued_cmd *qc)
+ }
+ 
+ /**
++ *	ata_dev_disable - disable ATA device
++ *	@dev: ATA device to disable
++ *
++ *	Disable @dev.
++ *
++ *	Locking:
++ *	EH context.
++ */
++void ata_dev_disable(struct ata_device *dev)
++{
++	if (!ata_dev_enabled(dev))
++		return;
++
++	if (ata_msg_drv(dev->link->ap))
++		ata_dev_printk(dev, KERN_WARNING, "disabled\n");
++	ata_acpi_on_disable(dev);
++	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
++	dev->class++;
++}
++
++/**
+  *	ata_eh_detach_dev - detach ATA device
+  *	@dev: ATA device to detach
+  *
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index fe2839e..0a6f5be 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -79,7 +79,6 @@ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+ 			   unsigned int tag);
+ extern u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev);
+-extern void ata_dev_disable(struct ata_device *dev);
+ extern void ata_pio_queue_task(struct ata_port *ap, void *data,
+ 			       unsigned long delay);
+ extern void ata_port_flush_task(struct ata_port *ap);
+@@ -160,6 +159,7 @@ extern void ata_scsi_error(struct Scsi_Host *host);
+ extern void ata_port_wait_eh(struct ata_port *ap);
+ extern void ata_eh_fastdrain_timerfn(unsigned long arg);
+ extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
++extern void ata_dev_disable(struct ata_device *dev);
+ extern void ata_eh_detach_dev(struct ata_device *dev);
+ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 			       unsigned int action);
+-- 
+1.6.0.2
 
-It was surprisingly easy to trigger link layer problems.  eSATA ports
-often go through extra cable and gender.  eSATA cables tend to be
-longer than internal ones and as the cables are much stiffer touching
-or moving the cable can easily cause enough wiggle at the connectors
-to cause temporary transmission problems and being outside, it's much
-more likely to be moved.
-
-So, with abundant link quality problems, the following problems have
-been identified.
-
-a. Our link speed down logic on device probing failure is broken.  It
-   somehow got masked off by a condition test which is there to
-   prevent spurious warning messages.  This prevented repeated
-   IDENTIFY failures from triggering link speed down.
-
-b. When the condition is right (or wrong), devices succeed at
-   negotiating 3.0Gbps but fails to actually establish link over it.
-   This leads to frustrating repetition of hotplug events followed by
-   failed reset attempts.  libata EH needs to remember failed probe
-   trials and speed the link down to work around this problem.
-
-c. Certain WD My Book's react badly to certain transmission errors.
-   After a link error, it often completely shuts down the eSATA port
-   and power down.  The only way to wake it up is to remove and
-   re-apply power.  With the right cabling, this almost renders the
-   device unusable as it completely shuts down when the host tries to
-   transfer data.
-
-This patchset contains patches to address the above three problems.
-
- 0001-libata-fix-EH-device-failure-handling.patch
- 0002-libata-move-ata_dev_disable-to-libata-eh.c.patch
- 0003-libata-check-onlineness-before-using-SPD-in-sata_do.patch
- 0004-libata-clear-dev-ering-in-smarter-way.patch
- 0005-libata-add-spd_limit-to-sata_down_spd_limit.patch
- 0006-libata-improve-probe-failure-handling.patch
- 0007-libata-add-no-penalty-retry-request-for-EH-device-h.patch
- 0008-libata-implement-HORKAGE_1_5_GBPS-and-apply-it-to-W.patch
-
-0001 fixes #a.  0002-0006 implement workaround for #b and 0007-0008
-for #c.  This patchset is on top of the current upstream-fixes[1].
-
-Thanks.
-
- drivers/ata/libata-core.c |   93 +++++++++++++++++++++++++++++++++++-----------
- drivers/ata/libata-eh.c   |   87 +++++++++++++++++++++++++++++++++++++++----
- drivers/ata/libata-pmp.c  |    2 
- drivers/ata/libata.h      |    4 -
- include/linux/libata.h    |   19 +++++----
- 5 files changed, 164 insertions(+), 41 deletions(-)
-
---
-tejun
-
-[1] 4a99d95fa836e254d17910e52663ba2be7b880e7
