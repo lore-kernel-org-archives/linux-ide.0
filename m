@@ -1,42 +1,35 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
- 	SSDs - Impact of trim?]
-Date: Thu, 29 Jan 2009 01:49:55 +0000
-Message-ID: <49810B43.20108@anonymous.org.uk>
-References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <1232992065.3248.38.camel@localhost.localdomain>	 <18814.39074.194781.490676@notabene.brown>	 <497EE6A4.7030406@anonymous.org.uk> <4980BBE7.30808@tmr.com> <7fce22690901281556h67fb353dp879f88e6c2a76eaf@mail.gmail.com>
+From: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
+Subject: Re: [PATCH 1/4] ide: remove IDE_ARCH_INTR
+Date: Thu, 29 Jan 2009 05:22:48 +0100 (CET)
+Message-ID: <alpine.DEB.1.00.0901290521300.7218@zirkon.biophys.uni-duesseldorf.de>
+References: <20090127180246.28089.2981.sendpatchset@localhost.localdomain>
+ <20090127180252.28089.70513.sendpatchset@localhost.localdomain>
+ <393174.25588.qm@web52403.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hole.yuiop.co.uk ([89.145.97.62]:58795 "EHLO hole.yuiop.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754588AbZA2Bty (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jan 2009 20:49:54 -0500
-In-Reply-To: <7fce22690901281556h67fb353dp879f88e6c2a76eaf@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-reply-to: <393174.25588.qm@web52403.mail.re2.yahoo.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: "David D. Kilzer" <ddkilzer@kilzer.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitz@debian.org>, linux-m68k@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 28/01/2009 23:56, Greg Freemyer wrote:
-> Once discard calls get into linux file systems mdraid and/or device
-> mapper could implement linux's own thin provisioning implementation.
-> Even with traditional disks that don't support unmap.  I gather that
-> is what the EMCs of the world will be doing in their platforms.
+Hi,
+
 > 
-> http://en.wikipedia.org/wiki/Thin_provisioning
+> -            (void)ide_ack_intr(hwif);
+> +            if (hwif->ack_intr(hwif))
+> +                hwif->ack_intr(hwif);
+> 
+> Shouldn't that be:
+> 
+> -            (void)ide_ack_intr(hwif);
+> +            if (hwif->ack_intr)
+> +                hwif->ack_intr(hwif);
 
-Sounds more like a device mapper or LVM thing (than md/RAID) to me, but 
-I'd definitely agree that this would be another great reason for block 
-devices to implement map/unmap.
+Seconded. No point in ack'ing the int twice (not to mention the other side 
+effects).
 
-And I wonder if there's room for another dm/md device type which just 
-implements these usage maps over traditional devices which don't support 
-unmap (much as I was wondering a few weeks back about a soft DIF 
-implementation over e.g. SATA devices). Darn it, I might just have to 
-dig out my school books on C; it's a while since I offered a kernel patch.
-
-Cheers,
-
-John.
+	Michael
 
