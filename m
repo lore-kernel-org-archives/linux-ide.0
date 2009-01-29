@@ -1,119 +1,105 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 8/8] libata: implement HORKAGE_1_5_GBPS and apply it to WD My Book
-Date: Thu, 29 Jan 2009 20:31:36 +0900
-Message-ID: <1233228696-10562-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/8] libata: improve probe failure handling
+Date: Thu, 29 Jan 2009 20:31:34 +0900
+Message-ID: <1233228696-10562-7-git-send-email-tj@kernel.org>
 References: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34097 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34110 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752553AbZA2LcB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jan 2009 06:32:01 -0500
+	id S1752924AbZA2LcI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jan 2009 06:32:08 -0500
 In-Reply-To: <1233228696-10562-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-3Gbps is often much more prone to transmission failures.  It's usually
-okay to let EH handle speed down after transmission failures but some
-WD My Book drives completely shutdown after certain transmission
-failures and after it only power cycling can revive them.  Combined
-with the fact that external drives often end up with cable assembly
-which is longer than usual and more likely to have intervening gender,
-this makes these drives very likely to shutdown under certain
-configurations virtually rendering them unusable.
+When link is flaky at high speed, it isn't uncommon for a device to
+repeatedly fail probing sequence early after successfully negotiating
+high link speed.  This often leads to consecutive hotplug events
+without successful probing.
 
-This patch implements HOARKGE_1_5_GBPS and applies it to WD My Book
-such that 1.5Gbps is forced once the device is identified.
+This patch improves libata EH such that it remembers probing trials
+and if there have been more than two unsuccessful trials in the past
+60 seconds, slows down link speed to 1.5Gbps.
 
-Please take a look at the following bz for related reports.
-
-  http://bugzilla.kernel.org/show_bug.cgi?id=9913
+As link speed negotiation is the duty of the PHY layer proper, the
+goal of this fallback mechanism is to provide the last resort when
+everything else fails, which unfortunately happens not too
+infrequently, so no fancy 6->3->1.5 speeding down or highest
+successful transmission speed seen kind of logics (yet).
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-core.c |   41 +++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |    1 +
- 2 files changed, 42 insertions(+), 0 deletions(-)
+ drivers/ata/libata-eh.c |   38 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 38 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0cc0d8f..4394861 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2232,6 +2232,40 @@ retry:
- 	return rc;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 685509b..caa1e9f 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -82,6 +82,10 @@ enum {
+ 	ATA_EH_FASTDRAIN_INTERVAL	=  3000,
+ 
+ 	ATA_EH_UA_TRIES			= 5,
++
++	/* probe speed down parameters, see ata_eh_schedule_probe() */
++	ATA_EH_PROBE_TRIAL_INTERVAL	= 60000,	/* 1 min */
++	ATA_EH_PROBE_TRIALS		= 2,
+ };
+ 
+ /* The following table determines how we sequence resets.  Each entry
+@@ -2975,9 +2979,24 @@ static int ata_eh_skip_recovery(struct ata_link *link)
+ 	return 1;
  }
  
-+static int ata_do_link_spd_horkage(struct ata_device *dev)
++static int ata_count_probe_trials_cb(struct ata_ering_entry *ent, void *void_arg)
 +{
-+	struct ata_link *plink = ata_dev_phys_link(dev);
-+	u32 target, target_limit;
++	u64 interval = msecs_to_jiffies(ATA_EH_PROBE_TRIAL_INTERVAL);
++	u64 now = get_jiffies_64();
++	int *trials = void_arg;
 +
-+	if (!sata_scr_valid(plink))
-+		return 0;
++	if (ent->timestamp < now - min(now, interval))
++		return -1;
 +
-+	if (dev->horkage & ATA_HORKAGE_1_5_GBPS)
-+		target = 1;
-+	else
-+		return 0;
-+
-+	target_limit = (1 << target) - 1;
-+
-+	/* if already on stricter limit, no need to push further */
-+	if (plink->sata_spd_limit <= target_limit)
-+		return 0;
-+
-+	plink->sata_spd_limit = target_limit;
-+
-+	/* Request another EH round by returning -EAGAIN if link is
-+	 * going faster than the target speed.  Forward progress is
-+	 * guaranteed by setting sata_spd_limit to target_limit above.
-+	 */
-+	if (plink->sata_spd > target) {
-+		ata_dev_printk(dev, KERN_INFO,
-+			       "applying link speed limit horkage to %s\n",
-+			       sata_spd_string(target));
-+		return -EAGAIN;
-+	}
++	(*trials)++;
 +	return 0;
 +}
 +
- static inline u8 ata_dev_knobble(struct ata_device *dev)
+ static int ata_eh_schedule_probe(struct ata_device *dev)
  {
- 	struct ata_port *ap = dev->link->ap;
-@@ -2322,6 +2356,10 @@ int ata_dev_configure(struct ata_device *dev)
- 		return 0;
- 	}
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
++	struct ata_link *link = ata_dev_phys_link(dev);
++	int trials = 0;
  
-+	rc = ata_do_link_spd_horkage(dev);
-+	if (rc)
-+		return rc;
+ 	if (!(ehc->i.probe_mask & (1 << dev->devno)) ||
+ 	    (ehc->did_probe_mask & (1 << dev->devno)))
+@@ -2990,6 +3009,25 @@ static int ata_eh_schedule_probe(struct ata_device *dev)
+ 	ehc->saved_xfer_mode[dev->devno] = 0;
+ 	ehc->saved_ncq_enabled &= ~(1 << dev->devno);
+ 
++	/* Record and count probe trials on the ering.  The specific
++	 * error mask used is irrelevant.  Because a successful device
++	 * detection clears the ering, this count accumulates only if
++	 * there are consecutive failed probes.
++	 *
++	 * If the count is equal to or higher than ATA_EH_PROBE_TRIALS
++	 * in the last ATA_EH_PROBE_TRIAL_INTERVAL, link speed is
++	 * forced to 1.5Gbps.
++	 *
++	 * This is to work around cases where failed link speed
++	 * negotiation results in device misdetection leading to
++	 * infinite DEVXCHG or PHRDY CHG events.
++	 */
++	ata_ering_record(&dev->ering, 0, AC_ERR_OTHER);
++	ata_ering_map(&dev->ering, ata_count_probe_trials_cb, &trials);
 +
- 	/* let ACPI work its magic */
- 	rc = ata_acpi_on_devcfg(dev);
- 	if (rc)
-@@ -4221,6 +4259,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	/* Devices that do not need bridging limits applied */
- 	{ "MTRON MSP-SATA*",		NULL,	ATA_HORKAGE_BRIDGE_OK, },
- 
-+	/* Devices which aren't very happy with higher link speeds */
-+	{ "WD My Book",			NULL,	ATA_HORKAGE_1_5_GBPS, },
++	if (trials > ATA_EH_PROBE_TRIALS)
++		sata_down_spd_limit(link, 1);
 +
- 	/* End Marker */
- 	{ }
- };
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7d7bc11..31ce91d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -378,6 +378,7 @@ enum {
- 	ATA_HORKAGE_ATAPI_MOD16_DMA = (1 << 11), /* use ATAPI DMA for commands
- 						    not multiple of 16 bytes */
- 	ATA_HORKAGE_FIRMWARE_WARN = (1 << 12),	/* firwmare update warning */
-+	ATA_HORKAGE_1_5_GBPS	= (1 << 13),	/* force 1.5 Gbps */
+ 	return 1;
+ }
  
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
 -- 
 1.6.0.2
 
