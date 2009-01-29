@@ -1,65 +1,82 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
-Date: Thu, 29 Jan 2009 14:04:35 +0100
-Message-ID: <20090129130435.GB1425@ucw.cz>
-References: <20081104062734.GA4420@havoc.gtf.org> <49739371.5030107@garzik.org> <200901192053.50831.rjw@sisk.pl> <200901192054.55536.rjw@sisk.pl>
+From: Dongjun Shin <djshin90@gmail.com>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+	SSDs - Impact of trim?]
+Date: Thu, 29 Jan 2009 23:07:27 +0900
+Message-ID: <7fe698080901290607n86b054q20cb830286d7a6d0@mail.gmail.com>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>
+	 <1232749447.3250.146.camel@localhost.localdomain>
+	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>
+	 <497A542C.1040900@redhat.com>
+	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>
+	 <497DE35C.6090308@redhat.com>
+	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>
+	 <497DF807.7010600@rtr.ca>
+	 <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>
+	 <497DFF1A.2050401@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:44617 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbZA2NU3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 08:20:29 -0500
-Content-Disposition: inline
-In-Reply-To: <200901192054.55536.rjw@sisk.pl>
+Received: from ti-out-0910.google.com ([209.85.142.190]:13152 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758057AbZA2OH3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 09:07:29 -0500
+In-Reply-To: <497DFF1A.2050401@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>, Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Mon 2009-01-19 20:54:54, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> Introduce boolean function system_entering_hibernation() returning
-> 'true' during the last phase of hibernation, in which devices are
-> being put into low power states and the sleep state (for example,
-> ACPI S4) is finally entered.
+On Tue, Jan 27, 2009 at 3:21 AM, Mark Lord <liml@rtr.ca> wrote:
+> Greg Freemyer wrote:
+>>
+>> Just so I know and before I try to find the right way to comment to
+>> the T13 and T10 committees:
+>>
+>> What is the negative of adding a ATA/SCSI command to allow the storage
+>> device to be interrogated to see what sectors/blocks/erase-units are
+>> in a mapped vs. unmapped state?
+>>
+>> For T13 (ATA), it would actually be a tri-state flag I gather:
+>>
+>>  Mapped - last data written available
+>>  unmapped - no data values assigned
+>>  unmapped - deterministic data values
+>>
+>> Surely the storage device has to be keeping this data internally.  Why
+>> not expose it?
+>
+> ..
+>
+> That's a good approach.  One problem on the drive end, is that they
+> may not be maintain central lists of these.  Rather, it might be stored
+> as local flags in each affected sector.
+>
+> So any attempt to query "all" is probably not feasible,
+> but it should be simple enough to "query one" sector at a time
+> for that info.  If one wants them all, the just loop over
+> the entire device doing the "query one" for each sector.
+>
+> Another drawback to the "query all", is the size of data (the list)
+> returned is unknown in advance.  We generally don't have commands
+> that work like that.
+>
 
-...this paragraph...
+I'm not sure if the map/unmap flag will help the situation for the
+forensic examiner.
+What if SSD always returns zero for the unmapped area? (it's not
+violating the spec)
+Although the flag will tell you the exact state of the sectors, there
+is no hint for
+the forensic analysis if these are filled with zero.
 
-> Index: linux-2.6/kernel/power/disk.c
-> ===================================================================
-> --- linux-2.6.orig/kernel/power/disk.c
-> +++ linux-2.6/kernel/power/disk.c
-> @@ -71,6 +71,14 @@ void hibernation_set_ops(struct platform
->  	mutex_unlock(&pm_mutex);
->  }
+My personal opinion is that the flag for map/unmap will result in
+unnecessary overhead
+considering the common use cases.
 
-....should go somewhere here. Because the name does not imply it is
-for last phases, only...
+Please also consider that, although not directly related with trim,
+features like
+Full-Disk-Encryption are also making things difficult for you.
 
-> +static bool entering_platform_hibernation;
-> +
-> +bool system_entering_hibernation(void)
-> +{
-> +	return entering_platform_hibernation;
-> +}
-> +EXPORT_SYMBOL(system_entering_hibernation);
-> +
->  #ifdef CONFIG_PM_DEBUG
->  static void hibernation_debug_sleep(void)
->  {
-> @@ -411,6 +419,7 @@ int hibernation_platform_enter(void)
->  	if (error)
->  		goto Close;
->  
-> +	entering_platform_hibernation = true;
->  	suspend_console();
-
-Why entering _platform_ hibernation? It will not be set for echo
-shutdown > disk case?
-
-									Pavel
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Dongjun
