@@ -1,54 +1,42 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Seagate disk freeze for 30 seconds then comes back (RecovComm
-   10B8B)
-Date: Wed, 28 Jan 2009 18:52:54 -0600
-Message-ID: <4980FDE6.7080406@shaw.ca>
-References: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Thu, 29 Jan 2009 01:49:55 +0000
+Message-ID: <49810B43.20108@anonymous.org.uk>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <1232992065.3248.38.camel@localhost.localdomain>	 <18814.39074.194781.490676@notabene.brown>	 <497EE6A4.7030406@anonymous.org.uk> <4980BBE7.30808@tmr.com> <7fce22690901281556h67fb353dp879f88e6c2a76eaf@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:6110 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758158AbZA2Aw6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Jan 2009 19:52:58 -0500
-In-Reply-To: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro>
+Received: from hole.yuiop.co.uk ([89.145.97.62]:58795 "EHLO hole.yuiop.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754588AbZA2Bty (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jan 2009 20:49:54 -0500
+In-Reply-To: <7fce22690901281556h67fb353dp879f88e6c2a76eaf@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Catalin(ux) M. BOIE wrote:
-> Hello!
+On 28/01/2009 23:56, Greg Freemyer wrote:
+> Once discard calls get into linux file systems mdraid and/or device
+> mapper could implement linux's own thin provisioning implementation.
+> Even with traditional disks that don't support unmap.  I gather that
+> is what the EMCs of the world will be doing in their platforms.
 > 
-> I have a ST9160821AS drive, firmware 3.BHE, and I experience some seldom 
-> problems with it. It is in a HP 6715s HP laptop, kernel 2.6.27.5.
-> 
-> The error message is:
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x80002 action 0x6 frozen
-> ata1: SError: { RecovComm 10B8B }
-> ata1.00: cmd ca/00:f8:11:b8:38/00:00:00:00:00/ec tag 0 dma 126976 out
-> res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: hard resetting link
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
-> ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> 
-> When it happens, the system freezes for around 30 seconds.
-> 
-> Seagate told me that there is no firmware update for this drive.
-> 
-> Please, let me know if it is a software issue.
+> http://en.wikipedia.org/wiki/Thin_provisioning
 
-Quite unlikely, it looks like something caused the communications with 
-the drive to be dropped. It's likely either a drive, cabling/connection 
-or power problem (the latter two seem unlikely in a laptop though, 
-unless the drive isn't connected all the way or something..)
+Sounds more like a device mapper or LVM thing (than md/RAID) to me, but 
+I'd definitely agree that this would be another great reason for block 
+devices to implement map/unmap.
+
+And I wonder if there's room for another dm/md device type which just 
+implements these usage maps over traditional devices which don't support 
+unmap (much as I was wondering a few weeks back about a soft DIF 
+implementation over e.g. SATA devices). Darn it, I might just have to 
+dig out my school books on C; it's a while since I offered a kernel patch.
+
+Cheers,
+
+John.
+
