@@ -1,73 +1,68 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Thu, 29 Jan 2009 15:48:32 +0100
-Message-ID: <200901291548.33238.stf_xl@wp.pl>
-References: <200901141345.42583.stf_xl@wp.pl> <49787929.2010305@ru.mvista.com> <497F2C5E.9020205@ru.mvista.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
+Date: Thu, 29 Jan 2009 15:51:08 +0100
+Message-ID: <200901291551.09238.rjw@sisk.pl>
+References: <20081104062734.GA4420@havoc.gtf.org> <200901192054.55536.rjw@sisk.pl> <20090129130435.GB1425@ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:57857 "EHLO mx1.wp.pl"
+Received: from ogre.sisk.pl ([217.79.144.158]:43357 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753528AbZA2Oso convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 09:48:44 -0500
-In-Reply-To: <497F2C5E.9020205@ru.mvista.com>
+	id S1752580AbZA2Ov3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jan 2009 09:51:29 -0500
+In-Reply-To: <20090129130435.GB1425@ucw.cz>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Jeff Garzik <jeff@garzik.org>, Frans Pop <elendil@planet.nl>, tj@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tuesday 27 January 2009 16:46:38 Sergei Shtylyov napisa=C5=82(a):
-> Hello, I wrote:
->=20
-> >>>> Well, we could add #ifdef with diffrent implementation of=20
-> >>>> init_smc_mode(), set_8bit_mode(), etc...=20
->=20
-> >>>   No, #ifdef'ery is certainly not an option.
->=20
-> >> Why?
->=20
-> >    It's totally ugly and unacceptable way of doing things. It seems=
- also=20
-> > totally wrong to add support for totally incompatible SMC to this d=
-river=20
-> > (especially with #ifdef's). Another driver should be written if CF=20
-> > support is required.
->=20
-> >> Other option is create some header files and implement and exporti=
-ng=20
-> >> these
-> >> functions from processor specific code. This add files dependencie=
-s=20
-> >> and spread
-> >> things across sources, FWIW.
->=20
-> >    I don't think it's feasible as that SMC is just too different.
->=20
->     Besides, AT91RM9200 code turned out to already be registering a p=
-latform=20
-> device called at91_cf -- driver for which I have located in drivers/p=
-cmcia/,=20
-> so apparently they're not interested in True IDE mode support (and ha=
-ve=20
-> overgeneralized the name as well :-).
-There can be AT91RM9200 boards where is only IDE hardware instead
-"full" Compact Flash support.
+On Thursday 29 January 2009, Pavel Machek wrote:
+> On Mon 2009-01-19 20:54:54, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> > 
+> > Introduce boolean function system_entering_hibernation() returning
+> > 'true' during the last phase of hibernation, in which devices are
+> > being put into low power states and the sleep state (for example,
+> > ACPI S4) is finally entered.
+> 
+> ...this paragraph...
+> 
+> > Index: linux-2.6/kernel/power/disk.c
+> > ===================================================================
+> > --- linux-2.6.orig/kernel/power/disk.c
+> > +++ linux-2.6/kernel/power/disk.c
+> > @@ -71,6 +71,14 @@ void hibernation_set_ops(struct platform
+> >  	mutex_unlock(&pm_mutex);
+> >  }
+> 
+> ....should go somewhere here. Because the name does not imply it is
+> for last phases, only...
+> 
+> > +static bool entering_platform_hibernation;
+> > +
+> > +bool system_entering_hibernation(void)
+> > +{
+> > +	return entering_platform_hibernation;
+> > +}
+> > +EXPORT_SYMBOL(system_entering_hibernation);
+> > +
+> >  #ifdef CONFIG_PM_DEBUG
+> >  static void hibernation_debug_sleep(void)
+> >  {
+> > @@ -411,6 +419,7 @@ int hibernation_platform_enter(void)
+> >  	if (error)
+> >  		goto Close;
+> >  
+> > +	entering_platform_hibernation = true;
+> >  	suspend_console();
+> 
+> Why entering _platform_ hibernation? It will not be set for echo
+> shutdown > disk case?
 
-Atmel publish application note with description how connect HDD to AT91=
-RM9200.
-Connection is very similar as for SAM9, the major difference is using G=
-PIO to control=20
-CF ~CSx signals. Here is document:
+If I remember correctly, no, it won't.
 
-http://www.atmel.com/dyn/resources/prod_documents/doc6023.pdf
-
-Currently people at at91.com forum did board with HDD. As driver
-they use pata_platform with some hacks, which look very similar
-as things in this driver, except they use polling and not need irq quir=
-k:
-
-http://www.at91.com/samphpbb/viewtopic.php?f=3D9&t=3D4528&p=3D15739
-
-Stanislaw Gruszka
+Thanks,
+Rafael
