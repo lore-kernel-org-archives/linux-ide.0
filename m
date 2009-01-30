@@ -1,63 +1,40 @@
-From: Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH] IDE: palm_bk3710: use ioremap instead of arch-specific IO_ADDRESS()
-Date: Thu, 29 Jan 2009 16:29:00 -0800
-Message-ID: <87d4e5ljqr.fsf@deeprootsystems.com>
-References: <1233270357-604-1-git-send-email-khilman@deeprootsystems.com>
-	<498240EB.3090907@ru.mvista.com>
+From: david@lang.hm
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+Date: Thu, 29 Jan 2009 19:38:18 -0800 (PST)
+Message-ID: <alpine.DEB.1.10.0901291937290.24753@asgard.lang.hm>
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <200901252027.43376.bzolnier@gmail.com> <alpine.DEB.1.10.0901251612310.16676@p34.internal.lan> <200901252239.26268.bzolnier@gmail.com> <498240B7.6010500@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:54454 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760290AbZA3A3c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jan 2009 19:29:32 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so185594rvb.1
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jan 2009 16:29:31 -0800 (PST)
-In-Reply-To: <498240EB.3090907@ru.mvista.com> (Sergei Shtylyov's message of "Fri\, 30 Jan 2009 02\:51\:07 +0300")
+Received: from mail.lang.hm ([64.81.33.126]:38022 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751489AbZA3Ceh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jan 2009 21:34:37 -0500
+In-Reply-To: <498240B7.6010500@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Sergei Shtylyov <sshtylyov@ru.mvista.com> writes:
+On Thu, 29 Jan 2009, Bill Davidsen wrote:
 
-> Hello.
+>>>> 
+>>> Correction, it was the HPT controller as you noted, broken? Was working 
+>>> for me in 2.6.26.3 :)
+>>> 
+>>> CONFIG_BLK_DEV_HPT34X=y
+>>> # CONFIG_HPT34X_AUTODMA is not set
+>>> CONFIG_BLK_DEV_HPT366=y
+>> 
+>> HPT34X driver got removed not HPT366.
+>> 
+>> However if you need we can bring support for HPT34x hardware back. :)
 >
-> Kevin Hilman wrote:
->
->> Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
->>   
->
->   Sorry, NAK.
->
->> diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
->> index f38aac7..be9c904 100644
->> --- a/drivers/ide/palm_bk3710.c
->> +++ b/drivers/ide/palm_bk3710.c
->> @@ -380,7 +380,11 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
->>  		return -EBUSY;
->>  	}
->>  -	base = IO_ADDRESS(mem->start);
->> +	base = ioremap(mem->start, mem->end);
->> +	if (!base) {
->> +		printk(KERN_ERR "failed to map IO memory\n");
->> +		return -ENOMEM;
->>   
->
->   Leaks requested memory region.
+> I don't think "bring it back" is enough, it had some major issues as I 
+> recall. I actually have a pile of these, but not running any recent kernel.
 >
 
-Where would you suggest putting the iounmap?  If the driver had a
-remove hook, I would've put it there.
+what was the problem with these? I have somthing in this family in one of 
+my secondary boxes (I'd have to go check exactly which model)
 
-Which brings up a bigger question, why isn't there a remove hook.  I
-vaguely remember there being some problem way back in the 2.6.18 time
-frame that wouldn't allow this driver to be removed.  Is that still a
-problem in newer kernels?
-
-Kevin
-
-
-
-
-
+David Lang
