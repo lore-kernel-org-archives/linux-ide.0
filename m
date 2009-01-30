@@ -1,32 +1,47 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: DMA breakage in 2.6.29-rc*
-Date: Fri, 30 Jan 2009 13:17:49 +0100
-Message-ID: <18818.61421.549546.38274@harpo.it.uu.se>
-References: <1233294371.18767.23.camel@pasglop>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Fri, 30 Jan 2009 10:43:31 -0500
+Message-ID: <49832023.2040906@tmr.com>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <497DF807.7010600@rtr.ca>	 <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>	 <497DFF1A.2050401@rtr.ca>	 <7fe698080901290607n86b054q20cb830286d7a6d0@mail.gmail.com>	 <4981CF60.2040507@rtr.ca> <87f94c370901290827n77882126k75547bfdd2db0072@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:36859 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751665AbZA3MSE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jan 2009 07:18:04 -0500
-In-Reply-To: <1233294371.18767.23.camel@pasglop>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87f94c370901290827n77882126k75547bfdd2db0072@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: Mark Lord <liml@rtr.ca>, Dongjun Shin <djshin90@gmail.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, list linux-ide <linux-ide@vger.kernel.org>
 
-Benjamin Herrenschmidt writes:
- > Hi Bart !
- > 
- > On a bunch of pmac's, I'm getting lost interrupts when trying to do DMA
- > with ide hard disks (first time at boot when reading the partition
- > table). It then times out, reverts to PIO and boots fine.
- > 
- > Haven't had time to fully bisect yet, but it seem to be somewhere in the
- > pile of IDE patches (surprise :-) that went in around that time.
+Greg Freemyer wrote:
+> On Thu, Jan 29, 2009 at 10:46 AM, Mark Lord <liml@rtr.ca> wrote:
+>   
+>> Dongjun Shin wrote:
+>> ..
+>>     
+>>> Please also consider that, although not directly related with trim,
+>>> features like
+>>> Full-Disk-Encryption are also making things difficult for you.
+>>>       
+>> ..
+>>
+>> Assuming the encryption doesn't have a state-mandated backdoor hidden
+>> inside.
+>>     
+>
+> The timing could not be worse.  Last year if we could not get the
+> password, we could just send the user to Gitmo!!!
+>   
 
-On a slightly related note, any update on the pata_macio driver
-you posted last summer? As I recall, it worked ok on my G4, except
-for some OF/yaboot mismatch which broke ydl's /sbin/installkernel.
+I believe that in England, or maybe the whole EU, you can be forced to 
+give up your passwords, and be imprisoned until you do. There was an 
+article about that and I don't remember the details, but it was enough 
+to make me leave my computer home when I visit England again.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
