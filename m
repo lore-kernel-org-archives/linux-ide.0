@@ -1,40 +1,32 @@
-From: david@lang.hm
-Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
-Date: Thu, 29 Jan 2009 19:38:18 -0800 (PST)
-Message-ID: <alpine.DEB.1.10.0901291937290.24753@asgard.lang.hm>
-References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan> <200901252027.43376.bzolnier@gmail.com> <alpine.DEB.1.10.0901251612310.16676@p34.internal.lan> <200901252239.26268.bzolnier@gmail.com> <498240B7.6010500@tmr.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: DMA breakage in 2.6.29-rc*
+Date: Fri, 30 Jan 2009 16:46:11 +1100
+Message-ID: <1233294371.18767.23.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:38022 "EHLO bifrost.lang.hm"
+Received: from gate.crashing.org ([63.228.1.57]:60269 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489AbZA3Ceh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jan 2009 21:34:37 -0500
-In-Reply-To: <498240B7.6010500@tmr.com>
+	id S1751111AbZA3FqR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Jan 2009 00:46:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-On Thu, 29 Jan 2009, Bill Davidsen wrote:
+Hi Bart !
 
->>>> 
->>> Correction, it was the HPT controller as you noted, broken? Was working 
->>> for me in 2.6.26.3 :)
->>> 
->>> CONFIG_BLK_DEV_HPT34X=y
->>> # CONFIG_HPT34X_AUTODMA is not set
->>> CONFIG_BLK_DEV_HPT366=y
->> 
->> HPT34X driver got removed not HPT366.
->> 
->> However if you need we can bring support for HPT34x hardware back. :)
->
-> I don't think "bring it back" is enough, it had some major issues as I 
-> recall. I actually have a pile of these, but not running any recent kernel.
->
+On a bunch of pmac's, I'm getting lost interrupts when trying to do DMA
+with ide hard disks (first time at boot when reading the partition
+table). It then times out, reverts to PIO and boots fine.
 
-what was the problem with these? I have somthing in this family in one of 
-my secondary boxes (I'd have to go check exactly which model)
+Haven't had time to fully bisect yet, but it seem to be somewhere in the
+pile of IDE patches (surprise :-) that went in around that time.
 
-David Lang
+I'll dig more next week, but in the meantime, I though you may have a
+possible candidate in mind.
+
+Cheers,
+Ben.
+
