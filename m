@@ -1,47 +1,53 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
- 	SSDs - Impact of trim?]
-Date: Fri, 30 Jan 2009 10:43:31 -0500
-Message-ID: <49832023.2040906@tmr.com>
-References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <497DF807.7010600@rtr.ca>	 <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>	 <497DFF1A.2050401@rtr.ca>	 <7fe698080901290607n86b054q20cb830286d7a6d0@mail.gmail.com>	 <4981CF60.2040507@rtr.ca> <87f94c370901290827n77882126k75547bfdd2db0072@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: The Linux Storage and Filesystem Summit Call for Proposals
+Date: Fri, 30 Jan 2009 10:40:30 -0600
+Message-ID: <1233333630.3248.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f94c370901290827n77882126k75547bfdd2db0072@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
-Cc: Mark Lord <liml@rtr.ca>, Dongjun Shin <djshin90@gmail.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39097 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751907AbZA3Qk3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jan 2009 11:40:29 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Greg Freemyer wrote:
-> On Thu, Jan 29, 2009 at 10:46 AM, Mark Lord <liml@rtr.ca> wrote:
->   
->> Dongjun Shin wrote:
->> ..
->>     
->>> Please also consider that, although not directly related with trim,
->>> features like
->>> Full-Disk-Encryption are also making things difficult for you.
->>>       
->> ..
->>
->> Assuming the encryption doesn't have a state-mandated backdoor hidden
->> inside.
->>     
->
-> The timing could not be worse.  Last year if we could not get the
-> password, we could just send the user to Gitmo!!!
->   
+An update on the previously sent save the date email.  The website is
+now accepting proposals.
 
-I believe that in England, or maybe the whole EU, you can be forced to 
-give up your passwords, and be imprisoned until you do. There was an 
-article about that and I don't remember the details, but it was enough 
-to make me leave my computer home when I visit England again.
+---
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+This year's storage and filesystem workshop is being held in San
+Francisco on April 6th and 7th.  It's being held on the Monday and
+Tuesday immediately preceeding the Linux Foundation Collaboration
+Summit, in the same hotel.
+
+You can find all the details on the workshop's web site:
+
+  http://events.linuxfoundation.org/events/lsf-workshop
+
+The workshop focuses on collaboration and discussion.  There will be no
+referred papers and few presentations with slides will be accepted.
+
+To attend we ask that you use the CFP interface on the web site to
+submit a short proposal for a topic to discuss during the workshop.  The
+program committee will send invitations to the workshop based on these
+proposals.  The CFP and FAQ tabs on the web site describe this in more
+detail.
+
+For reference, there are writeups of previous workshops available
+online:
+
+http://lwn.net/Articles/226351/
+http://www.usenix.org/publications/login/2008-06/openpdfs/lsf08reports.pdf
+
+This year we'll be adding time to the schedule specifically for hands-on
+development with your colleagues.
+
+Please let me know if there are any questions about the workshop.
+
+James
 
 
