@@ -1,36 +1,47 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
-Date: Fri, 30 Jan 2009 10:21:56 +0000
-Message-ID: <20090130102156.1219bb2b@lxorguk.ukuu.org.uk>
-References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan>
-	<200901252027.43376.bzolnier@gmail.com>
-	<alpine.DEB.1.10.0901251612310.16676@p34.internal.lan>
-	<200901252239.26268.bzolnier@gmail.com>
-	<498240B7.6010500@tmr.com>
-	<alpine.DEB.1.10.0901291937290.24753@asgard.lang.hm>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: DMA breakage in 2.6.29-rc*
+Date: Fri, 30 Jan 2009 22:07:58 +1100
+Message-ID: <1233313678.18767.25.camel@pasglop>
+References: <1233294371.18767.23.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34799 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755933AbZA3KWJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jan 2009 05:22:09 -0500
-In-Reply-To: <alpine.DEB.1.10.0901291937290.24753@asgard.lang.hm>
+Received: from gate.crashing.org ([63.228.1.57]:49012 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbZA3LIG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Jan 2009 06:08:06 -0500
+In-Reply-To: <1233294371.18767.23.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: david@lang.hm
-Cc: Bill Davidsen <davidsen@tmr.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-> what was the problem with these? I have somthing in this family in one of 
-> my secondary boxes (I'd have to go check exactly which model)
+On Fri, 2009-01-30 at 16:46 +1100, Benjamin Herrenschmidt wrote:
+> Hi Bart !
+> 
+> On a bunch of pmac's, I'm getting lost interrupts when trying to do DMA
+> with ide hard disks (first time at boot when reading the partition
+> table). It then times out, reverts to PIO and boots fine.
+> 
+> Haven't had time to fully bisect yet, but it seem to be somewhere in the
+> pile of IDE patches (surprise :-) that went in around that time.
+> 
+> I'll dig more next week, but in the meantime, I though you may have a
+> possible candidate in mind.
 
-343/363 don't work unless you use the alternate access via the BAR4
-register range and leave BAR0-3 alone. That means you can't use the
-standard IDE setup helper logic with them.
+Smells like the patch that popped up not long ago already (can't find
+the thread now) where you cleaned up the port registration and broke our
+trick of passing a different parent device than the one used for DMA or
+something like that ... that mixed with something not testing the dma
+map results (probably my fault) and I think we are passing crap DMA
+addresses to the device.
 
-366 and later (which is almost certainly what you will have) replace this
-with a different collection of errata which are handled by both sets of
-drivers.
+I'll sort it out. I should be able to just add working dma ops to the
+macio_device, it's a lot easier now that ppc32 has the same dma ops
+structure in struct device as ppc64.
 
-Alan
+Cheers,
+Ben.
+
+
