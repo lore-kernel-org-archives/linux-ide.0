@@ -1,52 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH v2] IDE: palm_bk3710: use ioremap instead of arch-specific
- IO_ADDRESS()
-Date: Fri, 30 Jan 2009 23:03:47 +0300
-Message-ID: <49835D23.5040604@ru.mvista.com>
-References: <1233345567-643-1-git-send-email-khilman@deeprootsystems.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: DMA breakage in 2.6.29-rc*
+Date: Sat, 31 Jan 2009 07:45:46 +1100
+Message-ID: <1233348346.18767.26.camel@pasglop>
+References: <1233294371.18767.23.camel@pasglop>
+	 <18818.61421.549546.38274@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:17613 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752731AbZA3UDT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jan 2009 15:03:19 -0500
-In-Reply-To: <1233345567-643-1-git-send-email-khilman@deeprootsystems.com>
+Received: from gate.crashing.org ([63.228.1.57]:55789 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754501AbZA3UrG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Jan 2009 15:47:06 -0500
+In-Reply-To: <18818.61421.549546.38274@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kevin Hilman <khilman@deeprootsystems.com>
-Cc: linux-ide@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, list linux-ide <linux-ide@vger.kernel.org>
 
-Kevin Hilman wrote:
+On Fri, 2009-01-30 at 13:17 +0100, Mikael Pettersson wrote:
+> Benjamin Herrenschmidt writes:
+>  > Hi Bart !
+>  > 
+>  > On a bunch of pmac's, I'm getting lost interrupts when trying to do DMA
+>  > with ide hard disks (first time at boot when reading the partition
+>  > table). It then times out, reverts to PIO and boots fine.
+>  > 
+>  > Haven't had time to fully bisect yet, but it seem to be somewhere in the
+>  > pile of IDE patches (surprise :-) that went in around that time.
+> 
+> On a slightly related note, any update on the pata_macio driver
+> you posted last summer? As I recall, it worked ok on my G4, except
+> for some OF/yaboot mismatch which broke ydl's /sbin/installkernel.
 
-> Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
+I needs more work and I didn't get a chance to do that yet.. It will
+need yaboot's ofboot script to be updated too, unfortunately, as it hard
+codes things specific to ide-pmac.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cheers,
+Ben.
 
-> diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
-> index f38aac7..6196f76 100644
-> --- a/drivers/ide/palm_bk3710.c
-> +++ b/drivers/ide/palm_bk3710.c
-> @@ -347,7 +347,7 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
->  	struct clk *clk;
->  	struct resource *mem, *irq;
->  	void __iomem *base;
-> -	unsigned long rate;
-> +	unsigned long rate, mem_size;
->  	int i, rc;
->  	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
->  
-> @@ -374,13 +374,19 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
->  		return -ENODEV;
->  	}
->  
-> -	if (request_mem_region(mem->start, mem->end - mem->start + 1,
-> +	mem_size = mem->end - mem->start + 1;
-> +	if (request_mem_region(mem->start, mem_size,
->  			       "palm_bk3710") == NULL) {
-
-    No point in keeping *if* occupying 2 lines, I think...
-
-MBR, Sergei
 
