@@ -1,159 +1,92 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 02/07] sata_mv: rearrange mv_start_dma() and friends
-Date: Fri, 30 Jan 2009 18:47:51 -0500
-Message-ID: <498391A7.1090209@rtr.ca>
-References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca>
+Subject: [PATCH 03/07] sata_mv: restructure mv_qc_issue
+Date: Fri, 30 Jan 2009 18:48:41 -0500
+Message-ID: <498391D9.2000403@rtr.ca>
+References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca> <498391A7.1090209@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:48391 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:57877 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757947AbZA3Xrw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jan 2009 18:47:52 -0500
-In-Reply-To: <4983915F.7090705@rtr.ca>
+	id S1753175AbZA3Xsm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Jan 2009 18:48:42 -0500
+In-Reply-To: <498391A7.1090209@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Rearrange mv_start_dma() and friends, in preparation for adding
-non-EDMA DMA modes, and non-EDMA interrupts, to the driver.
+Rearrange logic in mv_qc_issue() to handle protocols
+other than ATA_PROT_DMA, ATA_PROT_NCQ, and ATA_PROT_PIO.
+This is in preparation for later enabling ATAPI support.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2009-01-30 16:45:20.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-01-30 16:44:12.000000000 -0500
-@@ -536,7 +536,7 @@
- 			     unsigned int port_no);
- static int mv_stop_edma(struct ata_port *ap);
- static int mv_stop_edma_engine(void __iomem *port_mmio);
--static void mv_edma_cfg(struct ata_port *ap, int want_ncq);
-+static void mv_edma_cfg(struct ata_port *ap, int want_ncq, int want_edma);
- 
- static void mv_pmp_select(struct ata_port *ap, int pmp);
- static int mv_pmp_hardreset(struct ata_link *link, unsigned int *class,
-@@ -849,8 +849,32 @@
- 	mv_set_main_irq_mask(ap->host, disable_bits, enable_bits);
- }
- 
-+static void mv_clear_and_enable_port_irqs(struct ata_port *ap,
-+					  void __iomem *port_mmio,
-+					  unsigned int port_irqs)
-+{
-+	struct mv_host_priv *hpriv = ap->host->private_data;
-+	int hardport = mv_hardport_from_port(ap->port_no);
-+	void __iomem *hc_mmio = mv_hc_base_from_port(
-+				mv_host_base(ap->host), ap->port_no);
-+	u32 hc_irq_cause;
-+
-+	/* clear EDMA event indicators, if any */
-+	writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
-+
-+	/* clear pending irq events */
-+	hc_irq_cause = ~((DEV_IRQ | DMA_IRQ) << hardport);
-+	writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
-+
-+	/* clear FIS IRQ Cause */
-+	if (IS_GEN_IIE(hpriv))
-+		writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
-+
-+	mv_enable_port_irqs(ap, port_irqs);
-+}
-+
- /**
-- *      mv_start_dma - Enable eDMA engine
-+ *      mv_start_edma - Enable eDMA engine
-  *      @base: port base address
-  *      @pp: port private data
-  *
-@@ -860,7 +884,7 @@
-  *      LOCKING:
-  *      Inherited from caller.
+--- old/drivers/ata/sata_mv.c	2009-01-30 18:21:49.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2009-01-30 18:23:22.000000000 -0500
+@@ -1565,14 +1565,26 @@
   */
--static void mv_start_dma(struct ata_port *ap, void __iomem *port_mmio,
-+static void mv_start_edma(struct ata_port *ap, void __iomem *port_mmio,
- 			 struct mv_port_priv *pp, u8 protocol)
+ static unsigned int mv_qc_issue(struct ata_queued_cmd *qc)
  {
- 	int want_ncq = (protocol == ATA_PROT_NCQ);
-@@ -872,26 +896,11 @@
- 	}
- 	if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN)) {
- 		struct mv_host_priv *hpriv = ap->host->private_data;
--		int hardport = mv_hardport_from_port(ap->port_no);
--		void __iomem *hc_mmio = mv_hc_base_from_port(
--					mv_host_base(ap->host), ap->port_no);
--		u32 hc_irq_cause;
--
--		/* clear EDMA event indicators, if any */
--		writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
--
--		/* clear pending irq events */
--		hc_irq_cause = ~((DEV_IRQ | DMA_IRQ) << hardport);
--		writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
++	static int limit_warnings = 10;
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *port_mmio = mv_ap_base(ap);
+ 	struct mv_port_priv *pp = ap->private_data;
+ 	u32 in_index;
++	unsigned int port_irqs = DONE_IRQ | ERR_IRQ;
  
--		mv_edma_cfg(ap, want_ncq);
--
--		/* clear FIS IRQ Cause */
--		if (IS_GEN_IIE(hpriv))
--			writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
-+		mv_edma_cfg(ap, want_ncq, 1);
- 
- 		mv_set_edma_ptrs(port_mmio, hpriv, pp);
--		mv_enable_port_irqs(ap, DONE_IRQ|ERR_IRQ);
-+		mv_clear_and_enable_port_irqs(ap, port_mmio, DONE_IRQ|ERR_IRQ);
- 
- 		writelfl(EDMA_EN, port_mmio + EDMA_CMD_OFS);
- 		pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
-@@ -1173,7 +1182,7 @@
- 		writel(new, hpriv->base + MV_GPIO_PORT_CTL_OFS);
- }
- 
--static void mv_edma_cfg(struct ata_port *ap, int want_ncq)
-+static void mv_edma_cfg(struct ata_port *ap, int want_ncq, int want_edma)
- {
- 	u32 cfg;
- 	struct mv_port_priv *pp    = ap->private_data;
-@@ -1182,7 +1191,7 @@
- 
- 	/* set up non-NCQ EDMA configuration */
- 	cfg = EDMA_CFG_Q_DEPTH;		/* always 0x1f for *all* chips */
--	pp->pp_flags &= ~MV_PP_FLAG_FBS_EN;
-+	pp->pp_flags &= ~(MV_PP_FLAG_FBS_EN | MV_PP_FLAG_NCQ_EN);
- 
- 	if (IS_GEN_I(hpriv))
- 		cfg |= (1 << 8);	/* enab config burst size mask */
-@@ -1211,9 +1220,11 @@
+-	if ((qc->tf.protocol != ATA_PROT_DMA) &&
+-	    (qc->tf.protocol != ATA_PROT_NCQ)) {
+-		static int limit_warnings = 10;
++	switch (qc->tf.protocol) {
++	case ATA_PROT_DMA:
++	case ATA_PROT_NCQ:
++		mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
++		pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
++		in_index = pp->req_idx << EDMA_REQ_Q_PTR_SHIFT;
++
++		/* Write the request in pointer to kick the EDMA to life */
++		writelfl((pp->crqb_dma & EDMA_REQ_Q_BASE_LO_MASK) | in_index,
++					port_mmio + EDMA_REQ_Q_IN_PTR_OFS);
++		return 0;
++
++	case ATA_PROT_PIO:
+ 		/*
+ 		 * Errata SATA#16, SATA#24: warn if multiple DRQs expected.
+ 		 *
+@@ -1590,27 +1602,22 @@
+ 					": attempting PIO w/multiple DRQ: "
+ 					"this may fail due to h/w errata\n");
  		}
- 
- 		cfg |= (1 << 23);	/* do not mask PM field in rx'd FIS */
--		cfg |= (1 << 22);	/* enab 4-entry host queue cache */
--		if (!IS_SOC(hpriv))
--			cfg |= (1 << 18);	/* enab early completion */
-+		if (want_edma) {
-+			cfg |= (1 << 22); /* enab 4-entry host queue cache */
-+			if (!IS_SOC(hpriv))
-+				cfg |= (1 << 18); /* enab early completion */
-+		}
- 		if (hpriv->hp_flags & MV_HP_CUT_THROUGH)
- 			cfg |= (1 << 17); /* enab cut-thru (dis stor&forwrd) */
- 	}
-@@ -1221,8 +1232,7 @@
- 	if (want_ncq) {
- 		cfg |= EDMA_CFG_NCQ;
- 		pp->pp_flags |=  MV_PP_FLAG_NCQ_EN;
--	} else
--		pp->pp_flags &= ~MV_PP_FLAG_NCQ_EN;
-+	}
- 
- 	writelfl(cfg, port_mmio + EDMA_CFG_OFS);
- }
-@@ -1591,7 +1601,7 @@
++		/* drop through */
++	case ATAPI_PROT_PIO:
++		port_irqs = ERR_IRQ;	/* leave DONE_IRQ masked for PIO */
++		/* drop through */
++	default:
+ 		/*
+ 		 * We're about to send a non-EDMA capable command to the
+ 		 * port.  Turn off EDMA so there won't be problems accessing
+ 		 * shadow block, etc registers.
+ 		 */
+ 		mv_stop_edma(ap);
+-		mv_enable_port_irqs(ap, ERR_IRQ);
++		mv_edma_cfg(ap, 0, 0);
++		mv_clear_and_enable_port_irqs(ap, mv_ap_base(ap), port_irqs);
+ 		mv_pmp_select(ap, qc->dev->link->pmp);
  		return ata_sff_qc_issue(qc);
  	}
+-
+-	mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
+-
+-	pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
+-	in_index = pp->req_idx << EDMA_REQ_Q_PTR_SHIFT;
+-
+-	/* and write the request in pointer to kick the EDMA to life */
+-	writelfl((pp->crqb_dma & EDMA_REQ_Q_BASE_LO_MASK) | in_index,
+-		 port_mmio + EDMA_REQ_Q_IN_PTR_OFS);
+-
+-	return 0;
+ }
  
--	mv_start_dma(ap, port_mmio, pp, qc->tf.protocol);
-+	mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
- 
- 	pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
- 	in_index = pp->req_idx << EDMA_REQ_Q_PTR_SHIFT;
+ static struct ata_queued_cmd *mv_get_active_qc(struct ata_port *ap)
