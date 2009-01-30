@@ -1,109 +1,159 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 01/07] sata_mv: cleanup chipset GENeration FLAGS
-Date: Fri, 30 Jan 2009 18:46:39 -0500
-Message-ID: <4983915F.7090705@rtr.ca>
-References: <49839107.2040603@rtr.ca>
+Subject: [PATCH 02/07] sata_mv: rearrange mv_start_dma() and friends
+Date: Fri, 30 Jan 2009 18:47:51 -0500
+Message-ID: <498391A7.1090209@rtr.ca>
+References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:48388 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:48391 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753575AbZA3Xqk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jan 2009 18:46:40 -0500
-In-Reply-To: <49839107.2040603@rtr.ca>
+	id S1757947AbZA3Xrw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Jan 2009 18:47:52 -0500
+In-Reply-To: <4983915F.7090705@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Clean up the chipset GENeration FLAGS, and rename them
-for consistency with other uses of GEN_XX within sata_mv.
+Rearrange mv_start_dma() and friends, in preparation for adding
+non-EDMA DMA modes, and non-EDMA interrupts, to the driver.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2009-01-30 16:09:07.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-01-30 16:27:13.000000000 -0500
-@@ -120,14 +120,15 @@
- 	MV_FLAG_IRQ_COALESCE	= (1 << 29),  /* IRQ coalescing capability */
+--- old/drivers/ata/sata_mv.c	2009-01-30 16:45:20.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2009-01-30 16:44:12.000000000 -0500
+@@ -536,7 +536,7 @@
+ 			     unsigned int port_no);
+ static int mv_stop_edma(struct ata_port *ap);
+ static int mv_stop_edma_engine(void __iomem *port_mmio);
+-static void mv_edma_cfg(struct ata_port *ap, int want_ncq);
++static void mv_edma_cfg(struct ata_port *ap, int want_ncq, int want_edma);
  
- 	MV_COMMON_FLAGS		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
--				  ATA_FLAG_MMIO | ATA_FLAG_NO_ATAPI |
--				  ATA_FLAG_PIO_POLLING,
-+				  ATA_FLAG_MMIO | ATA_FLAG_PIO_POLLING,
+ static void mv_pmp_select(struct ata_port *ap, int pmp);
+ static int mv_pmp_hardreset(struct ata_link *link, unsigned int *class,
+@@ -849,8 +849,32 @@
+ 	mv_set_main_irq_mask(ap->host, disable_bits, enable_bits);
+ }
  
--	MV_6XXX_FLAGS		= MV_FLAG_IRQ_COALESCE,
-+	MV_GEN_I_FLAGS		= MV_COMMON_FLAGS | ATA_FLAG_NO_ATAPI,
- 
--	MV_GENIIE_FLAGS		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-+	MV_GEN_II_FLAGS		= MV_COMMON_FLAGS | MV_FLAG_IRQ_COALESCE |
- 				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
--				  ATA_FLAG_NCQ | ATA_FLAG_AN,
-+				  ATA_FLAG_NCQ | ATA_FLAG_NO_ATAPI,
++static void mv_clear_and_enable_port_irqs(struct ata_port *ap,
++					  void __iomem *port_mmio,
++					  unsigned int port_irqs)
++{
++	struct mv_host_priv *hpriv = ap->host->private_data;
++	int hardport = mv_hardport_from_port(ap->port_no);
++	void __iomem *hc_mmio = mv_hc_base_from_port(
++				mv_host_base(ap->host), ap->port_no);
++	u32 hc_irq_cause;
 +
-+	MV_GEN_IIE_FLAGS	= MV_GEN_II_FLAGS | ATA_FLAG_AN,
++	/* clear EDMA event indicators, if any */
++	writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
++
++	/* clear pending irq events */
++	hc_irq_cause = ~((DEV_IRQ | DMA_IRQ) << hardport);
++	writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
++
++	/* clear FIS IRQ Cause */
++	if (IS_GEN_IIE(hpriv))
++		writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
++
++	mv_enable_port_irqs(ap, port_irqs);
++}
++
+ /**
+- *      mv_start_dma - Enable eDMA engine
++ *      mv_start_edma - Enable eDMA engine
+  *      @base: port base address
+  *      @pp: port private data
+  *
+@@ -860,7 +884,7 @@
+  *      LOCKING:
+  *      Inherited from caller.
+  */
+-static void mv_start_dma(struct ata_port *ap, void __iomem *port_mmio,
++static void mv_start_edma(struct ata_port *ap, void __iomem *port_mmio,
+ 			 struct mv_port_priv *pp, u8 protocol)
+ {
+ 	int want_ncq = (protocol == ATA_PROT_NCQ);
+@@ -872,26 +896,11 @@
+ 	}
+ 	if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN)) {
+ 		struct mv_host_priv *hpriv = ap->host->private_data;
+-		int hardport = mv_hardport_from_port(ap->port_no);
+-		void __iomem *hc_mmio = mv_hc_base_from_port(
+-					mv_host_base(ap->host), ap->port_no);
+-		u32 hc_irq_cause;
+-
+-		/* clear EDMA event indicators, if any */
+-		writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+-
+-		/* clear pending irq events */
+-		hc_irq_cause = ~((DEV_IRQ | DMA_IRQ) << hardport);
+-		writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
  
- 	CRQB_FLAG_READ		= (1 << 0),
- 	CRQB_TAG_SHIFT		= 1,
-@@ -603,53 +604,49 @@
+-		mv_edma_cfg(ap, want_ncq);
+-
+-		/* clear FIS IRQ Cause */
+-		if (IS_GEN_IIE(hpriv))
+-			writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
++		mv_edma_cfg(ap, want_ncq, 1);
  
- static const struct ata_port_info mv_port_info[] = {
- 	{  /* chip_504x */
--		.flags		= MV_COMMON_FLAGS,
-+		.flags		= MV_GEN_I_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv5_ops,
- 	},
- 	{  /* chip_508x */
--		.flags		= MV_COMMON_FLAGS | MV_FLAG_DUAL_HC,
-+		.flags		= MV_GEN_I_FLAGS | MV_FLAG_DUAL_HC,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv5_ops,
- 	},
- 	{  /* chip_5080 */
--		.flags		= MV_COMMON_FLAGS | MV_FLAG_DUAL_HC,
-+		.flags		= MV_GEN_I_FLAGS | MV_FLAG_DUAL_HC,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv5_ops,
- 	},
- 	{  /* chip_604x */
--		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
--				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
--				  ATA_FLAG_NCQ,
-+		.flags		= MV_GEN_II_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv6_ops,
- 	},
- 	{  /* chip_608x */
--		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
--				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
--				  ATA_FLAG_NCQ | MV_FLAG_DUAL_HC,
-+		.flags		= MV_GEN_II_FLAGS | MV_FLAG_DUAL_HC,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv6_ops,
- 	},
- 	{  /* chip_6042 */
--		.flags		= MV_GENIIE_FLAGS,
-+		.flags		= MV_GEN_IIE_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv_iie_ops,
- 	},
- 	{  /* chip_7042 */
--		.flags		= MV_GENIIE_FLAGS,
-+		.flags		= MV_GEN_IIE_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv_iie_ops,
- 	},
- 	{  /* chip_soc */
--		.flags		= MV_GENIIE_FLAGS,
-+		.flags		= MV_GEN_IIE_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &mv_iie_ops,
+ 		mv_set_edma_ptrs(port_mmio, hpriv, pp);
+-		mv_enable_port_irqs(ap, DONE_IRQ|ERR_IRQ);
++		mv_clear_and_enable_port_irqs(ap, port_mmio, DONE_IRQ|ERR_IRQ);
+ 
+ 		writelfl(EDMA_EN, port_mmio + EDMA_CMD_OFS);
+ 		pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
+@@ -1173,7 +1182,7 @@
+ 		writel(new, hpriv->base + MV_GPIO_PORT_CTL_OFS);
+ }
+ 
+-static void mv_edma_cfg(struct ata_port *ap, int want_ncq)
++static void mv_edma_cfg(struct ata_port *ap, int want_ncq, int want_edma)
+ {
+ 	u32 cfg;
+ 	struct mv_port_priv *pp    = ap->private_data;
+@@ -1182,7 +1191,7 @@
+ 
+ 	/* set up non-NCQ EDMA configuration */
+ 	cfg = EDMA_CFG_Q_DEPTH;		/* always 0x1f for *all* chips */
+-	pp->pp_flags &= ~MV_PP_FLAG_FBS_EN;
++	pp->pp_flags &= ~(MV_PP_FLAG_FBS_EN | MV_PP_FLAG_NCQ_EN);
+ 
+ 	if (IS_GEN_I(hpriv))
+ 		cfg |= (1 << 8);	/* enab config burst size mask */
+@@ -1211,9 +1220,11 @@
+ 		}
+ 
+ 		cfg |= (1 << 23);	/* do not mask PM field in rx'd FIS */
+-		cfg |= (1 << 22);	/* enab 4-entry host queue cache */
+-		if (!IS_SOC(hpriv))
+-			cfg |= (1 << 18);	/* enab early completion */
++		if (want_edma) {
++			cfg |= (1 << 22); /* enab 4-entry host queue cache */
++			if (!IS_SOC(hpriv))
++				cfg |= (1 << 18); /* enab early completion */
++		}
+ 		if (hpriv->hp_flags & MV_HP_CUT_THROUGH)
+ 			cfg |= (1 << 17); /* enab cut-thru (dis stor&forwrd) */
+ 	}
+@@ -1221,8 +1232,7 @@
+ 	if (want_ncq) {
+ 		cfg |= EDMA_CFG_NCQ;
+ 		pp->pp_flags |=  MV_PP_FLAG_NCQ_EN;
+-	} else
+-		pp->pp_flags &= ~MV_PP_FLAG_NCQ_EN;
++	}
+ 
+ 	writelfl(cfg, port_mmio + EDMA_CFG_OFS);
+ }
+@@ -1591,7 +1601,7 @@
+ 		return ata_sff_qc_issue(qc);
+ 	}
+ 
+-	mv_start_dma(ap, port_mmio, pp, qc->tf.protocol);
++	mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
+ 
+ 	pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
+ 	in_index = pp->req_idx << EDMA_REQ_Q_PTR_SHIFT;
