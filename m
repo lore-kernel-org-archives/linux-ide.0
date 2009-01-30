@@ -1,43 +1,36 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: DMA breakage in 2.6.29-rc*
-Date: Sat, 31 Jan 2009 07:45:46 +1100
-Message-ID: <1233348346.18767.26.camel@pasglop>
-References: <1233294371.18767.23.camel@pasglop>
-	 <18818.61421.549546.38274@harpo.it.uu.se>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: Seagate disk freeze for 30 seconds then comes back (RecovComm 10B8B)
+Date: Fri, 30 Jan 2009 16:21:16 -0500
+Message-ID: <20090130212115.GB26062@csclub.uwaterloo.ca>
+References: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro> <20090128153141.GC26064@csclub.uwaterloo.ca> <498244D4.4060903@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:55789 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754501AbZA3UrG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jan 2009 15:47:06 -0500
-In-Reply-To: <18818.61421.549546.38274@harpo.it.uu.se>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:32826 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754615AbZA3VVR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jan 2009 16:21:17 -0500
+Content-Disposition: inline
+In-Reply-To: <498244D4.4060903@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, list linux-ide <linux-ide@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: "Catalin(ux) M. BOIE" <catab@embedromix.ro>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 2009-01-30 at 13:17 +0100, Mikael Pettersson wrote:
-> Benjamin Herrenschmidt writes:
->  > Hi Bart !
->  > 
->  > On a bunch of pmac's, I'm getting lost interrupts when trying to do DMA
->  > with ide hard disks (first time at boot when reading the partition
->  > table). It then times out, reverts to PIO and boots fine.
->  > 
->  > Haven't had time to fully bisect yet, but it seem to be somewhere in the
->  > pile of IDE patches (surprise :-) that went in around that time.
+On Thu, Jan 29, 2009 at 07:07:48PM -0500, Bill Davidsen wrote:
+> Would you expect that firmware would be shared between old tech laptop 
+> drives and desktop/server drives? Particularly since the laptop drive was 
+> built before any of the 7200.11 drives?
 > 
-> On a slightly related note, any update on the pata_macio driver
-> you posted last summer? As I recall, it worked ok on my G4, except
-> for some OF/yaboot mismatch which broke ydl's /sbin/installkernel.
+> I think this is a very unlikely part of the problem. Certainly the drive 
+> might be dying or other hardware issue.
 
-I needs more work and I didn't get a chance to do that yet.. It will
-need yaboot's ofboot script to be updated too, unfortunately, as it hard
-codes things specific to ide-pmac.
+It does seem unlikely, although if it is a common design flaw in their
+firmware, it could have been carried over from older drives and just not
+be as noticeable on the older drives with smaller caches and less drive
+space.
 
-Cheers,
-Ben.
+Now if the drive is really old, then year it might simply be failing.
 
-
+-- 
+Len Sorensen
