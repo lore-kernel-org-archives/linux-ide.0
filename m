@@ -1,42 +1,45 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
-Date: Sat, 31 Jan 2009 11:35:56 -0500
-Message-ID: <49847DEC.80603@rtr.ca>
-References: <20090131122500.f6817013.cjsthompson@gmail.com>	<4984636C.8050609@ru.mvista.com> <20090131172746.f9b02ca5.cjsthompson@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
+Date: Sat, 31 Jan 2009 19:57:17 +0300
+Message-ID: <498482ED.9090800@ru.mvista.com>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>	<20090126191151.18b094e6@lxorguk.ukuu.org.uk>	<49846A36.5000708@ru.mvista.com> <20090131160601.5159579d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:42723 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752786AbZAaQf7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Jan 2009 11:35:59 -0500
-In-Reply-To: <20090131172746.f9b02ca5.cjsthompson@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:36927 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752447AbZAaQ5Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Jan 2009 11:57:24 -0500
+In-Reply-To: <20090131160601.5159579d@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Hugh Dickins <hugh@veritas.com>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The only difference between those two identify packets
-seems to be that the drive write-cache was disabled
-when dumped from the pata_cs5536, and enabled when
-dumped from AMD_IDE.
+Hello.
 
-[~] diff -u 1.id 2.id
---- 1.id        2009-01-31 11:33:58.000000000 -0500
-+++ 2.id        2009-01-31 11:34:11.000000000 -0500
-@@ -31,7 +31,7 @@
- Commands/features:
-        Enabled Supported:
-           *    Power Management feature set
--               Write cache
-+          *    Write cache
-           *    Look-ahead
-           *    WRITE_BUFFER command
-           *    READ_BUFFER command
-@@ -40,4 +40,4 @@
-           *    Advanced Power Management feature set
-           *    Mandatory FLUSH_CACHE
-           *    CFA Power Level 1  (max 256mA)
--Integrity word not set (found 0x0000, expected 0x4da5)
-+Integrity word not set (found 0x0000, expected 0x24a5)
+Alan Cox wrote:
+
+>>> +	if (pdev->device == PCI_DEVICE_ID_AMD_VIPER_7411) /* FIFO is broken */
+>>> +		fifo = 0;
+>>> +
+>>> +	/* On the later chips the read prefetch bits become no-op bits */
+>>> +	pci_read_config_byte(pdev, 0x41, &r);
+>>> +	r &= ~fifobit[ap->port_no];
+>>>   
+>>>       
+>>   Why not:
+>>
+>>        r &= ~fifo;
+>>     
+>
+> Because then it wouldn't clear the bits if they were set already and we
+> wanted them off!
+>   
+
+   Ah, missed the modification of 'fifo'... :-<
+
+MBR, Sergei
+
+
