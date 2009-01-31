@@ -1,561 +1,265 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: 2.6.28: All I/O, D-state: 3ware 9650SE-16ML/Intel/965/MTRR/PAT?
-Date: Sat, 31 Jan 2009 05:48:51 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901310523480.29879@p34.internal.lan>
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+Subject: Re: Some IDE issues with 2.6.28 on PC-Engines ALIX2
+Date: Sat, 31 Jan 2009 12:25:00 +0100
+Message-ID: <20090131122500.f6817013.cjsthompson@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:44531 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752050AbZAaKsx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Jan 2009 05:48:53 -0500
+Received: from ey-out-2122.google.com ([74.125.78.26]:36267 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984AbZAaL05 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Jan 2009 06:26:57 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so201021eya.37
+        for <linux-ide@vger.kernel.org>; Sat, 31 Jan 2009 03:26:54 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
-
-I have opened a case with 3ware about this, but I do not believe the 3ware 
-card is at fault, it appears something to do with X or the memory subsystem.
-This is not easily reproducible and does not occur often. Maybe once or 
-twice per month, if that, hopefully someone can make out what is happening 
-in the trace below?
-
-KERNEL:
-# uname -a
-Linux p34.internal.lan 2.6.28 #9 SMP Thu Jan 1 08:07:31 EST 2009 x86_64 GNU/Linux
-
-PROBLEM:
-During I/O to the 3ware RAID (at least in the past 3-4 previous cases when 
-it occured), the system stops all I/O to all processes that are have I/O 
-to perform on the 3ware card.  I did a lot of analysis which is shown at 
-the bottom of this e-mail.
-
-ODDITY:
-After all of the diagnostics I did below(!), what ended up "bringing" the 
-system back to life?  I moved the mouse cursor on the local machine (I run 
-X) and it uses the Intel graphics (Intel DG965WH motherboard), once I 
-logged in, the ENTIRE system became responsive again, what the heck!?  All 
-of the processes in D-state were now freed!  I have taken an echo t > 
-/proc/sysrq-trigger, hopefully someone can shed some light on this?  It 
-almost seems like the memory/MTRR(?) is stomping the other memory that is 
-used by the system?
-
-QUESTION: Why??
-At the bottom of this e-mail (and also the 3ware ticket):
-Request:-  31st January 2009 at 2:24
-         Just as I was about to give up, I went to the machine, woke up the screensaver (moved mouse) and logged in and then EVERYTHING started working again??
-
-NOTE:
-After all of this, I re-ran the unrar, it worked fine.  My guess is X is doing
-something very strange with the memory?  I can try running no X for awhile
-and see if that gets rid of the problem?  Is that the recommended course of
-action, are there other things I can try to debug this problem further? Has
-anyone ever seen anything like this?
-
-CONFIG:
-http://home.comcast.net/~jpiszcz/20090131/config-2.6.28.txt
-
-LOGS: (from Xorg.log)
-(II) intel(0): EDID vendor "DEL", prod id 40984
-(II) intel(0): Output VGA connected
-(II) intel(0): Output VGA using initial mode 1680x1050
-(II) intel(0): detected 512 kB GTT.
-(II) intel(0): detected 7676 kB stolen memory. <- Is this of interest?
-(==) intel(0): video overlay key set to 0x101fe
-(==) intel(0): Will not try to enable page flipping
-(==) intel(0): Triple buffering disabled
-(==) intel(0): Intel XvMC decoder disabled
-(==) intel(0): Using gamma correction (1.0, 1.0, 1.0)
-(**) intel(0): Display dimensions: (430, 270) mm
-(**) intel(0): DPI set to (99, 158)
-
-KERNEL OPTIONS: (of interest?):
-   | |    [*] MTRR (Memory Type Range Register) support                    | |
-   | |    [*]   MTRR cleanup support                                       | |
-   | |    (0)     MTRR cleanup enable value (0-1)                          | |
-   | |    (1)     MTRR cleanup spare reg num (0-7)                         | |
-   | |    [*]   x86 PAT support                                            | |
-
-Should I consider disabling MTRR, x86 PAT support or both?  To see if the
-problem recurs? Are there any other kernel options I have enabled that could
-lead to this problem?
-
-LSPCI:
-00:00.0 Host bridge: Intel Corporation 82P965/G965 Memory Controller Hub (rev 02)
-00:01.0 PCI bridge: Intel Corporation 82P965/G965 PCI Express Root Port (rev 02)
-00:02.0 VGA compatible controller: Intel Corporation 82G965 Integrated Graphics Controller (rev 02)
-00:03.0 Communication controller: Intel Corporation 82P965/G965 HECI Controller (rev 02)
-00:19.0 Ethernet controller: Intel Corporation 82566DC Gigabit Network Connection (rev 02)
-00:1a.0 USB Controller: Intel Corporation 82801H (ICH8 Family) USB UHCI Controller #4 (rev 02)
-00:1a.1 USB Controller: Intel Corporation 82801H (ICH8 Family) USB UHCI Controller #5 (rev 02)
-00:1a.7 USB Controller: Intel Corporation 82801H (ICH8 Family) USB2 EHCI Controller #2 (rev 02)
-00:1b.0 Audio device: Intel Corporation 82801H (ICH8 Family) HD Audio Controller (rev 02)
-00:1c.0 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express Port 1 (rev 02)
-00:1c.1 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express Port 2 (rev 02)
-00:1c.2 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express Port 3 (rev 02)
-00:1c.3 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express Port 4 (rev 02)
-00:1c.4 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express Port 5 (rev 02)
-00:1d.0 USB Controller: Intel Corporation 82801H (ICH8 Family) USB UHCI Controller #1 (rev 02)
-00:1d.1 USB Controller: Intel Corporation 82801H (ICH8 Family) USB UHCI Controller #2 (rev 02)
-00:1d.2 USB Controller: Intel Corporation 82801H (ICH8 Family) USB UHCI Controller #3 (rev 02)
-00:1d.7 USB Controller: Intel Corporation 82801H (ICH8 Family) USB2 EHCI Controller #1 (rev 02)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev f2)
-00:1f.0 ISA bridge: Intel Corporation 82801HH (ICH8DH) LPC Interface Controller (rev 02)
-00:1f.2 SATA controller: Intel Corporation 82801HR/HO/HH (ICH8R/DO/DH) 6 port SATA AHCI Controller (rev 02)
-00:1f.3 SMBus: Intel Corporation 82801H (ICH8 Family) SMBus Controller (rev 02)
-01:00.0 RAID bus controller: 3ware Inc 9650SE SATA-II RAID (rev 01)
-03:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6101 single-port PATA133 interface (rev b1)
-07:00.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
-07:01.0 Ethernet controller: Intel Corporation 82541GI Gigabit Ethernet Controller
-
-INTERRUPTS:
-# cat /proc/interrupts
-            CPU0       CPU1       CPU2       CPU3
-   0:       8722          0          0          0   IO-APIC-edge      timer
-   1:          2          0          0          0   IO-APIC-edge      i8042
-   9:          0          0          0          0   IO-APIC-fasteoi   acpi
-  12:          3          0          0          0   IO-APIC-edge      i8042
-  16:   10253239   34561425   28715428   20097192   IO-APIC-fasteoi   3w-9xxx, uhci_hcd:usb3
-  18:       1532         38          0          0   IO-APIC-fasteoi   ehci_hcd:usb1, uhci_hcd:usb7
-  19:      43319      66498          0          0   IO-APIC-fasteoi   uhci_hcd:usb6
-  21:    1503630  282221348   34906481  251529888   IO-APIC-fasteoi   uhci_hcd:usb4, eth1
-  22:    3041085   50898734   44446192  106189021   IO-APIC-fasteoi   HDA Intel, eth2
-  23:   13630119   27422086    1544853      13244   IO-APIC-fasteoi   ehci_hcd:usb2, uhci_hcd:usb5
-375:    3059314   15607219    8335846    3335608   PCI-MSI-edge      ahci
-376:    2259672  275715231   18496746  107799784   PCI-MSI-edge      eth0
-377:    2653268    4958739          0          0   PCI-MSI-edge      i915@pci:0000:00:02.0
-NMI:          0          0          0          0   Non-maskable interrupts
-LOC: 2603771749 2610047685 2594237486 2589369293   Local timer interrupts
-RES:    5511462    1894029    4550761    1766978   Rescheduling interrupts
-CAL:      15747      15686      15135       6535   Function call interrupts
-TLB:     749115     747241     962808     893832   TLB shootdowns
-TRM:          0          0          0          0   Thermal event interrupts
-THR:          0          0          0          0   Threshold APIC interrupts
-SPU:          0          0          0          0   Spurious interrupts
-ERR:          0
-MIS:          0
-
-DETAILS (warning! very long):
-
-Request:-  31st January 2009 at 1:45
-         This problem has happened 3 or 4 times now, it is very strange, it occurs across several kernels, the one I am running now is (2.6.28).  It occurs across two schedulers (so it is unlikely the kernel); noop and deadline.
-
-Essentially what happens is all I/O is blocked during decompression of a file and it stays that way:
-
-Extracting from backup.r81
-
-...         backup-20090101.img                                             87%
-
-Extracting from backup.r82
-
-...         backup-20090101.img                                             88%
-
-Extracting from backup.r83
-
-...         backup-20090101.img                                             89%
-
-Extracting from backup.r84
-
-...         backup-20090101.img                                             90%
-
-Here, it is *stuck* at 90%:
-
-   PID USER      PR  NI  VIRT SWAP  RES  SHR S %CPU %MEM   TIME P COMMAND
-   348 user      20   0 18616  16m 1572 1108 R  100  0.0  21:59 0 unrar
-
-It sits at 100%, this has happened during VERIFYs and also when the system is just plain idle.  It seems to be a very nasty bug because the process _never_ seems to complete.
-
-When this bug occurs, it appears all I/O to the array is blocked:
-$ dd if=/dev/zero of=create_file bs=1M count=1024
-
-It just sits there, when I try to strace the process, I get nothing:
-$ strace -p 770
-Process 770 attached - interrupt to quit
-
-I tried some things:
-
-# /opt/3ware/9500/tw_cli  /c0 set verify=5
-Setting Verify Rate on /c0 to 5 (Fastest I/O)...Done.
-
-# /opt/3ware/9500/tw_cli  /c0 set verify=1
-Setting Verify Rate on /c0 to 1 (Fastest Verify)...Done.
-
-# /opt/3ware/9500/tw_cli  /c0 set verify=3
-Setting Verify Rate on /c0 to 3 (Balanced Verify and I/O )...Done.
-
-No difference.
-
-In its current failure mode:
-//p34> info c0
-
-Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
-------------------------------------------------------------------------------
-u0    RAID-6    VERIFYING      -       91%(A)  64K     12107.1   ON     ON 
-u1    SPARE     OK             -       -       -       931.505   -      ON
-
-
-It is verifying, maybe it will 'unblock' the I/O when its done verifying?
-
-As you can see, the box is stagnant during this problem:
-$ vmstat 1
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
-  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
-  5  0  83104  47396    136 6586588    0    0   580   442    3    0  1  1 98  0
-  5  0  83104  47380    136 6586612    0    0     0     0 4143  129  0 25 75  0
-  5  0  83104  47380    136 6586612    0    0     0     0 4063  147  0 25 75  0
-  5  0  83104  47380    136 6586612    0    0     0     0 4052  139  0 25 75  0
-  5  0  83104  47256    136 6586612    0    0     0     0 4137  199  0 25 75  0
-  5  0  83104  47256    136 6586612    0    0     0     0 4916  160  0 25 75  0
-
-Here is an iostat on the device (/dev/sda):
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-            0.00    0.00   25.00    0.00    0.00   75.00
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
-sda1              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-            0.00    0.00   25.06    0.00    0.00   74.94
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
-sda1              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-            0.00    0.00   25.00    0.00    0.00   75.00
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
-sda1              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-            0.00    0.00   25.06    0.00    0.00   74.94
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
-sda1              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-
-I will let it sit for now and see if it "comes to" after the VERIFY is complete.  In the interim I have attached the tw_cli /c0 show diag output, but that looks normal as well, at least the most recent output, this looks like it could be a deeper bug than just something on the surface.
-
-The 25% is probably 1 of the CPUs (quad core) pegged at 100% trying to get I/O and the controller is not allowing it!
-
-This problem was *NEVER* experienced when I was not using the 3ware card, it only happened after I began using this card in my machine.
-
-# /opt/3ware/9500/tw_cli  /c0 show all
-/c0 Driver Version = 2.26.02.011
-/c0 Model = 9650SE-16ML
-/c0 Available Memory = 224MB
-/c0 Firmware Version = FE9X 4.06.00.004
-/c0 Bios Version = BE9X 4.05.00.015
-/c0 Boot Loader Version = BL9X 3.08.00.001
-/c0 Serial Number = [[ snip ]]
-/c0 PCB Version = Rev 032
-/c0 PCHIP Version = 2.00
-/c0 ACHIP Version = 1.90
-/c0 Number of Ports = 16
-/c0 Number of Drives = 16
-/c0 Number of Units = 2
-/c0 Total Optimal Units = 2
-/c0 Not Optimal Units = 0 
-/c0 JBOD Export Policy = off
-/c0 Disk Spinup Policy = 1
-/c0 Spinup Stagger Time Policy (sec) = 1
-/c0 Auto-Carving Policy = off
-/c0 Auto-Carving Size = 2048 GB
-/c0 Auto-Rebuild Policy = on
-/c0 Controller Bus Type = PCIe
-/c0 Controller Bus Width = 8 lanes
-/c0 Controller Bus Speed = 2.5 Gbps/lane
-
-Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
-------------------------------------------------------------------------------
-u0    RAID-6    VERIFYING      -       92%(A)  64K     12107.1   ON     ON 
-u1    SPARE     OK             -       -       -       931.505   -      ON
-
-Port   Status           Unit   Size        Blocks        Serial
----------------------------------------------------------------
-p0     OK               u0     931.51 GB   1953525168    WD-...
-p1     OK               u0     931.51 GB   1953525168    WD-...
-p2     OK               u0     931.51 GB   1953525168    WD-...
-p3     OK               u0     931.51 GB   1953525168    WD-...
-p4     OK               u0     931.51 GB   1953525168    WD-...
-p5     OK               u0     931.51 GB   1953525168    WD-...
-p6     OK               u0     931.51 GB   1953525168    WD-...
-p7     OK               u0     931.51 GB   1953525168    WD-...
-p8     OK               u0     931.51 GB   1953525168    WD-...
-p9     OK               u0     931.51 GB   1953525168    WD-...
-p10    OK               u0     931.51 GB   1953525168    WD-...
-p11    OK               u0     931.51 GB   1953525168    WD-...
-p12    OK               u0     931.51 GB   1953525168    WD-...
-p13    OK               u0     931.51 GB   1953525168    WD-...
-p14    OK               u0     931.51 GB   1953525168    WD-...
-p15    OK               u1     931.51 GB   1953525168    WD-...
-
-Name  OnlineState  BBUReady  Status    Volt     Temp     Hours  LastCapTest
----------------------------------------------------------------------------
-bbu   On           Yes       OK        OK       OK       255    28-Dec-2008
-
-Once this is "over" then I can attach the tw_cli diag output right now its locking/blocking any I/O, I cannot even ssh to the host, even though the root partition/drives are not on the 3ware controller!!
-
-root      8694  0.0  0.0      0     0 ?        D    Jan29   2:21 [pdflush]
-root      2226  0.0  0.0  10100   404 ?        Ds   Jan01   0:14 /sbin/syslogd -r
-
-Lots of processes in D-state.
-
-
-Request:-  31st January 2009 at 2:8
-         Nope, its still LOCKED/blocked/etc:
-
-# /opt/3ware/9500/tw_cli  info c0
-
-Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
-------------------------------------------------------------------------------
-u0    RAID-6    OK             -       -       64K     12107.1   ON     ON 
-u1    SPARE     OK             -       -       -       931.505   -      ON
-
-Port   Status           Unit   Size        Blocks        Serial
----------------------------------------------------------------
-p0     OK               u0     931.51 GB   1953525168    WD-
-p1     OK               u0     931.51 GB   1953525168    WD-
-p2     OK               u0     931.51 GB   1953525168    WD-
-p3     OK               u0     931.51 GB   1953525168    WD-
-p4     OK               u0     931.51 GB   1953525168    WD-
-p5     OK               u0     931.51 GB   1953525168    WD-
-p6     OK               u0     931.51 GB   1953525168    WD-
-p7     OK               u0     931.51 GB   1953525168    WD-
-p8     OK               u0     931.51 GB   1953525168    WD-
-p9     OK               u0     931.51 GB   1953525168    WD-
-p10    OK               u0     931.51 GB   1953525168    WD-
-p11    OK               u0     931.51 GB   1953525168    WD-
-p12    OK               u0     931.51 GB   1953525168    WD-
-p13    OK               u0     931.51 GB   1953525168    WD-
-p14    OK               u0     931.51 GB   1953525168    WD-
-p15    OK               u1     931.51 GB   1953525168    WD-
-
-Name  OnlineState  BBUReady  Status    Volt     Temp     Hours  LastCapTest
----------------------------------------------------------------------------
-bbu   On           Yes       OK        OK       OK       255    28-Dec-2008
-
-Completely blocking all I/O..
-
-p34:~# ps auxww | grep -i unrar
-user       348 99.6  0.0  18616  1572 pts/19   R+   04:05  60:59 unrar x backup01.rar
-root       865  0.0  0.0   4220   724 pts/29   S+   05:06   0:00 grep -i unrar
-p34:~# kill -9 348
-p34:~# 
-p34:~# killall -9 dd
-p34:~#
-
-Still...... BLOCKED...
-
-
-
-Request:-  31st January 2009 at 2:13
-         I was able to get a call trace, when I tried to write it to a file though, it was BLOCKED, so this is from a free ssh session I had open:
-
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff80264979>] autoremove_wake_function+0x9/0x30
-[2578818.429166]  [<ffffffff8024597a>] __wake_up_common+0x5a/0x90
-[2578818.429166]  [<ffffffff80608ced>] schedule_timeout+0xad/0xf0
-[2578818.429166]  [<ffffffff80264a83>] prepare_to_wait_exclusive+0x23/0x80
-[2578818.429166]  [<ffffffff805dcad6>] unix_wait_for_peer+0x86/0xd0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff80575cd7>] memcpy_fromiovec+0x57/0x80
-[2578818.429166]  [<ffffffff805dd170>] unix_dgram_sendmsg+0x450/0x5a0
-[2578818.429166]  [<ffffffff8056d77b>] sock_sendmsg+0xcb/0x100
-[2578818.429166]  [<ffffffff802af076>] do_path_lookup+0xd6/0x1a0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802af15d>] kern_path+0x1d/0x40
-[2578818.429166]  [<ffffffff8025408e>] current_fs_time+0x1e/0x30
-[2578818.429166]  [<ffffffff802baa9d>] mnt_want_write+0x2d/0xa0
-[2578818.429166]  [<ffffffff802bb637>] mntput_no_expire+0x27/0x140
-[2578818.429166]  [<ffffffff805dccc2>] unix_find_other+0x1a2/0x200
-[2578818.429166]  [<ffffffff8056cd62>] sockfd_lookup_light+0x22/0x90
-[2578818.429166]  [<ffffffff8056db89>] sys_sendto+0x119/0x180
-[2578818.429166]  [<ffffffff805dd5ba>] unix_dgram_connect+0xaa/0x250
-[2578818.429166]  [<ffffffff8056d046>] sys_connect+0x86/0xe0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] cron          S ffff88022aae7bc8     0   861   3044
-[2578818.429166]  ffff8801005b9b88 0000000000000086 00007f68d6c77000 ffffe2000453ab70
-[2578818.429166]  ffffffff807cd000 ffff8801005b5260 ffff880211f8f160 ffff8801005b5490
-[2578818.429166]  000000032abe1b60 ffff8801005b9d18 ffff8801005b5490 ffffffff8028b45b
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff8028b45b>] handle_mm_fault+0x2bb/0x7a0
-[2578818.429166]  [<ffffffff80608ced>] schedule_timeout+0xad/0xf0
-[2578818.429166]  [<ffffffff80264a83>] prepare_to_wait_exclusive+0x23/0x80
-[2578818.429166]  [<ffffffff805dcad6>] unix_wait_for_peer+0x86/0xd0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff80575cd7>] memcpy_fromiovec+0x57/0x80
-[2578818.429166]  [<ffffffff805dd170>] unix_dgram_sendmsg+0x450/0x5a0
-[2578818.429166]  [<ffffffff8056d77b>] sock_sendmsg+0xcb/0x100
-[2578818.429166]  [<ffffffff802af076>] do_path_lookup+0xd6/0x1a0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802af15d>] kern_path+0x1d/0x40
-[2578818.429166]  [<ffffffff8025408e>] current_fs_time+0x1e/0x30
-[2578818.429166]  [<ffffffff802baa9d>] mnt_want_write+0x2d/0xa0
-[2578818.429166]  [<ffffffff802bb637>] mntput_no_expire+0x27/0x140
-[2578818.429166]  [<ffffffff805dccc2>] unix_find_other+0x1a2/0x200
-[2578818.429166]  [<ffffffff8056cd62>] sockfd_lookup_light+0x22/0x90
-[2578818.429166]  [<ffffffff8056db89>] sys_sendto+0x119/0x180
-[2578818.429166]  [<ffffffff805dd5ba>] unix_dgram_connect+0xaa/0x250
-[2578818.429166]  [<ffffffff8056d046>] sys_connect+0x86/0xe0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] cron          S 00000000ffffffff     0   862   3044
-[2578818.429166]  ffff8801005bbb88 0000000000000086 00007f68d6c77000 ffffe2000453ab70
-[2578818.429166]  ffffffff807cd000 ffff8801005b4cf0 ffff88022b8950e0 ffff8801005b4f20
-[2578818.429166]  0000000129928420 0000000199ae5567 ffff8801005b4f20 ffffffff8028b45b
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff8028b45b>] handle_mm_fault+0x2bb/0x7a0
-[2578818.429166]  [<ffffffff80608ced>] schedule_timeout+0xad/0xf0
-[2578818.429166]  [<ffffffff80264a83>] prepare_to_wait_exclusive+0x23/0x80
-[2578818.429166]  [<ffffffff805dcad6>] unix_wait_for_peer+0x86/0xd0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff80575cd7>] memcpy_fromiovec+0x57/0x80
-[2578818.429166]  [<ffffffff805dd170>] unix_dgram_sendmsg+0x450/0x5a0
-[2578818.429166]  [<ffffffff8056d77b>] sock_sendmsg+0xcb/0x100
-[2578818.429166]  [<ffffffff802af076>] do_path_lookup+0xd6/0x1a0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802af15d>] kern_path+0x1d/0x40
-[2578818.429166]  [<ffffffff8025408e>] current_fs_time+0x1e/0x30
-[2578818.429166]  [<ffffffff802baa9d>] mnt_want_write+0x2d/0xa0
-[2578818.429166]  [<ffffffff802bb637>] mntput_no_expire+0x27/0x140
-[2578818.429166]  [<ffffffff805dccc2>] unix_find_other+0x1a2/0x200
-[2578818.429166]  [<ffffffff8056cd62>] sockfd_lookup_light+0x22/0x90
-[2578818.429166]  [<ffffffff8056db89>] sys_sendto+0x119/0x180
-[2578818.429166]  [<ffffffff805dd5ba>] unix_dgram_connect+0xaa/0x250
-[2578818.429166]  [<ffffffff8056d046>] sys_connect+0x86/0xe0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-
-
-Request:-  31st January 2009 at 2:16
-         These are the 'optimizations' I use on this array:
-
-   echo 128 > /sys/block/$i/queue/max_sectors_kb   # 128 is default
-   echo 512 > /sys/block/$i/queue/nr_requests      # 128 is default
-   # echo 254 > /sys/block/$i/device/queue_depth   # 254 is default
-   echo deadline > /sys/block/$i/queue/scheduler   # distribution dependent
-   blockdev --setra 16384 /dev/$i                  # set readahead
-
-In the past I had been able to kill the process(es) involved or they died eventually, however, this does not seem to be the case this time, I still cannot get my system back!
-
-Request:-  31st January 2009 at 2:20
-         Here is more of the echo t > sysrq-trigger:
-
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff805de205>] unix_stream_sendmsg+0x3b5/0x3d0
-[2578818.429166]  [<ffffffff80608ced>] schedule_timeout+0xad/0xf0
-[2578818.429166]  [<ffffffff80264b03>] prepare_to_wait+0x23/0x80
-[2578818.429166]  [<ffffffff805ddc92>] unix_stream_recvmsg+0x432/0x5f0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802aeb6c>] __link_path_walk+0xdbc/0xf20
-[2578818.429166]  [<ffffffff8056c60f>] sock_aio_read+0x14f/0x160
-[2578818.429166]  [<ffffffff802a3ed3>] do_sync_read+0xe3/0x130
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802a4b3e>] vfs_read+0x15e/0x170
-[2578818.429166]  [<ffffffff802a4c53>] sys_read+0x53/0xa0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] sshd          S 00000000ffffffff     0 32669  32667
-[2578818.429166]  ffff8801c4b15998 0000000000000086 ffffffff80755008 ffffffff8040c2c0
-[2578818.429166]  ffffffff807cd000 ffff88022b968700 ffff88022b8f2bb0 ffff88022b968930
-[2578818.429166]  0000000328057c18 0000000199b05a5c ffff88022b968930 ffff8801c4b159a8
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff8040c2c0>] rb_insert_color+0x100/0x130
-[2578818.429166]  [<ffffffff8026800f>] hrtimer_start_range_ns+0xdf/0x1b0
-[2578818.429166]  [<ffffffff80267eb9>] hrtimer_try_to_cancel+0x39/0x80
-[2578818.429166]  [<ffffffff80609415>] schedule_hrtimeout_range+0xb5/0x150
-[2578818.429166]  [<ffffffff802678e0>] hrtimer_wakeup+0x0/0x30
-[2578818.429166]  [<ffffffff802b35d9>] do_select+0x539/0x630
-[2578818.429166]  [<ffffffff802b3d30>] __pollwait+0x0/0x130
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80575f57>] memcpy_toiovec+0x57/0x80
-[2578818.429166]  [<ffffffff8060a529>] _spin_lock_bh+0x9/0x20
-[2578818.429166]  [<ffffffff8056fcc3>] release_sock+0x13/0xa0
-[2578818.429166]  [<ffffffff805ab7dc>] tcp_recvmsg+0x32c/0x940
-[2578818.429166]  [<ffffffff8056f110>] sock_common_recvmsg+0x30/0x50
-[2578818.429166]  [<ffffffff8056c60f>] sock_aio_read+0x14f/0x160
-[2578818.429166]  [<ffffffff802b38cf>] core_sys_select+0x1ff/0x310
-[2578818.429166]  [<ffffffff80240bb0>] do_page_fault+0x2f0/0x980
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff8026aa98>] getnstimeofday+0x48/0xc0
-[2578818.429166]  [<ffffffff802308b9>] read_tsc+0x9/0x20
-[2578818.429166]  [<ffffffff8026aa98>] getnstimeofday+0x48/0xc0
-[2578818.429166]  [<ffffffff802b3c71>] sys_select+0x51/0x110
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] bash          S 00000000ffffffff     0 32670  32669
-[2578818.429166]  ffff88022607de88 0000000000000082 ffff8800b773cc60 00000000006c4e5c
-[2578818.429166]  ffffffff807cd000 ffff8801006a8410 ffffffff8071a340 ffff8801006a8640
-[2578818.429166]  00000000006a8410 000000019977482f ffff8801006a8640 ffffffff807258c8
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff8045be2b>] tty_check_change+0x11b/0x130
-[2578818.429166]  [<ffffffff8025191e>] session_of_pgrp+0xe/0x50
-[2578818.429166]  [<ffffffff8045c6f2>] tty_ioctl+0x8b2/0x920
-[2578818.429166]  [<ffffffff80252872>] do_wait+0x272/0x350
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff802529e5>] sys_wait4+0x95/0xf0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] sr            S 00000000ffffffff     0 32677  32670
-[2578818.429166]  ffff88008f50fe88 0000000000000086 ffff88010ccebbb8 00000000006c4e5c
-[2578818.429166]  ffffffff807cd000 ffff880148a6f260 ffffffff8071a340 ffff880148a6f490
-[2578818.429166]  0000000048a6f260 000000019977482f ffff880148a6f490 ffffffff807258c8
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff80252872>] do_wait+0x272/0x350
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff802529e5>] sys_wait4+0x95/0xf0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] screen        S 00000000ffffffff     0 32683  32677
-[2578818.429166]  ffff88020a9e5f68 0000000000000086 ffff88022ba8f160 ffff88020a9e5f28
-[2578818.429166]  ffffffff807cd000 ffff88022ba8f160 ffff88022b8950e0 ffff88022ba8f390
-[2578818.429166]  000000015afa2f00 0000000199b0f5e0 ffff88022ba8f390 00007fff5afa5be2
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff80253955>] alarm_setitimer+0x35/0x70
-[2578818.429166]  [<ffffffff8025a2e9>] sys_pause+0x19/0x30
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] sshd          S 00000000ffffffff     0 32684  10156
-[2578818.429166]  ffff880198c4bbe8 0000000000000082 ffff880228808000 ffff880198c4bb68
-[2578818.429166]  ffffffff807cd000 ffff880100552090 ffff88022b8f2bb0 ffff8801005522c0
-[2578818.429166]  0000000398c4bb68 000000019977506f ffff8801005522c0 ffff8800058e33c0
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff805de205>] unix_stream_sendmsg+0x3b5/0x3d0
-[2578818.429166]  [<ffffffff80608ced>] schedule_timeout+0xad/0xf0
-[2578818.429166]  [<ffffffff80264b03>] prepare_to_wait+0x23/0x80
-[2578818.429166]  [<ffffffff805ddc92>] unix_stream_recvmsg+0x432/0x5f0
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802aeb6c>] __link_path_walk+0xdbc/0xf20
-[2578818.429166]  [<ffffffff8056c60f>] sock_aio_read+0x14f/0x160
-[2578818.429166]  [<ffffffff802a3ed3>] do_sync_read+0xe3/0x130
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff802a4b3e>] vfs_read+0x15e/0x170
-[2578818.429166]  [<ffffffff802a4c53>] sys_read+0x53/0xa0
-[2578818.429166]  [<ffffffff8022986b>] system_call_fastpath+0x16/0x1b
-[2578818.429166] sshd          S 00000000ffffffff     0 32686  32684
-[2578818.429166]  ffff880040dff998 0000000000000086 ffff880040dff9a8 ffffffff8040c250
-[2578818.429166]  ffffffff807cd000 ffff8801e96411e0 ffff88022b8f2bb0 ffff8801e9641410
-[2578818.429166]  0000000328057c18 0000000199b0a381 ffff8801e9641410 ffff880040dff9a8
-[2578818.429166] Call Trace:
-[2578818.429166]  [<ffffffff8040c250>] rb_insert_color+0x90/0x130
-[2578818.429166]  [<ffffffff8026800f>] hrtimer_start_range_ns+0xdf/0x1b0
-[2578818.429166]  [<ffffffff80267eb9>] hrtimer_try_to_cancel+0x39/0x80
-[2578818.429166]  [<ffffffff80609415>] schedule_hrtimeout_range+0xb5/0x150
-[2578818.429166]  [<ffffffff802678e0>] hrtimer_wakeup+0x0/0x30
-[2578818.429166]  [<ffffffff802b35d9>] do_select+0x539/0x630
-[2578818.429166]  [<ffffffff802b3d30>] __pollwait+0x0/0x130
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80249e30>] default_wake_function+0x0/0x10
-[2578818.429166]  [<ffffffff80575f57>] memcpy_toiovec+0x57/0x80
-[2578818.429166]  [<ffffffff8060a529>] _spin_lock_bh+0x9/0x20
-[2578818.429166]  [<ffffffff8056fcc3>] release_sock+0x13/0xa0
-[2578818.429166]  [<ffffffff805ab7dc>] tcp_recvmsg+0x32c/0x940
-[2578818.429166]  [<ffffffff8056f110>] sock_common_recvmsg+0x30/0x50
-[2578818.429166]  [<ffffffff8056c60f>] sock_aio_read+0x14f/0x160
-[2578818.429166]  [<ffffffff802b38cf>] core_sys_select+0x1ff/0x310
-[2578818.429166]  [<ffffffff8045e7a1>] n_tty_read+0x371/0x870
-[2578818.429166]  [<ffffffff80264970>] autoremove_wake_function+0x0/0x30
-[2578818.429166]  [<ffffffff80249e30>] default_wake_fun
-
-Request:-  31st January 2009 at 2:24
-         Just as I was about to give up, I went to the machine, woke up the screensaver (moved mouse) and logged in and then EVERYTHING started working again??
-
+To: linux-ide@vger.kernel.org
+
+Sergei Shtylyov wrote:
+> Hm, looks like your CF drive is rather advanced
+> and might be supporting UltraDMA (and your CF slot
+> supports DMA). Care to post the output of 'hdparm -i /dev/hda'?=20
+
+/dev/hda:                                                              =
+        =20
+                                                                       =
+        =20
+ Model=3DHMS360604D5CF00, FwRev=3DDP3OC40D, SerialNo=3DDNP450B4YHR2EA  =
+              =20
+ Config=3D{ HardSect NotMFM Removeable DTR>10Mbs nonMagnetic }         =
+          =20
+ RawCHS=3D5952/16/63, TrkSize=3D32256, SectSize=3D512, ECCbytes=3D4    =
+                =20
+ BuffType=3DDualPortCache, BuffSize=3D128kB, MaxMultSect=3D32, MultSect=
+=3Doff          =20
+ CurCHS=3D5952/16/63, CurSects=3D5999616, LBA=3Dyes, LBAsects=3D5999616=
+                =20
+ IORDY=3Don/off, tPIO=3D{min:120,w/IORDY:120}, tDMA=3D{min:120,rec:120}=
+              =20
+ PIO modes:  pio0 pio1 pio2 pio3 pio4                                  =
+        =20
+ DMA modes:  mdma0 mdma1 mdma2                                         =
+        =20
+ UDMA modes: udma0 udma1 *udma2                                        =
+        =20
+ AdvancedPM=3Dyes: mode=3D0x60 (96) WriteCache=3Ddisabled              =
+              =20
+ Drive conforms to: ATA/ATAPI-4 published, ANSI INCITS 317-1998:  ATA/A=
+TAPI-1,24
+                                                                       =
+        =20
+ * signifies the current active mode
+
+That's the output for my Hitachi Microdrive on the ALIX.2d3. It's using=
+ UDMA although I'm not using the pata_cs5536 driver since this Microdri=
+ve shows up as /dev/hda.
+
+I'm having problems booting a kernel with pata_cs5536 on this box:
+
+PC Engines ALIX.2 v0.99h
+640 KB Base Memory
+261120 KB Extended Memory
+Waiting for HDD ...
+
+01F0 Master 848A HMS360604D5CF00                        =20
+Phys C/H/S 5952/16/63 Log C/H/S 744/128/63
+
+LI
+LILLOO  2222..88  bboooott:: =20
+
+LLooaaddiinngg  LLiinnuuxx.............................................=
+=2E....
+
+BBIIOOSS  ddaattaa  cchheecckk  ssuucccceessssffuull
+
+[    0.000000] BIOS EBDA/lowmem at: 00000000/000a0000
+[    0.000000] Linux version 2.6.28.2alix2d3-2 (witukind@wotan) (gcc ve=
+rsion 4.2.4) #4 Fri Jan 30 23:31:26 CET 2009
+[    0.000000] KERNEL supported cpus:
+[    0.000000]   Intel GenuineIntel
+[    0.000000]   AMD AuthenticAMD
+[    0.000000]   NSC Geode by NSC
+[    0.000000]   Cyrix CyrixInstead
+[    0.000000]   Centaur CentaurHauls
+[    0.000000]   Transmeta GenuineTMx86
+[    0.000000]   Transmeta TransmetaCPU
+[    0.000000]   UMC UMC UMC UMC
+[    0.000000] BIOS-provided physical RAM map:
+[    0.000000]  BIOS-e820: 0000000000000000 - 00000000000a0000 (usable)
+[    0.000000]  BIOS-e820: 00000000000f0000 - 0000000000100000 (reserve=
+d)
+[    0.000000]  BIOS-e820: 0000000000100000 - 0000000010000000 (usable)
+[    0.000000]  BIOS-e820: 00000000fff00000 - 0000000100000000 (reserve=
+d)
+[    0.000000] DMI not present or invalid.
+[    0.000000] last_pfn =3D 0x10000 max_arch_pfn =3D 0x100000
+[    0.000000] ACPI Error (tbxfroot-0218): A valid RSDP was not found [=
+20080926]
+[    0.000000] 256MB LOWMEM available.
+[    0.000000]   mapped low ram: 0 - 10000000
+[    0.000000]   low ram: 00000000 - 10000000
+[    0.000000]   bootmap 00001000 - 00003000
+[    0.000000] (6 early reservations) =3D=3D> bootmem [0000000000 - 001=
+0000000]
+[    0.000000]   #0 [0000000000 - 0000001000]   BIOS data page =3D=3D> =
+[0000000000 - 0000001000]
+[    0.000000]   #1 [0000200000 - 00004ab218]    TEXT DATA BSS =3D=3D> =
+[0000200000 - 00004ab218]
+[    0.000000]   #2 [00004ac000 - 00004af000]    INIT_PG_TABLE =3D=3D> =
+[00004ac000 - 00004af000]
+[    0.000000]   #3 [000009f000 - 0000100000]    BIOS reserved =3D=3D> =
+[000009f000 - 0000100000]
+[    0.000000]   #4 [0000007000 - 0000008000]          PGTABLE =3D=3D> =
+[0000007000 - 0000008000]
+[    0.000000]   #5 [0000001000 - 0000003000]          BOOTMAP =3D=3D> =
+[0000001000 - 0000003000]
+[    0.000000] Zone PFN ranges:
+[    0.000000]   DMA      0x00000000 -> 0x00001000
+[    0.000000]   Normal   0x00001000 -> 0x00010000
+[    0.000000] Movable zone start PFN for each node
+[    0.000000] early_node_map[2] active PFN ranges
+[    0.000000]     0: 0x00000000 -> 0x000000a0
+[    0.000000]     0: 0x00000100 -> 0x00010000
+[    0.000000] Allocating PCI resources starting at 20000000 (gap: 1000=
+0000:eff00000)
+[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  =
+Total pages: 64928
+[    0.000000] Kernel command line: BOOT_IMAGE=3DLinux ro root=3DLABEL=3D=
+root console=3DttyS0,38400n8 edd=3Doff
+[    0.000000] Initializing CPU#0
+[    0.000000] PID hash table entries: 1024 (order: 10, 4096 bytes)
+[    0.000000] Fast TSC calibration using PIT
+[    0.000000] Detected 497.995 MHz processor.
+[    0.010000] Console: colour dummy device 80x25
+[    0.010000] console [ttyS0] enabled
+[    0.010000] Dentry cache hash table entries: 32768 (order: 5, 131072=
+ bytes)
+[    0.010000] Inode-cache hash table entries: 16384 (order: 4, 65536 b=
+ytes)
+[    0.010000] Memory: 256568k/262144k available (1568k kernel code, 50=
+08k reserved, 752k data, 176k init, 0k highmem)
+[    0.010000] virtual kernel memory layout:
+[    0.010000]     fixmap  : 0xfffed000 - 0xfffff000   (  72 kB)
+[    0.010000]     vmalloc : 0xd0800000 - 0xfffeb000   ( 759 MB)
+[    0.010000]     lowmem  : 0xc0000000 - 0xd0000000   ( 256 MB)
+[    0.010000]       .init : 0xc0448000 - 0xc0474000   ( 176 kB)
+[    0.010000]       .data : 0xc03880f0 - 0xc0444334   ( 752 kB)
+[    0.010000]       .text : 0xc0200000 - 0xc03880f0   (1568 kB)
+[    0.010000] Checking if this processor honours the WP bit even in su=
+pervisor mode...Ok.
+[    0.010000] SLUB: Genslabs=3D12, HWalign=3D32, Order=3D0-3, MinObjec=
+ts=3D0, CPUs=3D1, Nodes=3D1
+[    0.010016] Calibrating delay loop (skipped), value calculated using=
+ timer frequency.. 995.99 BogoMIPS (lpj=3D4979950)
+[    0.030051] Security Framework initialized
+[    0.040033] Mount-cache hash table entries: 512
+[    0.050364] CPU: L1 I Cache: 64K (32 bytes/line), D cache 64K (32 by=
+tes/line)
+[    0.060011] CPU: L2 Cache: 128K (32 bytes/line)
+[    0.070027] CPU: Geode(TM) Integrated Processor by AMD PCS stepping =
+02
+[    0.090012] Checking 'hlt' instruction... OK.
+[    0.141405] Freeing SMP alternatives: 0k freed
+[    0.150010] ACPI: Core revision 20080926
+[    0.160110] ACPI Exception (tbxface-0627): AE_NO_ACPI_TABLES, While =
+loading namespace from ACPI tables [20080926]
+[    0.183426] ACPI: Unable to load the System Description Tables
+[    0.190690] net_namespace: 704 bytes
+[    0.200771] NET: Registered protocol family 16
+[    0.210050] geode-mfgpt:  8 MFGPT timers available.
+[    0.220009] geode-mfgpt:  Registered timer 0
+[    0.230034] mfgpt-timer:  Registering MFGPT timer 0 as a clock event=
+, using IRQ 7
+[    0.241693] PCI: PCI BIOS revision 2.10 entry at 0xfced9, last bus=3D=
+0
+[    0.250013] PCI: Using configuration type 1 for base access
+[    0.265322] ACPI: Interpreter disabled.
+[    0.270927] SCSI subsystem initialized
+[    0.280775] PCI: Probing PCI hardware
+[    0.290653] pci 0000:00:09.0: PME# supported from D0 D1 D2 D3hot D3c=
+old
+[    0.300171] pci 0000:00:09.0: PME# disabled
+[    0.310312] pci 0000:00:0a.0: PME# supported from D0 D1 D2 D3hot D3c=
+old
+[    0.320038] pci 0000:00:0a.0: PME# disabled
+[    0.330141] pci 0000:00:0b.0: PME# supported from D0 D1 D2 D3hot D3c=
+old
+[    0.340011] pci 0000:00:0b.0: PME# disabled
+[    0.350802] pci 0000:00:0f.4: PME# supported from D0 D3hot D3cold
+[    0.360018] pci 0000:00:0f.4: PME# disabled
+[    0.370247] pci 0000:00:0f.5: PME# supported from D0 D3hot D3cold
+[    0.380016] pci 0000:00:0f.5: PME# disabled
+[    0.392386] pnp: PnP ACPI: disabled
+[    0.402124] bus: 00 index 0 io port: [0x00-0xffff]
+[    0.416578] bus: 00 index 1 mmio: [0x000000-0xffffffff]
+[    0.432357] NET: Registered protocol family 2
+[    0.446189] IP route cache hash table entries: 2048 (order: 1, 8192 =
+bytes)
+[    0.468140] TCP established hash table entries: 8192 (order: 4, 6553=
+6 bytes)
+[    0.489576] TCP bind hash table entries: 8192 (order: 3, 32768 bytes=
+)
+[    0.509082] TCP: Hash tables configured (established 8192 bind 8192)
+[    0.528204] TCP reno registered
+[    0.538551] platform rtc_cmos: registered platform RTC device (no PN=
+P device found)
+[    0.584100] HugeTLB registered 4 MB page size, pre-allocated 0 pages
+[    0.615490] msgmni has been set to 501
+[    0.628037] alg: No test for stdrng (krng)
+[    0.641030] Block layer SCSI generic (bsg) driver version 0.4 loaded=
+ (major 253)
+[    0.663275] io scheduler noop registered
+[    0.675209] io scheduler cfq registered (default)
+[    0.701838] Serial: 8250/16550 driver4 ports, IRQ sharing disabled
+=FF[    1.006820] serial8250: ttyS0 at I/O 0x3f8 (irq =3D 4) is a NS165=
+50A
+[    1.306617] serial8250: ttyS1 at I/O 0x2f8 (irq =3D 3) is a NS16550A
+[    1.326604] Driver 'sd' needs updating - please use bus_type methods
+[    1.346086] scsi0 : pata_cs5536
+[    1.356079] scsi1 : pata_cs5536
+[    1.365962] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00=
+ irq 14
+[    1.386924] ata2: DUMMY
+[    1.570678] ata1.00: CFA: HMS360604D5CF00, DP3OC40D, max UDMA/33
+[    1.588766] ata1.00: 5999616 sectors, multi 0: LBA=20
+[    1.646824] ata1.00: configured for UDMA/33
+[    1.659803] scsi 0:0:0:0: Direct-Access     ATA      HMS360604D5CF00=
+  DP3O PQ: 0 ANSI: 5
+[    1.684813] sd 0:0:0:0: [sda] 5999616 512-byte hardware sectors: (3.=
+07 GB/2.86 GiB)
+[    1.707902] sd 0:0:0:0: [sda] Write Protect is off
+[    1.722482] sd 0:0:0:0: [sda] Write cache: disabled, read cache: ena=
+bled, doesn't support DPO or FUA
+[    1.750365] sd 0:0:0:0: [sda] 5999616 512-byte hardware sectors: (3.=
+07 GB/2.86 GiB)
+[    1.773459] sd 0:0:0:0: [sda] Write Protect is off
+[    1.788001] sd 0:0:0:0: [sda] Write cache: disabled, read cache: ena=
+bled, doesn't support DPO or FUA
+[    1.815452]  sda: sda1 sda2 sda3 < sda5 sda6 sda7 sda8 sda9 sda10 >
+[    2.217848] sd 0:0:0:0: [sda] Attached SCSI removable disk
+[    2.235380] PNP: No PS/2 controller found. Probing ports directly.
+[    2.254873] i8042.c: No controller found.
+[    2.267240] mice: PS/2 mouse device common for all mice
+[    2.283134] cpuidle: using governor ladder
+[    2.295520] cpuidle: using governor menu
+[    2.310323] Using IPI Shortcut mode
+[    2.322395] VFS: Cannot open root device "LABEL=3Droot" or unknown-b=
+lock(0,0)
+[    2.343367] Please append a correct "root=3D" boot option; here are =
+the available partitions:
+[    2.368481] 0800         2999808 sda driver: sd
+[    2.382190]   0801           96736 sda1
+[    2.393810]   0802          249984 sda2
+[    2.405455]   0803               1 sda3
+[    2.417079]   0805          572512 sda5
+[    2.428702]   0806          294304 sda6
+[    2.440321]   0807          878944 sda7
+[    2.451942]   0808          124960 sda8
+[    2.463589]   0809          193504 sda9
+[    2.475213]   080a          588640 sda10
+[    2.487121] Kernel panic - not syncing: VFS: Unable to mount root fs=
+ on unknown-block(0,0)
+
+--=20
+Christoph .J Thompson <cjsthompson@gmail.com>
