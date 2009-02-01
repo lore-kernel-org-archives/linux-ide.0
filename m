@@ -1,53 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
-Date: Sun, 01 Feb 2009 13:14:48 +0900
-Message-ID: <498521B8.1020703@kernel.org>
-References: <1233456951-992-1-git-send-email-tj@kernel.org>
-	<49851507.5040905@garzik.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ide/libata: fix ata_id_is_cfa() (take 4)
+Date: Sun, 1 Feb 2009 20:43:36 +0400
+Message-ID: <200902011943.36880.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <49851507.5040905@garzik.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, dm-devel@redhat.com, Mauelshagen@redhat.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:46544 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752297AbZBAQnM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 11:43:12 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, gdu@mns.spb.ru
 
-Hello, Jeff.
+When checking for the CFA feature set support, ata_id_is_cfa() tests bit 2 in
+word 82 of the identify data instead the word 83;  it also checks the ATA/PI
+version support in the word 80 (which the CompactFlash specifications have as
+reserved), this having no slightest chance to work on the modern CF cards that
+don't have 0x848A in the word 0...
 
-Jeff Garzik wrote:
-> But the net result is that you are telling dmraid that it is OK to
-> proceed, even though part of the disk it wants is really missing.  That
-> seems unwise, because are you not basically proceeding with a known
-> corrupt dataset at that point?
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Can you elaborate a bit?  I don't really understand what you mean.  To
-clarify...
+---
+So, here's fourth version of this simplistic patch. I've dropped the paranoid
+ATA version check since apparently not all cards follow the CF spec. in this
+respect and it seems wrong to blacklist a card that does report CFA support.
 
-* What happens now.
+ include/linux/ata.h |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-BIOS sets up HPA expecting the raid driver to look at the metadata
-which is at fixed offset from the end of the HPA locked size.  dmraid
-doesn't know about it so looks at the wrong place.  Results can be
-failed assembly or corrupt assembly depending on what's actually on
-the disk.
+Index: linux-2.6/include/linux/ata.h
+===================================================================
+--- linux-2.6.orig/include/linux/ata.h
++++ linux-2.6/include/linux/ata.h
+@@ -731,12 +731,17 @@ static inline int ata_id_current_chs_val
+ 
+ static inline int ata_id_is_cfa(const u16 *id)
+ {
+-	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
++	if (id[ATA_ID_CONFIG] == 0x848A)	/* Traditional CF */
+ 		return 1;
+-	/* Could be CF hiding as standard ATA */
+-	if (ata_id_major_version(id) >= 3 &&
+-	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
+-	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
++	/*
++	 * CF specs don't require specific value in the word 0 anymore and yet
++	 * they forbid to report the ATA version in the word 80 and require the
++	 * CFA feature set support to be indicated in the word 83 in this case.
++	 * Unfortunately, some cards only follow either of this requirements,
++	 * and while those that don't indicated CFA feature support, need some
++	 * sort of quirk list, it seems impractical for the ones that do...
++	 */
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC004) == 0x4004)
+ 		return 1;
+ 	return 0;
+ }
 
-* With the patches applied.
-
-BIOS does the same but libata tells dmraid the BIOS size.  dmraid
-looks at the same offset as the BIOS and everything is well.
-
-Thanks.
-
--- 
-tejun
