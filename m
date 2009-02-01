@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 6/8] ide-{floppy,tape}: cleanup ide*_end_request()
-Date: Sun, 01 Feb 2009 20:28:14 +0100
-Message-ID: <20090201192814.1592.94679.sendpatchset@localhost.localdomain>
+Subject: [PATCH 8/8] ide: return request status from ->pc_callback method
+Date: Sun, 01 Feb 2009 20:28:38 +0100
+Message-ID: <20090201192838.1592.16234.sendpatchset@localhost.localdomain>
 References: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:53959 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756192AbZBAT1W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 14:27:22 -0500
+Received: from mu-out-0910.google.com ([209.85.134.191]:21944 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756517AbZBAT1p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 14:27:45 -0500
 In-Reply-To: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,265 +15,121 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-{floppy,tape}: cleanup ide*_end_request()
+Subject: [PATCH] ide: return request status from ->pc_callback method
 
-* ide*_end_request() is only called with uptodate == 0 or uptodate == 1
-  so cleanup it accordingly.
-
-* Inline ide*_end_request() content at call sites so the only user left
-  is ->end_request method.
-
-* ->end_request is now used only for private driver requests so remove
-  handling of other requests from ide*_end_request().
+Make ->pc_callback method return request status and then move
+the request completion from ->pc_callback to ide_pc_intr().
 
 There should be no functional changes caused by this patch.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-floppy.c |   66 ++++++++++++++++++++++-------------------------
- drivers/ide/ide-tape.c   |   40 +++++++++++++++-------------
- 2 files changed, 53 insertions(+), 53 deletions(-)
+ drivers/ide/ide-atapi.c  |   12 +++++++++++-
+ drivers/ide/ide-floppy.c |   12 ++++--------
+ drivers/ide/ide-tape.c   |   10 ++--------
+ include/linux/ide.h      |    2 +-
+ 4 files changed, 18 insertions(+), 18 deletions(-)
 
+Index: b/drivers/ide/ide-atapi.c
+===================================================================
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -345,6 +345,8 @@ static ide_startstop_t ide_pc_intr(ide_d
+ 
+ 	/* No more interrupts */
+ 	if ((stat & ATA_DRQ) == 0) {
++		int uptodate;
++
+ 		debug_log("Packet command completed, %d bytes transferred\n",
+ 			  pc->xferred);
+ 
+@@ -383,7 +385,15 @@ static ide_startstop_t ide_pc_intr(ide_d
+ 			dsc = 1;
+ 
+ 		/* Command finished - Call the callback function */
+-		drive->pc_callback(drive, dsc);
++		uptodate = drive->pc_callback(drive, dsc);
++
++		if (uptodate == 0)
++			drive->failed_pc = NULL;
++
++		if (blk_special_request(rq))
++			ide_complete_rq(drive, 0);
++		else
++			ide_end_request(drive, uptodate, 0);
+ 
+ 		return ide_stopped;
+ 	}
 Index: b/drivers/ide/ide-floppy.c
 ===================================================================
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -62,40 +62,21 @@
- #define IDEFLOPPY_PC_DELAY	(HZ/20)	/* default delay for ZIP 100 (50ms) */
- 
- /*
-- * Used to finish servicing a request. For read/write requests, we will call
-- * ide_end_request to pass to the next buffer.
-+ * Used to finish servicing a private request.
-  */
- static int ide_floppy_end_request(ide_drive_t *drive, int uptodate, int nsecs)
- {
- 	struct request *rq = drive->hwif->rq;
--	int error;
- 
- 	ide_debug_log(IDE_DBG_FUNC, "enter");
- 
--	switch (uptodate) {
--	case 0:
--		error = IDE_DRV_ERROR_GENERAL;
--		break;
--
--	case 1:
--		error = 0;
--		break;
--
--	default:
--		error = uptodate;
--	}
--
--	if (error)
-+	if (uptodate == 0)
- 		drive->failed_pc = NULL;
- 
--	if (!blk_special_request(rq)) {
--		/* our real local end request function */
--		ide_end_request(drive, uptodate, nsecs);
--		return 0;
--	}
--	rq->errors = error;
--	/* fixme: need to move this local also */
-+	rq->errors = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
-+
- 	ide_complete_rq(drive, 0);
-+
- 	return 0;
+@@ -71,7 +71,7 @@ static void idefloppy_update_buffers(ide
+ 		ide_end_request(drive, 1, 0);
  }
  
-@@ -106,13 +87,14 @@ static void idefloppy_update_buffers(ide
- 	struct bio *bio = rq->bio;
- 
- 	while ((bio = rq->bio) != NULL)
--		ide_floppy_end_request(drive, 1, 0);
-+		ide_end_request(drive, 1, 0);
- }
- 
- static void ide_floppy_callback(ide_drive_t *drive, int dsc)
+-static void ide_floppy_callback(ide_drive_t *drive, int dsc)
++static int ide_floppy_callback(ide_drive_t *drive, int dsc)
  {
  	struct ide_disk_obj *floppy = drive->driver_data;
  	struct ide_atapi_pc *pc = drive->pc;
-+	struct request *rq = pc->rq;
- 	int uptodate = pc->error ? 0 : 1;
- 
- 	ide_debug_log(IDE_DBG_FUNC, "enter");
-@@ -121,7 +103,7 @@ static void ide_floppy_callback(ide_driv
- 		drive->failed_pc = NULL;
- 
- 	if (pc->c[0] == GPCMD_READ_10 || pc->c[0] == GPCMD_WRITE_10 ||
--	    (pc->rq && blk_pc_request(pc->rq)))
-+	    (rq && blk_pc_request(rq)))
- 		uptodate = 1; /* FIXME */
- 	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
- 		u8 *buf = pc->buf;
-@@ -145,7 +127,14 @@ static void ide_floppy_callback(ide_driv
+@@ -108,14 +108,10 @@ static void ide_floppy_callback(ide_driv
  			       "Aborting request!\n");
  	}
  
--	ide_floppy_end_request(drive, uptodate, 0);
-+	if (uptodate == 0)
-+		drive->failed_pc = NULL;
+-	if (uptodate == 0)
+-		drive->failed_pc = NULL;
+-
+-	if (blk_special_request(rq)) {
++	if (blk_special_request(rq))
+ 		rq->errors = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
+-		ide_complete_rq(drive, 0);
+-	} else
+-		ide_end_request(drive, uptodate, 0);
 +
-+	if (blk_special_request(rq)) {
-+		rq->errors = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
-+		ide_complete_rq(drive, 0);
-+	} else
-+		ide_end_request(drive, uptodate, 0);
++	return uptodate;
  }
  
  static void ide_floppy_report_error(struct ide_disk_obj *floppy,
-@@ -286,21 +275,25 @@ static ide_startstop_t ide_floppy_do_req
- 					: "dev?"));
- 
- 	if (rq->errors >= ERROR_MAX) {
--		if (drive->failed_pc)
-+		if (drive->failed_pc) {
- 			ide_floppy_report_error(floppy, drive->failed_pc);
--		else
-+			drive->failed_pc = NULL;
-+		} else
- 			printk(KERN_ERR PFX "%s: I/O error\n", drive->name);
- 
--		ide_floppy_end_request(drive, 0, 0);
--		return ide_stopped;
-+		if (blk_special_request(rq)) {
-+			rq->errors = IDE_DRV_ERROR_GENERAL;
-+			ide_complete_rq(drive, 0);
-+			return ide_stopped;
-+		} else
-+			goto out_end;
- 	}
- 	if (blk_fs_request(rq)) {
- 		if (((long)rq->sector % floppy->bs_factor) ||
- 		    (rq->nr_sectors % floppy->bs_factor)) {
- 			printk(KERN_ERR PFX "%s: unsupported r/w rq size\n",
- 				drive->name);
--			ide_floppy_end_request(drive, 0, 0);
--			return ide_stopped;
-+			goto out_end;
- 		}
- 		pc = &floppy->queued_pc;
- 		idefloppy_create_rw_cmd(drive, pc, rq, (unsigned long)block);
-@@ -311,8 +304,7 @@ static ide_startstop_t ide_floppy_do_req
- 		idefloppy_blockpc_cmd(floppy, pc, rq);
- 	} else {
- 		blk_dump_rq_flags(rq, PFX "unsupported command in queue");
--		ide_floppy_end_request(drive, 0, 0);
--		return ide_stopped;
-+		goto out_end;
- 	}
- 
- 	ide_init_sg_cmd(drive, rq);
-@@ -324,6 +316,10 @@ static ide_startstop_t ide_floppy_do_req
- 	pc->rq = rq;
- 
- 	return idefloppy_issue_pc(drive, pc);
-+out_end:
-+	drive->failed_pc = NULL;
-+	ide_end_request(drive, 0, 0);
-+	return ide_stopped;
- }
- 
- /*
 Index: b/drivers/ide/ide-tape.c
 ===================================================================
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -464,23 +464,13 @@ static void ide_tape_kfree_buffer(idetap
- static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
- {
- 	struct request *rq = drive->hwif->rq;
--	int error;
+@@ -463,7 +463,7 @@ static void ide_tape_kfree_buffer(idetap
  
- 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+ static void ide_tape_handle_dsc(ide_drive_t *);
  
--	switch (uptodate) {
--	case 0: error = IDE_DRV_ERROR_GENERAL; break;
--	case 1: error = 0; break;
--	default: error = uptodate;
--	}
--	rq->errors = error;
--	if (error)
--		drive->failed_pc = NULL;
-+	rq->errors = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
- 
--	if (!blk_special_request(rq)) {
--		ide_end_request(drive, uptodate, nr_sects);
--		return 0;
--	}
-+	if (uptodate == 0)
-+		drive->failed_pc = NULL;
- 
- 	ide_complete_rq(drive, 0);
- 
-@@ -493,7 +483,9 @@ static void ide_tape_callback(ide_drive_
+-static void ide_tape_callback(ide_drive_t *drive, int dsc)
++static int ide_tape_callback(ide_drive_t *drive, int dsc)
  {
  	idetape_tape_t *tape = drive->driver_data;
  	struct ide_atapi_pc *pc = drive->pc;
-+	struct request *rq = drive->hwif->rq;
- 	int uptodate = pc->error ? 0 : 1;
-+	int err = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
+@@ -530,13 +530,7 @@ static void ide_tape_callback(ide_drive_
  
- 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+ 	rq->errors = err;
  
-@@ -510,7 +502,6 @@ static void ide_tape_callback(ide_drive_
- 			printk(KERN_ERR "ide-tape: Error in REQUEST SENSE "
- 					"itself - Aborting request!\n");
- 	} else if (pc->c[0] == READ_6 || pc->c[0] == WRITE_6) {
--		struct request *rq = drive->hwif->rq;
- 		int blocks = pc->xferred / tape->blk_size;
- 
- 		tape->avg_size += blocks * tape->blk_size;
-@@ -525,8 +516,10 @@ static void ide_tape_callback(ide_drive_
- 		tape->first_frame += blocks;
- 		rq->current_nr_sectors -= blocks;
- 
--		if (pc->error)
--			uptodate = pc->error;
-+		if (pc->error) {
-+			uptodate = 0;
-+			err = pc->error;
-+		}
- 	} else if (pc->c[0] == READ_POSITION && uptodate) {
- 		u8 *readpos = pc->buf;
- 
-@@ -540,6 +533,7 @@ static void ide_tape_callback(ide_drive_
- 					 "to the tape\n");
- 			clear_bit(IDE_AFLAG_ADDRESS_VALID, &drive->atapi_flags);
- 			uptodate = 0;
-+			err = IDE_DRV_ERROR_GENERAL;
- 		} else {
- 			debug_log(DBG_SENSE, "Block Location - %u\n",
- 					be32_to_cpup((__be32 *)&readpos[4]));
-@@ -550,7 +544,15 @@ static void ide_tape_callback(ide_drive_
- 		}
- 	}
- 
--	idetape_end_request(drive, uptodate, 0);
-+	rq->errors = err;
-+
-+	if (uptodate == 0)
-+		drive->failed_pc = NULL;
-+
-+	if (blk_special_request(rq))
-+		ide_complete_rq(drive, 0);
-+	else
-+		ide_end_request(drive, uptodate, 0);
+-	if (uptodate == 0)
+-		drive->failed_pc = NULL;
+-
+-	if (blk_special_request(rq))
+-		ide_complete_rq(drive, 0);
+-	else
+-		ide_end_request(drive, uptodate, 0);
++	return uptodate;
  }
  
  /*
-@@ -794,7 +796,9 @@ static ide_startstop_t idetape_do_reques
- 		if (rq != postponed_rq) {
- 			printk(KERN_ERR "ide-tape: ide-tape.c bug - "
- 					"Two DSC requests were queued\n");
--			idetape_end_request(drive, 0, 0);
-+			rq->errors = IDE_DRV_ERROR_GENERAL;
-+			drive->failed_pc = NULL;
-+			ide_complete_rq(drive, 0);
- 			return ide_stopped;
- 		}
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -619,7 +619,7 @@ struct ide_drive_s {
+ 	struct ide_atapi_pc *failed_pc;
  
+ 	/* callback for packet commands */
+-	void (*pc_callback)(struct ide_drive_s *, int);
++	int  (*pc_callback)(struct ide_drive_s *, int);
+ 
+ 	void (*pc_update_buffers)(struct ide_drive_s *, struct ide_atapi_pc *);
+ 	int  (*pc_io_buffers)(struct ide_drive_s *, struct ide_atapi_pc *,
