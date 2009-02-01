@@ -1,46 +1,32 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] au1xxx-ide: auide_dma_end() cleanup
-Date: Sun, 1 Feb 2009 20:15:29 +0100
-Message-ID: <200902012015.29284.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/8] ide: remove ->end_request method
+Date: Sun, 01 Feb 2009 20:27:32 +0100
+Message-ID: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f12.google.com ([209.85.218.12]:60208 "EHLO
-	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751571AbZBATPF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 14:15:05 -0500
-Content-Disposition: inline
+Received: from fk-out-0910.google.com ([209.85.128.191]:3657 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504AbZBAT0k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 14:26:40 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-No need to check / clear hwif->sg_nents.
 
-There should be no functional changes caused by this patch.
+by-product of some other WIP...
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/au1xxx-ide.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+on top of "[PATCH 00/15] weekly IDE updates" patchset
+[ http://marc.info/?l=linux-kernel&m=123351051303529&w=2 ]
 
-Index: b/drivers/ide/au1xxx-ide.c
-===================================================================
---- a/drivers/ide/au1xxx-ide.c
-+++ b/drivers/ide/au1xxx-ide.c
-@@ -286,12 +286,7 @@ static int auide_build_dmatable(ide_driv
- 
- static int auide_dma_end(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif = drive->hwif;
--
--	if (hwif->sg_nents) {
--		ide_destroy_dmatable(drive);
--		hwif->sg_nents = 0;
--	}
-+	ide_destroy_dmatable(drive);
- 
- 	return 0;
- }
+diffstat:
+ drivers/ide/ide-atapi.c    |   17 +++--
+ drivers/ide/ide-cd.c       |    1 
+ drivers/ide/ide-disk.c     |    1 
+ drivers/ide/ide-floppy.c   |  130 ++++++++++++++++-----------------------------
+ drivers/ide/ide-gd.c       |    6 --
+ drivers/ide/ide-gd.h       |    2 
+ drivers/ide/ide-io.c       |   21 ++++---
+ drivers/ide/ide-tape.c     |  124 ++++++++++++++----------------------------
+ drivers/ide/ide-taskfile.c |   16 +----
+ include/linux/ide.h        |   16 +++--
+ 10 files changed, 127 insertions(+), 207 deletions(-)
