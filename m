@@ -1,62 +1,49 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH 04/07] sata_mv: update ata_qc_from_tag
-Date: Sun, 1 Feb 2009 12:49:02 -0800
-Message-ID: <da824cf30902011249r5aa12dc8g39426a39dee41201@mail.gmail.com>
-References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca>
-	 <498391A7.1090209@rtr.ca> <498391D9.2000403@rtr.ca>
-	 <49839209.9010602@rtr.ca>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH #upstream-fixes] sata_nv: ck804 has borked hardreset too
+Date: Sun, 01 Feb 2009 14:49:39 -0600
+Message-ID: <49860AE3.2040108@gmail.com>
+References: <4985014F.7070607@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:51355 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753758AbZBAUtK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 15:49:10 -0500
-Received: from spaceape10.eur.corp.google.com (spaceape10.eur.corp.google.com [172.28.16.144])
-	by smtp-out.google.com with ESMTP id n11Kn6xO001672
-	for <linux-ide@vger.kernel.org>; Sun, 1 Feb 2009 20:49:07 GMT
-Received: from wf-out-1314.google.com (wfd27.prod.google.com [10.142.4.27])
-	by spaceape10.eur.corp.google.com with ESMTP id n11KmfJW001863
-	for <linux-ide@vger.kernel.org>; Sun, 1 Feb 2009 12:49:03 -0800
-Received: by wf-out-1314.google.com with SMTP id 27so1428665wfd.17
-        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 12:49:02 -0800 (PST)
-In-Reply-To: <49839209.9010602@rtr.ca>
+Received: from qb-out-0506.google.com ([72.14.204.230]:64659 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754526AbZBAUtl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 15:49:41 -0500
+Received: by qb-out-0506.google.com with SMTP id f11so461646qba.17
+        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 12:49:40 -0800 (PST)
+In-Reply-To: <4985014F.7070607@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, Jan 30, 2009 at 3:49 PM, Mark Lord <liml@rtr.ca> wrote:
-> Update the logic in ata_qc_from_tag() to match that used
-> in similar places elsewhere in libata.
->
-> Signed-off-by: Mark Lord <mlord@pobox.com>
->
-> --- old/drivers/ata/sata_mv.c   2009-01-30 18:23:22.000000000 -0500
-> +++ linux/drivers/ata/sata_mv.c 2009-01-30 18:26:55.000000000 -0500
-> @@ -1628,6 +1628,12 @@
->        if (pp->pp_flags & MV_PP_FLAG_NCQ_EN)
->                return NULL;
->        qc = ata_qc_from_tag(ap, ap->link.active_tag);
-> +       if (qc) {
-> +               if (qc->tf.flags & ATA_TFLAG_POLLING)
-> +                       qc = NULL;
-> +               else if (!(qc->flags & ATA_QCFLAG_ACTIVE))
-> +                       qc = NULL;
-> +       }
->        if (qc && (qc->tf.flags & ATA_TFLAG_POLLING))
->                qc = NULL;
+Tejun Heo wrote:
+> While playing with nvraid, I found out that rmmoding and insmoding
+> often trigger hardreset failure on the first port (the second one was
+> always okay).  Seriously, how diverse can you get with hardreset
+> behaviors?  Anyways, make ck804 use noclassify variant too.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+> Robert, ISTR that a user was reporting probing problem on ck804, I
+> think the user could have been seeing this.  The behavior on my
+> motherboard is very curious.  The problem is always with the first
+> port.  If booted from cdrom, it always fails.  If booted from
+> harddrive, the initial probing works fine but from the second time on,
+> it fails.  Argh...
 
-Mark,
-isn't the second test redudant now and can be removed?
-(refering to the test immediately following the code you added).
+Yeah, it's amazing how their controllers can be messed up with hardreset 
+in so many varying and creative ways. One only hopes their newer AHCI 
+based controllers have fewer bugs..
 
-grant
-
->        return qc;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I saw another problem recently on CK804, where an error occurs on a DVD 
+drive (due to a scratched disc or something).  This was in Windows, 
+using the default Microsoft IDE driver. It would either blue-screen the 
+machine with a machine check exception or just cause a hard lockup. 
+People have reported this in Linux as well, it seems like the controller 
+fails to respond to register accesses and triggers a northbridge 
+transaction timeout MCE. Obviously not a driver problem, then.. Ended up 
+switching the optical drives to the Silicon Image controller on this 
+board because the CK804 controller just wasn't reliable with them.
