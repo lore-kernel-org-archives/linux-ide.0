@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 07/15] ide: add IDE_HFLAG_DTC2278 host flag
-Date: Sun, 01 Feb 2009 18:49:58 +0100
-Message-ID: <20090201174958.19144.18206.sendpatchset@localhost.localdomain>
+Subject: [PATCH 13/15] ide: no need to read Status and Error registers for "empty" taskfile requests
+Date: Sun, 01 Feb 2009 18:50:40 +0100
+Message-ID: <20090201175040.19144.95929.sendpatchset@localhost.localdomain>
 References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:6833 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753416AbZBARtG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:49:06 -0500
+Received: from fg-out-1718.google.com ([72.14.220.159]:43113 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756214AbZBARtr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:49:47 -0500
 In-Reply-To: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,57 +15,25 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add IDE_HFLAG_DTC2278 host flag
-
-Add IDE_HFLAG_DTC2278 host flag and use it instead of ide_dtc2278
-chipset type in ide_init_port().
-
-There should be no functional changes caused by this patch.
+Subject: [PATCH] ide: no need to read Status and Error registers for "empty" taskfile requests
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/dtc2278.c   |    3 ++-
- drivers/ide/ide-probe.c |    2 +-
- include/linux/ide.h     |    2 ++
- 3 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/ide/ide-io.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Index: b/drivers/ide/dtc2278.c
+Index: b/drivers/ide/ide-io.c
 ===================================================================
---- a/drivers/ide/dtc2278.c
-+++ b/drivers/ide/dtc2278.c
-@@ -100,7 +100,8 @@ static const struct ide_port_info dtc227
- 				  IDE_HFLAG_IO_32BIT |
- 				  /* disallow ->io_32bit changes */
- 				  IDE_HFLAG_NO_IO_32BIT |
--				  IDE_HFLAG_NO_DMA,
-+				  IDE_HFLAG_NO_DMA |
-+				  IDE_HFLAG_DTC2278,
- 	.pio_mask		= ATA_PIO4,
- };
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -333,9 +333,7 @@ static ide_startstop_t execute_drive_cmd
+ #ifdef DEBUG
+  	printk("%s: DRIVE_CMD (null)\n", drive->name);
+ #endif
+-	(void)hwif->tp_ops->read_status(hwif);
+-
+-	ide_complete_rq(drive, ide_read_error(drive));
++	ide_complete_rq(drive, 0);
  
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1056,7 +1056,7 @@ static void ide_init_port(ide_hwif_t *hw
- 		hwif->tp_ops = d->tp_ops;
- 
- 	/* ->set_pio_mode for DTC2278 is currently limited to port 0 */
--	if (hwif->chipset != ide_dtc2278 || hwif->channel == 0)
-+	if ((hwif->host_flags & IDE_HFLAG_DTC2278) == 0 || hwif->channel == 0)
- 		hwif->port_ops = d->port_ops;
- 
- 	hwif->swdma_mask = d->swdma_mask;
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1322,6 +1322,8 @@ enum {
- 	IDE_HFLAG_ERROR_STOPS_FIFO	= (1 << 19),
- 	/* serialize ports */
- 	IDE_HFLAG_SERIALIZE		= (1 << 20),
-+	/* host is DTC2278 */
-+	IDE_HFLAG_DTC2278		= (1 << 21),
- 	/* host is TRM290 */
- 	IDE_HFLAG_TRM290		= (1 << 23),
- 	/* use 32-bit I/O ops */
+  	return ide_stopped;
+ }
