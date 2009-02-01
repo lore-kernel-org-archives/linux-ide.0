@@ -1,60 +1,84 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Sun, 1 Feb 2009 18:13:17 +0100
-Message-ID: <200902011813.18192.bzolnier@gmail.com>
-References: <200901141345.42583.stf_xl@wp.pl> <200901161843.19487.bzolnier@gmail.com> <200901301005.44858.stf_xl@wp.pl>
+Subject: Re: DMA breakage in 2.6.29-rc*
+Date: Sun, 1 Feb 2009 17:44:07 +0100
+Message-ID: <200902011744.07794.bzolnier@gmail.com>
+References: <1233294371.18767.23.camel@pasglop> <1233313678.18767.25.camel@pasglop>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f12.google.com ([209.85.218.12]:42252 "EHLO
-	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643AbZBARYX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:24:23 -0500
-Received: by bwz5 with SMTP id 5so869285bwz.13
-        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 09:24:20 -0800 (PST)
-In-Reply-To: <200901301005.44858.stf_xl@wp.pl>
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:52167 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbZBARYV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:24:21 -0500
+Received: by fxm13 with SMTP id 13so1064357fxm.13
+        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 09:24:18 -0800 (PST)
+In-Reply-To: <1233313678.18767.25.camel@pasglop>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-On Friday 30 January 2009, Stanislaw Gruszka wrote:
-> Czesc
+
+Hi,
+
+On Friday 30 January 2009, Benjamin Herrenschmidt wrote:
+> On Fri, 2009-01-30 at 16:46 +1100, Benjamin Herrenschmidt wrote:
+> > Hi Bart !
+> > 
+> > On a bunch of pmac's, I'm getting lost interrupts when trying to do DMA
+> > with ide hard disks (first time at boot when reading the partition
+> > table). It then times out, reverts to PIO and boots fine.
+> > 
+> > Haven't had time to fully bisect yet, but it seem to be somewhere in the
+> > pile of IDE patches (surprise :-) that went in around that time.
+> > 
+> > I'll dig more next week, but in the meantime, I though you may have a
+> > possible candidate in mind.
 > 
-> On Friday 16 January 2009 18:43, Bartlomiej Zolnierkiewicz wrote:
-> > > +static const struct ide_port_info at91_ide_port_info __initdata = {
-> > > +	.port_ops = &at91_ide_port_ops,
-> > > +	.tp_ops = &at91_ide_tp_ops,
-> > > +	.host_flags = IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA | IDE_HFLAG_SINGLE,
-> > > +	.pio_mask = ATA_PIO6,
-> > > +};
-> >
-> > AFAICS IDE_HFLAG_NO_IO_32BIT should also be set here,
-> > you may also want to set IDE_HFLAG_UNMASK_IRQS while at it
-> I have some doubts about things pointed out by Alan  - atomic access.  
-> Due to flipping 8/16 bit in this driver, all functions accessing task file 
-> and data register should do things atomically. If for example
-> tp_ops->input_data() will be braked by interrupt and any other function
-> accessing task file will be called very bad things can happen.
+> Smells like the patch that popped up not long ago already (can't find
+> the thread now) where you cleaned up the port registration and broke our
+> trick of passing a different parent device than the one used for DMA or
+> something like that ... that mixed with something not testing the dma
 
-All taskfile / data access is atomic, the only exception is [Alt]Status
-register read if shared IRQs are used (which doesn't seem to be the case
-with AT91) or if the hardware is flaky and unexpected IRQs can happen...
+Yeah my bad, though thanks to Andreas Schwab it is fixed in -rc3.
 
-If 8/16-bit flipping is really an issue then AT91 IRQ handler may need
-to save info about current mode on entry, switch to 8-bit (if in 16-bit
-mode), restore the saved mode on exit (if it was 16-bit mode).
+> map results (probably my fault) and I think we are passing crap DMA
+> addresses to the device.
+> 
+> I'll sort it out. I should be able to just add working dma ops to the
+> macio_device, it's a lot easier now that ppc32 has the same dma ops
+> structure in struct device as ppc64.
 
-> If I use IDE_HFLAG_UNMASK_IRQS IDE layer will assure atomic
-> access to ATA registers ?
+Would be great as I have completely no idea about this stuff.
 
-IDE_HFLAG_UNMASK_IRQS allows other IRQs to be serviced while IDE IRQ
-is being serviced so really no problem here (unless some other drivers
-also mess with 8/16-bit flipping but if so then the current code needs
-fixing too).
+While you are at DMA support and will be fixing/testing it anyway
+you may try to remove long standing duplication/obfuscation:
+
+	/* Those fields are duplicating what is in hwif. We currently
+	 * can't use the hwif ones because of some assumptions that are
+	 * beeing done by the generic code about the kind of dma controller
+	 * and format of the dma table. This will have to be fixed though.
+	 */
+	volatile struct dbdma_regs __iomem *	dma_regs;
+	struct dbdma_cmd*		dma_table_cpu;
+
+What needs to be done is more-or-less:
+
+- teaching pmac_ide_init_dma() about hwif->prd_max_{nents,size}
+  and then converting it to use ide_allocate_dma_engine()
+
+- pmif->dma_regs -> hwif->dma_base
+
+- pmif->dma_table_cpu -> hwif->dmatable_cpu
+
+- sticking ide_release_dma_engine() somewhere (it seems that
+  pmac driver never frees DMA memory allocated currently)
+
+Of course while the above would be a nice cleanup+fixup, making
+the driver work comes first..
 
 Thanks,
 Bart
