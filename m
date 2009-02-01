@@ -1,112 +1,59 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/4] ide: remove IDE_ARCH_INTR
-Date: Sun, 1 Feb 2009 16:53:42 +0100
-Message-ID: <200902011653.42527.bzolnier@gmail.com>
-References: <20090127180246.28089.2981.sendpatchset@localhost.localdomain> <393174.25588.qm@web52403.mail.re2.yahoo.com>  <alpine.DEB.1.00.0901290521300.7218@zirkon.biophys.uni-duesseldorf.de>
+Subject: Re: [PATCH v2] IDE: palm_bk3710: use ioremap instead of arch-specific IO_ADDRESS()
+Date: Sun, 1 Feb 2009 17:03:42 +0100
+Message-ID: <200902011703.44080.bzolnier@gmail.com>
+References: <1233345567-643-1-git-send-email-khilman@deeprootsystems.com> <49835D23.5040604@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.00.0901290521300.7218@zirkon.biophys.uni-duesseldorf.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.159]:38460 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503AbZBARYN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:24:13 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so408325fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 09:24:11 -0800 (PST)
+In-Reply-To: <49835D23.5040604@ru.mvista.com>
 Content-Disposition: inline
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
-Cc: "David D. Kilzer" <ddkilzer@kilzer.net>, linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitz@debian.org>, linux-m68k@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Kevin Hilman <khilman@deeprootsystems.com>, linux-ide@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com
 
-
-On Thursday 29 January 2009, Michael Schmitz wrote:
-> Hi,
+On Friday 30 January 2009, Sergei Shtylyov wrote:
+> Kevin Hilman wrote:
 > 
-> > 
-> > -            (void)ide_ack_intr(hwif);
-> > +            if (hwif->ack_intr(hwif))
-> > +                hwif->ack_intr(hwif);
-> > 
-> > Shouldn't that be:
-> > 
-> > -            (void)ide_ack_intr(hwif);
-> > +            if (hwif->ack_intr)
-> > +                hwif->ack_intr(hwif);
+> > Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
 > 
-> Seconded. No point in ack'ing the int twice (not to mention the other side 
-> effects).
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Brown paper bag time and another proof that having helpful people looking
-over your patches really matters...
+applied
 
-Thanks guys, I fixed it in v2.
+[ yay, this driver builds on x86 again :) ]
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove IDE_ARCH_INTR (v2)
+> > diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
+> > index f38aac7..6196f76 100644
+> > --- a/drivers/ide/palm_bk3710.c
+> > +++ b/drivers/ide/palm_bk3710.c
+> > @@ -347,7 +347,7 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
+> >  	struct clk *clk;
+> >  	struct resource *mem, *irq;
+> >  	void __iomem *base;
+> > -	unsigned long rate;
+> > +	unsigned long rate, mem_size;
+> >  	int i, rc;
+> >  	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
+> >  
+> > @@ -374,13 +374,19 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
+> >  		return -ENODEV;
+> >  	}
+> >  
+> > -	if (request_mem_region(mem->start, mem->end - mem->start + 1,
+> > +	mem_size = mem->end - mem->start + 1;
+> > +	if (request_mem_region(mem->start, mem_size,
+> >  			       "palm_bk3710") == NULL) {
+> 
+>     No point in keeping *if* occupying 2 lines, I think...
 
-This micro-optimization is not worth it.  Just always check for
-existence of ->ack_intr method in ide_intr() and ide_timer_expiry().
-
-v2:
-Fix brown-paper-bag bug spotted by David D. Kilzer.
-
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Michael Schmitz <schmitz@debian.org>
-Cc: "David D. Kilzer" <ddkilzer@kilzer.net>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-io.c   |    5 +++--
- include/asm-m68k/ide.h |    3 ---
- include/linux/ide.h    |    5 -----
- 3 files changed, 3 insertions(+), 10 deletions(-)
-
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -736,7 +736,8 @@ void ide_timer_expiry (unsigned long dat
- 		} else if (drive_is_ready(drive)) {
- 			if (drive->waiting_for_dma)
- 				hwif->dma_ops->dma_lost_irq(drive);
--			(void)ide_ack_intr(hwif);
-+			if (hwif->ack_intr)
-+				hwif->ack_intr(hwif);
- 			printk(KERN_WARNING "%s: lost interrupt\n",
- 				drive->name);
- 			startstop = handler(drive);
-@@ -851,7 +852,7 @@ irqreturn_t ide_intr (int irq, void *dev
- 
- 	spin_lock_irqsave(&hwif->lock, flags);
- 
--	if (!ide_ack_intr(hwif))
-+	if (hwif->ack_intr && hwif->ack_intr(hwif) == 0)
- 		goto out;
- 
- 	handler = hwif->handler;
-Index: b/include/asm-m68k/ide.h
-===================================================================
---- a/include/asm-m68k/ide.h
-+++ b/include/asm-m68k/ide.h
-@@ -123,8 +123,5 @@ ide_get_lock(irq_handler_t handler, void
- }
- #endif /* CONFIG_BLK_DEV_FALCON_IDE */
- 
--#define IDE_ARCH_ACK_INTR
--#define ide_ack_intr(hwif)	((hwif)->ack_intr ? (hwif)->ack_intr(hwif) : 1)
--
- #endif /* __KERNEL__ */
- #endif /* _M68K_IDE_H */
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -202,11 +202,6 @@ static inline void ide_std_init_ports(hw
- 
- #define MAX_HWIFS	10
- 
--/* Currently only m68k, apus and m8xx need it */
--#ifndef IDE_ARCH_ACK_INTR
--# define ide_ack_intr(hwif) (1)
--#endif
--
- /* Currently only Atari needs it */
- #ifndef IDE_ARCH_LOCK
- # define ide_release_lock()			do {} while (0)
-
+I fixed it while merging the patch.
