@@ -1,40 +1,34 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.28: All I/O, D-state: 3ware
- 9650SE-16ML/Intel/965/MTRR/PAT?
-Date: Sat, 31 Jan 2009 18:11:41 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901311811140.19833@p34.internal.lan>
-References: <alpine.DEB.1.10.0901310523480.29879@p34.internal.lan> <alpine.DEB.1.10.0901311230510.4472@p34.internal.lan> <20090131175509.GA24900@infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream-fixes 1/2] pata_atiixp: update port enabledness
+ test handling
+Date: Sun, 01 Feb 2009 10:32:09 +0900
+Message-ID: <4984FB99.6000704@kernel.org>
+References: <497028CF.7030408@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090131175509.GA24900@infradead.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, xfs@oss.sgi.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:33772 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752546AbZBABcY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Jan 2009 20:32:24 -0500
+In-Reply-To: <497028CF.7030408@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, bugsbuggy@ymail.com
 
+Tejun Heo wrote:
+> Port enabledness test fits much better into init_one() instead of
+> pre_reset().  The reason why these tests are in pre_reset() is purely
+> historical at this point.  Move it to init_one().  This will help
+> further changes.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
+Jeff, the second one turned out to be unnecessary but this patch is
+worthy on its own.  Can you please put it into #upstream?
 
-On Sat, 31 Jan 2009, Christoph Hellwig wrote:
+Thanks.
 
-> On Sat, Jan 31, 2009 at 12:37:39PM -0500, Justin Piszcz wrote:
->> I think it was a coincidence when I tried to login before, I tried it
->> again (after trying to re-produce the problem, which I had been able to
->> do) and this time the mouse worked but the keyboard did not..even running
->> echo b > sysrq-trigger did not reboot the server..  Had to resort to
->> manual method.
->>
->> I am now on kernel 2.6.28.2 and will see if I can make it happen again.
->
-> This looks like the bug fixed by commit
-> e8c82c2e23e3527e0c9dc195e432c16784d270fa.  Make sure you have it.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-Thanks, looks like that was the culprit, no hangs in 1-2 hrs of heavy I/O.
-
-Justin.
+-- 
+tejun
