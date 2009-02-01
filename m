@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 02/15] scc_pata: remove DECLARE_SCC_DEV() macro
-Date: Sun, 01 Feb 2009 18:49:23 +0100
-Message-ID: <20090201174923.19144.28927.sendpatchset@localhost.localdomain>
+Subject: [PATCH 01/15] ide: include <asm/ide.h> only when needed
+Date: Sun, 01 Feb 2009 18:49:16 +0100
+Message-ID: <20090201174916.19144.11318.sendpatchset@localhost.localdomain>
 References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f12.google.com ([209.85.218.12]:45568 "EHLO
-	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755378AbZBARsa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:30 -0500
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:60140 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754012AbZBARsY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:24 -0500
 In-Reply-To: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,45 +15,75 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] scc_pata: remove DECLARE_SCC_DEV() macro
+Subject: [PATCH] ide: include <asm/ide.h> only when needed
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/scc_pata.c |   23 +++++++++--------------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+ drivers/ide/ide-io-std.c |    7 +++++++
+ drivers/ide/tx4938ide.c  |    2 ++
+ drivers/ide/tx4939ide.c  |    2 ++
+ include/linux/ide.h      |    7 -------
+ 4 files changed, 11 insertions(+), 7 deletions(-)
 
-Index: b/drivers/ide/scc_pata.c
+Index: b/drivers/ide/ide-io-std.c
 ===================================================================
---- a/drivers/ide/scc_pata.c
-+++ b/drivers/ide/scc_pata.c
-@@ -882,21 +882,16 @@ static const struct ide_dma_ops scc_dma_
- 	.dma_sff_read_status	= scc_dma_sff_read_status,
- };
+--- a/drivers/ide/ide-io-std.c
++++ b/drivers/ide/ide-io-std.c
+@@ -2,6 +2,13 @@
+ #include <linux/kernel.h>
+ #include <linux/ide.h>
  
--#define DECLARE_SCC_DEV(name_str)			\
--  {							\
--      .name		= name_str,			\
--      .init_iops	= init_iops_scc,		\
--      .init_dma		= scc_init_dma,			\
--      .init_hwif	= init_hwif_scc,		\
--      .tp_ops		= &scc_tp_ops,		\
--      .port_ops		= &scc_port_ops,		\
--      .dma_ops		= &scc_dma_ops,			\
--      .host_flags	= IDE_HFLAG_SINGLE,		\
--      .pio_mask		= ATA_PIO4,			\
--  }
++#if defined(CONFIG_ARM) || defined(CONFIG_M68K) || defined(CONFIG_MIPS) || \
++    defined(CONFIG_PARISC) || defined(CONFIG_PPC) || defined(CONFIG_SPARC)
++#include <asm/ide.h>
++#else
++#include <asm-generic/ide_iops.h>
++#endif
++
+ /*
+  *	Conventional PIO operations for ATA devices
+  */
+Index: b/drivers/ide/tx4938ide.c
+===================================================================
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -15,6 +15,8 @@
+ #include <linux/init.h>
+ #include <linux/platform_device.h>
+ #include <linux/io.h>
++
++#include <asm/ide.h>
+ #include <asm/txx9/tx4938.h>
+ 
+ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
+Index: b/drivers/ide/tx4939ide.c
+===================================================================
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -18,6 +18,8 @@
+ #include <linux/io.h>
+ #include <linux/scatterlist.h>
+ 
++#include <asm/ide.h>
++
+ #define MODNAME	"tx4939ide"
+ 
+ /* ATA Shadow Registers (8-bit except for Data which is 16-bit) */
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -193,13 +193,6 @@ static inline void ide_std_init_ports(hw
+ 	hw->io_ports.ctl_addr = ctl_addr;
+ }
+ 
+-#if defined(CONFIG_ARM) || defined(CONFIG_M68K) || defined(CONFIG_MIPS) || \
+-    defined(CONFIG_PARISC) || defined(CONFIG_PPC) || defined(CONFIG_SPARC)
+-#include <asm/ide.h>
+-#else
+-#include <asm-generic/ide_iops.h>
+-#endif
 -
- static const struct ide_port_info scc_chipsets[] __devinitdata = {
--	/* 0 */ DECLARE_SCC_DEV("sccIDE"),
-+	.name		= "sccIDE",
-+	.init_iops	= init_iops_scc,
-+	.init_dma	= scc_init_dma,
-+	.init_hwif	= init_hwif_scc,
-+	.tp_ops		= &scc_tp_ops,
-+	.port_ops	= &scc_port_ops,
-+	.dma_ops	= &scc_dma_ops,
-+	.host_flags	= IDE_HFLAG_SINGLE,
-+	.pio_mask	= ATA_PIO4,
- };
+ #define MAX_HWIFS	10
  
- /**
+ /*
