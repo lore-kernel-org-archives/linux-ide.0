@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 01/15] ide: include <asm/ide.h> only when needed
-Date: Sun, 01 Feb 2009 18:49:16 +0100
-Message-ID: <20090201174916.19144.11318.sendpatchset@localhost.localdomain>
+Subject: [PATCH 04/15] ide: fix error message in pre_task_out_intr()
+Date: Sun, 01 Feb 2009 18:49:37 +0100
+Message-ID: <20090201174937.19144.31260.sendpatchset@localhost.localdomain>
 References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:60140 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754012AbZBARsY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:24 -0500
+Received: from fg-out-1718.google.com ([72.14.220.159]:43113 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755838AbZBARsp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:45 -0500
 In-Reply-To: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,75 +15,30 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: include <asm/ide.h> only when needed
+Subject: [PATCH] ide: fix error message in pre_task_out_intr()
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io-std.c |    7 +++++++
- drivers/ide/tx4938ide.c  |    2 ++
- drivers/ide/tx4939ide.c  |    2 ++
- include/linux/ide.h      |    7 -------
- 4 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/ide/ide-taskfile.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Index: b/drivers/ide/ide-io-std.c
+Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
---- a/drivers/ide/ide-io-std.c
-+++ b/drivers/ide/ide-io-std.c
-@@ -2,6 +2,13 @@
- #include <linux/kernel.h>
- #include <linux/ide.h>
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -419,12 +419,14 @@ static ide_startstop_t task_out_intr (id
  
-+#if defined(CONFIG_ARM) || defined(CONFIG_M68K) || defined(CONFIG_MIPS) || \
-+    defined(CONFIG_PARISC) || defined(CONFIG_PPC) || defined(CONFIG_SPARC)
-+#include <asm/ide.h>
-+#else
-+#include <asm-generic/ide_iops.h>
-+#endif
-+
- /*
-  *	Conventional PIO operations for ATA devices
-  */
-Index: b/drivers/ide/tx4938ide.c
-===================================================================
---- a/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -15,6 +15,8 @@
- #include <linux/init.h>
- #include <linux/platform_device.h>
- #include <linux/io.h>
-+
-+#include <asm/ide.h>
- #include <asm/txx9/tx4938.h>
+ static ide_startstop_t pre_task_out_intr(ide_drive_t *drive, struct request *rq)
+ {
++	ide_hwif_t *hwif = drive->hwif;
+ 	ide_startstop_t startstop;
  
- static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
-Index: b/drivers/ide/tx4939ide.c
-===================================================================
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -18,6 +18,8 @@
- #include <linux/io.h>
- #include <linux/scatterlist.h>
- 
-+#include <asm/ide.h>
-+
- #define MODNAME	"tx4939ide"
- 
- /* ATA Shadow Registers (8-bit except for Data which is 16-bit) */
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -193,13 +193,6 @@ static inline void ide_std_init_ports(hw
- 	hw->io_ports.ctl_addr = ctl_addr;
- }
- 
--#if defined(CONFIG_ARM) || defined(CONFIG_M68K) || defined(CONFIG_MIPS) || \
--    defined(CONFIG_PARISC) || defined(CONFIG_PPC) || defined(CONFIG_SPARC)
--#include <asm/ide.h>
--#else
--#include <asm-generic/ide_iops.h>
--#endif
--
- #define MAX_HWIFS	10
- 
- /*
+ 	if (ide_wait_stat(&startstop, drive, ATA_DRQ,
+ 			  drive->bad_wstat, WAIT_DRQ)) {
+ 		printk(KERN_ERR "%s: no DRQ after issuing %sWRITE%s\n",
+-			drive->name, drive->hwif->data_phase ? "MULT" : "",
++			drive->name,
++			hwif->data_phase == TASKFILE_MULTI_OUT ? "MULT" : "",
+ 			(drive->dev_flags & IDE_DFLAG_LBA48) ? "_EXT" : "");
+ 		return startstop;
+ 	}
