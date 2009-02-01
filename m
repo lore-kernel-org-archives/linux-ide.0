@@ -1,59 +1,59 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH v2] IDE: palm_bk3710: use ioremap instead of arch-specific IO_ADDRESS()
-Date: Sun, 1 Feb 2009 17:03:42 +0100
-Message-ID: <200902011703.44080.bzolnier@gmail.com>
-References: <1233345567-643-1-git-send-email-khilman@deeprootsystems.com> <49835D23.5040604@ru.mvista.com>
+Subject: Re: [PATCH 1/3] ide-cd: use ide_drive_t's rq in cdrom_queue_request_sense
+Date: Sun, 1 Feb 2009 17:04:50 +0100
+Message-ID: <200902011704.51726.bzolnier@gmail.com>
+References: <1233002440-4325-1-git-send-email-petkovbb@gmail.com> <200901271607.10869.bzolnier@gmail.com> <9ea470500901270847m40264331le1092dc1589ec9de@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:38460 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.158]:51302 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503AbZBARYN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:24:13 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so408325fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 09:24:11 -0800 (PST)
-In-Reply-To: <49835D23.5040604@ru.mvista.com>
+	with ESMTP id S1752709AbZBARYO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:24:14 -0500
+In-Reply-To: <9ea470500901270847m40264331le1092dc1589ec9de@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Kevin Hilman <khilman@deeprootsystems.com>, linux-ide@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Friday 30 January 2009, Sergei Shtylyov wrote:
-> Kevin Hilman wrote:
+On Tuesday 27 January 2009, Borislav Petkov wrote:
+> On Tue, Jan 27, 2009 at 4:07 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Monday 26 January 2009, Borislav Petkov wrote:
+> >> There should be no functionality change resulting from this patch.
+> >>
+> >> Suggested-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> >> ---
+> >>  drivers/ide/ide-cd.c |    2 +-
+> >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> >>
+> >> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> >> index d3d5fb6..3907466 100644
+> >> --- a/drivers/ide/ide-cd.c
+> >> +++ b/drivers/ide/ide-cd.c
+> >> @@ -207,7 +207,7 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+> >>                                     struct request *failed_command)
+> >>  {
+> >>       struct cdrom_info *info         = drive->driver_data;
+> >> -     struct request *rq              = &info->request_sense_request;
+> >> +     struct request *rq              = &drive->request_sense_rq;
+> >
+> > Don't we want to also remove now unused ->request_sense_request?
 > 
-> > Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
+> sure we do :)
 > 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> --
+> From: Borislav Petkov <petkovbb@gmail.com>
+> Date: Tue, 27 Jan 2009 17:42:28 +0100
+> Subject: [PATCH 1/3] ide-cd: use ide_drive_t's rq in cdrom_queue_request_sense
+> 
+> There should be no functionality change resulting from this patch.
+> 
+> Suggested-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
 applied
-
-[ yay, this driver builds on x86 again :) ]
-
-> > diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
-> > index f38aac7..6196f76 100644
-> > --- a/drivers/ide/palm_bk3710.c
-> > +++ b/drivers/ide/palm_bk3710.c
-> > @@ -347,7 +347,7 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
-> >  	struct clk *clk;
-> >  	struct resource *mem, *irq;
-> >  	void __iomem *base;
-> > -	unsigned long rate;
-> > +	unsigned long rate, mem_size;
-> >  	int i, rc;
-> >  	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
-> >  
-> > @@ -374,13 +374,19 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
-> >  		return -ENODEV;
-> >  	}
-> >  
-> > -	if (request_mem_region(mem->start, mem->end - mem->start + 1,
-> > +	mem_size = mem->end - mem->start + 1;
-> > +	if (request_mem_region(mem->start, mem_size,
-> >  			       "palm_bk3710") == NULL) {
-> 
->     No point in keeping *if* occupying 2 lines, I think...
-
-I fixed it while merging the patch.
