@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 03/15] ide: fix memleak on failure in probe_for_drive()
-Date: Sun, 01 Feb 2009 18:49:30 +0100
-Message-ID: <20090201174930.19144.68338.sendpatchset@localhost.localdomain>
+Subject: [PATCH 06/15] ide: remove now superfluous check from ide_host_register()
+Date: Sun, 01 Feb 2009 18:49:51 +0100
+Message-ID: <20090201174951.19144.78464.sendpatchset@localhost.localdomain>
 References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:6833 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755684AbZBARsj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:39 -0500
+Received: from mail-bw0-f12.google.com ([209.85.218.12]:45568 "EHLO
+	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756012AbZBARs6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:58 -0500
 In-Reply-To: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,84 +15,44 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix memleak on failure in probe_for_drive()
+Subject: [PATCH] ide: remove now superfluous check from ide_host_register()
 
-Always free drive->id in probe_for_drive() if device is not present.
-
-While at it:
-- remove dead IDE_DFLAG_DEAD flag
-- remove superfluous IDE_DFLAG_PRESENT check
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |   22 +++++++++-------------
- include/linux/ide.h     |    2 --
- 2 files changed, 9 insertions(+), 15 deletions(-)
+ drivers/ide/ide-probe.c |   19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -228,15 +228,9 @@ static void do_identify(ide_drive_t *dri
- 	m[ATA_ID_PROD_LEN - 1] = '\0';
+@@ -1333,20 +1333,15 @@ int ide_host_register(struct ide_host *h
+ 		ide_init_port_hw(hwif, hws[i]);
+ 		ide_port_apply_params(hwif);
  
- 	if (strstr(m, "E X A B Y T E N E S T"))
--		goto err_misc;
+-		if (d == NULL) {
+-			mate = NULL;
+-		} else {
+-			if ((i & 1) && mate) {
+-				hwif->mate = mate;
+-				mate->mate = hwif;
+-			}
 -
--	drive->dev_flags |= IDE_DFLAG_PRESENT;
--	drive->dev_flags &= ~IDE_DFLAG_DEAD;
+-			mate = (i & 1) ? NULL : hwif;
 -
--	return;
--err_misc:
--	kfree(id);
--	drive->dev_flags &= ~IDE_DFLAG_PRESENT;
-+		drive->dev_flags &= ~IDE_DFLAG_PRESENT;
-+	else
-+		drive->dev_flags |= IDE_DFLAG_PRESENT;
- }
- 
- /**
-@@ -505,8 +499,7 @@ static u8 probe_for_drive(ide_drive_t *d
+-			ide_init_port(hwif, i & 1, d);
+-			ide_port_cable_detect(hwif);
++		if ((i & 1) && mate) {
++			hwif->mate = mate;
++			mate->mate = hwif;
  		}
  
- 		if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
--			/* drive not found */
--			return 0;
-+			goto out_free;
- 
- 		/* identification failed? */
- 		if ((drive->dev_flags & IDE_DFLAG_ID_READ) == 0) {
-@@ -530,7 +523,7 @@ static u8 probe_for_drive(ide_drive_t *d
++		mate = (i & 1) ? NULL : hwif;
++
++		ide_init_port(hwif, i & 1, d);
++		ide_port_cable_detect(hwif);
+ 		ide_port_init_devices(hwif);
  	}
  
- 	if ((drive->dev_flags & IDE_DFLAG_PRESENT) == 0)
--		return 0;
-+		goto out_free;
- 
- 	/* The drive wasn't being helpful. Add generic info only */
- 	if ((drive->dev_flags & IDE_DFLAG_ID_READ) == 0) {
-@@ -543,7 +536,10 @@ static u8 probe_for_drive(ide_drive_t *d
- 		ide_disk_init_mult_count(drive);
- 	}
- 
--	return !!(drive->dev_flags & IDE_DFLAG_PRESENT);
-+	return 1;
-+out_free:
-+	kfree(drive->id);
-+	return 0;
- }
- 
- static void hwif_release_dev(struct device *dev)
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -494,8 +494,6 @@ enum {
- 	IDE_DFLAG_NICE1			= (1 << 5),
- 	/* device is physically present */
- 	IDE_DFLAG_PRESENT		= (1 << 6),
--	/* device ejected hint */
--	IDE_DFLAG_DEAD			= (1 << 7),
- 	/* id read from device (synthetic if not set) */
- 	IDE_DFLAG_ID_READ		= (1 << 8),
- 	IDE_DFLAG_NOPROBE		= (1 << 9),
