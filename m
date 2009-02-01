@@ -1,135 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 8/8] ide: return request status from ->pc_callback method
-Date: Sun, 01 Feb 2009 20:28:38 +0100
-Message-ID: <20090201192838.1592.16234.sendpatchset@localhost.localdomain>
-References: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH 04/07] sata_mv: update ata_qc_from_tag
+Date: Sun, 1 Feb 2009 12:49:02 -0800
+Message-ID: <da824cf30902011249r5aa12dc8g39426a39dee41201@mail.gmail.com>
+References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca>
+	 <498391A7.1090209@rtr.ca> <498391D9.2000403@rtr.ca>
+	 <49839209.9010602@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:21944 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756517AbZBAT1p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 14:27:45 -0500
-In-Reply-To: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
+Received: from smtp-out.google.com ([216.239.33.17]:51355 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753758AbZBAUtK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 15:49:10 -0500
+Received: from spaceape10.eur.corp.google.com (spaceape10.eur.corp.google.com [172.28.16.144])
+	by smtp-out.google.com with ESMTP id n11Kn6xO001672
+	for <linux-ide@vger.kernel.org>; Sun, 1 Feb 2009 20:49:07 GMT
+Received: from wf-out-1314.google.com (wfd27.prod.google.com [10.142.4.27])
+	by spaceape10.eur.corp.google.com with ESMTP id n11KmfJW001863
+	for <linux-ide@vger.kernel.org>; Sun, 1 Feb 2009 12:49:03 -0800
+Received: by wf-out-1314.google.com with SMTP id 27so1428665wfd.17
+        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 12:49:02 -0800 (PST)
+In-Reply-To: <49839209.9010602@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: return request status from ->pc_callback method
+On Fri, Jan 30, 2009 at 3:49 PM, Mark Lord <liml@rtr.ca> wrote:
+> Update the logic in ata_qc_from_tag() to match that used
+> in similar places elsewhere in libata.
+>
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+>
+> --- old/drivers/ata/sata_mv.c   2009-01-30 18:23:22.000000000 -0500
+> +++ linux/drivers/ata/sata_mv.c 2009-01-30 18:26:55.000000000 -0500
+> @@ -1628,6 +1628,12 @@
+>        if (pp->pp_flags & MV_PP_FLAG_NCQ_EN)
+>                return NULL;
+>        qc = ata_qc_from_tag(ap, ap->link.active_tag);
+> +       if (qc) {
+> +               if (qc->tf.flags & ATA_TFLAG_POLLING)
+> +                       qc = NULL;
+> +               else if (!(qc->flags & ATA_QCFLAG_ACTIVE))
+> +                       qc = NULL;
+> +       }
+>        if (qc && (qc->tf.flags & ATA_TFLAG_POLLING))
+>                qc = NULL;
 
-Make ->pc_callback method return request status and then move
-the request completion from ->pc_callback to ide_pc_intr().
+Mark,
+isn't the second test redudant now and can be removed?
+(refering to the test immediately following the code you added).
 
-There should be no functional changes caused by this patch.
+grant
 
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-atapi.c  |   12 +++++++++++-
- drivers/ide/ide-floppy.c |   12 ++++--------
- drivers/ide/ide-tape.c   |   10 ++--------
- include/linux/ide.h      |    2 +-
- 4 files changed, 18 insertions(+), 18 deletions(-)
-
-Index: b/drivers/ide/ide-atapi.c
-===================================================================
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -345,6 +345,8 @@ static ide_startstop_t ide_pc_intr(ide_d
- 
- 	/* No more interrupts */
- 	if ((stat & ATA_DRQ) == 0) {
-+		int uptodate;
-+
- 		debug_log("Packet command completed, %d bytes transferred\n",
- 			  pc->xferred);
- 
-@@ -383,7 +385,15 @@ static ide_startstop_t ide_pc_intr(ide_d
- 			dsc = 1;
- 
- 		/* Command finished - Call the callback function */
--		drive->pc_callback(drive, dsc);
-+		uptodate = drive->pc_callback(drive, dsc);
-+
-+		if (uptodate == 0)
-+			drive->failed_pc = NULL;
-+
-+		if (blk_special_request(rq))
-+			ide_complete_rq(drive, 0);
-+		else
-+			ide_end_request(drive, uptodate, 0);
- 
- 		return ide_stopped;
- 	}
-Index: b/drivers/ide/ide-floppy.c
-===================================================================
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -71,7 +71,7 @@ static void idefloppy_update_buffers(ide
- 		ide_end_request(drive, 1, 0);
- }
- 
--static void ide_floppy_callback(ide_drive_t *drive, int dsc)
-+static int ide_floppy_callback(ide_drive_t *drive, int dsc)
- {
- 	struct ide_disk_obj *floppy = drive->driver_data;
- 	struct ide_atapi_pc *pc = drive->pc;
-@@ -108,14 +108,10 @@ static void ide_floppy_callback(ide_driv
- 			       "Aborting request!\n");
- 	}
- 
--	if (uptodate == 0)
--		drive->failed_pc = NULL;
--
--	if (blk_special_request(rq)) {
-+	if (blk_special_request(rq))
- 		rq->errors = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
--		ide_complete_rq(drive, 0);
--	} else
--		ide_end_request(drive, uptodate, 0);
-+
-+	return uptodate;
- }
- 
- static void ide_floppy_report_error(struct ide_disk_obj *floppy,
-Index: b/drivers/ide/ide-tape.c
-===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -463,7 +463,7 @@ static void ide_tape_kfree_buffer(idetap
- 
- static void ide_tape_handle_dsc(ide_drive_t *);
- 
--static void ide_tape_callback(ide_drive_t *drive, int dsc)
-+static int ide_tape_callback(ide_drive_t *drive, int dsc)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc *pc = drive->pc;
-@@ -530,13 +530,7 @@ static void ide_tape_callback(ide_drive_
- 
- 	rq->errors = err;
- 
--	if (uptodate == 0)
--		drive->failed_pc = NULL;
--
--	if (blk_special_request(rq))
--		ide_complete_rq(drive, 0);
--	else
--		ide_end_request(drive, uptodate, 0);
-+	return uptodate;
- }
- 
- /*
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -619,7 +619,7 @@ struct ide_drive_s {
- 	struct ide_atapi_pc *failed_pc;
- 
- 	/* callback for packet commands */
--	void (*pc_callback)(struct ide_drive_s *, int);
-+	int  (*pc_callback)(struct ide_drive_s *, int);
- 
- 	void (*pc_update_buffers)(struct ide_drive_s *, struct ide_atapi_pc *);
- 	int  (*pc_io_buffers)(struct ide_drive_s *, struct ide_atapi_pc *,
+>        return qc;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
