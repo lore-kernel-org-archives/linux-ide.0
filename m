@@ -1,65 +1,112 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH resend] ide/libata: fix ata_id_is_cfa() (take 4)
-Date: Sun, 1 Feb 2009 20:46:39 +0400
-Message-ID: <200902011946.39316.sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/4] ide: remove IDE_ARCH_INTR
+Date: Sun, 1 Feb 2009 16:53:42 +0100
+Message-ID: <200902011653.42527.bzolnier@gmail.com>
+References: <20090127180246.28089.2981.sendpatchset@localhost.localdomain> <393174.25588.qm@web52403.mail.re2.yahoo.com>  <alpine.DEB.1.00.0901290521300.7218@zirkon.biophys.uni-duesseldorf.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:46572 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752162AbZBAQqL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 11:46:11 -0500
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.00.0901290521300.7218@zirkon.biophys.uni-duesseldorf.de>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-m68k-owner@vger.kernel.org
+To: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
+Cc: "David D. Kilzer" <ddkilzer@kilzer.net>, linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitz@debian.org>, linux-m68k@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, gdu@mns.spb.ru
 
-When checking for the CFA feature set support, ata_id_is_cfa() tests bit 2 in
-word 82 of the identify data instead the word 83;  it also checks the ATA/PI
-version support in the word 80 (which the CompactFlash specifications have as
-reserved), this having no slightest chance to work on the modern CF cards that
-don't have 0x848A in the word 0...
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+On Thursday 29 January 2009, Michael Schmitz wrote:
+> Hi,
+> 
+> > 
+> > -            (void)ide_ack_intr(hwif);
+> > +            if (hwif->ack_intr(hwif))
+> > +                hwif->ack_intr(hwif);
+> > 
+> > Shouldn't that be:
+> > 
+> > -            (void)ide_ack_intr(hwif);
+> > +            if (hwif->ack_intr)
+> > +                hwif->ack_intr(hwif);
+> 
+> Seconded. No point in ack'ing the int twice (not to mention the other side 
+> effects).
 
+Brown paper bag time and another proof that having helpful people looking
+over your patches really matters...
+
+Thanks guys, I fixed it in v2.
+
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove IDE_ARCH_INTR (v2)
+
+This micro-optimization is not worth it.  Just always check for
+existence of ->ack_intr method in ide_intr() and ide_timer_expiry().
+
+v2:
+Fix brown-paper-bag bug spotted by David D. Kilzer.
+
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Michael Schmitz <schmitz@debian.org>
+Cc: "David D. Kilzer" <ddkilzer@kilzer.net>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Oops, caught the comment typos, resending... :-/
-So, here's the fourth version of this simplistic patch in which I had to drop
-the paranoid ATA version check since apparently not all cards follow the CF
-specs in this respect and it seems wrong to blacklist a card that does report
-CFA feature set support...
+ drivers/ide/ide-io.c   |    5 +++--
+ include/asm-m68k/ide.h |    3 ---
+ include/linux/ide.h    |    5 -----
+ 3 files changed, 3 insertions(+), 10 deletions(-)
 
- include/linux/ata.h |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
-
-Index: linux-2.6/include/linux/ata.h
+Index: b/drivers/ide/ide-io.c
 ===================================================================
---- linux-2.6.orig/include/linux/ata.h
-+++ linux-2.6/include/linux/ata.h
-@@ -731,12 +731,17 @@ static inline int ata_id_current_chs_val
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -736,7 +736,8 @@ void ide_timer_expiry (unsigned long dat
+ 		} else if (drive_is_ready(drive)) {
+ 			if (drive->waiting_for_dma)
+ 				hwif->dma_ops->dma_lost_irq(drive);
+-			(void)ide_ack_intr(hwif);
++			if (hwif->ack_intr)
++				hwif->ack_intr(hwif);
+ 			printk(KERN_WARNING "%s: lost interrupt\n",
+ 				drive->name);
+ 			startstop = handler(drive);
+@@ -851,7 +852,7 @@ irqreturn_t ide_intr (int irq, void *dev
  
- static inline int ata_id_is_cfa(const u16 *id)
- {
--	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
-+	if (id[ATA_ID_CONFIG] == 0x848A)	/* Traditional CF */
- 		return 1;
--	/* Could be CF hiding as standard ATA */
--	if (ata_id_major_version(id) >= 3 &&
--	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
--	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
-+	/*
-+	 * CF specs don't require specific value in the word 0 anymore and yet
-+	 * they forbid to report the ATA version in the word 80 and require the
-+	 * CFA feature set support to be indicated in the word 83 in this case.
-+	 * Unfortunately, some cards only follow either of this requirements,
-+	 * and while those that don't indicate CFA feature support need some
-+	 * sort of quirk list, it seems impractical for the ones that do...
-+	 */
-+	if ((id[ATA_ID_COMMAND_SET_2] & 0xC004) == 0x4004)
- 		return 1;
- 	return 0;
+ 	spin_lock_irqsave(&hwif->lock, flags);
+ 
+-	if (!ide_ack_intr(hwif))
++	if (hwif->ack_intr && hwif->ack_intr(hwif) == 0)
+ 		goto out;
+ 
+ 	handler = hwif->handler;
+Index: b/include/asm-m68k/ide.h
+===================================================================
+--- a/include/asm-m68k/ide.h
++++ b/include/asm-m68k/ide.h
+@@ -123,8 +123,5 @@ ide_get_lock(irq_handler_t handler, void
  }
+ #endif /* CONFIG_BLK_DEV_FALCON_IDE */
+ 
+-#define IDE_ARCH_ACK_INTR
+-#define ide_ack_intr(hwif)	((hwif)->ack_intr ? (hwif)->ack_intr(hwif) : 1)
+-
+ #endif /* __KERNEL__ */
+ #endif /* _M68K_IDE_H */
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -202,11 +202,6 @@ static inline void ide_std_init_ports(hw
+ 
+ #define MAX_HWIFS	10
+ 
+-/* Currently only m68k, apus and m8xx need it */
+-#ifndef IDE_ARCH_ACK_INTR
+-# define ide_ack_intr(hwif) (1)
+-#endif
+-
+ /* Currently only Atari needs it */
+ #ifndef IDE_ARCH_LOCK
+ # define ide_release_lock()			do {} while (0)
 
