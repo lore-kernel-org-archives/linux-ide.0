@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 05/15] ide: allow host drivers to specify IRQ flags
-Date: Sun, 01 Feb 2009 18:49:44 +0100
-Message-ID: <20090201174944.19144.12065.sendpatchset@localhost.localdomain>
+Subject: [PATCH 09/15] ide: add "flagged" taskfile flags to struct ide_taskfile
+Date: Sun, 01 Feb 2009 18:50:12 +0100
+Message-ID: <20090201175012.19144.87417.sendpatchset@localhost.localdomain>
 References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.159]:43113 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755922AbZBARsv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:48:51 -0500
+	with ESMTP id S1755808AbZBARtU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 12:49:20 -0500
 In-Reply-To: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,257 +15,313 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: allow host drivers to specify IRQ flags
+Subject: [PATCH] ide: add "flagged" taskfile flags to struct ide_taskfile
 
-* Add ->irq_flags field to struct ide_port_info and struct ide_host.
+* Add ->ftf_flags field to struct ide_taskfile
+  and convert flags for TASKFILE ioctl to use it.
 
-* Update host drivers and IDE PCI code to use ->irq_flags field.
+* Rename "flagged" taskfile flags:
+  - IDE_TFLAG_FLAGGED -> IDE_FTFLAG_FLAGGED
+  - IDE_TFLAG_FLAGGED_SET_IN_FLAGS -> IDE_FTFLAG_SET_IN_FLAGS
+  - IDE_TFLAG_{OUT,IN}_DATA -> IDE_FTFLAG_{OUT,IN}_DATA
 
-* Convert init_irq() and ide_intr() to use host->irq_flags.
-
-This fixes handling of shared IRQs for non-PCI hosts
-and removes ugly ifdeffery from core IDE code.
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/buddha.c    |    1 +
- drivers/ide/delkin_cb.c |    1 +
- drivers/ide/falconide.c |    1 +
- drivers/ide/gayle.c     |    1 +
- drivers/ide/ide-cs.c    |    1 +
- drivers/ide/ide-io.c    |   15 ++++-----------
- drivers/ide/ide-probe.c |    9 +--------
- drivers/ide/macide.c    |    1 +
- drivers/ide/q40ide.c    |    1 +
- drivers/ide/scc_pata.c  |    1 +
- drivers/ide/setup-pci.c |    4 ++++
- drivers/ide/sgiioc4.c   |    1 +
- include/linux/ide.h     |    6 ++++++
- 13 files changed, 24 insertions(+), 19 deletions(-)
+ drivers/ide/ide-h8300.c    |    4 +-
+ drivers/ide/ide-io-std.c   |    6 ++--
+ drivers/ide/ide-taskfile.c |   12 ++++----
+ drivers/ide/ns87415.c      |    2 -
+ drivers/ide/scc_pata.c     |    4 +-
+ drivers/ide/tx4938ide.c    |    4 +-
+ drivers/ide/tx4939ide.c    |    4 +-
+ include/linux/ide.h        |   66 +++++++++++++++++++++++----------------------
+ 8 files changed, 53 insertions(+), 49 deletions(-)
 
-Index: b/drivers/ide/buddha.c
+Index: b/drivers/ide/ide-h8300.c
 ===================================================================
---- a/drivers/ide/buddha.c
-+++ b/drivers/ide/buddha.c
-@@ -145,6 +145,7 @@ static void __init buddha_setup_ports(hw
+--- a/drivers/ide/ide-h8300.c
++++ b/drivers/ide/ide-h8300.c
+@@ -54,7 +54,7 @@ static void h8300_tf_load(ide_drive_t *d
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
  
- static const struct ide_port_info buddha_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- };
+-	if (task->tf_flags & IDE_TFLAG_OUT_DATA)
++	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA)
+ 		mm_outw((tf->hob_data << 8) | tf->data, io_ports->data_addr);
  
-     /*
-Index: b/drivers/ide/delkin_cb.c
-===================================================================
---- a/drivers/ide/delkin_cb.c
-+++ b/drivers/ide/delkin_cb.c
-@@ -66,6 +66,7 @@ static const struct ide_port_info delkin
- 	.port_ops		= &delkin_cb_port_ops,
- 	.host_flags		= IDE_HFLAG_IO_32BIT | IDE_HFLAG_UNMASK_IRQS |
- 				  IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- 	.init_chipset		= delkin_cb_init_chipset,
- };
- 
-Index: b/drivers/ide/falconide.c
-===================================================================
---- a/drivers/ide/falconide.c
-+++ b/drivers/ide/falconide.c
-@@ -105,6 +105,7 @@ static const struct ide_port_info falcon
- 	.tp_ops			= &falconide_tp_ops,
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- };
- 
- static void __init falconide_setup_ports(hw_regs_t *hw)
-Index: b/drivers/ide/gayle.c
-===================================================================
---- a/drivers/ide/gayle.c
-+++ b/drivers/ide/gayle.c
-@@ -120,6 +120,7 @@ static void __init gayle_setup_ports(hw_
- static const struct ide_port_info gayle_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- };
- 
-     /*
-Index: b/drivers/ide/ide-cs.c
-===================================================================
---- a/drivers/ide/ide-cs.c
-+++ b/drivers/ide/ide-cs.c
-@@ -154,6 +154,7 @@ static const struct ide_port_ops idecs_p
- static const struct ide_port_info idecs_port_info = {
- 	.port_ops		= &idecs_port_ops,
- 	.host_flags		= IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- };
- 
- static struct ide_host *idecs_register(unsigned long io, unsigned long ctl,
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -841,6 +841,7 @@ static void unexpected_intr(int irq, ide
- irqreturn_t ide_intr (int irq, void *dev_id)
- {
- 	ide_hwif_t *hwif = (ide_hwif_t *)dev_id;
-+	struct ide_host *host = hwif->host;
- 	ide_drive_t *uninitialized_var(drive);
- 	ide_handler_t *handler;
- 	unsigned long flags;
-@@ -848,8 +849,8 @@ irqreturn_t ide_intr (int irq, void *dev
- 	irqreturn_t irq_ret = IRQ_NONE;
- 	int plug_device = 0;
- 
--	if (hwif->host->host_flags & IDE_HFLAG_SERIALIZE) {
--		if (hwif != hwif->host->cur_port)
-+	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
-+		if (hwif != host->cur_port)
- 			goto out_early;
- 	}
- 
-@@ -872,27 +873,19 @@ irqreturn_t ide_intr (int irq, void *dev
- 		 *
- 		 * For PCI, we cannot tell the difference,
- 		 * so in that case we just ignore it and hope it goes away.
--		 *
--		 * FIXME: unexpected_intr should be hwif-> then we can
--		 * remove all the ifdef PCI crap
- 		 */
--#ifdef CONFIG_BLK_DEV_IDEPCI
--		if (hwif->chipset != ide_pci)
--#endif	/* CONFIG_BLK_DEV_IDEPCI */
--		{
-+		if ((host->irq_flags & IRQF_SHARED) == 0) {
- 			/*
- 			 * Probably not a shared PCI interrupt,
- 			 * so we can safely try to do something about it:
- 			 */
- 			unexpected_intr(irq, hwif);
--#ifdef CONFIG_BLK_DEV_IDEPCI
- 		} else {
- 			/*
- 			 * Whack the status register, just in case
- 			 * we have a leftover pending IRQ.
- 			 */
- 			(void)hwif->tp_ops->read_status(hwif);
--#endif /* CONFIG_BLK_DEV_IDEPCI */
- 		}
- 		goto out;
- 	}
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -837,14 +837,7 @@ static int ide_port_setup_devices(ide_hw
- static int init_irq (ide_hwif_t *hwif)
- {
+ 	if (task->tf_flags & IDE_TFLAG_OUT_HOB_FEATURE)
+@@ -90,7 +90,7 @@ static void h8300_tf_read(ide_drive_t *d
  	struct ide_io_ports *io_ports = &hwif->io_ports;
--	int sa = 0;
--
--#if defined(__mc68000__)
--	sa = IRQF_SHARED;
--#endif /* __mc68000__ */
--
--	if (hwif->chipset == ide_pci)
--		sa = IRQF_SHARED;
-+	int sa = hwif->host->irq_flags;
+ 	struct ide_taskfile *tf = &task->tf;
  
- 	if (io_ports->ctl_addr)
- 		hwif->tp_ops->set_irq(hwif, 1);
-Index: b/drivers/ide/macide.c
+-	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data = mm_inw(io_ports->data_addr);
+ 
+ 		tf->data = data & 0xff;
+Index: b/drivers/ide/ide-io-std.c
 ===================================================================
---- a/drivers/ide/macide.c
-+++ b/drivers/ide/macide.c
-@@ -82,6 +82,7 @@ static void __init macide_setup_ports(hw
+--- a/drivers/ide/ide-io-std.c
++++ b/drivers/ide/ide-io-std.c
+@@ -96,10 +96,10 @@ void ide_tf_load(ide_drive_t *drive, ide
+ 	else
+ 		tf_outb = ide_outb;
  
- static const struct ide_port_info macide_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- };
+-	if (task->tf_flags & IDE_TFLAG_FLAGGED)
++	if (task->ftf_flags & IDE_FTFLAG_FLAGGED)
+ 		HIHI = 0xFF;
  
- static const char *mac_ide_name[] =
-Index: b/drivers/ide/q40ide.c
+-	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA) {
+ 		u16 data = (tf->hob_data << 8) | tf->data;
+ 
+ 		if (mmio)
+@@ -153,7 +153,7 @@ void ide_tf_read(ide_drive_t *drive, ide
+ 		tf_inb  = ide_inb;
+ 	}
+ 
+-	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data;
+ 
+ 		if (mmio)
+Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
---- a/drivers/ide/q40ide.c
-+++ b/drivers/ide/q40ide.c
-@@ -112,6 +112,7 @@ static const struct ide_tp_ops q40ide_tp
- static const struct ide_port_info q40ide_port_info = {
- 	.tp_ops			= &q40ide_tp_ops,
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
-+	.irq_flags		= IRQF_SHARED,
- };
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -73,8 +73,8 @@ ide_startstop_t do_rw_taskfile (ide_driv
+ 		}
+ 	}
  
- /* 
+-	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+-		task->tf_flags |= IDE_TFLAG_FLAGGED_SET_IN_FLAGS;
++	if (task->ftf_flags & IDE_FTFLAG_FLAGGED)
++		task->ftf_flags |= IDE_FTFLAG_SET_IN_FLAGS;
+ 
+ 	memcpy(&hwif->task, task, sizeof(*task));
+ 
+@@ -551,10 +551,10 @@ int ide_taskfile_ioctl (ide_drive_t *dri
+ 		args.tf_flags |= (IDE_TFLAG_LBA48 | IDE_TFLAG_IN_HOB);
+ 
+ 	if (req_task->out_flags.all) {
+-		args.tf_flags |= IDE_TFLAG_FLAGGED;
++		args.ftf_flags |= IDE_FTFLAG_FLAGGED;
+ 
+ 		if (req_task->out_flags.b.data)
+-			args.tf_flags |= IDE_TFLAG_OUT_DATA;
++			args.ftf_flags |= IDE_FTFLAG_OUT_DATA;
+ 
+ 		if (req_task->out_flags.b.nsector_hob)
+ 			args.tf_flags |= IDE_TFLAG_OUT_HOB_NSECT;
+@@ -582,7 +582,7 @@ int ide_taskfile_ioctl (ide_drive_t *dri
+ 	}
+ 
+ 	if (req_task->in_flags.b.data)
+-		args.tf_flags |= IDE_TFLAG_IN_DATA;
++		args.ftf_flags |= IDE_FTFLAG_IN_DATA;
+ 
+ 	switch(req_task->data_phase) {
+ 		case TASKFILE_MULTI_OUT:
+@@ -647,7 +647,7 @@ int ide_taskfile_ioctl (ide_drive_t *dri
+ 	memcpy(req_task->hob_ports, &args.tf_array[0], HDIO_DRIVE_HOB_HDR_SIZE - 2);
+ 	memcpy(req_task->io_ports, &args.tf_array[6], HDIO_DRIVE_TASK_HDR_SIZE);
+ 
+-	if ((args.tf_flags & IDE_TFLAG_FLAGGED_SET_IN_FLAGS) &&
++	if ((args.ftf_flags & IDE_FTFLAG_SET_IN_FLAGS) &&
+ 	    req_task->in_flags.all == 0) {
+ 		req_task->in_flags.all = IDE_TASKFILE_STD_IN_FLAGS;
+ 		if (drive->dev_flags & IDE_DFLAG_LBA48)
+Index: b/drivers/ide/ns87415.c
+===================================================================
+--- a/drivers/ide/ns87415.c
++++ b/drivers/ide/ns87415.c
+@@ -66,7 +66,7 @@ static void superio_tf_read(ide_drive_t 
+ 	struct ide_io_ports *io_ports = &drive->hwif->io_ports;
+ 	struct ide_taskfile *tf = &task->tf;
+ 
+-	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data = inw(io_ports->data_addr);
+ 
+ 		tf->data = data & 0xff;
 Index: b/drivers/ide/scc_pata.c
 ===================================================================
 --- a/drivers/ide/scc_pata.c
 +++ b/drivers/ide/scc_pata.c
-@@ -891,6 +891,7 @@ static const struct ide_port_info scc_ch
- 	.port_ops	= &scc_port_ops,
- 	.dma_ops	= &scc_dma_ops,
- 	.host_flags	= IDE_HFLAG_SINGLE,
-+	.irq_flags	= IRQF_SHARED,
- 	.pio_mask	= ATA_PIO4,
- };
+@@ -675,7 +675,7 @@ static void scc_tf_load(ide_drive_t *dri
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
  
-Index: b/drivers/ide/setup-pci.c
+-	if (task->tf_flags & IDE_TFLAG_OUT_DATA)
++	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA)
+ 		out_be32((void *)io_ports->data_addr,
+ 			 (tf->hob_data << 8) | tf->data);
+ 
+@@ -711,7 +711,7 @@ static void scc_tf_read(ide_drive_t *dri
+ 	struct ide_io_ports *io_ports = &drive->hwif->io_ports;
+ 	struct ide_taskfile *tf = &task->tf;
+ 
+-	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data = (u16)in_be32((void *)io_ports->data_addr);
+ 
+ 		tf->data = data & 0xff;
+Index: b/drivers/ide/tx4938ide.c
 ===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -558,6 +558,8 @@ int ide_pci_init_one(struct pci_dev *dev
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -92,7 +92,7 @@ static void tx4938ide_tf_load(ide_drive_
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
  
- 	host->host_priv = priv;
+-	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA) {
+ 		u16 data = (tf->hob_data << 8) | tf->data;
  
-+	host->irq_flags = IRQF_SHARED;
-+
- 	pci_set_drvdata(dev, host);
+ 		/* no endian swap */
+@@ -132,7 +132,7 @@ static void tx4938ide_tf_read(ide_drive_
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+ 	struct ide_taskfile *tf = &task->tf;
  
- 	ret = do_ide_setup_pci_device(dev, d, 1);
-@@ -606,6 +608,8 @@ int ide_pci_init_two(struct pci_dev *dev
+-	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data;
  
- 	host->host_priv = priv;
- 
-+	host->irq_flags = IRQF_SHARED;
-+
- 	pci_set_drvdata(pdev[0], host);
- 	pci_set_drvdata(pdev[1], host);
- 
-Index: b/drivers/ide/sgiioc4.c
+ 		/* no endian swap */
+Index: b/drivers/ide/tx4939ide.c
 ===================================================================
---- a/drivers/ide/sgiioc4.c
-+++ b/drivers/ide/sgiioc4.c
-@@ -557,6 +557,7 @@ static const struct ide_port_info sgiioc
- 	.port_ops		= &sgiioc4_port_ops,
- 	.dma_ops		= &sgiioc4_dma_ops,
- 	.host_flags		= IDE_HFLAG_MMIO,
-+	.irq_flags		= IRQF_SHARED,
- 	.mwdma_mask		= ATA_MWDMA2_ONLY,
- };
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -477,7 +477,7 @@ static void tx4939ide_tf_load(ide_drive_
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
  
+-	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA) {
+ 		u16 data = (tf->hob_data << 8) | tf->data;
+ 
+ 		/* no endian swap */
+@@ -519,7 +519,7 @@ static void tx4939ide_tf_read(ide_drive_
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+ 	struct ide_taskfile *tf = &task->tf;
+ 
+-	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
++	if (task->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data;
+ 
+ 		/* no endian swap */
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -836,6 +836,9 @@ struct ide_host {
- 	void		(*release_lock)(void);
+@@ -234,56 +234,52 @@ typedef enum {
  
- 	unsigned long	host_flags;
+ enum {
+ 	IDE_TFLAG_LBA48			= (1 << 0),
+-	IDE_TFLAG_FLAGGED		= (1 << 2),
+-	IDE_TFLAG_OUT_DATA		= (1 << 3),
+-	IDE_TFLAG_OUT_HOB_FEATURE	= (1 << 4),
+-	IDE_TFLAG_OUT_HOB_NSECT		= (1 << 5),
+-	IDE_TFLAG_OUT_HOB_LBAL		= (1 << 6),
+-	IDE_TFLAG_OUT_HOB_LBAM		= (1 << 7),
+-	IDE_TFLAG_OUT_HOB_LBAH		= (1 << 8),
++	IDE_TFLAG_OUT_HOB_FEATURE	= (1 << 1),
++	IDE_TFLAG_OUT_HOB_NSECT		= (1 << 2),
++	IDE_TFLAG_OUT_HOB_LBAL		= (1 << 3),
++	IDE_TFLAG_OUT_HOB_LBAM		= (1 << 4),
++	IDE_TFLAG_OUT_HOB_LBAH		= (1 << 5),
+ 	IDE_TFLAG_OUT_HOB		= IDE_TFLAG_OUT_HOB_FEATURE |
+ 					  IDE_TFLAG_OUT_HOB_NSECT |
+ 					  IDE_TFLAG_OUT_HOB_LBAL |
+ 					  IDE_TFLAG_OUT_HOB_LBAM |
+ 					  IDE_TFLAG_OUT_HOB_LBAH,
+-	IDE_TFLAG_OUT_FEATURE		= (1 << 9),
+-	IDE_TFLAG_OUT_NSECT		= (1 << 10),
+-	IDE_TFLAG_OUT_LBAL		= (1 << 11),
+-	IDE_TFLAG_OUT_LBAM		= (1 << 12),
+-	IDE_TFLAG_OUT_LBAH		= (1 << 13),
++	IDE_TFLAG_OUT_FEATURE		= (1 << 6),
++	IDE_TFLAG_OUT_NSECT		= (1 << 7),
++	IDE_TFLAG_OUT_LBAL		= (1 << 8),
++	IDE_TFLAG_OUT_LBAM		= (1 << 9),
++	IDE_TFLAG_OUT_LBAH		= (1 << 10),
+ 	IDE_TFLAG_OUT_TF		= IDE_TFLAG_OUT_FEATURE |
+ 					  IDE_TFLAG_OUT_NSECT |
+ 					  IDE_TFLAG_OUT_LBAL |
+ 					  IDE_TFLAG_OUT_LBAM |
+ 					  IDE_TFLAG_OUT_LBAH,
+-	IDE_TFLAG_OUT_DEVICE		= (1 << 14),
+-	IDE_TFLAG_WRITE			= (1 << 15),
+-	IDE_TFLAG_FLAGGED_SET_IN_FLAGS	= (1 << 16),
+-	IDE_TFLAG_IN_DATA		= (1 << 17),
+-	IDE_TFLAG_CUSTOM_HANDLER	= (1 << 18),
+-	IDE_TFLAG_DMA_PIO_FALLBACK	= (1 << 19),
+-	IDE_TFLAG_IN_HOB_FEATURE	= (1 << 20),
+-	IDE_TFLAG_IN_HOB_NSECT		= (1 << 21),
+-	IDE_TFLAG_IN_HOB_LBAL		= (1 << 22),
+-	IDE_TFLAG_IN_HOB_LBAM		= (1 << 23),
+-	IDE_TFLAG_IN_HOB_LBAH		= (1 << 24),
++	IDE_TFLAG_OUT_DEVICE		= (1 << 11),
++	IDE_TFLAG_WRITE			= (1 << 12),
++	IDE_TFLAG_CUSTOM_HANDLER	= (1 << 13),
++	IDE_TFLAG_DMA_PIO_FALLBACK	= (1 << 14),
++	IDE_TFLAG_IN_HOB_FEATURE	= (1 << 15),
++	IDE_TFLAG_IN_HOB_NSECT		= (1 << 16),
++	IDE_TFLAG_IN_HOB_LBAL		= (1 << 17),
++	IDE_TFLAG_IN_HOB_LBAM		= (1 << 18),
++	IDE_TFLAG_IN_HOB_LBAH		= (1 << 19),
+ 	IDE_TFLAG_IN_HOB_LBA		= IDE_TFLAG_IN_HOB_LBAL |
+ 					  IDE_TFLAG_IN_HOB_LBAM |
+ 					  IDE_TFLAG_IN_HOB_LBAH,
+ 	IDE_TFLAG_IN_HOB		= IDE_TFLAG_IN_HOB_FEATURE |
+ 					  IDE_TFLAG_IN_HOB_NSECT |
+ 					  IDE_TFLAG_IN_HOB_LBA,
+-	IDE_TFLAG_IN_FEATURE		= (1 << 1),
+-	IDE_TFLAG_IN_NSECT		= (1 << 25),
+-	IDE_TFLAG_IN_LBAL		= (1 << 26),
+-	IDE_TFLAG_IN_LBAM		= (1 << 27),
+-	IDE_TFLAG_IN_LBAH		= (1 << 28),
++	IDE_TFLAG_IN_FEATURE		= (1 << 20),
++	IDE_TFLAG_IN_NSECT		= (1 << 21),
++	IDE_TFLAG_IN_LBAL		= (1 << 22),
++	IDE_TFLAG_IN_LBAM		= (1 << 23),
++	IDE_TFLAG_IN_LBAH		= (1 << 24),
+ 	IDE_TFLAG_IN_LBA		= IDE_TFLAG_IN_LBAL |
+ 					  IDE_TFLAG_IN_LBAM |
+ 					  IDE_TFLAG_IN_LBAH,
+ 	IDE_TFLAG_IN_TF			= IDE_TFLAG_IN_NSECT |
+ 					  IDE_TFLAG_IN_LBA,
+-	IDE_TFLAG_IN_DEVICE		= (1 << 29),
++	IDE_TFLAG_IN_DEVICE		= (1 << 25),
+ 	IDE_TFLAG_HOB			= IDE_TFLAG_OUT_HOB |
+ 					  IDE_TFLAG_IN_HOB,
+ 	IDE_TFLAG_TF			= IDE_TFLAG_OUT_TF |
+@@ -291,9 +287,16 @@ enum {
+ 	IDE_TFLAG_DEVICE		= IDE_TFLAG_OUT_DEVICE |
+ 					  IDE_TFLAG_IN_DEVICE,
+ 	/* force 16-bit I/O operations */
+-	IDE_TFLAG_IO_16BIT		= (1 << 30),
++	IDE_TFLAG_IO_16BIT		= (1 << 26),
+ 	/* ide_task_t was allocated using kmalloc() */
+-	IDE_TFLAG_DYN			= (1 << 31),
++	IDE_TFLAG_DYN			= (1 << 27),
++};
 +
-+	int		irq_flags;
-+
- 	void		*host_priv;
- 	ide_hwif_t	*cur_port;	/* for hosts requiring serialization */
++enum {
++	IDE_FTFLAG_FLAGGED		= (1 << 0),
++	IDE_FTFLAG_SET_IN_FLAGS		= (1 << 1),
++	IDE_FTFLAG_OUT_DATA		= (1 << 2),
++	IDE_FTFLAG_IN_DATA		= (1 << 3),
+ };
  
-@@ -1368,6 +1371,9 @@ struct ide_port_info {
- 	u16			max_sectors;	/* if < than the default one */
- 
- 	u32			host_flags;
-+
-+	int			irq_flags;
-+
- 	u8			pio_mask;
- 	u8			swdma_mask;
- 	u8			mwdma_mask;
+ struct ide_taskfile {
+@@ -330,6 +333,7 @@ typedef struct ide_task_s {
+ 		struct ide_taskfile	tf;
+ 		u8			tf_array[14];
+ 	};
++	u8			ftf_flags;	/* for TASKFILE ioctl */
+ 	u32			tf_flags;
+ 	int			data_phase;
+ 	struct request		*rq;		/* copy of request */
