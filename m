@@ -1,81 +1,98 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH 05/07] sata_mv: mv_fill_sg fixes
-Date: Sun, 1 Feb 2009 12:55:08 -0800
-Message-ID: <da824cf30902011255s52878598v5f1e98746865bcab@mail.gmail.com>
-References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca>
-	 <498391A7.1090209@rtr.ca> <498391D9.2000403@rtr.ca>
-	 <49839209.9010602@rtr.ca> <49839256.7090402@rtr.ca>
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
+Date: Sun, 1 Feb 2009 21:13:08 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
+ <20090126191151.18b094e6@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:51897 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753919AbZBAUzR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 15:55:17 -0500
-Received: from spaceape7.eur.corp.google.com (spaceape7.eur.corp.google.com [172.28.16.141])
-	by smtp-out.google.com with ESMTP id n11KtDjw000838
-	for <linux-ide@vger.kernel.org>; Sun, 1 Feb 2009 12:55:14 -0800
-Received: from wf-out-1314.google.com (wfc25.prod.google.com [10.142.3.25])
-	by spaceape7.eur.corp.google.com with ESMTP id n11Kt95Y000685
-	for <linux-ide@vger.kernel.org>; Sun, 1 Feb 2009 12:55:09 -0800
-Received: by wf-out-1314.google.com with SMTP id 25so1231723wfc.6
-        for <linux-ide@vger.kernel.org>; Sun, 01 Feb 2009 12:55:08 -0800 (PST)
-In-Reply-To: <49839256.7090402@rtr.ca>
+Received: from extu-mxob-1.symantec.com ([216.10.194.28]:41638 "EHLO
+	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753753AbZBAVPg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 16:15:36 -0500
+In-Reply-To: <20090126191151.18b094e6@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@linux-foundation.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jan 30, 2009 at 3:50 PM, Mark Lord <liml@rtr.ca> wrote:
-> Fix mv_fill_sg() to zero out the reserved word (required for ATAPI),
-> and to include a memory barrier.  This may also help with problems
-> reported by Jens on the PPC platform.
->
-> Signed-off-by: Mark Lord <mlord@pobox.com>
->
-> --- old/drivers/ata/sata_mv.c   2009-01-30 18:31:03.000000000 -0500
-> +++ linux/drivers/ata/sata_mv.c 2009-01-30 18:32:08.000000000 -0500
-> @@ -1364,12 +1364,13 @@
->                        u32 offset = addr & 0xffff;
->                        u32 len = sg_len;
->
-> -                       if ((offset + sg_len > 0x10000))
-> +                       if ((offset + len > 0x10000))
+On Mon, 26 Jan 2009, Alan Cox wrote:
+> > [PATCH] libata sff: 32bit PIO use 16bit on slop
+> > 
+> > 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
+> > causes errors on a four-year-old ata_piix Dell Precision 670.  Using
+> > 16bit PIO instead of 32bit PIO on the odd 1, 2 or 3 chars fixes that.
+> > 
+> > Signed-off-by: Hugh Dickins <hugh@veritas.com>
+> 
+> For the 3 bytes of slop it should use a single iowrite32 but otherwise
+> that seems ok. We do need to handle the FIFO setup on the AMD differently
+> if we do this ...
 
-Why the double parens?
+Sorry, I believe you were waiting on me for this, to accompany your
+AMD and VLB patches.  I'm afraid I don't have any such AMD devices
+to test this along with yours, and the only non-0 slop that I've seen
+in testing has been 2 (about 25% of ops, so I removed the "unlikely").
+But this patch works as well for me as the patch I posted before
+(though much more verbose: please simplify if you see a better way).
 
->                                len = 0x10000 - offset;
->
->                        mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
->                        mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
->                        mv_sg->flags_size = cpu_to_le32(len & 0xffff);
-> +                       mv_sg->reserved = 0;
->
->                        sg_len -= len;
->                        addr += len;
-> @@ -1381,6 +1382,7 @@
->
->        if (likely(last_sg))
->                last_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
-> +       mb(); /* ensure data structure is visible to the chipset */
 
-It's not obvious to me what you are racing against here.
-Normally the mb() is to prevent the above store from getting executed
-*after* some MMIO read or write that would tell the chip to read the
-flags_size field (or anything recently stored in that data structure).
+[PATCH] libata sff: 32bit PIO use 16bit on slop
 
-I guess I'm asking for the comment to indicate which MMIO write it's
-racing with.
+871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
+causes errors on a four-year-old ata_piix Dell Precision 670.  Using
+16bit PIO instead of 32bit PIO on the odd 1 or 2 chars fixes that,
+but Alan Cox indicates that we should still use 32bit for 3 chars.
 
-thanks,
-grant
+Signed-off-by: Hugh Dickins <hugh@veritas.com>
+---
 
-> }
->
-> static void mv_crqb_pack_cmd(__le16 *cmdw, u8 data, u8 addr, unsigned last)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+ drivers/ata/libata-sff.c |   33 ++++++++++++++++++++++++---------
+ 1 file changed, 24 insertions(+), 9 deletions(-)
+
+--- 2.6.29-rc3/drivers/ata/libata-sff.c	2009-01-29 12:33:28.000000000 +0000
++++ linux/drivers/ata/libata-sff.c	2009-02-01 20:21:13.000000000 +0000
+@@ -773,18 +773,33 @@ unsigned int ata_sff_data_xfer32(struct
+ 	else
+ 		iowrite32_rep(data_addr, buf, words);
+ 
+-	if (unlikely(slop)) {
+-		__le32 pad;
+-		if (rw == READ) {
+-			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
+-			memcpy(buf + buflen - slop, &pad, slop);
++	if (slop) {
++		unsigned char *trailing_buf = buf + buflen - slop;
++
++		if (slop <= 2) {
++			__le16 slop_word;
++			if (rw == READ) {
++				slop_word = cpu_to_le16(ioread16(data_addr));
++				memcpy(trailing_buf, &slop_word, slop);
++			} else {
++				slop_word = 0;
++				memcpy(&slop_word, trailing_buf, slop);
++				iowrite16(le16_to_cpu(slop_word), data_addr);
++			}
+ 		} else {
+-			memcpy(&pad, buf + buflen - slop, slop);
+-			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
++			__le32 slop_word;
++			if (rw == READ) {
++				slop_word = cpu_to_le32(ioread32(data_addr));
++				memcpy(trailing_buf, &slop_word, slop);
++			} else {
++				slop_word = 0;
++				memcpy(&slop_word, trailing_buf, slop);
++				iowrite32(le32_to_cpu(slop_word), data_addr);
++			}
+ 		}
+-		words++;
+ 	}
+-	return words << 2;
++
++	return buflen + (buflen & 1);
+ }
+ EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
+ 
