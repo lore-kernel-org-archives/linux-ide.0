@@ -1,28 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 02/15] scc_pata: remove DECLARE_SCC_DEV() macro
-Date: Sun, 01 Feb 2009 21:49:37 +0300
-Message-ID: <4985EEC1.60204@ru.mvista.com>
-References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain> <20090201174923.19144.28927.sendpatchset@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] trm290: trm290_dma_setup() fix
+Date: Sun, 1 Feb 2009 20:14:32 +0100
+Message-ID: <200902012014.33037.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:55436 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752192AbZBAStK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Feb 2009 13:49:10 -0500
-In-Reply-To: <20090201174923.19144.28927.sendpatchset@localhost.localdomain>
+Received: from fk-out-0910.google.com ([209.85.128.184]:63098 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbZBATPD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Feb 2009 14:15:03 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Re-map sg table if necessary (not that it really matters since
+DMA support is disabled currently).
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+we should consider removing the driver (or at least DMA support)...
 
-    Down with the copy & paste programming! :-)
+ drivers/ide/trm290.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+Index: b/drivers/ide/trm290.c
+===================================================================
+--- a/drivers/ide/trm290.c
++++ b/drivers/ide/trm290.c
+@@ -198,6 +198,7 @@ static int trm290_dma_setup(ide_drive_t 
+ 		rw = 2;
+ 
+ 	if (!(count = ide_build_dmatable(drive, rq))) {
++		ide_map_sg(drive, rq);
+ 		/* try PIO instead of DMA */
+ 		trm290_prepare_drive(drive, 0); /* select PIO xfer */
+ 		return 1;
