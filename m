@@ -1,37 +1,55 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream] ahci/sata_vsc: drop intx manipulation on msi
- enable
-Date: Sun, 01 Feb 2009 10:32:30 +0900
-Message-ID: <4984FBAE.1090709@kernel.org>
-References: <49792C0B.6070602@kernel.org>
+Subject: [PATCH #upstream-fixes] sata_nv: ck804 has borked hardreset too
+Date: Sun, 01 Feb 2009 10:56:31 +0900
+Message-ID: <4985014F.7070607@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33783 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:40818 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753280AbZBABcq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Jan 2009 20:32:46 -0500
-In-Reply-To: <49792C0B.6070602@kernel.org>
+	id S1752042AbZBAB4r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Jan 2009 20:56:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
+To: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> There's no need to turn off intx explicitly on msi enable.  This is
-> automatically handled by pci.  Drop it.
-> 
-> Note that, in sata_vsc's case, it was completely redundant; however,
-> for ahci, it might be needed on machines if the BIOS turns intx off
-> during boot.  However, there's no evidence of such behavior for ahci
-> and the only such case seems to be ICH5 PATA according to ata_piix.
-> Also, given the way ahci operates, it's highly unlikely BIOS ever
-> disables IRQ for the controller.  However, as this change has slight
-> possibility of introducing failure, please schedule it for #upstream.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+While playing with nvraid, I found out that rmmoding and insmoding
+often trigger hardreset failure on the first port (the second one was
+always okay).  Seriously, how diverse can you get with hardreset
+behaviors?  Anyways, make ck804 use noclassify variant too.
 
-Ping.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Robert, ISTR that a user was reporting probing problem on ck804, I
+think the user could have been seeing this.  The behavior on my
+motherboard is very curious.  The problem is always with the first
+port.  If booted from cdrom, it always fails.  If booted from
+harddrive, the initial probing works fine but from the second time on,
+it fails.  Argh...
 
--- 
-tejun
+ drivers/ata/sata_nv.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index c49ad0e..444af04 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -436,11 +436,16 @@ static struct ata_port_operations nv_nf2_ops = {
+ 	.hardreset		= nv_noclassify_hardreset,
+ };
+ 
+-/* CK804 finally gets hardreset right */
++/* For initial probing after boot and hot plugging, hardreset mostly
++ * works fine on CK804 but curiously, reprobing on the initial port by
++ * rescanning or rmmod/insmod fails to acquire the initial D2H Reg FIS
++ * in somewhat undeterministic way.  Use noclassify hardreset.
++ */
+ static struct ata_port_operations nv_ck804_ops = {
+ 	.inherits		= &nv_common_ops,
+ 	.freeze			= nv_ck804_freeze,
+ 	.thaw			= nv_ck804_thaw,
++	.hardreset		= nv_noclassify_hardreset,
+ 	.host_stop		= nv_ck804_host_stop,
+ };
+ 
