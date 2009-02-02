@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 13/14] ide: use ide_complete_cmd() for PM commands
-Date: Mon, 02 Feb 2009 22:40:23 +0100
-Message-ID: <20090202214023.17960.77399.sendpatchset@localhost.localdomain>
+Subject: [PATCH 14/14] ide: sanitize ide_finish_cmd()
+Date: Mon, 02 Feb 2009 22:40:29 +0100
+Message-ID: <20090202214029.17960.54823.sendpatchset@localhost.localdomain>
 References: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:9188 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759366AbZBBVj0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:39:26 -0500
+Received: from fg-out-1718.google.com ([72.14.220.155]:10839 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759128AbZBBVjf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:39:35 -0500
 In-Reply-To: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,69 +15,83 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: use ide_complete_cmd() for PM commands
+Subject: [PATCH] ide: sanitize ide_finish_cmd()
 
-* Fixup ->tf_flags in ide_do_park_unpark() and ide_start_power_step()
-  to match their current use.
+* Move ide_end_request() call out from ide_finish_cmd() to its users.
 
-* Use ide_complete_cmd() for PM commands using ATA_PROT_NODATA.
+* Use ide_finish_cmd() in task_no_data_intr().
+
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-park.c     |    4 ++--
- drivers/ide/ide-pm.c       |    2 +-
- drivers/ide/ide-taskfile.c |    8 +++-----
- 3 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/ide/ide-dma.c      |    5 ++++-
+ drivers/ide/ide-taskfile.c |   24 +++++++++---------------
+ 2 files changed, 13 insertions(+), 16 deletions(-)
 
-Index: b/drivers/ide/ide-park.c
+Index: b/drivers/ide/ide-dma.c
 ===================================================================
---- a/drivers/ide/ide-park.c
-+++ b/drivers/ide/ide-park.c
-@@ -74,11 +74,11 @@ ide_startstop_t ide_do_park_unpark(ide_d
- 		tf->lbal = 0x4c;
- 		tf->lbam = 0x4e;
- 		tf->lbah = 0x55;
--		cmd.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
- 	} else		/* cmd == REQ_UNPARK_HEADS */
- 		tf->command = ATA_CMD_CHK_POWER;
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -98,7 +98,10 @@ ide_startstop_t ide_dma_intr(ide_drive_t
+ 		if (!dma_stat) {
+ 			struct ide_cmd *cmd = &hwif->cmd;
  
--	cmd.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
-+	cmd.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE |
-+		       IDE_TFLAG_CUSTOM_HANDLER;
- 	cmd.protocol = ATA_PROT_NODATA;
- 
- 	cmd.rq = rq;
-Index: b/drivers/ide/ide-pm.c
-===================================================================
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -163,7 +163,7 @@ ide_startstop_t ide_start_power_step(ide
- 	return ide_stopped;
- 
- out_do_tf:
--	cmd->tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
-+	cmd->tf_flags = IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE;
- 	cmd->protocol = ATA_PROT_NODATA;
- 
- 	return do_rw_taskfile(drive, cmd);
+-			ide_finish_cmd(drive, cmd, stat);
++			if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
++				ide_finish_cmd(drive, cmd, stat);
++			else
++				ide_end_request(drive, 1, cmd->rq->nr_sectors);
+ 			return ide_stopped;
+ 		}
+ 		printk(KERN_ERR "%s: %s: bad DMA status (0x%02x)\n",
 Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
 --- a/drivers/ide/ide-taskfile.c
 +++ b/drivers/ide/ide-taskfile.c
-@@ -149,13 +149,11 @@ static ide_startstop_t task_no_data_intr
- 	if (custom && tf->command == ATA_CMD_SET_MULTI)
+@@ -150,12 +150,8 @@ static ide_startstop_t task_no_data_intr
  		drive->mult_count = drive->mult_req;
  
--	if (custom == 0 || tf->command == ATA_CMD_IDLEIMMEDIATE) {
--		struct request *rq = hwif->rq;
-+	if (custom == 0 || tf->command == ATA_CMD_IDLEIMMEDIATE ||
-+	    tf->command == ATA_CMD_CHK_POWER) {
- 		u8 err = ide_read_error(drive);
+ 	if (custom == 0 || tf->command == ATA_CMD_IDLEIMMEDIATE ||
+-	    tf->command == ATA_CMD_CHK_POWER) {
+-		u8 err = ide_read_error(drive);
+-
+-		ide_complete_cmd(drive, cmd, stat, err);
+-		ide_complete_rq(drive, err);
+-	}
++	    tf->command == ATA_CMD_CHK_POWER)
++		ide_finish_cmd(drive, cmd, stat);
  
--		if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE ||
--		    tf->command == ATA_CMD_IDLEIMMEDIATE)
--			ide_complete_cmd(drive, cmd, stat, err);
-+		ide_complete_cmd(drive, cmd, stat, err);
- 		ide_complete_rq(drive, err);
- 	}
+ 	return ide_stopped;
+ }
+@@ -287,15 +283,10 @@ static void ide_error_cmd(ide_drive_t *d
  
+ void ide_finish_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat)
+ {
+-	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0) {
+-		u8 err = ide_read_error(drive);
++	u8 err = ide_read_error(drive);
+ 
+-		ide_complete_cmd(drive, cmd, stat, err);
+-		ide_complete_rq(drive, err);
+-		return;
+-	}
+-
+-	ide_end_request(drive, 1, cmd->rq->nr_sectors);
++	ide_complete_cmd(drive, cmd, stat, err);
++	ide_complete_rq(drive, err);
+ }
+ 
+ /*
+@@ -350,7 +341,10 @@ out_wait:
+ 	ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE, NULL);
+ 	return ide_started;
+ out_end:
+-	ide_finish_cmd(drive, cmd, stat);
++	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
++		ide_finish_cmd(drive, cmd, stat);
++	else
++		ide_end_request(drive, 1, cmd->rq->nr_sectors);
+ 	return ide_stopped;
+ out_err:
+ 	ide_error_cmd(drive, cmd);
