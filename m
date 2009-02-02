@@ -1,129 +1,125 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE: Unregister devices if initialization fails.
-Date: Mon, 2 Feb 2009 18:49:32 +0100
-Message-ID: <200902021849.33036.bzolnier@gmail.com>
-References: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com> <200902011721.58648.bzolnier@gmail.com> <1233569381.9970.60.camel@zakaz.uk.xensource.com>
+Subject: Re: [PATCH 02/15] scc_pata: remove DECLARE_SCC_DEV() macro
+Date: Mon, 2 Feb 2009 19:26:44 +0100
+Message-ID: <200902021926.44921.bzolnier@gmail.com>
+References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain> <20090201174923.19144.28927.sendpatchset@localhost.localdomain> <49872324.9070908@cluded.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:50228 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755893AbZBBSgy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 13:36:54 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so1333816fkf.5
-        for <linux-ide@vger.kernel.org>; Mon, 02 Feb 2009 10:36:51 -0800 (PST)
-In-Reply-To: <1233569381.9970.60.camel@zakaz.uk.xensource.com>
+Received: from mu-out-0910.google.com ([209.85.134.191]:10479 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755975AbZBBSgz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 13:36:55 -0500
+In-Reply-To: <49872324.9070908@cluded.net>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ian Campbell <Ian.Campbell@citrix.com>
-Cc: linux-ide@vger.kernel.org
+To: "Daniel K." <daniel@cluded.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 02 February 2009, Ian Campbell wrote:
-> On Sun, 2009-02-01 at 17:21 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > On Friday 30 January 2009, Ian Campbell wrote:
-> > > On Tue, 2009-01-27 at 17:41 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > > Hi,
-> > > > 
-> > > > On Friday 23 January 2009, Ian Campbell wrote:
-> > > > > On reboot the loop in device_shutdown gets confused by these devices
-> > > > > and goes into an infinite loop. I think this is because they don't
-> > > > > have dev->bus or dev->driver which is because hwif_register_devices
-> > > > > doesn't get called if !hwif->present.
-> > > > > 
-> > > > > Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-> > > > > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > ---
-> > > > >  drivers/ide/ide-probe.c |   10 ++++++----
-> > > > >  1 files changed, 6 insertions(+), 4 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-> > > > > index 312127e..120f65b 100644
-> > > > > --- a/drivers/ide/ide-probe.c
-> > > > > +++ b/drivers/ide/ide-probe.c
-> > > > > @@ -1520,6 +1520,8 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
-> > > > >  		if (hwif_init(hwif) == 0) {
-> > > > >  			printk(KERN_INFO "%s: failed to initialize IDE "
-> > > > >  					 "interface\n", hwif->name);
-> > > > > +			device_unregister(&hwif->gendev);
-> > > > > +			device_destroy(ide_port_class, MKDEV(0, 0));
-> > > > >  			hwif->present = 0;
-> > > > 
-> > > > I've been wondering about this a bit and I think that we should just nuke
-> > > > port from struct ide_host in such situation so I added ide_disable_port()
-> > > > helper for this (+ fixed ide_register_port() handling while at it).
-> > > > 
-> > > > Could you please re-base your fix on top of attached patch?
-> > > 
-> > > Sure.
-> > > 
-> > > Subject: IDE: Disable and unregister devices if initialization fails.
-> > > 
-> > > On reboot the loop in device_shutdown gets confused by these partially
-> > > initialized devices and goes into an infinite loop. Therefore disable
-> > > and unregister these devices.
-> > > 
-> > > Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-> > > 
-> > > ---
-> > >  drivers/ide/ide-probe.c |   10 ++++++----
-> > >  1 file changed, 6 insertions(+), 4 deletions(-)
-> > > 
-> > > diff -r 12d1a7848ddf drivers/ide/ide-probe.c
-> > > --- a/drivers/ide/ide-probe.c	Fri Jan 30 16:37:15 2009 +0000
-> > > +++ b/drivers/ide/ide-probe.c	Fri Jan 30 17:00:08 2009 +0000
-> > > @@ -1549,6 +1549,8 @@
-> > >  		if (hwif_init(hwif) == 0) {
-> > >  			printk(KERN_INFO "%s: failed to initialize IDE "
-> > >  					 "interface\n", hwif->name);
-> > > +			ide_disable_port(hwif);
-> > > +			device_unregister(&hwif->gendev);
-> > >  			hwif->present = 0;
-> > >  			continue;
-> > 
-> > Hmmm, ide_disable_port() may free hwif so it needs to happen last...
+On Monday 02 February 2009, Daniel K. wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Index: b/drivers/ide/scc_pata.c
+> > ===================================================================
+> > --- a/drivers/ide/scc_pata.c
+> > +++ b/drivers/ide/scc_pata.c
+> > @@ -882,21 +882,16 @@ static const struct ide_dma_ops scc_dma_
+> >  	.dma_sff_read_status	= scc_dma_sff_read_status,
+> >  };
+> >  
+> > -#define DECLARE_SCC_DEV(name_str)			\
+> > -  {							\
+> > -      .name		= name_str,			\
+> > -      .init_iops	= init_iops_scc,		\
+> > -      .init_dma		= scc_init_dma,			\
+> > -      .init_hwif	= init_hwif_scc,		\
+> > -      .tp_ops		= &scc_tp_ops,		\
+> > -      .port_ops		= &scc_port_ops,		\
+> > -      .dma_ops		= &scc_dma_ops,			\
+> > -      .host_flags	= IDE_HFLAG_SINGLE,		\
+> > -      .pio_mask		= ATA_PIO4,			\
+> > -  }
+> > -
+> >  static const struct ide_port_info scc_chipsets[] __devinitdata = {
+> > -	/* 0 */ DECLARE_SCC_DEV("sccIDE"),
+> > +	.name		= "sccIDE",
+> > +	.init_iops	= init_iops_scc,
+> > +	.init_dma	= scc_init_dma,
+> > +	.init_hwif	= init_hwif_scc,
+> > +	.tp_ops		= &scc_tp_ops,
+> > +	.port_ops	= &scc_port_ops,
+> > +	.dma_ops	= &scc_dma_ops,
+> > +	.host_flags	= IDE_HFLAG_SINGLE,
+> > +	.pio_mask	= ATA_PIO4,
+> >  };
+> >  
+> >  /**
 > 
-> Oops, new version below.
-> 
-> > Also did you have a chance to retest this? [ I couldn't reproduce
-> > the issue so was hoping that you could test combined fixes. ]
-> 
-> Yep, I can easily repro. I've actually fixed the underlying issue (a Xen
-> IRQ problem) causing the probe to fail but can easily revert that fix to
-> test these patches. If you wanted to repro yourself you could probably
-> make the request_irq() in init_irq() artificially fail.
-> 
-> Ian.
+> You're a few braces short here, aren't you?
 
-Ok, thanks for explaining this (I get "The Big Picture" now).
+Good catch, thanks!
 
-> IDE: Disable and unregister devices if initialization fails.
-> 
-> On reboot the loop in device_shutdown gets confused by these partially
-> initialized devices and goes into an infinite loop. Therefore disable
-> and unregister these devices.
-> 
-> Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-> ---
->  drivers/ide/ide-probe.c |   10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> 
-> diff -r 9d5441419978 -r f596f17b02c3 drivers/ide/ide-probe.c
-> --- a/drivers/ide/ide-probe.c	Fri Jan 30 17:39:53 2009 +0000
-> +++ b/drivers/ide/ide-probe.c	Mon Feb 02 10:02:32 2009 +0000
-> @@ -1549,6 +1549,8 @@
->  		if (hwif_init(hwif) == 0) {
->  			printk(KERN_INFO "%s: failed to initialize IDE "
->  					 "interface\n", hwif->name);
-> +			device_unregister(&hwif->gendev);
-> +			ide_disable_port(hwif);
->  			hwif->present = 0;
+> The braces in the #define, didn't get carried over in the change.
 
-I applied the patch (removing leftover hwif->present while at it)
-and sucessfully tested it locally (by making hwif_init() to fail).
+Actually we may simplify the whole thing while at it.
 
-Thanks,
-Bart
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] scc_pata: remove DECLARE_SCC_DEV() macro (v2)
+
+v2:
+scc_chipsets[] -> scc_chipset fix (spotted by Daniel K.).
+
+Cc: "Daniel K." <daniel@cluded.net>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/scc_pata.c |   27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
+
+Index: b/drivers/ide/scc_pata.c
+===================================================================
+--- a/drivers/ide/scc_pata.c
++++ b/drivers/ide/scc_pata.c
+@@ -882,21 +882,16 @@ static const struct ide_dma_ops scc_dma_
+ 	.dma_sff_read_status	= scc_dma_sff_read_status,
+ };
+ 
+-#define DECLARE_SCC_DEV(name_str)			\
+-  {							\
+-      .name		= name_str,			\
+-      .init_iops	= init_iops_scc,		\
+-      .init_dma		= scc_init_dma,			\
+-      .init_hwif	= init_hwif_scc,		\
+-      .tp_ops		= &scc_tp_ops,		\
+-      .port_ops		= &scc_port_ops,		\
+-      .dma_ops		= &scc_dma_ops,			\
+-      .host_flags	= IDE_HFLAG_SINGLE,		\
+-      .pio_mask		= ATA_PIO4,			\
+-  }
+-
+-static const struct ide_port_info scc_chipsets[] __devinitdata = {
+-	/* 0 */ DECLARE_SCC_DEV("sccIDE"),
++static const struct ide_port_info scc_chipset __devinitdata = {
++	.name		= "sccIDE",
++	.init_iops	= init_iops_scc,
++	.init_dma	= scc_init_dma,
++	.init_hwif	= init_hwif_scc,
++	.tp_ops		= &scc_tp_ops,
++	.port_ops	= &scc_port_ops,
++	.dma_ops	= &scc_dma_ops,
++	.host_flags	= IDE_HFLAG_SINGLE,
++	.pio_mask	= ATA_PIO4,
+ };
+ 
+ /**
+@@ -910,7 +905,7 @@ static const struct ide_port_info scc_ch
+ 
+ static int __devinit scc_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+-	return init_setup_scc(dev, &scc_chipsets[id->driver_data]);
++	return init_setup_scc(dev, &scc_chipset);
+ }
+ 
+ /**
+
