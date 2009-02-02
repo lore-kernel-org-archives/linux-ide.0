@@ -1,46 +1,62 @@
-From: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
-Subject: Re: Seagate disk freeze for 30 seconds then comes back (RecovComm
- 10B8B)
-Date: Mon, 2 Feb 2009 17:15:40 +0200 (EET)
-Message-ID: <alpine.LFD.2.00.0902021714430.5093@mail.embedromix.ro>
-References: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro> <20090128153141.GC26064@csclub.uwaterloo.ca> <498244D4.4060903@tmr.com> <20090130212115.GB26062@csclub.uwaterloo.ca>
+From: "Daniel K." <daniel@cluded.net>
+Subject: Re: [PATCH 02/15] scc_pata: remove DECLARE_SCC_DEV() macro
+Date: Mon, 02 Feb 2009 17:45:24 +0100
+Message-ID: <49872324.9070908@cluded.net>
+References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain> <20090201174923.19144.28927.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.embedromix.ro ([82.78.144.6]:49701 "EHLO
-	mail.embedromix.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755832AbZBBPPz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 10:15:55 -0500
-In-Reply-To: <20090130212115.GB26062@csclub.uwaterloo.ca>
+Received: from in.cluded.net ([195.159.98.120]:56352 "EHLO in.cluded.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752298AbZBBQwP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 11:52:15 -0500
+In-Reply-To: <20090201174923.19144.28927.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 30 Jan 2009, Lennart Sorensen wrote:
+Bartlomiej Zolnierkiewicz wrote:
+> Index: b/drivers/ide/scc_pata.c
+> ===================================================================
+> --- a/drivers/ide/scc_pata.c
+> +++ b/drivers/ide/scc_pata.c
+> @@ -882,21 +882,16 @@ static const struct ide_dma_ops scc_dma_
+>  	.dma_sff_read_status	= scc_dma_sff_read_status,
+>  };
+>  
+> -#define DECLARE_SCC_DEV(name_str)			\
+> -  {							\
+> -      .name		= name_str,			\
+> -      .init_iops	= init_iops_scc,		\
+> -      .init_dma		= scc_init_dma,			\
+> -      .init_hwif	= init_hwif_scc,		\
+> -      .tp_ops		= &scc_tp_ops,		\
+> -      .port_ops		= &scc_port_ops,		\
+> -      .dma_ops		= &scc_dma_ops,			\
+> -      .host_flags	= IDE_HFLAG_SINGLE,		\
+> -      .pio_mask		= ATA_PIO4,			\
+> -  }
+> -
+>  static const struct ide_port_info scc_chipsets[] __devinitdata = {
+> -	/* 0 */ DECLARE_SCC_DEV("sccIDE"),
+> +	.name		= "sccIDE",
+> +	.init_iops	= init_iops_scc,
+> +	.init_dma	= scc_init_dma,
+> +	.init_hwif	= init_hwif_scc,
+> +	.tp_ops		= &scc_tp_ops,
+> +	.port_ops	= &scc_port_ops,
+> +	.dma_ops	= &scc_dma_ops,
+> +	.host_flags	= IDE_HFLAG_SINGLE,
+> +	.pio_mask	= ATA_PIO4,
+>  };
+>  
+>  /**
 
-> On Thu, Jan 29, 2009 at 07:07:48PM -0500, Bill Davidsen wrote:
->> Would you expect that firmware would be shared between old tech laptop
->> drives and desktop/server drives? Particularly since the laptop drive was
->> built before any of the 7200.11 drives?
->>
->> I think this is a very unlikely part of the problem. Certainly the drive
->> might be dying or other hardware issue.
->
-> It does seem unlikely, although if it is a common design flaw in their
-> firmware, it could have been carried over from older drives and just not
-> be as noticeable on the older drives with smaller caches and less drive
-> space.
->
-> Now if the drive is really old, then year it might simply be failing.
+You're a few braces short here, aren't you?
 
-No, the driver is pretty new (less than 1 year old) and the use is very 
-light.
+The braces in the #define, didn't get carried over in the change.
 
-> -- 
-> Len Sorensen
->
 
---
-Catalin(ux) M. BOIE
-http://kernel.embedromix.ro/
+Daniel K.
