@@ -1,74 +1,61 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
-Date: Mon, 2 Feb 2009 12:12:31 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0902021152220.17261@blonde.anvils>
-References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
- <20090126191151.18b094e6@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
- <4986DDA9.6010903@ru.mvista.com>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [RFC][PATCH] at91_ide driver
+Date: Mon, 2 Feb 2009 13:35:31 +0100
+Message-ID: <200902021335.31465.stf_xl@wp.pl>
+References: <200901141345.42583.stf_xl@wp.pl> <200901301005.44858.stf_xl@wp.pl> <200902011813.18192.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from extu-mxob-1.symantec.com ([216.10.194.28]:36029 "EHLO
-	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752810AbZBBMTN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 07:19:13 -0500
-In-Reply-To: <4986DDA9.6010903@ru.mvista.com>
+Received: from mx1.wp.pl ([212.77.101.5]:41415 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752827AbZBBMfo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 07:35:44 -0500
+In-Reply-To: <200902011813.18192.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@linux-foundation.org>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
 
-On Mon, 2 Feb 2009, Sergei Shtylyov wrote:
-> Hugh Dickins wrote:
-> > But this patch works as well for me as the patch I posted before
-> > (though much more verbose: please simplify if you see a better way).
-> 
->   How about the following?
-> 
-> 		unsigned char *tail = buf + buflen - slop;
-> 		unsigned char pad[4];
-> 
-> 		if (rw == READ) {
-> 			if (slop <= 2)
-> 				ioread16_rep(data_addr, pad, 1);
-> 			else
-> 				ioread32_rep(data_addr, pad, 1);
-> 					memcpy(tail, pad, slop);
+Sunday 01 February 2009 18:13:17 Bartlomiej Zolnierkiewicz napisa=C5=82=
+(a):
+> > I have some doubts about things pointed out by Alan  - atomic acces=
+s. =20
+> > Due to flipping 8/16 bit in this driver, all functions accessing ta=
+sk file=20
+> > and data register should do things atomically. If for example
+> > tp_ops->input_data() will be braked by interrupt and any other func=
+tion
+> > accessing task file will be called very bad things can happen.
+>=20
+> All taskfile / data access is atomic, the only exception is [Alt]Stat=
+us
+> register read if shared IRQs are used (which doesn't seem to be the c=
+ase
+> with AT91) or if the hardware is flaky and unexpected IRQs can happen=
+=2E..
+>=20
+> If 8/16-bit flipping is really an issue then AT91 IRQ handler may nee=
+d
+> to save info about current mode on entry, switch to 8-bit (if in 16-b=
+it
+> mode), restore the saved mode on exit (if it was 16-bit mode).
+I think we don't need it because we don't use shared interrupts.
+Moreover hardware allow to Altarnate Status register be accessed
+in both 8 and 16 bit modes.
 
-Too many tabs on the memcpy.
+> > If I use IDE_HFLAG_UNMASK_IRQS IDE layer will assure atomic
+> > access to ATA registers ?
+>=20
+> IDE_HFLAG_UNMASK_IRQS allows other IRQs to be serviced while IDE IRQ
+> is being serviced so really no problem here (unless some other driver=
+s
+> also mess with 8/16-bit flipping but if so then the current code need=
+s
+> fixing too).
+We have exclusive access to Static Memory Controller registers as long
+as there are no bug in board specific code. So no problem here either.
 
-> 		} else {
-> 			memcpy(pad, tail, slop);
-> 			memset(pad + slop, 0, 4 - slop);
+Stanislaw Gruszka
 
-And we could make that line even more complicated!
-But I think unsigned char pad[4] = {0, 0, 0, 0} would be better.
-Though Alan didn't have it initialized at all: I don't know if
-that was oversight or superior knowledge.  In Alan's case, one
-should usually assume the latter.
-
-> 			if (slop <= 2)
-> 				iowrite16_rep(data_addr, pad, 1);
-> 			else
-> 				iowrite32_rep(data_addr, pad, 1);
-> 		}
-
-Well, I don't know.  I felt really pleased with using ioread16_rep
-and the char array in my original patch, where slop might be 1 or 2
-or 3; but once it comes down to always one single PIO op, I felt
-it too lazy to be using the _rep form.
-
-I really don't care, whatever works and best satisfies Alan.
-
-> > -	return words << 2;
-> > +
-> > +	return buflen + (buflen & 1);
-> >   
-> 
->    return (buflen + 1) & ~1;
-> 
->   Well, I guess I could just have posted my own patch... :-)
-
-Yes, do go ahead, I'm not desperate to get my name in there!
-
-Hugh
