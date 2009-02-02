@@ -1,125 +1,131 @@
-From: Ian Campbell <Ian.Campbell@citrix.com>
-Subject: Re: [PATCH] IDE: Unregister devices if initialization fails.
-Date: Mon, 02 Feb 2009 10:09:41 +0000
-Message-ID: <1233569381.9970.60.camel@zakaz.uk.xensource.com>
-References: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com>
-	 <200901271741.44704.bzolnier@gmail.com>
-	 <1233335943.9970.28.camel@zakaz.uk.xensource.com>
-	 <200902011721.58648.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
+Date: Mon, 02 Feb 2009 14:48:57 +0300
+Message-ID: <4986DDA9.6010903@ru.mvista.com>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils> <20090126191151.18b094e6@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:38206 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531AbZBBKKW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 05:10:22 -0500
-In-Reply-To: <200902011721.58648.bzolnier@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:11243 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752754AbZBBLtF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 06:49:05 -0500
+In-Reply-To: <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
-
-On Sun, 2009-02-01 at 17:21 +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Friday 30 January 2009, Ian Campbell wrote:
-> > On Tue, 2009-01-27 at 17:41 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > Hi,
-> > > 
-> > > On Friday 23 January 2009, Ian Campbell wrote:
-> > > > On reboot the loop in device_shutdown gets confused by these devices
-> > > > and goes into an infinite loop. I think this is because they don't
-> > > > have dev->bus or dev->driver which is because hwif_register_devices
-> > > > doesn't get called if !hwif->present.
-> > > > 
-> > > > Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-> > > > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > ---
-> > > >  drivers/ide/ide-probe.c |   10 ++++++----
-> > > >  1 files changed, 6 insertions(+), 4 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-> > > > index 312127e..120f65b 100644
-> > > > --- a/drivers/ide/ide-probe.c
-> > > > +++ b/drivers/ide/ide-probe.c
-> > > > @@ -1520,6 +1520,8 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
-> > > >  		if (hwif_init(hwif) == 0) {
-> > > >  			printk(KERN_INFO "%s: failed to initialize IDE "
-> > > >  					 "interface\n", hwif->name);
-> > > > +			device_unregister(&hwif->gendev);
-> > > > +			device_destroy(ide_port_class, MKDEV(0, 0));
-> > > >  			hwif->present = 0;
-> > > 
-> > > I've been wondering about this a bit and I think that we should just nuke
-> > > port from struct ide_host in such situation so I added ide_disable_port()
-> > > helper for this (+ fixed ide_register_port() handling while at it).
-> > > 
-> > > Could you please re-base your fix on top of attached patch?
-> > 
-> > Sure.
-> > 
-> > Subject: IDE: Disable and unregister devices if initialization fails.
-> > 
-> > On reboot the loop in device_shutdown gets confused by these partially
-> > initialized devices and goes into an infinite loop. Therefore disable
-> > and unregister these devices.
-> > 
-> > Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-> > 
-> > ---
-> >  drivers/ide/ide-probe.c |   10 ++++++----
-> >  1 file changed, 6 insertions(+), 4 deletions(-)
-> > 
-> > diff -r 12d1a7848ddf drivers/ide/ide-probe.c
-> > --- a/drivers/ide/ide-probe.c	Fri Jan 30 16:37:15 2009 +0000
-> > +++ b/drivers/ide/ide-probe.c	Fri Jan 30 17:00:08 2009 +0000
-> > @@ -1549,6 +1549,8 @@
-> >  		if (hwif_init(hwif) == 0) {
-> >  			printk(KERN_INFO "%s: failed to initialize IDE "
-> >  					 "interface\n", hwif->name);
-> > +			ide_disable_port(hwif);
-> > +			device_unregister(&hwif->gendev);
-> >  			hwif->present = 0;
-> >  			continue;
-> 
-> Hmmm, ide_disable_port() may free hwif so it needs to happen last...
-
-Oops, new version below.
-
-> Also did you have a chance to retest this? [ I couldn't reproduce
-> the issue so was hoping that you could test combined fixes. ]
-
-Yep, I can easily repro. I've actually fixed the underlying issue (a Xen
-IRQ problem) causing the probe to fail but can easily revert that fix to
-test these patches. If you wanted to repro yourself you could probably
-make the request_irq() in init_irq() artificially fail.
-
-Ian.
-
-IDE: Disable and unregister devices if initialization fails.
-
-On reboot the loop in device_shutdown gets confused by these partially
-initialized devices and goes into an infinite loop. Therefore disable
-and unregister these devices.
-
-Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
----
- drivers/ide/ide-probe.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@linux-foundation.org>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-diff -r 9d5441419978 -r f596f17b02c3 drivers/ide/ide-probe.c
---- a/drivers/ide/ide-probe.c	Fri Jan 30 17:39:53 2009 +0000
-+++ b/drivers/ide/ide-probe.c	Mon Feb 02 10:02:32 2009 +0000
-@@ -1549,6 +1549,8 @@
- 		if (hwif_init(hwif) == 0) {
- 			printk(KERN_INFO "%s: failed to initialize IDE "
- 					 "interface\n", hwif->name);
-+			device_unregister(&hwif->gendev);
-+			ide_disable_port(hwif);
- 			hwif->present = 0;
- 			continue;
- 		}
 
+Hugh Dickins wrote:
+> On Mon, 26 Jan 2009, Alan Cox wrote:
+>   
+>>> [PATCH] libata sff: 32bit PIO use 16bit on slop
+>>>
+>>> 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
+>>> causes errors on a four-year-old ata_piix Dell Precision 670.  Using
+>>> 16bit PIO instead of 32bit PIO on the odd 1, 2 or 3 chars fixes that.
+>>>
+>>> Signed-off-by: Hugh Dickins <hugh@veritas.com>
+>>>       
+>> For the 3 bytes of slop it should use a single iowrite32 but otherwise
+>> that seems ok. We do need to handle the FIFO setup on the AMD differently
+>> if we do this ...
+>>     
+>
+> Sorry, I believe you were waiting on me for this, to accompany your
+> AMD and VLB patches.  I'm afraid I don't have any such AMD devices
+> to test this along with yours, and the only non-0 slop that I've seen
+> in testing has been 2 (about 25% of ops, so I removed the "unlikely").
+> But this patch works as well for me as the patch I posted before
+> (though much more verbose: please simplify if you see a better way).
+>
+>
+> [PATCH] libata sff: 32bit PIO use 16bit on slop
+>
+> 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
+> causes errors on a four-year-old ata_piix Dell Precision 670.  Using
+> 16bit PIO instead of 32bit PIO on the odd 1 or 2 chars fixes that,
+> but Alan Cox indicates that we should still use 32bit for 3 chars.
+>
+> Signed-off-by: Hugh Dickins <hugh@veritas.com>
+> ---
+>
+>  drivers/ata/libata-sff.c |   33 ++++++++++++++++++++++++---------
+>  1 file changed, 24 insertions(+), 9 deletions(-)
+>
+> --- 2.6.29-rc3/drivers/ata/libata-sff.c	2009-01-29 12:33:28.000000000 +0000
+> +++ linux/drivers/ata/libata-sff.c	2009-02-01 20:21:13.000000000 +0000
+> @@ -773,18 +773,33 @@ unsigned int ata_sff_data_xfer32(struct
+>  	else
+>  		iowrite32_rep(data_addr, buf, words);
+>  
+> -	if (unlikely(slop)) {
+> -		__le32 pad;
+> -		if (rw == READ) {
+> -			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
+> -			memcpy(buf + buflen - slop, &pad, slop);
+> +	if (slop) {
+> +		unsigned char *trailing_buf = buf + buflen - slop;
+>   
+> +   
+>   
+> +		if (slop <= 2) {
+> +			__le16 slop_word;
+> +			if (rw == READ) {
+> +				slop_word = cpu_to_le16(ioread16(data_addr));
+> +				memcpy(trailing_buf, &slop_word, slop);
+> +			} else {
+> +				slop_word = 0;
+> +				memcpy(&slop_word, trailing_buf, slop);
+> +				iowrite16(le16_to_cpu(slop_word), data_addr);
+> +			}
+>  		} else {
+> -			memcpy(&pad, buf + buflen - slop, slop);
+> -			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
+> +			__le32 slop_word;
+> +			if (rw == READ) {
+> +				slop_word = cpu_to_le32(ioread32(data_addr));
+> +				memcpy(trailing_buf, &slop_word, slop);
+> +			} else {
+> +				slop_word = 0;
+> +				memcpy(&slop_word, trailing_buf, slop);
+> +				iowrite32(le32_to_cpu(slop_word), data_addr);
+> +			}
+>   
 
+   How about the following?
+
+		unsigned char *tail = buf + buflen - slop;
+		unsigned char pad[4];
+
+		if (rw == READ) {
+			if (slop <= 2)
+				ioread16_rep(data_addr, pad, 1);
+			else
+				ioread32_rep(data_addr, pad, 1);
+			memcpy(tail, pad, slop);
+ 		} else {
+			memcpy(pad, tail, slop);
+			memset(pad + slop, 0, 4 - slop);
+			if (slop <= 2)
+				iowrite16_rep(data_addr, pad, 1);
+			else
+				iowrite32_rep(data_addr, pad, 1);
+		}
+
+>  	}
+> -	return words << 2;
+> +
+> +	return buflen + (buflen & 1);
+>   
+
+    return (buflen + 1) & ~1;
+
+   Well, I guess I could just have posted my own patch... :-)
+
+MBR, Sergei
 
 
