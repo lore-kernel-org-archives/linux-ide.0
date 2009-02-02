@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 05/14] ide: move command related fields from ide_hwif_t to struct ide_cmd
-Date: Mon, 02 Feb 2009 22:37:41 +0100
-Message-ID: <20090202213741.17960.8352.sendpatchset@localhost.localdomain>
+Subject: [PATCH 04/14] ide: pass command instead of request to ide_pio_datablock()
+Date: Mon, 02 Feb 2009 22:37:34 +0100
+Message-ID: <20090202213734.17960.44016.sendpatchset@localhost.localdomain>
 References: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f12.google.com ([209.85.218.12]:40432 "EHLO
+Received: from mail-bw0-f12.google.com ([209.85.218.12]:47527 "EHLO
 	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758941AbZBBVjN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:39:13 -0500
+	with ESMTP id S1758112AbZBBVjG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:39:06 -0500
 In-Reply-To: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,404 +15,536 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: move command related fields from ide_hwif_t to struct ide_cmd
+Subject: [PATCH] ide: pass command instead of request to ide_pio_datablock()
 
-* Move command related fields from ide_hwif_t to struct ide_cmd.
+* Add IDE_TFLAG_FS taskfile flag and set it for REQ_TYPE_FS requests.
 
-* Make ide_init_sg_cmd() take command and sectors number as arguments.
+* Convert ->{in,out}put_data methods to take command instead of request
+  as an argument.  Then convert pre_task_out_intr(), task_end_request(),
+  task_error(), task_in_unexpected(), ide_pio_sector(), ide_pio_multi()
+  and ide_pio_datablock() in similar way.
+
+* Rename task_end_request() to ide_finish_cmd().
 
 There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/au1xxx-ide.c   |    2 +-
- drivers/ide/icside.c       |    2 +-
- drivers/ide/ide-disk.c     |   12 ++++++------
- drivers/ide/ide-dma-sff.c  |    2 +-
- drivers/ide/ide-dma.c      |   12 +++++++-----
- drivers/ide/ide-floppy.c   |    5 +++--
- drivers/ide/ide-io.c       |   24 ++++++++++--------------
- drivers/ide/ide-taskfile.c |   33 ++++++++++++++++-----------------
- drivers/ide/pmac.c         |    2 +-
- drivers/ide/sgiioc4.c      |    2 +-
- drivers/ide/tx4939ide.c    |    2 +-
- include/linux/ide.h        |   18 ++++++++++--------
- 12 files changed, 58 insertions(+), 58 deletions(-)
+ drivers/ide/au1xxx-ide.c   |    4 +-
+ drivers/ide/falconide.c    |    8 ++--
+ drivers/ide/ide-disk.c     |    2 +
+ drivers/ide/ide-dma.c      |    4 +-
+ drivers/ide/ide-h8300.c    |    4 +-
+ drivers/ide/ide-io-std.c   |    4 +-
+ drivers/ide/ide-taskfile.c |   88 +++++++++++++++++++++------------------------
+ drivers/ide/q40ide.c       |    8 ++--
+ drivers/ide/scc_pata.c     |    4 +-
+ drivers/ide/tx4938ide.c    |    4 +-
+ include/linux/ide.h        |   17 ++++----
+ 11 files changed, 74 insertions(+), 73 deletions(-)
 
 Index: b/drivers/ide/au1xxx-ide.c
 ===================================================================
 --- a/drivers/ide/au1xxx-ide.c
 +++ b/drivers/ide/au1xxx-ide.c
-@@ -215,7 +215,7 @@ static int auide_build_dmatable(ide_driv
- 	struct request *rq = hwif->rq;
- 	_auide_hwif *ahwif = &auide_hwif;
- 	struct scatterlist *sg;
--	int i = hwif->sg_nents, iswrite, count = 0;
-+	int i = hwif->cmd.sg_nents, iswrite, count = 0;
+@@ -86,13 +86,13 @@ void auide_outsw(unsigned long port, voi
+ 	ctp->cur_ptr = au1xxx_ddma_get_nextptr_virt(dp);
+ }
  
- 	iswrite = (rq_data_dir(rq) == WRITE);
- 	/* Save for interrupt context */
-Index: b/drivers/ide/icside.c
+-static void au1xxx_input_data(ide_drive_t *drive, struct request *rq,
++static void au1xxx_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			      void *buf, unsigned int len)
+ {
+ 	auide_insw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
+ }
+ 
+-static void au1xxx_output_data(ide_drive_t *drive, struct request *rq,
++static void au1xxx_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			       void *buf, unsigned int len)
+ {
+ 	auide_outsw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
+Index: b/drivers/ide/falconide.c
 ===================================================================
---- a/drivers/ide/icside.c
-+++ b/drivers/ide/icside.c
-@@ -344,7 +344,7 @@ static int icside_dma_setup(ide_drive_t 
- 	 * Tell the DMA engine about the SG table and
- 	 * data direction.
- 	 */
--	set_dma_sg(ec->dma, hwif->sg_table, hwif->sg_nents);
-+	set_dma_sg(ec->dma, hwif->sg_table, hwif->cmd.sg_nents);
- 	set_dma_mode(ec->dma, dma_mode);
+--- a/drivers/ide/falconide.c
++++ b/drivers/ide/falconide.c
+@@ -62,23 +62,23 @@ static void falconide_get_lock(irq_handl
+ 	}
+ }
  
- 	drive->waiting_for_dma = 1;
+-static void falconide_input_data(ide_drive_t *drive, struct request *rq,
++static void falconide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 				 void *buf, unsigned int len)
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 
+-	if (drive->media == ide_disk && rq && rq->cmd_type == REQ_TYPE_FS)
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+ 		return insw(data_addr, buf, (len + 1) / 2);
+ 
+ 	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+ }
+ 
+-static void falconide_output_data(ide_drive_t *drive, struct request *rq,
++static void falconide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 				  void *buf, unsigned int len)
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 
+-	if (drive->media == ide_disk && rq && rq->cmd_type == REQ_TYPE_FS)
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+ 		return outsw(data_addr, buf, (len + 1) / 2);
+ 
+ 	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
 Index: b/drivers/ide/ide-disk.c
 ===================================================================
 --- a/drivers/ide/ide-disk.c
 +++ b/drivers/ide/ide-disk.c
-@@ -104,14 +104,14 @@ static ide_startstop_t __ide_do_rw_disk(
- 			lba48 = 0;
+@@ -156,6 +156,8 @@ static ide_startstop_t __ide_do_rw_disk(
+ 		tf->device = head;
  	}
  
--	if (!dma) {
--		ide_init_sg_cmd(drive, rq);
--		ide_map_sg(drive, rq);
--	}
--
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
- 
-+	if (dma == 0) {
-+		ide_init_sg_cmd(&cmd, nsectors);
-+		ide_map_sg(drive, rq);
-+	}
++	cmd.tf_flags |= IDE_TFLAG_FS;
 +
- 	if (drive->dev_flags & IDE_DFLAG_LBA) {
- 		if (lba48) {
- 			pr_debug("%s: LBA=0x%012llx\n", drive->name,
-@@ -170,7 +170,7 @@ static ide_startstop_t __ide_do_rw_disk(
- 		/* fallback to PIO */
- 		cmd.tf_flags |= IDE_TFLAG_DMA_PIO_FALLBACK;
- 		ide_tf_set_cmd(drive, &cmd, 0);
--		ide_init_sg_cmd(drive, rq);
-+		ide_init_sg_cmd(&cmd, nsectors);
- 		rc = do_rw_taskfile(drive, &cmd);
- 	}
+ 	if (rq_data_dir(rq))
+ 		cmd.tf_flags |= IDE_TFLAG_WRITE;
  
-Index: b/drivers/ide/ide-dma-sff.c
-===================================================================
---- a/drivers/ide/ide-dma-sff.c
-+++ b/drivers/ide/ide-dma-sff.c
-@@ -120,7 +120,7 @@ int ide_build_dmatable(ide_drive_t *driv
- 	struct scatterlist *sg;
- 	u8 is_trm290 = !!(hwif->host_flags & IDE_HFLAG_TRM290);
- 
--	for_each_sg(hwif->sg_table, sg, hwif->sg_nents, i) {
-+	for_each_sg(hwif->sg_table, sg, hwif->cmd.sg_nents, i) {
- 		u32 cur_addr, cur_len, xcount, bcount;
- 
- 		cur_addr = sg_dma_address(sg);
 Index: b/drivers/ide/ide-dma.c
 ===================================================================
 --- a/drivers/ide/ide-dma.c
 +++ b/drivers/ide/ide-dma.c
-@@ -128,16 +128,17 @@ int ide_build_sglist(ide_drive_t *drive,
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct scatterlist *sg = hwif->sg_table;
-+	struct ide_cmd *cmd = &hwif->cmd;
- 	int i;
+@@ -96,9 +96,9 @@ ide_startstop_t ide_dma_intr(ide_drive_t
  
- 	ide_map_sg(drive, rq);
+ 	if (OK_STAT(stat, DRIVE_READY, drive->bad_wstat | ATA_DRQ)) {
+ 		if (!dma_stat) {
+-			struct request *rq = hwif->rq;
++			struct ide_cmd *cmd = &hwif->cmd;
  
- 	if (rq_data_dir(rq) == READ)
--		hwif->sg_dma_direction = DMA_FROM_DEVICE;
-+		cmd->sg_dma_direction = DMA_FROM_DEVICE;
- 	else
--		hwif->sg_dma_direction = DMA_TO_DEVICE;
-+		cmd->sg_dma_direction = DMA_TO_DEVICE;
- 
--	i = dma_map_sg(hwif->dev, sg, hwif->sg_nents, hwif->sg_dma_direction);
-+	i = dma_map_sg(hwif->dev, sg, cmd->sg_nents, cmd->sg_dma_direction);
- 	if (i == 0)
- 		ide_map_sg(drive, rq);
- 
-@@ -158,9 +159,10 @@ int ide_build_sglist(ide_drive_t *drive,
- void ide_destroy_dmatable(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
-+	struct ide_cmd *cmd = &hwif->cmd;
- 
--	dma_unmap_sg(hwif->dev, hwif->sg_table, hwif->sg_nents,
--		     hwif->sg_dma_direction);
-+	dma_unmap_sg(hwif->dev, hwif->sg_table, cmd->sg_nents,
-+		     cmd->sg_dma_direction);
- }
- EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
- 
-Index: b/drivers/ide/ide-floppy.c
+-			task_end_request(drive, rq, stat);
++			ide_finish_cmd(drive, cmd, stat);
+ 			return ide_stopped;
+ 		}
+ 		printk(KERN_ERR "%s: %s: bad DMA status (0x%02x)\n",
+Index: b/drivers/ide/ide-h8300.c
 ===================================================================
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -244,6 +244,7 @@ static ide_startstop_t ide_floppy_do_req
+--- a/drivers/ide/ide-h8300.c
++++ b/drivers/ide/ide-h8300.c
+@@ -143,13 +143,13 @@ static void mm_insw(unsigned long addr, 
+ 		*bp = bswap(*(volatile u16 *)addr);
+ }
+ 
+-static void h8300_input_data(ide_drive_t *drive, struct request *rq,
++static void h8300_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			     void *buf, unsigned int len)
  {
- 	struct ide_disk_obj *floppy = drive->driver_data;
- 	ide_hwif_t *hwif = drive->hwif;
-+	struct ide_cmd *cmd = &hwif->cmd;
- 	struct ide_atapi_pc *pc;
+ 	mm_insw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
+ }
  
- 	if (drive->debug_mask & IDE_DBG_RQ)
-@@ -284,11 +285,11 @@ static ide_startstop_t ide_floppy_do_req
- 		goto out_end;
- 	}
- 
--	ide_init_sg_cmd(drive, rq);
-+	ide_init_sg_cmd(cmd, rq->nr_sectors);
- 	ide_map_sg(drive, rq);
- 
- 	pc->sg = hwif->sg_table;
--	pc->sg_cnt = hwif->sg_nents;
-+	pc->sg_cnt = cmd->sg_nents;
- 
- 	pc->rq = rq;
- 
-Index: b/drivers/ide/ide-io.c
+-static void h8300_output_data(ide_drive_t *drive, struct request *rq,
++static void h8300_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			      void *buf, unsigned int len)
+ {
+ 	mm_outsw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
+Index: b/drivers/ide/ide-io-std.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -270,30 +270,26 @@ static ide_startstop_t do_special (ide_d
- void ide_map_sg(ide_drive_t *drive, struct request *rq)
+--- a/drivers/ide/ide-io-std.c
++++ b/drivers/ide/ide-io-std.c
+@@ -219,7 +219,7 @@ static void ata_vlb_sync(unsigned long p
+  * so if an odd len is specified, be sure that there's at least one
+  * extra byte allocated for the buffer.
+  */
+-void ide_input_data(ide_drive_t *drive, struct request *rq, void *buf,
++void ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd, void *buf,
+ 		    unsigned int len)
  {
  	ide_hwif_t *hwif = drive->hwif;
-+	struct ide_cmd *cmd = &hwif->cmd;
- 	struct scatterlist *sg = hwif->sg_table;
- 
- 	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
- 		sg_init_one(sg, rq->buffer, rq->nr_sectors * SECTOR_SIZE);
--		hwif->sg_nents = 1;
-+		cmd->sg_nents = 1;
- 	} else if (!rq->bio) {
- 		sg_init_one(sg, rq->data, rq->data_len);
--		hwif->sg_nents = 1;
--	} else {
--		hwif->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
--	}
-+		cmd->sg_nents = 1;
-+	} else
-+		cmd->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
- }
--
- EXPORT_SYMBOL_GPL(ide_map_sg);
- 
--void ide_init_sg_cmd(ide_drive_t *drive, struct request *rq)
-+void ide_init_sg_cmd(struct ide_cmd *cmd, int nsect)
+@@ -265,7 +265,7 @@ EXPORT_SYMBOL_GPL(ide_input_data);
+ /*
+  * This is used for most PIO data transfers *to* the IDE interface
+  */
+-void ide_output_data(ide_drive_t *drive, struct request *rq, void *buf,
++void ide_output_data(ide_drive_t *drive, struct ide_cmd *cmd, void *buf,
+ 		     unsigned int len)
  {
--	ide_hwif_t *hwif = drive->hwif;
--
--	hwif->nsect = hwif->nleft = rq->nr_sectors;
--	hwif->cursg_ofs = 0;
--	hwif->cursg = NULL;
-+	cmd->nsect = cmd->nleft = nsect;
-+	cmd->cursg_ofs = 0;
-+	cmd->cursg = NULL;
- }
--
- EXPORT_SYMBOL_GPL(ide_init_sg_cmd);
- 
- /**
-@@ -319,7 +315,7 @@ static ide_startstop_t execute_drive_cmd
- 		case TASKFILE_OUT:
- 		case TASKFILE_MULTI_IN:
- 		case TASKFILE_IN:
--			ide_init_sg_cmd(drive, rq);
-+			ide_init_sg_cmd(cmd, rq->nr_sectors);
- 			ide_map_sg(drive, rq);
- 		default:
- 			break;
+ 	ide_hwif_t *hwif = drive->hwif;
 Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
 --- a/drivers/ide/ide-taskfile.c
 +++ b/drivers/ide/ide-taskfile.c
-@@ -205,7 +205,7 @@ static void ide_pio_sector(ide_drive_t *
+@@ -54,19 +54,20 @@ int taskfile_lib_get_identify (ide_drive
+ }
+ 
+ static ide_startstop_t task_no_data_intr(ide_drive_t *);
+-static ide_startstop_t pre_task_out_intr(ide_drive_t *, struct request *);
++static ide_startstop_t pre_task_out_intr(ide_drive_t *, struct ide_cmd *);
+ static ide_startstop_t task_in_intr(ide_drive_t *);
+ 
+-ide_startstop_t do_rw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd)
++ide_startstop_t do_rw_taskfile(ide_drive_t *drive, struct ide_cmd *orig_cmd)
  {
  	ide_hwif_t *hwif = drive->hwif;
- 	struct scatterlist *sg = hwif->sg_table;
--	struct scatterlist *cursg = hwif->cursg;
-+	struct scatterlist *cursg = cmd->cursg;
- 	struct page *page;
- #ifdef CONFIG_HIGHMEM
- 	unsigned long flags;
-@@ -213,14 +213,14 @@ static void ide_pio_sector(ide_drive_t *
- 	unsigned int offset;
- 	u8 *buf;
++	struct ide_cmd *cmd = &hwif->cmd;
+ 	struct ide_taskfile *tf = &cmd->tf;
+ 	ide_handler_t *handler = NULL;
+ 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+ 	const struct ide_dma_ops *dma_ops = hwif->dma_ops;
  
--	cursg = hwif->cursg;
-+	cursg = cmd->cursg;
- 	if (!cursg) {
- 		cursg = sg;
--		hwif->cursg = sg;
-+		cmd->cursg = sg;
+-	if (cmd->data_phase == TASKFILE_MULTI_IN ||
+-	    cmd->data_phase == TASKFILE_MULTI_OUT) {
++	if (orig_cmd->data_phase == TASKFILE_MULTI_IN ||
++	    orig_cmd->data_phase == TASKFILE_MULTI_OUT) {
+ 		if (!drive->mult_count) {
+ 			printk(KERN_ERR "%s: multimode not set!\n",
+ 					drive->name);
+@@ -74,10 +75,10 @@ ide_startstop_t do_rw_taskfile(ide_drive
+ 		}
  	}
  
- 	page = sg_page(cursg);
--	offset = cursg->offset + hwif->cursg_ofs * SECTOR_SIZE;
-+	offset = cursg->offset + cmd->cursg_ofs * SECTOR_SIZE;
+-	if (cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
+-		cmd->ftf_flags |= IDE_FTFLAG_SET_IN_FLAGS;
++	if (orig_cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
++		orig_cmd->ftf_flags |= IDE_FTFLAG_SET_IN_FLAGS;
  
- 	/* get the current page and offset */
- 	page = nth_page(page, (offset >> PAGE_SHIFT));
-@@ -231,12 +231,12 @@ static void ide_pio_sector(ide_drive_t *
- #endif
- 	buf = kmap_atomic(page, KM_BIO_SRC_IRQ) + offset;
+-	memcpy(&hwif->cmd, cmd, sizeof(*cmd));
++	memcpy(cmd, orig_cmd, sizeof(*cmd));
  
--	hwif->nleft--;
--	hwif->cursg_ofs++;
-+	cmd->nleft--;
-+	cmd->cursg_ofs++;
+ 	if ((cmd->tf_flags & IDE_TFLAG_DMA_PIO_FALLBACK) == 0) {
+ 		ide_tf_dump(drive->name, tf);
+@@ -91,7 +92,7 @@ ide_startstop_t do_rw_taskfile(ide_drive
+ 	case TASKFILE_OUT:
+ 		tp_ops->exec_command(hwif, tf->command);
+ 		ndelay(400);	/* FIXME */
+-		return pre_task_out_intr(drive, cmd->rq);
++		return pre_task_out_intr(drive, cmd);
+ 	case TASKFILE_MULTI_IN:
+ 	case TASKFILE_IN:
+ 		handler = task_in_intr;
+@@ -199,7 +200,7 @@ static u8 wait_drive_not_busy(ide_drive_
+ 	return stat;
+ }
  
--	if ((hwif->cursg_ofs * SECTOR_SIZE) == cursg->length) {
--		hwif->cursg = sg_next(hwif->cursg);
--		hwif->cursg_ofs = 0;
-+	if ((cmd->cursg_ofs * SECTOR_SIZE) == cursg->length) {
-+		cmd->cursg = sg_next(cmd->cursg);
-+		cmd->cursg_ofs = 0;
- 	}
+-static void ide_pio_sector(ide_drive_t *drive, struct request *rq,
++static void ide_pio_sector(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			   unsigned int write)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+@@ -240,9 +241,9 @@ static void ide_pio_sector(ide_drive_t *
  
  	/* do the actual data transfer */
-@@ -256,7 +256,7 @@ static void ide_pio_multi(ide_drive_t *d
+ 	if (write)
+-		hwif->tp_ops->output_data(drive, rq, buf, SECTOR_SIZE);
++		hwif->tp_ops->output_data(drive, cmd, buf, SECTOR_SIZE);
+ 	else
+-		hwif->tp_ops->input_data(drive, rq, buf, SECTOR_SIZE);
++		hwif->tp_ops->input_data(drive, cmd, buf, SECTOR_SIZE);
+ 
+ 	kunmap_atomic(buf, KM_BIO_SRC_IRQ);
+ #ifdef CONFIG_HIGHMEM
+@@ -250,24 +251,23 @@ static void ide_pio_sector(ide_drive_t *
+ #endif
+ }
+ 
+-static void ide_pio_multi(ide_drive_t *drive, struct request *rq,
++static void ide_pio_multi(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			  unsigned int write)
  {
  	unsigned int nsect;
  
--	nsect = min_t(unsigned int, drive->hwif->nleft, drive->mult_count);
-+	nsect = min_t(unsigned int, cmd->nleft, drive->mult_count);
+ 	nsect = min_t(unsigned int, drive->hwif->nleft, drive->mult_count);
  	while (nsect--)
- 		ide_pio_sector(drive, cmd, write);
+-		ide_pio_sector(drive, rq, write);
++		ide_pio_sector(drive, cmd, write);
  }
-@@ -291,19 +291,18 @@ static ide_startstop_t task_error(ide_dr
+ 
+-static void ide_pio_datablock(ide_drive_t *drive, struct request *rq,
+-				     unsigned int write)
++static void ide_pio_datablock(ide_drive_t *drive, struct ide_cmd *cmd,
++			      unsigned int write)
+ {
+-	struct ide_cmd *cmd = &drive->hwif->cmd;
+ 	u8 saved_io_32bit = drive->io_32bit;
+ 
+-	if (blk_fs_request(rq))
+-		rq->errors = 0;
++	if (cmd->tf_flags & IDE_TFLAG_FS)
++		cmd->rq->errors = 0;
+ 
+ 	if (cmd->tf_flags & IDE_TFLAG_IO_16BIT)
+ 		drive->io_32bit = 0;
+@@ -277,22 +277,21 @@ static void ide_pio_datablock(ide_drive_
+ 	switch (cmd->data_phase) {
+ 	case TASKFILE_MULTI_IN:
+ 	case TASKFILE_MULTI_OUT:
+-		ide_pio_multi(drive, rq, write);
++		ide_pio_multi(drive, cmd, write);
+ 		break;
+ 	default:
+-		ide_pio_sector(drive, rq, write);
++		ide_pio_sector(drive, cmd, write);
+ 		break;
+ 	}
+ 
+ 	drive->io_32bit = saved_io_32bit;
+ }
+ 
+-static ide_startstop_t task_error(ide_drive_t *drive, struct request *rq,
++static ide_startstop_t task_error(ide_drive_t *drive, struct ide_cmd *cmd,
  				  const char *s, u8 stat)
  {
- 	if (cmd->tf_flags & IDE_TFLAG_FS) {
--		ide_hwif_t *hwif = drive->hwif;
--		int sectors = hwif->nsect - hwif->nleft;
-+		int sectors = cmd->nsect - cmd->nleft;
+-	if (blk_fs_request(rq)) {
++	if (cmd->tf_flags & IDE_TFLAG_FS) {
+ 		ide_hwif_t *hwif = drive->hwif;
+-		struct ide_cmd *cmd = &hwif->cmd;
+ 		int sectors = hwif->nsect - hwif->nleft;
  
  		switch (cmd->data_phase) {
- 		case TASKFILE_IN:
--			if (hwif->nleft)
-+			if (cmd->nleft)
- 				break;
- 			/* fall through */
- 		case TASKFILE_OUT:
- 			sectors--;
- 			break;
- 		case TASKFILE_MULTI_IN:
--			if (hwif->nleft)
-+			if (cmd->nleft)
- 				break;
- 			/* fall through */
- 		case TASKFILE_MULTI_OUT:
-@@ -371,7 +370,7 @@ static ide_startstop_t task_in_intr(ide_
- 	ide_pio_datablock(drive, cmd, 0);
+@@ -319,19 +318,17 @@ static ide_startstop_t task_error(ide_dr
+ 	return ide_error(drive, s, stat);
+ }
  
- 	/* Are we done? Check status and finish transfer. */
--	if (!hwif->nleft) {
-+	if (cmd->nleft == 0) {
- 		stat = wait_drive_not_busy(drive);
- 		if (!OK_STAT(stat, 0, BAD_STAT))
- 			return task_error(drive, cmd, __func__, stat);
-@@ -398,10 +397,10 @@ static ide_startstop_t task_out_intr (id
- 		return task_error(drive, cmd, __func__, stat);
+-void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
++void ide_finish_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat)
+ {
+-	if (blk_fs_request(rq) == 0) {
+-		struct ide_cmd *cmd = rq->special;
++	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0) {
+ 		u8 err = ide_read_error(drive);
  
- 	/* Deal with unexpected ATA data phase. */
--	if (((stat & ATA_DRQ) == 0) ^ !hwif->nleft)
-+	if (((stat & ATA_DRQ) == 0) ^ (cmd->nleft == 0))
- 		return task_error(drive, cmd, __func__, stat);
+-		if (cmd)
+-			ide_complete_cmd(drive, cmd, stat, err);
++		ide_complete_cmd(drive, cmd, stat, err);
+ 		ide_complete_rq(drive, err);
+ 		return;
+ 	}
  
--	if (!hwif->nleft) {
-+	if (cmd->nleft == 0) {
- 		ide_finish_cmd(drive, cmd, stat);
+-	ide_end_request(drive, 1, rq->nr_sectors);
++	ide_end_request(drive, 1, cmd->rq->nr_sectors);
+ }
+ 
+ /*
+@@ -340,11 +337,12 @@ void task_end_request(ide_drive_t *drive
+  * It might be a spurious irq (shared irq), but it might be a
+  * command that had no output.
+  */
+-static ide_startstop_t task_in_unexpected(ide_drive_t *drive, struct request *rq, u8 stat)
++static ide_startstop_t task_in_unexpected(ide_drive_t *drive,
++					  struct ide_cmd *cmd, u8 stat)
+ {
+ 	/* Command all done? */
+ 	if (OK_STAT(stat, ATA_DRDY, ATA_BUSY)) {
+-		task_end_request(drive, rq, stat);
++		ide_finish_cmd(drive, cmd, stat);
  		return ide_stopped;
  	}
-Index: b/drivers/ide/pmac.c
-===================================================================
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -1432,7 +1432,7 @@ pmac_ide_build_dmatable(ide_drive_t *dri
- 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
- 	struct scatterlist *sg;
- 	int wr = (rq_data_dir(rq) == WRITE);
--	int i = hwif->sg_nents, count = 0;
-+	int i = hwif->cmd.sg_nents, count = 0;
  
- 	/* DMA table is already aligned */
- 	table = (struct dbdma_cmd *) pmif->dma_table_cpu;
-Index: b/drivers/ide/sgiioc4.c
-===================================================================
---- a/drivers/ide/sgiioc4.c
-+++ b/drivers/ide/sgiioc4.c
-@@ -429,7 +429,7 @@ sgiioc4_build_dma_table(ide_drive_t * dr
+@@ -359,25 +357,25 @@ static ide_startstop_t task_in_unexpecte
+ static ide_startstop_t task_in_intr(ide_drive_t *drive)
  {
  	ide_hwif_t *hwif = drive->hwif;
- 	unsigned int *table = hwif->dmatable_cpu;
--	unsigned int count = 0, i = hwif->sg_nents;
-+	unsigned int count = 0, i = hwif->cmd.sg_nents;
- 	struct scatterlist *sg = hwif->sg_table;
+-	struct request *rq = hwif->rq;
++	struct ide_cmd *cmd = &drive->hwif->cmd;
+ 	u8 stat = hwif->tp_ops->read_status(hwif);
  
- 	while (i && sg_dma_len(sg)) {
-Index: b/drivers/ide/tx4939ide.c
+ 	/* Error? */
+ 	if (stat & ATA_ERR)
+-		return task_error(drive, rq, __func__, stat);
++		return task_error(drive, cmd, __func__, stat);
+ 
+ 	/* Didn't want any data? Odd. */
+ 	if ((stat & ATA_DRQ) == 0)
+-		return task_in_unexpected(drive, rq, stat);
++		return task_in_unexpected(drive, cmd, stat);
+ 
+-	ide_pio_datablock(drive, rq, 0);
++	ide_pio_datablock(drive, cmd, 0);
+ 
+ 	/* Are we done? Check status and finish transfer. */
+ 	if (!hwif->nleft) {
+ 		stat = wait_drive_not_busy(drive);
+ 		if (!OK_STAT(stat, 0, BAD_STAT))
+-			return task_error(drive, rq, __func__, stat);
+-		task_end_request(drive, rq, stat);
++			return task_error(drive, cmd, __func__, stat);
++		ide_finish_cmd(drive, cmd, stat);
+ 		return ide_stopped;
+ 	}
+ 
+@@ -393,31 +391,31 @@ static ide_startstop_t task_in_intr(ide_
+ static ide_startstop_t task_out_intr (ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+-	struct request *rq = hwif->rq;
++	struct ide_cmd *cmd = &drive->hwif->cmd;
+ 	u8 stat = hwif->tp_ops->read_status(hwif);
+ 
+ 	if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
+-		return task_error(drive, rq, __func__, stat);
++		return task_error(drive, cmd, __func__, stat);
+ 
+ 	/* Deal with unexpected ATA data phase. */
+ 	if (((stat & ATA_DRQ) == 0) ^ !hwif->nleft)
+-		return task_error(drive, rq, __func__, stat);
++		return task_error(drive, cmd, __func__, stat);
+ 
+ 	if (!hwif->nleft) {
+-		task_end_request(drive, rq, stat);
++		ide_finish_cmd(drive, cmd, stat);
+ 		return ide_stopped;
+ 	}
+ 
+ 	/* Still data left to transfer. */
+-	ide_pio_datablock(drive, rq, 1);
++	ide_pio_datablock(drive, cmd, 1);
+ 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
+ 
+ 	return ide_started;
+ }
+ 
+-static ide_startstop_t pre_task_out_intr(ide_drive_t *drive, struct request *rq)
++static ide_startstop_t pre_task_out_intr(ide_drive_t *drive,
++					 struct ide_cmd *cmd)
+ {
+-	struct ide_cmd *cmd = &drive->hwif->cmd;
+ 	ide_startstop_t startstop;
+ 
+ 	if (ide_wait_stat(&startstop, drive, ATA_DRQ,
+@@ -433,7 +431,7 @@ static ide_startstop_t pre_task_out_intr
+ 		local_irq_disable();
+ 
+ 	ide_set_handler(drive, &task_out_intr, WAIT_WORSTCASE, NULL);
+-	ide_pio_datablock(drive, rq, 1);
++	ide_pio_datablock(drive, cmd, 1);
+ 
+ 	return ide_started;
+ }
+Index: b/drivers/ide/q40ide.c
 ===================================================================
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -240,7 +240,7 @@ static int tx4939ide_build_dmatable(ide_
- 	int i;
- 	struct scatterlist *sg;
+--- a/drivers/ide/q40ide.c
++++ b/drivers/ide/q40ide.c
+@@ -72,23 +72,23 @@ static void q40_ide_setup_ports(hw_regs_
+ 	hw->chipset = ide_generic;
+ }
  
--	for_each_sg(hwif->sg_table, sg, hwif->sg_nents, i) {
-+	for_each_sg(hwif->sg_table, sg, hwif->cmd.sg_nents, i) {
- 		u32 cur_addr, cur_len, bcount;
+-static void q40ide_input_data(ide_drive_t *drive, struct request *rq,
++static void q40ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			      void *buf, unsigned int len)
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
  
- 		cur_addr = sg_dma_address(sg);
+-	if (drive->media == ide_disk && rq && rq->cmd_type == REQ_TYPE_FS)
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+ 		return insw(data_addr, buf, (len + 1) / 2);
+ 
+ 	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+ }
+ 
+-static void q40ide_output_data(ide_drive_t *drive, struct request *rq,
++static void q40ide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			       void *buf, unsigned int len)
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 
+-	if (drive->media == ide_disk && rq && rq->cmd_type == REQ_TYPE_FS)
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+ 		return outsw(data_addr, buf, (len + 1) / 2);
+ 
+ 	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+Index: b/drivers/ide/scc_pata.c
+===================================================================
+--- a/drivers/ide/scc_pata.c
++++ b/drivers/ide/scc_pata.c
+@@ -750,7 +750,7 @@ static void scc_tf_read(ide_drive_t *dri
+ 	}
+ }
+ 
+-static void scc_input_data(ide_drive_t *drive, struct request *rq,
++static void scc_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ 			   void *buf, unsigned int len)
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+@@ -766,7 +766,7 @@ static void scc_input_data(ide_drive_t *
+ 		scc_ide_insw(data_addr, buf, len / 2);
+ }
+ 
+-static void scc_output_data(ide_drive_t *drive,  struct request *rq,
++static void scc_output_data(ide_drive_t *drive,  struct ide_cmd *cmd,
+ 			    void *buf, unsigned int len)
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+Index: b/drivers/ide/tx4938ide.c
+===================================================================
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -174,7 +174,7 @@ static void tx4938ide_tf_read(ide_drive_
+ 	}
+ }
+ 
+-static void tx4938ide_input_data_swap(ide_drive_t *drive, struct request *rq,
++static void tx4938ide_input_data_swap(ide_drive_t *drive, struct ide_cmd *cmd,
+ 				void *buf, unsigned int len)
+ {
+ 	unsigned long port = drive->hwif->io_ports.data_addr;
+@@ -186,7 +186,7 @@ static void tx4938ide_input_data_swap(id
+ 	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
+ }
+ 
+-static void tx4938ide_output_data_swap(ide_drive_t *drive, struct request *rq,
++static void tx4938ide_output_data_swap(ide_drive_t *drive, struct ide_cmd *cmd,
+ 				void *buf, unsigned int len)
+ {
+ 	unsigned long port = drive->hwif->io_ports.data_addr;
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -344,6 +344,15 @@ struct ide_cmd {
- 	u8			ftf_flags;	/* for TASKFILE ioctl */
- 	u32			tf_flags;
- 	int			data_phase;
-+
-+	int			sg_nents;	  /* number of sg entries */
-+	int			sg_dma_direction; /* DMA transfer direction */
-+
-+	unsigned int		nsect;
-+	unsigned int		nleft;
-+	struct scatterlist	*cursg;
-+	unsigned int		cursg_ofs;
-+
- 	struct request		*rq;		/* copy of request */
- 	void			*special;	/* valid_t generally */
+@@ -297,6 +297,7 @@ enum {
+ 	IDE_TFLAG_IO_16BIT		= (1 << 26),
+ 	/* struct ide_cmd was allocated using kmalloc() */
+ 	IDE_TFLAG_DYN			= (1 << 27),
++	IDE_TFLAG_FS			= (1 << 28),
  };
-@@ -772,16 +781,9 @@ typedef struct hwif_s {
- 	/* Scatter-gather list used to build the above */
- 	struct scatterlist *sg_table;
- 	int sg_max_nents;		/* Maximum number of entries in it */
--	int sg_nents;			/* Current number of entries in it */
--	int sg_dma_direction;		/* dma transfer direction */
  
- 	struct ide_cmd cmd;		/* current command */
+ enum {
+@@ -655,10 +656,10 @@ struct ide_tp_ops {
+ 	void	(*tf_load)(ide_drive_t *, struct ide_cmd *);
+ 	void	(*tf_read)(ide_drive_t *, struct ide_cmd *);
  
--	unsigned int nsect;
--	unsigned int nleft;
--	struct scatterlist *cursg;
--	unsigned int cursg_ofs;
--
- 	int		rqsize;		/* max sectors per request */
- 	int		irq;		/* our irq number */
+-	void	(*input_data)(ide_drive_t *, struct request *, void *,
+-			      unsigned int);
+-	void	(*output_data)(ide_drive_t *, struct request *, void *,
+-			       unsigned int);
++	void	(*input_data)(ide_drive_t *, struct ide_cmd *,
++			      void *, unsigned int);
++	void	(*output_data)(ide_drive_t *, struct ide_cmd *,
++			       void *, unsigned int);
+ };
  
-@@ -1407,7 +1409,7 @@ int ide_pci_resume(struct pci_dev *);
- #endif
+ extern const struct ide_tp_ops default_tp_ops;
+@@ -863,7 +864,7 @@ typedef ide_startstop_t (ide_handler_t)(
+ typedef int (ide_expiry_t)(ide_drive_t *);
  
- void ide_map_sg(ide_drive_t *, struct request *);
--void ide_init_sg_cmd(ide_drive_t *, struct request *);
-+void ide_init_sg_cmd(struct ide_cmd *, int);
+ /* used by ide-cd, ide-floppy, etc. */
+-typedef void (xfer_func_t)(ide_drive_t *, struct request *rq, void *, unsigned);
++typedef void (xfer_func_t)(ide_drive_t *, struct ide_cmd *, void *, unsigned);
  
- #define BAD_DMA_DRIVE		0
- #define GOOD_DMA_DRIVE		1
+ extern struct mutex ide_setting_mtx;
+ 
+@@ -1172,8 +1173,8 @@ void ide_set_irq(ide_hwif_t *, int);
+ void ide_tf_load(ide_drive_t *, struct ide_cmd *);
+ void ide_tf_read(ide_drive_t *, struct ide_cmd *);
+ 
+-void ide_input_data(ide_drive_t *, struct request *, void *, unsigned int);
+-void ide_output_data(ide_drive_t *, struct request *, void *, unsigned int);
++void ide_input_data(ide_drive_t *, struct ide_cmd *, void *, unsigned int);
++void ide_output_data(ide_drive_t *, struct ide_cmd *, void *, unsigned int);
+ 
+ int ide_io_buffers(ide_drive_t *, struct ide_atapi_pc *, unsigned int, int);
+ 
+@@ -1223,7 +1224,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t
+ 
+ ide_startstop_t do_rw_taskfile(ide_drive_t *, struct ide_cmd *);
+ 
+-void task_end_request(ide_drive_t *, struct request *, u8);
++void ide_finish_cmd(ide_drive_t *, struct ide_cmd *, u8);
+ 
+ int ide_raw_taskfile(ide_drive_t *, struct ide_cmd *, u8 *, u16);
+ int ide_no_data_taskfile(ide_drive_t *, struct ide_cmd *);
