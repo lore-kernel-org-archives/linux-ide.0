@@ -1,131 +1,74 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Hugh Dickins <hugh@veritas.com>
 Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
-Date: Mon, 02 Feb 2009 14:48:57 +0300
-Message-ID: <4986DDA9.6010903@ru.mvista.com>
-References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils> <20090126191151.18b094e6@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
+Date: Mon, 2 Feb 2009 12:12:31 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0902021152220.17261@blonde.anvils>
+References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils>
+ <20090126191151.18b094e6@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
+ <4986DDA9.6010903@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:11243 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752754AbZBBLtF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Feb 2009 06:49:05 -0500
-In-Reply-To: <Pine.LNX.4.64.0902012050190.16351@blonde.anvils>
+Received: from extu-mxob-1.symantec.com ([216.10.194.28]:36029 "EHLO
+	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbZBBMTN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 07:19:13 -0500
+In-Reply-To: <4986DDA9.6010903@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@linux-foundation.org>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Mon, 2 Feb 2009, Sergei Shtylyov wrote:
+> Hugh Dickins wrote:
+> > But this patch works as well for me as the patch I posted before
+> > (though much more verbose: please simplify if you see a better way).
+> 
+>   How about the following?
+> 
+> 		unsigned char *tail = buf + buflen - slop;
+> 		unsigned char pad[4];
+> 
+> 		if (rw == READ) {
+> 			if (slop <= 2)
+> 				ioread16_rep(data_addr, pad, 1);
+> 			else
+> 				ioread32_rep(data_addr, pad, 1);
+> 					memcpy(tail, pad, slop);
 
+Too many tabs on the memcpy.
 
-Hugh Dickins wrote:
-> On Mon, 26 Jan 2009, Alan Cox wrote:
->   
->>> [PATCH] libata sff: 32bit PIO use 16bit on slop
->>>
->>> 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
->>> causes errors on a four-year-old ata_piix Dell Precision 670.  Using
->>> 16bit PIO instead of 32bit PIO on the odd 1, 2 or 3 chars fixes that.
->>>
->>> Signed-off-by: Hugh Dickins <hugh@veritas.com>
->>>       
->> For the 3 bytes of slop it should use a single iowrite32 but otherwise
->> that seems ok. We do need to handle the FIFO setup on the AMD differently
->> if we do this ...
->>     
->
-> Sorry, I believe you were waiting on me for this, to accompany your
-> AMD and VLB patches.  I'm afraid I don't have any such AMD devices
-> to test this along with yours, and the only non-0 slop that I've seen
-> in testing has been 2 (about 25% of ops, so I removed the "unlikely").
-> But this patch works as well for me as the patch I posted before
-> (though much more verbose: please simplify if you see a better way).
->
->
-> [PATCH] libata sff: 32bit PIO use 16bit on slop
->
-> 871af1210f13966ab911ed2166e4ab2ce775b99d libata: Add 32bit PIO support
-> causes errors on a four-year-old ata_piix Dell Precision 670.  Using
-> 16bit PIO instead of 32bit PIO on the odd 1 or 2 chars fixes that,
-> but Alan Cox indicates that we should still use 32bit for 3 chars.
->
-> Signed-off-by: Hugh Dickins <hugh@veritas.com>
-> ---
->
->  drivers/ata/libata-sff.c |   33 ++++++++++++++++++++++++---------
->  1 file changed, 24 insertions(+), 9 deletions(-)
->
-> --- 2.6.29-rc3/drivers/ata/libata-sff.c	2009-01-29 12:33:28.000000000 +0000
-> +++ linux/drivers/ata/libata-sff.c	2009-02-01 20:21:13.000000000 +0000
-> @@ -773,18 +773,33 @@ unsigned int ata_sff_data_xfer32(struct
->  	else
->  		iowrite32_rep(data_addr, buf, words);
->  
-> -	if (unlikely(slop)) {
-> -		__le32 pad;
-> -		if (rw == READ) {
-> -			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
-> -			memcpy(buf + buflen - slop, &pad, slop);
-> +	if (slop) {
-> +		unsigned char *trailing_buf = buf + buflen - slop;
->   
-> +   
->   
-> +		if (slop <= 2) {
-> +			__le16 slop_word;
-> +			if (rw == READ) {
-> +				slop_word = cpu_to_le16(ioread16(data_addr));
-> +				memcpy(trailing_buf, &slop_word, slop);
-> +			} else {
-> +				slop_word = 0;
-> +				memcpy(&slop_word, trailing_buf, slop);
-> +				iowrite16(le16_to_cpu(slop_word), data_addr);
-> +			}
->  		} else {
-> -			memcpy(&pad, buf + buflen - slop, slop);
-> -			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
-> +			__le32 slop_word;
-> +			if (rw == READ) {
-> +				slop_word = cpu_to_le32(ioread32(data_addr));
-> +				memcpy(trailing_buf, &slop_word, slop);
-> +			} else {
-> +				slop_word = 0;
-> +				memcpy(&slop_word, trailing_buf, slop);
-> +				iowrite32(le32_to_cpu(slop_word), data_addr);
-> +			}
->   
+> 		} else {
+> 			memcpy(pad, tail, slop);
+> 			memset(pad + slop, 0, 4 - slop);
 
-   How about the following?
+And we could make that line even more complicated!
+But I think unsigned char pad[4] = {0, 0, 0, 0} would be better.
+Though Alan didn't have it initialized at all: I don't know if
+that was oversight or superior knowledge.  In Alan's case, one
+should usually assume the latter.
 
-		unsigned char *tail = buf + buflen - slop;
-		unsigned char pad[4];
+> 			if (slop <= 2)
+> 				iowrite16_rep(data_addr, pad, 1);
+> 			else
+> 				iowrite32_rep(data_addr, pad, 1);
+> 		}
 
-		if (rw == READ) {
-			if (slop <= 2)
-				ioread16_rep(data_addr, pad, 1);
-			else
-				ioread32_rep(data_addr, pad, 1);
-			memcpy(tail, pad, slop);
- 		} else {
-			memcpy(pad, tail, slop);
-			memset(pad + slop, 0, 4 - slop);
-			if (slop <= 2)
-				iowrite16_rep(data_addr, pad, 1);
-			else
-				iowrite32_rep(data_addr, pad, 1);
-		}
+Well, I don't know.  I felt really pleased with using ioread16_rep
+and the char array in my original patch, where slop might be 1 or 2
+or 3; but once it comes down to always one single PIO op, I felt
+it too lazy to be using the _rep form.
 
->  	}
-> -	return words << 2;
-> +
-> +	return buflen + (buflen & 1);
->   
+I really don't care, whatever works and best satisfies Alan.
 
-    return (buflen + 1) & ~1;
+> > -	return words << 2;
+> > +
+> > +	return buflen + (buflen & 1);
+> >   
+> 
+>    return (buflen + 1) & ~1;
+> 
+>   Well, I guess I could just have posted my own patch... :-)
 
-   Well, I guess I could just have posted my own patch... :-)
+Yes, do go ahead, I'm not desperate to get my name in there!
 
-MBR, Sergei
-
-
+Hugh
