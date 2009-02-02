@@ -1,48 +1,65 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 00/14] ide: ide_task_t -> struct ide_cmd
-Date: Mon, 02 Feb 2009 22:37:07 +0100
-Message-ID: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758984AbZBBVjY@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 11/14] ide: task_error() -> task_error_cmd()
+Date: Mon, 02 Feb 2009 22:40:00 +0100
+Message-ID: <20090202214000.17960.75917.sendpatchset@localhost.localdomain>
+References: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.184]:9188 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759205AbZBBVjG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:39:06 -0500
+In-Reply-To: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: task_error() -> task_error_cmd()
 
-Sanitize structure representing ATA command and few related changes.
+* Move ide_error() call from task_error() to task_pio_intr()
+  (the only user).
 
-on top of "[PATCH 0/8] ide: remove ->end_request method" patchset
-[ http://lkml.org/lkml/2009/2/1/117 ]
+* Drop no longer used arguments from task_error().
 
-diffstat:
- drivers/ide/au1xxx-ide.c    |   13 -
- drivers/ide/falconide.c     |    8 
- drivers/ide/icside.c        |    8 
- drivers/ide/ide-acpi.c      |   10 
- drivers/ide/ide-atapi.c     |   61 ++--
- drivers/ide/ide-disk.c      |  169 ++++++-------
- drivers/ide/ide-disk_proc.c |   28 +-
- drivers/ide/ide-dma-sff.c   |    6 
- drivers/ide/ide-dma.c       |   30 +-
- drivers/ide/ide-eh.c        |    6 
- drivers/ide/ide-floppy.c    |    5 
- drivers/ide/ide-h8300.c     |   66 ++---
- drivers/ide/ide-io-std.c    |   66 ++---
- drivers/ide/ide-io.c        |   82 +++---
- drivers/ide/ide-ioctls.c    |   46 +--
- drivers/ide/ide-iops.c      |   30 +-
- drivers/ide/ide-lib.c       |   20 -
- drivers/ide/ide-park.c      |   25 +
- drivers/ide/ide-pm.c        |   39 +--
- drivers/ide/ide-probe.c     |   18 -
- drivers/ide/ide-proc.c      |   16 -
- drivers/ide/ide-taskfile.c  |  571 ++++++++++++++++++++------------------------
- drivers/ide/ns87415.c       |   30 +-
- drivers/ide/pmac.c          |    9 
- drivers/ide/q40ide.c        |    8 
- drivers/ide/scc_pata.c      |   66 ++---
- drivers/ide/sgiioc4.c       |   12 
- drivers/ide/tx4938ide.c     |   66 ++---
- drivers/ide/tx4939ide.c     |   81 +++---
- include/linux/ide.h         |   64 ++--
- 30 files changed, 803 insertions(+), 856 deletions(-)
+* Rename task_error() to ide_error_cmd().
+
+There should be no functional changes caused by this patch.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-taskfile.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -276,8 +276,7 @@ static void ide_pio_datablock(ide_drive_
+ 	drive->io_32bit = saved_io_32bit;
+ }
+ 
+-static ide_startstop_t task_error(ide_drive_t *drive, struct ide_cmd *cmd,
+-				  const char *s, u8 stat)
++static void ide_error_cmd(ide_drive_t *drive, struct ide_cmd *cmd)
+ {
+ 	if (cmd->tf_flags & IDE_TFLAG_FS) {
+ 		int sectors = cmd->nsect - cmd->nleft;
+@@ -293,7 +292,6 @@ static ide_startstop_t task_error(ide_dr
+ 		if (sectors > 0)
+ 			ide_end_request(drive, 1, sectors);
+ 	}
+-	return ide_error(drive, s, stat);
+ }
+ 
+ void ide_finish_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat)
+@@ -364,7 +362,8 @@ out_end:
+ 	ide_finish_cmd(drive, cmd, stat);
+ 	return ide_stopped;
+ out_err:
+-	return task_error(drive, cmd, __func__, stat);
++	ide_error_cmd(drive, cmd);
++	return ide_error(drive, __func__, stat);
+ }
+ 
+ static ide_startstop_t pre_task_out_intr(ide_drive_t *drive,
