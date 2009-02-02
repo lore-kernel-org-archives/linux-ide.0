@@ -1,61 +1,52 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [RFC][PATCH] at91_ide driver
-Date: Mon, 2 Feb 2009 13:35:31 +0100
-Message-ID: <200902021335.31465.stf_xl@wp.pl>
-References: <200901141345.42583.stf_xl@wp.pl> <200901301005.44858.stf_xl@wp.pl> <200902011813.18192.bzolnier@gmail.com>
+From: Giulio Orsero <giulioo@gmail.com>
+Subject: Please add ST3120827AS 3.42 to NCQ blacklist
+Date: Mon, 02 Feb 2009 14:28:24 +0100
+Message-ID: <20090202132824.09984F805@i3.golden.dom>
+Reply-To: giulioo@pobox.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:41415 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752827AbZBBMfo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 07:35:44 -0500
-In-Reply-To: <200902011813.18192.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from relay-2.smtp.seeweb.it ([217.194.8.131]:48279 "EHLO
+	relay-2.smtp.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103AbZBBOBm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 09:01:42 -0500
+Received: from i3.golden.dom (unknown [151.58.205.50])
+	by relay-2.smtp.seeweb.it (Postfix) with ESMTP id 4FFBB51EA4
+	for <linux-ide@vger.kernel.org>; Mon,  2 Feb 2009 14:33:01 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Haavard Skinnemoen <haavard.skinnemoen@atmel.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Sunday 01 February 2009 18:13:17 Bartlomiej Zolnierkiewicz napisa=C5=82=
-(a):
-> > I have some doubts about things pointed out by Alan  - atomic acces=
-s. =20
-> > Due to flipping 8/16 bit in this driver, all functions accessing ta=
-sk file=20
-> > and data register should do things atomically. If for example
-> > tp_ops->input_data() will be braked by interrupt and any other func=
-tion
-> > accessing task file will be called very bad things can happen.
->=20
-> All taskfile / data access is atomic, the only exception is [Alt]Stat=
-us
-> register read if shared IRQs are used (which doesn't seem to be the c=
-ase
-> with AT91) or if the hardware is flaky and unexpected IRQs can happen=
-=2E..
->=20
-> If 8/16-bit flipping is really an issue then AT91 IRQ handler may nee=
-d
-> to save info about current mode on entry, switch to 8-bit (if in 16-b=
-it
-> mode), restore the saved mode on exit (if it was 16-bit mode).
-I think we don't need it because we don't use shared interrupts.
-Moreover hardware allow to Altarnate Status register be accessed
-in both 8 and 16 bit modes.
+Supermicro P8SC8, CENTOS/RHEL 5.x 2.6.18-128.el5
+HD: Seagate SATA ST3120827AS fw3.42  [2 disks in md raid1]
+ 
+00:1f.1 0101: 8086:266f (rev 03)
+00:1f.2 0101: 8086:2652 (rev 03)
+ 
+2652 is handled by both ata_piix and ahci.
+Using ata_piix everything is fine, using ahci will cause periodic errors
+like:
+ 
+ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+ata1.00: cmd 61/08:00:4d:6d:c0/00:00:00:00:00/40 tag 0 ncq 4096 out
+         res 40/00:00:b5:95:a7/00:00:00:00:00/40 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1: hard resetting link
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: configured for UDMA/133
+ata1: EH complete
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write back
 
-> > If I use IDE_HFLAG_UNMASK_IRQS IDE layer will assure atomic
-> > access to ATA registers ?
->=20
-> IDE_HFLAG_UNMASK_IRQS allows other IRQs to be serviced while IDE IRQ
-> is being serviced so really no problem here (unless some other driver=
-s
-> also mess with 8/16-bit flipping but if so then the current code need=
-s
-> fixing too).
-We have exclusive access to Static Memory Controller registers as long
-as there are no bug in board specific code. So no problem here either.
+Using
+echo 1 > /sys/block/sda/device/queue_depth
+echo 1 > /sys/block/sdb/device/queue_depth
+will eliminate the issue, so please add
+      { "ST3120827AS",        "3.42",         ATA_HORKAGE_NONCQ },
+to the NCQ blacklist.
 
-Stanislaw Gruszka
-
+Thanks
+-- 
+giulioo@pobox.com
