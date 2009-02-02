@@ -1,96 +1,129 @@
-From: Mario Limonciello <mario_limonciello@dell.com>
-Subject: Re: [PATCH] libata: change drive ready wait after hard reset to 5s
-Date: Mon, 02 Feb 2009 11:17:45 -0600
-Message-ID: <49872AB9.1010807@dell.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org> <1233456951-992-4-git-send-email-tj@kernel.org> <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] IDE: Unregister devices if initialization fails.
+Date: Mon, 2 Feb 2009 18:49:32 +0100
+Message-ID: <200902021849.33036.bzolnier@gmail.com>
+References: <1232715869-31039-1-git-send-email-Ian.Campbell@citrix.com> <200902011721.58648.bzolnier@gmail.com> <1233569381.9970.60.camel@zakaz.uk.xensource.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig4287E325EF1638B221A646D9"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ausxipps301.us.dell.com ([143.166.148.223]:13555 "EHLO
-	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551AbZBBR1R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 12:27:17 -0500
-In-Reply-To: <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
+Received: from fk-out-0910.google.com ([209.85.128.189]:50228 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755893AbZBBSgy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 13:36:54 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so1333816fkf.5
+        for <linux-ide@vger.kernel.org>; Mon, 02 Feb 2009 10:36:51 -0800 (PST)
+In-Reply-To: <1233569381.9970.60.camel@zakaz.uk.xensource.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Hayes, Stuart" <Stuart_Hayes@dell.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Ian Campbell <Ian.Campbell@citrix.com>
+Cc: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig4287E325EF1638B221A646D9
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Monday 02 February 2009, Ian Campbell wrote:
+> On Sun, 2009-02-01 at 17:21 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Friday 30 January 2009, Ian Campbell wrote:
+> > > On Tue, 2009-01-27 at 17:41 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > > Hi,
+> > > > 
+> > > > On Friday 23 January 2009, Ian Campbell wrote:
+> > > > > On reboot the loop in device_shutdown gets confused by these devices
+> > > > > and goes into an infinite loop. I think this is because they don't
+> > > > > have dev->bus or dev->driver which is because hwif_register_devices
+> > > > > doesn't get called if !hwif->present.
+> > > > > 
+> > > > > Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
+> > > > > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > > > ---
+> > > > >  drivers/ide/ide-probe.c |   10 ++++++----
+> > > > >  1 files changed, 6 insertions(+), 4 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+> > > > > index 312127e..120f65b 100644
+> > > > > --- a/drivers/ide/ide-probe.c
+> > > > > +++ b/drivers/ide/ide-probe.c
+> > > > > @@ -1520,6 +1520,8 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
+> > > > >  		if (hwif_init(hwif) == 0) {
+> > > > >  			printk(KERN_INFO "%s: failed to initialize IDE "
+> > > > >  					 "interface\n", hwif->name);
+> > > > > +			device_unregister(&hwif->gendev);
+> > > > > +			device_destroy(ide_port_class, MKDEV(0, 0));
+> > > > >  			hwif->present = 0;
+> > > > 
+> > > > I've been wondering about this a bit and I think that we should just nuke
+> > > > port from struct ide_host in such situation so I added ide_disable_port()
+> > > > helper for this (+ fixed ide_register_port() handling while at it).
+> > > > 
+> > > > Could you please re-base your fix on top of attached patch?
+> > > 
+> > > Sure.
+> > > 
+> > > Subject: IDE: Disable and unregister devices if initialization fails.
+> > > 
+> > > On reboot the loop in device_shutdown gets confused by these partially
+> > > initialized devices and goes into an infinite loop. Therefore disable
+> > > and unregister these devices.
+> > > 
+> > > Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
+> > > 
+> > > ---
+> > >  drivers/ide/ide-probe.c |   10 ++++++----
+> > >  1 file changed, 6 insertions(+), 4 deletions(-)
+> > > 
+> > > diff -r 12d1a7848ddf drivers/ide/ide-probe.c
+> > > --- a/drivers/ide/ide-probe.c	Fri Jan 30 16:37:15 2009 +0000
+> > > +++ b/drivers/ide/ide-probe.c	Fri Jan 30 17:00:08 2009 +0000
+> > > @@ -1549,6 +1549,8 @@
+> > >  		if (hwif_init(hwif) == 0) {
+> > >  			printk(KERN_INFO "%s: failed to initialize IDE "
+> > >  					 "interface\n", hwif->name);
+> > > +			ide_disable_port(hwif);
+> > > +			device_unregister(&hwif->gendev);
+> > >  			hwif->present = 0;
+> > >  			continue;
+> > 
+> > Hmmm, ide_disable_port() may free hwif so it needs to happen last...
+> 
+> Oops, new version below.
+> 
+> > Also did you have a chance to retest this? [ I couldn't reproduce
+> > the issue so was hoping that you could test combined fixes. ]
+> 
+> Yep, I can easily repro. I've actually fixed the underlying issue (a Xen
+> IRQ problem) causing the probe to fail but can easily revert that fix to
+> test these patches. If you wanted to repro yourself you could probably
+> make the request_irq() in init_irq() artificially fail.
+> 
+> Ian.
 
-I believe this is the reference that Stuart refers to in the ATA-6 spec:
+Ok, thanks for explaining this (I get "The Big Picture" now).
 
-http://www.t10.org/t13/project/d1410r3a-ATA-ATAPI-6.pdf
+> IDE: Disable and unregister devices if initialization fails.
+> 
+> On reboot the loop in device_shutdown gets confused by these partially
+> initialized devices and goes into an infinite loop. Therefore disable
+> and unregister these devices.
+> 
+> Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
+> ---
+>  drivers/ide/ide-probe.c |   10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> 
+> diff -r 9d5441419978 -r f596f17b02c3 drivers/ide/ide-probe.c
+> --- a/drivers/ide/ide-probe.c	Fri Jan 30 17:39:53 2009 +0000
+> +++ b/drivers/ide/ide-probe.c	Mon Feb 02 10:02:32 2009 +0000
+> @@ -1549,6 +1549,8 @@
+>  		if (hwif_init(hwif) == 0) {
+>  			printk(KERN_INFO "%s: failed to initialize IDE "
+>  					 "interface\n", hwif->name);
+> +			device_unregister(&hwif->gendev);
+> +			ide_disable_port(hwif);
+>  			hwif->present = 0;
 
-Here's the snippet, (p327):
+I applied the patch (removing leftover hwif->present while at it)
+and sucessfully tested it locally (by making hwif_init() to fail).
 
-"
-Transition D0HR1:D0HR1: When the sample indicates that DASP- is negated
-and            less than 450 ms have
-elapsed since the negation of RESET-, then the device shall make a
-transition to the   D0HR1: Sample_DASP-
-state. When the sample indicates that DASP- is negated and greater than
-450 ms          but less than 5 s have
-elapsed since the negation of RESET-, then the device may make a
-transition to the     D0HR1: Sample_DASP-
-state.
-Transition D0HR1:D0HR3: When the sample indicates that DASP- is negated
-and 5 s have elapsed since the
-negation of RESET-, then the device shall clear bit 7 in the Error
-register and make a transition to the D0HR3:
-Set_status state. When the sample indicates that DASP- is negated and
-greater than 450 ms but less than 5 s
-have elapsed since the negation of RESET-, then the device may clear bit
-7 in the Error register and make a
-transition to the D0HR3: Set_status state.
-"
-
-Hayes, Stuart wrote:
-> This fixes problems during resume with drives that take longer than 1s
-> to be ready.  The ATA-6 spec appears to allow 5 seconds for a drive to
-> be ready.
->
-> On one affected system, this patch changes "PM: resume devices took..."=
-
-> message from 17 seconds to 4 seconds, and gets rid of a lot of ugly
-> timeout/error messages.
->
-> Without this patch, the libata code moves on after 1s, tries to send a
-> soft reset (which the drive doesn't see because it isn't ready) which
-> also times out, then an IDENTIFY command is sent to the drive which
-> times out, and finally the error handler will try to send another hard
-> reset which will finally get things working.
->
-> Sorry to send as an attachment, but my mail server will wrap text.
->
->
-> Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
->
->  =20
-
---=20
-Mario Limonciello
-*Dell | Linux Engineering*
-mario_limonciello@dell.com
-
-
---------------enig4287E325EF1638B221A646D9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkmHKrkACgkQ2CrZjkA73Ys11ACeM9ibnvpj5ZZVyYhE7oHNqikJ
-4h4An0zmAdshbCGkcyEjZi9wvGNNkleR
-=8xrR
------END PGP SIGNATURE-----
-
---------------enig4287E325EF1638B221A646D9--
+Thanks,
+Bart
