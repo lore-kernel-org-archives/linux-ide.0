@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 14/14] ide: sanitize ide_finish_cmd()
-Date: Mon, 02 Feb 2009 22:40:29 +0100
-Message-ID: <20090202214029.17960.54823.sendpatchset@localhost.localdomain>
+Subject: [PATCH 10/14] ide: unify exit paths in task_pio_intr()
+Date: Mon, 02 Feb 2009 22:38:21 +0100
+Message-ID: <20090202213821.17960.40146.sendpatchset@localhost.localdomain>
 References: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:10839 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759128AbZBBVjf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:39:35 -0500
+Received: from mail-bw0-f12.google.com ([209.85.218.12]:47443 "EHLO
+	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759743AbZBBVlK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 16:41:10 -0500
 In-Reply-To: <20090202213707.17960.61897.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,83 +15,87 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: sanitize ide_finish_cmd()
-
-* Move ide_end_request() call out from ide_finish_cmd() to its users.
-
-* Use ide_finish_cmd() in task_no_data_intr().
+Subject: [PATCH] ide: unify exit paths in task_pio_intr()
 
 There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-dma.c      |    5 ++++-
- drivers/ide/ide-taskfile.c |   24 +++++++++---------------
- 2 files changed, 13 insertions(+), 16 deletions(-)
+'goto' rules!
 
-Index: b/drivers/ide/ide-dma.c
-===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -98,7 +98,10 @@ ide_startstop_t ide_dma_intr(ide_drive_t
- 		if (!dma_stat) {
- 			struct ide_cmd *cmd = &hwif->cmd;
- 
--			ide_finish_cmd(drive, cmd, stat);
-+			if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
-+				ide_finish_cmd(drive, cmd, stat);
-+			else
-+				ide_end_request(drive, 1, cmd->rq->nr_sectors);
- 			return ide_stopped;
- 		}
- 		printk(KERN_ERR "%s: %s: bad DMA status (0x%02x)\n",
+ drivers/ide/ide-taskfile.c |   37 +++++++++++++++++--------------------
+ 1 file changed, 17 insertions(+), 20 deletions(-)
+
 Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
 --- a/drivers/ide/ide-taskfile.c
 +++ b/drivers/ide/ide-taskfile.c
-@@ -150,12 +150,8 @@ static ide_startstop_t task_no_data_intr
- 		drive->mult_count = drive->mult_req;
+@@ -322,35 +322,28 @@ static ide_startstop_t task_pio_intr(ide
+ 	if (write == 0) {
+ 		/* Error? */
+ 		if (stat & ATA_ERR)
+-			return task_error(drive, cmd, __func__, stat);
++			goto out_err;
  
- 	if (custom == 0 || tf->command == ATA_CMD_IDLEIMMEDIATE ||
--	    tf->command == ATA_CMD_CHK_POWER) {
--		u8 err = ide_read_error(drive);
+ 		/* Didn't want any data? Odd. */
+ 		if ((stat & ATA_DRQ) == 0) {
+ 			/* Command all done? */
+-			if (OK_STAT(stat, ATA_DRDY, ATA_BUSY)) {
+-				ide_finish_cmd(drive, cmd, stat);
+-				return ide_stopped;
+-			}
++			if (OK_STAT(stat, ATA_DRDY, ATA_BUSY))
++				goto out_end;
+ 
+ 			/* Assume it was a spurious irq */
+-			ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE,
+-					NULL);
 -
--		ide_complete_cmd(drive, cmd, stat, err);
--		ide_complete_rq(drive, err);
+-			return ide_started;
++			goto out_wait;
+ 		}
+ 	} else {
+ 		if (!OK_STAT(stat, DRIVE_READY, drive->bad_wstat))
+-			return task_error(drive, cmd, __func__, stat);
++			goto out_err;
+ 
+ 		/* Deal with unexpected ATA data phase. */
+ 		if (((stat & ATA_DRQ) == 0) ^ (cmd->nleft == 0))
+-			return task_error(drive, cmd, __func__, stat);
++			goto out_err;
+ 	}
+ 
+-	if (write && cmd->nleft == 0) {
+-		ide_finish_cmd(drive, cmd, stat);
+-		return ide_stopped;
 -	}
-+	    tf->command == ATA_CMD_CHK_POWER)
-+		ide_finish_cmd(drive, cmd, stat);
++	if (write && cmd->nleft == 0)
++		goto out_end;
  
- 	return ide_stopped;
- }
-@@ -287,15 +283,10 @@ static void ide_error_cmd(ide_drive_t *d
- 
- void ide_finish_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat)
- {
--	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0) {
--		u8 err = ide_read_error(drive);
-+	u8 err = ide_read_error(drive);
- 
--		ide_complete_cmd(drive, cmd, stat, err);
--		ide_complete_rq(drive, err);
--		return;
+ 	/* Still data left to transfer. */
+ 	ide_pio_datablock(drive, cmd, write);
+@@ -359,15 +352,19 @@ static ide_startstop_t task_pio_intr(ide
+ 	if (write == 0 && cmd->nleft == 0) {
+ 		stat = wait_drive_not_busy(drive);
+ 		if (!OK_STAT(stat, 0, BAD_STAT))
+-			return task_error(drive, cmd, __func__, stat);
+-		ide_finish_cmd(drive, cmd, stat);
+-		return ide_stopped;
 -	}
--
--	ide_end_request(drive, 1, cmd->rq->nr_sectors);
-+	ide_complete_cmd(drive, cmd, stat, err);
-+	ide_complete_rq(drive, err);
- }
++			goto out_err;
  
- /*
-@@ -350,7 +341,10 @@ out_wait:
++		goto out_end;
++	}
++out_wait:
+ 	/* Still data left to transfer. */
  	ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE, NULL);
+-
  	return ide_started;
- out_end:
--	ide_finish_cmd(drive, cmd, stat);
-+	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
-+		ide_finish_cmd(drive, cmd, stat);
-+	else
-+		ide_end_request(drive, 1, cmd->rq->nr_sectors);
- 	return ide_stopped;
- out_err:
- 	ide_error_cmd(drive, cmd);
++out_end:
++	ide_finish_cmd(drive, cmd, stat);
++	return ide_stopped;
++out_err:
++	return task_error(drive, cmd, __func__, stat);
+ }
+ 
+ static ide_startstop_t pre_task_out_intr(ide_drive_t *drive,
