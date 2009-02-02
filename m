@@ -1,117 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
-Date: Mon, 02 Feb 2009 17:17:56 +0300
-Message-ID: <49870094.2010101@ru.mvista.com>
-References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils> <20090126191151.18b094e6@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0902012050190.16351@blonde.anvils> <4986DDA9.6010903@ru.mvista.com> <Pine.LNX.4.64.0902021152220.17261@blonde.anvils>
+From: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
+Subject: Re: Seagate disk freeze for 30 seconds then comes back (RecovComm
+ 10B8B)
+Date: Mon, 2 Feb 2009 17:15:40 +0200 (EET)
+Message-ID: <alpine.LFD.2.00.0902021714430.5093@mail.embedromix.ro>
+References: <alpine.LFD.2.00.0901271739400.2013@mail.embedromix.ro> <20090128153141.GC26064@csclub.uwaterloo.ca> <498244D4.4060903@tmr.com> <20090130212115.GB26062@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:15372 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752727AbZBBOSG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Feb 2009 09:18:06 -0500
-In-Reply-To: <Pine.LNX.4.64.0902021152220.17261@blonde.anvils>
+Received: from mail.embedromix.ro ([82.78.144.6]:49701 "EHLO
+	mail.embedromix.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755832AbZBBPPz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 10:15:55 -0500
+In-Reply-To: <20090130212115.GB26062@csclub.uwaterloo.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@linux-foundation.org>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: Bill Davidsen <davidsen@tmr.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+On Fri, 30 Jan 2009, Lennart Sorensen wrote:
 
-Hugh Dickins wrote:
-
->>> (though much more verbose: please simplify if you see a better way).
->>>       
->>   How about the following?
+> On Thu, Jan 29, 2009 at 07:07:48PM -0500, Bill Davidsen wrote:
+>> Would you expect that firmware would be shared between old tech laptop
+>> drives and desktop/server drives? Particularly since the laptop drive was
+>> built before any of the 7200.11 drives?
 >>
->> 		unsigned char *tail = buf + buflen - slop;
->> 		unsigned char pad[4];
->>
->> 		if (rw == READ) {
->> 			if (slop <= 2)
->> 				ioread16_rep(data_addr, pad, 1);
->> 			else
->> 				ioread32_rep(data_addr, pad, 1);
->> 					memcpy(tail, pad, slop);
->>     
+>> I think this is a very unlikely part of the problem. Certainly the drive
+>> might be dying or other hardware issue.
 >
-> Too many tabs on the memcpy.
->   
-
-   Hey, this is not a patch, and I was using Thunderbird's msg editor -- 
-which isn;t really good to tabs. :-)
-
->> 		} else {
->> 			memcpy(pad, tail, slop);
->> 			memset(pad + slop, 0, 4 - slop);
->>     
+> It does seem unlikely, although if it is a common design flaw in their
+> firmware, it could have been carried over from older drives and just not
+> be as noticeable on the older drives with smaller caches and less drive
+> space.
 >
-> And we could make that line even more complicated!
->   
+> Now if the drive is really old, then year it might simply be failing.
 
-   We could use memzero() but memset() should boil down to it anyway.
+No, the driver is pretty new (less than 1 year old) and the use is very 
+light.
 
-> But I think unsigned char pad[4] = {0, 0, 0, 0} would be better.
->   
-
-   Not really, we don't need to waste time initiazlizing it on reads -- 
-I hope you understand that it will require real code to write all those 
-zeros?). Besides, only {0} should be enough as other entries should be 
-implitly zeroed).
-
-> Though Alan didn't have it initialized at all: I don't know if
-> that was oversight or superior knowledge.  In Alan's case, one
-> should usually assume the latter.
-
-   These bytes can be anything actually as a device should just ignore them.
-
->> 		if (slop <= 2)
->> 				iowrite16_rep(data_addr, pad, 1);
->> 			else
->> 				iowrite32_rep(data_addr, pad, 1);
->> 		}
->>     
+> -- 
+> Len Sorensen
 >
-> Well, I don't know.
 
-   I do. :-)
-
-> I felt really pleased with using ioread16_rep
-> and the char array in my original patch, where slop might be 1 or 2
-> or 3; but once it comes down to always one single PIO op, I felt
-> it too lazy to be using the _rep form.
->   
-
-   It should do the Right Thing WRT the byte reordering (which is a lack 
-thereof ;-) while your code had to muck with it explicitly. And of 
-course it's shorter -- because of that.
-
-> I really don't care, whatever works and best satisfies Alan.
->   
-
-  I thought we should care about general user satisfaction, not just 
-Alan's... :-)
-
->>> -	return words << 2;
->>> +
->>> +	return buflen + (buflen & 1);
->>>   
->>>       
->>    return (buflen + 1) & ~1;
->>
->>   Well, I guess I could just have posted my own patch... :-)
->>     
->
-> Yes, do go ahead, I'm not desperate to get my name in there!
->   
-
-   I'm not actually very enthusiastic in getting blamed for the 
-breakage, given the Alan's example. ;-)
-
-> Hugh
->   
-
-MBR, Sergei
-
-
+--
+Catalin(ux) M. BOIE
+http://kernel.embedromix.ro/
