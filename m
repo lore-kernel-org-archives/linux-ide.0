@@ -1,39 +1,56 @@
-From: Andrew Victor <avictor.za@gmail.com>
-Subject: Re: [PATCH 3/3] AT91: initialize IDE driver on AT91SAM9263 cpu
-Date: Tue, 3 Feb 2009 22:27:04 +0200
-Message-ID: <cd73a99e0902031227x678ebfa3h14207aeaf00a406c@mail.gmail.com>
-References: <200902031147.41822.stf_xl@wp.pl>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] [resend] Resume from hibernation fails with pata_it821x RAID volume
+Date: Tue, 3 Feb 2009 23:20:17 +0100
+Message-ID: <200902032320.19907.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:42263 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbZBCU1I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Feb 2009 15:27:08 -0500
-Received: by ewy14 with SMTP id 14so2828376ewy.13
-        for <linux-ide@vger.kernel.org>; Tue, 03 Feb 2009 12:27:05 -0800 (PST)
-In-Reply-To: <200902031147.41822.stf_xl@wp.pl>
+Received: from mail.atlantis.sk ([80.94.52.35]:52272 "EHLO mail.atlantis.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751501AbZBCWUa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Feb 2009 17:20:30 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-hi Stanislaw,
+Hello,
+hibernation didn't work for me since I started to use IT8212 controller. Now I 
+did some debugging (booting with no_console_suspend init=/bin/sh).
 
-> +void __init at91_add_device_ide(struct at91_ide_data *data)
-> +{
+Found that resume fails (2.6.28) with "serial number mismatch 'some 
+garbage' != 'some other garbage'" and "revalidation failed" messages. That's 
+because the controller firmware fills different serial number in the IDENTIFY 
+every boot.
 
-This platform initialization code is virtually identical to the
-at91_cf version submitted by Uros Bizjak, albeit for the SAM9260.
-Similarly the "at91_cf_data" and "at91_ide_data" structs.
-
-Wouldn't it be better to have a single CF initialization function, and
-you specify whether you want "plain CF" mode or True-IDE mode?
-You could even pass the same platform-resources structure (ie,
-base-address of CF region), and have at91_ide setup the location of
-the task-file and control registers from that base address.
+The patch below fixes the resume simply clearing the serial number. The proper 
+fix would be probably to fill in the serial number of the RAID volume 
+instead. I assume that there must be something like that stored on the drives 
+but I don't know where.
 
 
-Regards,
-  Andrew Victor
+Fix resume on pata_it821x RAID volume by clearing the serial number in 
+IDENTIFY data, which is otherwise different on each boot.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+
+--- linux-2.6.28-orig/drivers/ata/pata_it821x.c	2009-01-02 17:18:36.000000000 
++0100
++++ linux/drivers/ata/pata_it821x.c	2009-02-02 17:47:57.000000000 +0100
+@@ -561,6 +561,9 @@
+ 		id[83] |= 0x4400;	/* Word 83 is valid and LBA48 */
+ 		id[86] |= 0x0400;	/* LBA48 on */
+ 		id[ATA_ID_MAJOR_VER] |= 0x1F;
++		/* Clear the serial number because it's different each boot
++		   which breaks validation on resume */
++		memset(&id[ATA_ID_SERNO], 0x20, ATA_ID_SERNO_LEN);
+ 	}
+ 	return err_mask;
+ }
+
+
+-- 
+Ondrej Zary
