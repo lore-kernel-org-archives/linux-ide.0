@@ -1,72 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: add a module parameter to ignore the SSS flags
- for async scanning
-Date: Mon, 02 Feb 2009 22:42:49 -0500
-Message-ID: <4987BD39.6090806@garzik.org>
-References: <20090126162856.0720ce17@infradead.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH -next] libata: fix kernel-doc warnings
+Date: Mon, 02 Feb 2009 22:43:02 -0500
+Message-ID: <4987BD46.5000906@pobox.com>
+References: <20090120162859.022628c1.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34423 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34435 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751312AbZBCDmy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Feb 2009 22:42:54 -0500
-In-Reply-To: <20090126162856.0720ce17@infradead.org>
+	id S1751328AbZBCDnH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 22:43:07 -0500
+In-Reply-To: <20090120162859.022628c1.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-ide@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: ide <linux-ide@vger.kernel.org>
 
-Arjan van de Ven wrote:
->>From f1adba17389764dd6f2ff654d61e8c32dbedbbef Mon Sep 17 00:00:00 2001
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Mon, 26 Jan 2009 02:05:44 -0800
-> Subject: [PATCH] ahci: add a module parameter to ignore the SSS flags for async scanning
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> The SSS flag, which directs the OS to spin up one disk at a time
-> to not have the PSU blow out, sometimes gets set even when not needed.
-> The effect of this is a longer-than-needed boot time.
+> Fix libata kernel-doc warnings:
 > 
-> This patch adds a module parameter that makes the driver ignore SSS
-> at least as far as the parallel scan during boot is concerned...
+> Warning(linux-next-20090120//drivers/ata/libata-core.c:4720): Excess function parameter 'dev' description in 'ata_qc_new'
+> Warning(linux-next-20090120//drivers/ata/libata-scsi.c:428): No description found for parameter 'ap'
 > 
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 > ---
->  drivers/ata/ahci.c |    9 ++++++++-
->  1 files changed, 8 insertions(+), 1 deletions(-)
+>  drivers/ata/libata-core.c |    3 +--
+>  drivers/ata/libata-scsi.c |    1 +
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 9603967..969c5e1 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -61,9 +61,14 @@
->  #define EM_MSG_LED_VALUE_ON           0x00010000
+> --- linux-next-20090120.orig/drivers/ata/libata-core.c
+> +++ linux-next-20090120/drivers/ata/libata-core.c
+> @@ -4709,8 +4709,7 @@ void swap_buf_le16(u16 *buf, unsigned in
 >  
->  static int ahci_skip_host_reset;
-> +static int ahci_ignore_sss;
-> +
->  module_param_named(skip_host_reset, ahci_skip_host_reset, int, 0444);
->  MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)");
+>  /**
+>   *	ata_qc_new - Request an available ATA command, for queueing
+> - *	@ap: Port associated with device @dev
+> - *	@dev: Device from whom we request an available command structure
+> + *	@ap: target port
+>   *
+>   *	LOCKING:
+>   *	None.
+> --- linux-next-20090120.orig/drivers/ata/libata-scsi.c
+> +++ linux-next-20090120/drivers/ata/libata-scsi.c
+> @@ -414,6 +414,7 @@ int ata_std_bios_param(struct scsi_devic
 >  
-> +module_param_named(ignore_sss, ahci_ignore_sss, int, 0444);
-> +MODULE_PARM_DESC(ignore_sss, "Ignore staggered spinup flag (0=don't ignore, 1=ignore)");
-> +
->  static int ahci_enable_alpm(struct ata_port *ap,
->  		enum link_pm policy);
->  static void ahci_disable_alpm(struct ata_port *ap);
-> @@ -2660,8 +2665,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	host->iomap = pcim_iomap_table(pdev);
->  	host->private_data = hpriv;
->  
-> -	if (!(hpriv->cap & HOST_CAP_SSS))
-> +	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
->  		host->flags |= ATA_HOST_PARALLEL_SCAN;
-> +	else
-> +		printk(KERN_INFO "ahci: SSS flag set, parallel bus scan disabled\n");
->  
->  	if (pi.flags & ATA_FLAG_EM)
+>  /**
+>   *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
+> + *	@ap: target port
+>   *	@sdev: SCSI device to get identify data for
+>   *	@arg: User buffer area for identify data
 
-applied
+applied to -rc
 
 
