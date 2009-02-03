@@ -1,55 +1,79 @@
-From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
-Subject: Re: [PATCH] Fix sata_sil compilation error with libata debug enabled (2.6.29-rcX)
-Date: Tue, 3 Feb 2009 14:01:28 +0200
-Message-ID: <20090203120128.GT15052@edu.joroinen.fi>
-References: <20090202194714.GN15052@edu.joroinen.fi> <4987BC43.3040400@garzik.org>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: [PATCH] block: export SSD/non-rotational queue flag through
+ sysfs
+Date: Tue, 3 Feb 2009 13:32:42 +0100
+Message-ID: <20090203133242.29904063@mjolnir.drzeus.cx>
+References: <4964866D.8010503@msgid.tls.msk.ru>
+	<1231342473.3282.19.camel@localhost.localdomain>
+	<496ECBA0.60209@gmail.com>
+	<87f94c370901150707h10506e99reaa40c23e32ab18c@mail.gmail.com>
+	<1232035561.5966.48.camel@localhost.localdomain>
+	<da824cf30901151055o2385ef74x918e8390e576d807@mail.gmail.com>
+	<1232046039.5966.54.camel@localhost.localdomain>
+	<da824cf30901151445q6b54c0b1nbf24f03849e1a5b3@mail.gmail.com>
+	<1232061429.5966.87.camel@localhost.localdomain>
+	<Pine.LNX.4.64.0901152341500.15035@blonde.anvils>
+	<20090116064818.GS30821@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754075AbZBCMBk@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4987BC43.3040400@garzik.org>
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-18211-1233664376-0001-2"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754870AbZBCMdT@vger.kernel.org>
+In-Reply-To: <20090116064818.GS30821@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Hugh Dickins <hugh@veritas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Grant Grundler <grundler@google.com>, Greg Freemyer <greg.freemyer@gmail.com>, Tejun Heo <htejun@gmail.com>, Michael Tokarev <mjt@tls.msk.ru>, Kay Sievers <kay.sievers@vrfy.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Feb 02, 2009 at 10:38:43PM -0500, Jeff Garzik wrote:
-> Pasi K=E4rkk=E4inen wrote:
-> >Hello!
-> >
-> >I tried compiling 2.6.29-rc1 and 2.6.29-rc3 with libata debugging en=
-abled
-> >and got the following error:
-> >
-> >  CC [M]  drivers/ata/sata_sil.o
-> >drivers/ata/sata_sil.c: In function 'sil_fill_sg':
-> >drivers/ata/sata_sil.c:327: error: 'pi' undeclared (first use in thi=
-s=20
-> >function)
-> >drivers/ata/sata_sil.c:327: error: (Each undeclared identifier is re=
-ported=20
-> >only once
-> >drivers/ata/sata_sil.c:327: error: for each function it appears in.)
-> >make[2]: *** [drivers/ata/sata_sil.o] Error 1
-> >make[1]: *** [drivers/ata] Error 2
-> >make: *** [drivers] Error 2
-> >
-> >include/linux/libata.h has the following enabled:
-> >
-> >#define ATA_DEBUG
-> >#define ATA_VERBOSE_DEBUG
-> >#define ATA_IRQ_TRAP
-> >
-> >The attached patch fixes the compilation.. I'm not sure if it's the =
-correct
-> >fix, but looking at the code it seems correct.. or at least makes th=
-e
-> >code compile for me :)
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
+
+--=_freyr.drzeus.cx-18211-1233664376-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 16 Jan 2009 07:48:18 +0100
+Jens Axboe <jens.axboe@oracle.com> wrote:
+
 >=20
-> applied
+> For non-queuing devices, I think our current check is a bit too drastic.
+> We probably want to change that to
+>=20
+> int dont_plug(q)
+> {
+>         return blk_queue_nonrot(q) && blk_queue_tagged(q);
+> }
 >=20
 
-Great, thanks!
+Please do. The MMC block driver sets nonrot as of late, but it is
+extremely dependent on merging. The command overhead is just silly, so
+to get anywhere near the speed numbers indicated in marketing you need
+large requests.
 
--- Pasi
+It seems that too many confuse "non-rotational" with "low latency",
+which isn't always the same. :)
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  Linux kernel, MMC maintainer        http://www.kernel.org
+  rdesktop, core developer          http://www.rdesktop.org
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.drzeus.cx-18211-1233664376-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkmIOXIACgkQ7b8eESbyJLjdVQCgqNVyBfYB9z9dVstnhmi75i4t
+GHkAoIi1mICX4UQmdcFWxF5fkUm/Zc1T
+=cPzc
+-----END PGP SIGNATURE-----
+
+--=_freyr.drzeus.cx-18211-1233664376-0001-2--
