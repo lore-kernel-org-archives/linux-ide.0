@@ -1,52 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Fix sata_sil compilation error with libata debug enabled
- (2.6.29-rcX)
-Date: Mon, 02 Feb 2009 22:38:43 -0500
-Message-ID: <4987BC43.3040400@garzik.org>
-References: <20090202194714.GN15052@edu.joroinen.fi>
+Subject: Re: [PATCH] sata_mv: Fix chip type for Hightpoint RocketRaid 1740/1742
+Date: Mon, 02 Feb 2009 22:42:41 -0500
+Message-ID: <4987BD31.8070300@garzik.org>
+References: <20070709143841.133abb71@the-village.bc.nu> <4696965E.70403@garzik.org> <497F795D.8090600@rtr.ca> <497F7AC8.7070700@rtr.ca> <497F7D99.4060108@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56795 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34418 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751523AbZBCDir (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Feb 2009 22:38:47 -0500
-In-Reply-To: <20090202194714.GN15052@edu.joroinen.fi>
+	id S1751248AbZBCDmt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 22:42:49 -0500
+In-Reply-To: <497F7D99.4060108@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, stable@kernel.org
 
-Pasi K=E4rkk=E4inen wrote:
-> Hello!
->=20
-> I tried compiling 2.6.29-rc1 and 2.6.29-rc3 with libata debugging ena=
-bled
-> and got the following error:
->=20
->   CC [M]  drivers/ata/sata_sil.o
-> drivers/ata/sata_sil.c: In function 'sil_fill_sg':
-> drivers/ata/sata_sil.c:327: error: 'pi' undeclared (first use in this=
- function)
-> drivers/ata/sata_sil.c:327: error: (Each undeclared identifier is rep=
-orted only once
-> drivers/ata/sata_sil.c:327: error: for each function it appears in.)
-> make[2]: *** [drivers/ata/sata_sil.o] Error 1
-> make[1]: *** [drivers/ata] Error 2
-> make: *** [drivers] Error 2
->=20
-> include/linux/libata.h has the following enabled:
->=20
-> #define ATA_DEBUG
-> #define ATA_VERBOSE_DEBUG
-> #define ATA_IRQ_TRAP
->=20
-> The attached patch fixes the compilation.. I'm not sure if it's the c=
-orrect
-> fix, but looking at the code it seems correct.. or at least makes the
-> code compile for me :)
+Mark Lord wrote:
+> Fix chip type for the Highpoint RocketRAID 1740 and 1742 PCI cards.
+> These really do have Marvell 6042 chips on them, rather than the 5081 chip.
+> 
+> Confirmed by multiple (two) users (for the 1740), and by examining
+> the product photographs from Highpoint's web site.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> ---
+> This replaces the earlier 1740-only version of the patch.
+> This patch is a candidate for linux-stable as well.
+> 
+> --- old/drivers/ata/sata_mv.c    2009-01-27 16:03:08.000000000 -0500
+> +++ linux/drivers/ata/sata_mv.c    2009-01-27 16:28:15.000000000 -0500
+> @@ -663,8 +663,8 @@
+>     { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
+>     /* RocketRAID 1720/174x have different identifiers */
+>     { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
+> -    { PCI_VDEVICE(TTI, 0x1740), chip_508x },
+> -    { PCI_VDEVICE(TTI, 0x1742), chip_508x },
+> +    { PCI_VDEVICE(TTI, 0x1740), chip_6042 },
+> +    { PCI_VDEVICE(TTI, 0x1742), chip_6042 },
+> 
+>     { PCI_VDEVICE(MARVELL, 0x6040), chip_604x },
 
 applied
 
