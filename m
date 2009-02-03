@@ -1,38 +1,28 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 1/2] pata_atiixp: update port enabledness
- test handling
-Date: Mon, 02 Feb 2009 23:10:00 -0500
-Message-ID: <4987C398.50709@garzik.org>
-References: <497028CF.7030408@kernel.org> <4984FB99.6000704@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/07] sata_mv: cleanup chipset GENeration FLAGS
+Date: Mon, 02 Feb 2009 23:12:11 -0500
+Message-ID: <4987C41B.40501@pobox.com>
+References: <49839107.2040603@rtr.ca> <4983915F.7090705@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56033 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56051 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751384AbZBCEKD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Feb 2009 23:10:03 -0500
-In-Reply-To: <4984FB99.6000704@kernel.org>
+	id S1751500AbZBCEMO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 23:12:14 -0500
+In-Reply-To: <4983915F.7090705@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, bugsbuggy@ymail.com
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Tejun Heo wrote:
->> Port enabledness test fits much better into init_one() instead of
->> pre_reset().  The reason why these tests are in pre_reset() is purely
->> historical at this point.  Move it to init_one().  This will help
->> further changes.
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
+Mark Lord wrote:
+> Clean up the chipset GENeration FLAGS, and rename them
+> for consistency with other uses of GEN_XX within sata_mv.
 > 
-> Jeff, the second one turned out to be unnecessary but this patch is
-> worthy on its own.  Can you please put
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 
-You mean upstream commit 16028232bf6dc5ed7e4bd341ef335f386229ad0b ?
-
-	Jeff
-
+applied 1-2
 
 
