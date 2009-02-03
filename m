@@ -1,66 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.29-rc libata sff 32bit PIO regression
-Date: Mon, 02 Feb 2009 23:00:40 -0500
-Message-ID: <4987C168.5060807@garzik.org>
-References: <Pine.LNX.4.64.0901211322010.15945@blonde.anvils> <20090126191256.04dfb6d3@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 8/8] libata: implement HORKAGE_1_5_GBPS and apply it to
+ WD My Book
+Date: Mon, 02 Feb 2009 23:04:51 -0500
+Message-ID: <4987C263.90000@garzik.org>
+References: <1233228696-10562-1-git-send-email-tj@kernel.org> <1233228696-10562-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53842 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39861 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752160AbZBCEAu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Feb 2009 23:00:50 -0500
-In-Reply-To: <20090126191256.04dfb6d3@lxorguk.ukuu.org.uk>
+	id S1754054AbZBCEEy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 23:04:54 -0500
+In-Reply-To: <1233228696-10562-9-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Hugh Dickins <hugh@veritas.com>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> And while we are at it fix the 32bit PIO handling for VLB for this case
-> too
+Tejun Heo wrote:
+> 3Gbps is often much more prone to transmission failures.  It's usually
+> okay to let EH handle speed down after transmission failures but some
+> WD My Book drives completely shutdown after certain transmission
+> failures and after it only power cycling can revive them.  Combined
+> with the fact that external drives often end up with cable assembly
+> which is longer than usual and more likely to have intervening gender,
+> this makes these drives very likely to shutdown under certain
+> configurations virtually rendering them unusable.
 > 
-> pata_legacy: For VLB 32bit PIO don't try tricks with slop
+> This patch implements HOARKGE_1_5_GBPS and applies it to WD My Book
+> such that 1.5Gbps is forced once the device is identified.
 > 
-> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Please take a look at the following bz for related reports.
 > 
-> These devices are generally used with ATA anyway and it seems that some
-> ATAPI will need us to issue the right number of words. Therefore as we
-> can't switch mid burst on VLB devices we should only use 32bit I/O for
-> suitable block sizes.
-> ---
+>   http://bugzilla.kernel.org/show_bug.cgi?id=9913
 > 
->  drivers/ata/pata_legacy.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-> index 6c1d778..e3bc1b4 100644
-> --- a/drivers/ata/pata_legacy.c
-> +++ b/drivers/ata/pata_legacy.c
-> @@ -283,9 +283,10 @@ static void pdc20230_set_piomode(struct ata_port *ap, struct ata_device *adev)
->  static unsigned int pdc_data_xfer_vlb(struct ata_device *dev,
->  			unsigned char *buf, unsigned int buflen, int rw)
->  {
-> -	if (ata_id_has_dword_io(dev->id)) {
-> +	int slop = buflen & 3;
-> +	/* 32bit I/O capable *and* we need to write a whole number of dwords */
-> +	if (ata_id_has_dword_io(dev->id) && (slop == 0 || slop == 3)) {
->  		struct ata_port *ap = dev->link->ap;
-> -		int slop = buflen & 3;
->  		unsigned long flags;
->  
->  		local_irq_save(flags);
-> @@ -735,7 +736,7 @@ static unsigned int vlb32_data_xfer(struct ata_device *adev, unsigned char *buf,
->  	struct ata_port *ap = adev->link->ap;
->  	int slop = buflen & 3;
->  
-> -	if (ata_id_has_dword_io(adev->id)) {
-> +	if (ata_id_has_dword_io(adev->id) && (slop == 0 || slop == 3)) {
->  		if (rw == WRITE)
->  			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-tested etc.?  I don't see a sign-off...
+applied 1-8
 
 
