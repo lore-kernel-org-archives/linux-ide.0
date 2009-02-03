@@ -1,52 +1,53 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [stable] [Bugme-new] [Bug 12351] New: sata_nv hotplug not work
- in 2.6.27.10
-Date: Mon, 02 Feb 2009 20:04:42 -0600
-Message-ID: <4987A63A.1020801@gmail.com>
-References: <bug-12351-10286@http.bugzilla.kernel.org/> <20090105153644.8a0eea74.akpm@linux-foundation.org> <4962AC5C.1000605@shaw.ca> <20090106102758.GA7309@libero.it> <4963F520.4060500@shaw.ca> <20090115184502.GC10674@kroah.com> <4971449A.9010601@shaw.ca> <20090202225500.GB32075@kroah.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Fix sata_sil compilation error with libata debug enabled
+ (2.6.29-rcX)
+Date: Mon, 02 Feb 2009 22:38:43 -0500
+Message-ID: <4987BC43.3040400@garzik.org>
+References: <20090202194714.GN15052@edu.joroinen.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:45230 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178AbZBCCEp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2009 21:04:45 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so647227yxm.1
-        for <linux-ide@vger.kernel.org>; Mon, 02 Feb 2009 18:04:43 -0800 (PST)
-In-Reply-To: <20090202225500.GB32075@kroah.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:56795 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751523AbZBCDir (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2009 22:38:47 -0500
+In-Reply-To: <20090202194714.GN15052@edu.joroinen.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, Tejun Heo <tj@kernel.org>, gpanco@tiscali.it, Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org
+To: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Greg KH wrote:
-> On Fri, Jan 16, 2009 at 08:38:18PM -0600, Robert Hancock wrote:
->> Greg KH wrote:
->>> On Tue, Jan 06, 2009 at 06:19:44PM -0600, Robert Hancock wrote:
->>>> Giovanni Pancotti wrote:
->>>>> On Monday 05 January 2009, alle 18:57, Robert Hancock wrote:
->>>>>
->>>>>>>> Hardware Environment:x86 ASUS M2N-E
->>>>>> OK, this is an MCP61 board. We're now using softreset instead of hardreset 
->>>>>> on hotplug and apparently that doesn't work. Thing is that:
->>>>> no, it is not MCP61, but MCP55:
->>>> Ahh, ok, that is less contradictory then :-) Presumably we should still 
->>>> be using hardreset on that chipset.
->>> So, do we know how to solve this in the 2.6.27.y tree?
->> Can you try reverting this patch?
->>
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=3c324283e6cdb79210cf7975c3e40d3ba3e672b2
->>
->> This likely isn't a proper fix as it will probably re-break some other 
->> chipsets but it will confirm what the problem is in this case. It looks 
->> like this patch changed MCP55 to inherit from generic_ops instead of 
->> common_ops which caused it to use soft reset instead of hard reset. Not 
->> sure if that was intentional or not.. Tejun?
-> 
-> I don't want to revert that, as I don't want to break anything else :)
+Pasi K=E4rkk=E4inen wrote:
+> Hello!
+>=20
+> I tried compiling 2.6.29-rc1 and 2.6.29-rc3 with libata debugging ena=
+bled
+> and got the following error:
+>=20
+>   CC [M]  drivers/ata/sata_sil.o
+> drivers/ata/sata_sil.c: In function 'sil_fill_sg':
+> drivers/ata/sata_sil.c:327: error: 'pi' undeclared (first use in this=
+ function)
+> drivers/ata/sata_sil.c:327: error: (Each undeclared identifier is rep=
+orted only once
+> drivers/ata/sata_sil.c:327: error: for each function it appears in.)
+> make[2]: *** [drivers/ata/sata_sil.o] Error 1
+> make[1]: *** [drivers/ata] Error 2
+> make: *** [drivers] Error 2
+>=20
+> include/linux/libata.h has the following enabled:
+>=20
+> #define ATA_DEBUG
+> #define ATA_VERBOSE_DEBUG
+> #define ATA_IRQ_TRAP
+>=20
+> The attached patch fixes the compilation.. I'm not sure if it's the c=
+orrect
+> fix, but looking at the code it seems correct.. or at least makes the
+> code compile for me :)
 
-That was directed at the reporter :-) However, hopefully this patch in 
-current git will resolve the problem:
+applied
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2d775708bc6613f1be47f1e720781343341ecc94
+
