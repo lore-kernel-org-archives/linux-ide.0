@@ -1,53 +1,119 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Wed, 04 Feb 2009 19:08:09 +0300
-Message-ID: <4989BD69.5050601@ru.mvista.com>
-References: <200902031147.22827.stf_xl@wp.pl> <498987E6.7040909@ru.mvista.com> <200902041547.44149.stf_xl@wp.pl> <4989BC8B.4010105@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH] sata_mv: enable ATAPI DMA for GEN_IIE chips
+Date: Wed, 04 Feb 2009 13:05:45 -0500
+Message-ID: <4989D8F9.2060500@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:21511 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753926AbZBDQHn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Feb 2009 11:07:43 -0500
-In-Reply-To: <4989BC8B.4010105@ru.mvista.com>
+Received: from rtr.ca ([76.10.145.34]:44219 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752064AbZBDSFs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Feb 2009 13:05:48 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello, I wrote:
+Enable ATAPI DMA transfers on GEN_IIE chips (6042/7042/SOC).
+This also gets rid of any need for mv_mode_filter().
 
->>>> diff --git a/arch/arm/mach-at91/include/mach/board.h 
->>>> b/arch/arm/mach-at91/include/mach/board.h
->>>> index fb51f0e..6674b9b 100644
->>>> --- a/arch/arm/mach-at91/include/mach/board.h
->>>> +++ b/arch/arm/mach-at91/include/mach/board.h
->>>> @@ -59,6 +59,18 @@ struct at91_cf_data {
->>>> };
->>>> extern void __init at91_add_device_cf(struct at91_cf_data *data);
->>>>
->>>> + /* Compact Flash True IDE mode */
->>>> +struct at91_ide_data {
->>>> +    u8    irq_pin;        /* the same meaning as for CF */
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
->>>  I again have to express my dislike about not passing IRQ the usual 
->>> way. Also, see my comments to the platform code.
-
->> Yes, I know, I don't like to argue. Only reasoning to use platform irq 
->> resource
->> seams to be: "because other drivers do". However we have exception - 
->> at91_cf
->> also use board->irq_pin, so maybe this driver could also do ?
-
->    Then why have the memory resource when we can calculate it from the 
-> chip select? (I'm not asking you to do that, since the platfrom device 
-> resources are user-visible thru /proc/iomem -- even if the driver is not 
-> enabled.)
-
-    Oh, I forgot that it's ARM with its #ifdef hell. :-D
-Then they're only visible when the driver is enabled.
-
-MBR, Sergei
-
+--- old/drivers/ata/sata_mv.c	2009-02-03 14:58:13.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2009-02-04 12:58:52.000000000 -0500
+@@ -345,7 +345,7 @@
+ 	EDMA_ARB_CFG_OFS	= 0x38,
+ 
+ 	EDMA_HALTCOND_OFS	= 0x60,		/* GenIIe halt conditions */
+-
++	EDMA_UNKNOWN_RSVD_OFS	= 0x6C,		/* GenIIe unknown/reserved */
+ 
+ 	BMDMA_CMD_OFS		= 0x224,	/* bmdma command register */
+ 	BMDMA_STATUS_OFS	= 0x228,	/* bmdma status register */
+@@ -551,8 +551,6 @@
+ static void mv_process_crpb_entries(struct ata_port *ap,
+ 					struct mv_port_priv *pp);
+ 
+-static unsigned long mv_mode_filter(struct ata_device *dev,
+-				    unsigned long xfer_mask);
+ static void mv_sff_irq_clear(struct ata_port *ap);
+ static int mv_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void mv_bmdma_setup(struct ata_queued_cmd *qc);
+@@ -614,7 +612,6 @@
+ 	.bmdma_start		= mv_bmdma_start,
+ 	.bmdma_stop		= mv_bmdma_stop,
+ 	.bmdma_status		= mv_bmdma_status,
+-	.mode_filter		= mv_mode_filter,
+ };
+ 
+ static struct ata_port_operations mv_iie_ops = {
+@@ -1260,6 +1257,25 @@
+ 	writelfl(cfg, port_mmio + EDMA_CFG_OFS);
+ }
+ 
++/**
++ * 	mv_bmdma_enable - set a magic bit on GEN_IIE to allow bmdma
++ * 	@ap: Port being initialized
++ */
++static void mv_bmdma_enable(struct ata_port *ap)
++{
++	struct mv_host_priv *hpriv = ap->host->private_data;
++
++	if (IS_GEN_IIE(hpriv)) {
++		void __iomem *port_mmio = mv_ap_base(ap);
++		/*
++		 * Some magic is required to get non-EDMA DMA to work:
++		 */
++		u32 rsvd = readl(port_mmio + EDMA_UNKNOWN_RSVD_OFS);
++		if (!(rsvd & 1))
++			writel(rsvd | 1, port_mmio + EDMA_UNKNOWN_RSVD_OFS);
++	}
++}
++
+ static void mv_port_free_dma_mem(struct ata_port *ap)
+ {
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+@@ -1340,6 +1356,7 @@
+ 		}
+ 	}
+ 	mv_edma_cfg(ap, 0, 0);
++	mv_bmdma_enable(ap);
+ 	return 0;
+ 
+ out_port_free_dma_mem:
+@@ -1417,26 +1434,6 @@
+ }
+ 
+ /**
+- *	mv_mode_filter - Allow ATAPI DMA only on GenII chips.
+- *	@dev: device whose xfer modes are being configured.
+- *
+- *	Only the GenII hardware can use DMA with ATAPI drives.
+- */
+-static unsigned long mv_mode_filter(struct ata_device *adev,
+-				    unsigned long xfer_mask)
+-{
+-	if (adev->class == ATA_DEV_ATAPI) {
+-		struct mv_host_priv *hpriv = adev->link->ap->host->private_data;
+-		if (!IS_GEN_II(hpriv)) {
+-			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+-			ata_dev_printk(adev, KERN_INFO,
+-				"ATAPI DMA not supported on this chipset\n");
+-		}
+-	}
+-	return xfer_mask;
+-}
+-
+-/**
+  *	mv_sff_irq_clear - Clear hardware interrupt after DMA.
+  *	@ap: Port associated with this ATA transaction.
+  *
+@@ -2997,7 +2994,7 @@
+ 		}
+ 	} while (sstatus != 0x0 && sstatus != 0x113 && sstatus != 0x123);
+ 	mv_edma_cfg(ap, 0, 0);
+-
++	mv_bmdma_enable(ap);
+ 	return rc;
+ }
+ 
