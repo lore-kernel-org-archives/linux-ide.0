@@ -1,45 +1,41 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 0/8] ide: remove ->end_request method
-Date: Thu, 5 Feb 2009 07:50:35 +0100
-Message-ID: <20090205065035.GA32418@gollum.tnic>
-References: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
-Reply-To: petkovbb@gmail.com
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Suggestions for debugging ata_piix and ahci driver failures on Xen pv_ops dom0 kernel (2.6.29-rcX)
+Date: Thu, 5 Feb 2009 10:28:43 +0200
+Message-ID: <20090205082843.GD15052@edu.joroinen.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:52712 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbZBEGuj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 01:50:39 -0500
+Received: from edu.joroinen.fi ([194.89.68.130]:49123 "EHLO edu.joroinen.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753148AbZBEI2q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Feb 2009 03:28:46 -0500
 Content-Disposition: inline
-In-Reply-To: <20090201192732.1592.76435.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Sun, Feb 01, 2009 at 08:27:32PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> by-product of some other WIP...
-> 
-> on top of "[PATCH 00/15] weekly IDE updates" patchset
-> [ http://marc.info/?l=linux-kernel&m=123351051303529&w=2 ]
-> 
-> diffstat:
->  drivers/ide/ide-atapi.c    |   17 +++--
->  drivers/ide/ide-cd.c       |    1 
->  drivers/ide/ide-disk.c     |    1 
->  drivers/ide/ide-floppy.c   |  130 ++++++++++++++++-----------------------------
->  drivers/ide/ide-gd.c       |    6 --
->  drivers/ide/ide-gd.h       |    2 
->  drivers/ide/ide-io.c       |   21 ++++---
->  drivers/ide/ide-tape.c     |  124 ++++++++++++++----------------------------
->  drivers/ide/ide-taskfile.c |   16 +----
->  include/linux/ide.h        |   16 +++--
->  10 files changed, 127 insertions(+), 207 deletions(-)
+Hello!
 
-ACK.
+I'm trying to figure out what's wrong with the pv_ops dom0 kernel/patches [1]
+causing at least ata_piix and ahci drivers to fail to work.
 
--- 
-Regards/Gruss,
-    Boris.
+There was legacy IRQ enabling problem earlier with the pv_ops dom0 patches, 
+which pretty much prevented the disks from being detected.. but that got fixed. 
+It could still be something related to Xen/dom0 irq handling.. 
+
+I'd be glad if someone could take a look at this 2.6.29-rc3-tip pv_ops dom0 kernel boot log
+and comment about _possible_ causes for such behaviour of ata_piix and ahci:
+
+http://pasik.reaktio.net/xen/pv_ops-dom0-debug/pv_ops-dom0-bootlog-11-xen331-linux-2.6.29-rc3-atadebug3.txt
+
+In that testing box I have just one IDE hdd attached to ata_piix controller, the AHCI controller doesn't
+have any disks attached.
+
+The exact same kernel works OK without problems on baremetal without Xen
+hypervisor. 
+
+[1] http://xenbits.xen.org/paravirt_ops/patches.hg/ and
+http://wiki.xensource.com/xenwiki/XenParavirtOps
+
+-- Pasi
