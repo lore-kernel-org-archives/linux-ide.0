@@ -1,35 +1,37 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [PATCH 3/3] AT91: initialize IDE driver on AT91SAM9263 cpu
-Date: Thu, 5 Feb 2009 16:06:04 +0100
-Message-ID: <200902051606.04181.stf_xl@wp.pl>
-References: <200902031147.41822.stf_xl@wp.pl> <cd73a99e0902031227x678ebfa3h14207aeaf00a406c@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv: enable ATAPI DMA for GEN_IIE chips
+Date: Thu, 05 Feb 2009 10:33:51 -0500
+Message-ID: <498B06DF.8010501@rtr.ca>
+References: <4989D8F9.2060500@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:53568 "EHLO mx1.wp.pl"
+Received: from rtr.ca ([76.10.145.34]:41652 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757285AbZBEPGX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 10:06:23 -0500
-In-Reply-To: <cd73a99e0902031227x678ebfa3h14207aeaf00a406c@mail.gmail.com>
-Content-Disposition: inline
+	id S1751057AbZBEPdx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Feb 2009 10:33:53 -0500
+In-Reply-To: <4989D8F9.2060500@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Victor <avictor.za@gmail.com>
-Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tuesday 03 February 2009 21:27:04 Andrew Victor napisa=C5=82(a):
-> hi Stanislaw,
->=20
-> > +void __init at91_add_device_ide(struct at91_ide_data *data)
-> > +{
->=20
-> This platform initialization code is virtually identical to the
-> at91_cf version submitted by Uros Bizjak, albeit for the SAM9260.
-> Similarly the "at91_cf_data" and "at91_ide_data" structs.
-Shouldn't be sam9_smc_config stuff be in board file not in cpu file,=20
-in place where you know what is the clock frequency. Could you
-assume cpu is clocked with some particular freqency?
+Mark Lord wrote:
+> Enable ATAPI DMA transfers on GEN_IIE chips (6042/7042/SOC).
+> This also gets rid of any need for mv_mode_filter().
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> --- old/drivers/ata/sata_mv.c    2009-02-03 14:58:13.000000000 -0500
+> +++ linux/drivers/ata/sata_mv.c    2009-02-04 12:58:52.000000000 -0500
+> @@ -345,7 +345,7 @@
+>     EDMA_ARB_CFG_OFS    = 0x38,
+> 
+>     EDMA_HALTCOND_OFS    = 0x60,        /* GenIIe halt conditions */
+> -
+> +    EDMA_UNKNOWN_RSVD_OFS    = 0x6C,        /* GenIIe unknown/reserved */
+..
 
-Cheers
-Stanislaw Gruszka
+Scuttle that patch.  I'll re-issue a (v2) version shortly.
+
+-ml
