@@ -1,48 +1,44 @@
-From: Andrew Victor <avictor.za@gmail.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Thu, 5 Feb 2009 22:00:30 +0200
-Message-ID: <cd73a99e0902051200ob1787e2v73e750344ca44ec9@mail.gmail.com>
-References: <200902031147.22827.stf_xl@wp.pl> <200902041547.44149.stf_xl@wp.pl>
-	 <4989BC8B.4010105@ru.mvista.com> <200902051601.50822.stf_xl@wp.pl>
-	 <498B0F22.3090403@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/3] AT91: initialize IDE driver on AT91SAM9263 cpu
+Date: Thu, 05 Feb 2009 23:01:47 +0300
+Message-ID: <498B45AB.3070409@ru.mvista.com>
+References: <200902031147.41822.stf_xl@wp.pl>	 <cd73a99e0902031227x678ebfa3h14207aeaf00a406c@mail.gmail.com>	 <200902041036.30785.stf_xl@wp.pl> <498AD574.9050003@ru.mvista.com> <cd73a99e0902051143m755cf077le11f01bd4454b15f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:42170 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbZBEUAd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 15:00:33 -0500
-Received: by ewy13 with SMTP id 13so824090ewy.18
-        for <linux-ide@vger.kernel.org>; Thu, 05 Feb 2009 12:00:30 -0800 (PST)
-In-Reply-To: <498B0F22.3090403@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:60716 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752103AbZBEUBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Feb 2009 15:01:24 -0500
+In-Reply-To: <cd73a99e0902051143m755cf077le11f01bd4454b15f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Andrew Victor <avictor.za@gmail.com>
 Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
 
-hi,
+Andrew Victor wrote:
 
->>>>> AT91SAM9.
->
->>>> Ok, currently only SAM9 can be used with driver. However I think adding
->>>> support to AT91RM9200 to this driver will be not much effort.
->
->>>   Can you answer the simple question: why we should try to support two
->>> incompatible chips with a single driver? Because the driver name will be
->>> shorter? :-)
->
->> Very funny. I think patch adding RM9200 support to this driver will have
->> less
->> than 50 lines changeset,  whereas writing new driver would be about 500
->> lines.
->
->   This approach is so broken-minded that I'm just out words to argue any
-> more.
+>>>http://download.ronetix.info/sk-eb926x/linux/kernel/2.6.28/003_linux-2.6.28-at91-ronetix-12012009.patch
 
-This driver should also work on the Atmel AT91CAP9 and AT572D940HF processors.
-So I see no valid reason why the driver cannot be called at91_ide.
+>> This patch is clearly incomplete because drivers/pcmcia/at91_cf.c does
+>>accesses AT91RM9200 specific SMC register, but the patch does nothing about
+>>making this work on AT91SAM9. Though it indeed seems that AT91SAM9 can be
+>>supported by that driver with minimum change -- perhaps by using
+>>cpi_is_*()...
 
+> Rather see latest patch on http://maxim.org.za/at91_26.html.
 
-Regards,
-  Andrew Victor
+> The cpu_is_XX() is for run-time selection (and is the preferred mechanism).
+> Unfortunately the SMC registers are significantly different on the
+> SAM9 and RM9200, so we need to use #ifdefs for compile-time selection.
+
+    Ah, seeing the real issue now: different encoding of the DBW fields b/w 
+those 2 types of SMCs. Oh, and I've missed the different DBW field positions 
+too... That however can be addressed by using the driver local #define', not 
+the ones from the headers (which should be conflicting)...
+
+> Regards,
+>   Andrew Victor
+
+WBR, Sergei
