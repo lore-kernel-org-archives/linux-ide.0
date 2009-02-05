@@ -1,144 +1,131 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 02/02] sata_mv: enable ATAPI DMA for GEN_IIE (v2)
-Date: Thu, 05 Feb 2009 10:37:49 -0500
-Message-ID: <498B07CD.4090200@rtr.ca>
-References: <4989D8F9.2060500@rtr.ca> <498B06DF.8010501@rtr.ca> <498B0789.2080900@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/3] ide: add at91_ide driver
+Date: Thu, 05 Feb 2009 19:09:06 +0300
+Message-ID: <498B0F22.3090403@ru.mvista.com>
+References: <200902031147.22827.stf_xl@wp.pl> <200902041547.44149.stf_xl@wp.pl> <4989BC8B.4010105@ru.mvista.com> <200902051601.50822.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:41659 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753327AbZBEPhv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Feb 2009 10:37:51 -0500
-In-Reply-To: <498B0789.2080900@rtr.ca>
+Received: from h155.mvista.com ([63.81.120.155]:56271 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751166AbZBEQIl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Feb 2009 11:08:41 -0500
+In-Reply-To: <200902051601.50822.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Grant Grundler <grundler@google.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
 
-Enable use of (basic) DMA for ATAPI on GEN_IIE chips.
-This also gets rid of any need for mv_mode_filter().
+Stanislaw Gruszka wrote:
 
-Using basic DMA on GEN_IIE requires setting an undocumented
-bit in an undocumented register.  For safety, we clear that
-bit again when switching back to EDMA mode.
+>>>>>extern void __init at91_add_device_cf(struct at91_cf_data *data);
+>>>>>
+>>>>>+ /* Compact Flash True IDE mode */
+>>>>>+struct at91_ide_data {
+>>>>>+	u8	irq_pin;		/* the same meaning as for CF */
 
-To avoid a performance penalty when switching modes,
-we cache the register in port_priv, as already done for other regs.
+>>>> I again have to express my dislike about not passing IRQ the usual 
+>>>>way. Also, see my comments to the platform code.
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
+>>>Yes, I know, I don't like to argue. Only reasoning to use platform irq resource
+>>>seams to be: "because other drivers do". However we have exception - at91_cf
+>>>also use board->irq_pin, so maybe this driver could also do ?
 
-This replaces the original patch posted earlier.
+>>    Then why have the memory resource when we can calculate it from the chip 
+>>select?  
 
---- old/drivers/ata/sata_mv.c	2009-02-05 10:14:43.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2009-02-05 10:13:12.000000000 -0500
-@@ -345,7 +345,7 @@
- 	EDMA_ARB_CFG_OFS	= 0x38,
- 
- 	EDMA_HALTCOND_OFS	= 0x60,		/* GenIIe halt conditions */
--
-+	EDMA_UNKNOWN_RSVD_OFS	= 0x6C,		/* GenIIe unknown/reserved */
- 
- 	BMDMA_CMD_OFS		= 0x224,	/* bmdma command register */
- 	BMDMA_STATUS_OFS	= 0x228,	/* bmdma status register */
-@@ -447,6 +447,7 @@
- 	u32			fiscfg;
- 	u32			ltmode;
- 	u32			haltcond;
-+	u32			unknown_rsvd;
- };
- 
- struct mv_port_priv {
-@@ -563,8 +564,6 @@
- static void mv_process_crpb_entries(struct ata_port *ap,
- 					struct mv_port_priv *pp);
- 
--static unsigned long mv_mode_filter(struct ata_device *dev,
--				    unsigned long xfer_mask);
- static void mv_sff_irq_clear(struct ata_port *ap);
- static int mv_check_atapi_dma(struct ata_queued_cmd *qc);
- static void mv_bmdma_setup(struct ata_queued_cmd *qc);
-@@ -626,7 +625,6 @@
- 	.bmdma_start		= mv_bmdma_start,
- 	.bmdma_stop		= mv_bmdma_stop,
- 	.bmdma_status		= mv_bmdma_status,
--	.mode_filter		= mv_mode_filter,
- };
- 
- static struct ata_port_operations mv_iie_ops = {
-@@ -842,6 +840,7 @@
- 	pp->cached.fiscfg = readl(port_mmio + FISCFG_OFS);
- 	pp->cached.ltmode = readl(port_mmio + LTMODE_OFS);
- 	pp->cached.haltcond = readl(port_mmio + EDMA_HALTCOND_OFS);
-+	pp->cached.unknown_rsvd = readl(port_mmio + EDMA_UNKNOWN_RSVD_OFS);
- }
- 
- /**
-@@ -1252,6 +1251,30 @@
- 		writel(new, hpriv->base + MV_GPIO_PORT_CTL_OFS);
- }
- 
-+/**
-+ * 	mv_bmdma_enable - set a magic bit on GEN_IIE to allow bmdma
-+ * 	@ap: Port being initialized
-+ *
-+ *	There are two DMA modes on these chips:  basic DMA, and EDMA.
-+ *
-+ *	Bit-0 of the "EDMA RESERVED" register enables/disables use
-+ *	of basic DMA on the GEN_IIE versions of the chips.
-+ *
-+ *	This bit survives EDMA resets, and must be set for basic DMA
-+ *	to function, and should be cleared when EDMA is active.
-+ */
-+static void mv_bmdma_enable_iie(struct ata_port *ap, int enable_bmdma)
-+{
-+	struct mv_port_priv *pp = ap->private_data;
-+	u32 new, *old = &pp->cached.unknown_rsvd;
-+
-+	if (enable_bmdma)
-+		new = *old | 1;
-+	else
-+		new = *old & ~1;
-+	mv_write_cached_reg(mv_ap_base(ap) + EDMA_UNKNOWN_RSVD_OFS, old, new);
-+}
-+
- static void mv_edma_cfg(struct ata_port *ap, int want_ncq, int want_edma)
- {
- 	u32 cfg;
-@@ -1297,6 +1320,7 @@
- 		}
- 		if (hpriv->hp_flags & MV_HP_CUT_THROUGH)
- 			cfg |= (1 << 17); /* enab cut-thru (dis stor&forwrd) */
-+		mv_bmdma_enable_iie(ap, !want_edma);
- 	}
- 
- 	if (want_ncq) {
-@@ -1465,26 +1489,6 @@
- }
- 
- /**
-- *	mv_mode_filter - Allow ATAPI DMA only on GenII chips.
-- *	@dev: device whose xfer modes are being configured.
-- *
-- *	Only the GenII hardware can use DMA with ATAPI drives.
-- */
--static unsigned long mv_mode_filter(struct ata_device *adev,
--				    unsigned long xfer_mask)
--{
--	if (adev->class == ATA_DEV_ATAPI) {
--		struct mv_host_priv *hpriv = adev->link->ap->host->private_data;
--		if (!IS_GEN_II(hpriv)) {
--			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
--			ata_dev_printk(adev, KERN_INFO,
--				"ATAPI DMA not supported on this chipset\n");
--		}
--	}
--	return xfer_mask;
--}
--
--/**
-  *	mv_sff_irq_clear - Clear hardware interrupt after DMA.
-  *	@ap: Port associated with this ATA transaction.
-  *
+> Great idea, I very like it :)
+
+    It should have arisen from trying to follow your approach consistently.
+    You can then drop the whole idea of using the platform device -- 'struct 
+device' already has 'platform_data' member (although... there is a prominent 
+example of a platfrom driver using only the platform data to pass all the 
+resource information: drivers/serial/8250.c).
+
+> But memory is a platform (cpu) resource,
+
+    I don't get what you're trying to say. AFAIK, there has never been an 
+*implication* that the platfrom device resources should be CPU-, and not 
+board-specific.
+
+> however board dependend.
+
+    Haven't you just told us that it's not board, but CPU dependent?
+
+>>(I'm not asking you to do that, since the platfrom device resources   
+>>are user-visible thru /proc/iomem -- even if the driver is not enabled.)
+
+> Let's distinguish platform (cpu) resources and board resources.
+
+    I'm seeing no point in such distinction. The platfrom device framework was 
+created exactly with the assorted on-board devices in mind.
+
+> If you take a look at arch/arm/mach-at91/*_devices.c files, 
+> IORESOURCE_IRQ are used for interrupts from devices that are integrated
+> on the chip. Board specific irq pins (like in at91_cf, at91_ether) are not
+> passed to platform driver via platform_resource but via board data.
+
+    I don't care what the particular broken ARM platfrom code does. If it 
+can't pass resources in a normal way, it should be fixed, and not followed as 
+a good example.
+
+>>>>>diff --git a/drivers/ide/at91_ide.c b/drivers/ide/at91_ide.c
+>>>>>new file mode 100644
+>>>>>index 0000000..3a1f7e0
+>>>>>--- /dev/null
+>>>>>+++ b/drivers/ide/at91_ide.c
+>>>>>@@ -0,0 +1,496 @@
+>>>>>+/*
+>>>>>+ * IDE host driver for AT91SAM9 Static Memory Controller
+
+>>>>  Why not call the driver 'at91sam9_ide'?
+
+>>>>>+/*
+>>>>>+ * AT91 Static Memory Controller
+
+>>>> AT91SAM9.
+
+>>>Ok, currently only SAM9 can be used with driver. However I think adding
+>>>support to AT91RM9200 to this driver will be not much effort.
+
+>>    Can you answer the simple question: why we should try to support two 
+>>incompatible chips with a single driver? Because the driver name will be 
+>>shorter? :-)
+
+> Very funny. I think patch adding RM9200 support to this driver will have less
+> than 50 lines changeset,  whereas writing new driver would be about 500 lines.
+
+    This approach is so broken-minded that I'm just out words to argue any more.
+    Let's then support say all the PCI IDE chipsets with the single driver 
+(actully, there was a driver that tried to support 2 incompatible Promise chip 
+families but it got split finally). Moreover, with AT91RM9200 lacking True IDE 
+mode support, the code (if anybody in their right mind would undertake the 
+task of adding IDE support) will be different enough from what is there 
+already, that I doubt that that imaginary porgrammer would keep clinging to 
+the doubtful idea to the very end... anyway, I'm now considering the very 
+possibilty of anybody trying to do that minimal, exactly due to AT91RM9200 
+lacking True IDE support.
+
+>>>I don't think
+>>>someone will want to write new driver for RM9200 insted using this one.
+
+>>    You're right, nobody will want that... because AT91RM9200 as is has *no 
+>>support for True IDE mode*. ;-)
+
+> Atmel documents are confusing. AT91RM9200 datasheet tells there is no
+> True IDE support,
+
+    There is no confusion there -- at least for me. Yes, there is no True IDE 
+support.
+
+> but RM9200 hard drive application note (which I send you a link before) tell it is.
+
+    That is just a total hack. I don't think anyone will really want to use 
+the GPIO controlled chip selects that this application note describes... well, 
+if only out of total desperation. :-)
+
+> Cheers
+> Stanislaw Gruszka
+
+MBR, Sergei
