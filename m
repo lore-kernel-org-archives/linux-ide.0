@@ -1,117 +1,49 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/4] ide: remove IDE_ARCH_LOCK
-Date: Thu, 5 Feb 2009 21:14:44 +0100
-Message-ID: <200902052114.44792.bzolnier@gmail.com>
-References: <20090127180246.28089.2981.sendpatchset@localhost.localdomain> <20090127180259.28089.56908.sendpatchset@localhost.localdomain> <Pine.LNX.4.64.0902042226440.25136@anakin>
+Subject: Re: [PATCH 2/3] ide: add at91_ide driver
+Date: Thu, 5 Feb 2009 22:23:08 +0100
+Message-ID: <200902052223.08637.bzolnier@gmail.com>
+References: <200902031147.22827.stf_xl@wp.pl> <498987E6.7040909@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0902042226440.25136@anakin>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.184]:40376 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017AbZBEVet (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 16:34:49 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so323214mue.1
+        for <linux-ide@vger.kernel.org>; Thu, 05 Feb 2009 13:34:47 -0800 (PST)
+In-Reply-To: <498987E6.7040909@ru.mvista.com>
 Content-Disposition: inline
-Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-ide@vger.kernel.org, Michael Schmitz <schmitz@debian.org>, linux-m68k@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 
-On Wednesday 04 February 2009, Geert Uytterhoeven wrote:
-> On Tue, 27 Jan 2009, Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] ide: remove IDE_ARCH_LOCK
-> > 
-> > * Add ->{get,release}_lock methods to struct ide_port_info
-> >   and struct ide_host.
-> > 
-> > * Convert core IDE code, m68k IDE code and falconide support to use
-> >   ->{get,release}_lock methods instead of ide_{get,release}_lock().
-> > 
-> > * Remove IDE_ARCH_LOCK.
-> > 
-> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> > Cc: Michael Schmitz <schmitz@debian.org>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > We may also consider adding struct ide_host_ops later...
-> > 
-> >  drivers/ide/falconide.c |   25 +++++++++++++++++++++++--
-> >  drivers/ide/ide-io.c    |    8 ++++----
-> >  drivers/ide/ide-probe.c |    2 ++
-> >  include/asm-m68k/ide.h  |   36 ------------------------------------
-> >  include/linux/ide.h     |   16 ++++++++++------
-> >  5 files changed, 39 insertions(+), 48 deletions(-)
-> > 
-> > Index: b/drivers/ide/falconide.c
-> > ===================================================================
-> > --- a/drivers/ide/falconide.c
-> > +++ b/drivers/ide/falconide.c
-> > @@ -40,8 +40,27 @@
-> >       *  which is shared between several drivers.
-> >       */
-> >  
-> > -int falconide_intr_lock;
-> > -EXPORT_SYMBOL(falconide_intr_lock);
-> > +static int falconide_intr_lock;
-> > +
-> > +static void falconide_release_lock(void)
+On Wednesday 04 February 2009, Sergei Shtylyov wrote:
+
+[...]
+
+> > +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
 > > +{
-> > +	if (falconide_intr_lock == 0) {
-> > +		printk(KERN_ERR "%s: bug\n", __func__);
-> > +		return;
-> > +	}
-> > +	falconide_intr_lock = 0;
-> > +	stdma_release();
-> > +}
+> > +	ide_hwif_t *hwif = drive->hwif;
+> > +	struct ide_io_ports *io_ports = &hwif->io_ports;
+> > +	struct ide_taskfile *tf = &task->tf;
+> > +	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
 > > +
-> > +static void falconide_get_lock(irq_handler_t handler, void *data)
-> > +{
-> > +	if (falconide_intr_lock == 0) {
-> > +		if (in_interrupt() > 0)
-> > +			panic("Falcon IDE hasn't ST-DMA lock in interrupt");
-> > +		stdma_lock(handler, data);
-> > +		falconide_intr_lock = 1;
-> > +	}
-> > +}
-> >  
-> >  static void falconide_input_data(ide_drive_t *drive, struct request *rq,
-> >  				 void *buf, unsigned int len)
-> > @@ -81,6 +100,8 @@ static const struct ide_tp_ops falconide
-> >  };
-> >  
-> >  static const struct ide_port_info falconide_port_info = {
-> > +	.get_lock		= falconide_get_lock,
-> > +	.release_lock		= falconide_release_lock,
-> >  	.tp_ops			= &falconide_tp_ops,
-> >  	.host_flags		= IDE_HFLAG_NO_DMA | IDE_HFLAG_SERIALIZE,
-> >  };
+> > +	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+> > +		HIHI = 0xFF;
+> > +
+> > +	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
+> >   
 > 
-> http://kisskb.ellerman.id.au/kisskb/buildresult/71775/
-> 
-> drivers/ide/falconide.c:157: error: implicit declaration of function 'ide_get_lock'
-> drivers/ide/falconide.c:159: error: implicit declaration of function 'ide_release_lock'
-> 
-> Seems like you forgot to update two callers?
-> 
-> diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
-> index 1203796..bb0c86e 100644
-> --- a/drivers/ide/falconide.c
-> +++ b/drivers/ide/falconide.c
-> @@ -154,9 +154,9 @@ static int __init falconide_init(void)
->  		goto err;
->  	}
->  
-> -	ide_get_lock(NULL, NULL);
-> +	falconide_get_lock(NULL, NULL);
->  	rc = ide_host_register(host, &falconide_port_info, hws);
-> -	ide_release_lock();
-> +	falconide_release_lock();
+>    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody ever used it.
 
-Thanks, I integrated above fix into the original patch.
+It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to break it.
 
-...
-v2:
-* Build fix from Geert updating ide_{get,release}_lock() callers in
-  falconide.c.
-...
+Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA to struct
+ide_tp_ops -- it should also help some other host drivers like tx493*.
 
+Thanks,
 Bart
