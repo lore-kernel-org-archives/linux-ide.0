@@ -1,47 +1,54 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/15] ide: include <asm/ide.h> only when needed
-Date: Thu, 5 Feb 2009 22:14:31 +0100
-Message-ID: <200902052214.31483.bzolnier@gmail.com>
-References: <20090201174916.19144.11318.sendpatchset@localhost.localdomain> <200902021927.25177.bzolnier@gmail.com> <20090204.232006.01916235.anemo@mba.ocn.ne.jp>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/3] ide: add at91_ide driver
+Date: Fri, 06 Feb 2009 02:31:14 +0300
+Message-ID: <498B76C2.7030709@ru.mvista.com>
+References: <200902031147.22827.stf_xl@wp.pl> <498987E6.7040909@ru.mvista.com> <200902052223.08637.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:40866 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752617AbZBEVeq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 16:34:46 -0500
-In-Reply-To: <20090204.232006.01916235.anemo@mba.ocn.ne.jp>
-Content-Disposition: inline
+Received: from homer.mvista.com ([63.81.120.155]:64330 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755689AbZBEXbX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 18:31:23 -0500
+In-Reply-To: <200902052223.08637.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: geert@linux-m68k.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, apw@canonical.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 
-On Wednesday 04 February 2009, Atsushi Nemoto wrote:
-> On Mon, 2 Feb 2009 19:27:25 +0100, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > > > +#include <asm/ide.h>
-> > > 
-> > > Did you try checkpatch.pl?
-> > 
-> > Sure.
-> > 
-> > This driver uses stuff from <asm-mips/ide.h>.
-> > 
-> > [ I guess I could put '-mips' there to silence warnings on tx493{8,9}.c,
-> >   however I don't know of the way to get rid of ide-io-std.c's one... ]
-> 
-> BTW, tx4939ide_{in,out}put_data_swap and
-> tx4939ide_{in,out}put_data_swap do exactly same thing.
-> 
-> If byte-swapped version of ide_{in,out}put_data() were available by
-> ide core, they can be used instead.  The byte-swapped version of
-> default_tp_ops would much helps such queer big-endian platforms.  Is
-> it worth to bloat ide core? ;-)
+Hello.
 
-Seems to be a good idea and it may also help some other host drivers
-(ide-h8300.c?).
+Bartlomiej Zolnierkiewicz wrote:
 
-Thanks,
-Bart
+>>> +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
+>>> +{
+>>> +	ide_hwif_t *hwif = drive->hwif;
+>>> +	struct ide_io_ports *io_ports = &hwif->io_ports;
+>>> +	struct ide_taskfile *tf = &task->tf;
+>>> +	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+>>> +
+>>> +	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+>>> +		HIHI = 0xFF;
+>>> +
+>>> +	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
+>>>   
+>>>       
+>>    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody ever used it.
+>>     
+>
+> It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to break it.
+>
+> Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA to struct
+> ide_tp_ops -- it should also help some other host drivers like tx493*.
+>   
+
+  That would be extremely senseless activity sicne I believe this flag 
+is totally useless. I have better thing to do. :-)
+
+> Thanks,
+> Bart
+
+MBR, Sergei
+
+
