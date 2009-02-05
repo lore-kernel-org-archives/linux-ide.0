@@ -1,49 +1,85 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Thu, 5 Feb 2009 22:23:08 +0100
-Message-ID: <200902052223.08637.bzolnier@gmail.com>
-References: <200902031147.22827.stf_xl@wp.pl> <498987E6.7040909@ru.mvista.com>
+Subject: [PATCH] ide: use ide_complete_cmd() for REQ_UNPARK_HEADS
+Date: Thu, 5 Feb 2009 21:29:51 +0100
+Message-ID: <200902052129.52047.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:40376 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017AbZBEVet (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 16:34:49 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so323214mue.1
-        for <linux-ide@vger.kernel.org>; Thu, 05 Feb 2009 13:34:47 -0800 (PST)
-In-Reply-To: <498987E6.7040909@ru.mvista.com>
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:35382 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387AbZBEVeq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 16:34:46 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Wednesday 04 February 2009, Sergei Shtylyov wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: use ide_complete_cmd() for REQ_UNPARK_HEADS
 
-[...]
+* Fixup ->tf_flags in ide_do_park_unpark() to match their current use.
 
-> > +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
-> > +{
-> > +	ide_hwif_t *hwif = drive->hwif;
-> > +	struct ide_io_ports *io_ports = &hwif->io_ports;
-> > +	struct ide_taskfile *tf = &task->tf;
-> > +	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
-> > +
-> > +	if (task->tf_flags & IDE_TFLAG_FLAGGED)
-> > +		HIHI = 0xFF;
-> > +
-> > +	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
-> >   
-> 
->    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody ever used it.
+* Use ide_complete_cmd() for REQ_UNPARK_HEADS.
 
-It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to break it.
+While at it:
 
-Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA to struct
-ide_tp_ops -- it should also help some other host drivers like tx493*.
+* No need to read Error register for PM requests in task_no_data_intr().
 
-Thanks,
-Bart
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+replaces "ide: use ide_complete_cmd() for PM commands" patch
+
+[ as a result of 'take 2' of "ide: move request type specific
+  code from ide_end_drive_cmd() to callers" patch ]
+
+ drivers/ide/ide-park.c     |    4 ++--
+ drivers/ide/ide-taskfile.c |   10 +++++-----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+Index: b/drivers/ide/ide-park.c
+===================================================================
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -74,11 +74,11 @@ ide_startstop_t ide_do_park_unpark(ide_d
+ 		tf->lbal = 0x4c;
+ 		tf->lbam = 0x4e;
+ 		tf->lbah = 0x55;
+-		cmd.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
++		cmd.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
+ 	} else		/* cmd == REQ_UNPARK_HEADS */
+ 		tf->command = ATA_CMD_CHK_POWER;
+ 
+-	cmd.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
++	cmd.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
+ 	cmd.protocol = ATA_PROT_NODATA;
+ 
+ 	cmd.rq = rq;
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -149,16 +149,16 @@ static ide_startstop_t task_no_data_intr
+ 	if (custom && tf->command == ATA_CMD_SET_MULTI)
+ 		drive->mult_count = drive->mult_req;
+ 
+-	if (custom == 0 || tf->command == ATA_CMD_IDLEIMMEDIATE) {
++	if (custom == 0 || tf->command == ATA_CMD_IDLEIMMEDIATE ||
++	    tf->command == ATA_CMD_CHK_POWER) {
+ 		struct request *rq = hwif->rq;
+-		u8 err = ide_read_error(drive);
+ 
+ 		if (blk_pm_request(rq))
+ 			ide_complete_pm_rq(drive, rq);
+ 		else {
+-			if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE ||
+-			    tf->command == ATA_CMD_IDLEIMMEDIATE)
+-				ide_complete_cmd(drive, cmd, stat, err);
++			u8 err = ide_read_error(drive);
++
++			ide_complete_cmd(drive, cmd, stat, err);
+ 			ide_complete_rq(drive, err);
+ 		}
+ 	}
