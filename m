@@ -1,58 +1,61 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Suggestions for debugging ata_piix and ahci driver failures on
- Xen pv_ops dom0 kernel (2.6.29-rcX)
-Date: Thu, 05 Feb 2009 18:45:02 -0600
-Message-ID: <498B880E.6070001@gmail.com>
-References: <20090205082843.GD15052@edu.joroinen.fi>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 09/15] ide: add "flagged" taskfile flags to struct
+ ide_taskfile
+Date: Fri, 6 Feb 2009 17:04:25 +1100
+Message-ID: <20090206170425.201346e6.sfr@canb.auug.org.au>
+References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
+	<20090201175012.19144.87417.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:35394 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491AbZBFApI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 19:45:08 -0500
-In-Reply-To: <20090205082843.GD15052@edu.joroinen.fi>
+Received: from chilli.pcug.org.au ([203.10.76.44]:58758 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751642AbZBFGEc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Feb 2009 01:04:32 -0500
+In-Reply-To: <20090201175012.19144.87417.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Pasi K=E4rkk=E4inen wrote:
-> Hello!
->=20
-> I'm trying to figure out what's wrong with the pv_ops dom0 kernel/pat=
-ches [1]
-> causing at least ata_piix and ahci drivers to fail to work.
->=20
-> There was legacy IRQ enabling problem earlier with the pv_ops dom0 pa=
-tches,=20
-> which pretty much prevented the disks from being detected.. but that =
-got fixed.=20
-> It could still be something related to Xen/dom0 irq handling..=20
->=20
-> I'd be glad if someone could take a look at this 2.6.29-rc3-tip pv_op=
-s dom0 kernel boot log
-> and comment about _possible_ causes for such behaviour of ata_piix an=
-d ahci:
->=20
-> http://pasik.reaktio.net/xen/pv_ops-dom0-debug/pv_ops-dom0-bootlog-11=
--xen331-linux-2.6.29-rc3-atadebug3.txt
->=20
-> In that testing box I have just one IDE hdd attached to ata_piix cont=
-roller, the AHCI controller doesn't
-> have any disks attached.
->=20
-> The exact same kernel works OK without problems on baremetal without =
-Xen
-> hypervisor.=20
+--Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Seems like me like ata_piix is not receiving any interrupts.. the=20
-polling-based IDENTIFY and SET FEATURES work, but the READ NATIVE MAX=20
-ADDRESS times out and so does the READ DMA that gets tried next.
+Hi Bart,
 
-Note that the ata_piix controller is in legacy mode, not native mode, s=
-o=20
-it's using IRQ 14 and 15, not whatever the hardware may otherwise=20
-indicate. Could be the problem is related to that.
+On Sun, 01 Feb 2009 18:50:12 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmai=
+l.com> wrote:
+>
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: add "flagged" taskfile flags to struct ide_taskfile
+>=20
+> * Add ->ftf_flags field to struct ide_taskfile
+>   and convert flags for TASKFILE ioctl to use it.
+>=20
+> * Rename "flagged" taskfile flags:
+>   - IDE_TFLAG_FLAGGED -> IDE_FTFLAG_FLAGGED
+
+There were several places where this transformation did not take place as
+shown by today's linux-next build.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkmL0ukACgkQjjKRsyhoI8x6PgCfZFitULk1WqOrpj3cfZ22JXcC
+wBkAn0rAVkGuIg9VEtrN+9pDQ7v+4f7k
+=Fs/n
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/--
