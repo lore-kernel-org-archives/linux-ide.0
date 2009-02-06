@@ -1,36 +1,68 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] [resend] Resume from hibernation fails with pata_it821x
- RAID volume
-Date: Fri, 6 Feb 2009 17:56:35 +0000
-Message-ID: <20090206175635.5344ce37@lxorguk.ukuu.org.uk>
-References: <200902061412.09839.linux@rainbow-software.org>
-	<498C778B.7020309@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 01/15] ide: include <asm/ide.h> only when needed
+Date: Sat, 07 Feb 2009 01:03:59 +0300
+Message-ID: <498CB3CF.8070306@ru.mvista.com>
+References: <20090201174916.19144.11318.sendpatchset@localhost.localdomain> <200902052214.31483.bzolnier@gmail.com> <498B7D09.6040100@ru.mvista.com> <200902061721.46813.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40080 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760488AbZBFR4R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Feb 2009 12:56:17 -0500
-In-Reply-To: <498C778B.7020309@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:31058 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753948AbZBFWDj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Feb 2009 17:03:39 -0500
+In-Reply-To: <200902061721.46813.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, geert@linux-m68k.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, apw@canonical.com
 
->     See CodingStyle chapter 8 for the preferred multiline comment style.
-> 
-> > +		memset(&id[ATA_ID_SERNO], 0x20, ATA_ID_SERNO_LEN);
-> 
->     Why not ' '?
-> 
-> MBR, Sergei
+Bartlomiej Zolnierkiewicz wrote:
 
+>>Hello.
 
-Digging into the docs the RAID serial number (and what that means isn't
-defined anywhere I can see) is byte offset 54-73 in each of the 4 128
-byte blocks returned by the chip status query we do at boot
-(it821x_probe_firmware).
+>>Bartlomiej Zolnierkiewicz wrote:
 
-Alan
+>>>>>>>+#include <asm/ide.h>
+
+>>>>>>Did you try checkpatch.pl?
+
+>>>>>Sure.
+
+>>>>>This driver uses stuff from <asm-mips/ide.h>.
+
+>>>>>[ I guess I could put '-mips' there to silence warnings on tx493{8,9}.c,
+>>>>>  however I don't know of the way to get rid of ide-io-std.c's one... ]
+
+>>>>BTW, tx4939ide_{in,out}put_data_swap and
+>>>>tx4939ide_{in,out}put_data_swap do exactly same thing.
+
+>>>>If byte-swapped version of ide_{in,out}put_data() were available by
+>>>>ide core, they can be used instead.  The byte-swapped version of
+>>>>default_tp_ops would much helps such queer big-endian platforms.  Is
+>>>>it worth to bloat ide core? ;-)
+
+>>>Seems to be a good idea and it may also help some other host drivers
+>>>(ide-h8300.c?).
+
+>>   I'm not sure we need to carry the extra little used code just to help 
+>>some exotic driver.
+
+> It doesn't seem like we would need to carry any extra extra code for host
+> drivers that don't need it because we have flexible Kconfig language to take
+> care of such cases, i.e.
+
+> ...
+> config CONFIG_IDE_BE_IO
+> 	bool
+
+    If it was that simple... Normally the BE case gets handled automagically 
+(moreover, there is MIPS option that additionally controls I/O and memory 
+space byte swapping). The case we have to address for TX493x is actually where 
+the usual magic fails (or actually the code just doesn't want to use that 
+option). So this doesn't look like a good name to me...
+
+> Thanks,
+> Bart
+
+WBR, Sergei
