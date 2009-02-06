@@ -1,56 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 01/15] ide: include <asm/ide.h> only when needed
-Date: Fri, 06 Feb 2009 02:58:01 +0300
-Message-ID: <498B7D09.6040100@ru.mvista.com>
-References: <20090201174916.19144.11318.sendpatchset@localhost.localdomain> <200902021927.25177.bzolnier@gmail.com> <20090204.232006.01916235.anemo@mba.ocn.ne.jp> <200902052214.31483.bzolnier@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Suggestions for debugging ata_piix and ahci driver failures on
+ Xen pv_ops dom0 kernel (2.6.29-rcX)
+Date: Thu, 05 Feb 2009 18:45:02 -0600
+Message-ID: <498B880E.6070001@gmail.com>
+References: <20090205082843.GD15052@edu.joroinen.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:64806 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753131AbZBEX6I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 18:58:08 -0500
-In-Reply-To: <200902052214.31483.bzolnier@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.247]:35394 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491AbZBFApI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Feb 2009 19:45:08 -0500
+In-Reply-To: <20090205082843.GD15052@edu.joroinen.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, geert@linux-m68k.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, apw@canonical.com
+To: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+Pasi K=E4rkk=E4inen wrote:
+> Hello!
+>=20
+> I'm trying to figure out what's wrong with the pv_ops dom0 kernel/pat=
+ches [1]
+> causing at least ata_piix and ahci drivers to fail to work.
+>=20
+> There was legacy IRQ enabling problem earlier with the pv_ops dom0 pa=
+tches,=20
+> which pretty much prevented the disks from being detected.. but that =
+got fixed.=20
+> It could still be something related to Xen/dom0 irq handling..=20
+>=20
+> I'd be glad if someone could take a look at this 2.6.29-rc3-tip pv_op=
+s dom0 kernel boot log
+> and comment about _possible_ causes for such behaviour of ata_piix an=
+d ahci:
+>=20
+> http://pasik.reaktio.net/xen/pv_ops-dom0-debug/pv_ops-dom0-bootlog-11=
+-xen331-linux-2.6.29-rc3-atadebug3.txt
+>=20
+> In that testing box I have just one IDE hdd attached to ata_piix cont=
+roller, the AHCI controller doesn't
+> have any disks attached.
+>=20
+> The exact same kernel works OK without problems on baremetal without =
+Xen
+> hypervisor.=20
 
-Bartlomiej Zolnierkiewicz wrote:
+Seems like me like ata_piix is not receiving any interrupts.. the=20
+polling-based IDENTIFY and SET FEATURES work, but the READ NATIVE MAX=20
+ADDRESS times out and so does the READ DMA that gets tried next.
 
->>>>> +#include <asm/ide.h>
->>>>>           
->>>> Did you try checkpatch.pl?
->>>>         
->>> Sure.
->>>
->>> This driver uses stuff from <asm-mips/ide.h>.
->>>
->>> [ I guess I could put '-mips' there to silence warnings on tx493{8,9}.c,
->>>   however I don't know of the way to get rid of ide-io-std.c's one... ]
->>>       
->> BTW, tx4939ide_{in,out}put_data_swap and
->> tx4939ide_{in,out}put_data_swap do exactly same thing.
->>
->> If byte-swapped version of ide_{in,out}put_data() were available by
->> ide core, they can be used instead.  The byte-swapped version of
->> default_tp_ops would much helps such queer big-endian platforms.  Is
->> it worth to bloat ide core? ;-)
->>     
->
-> Seems to be a good idea and it may also help some other host drivers
-> (ide-h8300.c?).
->   
-
-   I'm not sure we need to carry the extra little used code just to help 
-some exotic driver.
-
-> Thanks,
-> Bart
-
-MBR, Sergei
-
-
+Note that the ata_piix controller is in legacy mode, not native mode, s=
+o=20
+it's using IRQ 14 and 15, not whatever the hardware may otherwise=20
+indicate. Could be the problem is related to that.
