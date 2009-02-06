@@ -1,45 +1,62 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/3 v2] AT91: initialize Compact Flash on AT91SAM9263
- cpu
-Date: Fri, 06 Feb 2009 20:23:55 +0300
-Message-ID: <498C722B.6060808@ru.mvista.com>
-References: <200902061214.19789.stf_xl@wp.pl> <498C2A57.6010908@ru.mvista.com> <200902061433.19490.stf_xl@wp.pl>
+Subject: Re: [PATCH] [resend] Resume from hibernation fails with pata_it821x
+ RAID volume
+Date: Fri, 06 Feb 2009 20:46:51 +0300
+Message-ID: <498C778B.7020309@ru.mvista.com>
+References: <200902061412.09839.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25211 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:26063 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752796AbZBFRXb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Feb 2009 12:23:31 -0500
-In-Reply-To: <200902061433.19490.stf_xl@wp.pl>
+	id S1751878AbZBFRq0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Feb 2009 12:46:26 -0500
+In-Reply-To: <200902061412.09839.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Stanislaw Gruszka wrote:
+Ondrej Zary wrote:
 
->>>+void __init at91_add_device_cf(struct at91_cf_data *data)
->>>+{
+> hibernation didn't work for me since I started to use IT8212 controller. Now I 
+> did some debugging (booting with no_console_suspend init=/bin/sh).
 
->>[...]
+> Found that resume fails (2.6.28) with "serial number mismatch 'some 
+> garbage' != 'some other garbage'" and "revalidation failed" messages. That's 
+> because the controller firmware fills different serial number in the IDENTIFY 
+> every boot.
 
->>>+	/* enable EBI controlled pins */
->>>+	at91_set_A_periph(AT91_PIN_PD5, 1);  /* NWAIT */
->>>+	at91_set_A_periph(AT91_PIN_PD8, 0);  /* CFCE1 */
->>>+	at91_set_A_periph(AT91_PIN_PD9, 0);  /* CFCE2 */
->>>+	at91_set_A_periph(AT91_PIN_PD14, 0); /* CFNRW */
->>>+
->>>+	if (data->flags & AT91_CF_TRUE_IDE)
+> The patch below fixes the resume simply clearing the serial number. The proper 
+> fix would be probably to fill in the serial number of the RAID volume 
+> instead.
 
->>   Again, I've probably missed something but this structre doesn't have 
->>the 'flags' field. How is this suppoed to compile?
+    I wonder why they just don't put it there (if they indeed have such 
+number). If I don't mistake, this is a RAID disk?
 
-> Patch 2/3 add flags to the at91_cf_data structure.
+> I assume that there must be something like that stored on the drives 
+> but I don't know where.
 
-    Ah, stupid me. Haven't looked at that patch yet. :-<
+> Fix resume on pata_it821x RAID volume by clearing the serial number in 
+> IDENTIFY data, which is otherwise different on each boot.
 
-> Stanislaw Gruszka
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+
+> --- linux-2.6.28-orig/drivers/ata/pata_it821x.c	2009-01-02 17:18:36.000000000 
+> +0100
+> +++ linux/drivers/ata/pata_it821x.c	2009-02-02 17:47:57.000000000 +0100
+> @@ -561,6 +561,9 @@
+>  		id[83] |= 0x4400;	/* Word 83 is valid and LBA48 */
+>  		id[86] |= 0x0400;	/* LBA48 on */
+>  		id[ATA_ID_MAJOR_VER] |= 0x1F;
+> +		/* Clear the serial number because it's different each boot
+> +		   which breaks validation on resume */
+
+    See CodingStyle chapter 8 for the preferred multiline comment style.
+
+> +		memset(&id[ATA_ID_SERNO], 0x20, ATA_ID_SERNO_LEN);
+
+    Why not ' '?
 
 MBR, Sergei
