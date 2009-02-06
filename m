@@ -1,63 +1,45 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Fri, 06 Feb 2009 20:20:03 +0300
-Message-ID: <498C7143.3090508@ru.mvista.com>
-References: <200902031147.22827.stf_xl@wp.pl> <498B0F22.3090403@ru.mvista.com> <498C173F.4000908@ru.mvista.com> <200902061750.24258.bzolnier@gmail.com>
+Subject: Re: [PATCH 3/3 v2] AT91: initialize Compact Flash on AT91SAM9263
+ cpu
+Date: Fri, 06 Feb 2009 20:23:55 +0300
+Message-ID: <498C722B.6060808@ru.mvista.com>
+References: <200902061214.19789.stf_xl@wp.pl> <498C2A57.6010908@ru.mvista.com> <200902061433.19490.stf_xl@wp.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25113 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:25211 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753021AbZBFRTi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Feb 2009 12:19:38 -0500
-In-Reply-To: <200902061750.24258.bzolnier@gmail.com>
+	id S1752796AbZBFRXb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Feb 2009 12:23:31 -0500
+In-Reply-To: <200902061433.19490.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk
 
-Bartlomiej Zolnierkiewicz wrote:
+Stanislaw Gruszka wrote:
 
->>>>   Can you answer the simple question: why we should try to support 
->>>>two incompatible chips with a single driver? Because the driver name 
->>>>will be shorter? :-)
+>>>+void __init at91_add_device_cf(struct at91_cf_data *data)
+>>>+{
 
->>>>Very funny. I think patch adding RM9200 support to this driver will 
->>>>have less
->>>>than 50 lines changeset,  whereas writing new driver would be about 
->>>>500 lines.
+>>[...]
 
->>>   This approach is so broken-minded that I'm just out words to argue 
->>>any more.
+>>>+	/* enable EBI controlled pins */
+>>>+	at91_set_A_periph(AT91_PIN_PD5, 1);  /* NWAIT */
+>>>+	at91_set_A_periph(AT91_PIN_PD8, 0);  /* CFCE1 */
+>>>+	at91_set_A_periph(AT91_PIN_PD9, 0);  /* CFCE2 */
+>>>+	at91_set_A_periph(AT91_PIN_PD14, 0); /* CFNRW */
+>>>+
+>>>+	if (data->flags & AT91_CF_TRUE_IDE)
 
->>>   Let's then support say all the PCI IDE chipsets with the single 
->>>driver (actully, there was a driver that tried to support 2 
->>>incompatible Promise chip families but it got split finally).
+>>   Again, I've probably missed something but this structre doesn't have 
+>>the 'flags' field. How is this suppoed to compile?
 
-> Actually it was the case for Linux during early 2.4.x days. :)
+> Patch 2/3 add flags to the at91_cf_data structure.
 
-    And I've spent considerable time fixing this driver in 2.4.20. :-)
+    Ah, stupid me. Haven't looked at that patch yet. :-<
 
-> [ Probably for historical reasons. ]
-
->>   To say the truth, there are stil at least 2 examples of such drivers: 
->>hpt366 and aec6210. While the former is justified by the bogus chip 
-
-> The former can be probably still improved with hpt3xx_main.c and chipset
-> family specific code separated into hpt36x.c etc.
-
-    Don't think that there's even enough common code for hpt3xx_main.c.
-
->>identification poilicy used by the vendor, the latter has no 
->>justification at all.
-
-> Patches are always warmly welcomed.
-
-    There is just to much I'd like to be done with this driver and too little 
-time to do that. :-)
-
-> Thanks,
-> Bart
+> Stanislaw Gruszka
 
 MBR, Sergei
