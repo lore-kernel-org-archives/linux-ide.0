@@ -1,61 +1,32 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 09/15] ide: add "flagged" taskfile flags to struct
- ide_taskfile
-Date: Fri, 6 Feb 2009 17:04:25 +1100
-Message-ID: <20090206170425.201346e6.sfr@canb.auug.org.au>
-References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain>
-	<20090201175012.19144.87417.sendpatchset@localhost.localdomain>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [PATCH 2/3] ide: add at91_ide driver
+Date: Fri, 6 Feb 2009 10:30:11 +0100
+Message-ID: <200902061030.11427.stf_xl@wp.pl>
+References: <200902031147.22827.stf_xl@wp.pl> <498987E6.7040909@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:58758 "EHLO smtps.tip.net.au"
+Received: from mx1.wp.pl ([212.77.101.5]:42974 "EHLO mx1.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642AbZBFGEc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Feb 2009 01:04:32 -0500
-In-Reply-To: <20090201175012.19144.87417.sendpatchset@localhost.localdomain>
+	id S1752528AbZBFJaW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Feb 2009 04:30:22 -0500
+In-Reply-To: <498987E6.7040909@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
 
---Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi Bart,
-
-On Sun, 01 Feb 2009 18:50:12 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmai=
-l.com> wrote:
->
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: add "flagged" taskfile flags to struct ide_taskfile
+Wednesday 04 February 2009 13:19:50 Sergei Shtylyov napisa=C5=82(a):
+> [...]
+> > +	host->ports[0]->extra_base =3D board->chipselect;
+> >  =20
 >=20
-> * Add ->ftf_flags field to struct ide_taskfile
->   and convert flags for TASKFILE ioctl to use it.
->=20
-> * Rename "flagged" taskfile flags:
->   - IDE_TFLAG_FLAGGED -> IDE_FTFLAG_FLAGGED
+>    BTW, we have 2 fields in the struct hwif_s that fit this case bett=
+er:=20
+> config_data and select_data. It's a bit stange that you've selected=20
+> extra_base...
+config_data is in use by IDE core, I'll switch to select_data.
 
-There were several places where this transformation did not take place as
-shown by today's linux-next build.
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkmL0ukACgkQjjKRsyhoI8x6PgCfZFitULk1WqOrpj3cfZ22JXcC
-wBkAn0rAVkGuIg9VEtrN+9pDQ7v+4f7k
-=Fs/n
------END PGP SIGNATURE-----
-
---Signature=_Fri__6_Feb_2009_17_04_25_+1100_dnkpqyns83Q/12r/--
+Stanislaw Gruszka
