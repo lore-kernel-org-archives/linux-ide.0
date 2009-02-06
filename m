@@ -1,154 +1,110 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 3/3 v2] AT91: initialize Compact Flash on AT91SAM9263 cpu
-Date: Fri, 6 Feb 2009 12:14:19 +0100
-Message-ID: <200902061214.19789.stf_xl@wp.pl>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/3 v2] AT91: initialize Compact Flash on AT91SAM9263
+ cpu
+Date: Fri, 06 Feb 2009 15:03:54 +0300
+Message-ID: <498C272A.5070101@ru.mvista.com>
+References: <200902061214.19789.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:13362 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754676AbZBFLOY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Feb 2009 06:14:24 -0500
-Received: from ebg226.internetdsl.tpnet.pl (HELO staszek-desktop.local) (stf_xl@wp.pl@[83.14.136.226])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES256-SHA encrypted SMTP
-          for <linux-ide@vger.kernel.org>; 6 Feb 2009 12:14:19 +0100
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:18703 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752721AbZBFMD7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Feb 2009 07:03:59 -0500
+In-Reply-To: <200902061214.19789.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>
-Cc: linux-arm-kernel@lists.arm.linux.org.uk
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- arch/arm/mach-at91/at91sam9263_devices.c |  106 ++++++++++++++++++++++++++++++
- 1 files changed, 106 insertions(+), 0 deletions(-)
+Hello.
 
-diff --git a/arch/arm/mach-at91/at91sam9263_devices.c b/arch/arm/mach-at91/at91sam9263_devices.c
-index b753cb8..7c950f1 100644
---- a/arch/arm/mach-at91/at91sam9263_devices.c
-+++ b/arch/arm/mach-at91/at91sam9263_devices.c
-@@ -15,6 +15,7 @@
- #include <linux/dma-mapping.h>
- #include <linux/platform_device.h>
- #include <linux/i2c-gpio.h>
-+#include <linux/delay.h>
- 
- #include <linux/fb.h>
- #include <video/atmel_lcdc.h>
-@@ -347,6 +348,111 @@ void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data)
- void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data) {}
- #endif
- 
-+/* --------------------------------------------------------------------
-+ *  Compact Flash (PCMCIA or IDE)
-+ * -------------------------------------------------------------------- */
-+
-+#if defined(CONFIG_AT91_CF) || defined(CONFIG_AT91_CF_MODULE) || \
-+    defined(CONFIG_BLK_DEV_IDE_AT91) || defined(CONFIG_BLK_DEV_IDE_AT91_MODULE)
-+
-+static struct resource cf_resources[] = {
-+	[0] = {
-+		.start	= 0,
-+		.end	= 0,
-+		.flags	= IORESOURCE_MEM,
-+	},
-+};
-+
-+static struct at91_cf_data cf_data;
-+
-+static struct platform_device at91_cf_device = {
-+	.id 	= -1,
-+	.dev	= {
-+		.platform_data = &cf_data,
-+	},
-+	.resource = cf_resources,
-+	.num_resources = ARRAY_SIZE(cf_resources),
-+};
-+
-+void __init at91_add_device_cf(struct at91_cf_data *data)
-+{
-+	unsigned long ebi0_csa, addr_space;
-+
-+	if (!data)
-+		return;
-+
-+	/*
-+	 * assign CS4 or CS5 to SMC with Compact Flash logic support,
-+	 * we assume SMC timings are configured by board code,
-+	 * except True IDE where timings are controlled by driver
-+	 */
-+	ebi0_csa = at91_sys_read(AT91_MATRIX_EBI0CSA);
-+	switch (data->chipselect) {
-+	case 4:
-+		at91_set_A_periph(AT91_PIN_PD6, 0);  /* EBI0_NCS4/CFCS0 */
-+		ebi0_csa |= AT91_MATRIX_EBI0_CS4A_SMC_CF1;
-+		addr_space = AT91_CHIPSELECT_4;
-+		break;
-+	case 5:
-+		at91_set_A_periph(AT91_PIN_PD7, 0);  /* EBI0_NCS5/CFCS1 */
-+		ebi0_csa |= AT91_MATRIX_EBI0_CS5A_SMC_CF2;
-+		addr_space = AT91_CHIPSELECT_5;
-+		break;
-+	default:
-+		printk(KERN_ERR "AT91: CF bad chip-select requested (%u)\n",
-+		       data->chipselect);
-+		return;
-+	}
-+	at91_sys_write(AT91_MATRIX_EBI0CSA, ebi0_csa);
-+
-+	cf_resources[0].start = addr_space;
-+	cf_resources[0].end = addr_space + SZ_256M - 1;
-+
-+	if (data->det_pin) {
-+		/* check if device is present */
-+		at91_set_gpio_input(data->det_pin, 1);
-+		at91_set_deglitch(data->det_pin, 1);
-+		if (at91_get_gpio_value(data->det_pin) != 0) {
-+			printk(KERN_ERR "AT91: no CF card detected\n");
-+			return;
-+		}
-+	}
-+
-+	if (data->rst_pin) {
-+		/* reset the card */
-+		int reset = (data->flags & AT91_CF_TRUE_IDE) ? 0 : 1;
-+
-+		at91_set_gpio_output(data->rst_pin, reset);
-+		udelay(25); /* taken from ATA docs, CFA not specify it ? */
-+		at91_set_gpio_output(data->rst_pin, !reset);
-+	}
-+
-+	if (data->irq_pin) {
-+		at91_set_gpio_input(data->irq_pin, 1);
-+		at91_set_deglitch(data->irq_pin, 1);
-+	}
-+
-+	if (data->vcc_pin)
-+		/* initially off */
-+		at91_set_gpio_output(data->vcc_pin, 0);
-+
-+	/* enable EBI controlled pins */
-+	at91_set_A_periph(AT91_PIN_PD5, 1);  /* NWAIT */
-+	at91_set_A_periph(AT91_PIN_PD8, 0);  /* CFCE1 */
-+	at91_set_A_periph(AT91_PIN_PD9, 0);  /* CFCE2 */
-+	at91_set_A_periph(AT91_PIN_PD14, 0); /* CFNRW */
-+
-+	if (data->flags & AT91_CF_TRUE_IDE)
-+		at91_cf_device.name = "at91_ide";
-+	else
-+		at91_cf_device.name = "at91_cf";
-+
-+	cf_data = *data;
-+	platform_device_register(&at91_cf_device);
-+}
-+#else
-+void __init at91_add_device_cf(struct at91_ide_data *data) {}
-+#endif
- 
- /* --------------------------------------------------------------------
-  *  NAND / SmartMedia
--- 
-1.5.2.5
+Stanislaw Gruszka wrote:
+
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>   
+[...]
+> @@ -347,6 +348,111 @@ void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data)
+>  void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data) {}
+>  #endif
+>  
+> +/* --------------------------------------------------------------------
+> + *  Compact Flash (PCMCIA or IDE)
+> + * -------------------------------------------------------------------- */
+> +
+> +#if defined(CONFIG_AT91_CF) || defined(CONFIG_AT91_CF_MODULE) || \
+> +    defined(CONFIG_BLK_DEV_IDE_AT91) || defined(CONFIG_BLK_DEV_IDE_AT91_MODULE)
+>   
+
+   Ugh... what are trying to achieve with this, marginal memory save?
+
+> +static struct resource cf_resources[] = {
+> +	[0] = {
+> +		.start	= 0,
+> +		.end	= 0,
+> +		.flags	= IORESOURCE_MEM,
+> +	},
+> +};
+> +
+> +static struct at91_cf_data cf_data;
+> +
+> +static struct platform_device at91_cf_device = {
+> +	.id 	= -1,
+> +	.dev	= {
+> +		.platform_data = &cf_data,
+> +	},
+> +	.resource = cf_resources,
+> +	.num_resources = ARRAY_SIZE(cf_resources),
+> +};
+> +
+> +void __init at91_add_device_cf(struct at91_cf_data *data)
+> +{
+>   
+[...]
+> +	cf_resources[0].start = addr_space;
+> +	cf_resources[0].end = addr_space + SZ_256M - 1;
+>   
+
+   In the datasheet the CF mode address space is just 0x1000000, i.e. 16 
+MB, not 256. Moreover, address lines above A22 are not connected to CF 
+at all.
+
+> +
+> +	if (data->det_pin) {
+> +		/* check if device is present */
+> +		at91_set_gpio_input(data->det_pin, 1);
+> +		at91_set_deglitch(data->det_pin, 1);
+> +		if (at91_get_gpio_value(data->det_pin) != 0) {
+> +			printk(KERN_ERR "AT91: no CF card detected\n");
+> +			return;
+> +		}
+> +	}
+>   
+
+   Bart, I'm not sure: don't we support warm-plug now? Or it won't avail 
+us with CF?
+
+> +	if (data->rst_pin) {
+> +		/* reset the card */
+> +		int reset = (data->flags & AT91_CF_TRUE_IDE) ? 0 : 1;
+> +
+> +		at91_set_gpio_output(data->rst_pin, reset);
+> +		udelay(25); /* taken from ATA docs, CFA not specify it ? */
+> +		at91_set_gpio_output(data->rst_pin, !reset);
+> +	}
+>   
+
+   Is there really a need to hard reset CF on every reboot?
+
+> +	if (data->vcc_pin)
+> +		/* initially off */
+> +		at91_set_gpio_output(data->vcc_pin, 0);
+>   
+
+   Why? Moreover, resetting CF without power applied (or cutting off 
+power afterwards) just doesn't make sense...
+
+MBR, Sergei
+
+
