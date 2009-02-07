@@ -1,42 +1,66 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH] [resend] Resume from hibernation fails with pata_it821x RAID volume
-Date: Sat, 7 Feb 2009 13:29:58 +0100
-Message-ID: <200902071330.00779.linux@rainbow-software.org>
-References: <200902061412.09839.linux@rainbow-software.org> <498C778B.7020309@ru.mvista.com> <20090206175635.5344ce37@lxorguk.ukuu.org.uk>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Sat, 07 Feb 2009 09:53:06 -0500
+Message-ID: <498DA052.6090605@redhat.com>
+References: <20090123041558.GC24652@parisc-linux.org>	 <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.atlantis.sk ([80.94.52.35]:46290 "EHLO mail.atlantis.sk"
+Received: from mx2.redhat.com ([66.187.237.31]:43337 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063AbZBGMaI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Feb 2009 07:30:08 -0500
-In-Reply-To: <20090206175635.5344ce37@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+	id S1752104AbZBGOxf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Feb 2009 09:53:35 -0500
+In-Reply-To: <1232721777.4430.7.camel@macbook.infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <mkp@mkp.net>
+Cc: Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Friday 06 February 2009 18:56:35 Alan Cox wrote:
-> >     See CodingStyle chapter 8 for the preferred multiline comment style.
-> >
-> > > +		memset(&id[ATA_ID_SERNO], 0x20, ATA_ID_SERNO_LEN);
-> >
-> >     Why not ' '?
-> >
-> > MBR, Sergei
->
-> Digging into the docs the RAID serial number (and what that means isn't
-> defined anywhere I can see) is byte offset 54-73 in each of the 4 128
-> byte blocks returned by the chip status query we do at boot
-> (it821x_probe_firmware).
 
-Yes, found it there. But it seems to be the same number as present in the 
-IDENTIFY data. It contains date and time of boot (matches RAID_SERIAL_NUMBER 
-structure found in iteraid.h in driver source from ITE) instead of date and 
-time of RAID creation.
+I have been poked at by some vendors about the status of our support for 
+the virtually/thinly provisioned luns since they are getting close to 
+being able to test with real devices.
 
--- 
-Ondrej Zary
+My quick summary is that we most of the work so far has been done 
+without any real hardware to play with - in 2.6.29-rc3, I don't see any 
+low level ATA or SCSI bits that turn requests tagged with REQ_DISCARD 
+into the specific ATA or SCSI commands. Did I miss something & if not, 
+do we have plans to push anything upstream soonish?
+
+One note on the SCSI devices, there was a T10 proposal to add an "UNMAP" 
+bit to the "WRITE SAME" command for SCSI. The details of the proposed 
+interface are at:
+
+http://www.t11.org/t10/document.08/08-356r4.pdf
+
+The up side of using WRITE SAME with unmap is that there are no fuzzy 
+semantics about what the unmapped sectors will be - they will all be 
+whatever the WRITE SAME command would have set (usually zeroes I assume).
+
+The summary of write same is that you send down one sector (say 512 
+bytes of zeroes) and a count so you can do a zeroing of the target 
+without having to send all of the data over the wire. Very useful for 
+initializing members of a RAID device for example to a known pattern.
+
+The down side would be that if we incorrectly send down a WRITE SAME 
+command to a non-thin device, I think that we would kick off a potential 
+extremely long IO. For example, imagine doing a write same of a full TB 
+- that could take an hour which might be an issue :-)  Of course, we 
+should not be doing that if we get the code right.
+
+I don't see another of the PDF's claims of advantages for file systems 
+to be really all that useful.
+
+With either the write same and its proposed unmap bit or with the 
+original T10 unmap, do we have a short list of infrastructure that needs 
+fleshed out? Anything we can do to help get peoples patches to test with 
+their non-GA thin enabled devices?
+
+Is there a similar short list of things to be done for T13 devices with 
+TRIM? Anyone have a chance to test on real hardware yet?
+
+Thanks!
+
+Ric
+
