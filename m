@@ -1,73 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 01/15] ide: include <asm/ide.h> only when needed
-Date: Sun, 08 Feb 2009 02:37:42 +0300
-Message-ID: <498E1B46.2040500@ru.mvista.com>
-References: <498B7D09.6040100@ru.mvista.com>	<200902061721.46813.bzolnier@gmail.com>	<498CB3CF.8070306@ru.mvista.com> <20090208.003536.72707389.anemo@mba.ocn.ne.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Sat, 07 Feb 2009 18:46:42 -0500
+Message-ID: <498E1D62.9070105@garzik.org>
+References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <20090207224722.GA31509@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:45574 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753615AbZBGXht (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Feb 2009 18:37:49 -0500
-In-Reply-To: <20090208.003536.72707389.anemo@mba.ocn.ne.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20090207224722.GA31509@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Ric Wheeler <rwheeler@redhat.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: bzolnier@gmail.com, geert@linux-m68k.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, apw@canonical.com
 
-Hello.
+Matthew Wilcox wrote:
+> On Sat, Feb 07, 2009 at 09:53:06AM -0500, Ric Wheeler wrote:
+>> I have been poked at by some vendors about the status of our support for 
+>> the virtually/thinly provisioned luns since they are getting close to 
+>> being able to test with real devices.
+>>
+>> My quick summary is that we most of the work so far has been done 
+>> without any real hardware to play with - in 2.6.29-rc3, I don't see any 
+>> low level ATA or SCSI bits that turn requests tagged with REQ_DISCARD 
+>> into the specific ATA or SCSI commands. Did I miss something & if not, 
+>> do we have plans to push anything upstream soonish?
+> 
+> Bearing in mind that I'm now three weeks behind on email, you might want
+> to look at
+> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20081231
+> which has at least one known bug (fixed by Dave Woodhouse and Ben
+> Herrenschmidt).  I'll be able to give a more coherent answer in a few
+> days.  Or maybe Dave will beat me to it ;-)
 
-Atsushi Nemoto wrote:
+BTW when will somebody send me the 4k sector patches?  :)
 
->>> config CONFIG_IDE_BE_IO
->>> 	bool
->>>       
->>     If it was that simple... Normally the BE case gets handled automagically 
->> (moreover, there is MIPS option that additionally controls I/O and memory 
->> space byte swapping). The case we have to address for TX493x is actually where 
->> the usual magic fails (or actually the code just doesn't want to use that 
->> option). So this doesn't look like a good name to me...
->>     
->
-> Well, for TX493x (MIPS), we have CONFIG_SWAP_IO_SPACE for big endian
-> and it works fine for PCI-IDE host controllers.  For SoC internal
-> controllers, no swapping is needed for both endian, thus custom tp_ops
-> is needed only for big endian.
->   
+	Jeff
 
-   Yeah, SoCs *typically* can handle different endianness for the 
-integrated devices in a transparent way. TX4939 didn't do that 
-consistently still, and that's where the MIPS address swizzling macros 
-could have helped but Atsushi chose to reserve their usage only to the 
-external bus accesses. I however don't think that TX4938 case should 
-have been handled the same way as TX4939 since in this case the 
-controller is *not* SoC integrated device and the IDE registers are 
-situated on the chip's external bus with their mapping is actually board 
-specific, if I don't mistake (I don't have the datasheet at hand).
-
-> So ... IDE_BE_IO looks actually not best name for this case.  It is
-> IDE_RAW_IO or something.
-
-   Yes, I was going to suggest exactly that.
-
-> But IDE_RAW_IO might not fit for other cases.  IDE_SWAPPED_IO?
-
-   I'd prefer IDE_RAW_IO because it can be swapped when using the 
-standard accessors as well. Frankly speaking, I'm not sure why ide-h8300 
-needs its own accessors while this arch's io.h has an abundance of 
-swapping and not swapping accessors already defined...
-
-> Any other good name?
->   
-
-   I'm still not convinced that it's really worth the trouble...
-
-> ---
-> Atsushi Nemoto
->   
-
-MBR, Sergei
 
 
