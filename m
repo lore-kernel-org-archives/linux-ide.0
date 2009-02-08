@@ -1,53 +1,64 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Sun, 8 Feb 2009 13:50:49 -0700
-Message-ID: <20090208205049.GG31509@parisc-linux.org>
-References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <1234019372.4658.9.camel@localhost.localdomain> <20090207225025.GB31509@parisc-linux.org> <498F0C9D.3070601@redhat.com>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: Port Multiplier access with Sil 3124
+Date: Sun, 08 Feb 2009 12:38:14 -0800
+Message-ID: <498F42B6.8030607@tlinx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43596 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038AbZBHUuv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 15:50:51 -0500
-Content-Disposition: inline
-In-Reply-To: <498F0C9D.3070601@redhat.com>
+Received: from ishtar.tlinx.org ([64.81.245.74]:32776 "EHLO ishtar.tlinx.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751449AbZBHVIs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Feb 2009 16:08:48 -0500
+Received: from [192.168.3.11] (Athena [192.168.3.11])
+	by ishtar.tlinx.org (8.14.1/8.12.10/SuSE Linux 0.7) with ESMTP id n18KcFvO015676
+	for <linux-ide@vger.kernel.org>; Sun, 8 Feb 2009 12:38:15 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Sun, Feb 08, 2009 at 11:47:25AM -0500, Ric Wheeler wrote:
-> Matthew Wilcox wrote:
-> >I thought we had agreed on a plan which satisfied the SSD and insane
-> >array vendors.  That is that we would do no tracking of allocation units
-> >in the filesystem, but instead extend each trim out to cover the maximum
-> >possible size.  I've confirmed with Intel's SSD people that this would
-> >cause them no harm at all (trimming already trimmed sectors won't even
-> >cause a slowdown).  Whether the filesystem people have taken note of
-> >this, I have no idea.
->
-> That should be helpful for the array people, but for some of them with 
-> really large delete chuck sizes, they will still miss a lot since their 
-> size is larger than the average file size :-)  I guess that we could do 
-> something to resync - Ted mentioned some ideas for ext4.
+Is there something different, from normal disk-access, that I need to do
+to access hard disks beyond '1', on a port-multiplier?
 
-I'm not sure I communicated the plan effectively.
+I thought I remembered reading the port multiplier support was
+working for many SATA and SATA RAID controller capable chipsets,
+including the Sil 3124.
 
-Let's consider deleting a 4k file.
+I picked up a 2-Bay external SATA enclosure that I'm trying to access in
+(what I thought) was the simplest mode: "JBOD".  However, when I boot,
+I am only seeing the first hard disk.
 
-The DISCARD that the filesystem sends down does not just cover the 4k
-of data.  It covers all adjacent free space to that 4k of data, so it
-might end up sending a DISCARD of several megabytes or even gigabytes,
-assuming there's that much contiguous free space.
+Experimenting, I tried a single hard disk in both positions -- one
+position let me see the disk directly (as though it was a direct,
+str8-thru connection), the other position showed up detected by
+the boot BIOS as a 7MB HD by some unrecognized vendor.   In
+linux, I'm able to access and use the hard disk when it appears
+'str8-thru', but linux sees nothing concerning the 7MB pseudo HD.
 
-Now, filesystems which fragment their free space will not do well on
-thin provisioned devices, but then they won't do well on any devices --
-keeping your free space compacted is an essential part of any filesystem's
-job, even on SSDs.
+Is my expectation that the driver would simply recognize the
+external enclosure by whatever I had the external enclosure set to,
+too optimistic?  Do I need to run some special util to setup the disks in
+JBOD mode?  I guess I thought I only needed to worry about
+'special utils' if I was using the disk-pair in a RAID config (0/1)...
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+It seems there should be a linux util to manage the "container",
+'sil57xx'  --  I take it is not used for RAID-only config?
+
+My ultimate aim is to use it in a RAID-0, mirror config (my luck
+with SATA disk drives has been abysmal, of late (*sigh*)).
+
+Anyone with any real-world experience about when the 3Gb SAS
+starts to become a bottleneck?  I know that theoretically, it could
+support a hair over 350MB/s if there was no overhead, which would
+reliably only support 2 hard disks at full speed (assuming ~120MB/s
+max linear read speed/disk).  Does that jive with people's real-world 
+experience?  I.e. port-multipliers can provide full throughput for
+2-HD's but not likely 3? 
+
+Should I be looking for an sil57xx program somewhere (the box contained
+a mini-CD, but it looks like a driver for an older kernel (2.6.9).  Not 
+so sure about it's usefulness in my setup.
+
+Thanks,
+-linda
+
