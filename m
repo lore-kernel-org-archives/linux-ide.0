@@ -1,64 +1,89 @@
-From: Linda Walsh <lkml@tlinx.org>
-Subject: Port Multiplier access with Sil 3124
-Date: Sun, 08 Feb 2009 12:38:14 -0800
-Message-ID: <498F42B6.8030607@tlinx.org>
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
+Date: Sun, 8 Feb 2009 21:12:53 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0902082108290.18661@blonde.anvils>
+References: <200902082253.07438.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ishtar.tlinx.org ([64.81.245.74]:32776 "EHLO ishtar.tlinx.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751449AbZBHVIs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Feb 2009 16:08:48 -0500
-Received: from [192.168.3.11] (Athena [192.168.3.11])
-	by ishtar.tlinx.org (8.14.1/8.12.10/SuSE Linux 0.7) with ESMTP id n18KcFvO015676
-	for <linux-ide@vger.kernel.org>; Sun, 8 Feb 2009 12:38:15 -0800
+Received: from extu-mxob-1.symantec.com ([216.10.194.28]:55211 "EHLO
+	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336AbZBHVlN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 16:41:13 -0500
+Received: from [172.20.30.223]([172.20.30.223]) (3102 bytes) by megami.veritas.com
+	via sendmail with P:esmtp/R:smart_host/T:smtp
+	(sender: <hugh@veritas.com>)
+	id <m1LWGxw-0000J7C@megami.veritas.com>
+	for <linux-ide@vger.kernel.org>; Sun, 8 Feb 2009 13:13:24 -0800 (PST)
+	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
+In-Reply-To: <200902082253.07438.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
 
-Is there something different, from normal disk-access, that I need to do
-to access hard disks beyond '1', on a port-multiplier?
+On Sun, 8 Feb 2009, Sergei Shtylyov wrote:
 
-I thought I remembered reading the port multiplier support was
-working for many SATA and SATA RAID controller capable chipsets,
-including the Sil 3124.
+> Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
+> caused all kind of errors on the ATAPI devices, so it's been empirically proven
+> that one shouldn't read/write an extra data word when a device isn't expecting
+> it already. "Don't do it then"; however still taking a chance to use 32-bit I/O
+> one last  time when there are exactly 3 trailing bytes.  Oh, and stop pointless
+> swapping bytes to and fro as well by using io*_rep() which shouldn't byte-swap.
+> 
+> This should fix the kernel.org bug #12609.
+> 
+> ---
+> This is hopefully better replacement for Hugh Dickins most recent patch
+> (http://marc.info/?l=linux-ide&m=123352294619281)...
 
-I picked up a 2-Bay external SATA enclosure that I'm trying to access in
-(what I thought) was the simplest mode: "JBOD".  However, when I boot,
-I am only seeing the first hard disk.
+Yes, looks nice, and works for me.  My only criticism would be,
+minor issue unchanged by your patch, that actually "slop" isn't
+unlikely enough to deserve an "unlikely" - slop of 1 or 3 is
+unlikely, but slop of 2 is quite common.
 
-Experimenting, I tried a single hard disk in both positions -- one
-position let me see the disk directly (as though it was a direct,
-str8-thru connection), the other position showed up detected by
-the boot BIOS as a 7MB HD by some unrecognized vendor.   In
-linux, I'm able to access and use the hard disk when it appears
-'str8-thru', but linux sees nothing concerning the 7MB pseudo HD.
+Hugh
 
-Is my expectation that the driver would simply recognize the
-external enclosure by whatever I had the external enclosure set to,
-too optimistic?  Do I need to run some special util to setup the disks in
-JBOD mode?  I guess I thought I only needed to worry about
-'special utils' if I was using the disk-pair in a RAID config (0/1)...
-
-It seems there should be a linux util to manage the "container",
-'sil57xx'  --  I take it is not used for RAID-only config?
-
-My ultimate aim is to use it in a RAID-0, mirror config (my luck
-with SATA disk drives has been abysmal, of late (*sigh*)).
-
-Anyone with any real-world experience about when the 3Gb SAS
-starts to become a bottleneck?  I know that theoretically, it could
-support a hair over 350MB/s if there was no overhead, which would
-reliably only support 2 hard disks at full speed (assuming ~120MB/s
-max linear read speed/disk).  Does that jive with people's real-world 
-experience?  I.e. port-multipliers can provide full throughput for
-2-HD's but not likely 3? 
-
-Should I be looking for an sil57xx program somewhere (the box contained
-a mini-CD, but it looks like a driver for an older kernel (2.6.9).  Not 
-so sure about it's usefulness in my setup.
-
-Thanks,
--linda
-
+> 
+>  drivers/ata/libata-sff.c |   23 ++++++++++++++++-------
+>  1 files changed, 16 insertions(+), 7 deletions(-)
+> 
+> Index: linux-2.6/drivers/ata/libata-sff.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/libata-sff.c
+> +++ linux-2.6/drivers/ata/libata-sff.c
+> @@ -773,18 +773,27 @@ unsigned int ata_sff_data_xfer32(struct 
+>  	else
+>  		iowrite32_rep(data_addr, buf, words);
+>  
+> +	/* Transfer trailing bytes, if any */
+>  	if (unlikely(slop)) {
+> -		__le32 pad;
+> +		unsigned char pad[4];
+> +
+> +		/* Point buf to the tail of buffer */
+> +		buf += buflen - slop;
+>  		if (rw == READ) {
+> -			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
+> -			memcpy(buf + buflen - slop, &pad, slop);
+> +			if (slop < 3)
+> +				ioread16_rep(data_addr, pad, 1);
+> +			else
+> +				ioread32_rep(data_addr, pad, 1);
+> +			memcpy(buf, pad, slop);
+>  		} else {
+> -			memcpy(&pad, buf + buflen - slop, slop);
+> -			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
+> +			memcpy(pad, buf, slop);
+> +			if (slop < 3)
+> +				iowrite16_rep(data_addr, pad, 1);
+> +			else
+> +				iowrite32_rep(data_addr, pad, 1);
+>  		}
+> -		words++;
+>  	}
+> -	return words << 2;
+> +	return (buflen + 1) & ~1;
+>  }
+>  EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
+>  
