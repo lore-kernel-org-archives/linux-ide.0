@@ -1,102 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 09/15] ide: add "flagged" taskfile flags to struct ide_taskfile
-Date: Sun, 8 Feb 2009 12:38:18 +0100
-Message-ID: <200902081238.18970.bzolnier@gmail.com>
-References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain> <20090201175012.19144.87417.sendpatchset@localhost.localdomain> <20090206170425.201346e6.sfr@canb.auug.org.au>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Sun, 08 Feb 2009 11:47:25 -0500
+Message-ID: <498F0C9D.3070601@redhat.com>
+References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <1234019372.4658.9.camel@localhost.localdomain> <20090207225025.GB31509@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:50659 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870AbZBHMgh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 07:36:37 -0500
-In-Reply-To: <20090206170425.201346e6.sfr@canb.auug.org.au>
-Content-Disposition: inline
+Received: from mx2.redhat.com ([66.187.237.31]:60081 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500AbZBHQs0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Feb 2009 11:48:26 -0500
+In-Reply-To: <20090207225025.GB31509@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Matthew Wilcox wrote:
+> On Sat, Feb 07, 2009 at 09:09:32AM -0600, James Bottomley wrote:
+>   
+>> On Sat, 2009-02-07 at 09:53 -0500, Ric Wheeler wrote:
+>>     
+>>> I have been poked at by some vendors about the status of our support for 
+>>> the virtually/thinly provisioned luns since they are getting close to 
+>>> being able to test with real devices.
+>>>       
+>> With my LSF hat on, a certain array vendor might be sponsoring to get
+>> the opportunity to raise this issue more fully.  The impression (mostly
+>> correct) is that we're thinking about trim/unmap purely from the SSD FTL
+>> point of view and perhaps not being as useful as we might to virtually
+>> provisioned LUNs ... so you could mention to the other vendors that they
+>> might have an interest in coming (and even possibly sponsoring).
+>>     
+>
+> I thought we had agreed on a plan which satisfied the SSD and insane
+> array vendors.  That is that we would do no tracking of allocation units
+> in the filesystem, but instead extend each trim out to cover the maximum
+> possible size.  I've confirmed with Intel's SSD people that this would
+> cause them no harm at all (trimming already trimmed sectors won't even
+> cause a slowdown).  Whether the filesystem people have taken note of
+> this, I have no idea.
+>
+>   
+That should be helpful for the array people, but for some of them with 
+really large delete chuck sizes, they will still miss a lot since their 
+size is larger than the average file size :-)  I guess that we could do 
+something to resync - Ted mentioned some ideas for ext4.
 
-Hi,
+On another note, they are pondering either using write same with the 
+discard bit set or the unmap command. It would seem that for thin 
+provisioning alone, either would work.
 
-On Friday 06 February 2009, Stephen Rothwell wrote:
-> Hi Bart,
-> 
-> On Sun, 01 Feb 2009 18:50:12 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> >
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] ide: add "flagged" taskfile flags to struct ide_taskfile
-> > 
-> > * Add ->ftf_flags field to struct ide_taskfile
-> >   and convert flags for TASKFILE ioctl to use it.
-> > 
-> > * Rename "flagged" taskfile flags:
-> >   - IDE_TFLAG_FLAGGED -> IDE_FTFLAG_FLAGGED
-> 
-> There were several places where this transformation did not take place as
-> shown by today's linux-next build.
-
-Thanks, it is now fixed with v2 of the patch, interdiff below:
-
-...
-v2:
-* Remember to fully update ide-h8300.c, scc_pata.c and tx493{8,9}ide.c
-  (thanks to Stephen Rothwell for noticing).
-
-There should be no functional changes caused by this patch.
-
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-...
-diff -u b/drivers/ide/ide-h8300.c b/drivers/ide/ide-h8300.c
---- b/drivers/ide/ide-h8300.c
-+++ b/drivers/ide/ide-h8300.c
-@@ -51,7 +51,7 @@
- 	struct ide_taskfile *tf = &task->tf;
- 	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
- 
--	if (task->tf_flags & IDE_TFLAG_FLAGGED)
-+	if (task->ftf_flags & IDE_FTFLAG_FLAGGED)
- 		HIHI = 0xFF;
- 
- 	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA)
-diff -u b/drivers/ide/scc_pata.c b/drivers/ide/scc_pata.c
---- b/drivers/ide/scc_pata.c
-+++ b/drivers/ide/scc_pata.c
-@@ -672,7 +672,7 @@
- 	struct ide_taskfile *tf = &task->tf;
- 	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
- 
--	if (task->tf_flags & IDE_TFLAG_FLAGGED)
-+	if (task->ftf_flags & IDE_FTFLAG_FLAGGED)
- 		HIHI = 0xFF;
- 
- 	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA)
-diff -u b/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
---- b/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -89,7 +89,7 @@
- 	struct ide_taskfile *tf = &task->tf;
- 	u8 HIHI = task->tf_flags & IDE_TFLAG_LBA48 ? 0xE0 : 0xEF;
- 
--	if (task->tf_flags & IDE_TFLAG_FLAGGED)
-+	if (task->ftf_flags & IDE_FTFLAG_FLAGGED)
- 		HIHI = 0xFF;
- 
- 	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA) {
-diff -u b/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
---- b/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -474,7 +474,7 @@
- 	struct ide_taskfile *tf = &task->tf;
- 	u8 HIHI = task->tf_flags & IDE_TFLAG_LBA48 ? 0xE0 : 0xEF;
- 
--	if (task->tf_flags & IDE_TFLAG_FLAGGED)
-+	if (task->ftf_flags & IDE_FTFLAG_FLAGGED)
- 		HIHI = 0xFF;
- 
- 	if (task->ftf_flags & IDE_FTFLAG_OUT_DATA) {
+ric
 
