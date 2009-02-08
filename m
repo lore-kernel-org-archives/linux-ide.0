@@ -1,83 +1,52 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Mon, 09 Feb 2009 01:58:46 +0300
-Message-ID: <498F63A6.60807@ru.mvista.com>
-References: <200902031147.22827.stf_xl@wp.pl> <200902052223.08637.bzolnier@gmail.com> <498B76C2.7030709@ru.mvista.com> <200902061736.23051.bzolnier@gmail.com> <498E230A.8060807@ru.mvista.com> <498EC481.5080308@ru.mvista.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
+Date: Mon, 9 Feb 2009 00:48:07 +0100
+Message-ID: <18831.28471.454273.451912@harpo.it.uu.se>
+References: <200902082253.07438.sshtylyov@ru.mvista.com>
+	<Pine.LNX.4.64.0902082108290.18661@blonde.anvils>
+	<498F5A25.90707@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:58363 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752971AbZBHW6x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Feb 2009 17:58:53 -0500
-In-Reply-To: <498EC481.5080308@ru.mvista.com>
+Received: from aun.it.uu.se ([130.238.12.36]:40615 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751391AbZBHXss (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Feb 2009 18:48:48 -0500
+In-Reply-To: <498F5A25.90707@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Hugh Dickins <hugh@veritas.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
 
-Hello, I wrote:
+Sergei Shtylyov writes:
+ > Hello.
+ > 
+ > Hugh Dickins wrote:
+ > 
+ > >> Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
+ > >> caused all kind of errors on the ATAPI devices, so it's been empirically proven
+ > >> that one shouldn't read/write an extra data word when a device isn't expecting
+ > >> it already. "Don't do it then"; however still taking a chance to use 32-bit I/O
+ > >> one last  time when there are exactly 3 trailing bytes.  Oh, and stop pointless
+ > >> swapping bytes to and fro as well by using io*_rep() which shouldn't byte-swap.
+ > >>
+ > >> This should fix the kernel.org bug #12609.
+ > >>
+ > >> ---
+ > >> This is hopefully better replacement for Hugh Dickins most recent patch
+ > >> (http://marc.info/?l=linux-ide&m=123352294619281)...
+ > >>     
+ > >
+ > > Yes, looks nice, and works for me.  My only criticism would be,
+ > > minor issue unchanged by your patch, that actually "slop" isn't
+ > > unlikely enough to deserve an "unlikely" - slop of 1 or 3 is
+ > > unlikely, but slop of 2 is quite common.
+ > >   
+ > 
+ >    I guess that's the case only for the ATAPI devices, so I'm going to 
+ > keep it.
 
->>>>>>> +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
->>>>>>> +{
->>>>>>> +    ide_hwif_t *hwif = drive->hwif;
->>>>>>> +    struct ide_io_ports *io_ports = &hwif->io_ports;
->>>>>>> +    struct ide_taskfile *tf = &task->tf;
->>>>>>> +    u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
->>>>>>> +
->>>>>>> +    if (task->tf_flags & IDE_TFLAG_FLAGGED)
->>>>>>> +        HIHI = 0xFF;
->>>>>>> +
->>>>>>> +    if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
->>>>>>>                   
->>>>>>    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody 
->>>>>> ever used it.
->>>>>>             
->>>>> It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to 
->>>>> break it.
->>>>>
->>>>> Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA 
->>>>> to struct
->>>>> ide_tp_ops -- it should also help some other host drivers like 
->>>>> tx493*.
->>>>>         
->>>>   That would be extremely senseless activity sicne I believe this 
->>>> flag is totally useless. I have better thing to do. :-)
->>>>     
->>>
->>> I would love to remove this flag but it is used by user-space exposed
->>> interface 
->>
->>   I know that...
->>
->>> (which was used by few drive vendors for their diagnostics
->>> tools -- doesn't matter whether internal or external) so you should put
->>> some technical arguments behind its removal (you know many of low-level
->>> technical details better than me so I may be missing something which is
->>> obvious to you).
->>>   
->>
->>   Well, the vendors can do strange things, of course...
->>   However, accessing the data register is certainly not a part of any 
->> ATA/PI defined command's inputs/outputs (the corresponding tables 
->> just don't have this register). I suspect that this flag was added 
->> just "for completeness".
->>
->>> OTOH while ->{read,write}_data approach would result in something like
->>> ~50 extra LOC (or even less with be_tp_ops) compared to removal it is
->>> completely safe and we don't need to spend a single second wondering
->>> about potential breakage 
->>
->>   Go for it. ;-)
->
->   I think I have a better idea than creating another (useless) couple 
-> of "transport" methods. Why not (ab)use the exisitng 
-> {in|out}put_data() methods instead? :-)
-
-   Besides, those methods are clearly subject to some size 
-optimization... I'll cook up a patch while I'm at it. :-)
-
-MBR, Sergei
-
-
+I really don't think it's a good idea to play micro-optimisation
+unlikely() tricks when the likelihood depends on what kind of device
+the driver is talking to. In this case unlikely() is clearly wrong.
