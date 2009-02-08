@@ -1,52 +1,59 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
-Date: Mon, 9 Feb 2009 00:48:07 +0100
-Message-ID: <18831.28471.454273.451912@harpo.it.uu.se>
-References: <200902082253.07438.sshtylyov@ru.mvista.com>
-	<Pine.LNX.4.64.0902082108290.18661@blonde.anvils>
-	<498F5A25.90707@ru.mvista.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Sun, 08 Feb 2009 18:58:22 -0500
+Message-ID: <498F719E.6090709@redhat.com>
+References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <1234019372.4658.9.camel@localhost.localdomain> <20090207225025.GB31509@parisc-linux.org> <498F0C9D.3070601@redhat.com> <20090208205049.GG31509@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:40615 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751391AbZBHXss (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Feb 2009 18:48:48 -0500
-In-Reply-To: <498F5A25.90707@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20090208205049.GG31509@parisc-linux.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Hugh Dickins <hugh@veritas.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
 
-Sergei Shtylyov writes:
- > Hello.
- > 
- > Hugh Dickins wrote:
- > 
- > >> Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
- > >> caused all kind of errors on the ATAPI devices, so it's been empirically proven
- > >> that one shouldn't read/write an extra data word when a device isn't expecting
- > >> it already. "Don't do it then"; however still taking a chance to use 32-bit I/O
- > >> one last  time when there are exactly 3 trailing bytes.  Oh, and stop pointless
- > >> swapping bytes to and fro as well by using io*_rep() which shouldn't byte-swap.
- > >>
- > >> This should fix the kernel.org bug #12609.
- > >>
- > >> ---
- > >> This is hopefully better replacement for Hugh Dickins most recent patch
- > >> (http://marc.info/?l=linux-ide&m=123352294619281)...
- > >>     
- > >
- > > Yes, looks nice, and works for me.  My only criticism would be,
- > > minor issue unchanged by your patch, that actually "slop" isn't
- > > unlikely enough to deserve an "unlikely" - slop of 1 or 3 is
- > > unlikely, but slop of 2 is quite common.
- > >   
- > 
- >    I guess that's the case only for the ATAPI devices, so I'm going to 
- > keep it.
+Matthew Wilcox wrote:
+> On Sun, Feb 08, 2009 at 11:47:25AM -0500, Ric Wheeler wrote:
+>   
+>> Matthew Wilcox wrote:
+>>     
+>>> I thought we had agreed on a plan which satisfied the SSD and insane
+>>> array vendors.  That is that we would do no tracking of allocation units
+>>> in the filesystem, but instead extend each trim out to cover the maximum
+>>> possible size.  I've confirmed with Intel's SSD people that this would
+>>> cause them no harm at all (trimming already trimmed sectors won't even
+>>> cause a slowdown).  Whether the filesystem people have taken note of
+>>> this, I have no idea.
+>>>       
+>> That should be helpful for the array people, but for some of them with 
+>> really large delete chuck sizes, they will still miss a lot since their 
+>> size is larger than the average file size :-)  I guess that we could do 
+>> something to resync - Ted mentioned some ideas for ext4.
+>>     
+>
+> I'm not sure I communicated the plan effectively.
+>
+> Let's consider deleting a 4k file.
+>
+> The DISCARD that the filesystem sends down does not just cover the 4k
+> of data.  It covers all adjacent free space to that 4k of data, so it
+> might end up sending a DISCARD of several megabytes or even gigabytes,
+> assuming there's that much contiguous free space.
+>
+> Now, filesystems which fragment their free space will not do well on
+> thin provisioned devices, but then they won't do well on any devices --
+> keeping your free space compacted is an essential part of any filesystem's
+> job, even on SSDs.
+>
+>   
+Thanks - that does sound like it will in fact help clean up.  I suppose 
+the worst case would be deleting lots of non-contiguous small files from 
+a full file system (say every other 4KB or something obscure like that). 
 
-I really don't think it's a good idea to play micro-optimisation
-unlikely() tricks when the likelihood depends on what kind of device
-the driver is talking to. In this case unlikely() is clearly wrong.
+I will see what the vendors I know have come up with, I think that this 
+should give them something interesting to play with....
+
+Ric
+
+
