@@ -1,35 +1,48 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
-Date: Mon, 09 Feb 2009 01:10:59 +0300
-Message-ID: <498F5873.1080906@ru.mvista.com>
-References: <200902082253.07438.sshtylyov@ru.mvista.com> <20090208201125.49326bd2@lxorguk.ukuu.org.uk>
+Date: Mon, 09 Feb 2009 01:18:13 +0300
+Message-ID: <498F5A25.90707@ru.mvista.com>
+References: <200902082253.07438.sshtylyov@ru.mvista.com> <Pine.LNX.4.64.0902082108290.18661@blonde.anvils>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:57761 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:57911 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753262AbZBHWLI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Feb 2009 17:11:08 -0500
-In-Reply-To: <20090208201125.49326bd2@lxorguk.ukuu.org.uk>
+	id S1751900AbZBHWST (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Feb 2009 17:18:19 -0500
+In-Reply-To: <Pine.LNX.4.64.0902082108290.18661@blonde.anvils>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rjw@sisk.pl
+To: Hugh Dickins <hugh@veritas.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
 
 Hello.
 
-Alan Cox wrote:
+Hugh Dickins wrote:
 
+>> Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
+>> caused all kind of errors on the ATAPI devices, so it's been empirically proven
+>> that one shouldn't read/write an extra data word when a device isn't expecting
+>> it already. "Don't do it then"; however still taking a chance to use 32-bit I/O
+>> one last  time when there are exactly 3 trailing bytes.  Oh, and stop pointless
 >> swapping bytes to and fro as well by using io*_rep() which shouldn't byte-swap.
+>>
+>> This should fix the kernel.org bug #12609.
+>>
+>> ---
+>> This is hopefully better replacement for Hugh Dickins most recent patch
+>> (http://marc.info/?l=linux-ide&m=123352294619281)...
 >>     
 >
-> Nice - thats a very sneaky and clean way to do it but probably should be
-> commented or someone will "optimise" it one day ..
+> Yes, looks nice, and works for me.  My only criticism would be,
+> minor issue unchanged by your patch, that actually "slop" isn't
+> unlikely enough to deserve an "unlikely" - slop of 1 or 3 is
+> unlikely, but slop of 2 is quite common.
 >   
 
-   OK, I'll recast and repost it -- along with the patch cleaning up the 
-corresponding fragment of the 16-bit I/O method.
+   I guess that's the case only for the ATAPI devices, so I'm going to 
+keep it.
 
 MBR, Sergei
 
