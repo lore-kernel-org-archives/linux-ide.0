@@ -1,78 +1,60 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Sun, 08 Feb 2009 14:39:45 +0300
-Message-ID: <498EC481.5080308@ru.mvista.com>
-References: <200902031147.22827.stf_xl@wp.pl> <200902052223.08637.bzolnier@gmail.com> <498B76C2.7030709@ru.mvista.com> <200902061736.23051.bzolnier@gmail.com> <498E230A.8060807@ru.mvista.com>
+Subject: Re: [PATCH] ide: Add tx4938ide driver (v2)
+Date: Sun, 08 Feb 2009 14:44:58 +0300
+Message-ID: <498EC5BA.4080002@ru.mvista.com>
+References: <20081023.012013.52129771.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:50582 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:50640 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752477AbZBHLjx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 06:39:53 -0500
-In-Reply-To: <498E230A.8060807@ru.mvista.com>
+	with ESMTP id S1752506AbZBHLpH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 06:45:07 -0500
+In-Reply-To: <20081023.012013.52129771.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
 
-Hello, I wrote:
+Hello.
 
->>>>>> +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
->>>>>> +{
->>>>>> +    ide_hwif_t *hwif = drive->hwif;
->>>>>> +    struct ide_io_ports *io_ports = &hwif->io_ports;
->>>>>> +    struct ide_taskfile *tf = &task->tf;
->>>>>> +    u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
->>>>>> +
->>>>>> +    if (task->tf_flags & IDE_TFLAG_FLAGGED)
->>>>>> +        HIHI = 0xFF;
->>>>>> +
->>>>>> +    if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
->>>>>>                   
->>>>>    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody 
->>>>> ever used it.
->>>>>             
->>>> It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to break 
->>>> it.
->>>>
->>>> Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA to 
->>>> struct
->>>> ide_tp_ops -- it should also help some other host drivers like tx493*.
->>>>         
->>>   That would be extremely senseless activity sicne I believe this 
->>> flag is totally useless. I have better thing to do. :-)
->>>     
->>
->> I would love to remove this flag but it is used by user-space exposed
->> interface 
->
->   I know that...
->
->> (which was used by few drive vendors for their diagnostics
->> tools -- doesn't matter whether internal or external) so you should put
->> some technical arguments behind its removal (you know many of low-level
->> technical details better than me so I may be missing something which is
->> obvious to you).
->>   
->
->   Well, the vendors can do strange things, of course...
->   However, accessing the data register is certainly not a part of any 
-> ATA/PI defined command's inputs/outputs (the corresponding tables just 
-> don't have this register). I suspect that this flag was added just 
-> "for completeness".
->
->> OTOH while ->{read,write}_data approach would result in something like
->> ~50 extra LOC (or even less with be_tp_ops) compared to removal it is
->> completely safe and we don't need to spend a single second wondering
->> about potential breakage 
->
->   Go for it. ;-)
+Atsushi Nemoto wrote:
 
-   I think I have a better idea than creating another (useless) couple 
-of "transport" methods. Why not (ab)use the exisitng {in|out}put_data() 
-methods instead? :-)
+> This is the driver for the Toshiba TX4938 SoC EBUS controller ATA mode.
+> It has custom set_pio_mode and some hacks for big endian.
+>
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>   
+[...]
+> +static void tx4938ide_input_data_swap(ide_drive_t *drive, struct request *rq,
+> +				void *buf, unsigned int len)
+> +{
+> +	unsigned long port = drive->hwif->io_ports.data_addr;
+> +	unsigned short *ptr = buf;
+> +	unsigned int count = (len + 1) / 2;
+> +
+> +	while (count--)
+> +		*ptr++ = cpu_to_le16(__raw_readw((void __iomem *)port));
+> +	__ide_flush_dcache_range((unsigned long)buf, count * 2);
+> +}
+> +
+> +static void tx4938ide_output_data_swap(ide_drive_t *drive, struct request *rq,
+> +				void *buf, unsigned int len)
+> +{
+> +	unsigned long port = drive->hwif->io_ports.data_addr;
+> +	unsigned short *ptr = buf;
+> +	unsigned int count = (len + 1) / 2;
+> +
+> +	while (count--) {
+> +		__raw_writew(le16_to_cpu(*ptr), (void __iomem *)port);
+> +		ptr++;
+> +	}
+> +	__ide_flush_dcache_range((unsigned long)buf, count * 2);
+> +}
+
+   Atsushi, does TX49 really suffer from the issue that these flushes 
+are trying to address?
 
 MBR, Sergei
 
