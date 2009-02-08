@@ -1,75 +1,90 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] libata-sff: fix 32-bit PIO regression
-Date: Sun, 8 Feb 2009 23:53:07 +0400
-Message-ID: <200902082253.07438.sshtylyov@ru.mvista.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Sun, 8 Feb 2009 15:06:44 -0500
+Message-ID: <87f94c370902081206v71106c5fp9a7ef0400301a1ab@mail.gmail.com>
+References: <20090123041558.GC24652@parisc-linux.org>
+	 <4979AF62.7070409@redhat.com>
+	 <1232721777.4430.7.camel@macbook.infradead.org>
+	 <498DA052.6090605@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:11435 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753286AbZBHTwo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 14:52:44 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <498DA052.6090605@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
 
-Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
-caused all kind of errors on the ATAPI devices, so it's been empirically proven
-that one shouldn't read/write an extra data word when a device isn't expecting
-it already. "Don't do it then"; however still taking a chance to use 32-bit I/O
-one last  time when there are exactly 3 trailing bytes.  Oh, and stop pointless
-swapping bytes to and fro as well by using io*_rep() which shouldn't byte-swap.
+On Sat, Feb 7, 2009 at 9:53 AM, Ric Wheeler <rwheeler@redhat.com> wrote:
+>
+> I have been poked at by some vendors about the status of our support for the
+> virtually/thinly provisioned luns since they are getting close to being able
+> to test with real devices.
 
-This should fix the kernel.org bug #12609.
+I found a list of T10 activities just since just Dec. 1, 2008 and it
+is a bit overwhelming.  (ie. 08-356r4 is but one of many recent
+reports)
 
----
-This is hopefully better replacement for Hugh Dickins most recent patch
-(http://marc.info/?l=linux-ide&m=123352294619281)...
+http://www.t10.org/new_a.htm
 
- drivers/ata/libata-sff.c |   23 ++++++++++++++++-------
- 1 files changed, 16 insertions(+), 7 deletions(-)
+For those of us that don't live and breath the SCSI spec, is there an
+overview site describing what is going on.
 
-Index: linux-2.6/drivers/ata/libata-sff.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-sff.c
-+++ linux-2.6/drivers/ata/libata-sff.c
-@@ -773,18 +773,27 @@ unsigned int ata_sff_data_xfer32(struct 
- 	else
- 		iowrite32_rep(data_addr, buf, words);
- 
-+	/* Transfer trailing bytes, if any */
- 	if (unlikely(slop)) {
--		__le32 pad;
-+		unsigned char pad[4];
-+
-+		/* Point buf to the tail of buffer */
-+		buf += buflen - slop;
- 		if (rw == READ) {
--			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
--			memcpy(buf + buflen - slop, &pad, slop);
-+			if (slop < 3)
-+				ioread16_rep(data_addr, pad, 1);
-+			else
-+				ioread32_rep(data_addr, pad, 1);
-+			memcpy(buf, pad, slop);
- 		} else {
--			memcpy(&pad, buf + buflen - slop, slop);
--			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
-+			memcpy(pad, buf, slop);
-+			if (slop < 3)
-+				iowrite16_rep(data_addr, pad, 1);
-+			else
-+				iowrite32_rep(data_addr, pad, 1);
- 		}
--		words++;
- 	}
--	return words << 2;
-+	return (buflen + 1) & ~1;
- }
- EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
- 
+Maybe:
+09-059r0 	T10 Project Summary - January 2009 	John Lohmeyer 	PDF
+(34729)	2009/01/22
+http://www.t10.org/cgi-bin/ac.pl?t=d&f=09-059r0.pdf
 
+I have not read any of the Post Dec. 1 stuff including the above
+project summary, but based on the names these seem potentially
+relevant:
+
+09-055r0 	T13 Liaison Report January 09 	Dan Colegrove 	PDF (4770)	2009/01/15
+
+08-356r4 	SBC-3: WRITE SAME unmap bit 	David L. Black 	PDF (56608)	2008/12/10
+
+08-356r5 	SBC-3 Thin Provisioning Commands 	Fred Knight, David L.
+Black 	PDF (387549)	2009/01/15
+
+08-149r7 	SBC - Thin Provisioning 	Frederick Knight 	PDF (281001)	2008/12/08
+
+08-149r8 	SBC - Thin Provisioning 	Frederick Knight 	PDF (281387)	2009/01/09
+
+09-011r1 	SBC-3 Thin Provisioning Threshold Notification 	Frederick
+Knight 	PDF (32757)	2009/01/09
+
+08-149r9 	SBC - Thin Provisioning 	Frederick Knight 	PDF (353888)	2009/01/15
+
+09-012r0 	Minutes: CAP - Thin Provisioning 12/4 con-call 	Frederick
+Knight 	PDF (38063)	2008/12/08
+
+09-011r0 	SBC-3 Thin Provisioning Threshold Notification 	Frederick
+Knight 	PDF (48523)	2008/12/08
+
+08-396r3 	SPC-4: Reporting support for all DIF types 	George Penokie
+	PDF (85358)	2009/01/14
+
+09-058r0 	Agenda for T10 Meeting #90 March 2009 	John Lohmeyer 	PDF
+(61437)	2009/01/19
+
+09-020r0 	T11 Liaison Report, December 2008 	Robert Snively 	PDF
+(13117)	2008/12/19
+
+09-032r0 	Minutes of T10 Plenary Meeting #89 - January 15, 2009 	Weber
+& Lohmeyer 	HTM (141593)	2009/01/23
+
+09-032r0 	Minutes of T10 Plenary Meeting #89 - January 15, 2009 	Weber
+& Lohmeyer 	PDF (344891)	2009/01/23
+
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
