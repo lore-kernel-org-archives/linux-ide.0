@@ -1,43 +1,79 @@
-From: "David Woodhouse" <dwmw2@infradead.org>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Sat, 7 Feb 2009 23:36:07 -0000 (UTC)
-Message-ID: <6e1133942a9f20e058e117a24fad9199.squirrel@baythorne.infradead.org>
-References: <20090123041558.GC24652@parisc-linux.org>
-    <4979AF62.7070409@redhat.com>
-    <1232721777.4430.7.camel@macbook.infradead.org>
-    <498DA052.6090605@redhat.com>
-    <20090207224722.GA31509@parisc-linux.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/3] ide: add at91_ide driver
+Date: Sun, 08 Feb 2009 14:39:45 +0300
+Message-ID: <498EC481.5080308@ru.mvista.com>
+References: <200902031147.22827.stf_xl@wp.pl> <200902052223.08637.bzolnier@gmail.com> <498B76C2.7030709@ru.mvista.com> <200902061736.23051.bzolnier@gmail.com> <498E230A.8060807@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090207224722.GA31509@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Ric Wheeler <rwheeler@redhat.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:50582 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752477AbZBHLjx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Feb 2009 06:39:53 -0500
+In-Reply-To: <498E230A.8060807@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 
-> On Sat, Feb 07, 2009 at 09:53:06AM -0500, Ric Wheeler wrote:
->> I have been poked at by some vendors about the status of our support for
->> the virtually/thinly provisioned luns since they are getting close to
->> being able to test with real devices.
+Hello, I wrote:
+
+>>>>>> +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
+>>>>>> +{
+>>>>>> +    ide_hwif_t *hwif = drive->hwif;
+>>>>>> +    struct ide_io_ports *io_ports = &hwif->io_ports;
+>>>>>> +    struct ide_taskfile *tf = &task->tf;
+>>>>>> +    u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+>>>>>> +
+>>>>>> +    if (task->tf_flags & IDE_TFLAG_FLAGGED)
+>>>>>> +        HIHI = 0xFF;
+>>>>>> +
+>>>>>> +    if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
+>>>>>>                   
+>>>>>    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody 
+>>>>> ever used it.
+>>>>>             
+>>>> It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to break 
+>>>> it.
+>>>>
+>>>> Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA to 
+>>>> struct
+>>>> ide_tp_ops -- it should also help some other host drivers like tx493*.
+>>>>         
+>>>   That would be extremely senseless activity sicne I believe this 
+>>> flag is totally useless. I have better thing to do. :-)
+>>>     
 >>
->> My quick summary is that we most of the work so far has been done
->> without any real hardware to play with - in 2.6.29-rc3, I don't see any
->> low level ATA or SCSI bits that turn requests tagged with REQ_DISCARD
->> into the specific ATA or SCSI commands. Did I miss something & if not,
->> do we have plans to push anything upstream soonish?
+>> I would love to remove this flag but it is used by user-space exposed
+>> interface 
 >
-> Bearing in mind that I'm now three weeks behind on email, you might want
-> to look at
-> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20081231
-> which has at least one known bug (fixed by Dave Woodhouse and Ben
-> Herrenschmidt).  I'll be able to give a more coherent answer in a few
-> days.  Or maybe Dave will beat me to it ;-)
+>   I know that...
+>
+>> (which was used by few drive vendors for their diagnostics
+>> tools -- doesn't matter whether internal or external) so you should put
+>> some technical arguments behind its removal (you know many of low-level
+>> technical details better than me so I may be missing something which is
+>> obvious to you).
+>>   
+>
+>   Well, the vendors can do strange things, of course...
+>   However, accessing the data register is certainly not a part of any 
+> ATA/PI defined command's inputs/outputs (the corresponding tables just 
+> don't have this register). I suspect that this flag was added just 
+> "for completeness".
+>
+>> OTOH while ->{read,write}_data approach would result in something like
+>> ~50 extra LOC (or even less with be_tp_ops) compared to removal it is
+>> completely safe and we don't need to spend a single second wondering
+>> about potential breakage 
+>
+>   Go for it. ;-)
 
-Ben's suggestion was that the IDE core wouldn't be sending the payload of
-the command because it looks at the R/W bit... which is clear (read) in
-our discard requests ATM. Making them appear to be writes is simple enough
-though. I gave an updated test kernel to the Sandisk folks but haven't got
-results back from them yet.
+   I think I have a better idea than creating another (useless) couple 
+of "transport" methods. Why not (ab)use the exisitng {in|out}put_data() 
+methods instead? :-)
+
+MBR, Sergei
+
 
