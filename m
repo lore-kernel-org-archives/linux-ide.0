@@ -1,56 +1,43 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Sun, 08 Feb 2009 11:47:25 -0500
-Message-ID: <498F0C9D.3070601@redhat.com>
-References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <1234019372.4658.9.camel@localhost.localdomain> <20090207225025.GB31509@parisc-linux.org>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH] ide: Add tx4938ide driver (v2)
+Date: Mon, 09 Feb 2009 01:53:21 +0900 (JST)
+Message-ID: <20090209.015321.25909754.anemo@mba.ocn.ne.jp>
+References: <20081023.012013.52129771.anemo@mba.ocn.ne.jp>
+	<498EC5BA.4080002@ru.mvista.com>
+	<498EC790.9070403@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60081 "EHLO mx2.redhat.com"
+Received: from mba.ocn.ne.jp ([122.1.235.107]:53649 "EHLO smtp.mba.ocn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbZBHQs0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Feb 2009 11:48:26 -0500
-In-Reply-To: <20090207225025.GB31509@parisc-linux.org>
+	id S1752746AbZBHQxX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Feb 2009 11:53:23 -0500
+In-Reply-To: <498EC790.9070403@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: sshtylyov@ru.mvista.com
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-Matthew Wilcox wrote:
-> On Sat, Feb 07, 2009 at 09:09:32AM -0600, James Bottomley wrote:
->   
->> On Sat, 2009-02-07 at 09:53 -0500, Ric Wheeler wrote:
->>     
->>> I have been poked at by some vendors about the status of our support for 
->>> the virtually/thinly provisioned luns since they are getting close to 
->>> being able to test with real devices.
->>>       
->> With my LSF hat on, a certain array vendor might be sponsoring to get
->> the opportunity to raise this issue more fully.  The impression (mostly
->> correct) is that we're thinking about trim/unmap purely from the SSD FTL
->> point of view and perhaps not being as useful as we might to virtually
->> provisioned LUNs ... so you could mention to the other vendors that they
->> might have an interest in coming (and even possibly sponsoring).
->>     
->
-> I thought we had agreed on a plan which satisfied the SSD and insane
-> array vendors.  That is that we would do no tracking of allocation units
-> in the filesystem, but instead extend each trim out to cover the maximum
-> possible size.  I've confirmed with Intel's SSD people that this would
-> cause them no harm at all (trimming already trimmed sectors won't even
-> cause a slowdown).  Whether the filesystem people have taken note of
-> this, I have no idea.
->
->   
-That should be helpful for the array people, but for some of them with 
-really large delete chuck sizes, they will still miss a lot since their 
-size is larger than the average file size :-)  I guess that we could do 
-something to resync - Ted mentioned some ideas for ext4.
+On Sun, 08 Feb 2009 14:52:48 +0300, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> >> +    __ide_flush_dcache_range((unsigned long)buf, count * 2);
+> >> +}
+> >
+> >   Atsushi, does TX49 really suffer from the issue that these flushes 
+> > are trying to address?
+> 
+>    Well, looking thru the TX4939 thread, it appears that I've asked this 
+> question already. Isn't this related to VIVT caches?
 
-On another note, they are pondering either using write same with the 
-discard bit set or the unmap command. It would seem that for thin 
-provisioning alone, either would work.
+No, TX49 has VIPT cache.  It is related to D-cache aliasing on PIO.
+My first attempt to fix this issue goes back to 2004:
 
-ric
+http://www.linux-mips.org/archives/linux-mips/2004-03/msg00185.html
 
+And more generic lengthy discussion can be found on (as mentioned in
+the previous tx4939 thread):
+
+http://lkml.org/lkml/2006/1/13/156
+
+---
+Atsushi Nemoto
