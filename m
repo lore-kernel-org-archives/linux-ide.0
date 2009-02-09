@@ -1,34 +1,80 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Port Multiplier access with Sil 3124
-Date: Mon, 09 Feb 2009 15:09:12 -0500
-Message-ID: <49908D68.8060601@rtr.ca>
-References: <498F42B6.8030607@tlinx.org> <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for February 9 (ide-dma)
+Date: Mon, 09 Feb 2009 13:50:20 -0800
+Message-ID: <4990A51C.1090607@oracle.com>
+References: <20090209193908.1a448944.sfr@canb.auug.org.au> <499064CC.1030907@oracle.com> <200902091956.54226.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:35293 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752928AbZBIUJR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Feb 2009 15:09:17 -0500
-In-Reply-To: <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <200902091956.54226.bzolnier@gmail.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Linda Walsh <lkml@tlinx.org>, linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> In my real world tests I've never seen a single drive achieve beyond
-> about 80MB/sec.  (5GB/min is the way I actually measure it.  That was
-> using SATA directly on the MB which I assume is as fast a PCIe.)
-..
+Bartlomiej Zolnierkiewicz wrote:
+> On Monday 09 February 2009, Randy Dunlap wrote:
+>> Stephen Rothwell wrote:
+>>> Hi all,
+>>>
+>>> [I accidentally deleted the merge and quilt-import logs today :-( - I
+>>> wonder if any would have noticed :-).  The merge summary still appears
+>>> below.]
+>>>
+>>> Changes since 20090206:
+>>>
+>>> New tree:
+>>> 	aoe
+>>>
+>>> Undropped trees:
+>>> 	ide
+>>
+>> When CONFIG_BLK_DEV_IDEDMA=n:
+>>
+>> drivers/ide/ide-taskfile.c:104: error: implicit declaration of function 'ide_build_sglist'
+> 
+> Thanks.  Should be fixed with new revision of the guilty patch
+> (fix part is in <linux/ide.h> chunk):
 
-I have had spinning drives here that coulw achieve a simple linear
-read rate of 112Mbytes/sec.
+Ack.  That works.  Thanks.
 
-Any amount of seeking thrown in and that number drops a lot,
-but that's the current max I know of.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: call ide_build_sglist() prior to ->dma_setup (v2)
+> 
+> * Re-map sg table if needed in ide_build_sglist().
+> 
+> * Move ide_build_sglist() call from ->dma_setup to its users.
+> 
+> * Un-export ide_build_sglist().
+> 
+> v2:
+> * Build fix for CONFIG_BLK_DEV_IDEDMA=n (noticed by Randy Dunlap).
+> 
+> There should be no functional changes caused by this patch.
+> 
+> Cc: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-There are SATA SSDs in the wild already that are *way* faster, though.
 
-Cheers
+> Index: b/include/linux/ide.h
+> ===================================================================
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -1474,6 +1474,8 @@ static inline int ide_set_dma(ide_drive_
+>  static inline void ide_check_dma_crc(ide_drive_t *drive) { ; }
+>  static inline ide_startstop_t ide_dma_timeout_retry(ide_drive_t *drive, int error) { return ide_stopped; }
+>  static inline void ide_release_dma_engine(ide_hwif_t *hwif) { ; }
+> +static inline int ide_build_sglist(ide_drive_t *drive,
+> +				   struct request *rq) { return 0; }
+>  #endif /* CONFIG_BLK_DEV_IDEDMA */
+>  
+>  #ifdef CONFIG_BLK_DEV_IDEACPI
+> 
+> 
+> 
+> 
+
+
+-- 
+~Randy
