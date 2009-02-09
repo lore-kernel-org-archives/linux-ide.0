@@ -1,48 +1,66 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
-Date: Mon, 09 Feb 2009 19:48:48 +0300
-Message-ID: <49905E70.8000209@ru.mvista.com>
-References: <200902082253.07438.sshtylyov@ru.mvista.com> <Pine.LNX.4.64.0902082108290.18661@blonde.anvils> <498F73A5.2070300@ru.mvista.com> <Pine.LNX.4.64.0902091016520.14410@blonde.anvils> <49905D08.4050302@ru.mvista.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH] [resend] Resume from hibernation fails with pata_it821x RAID volume
+Date: Mon, 9 Feb 2009 18:05:39 +0100
+Message-ID: <200902091805.42285.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:16864 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755959AbZBIQsZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Feb 2009 11:48:25 -0500
-In-Reply-To: <49905D08.4050302@ru.mvista.com>
+Received: from mail.atlantis.sk ([80.94.52.35]:48133 "EHLO mail.atlantis.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754725AbZBIRFv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Feb 2009 12:05:51 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Hugh Dickins <hugh@veritas.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, I wrote:
+On Friday 06 February 2009 18:56:35 Alan Cox wrote:
+> >     See CodingStyle chapter 8 for the preferred multiline comment style.
+> >
+> > > +		memset(&id[ATA_ID_SERNO], 0x20, ATA_ID_SERNO_LEN);
+> >
+> >     Why not ' '?
+> >
+> > MBR, Sergei
+>
+> Digging into the docs the RAID serial number (and what that means isn't
+> defined anywhere I can see) is byte offset 54-73 in each of the 4 128
+> byte blocks returned by the chip status query we do at boot
+> (it821x_probe_firmware).
 
->>>> Yes, looks nice, and works for me.  My only criticism would be,
->>>> minor issue unchanged by your patch, that actually "slop" isn't
->>>> unlikely enough to deserve an "unlikely" - slop of 1 or 3 is
->>>> unlikely, but slop of 2 is quite common.
+Yes, found it there. But it seems to be the same number as present in the 
+IDENTIFY data. It contains date and time of boot (matches RAID_SERIAL_NUMBER 
+structure found in iteraid.h in driver source from ITE) instead of date and 
+time of RAID creation.
 
->>> Common on what types of ATAPI commands? I can hardly believe that 
->>> they are
->>> common on the block I/O...
-
->> When I checked (mounting and listing a CD), about 34% of
->> commands had slop 2.
-
->    Hm, that probably involved the raw block reads. I don't remember the 
-> raw sector length off-hand but it may well be just even, not divisble by 4.
-
-    Oops, I read "listening" instead of "listing". :-/
-    But I thought that listing shouldn't involve anything other than block 
-reads. OTOH, I'm not familiar enough with ISO9660... What commands are you 
-seeing (if you have them dumped)?
-
->> But you're right, now I try copying
->> a large file, there's no slop involved in that at all.
+I don't have any better solution than the patch below. Generating the serial
+number from drives containing the array is not an option as it prevents
+resume if one of the drives fails.
 
 
->> Hugh
+Fix resume on pata_it821x RAID volume by clearing the serial number in 
+IDENTIFY data. The serial number is different on each boot, breaking
+validation on resume from hibernation.
 
-MBR, Sergei
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+
+--- linux-2.6.28-orig/drivers/ata/pata_it821x.c	2009-01-02 17:18:36.000000000 +0100
++++ linux/drivers/ata/pata_it821x.c	2009-02-09 17:52:21.000000000 +0100
+@@ -561,6 +561,9 @@
+ 		id[83] |= 0x4400;	/* Word 83 is valid and LBA48 */
+ 		id[86] |= 0x0400;	/* LBA48 on */
+ 		id[ATA_ID_MAJOR_VER] |= 0x1F;
++		/* Clear the serial number because it's different each boot
++		   which breaks validation on resume */
++		memset(&id[ATA_ID_SERNO], ' ', ATA_ID_SERNO_LEN);
+ 	}
+ 	return err_mask;
+ }
+
+
+
+-- 
+Ondrej Zary
