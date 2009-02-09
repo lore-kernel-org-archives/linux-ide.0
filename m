@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/6] ide: use do_rw_taskfile() for ATA_CMD_PACKET commands
-Date: Tue, 10 Feb 2009 00:19:58 +0100
-Message-ID: <20090209231958.32406.59196.sendpatchset@localhost.localdomain>
+Subject: [PATCH 3/6] ide: set hwif->expiry prior to calling [__]ide_set_handler()
+Date: Tue, 10 Feb 2009 00:20:05 +0100
+Message-ID: <20090209232005.32406.20153.sendpatchset@localhost.localdomain>
 References: <20090209231945.32406.14874.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:23002 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755284AbZBIXSp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 18:18:45 -0500
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:56753 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755790AbZBIXSz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 18:18:55 -0500
 In-Reply-To: <20090209231945.32406.14874.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,285 +15,222 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: use do_rw_taskfile() for ATA_CMD_PACKET commands
+Subject: [PATCH] ide: set hwif->expiry prior to calling [__]ide_set_handler()
 
-* Pass command to ide_issue_pc() and update ->do_request methods
-  in ide-{cd,floppy,tape}.c accordingly.
+* Set hwif->expiry prior to calling [__]ide_set_handler()
+  and drop 'expiry' argument.
 
-* Convert ide_pktcmd_tf_load() to ide_init_packet_cmd() which
-  just initializes command structure and use do_rw_taskfile()
-  to load ATA_CMD_PACKET commands.
-
-While at it:
-
-* Rename ide{floppy,tape}_issue_pc() to ide_{floppy,tape}_issue_pc().
+* Set hwif->expiry to NULL in ide_{timer_expiry,intr}()
+  and remove 'hwif->expiry = NULL' assignments.
 
 There should be no functional changes caused by this patch.
 
-Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-atapi.c    |   37 ++++++++++++-------------------------
- drivers/ide/ide-cd.c       |   11 ++++++++++-
- drivers/ide/ide-floppy.c   |   24 ++++++++++++++----------
- drivers/ide/ide-tape.c     |   19 ++++++++++++++-----
- drivers/ide/ide-taskfile.c |    3 ++-
- include/linux/ide.h        |    2 +-
- 6 files changed, 53 insertions(+), 43 deletions(-)
+ drivers/ide/ide-atapi.c    |    6 ++++--
+ drivers/ide/ide-cd.c       |    3 ++-
+ drivers/ide/ide-eh.c       |    9 ++++-----
+ drivers/ide/ide-io.c       |    2 ++
+ drivers/ide/ide-iops.c     |   13 +++++++------
+ drivers/ide/ide-taskfile.c |    6 +++---
+ include/linux/ide.h        |    6 ++----
+ 7 files changed, 24 insertions(+), 21 deletions(-)
 
 Index: b/drivers/ide/ide-atapi.c
 ===================================================================
 --- a/drivers/ide/ide-atapi.c
 +++ b/drivers/ide/ide-atapi.c
-@@ -475,23 +475,15 @@ next_irq:
+@@ -471,7 +471,7 @@ static ide_startstop_t ide_pc_intr(ide_d
+ 		  rq->cmd[0], bcount);
+ next_irq:
+ 	/* And set the interrupt handler again */
+-	ide_set_handler(drive, ide_pc_intr, timeout, NULL);
++	ide_set_handler(drive, ide_pc_intr, timeout);
  	return ide_started;
  }
  
--static void ide_pktcmd_tf_load(ide_drive_t *drive, u32 tf_flags, u16 bcount)
-+static void ide_init_packet_cmd(struct ide_cmd *cmd, u32 tf_flags,
-+				u16 bcount, u8 dma)
- {
--	ide_hwif_t *hwif = drive->hwif;
--	struct ide_cmd cmd;
--	u8 dma = drive->dma;
--
--	memset(&cmd, 0, sizeof(cmd));
--	cmd.tf_flags = IDE_TFLAG_OUT_LBAH | IDE_TFLAG_OUT_LBAM |
--		       IDE_TFLAG_OUT_FEATURE | tf_flags;
--	cmd.tf.feature = dma;		/* Use PIO/DMA */
--	cmd.tf.lbam    = bcount & 0xff;
--	cmd.tf.lbah    = (bcount >> 8) & 0xff;
--
--	ide_tf_dump(drive->name, &cmd.tf);
--	hwif->tp_ops->set_irq(hwif, 1);
--	SELECT_MASK(drive, 0);
--	hwif->tp_ops->tf_load(drive, &cmd);
-+	cmd->protocol  = dma ? ATAPI_PROT_DMA : ATAPI_PROT_PIO;
-+	cmd->tf_flags |= IDE_TFLAG_OUT_LBAH | IDE_TFLAG_OUT_LBAM |
-+			 IDE_TFLAG_OUT_FEATURE | tf_flags;
-+	cmd->tf.feature = dma;		/* Use PIO/DMA */
-+	cmd->tf.lbam    = bcount & 0xff;
-+	cmd->tf.lbah    = (bcount >> 8) & 0xff;
- }
- 
- static u8 ide_read_ireason(ide_drive_t *drive)
-@@ -622,24 +614,17 @@ static ide_startstop_t ide_transfer_pc(i
- 	return ide_started;
- }
- 
--ide_startstop_t ide_issue_pc(ide_drive_t *drive)
-+ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
- {
- 	struct ide_atapi_pc *pc;
- 	ide_hwif_t *hwif = drive->hwif;
- 	const struct ide_dma_ops *dma_ops = hwif->dma_ops;
--	struct ide_cmd *cmd = &hwif->cmd;
- 	ide_expiry_t *expiry = NULL;
- 	struct request *rq = hwif->rq;
- 	unsigned int timeout;
- 	u32 tf_flags;
- 	u16 bcount;
- 
--	if (drive->media != ide_floppy) {
--		if (rq_data_dir(rq))
--			cmd->tf_flags |= IDE_TFLAG_WRITE;
--		cmd->rq = rq;
--	}
--
- 	if (dev_is_idecd(drive)) {
- 		tf_flags = IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL;
- 		bcount = ide_cd_get_xferlen(rq);
-@@ -684,7 +669,9 @@ ide_startstop_t ide_issue_pc(ide_drive_t
- 						       : WAIT_TAPE_CMD;
+@@ -590,11 +590,13 @@ static ide_startstop_t ide_transfer_pc(i
+ 		}
  	}
  
--	ide_pktcmd_tf_load(drive, tf_flags, bcount);
-+	ide_init_packet_cmd(cmd, tf_flags, bcount, drive->dma);
++	hwif->expiry = expiry;
 +
-+	(void)do_rw_taskfile(drive, cmd);
+ 	/* Set the interrupt routine */
+ 	ide_set_handler(drive,
+ 			(dev_is_idecd(drive) ? drive->irq_handler
+ 					     : ide_pc_intr),
+-			timeout, expiry);
++			timeout);
  
- 	/* Issue the packet command */
- 	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
+ 	/* Begin DMA, if necessary */
+ 	if (dev_is_idecd(drive)) {
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -1060,6 +1060,8 @@ static void cdrom_do_block_pc(ide_drive_
- static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 					sector_t block)
- {
-+	struct ide_cmd cmd;
-+
- 	ide_debug_log(IDE_DBG_RQ, "cmd: 0x%x, block: %llu",
- 				  rq->cmd[0], (unsigned long long)block);
- 
-@@ -1088,7 +1090,14 @@ static ide_startstop_t ide_cd_do_request
- 		return ide_stopped;
+@@ -953,7 +953,8 @@ static ide_startstop_t cdrom_newpc_intr(
+ 			expiry = ide_cd_expiry;
  	}
  
--	return ide_issue_pc(drive);
-+	memset(&cmd, 0, sizeof(cmd));
-+
-+	if (rq_data_dir(rq))
-+		cmd.tf_flags |= IDE_TFLAG_WRITE;
-+
-+	cmd.rq = rq;
-+
-+	return ide_issue_pc(drive, &cmd);
- }
+-	ide_set_handler(drive, cdrom_newpc_intr, timeout, expiry);
++	hwif->expiry = expiry;
++	ide_set_handler(drive, cdrom_newpc_intr, timeout);
+ 	return ide_started;
  
- /*
-Index: b/drivers/ide/ide-floppy.c
+ end_request:
+Index: b/drivers/ide/ide-eh.c
 ===================================================================
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -130,8 +130,9 @@ static void ide_floppy_report_error(stru
+--- a/drivers/ide/ide-eh.c
++++ b/drivers/ide/ide-eh.c
+@@ -175,8 +175,7 @@ static ide_startstop_t atapi_reset_pollf
+ 		printk(KERN_INFO "%s: ATAPI reset complete\n", drive->name);
+ 	else {
+ 		if (time_before(jiffies, hwif->poll_timeout)) {
+-			ide_set_handler(drive, &atapi_reset_pollfunc, HZ/20,
+-					NULL);
++			ide_set_handler(drive, &atapi_reset_pollfunc, HZ/20);
+ 			/* continue polling */
+ 			return ide_started;
+ 		}
+@@ -238,7 +237,7 @@ static ide_startstop_t reset_pollfunc(id
  
- }
- 
--static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
--		struct ide_atapi_pc *pc)
-+static ide_startstop_t ide_floppy_issue_pc(ide_drive_t *drive,
-+					   struct ide_cmd *cmd,
-+					   struct ide_atapi_pc *pc)
- {
- 	struct ide_disk_obj *floppy = drive->driver_data;
- 
-@@ -157,7 +158,7 @@ static ide_startstop_t idefloppy_issue_p
- 
- 	pc->retries++;
- 
--	return ide_issue_pc(drive);
-+	return ide_issue_pc(drive, cmd);
- }
- 
- void ide_floppy_create_read_capacity_cmd(struct ide_atapi_pc *pc)
-@@ -244,7 +245,7 @@ static ide_startstop_t ide_floppy_do_req
- {
- 	struct ide_disk_obj *floppy = drive->driver_data;
- 	ide_hwif_t *hwif = drive->hwif;
--	struct ide_cmd *cmd = &hwif->cmd;
-+	struct ide_cmd cmd;
- 	struct ide_atapi_pc *pc;
- 
- 	if (drive->debug_mask & IDE_DBG_RQ)
-@@ -285,19 +286,22 @@ static ide_startstop_t ide_floppy_do_req
- 		goto out_end;
+ 	if (!OK_STAT(tmp, 0, ATA_BUSY)) {
+ 		if (time_before(jiffies, hwif->poll_timeout)) {
+-			ide_set_handler(drive, &reset_pollfunc, HZ/20, NULL);
++			ide_set_handler(drive, &reset_pollfunc, HZ/20);
+ 			/* continue polling */
+ 			return ide_started;
+ 		}
+@@ -355,7 +354,7 @@ static ide_startstop_t do_reset1(ide_dri
+ 		ndelay(400);
+ 		hwif->poll_timeout = jiffies + WAIT_WORSTCASE;
+ 		hwif->polling = 1;
+-		__ide_set_handler(drive, &atapi_reset_pollfunc, HZ/20, NULL);
++		__ide_set_handler(drive, &atapi_reset_pollfunc, HZ/20);
+ 		spin_unlock_irqrestore(&hwif->lock, flags);
+ 		return ide_started;
  	}
+@@ -415,7 +414,7 @@ static ide_startstop_t do_reset1(ide_dri
+ 	udelay(10);
+ 	hwif->poll_timeout = jiffies + WAIT_WORSTCASE;
+ 	hwif->polling = 1;
+-	__ide_set_handler(drive, &reset_pollfunc, HZ/20, NULL);
++	__ide_set_handler(drive, &reset_pollfunc, HZ/20);
  
-+	memset(&cmd, 0, sizeof(cmd));
-+
- 	if (rq_data_dir(rq))
--		cmd->tf_flags |= IDE_TFLAG_WRITE;
--	cmd->rq = rq;
-+		cmd.tf_flags |= IDE_TFLAG_WRITE;
-+
-+	cmd.rq = rq;
- 
--	ide_init_sg_cmd(cmd, rq->nr_sectors);
--	ide_map_sg(drive, cmd);
-+	ide_init_sg_cmd(&cmd, rq->nr_sectors);
-+	ide_map_sg(drive, &cmd);
- 
- 	pc->sg = hwif->sg_table;
--	pc->sg_cnt = cmd->sg_nents;
-+	pc->sg_cnt = cmd.sg_nents;
- 
- 	pc->rq = rq;
- 
--	return idefloppy_issue_pc(drive, pc);
-+	return ide_floppy_issue_pc(drive, &cmd, pc);
- out_end:
- 	drive->failed_pc = NULL;
- 	if (blk_fs_request(rq) == 0 && rq->errors == 0)
-Index: b/drivers/ide/ide-tape.c
+ 	/*
+ 	 * Some weird controller like resetting themselves to a strange
+Index: b/drivers/ide/ide-io.c
 ===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -580,7 +580,7 @@ static int ide_tape_io_buffers(ide_drive
-  *
-  * The handling will be done in three stages:
-  *
-- * 1. idetape_issue_pc will send the packet command to the drive, and will set
-+ * 1. ide_tape_issue_pc will send the packet command to the drive, and will set
-  * the interrupt handler to ide_pc_intr.
-  *
-  * 2. On each interrupt, ide_pc_intr will be called. This step will be
-@@ -608,8 +608,9 @@ static int ide_tape_io_buffers(ide_drive
-  * request.
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -647,6 +647,7 @@ void ide_timer_expiry (unsigned long dat
+ 			}
+ 		}
+ 		hwif->handler = NULL;
++		hwif->expiry = NULL;
+ 		/*
+ 		 * We need to simulate a real interrupt when invoking
+ 		 * the handler() function, which means we need to
+@@ -826,6 +827,7 @@ irqreturn_t ide_intr (int irq, void *dev
+ 		goto out;
+ 
+ 	hwif->handler = NULL;
++	hwif->expiry = NULL;
+ 	hwif->req_gen++;
+ 	del_timer(&hwif->timer);
+ 	spin_unlock(&hwif->lock);
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -425,26 +425,25 @@ int ide_config_drive_speed(ide_drive_t *
+  * See also ide_execute_command
   */
- 
--static ide_startstop_t idetape_issue_pc(ide_drive_t *drive,
--		struct ide_atapi_pc *pc)
-+static ide_startstop_t ide_tape_issue_pc(ide_drive_t *drive,
-+					 struct ide_cmd *cmd,
-+					 struct ide_atapi_pc *pc)
+ void __ide_set_handler(ide_drive_t *drive, ide_handler_t *handler,
+-		       unsigned int timeout, ide_expiry_t *expiry)
++		       unsigned int timeout)
  {
- 	idetape_tape_t *tape = drive->driver_data;
+ 	ide_hwif_t *hwif = drive->hwif;
  
-@@ -654,7 +655,7 @@ static ide_startstop_t idetape_issue_pc(
- 
- 	pc->retries++;
- 
--	return ide_issue_pc(drive);
-+	return ide_issue_pc(drive, cmd);
+ 	BUG_ON(hwif->handler);
+ 	hwif->handler		= handler;
+-	hwif->expiry		= expiry;
+ 	hwif->timer.expires	= jiffies + timeout;
+ 	hwif->req_gen_timer	= hwif->req_gen;
+ 	add_timer(&hwif->timer);
  }
  
- /* A mode sense command is used to "sense" tape parameters. */
-@@ -749,6 +750,7 @@ static ide_startstop_t idetape_do_reques
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc *pc = NULL;
- 	struct request *postponed_rq = tape->postponed_rq;
-+	struct ide_cmd cmd;
- 	u8 stat;
+-void ide_set_handler (ide_drive_t *drive, ide_handler_t *handler,
+-		      unsigned int timeout, ide_expiry_t *expiry)
++void ide_set_handler(ide_drive_t *drive, ide_handler_t *handler,
++		     unsigned int timeout)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	unsigned long flags;
  
- 	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu,"
-@@ -844,7 +846,14 @@ static ide_startstop_t idetape_do_reques
- 	BUG();
- 
- out:
--	return idetape_issue_pc(drive, pc);
-+	memset(&cmd, 0, sizeof(cmd));
-+
-+	if (rq_data_dir(rq))
-+		cmd.tf_flags |= IDE_TFLAG_WRITE;
-+
-+	cmd.rq = rq;
-+
-+	return ide_tape_issue_pc(drive, &cmd, pc);
+ 	spin_lock_irqsave(&hwif->lock, flags);
+-	__ide_set_handler(drive, handler, timeout, expiry);
++	__ide_set_handler(drive, handler, timeout);
+ 	spin_unlock_irqrestore(&hwif->lock, flags);
  }
+ EXPORT_SYMBOL(ide_set_handler);
+@@ -469,8 +468,10 @@ void ide_execute_command(ide_drive_t *dr
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	unsigned long flags;
  
- /*
++	hwif->expiry = expiry;
++
+ 	spin_lock_irqsave(&hwif->lock, flags);
+-	__ide_set_handler(drive, handler, timeout, expiry);
++	__ide_set_handler(drive, handler, timeout);
+ 	hwif->tp_ops->exec_command(hwif, cmd);
+ 	/*
+ 	 * Drive takes 400nS to respond, we must avoid the IRQ being
 Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
 --- a/drivers/ide/ide-taskfile.c
 +++ b/drivers/ide/ide-taskfile.c
-@@ -100,13 +100,14 @@ ide_startstop_t do_rw_taskfile(ide_drive
- 		ide_execute_command(drive, tf->command, handler,
- 				    WAIT_WORSTCASE, NULL);
- 		return ide_started;
--	default:
-+	case ATA_PROT_DMA:
- 		if ((drive->dev_flags & IDE_DFLAG_USING_DMA) == 0 ||
- 		    ide_build_sglist(drive, cmd) == 0 ||
- 		    dma_ops->dma_setup(drive, cmd))
- 			return ide_stopped;
- 		dma_ops->dma_exec_cmd(drive, tf->command);
- 		dma_ops->dma_start(drive);
-+	default:
- 		return ide_started;
+@@ -140,7 +140,7 @@ static ide_startstop_t task_no_data_intr
+ 		} else if (custom && tf->command == ATA_CMD_INIT_DEV_PARAMS) {
+ 			if ((stat & (ATA_ERR | ATA_DRQ)) == 0) {
+ 				ide_set_handler(drive, &task_no_data_intr,
+-						WAIT_WORSTCASE, NULL);
++						WAIT_WORSTCASE);
+ 				return ide_started;
+ 			}
+ 		}
+@@ -347,7 +347,7 @@ static ide_startstop_t task_pio_intr(ide
  	}
- }
+ out_wait:
+ 	/* Still data left to transfer. */
+-	ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE, NULL);
++	ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE);
+ 	return ide_started;
+ out_end:
+ 	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
+@@ -377,7 +377,7 @@ static ide_startstop_t pre_task_out_intr
+ 	if ((drive->dev_flags & IDE_DFLAG_UNMASK) == 0)
+ 		local_irq_disable();
+ 
+-	ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE, NULL);
++	ide_set_handler(drive, &task_pio_intr, WAIT_WORSTCASE);
+ 
+ 	ide_pio_datablock(drive, cmd, 1);
+ 
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1223,7 +1223,7 @@ int ide_cd_expiry(ide_drive_t *);
+@@ -1132,10 +1132,8 @@ unsigned int ide_rq_bytes(struct request
+ int ide_end_rq(ide_drive_t *, struct request *, int, unsigned int);
+ void ide_kill_rq(ide_drive_t *, struct request *);
  
- int ide_cd_get_xferlen(struct request *);
+-void __ide_set_handler(ide_drive_t *, ide_handler_t *, unsigned int,
+-		       ide_expiry_t *);
+-void ide_set_handler(ide_drive_t *, ide_handler_t *, unsigned int,
+-		     ide_expiry_t *);
++void __ide_set_handler(ide_drive_t *, ide_handler_t *, unsigned int);
++void ide_set_handler(ide_drive_t *, ide_handler_t *, unsigned int);
  
--ide_startstop_t ide_issue_pc(ide_drive_t *);
-+ide_startstop_t ide_issue_pc(ide_drive_t *, struct ide_cmd *);
- 
- ide_startstop_t do_rw_taskfile(ide_drive_t *, struct ide_cmd *);
- 
+ void ide_execute_command(ide_drive_t *, u8, ide_handler_t *, unsigned int,
+ 			 ide_expiry_t *);
