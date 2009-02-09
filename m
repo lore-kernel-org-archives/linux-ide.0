@@ -1,58 +1,101 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
-Date: Mon, 09 Feb 2009 13:56:17 +0300
-Message-ID: <49900BD1.9040305@ru.mvista.com>
-References: <200902082253.07438.sshtylyov@ru.mvista.com>	<Pine.LNX.4.64.0902082108290.18661@blonde.anvils>	<498F5A25.90707@ru.mvista.com> <18831.28471.454273.451912@harpo.it.uu.se> <498F72C8.8020204@ru.mvista.com> <498F767B.9060701@pobox.com> <499008B7.3020404@ru.mvista.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Port Multiplier access with Sil 3124
+Date: Mon, 9 Feb 2009 09:35:44 -0500
+Message-ID: <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>
+References: <498F42B6.8030607@tlinx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:8356 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752461AbZBIK4X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Feb 2009 05:56:23 -0500
-In-Reply-To: <499008B7.3020404@ru.mvista.com>
+Received: from qw-out-2122.google.com ([74.125.92.26]:46497 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235AbZBIOfp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 09:35:45 -0500
+Received: by qw-out-2122.google.com with SMTP id 5so63933qwi.37
+        for <linux-ide@vger.kernel.org>; Mon, 09 Feb 2009 06:35:44 -0800 (PST)
+In-Reply-To: <498F42B6.8030607@tlinx.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>
-Cc: Hugh Dickins <hugh@veritas.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
+To: Linda Walsh <lkml@tlinx.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello, I wrote:
-
->> The answer depends on workload.  Though rare, workloads do exist that 
->> involve a lot of oddball querying via weird, vendor-specific 
->> SCSI[-ish] commands.
->   Do you really think that the transfers having lengths non-divisible 
-> by 4 make any *significant* percentage even on the ATAPI devices? I 
-> think it's you who is really wrong.
+On Sun, Feb 8, 2009 at 3:38 PM, Linda Walsh <lkml@tlinx.org> wrote:
+> Is there something different, from normal disk-access, that I need to do
+> to access hard disks beyond '1', on a port-multiplier?
 >
->   Can you give an example of a *continous* querying with the data 
-> transferring commands?
->   Hm, it just occured to me that the typical ATAPI command packet is 
-> 12 bytes long.
-
-   Haha, I even can't count! 12 divides by 4, of course. :-D
-
->> Or a more human version of the rule:  if you have to have a long 
->> email thread about unlikely() placement, it is best just to avoid 
->> using unlikely() in that case at all.  Branch prediction units in 
->> modern CPUs are damned good anyways, and there is always the 
->> likelihood that a human-placed unlikely() becomes wrong in the 
->> future. Moreover, the likelihood and cost of a branch mispredict are 
->> both low in this case, IMO.
+> I thought I remembered reading the port multiplier support was
+> working for many SATA and SATA RAID controller capable chipsets,
+> including the Sil 3124.
 >
->   There are still CPUs without the branch prediction, you know -- 
-> Linux runs not only on x86.
+> I picked up a 2-Bay external SATA enclosure that I'm trying to access in
+> (what I thought) was the simplest mode: "JBOD".  However, when I boot,
+> I am only seeing the first hard disk.
 >
->> Plus the code is more readable without unlikely(), IMO.
+> Experimenting, I tried a single hard disk in both positions -- one
+> position let me see the disk directly (as though it was a direct,
+> str8-thru connection), the other position showed up detected by
+> the boot BIOS as a 7MB HD by some unrecognized vendor.   In
+> linux, I'm able to access and use the hard disk when it appears
+> 'str8-thru', but linux sees nothing concerning the 7MB pseudo HD.
 >
->   I tend to disagree. However, the packet command transfer is not 
-> unlikely at all, so I'll remove that unlikely() in the respun patch.
+> Is my expectation that the driver would simply recognize the
+> external enclosure by whatever I had the external enclosure set to,
+> too optimistic?  Do I need to run some special util to setup the disks in
+> JBOD mode?  I guess I thought I only needed to worry about
+> 'special utils' if I was using the disk-pair in a RAID config (0/1)...
+>
+> It seems there should be a linux util to manage the "container",
+> 'sil57xx'  --  I take it is not used for RAID-only config?
+>
+> My ultimate aim is to use it in a RAID-0, mirror config (my luck
+> with SATA disk drives has been abysmal, of late (*sigh*)).
 
-   No, I'll keep it now. This case is indeed unlikely.
+I assume you mean raid-1.  I'm seeing a lot of people lose data even
+with that.  There seem to be a lot of firmware specific bugs recently
+(not just seagate). Be sure and mix vendors / batches / etc. in an
+effort to keep away from near simultaneous double disk failure.
 
->>     Jeff
+> Anyone with any real-world experience about when the 3Gb SAS
+> starts to become a bottleneck?  I know that theoretically, it could
+> support a hair over 350MB/s if there was no overhead, which would
+> reliably only support 2 hard disks at full speed (assuming ~120MB/s
+> max linear read speed/disk).
 
-MBR, Sergei
+In my real world tests I've never seen a single drive achieve beyond
+about 80MB/sec.  (5GB/min is the way I actually measure it.  That was
+using SATA directly on the MB which I assume is as fast a PCIe.)
+
+But very few people have a heavy linear read / write load (I do, but
+my use case is unusual).
+
+Most apps use random i/o.  That is where raid in general should shine.
+ That includes a PMP setup I assume.
+
+> Does that jive with people's real-world
+> experience?  I.e. port-multipliers can provide full throughput for
+> 2-HD's but not likely 3?
+> Should I be looking for an sil57xx program somewhere (the box contained
+> a mini-CD, but it looks like a driver for an older kernel (2.6.9).  Not so
+> sure about it's usefulness in my setup.
+>
+> Thanks,
+> -linda
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
+
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
