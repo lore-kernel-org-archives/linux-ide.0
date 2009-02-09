@@ -1,95 +1,63 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Sun, 08 Feb 2009 19:01:23 -0500
-Message-ID: <498F7253.1070002@redhat.com>
-References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <87f94c370902081206v71106c5fp9a7ef0400301a1ab@mail.gmail.com> <20090208204434.GF31509@parisc-linux.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] libata-sff: fix 32-bit PIO regression
+Date: Mon, 09 Feb 2009 03:03:20 +0300
+Message-ID: <498F72C8.8020204@ru.mvista.com>
+References: <200902082253.07438.sshtylyov@ru.mvista.com>	<Pine.LNX.4.64.0902082108290.18661@blonde.anvils>	<498F5A25.90707@ru.mvista.com> <18831.28471.454273.451912@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090208204434.GF31509@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:59121 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753111AbZBIAD1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Feb 2009 19:03:27 -0500
+In-Reply-To: <18831.28471.454273.451912@harpo.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Hugh Dickins <hugh@veritas.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl
 
-Matthew Wilcox wrote:
-> On Sun, Feb 08, 2009 at 03:06:44PM -0500, Greg Freemyer wrote:
->   
->> I found a list of T10 activities just since just Dec. 1, 2008 and it
->> is a bit overwhelming.  (ie. 08-356r4 is but one of many recent
->> reports)
->>
->> http://www.t10.org/new_a.htm
->>
->> For those of us that don't live and breath the SCSI spec, is there an
->> overview site describing what is going on.
->>     
+Hello
+
+Mikael Pettersson wrote:
+> Sergei Shtylyov writes:
+>  > Hello.
+>  > 
+>  > Hugh Dickins wrote:
+>  > 
+>  > >> Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
+>  > >> caused all kind of errors on the ATAPI devices, so it's been empirically proven
+>  > >> that one shouldn't read/write an extra data word when a device isn't expecting
+>  > >> it already. "Don't do it then"; however still taking a chance to use 32-bit I/O
+>  > >> one last  time when there are exactly 3 trailing bytes.  Oh, and stop pointless
+>  > >> swapping bytes to and fro as well by using io*_rep() which shouldn't byte-swap.
+>  > >>
+>  > >> This should fix the kernel.org bug #12609.
+>  > >>
+>  > >> ---
+>  > >> This is hopefully better replacement for Hugh Dickins most recent patch
+>  > >> (http://marc.info/?l=linux-ide&m=123352294619281)...
+>  > >>     
+>  > >
+>  > > Yes, looks nice, and works for me.  My only criticism would be,
+>  > > minor issue unchanged by your patch, that actually "slop" isn't
+>  > > unlikely enough to deserve an "unlikely" - slop of 1 or 3 is
+>  > > unlikely, but slop of 2 is quite common.
+>  > >   
+>  > 
+>  >    I guess that's the case only for the ATAPI devices, so I'm going to 
+>  > keep it.
 >
-> I've been working off 08-149r7.pdf.  I'm sure that's been superseded by
-> now.  
->
->   
->> 08-356r4 	SBC-3: WRITE SAME unmap bit 	David L. Black 	PDF (56608)	2008/12/10
->>     
->
-> Probably interesting.  Haven't read it myself.
+> I really don't think it's a good idea to play micro-optimisation
+> unlikely() tricks when the likelihood depends on what kind of device
+> the driver is talking to. In this case unlikely() is clearly wrong.
 >   
 
-This is only a four page proposal - basically, we would use the write 
-same command with a special unmap bit set to tell the target that it may 
-(at its option) unmap the blocks. If not, it would in fact have to set 
-the data to the indicated pattern in the command which I presume would 
-be all zeros in the normal case.
->   
->> 08-356r5 	SBC-3 Thin Provisioning Commands 	Fred Knight, David L.
->> Black 	PDF (387549)	2009/01/15
->>     
->
-> Fred Knight seems to be the main coordinator of this effort, so yes.
->   
+   Clearly?! :-O
+   Do you really think that the transfers having lengths non-divisible 
+by 4 make any *significant* percentage even on the ATAPI devices? I 
+think it's you who is really wrong.
 
-Fred and David Black both have been quite active.
->   
->> 08-149r7 	SBC - Thin Provisioning 	Frederick Knight 	PDF (281001)	2008/12/08
->>     
->
-> That's the one I'm working from.
->
->   
->> 08-149r8 	SBC - Thin Provisioning 	Frederick Knight 	PDF (281387)	2009/01/09
->>     
->
-> A newer version ... thought so.
->
->   
->> 09-011r1 	SBC-3 Thin Provisioning Threshold Notification 	Frederick
->> Knight 	PDF (32757)	2009/01/09
->>     
->
-> Clearly related.
->
->   
->> 08-149r9 	SBC - Thin Provisioning 	Frederick Knight 	PDF (353888)	2009/01/15
->>     
->
-> Even newer version of what I've been working from.
->
->   
->> 09-012r0 	Minutes: CAP - Thin Provisioning 12/4 con-call 	Frederick
->> Knight 	PDF (38063)	2008/12/08
->>     
->
-> Probably tedious.
->
->   
->> 08-396r3 	SPC-4: Reporting support for all DIF types 	George Penokie
->> 	PDF (85358)	2009/01/14
->>     
->
-> Unrelated, I would think.
->
-> I'd go with 08-149r9 to get a good overview.
->
->   
+MBR, Sergei
+
 
