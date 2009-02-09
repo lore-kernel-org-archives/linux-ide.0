@@ -1,88 +1,102 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3] ide: add at91_ide driver
-Date: Mon, 9 Feb 2009 20:48:23 +0100
-Message-ID: <200902092048.23441.bzolnier@gmail.com>
-References: <200902031147.22827.stf_xl@wp.pl> <498EC481.5080308@ru.mvista.com> <498F63A6.60807@ru.mvista.com>
+Subject: Re: [PATCH] ide.c 'clear' fix, ide=nodma documentation
+Date: Mon, 9 Feb 2009 20:57:54 +0100
+Message-ID: <200902092057.54850.bzolnier@gmail.com>
+References: <20090208220956.GA3278@spacedout.fries.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-bw0-f161.google.com ([209.85.218.161]:38217 "EHLO
 	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754071AbZBIT5j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 14:57:39 -0500
-Received: by bwz5 with SMTP id 5so1794009bwz.13
-        for <linux-ide@vger.kernel.org>; Mon, 09 Feb 2009 11:57:37 -0800 (PST)
-In-Reply-To: <498F63A6.60807@ru.mvista.com>
+	with ESMTP id S1753851AbZBIT5l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 14:57:41 -0500
+In-Reply-To: <20090208220956.GA3278@spacedout.fries.net>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk, Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+To: David Fries <david@fries.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sunday 08 February 2009, Sergei Shtylyov wrote:
-> Hello, I wrote:
+
+Hi,
+
+On Sunday 08 February 2009, David Fries wrote:
+> From: David Fries <david@fries.net>
 > 
-> >>>>>>> +void at91_ide_tf_load(ide_drive_t *drive, ide_task_t *task)
-> >>>>>>> +{
-> >>>>>>> +    ide_hwif_t *hwif = drive->hwif;
-> >>>>>>> +    struct ide_io_ports *io_ports = &hwif->io_ports;
-> >>>>>>> +    struct ide_taskfile *tf = &task->tf;
-> >>>>>>> +    u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
-> >>>>>>> +
-> >>>>>>> +    if (task->tf_flags & IDE_TFLAG_FLAGGED)
-> >>>>>>> +        HIHI = 0xFF;
-> >>>>>>> +
-> >>>>>>> +    if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
-> >>>>>>>                   
-> >>>>>>    Sigh. Bart, couldn't we drop that stupid flag? I bet nobody 
-> >>>>>> ever used it.
-> >>>>>>             
-> >>>>> It is there for HDIO_DRIVE_TASKFILE ioctl and I prefer not to 
-> >>>>> break it.
-> >>>>>
-> >>>>> Just add ->{read,write}_data methods for IDE_TFLAG_{IN,OUT}_DATA 
-> >>>>> to struct
-> >>>>> ide_tp_ops -- it should also help some other host drivers like 
-> >>>>> tx493*.
-> >>>>>         
-> >>>>   That would be extremely senseless activity sicne I believe this 
-> >>>> flag is totally useless. I have better thing to do. :-)
-> >>>>     
-> >>>
-> >>> I would love to remove this flag but it is used by user-space exposed
-> >>> interface 
-> >>
-> >>   I know that...
-> >>
-> >>> (which was used by few drive vendors for their diagnostics
-> >>> tools -- doesn't matter whether internal or external) so you should put
-> >>> some technical arguments behind its removal (you know many of low-level
-> >>> technical details better than me so I may be missing something which is
-> >>> obvious to you).
-> >>>   
-> >>
-> >>   Well, the vendors can do strange things, of course...
-> >>   However, accessing the data register is certainly not a part of any 
-> >> ATA/PI defined command's inputs/outputs (the corresponding tables 
-> >> just don't have this register). I suspect that this flag was added 
-> >> just "for completeness".
-> >>
-> >>> OTOH while ->{read,write}_data approach would result in something like
-> >>> ~50 extra LOC (or even less with be_tp_ops) compared to removal it is
-> >>> completely safe and we don't need to spend a single second wondering
-> >>> about potential breakage 
-> >>
-> >>   Go for it. ;-)
-> >
-> >   I think I have a better idea than creating another (useless) couple 
-> > of "transport" methods. Why not (ab)use the exisitng 
-> > {in|out}put_data() methods instead? :-)
+> Documentation/kernel-parameters.txt
+> ide=nodma is no longer valid
+> 
+> drivers/ide/Kconfig
+> the module is ide-core.ko not ide
+> 
+> drivers/ide/ide.c
+> It took me a while to figure out what the arguments %d.%d:%d to nodma
+> module parameter ment, so I added a comment to each.
 
-Good idea.
+This is documented in Documentation/ide/ide.txt however having
+more documentation won't hurt.
 
->    Besides, those methods are clearly subject to some size 
-> optimization... I'll cook up a patch while I'm at it. :-)
+> Added a comment to each of the sscanf lines to
+> There is a bug, if j is 0 it would previously clear all the other bits
+> except the current device, changed in three different places.
+> mask &= (1 << i)     should be     mask &= ~(1 << i)
 
-:)
+Good catch.
+
+> Signed-off-by: David Fries <david@fries.net>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Applied, thanks!
+
+> ---
+> I pretty much wasted my Saturday on this.  This is an older VIA
+> vt82c586b (rev 41) IDE UDMA33 and I've seen disk corruption in the
+> past with dma enabled, I can't use hdparm because those settings don't
+> persist across hibernate and restore (that should be another bug
+> report).  ide=nodma was working on the last 2.6.24 kernel, and
+> kernel-parameters.txt still lists it.  I had to go through the change
+> logs to figure out what happened to ide=nodma, then ide.c to figure
+> out what replaced it and what %d.%d:%d means (so I documented it so
+> other would have an easier time), then figure out how to set a module
+> parameter on the kernel command line when Kconfig said the module name
+> was ide and ide.nodma=0.0 didn't work, it was ide-core.nodma=0.0.
+> 
+> Now instead of,
+> ide=nodma
+> I have the following.
+> ide-core.nodma=0.0 ide-core.nodma=0.1 ide-core.nodma=1.0 ide-core.nodma=1.1
+
+The important question is why do you have to use debug "=nodma" option?
+
+Is the corruption present in any recent kernels?
+
+What disk is it?  Do we need to add it to DMA blacklist?
+
+I don't recall any reports about such issues and via82cxxx host driver,
+have you tried to verify that this is not a faulty hardware?
+
+> Where else is hdc written 1.0 ?  Why doesn't it take ide-core.nodma=hdc ?
+
+- simpler code, without parsing of parameters
+
+- no dependence on legacy /dev/hd* naming
+
+- makes people think harder about reporting/investigating issues instead of
+  covering them up with using debug kernel parameters ;-)
+
+[...]
+
+> --- a/drivers/ide/ide.c
+> +++ b/drivers/ide/ide.c
+> @@ -337,6 +337,7 @@ static int ide_set_dev_param_mask(const char *s, struct kernel_param *kp)
+>  	int a, b, i, j = 1;
+>  	unsigned int *dev_param_mask = (unsigned int *)kp->arg;
+>  
+> +	/* controller . disk (0 or 1) [ : 1 (set) | 0 (clear) ] */
+
+I did s/disk/device/ here and in other places while merging the patch.
+
+Thanks,
+Bart
