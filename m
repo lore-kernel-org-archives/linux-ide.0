@@ -1,71 +1,52 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: [PATCH] libata: change drive ready wait after hard reset to 5s
-Date: Mon, 9 Feb 2009 15:48:45 -0600
-Message-ID: <DFEF91B22ED07447AB6AA4B237F913F902185A2B@ausx3mpc125.aus.amer.dell.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org> <1233456951-992-4-git-send-email-tj@kernel.org> <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: Re: Port Multiplier access with Sil 3124
+Date: Mon, 09 Feb 2009 14:01:37 -0800
+Message-ID: <4990A7C1.5060904@tlinx.org>
+References: <498F42B6.8030607@tlinx.org> <da824cf30902090126p5e031e09q5b93da7a296bc849@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C98B00.2EABEB8E"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:32607 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433AbZBIV6O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 16:58:14 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
+Received: from ishtar.tlinx.org ([64.81.245.74]:37110 "EHLO ishtar.tlinx.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752799AbZBIWBq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Feb 2009 17:01:46 -0500
+In-Reply-To: <da824cf30902090126p5e031e09q5b93da7a296bc849@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mario_Limonciello@Dell.com
+To: Grant Grundler <grundler@google.com>
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Grant Grundler wrote:
+> Linda,
+> Please tell us which kernel version you have and include the dmesg
+> output. Port multiplier support is generally working in 2.6.26 (and later
+> releases) for several drivers.  PM support was added after 2.6.20.
+---
+    Sorry.  I'm a bit behind the edge at 2.6.27.3 --
+but I tried a boot w/2.6.28.3 and didn't see a difference (had to return
+to 27.3 as I accidently disabled a different driver and haven't regened it.
 
-------_=_NextPart_001_01C98B00.2EABEB8E
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+>
+> Where did you find 350MB/s theoretical?
+> Link is 8b10b encoded. So it's 10:1 of bits to bytes conversion of link rate.
+> 3Gb/s --> 300MB/s in theory.
+---
+    Yep.  Forgot about that... was forgetting about the 2-bits of overhead,
+so was using 3Gb/8/(1024*1024) -> 357.6, which I rounded down to 350... 
+but forgot about the 10/8 encoding (just as I get rid of that conversion
+habit from modem days, now I have to remember it as a special case for
+SATA...:-)  ).
+
+>
+> For MB/s, it depends on the SATA controller. Don't expect more then
+> 225-235 MB/s per port. At least one sata_sil3124 chip (3126?) is buggy
+> and won't do more than 120MB/s read for all ports (170 MB/s write).
+> See linux-ide archives for discussion on this.
+---
+    That's horrible!  I'd definitely call that a bug.  Right now,
+the fastest I'm getting on my single ATA's is 70-80MB/s.  I could
+get that per/ATA port.  So 120MB read for 4 SATA ports would be
+a giant step backwards (170MB/s write?  write faster than read?)
 
 
-I'm re-sending this patch... I didn't get a response last time I sent
-this in a week ago.  (Is there something wrong with it?)  Thanks!  ...
-Stuart
-
-
-
-This fixes problems during resume with drives that take longer than 1s
-to be ready.  The ATA-6 spec appears to allow 5 seconds for a drive to
-be ready.
-
-On one affected system, this patch changes "PM: resume devices took..."
-message from 17 seconds to 4 seconds, and gets rid of a lot of ugly
-timeout/error messages.
-
-Without this patch, the libata code moves on after 1s, tries to send a
-soft reset (which the drive doesn't see because it isn't ready) which
-also times out, then an IDENTIFY command is sent to the drive which
-times out, and finally the error handler will try to send another hard
-reset which will finally get things working.
-
-Sorry to send as an attachment, but my mail server will wrap text.
-
-
-Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
-
-
-------_=_NextPart_001_01C98B00.2EABEB8E
-Content-Type: application/octet-stream;
-	name="sata_wait5s_on_resume.patch"
-Content-Transfer-Encoding: base64
-Content-Description: sata_wait5s_on_resume.patch
-Content-Disposition: attachment;
-	filename="sata_wait5s_on_resume.patch"
-
-LS0tIGxpbnV4LTIuNi4yOC4yL2luY2x1ZGUvbGludXgvbGliYXRhLmgub3JpZwkyMDA5LTAxLTI0
-IDE4OjQyOjA3LjAwMDAwMDAwMCAtMDYwMAorKysgbGludXgtMi42LjI4LjIvaW5jbHVkZS9saW51
-eC9saWJhdGEuaAkyMDA5LTAyLTAyIDEwOjM2OjMwLjAwMDAwMDAwMCAtMDYwMApAQCAtMjcxLDcg
-KzI3MSw3IEBAIGVudW0gewogCSAqIGFkdmlzZWQgdG8gd2FpdCBvbmx5IGZvciB0aGUgZm9sbG93
-aW5nIGR1cmF0aW9uIGJlZm9yZQogCSAqIGRvaW5nIFNSU1QuCiAJICovCi0JQVRBX1RNT1VUX1BN
-UF9TUlNUX1dBSVQJPSAxMDAwLAorCUFUQV9UTU9VVF9QTVBfU1JTVF9XQUlUCT0gNTAwMCwKIAog
-CS8qIEFUQSBidXMgc3RhdGVzICovCiAJQlVTX1VOS05PV04JCT0gMCwK
-
-------_=_NextPart_001_01C98B00.2EABEB8E--
