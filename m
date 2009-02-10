@@ -1,70 +1,59 @@
-From: David Fries <david@fries.net>
-Subject: Re: [PATCH] ide.c 'clear' fix, ide=nodma documentation
-Date: Mon, 9 Feb 2009 18:52:44 -0600
-Message-ID: <20090210005244.GE2524@spacedout.fries.net>
-References: <20090208220956.GA3278@spacedout.fries.net> <200902092057.54850.bzolnier@gmail.com>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: Re: Port Multiplier access with Sil 3124
+Date: Mon, 09 Feb 2009 17:07:21 -0800
+Message-ID: <4990D349.4050408@tlinx.org>
+References: <498F42B6.8030607@tlinx.org>	 <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>	 <4990AC91.8010104@tlinx.org> <87f94c370902091501h96ecb8dp7acac1fa80a82d8a@mail.gmail.com> <4990C70E.1010707@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754018AbZBJAxD@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200902092057.54850.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ishtar.tlinx.org ([64.81.245.74]:37702 "EHLO ishtar.tlinx.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752418AbZBJBHc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Feb 2009 20:07:32 -0500
+In-Reply-To: <4990C70E.1010707@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>
 
-On Mon, Feb 09, 2009 at 08:57:54PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > I pretty much wasted my Saturday on this.  This is an older VIA
-> > vt82c586b (rev 41) IDE UDMA33 and I've seen disk corruption in the
-> > past with dma enabled, I can't use hdparm because those settings don't
-> > persist across hibernate and restore (that should be another bug
-> > report).  ide=nodma was working on the last 2.6.24 kernel, and
-> > kernel-parameters.txt still lists it.  I had to go through the change
-> > logs to figure out what happened to ide=nodma, then ide.c to figure
-> > out what replaced it and what %d.%d:%d means (so I documented it so
-> > other would have an easier time), then figure out how to set a module
-> > parameter on the kernel command line when Kconfig said the module name
-> > was ide and ide.nodma=0.0 didn't work, it was ide-core.nodma=0.0.
-> > 
-> > Now instead of,
-> > ide=nodma
-> > I have the following.
-> > ide-core.nodma=0.0 ide-core.nodma=0.1 ide-core.nodma=1.0 ide-core.nodma=1.1
+Jeff Garzik wrote:
+> Greg Freemyer wrote:
 > 
-> The important question is why do you have to use debug "=nodma" option?
+>> I'm hearing of people saying a 2 disk mirror (raid-1) is not safe
+>> enough.  Go with either a 3 disk mirror or to raid-6.  Even with
+>> raid-6 I personally would not let it have too many spindles. (Whatever
+>> too many means?)
+> 
+> IMO, RAID-1 was never safe.  With RAID-1, one must rely solely on 
+> "knowing" which RAID component is bad.  With a completely dead drive, 
+> this is obvious; with slowly creeping bad sectors, far less obvious.
+---
+	I had a similar thought -- how would I know if the
+2-disks are actually "in sync"?
 
-> What disk is it?  Do we need to add it to DMA blacklist?
+	I'm  guessing I could physically remove each and try to access
+them as single-drives and they should be the same, but I don't know that
+the RAID-1 format will store the data on each drive to exactly look
+like a single mounted disk.  I can't think of how else they might
+do it, or why, but I just haven't physically verified that I an
+pull either HD and access it as a solo-hard disk.  (I'd hope so...but
+until I've actually tried it with the hardware in question...)
 
-Model=Maxtor 6Y120P0, FwRev=YAR41BW0
-Model=PLEXTOR CD-R PX-W4012A, FwRev=1.06
+	But all of this is really depressing me.  Just throw up my hands
+and give up on computer storage?
 
-But I've had the same model in another computer without any issue and
-each are on their own ribben cable.
+	That hardly seems right.
 
-> I don't recall any reports about such issues and via82cxxx host driver,
-> have you tried to verify that this is not a faulty hardware?
+	FYI -- my drive failures, recently, have kill my *backup*
+hard disks.  All of my failures have been on my "newer", larger
+hard disks that I use for backup purposes.
 
-I was expecting it to be faulty hardware, this isn't the only issue
-with this FIC VA-503 motherboard.  I'm running one dimm because when I
-had two memcheck passed everything but block moves and failed (alone
-either dimm would pass).  I've been told the PCI controller doesn't
-honor the don't do write combining which has taken driver work
-arounds, I've had problems running a 3Com network card but had a hack
-that would get it to work, another network card would randomly trash
-memory and crash the computer, but infrequently enough that it took me
-a while to finger it and switching to yet another card to solve it.
+	I also had a triple Seagate drive failure within 2 months,
+two of them within a week -- and I did lose *backups* of my primary
+drives!
 
-> Is the corruption present in any recent kernels?
+	That's just bas-ackwards.  My "plan" was to go to RAID-1
+for my ****backup**** hard disks.  Most of my primary hard disks are
+SCSI or SAS and they've been unaffected by the SATA pathos.
 
-I haven't tried.  At the time I had a formula for 'do this', and
-sometimes it comes out corrupted.  The test case was reliable enough
-that dma on corruption, off no corruption.  I looked and I couldn't
-find it.  My time would be better spent replacing the system than
-risking my filesystem and data in order to potentially get some
-performance.  If I turn on dma and see a corruption I could positively
-say it was still there, if I don't, well, I might have just not hit
-the case.
-
--- 
-David Fries <david@fries.net>
-http://fries.net/~david/ (PGP encryption key available)
