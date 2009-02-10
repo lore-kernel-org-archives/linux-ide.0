@@ -1,83 +1,55 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Port Multiplier access with Sil 3124
-Date: Mon, 9 Feb 2009 22:25:19 -0500
-Message-ID: <87f94c370902091925g15bd433dlfe021431acbaaaa8@mail.gmail.com>
-References: <498F42B6.8030607@tlinx.org>
-	 <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>
-	 <4990AC91.8010104@tlinx.org>
-	 <87f94c370902091501h96ecb8dp7acac1fa80a82d8a@mail.gmail.com>
-	 <4990C70E.1010707@garzik.org>
+Date: Mon, 09 Feb 2009 22:48:45 -0500
+Message-ID: <4990F91D.4020503@garzik.org>
+References: <498F42B6.8030607@tlinx.org>	 <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>	 <4990AC91.8010104@tlinx.org> <87f94c370902091501h96ecb8dp7acac1fa80a82d8a@mail.gmail.com> <4990C70E.1010707@garzik.org> <4990D349.4050408@tlinx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:39894 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbZBJDZU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2009 22:25:20 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so146715yxm.1
-        for <linux-ide@vger.kernel.org>; Mon, 09 Feb 2009 19:25:19 -0800 (PST)
-In-Reply-To: <4990C70E.1010707@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55619 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752888AbZBJDsu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Feb 2009 22:48:50 -0500
+In-Reply-To: <4990D349.4050408@tlinx.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linda Walsh <suse@tlinx.org>, linux-ide@vger.kernel.org
+To: Linda Walsh <lkml@tlinx.org>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Feb 9, 2009 at 7:15 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> Greg Freemyer wrote:
->
->> I'm hearing of people saying a 2 disk mirror (raid-1) is not safe
->> enough.  Go with either a 3 disk mirror or to raid-6.  Even with
->> raid-6 I personally would not let it have too many spindles. (Whatever
->> too many means?)
->
-> IMO, RAID-1 was never safe.  With RAID-1, one must rely solely on "knowing"
-> which RAID component is bad.  With a completely dead drive, this is obvious;
-> with slowly creeping bad sectors, far less obvious.
->
-> Plus, the biggest crime, in my opinion, is the lack of checksumming or any
-> other method of actually verifying your data.
->
-> I've been waiting for years for someone to write RAID-1f...  RAID-1 with a
-> hash function that writes checksums in a special metadata area (just like
-> the other pre-existing RAID metadata...  a RAID partition is really a just
-> simple filesystem anyway).
->
-> That way you _know_ with 100% certainty that your data is OK (or not), even
-> if you only have a single drive.
->
->        Jeff
+Linda Walsh wrote:
+> Jeff Garzik wrote:
+>> Greg Freemyer wrote:
+>>
+>>> I'm hearing of people saying a 2 disk mirror (raid-1) is not safe
+>>> enough.  Go with either a 3 disk mirror or to raid-6.  Even with
+>>> raid-6 I personally would not let it have too many spindles. (Whatever
+>>> too many means?)
+>>
+>> IMO, RAID-1 was never safe.  With RAID-1, one must rely solely on 
+>> "knowing" which RAID component is bad.  With a completely dead drive, 
+>> this is obvious; with slowly creeping bad sectors, far less obvious.
+> ---
+>     I had a similar thought -- how would I know if the
+> 2-disks are actually "in sync"?
+> 
+>     I'm  guessing I could physically remove each and try to access
+> them as single-drives and they should be the same, but I don't know that
+> the RAID-1 format will store the data on each drive to exactly look
+> like a single mounted disk.  I can't think of how else they might
+> do it, or why, but I just haven't physically verified that I an
+> pull either HD and access it as a solo-hard disk.  (I'd hope so...but
+> until I've actually tried it with the hardware in question...)
+> 
+>     But all of this is really depressing me.  Just throw up my hands
+> and give up on computer storage?
 
-Jeff,
+Find a solution that has both replication and checksumming :)
 
-I guess you know the scsi standard is in the process of getting
-expanded such that each sector can optionally have a well known hash.
-And that the hash can be provided by the kernel as part of the data
-write.  In turn it can be read as part of the sector on a data read.
+Trust no component!  :)
 
-Thus it will be possible to have true end-to-end reliability in a
-single disk environment.  Who knows when hardware will start to show
-up.  If anyone on this list has any influence on the T13 (ata) spec
-people, I think it would be a great addition to the ATA world as well
-as for the scsi world.
-
-You can google for "SCSI DIF/DIX extensions"
-
-The linux block layer, dm, and mdraid are all gaining support.  Maybe
-you can figure out an efficient way to leverage that infrastructure
-and implement raid-1f via libata and normal drives!!!
-
-Greg
+	Jeff
 
 
 
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
