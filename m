@@ -1,36 +1,48 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/3 v3] AT91: initialize Compact Flash on AT91SAM9263
- cpu
-Date: Wed, 11 Feb 2009 20:31:23 +0300
-Message-ID: <49930B6B.3000900@ru.mvista.com>
-References: <200902091145.11266.stf_xl@wp.pl> <4992D9A4.30205@ru.mvista.com> <200902111746.59404.bzolnier@gmail.com>
+From: Andrew Victor <avictor.za@gmail.com>
+Subject: Re: [PATCH 3/3 v3] AT91: initialize Compact Flash on AT91SAM9263 cpu
+Date: Wed, 11 Feb 2009 22:03:29 +0200
+Message-ID: <cd73a99e0902111203k7670f9d8w17cc90b7dec343fd@mail.gmail.com>
+References: <200902091145.11266.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:10283 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758492AbZBKRbA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Feb 2009 12:31:00 -0500
-In-Reply-To: <200902111746.59404.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.175]:12256 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757658AbZBKUDb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Feb 2009 15:03:31 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so18128ugf.37
+        for <linux-ide@vger.kernel.org>; Wed, 11 Feb 2009 12:03:29 -0800 (PST)
+In-Reply-To: <200902091145.11266.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.arm.linux.org.uk
 
-Bartlomiej Zolnierkiewicz wrote:
+hi Stanislaw,
 
->>Stanislaw Gruszka wrote:
+> +       if (data->flags & AT91_CF_TRUE_IDE) {
+> +               /* check if device is present */
+> +               if (data->det_pin && at91_get_gpio_value(data->det_pin) != 0) {
+> +                       printk(KERN_ERR "AT91 CF True IDE: no device detected\n");
+> +                       return;
+> +               }
+> +               if (data->rst_pin) {
+> +                       /* reset the card */
+> +                       at91_set_gpio_output(data->rst_pin, 0);
+> +                       /* wait as defined in ATA7 vol2 (rev 4a) figure 36 */
+> +                       udelay(25);
+> +                       at91_set_gpio_output(data->rst_pin, 1);
+> +               }
 
->>>Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Shouldn't this rather be done in the at91_ide driver?
+I don't want to duplicate it in all the different at91sam9XX_devices.c files.
 
->>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+You could also define two separate "CF type" devices - one for CS4,
+another for CS5.
+That would allow for two independent "CF type" interfaces to be used
+at the same time (see at91sam9260_devices.c in maxim.org.za patches).
 
-> OK, does it also mean that you are fine with [PATCH 2/3 v2]?
 
-    No. I haven't found the time to look at it yet...
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+Regards,
+  Andrew Victor
