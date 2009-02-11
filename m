@@ -1,43 +1,31 @@
-From: Yan Seiner <yan@seiner.com>
-Subject: Re: Processes dying with ENXIO or EINTR - disk related?
-Date: Tue, 10 Feb 2009 17:41:22 -0800
-Message-ID: <49922CC2.8020705@seiner.com>
-References: <b895fb7dff47e49eee46d6bfc66b06e6.squirrel@www.datavault.us> <499229DF.50708@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Port Multiplier access with Sil 3124
+Date: Wed, 11 Feb 2009 11:09:26 +0900
+Message-ID: <49923356.6050405@kernel.org>
+References: <498F42B6.8030607@tlinx.org>	 <87f94c370902090635h2fc3e604n990bdd70be9c48cd@mail.gmail.com>	 <4990AC91.8010104@tlinx.org> <87f94c370902091501h96ecb8dp7acac1fa80a82d8a@mail.gmail.com> <4990C70E.1010707@garzik.org> <4990D349.4050408@tlinx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from flatoutfitness.com ([66.178.130.209]:40711 "EHLO www.seiner.com"
+Received: from hera.kernel.org ([140.211.167.34]:51678 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920AbZBKBlX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Feb 2009 20:41:23 -0500
-In-Reply-To: <499229DF.50708@kernel.org>
+	id S1754698AbZBKCJm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Feb 2009 21:09:42 -0500
+In-Reply-To: <4990D349.4050408@tlinx.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Linda Walsh <lkml@tlinx.org>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Tejun Heo wrote:
-> Yan Seiner wrote:
->   
->> Recently I've started getting system freezeups and weird segfaults with
->> EINTR (Interrupted system call) and ENXIO (No such device or address).
->>
->> These errors can be in ld, libc, and so on.  I'm stumped; the system has
->> worked fine for quite a while and just recently has developed this
->> behavior.  I can start yanking out hardware, but before I do that I wonder
->> if it is something to do with disk access.  I'm a bit stumped as to what
->> else could cause ENXIO on loading an app....  Needless to say there aren't
->> any errors at all anywhere that I can find, so I am guessing.
->>     
->
-> Highly unlikely it's related to IO.
->   
-I was experimenting with nouveau, an xorg driver for nvidia hardware.  
-Turns out that driver left the scsi hardware in a weird state that was 
-causing the segfaults.  A warm reboot wouldn't cure it; only a total 
-power down and wait 30 seconds cycle did.  Machine stable since then.
+Linda Walsh wrote:
+>     I also had a triple Seagate drive failure within 2 months,
+> two of them within a week -- and I did lose *backups* of my primary
+> drives!
 
-At a guess something in the nouveau driver screwed up the scsi 
-controller in the machine.
+My test disks go through a lot of unusual workloads which often
+include frequent emergency head unloads with immediately following
+spin up and Seagate has been the sturdiest for quite some time now.
+It's sad to hear that they're degressing.  :-(
 
+-- 
+tejun
