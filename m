@@ -1,39 +1,34 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/6] ide: add ->dma_expiry method and remove ->dma_exec_cmd
- one
-Date: Wed, 11 Feb 2009 20:30:21 +0300
-Message-ID: <49930B2D.8090503@ru.mvista.com>
-References: <20090209231945.32406.14874.sendpatchset@localhost.localdomain> <20090209232012.32406.88338.sendpatchset@localhost.localdomain> <4991C4F3.2040404@ru.mvista.com> <200902111730.39460.bzolnier@gmail.com>
+Subject: Re: [PATCH 3/3 v3] AT91: initialize Compact Flash on AT91SAM9263
+ cpu
+Date: Wed, 11 Feb 2009 20:31:23 +0300
+Message-ID: <49930B6B.3000900@ru.mvista.com>
+References: <200902091145.11266.stf_xl@wp.pl> <4992D9A4.30205@ru.mvista.com> <200902111746.59404.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:10269 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:10283 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753942AbZBKRaD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Feb 2009 12:30:03 -0500
-In-Reply-To: <200902111730.39460.bzolnier@gmail.com>
+	id S1758492AbZBKRbA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Feb 2009 12:31:00 -0500
+In-Reply-To: <200902111746.59404.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>, linux-kernel@vger.kernel.org
-
-Hello.
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>Bartlomiej Zolnierkiewicz wrote:
+>>Stanislaw Gruszka wrote:
 
->>>* Rename dma_timer_expiry() to ide_dma_sff_expiry() and export it.
+>>>Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
->>>* Add ->dma_expiry method
+>>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
->>    This name doesn't seem to make much sense. Why not leave it dma_timer_expiry?
+> OK, does it also mean that you are fine with [PATCH 2/3 v2]?
 
-> Well, the name matches with hwif->expiry one + the downside of leaving it at
-> dma_timer_expiry is a need to reformat all struct ide_dma_ops instances...
-
-    How about just timer_expiry() then?
+    No. I haven't found the time to look at it yet...
 
 > Thanks,
 > Bart
