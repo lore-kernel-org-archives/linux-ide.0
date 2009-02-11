@@ -1,34 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Port Multiplier access with Sil 3124
-Date: Wed, 11 Feb 2009 11:12:22 +0900
-Message-ID: <49923406.60501@kernel.org>
-References: <498F42B6.8030607@tlinx.org>
+Subject: Re: Processes dying with ENXIO or EINTR - disk related?
+Date: Wed, 11 Feb 2009 11:13:17 +0900
+Message-ID: <4992343D.1040504@kernel.org>
+References: <b895fb7dff47e49eee46d6bfc66b06e6.squirrel@www.datavault.us> <499229DF.50708@kernel.org> <49922CC2.8020705@seiner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58044 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:58081 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920AbZBKCMd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Feb 2009 21:12:33 -0500
-In-Reply-To: <498F42B6.8030607@tlinx.org>
+	id S1752952AbZBKCNI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Feb 2009 21:13:08 -0500
+In-Reply-To: <49922CC2.8020705@seiner.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linda Walsh <lkml@tlinx.org>
+To: Yan Seiner <yan@seiner.com>
 Cc: linux-ide@vger.kernel.org
 
-Linda Walsh wrote:
-> It seems there should be a linux util to manage the "container",
-> 'sil57xx'  --  I take it is not used for RAID-only config?
+Yan Seiner wrote:
+>> Highly unlikely it's related to IO.
+>>   
+> I was experimenting with nouveau, an xorg driver for nvidia hardware. 
+> Turns out that driver left the scsi hardware in a weird state that was
+> causing the segfaults.  A warm reboot wouldn't cure it; only a total
+> power down and wait 30 seconds cycle did.  Machine stable since then.
+> 
+> At a guess something in the nouveau driver screwed up the scsi
+> controller in the machine.
 
-sil57xx should generally work fine as PMP device.  There has been some
-detection related problem with recent firmwares which isn't fixed yet
-but it should generally work.  The hardest part is to put the chip
-into vanilla PMP mode.  The reference board I have has this rotary
-switch and I need to put it into JBOD mode and press another small
-mode-set switch to actually make the transition.
+That's a scary story.  :-(
 
-Can you post kernel boot log?
-
---
+-- 
 tejun
