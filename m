@@ -1,47 +1,61 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Wed, 11 Feb 2009 22:28:45 -0600
-Message-ID: <4993A57D.6010107@gmail.com>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>	<49922A2D.508@kernel.org>	<49924F48.4000009@rtr.ca> <20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com> <49934B20.4060206@rtr.ca> <49934D24.1050204@garzik.org>
+Subject: Re: Please add ST3120827AS 3.42 to NCQ blacklist
+Date: Wed, 11 Feb 2009 22:30:22 -0600
+Message-ID: <4993A5DE.4000403@gmail.com>
+References: <20090202132824.09984F805@i3.golden.dom> <49937FB5.3000608@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:50038 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359AbZBLE2v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Feb 2009 23:28:51 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so604403rnd.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Feb 2009 20:28:49 -0800 (PST)
-In-Reply-To: <49934D24.1050204@garzik.org>
+Received: from yw-out-2324.google.com ([74.125.46.29]:35203 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753559AbZBLEa0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Feb 2009 23:30:26 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so294891ywh.1
+        for <linux-ide@vger.kernel.org>; Wed, 11 Feb 2009 20:30:25 -0800 (PST)
+In-Reply-To: <49937FB5.3000608@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Chuck Ebbert <cebbert@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: giulioo@pobox.com, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> I wonder if it's just a case of too short a timeout on the cache flushes?
+Tejun Heo wrote:
+> Hello,
 > 
-> The answer in general to this question has always been "yes".....
+> Giulio Orsero wrote:
+>> Supermicro P8SC8, CENTOS/RHEL 5.x 2.6.18-128.el5
+>> HD: Seagate SATA ST3120827AS fw3.42  [2 disks in md raid1]
+>>  
+>> 00:1f.1 0101: 8086:266f (rev 03)
+>> 00:1f.2 0101: 8086:2652 (rev 03)
+>>  
+>> 2652 is handled by both ata_piix and ahci.
+>> Using ata_piix everything is fine, using ahci will cause periodic errors
+>> like:
+>>  
+>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+>> ata1.00: cmd 61/08:00:4d:6d:c0/00:00:00:00:00/40 tag 0 ncq 4096 out
+>>          res 40/00:00:b5:95:a7/00:00:00:00:00/40 Emask 0x4 (timeout)
+>> ata1.00: status: { DRDY }
+>> ata1: hard resetting link
+>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata1.00: configured for UDMA/133
+>> ata1: EH complete
+>> SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+>> sda: Write Protect is off
+>> SCSI device sda: drive cache: write back
+>>
+>> Using
+>> echo 1 > /sys/block/sda/device/queue_depth
+>> echo 1 > /sys/block/sdb/device/queue_depth
+>> will eliminate the issue, so please add
+>>       { "ST3120827AS",        "3.42",         ATA_HORKAGE_NONCQ },
+>> to the NCQ blacklist.
 > 
-> Unless this has changed in the past year, the worst case for SATA cache 
-> flush can definitely exceed 30 seconds...  it is unbounded as defined in 
-> the spec, and unbounded in practice as well.
-> 
-> Of course, users' patience is not unbounded :)
+> That's a 7200.7 which has been quite popular && happens to be used
+> extensively during libata development, so I'm highly doubtful the
+> problem is a wide spread one.  The problem is more likely to be
+> something specific to your configuration.
 
-Yeah, it's pretty ludicrous for a cache flush to potentially take that 
-long. Theoretically if you had a 32MB write cache completely full with 
-completely non-contiguous sectors you could end up with it taking 
-something like 2 minutes or more to write out. However, the drive really 
-should be ensuring that it doesn't build up so much in the write cache 
-that a flush would takes this long - that is a lot of data that could be 
-lost on an unexpected power-off.
-
-However, in this case the drive is not reporting Busy status at the 
-timeout, which suggests maybe an interrupt got lost or something. (Could 
-be still the drive's fault.)
-
-Chuck, when this happens can you tell if the disk sounds like it is 
-grinding away until the timeout happens or is it just sitting there?
+Indeed, I have a ST3160827AS (the 160GB version of that drive) with 3.42 
+firmware and haven't seen any problems with NCQ..
