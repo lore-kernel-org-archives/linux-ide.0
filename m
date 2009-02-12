@@ -1,63 +1,36 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [PATCH 3/3 v3] AT91: initialize Compact Flash on AT91SAM9263 cpu
-Date: Thu, 12 Feb 2009 10:33:56 +0100
-Message-ID: <200902121033.57176.stf_xl@wp.pl>
-References: <200902091145.11266.stf_xl@wp.pl> <cd73a99e0902111203k7670f9d8w17cc90b7dec343fd@mail.gmail.com>
+From: Eyal Shani <Eyal.Shani@sandisk.com>
+Subject: RE: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Thu, 12 Feb 2009 15:51:01 +0200
+Message-ID: <22BDA4D9BA18634DB0CFBB2E5A1563446F98BAE155@KFAEXMIPV1.sdcorp.global.sandisk.com>
+References: <20090123041558.GC24652@parisc-linux.org>
+	 <4979AF62.7070409@redhat.com>
+	 <1232721777.4430.7.camel@macbook.infradead.org>
+	 <498DA052.6090605@redhat.com>
+ <1234019372.4658.9.camel@localhost.localdomain> <498DB350.8000905@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:40523 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755955AbZBLJeF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Feb 2009 04:34:05 -0500
-In-Reply-To: <cd73a99e0902111203k7670f9d8w17cc90b7dec343fd@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <498DB350.8000905@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jeff@garzik.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Eyal Shani <Eyal.Shani@sandisk.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Victor <avictor.za@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.arm.linux.org.uk
 
-Hi
+Adding my 5 cents.
 
-Wednesday 11 February 2009 21:03:29 Andrew Victor napisa=C5=82(a):
-> > +       if (data->flags & AT91_CF_TRUE_IDE) {
-> > +               /* check if device is present */
-> > +               if (data->det_pin && at91_get_gpio_value(data->det_=
-pin) !=3D 0) {
-> > +                       printk(KERN_ERR "AT91 CF True IDE: no devic=
-e detected\n");
-> > +                       return;
-> > +               }
-> > +               if (data->rst_pin) {
-> > +                       /* reset the card */
-> > +                       at91_set_gpio_output(data->rst_pin, 0);
-> > +                       /* wait as defined in ATA7 vol2 (rev 4a) fi=
-gure 36 */
-> > +                       udelay(25);
-> > +                       at91_set_gpio_output(data->rst_pin, 1);
-> > +               }
->=20
-> Shouldn't this rather be done in the at91_ide driver?
-> I don't want to duplicate it in all the different at91sam9XX_devices.=
-c files.
+T13 added Trim to the latest ATA8 proposal.
+http://www.t13.org/Documents/UploadedDocuments/docs2009/d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf
 
-Ok, I'll move detection stuff to the driver. Not sure about reset, see =
-my=20
-previous mail on this issue. Could we move the reset into driver and
-risk system boot with device which possibly generate interrupts?
-Or perhaps we can remove reset as whole?
+This is after the changes put into the definition, with 'Deterministic Read after Trim'.
+This is not STANDARDIZED, but pretty much excepted by all sides.
 
-> You could also define two separate "CF type" devices - one for CS4,
-> another for CS5.
-> That would allow for two independent "CF type" interfaces to be used
-> at the same time (see at91sam9260_devices.c in maxim.org.za patches).
+I was hoping that would settle the differences between T10/T13 on this - little did I know...
 
-I saw sam9260 code before and I refused idea of doing two CF devices=20
-interfaces. AFAIK there are no boards we two CF slots (or separate one
-IDE and one CF slot), are they? I don't think someone really need such=20
-board (I could be wrong). If there become a board with two interfaces,=20
-then new patch can be done which extend the code.
-=20
-Cheers
-Stanislaw Gruszka
+We are working with David W. on his implementation for Trim feature, and hope to get to the bottom of debug process soon.
+Hope to update soon...
+
+
+Regards,
+Eyal Shani.
