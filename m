@@ -1,61 +1,39 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Please add ST3120827AS 3.42 to NCQ blacklist
-Date: Wed, 11 Feb 2009 22:30:22 -0600
-Message-ID: <4993A5DE.4000403@gmail.com>
-References: <20090202132824.09984F805@i3.golden.dom> <49937FB5.3000608@kernel.org>
+From: Vladimir Krivopalov <argenet@very-soft.com>
+Subject: SATA II generation controllers reset problem
+Date: Thu, 12 Feb 2009 12:44:05 +0600
+Message-ID: <4993C535.10204@very-soft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:35203 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559AbZBLEa0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Feb 2009 23:30:26 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so294891ywh.1
-        for <linux-ide@vger.kernel.org>; Wed, 11 Feb 2009 20:30:25 -0800 (PST)
-In-Reply-To: <49937FB5.3000608@kernel.org>
+Received: from mail.very-soft.com ([83.133.126.206]:38103 "EHLO
+	mail.very-soft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbZBLHQg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Feb 2009 02:16:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: giulioo@pobox.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello,
-> 
-> Giulio Orsero wrote:
->> Supermicro P8SC8, CENTOS/RHEL 5.x 2.6.18-128.el5
->> HD: Seagate SATA ST3120827AS fw3.42  [2 disks in md raid1]
->>  
->> 00:1f.1 0101: 8086:266f (rev 03)
->> 00:1f.2 0101: 8086:2652 (rev 03)
->>  
->> 2652 is handled by both ata_piix and ahci.
->> Using ata_piix everything is fine, using ahci will cause periodic errors
->> like:
->>  
->> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
->> ata1.00: cmd 61/08:00:4d:6d:c0/00:00:00:00:00/40 tag 0 ncq 4096 out
->>          res 40/00:00:b5:95:a7/00:00:00:00:00/40 Emask 0x4 (timeout)
->> ata1.00: status: { DRDY }
->> ata1: hard resetting link
->> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> ata1.00: configured for UDMA/133
->> ata1: EH complete
->> SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
->> sda: Write Protect is off
->> SCSI device sda: drive cache: write back
->>
->> Using
->> echo 1 > /sys/block/sda/device/queue_depth
->> echo 1 > /sys/block/sdb/device/queue_depth
->> will eliminate the issue, so please add
->>       { "ST3120827AS",        "3.42",         ATA_HORKAGE_NONCQ },
->> to the NCQ blacklist.
-> 
-> That's a 7200.7 which has been quite popular && happens to be used
-> extensively during libata development, so I'm highly doubtful the
-> problem is a wide spread one.  The problem is more likely to be
-> something specific to your configuration.
+Greetings, Jeff!
 
-Indeed, I have a ST3160827AS (the 160GB version of that drive) with 3.42 
-firmware and haven't seen any problems with NCQ..
+My name is Vladimir Krivopalov, and I work as software developer in 
+VerySoft LLC, Russia.
+We currently develop a project containing Linux and Windows client-side 
+parts and have to implement 'hot reboot' from Linux to Windows for our 
+purposes. We use kexec application and grub4dos bootloader for this.
+There's a problem we discovered while developing our project in Linux 
+part. It occurs when an effort to switch from protected mode to the real 
+mode is taken and bootloader is started, but it fails while looking for 
+the SATA II drives.
+As for normal booting with grub4dos, it has no probmels with detecting 
+SATA drives. It also finds all IDE drives and SATA I (that have 
+IDE-compartible interface) normally.
+We suppose the reason could be in that SATA II controllers aren't 
+resetted properly. Could you please provide any explanations on how are 
+they reset by default in libata library for Linux?
+
+Best regards,
+ Vladimir Krivopalov,
+ Software developer.
+ VerySoft LLC (www.very-soft.com)
