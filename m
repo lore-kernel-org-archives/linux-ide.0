@@ -1,66 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: The Linux Storage and Filesystem Summit Call for Proposals
-Date: Thu, 12 Feb 2009 08:43:34 -0600
-Message-ID: <1234449814.3295.74.camel@localhost.localdomain>
-References: <1233333630.3248.17.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata timeouts when stressing a Samsung HDD
+Date: Thu, 12 Feb 2009 11:10:59 -0500
+Message-ID: <49944A13.3050105@rtr.ca>
+References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>	<49922A2D.508@kernel.org>	<49924F48.4000009@rtr.ca>	<20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com>	<49934B20.4060206@rtr.ca>	<49934D24.1050204@garzik.org>	<49935157.6020002@rtr.ca> <20090211175409.4fb27541@dhcp-100-2-144.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1233333630.3248.17.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:46780 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755690AbZBLQLB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Feb 2009 11:11:01 -0500
+In-Reply-To: <20090211175409.4fb27541@dhcp-100-2-144.bos.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, 2009-01-30 at 10:40 -0600, James Bottomley wrote:
-> An update on the previously sent save the date email.  The website is
-> now accepting proposals.
+Chuck Ebbert wrote:
+> On Wed, 11 Feb 2009 17:29:43 -0500
+> Mark Lord <liml@rtr.ca> wrote:
+> 
+>>> Unless this has changed in the past year, the worst case for SATA cache 
+>>> flush can definitely exceed 30 seconds...  it is unbounded as defined in 
+>>> the spec, and unbounded in practice as well.
+>> ..
+>>
+>> But I don't think we've yet seen a proven case of it taking too long
+>> for the current libata timeouts.  Unless it's happening now.
+>> T'would be good to find out..  Chuck?
+> 
+> How do I change the timeout?
+..
 
-And just an update at the request of several people:  The deadline for
-proposals is 1 March 2009 with all invitees being informed by 7 March.
-However, given the pressures of travel and time, the committee reserves
-the right to approve early, so, given we only have 25 spaces available
-in each track, get your proposals in early.
+Heh.. actually, I'm not entirely sure myself.
+This stuff bounces between the block, scsi, and ata layers,
+and I think it's set before it gets to libata.
 
-James
-
-> ---
-> 
-> This year's storage and filesystem workshop is being held in San
-> Francisco on April 6th and 7th.  It's being held on the Monday and
-> Tuesday immediately preceeding the Linux Foundation Collaboration
-> Summit, in the same hotel.
-> 
-> You can find all the details on the workshop's web site:
-> 
->   http://events.linuxfoundation.org/events/lsf-workshop
-> 
-> The workshop focuses on collaboration and discussion.  There will be no
-> referred papers and few presentations with slides will be accepted.
-> 
-> To attend we ask that you use the CFP interface on the web site to
-> submit a short proposal for a topic to discuss during the workshop.  The
-> program committee will send invitations to the workshop based on these
-> proposals.  The CFP and FAQ tabs on the web site describe this in more
-> detail.
-> 
-> For reference, there are writeups of previous workshops available
-> online:
-> 
-> http://lwn.net/Articles/226351/
-> http://www.usenix.org/publications/login/2008-06/openpdfs/lsf08reports.pdf
-> 
-> This year we'll be adding time to the schedule specifically for hands-on
-> development with your colleagues.
-> 
-> Please let me know if there are any questions about the workshop.
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Tejun?
