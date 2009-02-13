@@ -1,62 +1,179 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: sata_nv frees DMA memory with different size (possibly a generic
- libata bug)
-Date: Thu, 12 Feb 2009 21:03:38 -0600
-Message-ID: <4994E30A.3040501@gmail.com>
-References: <20090212163952.78ca7d4f@dhcp-100-2-144.bos.redhat.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 01/06] sata_mv: cache frequently read registers
+Date: Fri, 13 Feb 2009 00:03:57 -0500
+Message-ID: <4994FF3D.90904@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:24915 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbZBMDDm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Feb 2009 22:03:42 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so556295ywh.1
-        for <linux-ide@vger.kernel.org>; Thu, 12 Feb 2009 19:03:41 -0800 (PST)
-In-Reply-To: <20090212163952.78ca7d4f@dhcp-100-2-144.bos.redhat.com>
+Received: from rtr.ca ([76.10.145.34]:35122 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750728AbZBMFEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Feb 2009 00:04:01 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Chuck Ebbert wrote:
-> Fedora rawhide has the DMA API debug patch applied and it has found this...
-> 
-> From https://bugzilla.redhat.com/show_bug.cgi?id=485172
-> 
-> WARNING: at lib/dma-debug.c:439 check_unmap+0x16a/0x3dd() (Tainted: G        W
-> )
-> Hardware name: System Product Name
-> sata_nv 0000:00:0d.0: DMA-API: device driver frees DMA memory with different
-> size [device address=0x00000000da031000] [map size=4096 bytes] [unmap
-> size=8192bytes]
-> Modules linked in: bridge stp llc bnep sco l2cap bluetooth sunrpc ip6t_REJECT
-> nf_conntrack_ipv6 ip6table_filter ip6_tables ipv6 cpufreq_ondemand
-> powernow_k8freq_table dm_multipath uinput snd_hda_codec_analog snd_hda_intel
-> snd_hda_codec snd_hwdep snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq
-> snd_seq_device snd_pcm_oss ppdev snd_mixer_oss snd_pcm snd_timer firewire_ohci
-> snd firewire_core soundcore aic7xxx snd_page_alloc jedec_probe crc_itu_t
-> forcedeth scsi_transport_spi pcspkr cfi_probe gen_probe sata_sil24 parport_pc
-> cfi_util parport mtd chipreg i2c_nforce2 map_funcs asus_atk0110 pata_amd
-> i2c_core hwmon ata_generic pata_acpi sata_nv raid456 async_xor async_memcpy
-> async_tx xor raid1 sha256_generic cbc aes_x86_64 aes_generic dm_crypt ext4 jbd2
-> crc16 [last unloaded: scsi_wait_scan]
-> Pid: 0, comm: swapper Tainted: G        W  2.6.29-0.99.rc4.git1.fc11.x86_64 #1
-> Call Trace:
-> <IRQ>  [<ffffffff81048822>] warn_slowpath+0xb7/0xe7
-> [<ffffffff8137bc4f>] ? _spin_lock_irqsave+0x78/0x86
-> [<ffffffff8119851b>] ? get_hash_bucket+0x28/0x34
-> [<ffffffff8106a5ae>] ? trace_hardirqs_off_caller+0x1f/0xac
-> [<ffffffff81198a15>] check_unmap+0x16a/0x3dd
-> [<ffffffff810388a7>] ? resched_task+0x2e/0x74
-> [<ffffffff81198d66>] debug_dma_unmap_sg+0x7c/0x9b
-> [<ffffffff8106a648>] ? trace_hardirqs_off+0xd/0xf
-> [<ffffffff8124fef9>] ata_sg_clean+0x96/0xd0
-> [<ffffffff8124ff89>] __ata_qc_complete+0x56/0xc9
-> [<ffffffff8125018b>] ata_qc_complete+0x18f/0x198
-> [<ffffffffa00cb249>] nv_swncq_interrupt+0x358/0x688 [sata_nv]
+Maintain a local (mv_port_priv) cache of frequently accessed registers,
+to avoid having to re-read them (very slow) on every transistion
+between EDMA and non-EDMA modes.  This speeds up things like
+flushing the drive write cache, and anything using basic DMA transfers.
 
-That's rather curious. It seems to be saying that the sg length is 
-different between the map and unmap, but it doesn't look like sata_nv 
-mucks with that anywhere, and neither does libata core..
+Signed-off-by: Mark Lord <mlord@pobox.com>
+--
+
+Resending without any changes from original.
+
+--- old/drivers/ata/sata_mv.c	2009-02-05 10:16:58.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2009-02-05 10:14:43.000000000 -0500
+@@ -438,6 +438,17 @@
+  	__le32			reserved;
+  };
+
++/*
++ * We keep a local cache of a few frequently accessed port
++ * registers here, to avoid having to read them (very slow)
++ * when switching between EDMA and non-EDMA modes.
++ */
++struct mv_cached_regs {
++	u32			fiscfg;
++	u32			ltmode;
++	u32			haltcond;
++};
++
+  struct mv_port_priv {
+  	struct mv_crqb		*crqb;
+  	dma_addr_t		crqb_dma;
+@@ -450,6 +461,7 @@
+  	unsigned int		resp_idx;
+
+  	u32			pp_flags;
++	struct mv_cached_regs	cached;
+  	unsigned int		delayed_eh_pmp_map;
+  };
+
+@@ -812,6 +824,43 @@
+  	return ((port_flags & MV_FLAG_DUAL_HC) ? 2 : 1);
+  }
+
++/**
++ *      mv_save_cached_regs - (re-)initialize cached port registers
++ *      @ap: the port whose registers we are caching
++ *
++ *	Initialize the local cache of port registers,
++ *	so that reading them over and over again can
++ *	be avoided on the hotter paths of this driver.
++ *	This saves a few microseconds each time we switch
++ *	to/from EDMA mode to perform (eg.) a drive cache flush.
++ */
++static void mv_save_cached_regs(struct ata_port *ap)
++{
++	void __iomem *port_mmio = mv_ap_base(ap);
++	struct mv_port_priv *pp = ap->private_data;
++
++	pp->cached.fiscfg = readl(port_mmio + FISCFG_OFS);
++	pp->cached.ltmode = readl(port_mmio + LTMODE_OFS);
++	pp->cached.haltcond = readl(port_mmio + EDMA_HALTCOND_OFS);
++}
++
++/**
++ *      mv_write_cached_reg - write to a cached port register
++ *      @addr: hardware address of the register
++ *      @old: pointer to cached value of the register
++ *      @new: new value for the register
++ *
++ *	Write a new value to a cached register,
++ *	but only if the value is different from before.
++ */
++static inline void mv_write_cached_reg(void __iomem *addr, u32 *old, u32 new)
++{
++	if (new != *old) {
++		*old = new;
++		writel(new, addr);
++	}
++}
++
+  static void mv_set_edma_ptrs(void __iomem *port_mmio,
+  			     struct mv_host_priv *hpriv,
+  			     struct mv_port_priv *pp)
+@@ -1159,35 +1208,33 @@
+  	return ATA_DEFER_PORT;
+  }
+
+-static void mv_config_fbs(void __iomem *port_mmio, int want_ncq, int want_fbs)
++static void mv_config_fbs(struct ata_port *ap, int want_ncq, int want_fbs)
+  {
+-	u32 new_fiscfg, old_fiscfg;
+-	u32 new_ltmode, old_ltmode;
+-	u32 new_haltcond, old_haltcond;
+-
+-	old_fiscfg   = readl(port_mmio + FISCFG_OFS);
+-	old_ltmode   = readl(port_mmio + LTMODE_OFS);
+-	old_haltcond = readl(port_mmio + EDMA_HALTCOND_OFS);
+-
+-	new_fiscfg   = old_fiscfg & ~(FISCFG_SINGLE_SYNC | FISCFG_WAIT_DEV_ERR);
+-	new_ltmode   = old_ltmode & ~LTMODE_BIT8;
+-	new_haltcond = old_haltcond | EDMA_ERR_DEV;
++	struct mv_port_priv *pp = ap->private_data;
++	void __iomem *port_mmio;
++
++	u32 fiscfg,   *old_fiscfg   = &pp->cached.fiscfg;
++	u32 ltmode,   *old_ltmode   = &pp->cached.ltmode;
++	u32 haltcond, *old_haltcond = &pp->cached.haltcond;
++
++	ltmode   = *old_ltmode & ~LTMODE_BIT8;
++	haltcond = *old_haltcond | EDMA_ERR_DEV;
+
+  	if (want_fbs) {
+-		new_fiscfg = old_fiscfg | FISCFG_SINGLE_SYNC;
+-		new_ltmode = old_ltmode | LTMODE_BIT8;
++		fiscfg = *old_fiscfg | FISCFG_SINGLE_SYNC;
++		ltmode = *old_ltmode | LTMODE_BIT8;
+  		if (want_ncq)
+-			new_haltcond &= ~EDMA_ERR_DEV;
++			haltcond &= ~EDMA_ERR_DEV;
+  		else
+-			new_fiscfg |=  FISCFG_WAIT_DEV_ERR;
++			fiscfg |=  FISCFG_WAIT_DEV_ERR;
++	} else {
++		fiscfg = *old_fiscfg & ~(FISCFG_SINGLE_SYNC | FISCFG_WAIT_DEV_ERR);
+  	}
+
+-	if (new_fiscfg != old_fiscfg)
+-		writelfl(new_fiscfg, port_mmio + FISCFG_OFS);
+-	if (new_ltmode != old_ltmode)
+-		writelfl(new_ltmode, port_mmio + LTMODE_OFS);
+-	if (new_haltcond != old_haltcond)
+-		writelfl(new_haltcond, port_mmio + EDMA_HALTCOND_OFS);
++	port_mmio = mv_ap_base(ap);
++	mv_write_cached_reg(port_mmio + FISCFG_OFS, old_fiscfg, fiscfg);
++	mv_write_cached_reg(port_mmio + LTMODE_OFS, old_ltmode, ltmode);
++	mv_write_cached_reg(port_mmio + EDMA_HALTCOND_OFS, old_haltcond, haltcond);
+  }
+
+  static void mv_60x1_errata_sata25(struct ata_port *ap, int want_ncq)
+@@ -1235,7 +1282,7 @@
+  		 */
+  		want_fbs &= want_ncq;
+
+-		mv_config_fbs(port_mmio, want_ncq, want_fbs);
++		mv_config_fbs(ap, want_ncq, want_fbs);
+
+  		if (want_fbs) {
+  			pp->pp_flags |= MV_PP_FLAG_FBS_EN;
+@@ -1339,6 +1386,7 @@
+  			pp->sg_tbl_dma[tag] = pp->sg_tbl_dma[0];
+  		}
+  	}
++	mv_save_cached_regs(ap);
+  	mv_edma_cfg(ap, 0, 0);
+  	return 0;
+
+@@ -2996,6 +3044,7 @@
+  				extra = HZ; /* only extend it once, max */
+  		}
+  	} while (sstatus != 0x0 && sstatus != 0x113 && sstatus != 0x123);
++	mv_save_cached_regs(ap);
+  	mv_edma_cfg(ap, 0, 0);
+
+  	return rc;
