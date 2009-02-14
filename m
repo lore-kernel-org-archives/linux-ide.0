@@ -1,26 +1,21 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: Very old IDE hard drive (240 MB) detected as 1.1 TB
-Date: Sat, 14 Feb 2009 18:54:12 +0300
-Message-ID: <4996E924.3060600@ru.mvista.com>
+Date: Sat, 14 Feb 2009 11:58:42 -0600
+Message-ID: <49970652.7030101@gmail.com>
 References: <200902131428.40212.hanno@hboeck.de> <499584FC.2050104@gmail.com> <200902141352.24277.hanno@hboeck.de> <4996C563.9090900@ru.mvista.com> <4996D443.4060103@rtr.ca> <alpine.LFD.1.10.0902141526310.651@ftp.linux-mips.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:21410 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750752AbZBNPyY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Feb 2009 10:54:24 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752822AbZBNSEE@vger.kernel.org>
 In-Reply-To: <alpine.LFD.1.10.0902141526310.651@ftp.linux-mips.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Maciej W. Rozycki" <macro@linux-mips.org>
-Cc: Mark Lord <liml@rtr.ca>, =?ISO-8859-1?Q?Hanno_B=F6ck?= <hanno@hboeck.de>, Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
-
-Hello.
+Cc: Mark Lord <liml@rtr.ca>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, =?ISO-8859-1?Q?Hanno_B=F6ck?= <hanno@hboeck.de>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
 Maciej W. Rozycki wrote:
-
+> On Sat, 14 Feb 2009, Mark Lord wrote:
+> 
 >>>   It has the current capacity in words 57-58 swapped:
 >>>
 >>> /dev/sdb:
@@ -36,31 +31,46 @@ Maciej W. Rozycki wrote:
 >>>
 >>>   It must be 82da 0007, not 0007 82da.
 >>>   IIRC, the IDE core doesn't trust the value reported in these words 
->>>       
 >> ..
 >>
 >> That's right.  I wrote the IDE code that way
 >> *specifically* due to a (different) Conner drive
 >> I had here at the time.
->>     
->
+> 
 >  It happened for some Maxtor drives too.  The reason is the ATA-1 spec was 
->   
-
-   And with Fujitsu ones too. IIRC, the one I encountered (10+ years 
-ago) had something like 0000 c000 there -- which in no way was related 
-to its real capacity.
-
 > not explicit about how words 57 and 58 were meant to be ordered and some 
->   
-> manufacturers interpreted it one and some the other way.
+> manufacturers interpreted it one and some the other way.  It looks like 
+> libata needs to be fixed.
 
-   However, the drive vendors should've really thought better before 
-reporting capacity in *middle-endian* format. :-)
+Here's the relevant code, it appears (drivers/ata/libata-core.c at line 
+1321):
 
->   Maciej
->   
+static u64 ata_id_n_sectors(const u16 *id)
+{
+	if (ata_id_has_lba(id)) {
+		if (ata_id_has_lba48(id))
+			return ata_id_u64(id, 100);
+		else
+			return ata_id_u32(id, 60);
+	} else {
+		if (ata_id_current_chs_valid(id))
+			return ata_id_u32(id, 57);
+		else
+			return id[1] * id[3] * id[6];
+	}
+}
 
-MBR, Sergei
+It looks like it's getting into the ata_id_current_chs_valid(id) path, 
+since all the values that function checks are indeed valid, but the 
+values in words 57-58 are not. There seems to be no real reason to use 
+those values since the same can be calculated from the reported CHS, so 
+you could change that code to:
 
+		if (ata_id_current_chs_valid(id))
+			return id[54] * id[55] * id[56];
+		else
+			return id[1] * id[3] * id[6];
 
+Hanno, would you be able to try building a kernel with a modified 
+drivers/ata/libata-core.c as above (in current -git it would be changing 
+line 1330) and see if that resolves the problem?
