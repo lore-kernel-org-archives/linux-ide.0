@@ -1,47 +1,45 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH 01/10] ide: add flags query macros
-Date: Sun, 15 Feb 2009 14:35:12 +0100
-Message-ID: <20090215133512.GA32621@uranus.ravnborg.org>
-References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com> <1234699692-9452-2-git-send-email-petkovbb@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/3 v2] AT91: initialize Compact Flash on AT91SAM9263
+ cpu
+Date: Sun, 15 Feb 2009 19:00:35 +0300
+Message-ID: <49983C23.3010701@ru.mvista.com>
+References: <200902061214.19789.stf_xl@wp.pl> <498C272A.5070101@ru.mvista.com> <200902061432.20291.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:51516 "EHLO
-	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753714AbZBONdV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 08:33:21 -0500
-Content-Disposition: inline
-In-Reply-To: <1234699692-9452-2-git-send-email-petkovbb@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:33894 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752590AbZBOQAR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 11:00:17 -0500
+In-Reply-To: <200902061432.20291.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk
 
-On Sun, Feb 15, 2009 at 01:08:03PM +0100, Borislav Petkov wrote:
-> There should be no functionality change resulting from this patch.
-> 
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> ---
->  include/linux/ide.h |  166 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 166 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/ide.h b/include/linux/ide.h
-> index c75631c..f133062 100644
-> --- a/include/linux/ide.h
-> +++ b/include/linux/ide.h
-> @@ -497,6 +497,82 @@ enum {
->  	IDE_AFLAG_NO_AUTOCLOSE		= (1 << 24),
->  };
->  
-> +#define ide_drv_drq_int(drive) \
-> +	((drive)->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT)
+Hello.
 
-Why not use a static inline here so we get proper typecheck.
-And then convert the return result to a bool (0/1) so you
-do not have to do this at the call site.
+Stanislaw Gruszka wrote:
 
-I counted at least three places in ide-cd that does a local
-transformation to a bool and I saw nowhere the actual bit value
-was used.
+>>>+	if (data->det_pin) {
+>>>+		/* check if device is present */
+>>>+		at91_set_gpio_input(data->det_pin, 1);
+>>>+		at91_set_deglitch(data->det_pin, 1);
+>>>+		if (at91_get_gpio_value(data->det_pin) != 0) {
+>>>+			printk(KERN_ERR "AT91: no CF card detected\n");
+>>>+			return;
+>>>+		}
+>>>+	}
 
-	Sam
+>>   Bart, I'm not sure: don't we support warm-plug now? Or it won't avail 
+>>us with CF?
+
+> Uhh, this code is wrong at least for PCMCIA as we hotplug there. I don't think
+> hotplug is supported for ATA devices.
+
+    I didn't say hot plug, I said *warm* plug. You can force port probing via 
+sysfs, if I don't mistake... Bart?
+
+MBR, Sergei
+
