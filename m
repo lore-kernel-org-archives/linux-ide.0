@@ -1,106 +1,51 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
-Date: Sun, 15 Feb 2009 23:09:22 +0300
-Message-ID: <49987672.2050102@ru.mvista.com>
-References: <200902152230.38271.sshtylyov@ru.mvista.com> <4998717A.2090507@pobox.com>
+Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
+Date: Sun, 15 Feb 2009 23:25:27 +0300
+Message-ID: <49987A37.9000300@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213451.13202.12671.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:36020 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:36174 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751990AbZBOUJE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 15:09:04 -0500
-In-Reply-To: <4998717A.2090507@pobox.com>
+	with ESMTP id S1752631AbZBOUZF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 15:25:05 -0500
+In-Reply-To: <20080620213451.13202.12671.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal 
->> bacause:
+> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
 
->> - it always initializes the padding buffer to 0 which is not really 
->> needed in
->>   both the read and write cases;
+> There should be no functional changes caused by this patch.
 
->> - it has to use memcpy() to transfer a single byte from/to the padding 
->> buffer;
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> Have you looked at the assembly, before deciding it is suboptiomal?
+> Index: b/drivers/ide/ide-iops.c
+> ===================================================================
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
+>  {
+>  	ide_hwif_t *hwif = drive->hwif;
+>  	const struct ide_port_ops *port_ops = hwif->port_ops;
+> +	ide_task_t task;
+>  
+>  	if (port_ops && port_ops->selectproc)
+>  		port_ops->selectproc(drive);
+>  
+> -	hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
+> +	memset(&task, 0, sizeof(task));
+> +	task.tf_flags = IDE_TFLAG_OUT_DEVICE;
+> +
+> +	drive->hwif->tf_load(drive, &task);
 
-    I'm estimating the code itself, not what the compiler can do to fix it. :-)
-
-> gcc optimizes tiny arrays and structures quite well, and is well capable 
-> of seeing one path where the initialization is clobbered without a 
-> single read, and another code path where it is used.
-
-    The initialier just shouldn't have been there in the first place, 
-clobbered or not. And let's looks at what gcc gave me:
-
-.L504:
-         .loc 1 727 0
-         testb   $1, %bl #, buflen
-         jne     .L511   #,
-[...]
-.L511:
-.LBB635:
-         .loc 1 731 0
-         movl    8(%ebp), %eax   # rw,
-         .loc 1 729 0
-         leal    (%esi,%ebx), %ebx       #, tmp72
-.LVL440:
-         .loc 1 728 0
-.LBB635:
-         .loc 1 731 0
-         movl    8(%ebp), %eax   # rw,
-         .loc 1 729 0
-         leal    (%esi,%ebx), %ebx       #, tmp72
-.LVL440:
-         .loc 1 728 0
-         movw    $0, -14(%ebp)   #, align_buf
-         .loc 1 731 0
-         testl   %eax, %eax      #
-         jne     .L507   #,
-         .loc 1 732 0
-         movl    -20(%ebp), %eax # data_addr, data_addr
-         call    ioread16        #
-         movw    %ax, -14(%ebp)  # D.29224, align_buf
-.LBB629:
-.LBB630:
-         .loc 4 60 0
-         movzbl  -14(%ebp), %eax #, tmp73
-         movb    %al, -1(%ebx)   # tmp73,
-.L509:
-.LBE630:
-.LBE629:
-         .loc 1 738 0
-         addl    $1, %edi        #, words
-         jmp     .L505   #
-.L507:
-.LBB631:
-.LBB632:
-         .loc 4 60 0
-         movzbl  -1(%ebx), %eax  #, tmp74
-.LBE632:
-.LBE631:
-         .loc 1 736 0
-         movzwl  -14(%ebp), %eax # align_buf, align_buf
-         call    iowrite16       #
-         jmp     .L509   #
-
-    As you can see, it happily assigned 0 to align_buf[0] at .LVL440, 
-regardless of the value of 'rw'.
-
-> As for memcpy, for small and/or constant values that is quite often a 
-> compiler builtin.  It is rarely useful, these days, to convert a memcpy() to a hand-rolled 
-version of same.
-
-    Here memcpy() just shouldn't have appeared in the first place. But indeed, 
-gcc did optimize it away.
-
->     Jeff
+    This actually doesn't seem like a bright idea to me, considering that this 
+gets called when starting every request. How will you look at me adding the 
+transport method for writing this register? :-)
 
 MBR, Sergei
