@@ -1,34 +1,23 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: device/vendor confusion
-Date: Mon, 16 Feb 2009 02:06:42 +0300
-Message-ID: <4998A002.2020303@ru.mvista.com>
-References: <49988EC5.40704@gmail.com>
+From: "Matthew" <us.garcia@pipejacking.org>
+Subject: Matthew has sent you an E-Card!
+Date: Sun, 15 Feb 2009 17:58:30 -0500
+Message-ID: <20090215175830.3040705@pipejacking.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:37580 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753897AbZBOXGt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 18:06:49 -0500
-In-Reply-To: <49988EC5.40704@gmail.com>
+Received: from h93.240.90.75.dynamic.ip.windstream.net ([75.90.240.93]:60285
+	"HELO h93.240.90.75.dynamic.ip.windstream.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753618AbZBOXK2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 18:10:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: linux-ide@vger.kernel.org
 
-Hello.
+Matthew has sent a Valentine's Day card and wrote this to you:
+"You're in love with me now, right?"
 
-Roel Kluin wrote:
-
-> Device and vendor ids were confused
->
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-... obviously. :-)
-
-MBR, Sergei
-
+Click on the link below to view your card:
+http://fqparn.bestlovehelp.com/?cardnum=bcc1a3197311ade8c223
+Webmaster, Jib Jab.
 
