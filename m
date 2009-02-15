@@ -1,56 +1,34 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [Bug #12263] Sata soft reset filling log
-Date: Sun, 15 Feb 2009 23:30:45 +0100
-Message-ID: <20090215223045.GC29300@elte.hu>
-References: <sTyoMUwdm9B.A.QCH.U40lJB@chimera> <ROx6X68CGJG.A.ahB.b50lJB@chimera> <49987F49.7050202@gawab.com> <200902152221.43834.rjw@sisk.pl>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: device/vendor confusion
+Date: Mon, 16 Feb 2009 02:06:42 +0300
+Message-ID: <4998A002.2020303@ru.mvista.com>
+References: <49988EC5.40704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:52363 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752491AbZBOWbW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Feb 2009 17:31:22 -0500
-Content-Disposition: inline
-In-Reply-To: <200902152221.43834.rjw@sisk.pl>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:37580 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753897AbZBOXGt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 18:06:49 -0500
+In-Reply-To: <49988EC5.40704@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Justin Madru <jdm64@gawab.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hugh Dickins <hugh@veritas.com>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+
+Hello.
+
+Roel Kluin wrote:
+
+> Device and vendor ids were confused
+>
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+... obviously. :-)
+
+MBR, Sergei
 
 
-* Rafael J. Wysocki <rjw@sisk.pl> wrote:
-
-> On Sunday 15 February 2009, Justin Madru wrote:
-> > Rafael J. Wysocki wrote:
-> > > This message has been generated automatically as a part of a report
-> > > of regressions introduced between 2.6.27 and 2.6.28.
-> > >
-> > > The following bug entry is on the current list of known regressions
-> > > introduced between 2.6.27 and 2.6.28.  Please verify if it still should
-> > > be listed and let me know (either way).
-> > >
-> > >
-> > > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12263
-> > > Subject		: Sata soft reset filling log
-> > > Submitter	: Justin Madru <bevicm@dslextreme.com>
-> > > Date		: 2008-12-13 2:07 (64 days old)
-> > > References	: http://marc.info/?l=linux-kernel&m=122913412608533&w=4
-> > 
-> > I'm still seeing this on .29-rc5, and I think that my bug #12263 is a 
-> > duplicate of bug #12609,
-> > or more correctly it's a duplicate of mine because I reported first.
-> > 
-> > It seems like the bug has been fixed in tip/master for some time now.
-> > Below is the diff of origin and tip from when I tested.
-> 
-> Ingo, do you know whinch patch in -tip fixes this regression?
-
-This one, done on Jan 10, more than a month ago:
-
-  f1d26da: Revert "libata: Add 32bit PIO support"
-
-When a commit causes trouble in -tip qa i immediately revert it in 95% 
-of the cases, no questions asked. Especially if it's related to 
-persistent storage.
-
-	Ingo
