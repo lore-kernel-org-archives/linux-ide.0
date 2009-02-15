@@ -1,81 +1,56 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12714] New: [pata_ali] ATAPI UltraDMA on secondary channel broken
-Date: Sun, 15 Feb 2009 14:01:09 -0800 (PST)
-Message-ID: <bug-12714-11633@http.bugzilla.kernel.org/>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [Bug #12263] Sata soft reset filling log
+Date: Sun, 15 Feb 2009 23:30:45 +0100
+Message-ID: <20090215223045.GC29300@elte.hu>
+References: <sTyoMUwdm9B.A.QCH.U40lJB@chimera> <ROx6X68CGJG.A.ahB.b50lJB@chimera> <49987F49.7050202@gawab.com> <200902152221.43834.rjw@sisk.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38187 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752242AbZBOWBj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 17:01:39 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1FM19iZ013763
-	for <linux-ide@vger.kernel.org>; Sun, 15 Feb 2009 14:01:10 -0800
+Received: from mx3.mail.elte.hu ([157.181.1.138]:52363 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752491AbZBOWbW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Feb 2009 17:31:22 -0500
+Content-Disposition: inline
+In-Reply-To: <200902152221.43834.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12714
-
-           Summary: [pata_ali] ATAPI UltraDMA on secondary channel broken
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: 2.6.27
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: jtsn@gmx.de
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Justin Madru <jdm64@gawab.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hugh Dickins <hugh@veritas.com>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 
-Latest working kernel version: 2.6.24 (with libata)
-Earliest failing kernel version: confirmed 2.6.27 (with libata), possibly
-2.6.25
-Distribution: Slackware 12.2
-Hardware Environment:
+* Rafael J. Wysocki <rjw@sisk.pl> wrote:
 
-00:12.0 IDE interface [0101]: ALi Corporation M5229 IDE [10b9:5229] (rev c7)
+> On Sunday 15 February 2009, Justin Madru wrote:
+> > Rafael J. Wysocki wrote:
+> > > This message has been generated automatically as a part of a report
+> > > of regressions introduced between 2.6.27 and 2.6.28.
+> > >
+> > > The following bug entry is on the current list of known regressions
+> > > introduced between 2.6.27 and 2.6.28.  Please verify if it still should
+> > > be listed and let me know (either way).
+> > >
+> > >
+> > > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12263
+> > > Subject		: Sata soft reset filling log
+> > > Submitter	: Justin Madru <bevicm@dslextreme.com>
+> > > Date		: 2008-12-13 2:07 (64 days old)
+> > > References	: http://marc.info/?l=linux-kernel&m=122913412608533&w=4
+> > 
+> > I'm still seeing this on .29-rc5, and I think that my bug #12263 is a 
+> > duplicate of bug #12609,
+> > or more correctly it's a duplicate of mine because I reported first.
+> > 
+> > It seems like the bug has been fixed in tip/master for some time now.
+> > Below is the diff of origin and tip from when I tested.
+> 
+> Ingo, do you know whinch patch in -tip fixes this regression?
 
-See http://bugzilla.kernel.org/show_bug.cgi?id=9904 for more hardware info.
+This one, done on Jan 10, more than a month ago:
 
-Problem Description:
+  f1d26da: Revert "libata: Add 32bit PIO support"
 
-Linux 2.6.24 (Slackware 12.1) pata_ali driver worked reliable in ATAPI UltraDMA
-mode reading and writing media on both channels, beside the cable detection
-issue mentioned in bug #9904 (which occured only with this specific ASUS
-drive).
+When a commit causes trouble in -tip qa i immediately revert it in 95% 
+of the cases, no questions asked. Especially if it's related to 
+persistent storage.
 
-The 2.6.27 driver completely disables ATAPI DMA and the atapi_dma=1 modparm
-brings it back only on the primary channel.
-
-pata_ali 0000:00:12.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-scsi3 : pata_ali
-scsi4 : pata_ali
-ata4: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00 irq 14
-ata5: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xff08 irq 15
-ata4.00: ATAPI: PIONEER DVD-RW  DVR-212, 1.28, max UDMA/66
-ata4.00: configured for UDMA/66
-ata5.00: ATAPI: MATSHITADVD-RAM SW-9576S, AY0J, max UDMA/66
-ata5.00: simplex DMA is claimed by other device, disabling DMA
-ata5.00: configured for PIO4
-
-# hdparm -t /dev/sr1
-
-/dev/sr1:
- Timing buffered disk reads:    6 MB in  3.18 seconds =   1.89 MB/sec
-
-So the secondary channel is completely unusable now with libata.
-
-Also I see no sense in the atapi_dma switch and its default (off), because
-ATAPI DMA was fine on 2.6.24. There might be a tunable for buggy hardware, but
-this default (which does not work with modern DVD writers at all) is bogus and
-should be changed.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+	Ingo
