@@ -1,158 +1,171 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 06/10] ide-disk: use flags query macros
-Date: Sun, 15 Feb 2009 13:08:08 +0100
-Message-ID: <1234699692-9452-7-git-send-email-petkovbb@gmail.com>
-References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 5/6] ide: remove ide_execute_pkt_cmd()
+Date: Sun, 15 Feb 2009 15:24:25 +0300
+Message-ID: <49980979.6090305@ru.mvista.com>
+References: <20090209231945.32406.14874.sendpatchset@localhost.localdomain>	 <20090209232019.32406.98822.sendpatchset@localhost.localdomain>	 <20090211065535.GC937@gollum.tnic> <4992D108.2070709@ru.mvista.com>	 <9ea470500902110537g4d6c67a3o35d1d8a4dcca0927@mail.gmail.com>	 <4992D77F.3090802@ru.mvista.com> <9ea470500902110832p58cf6b6at38a20f9ea7557017@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:29313 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753118AbZBOMIU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 07:08:20 -0500
-In-Reply-To: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:31943 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753173AbZBOMYb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 07:24:31 -0500
+In-Reply-To: <9ea470500902110832p58cf6b6at38a20f9ea7557017@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: petkovbb@gmail.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-There should be no functionality change resulting from this patch.
+Hello.
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-disk.c      |   28 ++++++++++++++--------------
- drivers/ide/ide-disk_proc.c |    2 +-
- 2 files changed, 15 insertions(+), 15 deletions(-)
+Borislav Petkov wrote:
 
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index ca934c8..011cdb3 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -99,7 +99,7 @@ static ide_startstop_t __ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
- 
--	if (drive->dev_flags & IDE_DFLAG_LBA) {
-+	if (ide_drv_does_lba(drive)) {
- 		if (lba48) {
- 			pr_debug("%s: LBA=0x%012llx\n", drive->name,
- 					(unsigned long long)block);
-@@ -180,7 +180,7 @@ static ide_startstop_t ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 
--	BUG_ON(drive->dev_flags & IDE_DFLAG_BLOCKED);
-+	BUG_ON(ide_drv_blocked(drive));
- 
- 	if (!blk_fs_request(rq)) {
- 		blk_dump_rq_flags(rq, "ide_do_rw_disk - bad command");
-@@ -359,7 +359,7 @@ static int ide_disk_get_capacity(ide_drive_t *drive)
- 	}
- 
- 	/* limit drive capacity to 137GB if LBA48 cannot be used */
--	if ((drive->dev_flags & IDE_DFLAG_LBA48) == 0 &&
-+	if (!ide_drv_lba48(drive) &&
- 	    drive->capacity64 > 1ULL << 28) {
- 		printk(KERN_WARNING "%s: cannot use LBA48 - full capacity "
- 		       "%llu sectors (%llu MB)\n",
-@@ -369,7 +369,7 @@ static int ide_disk_get_capacity(ide_drive_t *drive)
- 	}
- 
- 	if ((drive->hwif->host_flags & IDE_HFLAG_NO_LBA48_DMA) &&
--	    (drive->dev_flags & IDE_DFLAG_LBA48)) {
-+	    ide_drv_lba48(drive)) {
- 		if (drive->capacity64 > 1ULL << 28) {
- 			printk(KERN_INFO "%s: cannot use LBA48 DMA - PIO mode"
- 					 " will be used for accessing sectors "
-@@ -468,7 +468,7 @@ static void update_ordered(ide_drive_t *drive)
- 	unsigned ordered = QUEUE_ORDERED_NONE;
- 	prepare_flush_fn *prep_fn = NULL;
- 
--	if (drive->dev_flags & IDE_DFLAG_WCACHE) {
-+	if (ide_drv_wcache_enabled(drive)) {
- 		unsigned long long capacity;
- 		int barrier;
- 		/*
-@@ -481,8 +481,8 @@ static void update_ordered(ide_drive_t *drive)
- 		 */
- 		capacity = ide_gd_capacity(drive);
- 		barrier = ata_id_flush_enabled(id) &&
--			(drive->dev_flags & IDE_DFLAG_NOFLUSH) == 0 &&
--			((drive->dev_flags & IDE_DFLAG_LBA48) == 0 ||
-+			!ide_drv_noflush(drive) &&
-+			(!ide_drv_lba48(drive) ||
- 			 capacity <= (1ULL << 28) ||
- 			 ata_id_flush_ext_enabled(id));
- 
-@@ -604,10 +604,10 @@ static void ide_disk_setup(ide_drive_t *drive)
- 
- 	ide_proc_register_driver(drive, idkp->driver);
- 
--	if ((drive->dev_flags & IDE_DFLAG_ID_READ) == 0)
-+	if (!ide_drv_id_read(drive))
- 		return;
- 
--	if (drive->dev_flags & IDE_DFLAG_REMOVABLE) {
-+	if (ide_drv_removable(drive)) {
- 		/*
- 		 * Removable disks (eg. SYQUEST); ignore 'WD' drives
- 		 */
-@@ -617,7 +617,7 @@ static void ide_disk_setup(ide_drive_t *drive)
- 
- 	(void)set_addressing(drive, 1);
- 
--	if (drive->dev_flags & IDE_DFLAG_LBA48) {
-+	if (ide_drv_lba48(drive)) {
- 		int max_s = 2048;
- 
- 		if (max_s > hwif->rqsize)
-@@ -641,7 +641,7 @@ static void ide_disk_setup(ide_drive_t *drive)
- 	 */
- 	capacity = ide_gd_capacity(drive);
- 
--	if ((drive->dev_flags & IDE_DFLAG_FORCED_GEOM) == 0) {
-+	if (!ide_drv_forced_geom(drive)) {
- 		if (ata_id_lba48_enabled(drive->id)) {
- 			/* compatibility */
- 			drive->bios_sect = 63;
-@@ -680,7 +680,7 @@ static void ide_disk_setup(ide_drive_t *drive)
- 
- 	set_wcache(drive, 1);
- 
--	if ((drive->dev_flags & IDE_DFLAG_LBA) == 0 &&
-+	if (!ide_drv_does_lba(drive) &&
- 	    (drive->head == 0 || drive->head > 16)) {
- 		printk(KERN_ERR "%s: invalid geometry: %d physical heads?\n",
- 			drive->name, drive->head);
-@@ -692,7 +692,7 @@ static void ide_disk_setup(ide_drive_t *drive)
- static void ide_disk_flush(ide_drive_t *drive)
- {
- 	if (ata_id_flush_enabled(drive->id) == 0 ||
--	    (drive->dev_flags & IDE_DFLAG_WCACHE) == 0)
-+	    !ide_drv_wcache_enabled(drive))
- 		return;
- 
- 	if (do_idedisk_flushcache(drive))
-@@ -710,7 +710,7 @@ static int ide_disk_set_doorlock(ide_drive_t *drive, struct gendisk *disk,
- 	struct ide_cmd cmd;
- 	int ret;
- 
--	if ((drive->dev_flags & IDE_DFLAG_DOORLOCKING) == 0)
-+	if (!ide_drv_doorlocking(drive))
- 		return 0;
- 
- 	memset(&cmd, 0, sizeof(cmd));
-diff --git a/drivers/ide/ide-disk_proc.c b/drivers/ide/ide-disk_proc.c
-index 3f2a078..bfe8cc1 100644
---- a/drivers/ide/ide-disk_proc.c
-+++ b/drivers/ide/ide-disk_proc.c
-@@ -42,7 +42,7 @@ static int proc_idedisk_read_cache
- 	char		*out = page;
- 	int		len;
- 
--	if (drive->dev_flags & IDE_DFLAG_ID_READ)
-+	if (ide_drv_id_read(drive))
- 		len = sprintf(out, "%i\n", drive->id[ATA_ID_BUF_SIZE] / 2);
- 	else
- 		len = sprintf(out, "(none)\n");
--- 
-1.6.0.4
+>>>>> or similar instead of wasting stack space?
+>>>>>
+>>>>>          =20
+>>>>  It doesn't necessarily waste stack space. Haven't you heard about
+>>>> compiler
+>>>> putting local vairables into registers?
+>>>>
+>>>>        =20
+>>> Yes, have you heard of unnecessary register spilling?
+>>>
+>>>      =20
+>>  No -- only about stack spilling on CPUs "caching" the top of stack =
+in their
+>> register file (like SPARC).
+>>  Linux runs not only on x86 and many RISCs can store several local v=
+ariables
+>> in the dedicated registers -- it's the part of say MIPS ABIs...
+>>    =20
+
+   Oh, it's really the same on x86, only there are only 3 registers=20
+dedicated to that. RISCs typically have more, however x86_64 wiuth 16=20
+its registers is close to that already. However, you're right -- these=20
+registers need saving at the function entry, so they effectively take=20
+the stack space.
+
+>>>>> It'll also read better in the if() check:
+>>>>>
+>>>>> if (drv_can_irq_interrupt(drive)) { ...
+>>>>>
+>>>>>
+>>>>>          =20
+>>>>  It's faster to checj a local variable than to dereference drv sev=
+eral
+>>>> times
+>>>> -- unless gcc optimizes that away (by creating an implicit local v=
+ariable
+>>>> :-).
+>>>>        =20
+>
+>
+> Let's look at an example:
+>
+> In ide-cd.c:cdrom_newpc_intr() you have the following code snippet:
+>
+> <ide-cd.c>
+>  799         thislen =3D blk_fs_request(rq) ? len : rq->data_len;
+>  800         if (thislen > len)
+>  801                 thislen =3D len;
+>  802
+>  803         ide_debug_log(IDE_DBG_PC, "%s: DRQ: stat: 0x%x, thislen:=
+ %d\n",
+>  804                       __func__, stat, thislen);
+>  805
+>  806         /* If DRQ is clear, the command has completed. */
+>  807         if ((stat & ATA_DRQ) =3D=3D 0) {
+>  808                 if (blk_fs_request(rq)) {
+> </ide-cd.c>
+>
+> Now watch the blk_fs_request() thing.
+>
+> Here's what my gcc=C2=B9 spits out:
+>  =20
+
+   Thsi code is somewhat confused. Also, I was of a better opinion of g=
+cc...
+
+> <ide-cd.s>
+> .LVL174:
+>         .loc 1 799 0
+>         movl    76(%r12), %ecx  # <variable>.cmd_type, prephitmp.1128
+>         cmpl    $1, %ecx        #, prephitmp.1128
+>         movl    %ecx, %r8d      # prephitmp.1128, prephitmp.1047
+>         je      .L225   #,
+>  =20
+
+  Now where is that label?
+
+> .LVL175:
+>         .loc 1 800 0
+>         movzwl  -44(%rbp), %r15d        # len, thislen
+>  =20
+
+   Oh, that AT&T syntax... it took me a while to realize that it's a=20
+movzx insn. :-)
+
+> .LVL176:
+>         .loc 1 799 0
+>         movl    280(%r12), %edx # <variable>.data_len, thislen.1129
+> .LVL177:
+>         .loc 1 800 0
+>         cmpl    %r15d, %edx     # thislen, thislen.1129
+>         movl    %r15d, %ebx     # thislen, thislen.1163
+>         jg      .L145   #,
+> .LVL178:
+>         movl    %edx, %r15d     # thislen.1129, thislen
+>  =20
+
+   I wonder why it doesn't generate cmovng ISO jg and mov...
+
+> .LVL179:
+> .L145:
+>         .loc 1 807 0
+>         testb   $8, -64(%rbp)   #, stat
+>         jne     .L147   #,
+> .LVL180:
+>         .loc 1 808 0
+>         cmpl    $1, %ecx        #, prephitmp.1128
+>         je      .L226   #,
+>         .loc 1 825 0
+>         cmpl    $2, %ecx        #, prephitmp.1128
+>         .p2align 4,,3
+>         .p2align 3
+>         je      .L152   #,
+> .LBB408:
+> </ide-cd.s>
+>  =20
+> and at label .LVL174 you see the blk_fs_request() check from line
+> 799 above. Later, at label .LVL180 you see the next blk_fs_request() =
+check from
+> line 808 and this is cached in %ecx so gcc is smart enough to do that=
+=2E So,
+>  =20
+
+   Yes, CSE optimization does work...
+
+> actually you get the same thing/or even better with variables in regi=
+sters
+> instead of on stack
+
+  I still don't undestand why you assume that such variable will be=20
+alloceted on stack -- gcc has 3 registers available for local variables=
+=20
+(which doesn't have to save across function calls). However, the=20
+register variables have to take stack space indeed as they need to be=20
+saved on funciton entry... though I'm not sure that gcc will necessary=20
+put such variable in one of those 3 registers if it figures out that=20
+there are no function calls going to happen during its life time.
+
+> and the code is more readable. A win-win situation, I'd say :).
+>  =20
+
+  You haven't presented the code which gets generated when the local=20
+variable is used, so it's impossible to compare.
+
+MBR, Sergei
+
 
