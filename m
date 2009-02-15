@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] libata-sff: avoid byte swapping in ata
-Date: Sun, 15 Feb 2009 23:27:54 +0400
-Message-ID: <200902152227.54503.sshtylyov@ru.mvista.com>
+Subject: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
+Date: Sun, 15 Feb 2009 23:30:38 +0400
+Message-ID: <200902152230.38271.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:26198 "EHLO
+Received: from rtsoft3.corbina.net ([85.21.88.6]:26210 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750732AbZBOT1c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 14:27:32 -0500
+	by vger.kernel.org with ESMTP id S1751095AbZBOTaQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 14:30:16 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -32,6 +32,7 @@ Handling of the trailing byte in ata_sff_data_xfer() is suboptimal bacause:
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
+Oops, the subject got truncated -- resending...
 The patch is against the recent Linus' tree but should apply to applicable
 branch in the libata tree where it should probably wait for the next merge
 window...
