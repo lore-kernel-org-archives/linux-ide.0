@@ -1,86 +1,77 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 1/2] libata-sff: fix 32-bit PIO ATAPI regression
-Date: Sun, 15 Feb 2009 23:24:24 +0400
-Message-ID: <200902152224.25144.sshtylyov@ru.mvista.com>
+Subject: [PATCH 2/2] libata-sff: avoid byte swapping in ata
+Date: Sun, 15 Feb 2009 23:27:54 +0400
+Message-ID: <200902152227.54503.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:26167 "EHLO
+Received: from rtsoft3.corbina.net ([85.21.88.6]:26198 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751262AbZBOTYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 14:24:08 -0500
+	by vger.kernel.org with ESMTP id S1750732AbZBOT1c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 14:27:32 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rjw@sisk.pl, akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Commit 871af1210f13966ab911ed2166e4ab2ce775b99d (libata: Add 32bit PIO support)
-has caused all kinds of errors on the ATAPI devices, so it has been empirically
-proven that one shouldn't try to read/write an extra data word when a device is
-not expecting it already. "Don't do it then"; however, still use a chance to do
-32-bit read/write one last time when there are exactly 3 trailing bytes.
+Handling of the trailing byte in ata_sff_data_xfer() is suboptimal bacause:
 
-Oh, and stop pointlessly swapping the bytes to and fro on big-endian machines
-by using io*_rep() accessors which shouldn't byte-swap.
+- it always initializes the padding buffer to 0 which is not really needed in
+  both the read and write cases;
 
-This patch should fix the kernel.org bug #12609.
+- it has to use memcpy() to transfer a single byte from/to the padding buffer;
+
+- it uses io{read|write}16() accessors which swap bytes on the big endian CPUs
+  and so have to additionally convert the data from/to the little endian format
+  instead of using io{read|write}16_rep() accessors which are not supposed to
+  change the byte ordering.
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
-Added the comments and signoff.
-The patch is against the recent Linus' tree.
-It's a hopefully better replacement for Hugh Dickins most recent patch
-(http://marc.info/?l=linux-ide&m=123352294619281)...
+The patch is against the recent Linus' tree but should apply to applicable
+branch in the libata tree where it should probably wait for the next merge
+window...
 
- drivers/ata/libata-sff.c |   28 +++++++++++++++++++++-------
- 1 files changed, 21 insertions(+), 7 deletions(-)
+ drivers/ata/libata-sff.c |   20 +++++++++++++-------
+ 1 files changed, 13 insertions(+), 7 deletions(-)
 
 Index: linux-2.6/drivers/ata/libata-sff.c
 ===================================================================
 --- linux-2.6.orig/drivers/ata/libata-sff.c
 +++ linux-2.6/drivers/ata/libata-sff.c
-@@ -773,18 +773,32 @@ unsigned int ata_sff_data_xfer32(struct 
+@@ -723,17 +723,23 @@ unsigned int ata_sff_data_xfer(struct at
  	else
- 		iowrite32_rep(data_addr, buf, words);
+ 		iowrite16_rep(data_addr, buf, words);
  
-+	/* Transfer trailing bytes, if any */
- 	if (unlikely(slop)) {
--		__le32 pad;
-+		unsigned char pad[4];
-+
+-	/* Transfer trailing 1 byte, if any. */
++	/* Transfer trailing byte, if any. */
+ 	if (unlikely(buflen & 0x01)) {
+-		__le16 align_buf[1] = { 0 };
+-		unsigned char *trailing_buf = buf + buflen - 1;
++		unsigned char pad[2];
+ 
 +		/* Point buf to the tail of buffer */
-+		buf += buflen - slop;
++		buf += buflen - 1;
 +
 +		/*
-+		 * Use io*_rep() accessors here as well to avoid pointlessly
++		 * Use io*16_rep() accessors here as well to avoid pointlessly
 +		 * swapping bytes to and fro on the big endian machines...
 +		 */
  		if (rw == READ) {
--			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
--			memcpy(buf + buflen - slop, &pad, slop);
-+			if (slop < 3)
-+				ioread16_rep(data_addr, pad, 1);
-+			else
-+				ioread32_rep(data_addr, pad, 1);
-+			memcpy(buf, pad, slop);
+-			align_buf[0] = cpu_to_le16(ioread16(data_addr));
+-			memcpy(trailing_buf, align_buf, 1);
++			ioread16_rep(data_addr, pad, 1);
++			*buf = pad[0];
  		} else {
--			memcpy(&pad, buf + buflen - slop, slop);
--			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
-+			memcpy(pad, buf, slop);
-+			if (slop < 3)
-+				iowrite16_rep(data_addr, pad, 1);
-+			else
-+				iowrite32_rep(data_addr, pad, 1);
+-			memcpy(align_buf, trailing_buf, 1);
+-			iowrite16(le16_to_cpu(align_buf[0]), data_addr);
++			pad[0] = *buf;
++			iowrite16_rep(data_addr, pad, 1);
  		}
--		words++;
+ 		words++;
  	}
--	return words << 2;
-+	return (buflen + 1) & ~1;
- }
- EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
- 
 
