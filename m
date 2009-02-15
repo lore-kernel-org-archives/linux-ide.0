@@ -1,12 +1,12 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 07/10] ide-devsets: use flags query macros
-Date: Sun, 15 Feb 2009 13:08:09 +0100
-Message-ID: <1234699692-9452-8-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 05/10] ide-atapi: use flags query macros
+Date: Sun, 15 Feb 2009 13:08:07 +0100
+Message-ID: <1234699692-9452-6-git-send-email-petkovbb@gmail.com>
 References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:39233 "EHLO
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:62146 "EHLO
 	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbZBOMIW (ORCPT
+	with ESMTP id S1753338AbZBOMIW (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 07:08:22 -0500
 In-Reply-To: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,45 +18,83 @@ There should be no functionality change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-devsets.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/ide/ide-atapi.c |   15 +++++++--------
+ 1 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/ide-devsets.c b/drivers/ide/ide-devsets.c
-index 5bf958e..ca6a097 100644
---- a/drivers/ide/ide-devsets.c
-+++ b/drivers/ide/ide-devsets.c
-@@ -8,7 +8,7 @@ ide_devset_get(io_32bit, io_32bit);
- 
- static int set_io_32bit(ide_drive_t *drive, int arg)
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index c807515..4f0365f 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -202,7 +202,7 @@ int ide_set_media_lock(ide_drive_t *drive, struct gendisk *disk, int on)
  {
--	if (drive->dev_flags & IDE_DFLAG_NO_IO_32BIT)
-+	if (ide_drv_no_32bit_io(drive))
- 		return -EPERM;
+ 	struct ide_atapi_pc pc;
  
- 	if (arg < 0 || arg > 1 + (SUPPORT_VLB_SYNC << 1))
-@@ -115,12 +115,10 @@ static int set_pio_mode(ide_drive_t *drive, int arg)
- 		} else
- 			port_ops->set_pio_mode(drive, arg);
- 	} else {
--		int keep_dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
--
- 		ide_set_pio(drive, arg);
+-	if ((drive->dev_flags & IDE_DFLAG_DOORLOCKING) == 0)
++	if (!ide_drv_doorlocking(drive))
+ 		return 0;
  
- 		if (hwif->host_flags & IDE_HFLAG_SET_PIO_MODE_KEEP_DMA) {
--			if (keep_dma)
-+			if (ide_drv_using_dma(drive))
- 				ide_dma_on(drive);
- 		}
+ 	ide_init_pc(&pc);
+@@ -547,7 +547,7 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
+ 		return startstop;
  	}
-@@ -132,7 +130,7 @@ ide_devset_get_flag(unmaskirq, IDE_DFLAG_UNMASK);
  
- static int set_unmaskirq(ide_drive_t *drive, int arg)
- {
--	if (drive->dev_flags & IDE_DFLAG_NO_UNMASK)
-+	if (ide_drv_no_unmask(drive))
- 		return -EPERM;
+-	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
++	if (ide_drv_drq_int(drive)) {
+ 		if (drive->dma)
+ 			drive->waiting_for_dma = 1;
+ 	}
+@@ -570,7 +570,7 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
+ 		 * miliseconds later in ide_delayed_transfer_pc() after the
+ 		 * device says it's ready for a packet.
+ 		 */
+-		if (drive->atapi_flags & IDE_AFLAG_ZIP_DRIVE) {
++		if (ide_drv_zip(drive)) {
+ 			timeout = drive->pc_delay;
+ 			expiry = &ide_delayed_transfer_pc;
+ 		} else {
+@@ -611,7 +611,7 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
+ 	}
  
- 	if (arg < 0 || arg > 1)
+ 	/* Send the actual packet */
+-	if ((drive->atapi_flags & IDE_AFLAG_ZIP_DRIVE) == 0)
++	if (!ide_drv_zip(drive))
+ 		hwif->tp_ops->output_data(drive, NULL, rq->cmd, cmd_len);
+ 
+ 	return ide_started;
+@@ -627,7 +627,6 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
+ 	unsigned int timeout;
+ 	u32 tf_flags;
+ 	u16 bcount;
+-	u8 drq_int = !!(drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT);
+ 
+ 	if (dev_is_idecd(drive)) {
+ 		tf_flags = IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL;
+@@ -659,7 +658,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
+ 		}
+ 
+ 		if ((pc->flags & PC_FLAG_DMA_OK) &&
+-		     (drive->dev_flags & IDE_DFLAG_USING_DMA)) {
++		     ide_drv_using_dma(drive)) {
+ 			if (ide_build_sglist(drive, cmd))
+ 				drive->dma = !dma_ops->dma_setup(drive, cmd);
+ 			else
+@@ -677,7 +676,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
+ 
+ 	(void)do_rw_taskfile(drive, cmd);
+ 
+-	if (drq_int) {
++	if (ide_drv_drq_int(drive)) {
+ 		if (drive->dma)
+ 			drive->waiting_for_dma = 0;
+ 		hwif->expiry = expiry;
+@@ -685,6 +684,6 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
+ 
+ 	ide_execute_command(drive, cmd, ide_transfer_pc, timeout);
+ 
+-	return drq_int ? ide_started : ide_transfer_pc(drive);
++	return ide_drv_drq_int(drive) ? ide_started : ide_transfer_pc(drive);
+ }
+ EXPORT_SYMBOL_GPL(ide_issue_pc);
 -- 
 1.6.0.4
 
