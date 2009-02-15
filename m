@@ -1,78 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
-Date: Sun, 15 Feb 2009 23:30:38 +0400
-Message-ID: <200902152230.38271.sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
+Date: Sun, 15 Feb 2009 14:48:10 -0500
+Message-ID: <4998717A.2090507@pobox.com>
+References: <200902152230.38271.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:26210 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751095AbZBOTaQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 14:30:16 -0500
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:54229 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751345AbZBOTsR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Feb 2009 14:48:17 -0500
+In-Reply-To: <200902152230.38271.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Handling of the trailing byte in ata_sff_data_xfer() is suboptimal bacause:
+Sergei Shtylyov wrote:
+> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal bacause:
+> 
+> - it always initializes the padding buffer to 0 which is not really needed in
+>   both the read and write cases;
+> 
+> - it has to use memcpy() to transfer a single byte from/to the padding buffer;
 
-- it always initializes the padding buffer to 0 which is not really needed in
-  both the read and write cases;
+Have you looked at the assembly, before deciding it is suboptiomal?
 
-- it has to use memcpy() to transfer a single byte from/to the padding buffer;
+gcc optimizes tiny arrays and structures quite well, and is well capable 
+of seeing one path where the initialization is clobbered without a 
+single read, and another code path where it is used.
 
-- it uses io{read|write}16() accessors which swap bytes on the big endian CPUs
-  and so have to additionally convert the data from/to the little endian format
-  instead of using io{read|write}16_rep() accessors which are not supposed to
-  change the byte ordering.
+As for memcpy, for small and/or constant values that is quite often a 
+compiler builtin.  It is rarely useful, these days, to convert a 
+memcpy() to a hand-rolled version of same.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+	Jeff
 
----
-Oops, the subject got truncated -- resending...
-The patch is against the recent Linus' tree but should apply to applicable
-branch in the libata tree where it should probably wait for the next merge
-window...
 
- drivers/ata/libata-sff.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
-
-Index: linux-2.6/drivers/ata/libata-sff.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-sff.c
-+++ linux-2.6/drivers/ata/libata-sff.c
-@@ -723,17 +723,23 @@ unsigned int ata_sff_data_xfer(struct at
- 	else
- 		iowrite16_rep(data_addr, buf, words);
- 
--	/* Transfer trailing 1 byte, if any. */
-+	/* Transfer trailing byte, if any. */
- 	if (unlikely(buflen & 0x01)) {
--		__le16 align_buf[1] = { 0 };
--		unsigned char *trailing_buf = buf + buflen - 1;
-+		unsigned char pad[2];
- 
-+		/* Point buf to the tail of buffer */
-+		buf += buflen - 1;
-+
-+		/*
-+		 * Use io*16_rep() accessors here as well to avoid pointlessly
-+		 * swapping bytes to and fro on the big endian machines...
-+		 */
- 		if (rw == READ) {
--			align_buf[0] = cpu_to_le16(ioread16(data_addr));
--			memcpy(trailing_buf, align_buf, 1);
-+			ioread16_rep(data_addr, pad, 1);
-+			*buf = pad[0];
- 		} else {
--			memcpy(align_buf, trailing_buf, 1);
--			iowrite16(le16_to_cpu(align_buf[0]), data_addr);
-+			pad[0] = *buf;
-+			iowrite16_rep(data_addr, pad, 1);
- 		}
- 		words++;
- 	}
 
