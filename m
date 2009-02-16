@@ -1,36 +1,58 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 14/18] ide: use ->tf_read in ide_read_error()
-Date: Mon, 16 Feb 2009 15:25:40 +0300
-Message-ID: <49995B44.6090604@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213458.13202.77992.sendpatchset@localhost.localdomain> <4998A37D.3040904@ru.mvista.com> <49995856.0@ru.mvista.com>
+Subject: Re: [Bug #12263] Sata soft reset filling log
+Date: Mon, 16 Feb 2009 18:18:55 +0300
+Message-ID: <499983DF.5050503@ru.mvista.com>
+References: <sTyoMUwdm9B.A.QCH.U40lJB@chimera> <200902152221.43834.rjw@sisk.pl> <20090215223045.GC29300@elte.hu> <200902160012.57584.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:58430 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752919AbZBPMZp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 07:25:45 -0500
-In-Reply-To: <49995856.0@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752354AbZBPPSu@vger.kernel.org>
+In-Reply-To: <200902160012.57584.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Ingo Molnar <mingo@elte.hu>, Justin Madru <jdm64@gawab.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hugh Dickins <hugh@veritas.com>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, I wrote:
+Hello.
 
->>>   register and handle it in ->tf_read.
->>>   
->>
->>  Doesn't seem like a good name -- you can't read the features 
->> register. I should've commented to this patch earlier, of course...
-> * Add IDE_TFLAG_IN_FEATURE taskfile flag for reading Feature
->
->   Moreover, the error register shoudn't be affeceted by the HOB bit, 
-> so this flag doesn't make sense.
+Rafael J. Wysocki wrote:
 
-   I meant IDE_TFLAG_IN_HOB_FEATURE, of course.
+>>>>>This message has been generated automatically as a part of a report
+>>>>>of regressions introduced between 2.6.27 and 2.6.28.
+
+>>>>>The following bug entry is on the current list of known regressions
+>>>>>introduced between 2.6.27 and 2.6.28.  Please verify if it still should
+>>>>>be listed and let me know (either way).
+
+>>>>>Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12263
+>>>>>Subject		: Sata soft reset filling log
+>>>>>Submitter	: Justin Madru <bevicm@dslextreme.com>
+>>>>>Date		: 2008-12-13 2:07 (64 days old)
+>>>>>References	: http://marc.info/?l=linux-kernel&m=122913412608533&w=4
+
+>>>>I'm still seeing this on .29-rc5, and I think that my bug #12263 is a 
+>>>>duplicate of bug #12609,
+>>>>or more correctly it's a duplicate of mine because I reported first.
+
+>>>>It seems like the bug has been fixed in tip/master for some time now.
+>>>>Below is the diff of origin and tip from when I tested.
+
+>>>Ingo, do you know whinch patch in -tip fixes this regression?
+
+>>This one, done on Jan 10, more than a month ago:
+
+>>  f1d26da: Revert "libata: Add 32bit PIO support"
+
+>>When a commit causes trouble in -tip qa i immediately revert it in 95% 
+>>of the cases, no questions asked. Especially if it's related to 
+>>persistent storage.
+
+> OK, thanks.
+
+> We seem to have a working fix patch for this issue in bug #12609.
+
+    Wait, if this is indeed post-2.6.27 regression, it couldn't possibly have 
+been caused by that patch which got merged during 2.6.29-rc1 timeframe. 
+Something's up with this bug...
 
 MBR, Sergei
-
-
