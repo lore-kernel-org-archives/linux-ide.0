@@ -1,120 +1,67 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
-Date: Mon, 16 Feb 2009 22:51:49 +0100
-Message-ID: <200902162251.49271.bzolnier@gmail.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <4998AE87.3020502@ru.mvista.com> <49995300.7030102@ru.mvista.com>
+Subject: Re: [PATCH 11/20] ide-cd: unify cdrom_newpc_intr() exit paths
+Date: Mon, 16 Feb 2009 22:09:21 +0100
+Message-ID: <200902162209.21827.bzolnier@gmail.com>
+References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain> <20090216001422.27491.17281.sendpatchset@localhost.localdomain> <20090216092501.GA24323@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:13270 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.185]:6637 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753805AbZBPVyF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 16:54:05 -0500
-In-Reply-To: <49995300.7030102@ru.mvista.com>
+	with ESMTP id S1752432AbZBPVyB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 16:54:01 -0500
+In-Reply-To: <20090216092501.GA24323@gollum.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: petkovbb@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-On Monday 16 February 2009, Sergei Shtylyov wrote:
-> Hello, I wrote:
+On Monday 16 February 2009, Borislav Petkov wrote:
+> On Mon, Feb 16, 2009 at 01:14:22AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide-cd: unify cdrom_newpc_intr() exit paths
+> > 
+> > * Move cdrom_end_request() calls from cdrom_decode_status()
+> >   and ide_cd_check_ireason() to cdrom_newpc_intr().
+> > 
+> > * Unify cdrom_newpc_intr() exit paths.
+> > 
+> > There should be no functional changes caused by this patch.
+> > 
+> > Cc: Borislav Petkov <petkovbb@gmail.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/ide/ide-cd.c |   48 +++++++++++++++++++++++-------------------------
+> >  1 file changed, 23 insertions(+), 25 deletions(-)
+> > 
+> > Index: b/drivers/ide/ide-cd.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -291,7 +291,8 @@ static void cdrom_end_request(ide_drive_
+> >  /*
+> >   * Returns:
+> >   * 0: if the request should be continued.
+> > - * 1: if the request was ended.
+> > + * 1: if the request will be going through error recovery.
+> > + * 2: if the request should be ended.
 > 
-> >>> There should be no functional changes caused by this patch.
-> >>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >>> Index: b/drivers/ide/ide-iops.c
-> >>> ===================================================================
-> >>> --- a/drivers/ide/ide-iops.c
-> >>> +++ b/drivers/ide/ide-iops.c
-> >>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
-> >>>  {
-> >>>      ide_hwif_t *hwif = drive->hwif;
-> >>>      const struct ide_port_ops *port_ops = hwif->port_ops;
-> >>> +    ide_task_t task;
-> >>>  
-> >>>      if (port_ops && port_ops->selectproc)
-> >>>          port_ops->selectproc(drive);
-> >>>  
-> >>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
-> >>> +    memset(&task, 0, sizeof(task));
-> >>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
-> >>> +
-> >>> +    drive->hwif->tf_load(drive, &task);
-> >>
-> >>    This actually doesn't seem like a bright idea to me, considering 
-> >> that this gets called when starting every request. How will you look 
-> >> at me adding the transport method for writing this register? :-)
+> Yeah, we need defines for those. Especially if they're checked in other
+> functions:
+> 
+> if (rc == 2)
+> 
+> is simply not ok :). Rather,
+> 
+> if (rc == DO_END_REQUEST)
+> 
+> or something like that is much better, imho.
 
-Please check profiles first -- it might not be worth it. [1]
-
-> > Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
-> >
-> >   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
-> > consistent... well, I'm not excited about the whole idea conversion to 
-> > tf_{load|read}() -- it's not clear what exactly this bought us.
-
-This was explained some months ago already, so just to recall -- it was
-a part of a bigger work removing duplicated code and allowing abstraction
-of the ATA logic.
-
-Anyway this is not set in a stone so if you have proposal of a better
-approach please come forward with it.
-
->    We at least could have saved on memset() -- tf_load() method ignores 
-> fields other than tf_flags anyway...
-
-Unless it is huge performance win (unlikely) this is not a good idea
-as it would be a maintainance nightmare.
-
-->tf_load does only use cmd->tf_flags today but it might change one day
-and nobody will remember to audit all users that they pass a valid cmd...
+The whole cdrom_decode_status() needs a rewrite.  It could be as well
+that after that happens magic defines won't be needed anylonger...
 
 Thanks,
 Bart
-
-[1] coincidentally on the past Saturday I woke up with a bright idea
-of doing some profiling of IDE code... I thought this would be a fun...
-
-# readprofile -m System.map | grep ide_
-    30 ide_intr                                   0.0714
-     1 ide_map_sg                                 0.0112
-     1 ide_complete_rq                            0.0152
-    78 do_ide_request                             0.0643
-     1 __ide_wait_stat                            0.0059
-    51 ide_execute_command                        0.5100
-     4 ide_set_handler                            0.0635
-     7 ide_outb                                   1.1667
-   308 ide_mm_inb                                44.0000
-...
-
-This was on ICH4 PATA controller...  Fun indeed, ain't it?
-
-[ For non-ATA folks: it is _impossible_ for ide_mm_inb to be used
-  on the above controller. ]
-
-I still have to check what will happen if I would change the order
-of following assignments in ide_tf_read():
-
-...
-        if (mmio) {
-                tf_outb = ide_mm_outb;
-                tf_inb  = ide_mm_inb;
-        } else {
-                tf_outb = ide_outb;
-                tf_inb  = ide_inb;
-        }
-...
-
-However I instead I went ahead and tried to run oprofile to get me some
-more trushworthy results:
-
-# opreport -l vmlinux
-CPU: Pentium M (P6 core), speed 600 MHz (estimated)
-Counted CPU_CLK_UNHALTED events (clocks processor is not halted, and not in a thermal trip) with a unit mask of 0x00 (No unit mask) count 100000
-Segmentation fault
-
-After this, testing some older kernel versions and assuring that user-space
-packages are at their latest distro versions I had enough of fun...
