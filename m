@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 16/20] ide-cd: fix non-SECTOR_SIZE-multiples PIO transfers for fs requests
-Date: Mon, 16 Feb 2009 01:14:55 +0100
-Message-ID: <20090216001455.27491.90708.sendpatchset@localhost.localdomain>
+Subject: [PATCH 18/20] ide-cd: use scatterlists for PIO transfers (non-fs requests)
+Date: Mon, 16 Feb 2009 01:15:08 +0100
+Message-ID: <20090216001508.27491.1594.sendpatchset@localhost.localdomain>
 References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fk-out-0910.google.com ([209.85.128.191]:51735 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756130AbZBPANa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:30 -0500
+	with ESMTP id S1756539AbZBPANl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:41 -0500
 In-Reply-To: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,92 +15,221 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: fix non-SECTOR_SIZE-multiples PIO transfers for fs requests
+Subject: [PATCH] ide-cd: use scatterlists for PIO transfers (non-fs requests)
 
-We now support arbitrary number of bytes per-IRQ also for fs requests
-so remove ide_cd_check_transfer_size() and IDE_AFLAG_LIMIT_NFRAMES.
+Convert ide-cd to use scatterlists for PIO transfers and get rid of
+partial completions (except on error) also for non-fs requests.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |   36 +-----------------------------------
- include/linux/ide.h  |    5 -----
- 2 files changed, 1 insertion(+), 40 deletions(-)
+ drivers/ide/ide-cd.c |  102 +++++++++++++++------------------------------------
+ 1 file changed, 30 insertions(+), 72 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -501,31 +501,6 @@ static int ide_cd_check_ireason(ide_driv
+@@ -501,8 +501,10 @@ static int ide_cd_check_ireason(ide_driv
  	return -1;
  }
  
+-static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct request *rq)
++static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct ide_cmd *cmd)
+ {
++	struct request *rq = cmd->rq;
++
+ 	ide_debug_log(IDE_DBG_FUNC, "rq->cmd[0]: 0x%x", rq->cmd[0]);
+ 
+ 	/*
+@@ -510,11 +512,14 @@ static void ide_cd_request_sense_fixup(i
+ 	 * and some drives don't send them.  Sigh.
+ 	 */
+ 	if (rq->cmd[0] == GPCMD_REQUEST_SENSE &&
+-	    rq->data_len > 0 && rq->data_len <= 5)
+-		while (rq->data_len > 0) {
+-			*(u8 *)rq->data++ = 0;
+-			--rq->data_len;
++	    cmd->nleft > 0 && cmd->nleft <= 5) {
++		unsigned int ofs = cmd->nbytes - cmd->nleft;
++
++		while (cmd->nleft > 0) {
++			*((u8 *)rq->data + ofs++) = 0;
++			cmd->nleft--;
+ 		}
++	}
+ }
+ 
+ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
+@@ -605,22 +610,11 @@ static void ide_cd_error_cmd(ide_drive_t
+ 		ide_complete_rq(drive, 0, nr_bytes);
+ }
+ 
 -/*
-- * Assume that the drive will always provide data in multiples of at least
-- * SECTOR_SIZE, as it gets hairy to keep track of the transfers otherwise.
+- * Called from blk_end_request_callback() after the data of the request is
+- * completed and before the request itself is completed. By returning value '1',
+- * blk_end_request_callback() returns immediately without completing it.
 - */
--static int ide_cd_check_transfer_size(ide_drive_t *drive, int len)
+-static int cdrom_newpc_intr_dummy_cb(struct request *rq)
 -{
--	ide_debug_log(IDE_DBG_FUNC, "len: %d", len);
--
--	if ((len % SECTOR_SIZE) == 0)
--		return 0;
--
--	printk(KERN_ERR PFX "%s: %s: Bad transfer size %d\n", drive->name,
--			__func__, len);
--
--	if (drive->atapi_flags & IDE_AFLAG_LIMIT_NFRAMES)
--		printk(KERN_ERR PFX "This drive is not supported by this "
--				"version of the driver\n");
--	else {
--		printk(KERN_ERR PFX "Trying to limit transfer sizes\n");
--		drive->atapi_flags |= IDE_AFLAG_LIMIT_NFRAMES;
--	}
--
 -	return 1;
 -}
 -
- static ide_startstop_t ide_cd_prepare_rw_request(ide_drive_t *drive,
- 						 struct request *rq)
+ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
  {
-@@ -744,13 +719,7 @@ static ide_startstop_t cdrom_newpc_intr(
- 	if (rc)
- 		goto out_end;
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct ide_cmd *cmd = &hwif->cmd;
+ 	struct request *rq = hwif->rq;
+-	xfer_func_t *xferfunc;
+ 	ide_expiry_t *expiry = NULL;
+ 	int dma_error = 0, dma, stat, thislen, uptodate = 0;
+ 	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
+@@ -670,7 +664,7 @@ static ide_startstop_t cdrom_newpc_intr(
+ 
+ 	ide_read_bcount_and_ireason(drive, &len, &ireason);
+ 
+-	thislen = blk_fs_request(rq) ? len : rq->data_len;
++	thislen = blk_fs_request(rq) ? len : cmd->nleft;
+ 	if (thislen > len)
+ 		thislen = len;
+ 
+@@ -694,9 +688,9 @@ static ide_startstop_t cdrom_newpc_intr(
+ 				uptodate = 0;
+ 			}
+ 		} else if (!blk_pc_request(rq)) {
+-			ide_cd_request_sense_fixup(drive, rq);
++			ide_cd_request_sense_fixup(drive, cmd);
+ 			/* complain if we still have data left to transfer */
+-			uptodate = rq->data_len ? 0 : 1;
++			uptodate = cmd->nleft ? 0 : 1;
+ 			if (uptodate == 0)
+ 				rq->cmd_flags |= REQ_FAILED;
+ 		}
+@@ -710,35 +704,15 @@ static ide_startstop_t cdrom_newpc_intr(
+ 
+ 	cmd->last_xfer_len = 0;
+ 
+-	if (ireason == 0) {
+-		write = 1;
+-		xferfunc = hwif->tp_ops->output_data;
+-	} else {
+-		write = 0;
+-		xferfunc = hwif->tp_ops->input_data;
+-	}
+-
+ 	ide_debug_log(IDE_DBG_PC, "data transfer, rq->cmd_type: 0x%x, "
+ 				  "ireason: 0x%x",
+ 				  rq->cmd_type, ireason);
+ 
+ 	/* transfer data */
+ 	while (thislen > 0) {
+-		u8 *ptr = blk_fs_request(rq) ? NULL : rq->data;
+-		int blen = rq->data_len;
+-
+-		/* bio backed? */
+-		if (rq->bio) {
+-			if (blk_fs_request(rq)) {
+-				blen = min_t(int, thislen, cmd->nleft);
+-			} else {
+-				ptr = bio_data(rq->bio);
+-				blen = bio_iovec(rq->bio)->bv_len;
+-			}
+-		}
++		int blen = min_t(int, thislen, cmd->nleft);
+ 
+-		if ((blk_fs_request(rq) && cmd->nleft == 0) ||
+-		    (blk_fs_request(rq) == 0 && ptr == NULL)) {
++		if (cmd->nleft == 0) {
+ 			if (blk_fs_request(rq) && !write)
+ 				/*
+ 				 * If the buffers are full, pipe the rest into
+@@ -755,33 +729,12 @@ static ide_startstop_t cdrom_newpc_intr(
+ 			break;
+ 		}
+ 
+-		if (blen > thislen)
+-			blen = thislen;
+-
+-		if (blk_fs_request(rq)) {
+-			ide_pio_bytes(drive, cmd, write, blen);
+-			cmd->last_xfer_len += blen;
+-		} else
+-			xferfunc(drive, NULL, ptr, blen);
++		ide_pio_bytes(drive, cmd, write, blen);
++		cmd->last_xfer_len += blen;
+ 
+ 		thislen -= blen;
+ 		len -= blen;
+ 
+-		if (blk_fs_request(rq) == 0) {
+-			rq->data_len -= blen;
+-
+-			/*
+-			 * The request can't be completed until DRQ is cleared.
+-			 * So complete the data, but don't complete the request
+-			 * using the dummy function for the callback feature
+-			 * of blk_end_request_callback().
+-			 */
+-			if (rq->bio)
+-				blk_end_request_callback(rq, 0, blen,
+-						 cdrom_newpc_intr_dummy_cb);
+-			else
+-				rq->data += blen;
+-		}
+ 		if (sense && write == 0)
+ 			rq->sense_len += blen;
+ 	}
+@@ -806,8 +759,7 @@ out_end:
+ 	if (blk_pc_request(rq) && rc == 0) {
+ 		unsigned int dlen = rq->data_len;
+ 
+-		if (dma)
+-			rq->data_len = 0;
++		rq->data_len = 0;
+ 
+ 		if (blk_end_request(rq, 0, dlen))
+ 			BUG();
+@@ -820,13 +772,14 @@ out_end:
+ 		if (blk_fs_request(rq)) {
+ 			if (cmd->nleft == 0)
+ 				uptodate = 1;
+-			if (uptodate == 0)
+-				ide_cd_error_cmd(drive, cmd);
+ 		} else {
+ 			if (uptodate <= 0 && rq->errors == 0)
+ 				rq->errors = -EIO;
+ 		}
+ 
++		if (uptodate == 0)
++			ide_cd_error_cmd(drive, cmd);
++
+ 		/* make sure it's fully ended */
+ 		if (blk_pc_request(rq))
+ 			nsectors = (rq->data_len + 511) >> 9;
+@@ -836,6 +789,12 @@ out_end:
+ 		if (nsectors == 0)
+ 			nsectors = 1;
+ 
++		if (blk_fs_request(rq) == 0) {
++			rq->data_len -= (cmd->nbytes - cmd->nleft);
++			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
++				rq->data_len += cmd->last_xfer_len;
++		}
++
+ 		ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
+ 
+ 		if (sense && rc == 2)
+@@ -963,10 +922,9 @@ static ide_startstop_t ide_cd_do_request
+ 
+ 	cmd.rq = rq;
  
 -	if (blk_fs_request(rq)) {
--		if (write == 0) {
--			if (ide_cd_check_transfer_size(drive, len))
--				goto out_end;
--		}
--		cmd->last_xfer_len = 0;
+-		ide_init_sg_cmd(&cmd, rq->nr_sectors << 9);
+-		ide_map_sg(drive, &cmd);
 -	}
-+	cmd->last_xfer_len = 0;
++	ide_init_sg_cmd(&cmd,
++		blk_fs_request(rq) ? (rq->nr_sectors << 9) : rq->data_len);
++	ide_map_sg(drive, &cmd);
  
- 	if (ireason == 0) {
- 		write = 1;
-@@ -1611,9 +1580,6 @@ static const struct ide_proc_devset *ide
- #endif
- 
- static const struct cd_list_entry ide_cd_quirks_list[] = {
--	/* Limit transfer size per interrupt. */
--	{ "SAMSUNG CD-ROM SCR-2430", NULL,   IDE_AFLAG_LIMIT_NFRAMES	     },
--	{ "SAMSUNG CD-ROM SCR-2432", NULL,   IDE_AFLAG_LIMIT_NFRAMES	     },
- 	/* SCR-3231 doesn't support the SET_CD_SPEED command. */
- 	{ "SAMSUNG CD-ROM SCR-3231", NULL,   IDE_AFLAG_NO_SPEED_SELECT	     },
- 	/* Old NEC260 (not R) was released before ATAPI 1.2 spec. */
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -458,11 +458,6 @@ enum {
- 	IDE_AFLAG_TOCADDR_AS_BCD	= (1 << 3),
- 	/* TOC track numbers are in BCD. */
- 	IDE_AFLAG_TOCTRACKS_AS_BCD	= (1 << 4),
--	/*
--	 * Drive does not provide data in multiples of SECTOR_SIZE
--	 * when more than one interrupt is needed.
--	 */
--	IDE_AFLAG_LIMIT_NFRAMES		= (1 << 5),
- 	/* Saved TOC information is current. */
- 	IDE_AFLAG_TOC_VALID		= (1 << 6),
- 	/* We think that the drive door is locked. */
+ 	return ide_issue_pc(drive, &cmd);
+ out_end:
