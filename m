@@ -1,49 +1,66 @@
 From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Mon, 16 Feb 2009 16:30:40 -0500
-Message-ID: <20090216163040.194f5389@dhcp-100-2-144.bos.redhat.com>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>
-	<49922A2D.508@kernel.org>
-	<49924F48.4000009@rtr.ca>
-	<20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com>
-	<49934B20.4060206@rtr.ca>
-	<49934D24.1050204@garzik.org>
-	<49935157.6020002@rtr.ca>
-	<20090211175409.4fb27541@dhcp-100-2-144.bos.redhat.com>
-	<49944A13.3050105@rtr.ca>
-	<49944AA9.8040308@rtr.ca>
-	<4998D9B8.9020309@kernel.org>
+Subject: Re: sata_nv frees DMA memory with different size (possibly a
+ generic libata bug)
+Date: Mon, 16 Feb 2009 16:36:37 -0500
+Message-ID: <20090216163637.18dd315c@dhcp-100-2-144.bos.redhat.com>
+References: <20090212163952.78ca7d4f@dhcp-100-2-144.bos.redhat.com>
+	<4994E30A.3040501@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:55898 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:44430 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750863AbZBPVd1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Feb 2009 16:33:27 -0500
-In-Reply-To: <4998D9B8.9020309@kernel.org>
+	id S1751723AbZBPVjM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Feb 2009 16:39:12 -0500
+In-Reply-To: <4994E30A.3040501@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 16 Feb 2009 12:12:56 +0900
-Tejun Heo <tj@kernel.org> wrote:
+On Thu, 12 Feb 2009 21:03:38 -0600
+Robert Hancock <hancockrwd@gmail.com> wrote:
 
-
+> Chuck Ebbert wrote:
+> > Fedora rawhide has the DMA API debug patch applied and it has found this...
 > > 
-> > Mmm.. I think it is the SD_TIMEOUT value, defined in drivers/scsi/sd.h
-> > which currently uses (30 * HZ) as the timeout for most things,
-> > including for cache flushes.
+> > From https://bugzilla.redhat.com/show_bug.cgi?id=485172
 > > 
-> > Try changing it to (180 * HZ) just for fun.
+> > WARNING: at lib/dma-debug.c:439 check_unmap+0x16a/0x3dd() (Tainted: G        W
+> > )
+> > Hardware name: System Product Name
+> > sata_nv 0000:00:0d.0: DMA-API: device driver frees DMA memory with different
+> > size [device address=0x00000000da031000] [map size=4096 bytes] [unmap
+> > size=8192bytes]
+> > Modules linked in: bridge stp llc bnep sco l2cap bluetooth sunrpc ip6t_REJECT
+> > nf_conntrack_ipv6 ip6table_filter ip6_tables ipv6 cpufreq_ondemand
+> > powernow_k8freq_table dm_multipath uinput snd_hda_codec_analog snd_hda_intel
+> > snd_hda_codec snd_hwdep snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq
+> > snd_seq_device snd_pcm_oss ppdev snd_mixer_oss snd_pcm snd_timer firewire_ohci
+> > snd firewire_core soundcore aic7xxx snd_page_alloc jedec_probe crc_itu_t
+> > forcedeth scsi_transport_spi pcspkr cfi_probe gen_probe sata_sil24 parport_pc
+> > cfi_util parport mtd chipreg i2c_nforce2 map_funcs asus_atk0110 pata_amd
+> > i2c_core hwmon ata_generic pata_acpi sata_nv raid456 async_xor async_memcpy
+> > async_tx xor raid1 sha256_generic cbc aes_x86_64 aes_generic dm_crypt ext4 jbd2
+> > crc16 [last unloaded: scsi_wait_scan]
+> > Pid: 0, comm: swapper Tainted: G        W  2.6.29-0.99.rc4.git1.fc11.x86_64 #1
+> > Call Trace:
+> > <IRQ>  [<ffffffff81048822>] warn_slowpath+0xb7/0xe7
+> > [<ffffffff8137bc4f>] ? _spin_lock_irqsave+0x78/0x86
+> > [<ffffffff8119851b>] ? get_hash_bucket+0x28/0x34
+> > [<ffffffff8106a5ae>] ? trace_hardirqs_off_caller+0x1f/0xac
+> > [<ffffffff81198a15>] check_unmap+0x16a/0x3dd
+> > [<ffffffff810388a7>] ? resched_task+0x2e/0x74
+> > [<ffffffff81198d66>] debug_dma_unmap_sg+0x7c/0x9b
+> > [<ffffffff8106a648>] ? trace_hardirqs_off+0xd/0xf
+> > [<ffffffff8124fef9>] ata_sg_clean+0x96/0xd0
+> > [<ffffffff8124ff89>] __ata_qc_complete+0x56/0xc9
+> > [<ffffffff8125018b>] ata_qc_complete+0x18f/0x198
+> > [<ffffffffa00cb249>] nv_swncq_interrupt+0x358/0x688 [sata_nv]
 > 
-> Yeap, SD_TIMEOUT should be it.  But I've never personally seen disk
-> flushing taking as long as 30 seconds.  Does it really happen?  It's
-> not like the drive would be doing random seeking.  One full stroke
-> across the platter should be it.  Even with the rotational delay,
-> going over 30 seconds doesn't seem very likely.
+> That's rather curious. It seems to be saying that the sg length is 
+> different between the map and unmap, but it doesn't look like sata_nv 
+> mucks with that anywhere, and neither does libata core..
 
-I just noticed that the other drive, a Western Digital, was using 1.5Gbps
-instead of 3.0. So I forced the Samsung to the slower speed and now I
-can't make the timeout happen anymore.
+Could the SCSI code have merged two requests?
