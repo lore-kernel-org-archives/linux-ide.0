@@ -1,64 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 19/20] ide-cd: use common completion path for DMA requests in cdrom_newpc_intr()
-Date: Mon, 16 Feb 2009 01:15:15 +0100
-Message-ID: <20090216001515.27491.83644.sendpatchset@localhost.localdomain>
-References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12714] [pata_ali] ATAPI UltraDMA on secondary channel broken
+Date: Sun, 15 Feb 2009 16:51:31 -0800 (PST)
+Message-ID: <20090216005131.4E57010803F@picon.linux-foundation.org>
+References: <bug-12714-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:41106 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756587AbZBPANu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:50 -0500
-In-Reply-To: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59075 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755570AbZBPAve (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:51:34 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1G0pVlF020858
+	for <linux-ide@vger.kernel.org>; Sun, 15 Feb 2009 16:51:32 -0800
+In-Reply-To: <bug-12714-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: use common completion path for DMA requests in cdrom_newpc_intr()
+http://bugzilla.kernel.org/show_bug.cgi?id=12714
 
-Use the following facts:
 
-- rq->nr_sectors should now be always equal to (non-zero)
-  rq->hard_nr_sectors for fs requests
+akpm@osdl.org changed:
 
-- REQ_TYPE_ATA_PC requests have never bio attached to them
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |alan@lxorguk.ukuu.org.uk
+          Component|IDE                         |Serial ATA
+         Regression|0                           |1
 
-- rq->hard_nr_sectors == 0 for REQ_TYPE_ATA_PC requests
 
-- DMA is used only for fs, pc and REQ_TYPE_ATA_PC requests
 
-- 'uptodate' is ignored for pc requests ('rc == 0' case)
 
-and use the common completion path also for DMA requests.
+------- Comment #1 from akpm@osdl.org  2009-02-15 16:51 -------
+Reassigned to sata/pata, marked as a regression.
 
-There should be no functional changes caused by this patch
 
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-drivers/ide/ide-cd.c |   11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
-
-Index: b/drivers/ide/ide-cd.c
-===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -660,16 +660,7 @@ static ide_startstop_t cdrom_newpc_intr(
- 	if (dma) {
- 		if (dma_error)
- 			return ide_error(drive, "dma error", stat);
--		if (blk_fs_request(rq)) {
--			ide_complete_rq(drive, 0, rq->nr_sectors
--				? (rq->nr_sectors << 9) : ide_rq_bytes(rq));
--			return ide_stopped;
--		} else if (rq->cmd_type == REQ_TYPE_ATA_PC && !rq->bio) {
--			ide_complete_rq(drive, 0, 512);
--			return ide_stopped;
--		}
--		if (blk_pc_request(rq) == 0 && uptodate == 0)
--			rq->cmd_flags |= REQ_FAILED;
-+		uptodate = 1;
- 		goto out_end;
- 	}
- 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
