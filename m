@@ -1,44 +1,64 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/10] ide: flags query macros
-Date: Mon, 16 Feb 2009 23:17:31 +0100
-Message-ID: <200902162317.32188.bzolnier@gmail.com>
-References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: Don't trust current capacity values in identify
+ words 57-58
+Date: Mon, 16 Feb 2009 18:01:06 -0500
+Message-ID: <4999F032.6060107@rtr.ca>
+References: <4999CA54.1060306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:14256 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbZBPWQv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 17:16:51 -0500
-In-Reply-To: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:37762 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751141AbZBPXBH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Feb 2009 18:01:07 -0500
+In-Reply-To: <4999CA54.1060306@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, =?UTF-8?B?SGFubm8gQsO2Y2s=?= <hanno@hboeck.de>
 
-On Sunday 15 February 2009, Borislav Petkov wrote:
-> Hi,
-> 
-> this series adds the drive->atapi_flags and drive->dev_flags macro wrappers
-> we discussed. The idea was to make the code more readable and this has
+Robert Hancock wrote:
+> Hanno B=C3=B6ck reported a problem where an old Conner CP30254 240MB =
+hard drive
+> was reported as 1.1TB in capacity by libata:
+>=20
+> http://lkml.org/lkml/2009/2/13/134
+>=20
+> This was caused by libata trusting the drive's reported current capac=
+ity in=20
+> sectors in identify words 57 and 58 if the drive does not support LBA=
+ and the
+> current CHS translation values appear valid. Unfortunately it seems o=
+lder
+> ATA specs were vague about what this field should contain and a numbe=
+r of drives
+> used values with wrong byte order or that were totally bogus. There's=
+ no
+> unique information that it conveys and so we can just calculate the n=
+umber
+> of sectors from the reported current CHS values.
+>=20
+> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+=2E.
+>  	} else {
+>  		if (ata_id_current_chs_valid(id))
+> -			return ata_id_u32(id, 57);
+> +			return id[54] * id[55] * id[56];
+>  		else
+>  			return id[1] * id[3] * id[6];
+=2E.
 
-Fine...
+NAK.  That's not quite correct, either.
 
-> been my main concern when coming up with the macro naming, therefore
-> some macro names appear a tad more descriptive than the flag itself.
+The LBA capacity can be larger than the CHS capacity,
+so we have to use the reported LBA values if at all possible.
 
-...but this part destroys consistency in the process.
+That's why ata_id_is_lba_capacity_ok() exists,
+and why it looks so peculiar.
 
-If you think that some flag names should be fixed please just fix them
-(or just leave them alone -- I think that people invest far too much time
-into fixing all these minor things while tend to fix themselves when the
-big things are being fixed).
+Some of those early drives really did require that kind of logic.
 
-Also ide_drv_ is bad name for ->{dev,atapi}_flags (drv == "driver" for
-most people not "drive") -- please make it either ide_dev_ or ide_dflag_.
+Cheers
 
-Thanks,
-Bart
