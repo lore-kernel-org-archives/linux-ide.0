@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 08/20] ide-cd: factor out failed request completion from cdrom_end_request()
-Date: Mon, 16 Feb 2009 01:14:02 +0100
-Message-ID: <20090216001402.27491.60643.sendpatchset@localhost.localdomain>
+Subject: [PATCH 07/20] ide-cd: remove no longer needed 'ignore' module parameter
+Date: Mon, 16 Feb 2009 01:13:55 +0100
+Message-ID: <20090216001355.27491.56986.sendpatchset@localhost.localdomain>
 References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:51372 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756143AbZBPAMg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:12:36 -0500
+Received: from mu-out-0910.google.com ([209.85.134.184]:34049 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756111AbZBPAMc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:12:32 -0500
 In-Reply-To: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,78 +15,43 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: factor out failed request completion from cdrom_end_request()
+Subject: [PATCH] ide-cd: remove no longer needed 'ignore' module parameter
 
-There should be no functional changes caused by this patch.
+ide-scsi is gone...
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |   47 +++++++++++++++++++++++++----------------------
- 1 file changed, 25 insertions(+), 22 deletions(-)
+ drivers/ide/ide-cd.c |   12 ------------
+ 1 file changed, 12 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -237,6 +237,29 @@ static void cdrom_queue_request_sense(id
- 	elv_add_request(drive->queue, rq, ELEVATOR_INSERT_FRONT, 0);
- }
+@@ -1932,9 +1932,6 @@ static struct block_device_operations id
+ };
  
-+static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
-+{
-+	/*
-+	 * For REQ_TYPE_SENSE, "rq->buffer" points to the original
-+	 * failed request
-+	 */
-+	struct request *failed = (struct request *)rq->buffer;
-+	struct cdrom_info *info = drive->driver_data;
-+	void *sense = &info->sense_data;
-+
-+	if (failed) {
-+		if (failed->sense) {
-+			sense = failed->sense;
-+			failed->sense_len = rq->sense_len;
-+		}
-+		cdrom_analyze_sense_data(drive, failed, sense);
-+
-+		if (ide_end_rq(drive, failed, -EIO, blk_rq_bytes(failed)))
-+			BUG();
-+	} else
-+		cdrom_analyze_sense_data(drive, NULL, sense);
-+}
-+
- static void cdrom_end_request(ide_drive_t *drive, int uptodate)
- {
- 	struct request *rq = drive->hwif->rq;
-@@ -245,28 +268,8 @@ static void cdrom_end_request(ide_drive_
- 	ide_debug_log(IDE_DBG_FUNC, "cmd: 0x%x, uptodate: 0x%x, nsectors: %d",
- 				    rq->cmd[0], uptodate, nsectors);
+ /* module options */
+-static char *ignore;
+-module_param(ignore, charp, 0400);
+-
+ static unsigned long debug_mask;
+ module_param(debug_mask, ulong, 0644);
  
--	if (blk_sense_request(rq) && uptodate) {
--		/*
--		 * For REQ_TYPE_SENSE, "rq->buffer" points to the original
--		 * failed request
--		 */
--		struct request *failed = (struct request *) rq->buffer;
--		struct cdrom_info *info = drive->driver_data;
--		void *sense = &info->sense_data;
--
--		if (failed) {
--			if (failed->sense) {
--				sense = failed->sense;
--				failed->sense_len = rq->sense_len;
--			}
--			cdrom_analyze_sense_data(drive, failed, sense);
--
--			if (ide_end_rq(drive, failed, -EIO,
--				       blk_rq_bytes(failed)))
--				BUG();
--		} else
--			cdrom_analyze_sense_data(drive, NULL, sense);
+@@ -1955,15 +1952,6 @@ static int ide_cd_probe(ide_drive_t *dri
+ 	if (drive->media != ide_cdrom && drive->media != ide_optical)
+ 		goto failed;
+ 
+-	/* skip drives that we were told to ignore */
+-	if (ignore != NULL) {
+-		if (strstr(ignore, drive->name)) {
+-			printk(KERN_INFO PFX "ignoring drive %s\n",
+-					 drive->name);
+-			goto failed;
+-		}
 -	}
-+	if (blk_sense_request(rq) && uptodate)
-+		ide_cd_complete_failed_rq(drive, rq);
+-
+ 	drive->debug_mask = debug_mask;
+ 	drive->irq_handler = cdrom_newpc_intr;
  
- 	if (!rq->current_nr_sectors && blk_fs_request(rq))
- 		uptodate = 1;
