@@ -1,73 +1,120 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/10] ide: add flags query macros
-Date: Mon, 16 Feb 2009 22:07:08 +0100
-Message-ID: <200902162207.08535.bzolnier@gmail.com>
-References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com> <20090215180141.GB5156@gollum.tnic> <20090215205141.GA5901@uranus.ravnborg.org>
+Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
+Date: Mon, 16 Feb 2009 22:51:49 +0100
+Message-ID: <200902162251.49271.bzolnier@gmail.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <4998AE87.3020502@ru.mvista.com> <49995300.7030102@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756115AbZBPVy1@vger.kernel.org>
-In-Reply-To: <20090215205141.GA5901@uranus.ravnborg.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.186]:13270 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbZBPVyF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 16:54:05 -0500
+In-Reply-To: <49995300.7030102@ru.mvista.com>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: petkovbb@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 15 February 2009, Sam Ravnborg wrote:
-> On Sun, Feb 15, 2009 at 07:01:41PM +0100, Borislav Petkov wrote:
-> > Hi,
-> > 
-> > > > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> > > > ---
-> > > >  include/linux/ide.h |  166 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  1 files changed, 166 insertions(+), 0 deletions(-)
-> > > > 
-> > > > diff --git a/include/linux/ide.h b/include/linux/ide.h
-> > > > index c75631c..f133062 100644
-> > > > --- a/include/linux/ide.h
-> > > > +++ b/include/linux/ide.h
-> > > > @@ -497,6 +497,82 @@ enum {
-> > > >  	IDE_AFLAG_NO_AUTOCLOSE		= (1 << 24),
-> > > >  };
-> > > >  
-> > > > +#define ide_drv_drq_int(drive) \
-> > > > +	((drive)->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT)
-> > > 
-> > > Why not use a static inline here so we get proper typecheck.
-> > > And then convert the return result to a bool (0/1) so you
-> > > do not have to do this at the call site.
-> > > 
-> > > I counted at least three places in ide-cd that does a local
-> > > transformation to a bool and I saw nowhere the actual bit value
-> > > was used.
-> > 
-> > I'm assuming you're talking about those places (and similar):
-> > 
-> > drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
-> 
-> And in other places we do:
-> 
-> ide_drv_drq_int(drive) ? 1 : 0
-> 
-> > Well, actually we almost never use the 0/1 bool value and this one
-> > case is more of an exception. If you take a closer look, we don't have
-> > setters/getters ...,
-> I scanned all your patches and I did not find a single place where
-> the macros was not used as a bool value.
-> Mostly in if (ide_drv_drq_int(drive)) .. and ide_drv_drq_int(drive) &&
-> statements.
-> 
-> > So the macros as such are
-> > simply to save some stack and improve readability and since the whole
-> > thing keeps changing we might just as well turn them into static inlines
-> > one fine day :).
-> 
-> gcc will optmize the static inline functions so there is no drawbacks only
-> better type checking.
 
-Lets do it "today" then. :)
+On Monday 16 February 2009, Sergei Shtylyov wrote:
+> Hello, I wrote:
+> 
+> >>> There should be no functional changes caused by this patch.
+> >>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >>> Index: b/drivers/ide/ide-iops.c
+> >>> ===================================================================
+> >>> --- a/drivers/ide/ide-iops.c
+> >>> +++ b/drivers/ide/ide-iops.c
+> >>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
+> >>>  {
+> >>>      ide_hwif_t *hwif = drive->hwif;
+> >>>      const struct ide_port_ops *port_ops = hwif->port_ops;
+> >>> +    ide_task_t task;
+> >>>  
+> >>>      if (port_ops && port_ops->selectproc)
+> >>>          port_ops->selectproc(drive);
+> >>>  
+> >>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
+> >>> +    memset(&task, 0, sizeof(task));
+> >>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
+> >>> +
+> >>> +    drive->hwif->tf_load(drive, &task);
+> >>
+> >>    This actually doesn't seem like a bright idea to me, considering 
+> >> that this gets called when starting every request. How will you look 
+> >> at me adding the transport method for writing this register? :-)
+
+Please check profiles first -- it might not be worth it. [1]
+
+> > Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
+> >
+> >   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
+> > consistent... well, I'm not excited about the whole idea conversion to 
+> > tf_{load|read}() -- it's not clear what exactly this bought us.
+
+This was explained some months ago already, so just to recall -- it was
+a part of a bigger work removing duplicated code and allowing abstraction
+of the ATA logic.
+
+Anyway this is not set in a stone so if you have proposal of a better
+approach please come forward with it.
+
+>    We at least could have saved on memset() -- tf_load() method ignores 
+> fields other than tf_flags anyway...
+
+Unless it is huge performance win (unlikely) this is not a good idea
+as it would be a maintainance nightmare.
+
+->tf_load does only use cmd->tf_flags today but it might change one day
+and nobody will remember to audit all users that they pass a valid cmd...
 
 Thanks,
 Bart
+
+[1] coincidentally on the past Saturday I woke up with a bright idea
+of doing some profiling of IDE code... I thought this would be a fun...
+
+# readprofile -m System.map | grep ide_
+    30 ide_intr                                   0.0714
+     1 ide_map_sg                                 0.0112
+     1 ide_complete_rq                            0.0152
+    78 do_ide_request                             0.0643
+     1 __ide_wait_stat                            0.0059
+    51 ide_execute_command                        0.5100
+     4 ide_set_handler                            0.0635
+     7 ide_outb                                   1.1667
+   308 ide_mm_inb                                44.0000
+...
+
+This was on ICH4 PATA controller...  Fun indeed, ain't it?
+
+[ For non-ATA folks: it is _impossible_ for ide_mm_inb to be used
+  on the above controller. ]
+
+I still have to check what will happen if I would change the order
+of following assignments in ide_tf_read():
+
+...
+        if (mmio) {
+                tf_outb = ide_mm_outb;
+                tf_inb  = ide_mm_inb;
+        } else {
+                tf_outb = ide_outb;
+                tf_inb  = ide_inb;
+        }
+...
+
+However I instead I went ahead and tried to run oprofile to get me some
+more trushworthy results:
+
+# opreport -l vmlinux
+CPU: Pentium M (P6 core), speed 600 MHz (estimated)
+Counted CPU_CLK_UNHALTED events (clocks processor is not halted, and not in a thermal trip) with a unit mask of 0x00 (No unit mask) count 100000
+Segmentation fault
+
+After this, testing some older kernel versions and assuring that user-space
+packages are at their latest distro versions I had enough of fun...
