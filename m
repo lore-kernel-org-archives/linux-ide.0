@@ -1,200 +1,283 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 11/20] ide-cd: unify cdrom_newpc_intr() exit paths
-Date: Mon, 16 Feb 2009 10:25:01 +0100
-Message-ID: <20090216092501.GA24323@gollum.tnic>
-References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain> <20090216001422.27491.17281.sendpatchset@localhost.localdomain>
-Reply-To: petkovbb@gmail.com
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Promise SATA error-handling not quite working (2.6.29-rc4)
+Date: Mon, 16 Feb 2009 12:17:05 +0100
+Message-ID: <18841.19249.482433.181201@harpo.it.uu.se>
+References: <20090215234904.29178.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:65339 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404AbZBPJY7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 04:24:59 -0500
-Content-Disposition: inline
-In-Reply-To: <20090216001422.27491.17281.sendpatchset@localhost.localdomain>
+Received: from aun.it.uu.se ([130.238.12.36]:60848 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752004AbZBPLR0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Feb 2009 06:17:26 -0500
+In-Reply-To: <20090215234904.29178.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: George Spelvin <linux@horizon.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Feb 16, 2009 at 01:14:22AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide-cd: unify cdrom_newpc_intr() exit paths
-> 
-> * Move cdrom_end_request() calls from cdrom_decode_status()
->   and ide_cd_check_ireason() to cdrom_newpc_intr().
-> 
-> * Unify cdrom_newpc_intr() exit paths.
-> 
-> There should be no functional changes caused by this patch.
-> 
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-cd.c |   48 +++++++++++++++++++++++-------------------------
->  1 file changed, 23 insertions(+), 25 deletions(-)
-> 
-> Index: b/drivers/ide/ide-cd.c
-> ===================================================================
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -291,7 +291,8 @@ static void cdrom_end_request(ide_drive_
->  /*
->   * Returns:
->   * 0: if the request should be continued.
-> - * 1: if the request was ended.
-> + * 1: if the request will be going through error recovery.
-> + * 2: if the request should be ended.
+George Spelvin writes:
+ > I have a problematic drive hooked up to a
+ > 02:00.0 RAID bus controller [0104]: Promise Technology, Inc. Device [105a:3f20]
+ > which uses the AHCI driver.
 
-Yeah, we need defines for those. Especially if they're checked in other
-functions:
+That's the FT TX4650. Unfortunately Promise hasn't released any documentation
+on this controller, or an open-source reference driver. (The Linux driver they
+supply is partial-source: a big binary blob plus some uninformative kernel glue.)
 
-if (rc == 2)
+What we know about it is that it has an AHCI-like interface and that it somewhat
+works with Linux' ahci driver. But without documentation there's not much we can
+do when problems arise, like your failure to recover from a timeout error.
 
-is simply not ok :). Rather,
-
-if (rc == DO_END_REQUEST)
-
-or something like that is much better, imho.
-
->   */
->  static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
->  {
-> @@ -324,10 +325,7 @@ static int cdrom_decode_status(ide_drive
->  		 * Just give up.
->  		 */
->  		rq->cmd_flags |= REQ_FAILED;
-> -		cdrom_end_request(drive, 0);
-> -		ide_error(drive, "request sense failure", stat);
-> -		return 1;
-> -
-> +		return 2;
->  	} else if (blk_pc_request(rq) || rq->cmd_type == REQ_TYPE_ATA_PC) {
->  		/* All other functions, except for READ. */
->  
-> @@ -467,14 +465,12 @@ static int cdrom_decode_status(ide_drive
->  		 */
->  		if (stat & ATA_ERR)
->  			cdrom_queue_request_sense(drive, NULL, NULL);
-> +		return 1;
->  	} else {
->  		blk_dump_rq_flags(rq, PFX "bad rq");
-> -		cdrom_end_request(drive, 0);
-> +		return 2;
->  	}
->  
-> -	/* retry, or handle the next request */
-> -	return 1;
-> -
->  end_request:
->  	if (stat & ATA_ERR) {
->  		struct request_queue *q = drive->queue;
-> @@ -487,10 +483,9 @@ end_request:
->  		hwif->rq = NULL;
->  
->  		cdrom_queue_request_sense(drive, rq->sense, rq);
-> +		return 1;
->  	} else
-> -		cdrom_end_request(drive, 0);
-> -
-> -	return 1;
-> +		return 2;
->  }
->  
->  /*
-> @@ -534,7 +529,6 @@ static int ide_cd_check_ireason(ide_driv
->  	if (rq->cmd_type == REQ_TYPE_ATA_PC)
->  		rq->cmd_flags |= REQ_FAILED;
->  
-> -	cdrom_end_request(drive, 0);
->  	return -1;
->  }
->  
-> @@ -736,7 +730,8 @@ static ide_startstop_t cdrom_newpc_intr(
->  	xfer_func_t *xferfunc;
->  	ide_expiry_t *expiry = NULL;
->  	int dma_error = 0, dma, stat, thislen, uptodate = 0;
-> -	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0;
-> +	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc;
-> +	int sense = blk_sense_request(rq);
->  	unsigned int timeout;
->  	u16 len;
->  	u8 ireason;
-> @@ -756,8 +751,12 @@ static ide_startstop_t cdrom_newpc_intr(
->  		}
->  	}
->  
-> -	if (cdrom_decode_status(drive, 0, &stat))
-> +	rc = cdrom_decode_status(drive, 0, &stat);
-> +	if (rc) {
-> +		if (rc == 2)
-> +			goto out_end;
->  		return ide_stopped;
-> +	}
->  
->  	/* using dma, transfer is complete now */
->  	if (dma) {
-> @@ -802,8 +801,6 @@ static ide_startstop_t cdrom_newpc_intr(
->  					rq->cmd_flags |= REQ_FAILED;
->  				uptodate = 0;
->  			}
-> -			cdrom_end_request(drive, uptodate);
-> -			return ide_stopped;
->  		} else if (!blk_pc_request(rq)) {
->  			ide_cd_request_sense_fixup(drive, rq);
->  			/* complain if we still have data left to transfer */
-> @@ -815,17 +812,16 @@ static ide_startstop_t cdrom_newpc_intr(
->  	}
->  
->  	/* check which way to transfer data */
-> -	if (ide_cd_check_ireason(drive, rq, len, ireason, write))
-> -		return ide_stopped;
-> +	rc = ide_cd_check_ireason(drive, rq, len, ireason, write);
-> +	if (rc)
-> +		goto out_end;
->  
->  	if (blk_fs_request(rq)) {
->  		if (write == 0) {
->  			int nskip;
->  
-> -			if (ide_cd_check_transfer_size(drive, len)) {
-> -				cdrom_end_request(drive, 0);
-> -				return ide_stopped;
-> -			}
-> +			if (ide_cd_check_transfer_size(drive, len))
-> +				goto out_end;
->  
->  			/*
->  			 * First, figure out if we need to bit-bucket
-> @@ -918,7 +914,7 @@ static ide_startstop_t cdrom_newpc_intr(
->  			else
->  				rq->data += blen;
->  		}
-> -		if (!write && blk_sense_request(rq))
-> +		if (sense && write == 0)
->  			rq->sense_len += blen;
->  	}
->  
-> @@ -939,7 +935,7 @@ static ide_startstop_t cdrom_newpc_intr(
->  	return ide_started;
->  
->  out_end:
-> -	if (blk_pc_request(rq)) {
-> +	if (blk_pc_request(rq) && rc == 0) {
->  		unsigned int dlen = rq->data_len;
->  
->  		if (dma)
-> @@ -951,6 +947,8 @@ out_end:
->  		hwif->rq = NULL;
->  	} else {
->  		cdrom_end_request(drive, uptodate);
-> +		if (sense && rc == 2)
-> +			ide_error(drive, "request sense failure", stat);
->  	}
->  	return ide_stopped;
->  }
-
--- 
-Regards/Gruss,
-    Boris.
+ > 
+ > The drive itself is:
+ > /dev/sde:
+ > 
+ >  Model=ST3400832AS                             , FwRev=3.03    , SerialNo=            3NF167BM
+ >  Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
+ >  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ >  BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=?16?
+ >  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=781422768
+ >  IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
+ >  PIO modes:  pio0 pio1 pio2 pio3 pio4 
+ >  DMA modes:  mdma0 mdma1 mdma2 
+ >  UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5 *udma6 
+ >  AdvancedPM=no WriteCache=enabled
+ >  Drive conforms to: Unspecified:  ATA/ATAPI-1,2,3,4,5,6,7
+ > 
+ >  * signifies the current active mode
+ > 
+ > Anyway, last night during a RAID check operation, it stopped responding and dropped out of the array:
+ > 
+ > 03:33:17 kernel: ata5.00: qc timeout (cmd 0x2f)
+ > 03:33:17 kernel: ata5: failed to read log page 10h (errno=-5)
+ > 03:33:17 kernel: ata5.00: exception Emask 0x1 SAct 0xff SErr 0x0 action 0x6 frozen
+ > 03:33:17 kernel: ata5.00: irq_stat 0x40000000
+ > 03:33:17 kernel: ata5.00: cmd 60/00:00:d2:f8:2c/01:00:20:00:00/40 tag 0 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/3e:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:08:d2:f9:2c/01:00:20:00:00/40 tag 1 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/00:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:10:d2:fa:2c/01:00:20:00:00/40 tag 2 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/3e:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:18:d2:f3:2c/01:00:20:00:00/40 tag 3 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/3e:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:20:d2:f4:2c/01:00:20:00:00/40 tag 4 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/3e:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:28:d2:f5:2c/01:00:20:00:00/40 tag 5 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/00:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:30:d2:f6:2c/01:00:20:00:00/40 tag 6 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/3e:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5.00: cmd 60/00:38:d2:f7:2c/01:00:20:00:00/40 tag 7 ncq 131072 in
+ > 03:33:17 kernel:          res 40/00:00:d2:f8:2c/00:00:20:00:00/40 Emask 0x1 (device error)
+ > 03:33:17 kernel: ata5.00: status: { DRDY }
+ > 03:33:17 kernel: ata5: hard resetting link
+ > 03:33:17 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ > 03:33:22 kernel: ata5.00: qc timeout (cmd 0xec)
+ > 03:33:22 kernel: ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ > 03:33:22 kernel: ata5.00: revalidation failed (errno=-5)
+ > 03:33:22 kernel: ata5: hard resetting link
+ > 03:33:23 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ > 03:33:33 kernel: ata5.00: qc timeout (cmd 0xec)
+ > 03:33:33 kernel: ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ > 03:33:33 kernel: ata5.00: revalidation failed (errno=-5)
+ > 03:33:33 kernel: ata5: limiting SATA link speed to 1.5 Gbps
+ > 03:33:33 kernel: ata5: hard resetting link
+ > 03:33:33 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ > 03:34:03 kernel: ata5.00: qc timeout (cmd 0xec)
+ > 03:34:03 kernel: ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ > 03:34:03 kernel: ata5.00: revalidation failed (errno=-5)
+ > 03:34:03 kernel: ata5.00: disabled
+ > 03:34:03 kernel: ata5: hard resetting link
+ > 03:34:04 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ > 03:34:04 kernel: ata5: EH complete
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539817938
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539817682
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539817426
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539817170
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539816914
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818706
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818450
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818194
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 91795259
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 91795259
+ > 03:34:04 kernel: md: super_written gets error=-5, uptodate=0
+ > 03:34:04 kernel: raid10: Disk failure on sde3, disabling device.
+ > 03:34:04 kernel: raid10: Operation continuing on 5 devices.
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539816914
+ > 03:34:04 kernel: raid5: Disk failure on sde4, disabling device.
+ > 03:34:04 kernel: raid5: Operation continuing on 5 devices.
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539817170
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818450
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818706
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818194
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Unhandled error code
+ > 03:34:04 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 03:34:04 kernel: end_request: I/O error, dev sde, sector 539818458
+ > 03:34:04 kernel: RAID10 conf printout:
+ > 03:34:04 kernel:  --- wd:5 rd:6
+ > 03:34:04 kernel:  disk 0, wo:0, o:1, dev:sdb3
+ > 03:34:04 kernel:  disk 1, wo:0, o:1, dev:sdc3
+ > 03:34:04 kernel:  disk 2, wo:0, o:1, dev:sdd3
+ > 03:34:04 kernel:  disk 3, wo:1, o:0, dev:sde3
+ > 03:34:04 kernel:  disk 4, wo:0, o:1, dev:sdf3
+ > 03:34:04 kernel:  disk 5, wo:0, o:1, dev:sda3
+ > 03:34:04 kernel: RAID10 conf printout:
+ > 03:34:04 kernel:  --- wd:5 rd:6
+ > 03:34:04 kernel:  disk 0, wo:0, o:1, dev:sdb3
+ > 03:34:04 kernel:  disk 1, wo:0, o:1, dev:sdc3
+ > 03:34:04 kernel:  disk 2, wo:0, o:1, dev:sdd3
+ > 03:34:04 kernel:  disk 4, wo:0, o:1, dev:sdf3
+ > 03:34:04 kernel:  disk 5, wo:0, o:1, dev:sda3
+ > 03:34:04 kernel: md: md5: data-check done.
+ > 03:34:04 kernel: RAID5 conf printout:
+ > 03:34:04 kernel:  --- rd:6 wd:5
+ > 03:34:04 kernel:  disk 0, o:1, dev:sda4
+ > 03:34:04 kernel:  disk 1, o:1, dev:sdb4
+ > 03:34:04 kernel:  disk 2, o:1, dev:sdc4
+ > 03:34:04 kernel:  disk 3, o:1, dev:sdd4
+ > 03:34:04 kernel:  disk 4, o:0, dev:sde4
+ > 03:34:04 kernel:  disk 5, o:1, dev:sdf4
+ > 03:34:04 kernel: RAID5 conf printout:
+ > 03:34:04 kernel:  --- rd:6 wd:5
+ > 03:34:04 kernel:  disk 0, o:1, dev:sda4
+ > 03:34:04 kernel:  disk 1, o:1, dev:sdb4
+ > 03:34:04 kernel:  disk 2, o:1, dev:sdc4
+ > 03:34:04 kernel:  disk 3, o:1, dev:sdd4
+ > 03:34:04 kernel:  disk 5, o:1, dev:sdf4
+ > 
+ > After this point, commands like hdparm -I /dev/sde just aren't working.
+ > 
+ > "hdparm -w" just says
+ >  HDIO_DRIVE_RESET failed: Inappropriate ioctl for device
+ > 
+ > Unplugging and replugging the drive produces
+ > 23:00:05 kernel: ata5: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0xe frozen
+ > 23:00:05 kernel: ata5: irq_stat 0x00400000, PHY RDY changed
+ > 23:00:05 kernel: ata5: SError: { PHYRdyChg }
+ > 23:00:05 kernel: ata5: hard resetting link
+ > 23:00:05 kernel: ata5: SATA link down (SStatus 0 SControl 300)
+ > 23:00:05 kernel: ata5: EH complete
+ > 23:00:05 kernel: ata5.00: detaching (SCSI 4:0:0:0)
+ > 23:00:05 kernel: sd 4:0:0:0: [sde] Synchronizing SCSI cache
+ > 23:00:05 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 23:00:05 kernel: sd 4:0:0:0: [sde] Stopping disk
+ > 23:00:05 kernel: sd 4:0:0:0: [sde] START_STOP FAILED
+ > 23:00:05 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 23:00:09 kernel: ata5: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xe frozen
+ > 23:00:09 kernel: ata5: irq_stat 0x00000040, connection status changed
+ > 23:00:09 kernel: ata5: SError: { PHYRdyChg CommWake DevExch }
+ > 23:00:09 kernel: ata5: hard resetting link
+ > 23:00:11 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ > 23:00:11 kernel: ata5: link online but device misclassified, retrying
+ > 23:00:11 kernel: ata5: reset failed (errno=-11), retrying in 9 secs
+ > 23:00:19 kernel: ata5: hard resetting link
+ > 23:00:20 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ > 23:00:25 kernel: ata5.00: qc timeout (cmd 0xec)
+ > 23:00:25 kernel: ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ > 23:00:25 kernel: ata5: hard resetting link
+ > 23:00:26 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ > 23:00:36 kernel: ata5.00: qc timeout (cmd 0xec)
+ > 23:00:36 kernel: ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ > 23:00:36 kernel: ata5: limiting SATA link speed to 1.5 Gbps
+ > 23:00:36 kernel: ata5: hard resetting link
+ > 23:00:36 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ > 23:01:06 kernel: ata5.00: qc timeout (cmd 0xec)
+ > 23:01:06 kernel: ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ > 23:01:06 kernel: ata5: hard resetting link
+ > 23:01:07 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ > 23:01:07 kernel: ata5: EH complete
+ > 
+ > ... and I still don't have an accessible drive.  Rebooting, however,
+ > brings everything right back (even with no power cycle).
+ > 
+ > this, to me, suggests that the error handling is not doing a particularly
+ > good job resetting the drive.
+ > 
+ > Actually, let me try hot-pulling it while it's running normally.  To
+ > start with it idle...
+ > 23:43:08 kernel: ata5: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0xe frozen
+ > 23:43:08 kernel: ata5: irq_stat 0x00400000, PHY RDY changed
+ > 23:43:08 kernel: ata5: SError: { PHYRdyChg }
+ > 23:43:08 kernel: ata5: hard resetting link
+ > 23:43:09 kernel: ata5: SATA link down (SStatus 0 SControl 300)
+ > 23:43:14 kernel: ata5: hard resetting link
+ > 23:43:15 kernel: ata5: SATA link down (SStatus 0 SControl 300)
+ > 23:43:15 kernel: ata5: limiting SATA link speed to 1.5 Gbps
+ > 23:43:20 kernel: ata5: hard resetting link
+ > 23:43:20 kernel: ata5: SATA link down (SStatus 0 SControl 310)
+ > 23:43:20 kernel: ata5.00: disabled
+ > 23:43:20 kernel: ata5: EH complete
+ > 23:43:20 kernel: ata5.00: detaching (SCSI 4:0:0:0)
+ > 23:43:20 kernel: sd 4:0:0:0: [sde] Synchronizing SCSI cache
+ > 23:43:20 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 23:43:20 kernel: sd 4:0:0:0: [sde] Stopping disk
+ > 23:43:20 kernel: sd 4:0:0:0: [sde] START_STOP FAILED
+ > 23:43:20 kernel: sd 4:0:0:0: [sde] Result: hostbyte=0x04 driverbyte=0x00
+ > 23:43:25 kernel: ata5: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xe frozen
+ > 23:43:25 kernel: ata5: irq_stat 0x00000040, connection status changed
+ > 23:43:25 kernel: ata5: SError: { PHYRdyChg CommWake DevExch }
+ > 23:43:25 kernel: ata5: hard resetting link
+ > 23:43:32 kernel: ata5: link is slow to respond, please be patient (ready=0)
+ > 23:43:34 kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ > 23:43:34 kernel: ata5.00: ATA-7: ST3400832AS, 3.03, max UDMA/133
+ > 23:43:34 kernel: ata5.00: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ > 23:43:34 kernel: ata5.00: configured for UDMA/133
+ > 23:43:34 kernel: ata5: EH complete
+ > 23:43:34 kernel: scsi 4:0:0:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0 ANSI: 5
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] 781422768 512-byte hardware sectors: (400 GB/372 GiB)
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Write Protect is off
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Mode Sense: 00 3a 00 00
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] 781422768 512-byte hardware sectors: (400 GB/372 GiB)
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Write Protect is off
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Mode Sense: 00 3a 00 00
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ > 23:43:34 kernel:  sdg: sdg1 sdg2 sdg3 sdg4
+ > 23:43:34 kernel: sd 4:0:0:0: [sdg] Attached SCSI disk
+ > 
+ > H'm... that seemed to work.  I don't know what was going on with the drive,
+ > but a reboot fixed it while a remove/reinsert didn't.  Just a data point
+ > in case it helps anyone.
+ > --
+ > To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+ > the body of a message to majordomo@vger.kernel.org
+ > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ > 
