@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 06/20] ide: remove needless ide_dump_status_no_sense() wrapper
-Date: Mon, 16 Feb 2009 01:13:49 +0100
-Message-ID: <20090216001349.27491.27484.sendpatchset@localhost.localdomain>
+Subject: [PATCH 09/20] ide-cd: unify ide_cd_do_request() exit paths
+Date: Mon, 16 Feb 2009 01:14:09 +0100
+Message-ID: <20090216001409.27491.64048.sendpatchset@localhost.localdomain>
 References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:35554 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756007AbZBPAMW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:12:22 -0500
+Received: from mu-out-0910.google.com ([209.85.134.184]:34049 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756168AbZBPAMm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:12:42 -0500
 In-Reply-To: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,60 +15,103 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: remove needless ide_dump_status_no_sense() wrapper
+Subject: [PATCH] ide-cd: unify ide_cd_do_request() exit paths
 
-It makes no sense to check for BSY bit being set as earlier OK_STAT()
-check in cdrom_end_request() makes sure that BSY bit is cleared.
+* Move cdrom_end_request() calls from cdrom_start_rw()
+  and ide_cd_prepare_rw_request() to ide_cd_do_request().
+
+* Unify ide_cd_do_request() exit paths.
 
 There should be no functional changes caused by this patch.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |   17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+ drivers/ide/ide-cd.c |   28 ++++++++++++----------------
+ 1 file changed, 12 insertions(+), 16 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -285,13 +285,6 @@ static void cdrom_end_request(ide_drive_
- 	ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
+@@ -590,7 +590,6 @@ static ide_startstop_t ide_cd_prepare_rw
+ 				printk(KERN_ERR PFX "%s: %s: buffer botch (%u)\n",
+ 						drive->name, __func__,
+ 						rq->current_nr_sectors);
+-				cdrom_end_request(drive, 0);
+ 				return ide_stopped;
+ 			}
+ 			rq->current_nr_sectors += nskip;
+@@ -967,10 +966,8 @@ static ide_startstop_t cdrom_start_rw(id
+ 
+ 	if (write) {
+ 		/* disk has become write protected */
+-		if (get_disk_ro(cd->disk)) {
+-			cdrom_end_request(drive, 0);
++		if (get_disk_ro(cd->disk))
+ 			return ide_stopped;
+-		}
+ 	} else {
+ 		/*
+ 		 * We may be retrying this request after an error.  Fix up any
+@@ -982,10 +979,8 @@ static ide_startstop_t cdrom_start_rw(id
+ 	/* use DMA, if possible / writes *must* be hardware frame aligned */
+ 	if ((rq->nr_sectors & (sectors_per_frame - 1)) ||
+ 	    (rq->sector & (sectors_per_frame - 1))) {
+-		if (write) {
+-			cdrom_end_request(drive, 0);
++		if (write)
+ 			return ide_stopped;
+-		}
+ 		drive->dma = 0;
+ 	} else
+ 		drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
+@@ -1040,6 +1035,7 @@ static ide_startstop_t ide_cd_do_request
+ 					sector_t block)
+ {
+ 	struct ide_cmd cmd;
++	int uptodate = 0;
+ 
+ 	ide_debug_log(IDE_DBG_RQ, "cmd: 0x%x, block: %llu",
+ 				  rq->cmd[0], (unsigned long long)block);
+@@ -1048,11 +1044,9 @@ static ide_startstop_t ide_cd_do_request
+ 		blk_dump_rq_flags(rq, "ide_cd_do_request");
+ 
+ 	if (blk_fs_request(rq)) {
+-		if (cdrom_start_rw(drive, rq) == ide_stopped)
+-			return ide_stopped;
+-
+-		if (ide_cd_prepare_rw_request(drive, rq) == ide_stopped)
+-			return ide_stopped;
++		if (cdrom_start_rw(drive, rq) == ide_stopped ||
++		    ide_cd_prepare_rw_request(drive, rq) == ide_stopped)
++			goto out_end;
+ 	} else if (blk_sense_request(rq) || blk_pc_request(rq) ||
+ 		   rq->cmd_type == REQ_TYPE_ATA_PC) {
+ 		if (!rq->timeout)
+@@ -1061,12 +1055,11 @@ static ide_startstop_t ide_cd_do_request
+ 		cdrom_do_block_pc(drive, rq);
+ 	} else if (blk_special_request(rq)) {
+ 		/* right now this can only be a reset... */
+-		cdrom_end_request(drive, 1);
+-		return ide_stopped;
++		uptodate = 1;
++		goto out_end;
+ 	} else {
+ 		blk_dump_rq_flags(rq, DRV_NAME " bad flags");
+-		cdrom_end_request(drive, 0);
+-		return ide_stopped;
++		goto out_end;
+ 	}
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+@@ -1077,6 +1070,9 @@ static ide_startstop_t ide_cd_do_request
+ 	cmd.rq = rq;
+ 
+ 	return ide_issue_pc(drive, &cmd);
++out_end:
++	cdrom_end_request(drive, uptodate);
++	return ide_stopped;
  }
  
--static void ide_dump_status_no_sense(ide_drive_t *drive, const char *msg, u8 st)
--{
--	if (st & 0x80)
--		return;
--	ide_dump_status(drive, msg, st);
--}
--
  /*
-  * Returns:
-  * 0: if the request should be continued.
-@@ -434,21 +427,19 @@ static int cdrom_decode_status(ide_drive
- 			 * No point in retrying after an illegal request or data
- 			 * protect error.
- 			 */
--			ide_dump_status_no_sense(drive, "command error", stat);
-+			ide_dump_status(drive, "command error", stat);
- 			do_end_request = 1;
- 		} else if (sense_key == MEDIUM_ERROR) {
- 			/*
- 			 * No point in re-trying a zillion times on a bad
- 			 * sector. If we got here the error is not correctable.
- 			 */
--			ide_dump_status_no_sense(drive,
--						 "media error (bad sector)",
--						 stat);
-+			ide_dump_status(drive, "media error (bad sector)",
-+					stat);
- 			do_end_request = 1;
- 		} else if (sense_key == BLANK_CHECK) {
- 			/* disk appears blank ?? */
--			ide_dump_status_no_sense(drive, "media error (blank)",
--						 stat);
-+			ide_dump_status(drive, "media error (blank)", stat);
- 			do_end_request = 1;
- 		} else if ((err & ~ATA_ABORTED) != 0) {
- 			/* go to the default handler for other errors */
