@@ -1,22 +1,22 @@
-From: Mark Lord <liml@rtr.ca>
+From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: [PATCH] libata: Don't trust current capacity values in identify
  words 57-58
-Date: Mon, 16 Feb 2009 18:03:20 -0500
-Message-ID: <4999F0B8.7020700@rtr.ca>
+Date: Mon, 16 Feb 2009 17:46:58 -0600
+Message-ID: <4999FAF2.1000800@gmail.com>
 References: <4999CA54.1060306@gmail.com> <4999F032.6060107@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37769 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102AbZBPXDT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Feb 2009 18:03:19 -0500
+Received: from yx-out-2324.google.com ([74.125.44.28]:14443 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754383AbZBPXrE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 18:47:04 -0500
 In-Reply-To: <4999F032.6060107@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
+To: Mark Lord <liml@rtr.ca>
 Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, =?UTF-8?B?SGFubm8gQsO2Y2s=?= <hanno@hboeck.de>
 
 Mark Lord wrote:
@@ -62,12 +62,6 @@ s no
 > and why it looks so peculiar.
 >=20
 > Some of those early drives really did require that kind of logic.
-=2E.
 
-Mind you, one can do better than that, too.
-
-The "10% solution" in there right now is a bit of a (working) hack.
-It really probably just needs to check for a flipped-LBA
-that is within +/- one full cylinder of the CHS capacity.
-
-Cheers
+This is the !ata_id_has_lba code path. If the drive supports LBA then=20
+the LBA capacity will always be used, that hasn't changed.
