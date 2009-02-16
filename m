@@ -1,69 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata: Don't trust current capacity values in identify
- words 57-58
-Date: Mon, 16 Feb 2009 23:43:23 +0300
-Message-ID: <4999CFEB.3030204@ru.mvista.com>
-References: <4999CA54.1060306@gmail.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [BUG] 2.6.29-rc2-git1 to -rc5: libata lockup on boot, LED solid,
+	100% CPU
+Date: Mon, 16 Feb 2009 22:01:20 +0100
+Message-ID: <18841.54304.460011.351580@harpo.it.uu.se>
+References: <20090216200643.GA2393@rhlx01.hs-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.mvista.com ([63.81.120.155]:1786 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751881AbZBPUnD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Feb 2009 15:43:03 -0500
-In-Reply-To: <4999CA54.1060306@gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:36201 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752241AbZBPVB2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Feb 2009 16:01:28 -0500
+In-Reply-To: <20090216200643.GA2393@rhlx01.hs-esslingen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, =?UTF-8?B?SGFubm8=?= =?UTF-8?B?IELDtmNr?= <hanno@hboeck.de>
+To: Andreas Mohr <andi@lisas.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Robert Hancock wrote:
+Andreas Mohr writes:
+ > Hello all,
+ > 
+ > My Inspiron 8000 ICH2 (i810) P3/700 UP has a hard time booting 2.6.29 things:
+ > 
+ > [loaded init, shell stuff]
+ > ...
+ > ata1.00: configured for UDMA/100
+ > ata1.01: configured for UDMA/33
+ > ata1: EH complete
+ > ...
+ > Uniform CD-ROM driver Revision: 3.20
+ > [LAST LINE, FULL STOP]
+ > ---> hangs with IDE LED solidly on! <---
+ > 
+ > NOTE: kernel did NOT hang when accidentally running rc2-git1 w/o any modules loaded!
+ > (IOW, probably a module-related hang)
+ > disabling sr_mod.ko will make a boot proceed a tiny bit, then hang anyway
+ > 
+ > Could be mutex deadlock (CPU hot, 100%?)
+ > no log errors whatsoever
+ > latest known working: .28-rc6 (admittedly somewhat old; DOES work currently)
+ > earliest known buggy: -rc2-git1, -rc4 also, -rc5 also
+ > no SysRq available (notebook keys: no workey, /proc/sysrq obviously
+ > not available either)
+ > 
+ > Should I test 2.6.28.5? Every build will take two hours though...
+ > Not ATA-SFF 32bit bug problem, right? (already committed?)
+ > http://marc.info/?l=linux-kernel&m=123254501314058&w=2
 
-> Hanno B=C3=B6ck reported a problem where an old Conner CP30254 240MB =
-hard drive
-> was reported as 1.1TB in capacity by libata:
-
-> http://lkml.org/lkml/2009/2/13/134
-
-> This was caused by libata trusting the drive's reported current capac=
-ity in=20
-> sectors in identify words 57 and 58 if the drive does not support LBA=
- and the
-> current CHS translation values appear valid. Unfortunately it seems o=
-lder
-> ATA specs were vague about what this field should contain and a numbe=
-r of drives
-> used values with wrong byte order or that were totally bogus. There's=
- no
-> unique information that it conveys and so we can just calculate the n=
-umber
-> of sectors from the reported current CHS values.
-
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
-
-> ---
-
-> Should likely go into -next for testing for a while. Of course, the f=
-act that
-> this problem showed up in the first place shows that the number of pe=
-ople
-> that test libata with such boat anchors is fairly small :-)
-
-    It's been tested well enough for years in the IDE core I think.
-
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 9fbf059..5389cbc 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1327,7 +1327,7 @@ static u64 ata_id_n_sectors(const u16 *id)
->  			return ata_id_u32(id, 60);
->  	} else {
->  		if (ata_id_current_chs_valid(id))
-> -			return ata_id_u32(id, 57);
-> +			return id[54] * id[55] * id[56];
-
-    We have mnemonics for these 3 words in <linux/ata.h>...
-
-MBR, Sergei
+To me it looks like the 32-bit PIO bug. The patch you cited above was
+just the first to identify the issue. This is still unfixed in 29-rc5.
+Please test Sergei's latest proposed patch posted yesterday to linux-ide.
