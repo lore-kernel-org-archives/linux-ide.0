@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/20] ide-cd: remove cdrom_end_request()
-Date: Mon, 16 Feb 2009 01:14:29 +0100
-Message-ID: <20090216001429.27491.36651.sendpatchset@localhost.localdomain>
+Subject: [PATCH 14/20] ide-cd: cleanup ide_cd_do_request()
+Date: Mon, 16 Feb 2009 01:14:42 +0100
+Message-ID: <20090216001442.27491.81015.sendpatchset@localhost.localdomain>
 References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:34049 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756338AbZBPANC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:02 -0500
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:53581 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756012AbZBPANP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:15 -0500
 In-Reply-To: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,143 +15,54 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: remove cdrom_end_request()
-
-Inline cdrom_end_request() into cdrom_newpc_intr()
-and ide_cd_do_request().
+Subject: [PATCH] ide-cd: cleanup ide_cd_do_request()
 
 There should be no functional changes caused by this patch.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |   81 +++++++++++++++++++++++++++++----------------------
- 1 file changed, 47 insertions(+), 34 deletions(-)
+ drivers/ide/ide-cd.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -260,34 +260,6 @@ static void ide_cd_complete_failed_rq(id
- 		cdrom_analyze_sense_data(drive, NULL, sense);
- }
+@@ -1044,8 +1044,11 @@ static ide_startstop_t ide_cd_do_request
  
--static void cdrom_end_request(ide_drive_t *drive, int uptodate)
--{
--	struct request *rq = drive->hwif->rq;
--	int nsectors = rq->hard_cur_sectors;
--
--	ide_debug_log(IDE_DBG_FUNC, "cmd: 0x%x, uptodate: 0x%x, nsectors: %d",
--				    rq->cmd[0], uptodate, nsectors);
--
--	if (blk_sense_request(rq) && uptodate)
--		ide_cd_complete_failed_rq(drive, rq);
--
--	if (!rq->current_nr_sectors && blk_fs_request(rq))
--		uptodate = 1;
--	/* make sure it's fully ended */
--	if (blk_pc_request(rq))
--		nsectors = (rq->data_len + 511) >> 9;
--	if (!nsectors)
--		nsectors = 1;
--
--	ide_debug_log(IDE_DBG_FUNC, "uptodate: 0x%x, nsectors: %d",
--				    uptodate, nsectors);
--
--	if (blk_fs_request(rq) == 0 && uptodate <= 0 && rq->errors == 0)
--		rq->errors = -EIO;
--
--	ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
--}
--
- /*
-  * Returns:
-  * 0: if the request should be continued.
-@@ -730,7 +702,7 @@ static ide_startstop_t cdrom_newpc_intr(
- 	xfer_func_t *xferfunc;
- 	ide_expiry_t *expiry = NULL;
- 	int dma_error = 0, dma, stat, thislen, uptodate = 0;
--	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc;
-+	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
- 	int sense = blk_sense_request(rq);
- 	unsigned int timeout;
- 	u16 len;
-@@ -897,8 +869,14 @@ static ide_startstop_t cdrom_newpc_intr(
- 			rq->current_nr_sectors -= (blen >> 9);
- 			rq->sector += (blen >> 9);
- 
--			if (rq->current_nr_sectors == 0 && rq->nr_sectors)
--				cdrom_end_request(drive, 1);
-+			if (rq->current_nr_sectors == 0 && rq->nr_sectors) {
-+				nsectors = rq->hard_cur_sectors;
-+
-+				if (nsectors == 0)
-+					nsectors = 1;
-+
-+				ide_complete_rq(drive, 0, nsectors << 9);
-+			}
- 		} else {
- 			rq->data_len -= blen;
- 
-@@ -946,7 +924,28 @@ out_end:
- 
- 		hwif->rq = NULL;
- 	} else {
--		cdrom_end_request(drive, uptodate);
-+		if (sense && uptodate)
-+			ide_cd_complete_failed_rq(drive, rq);
-+
-+		if (blk_fs_request(rq)) {
+ 	if (blk_fs_request(rq)) {
+ 		if (cdrom_start_rw(drive, rq) == ide_stopped ||
+-		    ide_cd_prepare_rw_request(drive, rq) == ide_stopped)
++		    ide_cd_prepare_rw_request(drive, rq) == ide_stopped) {
 +			if (rq->current_nr_sectors == 0)
 +				uptodate = 1;
-+		} else {
-+			if (uptodate <= 0 && rq->errors == 0)
-+				rq->errors = -EIO;
+ 			goto out_end;
 +		}
-+
-+		/* make sure it's fully ended */
-+		if (blk_pc_request(rq))
-+			nsectors = (rq->data_len + 511) >> 9;
-+		else
-+			nsectors = rq->hard_cur_sectors;
-+
-+		if (nsectors == 0)
-+			nsectors = 1;
-+
-+		ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
-+
- 		if (sense && rc == 2)
- 			ide_error(drive, "request sense failure", stat);
+ 	} else if (blk_sense_request(rq) || blk_pc_request(rq) ||
+ 		   rq->cmd_type == REQ_TYPE_ATA_PC) {
+ 		if (!rq->timeout)
+@@ -1058,6 +1061,8 @@ static ide_startstop_t ide_cd_do_request
+ 		goto out_end;
+ 	} else {
+ 		blk_dump_rq_flags(rq, DRV_NAME " bad flags");
++		if (rq->errors == 0)
++			rq->errors = -EIO;
+ 		goto out_end;
  	}
-@@ -1035,7 +1034,7 @@ static ide_startstop_t ide_cd_do_request
- 					sector_t block)
- {
- 	struct ide_cmd cmd;
--	int uptodate = 0;
-+	int uptodate = 0, nsectors;
  
- 	ide_debug_log(IDE_DBG_RQ, "cmd: 0x%x, block: %llu",
- 				  rq->cmd[0], (unsigned long long)block);
-@@ -1071,7 +1070,21 @@ static ide_startstop_t ide_cd_do_request
+@@ -1070,14 +1075,6 @@ static ide_startstop_t ide_cd_do_request
  
  	return ide_issue_pc(drive, &cmd);
  out_end:
--	cdrom_end_request(drive, uptodate);
-+	if (blk_fs_request(rq)) {
-+		if (rq->current_nr_sectors == 0)
-+			uptodate = 1;
-+	} else {
-+		if (uptodate <= 0 && rq->errors == 0)
-+			rq->errors = -EIO;
-+	}
-+
-+	nsectors = rq->hard_cur_sectors;
-+
-+	if (nsectors == 0)
-+		nsectors = 1;
-+
-+	ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
-+
- 	return ide_stopped;
- }
+-	if (blk_fs_request(rq)) {
+-		if (rq->current_nr_sectors == 0)
+-			uptodate = 1;
+-	} else {
+-		if (uptodate <= 0 && rq->errors == 0)
+-			rq->errors = -EIO;
+-	}
+-
+ 	nsectors = rq->hard_nr_sectors;
  
+ 	if (nsectors == 0)
