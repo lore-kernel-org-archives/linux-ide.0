@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 20/20] ide-cd: unify transfer padding in cdrom_newpc_intr()
-Date: Mon, 16 Feb 2009 01:15:21 +0100
-Message-ID: <20090216001521.27491.46520.sendpatchset@localhost.localdomain>
+Subject: [PATCH 19/20] ide-cd: use common completion path for DMA requests in cdrom_newpc_intr()
+Date: Mon, 16 Feb 2009 01:15:15 +0100
+Message-ID: <20090216001515.27491.83644.sendpatchset@localhost.localdomain>
 References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-fx0-f20.google.com ([209.85.220.20]:41106 "EHLO
 	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756243AbZBPANz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:55 -0500
+	with ESMTP id S1756587AbZBPANu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Feb 2009 19:13:50 -0500
 In-Reply-To: <20090216001309.27491.59759.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,76 +15,50 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: unify transfer padding in cdrom_newpc_intr()
+Subject: [PATCH] ide-cd: use common completion path for DMA requests in cdrom_newpc_intr()
 
-* 'thislen' is always <= cmd->nleft for non-fs requests so the transfer
-  padding inside the 'while (thislen > 0)' loop can happen only for fs
-  requests -- then move it out of the loop and unify with the transfer
-  padding for non-fs requests ('thislen' == 'len' for fs requests).
+Use the following facts:
 
-* blk_dump_rq_flags() dumps all request flags so it is enough to pass
-  only the function name to it.
+- rq->nr_sectors should now be always equal to (non-zero)
+  rq->hard_nr_sectors for fs requests
 
-* Update my Copyrights while at it.
+- REQ_TYPE_ATA_PC requests have never bio attached to them
+
+- rq->hard_nr_sectors == 0 for REQ_TYPE_ATA_PC requests
+
+- DMA is used only for fs, pc and REQ_TYPE_ATA_PC requests
+
+- 'uptodate' is ignored for pc requests ('rc == 0' case)
+
+and use the common completion path also for DMA requests.
+
+There should be no functional changes caused by this patch
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |   29 +++++++++++------------------
- 1 file changed, 11 insertions(+), 18 deletions(-)
+drivers/ide/ide-cd.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -4,7 +4,7 @@
-  * Copyright (C) 1994-1996   Scott Snyder <snyder@fnald0.fnal.gov>
-  * Copyright (C) 1996-1998   Erik Andersen <andersee@debian.org>
-  * Copyright (C) 1998-2000   Jens Axboe <axboe@suse.de>
-- * Copyright (C) 2005, 2007  Bartlomiej Zolnierkiewicz
-+ * Copyright (C) 2005, 2007-2009  Bartlomiej Zolnierkiewicz
-  *
-  * May be copied or modified under the terms of the GNU General Public
-  * License.  See linux/COPYING for more information.
-@@ -703,22 +703,8 @@ static ide_startstop_t cdrom_newpc_intr(
- 	while (thislen > 0) {
- 		int blen = min_t(int, thislen, cmd->nleft);
- 
--		if (cmd->nleft == 0) {
--			if (blk_fs_request(rq) && !write)
--				/*
--				 * If the buffers are full, pipe the rest into
--				 * oblivion.
--				 */
--				ide_pad_transfer(drive, 0, thislen);
--			else {
--				printk(KERN_ERR PFX "%s: confused, missing data\n",
--						drive->name);
--				blk_dump_rq_flags(rq, rq_data_dir(rq)
--						  ? "cdrom_newpc_intr, write"
--						  : "cdrom_newpc_intr, read");
--			}
-+		if (cmd->nleft == 0)
- 			break;
+@@ -660,16 +660,7 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	if (dma) {
+ 		if (dma_error)
+ 			return ide_error(drive, "dma error", stat);
+-		if (blk_fs_request(rq)) {
+-			ide_complete_rq(drive, 0, rq->nr_sectors
+-				? (rq->nr_sectors << 9) : ide_rq_bytes(rq));
+-			return ide_stopped;
+-		} else if (rq->cmd_type == REQ_TYPE_ATA_PC && !rq->bio) {
+-			ide_complete_rq(drive, 0, 512);
+-			return ide_stopped;
 -		}
- 
- 		ide_pio_bytes(drive, cmd, write, blen);
- 		cmd->last_xfer_len += blen;
-@@ -731,8 +717,15 @@ static ide_startstop_t cdrom_newpc_intr(
+-		if (blk_pc_request(rq) == 0 && uptodate == 0)
+-			rq->cmd_flags |= REQ_FAILED;
++		uptodate = 1;
+ 		goto out_end;
  	}
  
- 	/* pad, if necessary */
--	if (!blk_fs_request(rq) && len > 0)
--		ide_pad_transfer(drive, write, len);
-+	if (len > 0) {
-+		if (blk_fs_request(rq) == 0 || write == 0)
-+			ide_pad_transfer(drive, write, len);
-+		else {
-+			printk(KERN_ERR PFX "%s: confused, missing data\n",
-+				drive->name);
-+			blk_dump_rq_flags(rq, "cdrom_newpc_intr");
-+		}
-+	}
- 
- 	if (blk_pc_request(rq)) {
- 		timeout = rq->timeout;
