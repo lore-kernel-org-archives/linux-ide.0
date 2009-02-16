@@ -1,47 +1,44 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Mon, 16 Feb 2009 12:12:56 +0900
-Message-ID: <4998D9B8.9020309@kernel.org>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>	<49922A2D.508@kernel.org>	<49924F48.4000009@rtr.ca>	<20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com>	<49934B20.4060206@rtr.ca>	<49934D24.1050204@garzik.org>	<49935157.6020002@rtr.ca> <20090211175409.4fb27541@dhcp-100-2-144.bos.redhat.com> <49944A13.3050105@rtr.ca> <49944AA9.8040308@rtr.ca>
+Subject: Re: Drives which perform frequent head unloads under Linux
+Date: Mon, 16 Feb 2009 12:52:39 +0900
+Message-ID: <4998E307.2010903@kernel.org>
+References: <200902031429.19457.fcartegnie@free.fr> <499380D2.5070306@kernel.org> <200902121414.46309.fcartegnie@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45025 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:49121 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755226AbZBPDNe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Feb 2009 22:13:34 -0500
-In-Reply-To: <49944AA9.8040308@rtr.ca>
+	id S1755965AbZBPDw5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Feb 2009 22:52:57 -0500
+In-Reply-To: <200902121414.46309.fcartegnie@free.fr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Francois Cartegnie <fcartegnie@free.fr>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Mark Lord wrote:
->> Chuck Ebbert wrote:
+=46rancois Cartegnie wrote:
+> Le jeudi 12 f=C3=A9vrier 2009, vous avez =C3=A9crit :
+>> Francois Cartegnie wrote:
+>>> MSI Megabook S425
+>>> MK8025GAS (unload every 8/10sec)
+>>> Workaround with APM to 254 (but doesn't disable totally).
+>> From the smartctl output,
 >>
->>> How do I change the timeout?
->> ..
+>>   9 Power_On_Hours     ...      2791
+>> 193 Load_Cycle_Count   ...      100209
 >>
->> Heh.. actually, I'm not entirely sure myself.
->> This stuff bounces between the block, scsi, and ata layers,
->> and I think it's set before it gets to libata.
-> ..
-> 
-> Mmm.. I think it is the SD_TIMEOUT value, defined in drivers/scsi/sd.h
-> which currently uses (30 * HZ) as the timeout for most things,
-> including for cache flushes.
-> 
-> Try changing it to (180 * HZ) just for fun.
+>> Which gives us 35.9 load cycles per hour which is kind of okay.  Is
+>> this because you have been running the system with APM value adjuste=
+d?
+>=20
+> The system has been fixed early, so It's not revealant.
+> The head clicks 3-4 seconds after the disk activity, which means that=
+ if you=20
+> are using ext3 with default commit time, you have a cycle every 5-6 s=
+econds.
 
-Yeap, SD_TIMEOUT should be it.  But I've never personally seen disk
-flushing taking as long as 30 seconds.  Does it really happen?  It's
-not like the drive would be doing random seeking.  One full stroke
-across the platter should be it.  Even with the rotational delay,
-going over 30 seconds doesn't seem very likely.
+Alright, added and pushed out.  Thanks.
 
-Thanks.
-
--- 
+--=20
 tejun
