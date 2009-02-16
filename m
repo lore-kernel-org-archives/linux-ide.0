@@ -1,113 +1,199 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 5/6] ide: remove ide_execute_pkt_cmd()
-Date: Mon, 16 Feb 2009 09:56:08 +0100
-Message-ID: <20090216085608.GB18517@gollum.tnic>
-References: <20090209231945.32406.14874.sendpatchset@localhost.localdomain> <20090209232019.32406.98822.sendpatchset@localhost.localdomain> <20090211065535.GC937@gollum.tnic> <4992D108.2070709@ru.mvista.com> <9ea470500902110537g4d6c67a3o35d1d8a4dcca0927@mail.gmail.com> <4992D77F.3090802@ru.mvista.com> <9ea470500902110832p58cf6b6at38a20f9ea7557017@mail.gmail.com> <49980979.6090305@ru.mvista.com> <20090215173901.GA5156@gollum.tnic> <4998A2A9.2060607@ru.mvista.com>
+Subject: Re: [PATCH 11/20] ide-cd: unify cdrom_newpc_intr() exit paths
+Date: Mon, 16 Feb 2009 10:25:01 +0100
+Message-ID: <20090216092501.GA24323@gollum.tnic>
+References: <20090216001309.27491.59759.sendpatchset@localhost.localdomain> <20090216001422.27491.17281.sendpatchset@localhost.localdomain>
 Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:41970 "EHLO
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:65339 "EHLO
 	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbZBPI4H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 03:56:07 -0500
+	with ESMTP id S1751404AbZBPJY7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 04:24:59 -0500
 Content-Disposition: inline
-In-Reply-To: <4998A2A9.2060607@ru.mvista.com>
+In-Reply-To: <20090216001422.27491.17281.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
->
->  Didn't quite get that statement.
->  Well, this example wasn't very convincing...
+On Mon, Feb 16, 2009 at 01:14:22AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide-cd: unify cdrom_newpc_intr() exit paths
+> 
+> * Move cdrom_end_request() calls from cdrom_decode_status()
+>   and ide_cd_check_ireason() to cdrom_newpc_intr().
+> 
+> * Unify cdrom_newpc_intr() exit paths.
+> 
+> There should be no functional changes caused by this patch.
+> 
+> Cc: Borislav Petkov <petkovbb@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-cd.c |   48 +++++++++++++++++++++++-------------------------
+>  1 file changed, 23 insertions(+), 25 deletions(-)
+> 
+> Index: b/drivers/ide/ide-cd.c
+> ===================================================================
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -291,7 +291,8 @@ static void cdrom_end_request(ide_drive_
+>  /*
+>   * Returns:
+>   * 0: if the request should be continued.
+> - * 1: if the request was ended.
+> + * 1: if the request will be going through error recovery.
+> + * 2: if the request should be ended.
 
-Oh, I'm really getting tired of this!
+Yeah, we need defines for those. Especially if they're checked in other
+functions:
 
-Here's your final example:
+if (rc == 2)
 
-A stack variable caching the flags check. REMEMBER, no write accesses to
-it!:
+is simply not ok :). Rather,
 
-<ide-cd.c>
-int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
-{
-        int stat, ntracks, i;
-        struct cdrom_info *info = drive->driver_data;
-        struct cdrom_device_info *cdi = &info->devinfo;
-        struct atapi_toc *toc = info->toc;
-        struct {
-                struct atapi_toc_header hdr;
-                struct atapi_toc_entry  ent;
-        } ms_tmp;
-        long last_written;
-        unsigned long sectors_per_frame = SECTORS_PER_FRAME;
-        u8 tmp = drive->atapi_flags & IDE_AFLAG_TOCTRACKS_AS_BCD;
-</ide-cd.c>
+if (rc == DO_END_REQUEST)
 
-later you access the _same_ variable in an if-check:
+or something like that is much better, imho.
 
-<ide-cd.c>
-        if (tmp) {
-                toc->hdr.first_track = bcd2bin(toc->hdr.first_track);
-                toc->hdr.last_track  = bcd2bin(toc->hdr.last_track);
-        }
-</ide-cd.c>
-
-
-Resulting assembly snippets:
-
-<ide-cd.s>
-.LCFI166:
-        .loc 1 1202 0
-        movl    %edx, -52(%ebp) # sense, sense
-        .loc 1 1213 0
-        movl    500(%edi), %ecx # <variable>.atapi_flags,
-        .loc 1 1204 0
-        movl    24(%eax), %eax  # <variable>.driver_data,
-.LVL399:
-        movl    %eax, -40(%ebp) #, info
-.LVL400:
-        .loc 1 1206 0
-        movl    16(%eax), %esi  # <variable>.toc, toc
-.LVL401:
-        .loc 1 1212 0
-        movl    $4, -20(%ebp)   #, sectors_per_frame
-.LVL402:
-        .loc 1 1213 0
-        movl    %ecx, -48(%ebp) #, D.31862
-</ide-cd.s>
-
-you see here the ->atapi_flags, dereferenced above, being saved on the
-stack. Here's the asm for the check later:
-
-<ide-cd.s>
-.LVL415:
-        jne     .L283   #,
-        .loc 1 1256 0
-        movb    -48(%ebp), %al  # D.31862,
-.LVL416:
-        andb    $16, %al        #,
-        movb    %al, -33(%ebp)  #, tmp
-.LVL417:
-        je      .L287   #,
-        .loc 1 1257 0
-</ide-cd.s>
-
-So, the ->atapi_flags is moved into 8bit %al from the stack! Then the
-$16 is the IDE_AFLAG_TOCTRACKS_AS_BCD, so the binary & against the
-->atapi_flags is done actually here. Then the tmp variable is SAVED ON
-THE STACK at -33(%ebp) and it is dereferenced AGAIN in the next check:
-
-.LVL426:
-        jne     .L283   #,
-        .loc 1 1297 0
-        cmpb    $0, -33(%ebp)   # tmp
-        je      .L290   #
-
-
-If you still don't see it, go play with your own assembler and do some
-code staring on your own which doesn't involve me!
+>   */
+>  static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
+>  {
+> @@ -324,10 +325,7 @@ static int cdrom_decode_status(ide_drive
+>  		 * Just give up.
+>  		 */
+>  		rq->cmd_flags |= REQ_FAILED;
+> -		cdrom_end_request(drive, 0);
+> -		ide_error(drive, "request sense failure", stat);
+> -		return 1;
+> -
+> +		return 2;
+>  	} else if (blk_pc_request(rq) || rq->cmd_type == REQ_TYPE_ATA_PC) {
+>  		/* All other functions, except for READ. */
+>  
+> @@ -467,14 +465,12 @@ static int cdrom_decode_status(ide_drive
+>  		 */
+>  		if (stat & ATA_ERR)
+>  			cdrom_queue_request_sense(drive, NULL, NULL);
+> +		return 1;
+>  	} else {
+>  		blk_dump_rq_flags(rq, PFX "bad rq");
+> -		cdrom_end_request(drive, 0);
+> +		return 2;
+>  	}
+>  
+> -	/* retry, or handle the next request */
+> -	return 1;
+> -
+>  end_request:
+>  	if (stat & ATA_ERR) {
+>  		struct request_queue *q = drive->queue;
+> @@ -487,10 +483,9 @@ end_request:
+>  		hwif->rq = NULL;
+>  
+>  		cdrom_queue_request_sense(drive, rq->sense, rq);
+> +		return 1;
+>  	} else
+> -		cdrom_end_request(drive, 0);
+> -
+> -	return 1;
+> +		return 2;
+>  }
+>  
+>  /*
+> @@ -534,7 +529,6 @@ static int ide_cd_check_ireason(ide_driv
+>  	if (rq->cmd_type == REQ_TYPE_ATA_PC)
+>  		rq->cmd_flags |= REQ_FAILED;
+>  
+> -	cdrom_end_request(drive, 0);
+>  	return -1;
+>  }
+>  
+> @@ -736,7 +730,8 @@ static ide_startstop_t cdrom_newpc_intr(
+>  	xfer_func_t *xferfunc;
+>  	ide_expiry_t *expiry = NULL;
+>  	int dma_error = 0, dma, stat, thislen, uptodate = 0;
+> -	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0;
+> +	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc;
+> +	int sense = blk_sense_request(rq);
+>  	unsigned int timeout;
+>  	u16 len;
+>  	u8 ireason;
+> @@ -756,8 +751,12 @@ static ide_startstop_t cdrom_newpc_intr(
+>  		}
+>  	}
+>  
+> -	if (cdrom_decode_status(drive, 0, &stat))
+> +	rc = cdrom_decode_status(drive, 0, &stat);
+> +	if (rc) {
+> +		if (rc == 2)
+> +			goto out_end;
+>  		return ide_stopped;
+> +	}
+>  
+>  	/* using dma, transfer is complete now */
+>  	if (dma) {
+> @@ -802,8 +801,6 @@ static ide_startstop_t cdrom_newpc_intr(
+>  					rq->cmd_flags |= REQ_FAILED;
+>  				uptodate = 0;
+>  			}
+> -			cdrom_end_request(drive, uptodate);
+> -			return ide_stopped;
+>  		} else if (!blk_pc_request(rq)) {
+>  			ide_cd_request_sense_fixup(drive, rq);
+>  			/* complain if we still have data left to transfer */
+> @@ -815,17 +812,16 @@ static ide_startstop_t cdrom_newpc_intr(
+>  	}
+>  
+>  	/* check which way to transfer data */
+> -	if (ide_cd_check_ireason(drive, rq, len, ireason, write))
+> -		return ide_stopped;
+> +	rc = ide_cd_check_ireason(drive, rq, len, ireason, write);
+> +	if (rc)
+> +		goto out_end;
+>  
+>  	if (blk_fs_request(rq)) {
+>  		if (write == 0) {
+>  			int nskip;
+>  
+> -			if (ide_cd_check_transfer_size(drive, len)) {
+> -				cdrom_end_request(drive, 0);
+> -				return ide_stopped;
+> -			}
+> +			if (ide_cd_check_transfer_size(drive, len))
+> +				goto out_end;
+>  
+>  			/*
+>  			 * First, figure out if we need to bit-bucket
+> @@ -918,7 +914,7 @@ static ide_startstop_t cdrom_newpc_intr(
+>  			else
+>  				rq->data += blen;
+>  		}
+> -		if (!write && blk_sense_request(rq))
+> +		if (sense && write == 0)
+>  			rq->sense_len += blen;
+>  	}
+>  
+> @@ -939,7 +935,7 @@ static ide_startstop_t cdrom_newpc_intr(
+>  	return ide_started;
+>  
+>  out_end:
+> -	if (blk_pc_request(rq)) {
+> +	if (blk_pc_request(rq) && rc == 0) {
+>  		unsigned int dlen = rq->data_len;
+>  
+>  		if (dma)
+> @@ -951,6 +947,8 @@ out_end:
+>  		hwif->rq = NULL;
+>  	} else {
+>  		cdrom_end_request(drive, uptodate);
+> +		if (sense && rc == 2)
+> +			ide_error(drive, "request sense failure", stat);
+>  	}
+>  	return ide_stopped;
+>  }
 
 -- 
 Regards/Gruss,
