@@ -1,93 +1,71 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
-Date: Tue, 17 Feb 2009 04:04:11 +0300
-Message-ID: <499A0D0B.7070007@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <4998AE87.3020502@ru.mvista.com> <49995300.7030102@ru.mvista.com> <200902162251.49271.bzolnier@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: [PATCH v2] libata: Don't trust current capacity values in identify
+ words 57-58
+Date: Mon, 16 Feb 2009 20:15:08 -0600
+Message-ID: <499A1DAC.6090200@gmail.com>
+References: <4999CA54.1060306@gmail.com> <4999CFEB.3030204@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754996AbZBQBE3@vger.kernel.org>
-In-Reply-To: <200902162251.49271.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f222.google.com ([209.85.217.222]:53152 "EHLO
+	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbZBQCPM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Feb 2009 21:15:12 -0500
+In-Reply-To: <4999CFEB.3030204@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, =?UTF-8?B?SGFubm8gQsO2Y2s=?= <hanno@hboeck.de>
 
-Hello.
+Hanno B=C3=B6ck reported a problem where an old Conner CP30254 240MB ha=
+rd drive
+was reported as 1.1TB in capacity by libata:
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Monday 16 February 2009, Sergei Shtylyov wrote:
->   
->> Hello, I wrote:
->>
->>     
->>>>> There should be no functional changes caused by this patch.
->>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>>> Index: b/drivers/ide/ide-iops.c
->>>>> ===================================================================
->>>>> --- a/drivers/ide/ide-iops.c
->>>>> +++ b/drivers/ide/ide-iops.c
->>>>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
->>>>>  {
->>>>>      ide_hwif_t *hwif = drive->hwif;
->>>>>      const struct ide_port_ops *port_ops = hwif->port_ops;
->>>>> +    ide_task_t task;
->>>>>  
->>>>>      if (port_ops && port_ops->selectproc)
->>>>>          port_ops->selectproc(drive);
->>>>>  
->>>>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
->>>>> +    memset(&task, 0, sizeof(task));
->>>>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
->>>>> +
->>>>> +    drive->hwif->tf_load(drive, &task);
->>>>>           
->>>>    This actually doesn't seem like a bright idea to me, considering 
->>>> that this gets called when starting every request. How will you look 
->>>> at me adding the transport method for writing this register? :-)
->>>>         
->
-> Please check profiles first -- it might not be worth it. [1]
->
->   
->>> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
->>>
->>>   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
->>> consistent... well, I'm not excited about the whole idea conversion to 
->>> tf_{load|read}() -- it's not clear what exactly this bought us.
->>>       
->
-> This was explained some months ago already, so just to recall -- it was
-> a part of a bigger work removing duplicated code and allowing abstraction
-> of the ATA logic.
->
-> Anyway this is not set in a stone so if you have proposal of a better
-> approach please come forward with it.
->   
+http://lkml.org/lkml/2009/2/13/134
 
-   Er... I think that the previous IN()/OUT() methods were better. Note 
-that we ended up using the local version of them in the dafault 
-ide_tf_{load}read}() anyway -- as Alan has pointed out it might be worth 
-splitting those into I/O and memory space versions... although given 
-general slowness of the I/O accesses, this is probably not going to win 
-much speed-wise.
+This was caused by libata trusting the drive's reported current capacit=
+y in=20
+sectors in identify words 57 and 58 if the drive does not support LBA a=
+nd the
+current CHS translation values appear valid. Unfortunately it seems old=
+er
+ATA specs were vague about what this field should contain and a number =
+of drives
+used values with wrong byte order or that were totally bogus. There's n=
+o
+unique information that it conveys and so we can just calculate the num=
+ber
+of sectors from the reported current CHS values.
 
->>    We at least could have saved on memset() -- tf_load() method ignores 
->> fields other than tf_flags anyway...
->>     
->
-> Unless it is huge performance win (unlikely) this is not a good idea as it would be a maintainance nightmare.
->   
-> ->tf_load does only use cmd->tf_flags today but it might change one day
-> and nobody will remember to audit all users that they pass a valid cmd...
->   
+While we're at it, clean up this function to use named constants for th=
+e
+identify word values.
 
-   It's just quite unbearable to see (especially for a long time 
-assembly coder) how a single register write is turning into *that*.
-So, it still seems worth risking... :-)
+Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 
-> Thanks,
-> Bart
->   
-
-MBR, Sergei
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9fbf059..33b5549 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1322,14 +1322,16 @@ static u64 ata_id_n_sectors(const u16 *id)
+ {
+ 	if (ata_id_has_lba(id)) {
+ 		if (ata_id_has_lba48(id))
+-			return ata_id_u64(id, 100);
++			return ata_id_u64(id, ATA_ID_LBA_CAPACITY_2);
+ 		else
+-			return ata_id_u32(id, 60);
++			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
+ 	} else {
+ 		if (ata_id_current_chs_valid(id))
+-			return ata_id_u32(id, 57);
++			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
++			       id[ATA_ID_CUR_SECTORS];
+ 		else
+-			return id[1] * id[3] * id[6];
++			return id[ATA_ID_CYLS] * id[ATA_ID_HEADS] *
++			       id[ATA_ID_SECTORS];
+ 	}
+ }
+=20
