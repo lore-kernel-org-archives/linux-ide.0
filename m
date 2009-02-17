@@ -1,50 +1,109 @@
-From: Andreas Mohr <andi@lisas.de>
-Subject: Re: [BUG] 2.6.29-rc2-git1 to -rc5: libata lockup on boot, LED
-	solid, 100% CPU
-Date: Tue, 17 Feb 2009 21:01:27 +0100
-Message-ID: <20090217200127.GA30981@rhlx01.hs-esslingen.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Tue, 17 Feb 2009 16:25:51 -0500
+Message-ID: <20090217212551.GA8468@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:45879 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754570AbZBQUB2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 15:01:28 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:59495 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752086AbZBQVZz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2009 16:25:55 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Andreas Mohr <andi@lisas.de>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, WimVanSebroeck@rhlx01.hs-esslingen.de
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-<wim@iguana.be>
-Bcc: 
-Subject: Re: [BUG] 2.6.29-rc2-git1 to -rc5: libata lockup on boot, LED
-	solid, 100% CPU
-Reply-To: 
-In-Reply-To: <18841.54304.460011.351580@harpo.it.uu.se>
-X-Priority: none
 
-[CC'd Sergei and Wim; thanks a lot for your work!]
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Hi,
+to receive the following updates:
 
-On Mon, Feb 16, 2009 at 10:01:20PM +0100, Mikael Pettersson wrote:
-> Andreas Mohr writes:
->  > Should I test 2.6.28.5? Every build will take two hours though...
->  > Not ATA-SFF 32bit bug problem, right? (already committed?)
->  > http://marc.info/?l=linux-kernel&m=123254501314058&w=2
-> 
-> To me it looks like the 32-bit PIO bug. The patch you cited above was
-> just the first to identify the issue. This is still unfixed in 29-rc5.
-> Please test Sergei's latest proposed patch posted yesterday to linux-ide.
+ drivers/ata/libata-sff.c |   28 +++++++++++++++++++++-------
+ drivers/ata/sata_nv.c    |   14 ++++++++------
+ 2 files changed, 29 insertions(+), 13 deletions(-)
 
-Bingo. That patch ( http://marc.info/?l=linux-ide&m=123482861218381&w=2 )
-made -rc5 boot for me. Well, after additionally disabling iTCO_wdt.ko,
-that is... (on my Dell Inspiron 8000 i810)
+Sergei Shtylyov (1):
+      libata-sff: fix 32-bit PIO ATAPI regression
 
-And HDD did seem to be a wee bit more reponsive, too, but that could be
-mere illusion...
+Tejun Heo (1):
+      sata_nv: give up hardreset on nf2
 
-Thanks,
-
-Andreas Mohr
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 0b299b0..714cb04 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -773,18 +773,32 @@ unsigned int ata_sff_data_xfer32(struct ata_device *dev, unsigned char *buf,
+ 	else
+ 		iowrite32_rep(data_addr, buf, words);
+ 
++	/* Transfer trailing bytes, if any */
+ 	if (unlikely(slop)) {
+-		__le32 pad;
++		unsigned char pad[4];
++
++		/* Point buf to the tail of buffer */
++		buf += buflen - slop;
++
++		/*
++		 * Use io*_rep() accessors here as well to avoid pointlessly
++		 * swapping bytes to and fro on the big endian machines...
++		 */
+ 		if (rw == READ) {
+-			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
+-			memcpy(buf + buflen - slop, &pad, slop);
++			if (slop < 3)
++				ioread16_rep(data_addr, pad, 1);
++			else
++				ioread32_rep(data_addr, pad, 1);
++			memcpy(buf, pad, slop);
+ 		} else {
+-			memcpy(&pad, buf + buflen - slop, slop);
+-			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
++			memcpy(pad, buf, slop);
++			if (slop < 3)
++				iowrite16_rep(data_addr, pad, 1);
++			else
++				iowrite32_rep(data_addr, pad, 1);
+ 		}
+-		words++;
+ 	}
+-	return words << 2;
++	return (buflen + 1) & ~1;
+ }
+ EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
+ 
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 444af04..55a8eed 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -421,19 +421,21 @@ static struct ata_port_operations nv_generic_ops = {
+ 	.hardreset		= ATA_OP_NULL,
+ };
+ 
+-/* OSDL bz3352 reports that nf2/3 controllers can't determine device
+- * signature reliably.  Also, the following thread reports detection
+- * failure on cold boot with the standard debouncing timing.
++/* nf2 is ripe with hardreset related problems.
++ *
++ * kernel bz#3352 reports nf2/3 controllers can't determine device
++ * signature reliably.  The following thread reports detection failure
++ * on cold boot with the standard debouncing timing.
+  *
+  * http://thread.gmane.org/gmane.linux.ide/34098
+  *
+- * Debounce with hotplug timing and request follow-up SRST.
++ * And bz#12176 reports that hardreset simply doesn't work on nf2.
++ * Give up on it and just don't do hardreset.
+  */
+ static struct ata_port_operations nv_nf2_ops = {
+-	.inherits		= &nv_common_ops,
++	.inherits		= &nv_generic_ops,
+ 	.freeze			= nv_nf2_freeze,
+ 	.thaw			= nv_nf2_thaw,
+-	.hardreset		= nv_noclassify_hardreset,
+ };
+ 
+ /* For initial probing after boot and hot plugging, hardreset mostly
