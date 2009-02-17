@@ -1,102 +1,81 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: Re: [PATCH] atiixp: missing parentheses?
-Date: Tue, 17 Feb 2009 16:37:54 +0100
-Message-ID: <499AD9D2.4040500@gmail.com>
-References: <499AB75F.6060709@gmail.com> <499AC8E2.60406@ru.mvista.com> <499AC92D.50108@ru.mvista.com> <200902171610.11528.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
+Date: Tue, 17 Feb 2009 21:07:03 +0300
+Message-ID: <499AFCC7.60403@ru.mvista.com>
+References: <200902152230.38271.sshtylyov@ru.mvista.com> <4998717A.2090507@pobox.com> <49987672.2050102@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f167.google.com ([209.85.218.167]:39121 "EHLO
-	mail-bw0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbZBQPh4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 10:37:56 -0500
-Received: by bwz11 with SMTP id 11so2114432bwz.13
-        for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2009 07:37:54 -0800 (PST)
-In-Reply-To: <200902171610.11528.bzolnier@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:28517 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753090AbZBQSGn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2009 13:06:43 -0500
+In-Reply-To: <49987672.2050102@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 17 February 2009, Sergei Shtylyov wrote:
->> I wrote:
->>
->>>> This looks odd, is below what was intended? note that timing_shift can
->>>> only be 16, 8 or 0. Maybe intended was 24, 16, 8 or 0? then we should do:
->>>    Looking at the libata driver, yes, it should be 0, 8, 16, and 24.
->>>> int timing_shift = ((drive->dn & 2) ? 16 : 0) + ((drive->dn & 1) ? 0 : 
->>>> 8);
+Hello, I wrote:
 
->>>    Why didn't you add parens around the first ?: then? They are surely 
->>> needed.
+>>> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal 
+>>> bacause:
 
-I was unsure what was intended so I chose to keep semantics, but wanted to
-show the oddity. Thankfully you were able to clarify that it's a bug.
+>>> - it always initializes the padding buffer to 0 which is not really 
+>>> needed in
+>>>   both the read and write cases;
 
->>     Oh, actually, timing_shift = (drive->dn ^ 1) * 8.
-> 
-> Yes, this way we'll get the correct:
-> 
-> 8 0 24 16
-> 
-> instead of the current
-> 
-> 8 0 16 16
+>>> - it has to use memcpy() to transfer a single byte from/to the 
+>>> padding buffer;
 
+>> Have you looked at the assembly, before deciding it is suboptiomal?
 
-> 
-> [ Luckily after DMA timings gets programmed for the third device to
->   offset 16 they get overwritten with DMA timings for fourth device.
-> 
->   Since BIOS should program DMA timings for the third device all
->   should work fine till suspend/resume... ] 
-> 
-> Roel, please fix the patch and resubmit.
-> 
-> Thanks,
-> Bart
-I am not sure what to write for the changelog, so I kept your remarks.
-Feel free to change them if necessary.
---------------------------->8-------------8<------------------------------
-DMA timings were incorrect. this way we'll get the correct:
+>    I'm estimating the code itself, not what the compiler can do to fix 
+> it. :-)
 
-8 0 24 16 
+>> gcc optimizes tiny arrays and structures quite well, and is well 
+>> capable of seeing one path where the initialization is clobbered 
+>> without a single read, and another code path where it is used.
 
-instead of the current
+>    The initialier just shouldn't have been there in the first place, 
+> clobbered or not. And let's looks at what gcc gave me:
 
-8 0 16 16
+[...]
 
-Luckily after DMA timings get programmed for the third device to
-offset 16 they get overwritten with DMA timings for fourth device.
+>> As for memcpy, for small and/or constant values that is quite often a 
+>> compiler builtin.  It is rarely useful, these days, to convert a 
+>> memcpy() to a hand-rolled 
 
-Since BIOS should program DMA timings for the third device all
-should work fine till suspend/resume...
+> version of same.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-diff --git a/drivers/ide/atiixp.c b/drivers/ide/atiixp.c
-index b2735d2..ecd1e62 100644
---- a/drivers/ide/atiixp.c
-+++ b/drivers/ide/atiixp.c
-@@ -52,7 +52,7 @@ static void atiixp_set_pio_mode(ide_drive_t *drive, const u8 pio)
- {
- 	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
- 	unsigned long flags;
--	int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 : 8;
-+	int timing_shift = (drive->dn ^ 1) * 8;
- 	u32 pio_timing_data;
- 	u16 pio_mode_data;
- 
-@@ -85,7 +85,7 @@ static void atiixp_set_dma_mode(ide_drive_t *drive, const u8 speed)
- {
- 	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
- 	unsigned long flags;
--	int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 : 8;
-+	int timing_shift = (drive->dn ^ 1) * 8;
- 	u32 tmp32;
- 	u16 tmp16;
- 	u16 udma_ctl = 0;
+>    Here memcpy() just shouldn't have appeared in the first place. But 
+> indeed, gcc did optimize it away.
 
+    In fact, we could do without both memcpy and io*15_rep() I think:
 
+  	if (unlikely(buflen & 0x01)) {
+		u16 pad;
+
+		/* Point buf to the tail of buffer */
+		buf += buflen - 1;
+
+		/*
+		 * Copy from/to pad's LSB only (host order),
+		 * dropping its MSB or zero-extending it...
+		 */
+  		if (rw == READ) {
+			pad = ioread16(data_addr);
+			*buf = (unsigned char)pad;
+  		} else {
+			pad = *buf;
+			iowrite16(pad, data_addr);
+		}
+	}
+
+    It should work -- that easy... although io{read|write}16() will still 
+byte-swap.
+
+>>     Jeff
+
+MBR, Sergei
