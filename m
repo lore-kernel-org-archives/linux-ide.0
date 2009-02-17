@@ -1,65 +1,59 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/10] ide: flags query macros
-Date: Tue, 17 Feb 2009 15:33:28 +0100
-Message-ID: <200902171533.29135.bzolnier@gmail.com>
-References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
+Date: Tue, 17 Feb 2009 18:13:01 +0300
+Message-ID: <499AD3FD.6040109@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213451.13202.12671.sendpatchset@localhost.localdomain> <49987A37.9000300@ru.mvista.com> <4998AE87.3020502@ru.mvista.com> <499AAC24.70200@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:53738 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbZBQPJm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 10:09:42 -0500
-In-Reply-To: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:25888 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752247AbZBQPMl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2009 10:12:41 -0500
+In-Reply-To: <499AAC24.70200@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 15 February 2009, Borislav Petkov wrote:
-> Hi,
-> 
-> this series adds the drive->atapi_flags and drive->dev_flags macro wrappers
-> we discussed. The idea was to make the code more readable and this has
-> been my main concern when coming up with the macro naming, therefore
-> some macro names appear a tad more descriptive than the flag itself.
-> 
->  drivers/ide/cmd640.c           |    2 +-
->  drivers/ide/ht6560b.c          |    3 +-
->  drivers/ide/ide-atapi.c        |   15 ++++++-------
->  drivers/ide/ide-cd.c           |   44 ++++++++++++++++++++-------------------
->  drivers/ide/ide-cd_ioctl.c     |   18 +++++++---------
->  drivers/ide/ide-devsets.c      |    8 ++----
->  drivers/ide/ide-disk.c         |   32 ++++++++++++++--------------
->  drivers/ide/ide-disk_proc.c    |    2 +-
->  drivers/ide/ide-dma.c          |    3 +-
->  drivers/ide/ide-eh.c           |   17 +++++++--------
->  drivers/ide/ide-floppy.c       |    6 ++--
->  drivers/ide/ide-floppy_ioctl.c |    2 +-
->  drivers/ide/ide-gd.c           |   14 ++++++------
->  drivers/ide/ide-io.c           |    9 +++----
->  drivers/ide/ide-ioctls.c       |    6 ++--
->  drivers/ide/ide-iops.c         |    6 ++--
->  drivers/ide/ide-lib.c          |    2 +-
->  drivers/ide/ide-park.c         |   11 ++++-----
->  drivers/ide/ide-pm.c           |    2 +-
->  drivers/ide/ide-probe.c        |   36 +++++++++++++++++---------------
->  drivers/ide/ide-proc.c         |    2 +-
->  drivers/ide/ide-tape.c         |   12 +++++-----
->  drivers/ide/ide-taskfile.c     |   16 +++++---------
->  drivers/ide/ns87415.c          |    5 +--
->  drivers/ide/pdc202xx_old.c     |    4 +-
->  drivers/ide/sc1200.c           |    2 +-
->  drivers/ide/trm290.c           |    4 +-
->  27 files changed, 136 insertions(+), 147 deletions(-)
+Hello, I wrote:
 
-One more thing I forgot yesterday:
+>>>> There should be no functional changes caused by this patch.
+>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>>> Index: b/drivers/ide/ide-iops.c
+>>>> ===================================================================
+>>>> --- a/drivers/ide/ide-iops.c
+>>>> +++ b/drivers/ide/ide-iops.c
+>>>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
+>>>>  {
+>>>>      ide_hwif_t *hwif = drive->hwif;
+>>>>      const struct ide_port_ops *port_ops = hwif->port_ops;
+>>>> +    ide_task_t task;
+>>>>  
+>>>>      if (port_ops && port_ops->selectproc)
+>>>>          port_ops->selectproc(drive);
+>>>>  
+>>>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
+>>>> +    memset(&task, 0, sizeof(task));
+>>>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
+>>>> +
+>>>> +    drive->hwif->tf_load(drive, &task);
 
-Since it is not a lot of modified lines and the change is rather
-straightforward it could as well be done in a single patch...
+>>>    This actually doesn't seem like a bright idea to me, considering 
+>>> that this gets called when starting every request. How will you look 
+>>> at me adding the transport method for writing this register? :-)
 
-Thanks,
-Bart
+>> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
+
+>>   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
+>> consistent...
+
+>   ... which didn't prevent libata from having such backdoor though, in 
+> the form of dev_select() method.
+
+    Oh, and I forgot about the IDE core's infamous selectproc() method which 
+could easily be taught to also write the device/head register and moved to 
+'struct ide_tp_ops'.
+
+MBR, Sergei
