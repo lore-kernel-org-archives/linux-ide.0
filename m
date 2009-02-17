@@ -1,108 +1,94 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
-Date: Tue, 17 Feb 2009 15:43:21 +0100
-Message-ID: <200902171543.21892.bzolnier@gmail.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <200902162251.49271.bzolnier@gmail.com> <499A0D0B.7070007@ru.mvista.com>
+Subject: Re: [PATCH] atiixp: missing parentheses?
+Date: Tue, 17 Feb 2009 16:10:11 +0100
+Message-ID: <200902171610.11528.bzolnier@gmail.com>
+References: <499AB75F.6060709@gmail.com> <499AC8E2.60406@ru.mvista.com> <499AC92D.50108@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:60668 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbZBQPJn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 10:09:43 -0500
-In-Reply-To: <499A0D0B.7070007@ru.mvista.com>
+Received: from mu-out-0910.google.com ([209.85.134.188]:41653 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306AbZBQPJo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 10:09:44 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so1131539mue.1
+        for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2009 07:09:42 -0800 (PST)
+In-Reply-To: <499AC92D.50108@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Roel Kluin <roel.kluin@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
 On Tuesday 17 February 2009, Sergei Shtylyov wrote:
-> Hello.
+> I wrote:
 > 
-> Bartlomiej Zolnierkiewicz wrote:
-> > On Monday 16 February 2009, Sergei Shtylyov wrote:
-> >   
-> >> Hello, I wrote:
+> >> This looks odd, is below what was intended? note that timing_shift can
+> >> only be 16, 8 or 0. Maybe intended was 24, 16, 8 or 0? then we should do:
+> 
+> >    Looking at the libata driver, yes, it should be 0, 8, 16, and 24.
+> 
+> >> int timing_shift = ((drive->dn & 2) ? 16 : 0) + ((drive->dn & 1) ? 0 : 
+> >> 8);
+> >> --------------------------->8-------------8<------------------------------ 
 > >>
-> >>     
-> >>>>> There should be no functional changes caused by this patch.
-> >>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >>>>> Index: b/drivers/ide/ide-iops.c
-> >>>>> ===================================================================
-> >>>>> --- a/drivers/ide/ide-iops.c
-> >>>>> +++ b/drivers/ide/ide-iops.c
-> >>>>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
-> >>>>>  {
-> >>>>>      ide_hwif_t *hwif = drive->hwif;
-> >>>>>      const struct ide_port_ops *port_ops = hwif->port_ops;
-> >>>>> +    ide_task_t task;
-> >>>>>  
-> >>>>>      if (port_ops && port_ops->selectproc)
-> >>>>>          port_ops->selectproc(drive);
-> >>>>>  
-> >>>>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
-> >>>>> +    memset(&task, 0, sizeof(task));
-> >>>>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
-> >>>>> +
-> >>>>> +    drive->hwif->tf_load(drive, &task);
-> >>>>>           
-> >>>>    This actually doesn't seem like a bright idea to me, considering 
-> >>>> that this gets called when starting every request. How will you look 
-> >>>> at me adding the transport method for writing this register? :-)
-> >>>>         
-> >
-> > Please check profiles first -- it might not be worth it. [1]
-> >
-> >   
-> >>> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
-> >>>
-> >>>   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
-> >>> consistent... well, I'm not excited about the whole idea conversion to 
-> >>> tf_{load|read}() -- it's not clear what exactly this bought us.
-> >>>       
-> >
-> > This was explained some months ago already, so just to recall -- it was
-> > a part of a bigger work removing duplicated code and allowing abstraction
-> > of the ATA logic.
-> >
-> > Anyway this is not set in a stone so if you have proposal of a better
-> > approach please come forward with it.
-> >   
+> >> Add missing parentheses
+> > 
+> > 
+> >> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> > 
+> > 
+> >> diff --git a/drivers/ide/atiixp.c b/drivers/ide/atiixp.c
+> >> index b2735d2..b7813ec 100644
+> >> --- a/drivers/ide/atiixp.c
+> >> +++ b/drivers/ide/atiixp.c
+> >> @@ -52,7 +52,7 @@ static void atiixp_set_pio_mode(ide_drive_t *drive, 
+> >> const u8 pio)
+> >>  {
+> >>      struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+> >>      unsigned long flags;
+> >> -    int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 
+> >> : 8;
+> >> +    int timing_shift = (drive->dn & 2) ? 16 : 0 + ((drive->dn & 1) ? 
+> >> 0 : 8);
+> >>      u32 pio_timing_data;
+> >>      u16 pio_mode_data;
+> >>  
+> >> @@ -85,7 +85,7 @@ static void atiixp_set_dma_mode(ide_drive_t *drive, 
+> >> const u8 speed)
+> >>  {
+> >>      struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+> >>      unsigned long flags;
+> >> -    int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 
+> >> : 8;
+> >> +    int timing_shift = (drive->dn & 2) ? 16 : 0 + ((drive->dn & 1) ? 
+> >> 0 : 8);
+> >>      u32 tmp32;
+> >>      u16 tmp16;
+> >>      u16 udma_ctl = 0;
+> > 
+> > 
+> >    Why didn't you add parens around the first ?: then? They are surely 
+> > needed. Though this clearly needs to be simplified to (drive->dn * 8).
 > 
->    Er... I think that the previous IN()/OUT() methods were better. Note 
-> that we ended up using the local version of them in the dafault 
-> ide_tf_{load}read}() anyway -- as Alan has pointed out it might be worth 
+>     Oh, actually, timing_shift = (drive->dn ^ 1) * 8.
 
-During ide_tf_{load,read}() addition I was a bit too optimistic about
-the possibility of the quick io{read,write}* conversion later...
+Yes, this way we'll get the correct:
 
-> splitting those into I/O and memory space versions... although given 
-> general slowness of the I/O accesses, this is probably not going to win 
-> much speed-wise.
+8 0 24 16
 
-Maybe it would be worth to add ->tf_{inb,outb} to struct ide_tp_ops
-and convert default tp_ops to use them...  OTOH we should reinvestigate
-the io{read,write}*() way first (maybe things have improved there)...
+instead of the current
 
-> >>    We at least could have saved on memset() -- tf_load() method ignores 
-> >> fields other than tf_flags anyway...
-> >>     
-> >
-> > Unless it is huge performance win (unlikely) this is not a good idea as it would be a maintainance nightmare.
-> >   
-> > ->tf_load does only use cmd->tf_flags today but it might change one day
-> > and nobody will remember to audit all users that they pass a valid cmd...
-> >   
-> 
->    It's just quite unbearable to see (especially for a long time 
-> assembly coder) how a single register write is turning into *that*.
-> So, it still seems worth risking... :-)
+8 0 16 16
 
-I see your point here.  If SELECT_DRIVE() is performance sensitive we
-may just add another struct ide_tp_ops method for it...
+[ Luckily after DMA timings gets programmed for the third device to
+  offset 16 they get overwritten with DMA timings for fourth device.
+
+  Since BIOS should program DMA timings for the third device all
+  should work fine till suspend/resume... ] 
+
+Roel, please fix the patch and resubmit.
 
 Thanks,
 Bart
