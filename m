@@ -1,81 +1,103 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
-Date: Tue, 17 Feb 2009 21:07:03 +0300
-Message-ID: <499AFCC7.60403@ru.mvista.com>
-References: <200902152230.38271.sshtylyov@ru.mvista.com> <4998717A.2090507@pobox.com> <49987672.2050102@ru.mvista.com>
+From: Justin Madru <jdm64@gawab.com>
+Subject: Re: [Bug #12263] Sata soft reset filling log
+Date: Tue, 17 Feb 2009 11:08:46 -0800
+Message-ID: <499B0B3E.3070101@gawab.com>
+References: <sTyoMUwdm9B.A.QCH.U40lJB@chimera> <200902152221.43834.rjw@sisk.pl> <20090215223045.GC29300@elte.hu> <200902160012.57584.rjw@sisk.pl> <499983DF.5050503@ru.mvista.com> <49998480.3090408@ru.mvista.com> <499986D0.3000205@ru.mvista.com> <4999BD1A.1060101@gawab.com> <4999C195.5050905@ru.mvista.com> <4999DD31.4010504@gawab.com> <Pine.LNX.4.64.0902171102260.15234@blonde.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:28517 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753090AbZBQSGn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Feb 2009 13:06:43 -0500
-In-Reply-To: <49987672.2050102@ru.mvista.com>
+Received: from rv-out-0506.google.com ([209.85.198.235]:36143 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbZBQTIz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 14:08:55 -0500
+In-Reply-To: <Pine.LNX.4.64.0902171102260.15234@blonde.anvils>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Ingo Molnar <mingo@elte.hu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Larry Finger <Larry.Finger@lwfinger.net>, Mikael Pettersson <mikpe@it.uu.se>
 
-Hello, I wrote:
+Hugh Dickins wrote:
+> On Mon, 16 Feb 2009, Justin Madru wrote:
+>   
+>> Sergei Shtylyov wrote:
+>>     
+>>> If 12609 is truly a post-2.6.28 regression and 12263 is post-2.6.27
+>>> regresssion, this just cannot be.
+>>>       
+>> Maybe the reporter of #12609 didn't notice/test kernels 28-rc1 to 28. Or maybe
+>> the difference in hardware is
+>> the issue, but the bug is still the same. Don't know.
+>>     
+>
+> Sorry Justin, you must be confused: as Sergei says,
+> #12609 and #12263 can only be different.
+>
+> I was one of the reporters of #12609, and I do know it's a post-2.6.28
+> regression (and Larry said so too), and one fix (not the preferred fix)
+> is to revert the ata_bmdma32_port_ops from 2.6.29-rc, and the preferred
+> fix is to improve the ata_sff_data_xfer32() introduced in 2.6.29-rc1.
+>
+> 2.6.28 does not contain any ata_bmdma32_port_ops, nor ata_sff_data_xfer32(),
+> not did 2.6.28-rc1 contain them.  So it is impossible for the reversion of
+> the patch that introduced them to fix any problem on 2.6.28.
+>
+> I'm quite prepared to believe that your #12263 manifests similarly to
+> #12609, and that a tip tree which contains a fix for #12609 contains
+> a fix for #12263; but please, those bugs are not the same, and they
+> don't have the same fix.
+>
+> Hugh
+>
+>   
+Well, like I said: "[I] Don't know". I'm not a kernel developer (or even 
+any developer... yet).
+I'm just someone that tests the -rc kernels to see if there's any 
+problems with my hardware.
+I try to report any regressions to lkml, and hopefully help the developers.
 
->>> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal 
->>> bacause:
+To me, who has no knowledge of all these low level issues, the following 
+error messages
+look strikingly similar with a quick glance.
 
->>> - it always initializes the padding buffer to 0 which is not really 
->>> needed in
->>>   both the read and write cases;
+# bug 12609
+# http://marc.info/?l=linux-kernel&m=123254501314058&w=4
+#
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+         res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
+ata2.00: status: { DRDY ERR }
+ata2: soft resetting link
+ata2.00: configured for UDMA/33
+ata2: EH complete
 
->>> - it has to use memcpy() to transfer a single byte from/to the 
->>> padding buffer;
+# bug 12263
+# http://marc.info/?l=linux-kernel&m=122913412608533&w=4
+#
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata2.00: ST_FIRST: !(DRQ|ERR|DF)
+ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         cdb 1e 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+         res 50/00:01:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+ata2.00: status: { DRDY }
+ata2: soft resetting link
+ata2.00: configured for UDMA/33
+ata2: EH complete
 
->> Have you looked at the assembly, before deciding it is suboptiomal?
+# bug 12609
+# http://marc.info/?l=linux-kernel&m=123275478111406&w=4
+#
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+         res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x3 (HSM violation)
+ata2.00: status: { DRDY ERR }
+ata2: soft resetting link
+ata2.00: configured for PIO4
+ata2: EH complete
 
->    I'm estimating the code itself, not what the compiler can do to fix 
-> it. :-)
+So, will the patch for 12609 fix my issue also, or does there need to be 
+another patch?
 
->> gcc optimizes tiny arrays and structures quite well, and is well 
->> capable of seeing one path where the initialization is clobbered 
->> without a single read, and another code path where it is used.
-
->    The initialier just shouldn't have been there in the first place, 
-> clobbered or not. And let's looks at what gcc gave me:
-
-[...]
-
->> As for memcpy, for small and/or constant values that is quite often a 
->> compiler builtin.  It is rarely useful, these days, to convert a 
->> memcpy() to a hand-rolled 
-
-> version of same.
-
->    Here memcpy() just shouldn't have appeared in the first place. But 
-> indeed, gcc did optimize it away.
-
-    In fact, we could do without both memcpy and io*15_rep() I think:
-
-  	if (unlikely(buflen & 0x01)) {
-		u16 pad;
-
-		/* Point buf to the tail of buffer */
-		buf += buflen - 1;
-
-		/*
-		 * Copy from/to pad's LSB only (host order),
-		 * dropping its MSB or zero-extending it...
-		 */
-  		if (rw == READ) {
-			pad = ioread16(data_addr);
-			*buf = (unsigned char)pad;
-  		} else {
-			pad = *buf;
-			iowrite16(pad, data_addr);
-		}
-	}
-
-    It should work -- that easy... although io{read|write}16() will still 
-byte-swap.
-
->>     Jeff
-
-MBR, Sergei
+Justin Madru
