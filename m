@@ -1,82 +1,55 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH v2] libata: Don't trust current capacity values in identify
- words 57-58
-Date: Tue, 17 Feb 2009 14:32:23 +0300
-Message-ID: <499AA047.70502@ru.mvista.com>
-References: <4999CA54.1060306@gmail.com> <4999CFEB.3030204@ru.mvista.com> <499A1DAC.6090200@gmail.com>
+Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
+Date: Tue, 17 Feb 2009 15:23:00 +0300
+Message-ID: <499AAC24.70200@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213451.13202.12671.sendpatchset@localhost.localdomain> <49987A37.9000300@ru.mvista.com> <4998AE87.3020502@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:20686 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:22235 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751123AbZBQLcb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Feb 2009 06:32:31 -0500
-In-Reply-To: <499A1DAC.6090200@gmail.com>
+	id S1751539AbZBQMXG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2009 07:23:06 -0500
+In-Reply-To: <4998AE87.3020502@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, =?UTF-8?B?SGFubm8=?= =?UTF-8?B?IELDtmNr?= <hanno@hboeck.de>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+Hello, I wrote:
 
-Robert Hancock wrote:
-
-> Hanno B=C3=B6ck reported a problem where an old Conner CP30254 240MB =
-hard drive
-> was reported as 1.1TB in capacity by libata:
+>>> There should be no functional changes caused by this patch.
+>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>> Index: b/drivers/ide/ide-iops.c
+>>> ===================================================================
+>>> --- a/drivers/ide/ide-iops.c
+>>> +++ b/drivers/ide/ide-iops.c
+>>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
+>>>  {
+>>>      ide_hwif_t *hwif = drive->hwif;
+>>>      const struct ide_port_ops *port_ops = hwif->port_ops;
+>>> +    ide_task_t task;
+>>>  
+>>>      if (port_ops && port_ops->selectproc)
+>>>          port_ops->selectproc(drive);
+>>>  
+>>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
+>>> +    memset(&task, 0, sizeof(task));
+>>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
+>>> +
+>>> +    drive->hwif->tf_load(drive, &task);
+>>
+>>    This actually doesn't seem like a bright idea to me, considering 
+>> that this gets called when starting every request. How will you look 
+>> at me adding the transport method for writing this register? :-)
+> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
 >
-> http://lkml.org/lkml/2009/2/13/134
->
-> This was caused by libata trusting the drive's reported current capac=
-ity in=20
-> sectors in identify words 57 and 58 if the drive does not support LBA=
- and the
-> current CHS translation values appear valid. Unfortunately it seems o=
-lder
-> ATA specs were vague about what this field should contain and a numbe=
-r of drives
-> used values with wrong byte order or that were totally bogus. There's=
- no
-> unique information that it conveys and so we can just calculate the n=
-umber
-> of sectors from the reported current CHS values.
->
-> While we're at it, clean up this function to use named constants for =
-the
-> identify word values.
->
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
->  =20
+>   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
+> consistent...
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-   ... though I'm not sure that the rename should be a part of this pat=
-ch.
-
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 9fbf059..33b5549 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1322,14 +1322,16 @@ static u64 ata_id_n_sectors(const u16 *id)
->  {
->  	if (ata_id_has_lba(id)) {
->  		if (ata_id_has_lba48(id))
-> -			return ata_id_u64(id, 100);
-> +			return ata_id_u64(id, ATA_ID_LBA_CAPACITY_2);
->  		else
-> -			return ata_id_u32(id, 60);
-> +			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
->  	} else {
->  		if (ata_id_current_chs_valid(id))
-> -			return ata_id_u32(id, 57);
-> +			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
-> +			       id[ATA_ID_CUR_SECTORS];
->  =20
-
-   It won't hurt to comment on why the capacity is ignored.=20
-Unfortunately, the IDE code lacks such comment.
+   ... which didn't prevent libata from having such backdoor though, in 
+the form of dev_select() method.
 
 MBR, Sergei
 
