@@ -1,94 +1,65 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] atiixp: missing parentheses?
-Date: Tue, 17 Feb 2009 16:10:11 +0100
-Message-ID: <200902171610.11528.bzolnier@gmail.com>
-References: <499AB75F.6060709@gmail.com> <499AC8E2.60406@ru.mvista.com> <499AC92D.50108@ru.mvista.com>
+Subject: Re: [PATCH 0/10] ide: flags query macros
+Date: Tue, 17 Feb 2009 15:33:28 +0100
+Message-ID: <200902171533.29135.bzolnier@gmail.com>
+References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:41653 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbZBQPJo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 10:09:44 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1131539mue.1
-        for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2009 07:09:42 -0800 (PST)
-In-Reply-To: <499AC92D.50108@ru.mvista.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:53738 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbZBQPJm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 10:09:42 -0500
+In-Reply-To: <1234699692-9452-1-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Tuesday 17 February 2009, Sergei Shtylyov wrote:
-> I wrote:
+On Sunday 15 February 2009, Borislav Petkov wrote:
+> Hi,
 > 
-> >> This looks odd, is below what was intended? note that timing_shift can
-> >> only be 16, 8 or 0. Maybe intended was 24, 16, 8 or 0? then we should do:
+> this series adds the drive->atapi_flags and drive->dev_flags macro wrappers
+> we discussed. The idea was to make the code more readable and this has
+> been my main concern when coming up with the macro naming, therefore
+> some macro names appear a tad more descriptive than the flag itself.
 > 
-> >    Looking at the libata driver, yes, it should be 0, 8, 16, and 24.
-> 
-> >> int timing_shift = ((drive->dn & 2) ? 16 : 0) + ((drive->dn & 1) ? 0 : 
-> >> 8);
-> >> --------------------------->8-------------8<------------------------------ 
-> >>
-> >> Add missing parentheses
-> > 
-> > 
-> >> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> > 
-> > 
-> >> diff --git a/drivers/ide/atiixp.c b/drivers/ide/atiixp.c
-> >> index b2735d2..b7813ec 100644
-> >> --- a/drivers/ide/atiixp.c
-> >> +++ b/drivers/ide/atiixp.c
-> >> @@ -52,7 +52,7 @@ static void atiixp_set_pio_mode(ide_drive_t *drive, 
-> >> const u8 pio)
-> >>  {
-> >>      struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
-> >>      unsigned long flags;
-> >> -    int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 
-> >> : 8;
-> >> +    int timing_shift = (drive->dn & 2) ? 16 : 0 + ((drive->dn & 1) ? 
-> >> 0 : 8);
-> >>      u32 pio_timing_data;
-> >>      u16 pio_mode_data;
-> >>  
-> >> @@ -85,7 +85,7 @@ static void atiixp_set_dma_mode(ide_drive_t *drive, 
-> >> const u8 speed)
-> >>  {
-> >>      struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
-> >>      unsigned long flags;
-> >> -    int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 
-> >> : 8;
-> >> +    int timing_shift = (drive->dn & 2) ? 16 : 0 + ((drive->dn & 1) ? 
-> >> 0 : 8);
-> >>      u32 tmp32;
-> >>      u16 tmp16;
-> >>      u16 udma_ctl = 0;
-> > 
-> > 
-> >    Why didn't you add parens around the first ?: then? They are surely 
-> > needed. Though this clearly needs to be simplified to (drive->dn * 8).
-> 
->     Oh, actually, timing_shift = (drive->dn ^ 1) * 8.
+>  drivers/ide/cmd640.c           |    2 +-
+>  drivers/ide/ht6560b.c          |    3 +-
+>  drivers/ide/ide-atapi.c        |   15 ++++++-------
+>  drivers/ide/ide-cd.c           |   44 ++++++++++++++++++++-------------------
+>  drivers/ide/ide-cd_ioctl.c     |   18 +++++++---------
+>  drivers/ide/ide-devsets.c      |    8 ++----
+>  drivers/ide/ide-disk.c         |   32 ++++++++++++++--------------
+>  drivers/ide/ide-disk_proc.c    |    2 +-
+>  drivers/ide/ide-dma.c          |    3 +-
+>  drivers/ide/ide-eh.c           |   17 +++++++--------
+>  drivers/ide/ide-floppy.c       |    6 ++--
+>  drivers/ide/ide-floppy_ioctl.c |    2 +-
+>  drivers/ide/ide-gd.c           |   14 ++++++------
+>  drivers/ide/ide-io.c           |    9 +++----
+>  drivers/ide/ide-ioctls.c       |    6 ++--
+>  drivers/ide/ide-iops.c         |    6 ++--
+>  drivers/ide/ide-lib.c          |    2 +-
+>  drivers/ide/ide-park.c         |   11 ++++-----
+>  drivers/ide/ide-pm.c           |    2 +-
+>  drivers/ide/ide-probe.c        |   36 +++++++++++++++++---------------
+>  drivers/ide/ide-proc.c         |    2 +-
+>  drivers/ide/ide-tape.c         |   12 +++++-----
+>  drivers/ide/ide-taskfile.c     |   16 +++++---------
+>  drivers/ide/ns87415.c          |    5 +--
+>  drivers/ide/pdc202xx_old.c     |    4 +-
+>  drivers/ide/sc1200.c           |    2 +-
+>  drivers/ide/trm290.c           |    4 +-
+>  27 files changed, 136 insertions(+), 147 deletions(-)
 
-Yes, this way we'll get the correct:
+One more thing I forgot yesterday:
 
-8 0 24 16
-
-instead of the current
-
-8 0 16 16
-
-[ Luckily after DMA timings gets programmed for the third device to
-  offset 16 they get overwritten with DMA timings for fourth device.
-
-  Since BIOS should program DMA timings for the third device all
-  should work fine till suspend/resume... ] 
-
-Roel, please fix the patch and resubmit.
+Since it is not a lot of modified lines and the change is rather
+straightforward it could as well be done in a single patch...
 
 Thanks,
 Bart
