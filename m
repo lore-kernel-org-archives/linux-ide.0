@@ -1,56 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
-Date: Tue, 17 Feb 2009 15:23:00 +0300
-Message-ID: <499AAC24.70200@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213451.13202.12671.sendpatchset@localhost.localdomain> <49987A37.9000300@ru.mvista.com> <4998AE87.3020502@ru.mvista.com>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] atiixp: missing parentheses?
+Date: Tue, 17 Feb 2009 14:10:55 +0100
+Message-ID: <499AB75F.6060709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:22235 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751539AbZBQMXG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Feb 2009 07:23:06 -0500
-In-Reply-To: <4998AE87.3020502@ru.mvista.com>
+Received: from mail-bw0-f167.google.com ([209.85.218.167]:62994 "EHLO
+	mail-bw0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbZBQNK5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 08:10:57 -0500
+Received: by bwz11 with SMTP id 11so2027620bwz.13
+        for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2009 05:10:55 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Hello, I wrote:
+This looks odd, is below what was intended? note that timing_shift can
+only be 16, 8 or 0. Maybe intended was 24, 16, 8 or 0? then we should do:
 
->>> There should be no functional changes caused by this patch.
->>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>> Index: b/drivers/ide/ide-iops.c
->>> ===================================================================
->>> --- a/drivers/ide/ide-iops.c
->>> +++ b/drivers/ide/ide-iops.c
->>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
->>>  {
->>>      ide_hwif_t *hwif = drive->hwif;
->>>      const struct ide_port_ops *port_ops = hwif->port_ops;
->>> +    ide_task_t task;
->>>  
->>>      if (port_ops && port_ops->selectproc)
->>>          port_ops->selectproc(drive);
->>>  
->>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
->>> +    memset(&task, 0, sizeof(task));
->>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
->>> +
->>> +    drive->hwif->tf_load(drive, &task);
->>
->>    This actually doesn't seem like a bright idea to me, considering 
->> that this gets called when starting every request. How will you look 
->> at me adding the transport method for writing this register? :-)
-> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
->
->   OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
-> consistent...
+int timing_shift = ((drive->dn & 2) ? 16 : 0) + ((drive->dn & 1) ? 0 : 8);
+--------------------------->8-------------8<------------------------------
+Add missing parentheses
 
-   ... which didn't prevent libata from having such backdoor though, in 
-the form of dev_select() method.
-
-MBR, Sergei
-
-
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/ide/atiixp.c b/drivers/ide/atiixp.c
+index b2735d2..b7813ec 100644
+--- a/drivers/ide/atiixp.c
++++ b/drivers/ide/atiixp.c
+@@ -52,7 +52,7 @@ static void atiixp_set_pio_mode(ide_drive_t *drive, const u8 pio)
+ {
+ 	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+ 	unsigned long flags;
+-	int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 : 8;
++	int timing_shift = (drive->dn & 2) ? 16 : 0 + ((drive->dn & 1) ? 0 : 8);
+ 	u32 pio_timing_data;
+ 	u16 pio_mode_data;
+ 
+@@ -85,7 +85,7 @@ static void atiixp_set_dma_mode(ide_drive_t *drive, const u8 speed)
+ {
+ 	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+ 	unsigned long flags;
+-	int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 : 8;
++	int timing_shift = (drive->dn & 2) ? 16 : 0 + ((drive->dn & 1) ? 0 : 8);
+ 	u32 tmp32;
+ 	u16 tmp16;
+ 	u16 udma_ctl = 0;
