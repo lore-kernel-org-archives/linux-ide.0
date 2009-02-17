@@ -1,75 +1,50 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: sata_nv frees DMA memory with different size (possibly a
- generic libata bug)
-Date: Tue, 17 Feb 2009 20:22:05 +0900
-Message-ID: <20090217202156B.fujita.tomonori@lab.ntt.co.jp>
-References: <4994E30A.3040501@gmail.com>
-	<20090216163637.18dd315c@dhcp-100-2-144.bos.redhat.com>
-	<499A26B7.80807@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] amd74xx: fix typo in drivers/ide/amd74xx.c
+Date: Tue, 17 Feb 2009 14:23:42 +0300
+Message-ID: <499A9E3E.2030400@ru.mvista.com>
+References: <499A5621.5000104@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:43324 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753338AbZBQLW0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Feb 2009 06:22:26 -0500
-In-Reply-To: <499A26B7.80807@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:20211 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750886AbZBQLXs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2009 06:23:48 -0500
+In-Reply-To: <499A5621.5000104@cn.fujitsu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hancockrwd@gmail.com
-Cc: cebbert@redhat.com, linux-ide@vger.kernel.org
+To: Wei Yongjun <yjwei@cn.fujitsu.com>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Mon, 16 Feb 2009 20:53:43 -0600
-Robert Hancock <hancockrwd@gmail.com> wrote:
+Hello.
 
-> Chuck Ebbert wrote:
-> > On Thu, 12 Feb 2009 21:03:38 -0600
-> > Robert Hancock <hancockrwd@gmail.com> wrote:
-> > 
-> >> Chuck Ebbert wrote:
-> >>> Fedora rawhide has the DMA API debug patch applied and it has found this...
-> >>>
-> >>> From https://bugzilla.redhat.com/show_bug.cgi?id=485172
-> >>>
-> >>> WARNING: at lib/dma-debug.c:439 check_unmap+0x16a/0x3dd() (Tainted: G        W
-> >>> )
-> >>> Hardware name: System Product Name
-> >>> sata_nv 0000:00:0d.0: DMA-API: device driver frees DMA memory with different
-> >>> size [device address=0x00000000da031000] [map size=4096 bytes] [unmap
-> >>> size=8192bytes]
-> >>> Modules linked in: bridge stp llc bnep sco l2cap bluetooth sunrpc ip6t_REJECT
-> >>> nf_conntrack_ipv6 ip6table_filter ip6_tables ipv6 cpufreq_ondemand
-> >>> powernow_k8freq_table dm_multipath uinput snd_hda_codec_analog snd_hda_intel
-> >>> snd_hda_codec snd_hwdep snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq
-> >>> snd_seq_device snd_pcm_oss ppdev snd_mixer_oss snd_pcm snd_timer firewire_ohci
-> >>> snd firewire_core soundcore aic7xxx snd_page_alloc jedec_probe crc_itu_t
-> >>> forcedeth scsi_transport_spi pcspkr cfi_probe gen_probe sata_sil24 parport_pc
-> >>> cfi_util parport mtd chipreg i2c_nforce2 map_funcs asus_atk0110 pata_amd
-> >>> i2c_core hwmon ata_generic pata_acpi sata_nv raid456 async_xor async_memcpy
-> >>> async_tx xor raid1 sha256_generic cbc aes_x86_64 aes_generic dm_crypt ext4 jbd2
-> >>> crc16 [last unloaded: scsi_wait_scan]
-> >>> Pid: 0, comm: swapper Tainted: G        W  2.6.29-0.99.rc4.git1.fc11.x86_64 #1
-> >>> Call Trace:
-> >>> <IRQ>  [<ffffffff81048822>] warn_slowpath+0xb7/0xe7
-> >>> [<ffffffff8137bc4f>] ? _spin_lock_irqsave+0x78/0x86
-> >>> [<ffffffff8119851b>] ? get_hash_bucket+0x28/0x34
-> >>> [<ffffffff8106a5ae>] ? trace_hardirqs_off_caller+0x1f/0xac
-> >>> [<ffffffff81198a15>] check_unmap+0x16a/0x3dd
-> >>> [<ffffffff810388a7>] ? resched_task+0x2e/0x74
-> >>> [<ffffffff81198d66>] debug_dma_unmap_sg+0x7c/0x9b
-> >>> [<ffffffff8106a648>] ? trace_hardirqs_off+0xd/0xf
-> >>> [<ffffffff8124fef9>] ata_sg_clean+0x96/0xd0
-> >>> [<ffffffff8124ff89>] __ata_qc_complete+0x56/0xc9
-> >>> [<ffffffff8125018b>] ata_qc_complete+0x18f/0x198
-> >>> [<ffffffffa00cb249>] nv_swncq_interrupt+0x358/0x688 [sata_nv]
-> >> That's rather curious. It seems to be saying that the sg length is 
-> >> different between the map and unmap, but it doesn't look like sata_nv 
-> >> mucks with that anywhere, and neither does libata core..
-> > 
-> > Could the SCSI code have merged two requests?
-> 
-> I wouldn't think so.. and if it did it seems like it would have to have 
-> changed the list after libata got the request somehow..
+Wei Yongjun wrote:
 
-Does this box uses GART IOMMU?
+> Fix the typo of dev->vendor to dev->device.
+>
+> Signed-off-by: Wei Yongjun <yjwei@cn.fujitsu.com>
+> ---
+>  drivers/ide/amd74xx.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/ide/amd74xx.c b/drivers/ide/amd74xx.c
+> index 69660a4..77267c8 100644
+> --- a/drivers/ide/amd74xx.c
+> +++ b/drivers/ide/amd74xx.c
+> @@ -166,7 +166,7 @@ static unsigned int init_chipset_amd74xx(struct pci_dev *dev)
+>  	 * Check for broken FIFO support.
+>  	 */
+>  	if (dev->vendor == PCI_VENDOR_ID_AMD &&
+> -	    dev->vendor == PCI_DEVICE_ID_AMD_VIPER_7411)
+> +	    dev->device == PCI_DEVICE_ID_AMD_VIPER_7411)
+>  		t &= 0x0f;
+>  	else
+>  		t |= 0xf0;
+>   
+
+Already submitted by Roel Kluin.
+
+MBR, Sergei
+
+
