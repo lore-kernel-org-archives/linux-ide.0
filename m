@@ -1,46 +1,75 @@
-From: Hugh Dickins <hugh-DTz5qymZ9yRBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [Bug #12263] Sata soft reset filling log
-Date: Tue, 17 Feb 2009 11:19:53 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0902171102260.15234@blonde.anvils>
-References: <sTyoMUwdm9B.A.QCH.U40lJB@chimera> <200902152221.43834.rjw@sisk.pl>
- <20090215223045.GC29300@elte.hu> <200902160012.57584.rjw@sisk.pl>
- <499983DF.5050503@ru.mvista.com> <49998480.3090408@ru.mvista.com>
- <499986D0.3000205@ru.mvista.com> <4999BD1A.1060101@gawab.com>
- <4999C195.5050905@ru.mvista.com> <4999DD31.4010504@gawab.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: sata_nv frees DMA memory with different size (possibly a
+ generic libata bug)
+Date: Tue, 17 Feb 2009 20:22:05 +0900
+Message-ID: <20090217202156B.fujita.tomonori@lab.ntt.co.jp>
+References: <4994E30A.3040501@gmail.com>
+	<20090216163637.18dd315c@dhcp-100-2-144.bos.redhat.com>
+	<499A26B7.80807@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4999DD31.4010504-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Justin Madru <jdm64-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org>
-Cc: Sergei Shtylyov <sshtylyov-hkdhdckH98+B+jHODAdFcQ@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux IDE <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, Larry Finger <Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>, Mikael Pettersson <mikpe-1zs4UD6AkMk@public.gmane.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:43324 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753338AbZBQLW0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Feb 2009 06:22:26 -0500
+In-Reply-To: <499A26B7.80807@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: hancockrwd@gmail.com
+Cc: cebbert@redhat.com, linux-ide@vger.kernel.org
 
-On Mon, 16 Feb 2009, Justin Madru wrote:
-> Sergei Shtylyov wrote:
-> >
-> > If 12609 is truly a post-2.6.28 regression and 12263 is post-2.6.27
-> > regresssion, this just cannot be.
+On Mon, 16 Feb 2009 20:53:43 -0600
+Robert Hancock <hancockrwd@gmail.com> wrote:
+
+> Chuck Ebbert wrote:
+> > On Thu, 12 Feb 2009 21:03:38 -0600
+> > Robert Hancock <hancockrwd@gmail.com> wrote:
+> > 
+> >> Chuck Ebbert wrote:
+> >>> Fedora rawhide has the DMA API debug patch applied and it has found this...
+> >>>
+> >>> From https://bugzilla.redhat.com/show_bug.cgi?id=485172
+> >>>
+> >>> WARNING: at lib/dma-debug.c:439 check_unmap+0x16a/0x3dd() (Tainted: G        W
+> >>> )
+> >>> Hardware name: System Product Name
+> >>> sata_nv 0000:00:0d.0: DMA-API: device driver frees DMA memory with different
+> >>> size [device address=0x00000000da031000] [map size=4096 bytes] [unmap
+> >>> size=8192bytes]
+> >>> Modules linked in: bridge stp llc bnep sco l2cap bluetooth sunrpc ip6t_REJECT
+> >>> nf_conntrack_ipv6 ip6table_filter ip6_tables ipv6 cpufreq_ondemand
+> >>> powernow_k8freq_table dm_multipath uinput snd_hda_codec_analog snd_hda_intel
+> >>> snd_hda_codec snd_hwdep snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq
+> >>> snd_seq_device snd_pcm_oss ppdev snd_mixer_oss snd_pcm snd_timer firewire_ohci
+> >>> snd firewire_core soundcore aic7xxx snd_page_alloc jedec_probe crc_itu_t
+> >>> forcedeth scsi_transport_spi pcspkr cfi_probe gen_probe sata_sil24 parport_pc
+> >>> cfi_util parport mtd chipreg i2c_nforce2 map_funcs asus_atk0110 pata_amd
+> >>> i2c_core hwmon ata_generic pata_acpi sata_nv raid456 async_xor async_memcpy
+> >>> async_tx xor raid1 sha256_generic cbc aes_x86_64 aes_generic dm_crypt ext4 jbd2
+> >>> crc16 [last unloaded: scsi_wait_scan]
+> >>> Pid: 0, comm: swapper Tainted: G        W  2.6.29-0.99.rc4.git1.fc11.x86_64 #1
+> >>> Call Trace:
+> >>> <IRQ>  [<ffffffff81048822>] warn_slowpath+0xb7/0xe7
+> >>> [<ffffffff8137bc4f>] ? _spin_lock_irqsave+0x78/0x86
+> >>> [<ffffffff8119851b>] ? get_hash_bucket+0x28/0x34
+> >>> [<ffffffff8106a5ae>] ? trace_hardirqs_off_caller+0x1f/0xac
+> >>> [<ffffffff81198a15>] check_unmap+0x16a/0x3dd
+> >>> [<ffffffff810388a7>] ? resched_task+0x2e/0x74
+> >>> [<ffffffff81198d66>] debug_dma_unmap_sg+0x7c/0x9b
+> >>> [<ffffffff8106a648>] ? trace_hardirqs_off+0xd/0xf
+> >>> [<ffffffff8124fef9>] ata_sg_clean+0x96/0xd0
+> >>> [<ffffffff8124ff89>] __ata_qc_complete+0x56/0xc9
+> >>> [<ffffffff8125018b>] ata_qc_complete+0x18f/0x198
+> >>> [<ffffffffa00cb249>] nv_swncq_interrupt+0x358/0x688 [sata_nv]
+> >> That's rather curious. It seems to be saying that the sg length is 
+> >> different between the map and unmap, but it doesn't look like sata_nv 
+> >> mucks with that anywhere, and neither does libata core..
+> > 
+> > Could the SCSI code have merged two requests?
 > 
-> Maybe the reporter of #12609 didn't notice/test kernels 28-rc1 to 28. Or maybe
-> the difference in hardware is
-> the issue, but the bug is still the same. Don't know.
+> I wouldn't think so.. and if it did it seems like it would have to have 
+> changed the list after libata got the request somehow..
 
-Sorry Justin, you must be confused: as Sergei says,
-#12609 and #12263 can only be different.
-
-I was one of the reporters of #12609, and I do know it's a post-2.6.28
-regression (and Larry said so too), and one fix (not the preferred fix)
-is to revert the ata_bmdma32_port_ops from 2.6.29-rc, and the preferred
-fix is to improve the ata_sff_data_xfer32() introduced in 2.6.29-rc1.
-
-2.6.28 does not contain any ata_bmdma32_port_ops, nor ata_sff_data_xfer32(),
-not did 2.6.28-rc1 contain them.  So it is impossible for the reversion of
-the patch that introduced them to fix any problem on 2.6.28.
-
-I'm quite prepared to believe that your #12263 manifests similarly to
-#12609, and that a tip tree which contains a fix for #12609 contains
-a fix for #12263; but please, those bugs are not the same, and they
-don't have the same fix.
-
-Hugh
+Does this box uses GART IOMMU?
