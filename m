@@ -1,76 +1,41 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata: Don't trust current capacity values in identify
- words 57-58
-Date: Tue, 17 Feb 2009 03:35:54 +0300
-Message-ID: <499A066A.7060509@ru.mvista.com>
-References: <4999CA54.1060306@gmail.com> <4999F032.6060107@rtr.ca>
+Subject: Re: [PATCH 14/18] ide: use ->tf_read in ide_read_error()
+Date: Tue, 17 Feb 2009 03:50:27 +0300
+Message-ID: <499A09D3.8070303@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <49995856.0@ru.mvista.com> <49995B44.6090604@ru.mvista.com> <200902162217.08541.bzolnier@gmail.com> <499A0181.8000008@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:4231 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:4375 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750729AbZBQAgB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Feb 2009 19:36:01 -0500
-In-Reply-To: <4999F032.6060107@rtr.ca>
+	id S1751170AbZBQAud (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Feb 2009 19:50:33 -0500
+In-Reply-To: <499A0181.8000008@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, =?UTF-8?B?SGFubm8gQsO2Y2s=?= <hanno@hboeck.de>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+Hello, I wrote:
 
-Mark Lord wrote:
-
->> Hanno B=C3=B6ck reported a problem where an old Conner CP30254 240MB=
- hard=20
->> drive
->> was reported as 1.1TB in capacity by libata:
+>>>>       
+>>>    I meant IDE_TFLAG_IN_HOB_FEATURE, of course.
+>>>     
 >>
->> http://lkml.org/lkml/2009/2/13/134
->>
->> This was caused by libata trusting the drive's reported current=20
->> capacity in sectors in identify words 57 and 58 if the drive does no=
-t=20
->> support LBA and the
->> current CHS translation values appear valid. Unfortunately it seems=20
->> older
->> ATA specs were vague about what this field should contain and a=20
->> number of drives
->> used values with wrong byte order or that were totally bogus. There'=
-s no
->> unique information that it conveys and so we can just calculate the=20
->> number
->> of sectors from the reported current CHS values.
->>
->> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
-> ..
->>      } else {
->>          if (ata_id_current_chs_valid(id))
->> -            return ata_id_u32(id, 57);
->> +            return id[54] * id[55] * id[56];
->>          else
->>              return id[1] * id[3] * id[6];
-> ..
+>> Once again blame the certain ioctl (you know which one)... :)
+>>   
+>   Moreover, the error register shoudn't be affeceted by the HOB bit, 
+> so this flag doesn't make sense.
 >
-> NAK.  That's not quite correct, either.
->
-> The LBA capacity can be larger than the CHS capacity,
-> so we have to use the reported LBA values if at all possible.
->
-> That's why ata_id_is_lba_capacity_ok() exists,
-> and why it looks so peculiar.
+>   Oh, horror... and I know that it wasn't completely ungrounded since 
+> both ATA/PI-6 adn -7 have words about reading the features register 
+> (depending on HOB). At least ATA/PI-8 got rid of this. Anyway, I think 
+> we can safely get rid of this flag and just return the same value in 
+> 'features' and 'hob_features'.
 
-   I think that checking LBA validity is a matter of another patch. Thi=
-s=20
-patch in itself should be sufficient.
-
-> Some of those early drives really did require that kind of logic.
-
-   I hightly doubt that this 240 MB drive is LBA capable at all.
-
-> Cheers
+  Although, after thinking a bit more, it doesn't seem worth the trouble 
+-- so the rename should suffice...
 
 MBR, Sergei
 
