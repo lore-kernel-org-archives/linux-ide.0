@@ -1,95 +1,44 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: linux-next: Tree for February 12 (ide)
-Date: Wed, 18 Feb 2009 09:17:28 -0800
-Message-ID: <499C42A8.7060003@oracle.com>
-References: <20090212194408.ff7489c1.sfr@canb.auug.org.au> <499451E0.6060004@oracle.com> <200902171519.27031.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <200902171519.27031.bzolnier@gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12734] ide-iops.c insists on doing 80-wire check
+Date: Wed, 18 Feb 2009 11:03:59 -0800 (PST)
+Message-ID: <20090218190359.3CEEF108041@picon.linux-foundation.org>
+References: <bug-12734-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39626 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752745AbZBRTER (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 14:04:17 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1IJ3xM3017198
+	for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 11:04:00 -0800
+In-Reply-To: <bug-12734-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 12 February 2009, Randy Dunlap wrote:
->> Stephen Rothwell wrote:
->>> Hi all,
->>>
->>> Changes since 20090211:
->>
->> When
->> # CONFIG_BLK_DEV_IDEDMA is not set
->>
->> linux-next-20090212/drivers/ide/ide-taskfile.c:108: error: 'ide_dma_intr' undeclared (first use in this function)
-> 
-> Thanks for spotting this, I fixed it in the revised patch:
+http://bugzilla.kernel.org/show_bug.cgi?id=12734
 
-Hi Bart,
 
-Have you pushed this patch yet?
+bzolnier@gmail.com changed:
 
-linux-next (20090218) is still getting this IDE build error.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
+             Status|NEW                         |ASSIGNED
 
-Thanks.
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: add ->dma_timer_expiry method and remove ->dma_exec_cmd one (v2)
-> 
-> * Rename dma_timer_expiry() to ide_dma_sff_timer_expiry() and export it.
-> 
-> * Add ->dma_timer_expiry method and use it to set hwif->expiry for
->   ATA_PROT_DMA protocol in do_rw_taskfile().
-> 
-> * Initialize ->dma_timer_expiry to ide_dma_sff_timer_expiry() for SFF hosts.
-> 
-> * Move setting hwif->expiry from ide_execute_command() to its users and drop
->   'expiry' argument.
-> 
-> * Use ide_execute_command() instead of ->dma_exec_cmd in do_rw_taskfile().
-> 
-> * Remove ->dma_exec_cmd method and its implementations.
-> 
-> * Unexport ide_execute_command() and ide_dma_intr().
-> 
-> v2:
-> * Fix CONFIG_BLK_DEV_IDEDMA=n build (noticed by Randy Dunlap).
-> 
-> * Fix *dma_expiry naming (suggested by Sergei Shtylyov).
-> 
-> There should be no functional changes caused by this patch.
-> 
-> Cc: Randy Dunlap <randy.dunlap@oracle.com>
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/alim15x3.c     |    2 +-
->  drivers/ide/au1xxx-ide.c   |    8 --------
->  drivers/ide/cmd64x.c       |    6 +++---
->  drivers/ide/cs5536.c       |    2 +-
->  drivers/ide/hpt366.c       |    6 +++---
->  drivers/ide/icside.c       |    7 -------
->  drivers/ide/ide-atapi.c    |    3 ++-
->  drivers/ide/ide-dma-sff.c  |   15 ++++-----------
->  drivers/ide/ide-dma.c      |    1 -
->  drivers/ide/ide-iops.c     |    6 +-----
->  drivers/ide/ide-taskfile.c |    6 ++++--
->  drivers/ide/it821x.c       |    2 +-
->  drivers/ide/ns87415.c      |    2 +-
->  drivers/ide/pdc202xx_old.c |    4 ++--
->  drivers/ide/pmac.c         |    8 --------
->  drivers/ide/sc1200.c       |    2 +-
->  drivers/ide/scc_pata.c     |    2 +-
->  drivers/ide/siimage.c      |    2 +-
->  drivers/ide/sl82c105.c     |    2 +-
->  drivers/ide/tc86c001.c     |    2 +-
->  drivers/ide/trm290.c       |    6 ------
->  drivers/ide/tx4939ide.c    |    2 +-
->  include/linux/ide.h        |    8 ++++----
->  23 files changed, 33 insertions(+), 71 deletions(-)
+
+
+------- Comment #4 from bzolnier@gmail.com  2009-02-18 11:03 -------
+There is no way to detect 80-wires cable for CF cards and some hosts don't
+implement host-side cable detection so this is not really a kernel bug.
+
+[ Please try using "ide_core.ignore_cable=[interface_number]" boot option
+  to override the cable detection ("ide_core.ignore_cable=0" for /dev/hda). ]
 
 
 -- 
-~Randy
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
