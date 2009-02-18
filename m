@@ -1,109 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 17 Feb 2009 16:25:51 -0500
-Message-ID: <20090217212551.GA8468@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12734] ide-iops.c insists on doing 80-wire check
+Date: Tue, 17 Feb 2009 16:25:26 -0800 (PST)
+Message-ID: <20090218002526.6FE60108041@picon.linux-foundation.org>
+References: <bug-12734-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:59495 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752086AbZBQVZz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Feb 2009 16:25:55 -0500
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38138 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751422AbZBRAZ6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Feb 2009 19:25:58 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1I0PQ5q032680
+	for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2009 16:25:27 -0800
+In-Reply-To: <bug-12734-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12734
 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+akpm@osdl.org changed:
 
-to receive the following updates:
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|drivers_other@kernel-       |io_ide@kernel-bugs.osdl.org
+                   |bugs.osdl.org               |
+          Component|Other                       |IDE
+            Product|Drivers                     |IO/Storage
 
- drivers/ata/libata-sff.c |   28 +++++++++++++++++++++-------
- drivers/ata/sata_nv.c    |   14 ++++++++------
- 2 files changed, 29 insertions(+), 13 deletions(-)
 
-Sergei Shtylyov (1):
-      libata-sff: fix 32-bit PIO ATAPI regression
 
-Tejun Heo (1):
-      sata_nv: give up hardreset on nf2
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 0b299b0..714cb04 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -773,18 +773,32 @@ unsigned int ata_sff_data_xfer32(struct ata_device *dev, unsigned char *buf,
- 	else
- 		iowrite32_rep(data_addr, buf, words);
- 
-+	/* Transfer trailing bytes, if any */
- 	if (unlikely(slop)) {
--		__le32 pad;
-+		unsigned char pad[4];
-+
-+		/* Point buf to the tail of buffer */
-+		buf += buflen - slop;
-+
-+		/*
-+		 * Use io*_rep() accessors here as well to avoid pointlessly
-+		 * swapping bytes to and fro on the big endian machines...
-+		 */
- 		if (rw == READ) {
--			pad = cpu_to_le32(ioread32(ap->ioaddr.data_addr));
--			memcpy(buf + buflen - slop, &pad, slop);
-+			if (slop < 3)
-+				ioread16_rep(data_addr, pad, 1);
-+			else
-+				ioread32_rep(data_addr, pad, 1);
-+			memcpy(buf, pad, slop);
- 		} else {
--			memcpy(&pad, buf + buflen - slop, slop);
--			iowrite32(le32_to_cpu(pad), ap->ioaddr.data_addr);
-+			memcpy(pad, buf, slop);
-+			if (slop < 3)
-+				iowrite16_rep(data_addr, pad, 1);
-+			else
-+				iowrite32_rep(data_addr, pad, 1);
- 		}
--		words++;
- 	}
--	return words << 2;
-+	return (buflen + 1) & ~1;
- }
- EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
- 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 444af04..55a8eed 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -421,19 +421,21 @@ static struct ata_port_operations nv_generic_ops = {
- 	.hardreset		= ATA_OP_NULL,
- };
- 
--/* OSDL bz3352 reports that nf2/3 controllers can't determine device
-- * signature reliably.  Also, the following thread reports detection
-- * failure on cold boot with the standard debouncing timing.
-+/* nf2 is ripe with hardreset related problems.
-+ *
-+ * kernel bz#3352 reports nf2/3 controllers can't determine device
-+ * signature reliably.  The following thread reports detection failure
-+ * on cold boot with the standard debouncing timing.
-  *
-  * http://thread.gmane.org/gmane.linux.ide/34098
-  *
-- * Debounce with hotplug timing and request follow-up SRST.
-+ * And bz#12176 reports that hardreset simply doesn't work on nf2.
-+ * Give up on it and just don't do hardreset.
-  */
- static struct ata_port_operations nv_nf2_ops = {
--	.inherits		= &nv_common_ops,
-+	.inherits		= &nv_generic_ops,
- 	.freeze			= nv_nf2_freeze,
- 	.thaw			= nv_nf2_thaw,
--	.hardreset		= nv_noclassify_hardreset,
- };
- 
- /* For initial probing after boot and hot plugging, hardreset mostly
+------- Comment #3 from akpm@osdl.org  2009-02-17 16:25 -------
+Reassigned to IDE.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
