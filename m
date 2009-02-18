@@ -1,88 +1,72 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] fix dma_unmap_sg misuse
-Date: Wed, 18 Feb 2009 21:59:49 +0100
-Message-ID: <200902182159.49980.bzolnier@gmail.com>
-References: <20090217133432M.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Bad module reference counter
+Date: Wed, 18 Feb 2009 22:25:19 +0100
+Message-ID: <200902182225.19784.bzolnier@gmail.com>
+References: <200902111032.59225.stf_xl@wp.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:43572 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883AbZBRU7A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 15:59:00 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so82510fkf.5
-        for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 12:58:58 -0800 (PST)
-In-Reply-To: <20090217133432M.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-fx0-f167.google.com ([209.85.220.167]:46087 "EHLO
+	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbZBRVXw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 16:23:52 -0500
+Received: by fxm11 with SMTP id 11so12361fxm.13
+        for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 13:23:49 -0800 (PST)
+In-Reply-To: <200902111032.59225.stf_xl@wp.pl>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: linux-ide@vger.kernel.org
 
-On Tuesday 17 February 2009, FUJITA Tomonori wrote:
-> Looks like that libata misuses dma_unmap_sg though I'm not familiar
-> with libata so I might completely misunderstand something.
+On Wednesday 11 February 2009, Stanislaw Gruszka wrote:
+> Hello.
 > 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] fix dma_unmap_sg misuse
+> I entered a problem with double decreasing module reference counter
+> where it become "negative", here is the usage scenario:
 > 
-> DMA-mapping.txt says:
+> # modprobe at91_ide
+> # modprobe ide_gd_mod
+> # lsmod
+> Module                  Size  Used by    Not tainted
+> ide_gd_mod             22948  0
+> at91_ide                4672  0
+> ide_core               77020  2 ide_gd_mod,at91_ide
+> # rmmod ide_gd_mod
+> # lsmod
+> Module                  Size  Used by    Not tainted
+> at91_ide                4672 4294967295
+> ide_core               77020  1 at91_ide
 > 
-> To unmap a scatterlist, just call:
+> Note when I first remove at91_ide module and then ide_gd_mod
+> everyting is ok.
 > 
-> 	pci_unmap_sg(pdev, sglist, nents, direction);
+> I tired to debug issue and I did not found any suspicious in at91_ide.
+> I think probable reason is double free in ide-gd.c . Here is patch with
+> workaround (or maybe it is a real fix, but I'm not sure):
 > 
-> Again, make sure DMA activity has already finished.
-> 
-> PLEASE NOTE:  The 'nents' argument to the pci_unmap_sg call must be
->               the _same_ one you passed into the pci_map_sg call,
-> 	      it should _NOT_ be the 'count' value _returned_ from the
->               pci_map_sg call.
-
-This is correct and other subsystems (SCSI, IDE) are compliant with it.
-
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-> ---
->  drivers/ata/libata-core.c |    4 ++--
->  include/linux/libata.h    |    1 +
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 9fbf059..5e324ce 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4612,7 +4612,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
->  	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+> diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+> index 7857b20..31ae04e 100644
+> --- a/drivers/ide/ide-gd.c
+> +++ b/drivers/ide/ide-gd.c
+> @@ -70,8 +70,6 @@ static void ide_gd_remove(ide_drive_t *drive)
+>  	del_gendisk(g);
 >  
->  	if (qc->n_elem)
-> -		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
-> +		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
->  
->  	qc->flags &= ~ATA_QCFLAG_DMAMAP;
->  	qc->sg = NULL;
-> @@ -4727,7 +4727,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
->  		return -1;
->  
->  	DPRINTK("%d sg elements mapped\n", n_elem);
+>  	drive->disk_ops->flush(drive);
 > -
-> +	qc->orig_n_elem = qc->n_elem;
->  	qc->n_elem = n_elem;
->  	qc->flags |= ATA_QCFLAG_DMAMAP;
+> -	ide_disk_put(idkp);
+>  }
 >  
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 5577ea8..2de827d 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -530,6 +530,7 @@ struct ata_queued_cmd {
->  	unsigned long		flags;		/* ATA_QCFLAG_xxx */
->  	unsigned int		tag;
->  	unsigned int		n_elem;
-> +	unsigned int		orig_n_elem;
->  
->  	int			dma_dir;
+>  static void ide_disk_release(struct kref *kref)
+> 
+> If this patch is ok, maybe similar things need to be done also in ide-cd and
+> perhaps other device type modules.
+
+Seems like ide_device_put() needs the same module_refcount() check that
+is present in scsi_device_put() so removal of device driver won't trigger
+a spurious module_put() on a host driver?
+
+Thanks,
+Bart
