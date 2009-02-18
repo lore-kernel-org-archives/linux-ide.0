@@ -1,16 +1,16 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/2] ide-{floppy,tape}: fix padding for PIO transfers
-Date: Wed, 18 Feb 2009 20:20:45 +0100
-Message-ID: <200902182020.46146.bzolnier@gmail.com>
+Subject: [PATCH 2/2] ide-floppy: use ide_pio_bytes()
+Date: Wed, 18 Feb 2009 20:21:43 +0100
+Message-ID: <200902182021.43377.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:22957 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754297AbZBRTVc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 14:21:32 -0500
+Received: from mu-out-0910.google.com ([209.85.134.189]:14130 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754405AbZBRTVd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 14:21:33 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,214 +18,176 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-{floppy,tape}: fix padding for PIO transfers
+Subject: [PATCH] ide-floppy: use ide_pio_bytes()
 
-* Return number of bytes left to transfer from idetape_{in,out}put_buffers()
-  and number of bytes done from ide_tape_io_buffers().
+* Fix ide_init_sg_cmd() setup for non-fs requests.
 
-* Fix padding for PIO transfers in ide_pc_intr() so read/write buffers are
-  always completely processed and then the transfer is padded if necessary.
+* Convert ide_pc_intr() to use ide_pio_bytes() for floppy media.
 
-* Remove invalid error messages.
-
-* Remove now superfluous padding from ide{_io_buffers,tape_input_buffers}().
-
-While at it:
-
-* Set pc->bh to NULL in idetape_input_buffers() after all bh-s are done.
-
-* Cache !!(pc->flags & PC_FLAG_WRITING) in local variable in ide_pc_intr().
+* Remove no longer needed ide_io_buffers() and sg/sg_cnt fields
+  from struct ide_atapi_pc.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-against pata-2.6 tree
-
- drivers/ide/ide-atapi.c |   57 ++++++++++++++++--------------------------------
- drivers/ide/ide-tape.c  |   32 +++++++++++++-------------
- 2 files changed, 35 insertions(+), 54 deletions(-)
+ drivers/ide/ide-atapi.c  |   57 +++++------------------------------------------
+ drivers/ide/ide-floppy.c |    9 -------
+ include/linux/ide.h      |    5 ----
+ 3 files changed, 8 insertions(+), 63 deletions(-)
 
 Index: b/drivers/ide/ide-atapi.c
 ===================================================================
 --- a/drivers/ide/ide-atapi.c
 +++ b/drivers/ide/ide-atapi.c
-@@ -108,13 +108,6 @@ int ide_io_buffers(ide_drive_t *drive, s
- 		}
- 	}
+@@ -69,49 +69,6 @@ int ide_check_atapi_device(ide_drive_t *
+ }
+ EXPORT_SYMBOL_GPL(ide_check_atapi_device);
  
--	if (bcount) {
--		printk(KERN_ERR "%s: %d leftover bytes, %s\n", drive->name,
--			bcount, write ? "padding with zeros"
--				      : "discarding data");
--		ide_pad_transfer(drive, write, bcount);
+-/* PIO data transfer routine using the scatter gather table. */
+-int ide_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
+-		    unsigned int bcount, int write)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+-	xfer_func_t *xf = write ? tp_ops->output_data : tp_ops->input_data;
+-	struct scatterlist *sg = pc->sg;
+-	char *buf;
+-	int count, done = 0;
+-
+-	while (bcount) {
+-		count = min(sg->length - pc->b_count, bcount);
+-
+-		if (PageHighMem(sg_page(sg))) {
+-			unsigned long flags;
+-
+-			local_irq_save(flags);
+-			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
+-			xf(drive, NULL, buf + pc->b_count, count);
+-			kunmap_atomic(buf - sg->offset, KM_IRQ0);
+-			local_irq_restore(flags);
+-		} else {
+-			buf = sg_virt(sg);
+-			xf(drive, NULL, buf + pc->b_count, count);
+-		}
+-
+-		bcount -= count;
+-		pc->b_count += count;
+-		done += count;
+-
+-		if (pc->b_count == sg->length) {
+-			if (!--pc->sg_cnt)
+-				break;
+-			pc->sg = sg = sg_next(sg);
+-			pc->b_count = 0;
+-		}
 -	}
 -
- 	return done;
- }
- EXPORT_SYMBOL_GPL(ide_io_buffers);
-@@ -315,9 +308,10 @@ static ide_startstop_t ide_pc_intr(ide_d
+-	return done;
+-}
+-EXPORT_SYMBOL_GPL(ide_io_buffers);
+-
+ void ide_init_pc(struct ide_atapi_pc *pc)
+ {
+ 	memset(pc, 0, sizeof(*pc));
+@@ -305,6 +262,7 @@ static ide_startstop_t ide_pc_intr(ide_d
+ {
+ 	struct ide_atapi_pc *pc = drive->pc;
+ 	ide_hwif_t *hwif = drive->hwif;
++	struct ide_cmd *cmd = &hwif->cmd;
  	struct request *rq = hwif->rq;
  	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
  	xfer_func_t *xferfunc;
--	unsigned int timeout, temp;
-+	unsigned int timeout, done;
- 	u16 bcount;
- 	u8 stat, ireason, dsc = 0;
-+	u8 write = !!(pc->flags & PC_FLAG_WRITING);
+@@ -426,14 +384,13 @@ static ide_startstop_t ide_pc_intr(ide_d
  
- 	debug_log("Enter %s - interrupt handler\n", __func__);
+ 	xferfunc = write ? tp_ops->output_data : tp_ops->input_data;
  
-@@ -421,8 +415,7 @@ static ide_startstop_t ide_pc_intr(ide_d
- 		return ide_do_reset(drive);
- 	}
- 
--	if (((ireason & ATAPI_IO) == ATAPI_IO) ==
--		!!(pc->flags & PC_FLAG_WRITING)) {
-+	if (((ireason & ATAPI_IO) == ATAPI_IO) == write) {
- 		/* Hopefully, we will never get here */
- 		printk(KERN_ERR "%s: We wanted to %s, but the device wants us "
- 				"to %s!\n", drive->name,
-@@ -431,45 +424,33 @@ static ide_startstop_t ide_pc_intr(ide_d
- 		return ide_do_reset(drive);
- 	}
- 
--	if (!(pc->flags & PC_FLAG_WRITING)) {
--		/* Reading - Check that we have enough space */
--		temp = pc->xferred + bcount;
--		if (temp > pc->req_xfer) {
--			if (temp > pc->buf_size) {
--				printk(KERN_ERR "%s: The device wants to send "
--						"us more data than expected - "
--						"discarding data\n",
--						drive->name);
+-	if ((drive->media == ide_floppy && !pc->buf) ||
+-	    (drive->media == ide_tape && pc->bh)) {
+-		done = drive->pc_io_buffers(drive, pc, bcount, write);
 -
--				ide_pad_transfer(drive, 0, bcount);
--				goto next_irq;
--			}
--			debug_log("The device wants to send us more data than "
--				  "expected - allowing transfer\n");
--		}
--		xferfunc = tp_ops->input_data;
--	} else
--		xferfunc = tp_ops->output_data;
-+	xferfunc = write ? tp_ops->output_data : tp_ops->input_data;
- 
- 	if ((drive->media == ide_floppy && !pc->buf) ||
- 	    (drive->media == ide_tape && pc->bh)) {
--		int done = drive->pc_io_buffers(drive, pc, bcount,
--				  !!(pc->flags & PC_FLAG_WRITING));
-+		done = drive->pc_io_buffers(drive, pc, bcount, write);
- 
++	if (drive->media == ide_floppy && pc->buf == NULL) {
++		done = min_t(unsigned int, bcount, cmd->nleft);
++		ide_pio_bytes(drive, cmd, write, done);
  		/* FIXME: don't do partial completions */
- 		if (drive->media == ide_floppy)
- 			ide_complete_rq(drive, 0,
- 					done ? done : ide_rq_bytes(rq));
--	} else
--		xferfunc(drive, NULL, pc->cur_pos, bcount);
-+	} else {
-+		done = min_t(unsigned int, bcount, pc->req_xfer - pc->xferred);
-+		xferfunc(drive, NULL, pc->cur_pos, done);
-+	}
- 
- 	/* Update the current position */
--	pc->xferred += bcount;
--	pc->cur_pos += bcount;
-+	pc->xferred += done;
-+	pc->cur_pos += done;
-+
-+	bcount -= done;
-+
-+	if (bcount)
-+		ide_pad_transfer(drive, write, bcount);
-+
-+	debug_log("[cmd %x] transferred %d bytes, padded %d bytes\n",
-+		  rq->cmd[0], done, bcount);
- 
--	debug_log("[cmd %x] transferred %d bytes on that intr.\n",
--		  rq->cmd[0], bcount);
--next_irq:
- 	/* And set the interrupt handler again */
- 	ide_set_handler(drive, ide_pc_intr, timeout);
- 	return ide_started;
-Index: b/drivers/ide/ide-tape.c
+-		if (drive->media == ide_floppy)
+-			ide_complete_rq(drive, 0,
+-					done ? done : ide_rq_bytes(rq));
++		ide_complete_rq(drive, 0, done ? done : ide_rq_bytes(rq));
++	} else if (drive->media == ide_tape && pc->bh) {
++		done = drive->pc_io_buffers(drive, pc, bcount, write);
+ 	} else {
+ 		done = min_t(unsigned int, bcount, pc->req_xfer - pc->xferred);
+ 		xferfunc(drive, NULL, pc->cur_pos, done);
+Index: b/drivers/ide/ide-floppy.c
 ===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -297,19 +297,15 @@ static struct ide_tape_obj *ide_tape_chr
- 	return tape;
- }
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -213,7 +213,6 @@ static void idefloppy_create_rw_cmd(ide_
+ 	memcpy(rq->cmd, pc->c, 12);
  
--static void idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
-+static int idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				  unsigned int bcount)
+ 	pc->rq = rq;
+-	pc->b_count = 0;
+ 	if (rq->cmd_flags & REQ_RW)
+ 		pc->flags |= PC_FLAG_WRITING;
+ 	pc->buf = NULL;
+@@ -227,7 +226,6 @@ static void idefloppy_blockpc_cmd(struct
+ 	ide_init_pc(pc);
+ 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
+ 	pc->rq = rq;
+-	pc->b_count = 0;
+ 	if (rq->data_len && rq_data_dir(rq) == WRITE)
+ 		pc->flags |= PC_FLAG_WRITING;
+ 	pc->buf = rq->data;
+@@ -244,7 +242,6 @@ static ide_startstop_t ide_floppy_do_req
+ 					     struct request *rq, sector_t block)
  {
- 	struct idetape_bh *bh = pc->bh;
- 	int count;
+ 	struct ide_disk_obj *floppy = drive->driver_data;
+-	ide_hwif_t *hwif = drive->hwif;
+ 	struct ide_cmd cmd;
+ 	struct ide_atapi_pc *pc;
  
- 	while (bcount) {
--		if (bh == NULL) {
--			printk(KERN_ERR "ide-tape: bh == NULL in "
--				"idetape_input_buffers\n");
--			ide_pad_transfer(drive, 0, bcount);
--			return;
--		}
-+		if (bh == NULL)
-+			break;
- 		count = min(
- 			(unsigned int)(bh->b_size - atomic_read(&bh->b_count)),
- 			bcount);
-@@ -323,21 +319,21 @@ static void idetape_input_buffers(ide_dr
- 				atomic_set(&bh->b_count, 0);
- 		}
- 	}
-+
- 	pc->bh = bh;
-+
-+	return bcount;
- }
+@@ -293,12 +290,9 @@ static ide_startstop_t ide_floppy_do_req
  
--static void idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
-+static int idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				   unsigned int bcount)
- {
- 	struct idetape_bh *bh = pc->bh;
- 	int count;
+ 	cmd.rq = rq;
  
- 	while (bcount) {
--		if (bh == NULL) {
--			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
--					__func__);
--			return;
--		}
-+		if (bh == NULL)
-+			break;
- 		count = min((unsigned int)pc->b_count, (unsigned int)bcount);
- 		drive->hwif->tp_ops->output_data(drive, NULL, pc->b_data, count);
- 		bcount -= count;
-@@ -352,6 +348,8 @@ static void idetape_output_buffers(ide_d
- 			}
- 		}
- 	}
-+
-+	return bcount;
- }
+-	ide_init_sg_cmd(&cmd, rq->nr_sectors << 9);
++	ide_init_sg_cmd(&cmd, pc->req_xfer);
+ 	ide_map_sg(drive, &cmd);
  
- static void idetape_update_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc)
-@@ -563,12 +561,14 @@ static void ide_tape_handle_dsc(ide_driv
- static int ide_tape_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				unsigned int bcount, int write)
- {
-+	unsigned int bleft;
-+
- 	if (write)
--		idetape_output_buffers(drive, pc, bcount);
-+		bleft = idetape_output_buffers(drive, pc, bcount);
- 	else
--		idetape_input_buffers(drive, pc, bcount);
-+		bleft = idetape_input_buffers(drive, pc, bcount);
+-	pc->sg = hwif->sg_table;
+-	pc->sg_cnt = cmd.sg_nents;
+-
+ 	pc->rq = rq;
  
--	return bcount;
-+	return bcount - bleft;
- }
+ 	return ide_floppy_issue_pc(drive, &cmd, pc);
+@@ -484,7 +478,6 @@ static void ide_floppy_setup(ide_drive_t
  
- /*
+ 	drive->pc_callback	 = ide_floppy_callback;
+ 	drive->pc_update_buffers = idefloppy_update_buffers;
+-	drive->pc_io_buffers	 = ide_io_buffers;
+ 
+ 	/*
+ 	 * We used to check revisions here. At this point however I'm giving up.
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -414,9 +414,6 @@ struct ide_atapi_pc {
+ 	struct idetape_bh *bh;
+ 	char *b_data;
+ 
+-	struct scatterlist *sg;
+-	unsigned int sg_cnt;
+-
+ 	unsigned long timeout;
+ };
+ 
+@@ -1172,8 +1169,6 @@ void ide_tf_read(ide_drive_t *, struct i
+ void ide_input_data(ide_drive_t *, struct ide_cmd *, void *, unsigned int);
+ void ide_output_data(ide_drive_t *, struct ide_cmd *, void *, unsigned int);
+ 
+-int ide_io_buffers(ide_drive_t *, struct ide_atapi_pc *, unsigned int, int);
+-
+ extern void SELECT_DRIVE(ide_drive_t *);
+ void SELECT_MASK(ide_drive_t *, int);
+ 
