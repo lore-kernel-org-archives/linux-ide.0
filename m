@@ -1,147 +1,95 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 3/3 v4] AT91: initialize Compact Flash on AT91SAM9263 cpu
-Date: Wed, 18 Feb 2009 11:07:26 +0100
-Message-ID: <200902181107.27095.stf_xl@wp.pl>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for February 12 (ide)
+Date: Wed, 18 Feb 2009 09:17:28 -0800
+Message-ID: <499C42A8.7060003@oracle.com>
+References: <20090212194408.ff7489c1.sfr@canb.auug.org.au> <499451E0.6060004@oracle.com> <200902171519.27031.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:60072 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751743AbZBRKHc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Feb 2009 05:07:32 -0500
-Received: from ebg226.internetdsl.tpnet.pl (HELO staszek-desktop.local) (stf_xl@wp.pl@[83.14.136.226])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES256-SHA encrypted SMTP
-          for <linux-ide@vger.kernel.org>; 18 Feb 2009 11:07:26 +0100
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <200902171519.27031.bzolnier@gmail.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>
-Cc: linux-arm-kernel@lists.arm.linux.org.uk
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- arch/arm/mach-at91/at91sam9263_devices.c |  105 ++++++++++++++++++++++++++++++
- 1 files changed, 105 insertions(+), 0 deletions(-)
+Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 12 February 2009, Randy Dunlap wrote:
+>> Stephen Rothwell wrote:
+>>> Hi all,
+>>>
+>>> Changes since 20090211:
+>>
+>> When
+>> # CONFIG_BLK_DEV_IDEDMA is not set
+>>
+>> linux-next-20090212/drivers/ide/ide-taskfile.c:108: error: 'ide_dma_intr' undeclared (first use in this function)
+> 
+> Thanks for spotting this, I fixed it in the revised patch:
 
-diff --git a/arch/arm/mach-at91/at91sam9263_devices.c b/arch/arm/mach-at91/at91sam9263_devices.c
-index b753cb8..f048043 100644
---- a/arch/arm/mach-at91/at91sam9263_devices.c
-+++ b/arch/arm/mach-at91/at91sam9263_devices.c
-@@ -347,6 +347,111 @@ void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data)
- void __init at91_add_device_mmc(short mmc_id, struct at91_mmc_data *data) {}
- #endif
- 
-+/* --------------------------------------------------------------------
-+ *  Compact Flash (PCMCIA or IDE)
-+ * -------------------------------------------------------------------- */
-+
-+#if defined(CONFIG_AT91_CF) || defined(CONFIG_AT91_CF_MODULE) || \
-+    defined(CONFIG_BLK_DEV_IDE_AT91) || defined(CONFIG_BLK_DEV_IDE_AT91_MODULE)
-+
-+static struct at91_cf_data cf0_data;
-+
-+static struct resource cf0_resources[] = {
-+	[0] = {
-+		.start	= AT91_CHIPSELECT_4,
-+		.end	= AT91_CHIPSELECT_4 + SZ_256M - 1,
-+		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT,
-+	}
-+};
-+
-+static struct platform_device cf0_device = {
-+	.id		= 0,
-+	.dev		= {
-+				.platform_data	= &cf0_data,
-+	},
-+	.resource	= cf0_resources,
-+	.num_resources	= ARRAY_SIZE(cf0_resources),
-+};
-+
-+static struct at91_cf_data cf1_data;
-+
-+static struct resource cf1_resources[] = {
-+	[0] = {
-+		.start	= AT91_CHIPSELECT_5,
-+		.end	= AT91_CHIPSELECT_5 + SZ_256M - 1,
-+		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT,
-+	}
-+};
-+
-+static struct platform_device cf1_device = {
-+	.id		= 1,
-+	.dev		= {
-+				.platform_data	= &cf1_data,
-+	},
-+	.resource	= cf1_resources,
-+	.num_resources	= ARRAY_SIZE(cf1_resources),
-+};
-+
-+void __init at91_add_device_cf(struct at91_cf_data *data)
-+{
-+	unsigned long ebi0_csa;
-+	struct platform_device *pdev;
-+
-+	if (!data)
-+		return;
-+
-+	/*
-+	 * assign CS4 or CS5 to SMC with Compact Flash logic support,
-+	 * we assume SMC timings are configured by board code,
-+	 * except True IDE where timings are controlled by driver
-+	 */
-+	ebi0_csa = at91_sys_read(AT91_MATRIX_EBI0CSA);
-+	switch (data->chipselect) {
-+	case 4:
-+		at91_set_A_periph(AT91_PIN_PD6, 0);  /* EBI0_NCS4/CFCS0 */
-+		ebi0_csa |= AT91_MATRIX_EBI0_CS4A_SMC_CF1;
-+		cf0_data = *data;
-+		pdev = &cf0_device;
-+		break;
-+	case 5:
-+		at91_set_A_periph(AT91_PIN_PD7, 0);  /* EBI0_NCS5/CFCS1 */
-+		ebi0_csa |= AT91_MATRIX_EBI0_CS5A_SMC_CF2;
-+		cf1_data = *data;
-+		pdev = &cf1_device;
-+		break;
-+	default:
-+		printk(KERN_ERR "AT91 CF: bad chip-select requested (%u)\n",
-+		       data->chipselect);
-+		return;
-+	}
-+	at91_sys_write(AT91_MATRIX_EBI0CSA, ebi0_csa);
-+
-+	if (data->det_pin) {
-+		at91_set_gpio_input(data->det_pin, 1);
-+		at91_set_deglitch(data->det_pin, 1);
-+	}
-+
-+	if (data->irq_pin) {
-+		at91_set_gpio_input(data->irq_pin, 1);
-+		at91_set_deglitch(data->irq_pin, 1);
-+	}
-+
-+	if (data->vcc_pin)
-+		/* initially off */
-+		at91_set_gpio_output(data->vcc_pin, 0);
-+
-+	/* enable EBI controlled pins */
-+	at91_set_A_periph(AT91_PIN_PD5, 1);  /* NWAIT */
-+	at91_set_A_periph(AT91_PIN_PD8, 0);  /* CFCE1 */
-+	at91_set_A_periph(AT91_PIN_PD9, 0);  /* CFCE2 */
-+	at91_set_A_periph(AT91_PIN_PD14, 0); /* CFNRW */
-+
-+	pdev->name = (data->flags & AT91_CF_TRUE_IDE) ? "at91_ide" : "at91_cf";
-+	platform_device_register(pdev);
-+}
-+#else
-+void __init at91_add_device_cf(struct at91_cf_data *data) {}
-+#endif
- 
- /* --------------------------------------------------------------------
-  *  NAND / SmartMedia
+Hi Bart,
+
+Have you pushed this patch yet?
+
+linux-next (20090218) is still getting this IDE build error.
+
+Thanks.
+
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: add ->dma_timer_expiry method and remove ->dma_exec_cmd one (v2)
+> 
+> * Rename dma_timer_expiry() to ide_dma_sff_timer_expiry() and export it.
+> 
+> * Add ->dma_timer_expiry method and use it to set hwif->expiry for
+>   ATA_PROT_DMA protocol in do_rw_taskfile().
+> 
+> * Initialize ->dma_timer_expiry to ide_dma_sff_timer_expiry() for SFF hosts.
+> 
+> * Move setting hwif->expiry from ide_execute_command() to its users and drop
+>   'expiry' argument.
+> 
+> * Use ide_execute_command() instead of ->dma_exec_cmd in do_rw_taskfile().
+> 
+> * Remove ->dma_exec_cmd method and its implementations.
+> 
+> * Unexport ide_execute_command() and ide_dma_intr().
+> 
+> v2:
+> * Fix CONFIG_BLK_DEV_IDEDMA=n build (noticed by Randy Dunlap).
+> 
+> * Fix *dma_expiry naming (suggested by Sergei Shtylyov).
+> 
+> There should be no functional changes caused by this patch.
+> 
+> Cc: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/alim15x3.c     |    2 +-
+>  drivers/ide/au1xxx-ide.c   |    8 --------
+>  drivers/ide/cmd64x.c       |    6 +++---
+>  drivers/ide/cs5536.c       |    2 +-
+>  drivers/ide/hpt366.c       |    6 +++---
+>  drivers/ide/icside.c       |    7 -------
+>  drivers/ide/ide-atapi.c    |    3 ++-
+>  drivers/ide/ide-dma-sff.c  |   15 ++++-----------
+>  drivers/ide/ide-dma.c      |    1 -
+>  drivers/ide/ide-iops.c     |    6 +-----
+>  drivers/ide/ide-taskfile.c |    6 ++++--
+>  drivers/ide/it821x.c       |    2 +-
+>  drivers/ide/ns87415.c      |    2 +-
+>  drivers/ide/pdc202xx_old.c |    4 ++--
+>  drivers/ide/pmac.c         |    8 --------
+>  drivers/ide/sc1200.c       |    2 +-
+>  drivers/ide/scc_pata.c     |    2 +-
+>  drivers/ide/siimage.c      |    2 +-
+>  drivers/ide/sl82c105.c     |    2 +-
+>  drivers/ide/tc86c001.c     |    2 +-
+>  drivers/ide/trm290.c       |    6 ------
+>  drivers/ide/tx4939ide.c    |    2 +-
+>  include/linux/ide.h        |    8 ++++----
+>  23 files changed, 33 insertions(+), 71 deletions(-)
+
+
 -- 
-1.5.2.5
-
+~Randy
