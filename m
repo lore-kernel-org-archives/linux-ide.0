@@ -1,43 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] it821x: remove dead URL
-Date: Wed, 18 Feb 2009 20:18:03 +0100
-Message-ID: <200902182018.04495.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide-cd: document capacity hack
+Date: Wed, 18 Feb 2009 22:35:27 +0300
+Message-ID: <499C62FF.1090805@ru.mvista.com>
+References: <200902182018.52195.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:19199 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665AbZBRTVb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 14:21:31 -0500
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:62973 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754911AbZBRTfH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 14:35:07 -0500
+In-Reply-To: <200902182018.52195.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] it821x: remove dead URL
+Hello.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/it821x.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Bartlomiej Zolnierkiewicz wrote:
 
-Index: b/drivers/ide/it821x.c
-===================================================================
---- a/drivers/ide/it821x.c
-+++ b/drivers/ide/it821x.c
-@@ -5,9 +5,8 @@
-  *  May be copied or modified under the terms of the GNU General Public License
-  *  Based in part on the ITE vendor provided SCSI driver.
-  *
-- *  Documentation available from
-- * 	http://www.ite.com.tw/pc/IT8212F_V04.pdf
-- *  Some other documents are NDA.
-+ *  Documentation:
-+ *	Datasheet is freely available, some other documents under NDA.
-  *
-  *  The ITE8212 isn't exactly a standard IDE controller. It has two
-  *  modes. In pass through mode then it is an IDE controller. In its smart
+> Just copy the comment from drivers/scsi/sr.c::sr_done()
+> (from which the capacity hack has been originated).
+
+> Cc: Borislav Petkov <petkovbb@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Index: b/drivers/ide/ide-cd.c
+> ===================================================================
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -189,6 +189,14 @@ static void cdrom_analyze_sense_data(ide
+>  			bio_sectors = max(bio_sectors(failed_command->bio), 4U);
+>  			sector &= ~(bio_sectors - 1);
+>  
+> +			/*
+> +			 * The SCSI specification allows for the value
+> +			 * returned by READ CAPACITY to be up to 75 2K
+> +			 * sectors past the last readable block.
+
+    Oh horror... :-)
+
+> +			 * Therefore, if we hit a medium error within the
+> +			 * last 75 2K sectors, we decrease the saved size
+> +			 * value.
+> +			 */
+>  			if (sector < get_capacity(info->disk) &&
+>  			    drive->probed_capacity - sector < 4 * 75)
+>  				set_capacity(info->disk, sector);
+
+    Would be nice if the CHS capacity workround was finally documented too? ;-)
+
+MBR, Sergei
