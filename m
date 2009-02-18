@@ -1,60 +1,88 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide-cd: document capacity hack
-Date: Wed, 18 Feb 2009 21:38:14 +0100
-Message-ID: <200902182138.15501.bzolnier@gmail.com>
-References: <200902182018.52195.bzolnier@gmail.com> <499C62FF.1090805@ru.mvista.com>
+Subject: Re: [PATCH] fix dma_unmap_sg misuse
+Date: Wed, 18 Feb 2009 21:59:49 +0100
+Message-ID: <200902182159.49980.bzolnier@gmail.com>
+References: <20090217133432M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:52277 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752869AbZBRUmx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 15:42:53 -0500
-In-Reply-To: <499C62FF.1090805@ru.mvista.com>
+Received: from fk-out-0910.google.com ([209.85.128.186]:43572 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883AbZBRU7A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 15:59:00 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so82510fkf.5
+        for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 12:58:58 -0800 (PST)
+In-Reply-To: <20090217133432M.fujita.tomonori@lab.ntt.co.jp>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-ide@vger.kernel.org
 
-On Wednesday 18 February 2009, Sergei Shtylyov wrote:
-> Hello.
+On Tuesday 17 February 2009, FUJITA Tomonori wrote:
+> Looks like that libata misuses dma_unmap_sg though I'm not familiar
+> with libata so I might completely misunderstand something.
 > 
-> Bartlomiej Zolnierkiewicz wrote:
+> =
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] fix dma_unmap_sg misuse
 > 
-> > Just copy the comment from drivers/scsi/sr.c::sr_done()
-> > (from which the capacity hack has been originated).
+> DMA-mapping.txt says:
 > 
-> > Cc: Borislav Petkov <petkovbb@gmail.com>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> To unmap a scatterlist, just call:
 > 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 	pci_unmap_sg(pdev, sglist, nents, direction);
 > 
-> > Index: b/drivers/ide/ide-cd.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -189,6 +189,14 @@ static void cdrom_analyze_sense_data(ide
-> >  			bio_sectors = max(bio_sectors(failed_command->bio), 4U);
-> >  			sector &= ~(bio_sectors - 1);
-> >  
-> > +			/*
-> > +			 * The SCSI specification allows for the value
-> > +			 * returned by READ CAPACITY to be up to 75 2K
-> > +			 * sectors past the last readable block.
+> Again, make sure DMA activity has already finished.
 > 
->     Oh horror... :-)
-> 
-> > +			 * Therefore, if we hit a medium error within the
-> > +			 * last 75 2K sectors, we decrease the saved size
-> > +			 * value.
-> > +			 */
-> >  			if (sector < get_capacity(info->disk) &&
-> >  			    drive->probed_capacity - sector < 4 * 75)
-> >  				set_capacity(info->disk, sector);
-> 
->     Would be nice if the CHS capacity workround was finally documented too? ;-)
+> PLEASE NOTE:  The 'nents' argument to the pci_unmap_sg call must be
+>               the _same_ one you passed into the pci_map_sg call,
+> 	      it should _NOT_ be the 'count' value _returned_ from the
+>               pci_map_sg call.
 
-Send patches.  I have my hands full of work...
+This is correct and other subsystems (SCSI, IDE) are compliant with it.
+
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+> ---
+>  drivers/ata/libata-core.c |    4 ++--
+>  include/linux/libata.h    |    1 +
+>  2 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 9fbf059..5e324ce 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4612,7 +4612,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
+>  	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+>  
+>  	if (qc->n_elem)
+> -		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
+> +		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
+>  
+>  	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+>  	qc->sg = NULL;
+> @@ -4727,7 +4727,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
+>  		return -1;
+>  
+>  	DPRINTK("%d sg elements mapped\n", n_elem);
+> -
+> +	qc->orig_n_elem = qc->n_elem;
+>  	qc->n_elem = n_elem;
+>  	qc->flags |= ATA_QCFLAG_DMAMAP;
+>  
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 5577ea8..2de827d 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -530,6 +530,7 @@ struct ata_queued_cmd {
+>  	unsigned long		flags;		/* ATA_QCFLAG_xxx */
+>  	unsigned int		tag;
+>  	unsigned int		n_elem;
+> +	unsigned int		orig_n_elem;
+>  
+>  	int			dma_dir;
