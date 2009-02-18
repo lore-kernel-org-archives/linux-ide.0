@@ -1,44 +1,60 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: sata_nv frees DMA memory with different size (possibly a
- generic libata bug)
-Date: Wed, 18 Feb 2009 15:25:16 -0500
-Message-ID: <20090218152516.7b4457b3@dhcp-100-2-144.bos.redhat.com>
-References: <4994E30A.3040501@gmail.com>
-	<20090216163637.18dd315c@dhcp-100-2-144.bos.redhat.com>
-	<499A26B7.80807@gmail.com>
-	<20090217202156B.fujita.tomonori@lab.ntt.co.jp>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-cd: document capacity hack
+Date: Wed, 18 Feb 2009 21:38:14 +0100
+Message-ID: <200902182138.15501.bzolnier@gmail.com>
+References: <200902182018.52195.bzolnier@gmail.com> <499C62FF.1090805@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35202 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752015AbZBRU2F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Feb 2009 15:28:05 -0500
-In-Reply-To: <20090217202156B.fujita.tomonori@lab.ntt.co.jp>
+Received: from fg-out-1718.google.com ([72.14.220.155]:52277 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752869AbZBRUmx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Feb 2009 15:42:53 -0500
+In-Reply-To: <499C62FF.1090805@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hancockrwd@gmail.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Tue, 17 Feb 2009 20:22:05 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-
- 
-> > >>> sata_nv 0000:00:0d.0: DMA-API: device driver frees DMA memory with different
-> > >>> size [device address=0x00000000da031000] [map size=4096 bytes] [unmap
-> > >> That's rather curious. It seems to be saying that the sg length is 
-> > >> different between the map and unmap, but it doesn't look like sata_nv 
-> > >> mucks with that anywhere, and neither does libata core..
-> > > 
-> > > Could the SCSI code have merged two requests?
-> > 
-> > I wouldn't think so.. and if it did it seems like it would have to have 
-> > changed the list after libata got the request somehow..
+On Wednesday 18 February 2009, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Does this box uses GART IOMMU?
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> > Just copy the comment from drivers/scsi/sr.c::sr_done()
+> > (from which the capacity hack has been originated).
+> 
+> > Cc: Borislav Petkov <petkovbb@gmail.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> > Index: b/drivers/ide/ide-cd.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -189,6 +189,14 @@ static void cdrom_analyze_sense_data(ide
+> >  			bio_sectors = max(bio_sectors(failed_command->bio), 4U);
+> >  			sector &= ~(bio_sectors - 1);
+> >  
+> > +			/*
+> > +			 * The SCSI specification allows for the value
+> > +			 * returned by READ CAPACITY to be up to 75 2K
+> > +			 * sectors past the last readable block.
+> 
+>     Oh horror... :-)
+> 
+> > +			 * Therefore, if we hit a medium error within the
+> > +			 * last 75 2K sectors, we decrease the saved size
+> > +			 * value.
+> > +			 */
+> >  			if (sector < get_capacity(info->disk) &&
+> >  			    drive->probed_capacity - sector < 4 * 75)
+> >  				set_capacity(info->disk, sector);
+> 
+>     Would be nice if the CHS capacity workround was finally documented too? ;-)
 
-I don't think so, but I've asked for the dmesg.
-
-It's using an nVidia MCP55/C51 chipset if that's any help.
-
+Send patches.  I have my hands full of work...
