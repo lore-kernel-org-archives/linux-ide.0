@@ -1,61 +1,68 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci fails with SATA DVD drive, IDE mode works
-Date: Thu, 19 Feb 2009 18:10:26 +0900
-Message-ID: <499D2202.7070503@kernel.org>
-References: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>
+Subject: Re: SATA II generation controllers reset problem
+Date: Thu, 19 Feb 2009 18:19:44 +0900
+Message-ID: <499D2430.3080601@kernel.org>
+References: <4993C535.10204@very-soft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51787 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:55490 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753955AbZBSJK0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Feb 2009 04:10:26 -0500
-In-Reply-To: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>
+	id S1757363AbZBSJUL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2009 04:20:11 -0500
+In-Reply-To: <4993C535.10204@very-soft.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Vladimir Krivopalov <argenet@very-soft.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello,
+Hello, Vladmir.
 
-Chuck Ebbert wrote:
-> Using kernel 2.6.29-rc3...
+Vladimir Krivopalov wrote:
+> Greetings, Jeff!
 > 
-> lspci says this device in IDE mode is ID 8086:292d Intel (ICH9M/M-E)
-> In that mode it works with the ata_piix driver.
-> 
-> But with ahci mode I get:
->
-> ata2: Sata link up 1.5Gbps (SStatus 113 SControl 300)
-> ata2.00 ATAPI: TSSTcorp CDDVDW TS-L633A, UO00, max MWDMA2, ATAPI AN
-> ata2.00 applying bridge limits
-> ata2.00 configured for PIO4
-> ata2.00 qc timeout (cmd 0xa0)
-> ata2.00 failed to clear UNIT ATTENTION (err_mask=0x5)
-> ata2: Sata link up 1.5Gbps (SStatus 113 SControl 300)
-> ata2.00 configured for PIO4
-> ata2.00 qc timeout (cmd 0xa0)
-> ata2.00 failed to clear UNIT ATTENTION (err_mask=0x5)
-> ata2: limiting SATA link speed to 1.5Gbps
-> ata2.00 limiting speed to PIO3
-> ata2: link is slow to respond, please be patient (ready=0)
-> ata2: COMRESET failed (errno=-16)
-> ata2: link is slow to respond, please be patient (ready=0)
-> ata2: COMRESET failed (errno=-16)
-> ata2: link is slow to respond, please be patient (ready=0)
-> ata2: COMRESET failed (errno=-16)
-> ata2: COMRESET failed (errno=-16)
-> ata2: reset failed, giving up
-> ata2.00: disabled
-> ata2: hard resetting link
-> ata2: link is slow to respond, please be patient (ready=0)
-> ata2: COMRESET failed (errno=-16)
+> My name is Vladimir Krivopalov, and I work as software developer in
+> VerySoft LLC, Russia.
+> We currently develop a project containing Linux and Windows client-side
+> parts and have to implement 'hot reboot' from Linux to Windows for our
+> purposes. We use kexec application and grub4dos bootloader for this.
+> There's a problem we discovered while developing our project in Linux
+> part. It occurs when an effort to switch from protected mode to the real
+> mode is taken and bootloader is started, but it fails while looking for
+> the SATA II drives.
+> As for normal booting with grub4dos, it has no probmels with detecting
+> SATA drives. It also finds all IDE drives and SATA I (that have
+> IDE-compartible interface) normally.
+> We suppose the reason could be in that SATA II controllers aren't
+> resetted properly. Could you please provide any explanations on how are
+> they reset by default in libata library for Linux?
 
-Can you please attach log of successful boot using ata_piix and the
-output of "hdparm -I" on the drive?  Also, if you put a different
-harddisk and more preferably a different ATAPI device there, does it
-work in ahci mode?
+You need to provide more information to get better response but, in
+general, that's not gonna work reliably in generic manner unless
+whatever is being loaded after linux knows how to reconfigure all the
+devices into a state BIOS code expects them to be.
+
+If you confine the problem to ATA controllers, I can think of two
+problems from the top of my head.
+
+1. Some modern ATA controllers come with dual programming interfaces
+   which can be switched on the fly and when possible linux switches
+   them to the native mode to use various features.  BIOSen are coded
+   expecting the controller to be in legacy mode, so it won't work.
+
+2. There are BIOSen which can handle native interface.  e.g. sil24 or
+   ahci BIOSen.  However, these interfaces require a lot more
+   initialization than legacy IDE programming interface.  For legacy
+   IDE, once the port addresses are determined, it's all peachy but
+   more modern interfaces need their address registers programmed at
+   the very least.  Those registers of course won't contain values
+   that BIOS expects after such hot reboot.
+
+If you're working on specific hardware, you can probably do specific
+initialization stuff during the process and put things as the BIOS
+expects them but if you're trying to come up with a general solution,
+I'm a bit skeptical it's gonna fly very far.
 
 Thanks.
 
