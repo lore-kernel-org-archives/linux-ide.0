@@ -1,24 +1,32 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: General question (scheduler) with SSDs?
-Date: Thu, 19 Feb 2009 08:38:38 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
+From: =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigBrady.com>
+Subject: Re: General question (scheduler) with SSDs?
+Date: Thu, 19 Feb 2009 13:50:22 +0000
+Message-ID: <499D639E.6090205@draigBrady.com>
+References: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail122.emailantidote.com ([80.169.59.122]:51486 "EHLO
+	SC-MTA-03.mxsweep.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751846AbZBSOAI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 09:00:08 -0500
+In-Reply-To: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-Hello,
+Justin Piszcz wrote:
+> Hello,
+> 
+> I was curious if anyone had done any benchmarks and/or has conclusive
+> information, what is the best Linux scheduler to use with SSDs?
+> 
+> Noop?
+> CFQ?
+> AS?
+> Deadline?
 
-I was curious if anyone had done any benchmarks and/or has conclusive 
-information, what is the best Linux scheduler to use with SSDs?
-
-Noop?
-CFQ?
-AS?
-Deadline?
-
-Justin.
-
+There was a thread started on that recently:
+http://lkml.org/lkml/2009/1/30/288
