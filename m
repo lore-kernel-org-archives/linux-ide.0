@@ -1,63 +1,128 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Thu, 19 Feb 2009 11:41:02 -0500
-Message-ID: <87f94c370902190841t788e14ccy9a2caa9d18c02964@mail.gmail.com>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>
-	 <49934B20.4060206@rtr.ca> <49934D24.1050204@garzik.org>
-	 <49935157.6020002@rtr.ca>
-	 <20090211175409.4fb27541@dhcp-100-2-144.bos.redhat.com>
-	 <49944A13.3050105@rtr.ca> <49944AA9.8040308@rtr.ca>
-	 <4998D9B8.9020309@kernel.org>
-	 <20090216163040.194f5389@dhcp-100-2-144.bos.redhat.com>
-	 <499CFA72.1040905@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Bad module reference counter
+Date: Thu, 19 Feb 2009 17:49:52 +0100
+Message-ID: <200902191749.52740.bzolnier@gmail.com>
+References: <200902111032.59225.stf_xl@wp.pl> <200902182225.19784.bzolnier@gmail.com> <200902191348.44508.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:50381 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbZBSQlD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 11:41:03 -0500
-Received: by qyk4 with SMTP id 4so781128qyk.13
-        for <linux-ide@vger.kernel.org>; Thu, 19 Feb 2009 08:41:02 -0800 (PST)
-In-Reply-To: <499CFA72.1040905@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200902191348.44508.stf_xl@wp.pl>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Thu, Feb 19, 2009 at 1:21 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> Chuck Ebbert wrote:
->>> Yeap, SD_TIMEOUT should be it.  But I've never personally seen disk
->>> flushing taking as long as 30 seconds.  Does it really happen?  It's
->>> not like the drive would be doing random seeking.  One full stroke
->>> across the platter should be it.  Even with the rotational delay,
->>> going over 30 seconds doesn't seem very likely.
->>
->> I just noticed that the other drive, a Western Digital, was using 1.5Gbps
->> instead of 3.0. So I forced the Samsung to the slower speed and now I
->> can't make the timeout happen anymore.
->
-> Timeouts are much more likely with the higher transfer speed but it's
-> kind of strange for flush cache to be affected by it as the command
-> doesn't have any data to transfer.  :-(
+On Thursday 19 February 2009, Stanislaw Gruszka wrote:
+> Wednesday 18 February 2009 22:25:19 Bartlomiej Zolnierkiewicz napisa=C5=
+=82(a):
+> > > I entered a problem with double decreasing module reference count=
+er
+> > > where it become "negative", here is the usage scenario:
+> > >=20
+> > > # modprobe at91_ide
+> > > # modprobe ide_gd_mod
+> > > # lsmod
+> > > Module                  Size  Used by    Not tainted
+> > > ide_gd_mod             22948  0
+> > > at91_ide                4672  0
+> > > ide_core               77020  2 ide_gd_mod,at91_ide
+> > > # rmmod ide_gd_mod
+> > > # lsmod
+> > > Module                  Size  Used by    Not tainted
+> > > at91_ide                4672 4294967295
+> > > ide_core               77020  1 at91_ide
+> > >=20
+> > > Note when I first remove at91_ide module and then ide_gd_mod
+> > > everyting is ok.
+> > >=20
+> > > I tired to debug issue and I did not found any suspicious in at91=
+_ide.
+> > > I think probable reason is double free in ide-gd.c . Here is patc=
+h with
+> > > workaround (or maybe it is a real fix, but I'm not sure):
+> > >=20
+> > > diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+> > > index 7857b20..31ae04e 100644
+> > > --- a/drivers/ide/ide-gd.c
+> > > +++ b/drivers/ide/ide-gd.c
+> > > @@ -70,8 +70,6 @@ static void ide_gd_remove(ide_drive_t *drive)
+> > >  	del_gendisk(g);
+> > > =20
+> > >  	drive->disk_ops->flush(drive);
+> > > -
+> > > -	ide_disk_put(idkp);
+> > >  }
+> > > =20
+> > >  static void ide_disk_release(struct kref *kref)
+> > >=20
+> > > If this patch is ok, maybe similar things need to be done also in=
+ ide-cd and
+> > > perhaps other device type modules.
+> >=20
+> > Seems like ide_device_put() needs the same module_refcount() check =
+that
+> > is present in scsi_device_put() so removal of device driver won't t=
+rigger
+> > a spurious module_put() on a host driver?
+>=20
+> I little surprise about scsi code (linux-scsi ML CC). Is comment insi=
+de
+> scsi_device_put() function correct? Why scsi_device_get() not check
+> try_module_get() return value? And most importand: there is reference
+> counter check before put, so it can be 0, but data does it protect is=
+ in
+> use ?
+>=20
+> Adding module_refcount() !=3D 0 to ide_device_put()  helps only parti=
+ally, below
+> commands sequence give oops [1].
+>=20
+> # modprobe at91_ide
+> # modprobe ide_gd_mod
+> # rmmod ide_gd_mod
+> # modprobe ide_gd_mod
+> # rmmod at91_ide
+>=20
+> Oops happens because previous "rmmod ide_gd_mod"  decrease some refer=
+ence
+> counter in ide_device_put() and in "rmmod at91_ide" function del_gend=
+isk()
+> cause call to drive_release_dev(), which free drive->id before ide_di=
+sk_flush() .
+> This function oops with NULL driver->id.
 
-I have not been following this thread, but those jumpers normally
-reduce the feature set from SATA-II to SATA-I as well.
+Uh... we will need some more intrusive changes to the reference countin=
+g
+to fix it -- like to replace idkp->kref by idkp->dev and make drive->ge=
+ndev
+a parent of it (so only after the final put on ->dev ->gendev can go aw=
+ay).
 
-So it could be an issue with a SATA-II feature.  ncq?
+[ IOW we need to have some changes similar to those done in sd.c by:
+	commit 6bdaa1f17dd32ec62345c7b57842f53e6278a2fa
+  and later by:
+	commit ee959b00c335d7780136c5abda37809191fe52c3 ]
 
+> There is no oops with my workaround, when I just remove ide_disk_put(=
+) from
 
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+I suppose that after ide_disk_put() removal ide_disk_release() is simpl=
+y
+never called... ;)
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+> ide_gd_remove(). It's strange why there is lack of symmetrical _put/_=
+get calls,
+> ide_gd_probe() has no call to ide_disk_get().=20
+
+We have kref_init() in ide_disk_probe(), so there is no need for it
+and we also don't want to hold an extra reference on host driver...
+
+Thanks,
+Bart
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
