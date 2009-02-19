@@ -1,26 +1,25 @@
-From: "Simeon" <han_qin_huang@seniorweb.nl>
-Subject: Simeon sent you a Greeting!
-Date: Wed, 18 Feb 2009 21:14:21 -0700
-Message-ID: <20090218211421.9080202@seniorweb.nl>
+From: Sagar Borikar <sagar.borikar@gmail.com>
+Subject: Synopsis SATA AHCI support
+Date: Thu, 19 Feb 2009 11:26:56 +0530
+Message-ID: <3fb94e50902182156y62da0f6dhfb5d99ad5de9d0fd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [70.98.75.195] ([70.98.75.195]:1221 "HELO wergvan"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751846AbZBSEXX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Feb 2009 23:23:23 -0500
-Received: from localhost.localdomain (gej [192.168.204.168])
-	by wergvan (Postfix) with ESMTP id A4A78CD7A25
-	for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 21:14:21 -0700
+Received: from wa-out-1112.google.com ([209.85.146.182]:16641 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535AbZBSF45 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 00:56:57 -0500
+Received: by wa-out-1112.google.com with SMTP id v33so139302wah.21
+        for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 21:56:56 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Simeon just sent you a postcard and wrote to you:
-"If I know what love is, It is because of you. "
+Hi
 
-To pick up your greeting card, click on the link below:
-http://iy.worshiplove.com/?code=9ea330c16d0c276b2e1e134d2
-For your convenience, the greeting card will be available for the next 40 days.
+Can you let me know whether Synopsis SATA AHCI is already supported in
+2.6? and if yes then please point me to the sources.
 
+Thanks
+Sagar
