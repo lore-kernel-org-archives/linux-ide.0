@@ -1,35 +1,68 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Thu, 19 Feb 2009 10:27:07 -0500
-Message-ID: <499D7A4B.5010804@rtr.ca>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>	<49922A2D.508@kernel.org>	<49924F48.4000009@rtr.ca> <20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com> <49934B20.4060206@rtr.ca> <49934D24.1050204@garzik.org> <4993A57D.6010107@gmail.com>
+Subject: [PATCH] sata_mv: fix SoC interrupt breakage
+Date: Thu, 19 Feb 2009 10:38:04 -0500
+Message-ID: <499D7CDC.9000202@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:34884 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:36699 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753147AbZBSP1J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Feb 2009 10:27:09 -0500
-In-Reply-To: <4993A57D.6010107@gmail.com>
+	id S1751479AbZBSPiD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2009 10:38:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jeff@garzik.org>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Lennert Buytenhek <buytenh@marvell.com>, Martin Michlmayr <tbm@cyrius.com>
 
- >ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
- >ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
- >         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
- >ata1.00: status: { DRDY }
+For some reason, sata_mv doesn't clear interrupt status during init
+when it's running on an SoC host adapter.  If the bootloader has
+touched the SATA controller before starting Linux, Linux can end up
+enabling the SATA interrupt with events pending, which will cause the
+interrupt to be marked as spurious and then be disabled, which then
+breaks all further accesses to the controller.
 
->>> I wonder if it's just a case of too short a timeout on the cache flushes?
-..
-> However, in this case the drive is not reporting Busy status at the 
-> timeout, which suggests maybe an interrupt got lost or something. (Could 
-> be still the drive's fault.)
-..
+This patch makes the SoC path clear interrupt status on init like in
+the non-SoC case.
 
-If I recall correctly, The reported shadow register contents are bogus
-when a timeout occurs.  So we don't actually know what the drive state was.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
 
-Or do we, Tejun?
+This is for 2.6.29 (upstream-fixes).
+Despite appearances, this patch simply removes a single unnecessary
+if-stmt from the code.  It looks larger due to the resulting change
+in indentation level.
+
+--- old/drivers/ata/sata_mv.c.orig	2009-02-17 09:31:30.000000000 -0500
++++ new/drivers/ata/sata_mv.c	2009-02-19 10:31:28.000000000 -0500
+@@ -3114,19 +3114,17 @@
+  		writelfl(0, hc_mmio + HC_IRQ_CAUSE_OFS);
+  	}
+
+-	if (!IS_SOC(hpriv)) {
+-		/* Clear any currently outstanding host interrupt conditions */
+-		writelfl(0, mmio + hpriv->irq_cause_ofs);
+-
+-		/* and unmask interrupt generation for host regs */
+-		writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
+-
+-		/*
+-		 * enable only global host interrupts for now.
+-		 * The per-port interrupts get done later as ports are set up.
+-		 */
+-		mv_set_main_irq_mask(host, 0, PCI_ERR);
+-	}
++	/* Clear any currently outstanding host interrupt conditions */
++	writelfl(0, mmio + hpriv->irq_cause_ofs);
++
++	/* and unmask interrupt generation for host regs */
++	writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
++
++	/*
++	 * enable only global host interrupts for now.
++	 * The per-port interrupts get done later as ports are set up.
++	 */
++	mv_set_main_irq_mask(host, 0, PCI_ERR);
+  done:
+  	return rc;
+  }
