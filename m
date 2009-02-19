@@ -1,31 +1,29 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH] fix dma_unmap_sg misuse
-Date: Thu, 19 Feb 2009 22:04:05 +0900
-Message-ID: <20090219220401T.fujita.tomonori@lab.ntt.co.jp>
+Date: Thu, 19 Feb 2009 22:09:03 +0900
+Message-ID: <20090219220553P.fujita.tomonori@lab.ntt.co.jp>
 References: <20090217133432M.fujita.tomonori@lab.ntt.co.jp>
-	<200902182159.49980.bzolnier@gmail.com>
+	<20090218171235.721d241a@dhcp-100-2-144.bos.redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:49710 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:55111 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753930AbZBSNEL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Feb 2009 08:04:11 -0500
-In-Reply-To: <200902182159.49980.bzolnier@gmail.com>
+	id S1753113AbZBSNJX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2009 08:09:23 -0500
+In-Reply-To: <20090218171235.721d241a@dhcp-100-2-144.bos.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: cebbert@redhat.com
 Cc: fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org
 
-On Wed, 18 Feb 2009 21:59:49 +0100
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Wed, 18 Feb 2009 17:12:35 -0500
+Chuck Ebbert <cebbert@redhat.com> wrote:
 
-> On Tuesday 17 February 2009, FUJITA Tomonori wrote:
-> > Looks like that libata misuses dma_unmap_sg though I'm not familiar
-> > with libata so I might completely misunderstand something.
-> > 
-> > =
+> On Tue, 17 Feb 2009 13:35:27 +0900
+> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> 
 > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 > > Subject: [PATCH] fix dma_unmap_sg misuse
 > > 
@@ -41,82 +39,35 @@ Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > >               the _same_ one you passed into the pci_map_sg call,
 > > 	      it should _NOT_ be the 'count' value _returned_ from the
 > >               pci_map_sg call.
-> 
-> This is correct and other subsystems (SCSI, IDE) are compliant with it.
-> 
+> > 
 > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > ---
+> >  drivers/ata/libata-core.c |    4 ++--
+> >  include/linux/libata.h    |    1 +
+> >  2 files changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 9fbf059..5e324ce 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -4612,7 +4612,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
+> >  	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+> >  
+> >  	if (qc->n_elem)
 > 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 	if (qc->orig_n_elem)
+> ?
 
-Thanks,
+Either is fine because when n_elem is not zero, qc->orig_n_elem is not
+zero.
 
-I guess that the ide stack has the same problem (I guess that you
-already knew that though).
-
-Looks like that the ide stack in linux-next has more serious problem
-about handling dma_map_sg?
-
-In linux-next, the ide doesn't save the returned value of dma_map_sg
-and assumes that dma_map_sg returns the same value to the 'nents'
-argument of dma_map_sg?
-
-Again I'm not familiar with the ide stack at all so I might completely
-misunderstand something.
-
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date: Thu, 19 Feb 2009 21:51:17 +0900
-Subject: [PATCH] ide: save the returned value of dma_map_sg
-
-dma_map_sg could return a value different to 'nents' argument of
-dma_map_sg so the ide stack needs to save it for the later usage
-(e.g. for_each_sg).
-
-The ide stack also needs to save the original sg_nents value for
-pci_unmap_sg.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/ide/ide-dma.c |    6 +++++-
- include/linux/ide.h   |    1 +
- 2 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-index b4fa861..3dbf80c 100644
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -143,6 +143,10 @@ int ide_build_sglist(ide_drive_t *drive, struct ide_cmd *cmd)
- 	i = dma_map_sg(hwif->dev, sg, cmd->sg_nents, cmd->sg_dma_direction);
- 	if (i == 0)
- 		ide_map_sg(drive, cmd);
-+	else {
-+		cmd->orig_sg_nents = cmd->sg_nents;
-+		cmd->sg_nents = i;
-+	}
- 
- 	return i;
- }
-@@ -163,7 +167,7 @@ void ide_destroy_dmatable(ide_drive_t *drive)
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct ide_cmd *cmd = &hwif->cmd;
- 
--	dma_unmap_sg(hwif->dev, hwif->sg_table, cmd->sg_nents,
-+	dma_unmap_sg(hwif->dev, hwif->sg_table, cmd->orig_sg_nents,
- 		     cmd->sg_dma_direction);
- }
- EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index c75631c..d3465d1 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -347,6 +347,7 @@ struct ide_cmd {
- 	int			protocol;
- 
- 	int			sg_nents;	  /* number of sg entries */
-+	int			orig_sg_nents;
- 	int			sg_dma_direction; /* DMA transfer direction */
- 
- 	unsigned int		nbytes;
--- 
-1.6.0.6
-
+> 
+> > -		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
+> > +		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
+> >  
+> >  	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+> >  	qc->sg = NULL;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
