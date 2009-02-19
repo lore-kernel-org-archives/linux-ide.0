@@ -1,84 +1,182 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] fix dma_unmap_sg misuse
-Date: Thu, 19 Feb 2009 17:06:46 +0100
-Message-ID: <200902191706.46661.bzolnier@gmail.com>
-References: <20090217133432M.fujita.tomonori@lab.ntt.co.jp> <200902182159.49980.bzolnier@gmail.com> <20090219220401T.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ide: remove ide_execute_pkt_cmd() (v2)
+Date: Thu, 19 Feb 2009 18:37:03 +0100
+Message-ID: <200902191837.04904.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:11791 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753558AbZBSRVM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 12:21:12 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so364026mue.1
-        for <linux-ide@vger.kernel.org>; Thu, 19 Feb 2009 09:21:10 -0800 (PST)
-In-Reply-To: <20090219220401T.fujita.tomonori@lab.ntt.co.jp>
+Received: from fg-out-1718.google.com ([72.14.220.152]:27259 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbZBSRiE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 12:38:04 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Thursday 19 February 2009, FUJITA Tomonori wrote:
-> On Wed, 18 Feb 2009 21:59:49 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > On Tuesday 17 February 2009, FUJITA Tomonori wrote:
-> > > Looks like that libata misuses dma_unmap_sg though I'm not familiar
-> > > with libata so I might completely misunderstand something.
-> > > 
-> > > =
-> > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > Subject: [PATCH] fix dma_unmap_sg misuse
-> > > 
-> > > DMA-mapping.txt says:
-> > > 
-> > > To unmap a scatterlist, just call:
-> > > 
-> > > 	pci_unmap_sg(pdev, sglist, nents, direction);
-> > > 
-> > > Again, make sure DMA activity has already finished.
-> > > 
-> > > PLEASE NOTE:  The 'nents' argument to the pci_unmap_sg call must be
-> > >               the _same_ one you passed into the pci_map_sg call,
-> > > 	      it should _NOT_ be the 'count' value _returned_ from the
-> > >               pci_map_sg call.
-> > 
-> > This is correct and other subsystems (SCSI, IDE) are compliant with it.
-> > 
-> > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > 
-> > Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Thanks,
-> 
-> I guess that the ide stack has the same problem (I guess that you
-> already knew that though).
-> 
-> Looks like that the ide stack in linux-next has more serious problem
-> about handling dma_map_sg?
-> 
-> In linux-next, the ide doesn't save the returned value of dma_map_sg
-> and assumes that dma_map_sg returns the same value to the 'nents'
-> argument of dma_map_sg?
-> 
-> Again I'm not familiar with the ide stack at all so I might completely
-> misunderstand something.
-> 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Date: Thu, 19 Feb 2009 21:51:17 +0900
-> Subject: [PATCH] ide: save the returned value of dma_map_sg
-> 
-> dma_map_sg could return a value different to 'nents' argument of
-> dma_map_sg so the ide stack needs to save it for the later usage
-> (e.g. for_each_sg).
-> 
-> The ide stack also needs to save the original sg_nents value for
-> pci_unmap_sg.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove ide_execute_pkt_cmd() (v2)
 
-applied, thanks!
+* Pass command structure to ide_execute_command() and skip
+  __ide_set_handler() for ATAPI protocols on non-DRQ devices.
+
+* Convert ide_issue_pc() to always use ide_execute_command()
+  and remove no longer needed ide_execute_pkt_cmd().
+
+v2:
+* Fix for non-DRQ devices (based on report from Borislav).
+
+There should be no functional changes caused by this patch.
+
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+replacement patch for the one in pata-2.6 tree
+
+ drivers/ide/ide-atapi.c    |   15 +++++++--------
+ drivers/ide/ide-iops.c     |   25 ++++++++-----------------
+ drivers/ide/ide-taskfile.c |    6 ++----
+ include/linux/ide.h        |    5 ++---
+ 4 files changed, 19 insertions(+), 32 deletions(-)
+
+Index: b/drivers/ide/ide-atapi.c
+===================================================================
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -481,6 +481,7 @@ static void ide_init_packet_cmd(struct i
+ 	cmd->protocol  = dma ? ATAPI_PROT_DMA : ATAPI_PROT_PIO;
+ 	cmd->tf_flags |= IDE_TFLAG_OUT_LBAH | IDE_TFLAG_OUT_LBAM |
+ 			 IDE_TFLAG_OUT_FEATURE | tf_flags;
++	cmd->tf.command = ATA_CMD_PACKET;
+ 	cmd->tf.feature = dma;		/* Use PIO/DMA */
+ 	cmd->tf.lbam    = bcount & 0xff;
+ 	cmd->tf.lbah    = (bcount >> 8) & 0xff;
+@@ -626,6 +627,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t
+ 	unsigned int timeout;
+ 	u32 tf_flags;
+ 	u16 bcount;
++	u8 drq_int = !!(drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT);
+ 
+ 	if (dev_is_idecd(drive)) {
+ 		tf_flags = IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL;
+@@ -675,17 +677,14 @@ ide_startstop_t ide_issue_pc(ide_drive_t
+ 
+ 	(void)do_rw_taskfile(drive, cmd);
+ 
+-	/* Issue the packet command */
+-	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
++	if (drq_int) {
+ 		if (drive->dma)
+ 			drive->waiting_for_dma = 0;
+ 		hwif->expiry = expiry;
+-		ide_execute_command(drive, ATA_CMD_PACKET, ide_transfer_pc,
+-				    timeout);
+-		return ide_started;
+-	} else {
+-		ide_execute_pkt_cmd(drive);
+-		return ide_transfer_pc(drive);
+ 	}
++
++	ide_execute_command(drive, cmd, ide_transfer_pc, timeout);
++
++	return drq_int ? ide_started : ide_transfer_pc(drive);
+ }
+ EXPORT_SYMBOL_GPL(ide_issue_pc);
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -451,7 +451,7 @@ EXPORT_SYMBOL(ide_set_handler);
+ /**
+  *	ide_execute_command	-	execute an IDE command
+  *	@drive: IDE drive to issue the command against
+- *	@command: command byte to write
++ *	@cmd: command
+  *	@handler: handler for next phase
+  *	@timeout: timeout for command
+  *
+@@ -461,15 +461,18 @@ EXPORT_SYMBOL(ide_set_handler);
+  *	should go via this function or do equivalent locking.
+  */
+ 
+-void ide_execute_command(ide_drive_t *drive, u8 cmd, ide_handler_t *handler,
+-			 unsigned timeout)
++void ide_execute_command(ide_drive_t *drive, struct ide_cmd *cmd,
++			 ide_handler_t *handler, unsigned timeout)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&hwif->lock, flags);
+-	__ide_set_handler(drive, handler, timeout);
+-	hwif->tp_ops->exec_command(hwif, cmd);
++	if ((cmd->protocol != ATAPI_PROT_DMA &&
++	     cmd->protocol != ATAPI_PROT_PIO) ||
++	    (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT))
++		__ide_set_handler(drive, handler, timeout);
++	hwif->tp_ops->exec_command(hwif, cmd->tf.command);
+ 	/*
+ 	 * Drive takes 400nS to respond, we must avoid the IRQ being
+ 	 * serviced before that.
+@@ -480,18 +483,6 @@ void ide_execute_command(ide_drive_t *dr
+ 	spin_unlock_irqrestore(&hwif->lock, flags);
+ }
+ 
+-void ide_execute_pkt_cmd(ide_drive_t *drive)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&hwif->lock, flags);
+-	hwif->tp_ops->exec_command(hwif, ATA_CMD_PACKET);
+-	ndelay(400);
+-	spin_unlock_irqrestore(&hwif->lock, flags);
+-}
+-EXPORT_SYMBOL_GPL(ide_execute_pkt_cmd);
+-
+ /*
+  * ide_wait_not_busy() waits for the currently selected device on the hwif
+  * to report a non-busy status, see comments in ide_probe_port().
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -97,8 +97,7 @@ ide_startstop_t do_rw_taskfile(ide_drive
+ 	case ATA_PROT_NODATA:
+ 		if (handler == NULL)
+ 			handler = task_no_data_intr;
+-		ide_execute_command(drive, tf->command, handler,
+-				    WAIT_WORSTCASE);
++		ide_execute_command(drive, cmd, handler, WAIT_WORSTCASE);
+ 		return ide_started;
+ 	case ATA_PROT_DMA:
+ 		if ((drive->dev_flags & IDE_DFLAG_USING_DMA) == 0 ||
+@@ -106,8 +105,7 @@ ide_startstop_t do_rw_taskfile(ide_drive
+ 		    dma_ops->dma_setup(drive, cmd))
+ 			return ide_stopped;
+ 		hwif->expiry = dma_ops->dma_timer_expiry;
+-		ide_execute_command(drive, tf->command, ide_dma_intr,
+-				    2 * WAIT_CMD);
++		ide_execute_command(drive, cmd, ide_dma_intr, 2 * WAIT_CMD);
+ 		dma_ops->dma_start(drive);
+ 	default:
+ 		return ide_started;
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1135,9 +1135,8 @@ void ide_kill_rq(ide_drive_t *, struct r
+ void __ide_set_handler(ide_drive_t *, ide_handler_t *, unsigned int);
+ void ide_set_handler(ide_drive_t *, ide_handler_t *, unsigned int);
+ 
+-void ide_execute_command(ide_drive_t *, u8, ide_handler_t *, unsigned int);
+-
+-void ide_execute_pkt_cmd(ide_drive_t *);
++void ide_execute_command(ide_drive_t *, struct ide_cmd *, ide_handler_t *,
++			 unsigned int);
+ 
+ void ide_pad_transfer(ide_drive_t *, int, int);
+ 
