@@ -1,38 +1,34 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] ide-cd: minor ide_cdrom_setup() cleanup
-Date: Thu, 19 Feb 2009 07:50:00 +0100
-Message-ID: <20090219065000.GB11664@gollum.tnic>
-References: <200902182019.33997.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Synopsis SATA AHCI support
+Date: Thu, 19 Feb 2009 17:57:15 +0900
+Message-ID: <499D1EEB.3000200@kernel.org>
+References: <3fb94e50902182156y62da0f6dhfb5d99ad5de9d0fd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:51859 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776AbZBSGzX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 01:55:23 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so212502fkf.5
-        for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2009 22:55:21 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200902182019.33997.bzolnier@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:59711 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753189AbZBSI5F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2009 03:57:05 -0500
+In-Reply-To: <3fb94e50902182156y62da0f6dhfb5d99ad5de9d0fd@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sagar Borikar <sagar.borikar@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Feb 18, 2009 at 08:19:33PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide-cd: minor ide_cdrom_setup() cleanup
+Sagar Borikar wrote:
+> Hi
 > 
-> Cache drive->queue in local variable and use max().
-> 
-> There should be no functional changes caused by this patch.
-> 
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Can you let me know whether Synopsis SATA AHCI is already supported in
+> 2.6? and if yes then please point me to the sources.
 
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
+I don't have any experience with the synopsis one but if it's standard
+ahci, the ahci driver should work but sometimes controllers require
+certain quirks to work properly.  Why don't you give it a try and
+report how it works?
+
+Thanks.
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
