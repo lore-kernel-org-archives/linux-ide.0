@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 06/10] trm290: use custom ->dma_{start,end} to handle trm290_prepare_drive()
-Date: Fri, 20 Feb 2009 18:12:22 +0100
-Message-ID: <20090220171222.25429.23636.sendpatchset@localhost.localdomain>
+Subject: [PATCH 08/10] ide: move ide_map_sg() call out from ->dma_setup method
+Date: Fri, 20 Feb 2009 18:12:36 +0100
+Message-ID: <20090220171236.25429.25264.sendpatchset@localhost.localdomain>
 References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-bw0-f161.google.com ([209.85.218.161]:36537 "EHLO
 	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757213AbZBTRK1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:10:27 -0500
+	with ESMTP id S1758905AbZBTRKm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:10:42 -0500
 In-Reply-To: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,57 +15,192 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] trm290: use custom ->dma_{start,end} to handle trm290_prepare_drive()
+Subject: [PATCH] ide: move ide_map_sg() call out from ->dma_setup method
 
-Use custom ->dma_{start,end} methods to handle trm290_prepare_drive()
-there instead of in ->dma_setup method.
+Move ide_map_sg() call from ->dma_setup implementations
+and ide_destroy_dmatable() one from *_build_dmatable() to
+ide_dma_prepare().
 
-There should be no functional changes caused by this patch
-(DMA support is disabled currently in trm290.c).
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/trm290.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/ide/au1xxx-ide.c  |    8 ++------
+ drivers/ide/ide-dma-sff.c |    2 --
+ drivers/ide/ide-dma.c     |    8 ++++++--
+ drivers/ide/pmac.c        |    6 +-----
+ drivers/ide/scc_pata.c    |    4 +---
+ drivers/ide/sgiioc4.c     |    6 +-----
+ drivers/ide/trm290.c      |    5 ++---
+ drivers/ide/tx4939ide.c   |    6 +-----
+ 8 files changed, 14 insertions(+), 31 deletions(-)
 
+Index: b/drivers/ide/au1xxx-ide.c
+===================================================================
+--- a/drivers/ide/au1xxx-ide.c
++++ b/drivers/ide/au1xxx-ide.c
+@@ -272,9 +272,7 @@ static int auide_build_dmatable(ide_driv
+ 	if (count)
+ 		return 1;
+ 
+- use_pio_instead:
+-	ide_destroy_dmatable(drive);
+-
++use_pio_instead:
+ 	return 0; /* revert to PIO for this request */
+ }
+ 
+@@ -290,10 +288,8 @@ static void auide_dma_start(ide_drive_t 
+ 
+ static int auide_dma_setup(ide_drive_t *drive, struct ide_cmd *cmd)
+ {
+-	if (auide_build_dmatable(drive, cmd) == 0) {
+-		ide_map_sg(drive, cmd);
++	if (auide_build_dmatable(drive, cmd) == 0)
+ 		return 1;
+-	}
+ 
+ 	drive->waiting_for_dma = 1;
+ 	return 0;
+Index: b/drivers/ide/ide-dma-sff.c
+===================================================================
+--- a/drivers/ide/ide-dma-sff.c
++++ b/drivers/ide/ide-dma-sff.c
+@@ -166,8 +166,6 @@ use_pio_instead:
+ 	printk(KERN_ERR "%s: %s\n", drive->name,
+ 		count ? "DMA table too small" : "empty DMA table?");
+ 
+-	ide_destroy_dmatable(drive);
+-
+ 	return 0; /* revert to PIO for this request */
+ }
+ EXPORT_SYMBOL_GPL(ide_build_dmatable);
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -566,8 +566,12 @@ int ide_dma_prepare(ide_drive_t *drive, 
+ 
+ 	if ((drive->dev_flags & IDE_DFLAG_USING_DMA) == 0 ||
+ 	    (dma_ops->dma_check && dma_ops->dma_check(drive, cmd)) ||
+-	    ide_build_sglist(drive, cmd) == 0 ||
+-	    dma_ops->dma_setup(drive, cmd))
++	    ide_build_sglist(drive, cmd) == 0)
+ 		return 1;
++	if (dma_ops->dma_setup(drive, cmd)) {
++		ide_destroy_dmatable(drive);
++		ide_map_sg(drive, cmd);
++		return 1;
++	}
+ 	return 0;
+ }
+Index: b/drivers/ide/pmac.c
+===================================================================
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1493,8 +1493,6 @@ static int pmac_ide_build_dmatable(ide_d
+ 	printk(KERN_DEBUG "%s: empty DMA table?\n", drive->name);
+ 
+ use_pio_instead:
+-	ide_destroy_dmatable(drive);
+-
+ 	return 0; /* revert to PIO for this request */
+ }
+ 
+@@ -1510,10 +1508,8 @@ static int pmac_ide_dma_setup(ide_drive_
+ 	u8 unit = drive->dn & 1, ata4 = (pmif->kind == controller_kl_ata4);
+ 	u8 write = !!(cmd->tf_flags & IDE_TFLAG_WRITE);
+ 
+-	if (pmac_ide_build_dmatable(drive, cmd) == 0) {
+-		ide_map_sg(drive, cmd);
++	if (pmac_ide_build_dmatable(drive, cmd) == 0)
+ 		return 1;
+-	}
+ 
+ 	/* Apple adds 60ns to wrDataSetup on reads */
+ 	if (ata4 && (pmif->timings[unit] & TR_66_UDMA_EN)) {
+Index: b/drivers/ide/scc_pata.c
+===================================================================
+--- a/drivers/ide/scc_pata.c
++++ b/drivers/ide/scc_pata.c
+@@ -321,10 +321,8 @@ static int scc_dma_setup(ide_drive_t *dr
+ 	u8 dma_stat;
+ 
+ 	/* fall back to pio! */
+-	if (ide_build_dmatable(drive, cmd) == 0) {
+-		ide_map_sg(drive, cmd);
++	if (ide_build_dmatable(drive, cmd) == 0)
+ 		return 1;
+-	}
+ 
+ 	/* PRD table */
+ 	out_be32((void __iomem *)(hwif->dma_base + 8), hwif->dmatable_dma);
+Index: b/drivers/ide/sgiioc4.c
+===================================================================
+--- a/drivers/ide/sgiioc4.c
++++ b/drivers/ide/sgiioc4.c
+@@ -478,8 +478,6 @@ static int sgiioc4_build_dmatable(ide_dr
+ 	}
+ 
+ use_pio_instead:
+-	ide_destroy_dmatable(drive);
+-
+ 	return 0;		/* revert to PIO for this request */
+ }
+ 
+@@ -488,11 +486,9 @@ static int sgiioc4_dma_setup(ide_drive_t
+ 	int ddir;
+ 	u8 write = !!(cmd->tf_flags & IDE_TFLAG_WRITE);
+ 
+-	if (sgiioc4_build_dmatable(drive, cmd) == 0) {
++	if (sgiioc4_build_dmatable(drive, cmd) == 0)
+ 		/* try PIO instead of DMA */
+-		ide_map_sg(drive, cmd);
+ 		return 1;
+-	}
+ 
+ 	if (write)
+ 		/* Writes TO the IOC4 FROM Main Memory */
 Index: b/drivers/ide/trm290.c
 ===================================================================
 --- a/drivers/ide/trm290.c
 +++ b/drivers/ide/trm290.c
-@@ -184,7 +184,6 @@ static int trm290_dma_setup(ide_drive_t 
- 	if (cmd->tf_flags & IDE_TFLAG_WRITE) {
- #ifdef TRM290_NO_DMA_WRITES
- 		/* always use PIO for writes */
--		trm290_prepare_drive(drive, 0);	/* select PIO xfer */
- 		return 1;
- #endif
- 		rw = 1;
-@@ -195,11 +194,8 @@ static int trm290_dma_setup(ide_drive_t 
- 	if (count == 0) {
- 		ide_map_sg(drive, cmd);
+@@ -193,11 +193,10 @@ static int trm290_dma_setup(ide_drive_t 
+ 	unsigned int count, rw = (cmd->tf_flags & IDE_TFLAG_WRITE) ? 1 : 2;
+ 
+ 	count = ide_build_dmatable(drive, cmd);
+-	if (count == 0) {
+-		ide_map_sg(drive, cmd);
++	if (count == 0)
  		/* try PIO instead of DMA */
--		trm290_prepare_drive(drive, 0); /* select PIO xfer */
  		return 1;
- 	}
--	/* select DMA xfer */
--	trm290_prepare_drive(drive, 1);
+-	}
++
  	outl(hwif->dmatable_dma | rw, hwif->dma_base);
  	drive->waiting_for_dma = 1;
  	/* start DMA */
-@@ -209,6 +205,7 @@ static int trm290_dma_setup(ide_drive_t 
+Index: b/drivers/ide/tx4939ide.c
+===================================================================
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -279,8 +279,6 @@ use_pio_instead:
+ 	printk(KERN_ERR "%s: %s\n", drive->name,
+ 		count ? "DMA table too small" : "empty DMA table?");
  
- static void trm290_dma_start(ide_drive_t *drive)
- {
-+	trm290_prepare_drive(drive, 1);
+-	ide_destroy_dmatable(drive);
+-
+ 	return 0; /* revert to PIO for this request */
  }
+ #else
+@@ -294,10 +292,8 @@ static int tx4939ide_dma_setup(ide_drive
+ 	u8 rw = (cmd->tf_flags & IDE_TFLAG_WRITE) ? 0 : ATA_DMA_WR;
  
- static int trm290_dma_end(ide_drive_t *drive)
-@@ -219,6 +216,8 @@ static int trm290_dma_end(ide_drive_t *d
+ 	/* fall back to PIO! */
+-	if (tx4939ide_build_dmatable(drive, cmd) == 0) {
+-		ide_map_sg(drive, cmd);
++	if (tx4939ide_build_dmatable(drive, cmd) == 0)
+ 		return 1;
+-	}
  
- 	status = inw(drive->hwif->dma_base + 2);
- 
-+	trm290_prepare_drive(drive, 0);
-+
- 	return status != 0x00ff;
- }
- 
+ 	/* PRD table */
+ 	tx4939ide_writel(hwif->dmatable_dma, base, TX4939IDE_PRD_Ptr);
