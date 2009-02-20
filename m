@@ -1,60 +1,47 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: sata_nv frees DMA memory with different size (possibly a generic
- libata bug)
-Date: Thu, 19 Feb 2009 20:58:35 -0600
-Message-ID: <499E1C5B.1050207@gmail.com>
-References: <20090217202156B.fujita.tomonori@lab.ntt.co.jp>	<20090218152516.7b4457b3@dhcp-100-2-144.bos.redhat.com>	<20090218170544.714e53a8@dhcp-100-2-144.bos.redhat.com> <20090219220901R.fujita.tomonori@lab.ntt.co.jp>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: libata timeouts when stressing a Samsung HDD
+Date: Fri, 20 Feb 2009 12:26:50 +0900
+Message-ID: <499E22FA.7030409@kernel.org>
+References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>	<49922A2D.508@kernel.org>	<49924F48.4000009@rtr.ca> <20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com> <49934B20.4060206@rtr.ca> <49934D24.1050204@garzik.org> <4993A57D.6010107@gmail.com> <499D7A4B.5010804@rtr.ca> <499DFA33.8090009@kernel.org> <499E1AD9.9020904@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:46571 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700AbZBTC6j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Feb 2009 21:58:39 -0500
-Received: by gxk22 with SMTP id 22so2023245gxk.13
-        for <linux-ide@vger.kernel.org>; Thu, 19 Feb 2009 18:58:38 -0800 (PST)
-In-Reply-To: <20090219220901R.fujita.tomonori@lab.ntt.co.jp>
+Received: from hera.kernel.org ([140.211.167.34]:50177 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752816AbZBTD07 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Feb 2009 22:26:59 -0500
+In-Reply-To: <499E1AD9.9020904@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: cebbert@redhat.com, linux-ide@vger.kernel.org, wes.shull@gmail.com
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Wed, 18 Feb 2009 17:05:44 -0500
-> Chuck Ebbert <cebbert@redhat.com> wrote:
-> 
->> On Wed, 18 Feb 2009 15:25:16 -0500
->> Chuck Ebbert <cebbert@redhat.com> wrote:
->>
->>> On Tue, 17 Feb 2009 20:22:05 +0900
->>> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+Hello,
+
+Robert Hancock wrote:
+>>> If I recall correctly, The reported shadow register contents are bogus
+>>> when a timeout occurs.  So we don't actually know what the drive
+>>> state was.
 >>>
->>>  
->>>>>>>> sata_nv 0000:00:0d.0: DMA-API: device driver frees DMA memory with different
->>>>>>>> size [device address=0x00000000da031000] [map size=4096 bytes] [unmap
->>>>>>> That's rather curious. It seems to be saying that the sg length is 
->>>>>>> different between the map and unmap, but it doesn't look like sata_nv 
->>>>>>> mucks with that anywhere, and neither does libata core..
->>>>>> Could the SCSI code have merged two requests?
->>>>> I wouldn't think so.. and if it did it seems like it would have to have 
->>>>> changed the list after libata got the request somehow..
->>>> Does this box uses GART IOMMU?
->>> I don't think so, but I've asked for the dmesg.
->> Okay, it _is_ using GART IOMMU:
+>>> Or do we, Tejun?
 >>
->> DMA-API: preallocated 8192 debug entries
->> DMA-API: debugging enabled by kernel config
->> PCI-DMA: Disabling AGP.
->> PCI-DMA: aperture base @ 20000000 size 65536 KB
->> PCI-DMA: using GART IOMMU.
->> PCI-DMA: Reserving 64MB of IOMMU area in the AGP aperture
+>> Yeah, it's bogus.  Maybe we should just report zeros.
 > 
-> Thanks, that makes sense.
-> 
-> I think that the following patch could fix this:
-> 
-> http://marc.info/?l=linux-ide&m=123484533504307&w=2
+> Didn't know that. Shouldn't we be able to do a qc_fill_rtf before error
+> handling in this case? That would make it easier to tell if we lost an
+> interrupt or if the drive is just taking too long..
 
-The patch looks reasonable to me. I'm CCing the reporter of the bug. 
-Wes, would you be able to test out Fujita's patch linked above?
+I think Alan already did it in the patches which added improved
+timeout handling callback.  Hmmm... Can't find it.  I thought it was
+in #upstream.  Anyways, I'm slightly worried about reading status
+blindly after timeout mainly due to experiences I had early while
+developing libata EH.  Some controllers were simply scary and very
+eager to lock up the whole machine.  That said, it could be that I'm
+just overly paranoid.  After all, with shared IRQ, we don't have
+control over when altstatus is read at least.
+
+Thanks.
+
+-- 
+tejun
