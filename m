@@ -1,43 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] remove stale comment from <linux/hdreg.h>
-Date: Fri, 20 Feb 2009 18:36:02 +0100
-Message-ID: <200902201836.02841.bzolnier@gmail.com>
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: General question (scheduler) with SSDs?
+Date: Fri, 20 Feb 2009 19:25:44 +0000
+Message-ID: <20090220192543.GA21644@silver.sucs.org>
+References: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan> <20090220094356.GB26124@silver.sucs.org> <ac3eb2510902200316m387ecb45n86a2ea7c6196b01@mail.gmail.com> <20090220131209.GA21446@silver.sucs.org> <ac3eb2510902200523o619e64aas7bffac9aeca86814@mail.gmail.com> <20090220142705.GA429@silver.sucs.org> <ac3eb2510902200656l11275aber128848182553726d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:50384 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756678AbZBTRes (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:34:48 -0500
+Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:43885 "EHLO
+	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872AbZBTTZs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 14:25:48 -0500
 Content-Disposition: inline
+In-Reply-To: <ac3eb2510902200656l11275aber128848182553726d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Sitsofe Wheeler <sitsofe@yahoo.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] remove stale comment from <linux/hdreg.h>
+On Fri, Feb 20, 2009 at 03:56:06PM +0100, Kay Sievers wrote:
+> Also the whitespace after "...PHISON *" does not need to be matched.
+> If the match value does not end in whitespace itself, udev will match
+> against the value with all trailing whitespace ignored.
 
-HDIO_GET_IDENTITY returns 256 words currently.
+Ah, I'm not matching against only whitespace:
 
-Noticed by Norman Diamond.
+$ cat /sys/block/*/device/model 
+ASUS-PHISON OB S
+ASUS-PHISON SSD 
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- include/linux/hdreg.h |    1 -
- 1 file changed, 1 deletion(-)
+(the first is the builtin faster SSD, the other is the slower removable
+SSD).
 
-Index: b/include/linux/hdreg.h
-===================================================================
---- a/include/linux/hdreg.h
-+++ b/include/linux/hdreg.h
-@@ -511,7 +511,6 @@ struct hd_driveid {
- 	unsigned short	words69_70[2];	/* reserved words 69-70
- 					 * future command overlap and queuing
- 					 */
--	/* HDIO_GET_IDENTITY currently returns only words 0 through 70 */
- 	unsigned short	words71_74[4];	/* reserved words 71-74
- 					 * for IDENTIFY PACKET DEVICE command
- 					 */
+-- 
+Sitsofe | http://sucs.org/~sits/
