@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 01/10] ide: add ->dma_clear method and remove ->dma_timeout one
-Date: Fri, 20 Feb 2009 18:11:47 +0100
-Message-ID: <20090220171147.25429.26218.sendpatchset@localhost.localdomain>
+Subject: [PATCH 09/10] ide: set/clear drive->waiting_for_dma flag in the core code
+Date: Fri, 20 Feb 2009 18:12:43 +0100
+Message-ID: <20090220171243.25429.21171.sendpatchset@localhost.localdomain>
 References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:18454 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758086AbZBTRJy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:09:54 -0500
+Received: from nf-out-0910.google.com ([64.233.182.187]:50686 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758990AbZBTRKx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:10:53 -0500
 In-Reply-To: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,433 +15,313 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add ->dma_clear method and remove ->dma_timeout one
+Subject: [PATCH] ide: set/clear drive->waiting_for_dma flag in the core code
 
-All custom ->dma_timeout implementations call the generic one thus it is
-possible to have only an optional method for resetting DMA engine instead:
-
-* Add ->dma_clear method and convert hpt366, pdc202xx_old and sl82c105
-  host drivers to use it.
-
-* Always use ide_dma_timeout() in ide_dma_timeout_retry() and remove
- ->dma_timeout method.
-
-* Make ide_dma_timeout() static.
+Set/clear drive->waiting_for_dma flag in the core code
+instead of in ->dma_setup and ->dma_end methods.
 
 There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/alim15x3.c     |    1 -
- drivers/ide/au1xxx-ide.c   |    1 -
- drivers/ide/cmd64x.c       |    3 ---
- drivers/ide/cs5536.c       |    1 -
- drivers/ide/hpt366.c       |   10 +---------
- drivers/ide/icside.c       |    1 -
- drivers/ide/ide-dma-sff.c  |    3 +--
- drivers/ide/ide-dma.c      |   10 ++++++----
- drivers/ide/it821x.c       |    3 +--
- drivers/ide/ns87415.c      |    1 -
- drivers/ide/pdc202xx_old.c |   10 ++--------
- drivers/ide/pmac.c         |    1 -
- drivers/ide/sc1200.c       |    1 -
- drivers/ide/scc_pata.c     |    1 -
- drivers/ide/sgiioc4.c      |    1 -
- drivers/ide/siimage.c      |    1 -
- drivers/ide/sl82c105.c     |    7 +++----
- drivers/ide/tc86c001.c     |    1 -
- drivers/ide/trm290.c       |    1 -
- drivers/ide/tx4939ide.c    |    1 -
- include/linux/ide.h        |    4 ++--
- 21 files changed, 16 insertions(+), 47 deletions(-)
+ drivers/ide/au1xxx-ide.c  |    6 ------
+ drivers/ide/cmd64x.c      |    1 -
+ drivers/ide/icside.c      |    4 ----
+ drivers/ide/ide-atapi.c   |    4 +++-
+ drivers/ide/ide-cd.c      |    1 +
+ drivers/ide/ide-dma-sff.c |    3 ---
+ drivers/ide/ide-dma.c     |    4 ++++
+ drivers/ide/ns87415.c     |    1 -
+ drivers/ide/pmac.c        |    3 ---
+ drivers/ide/sc1200.c      |    2 --
+ drivers/ide/scc_pata.c    |    3 +--
+ drivers/ide/sgiioc4.c     |    3 ---
+ drivers/ide/trm290.c      |    8 ++------
+ drivers/ide/tx4939ide.c   |    4 ----
+ 14 files changed, 11 insertions(+), 36 deletions(-)
 
-Index: b/drivers/ide/alim15x3.c
-===================================================================
---- a/drivers/ide/alim15x3.c
-+++ b/drivers/ide/alim15x3.c
-@@ -509,7 +509,6 @@ static const struct ide_dma_ops ali_dma_
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
 Index: b/drivers/ide/au1xxx-ide.c
 ===================================================================
 --- a/drivers/ide/au1xxx-ide.c
 +++ b/drivers/ide/au1xxx-ide.c
-@@ -353,7 +353,6 @@ static const struct ide_dma_ops au1xxx_d
- 	.dma_end		= auide_dma_end,
- 	.dma_test_irq		= auide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
--	.dma_timeout		= ide_dma_timeout,
- };
+@@ -291,7 +291,6 @@ static int auide_dma_setup(ide_drive_t *
+ 	if (auide_build_dmatable(drive, cmd) == 0)
+ 		return 1;
  
- static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+-	drive->waiting_for_dma = 1;
+ 	return 0;
+ }
+ 
+@@ -316,16 +315,11 @@ static void auide_dma_host_set(ide_drive
+ 
+ static void auide_ddma_tx_callback(int irq, void *param)
+ {
+-	_auide_hwif *ahwif = (_auide_hwif*)param;
+-	ahwif->drive->waiting_for_dma = 0;
+ }
+ 
+ static void auide_ddma_rx_callback(int irq, void *param)
+ {
+-	_auide_hwif *ahwif = (_auide_hwif*)param;
+-	ahwif->drive->waiting_for_dma = 0;
+ }
+-
+ #endif /* end CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA */
+ 
+ static void auide_init_dbdma_dev(dbdev_tab_t *dev, u32 dev_id, u32 tsize, u32 devwidth, u32 flags)
 Index: b/drivers/ide/cmd64x.c
 ===================================================================
 --- a/drivers/ide/cmd64x.c
 +++ b/drivers/ide/cmd64x.c
-@@ -384,7 +384,6 @@ static const struct ide_dma_ops cmd64x_d
- 	.dma_test_irq		= cmd64x_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
+@@ -318,7 +318,6 @@ static int cmd646_1_dma_end(ide_drive_t 
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	u8 dma_stat = 0, dma_cmd = 0;
  
-@@ -396,7 +395,6 @@ static const struct ide_dma_ops cmd646_r
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-@@ -408,7 +406,6 @@ static const struct ide_dma_ops cmd648_d
- 	.dma_test_irq		= cmd648_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-Index: b/drivers/ide/cs5536.c
-===================================================================
---- a/drivers/ide/cs5536.c
-+++ b/drivers/ide/cs5536.c
-@@ -236,7 +236,6 @@ static const struct ide_dma_ops cs5536_d
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- };
- 
- static const struct ide_port_info cs5536_info = {
-Index: b/drivers/ide/hpt366.c
-===================================================================
---- a/drivers/ide/hpt366.c
-+++ b/drivers/ide/hpt366.c
-@@ -835,12 +835,6 @@ static int hpt370_dma_end(ide_drive_t *d
- 	return ide_dma_end(drive);
- }
- 
--static void hpt370_dma_timeout(ide_drive_t *drive)
--{
--	hpt370_irq_timeout(drive);
--	ide_dma_timeout(drive);
--}
--
- /* returns 1 if DMA IRQ issued, 0 otherwise */
- static int hpt374_dma_test_irq(ide_drive_t *drive)
- {
-@@ -1423,7 +1417,6 @@ static const struct ide_dma_ops hpt37x_d
- 	.dma_test_irq		= hpt374_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-@@ -1435,7 +1428,7 @@ static const struct ide_dma_ops hpt370_d
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= hpt370_dma_timeout,
-+	.dma_clear		= hpt370_irq_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-@@ -1447,7 +1440,6 @@ static const struct ide_dma_ops hpt36x_d
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= hpt366_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
+-	drive->waiting_for_dma = 0;
+ 	/* get DMA status */
+ 	dma_stat = inb(hwif->dma_base + ATA_DMA_STATUS);
+ 	/* read DMA command state */
 Index: b/drivers/ide/icside.c
 ===================================================================
 --- a/drivers/ide/icside.c
 +++ b/drivers/ide/icside.c
-@@ -377,7 +377,6 @@ static const struct ide_dma_ops icside_v
- 	.dma_start		= icside_dma_start,
- 	.dma_end		= icside_dma_end,
- 	.dma_test_irq		= icside_dma_test_irq,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- };
- #else
+@@ -287,8 +287,6 @@ static int icside_dma_end(ide_drive_t *d
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct expansion_card *ec = ECARD_DEV(hwif->dev);
+ 
+-	drive->waiting_for_dma = 0;
+-
+ 	disable_dma(ec->dma);
+ 
+ 	return get_dma_residue(ec->dma) != 0;
+@@ -343,8 +341,6 @@ static int icside_dma_setup(ide_drive_t 
+ 	set_dma_sg(ec->dma, hwif->sg_table, cmd->sg_nents);
+ 	set_dma_mode(ec->dma, dma_mode);
+ 
+-	drive->waiting_for_dma = 1;
+-
+ 	return 0;
+ }
+ 
+Index: b/drivers/ide/ide-atapi.c
+===================================================================
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -322,8 +322,10 @@ static ide_startstop_t ide_pc_intr(ide_d
+ 	stat = tp_ops->read_status(hwif);
+ 
+ 	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
+-		int rc = hwif->dma_ops->dma_end(drive);
++		int rc;
+ 
++		drive->waiting_for_dma = 0;
++		rc = hwif->dma_ops->dma_end(drive);
+ 		ide_destroy_dmatable(drive);
+ 
+ 		if (rc || (drive->media == ide_tape && (stat & ATA_ERR))) {
+Index: b/drivers/ide/ide-cd.c
+===================================================================
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -638,6 +638,7 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	dma = drive->dma;
+ 	if (dma) {
+ 		drive->dma = 0;
++		drive->waiting_for_dma = 0;
+ 		dma_error = hwif->dma_ops->dma_end(drive);
+ 		ide_destroy_dmatable(drive);
+ 		if (dma_error) {
 Index: b/drivers/ide/ide-dma-sff.c
 ===================================================================
 --- a/drivers/ide/ide-dma-sff.c
 +++ b/drivers/ide/ide-dma-sff.c
-@@ -338,9 +338,8 @@ const struct ide_dma_ops sff_dma_ops = {
- 	.dma_start		= ide_dma_start,
- 	.dma_end		= ide_dma_end,
- 	.dma_test_irq		= ide_dma_test_irq,
--	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_lost_irq		= ide_dma_lost_irq,
-+	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- EXPORT_SYMBOL_GPL(sff_dma_ops);
+@@ -216,7 +216,6 @@ int ide_dma_setup(ide_drive_t *drive, st
+ 	/* clear INTR & ERROR flags */
+ 	ide_dma_sff_write_status(hwif, dma_stat | ATA_DMA_ERR | ATA_DMA_INTR);
+ 
+-	drive->waiting_for_dma = 1;
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ide_dma_setup);
+@@ -290,8 +289,6 @@ int ide_dma_end(ide_drive_t *drive)
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	u8 dma_stat = 0, dma_cmd = 0, mask;
+ 
+-	drive->waiting_for_dma = 0;
+-
+ 	/* stop DMA */
+ 	if (hwif->host_flags & IDE_HFLAG_MMIO) {
+ 		dma_cmd = readb((void __iomem *)(hwif->dma_base + ATA_DMA_CMD));
 Index: b/drivers/ide/ide-dma.c
 ===================================================================
 --- a/drivers/ide/ide-dma.c
 +++ b/drivers/ide/ide-dma.c
-@@ -456,7 +456,7 @@ void ide_dma_lost_irq(ide_drive_t *drive
- }
- EXPORT_SYMBOL_GPL(ide_dma_lost_irq);
- 
--void ide_dma_timeout(ide_drive_t *drive)
-+static void ide_dma_timeout(ide_drive_t *drive)
- {
+@@ -91,6 +91,7 @@ ide_startstop_t ide_dma_intr(ide_drive_t
  	ide_hwif_t *hwif = drive->hwif;
+ 	u8 stat = 0, dma_stat = 0;
  
-@@ -469,7 +469,6 @@ void ide_dma_timeout(ide_drive_t *drive)
- 
- 	hwif->dma_ops->dma_end(drive);
- }
--EXPORT_SYMBOL_GPL(ide_dma_timeout);
- 
- /*
-  * un-busy the port etc, and clear any pending DMA status. we want to
-@@ -479,6 +478,7 @@ EXPORT_SYMBOL_GPL(ide_dma_timeout);
- ide_startstop_t ide_dma_timeout_retry(ide_drive_t *drive, int error)
- {
- 	ide_hwif_t *hwif = drive->hwif;
-+	const struct ide_dma_ops *dma_ops = hwif->dma_ops;
- 	struct request *rq;
- 	ide_startstop_t ret = ide_stopped;
- 
-@@ -488,12 +488,14 @@ ide_startstop_t ide_dma_timeout_retry(id
++	drive->waiting_for_dma = 0;
+ 	dma_stat = hwif->dma_ops->dma_end(drive);
+ 	ide_destroy_dmatable(drive);
+ 	stat = hwif->tp_ops->read_status(hwif);
+@@ -475,6 +476,7 @@ ide_startstop_t ide_dma_timeout_retry(id
  
  	if (error < 0) {
  		printk(KERN_WARNING "%s: DMA timeout error\n", drive->name);
--		(void)hwif->dma_ops->dma_end(drive);
-+		(void)dma_ops->dma_end(drive);
++		drive->waiting_for_dma = 0;
+ 		(void)dma_ops->dma_end(drive);
+ 		ide_destroy_dmatable(drive);
  		ret = ide_error(drive, "dma timeout error",
- 				hwif->tp_ops->read_status(hwif));
- 	} else {
- 		printk(KERN_WARNING "%s: DMA timeout retry\n", drive->name);
--		hwif->dma_ops->dma_timeout(drive);
-+		if (dma_ops->dma_clear)
-+			dma_ops->dma_clear(drive);
-+		ide_dma_timeout(drive);
+@@ -487,6 +489,7 @@ ide_startstop_t ide_dma_timeout_retry(id
+ 		if (dma_ops->dma_test_irq(drive) == 0) {
+ 			ide_dump_status(drive, "DMA timeout",
+ 					hwif->tp_ops->read_status(hwif));
++			drive->waiting_for_dma = 0;
+ 			(void)dma_ops->dma_end(drive);
+ 			ide_destroy_dmatable(drive);
+ 		}
+@@ -573,5 +576,6 @@ int ide_dma_prepare(ide_drive_t *drive, 
+ 		ide_map_sg(drive, cmd);
+ 		return 1;
  	}
- 
- 	/*
-Index: b/drivers/ide/it821x.c
-===================================================================
---- a/drivers/ide/it821x.c
-+++ b/drivers/ide/it821x.c
-@@ -512,9 +512,8 @@ static struct ide_dma_ops it821x_pass_th
- 	.dma_start		= it821x_dma_start,
- 	.dma_end		= it821x_dma_end,
- 	.dma_test_irq		= ide_dma_test_irq,
--	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_lost_irq		= ide_dma_lost_irq,
-+	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
++	drive->waiting_for_dma = 1;
+ 	return 0;
+ }
 Index: b/drivers/ide/ns87415.c
 ===================================================================
 --- a/drivers/ide/ns87415.c
 +++ b/drivers/ide/ns87415.c
-@@ -306,7 +306,6 @@ static const struct ide_dma_ops ns87415_
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= superio_dma_sff_read_status,
- };
+@@ -207,7 +207,6 @@ static int ns87415_dma_end(ide_drive_t *
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	u8 dma_stat = 0, dma_cmd = 0;
  
-Index: b/drivers/ide/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pdc202xx_old.c
-+++ b/drivers/ide/pdc202xx_old.c
-@@ -258,12 +258,6 @@ static void pdc202xx_dma_lost_irq(ide_dr
- 	ide_dma_lost_irq(drive);
- }
- 
--static void pdc202xx_dma_timeout(ide_drive_t *drive)
--{
--	pdc202xx_reset(drive);
--	ide_dma_timeout(drive);
--}
--
- static int init_chipset_pdc202xx(struct pci_dev *dev)
- {
- 	unsigned long dmabase = pci_resource_start(dev, 4);
-@@ -336,7 +330,7 @@ static const struct ide_dma_ops pdc20246
- 	.dma_test_irq		= pdc202xx_dma_test_irq,
- 	.dma_lost_irq		= pdc202xx_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= pdc202xx_dma_timeout,
-+	.dma_clear		= pdc202xx_reset,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-@@ -348,7 +342,7 @@ static const struct ide_dma_ops pdc2026x
- 	.dma_test_irq		= pdc202xx_dma_test_irq,
- 	.dma_lost_irq		= pdc202xx_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= pdc202xx_dma_timeout,
-+	.dma_clear		= pdc202xx_reset,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
+-	drive->waiting_for_dma = 0;
+ 	dma_stat = hwif->dma_ops->dma_sff_read_status(hwif);
+ 	/* get DMA command mode */
+ 	dma_cmd = inb(hwif->dma_base + ATA_DMA_CMD);
 Index: b/drivers/ide/pmac.c
 ===================================================================
 --- a/drivers/ide/pmac.c
 +++ b/drivers/ide/pmac.c
-@@ -1650,7 +1650,6 @@ static const struct ide_dma_ops pmac_dma
- 	.dma_start		= pmac_ide_dma_start,
- 	.dma_end		= pmac_ide_dma_end,
- 	.dma_test_irq		= pmac_ide_dma_test_irq,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_lost_irq		= pmac_ide_dma_lost_irq,
- };
+@@ -1518,8 +1518,6 @@ static int pmac_ide_dma_setup(ide_drive_
+ 		(void)readl(PMAC_IDE_REG(IDE_TIMING_CONFIG));
+ 	}
+ 
+-	drive->waiting_for_dma = 1;
+-
+ 	return 0;
+ }
+ 
+@@ -1554,7 +1552,6 @@ pmac_ide_dma_end (ide_drive_t *drive)
+ 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
+ 	u32 dstat;
+ 
+-	drive->waiting_for_dma = 0;
+ 	dstat = readl(&dma->status);
+ 	writel(((RUN|WAKE|DEAD) << 16), &dma->control);
  
 Index: b/drivers/ide/sc1200.c
 ===================================================================
 --- a/drivers/ide/sc1200.c
 +++ b/drivers/ide/sc1200.c
-@@ -291,7 +291,6 @@ static const struct ide_dma_ops sc1200_d
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
+@@ -183,8 +183,6 @@ static int sc1200_dma_end(ide_drive_t *d
+ 	outb(dma_stat|0x1b, dma_base+2);	/* clear the INTR & ERROR bits */
+ 	outb(inb(dma_base)&~1, dma_base);	/* !! DO THIS HERE !! stop DMA */
+ 
+-	drive->waiting_for_dma = 0;
+-
+ 	return (dma_stat & 7) != 4;		/* verify good DMA status */
+ }
  
 Index: b/drivers/ide/scc_pata.c
 ===================================================================
 --- a/drivers/ide/scc_pata.c
 +++ b/drivers/ide/scc_pata.c
-@@ -872,7 +872,6 @@ static const struct ide_dma_ops scc_dma_
- 	.dma_end		= scc_dma_end,
- 	.dma_test_irq		= scc_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
- 	.dma_sff_read_status	= scc_dma_sff_read_status,
- };
+@@ -335,7 +335,7 @@ static int scc_dma_setup(ide_drive_t *dr
+ 
+ 	/* clear INTR & ERROR flags */
+ 	out_be32((void __iomem *)(hwif->dma_base + 4), dma_stat | 6);
+-	drive->waiting_for_dma = 1;
++
+ 	return 0;
+ }
+ 
+@@ -354,7 +354,6 @@ static int __scc_dma_end(ide_drive_t *dr
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	u8 dma_stat, dma_cmd;
+ 
+-	drive->waiting_for_dma = 0;
+ 	/* get DMA command mode */
+ 	dma_cmd = scc_ide_inb(hwif->dma_base);
+ 	/* stop DMA */
 Index: b/drivers/ide/sgiioc4.c
 ===================================================================
 --- a/drivers/ide/sgiioc4.c
 +++ b/drivers/ide/sgiioc4.c
-@@ -533,7 +533,6 @@ static const struct ide_dma_ops sgiioc4_
- 	.dma_end		= sgiioc4_dma_end,
- 	.dma_test_irq		= sgiioc4_dma_test_irq,
- 	.dma_lost_irq		= sgiioc4_dma_lost_irq,
--	.dma_timeout		= ide_dma_timeout,
- };
+@@ -258,8 +258,6 @@ static int sgiioc4_dma_end(ide_drive_t *
+ 		}
+ 	}
  
- static const struct ide_port_info sgiioc4_port_info __devinitconst = {
-Index: b/drivers/ide/siimage.c
-===================================================================
---- a/drivers/ide/siimage.c
-+++ b/drivers/ide/siimage.c
-@@ -715,7 +715,6 @@ static const struct ide_dma_ops sil_dma_
- 	.dma_end		= ide_dma_end,
- 	.dma_test_irq		= siimage_dma_test_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
-Index: b/drivers/ide/sl82c105.c
-===================================================================
---- a/drivers/ide/sl82c105.c
-+++ b/drivers/ide/sl82c105.c
-@@ -189,14 +189,13 @@ static void sl82c105_dma_start(ide_drive
- 	ide_dma_start(drive);
+-	drive->waiting_for_dma = 0;
+-
+ 	return dma_stat;
  }
  
--static void sl82c105_dma_timeout(ide_drive_t *drive)
-+static void sl82c105_dma_clear(ide_drive_t *drive)
- {
- 	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+@@ -412,7 +410,6 @@ sgiioc4_configure_for_dma(int dma_direct
+ 	writel(ending_dma_addr, (void __iomem *)(dma_base + IOC4_DMA_END_ADDR * 4));
  
--	DBG(("sl82c105_dma_timeout(drive:%s)\n", drive->name));
-+	DBG(("sl82c105_dma_clear(drive:%s)\n", drive->name));
- 
- 	sl82c105_reset_host(dev);
--	ide_dma_timeout(drive);
+ 	writel(dma_direction, (void __iomem *)ioc4_dma_addr);
+-	drive->waiting_for_dma = 1;
  }
  
- static int sl82c105_dma_end(ide_drive_t *drive)
-@@ -298,7 +297,7 @@ static const struct ide_dma_ops sl82c105
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= sl82c105_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= sl82c105_dma_timeout,
-+	.dma_clear		= sl82c105_dma_clear,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-Index: b/drivers/ide/tc86c001.c
-===================================================================
---- a/drivers/ide/tc86c001.c
-+++ b/drivers/ide/tc86c001.c
-@@ -187,7 +187,6 @@ static const struct ide_dma_ops tc86c001
- 	.dma_test_irq		= ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
+ /* IOC4 Scatter Gather list Format 					 */
 Index: b/drivers/ide/trm290.c
 ===================================================================
 --- a/drivers/ide/trm290.c
 +++ b/drivers/ide/trm290.c
-@@ -314,7 +314,6 @@ static struct ide_dma_ops trm290_dma_ops
- 	.dma_end		= trm290_dma_end,
- 	.dma_test_irq		= trm290_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
--	.dma_timeout		= ide_dma_timeout,
- };
+@@ -198,9 +198,9 @@ static int trm290_dma_setup(ide_drive_t 
+ 		return 1;
  
- static const struct ide_port_info trm290_chipset __devinitdata = {
+ 	outl(hwif->dmatable_dma | rw, hwif->dma_base);
+-	drive->waiting_for_dma = 1;
+ 	/* start DMA */
+ 	outw(count * 2 - 1, hwif->dma_base + 2);
++
+ 	return 0;
+ }
+ 
+@@ -211,11 +211,7 @@ static void trm290_dma_start(ide_drive_t
+ 
+ static int trm290_dma_end(ide_drive_t *drive)
+ {
+-	u16 status;
+-
+-	drive->waiting_for_dma = 0;
+-
+-	status = inw(drive->hwif->dma_base + 2);
++	u16 status = inw(drive->hwif->dma_base + 2);
+ 
+ 	trm290_prepare_drive(drive, 0);
+ 
 Index: b/drivers/ide/tx4939ide.c
 ===================================================================
 --- a/drivers/ide/tx4939ide.c
 +++ b/drivers/ide/tx4939ide.c
-@@ -632,7 +632,6 @@ static const struct ide_dma_ops tx4939id
- 	.dma_test_irq		= tx4939ide_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_timeout		= ide_dma_timeout,
- 	.dma_sff_read_status	= tx4939ide_dma_sff_read_status,
- };
+@@ -304,8 +304,6 @@ static int tx4939ide_dma_setup(ide_drive
+ 	/* clear INTR & ERROR flags */
+ 	tx4939ide_clear_dma_status(base);
  
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -715,8 +715,9 @@ struct ide_dma_ops {
- 	int	(*dma_end)(struct ide_drive_s *);
- 	int	(*dma_test_irq)(struct ide_drive_s *);
- 	void	(*dma_lost_irq)(struct ide_drive_s *);
-+	/* below ones are optional */
- 	int	(*dma_timer_expiry)(struct ide_drive_s *);
--	void	(*dma_timeout)(struct ide_drive_s *);
-+	void	(*dma_clear)(struct ide_drive_s *);
- 	/*
- 	 * The following method is optional and only required to be
- 	 * implemented for the SFF-8038i compatible controllers.
-@@ -1458,7 +1459,6 @@ static inline int config_drive_for_dma(i
- #endif /* CONFIG_BLK_DEV_IDEDMA_SFF */
+-	drive->waiting_for_dma = 1;
+-
+ 	tx4939ide_writew(SECTOR_SIZE / 2, base, drive->dn ?
+ 			 TX4939IDE_Xfer_Cnt_2 : TX4939IDE_Xfer_Cnt_1);
  
- void ide_dma_lost_irq(ide_drive_t *);
--void ide_dma_timeout(ide_drive_t *);
- ide_startstop_t ide_dma_timeout_retry(ide_drive_t *, int);
+@@ -321,8 +319,6 @@ static int tx4939ide_dma_end(ide_drive_t
+ 	void __iomem *base = TX4939IDE_BASE(hwif);
+ 	u16 ctl = tx4939ide_readw(base, TX4939IDE_Int_Ctl);
  
- #else
+-	drive->waiting_for_dma = 0;
+-
+ 	/* get DMA command mode */
+ 	dma_cmd = tx4939ide_readb(base, TX4939IDE_DMA_Cmd);
+ 	/* stop DMA */
