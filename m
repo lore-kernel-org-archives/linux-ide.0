@@ -1,47 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Fri, 20 Feb 2009 12:26:50 +0900
-Message-ID: <499E22FA.7030409@kernel.org>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>	<49922A2D.508@kernel.org>	<49924F48.4000009@rtr.ca> <20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com> <49934B20.4060206@rtr.ca> <49934D24.1050204@garzik.org> <4993A57D.6010107@gmail.com> <499D7A4B.5010804@rtr.ca> <499DFA33.8090009@kernel.org> <499E1AD9.9020904@gmail.com>
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: General question (scheduler) with SSDs?
+Date: Fri, 20 Feb 2009 09:31:31 +0000
+Message-ID: <20090220093131.GA26124@silver.sucs.org>
+References: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50177 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752816AbZBTD07 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Feb 2009 22:26:59 -0500
-In-Reply-To: <499E1AD9.9020904@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755141AbZBTJbo@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org
 
-Hello,
-
-Robert Hancock wrote:
->>> If I recall correctly, The reported shadow register contents are bogus
->>> when a timeout occurs.  So we don't actually know what the drive
->>> state was.
->>>
->>> Or do we, Tejun?
->>
->> Yeah, it's bogus.  Maybe we should just report zeros.
+On Thu, Feb 19, 2009 at 08:38:38AM -0500, Justin Piszcz wrote:
+> Hello,
 > 
-> Didn't know that. Shouldn't we be able to do a qc_fill_rtf before error
-> handling in this case? That would make it easier to tell if we lost an
-> interrupt or if the drive is just taking too long..
+> I was curious if anyone had done any benchmarks and/or has conclusive 
+> information, what is the best Linux scheduler to use with SSDs?
+> 
+> Noop?
+> CFQ?
+> AS?
+> Deadline?
 
-I think Alan already did it in the patches which added improved
-timeout handling callback.  Hmmm... Can't find it.  I thought it was
-in #upstream.  Anyways, I'm slightly worried about reading status
-blindly after timeout mainly due to experiences I had early while
-developing libata EH.  Some controllers were simply scary and very
-eager to lock up the whole machine.  That said, it could be that I'm
-just overly paranoid.  After all, with shared IRQ, we don't have
-control over when altstatus is read at least.
+As mentioned in another mail :wq
 
-Thanks.
 
 -- 
-tejun
+Sitsofe | http://sucs.org/~sits/
