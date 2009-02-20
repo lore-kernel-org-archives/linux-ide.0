@@ -1,62 +1,45 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: General question (scheduler) with SSDs?
-Date: Fri, 20 Feb 2009 15:56:06 +0100
-Message-ID: <ac3eb2510902200656l11275aber128848182553726d@mail.gmail.com>
-References: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
-	 <20090220094356.GB26124@silver.sucs.org>
-	 <ac3eb2510902200316m387ecb45n86a2ea7c6196b01@mail.gmail.com>
-	 <20090220131209.GA21446@silver.sucs.org>
-	 <ac3eb2510902200523o619e64aas7bffac9aeca86814@mail.gmail.com>
-	 <20090220142705.GA429@silver.sucs.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 00/10] ide: DMA methods cleanups/sanitizations
+Date: Fri, 20 Feb 2009 18:11:39 +0100
+Message-ID: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:54594 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167AbZBTO4I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 09:56:08 -0500
-In-Reply-To: <20090220142705.GA429@silver.sucs.org>
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:36537 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755455AbZBTRJq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:09:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Fri, Feb 20, 2009 at 15:27, Sitsofe Wheeler <sitsofe@yahoo.com> wrote:
-> On Fri, Feb 20, 2009 at 02:23:38PM +0100, Kay Sievers wrote:
->> On Fri, Feb 20, 2009 at 14:12, Sitsofe Wheeler <sitsofe@yahoo.com> wrote:
->> >
->> > I tried
->> > SUBSYSTEM=="block", ATTRS{model}=="ASUS-PHISON *", ATTR{queue/rotational}="0"
->> > but udevtest /sys/block/sda/ doesn't list it as firing (udev 117-8)...
->>
->> I does here:
->>   udev_rules_apply_to_event: ATTR '/sys/devices/ ...
->> /sdb/queue/rotational' writing '0'
->>
->>   $grep . /sys/class/block/*/queue/rotational
->>   /sys/class/block/sda/queue/rotational:1
->>   /sys/class/block/sdb/queue/rotational:0
->>
->> Maybe "udevtest" is not showing it for you, or udev 117 is too old and
->> does not work that way.
->
-> After you mentioned this I tried again and seemingly I was mistaken - it
-> does work as you described.
 
-Great.
+Sanitizations of DMA methods and related cleanups (~100 LOC gone)...
 
-> I had to make a slight rule tweak to stop
-> it matching on partitions though:
->
-> SUBSYSTEM=="block", KERNEL=="[sh]d[a-z]", ATTRS{model}=="ASUS-PHISON *", ATTR{queue/rotational}="0"
+[ on top of pata-2.6 tree + http://lkml.org/lkml/2009/2/18/257 ]
 
-Newer kernels have DEVTYPE in the envent environment, and:
-  ENV{DEVTYPE}=="disk"
-can be used, which is easier and more reliable.
-
-Also the whitespace after "...PHISON *" does not need to be matched.
-If the match value does not end in whitespace itself, udev will match
-against the value with all trailing whitespace ignored.
-
-Kay
+diffstat:
+ drivers/ide/alim15x3.c     |   10 ++--
+ drivers/ide/au1xxx-ide.c   |   17 ------
+ drivers/ide/cmd64x.c       |    6 --
+ drivers/ide/cs5536.c       |    1 
+ drivers/ide/hpt366.c       |   10 ----
+ drivers/ide/icside.c       |    8 ---
+ drivers/ide/ide-atapi.c    |   31 +++++-------
+ drivers/ide/ide-cd.c       |    4 +
+ drivers/ide/ide-dma-sff.c  |   10 ----
+ drivers/ide/ide-dma.c      |  112 +++++++++++++++++++++++++--------------------
+ drivers/ide/ide-taskfile.c |    4 -
+ drivers/ide/it821x.c       |    3 -
+ drivers/ide/ns87415.c      |   28 ++++-------
+ drivers/ide/pdc202xx_old.c |   10 ----
+ drivers/ide/pmac.c         |   12 ----
+ drivers/ide/sc1200.c       |    4 -
+ drivers/ide/scc_pata.c     |   10 ----
+ drivers/ide/sgiioc4.c      |   19 ++-----
+ drivers/ide/siimage.c      |    1 
+ drivers/ide/sl82c105.c     |    7 +-
+ drivers/ide/tc86c001.c     |    1 
+ drivers/ide/trm290.c       |   41 +++++++---------
+ drivers/ide/tx4939ide.c    |   15 ------
+ include/linux/ide.h        |   15 +++---
+ 24 files changed, 144 insertions(+), 235 deletions(-)
