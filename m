@@ -1,240 +1,131 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 10/10] ide: sanitize ide_build_sglist() and ide_destroy_dmatable()
-Date: Fri, 20 Feb 2009 18:12:54 +0100
-Message-ID: <20090220171254.25429.6029.sendpatchset@localhost.localdomain>
-References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
+Subject: [PATCH 1/2] ide-generic: remove no longer needed sysfs interface
+Date: Fri, 20 Feb 2009 18:18:12 +0100
+Message-ID: <200902201818.12765.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:46563 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759134AbZBTRLA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:11:00 -0500
-In-Reply-To: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:43866 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106AbZBTRRQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 12:17:16 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>, Alexander Schulz <alex@shark-linux.de>
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: sanitize ide_build_sglist() and ide_destroy_dmatable()
+Subject: [PATCH] ide-generic: remove no longer needed sysfs interface
 
-* Move ide_map_sg() calls out from ide_build_sglist()
-  to ide_dma_prepare().
-
-* Pass command to ide_destroy_dmatable().
-
-* Rename ide_build_sglist() to ide_dma_map_sg()
-  and ide_destroy_dmatable() to ide_dma_unmap_sg().
-
-There should be no functional changes caused by this patch.
+Nowadays we have "ide_generic.probe_mask=" module parameter
+and ide_platform host driver so sysfs interface for adding
+IDE interfaces is no longer needed.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-atapi.c |    2 -
- drivers/ide/ide-cd.c    |    2 -
- drivers/ide/ide-dma.c   |   50 ++++++++++++++++++++++++------------------------
- drivers/ide/sgiioc4.c   |    7 +++---
- include/linux/ide.h     |    3 --
- 5 files changed, 32 insertions(+), 32 deletions(-)
+on top of pata-2.6 tree
 
-Index: b/drivers/ide/ide-atapi.c
+ drivers/ide/ide-generic.c |   68 ----------------------------------------------
+ 1 file changed, 1 insertion(+), 67 deletions(-)
+
+Index: b/drivers/ide/ide-generic.c
 ===================================================================
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -284,7 +284,7 @@ static ide_startstop_t ide_pc_intr(ide_d
- 
- 		drive->waiting_for_dma = 0;
- 		rc = hwif->dma_ops->dma_end(drive);
--		ide_destroy_dmatable(drive);
-+		ide_dma_unmap_sg(drive, cmd);
- 
- 		if (rc || (drive->media == ide_tape && (stat & ATA_ERR))) {
- 			if (drive->media == ide_floppy)
-Index: b/drivers/ide/ide-cd.c
-===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -640,7 +640,7 @@ static ide_startstop_t cdrom_newpc_intr(
- 		drive->dma = 0;
- 		drive->waiting_for_dma = 0;
- 		dma_error = hwif->dma_ops->dma_end(drive);
--		ide_destroy_dmatable(drive);
-+		ide_dma_unmap_sg(drive, cmd);
- 		if (dma_error) {
- 			printk(KERN_ERR PFX "%s: DMA %s error\n", drive->name,
- 					write ? "write" : "read");
-Index: b/drivers/ide/ide-dma.c
-===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -89,17 +89,16 @@ static const struct drive_list_entry dri
- ide_startstop_t ide_dma_intr(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
-+	struct ide_cmd *cmd = &hwif->cmd;
- 	u8 stat = 0, dma_stat = 0;
- 
- 	drive->waiting_for_dma = 0;
- 	dma_stat = hwif->dma_ops->dma_end(drive);
--	ide_destroy_dmatable(drive);
-+	ide_dma_unmap_sg(drive, cmd);
- 	stat = hwif->tp_ops->read_status(hwif);
- 
- 	if (OK_STAT(stat, DRIVE_READY, drive->bad_wstat | ATA_DRQ)) {
- 		if (!dma_stat) {
--			struct ide_cmd *cmd = &hwif->cmd;
--
- 			if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
- 				ide_finish_cmd(drive, cmd, stat);
- 			else
-@@ -119,8 +118,8 @@ int ide_dma_good_drive(ide_drive_t *driv
- }
- 
- /**
-- *	ide_build_sglist	-	map IDE scatter gather for DMA I/O
-- *	@drive: the drive to build the DMA table for
-+ *	ide_dma_map_sg	-	map IDE scatter gather for DMA I/O
-+ *	@drive: the drive to map the DMA table for
-  *	@cmd: command
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -1,20 +1,12 @@
+ /*
+  * generic/default IDE host driver
   *
-  *	Perform the DMA mapping magic necessary to access the source or
-@@ -129,23 +128,19 @@ int ide_dma_good_drive(ide_drive_t *driv
-  *	operate in a portable fashion.
+- * Copyright (C) 2004, 2008 Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2004, 2008-2009 Bartlomiej Zolnierkiewicz
+  * This code was split off from ide.c.  See it for original copyrights.
+  *
+  * May be copied or modified under the terms of the GNU General Public License.
   */
  
--static int ide_build_sglist(ide_drive_t *drive, struct ide_cmd *cmd)
-+static int ide_dma_map_sg(ide_drive_t *drive, struct ide_cmd *cmd)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct scatterlist *sg = hwif->sg_table;
- 	int i;
- 
--	ide_map_sg(drive, cmd);
+-/*
+- * For special cases new interfaces may be added using sysfs, i.e.
+- *
+- *	echo -n "0x168:0x36e:10" > /sys/class/ide_generic/add
+- *
+- * will add an interface using I/O ports 0x168-0x16f/0x36e and IRQ 10.
+- */
 -
- 	if (cmd->tf_flags & IDE_TFLAG_WRITE)
- 		cmd->sg_dma_direction = DMA_TO_DEVICE;
- 	else
- 		cmd->sg_dma_direction = DMA_FROM_DEVICE;
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+ #include <linux/module.h>
+@@ -36,60 +28,6 @@ static const struct ide_port_info ide_ge
+ 	.host_flags		= IDE_HFLAG_NO_DMA,
+ };
  
- 	i = dma_map_sg(hwif->dev, sg, cmd->sg_nents, cmd->sg_dma_direction);
--	if (i == 0)
--		ide_map_sg(drive, cmd);
--	else {
-+	if (i) {
- 		cmd->orig_sg_nents = cmd->sg_nents;
- 		cmd->sg_nents = i;
- 	}
-@@ -154,7 +149,7 @@ static int ide_build_sglist(ide_drive_t 
- }
- 
- /**
-- *	ide_destroy_dmatable	-	clean up DMA mapping
-+ *	ide_dma_unmap_sg	-	clean up DMA mapping
-  *	@drive: The drive to unmap
-  *
-  *	Teardown mappings after DMA has completed. This must be called
-@@ -164,15 +159,14 @@ static int ide_build_sglist(ide_drive_t 
-  *	time.
-  */
- 
--void ide_destroy_dmatable(ide_drive_t *drive)
-+void ide_dma_unmap_sg(ide_drive_t *drive, struct ide_cmd *cmd)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	struct ide_cmd *cmd = &hwif->cmd;
- 
- 	dma_unmap_sg(hwif->dev, hwif->sg_table, cmd->orig_sg_nents,
- 		     cmd->sg_dma_direction);
- }
--EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
-+EXPORT_SYMBOL_GPL(ide_dma_unmap_sg);
- 
- /**
-  *	ide_dma_off_quietly	-	Generic DMA kill
-@@ -471,6 +465,7 @@ ide_startstop_t ide_dma_timeout_retry(id
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	const struct ide_dma_ops *dma_ops = hwif->dma_ops;
-+	struct ide_cmd *cmd = &hwif->cmd;
- 	struct request *rq;
- 	ide_startstop_t ret = ide_stopped;
- 
-@@ -482,7 +477,7 @@ ide_startstop_t ide_dma_timeout_retry(id
- 		printk(KERN_WARNING "%s: DMA timeout error\n", drive->name);
- 		drive->waiting_for_dma = 0;
- 		(void)dma_ops->dma_end(drive);
--		ide_destroy_dmatable(drive);
-+		ide_dma_unmap_sg(drive, cmd);
- 		ret = ide_error(drive, "dma timeout error",
- 				hwif->tp_ops->read_status(hwif));
- 	} else {
-@@ -495,7 +490,7 @@ ide_startstop_t ide_dma_timeout_retry(id
- 					hwif->tp_ops->read_status(hwif));
- 			drive->waiting_for_dma = 0;
- 			(void)dma_ops->dma_end(drive);
--			ide_destroy_dmatable(drive);
-+			ide_dma_unmap_sg(drive, cmd);
+-static ssize_t store_add(struct class *cls, const char *buf, size_t n)
+-{
+-	unsigned int base, ctl;
+-	int irq, rc;
+-	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
+-
+-	if (sscanf(buf, "%x:%x:%d", &base, &ctl, &irq) != 3)
+-		return -EINVAL;
+-
+-	memset(&hw, 0, sizeof(hw));
+-	ide_std_init_ports(&hw, base, ctl);
+-	hw.irq = irq;
+-	hw.chipset = ide_generic;
+-
+-	rc = ide_host_add(&ide_generic_port_info, hws, NULL);
+-	if (rc)
+-		return rc;
+-
+-	return n;
+-};
+-
+-static struct class_attribute ide_generic_class_attrs[] = {
+-	__ATTR(add, S_IWUSR, NULL, store_add),
+-	__ATTR_NULL
+-};
+-
+-static void ide_generic_class_release(struct class *cls)
+-{
+-	kfree(cls);
+-}
+-
+-static int __init ide_generic_sysfs_init(void)
+-{
+-	struct class *cls;
+-	int rc;
+-
+-	cls = kzalloc(sizeof(*cls), GFP_KERNEL);
+-	if (!cls)
+-		return -ENOMEM;
+-
+-	cls->name = DRV_NAME;
+-	cls->owner = THIS_MODULE;
+-	cls->class_release = ide_generic_class_release;
+-	cls->class_attrs = ide_generic_class_attrs;
+-
+-	rc = class_register(cls);
+-	if (rc) {
+-		kfree(cls);
+-		return rc;
+-	}
+-
+-	return 0;
+-}
+-
+ #if defined(CONFIG_PLAT_M32700UT) || defined(CONFIG_PLAT_MAPPI2) \
+ 	|| defined(CONFIG_PLAT_OPSPUT)
+ static const u16 legacy_bases[] = { 0x1f0 };
+@@ -196,10 +134,6 @@ static int __init ide_generic_init(void)
  		}
  	}
  
-@@ -572,14 +567,19 @@ int ide_dma_prepare(ide_drive_t *drive, 
- 	const struct ide_dma_ops *dma_ops = drive->hwif->dma_ops;
- 
- 	if ((drive->dev_flags & IDE_DFLAG_USING_DMA) == 0 ||
--	    (dma_ops->dma_check && dma_ops->dma_check(drive, cmd)) ||
--	    ide_build_sglist(drive, cmd) == 0)
--		return 1;
--	if (dma_ops->dma_setup(drive, cmd)) {
--		ide_destroy_dmatable(drive);
--		ide_map_sg(drive, cmd);
--		return 1;
--	}
-+	    (dma_ops->dma_check && dma_ops->dma_check(drive, cmd)))
-+		goto out;
-+	ide_map_sg(drive, cmd);
-+	if (ide_dma_map_sg(drive, cmd) == 0)
-+		goto out_map;
-+	if (dma_ops->dma_setup(drive, cmd))
-+		goto out_dma_unmap;
- 	drive->waiting_for_dma = 1;
- 	return 0;
-+out_dma_unmap:
-+	ide_dma_unmap_sg(drive, cmd);
-+out_map:
-+	ide_map_sg(drive, cmd);
-+out:
-+	return 1;
- }
-Index: b/drivers/ide/sgiioc4.c
-===================================================================
---- a/drivers/ide/sgiioc4.c
-+++ b/drivers/ide/sgiioc4.c
-@@ -277,11 +277,12 @@ static void sgiioc4_dma_host_set(ide_dri
- 		sgiioc4_clearirq(drive);
- }
- 
--static void
--sgiioc4_resetproc(ide_drive_t * drive)
-+static void sgiioc4_resetproc(ide_drive_t *drive)
- {
-+	struct ide_cmd *cmd = &drive->hwif->cmd;
-+
- 	sgiioc4_dma_end(drive);
--	ide_destroy_dmatable(drive);
-+	ide_dma_unmap_sg(drive, cmd);
- 	sgiioc4_clearirq(drive);
- }
- 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1438,8 +1438,7 @@ int ide_allocate_dma_engine(ide_hwif_t *
- void ide_release_dma_engine(ide_hwif_t *);
- 
- int ide_dma_prepare(ide_drive_t *, struct ide_cmd *);
+-	if (ide_generic_sysfs_init())
+-		printk(KERN_ERR DRV_NAME ": failed to create ide_generic "
+-					 "class\n");
 -
--void ide_destroy_dmatable(ide_drive_t *);
-+void ide_dma_unmap_sg(ide_drive_t *, struct ide_cmd *);
+ 	return rc;
+ }
  
- #ifdef CONFIG_BLK_DEV_IDEDMA_SFF
- int config_drive_for_dma(ide_drive_t *);
