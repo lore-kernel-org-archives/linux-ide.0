@@ -1,76 +1,47 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] hdparm: Show form factor and media rotation rate
-Date: Fri, 20 Feb 2009 20:01:25 -0500
-Message-ID: <yq1fxi8eh7e.fsf@sermon.lab.mkp.net>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: no hotplugging support (FIXME)
+Date: Fri, 20 Feb 2009 19:03:04 -0600
+Message-ID: <499F52C8.90205@gmail.com>
+References: <Pine.LNX.4.10.10301040547120.421-100000@master.linux-ide.org> <499F171D.5020600@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:25759 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754540AbZBUBBf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 20:01:35 -0500
+Received: from el-out-1112.google.com ([209.85.162.178]:50794 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273AbZBUBDJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Feb 2009 20:03:09 -0500
+Received: by el-out-1112.google.com with SMTP id b25so618257elf.1
+        for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2009 17:03:07 -0800 (PST)
+In-Reply-To: <499F171D.5020600@verizon.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: Todd and Margo Chester <ToddAndMargo@verizon.net>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
+Todd and Margo Chester wrote:
+> Hi Jeff,
+> 
+> I am having a nasty problem with hot swapping a removable (not
+> eSATA) drive I use for backup on several servers.  It is reported
+> over on
+> http://bugs.centos.org/view.php?id=3391
+> 
+> Trying to help me find a work around to the problem at
+> http://www.centos.org/modules/newbb/viewtopic.php?topic_id=18608&start=0#forumpost68783 
+> 
+> Alan posted your ata_piix.c code at
+> http://centos.toracat.org/ajb/tmp/toddandmargo/ata_piix.c
+> He pointed out
+> 
+> 1483 /* no hotplugging support (FIXME) */
+> 1484 if (!in_module_init)
+> 1485 return -ENODEV;
+> 
+> What do you mean by the comment in line 1483?  Is there some
+> know issue with hot swapping SATA drives?
 
-Make hdparm display form factor and media rotation rate when using -I.
-
-Surprisingly, I have a few devices that export these already.
-
-diff -purN -X /home/mkp/bin/dontdiff hdparm-9.11.orig/identify.c hdparm-9.11/identify.c
---- hdparm-9.11.orig/identify.c	2009-01-27 12:48:41.000000000 -0500
-+++ hdparm-9.11/identify.c	2009-02-20 19:56:12.000000000 -0500
-@@ -96,6 +96,7 @@
- #define RM_STAT 		127 /* removable media status notification feature set support */
- #define SECU_STATUS		128 /* security status */
- #define CFA_PWR_MODE		160 /* CFA power mode 1 */
-+#define FORM_FACTOR		168 /* device nominal form factor */
- #define START_MEDIA             176 /* media serial number */
- #define LENGTH_MEDIA            20  /* 20 words (40 bytes or characters)*/
- #define START_MANUF             196 /* media manufacturer I.D. */
-@@ -103,6 +104,7 @@
- #define SCT_SUPP		206 /* SMART command transport (SCT) support */
- #define TRANSPORT_MAJOR		222 /* PATA vs. SATA etc.. */
- #define TRANSPORT_MINOR		223 /* minor revision number */
-+#define NMRR			217 /* nominal media rotation rate */
- #define INTEGRITY		255 /* integrity word */
- 
- /* bit definitions within the words */
-@@ -897,6 +899,35 @@ void identify (__u16 *id_supplied)
- 	}
- 	putchar('\n');
- 
-+	/* Form factor */
-+	if(val[FORM_FACTOR] > 0) {
-+		printf("\tForm Factor: ");
-+		switch(val[FORM_FACTOR]) {
-+		case 1:
-+			printf("5.25 inch");
-+			break;
-+		case 2:
-+			printf("3.5 inch");
-+			break;
-+		case 3:
-+			printf("2.5 inch");
-+			break;
-+		case 4:
-+			printf("1.8 inch");
-+			break;
-+		default:
-+			printf("unknown");
-+			break;
-+		}
-+		printf("\n");
-+	}
-+
-+	/* Spinning disk or solid state? */
-+	if(val[NMRR] == 1)
-+		printf("\tNominal Media Rotation Rate: Solid State Device\n");
-+	else if(val[NMRR] > 0x401)
-+		printf("\tNominal Media Rotation Rate: %u\n", val[NMRR]);
-+
- 	/* hw support of commands (capabilities) */
- 	printf("Capabilities:\n");
- 	printf("\t");
+If you're using the ata_piix driver then it means your motherboard is 
+not in AHCI mode, so hotplugging is not supported by either the driver 
+or controller. You have to enable AHCI for SATA hotplug to work on Intel 
+controllers.
