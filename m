@@ -1,45 +1,80 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: help! locks problem in block layer request queue?
-Date: Mon, 23 Feb 2009 08:18:02 +0100
-Message-ID: <20090223071802.GK29783@kernel.dk>
-References: <38D9F46DFF92C54980D2F2C1E8EE313024842389@pdsmsx503.ccr.corp.intel.com> <20090219131305.GD29783@kernel.dk> <38D9F46DFF92C54980D2F2C1E8EE3130248428D8@pdsmsx503.ccr.corp.intel.com>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH 0/10] ide: flags query macros
+Date: Mon, 23 Feb 2009 08:34:52 +0100
+Message-ID: <20090223073452.GA1764@uranus.ravnborg.org>
+References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com> <200902171533.29135.bzolnier@gmail.com> <20090223070413.GA17783@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:1463 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbZBWHUf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Feb 2009 02:20:35 -0500
+Received: from pfepa.post.tele.dk ([195.41.46.235]:41494 "EHLO
+	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752454AbZBWHc7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Feb 2009 02:32:59 -0500
 Content-Disposition: inline
-In-Reply-To: <38D9F46DFF92C54980D2F2C1E8EE3130248428D8@pdsmsx503.ccr.corp.intel.com>
+In-Reply-To: <20090223070413.GA17783@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+On Mon, Feb 23, 2009 at 08:04:13AM +0100, Borislav Petkov wrote:
+> > Since it is not a lot of modified lines and the change is rather
+> > straightforward it could as well be done in a single patch...
+> 
+> here's version 2:
+> --
+> From: Borislav Petkov <petkovbb@gmail.com>
+> Date: Mon, 23 Feb 2009 07:58:23 +0100
+> Subject: [PATCH] ide: flags query macros
+> 
+> Add drive->atapi_flags and drive->dev_flags macro wrappers
+> 
+> v2:
+> - use static inlines for better typechecking
+> - use macro indirection for convenience
+> 
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+
+Version 2 looks much better - thanks.
+
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index df3df00..3553759 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -86,7 +86,7 @@ int ide_cdrom_check_media_change_real(struct cdrom_device_info *cdi,
+
+        if (slot_nr == CDSL_CURRENT) {
+                (void) cdrom_check_status(drive, NULL);
+-               retval = (drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED) ? 1 : 0;
++               retval = ide_dev_media_changed(drive) ? 1 : 0;
+                drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
+                return retval;
+        } else {
+
+The use of ? 1 : 0; here is redundant.
+
+                        if (drive->media == ide_disk) {
+-                               printk(KERN_INFO "%s: non-IDE drive, CHS=%d/%d/%d\n",
++                               pr_info("%s: non-IDE drive, CHS=%d/%d/%d\n",
+                                        drive->name, drive->cyl,
+                                        drive->head, drive->sect);
+                        } else if (drive->media == ide_cdrom) {
+-                               printk(KERN_INFO "%s: ATAPI cdrom (?)\n", drive->name);
++                               pr_info("%s: ATAPI cdrom (?)\n", drive->name);
+                        } else {
+                                /* nuke it */
+-                               printk(KERN_WARNING "%s: Unknown device on bus refused identification. Ignoring.\n",
++drive->name);
++                               pr_warning("%s: Unknown device on bus refused "
++                                          "identification, ignoring.\n",
++                                          drive->name);
+I did not see this addressed in the changelog?
 
 
-(please don't top post reply to emails...)
+                                drive->dev_flags &= ~IDE_DFLAG_PRESENT;
 
-On Sat, Feb 21 2009, Gao, Yunpeng wrote:
-> Really awesome!  This is a big bug. I have re-write the code of
-> processing requests from the request queue. The new code is copied
-> from drivers/mtd/mtd_blkdevs.c and did some necessary modifies. Now it
-> works well.  Many thanks to you :)
+You have a nice set of inlines to facilitate testing bits,
+but not for the above use?
+I guess this was not worth the abstraction for now.
 
-Glad that it now works :-)
 
-> BTW, I noticed that MTD driver (drivers/mtd/mtd_blkdevs.c) and MMC
-> driver (drivers/mmc/card/block.c and queue.c) also register a block
-> device, and they create a kernel thread to process the request queue
-> instead of process it directly. Why they do it like that? Is there any
-> special reason for that?
-
-If your request handling is slow, then it is often better to push
-request handling to a dedicated thread. That may be the case if your
-device can't do DMA for instance, and you have to transfer all the data
-manually. Pushing that to a thread usually makes it easy to do that with
-interrupts enabled and is thus nicer to the rest of the system.
-
--- 
-Jens Axboe
-
+	Sam
