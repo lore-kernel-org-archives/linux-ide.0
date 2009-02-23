@@ -1,72 +1,58 @@
-From: Sagar Borikar <sagar.borikar@gmail.com>
-Subject: Re: Synopsis SATA AHCI support
-Date: Mon, 23 Feb 2009 14:46:11 +0530
-Message-ID: <3fb94e50902230116n32e1fad0jad3e8f4bbd1274@mail.gmail.com>
-References: <3fb94e50902182156y62da0f6dhfb5d99ad5de9d0fd@mail.gmail.com>
-	 <499D1EEB.3000200@kernel.org>
-	 <3fb94e50902190318p4e423594o4be96bf0ee70007f@mail.gmail.com>
-	 <499D6201.9040705@kernel.org>
-	 <3fb94e50902190635g5f47e244w2631c9a3103fa6a@mail.gmail.com>
-	 <499DFB06.9020701@kernel.org>
+From: Peter Favrholdt <linux-ide@how.dk>
+Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
+ - it works
+Date: Mon, 23 Feb 2009 13:17:32 +0100
+Message-ID: <49A293DC.9030005@how.dk>
+References: <491C9A4F.1020801@tlinx.org>	<491FB7E2.2030105@kernel.org>	<18719.65298.689618.835202@harpo.it.uu.se>	<492059B1.4030708@how.dk>	<49205AD7.3080009@how.dk>	<4920D093.2030508@kernel.org>	<492159E0.1050804@how.dk>	<4922165E.9070203@kernel.org>	<49230361.2010001@how.dk>	<492371F4.7020400@kernel.org>	<49253A6D.1040202@how.dk>	<18725.17831.755158.999770@harpo.it.uu.se>	<49263F80.2060607@kernel.org>	<492C358C.7030403@garzik.org>	<18737.47407.218634.726384@harpo.it.uu.se>	<499102E5.6000603@garzik.org> <18833.47451.931683.294891@harpo.it.uu.se> <4991EDFC.4010109@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:46034 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbZBWJQM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Feb 2009 04:16:12 -0500
-Received: by rv-out-0506.google.com with SMTP id g37so1861229rvb.1
-        for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2009 01:16:12 -0800 (PST)
-In-Reply-To: <499DFB06.9020701@kernel.org>
+Received: from pfepa.post.tele.dk ([195.41.46.235]:50480 "EHLO
+	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515AbZBWMRi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Feb 2009 07:17:38 -0500
+In-Reply-To: <4991EDFC.4010109@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Mikael Pettersson <mikpe@it.uu.se>
 
-Tejun,
+Jeff Garzik wrote:
+> Mikael Pettersson wrote:
+>> Not really. I've kept the patch up to date for newer kernels, but
+>> there's been no testing by others that I know of. Do you want to
+>> include it in a testing branch?
+> 
+> I can at least make sure it is in #ALL and #NEXT, two meta-branches in 
+> libata-dev.git that are forwarded to akpm's -mm tree and linux-next, 
+> respectively, for wider public testing.
+> 
+> We can give it more-public testing and hopefully get a bit more feedback.
 
-The interface block is like this:
+I have tested this patch:
 
-AHB to AXI Bridge
--------------------------------------------------------------------------------------------------------------
+http://user.it.uu.se/~mikpe/linux/patches/2.6/OLD/2.6.28/patch-sata_promise-reset-updates-v1-2.6.28
 
-----------------------------------
-----------------------------------------------
-|         AHB Slave        |                           |         AHB
-Master (DMA)        |
----------------------------------
-----------------------------------------------
+On a vanilla 2.6.28.6 kernel.
 
+It works without any problems.
 
-----------------------------------
-----------------------------------------------
-|         AHCI registers    |                           |
-DMAC                        |
------------------------------------
------------------------------------------------
+Unfortunately I had to replace a faulty power supply - which may have 
+been the cause for my system failing earlier (as reported in previous 
+postings to this list).
 
+Hardware:
 
-I need to convert PCI interface to AHB. Has anyone done that before?
+AMD Barton 2500 on Nforce2 motherboard with
 
-Thanks
-Sagar
+Promise Technology, Inc. PDC40718 (SATA 300 TX4) (rev 02)
+
+4 Seagate 500GB ES drives:
+   Model Number:       ST3500630NS
+   Firmware Revision:  3.AEE
+   (with 1.5/3.0Gbps jumper removed = 3.0Gbps)
 
 
-On Fri, Feb 20, 2009 at 6:06 AM, Tejun Heo <tj@kernel.org> wrote:
-> Sagar Borikar wrote:
->> Hi Tejun
->>
->> Its not PCI interface but AHB. This SATA IP is intergated and
->> connected to AXI through AHB bridge. And as the ARM core based board
->> is in development stage, I haven't added all SATA functionalities. I
->> am debugging based on the serial output
->
-> Dunno anything about AHB or AXI but it's not a PCI device at all?
-> Then, how is the ahci driver supposed to find it?  Currently, libata
-> ahci driver only supports pci devices.  You'll at least need to modify
-> the init function to get the controller recognized by the driver.
->
-> --
-> tejun
->
+Best regards
+
+Peter
