@@ -1,27 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH] hdparm: Show form factor and media rotation rate
-Date: Mon, 23 Feb 2009 11:13:36 -0500
-Message-ID: <yq163j1uo5r.fsf@sermon.lab.mkp.net>
-References: <yq1fxi8eh7e.fsf@sermon.lab.mkp.net> <49A0E866.7040408@rtr.ca>
+Date: Mon, 23 Feb 2009 11:14:10 -0500
+Message-ID: <yq11vtpuo4t.fsf@sermon.lab.mkp.net>
+References: <yq1fxi8eh7e.fsf@sermon.lab.mkp.net>
+	<49A08310.8020100@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:21249 "EHLO
-	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbZBWQNv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Feb 2009 11:13:51 -0500
-In-Reply-To: <49A0E866.7040408@rtr.ca> (Mark Lord's message of "Sun\, 22 Feb 2009 00\:53\:42 -0500")
+Received: from acsinet11.oracle.com ([141.146.126.233]:27471 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbZBWQPo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Feb 2009 11:15:44 -0500
+In-Reply-To: <49A08310.8020100@msgid.tls.msk.ru> (Michael Tokarev's message of "Sun\, 22 Feb 2009 01\:41\:20 +0300")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
->>>>> "Mark" == Mark Lord <liml@rtr.ca> writes:
+>>>>> "Michael" == Michael Tokarev <mjt@tls.msk.ru> writes:
 
-Mark> Peachy.  I'll add it for hdparm-9.12, if you agree to the hdparm
-Mark> copyright (BSD style licensing).
+Michael> How about printing the actual (unrecognized) value here?  Like
+Michael> this:
 
-That's fine.
+Michael>   + default:
+Michael>   + printf("unknown (raw value = %d)", val[FORM_FACTOR]);
+Michael>   + break;
+
+I'm ok with that.  Mark?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
