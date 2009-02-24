@@ -1,149 +1,102 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: strange hdparm results with serverworks and pata-serverworks
-Date: Tue, 24 Feb 2009 17:39:27 -0500
-Message-ID: <49A4771F.5060802@rtr.ca>
-References: <49A30901.1@wpkg.org> <49A3F63A.2080805@rtr.ca> <49A43E73.6070705@wpkg.org>
+From: Todd and Margo Chester <ToddAndMargo@verizon.net>
+Subject: Re: no hotplugging support (FIXME)
+Date: Tue, 24 Feb 2009 13:57:57 -0800
+Message-ID: <49A46D65.1030008@verizon.net>
+References: <Pine.LNX.4.10.10301040547120.421-100000@master.linux-ide.org>
+ <499F171D.5020600@verizon.net> <499F52C8.90205@gmail.com>
+ <49A0B1D8.10303@verizon.net> <49A0C8F5.30405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:35721 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761314AbZBXWja (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Feb 2009 17:39:30 -0500
-In-Reply-To: <49A43E73.6070705@wpkg.org>
+Received: from vms173015pub.verizon.net ([206.46.173.15]:58665 "EHLO
+	vms173015pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437AbZBXW6X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Feb 2009 17:58:23 -0500
+Received: from rn1.rent-a-nerd.local ([71.125.118.126])
+ by vms173015.mailsrvcs.net
+ (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008; 32bit))
+ with ESMTPA id <0KFL00CE0BOLQRYV@vms173015.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Tue, 24 Feb 2009 15:57:58 -0600 (CST)
+In-reply-to: <49A0C8F5.30405@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
+To: Robert Hancock <hancockrwd@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Tomasz Chmielewski wrote:
-> Mark Lord schrieb:
->> Tomasz Chmielewski wrote:
->>> I have a ProLiant BL30p G1 machine running Debian Lenny (2.6.26 kernel).
+Robert Hancock wrote:
+> Todd and Margo Chester wrote:
+>> Robert Hancock wrote:
+>>> Todd and Margo Chester wrote:
+>>>> Hi Jeff,
+>>>>
+>>>> I am having a nasty problem with hot swapping a removable (not
+>>>> eSATA) drive I use for backup on several servers.  It is reported
+>>>> over on
+>>>> http://bugs.centos.org/view.php?id=3391
+>>>>
+>>>> Trying to help me find a work around to the problem at
+>>>> http://www.centos.org/modules/newbb/viewtopic.php?topic_id=18608&start=0#forumpost68783 
+>>>>
+>>>> Alan posted your ata_piix.c code at
+>>>> http://centos.toracat.org/ajb/tmp/toddandmargo/ata_piix.c
+>>>> He pointed out
+>>>>
+>>>> 1483 /* no hotplugging support (FIXME) */
+>>>> 1484 if (!in_module_init)
+>>>> 1485 return -ENODEV;
+>>>>
+>>>> What do you mean by the comment in line 1483?  Is there some
+>>>> know issue with hot swapping SATA drives?
 >>>
->>> It also has two identical, 2.5 inch WDC WD2500BEVE-00WZT0 IDE drives 
->>> (new drives, no smart/badblock errors). Both drives are connected to 
->>> a single IDE channel this machine has.
+>>> If you're using the ata_piix driver then it means your motherboard is 
+>>> not in AHCI mode, so hotplugging is not supported by either the 
+>>> driver or controller. You have to enable AHCI for SATA hotplug to 
+>>> work on Intel controllers.
 >>>
->>> "hdparm -t" gives me different results for these drives: ~10 MB/s for 
->>> hda, and ~20 MB/s for hdb with "serverworks" driver on Debian's 
->>> 2.6.26 kernel.
->>> When using "pata-serverworks" with 2.6.28.7 kernel, hdparm shows the 
->>> same results (~10 MB/s for sda, ~20 MB/s for sdb).
->>>
->>>
->>> However, when I run "dd if=/dev/sda of=/dev/null bs=64k", I can see 
->>> with iostat that for the first 7-8 seconds, reads are with ~10 MB/s 
->>> speed. Then, reads from sda are with ~20 MB/s or more and are on par 
->>> with sdb.
->>>
->>> Similar dd test for sdb shows that it delivers with speed of ~20 MB/s 
->>> from the first second.
->>>
->>> Is there an explanation for that?
->> ..
 >>
->> Well, as you have shown, both hdparm and dd give the same results
->> when doing (almost) the same test:  the first 3 seconds are slow.
-> 
-> But only for hda/sda. Not for hdb/sdb.
-> 
-> 
->> After that, I would assume that the kernel read-ahead algorithms
->> kick in better and improve things.
+>> Hi Robers,
 >>
->> But 10-20Mbytes/sec is slow for most modern drives,
->> even for 2.5" drives.  Older ones, sure, that's fine,
->> but the newest 2.5" drives should score between 40
->> and 100Mbytes/sec.
+>>    As far as I can tell, ACHI is turned on on my motherboard.
+>> I have tried all variation in bios (one of them turns /dev/sdb
+>> into /dev/hda).   Does not mean ACHI is working right.
+>>
+>>    Do you know of any reason why my kernel
+>> (CentOS 5.2: 2.6.18-92.1.22.el5) would not support
+>> (bugs, etc.) hotplugging?
+>>
+>>    Also, do you know of a utility that I can use to
+>> ask ACHI what is has for me (give me a report)?
+>>
+>> Many thanks,
+>> -T
 > 
-> BTW, I didn't mention it - these machine have CSB5 IDE controllers.
+> If the device is in AHCI mode then the ata_piix driver won't load for it 
+> - at least it won't in current kernels, I can't say for sure that it 
+> won't in the CentOS 5 version.. You do need to get it using the ahci 
+> driver instead of ata_piix or hotplug definitely won't work.
 > 
-> drivers/ata/pata_serverworks.c say there are two revisions of these 
-> controllers: one capable of UDMA 4, one capable of UDMA 5. I'm not sure 
-> what revision it is:
+> You can try changing the boot initrd to try to load the AHCI driver 
+> instead by changing the scsi_hostadapter entry in /etc/modprobe.conf to 
+> be ahci instead of ata_piix, then rebuilding the initrd or reinstalling 
+> the kernel RPM. However, if the BIOS isn't set up properly for AHCI mode 
+> to work, you'll have to either boot up in rescue mode and fix it, or 
+> boot up from a different kernel entry in grub.
 > 
-> 00:0f.1 IDE interface: Broadcom CSB5 IDE Controller (rev 93) (prog-if 8a 
-> [Master SecP PriP]) Subsystem: Broadcom CSB5 IDE Controller Control: 
-> I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- 
-> SERR+ FastB2B- DisINTx- Status: Cap- 66MHz- UDF- FastB2B- ParErr- 
-> DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx- Latency: 64 
-> Region 0: I/O ports at 01f0 [size=8] Region 1: I/O ports at 03f4 
-> [size=1] Region 2: I/O ports at 0170 [size=8] Region 3: I/O ports at 
-> 0374 [size=1] Region 4: I/O ports at 2000 [size=16] Kernel driver in 
-> use: Serverworks_IDE Kernel modules: serverworks
-> Either way, yes, it should be faster.
-> 
-> 
-> (...)
-> 
->> The difference could easily be in the chipset used to communicate
->> with the drive.
-> 
-> Controller's chipset? That it has some extra doubts before it decides to 
-> read
-> "faster" from the first drive (master), but doesn't have these doubts 
-> when reading from the slave drive?
-> 
-> 
->> You said "serverworks" driver, and "pata-serverworks".
->> The kernel start up logs will have more information,
->> including the timing info chosen by libata.
-> 
-> Here is what 2.6.28.7 says:
-> 
-> [    1.799408] ata1.00: ATA-8: WDC WD2500BEVE-00WZT0, 01.01A01, max 
-> UDMA/100
-> [    1.799413] ata1.00: 488397168 sectors, multi 8: LBA48.
-> [    2.100115] ata1.01: ATA-8: WDC WD2500BEVE-00WZT0, 01.01A01, max 
-> UDMA/100
-> [    2.100118] ata1.01: 488397168 sectors, multi 8: LBA48.
-> [    2.109007] ata1.00: configured for UDMA/100
-> [    2.124554] ata1.01: configured for UDMA/100
-> [    2.291564] scsi 0:0:0:0: Direct-Access     ATA      WDC WD2500BEVE-0 
-> 01.0 PQ: 0 ANSI: 5
-> [    2.291761] scsi 0:0:1:0: Direct-Access     ATA      WDC WD2500BEVE-0 
-> 01.0 PQ: 0 ANSI: 5
-> [    2.303851] Uniform Multi-Platform E-IDE driver
-> [    2.318650] Driver 'sd' needs updating - please use bus_type methods
-> [    2.318771] sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: 
-> (250 GB/232 GiB)
-> [    2.318790] sd 0:0:0:0: [sda] Write Protect is off
-> [    2.318793] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [    2.318822] sd 0:0:0:0: [sda] Write cache: disabled, read cache: 
-> enabled, doesn't support DPO or FUA
-> [    2.318901] sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors: 
-> (250 GB/232 GiB)
-> [    2.318919] sd 0:0:0:0: [sda] Write Protect is off
-> [    2.318922] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [    2.318951] sd 0:0:0:0: [sda] Write cache: disabled, read cache: 
-> enabled, doesn't support DPO or FUA
-> [    2.318955]  sda: sda1 sda2 sda3
-> [    2.401158] sd 0:0:0:0: [sda] Attached SCSI disk
-> [    2.401225] sd 0:0:1:0: [sdb] 488397168 512-byte hardware sectors: 
-> (250 GB/232 GiB)
-> [    2.401243] sd 0:0:1:0: [sdb] Write Protect is off
-> [    2.401246] sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-> [    2.401274] sd 0:0:1:0: [sdb] Write cache: disabled, read cache: 
-> enabled, doesn't support DPO or FUA
-> [    2.401332] sd 0:0:1:0: [sdb] 488397168 512-byte hardware sectors: 
-> (250 GB/232 GiB)
-> [    2.401350] sd 0:0:1:0: [sdb] Write Protect is off
-> [    2.401353] sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-> [    2.401382] sd 0:0:1:0: [sdb] Write cache: disabled, read cache: 
-> enabled, doesn't support DPO or FUA
-> [    2.401385]  sdb: sdb1 sdb2
-> [    2.453608] sd 0:0:1:0: [sdb] Attached SCSI disk
-..
 
-Everything looks configured correctly, so the only explanations
-for the slow (10/20MB/sec) speeds are the CPU/RAM, or other system activity.
+Hi Robert,
 
-As for the disparity in initial throughput between the master/slave drives,
-you could try reversing the two drives (swap them on the cable if using
-"cable select", otherwise rejumper the master/slave setup).  Then see if the
-slow start follows the specific drive to its new position on the cable,
-or if the master ("a") drive is always slower.
+I have
 
-Cheers
+$ modprobe --dry-run -v ahci
+insmod /lib/modules/2.6.18-92.1.22.el5/kernel/drivers/ata/ahci.ko
+
+in my system.  Do I just use "modprobe" to install the module
+and go edit /etc/modprobe.conf?
+
+And, does the modprobe insertion stay permanent (survives a reboot)?
+
+I am confused   :-[   Can you point me to a link that gives the
+directions?
+
+-T
