@@ -1,36 +1,39 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Wed, 25 Feb 2009 17:43:49 -0500
-Message-ID: <49A5C9A5.20005@rtr.ca>
-References: <82AA7849DFA14958B6A74CB6ED0B591B@DIAMOND8600> <26917692A9574F3A9363ED5253B42D2F@DIAMOND8600> <49A570DB.8090401@rtr.ca> <200902252035.05347.bzolnier@gmail.com> <DF79A3D50A1548A2A22EEFD769318266@DIAMOND8600>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: ATA support for 4k sector size
+Date: Wed, 25 Feb 2009 14:53:43 -0800
+Message-ID: <49A5CBF7.9000501@zytor.com>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:36956 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755636AbZBYWnw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2009 17:43:52 -0500
-In-Reply-To: <DF79A3D50A1548A2A22EEFD769318266@DIAMOND8600>
+Received: from terminus.zytor.com ([198.137.202.10]:56767 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbZBYWxu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 17:53:50 -0500
+In-Reply-To: <1235600698-6446-1-git-send-email-matthew@wil.cx>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Norman Diamond wrote:
->
-> Meanwhile I also can't help wondering, if Mark Lord has patched drivers/ide
-> to make it work, why has he delayed submitting the patches?
-..
+Matthew Wilcox wrote:
+> The two patches following this add support for drives which have sector
+> sizes other than 512 bytes.  I haven't been able to test this as I don't
+> have the hardware.
+> 
+> Individual host drivers will have to be updated to support sizes other
+> than 512 bytes.
+> 
+> Support for logical sector sizes that differ from physical sector sizes
+> depends on the READ CAPACITY 16 patch I posted in December that isn't in
+> scsi-misc yet.
+> 
+> The approach I've taken to generating the tables of which commands need
+> a 512-byte transfer size and which use the drive's sector size command is
+> 'innovative'.  Review is encouraged ;-)
 
-There's simply too much churn in drivers/ide for me to keep up with,
-and my patches won't apply to kernels from the past year.
+What sector size do we report to user space for this?  I'm asking 
+because logical sector size is visible in most partition formats.
 
-Drivers/ide is on the way out FAST now, and any new systems that
-still use it are mostly based on older kernels, where patches like
-mine are inappropriate for maintenance point releases.
-
-Libata should be used for any new setup that doesn't have a strict
-legacy requirement now.
-
-Cheers
+	-hpa
