@@ -1,61 +1,45 @@
-From: david@lang.hm
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: ATA support for 4k sector size
-Date: Wed, 25 Feb 2009 15:49:58 -0800 (PST)
-Message-ID: <alpine.DEB.1.10.0902251549180.26625@asgard.lang.hm>
-References: <1235600698-6446-1-git-send-email-matthew@wil.cx> <49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
+Date: Wed, 25 Feb 2009 18:51:35 -0500
+Message-ID: <yq163iyhy7s.fsf@sermon.lab.mkp.net>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
+	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
+	<49A5D55A.9080402@zytor.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:34503 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763483AbZBYXvQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2009 18:51:16 -0500
-In-Reply-To: <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:34202 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753406AbZBYXyg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 18:54:36 -0500
+In-Reply-To: <49A5D55A.9080402@zytor.com> (H. Peter Anvin's message of "Wed\, 25 Feb 2009 15\:33\:46 -0800")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-On Wed, 25 Feb 2009, Martin K. Petersen wrote:
+>>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
 
->>>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
->
->>> The two patches following this add support for drives which have
->>> sector sizes other than 512 bytes.  I haven't been able to test this
->>> as I don't have the hardware.
->
-> hpa> What sector size do we report to user space for this?  I'm asking
-> hpa> because logical sector size is visible in most partition formats.
->
-> There are several flavors of drives we have to deal with:
->
-> 512-byte logical / 512-byte hardware (current)
-> 512-byte logical / 4096-byte hardware (ATA, doing read-modify-write)
-> 4096-byte logical / 4096-byte hardware (SCSI initially, ATA later)
+hpa> I wish it was left to people like myself.  Realistically when it
+hpa> comes to disks with 4096-byte logical sectors it going to matter
+hpa> how the firmware chooses to expose it.
 
-add to this good support for SSDs
+Well. In the short term ATA is going to emulate 512 (at a penalty for
+misaligned I/O).  SCSI is switching to 4KB wholesale.
 
-?? logical / 128K hardware
+I have a 4KB/4KB drive here that I have had fun booting from the last
+few days.
 
-or similar.
 
-David Lang
+hpa> Most likely, the universe will explode at this time, since very few
+hpa> bootloaders can deal with a sector size other than 512 bytes, and
+hpa> virtually every partition table format contains a sector size
+hpa> dependency, which also means you'll break any mechanical imaging
+hpa> solution.
 
-> Because of 63-sector legacy problems a bunch of ATA vendors will
-> initially ship 512/4096 drives that are not naturally aligned.
-> I.e. logical sector 63 will be aligned on a 4KB hardware sector
-> boundary to overcome the misaligned default partitioning.
->
-> I have been working on some alignment patches the last week.  They hook
-> into the stuff Matthew has been doing in libata and I'll post them
-> shortly.
->
-> For each block device you'll get a hardware sector size exposed as well
-> as whether the device (partition) is naturally aligned or not.  This
-> works for both ATA and SCSI devices.
->
-> I'll defer to people like yourself for how this needs to work wrt. boot
-> loaders and creating partition tables.  I'm CC:ing Eric Sandeen because
-> he's also looking at this...
->
->
+hpa> It's going to hurt :(
+
+Yep, it sucks :|
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
