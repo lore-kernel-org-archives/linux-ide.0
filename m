@@ -1,43 +1,81 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: strange hdparm results with serverworks and pata-serverworks
-Date: Wed, 25 Feb 2009 10:44:13 +0100
-Message-ID: <49A512ED.9080706@wpkg.org>
-References: <49A30901.1@wpkg.org> <49A3F63A.2080805@rtr.ca> <49A43E73.6070705@wpkg.org> <49A4771F.5060802@rtr.ca>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: Bad module reference counter
+Date: Wed, 25 Feb 2009 12:00:42 +0100
+Message-ID: <200902251200.42517.stf_xl@wp.pl>
+References: <200902111032.59225.stf_xl@wp.pl> <200902201145.02308.stf_xl@wp.pl> <200902232336.35371.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:44595 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751163AbZBYJnu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 04:43:50 -0500
-In-Reply-To: <49A4771F.5060802@rtr.ca>
+Received: from mx1.wp.pl ([212.77.101.5]:28375 "EHLO mx1.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762311AbZBYLAz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 06:00:55 -0500
+In-Reply-To: <200902232336.35371.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Mark Lord schrieb:
+Monday 23 February 2009 23:36:35 Bartlomiej Zolnierkiewicz napisa=C5=82=
+(a):
+> > Looks that using ->dev insted of ->kref will do the work. But perha=
+ps less
+> > intrusive fix, like check kref in ide_disk_put() would be better so=
+lution.
+> > I tested below patch and everythings is fine.
+> >=20
+> > diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+> > index 7857b20..598f21b 100644
+> > --- a/drivers/ide/ide-gd.c
+> > +++ b/drivers/ide/ide-gd.c
+> > @@ -48,8 +48,8 @@ static void ide_disk_put(struct ide_disk_obj *idk=
+p)
+> >  	ide_drive_t *drive =3D idkp->drive;
+> > =20
+> >  	mutex_lock(&ide_disk_ref_mutex);
+> > -	kref_put(&idkp->kref, ide_disk_release);
+> > -	ide_device_put(drive);
+> > +	if (!kref_put(&idkp->kref, ide_disk_release))
+> > +		ide_device_put(drive);
+>=20
+> I worry that this just masks the problem as according to your previou=
+s
+> mail drive still can be already gone before ->flush in ide_gd_remove(=
+).
 
-> Everything looks configured correctly, so the only explanations
-> for the slow (10/20MB/sec) speeds are the CPU/RAM, or other system 
-> activity.
+I checked my patch against all mentioned problems, but it doesn't matte=
+r now.
+=20
+> >  	mutex_unlock(&ide_disk_ref_mutex);
+> >  }
+> > =20
+> > If this patch is ok and dropping kref to dev is not planed currentl=
+y, maybe
+> > I'll send "official" patch with ide-gd fix and for other devices ty=
+pes.
+>=20
+> Lets fix it fully.  The below patch together with previous ide_device=
+_put()
+> fix and drive_release_dev() one (from another mail) should make all p=
+roblems
+> go away...
+>=20
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: fix refcounting in device drivers
+>=20
+> During host driver module removal del_gendisk() results in a final
+> put on drive->gendev and freeing the drive by drive_release_dev().
+>=20
+> Convert device drivers from using struct kref to use struct device
+> so device driver's object holds reference on ->gendev and prevents
+> drive from prematurely going away.
+>=20
+> Also fix ->remove methods to not erroneously drop reference on a
+> host driver by using only put_device() instead of ide*_put().
+>=20
+> Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-It's a pretty powerful machine with plenty of RAM, no other activity.
-
-
-> As for the disparity in initial throughput between the master/slave drives,
-> you could try reversing the two drives (swap them on the cable if using
-> "cable select", otherwise rejumper the master/slave setup).  Then see if 
-> the
-> slow start follows the specific drive to its new position on the cable,
-> or if the master ("a") drive is always slower.
-
-Yes, "reversing" the drives makes the master slower (at least initially).
-
-Controller's "feature"?
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Tested-by: Stanislaw Gruszka <stf_xl@wp.pl>
