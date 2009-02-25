@@ -1,38 +1,47 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Wed, 25 Feb 2009 11:24:59 -0500
-Message-ID: <49A570DB.8090401@rtr.ca>
-References: <82AA7849DFA14958B6A74CB6ED0B591B@DIAMOND8600> <20090224171044.52e70a6b@dhcp-100-2-144.bos.redhat.com> <26917692A9574F3A9363ED5253B42D2F@DIAMOND8600>
+Subject: Re: strange hdparm results with serverworks and pata-serverworks
+Date: Wed, 25 Feb 2009 11:26:57 -0500
+Message-ID: <49A57151.1060206@rtr.ca>
+References: <49A30901.1@wpkg.org> <49A3F63A.2080805@rtr.ca> <49A43E73.6070705@wpkg.org> <49A4771F.5060802@rtr.ca> <49A512ED.9080706@wpkg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:46328 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:46332 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756762AbZBYQZD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2009 11:25:03 -0500
-In-Reply-To: <26917692A9574F3A9363ED5253B42D2F@DIAMOND8600>
+	id S1760929AbZBYQ1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Feb 2009 11:27:00 -0500
+In-Reply-To: <49A512ED.9080706@wpkg.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-ide@vger.kernel.org
 
-Norman Diamond wrote:
+Tomasz Chmielewski wrote:
+> Mark Lord schrieb:
+> 
+>> Everything looks configured correctly, so the only explanations
+>> for the slow (10/20MB/sec) speeds are the CPU/RAM, or other system 
+>> activity.
+> 
+> It's a pretty powerful machine with plenty of RAM, no other activity.
+> 
+> 
+>> As for the disparity in initial throughput between the master/slave 
+>> drives,
+>> you could try reversing the two drives (swap them on the cable if using
+>> "cable select", otherwise rejumper the master/slave setup).  Then see 
+>> if the
+>> slow start follows the specific drive to its new position on the cable,
+>> or if the master ("a") drive is always slower.
+> 
+> Yes, "reversing" the drives makes the master slower (at least initially).
+> 
+> Controller's "feature"?
 ..
-> Does anyone know when this bug was added?  2.6.19 is too old for my needs,
-> but the range 2.6.24 to 2.6.26 might be OK if they had taskfiles working.
-> Maybe I should look for a Slax version that had a kernel from 2.6.24 or so,
-> since I can probably customize it in a single day by now.  But if the bug
-> was already present in 2.6.24 then it would be a waste of time.
-..
 
-Heh.. the question could be more like, does anyone know which few kernels
-that HDIO_DRIVE_TASKFILE ever worked completely on?  :)
+Kinda looks that way.  Perhaps the driver isn't setting the master device
+up with optimal settings somewhere.. FIFO sizes or something ??
 
-I know I have to patch drivers/ide rather heavily to get a working,
-reliable HDIO_DRIVE_TASKFILE on it.
+Maybe somebody more familiar with serverworks stuff could have a look now.
 
-Much better is to move to libata, and use ATA_16 with SG_IO,
-for a standard, working way of doing this kind of stuff.
-
-Cheers
