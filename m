@@ -1,47 +1,48 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: strange hdparm results with serverworks and pata-serverworks
-Date: Wed, 25 Feb 2009 11:26:57 -0500
-Message-ID: <49A57151.1060206@rtr.ca>
-References: <49A30901.1@wpkg.org> <49A3F63A.2080805@rtr.ca> <49A43E73.6070705@wpkg.org> <49A4771F.5060802@rtr.ca> <49A512ED.9080706@wpkg.org>
+Subject: Re: [PATCH 01/06] sata_mv: cache frequently read registers
+Date: Wed, 25 Feb 2009 12:52:35 -0500
+Message-ID: <49A58563.50708@rtr.ca>
+References: <4994FF3D.90904@rtr.ca> <499A029A.1060101@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:46332 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:36486 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760929AbZBYQ1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2009 11:27:00 -0500
-In-Reply-To: <49A512ED.9080706@wpkg.org>
+	id S1752610AbZBYRwj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Feb 2009 12:52:39 -0500
+In-Reply-To: <499A029A.1060101@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tomasz Chmielewski wrote:
-> Mark Lord schrieb:
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Maintain a local (mv_port_priv) cache of frequently accessed registers,
+>> to avoid having to re-read them (very slow) on every transistion
+>> between EDMA and non-EDMA modes.  This speeds up things like
+>> flushing the drive write cache, and anything using basic DMA transfers.
+>>
+>> Signed-off-by: Mark Lord <mlord@pobox.com>
+>> -- 
+>>
+>> Resending without any changes from original.
 > 
->> Everything looks configured correctly, so the only explanations
->> for the slow (10/20MB/sec) speeds are the CPU/RAM, or other system 
->> activity.
+> ACK patches 1-6
 > 
-> It's a pretty powerful machine with plenty of RAM, no other activity.
+> however, they do not seem to apply to libata-dev.git#upstream, which 
+> already has several sata_mv changes in it.
 > 
-> 
->> As for the disparity in initial throughput between the master/slave 
->> drives,
->> you could try reversing the two drives (swap them on the cable if using
->> "cable select", otherwise rejumper the master/slave setup).  Then see 
->> if the
->> slow start follows the specific drive to its new position on the cable,
->> or if the master ("a") drive is always slower.
-> 
-> Yes, "reversing" the drives makes the master slower (at least initially).
-> 
-> Controller's "feature"?
+> Can you regenerate please?  No need to copy the list on resend, unless 
+> the patch content changes....
 ..
 
-Kinda looks that way.  Perhaps the driver isn't setting the master device
-up with optimal settings somewhere.. FIFO sizes or something ??
+I sent you the patches via email a week ago now,
+and no word back .. and no updates visible in libata-dev.
 
-Maybe somebody more familiar with serverworks stuff could have a look now.
+Did you get them?
 
+Thanks
+
+Mark
