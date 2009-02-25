@@ -1,81 +1,65 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: Bad module reference counter
-Date: Wed, 25 Feb 2009 12:00:42 +0100
-Message-ID: <200902251200.42517.stf_xl@wp.pl>
-References: <200902111032.59225.stf_xl@wp.pl> <200902201145.02308.stf_xl@wp.pl> <200902232336.35371.bzolnier@gmail.com>
+From: "Norman Diamond" <n0diamond@yahoo.co.jp>
+Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
+Date: Wed, 25 Feb 2009 20:43:44 +0900
+Message-ID: <26917692A9574F3A9363ED5253B42D2F@DIAMOND8600>
+References: <82AA7849DFA14958B6A74CB6ED0B591B@DIAMOND8600> <20090224171044.52e70a6b@dhcp-100-2-144.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:28375 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762311AbZBYLAz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 06:00:55 -0500
-In-Reply-To: <200902232336.35371.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from smtp05.mail.tnz.yahoo.co.jp ([203.216.246.68]:31413 "HELO
+	smtp05.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752846AbZBYLoS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 06:44:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Monday 23 February 2009 23:36:35 Bartlomiej Zolnierkiewicz napisa=C5=82=
-(a):
-> > Looks that using ->dev insted of ->kref will do the work. But perha=
-ps less
-> > intrusive fix, like check kref in ide_disk_put() would be better so=
-lution.
-> > I tested below patch and everythings is fine.
-> >=20
-> > diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-> > index 7857b20..598f21b 100644
-> > --- a/drivers/ide/ide-gd.c
-> > +++ b/drivers/ide/ide-gd.c
-> > @@ -48,8 +48,8 @@ static void ide_disk_put(struct ide_disk_obj *idk=
-p)
-> >  	ide_drive_t *drive =3D idkp->drive;
-> > =20
-> >  	mutex_lock(&ide_disk_ref_mutex);
-> > -	kref_put(&idkp->kref, ide_disk_release);
-> > -	ide_device_put(drive);
-> > +	if (!kref_put(&idkp->kref, ide_disk_release))
-> > +		ide_device_put(drive);
->=20
-> I worry that this just masks the problem as according to your previou=
-s
-> mail drive still can be already gone before ->flush in ide_gd_remove(=
-).
+Chuck Ebbert wrote:
+> Norman Diamond wrote:
+>
+>> Kernel 2.6.27.7 in Slax gets a panic or oops (I can't tell which).
+>> Of course I had to recompile the Slax kernel with CONFIG_IDE_TASK_IOCTL
+>> enabled.
+>> Kernel 2.6.19 in Knoppix handles the same HDIO_DRIVE_TASKFILE perfectly.
+>> 100% reproduced in four configurations: [WRITE_DMA_EXT and WRITE_DMA].
+>> (Of course the real purpose of the program will not be to write 126
+>> sectors starting at 0.)
+>>
+>> kernel BUG at block/cfg-iosched.c:2001!
+>> invalid opcode: 0000 [#1] SMP
+>> Pid: 3634, comm: pee3en Tainted: G        W (2.6.27.7 #1)
+>> EIP: 0060:[<c03be1a5>] EFLAGS: 00010046 CPU: 0
+>> EIP is at cfq_put_request+0x45/0x50
+>>  [<c03b20c0>] elv_put_request+0x10/0x20
+>>  [<c03b4441>] __blk_put_request+0x71/0x80
+>>  [<c03b4829>] blk_put_request+0x29/0x50
+>>  [<c045e308>] ide_raw_taskfile+0x78/0x90
+>>  [<c045f273>] ide_taskfile_ioctl+0x283/0x4c0
+>
+> block/cfq-iosched.c:
+> static void cfq_put_request(struct request *rq)
+> BUG_ON(!cfqq->allocated[rw]);     <================
+>
+> You should try 2.6.27.6 and 2.6.27.19 to see if they have the bug too.
 
-I checked my patch against all mentioned problems, but it doesn't matte=
-r now.
-=20
-> >  	mutex_unlock(&ide_disk_ref_mutex);
-> >  }
-> > =20
-> > If this patch is ok and dropping kref to dev is not planed currentl=
-y, maybe
-> > I'll send "official" patch with ide-gd fix and for other devices ty=
-pes.
->=20
-> Lets fix it fully.  The below patch together with previous ide_device=
-_put()
-> fix and drive_release_dev() one (from another mail) should make all p=
-roblems
-> go away...
->=20
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: fix refcounting in device drivers
->=20
-> During host driver module removal del_gendisk() results in a final
-> put on drive->gendev and freeing the drive by drive_release_dev().
->=20
-> Convert device drivers from using struct kref to use struct device
-> so device driver's object holds reference on ->gendev and prevents
-> drive from prematurely going away.
->=20
-> Also fix ->remove methods to not erroneously drop reference on a
-> host driver by using only put_device() instead of ide*_put().
->=20
-> Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+The latest kernel available from Slax with their build script is 2.6.27.8. 
+Today I modified their config to enable CONFIG_IDE_TASK_IOCTL and reproed 
+the bug with 2.6.27.8.
 
-Tested-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Tomorrow I will try to figure out if I can combine 2.6.27.19 with Slax's
+build script but I might not be able to figure it out.
+
+Does anyone know when this bug was added?  2.6.19 is too old for my needs,
+but the range 2.6.24 to 2.6.26 might be OK if they had taskfiles working.
+Maybe I should look for a Slax version that had a kernel from 2.6.24 or so,
+since I can probably customize it in a single day by now.  But if the bug
+was already present in 2.6.24 then it would be a waste of time. 
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
