@@ -1,56 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci fails with SATA DVD drive, IDE mode works
-Date: Thu, 26 Feb 2009 10:07:17 +0900
-Message-ID: <49A5EB45.6050202@kernel.org>
-References: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>	<499D2202.7070503@kernel.org>	<20090221181705.0b5f9ed3@dhcp-100-2-144.bos.redhat.com>	<49A4DFD4.3030206@kernel.org> <20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: ATA support for 4k sector size
+Date: Wed, 25 Feb 2009 21:50:43 -0500
+Message-ID: <20090226025043.GJ1363@mit.edu>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx> <49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60062 "EHLO hera.kernel.org"
+Received: from THUNK.ORG ([69.25.196.29]:41077 "EHLO thunker.thunk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753115AbZBZBIL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Feb 2009 20:08:11 -0500
-In-Reply-To: <20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>
+	id S1754763AbZBZCu5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Feb 2009 21:50:57 -0500
+Content-Disposition: inline
+In-Reply-To: <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-Hello,
-
-Chuck Ebbert wrote:
->> How did it go?
+On Wed, Feb 25, 2009 at 06:27:18PM -0500, Martin K. Petersen wrote:
 > 
-> I found another machine with the same chipset and a different ATAPI SATA
-> drive; that one works okay in ahci mode.
+> Because of 63-sector legacy problems a bunch of ATA vendors will
+> initially ship 512/4096 drives that are not naturally aligned.
+> I.e. logical sector 63 will be aligned on a 4KB hardware sector
+> boundary to overcome the misaligned default partitioning.
+> 
 
-Well, there's no way all ICH9Ms are broken, so I'm afraid 'the same
-chipset' is a tad bit too wide unless it was the same board/machine.
+Are we *sure* that this is what they plan to be doing?  Is there a way
+we can query the hardware to find out for sure what drives are doing
+what?
 
-> There are no messages at all between "EH complete" and the string of SCSI
-> error messages:
-...
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> ata2.00: cmd a0/01:00:00:00:02/00:00:00:00:00/a0 tag 0 dma 512 in
->          cdb a1 08 2e 00 00 00 00 00  40 ec 00 00 00 00 00 00
->          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata2.00: status: { DRDY }
-> ata2: hard resetting link
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata2.00: configured for MWDMA2
-> ata2: EH complete
+I'll note that Vista starts all new partitions at the 1MB boundary, so
+its filesystems will be naturally aligned.  As I mentioned in a recent blog
+entry:
 
-Here, BLANK has timed out but the device was recovered okay.
+http://thunk.org/tytso/blog/2009/02/20/aligning-filesystems-to-an-ssds-erase-block-size/
 
-> sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> sr 1:0:0:0: [sr0] Sense Key : Illegal Request [current] 
-> sr 1:0:0:0: [sr0] Add. Sense: Logical block address out of range
-> end_request: I/O error, dev sr0, sector 0
+... this is one place Vista is ahead of Linux.  So while Microsoft's
+market share has slipped, 85% of all new x86 machines still have some
+variant of Redmond-spawn installed on them, and with the advent of
+Windows 7 coming soon, and Microsoft making it harder and harder for
+vendors to ship machines upgraded to Windows XP, it
+seems... surprising... that new disks meant for Windows Vista or
+Windows 7 systems would be misaligned to start at logical sector 63.
 
-And after that, the media can't be read, so this one seems normal.
+						- Ted
 
-Thanks.
-
--- 
-tejun
