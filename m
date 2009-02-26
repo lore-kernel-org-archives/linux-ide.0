@@ -1,44 +1,60 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: ATA support for 4k sector size
-Date: Thu, 26 Feb 2009 00:16:00 -0500
-Message-ID: <yq1eixlg4mn.fsf@sermon.lab.mkp.net>
-References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
-	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
-	<20090226025043.GJ1363@mit.edu>
-	<20090226030735.GA16891@parisc-linux.org>
+From: "Norman Diamond" <n0diamond@yahoo.co.jp>
+Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
+Date: Thu, 26 Feb 2009 20:56:38 +0900
+Message-ID: <B2BE4BF16058416F88555755CB1823DF@DIAMOND8600>
+References: <82AA7849DFA14958B6A74CB6ED0B591B@DIAMOND8600> <26917692A9574F3A9363ED5253B42D2F@DIAMOND8600> <49A570DB.8090401@rtr.ca> <200902252035.05347.bzolnier@gmail.com> <DF79A3D50A1548A2A22EEFD769318266@DIAMOND8600> <49A5C9A5.20005@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="UTF-8";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:29007 "EHLO
-	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbZBZFRG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Feb 2009 00:17:06 -0500
-In-Reply-To: <20090226030735.GA16891@parisc-linux.org> (Matthew Wilcox's message of "Wed\, 25 Feb 2009 20\:07\:35 -0700")
+Received: from smtp06.mail.tnz.yahoo.co.jp ([203.216.246.69]:22447 "HELO
+	smtp06.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754436AbZBZL4z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Feb 2009 06:56:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
+To: Mark Lord <liml@rtr.ca>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
->>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
+Mark Lord wrote:
+> Norman Diamond wrote:
+>>
+>> Meanwhile I also can't help wondering, if Mark Lord has patched
+>> drivers/ide to make it work, why has he delayed submitting the patches?
+>
+> There's simply too much churn in drivers/ide for me to keep up with, and
+> my patches won't apply to kernels from the past year.
 
-Matthew> Lowest aligned logical block address=0
+OK!  For my present needs, a year-old kernel didn't need your patches.
 
-Matthew> This disagrees with Martin's assertion.
+This problem with 2.6.27.7 and 2.6.27.8 was solved by grading to 2.6.24.3.
+Slax 6.0.3 came with configuration files for 2.6.24.3, I edited the
+configuration to set CONFIG_IDE_TASK_IOCTL=y, and the result ran without
+crashing -- today anyway.  It still needs more testing.
 
-Quick answer from one of my contacts.  Desktop drives will indeed ship
-with an alignment of 1(*).  The alignment is hardwired at time of
-manufacture and can't be changed.
+This kind of solution, fixing a problem by upgrading to an older version, is
+something that we normally expect to pay for.  Usually we have to pay for
+that kind of software every time we buy a PC.  I'm well aware that this one
+came from volunteers, and I ought to contribute by finding where the bug was
+introduced, but sorry, I don't have that kind of free time.
 
-(*) I had to go back and reread the ATA spec to grok this.  READ
-CAPACITY(16) indicates the lowest naturally aligned LBA.  With LBA 63
-offset in play that would be LBA 7.
+> Drivers/ide is on the way out FAST now, and any new systems that still use
+> it are mostly based on older kernels, where patches like mine are
+> inappropriate for maintenance point releases.
 
-ATA, on the other hand, indicates how much LBA 0 is offset from the
-beginning of the first physical sector.  If LBA 63 is naturally aligned
-that means that LBA 0 is offset 512 bytes (physical sector 0 starts at
-LBA -1 if you will). Hence IDENTIFY DEVICE word 209 will contain 0x4001.
+Some are old systems that need their own maintenance, their maintenance
+ought to be accompanied by upgrading to newer kernels, and patches would be
+very highly appropriate for maintenance point releases.
 
-So you need to tweak your RC16 response a bit...
+> Libata should be used for any new setup that doesn't have a strict legacy
+> requirement now.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+90% agreed.  However, I've read that libata will never support add-on IDE
+boards. 
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
