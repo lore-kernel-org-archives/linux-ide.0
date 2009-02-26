@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: ATA support for 4k sector size
-Date: Wed, 25 Feb 2009 22:23:25 -0500
-Message-ID: <yq1myc9g9ua.fsf@sermon.lab.mkp.net>
+Date: Thu, 26 Feb 2009 00:16:00 -0500
+Message-ID: <yq1eixlg4mn.fsf@sermon.lab.mkp.net>
 References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
 	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
 	<20090226025043.GJ1363@mit.edu>
@@ -9,10 +9,10 @@ References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:51089 "EHLO
+Received: from rcsinet13.oracle.com ([148.87.113.125]:29007 "EHLO
 	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828AbZBZDYb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 22:24:31 -0500
+	with ESMTP id S1750908AbZBZFRG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Feb 2009 00:17:06 -0500
 In-Reply-To: <20090226030735.GA16891@parisc-linux.org> (Matthew Wilcox's message of "Wed\, 25 Feb 2009 20\:07\:35 -0700")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -25,15 +25,20 @@ Matthew> Lowest aligned logical block address=0
 
 Matthew> This disagrees with Martin's assertion.
 
-The original roadmap was to transition to 4KB sectors in 2006,
-coinciding with the Vista release.
+Quick answer from one of my contacts.  Desktop drives will indeed ship
+with an alignment of 1(*).  The alignment is hardwired at time of
+manufacture and can't be changed.
 
-Given how long this has taken (we're now talking ~2011 for GA) it may
-very well be that the alignment knobs will be unused because everybody
-will be using Vista or 7 by then.
+(*) I had to go back and reread the ATA spec to grok this.  READ
+CAPACITY(16) indicates the lowest naturally aligned LBA.  With LBA 63
+offset in play that would be LBA 7.
 
-That doesn't change the RAID array alignment problem, however.  And we
-need to prepare our partitioning tools to align correctly regardless.
+ATA, on the other hand, indicates how much LBA 0 is offset from the
+beginning of the first physical sector.  If LBA 63 is naturally aligned
+that means that LBA 0 is offset 512 bytes (physical sector 0 starts at
+LBA -1 if you will). Hence IDENTIFY DEVICE word 209 will contain 0x4001.
+
+So you need to tweak your RC16 response a bit...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
