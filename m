@@ -1,44 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: ATA support for 4k sector size
-Date: Wed, 25 Feb 2009 19:20:00 -0500
-Message-ID: <yq1fxi2gibz.fsf@sermon.lab.mkp.net>
-References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
-	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
-	<alpine.DEB.1.10.0902251549180.26625@asgard.lang.hm>
-	<yq1wsbegj1i.fsf@sermon.lab.mkp.net>
-	<alpine.DEB.1.10.0902251609490.26625@asgard.lang.hm>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ahci fails with SATA DVD drive, IDE mode works
+Date: Thu, 26 Feb 2009 10:07:17 +0900
+Message-ID: <49A5EB45.6050202@kernel.org>
+References: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>	<499D2202.7070503@kernel.org>	<20090221181705.0b5f9ed3@dhcp-100-2-144.bos.redhat.com>	<49A4DFD4.3030206@kernel.org> <20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:50742 "EHLO
-	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbZBZAUa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 19:20:30 -0500
-In-Reply-To: <alpine.DEB.1.10.0902251609490.26625@asgard.lang.hm> (david@lang.hm's message of "Wed\, 25 Feb 2009 16\:13\:42 -0800 \(PST\)")
+Received: from hera.kernel.org ([140.211.167.34]:60062 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753115AbZBZBIL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Feb 2009 20:08:11 -0500
+In-Reply-To: <20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: david@lang.hm
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: linux-ide@vger.kernel.org
 
->>>>> "david" == david  <david@lang.hm> writes:
+Hello,
 
-david> even if we can't get them to give us any info from the drive
-david> directly, we still want to allow the sysadmin to configure the
-david> use of the systems when they can find the info in other ways.
+Chuck Ebbert wrote:
+>> How did it go?
+> 
+> I found another machine with the same chipset and a different ATAPI SATA
+> drive; that one works okay in ahci mode.
 
-You can specify RAID parameters on the mkfs.xfs command line today.
-mke[234]fs have similar knobs.
+Well, there's no way all ICH9Ms are broken, so I'm afraid 'the same
+chipset' is a tad bit too wide unless it was the same board/machine.
 
+> There are no messages at all between "EH complete" and the string of SCSI
+> error messages:
+...
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> ata2.00: cmd a0/01:00:00:00:02/00:00:00:00:00/a0 tag 0 dma 512 in
+>          cdb a1 08 2e 00 00 00 00 00  40 ec 00 00 00 00 00 00
+>          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata2.00: status: { DRDY }
+> ata2: hard resetting link
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: configured for MWDMA2
+> ata2: EH complete
 
-david> if you have the smallest and largest I/O you can submit without a
-david> penalty and the alignment, isn't the optimal I/O size everything
-david> between these two? (or at least everything between these two may
-david> be close enough that defining an 'optimal' size may not be
-david> worthwhile)
+Here, BLANK has timed out but the device was recovered okay.
 
-These parameters come straight out of SCSI.  I described them wrong.
-maximum is the biggest I/O the device can handle, full stop.  Optimal is
-the preferred I/O size for the array.
+> sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+> sr 1:0:0:0: [sr0] Sense Key : Illegal Request [current] 
+> sr 1:0:0:0: [sr0] Add. Sense: Logical block address out of range
+> end_request: I/O error, dev sr0, sector 0
+
+And after that, the media can't be read, so this one seems normal.
+
+Thanks.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+tejun
