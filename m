@@ -1,35 +1,67 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: david@lang.hm
 Subject: Re: ATA support for 4k sector size
-Date: Wed, 25 Feb 2009 16:10:31 -0800
-Message-ID: <49A5DDF7.9070301@zytor.com>
-References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>	<49A5D76A.3010301@zytor.com> <yq11vtmhy0x.fsf@sermon.lab.mkp.net>	<49A5DAE7.3060409@zytor.com> <yq1skm2giwa.fsf@sermon.lab.mkp.net>
+Date: Wed, 25 Feb 2009 16:13:42 -0800 (PST)
+Message-ID: <alpine.DEB.1.10.0902251609490.26625@asgard.lang.hm>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx> <49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net> <alpine.DEB.1.10.0902251549180.26625@asgard.lang.hm> <yq1wsbegj1i.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:55306 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753691AbZBZAKw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2009 19:10:52 -0500
-In-Reply-To: <yq1skm2giwa.fsf@sermon.lab.mkp.net>
+Received: from mail.lang.hm ([64.81.33.126]:35160 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751855AbZBZAOH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Feb 2009 19:14:07 -0500
+In-Reply-To: <yq1wsbegj1i.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-Martin K. Petersen wrote:
-> 
-> hpa> Why one-time?
-> 
-> It's a compromise to avoid hours of low-level formatting before you can
-> use a drive.  New drives will come from the factory formatted in a
-> special way that can be switched instantaneously.  But once you start
-> writing you're stuck with it.
-> 
+On Wed, 25 Feb 2009, Martin K. Petersen wrote:
 
-That's ridiculously stupid.  All you need is an offset parameter, which 
-can be flipped at will.  Now, flipping it will obviously scramble all 
-data, but there is absolutely no reason why it shouldn't be possible to 
-instantaneously flip it back and forth.
+>>>>>> "david" == david  <david@lang.hm> writes:
+>
+>>> 512-byte logical / 512-byte hardware (current) 512-byte logical /
+>>> 4096-byte hardware (ATA, doing read-modify-write) 4096-byte logical /
+>>> 4096-byte hardware (SCSI initially, ATA later)
+>
+> david> add to this good support for SSDs
+>
+> david> ?? logical / 128K hardware
+>
+> david> or similar.
+>
+> Yep.  And that goes for RAID arrays too.
+>
+> For SCSI there some knobs we can query to get this information and my
+> alignment changes are using those (and they are in turn what Willy's
+> stuff hooks into).
+>
+> I've been lobbying the SSD vendors whose architecture is prone to
+> misalignment problems to propose a similar set of knobs for ATA.  But so
+> far it's just been a lot of talking.
 
-	-hpa
+even if we can't get them to give us any info from the drive directly, we 
+still want to allow the sysadmin to configure the use of the systems when 
+they can find the info in other ways.
+
+> My topology changes are a bit abstract in the sense that they expose:
+>
+> - smallest I/O you can submit without incurring a penalty (hw sector,
+>   raid chunk size)
+>
+> - optimal I/O size for the device in question
+>
+> - biggest I/O you can submit without incurring a penalty
+>
+> - alignment
+>
+> We can use these parameters to lay out partitions and filesystems
+> optimally.  Just like we currently do with XFS but implemented in a more
+> generic way that all filesystems can use.
+
+if you have the smallest and largest I/O you can submit without a penalty 
+and the alignment, isn't the optimal I/O size everything between these 
+two? (or at least everything between these two may be close enough that 
+defining an 'optimal' size may not be worthwhile)
+
+David Lang
