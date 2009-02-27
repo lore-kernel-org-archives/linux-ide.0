@@ -1,43 +1,90 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/10] ide: flags query macros
-Date: Fri, 27 Feb 2009 09:21:07 +0100
-Message-ID: <200902270921.08182.bzolnier@gmail.com>
-References: <1234699692-9452-1-git-send-email-petkovbb@gmail.com> <200902262235.58796.bzolnier@gmail.com> <20090227063822.GA26358@gollum.tnic>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] libata: fix dma_unmap_sg misuse
+Date: Fri, 27 Feb 2009 17:35:43 +0900
+Message-ID: <20090227173520W.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f178.google.com ([209.85.218.178]:46720 "EHLO
-	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126AbZB0IUK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Feb 2009 03:20:10 -0500
-In-Reply-To: <20090227063822.GA26358@gollum.tnic>
-Content-Disposition: inline
+Received: from sh.osrg.net ([192.16.179.4]:40989 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752062AbZB0Io3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Feb 2009 03:44:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, bzolnier@gmail.com, tj@kernel.org
 
-On Friday 27 February 2009, Borislav Petkov wrote:
+This is a repost of:
 
-[...]
+http://marc.info/?l=linux-ide&m=123484533504307&w=2
 
-> > BTW you may want to delay this patch after 2.6.30 as things should
-> > become much more peaceful then.
-> 
-> What exactly is the timeframe here? Do you want to have the updated
+I sent this 10 days ago but seems that I can't find this in linux-next
+yet. I guess that all the IOMMUs can handle this misuse for now so
+it's not urgent.
 
-Timeframe for 2.6.30 [1] or things becoming more peaceful [2]?
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] libata: fix dma_unmap_sg misuse
 
-[1] We're in -rc6 so it is probably two-three more weeks before -final
-    (then we have two weeks of merge window for draining ide tree queue).
+libata passes the returned value of dma_map_sg() to
+dma_unmap_sg(),which is the misuse of dma_unmap_sg().
 
-[2] I think that it will happen once we finish unification of ATAPI support.
+DMA-mapping.txt says:
 
-> version for the 2.6.31 merge window?
+To unmap a scatterlist, just call:
 
-That would be ideal from my POV.
+	pci_unmap_sg(pdev, sglist, nents, direction);
 
-Thanks,
-Bart
+Again, make sure DMA activity has already finished.
+
+PLEASE NOTE:  The 'nents' argument to the pci_unmap_sg call must be
+              the _same_ one you passed into the pci_map_sg call,
+	      it should _NOT_ be the 'count' value _returned_ from the
+              pci_map_sg call.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/libata-core.c |    4 ++--
+ include/linux/libata.h    |    1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 8167381..17a274a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4612,7 +4612,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
+ 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+ 
+ 	if (qc->n_elem)
+-		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
++		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
+ 
+ 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+ 	qc->sg = NULL;
+@@ -4727,7 +4727,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
+ 		return -1;
+ 
+ 	DPRINTK("%d sg elements mapped\n", n_elem);
+-
++	qc->orig_n_elem = qc->n_elem;
+ 	qc->n_elem = n_elem;
+ 	qc->flags |= ATA_QCFLAG_DMAMAP;
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c953e17..337d1bd 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -530,6 +530,7 @@ struct ata_queued_cmd {
+ 	unsigned long		flags;		/* ATA_QCFLAG_xxx */
+ 	unsigned int		tag;
+ 	unsigned int		n_elem;
++	unsigned int		orig_n_elem;
+ 
+ 	int			dma_dir;
+ 
+-- 
+1.6.0.6
+
