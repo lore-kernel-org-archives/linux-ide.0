@@ -1,70 +1,88 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: ATAPI question
-Date: Fri, 27 Feb 2009 21:08:54 -0600
-Message-ID: <49A8AAC6.2090201@gmail.com>
-References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
+Subject: Re: 2.6.28.7 boot problems
+Date: Fri, 27 Feb 2009 21:11:49 -0600
+Message-ID: <49A8AB75.9020006@gmail.com>
+References: <40f01080902251346v5f73ed43nacc07bf65c98a727@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:51388 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752681AbZB1DJH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Feb 2009 22:09:07 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1LdFZY-0000ap-2R
-	for linux-ide@vger.kernel.org; Sat, 28 Feb 2009 03:09:04 +0000
-Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 28 Feb 2009 03:09:04 +0000
-Received: from hancockrwd by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 28 Feb 2009 03:09:04 +0000
-In-Reply-To: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:45176 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101AbZB1DL5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Feb 2009 22:11:57 -0500
+Received: by ewy25 with SMTP id 25so1564283ewy.37
+        for <linux-ide@vger.kernel.org>; Fri, 27 Feb 2009 19:11:53 -0800 (PST)
+In-Reply-To: <40f01080902251346v5f73ed43nacc07bf65c98a727@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+To: Andrew Schepler <aschepler@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Foster, Doug F wrote:
-> I'm looking at the following Bugzilla sighting:  [Bug 429724] RHEL 5.4 periodic ATA error messages on Tolapai hardware.
+Andrew Schepler wrote:
+> Hi, and apologies if this list is an impolite place to ask for help.
+> (If not, where is better?)
 > 
-> I have reproduced the problem using these drives:  Plextor models PX-712 and PX-716 and Lite On model SHD-16S1S.
-> It occurs in AHCI mode only, not legacy mode.
-> Although I am working on an EP80579, it probably occurs on any AHCI controller.
+> I tried building myself a 2.6.28.7 Linux kernel, but the IDE drivers
+> seem not to be working.  My hard drive is IDE ATA.  CONFIG_IDE is
+> built into the kernel.  I've tried both with and without
+> CONFIG_IDE_GENERIC, but there's not much difference.  The root
+> partition is ext2 and ext2 is built into the kernel (but it looks like
+> the kernel's not even seeing any drives or partitions.)
 > 
-> This is a snippet from dmesg:
-> Jan 27 13:02:52 localhost kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> Jan 27 13:02:52 localhost kernel: ata2.00: cmd a0/00:00:00:08:00/00:00:00:00:00/a0 tag 0 pio 8 in
-> Jan 27 13:02:52 localhost kernel:          cdb 25 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-> Jan 27 13:02:52 localhost kernel:          res 40/00:03:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> Jan 27 13:02:52 localhost kernel: ata2.00: status: { DRDY }
-> Jan 27 13:02:53 localhost kernel: ata2: soft resetting link
-> Jan 27 13:02:53 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> Jan 27 13:02:53 localhost kernel: ata2.00: configured for UDMA/25
-> Jan 27 13:02:53 localhost kernel: ata2: EH complete
+> On failed 2.6.28.7 boot, I see the following relevant-looking lines.
+> I copied these by hand, so there might be a minor typo.  Yes, the
+> kernel lists no partitions after "available partitions:".
+> ide-gd driver 1.18
+> ide-cd driver 5.00
+> ide_generic: please use "probe_mask=0x3f" module parameter
+> ...
+> VFS: Cannot open root device "hda3" or unknown-block(0,0)
+> Please append a correct "root=" boot option; here are the available partitions:
+> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
 > 
-> Using a SATA analyzer, I find that on an INQUIRY (12h) ATAPI packet command, the device sets bit-6 (DRDY) and bit-4 (SERV) in the status register, and bits 0 (CoD) and 1 (IO) are set in the ATAPI Interrupt Reason Register (ATA Sector Count Register).  After SERVICE is flagged by the ATAPI device (and not serviced), it doesn't respond properly from then on.
+> Below is a grep excerpt from my .config, and then a successful dmesg
+> from kernel 2.6.17.  Can anyone guess what's going wrong?
+> 
+> Many thanks,
+> -- Andrew
+> 
+> $ grep -Ei 'ide|ata' /usr/src/linux-2.6.28.7/.config
+> # CONFIG_ATALK is not set
+> # CONFIG_PARIDE is not set
+> # CONFIG_ATA_OVER_ETH is not set
+> CONFIG_HAVE_IDE=y
+> CONFIG_IDE=y
+> # Please see Documentation/ide/ide.txt for help/info on IDE drives
+> CONFIG_IDE_ATAPI=y
+> # CONFIG_BLK_DEV_IDE_SATA is not set
+> CONFIG_IDE_GD=y
+> CONFIG_IDE_GD_ATA=y
+> CONFIG_IDE_GD_ATAPI=y
+> CONFIG_BLK_DEV_IDECD=y
+> CONFIG_BLK_DEV_IDECD_VERBOSE_ERRORS=y
+> # CONFIG_BLK_DEV_IDETAPE is not set
+> # CONFIG_BLK_DEV_IDESCSI is not set
+> # CONFIG_IDE_TASK_IOCTL is not set
+> CONFIG_IDE_PROC_FS=y
+> # IDE chipset support/bugfixes
+> CONFIG_IDE_GENERIC=y
+> CONFIG_BLK_DEV_IDEDMA_SFF=y
+> # PCI IDE chipsets support
+> CONFIG_BLK_DEV_IDEPCI=y
+> # CONFIG_IDEPCI_PCIBUS_ORDER is not set
+> CONFIG_BLK_DEV_IDEDMA_PCI=y
+> CONFIG_BLK_DEV_IDEDMA=y
+> CONFIG_ATA=y
+> # CONFIG_ATA_NONSTANDARD is not set
+> CONFIG_SATA_PMP=y
+> # CONFIG_SATA_AHCI is not set
+> # CONFIG_SATA_SIL24 is not set
+> CONFIG_ATA_SFF=y
+> ...
+> (the rest of the matching lines are not set)
 
-Bit 4 isn't SERV in this context, it's DRQ. (It's only SERV when TCQ is 
-in use, which it isn't.) It looks like this is a READ CAPACITY command 
-that's being issued by PIO. DRQ means the device expects to transfer 
-data - either to receive the CDB or send the response. Presumably that 
-didn't happen for some reason. Are you sure about both the C/D and I/O 
-bits being 1? That would mean command transfer to the host, which 
-doesn't make any sense.
-
-You're saying that DRQ never gets cleared after the INQUIRY command? 
-It's possible the device wanted to transfer more data than the PRD table 
-had room for. Not sure what AHCI ends up doing in this case. I'm CCing 
-Tejun who might know more..
-
-> 
-> Sections 5.7, 5.7.1, and 5.17 (overlapped commands) in the ATA Packet Interface for CD-ROMs specification (ATAPI-SFF8020i.pdf) seem to apply.  This functionality seems to be missing.  I would like to get some guidance as to where this functionality should be added.  I could either work with the appropriate maintainer on the details or take a crack at the code changes myself.  It would be a good learning experience for me, but I would like to collaborate with the appropriate Linux expert.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Sounds like you don't have the chipset-specific IDE driver enabled for 
+your hardware (I don't see any of them enabled in this list). I think 
+that IDE_GENERIC used to drive the controller in this case, but not 
+anymore, as it can only do so in a crappy, non-DMA way.
