@@ -1,43 +1,198 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata timeouts when stressing a Samsung HDD
-Date: Sun, 1 Mar 2009 20:28:19 +0000
-Message-ID: <20090301202819.45e50660@lxorguk.ukuu.org.uk>
-References: <20090202164053.4ecca9dd@dhcp-100-2-144.bos.redhat.com>
-	<49922A2D.508@kernel.org>
-	<49924F48.4000009@rtr.ca>
-	<20090211152908.383744cd@dhcp-100-2-144.bos.redhat.com>
-	<49934B20.4060206@rtr.ca>
-	<49934D24.1050204@garzik.org>
-	<4993A57D.6010107@gmail.com>
-	<499D7A4B.5010804@rtr.ca>
-	<499DFA33.8090009@kernel.org>
-	<499E1AD9.9020904@gmail.com>
-	<499E22FA.7030409@kernel.org>
-	<49AAE293.2050903@gmail.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Mysteriously slow writes SiI 3124
+Date: Sun, 01 Mar 2009 23:09:30 +0100
+Message-ID: <49AB079A.9090407@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38990 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753976AbZCAUby (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Mar 2009 15:31:54 -0500
-In-Reply-To: <49AAE293.2050903@gmail.com>
+Received: from arx.rabbit.us ([76.244.88.238]:42645 "EHLO arx.rabbit.us"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753438AbZCAWQW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Mar 2009 17:16:22 -0500
+Received: from [10.0.13.6] (unknown [10.0.13.6])
+	by arx.rabbit.us (Postfix) with ESMTP id 437DDD816C
+	for <linux-ide@vger.kernel.org>; Sun,  1 Mar 2009 17:09:36 -0500 (EST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> For some of these timeout issues I think it would make things a bit 
-> easier to diagnose, certainly.. With some controllers there might be a 
-> little bit of risk (nForce4 seems to be one of those twitchy ones, 
-> whether in ADMA mode or not, at least for command errors, possibly not 
-> for timeouts), however certainly for ones like AHCI which just store the 
-> D2H register FIS in memory, there's really no reason not to read it out..
+Hello,
 
-The timeout patches are not yet upstream because they needed a bit of
-further work for some controllers that subclass SFF but aren't very SFF
-so broke when the default timeout method was used. Thats all fixed now
-and waiting for the next update.
+I have a sil 3124 PCI-X SATA card with 4 drives attached to it.
+When I read simultaneously from all 4 drives, I get the expected
+~220MB/s combined read speed, limited by the presence of a 32bit
+card on the same bus (entire bus runs on 66mhz, mix of 64 and 32
+bit cards). When I write to the drives however I only get half of
+that ~106MB/s combined. Can someone shed some light?
 
-Alan
+All measurements are made on an idle system in single-user mode
+
+
+Combined read:
+root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd if="/dev/${d}2" of=/dev/null count=500 bs=1M & done
+[1] 30243
+[2] 30244
+[3] 30245
+[4] 30246
+root@Arzamas:~/tr# 500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 9.23146 s, 56.8 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 9.3649 s, 56.0 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 9.59152 s, 54.7 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 9.60045 s, 54.6 MB/s
+
+
+Combined write:
+root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd of="/dev/${d}2" if=/dev/zero count=500 bs=1M & done
+[1] 30239
+[2] 30240
+[3] 30241
+[4] 30242
+root@Arzamas:~/tr# 500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 19.4508 s, 27.0 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 19.6314 s, 26.7 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 19.7663 s, 26.5 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 19.7598 s, 26.5 MB/s
+
+
+Individual read (making sure disks are good):
+root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd if="/dev/${d}2" of=/dev/null count=500 bs=1M ; done
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.00963 s, 105 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.15979 s, 102 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.19258 s, 101 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.24153 s, 100 MB/s
+root@Arzamas:~/tr#
+
+
+Individual write:
+root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd of="/dev/${d}2" if=/dev/zero count=500 bs=1M ; done
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.15325 s, 102 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.36731 s, 97.7 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.24908 s, 99.9 MB/s
+500+0 records in
+500+0 records out
+524288000 bytes (524 MB) copied, 5.36189 s, 97.8 MB/s
+root@Arzamas:~/tr#
+
+
+Card:
+02:03.0 Mass storage controller: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller (rev 02)
+	Subsystem: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller
+	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV+ VGASnoop- ParErr+ Stepping+ SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 25
+	Region 0: Memory at fc5fd800 (64-bit, non-prefetchable) [size=128]
+	Region 2: Memory at fc5f0000 (64-bit, non-prefetchable) [size=32K]
+	Region 4: I/O ports at bc00 [size=16]
+	Expansion ROM at fc480000 [disabled] [size=512K]
+	Capabilities: [64] Power Management version 2
+		Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [40] PCI-X non-bridge device
+		Command: DPERE- ERO+ RBC=512 OST=12
+		Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=2048 DMOST=12 DMCRS=128 RSCEM- 266MHz- 533MHz-
+	Capabilities: [54] MSI: Mask- 64bit+ Count=1/1 Enable-
+		Address: 0000000000000000  Data: 0000
+	Kernel driver in use: sata_sil24
+
+
+Disks (excerpt from kernel bootup):
+sata_sil24 0000:02:03.0: version 1.1
+sata_sil24 0000:02:03.0: PCI INT A -> GSI 25 (level, low) -> IRQ 25
+scsi3 : sata_sil24
+scsi4 : sata_sil24
+scsi5 : sata_sil24
+scsi6 : sata_sil24
+ata3: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f0000 irq 25
+ata4: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f2000 irq 25
+ata5: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f4000 irq 25
+ata6: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f6000 irq 25
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
+ata3.00: ATA-8: ST3500320NS, SN05, max UDMA/133
+ata3.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata3.00: configured for UDMA/100
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
+ata4.00: ATA-8: ST3500320NS, SN05, max UDMA/133
+ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata4.00: configured for UDMA/100
+ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
+ata5.00: ATA-8: ST3500320NS, SN05, max UDMA/133
+ata5.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata5.00: configured for UDMA/100
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
+ata6.00: ATA-8: ST3500320NS, SN05, max UDMA/133
+ata6.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata6.00: configured for UDMA/100
+scsi 3:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
+sd 3:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 3:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1 sdb2 sdb3
+sd 3:0:0:0: [sdb] Attached SCSI disk
+scsi 4:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
+sd 4:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
+sd 4:0:0:0: [sdc] Write Protect is off
+sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 4:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
+sd 4:0:0:0: [sdc] Write Protect is off
+sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdc: sdc1 sdc2 sdc3
+sd 4:0:0:0: [sdc] Attached SCSI disk
+scsi 5:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
+sd 5:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 5:0:0:0: [sdd] Write Protect is off
+sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 5:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
+sd 5:0:0:0: [sdd] Write Protect is off
+sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdd: sdd1 sdd2 sdd3
+sd 5:0:0:0: [sdd] Attached SCSI disk
+scsi 6:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
+sd 6:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 6:0:0:0: [sde] Write Protect is off
+sd 6:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 6:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 6:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 6:0:0:0: [sde] Write Protect is off
+sd 6:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 6:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sde: sde1 sde2 sde3
+sd 6:0:0:0: [sde] Attached SCSI disk
