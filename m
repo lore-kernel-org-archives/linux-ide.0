@@ -1,63 +1,74 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Sun, 01 Mar 2009 05:06:29 -0600
-Message-ID: <49AA6C35.9080403@gmail.com>
-References: <82AA7849DFA14958B6A74CB6ED0B591B@DIAMOND8600> <26917692A9574F3A9363ED5253B42D2F@DIAMOND8600> <49A570DB.8090401@rtr.ca> <200902252035.05347.bzolnier@gmail.com> <DF79A3D50A1548A2A22EEFD769318266@DIAMOND8600> <49A5C9A5.20005@rtr.ca> <B2BE4BF16058416F88555755CB1823DF@DIAMOND8600> <49A8AC1A.1000900@gmail.com> <BB2D271BB5CF41EF91FCE9D3A0A1F2BB@DIAMOND8600>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ahci fails with SATA DVD drive, IDE mode works
+Date: Sun, 01 Mar 2009 21:26:33 +0900
+Message-ID: <49AA7EF9.7000306@kernel.org>
+References: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>	<499D2202.7070503@kernel.org>	<20090221181705.0b5f9ed3@dhcp-100-2-144.bos.redhat.com>	<49A4DFD4.3030206@kernel.org>	<20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>	<49A5EB45.6050202@kernel.org> <20090227175746.44acdbfa@dhcp-100-2-144.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:56290 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbZCALGf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Mar 2009 06:06:35 -0500
-Received: by gxk22 with SMTP id 22so3961170gxk.13
-        for <linux-ide@vger.kernel.org>; Sun, 01 Mar 2009 03:06:32 -0800 (PST)
-In-Reply-To: <BB2D271BB5CF41EF91FCE9D3A0A1F2BB@DIAMOND8600>
+Received: from hera.kernel.org ([140.211.167.34]:58252 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752273AbZCAM0b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Mar 2009 07:26:31 -0500
+In-Reply-To: <20090227175746.44acdbfa@dhcp-100-2-144.bos.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: Mark Lord <liml@rtr.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: linux-ide@vger.kernel.org
 
-Norman Diamond wrote:
-> Robert Hancock wrote:
->> Norman Diamond wrote:
->>> [attribution stolen:]
->>>
->>>> Libata should be used for any new setup that doesn't have a strict 
->>>> legacy requirement now.
->>>
->>> 90% agreed.  However, I've read that libata will never support add-on 
->>> IDE boards.
+Hello, Chuck.
+
+Chuck Ebbert wrote:
+> The other machine has what seems to be a "real" SATA DVD writer in it.
+> It reports udma5 as the connect speed. This one seems to be a PATA drive
+> with an internal SATA bridge and is connecting as mwdma2.
+
+Ah... that makes sense.  libata has problem with ATAPI devices
+connected over a SATA-PATA bridge.  Albert Lee tried to track it down
+a while ago but it never got resolved.  :-(
+
+Tracking things like this can be quite difficult.  Eh... having SATA
+tracer would be nice.  Oh well...
+
+>>> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>>> ata2.00: cmd a0/01:00:00:00:02/00:00:00:00:00/a0 tag 0 dma 512 in
+>>>          cdb a1 08 2e 00 00 00 00 00  40 ec 00 00 00 00 00 00
+>>>          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+>>> ata2.00: status: { DRDY }
+>>> ata2: hard resetting link
+>>> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>> ata2.00: configured for MWDMA2
+>>> ata2: EH complete
+>> Here, BLANK has timed out but the device was recovered okay.
 >>
->> Huh? It already does support most or all that one is likely to see..
 > 
-> That is good news then.
+> I ran 'hdparm -I' here. Why would it send BLANK to the drive??
+> (There was a 1.4 GB DVD-RW in the drive when I did that.)
+
+CDB 0xa1 is BLANK alright.  Is the problem reproducible?
+
+> Also there is no "applying bridge limits" message here when it resets
+> like there is when the system boots.
 > 
-> Last week when searching for articles about Slax and libata, I found 
-> various postings about methods that temporarily worked but no longer 
-> (for example there used to be a kernel boot parameter for the combined 
-> mode of some Intel chipsets, and there used to be a parameter to disable 
-> probing by ide_generic).  While not finding a way to get a particular 
-> chipset to be recognized as /dev/sda instead of /dev/hda, I also found 
-> other articles explaining various limitations of libata.  Some said that 
-> SATA is the priority for libata as it should be, but PATA was low 
-> priority with just enough effort to get it working with common legacy 
-> IDE controllers, and add-on IDE boards were zero priority.  My troubles 
-
-That's probably a fairly old article, not really the way things are today.
-
-> last week were with notebook PCs that didn't have add-on IDE cards, but 
-> I will also have to support add-on IDE cards.
+>>> sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+>>> sr 1:0:0:0: [sr0] Sense Key : Illegal Request [current] 
+>>> sr 1:0:0:0: [sr0] Add. Sense: Logical block address out of range
+>>> end_request: I/O error, dev sr0, sector 0
+>> And after that, the media can't be read, so this one seems normal.
+>>
 > 
-> If anyone here knows how to put libata in control of chipsets that could 
-> be claimed by either libata or legacy ide, please say.  As mentioned I 
-> found various postings by others that temporarily worked but no longer.  
-> It was kind of reassuring to see my program operate correctly under Slax 
-> 6.0.3 with my slight modification to Slax's config kernel 2.6.24.3 to 
-> enable taskfiles -- and then heartbreaking to see ordinary programs get 
-> 1.5 megabytes per second to the hard drive.
+> The media wasn't blanked -- rebooting lets me read it again.
+> 
+> Also, running 'hdparm -I' with no disk in the drive outputs:
+> 
+> /dev/sr0:
+>  HDIO_DRIVE_CMD(identify) failed: Invalid exchange
+> 
+> And strangely enough, I get the same message with a normal DVD disk in
+> the drive too...
 
-Likely easiest to just disable CONFIG_IDE in your kernel configuration 
-entirely. If you have two drivers compiled for the same hardware, there 
-isn't really a good way to force one or the other to be used.
+:-(
+
+-- 
+tejun
