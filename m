@@ -1,34 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Sun, 1 Mar 2009 01:16:27 +0000
-Message-ID: <20090301011627.3a1c5017@lxorguk.ukuu.org.uk>
-References: <82AA7849DFA14958B6A74CB6ED0B591B@DIAMOND8600>
-	<26917692A9574F3A9363ED5253B42D2F@DIAMOND8600>
-	<49A570DB.8090401@rtr.ca>
-	<200902252035.05347.bzolnier@gmail.com>
-	<DF79A3D50A1548A2A22EEFD769318266@DIAMOND8600>
-	<49A5C9A5.20005@rtr.ca>
-	<B2BE4BF16058416F88555755CB1823DF@DIAMOND8600>
-	<49A8AC1A.1000900@gmail.com>
-	<BB2D271BB5CF41EF91FCE9D3A0A1F2BB@DIAMOND8600>
+From: Andrew Schepler <aschepler@gmail.com>
+Subject: Re: 2.6.28.7 boot problems
+Date: Sat, 28 Feb 2009 20:57:57 -0500
+Message-ID: <40f01080902281757y1fc9be7dq710caea916652b53@mail.gmail.com>
+References: <40f01080902251346v5f73ed43nacc07bf65c98a727@mail.gmail.com>
+	 <49A8AB75.9020006@gmail.com>
+	 <40f01080902280827taf007cq613609fb42b9b24@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46311 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752694AbZCABQJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Feb 2009 20:16:09 -0500
-In-Reply-To: <BB2D271BB5CF41EF91FCE9D3A0A1F2BB@DIAMOND8600>
+Received: from yw-out-2324.google.com ([74.125.46.29]:31535 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755248AbZCAB6A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Feb 2009 20:58:00 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so1224511ywh.1
+        for <linux-ide@vger.kernel.org>; Sat, 28 Feb 2009 17:57:58 -0800 (PST)
+In-Reply-To: <40f01080902280827taf007cq613609fb42b9b24@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Mark Lord <liml@rtr.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: linux-ide@vger.kernel.org
 
-> If anyone here knows how to put libata in control of chipsets that could be 
-> claimed by either libata or legacy ide, please say.  As mentioned I found 
+> Now I'm going to go try some e2fsck -cc /dev/hda3 and/or badblocks -n
+> /dev/hda[12] to see if any disk problems turn up that way.
 
-Just compile in the libata drivers you need not the old IDE ones. Simple
-as that.
+No bad blocks found.
 
-Alan
+On closer inspection of the dmesg, it looks like those CRC errors only
+come up when the kernel is (attempting to?) set DMA modes, and never
+again.  So I don't know if I'm actually using DMA or not, but I now
+have a working, probably relatively safe, kernel.
+
+-- Andrew
