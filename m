@@ -1,47 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ATAPI question
-Date: Sun, 01 Mar 2009 21:51:48 +0900
-Message-ID: <49AA84E4.3050108@kernel.org>
-References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com> <49A8AAC6.2090201@gmail.com>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: [RFC][PATCH] sata_mv: harddisk activity led no longer responsive on QNAP TS-109
+Date: Sun, 1 Mar 2009 13:44:17 +0100
+Message-ID: <200903011344.18888.elendil@planet.nl>
+References: <200808261124.39282.elendil@planet.nl> <c70ff3ad0902240133o7558beeay563c89defd35e575@mail.gmail.com> <20090301075956.GA28039@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46152 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752414AbZCAMve (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Mar 2009 07:51:34 -0500
-In-Reply-To: <49A8AAC6.2090201@gmail.com>
+Received: from hpsmtp-eml17.KPNXCHANGE.COM ([213.75.38.117]:13473 "EHLO
+	hpsmtp-eml17.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752693AbZCAM7e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Mar 2009 07:59:34 -0500
+In-Reply-To: <20090301075956.GA28039@deprecation.cyrius.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: "Foster, Doug F" <doug.f.foster@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: saeed bishara <saeed.bishara@gmail.com>, Mark Lord <liml@rtr.ca>, linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
 
-Hello,
+On Sunday 01 March 2009, Martin Michlmayr wrote:
+> * saeed bishara <saeed.bishara@gmail.com> [2009-02-24 11:33]:
+> > What I think is that this issue is seen with the specific disk that
+> > you have, the chip blinks the LED depending on the BUSY bit status,
+> > and I suspect that with the disk you have does clear that bit
+> > immediately after receiving the command FIS, so the LED will be off,
+> > though the command is not completed yet, and this makes the led
+> > responsiveness differ that in NCQ-disabled mode.
+>
+> The LED issue was reported by two people on the QNAP forum the other
+> day.  I asked what disks they had and one has a WDC WD7500AACS-00D6B0
+> whereas the other one has a WDC WD10EADS-00L5B1.  Do you also use a
+> WDC disk, Frans?
 
-Robert Hancock wrote:
->> Using a SATA analyzer, I find that on an INQUIRY (12h) ATAPI packet
->> command, the device sets bit-6 (DRDY) and bit-4 (SERV) in the status
->> register, and bits 0 (CoD) and 1 (IO) are set in the ATAPI Interrupt
->> Reason Register (ATA Sector Count Register).  After SERVICE is flagged
->> by the ATAPI device (and not serviced), it doesn't respond properly
->> from then on.
-> 
-> Bit 4 isn't SERV in this context, it's DRQ. (It's only SERV when TCQ is
-> in use, which it isn't.) It looks like this is a READ CAPACITY command
-> that's being issued by PIO. DRQ means the device expects to transfer
-> data - either to receive the CDB or send the response. Presumably that
-> didn't happen for some reason. Are you sure about both the C/D and I/O
-> bits being 1? That would mean command transfer to the host, which
-> doesn't make any sense.
-> 
-> You're saying that DRQ never gets cleared after the INQUIRY command?
-> It's possible the device wanted to transfer more data than the PRD table
-> had room for. Not sure what AHCI ends up doing in this case. I'm CCing
-> Tejun who might know more..
+I always was rather doubtful of Saeed's analysis (with all due respect), 
+but it's good to see confirmed that the same problem manifests with other 
+disks too.
 
-libata always prepares for extra space for draining so I doubt that.
-Any chance you can post the traces?
+I have a completely different HD:
+Model Family:     Hitachi Deskstar T7K250 series
+Device Model:     HDT722516DLA380
+Firmware Version: V43OA91A
+User Capacity:    164,696,555,520 bytes
 
--- 
-tejun
+Cheers,
+FJP
