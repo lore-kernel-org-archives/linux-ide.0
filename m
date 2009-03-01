@@ -1,33 +1,40 @@
-From: Andrew Schepler <aschepler@gmail.com>
-Subject: Re: 2.6.28.7 boot problems
-Date: Sat, 28 Feb 2009 20:57:57 -0500
-Message-ID: <40f01080902281757y1fc9be7dq710caea916652b53@mail.gmail.com>
-References: <40f01080902251346v5f73ed43nacc07bf65c98a727@mail.gmail.com>
-	 <49A8AB75.9020006@gmail.com>
-	 <40f01080902280827taf007cq613609fb42b9b24@mail.gmail.com>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: Re: [RFC][PATCH] sata_mv: harddisk activity led no longer
+	responsive on QNAP TS-109
+Date: Sun, 1 Mar 2009 08:59:56 +0100
+Message-ID: <20090301075956.GA28039@deprecation.cyrius.com>
+References: <200808261124.39282.elendil@planet.nl> <200808261225.46315.elendil@planet.nl> <497B2C60.60608@rtr.ca> <200902240933.45874.elendil@planet.nl> <c70ff3ad0902240133o7558beeay563c89defd35e575@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:31535 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755248AbZCAB6A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Feb 2009 20:58:00 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so1224511ywh.1
-        for <linux-ide@vger.kernel.org>; Sat, 28 Feb 2009 17:57:58 -0800 (PST)
-In-Reply-To: <40f01080902280827taf007cq613609fb42b9b24@mail.gmail.com>
+Received: from sorrow.cyrius.com ([65.19.161.204]:58913 "EHLO
+	sorrow.cyrius.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777AbZCAIAK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Mar 2009 03:00:10 -0500
+Content-Disposition: inline
+In-Reply-To: <c70ff3ad0902240133o7558beeay563c89defd35e575@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: Frans Pop <elendil@planet.nl>, Mark Lord <liml@rtr.ca>, linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
 
-> Now I'm going to go try some e2fsck -cc /dev/hda3 and/or badblocks -n
-> /dev/hda[12] to see if any disk problems turn up that way.
+* saeed bishara <saeed.bishara@gmail.com> [2009-02-24 11:33]:
+> What I think is that this issue is seen with the specific disk that
+> you have, the chip blinks the LED depending on the BUSY bit status,
+> and I suspect that with the disk you have does clear that bit
+> immediately after receiving the command FIS, so the LED will be off,
+> though the command is not completed yet, and this makes the led
+> responsiveness differ that in NCQ-disabled mode.
 
-No bad blocks found.
+The LED issue was reported by two people on the QNAP forum the other
+day.  I asked what disks they had and one has a WDC WD7500AACS-00D6B0
+whereas the other one has a WDC WD10EADS-00L5B1.  Do you also use a
+WDC disk, Frans?
 
-On closer inspection of the dmesg, it looks like those CRC errors only
-come up when the kernel is (attempting to?) set DMA modes, and never
-again.  So I don't know if I'm actually using DMA or not, but I now
-have a working, probably relatively safe, kernel.
-
--- Andrew
+References:
+http://forum.qnap.com/viewtopic.php?f=147&t=1344&start=220#p55925
+http://forum.qnap.com/viewtopic.php?f=147&t=1344&start=220#p56027
+http://forum.qnap.com/viewtopic.php?f=147&t=1344&start=230#p56351
+-- 
+Martin Michlmayr
+http://www.cyrius.com/
