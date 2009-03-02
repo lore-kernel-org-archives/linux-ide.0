@@ -1,40 +1,51 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: ide_timer_expiry() - shouldn't 'wait' be int?
-Date: Mon, 02 Mar 2009 15:18:40 +0100
-Message-ID: <49ABEAC0.40407@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: ide_timer_expiry() - shouldn't 'wait' be int?
+Date: Mon, 02 Mar 2009 17:38:51 +0300
+Message-ID: <49ABEF7B.9080005@ru.mvista.com>
+References: <49ABEAC0.40407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:62264 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128AbZCBOSo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 09:18:44 -0500
-Received: by fxm24 with SMTP id 24so1996538fxm.37
-        for <linux-ide@vger.kernel.org>; Mon, 02 Mar 2009 06:18:41 -0800 (PST)
+Received: from gateway-1237.mvista.com ([63.81.120.155]:14550 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751630AbZCBOiT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 09:38:19 -0500
+In-Reply-To: <49ABEAC0.40407@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-vi drivers/ide/ide-io.c +906 and note:
+Roel Kluin wrote:
 
-void ide_timer_expiry (unsigned long data)
-{
-	ide_expiry_t *expiry = hwif->expiry;
-	...
-	unsigned long   wait = -1;
-		...
-		if (expiry) {
-			...
-			wait = expiry(drive);
-			if (wait > 0) { /* continue */
+> vi drivers/ide/ide-io.c +906 and note:
 
-also note that in include/linux/ide.h:883:
+> void ide_timer_expiry (unsigned long data)
+> {
+> 	ide_expiry_t *expiry = hwif->expiry;
+> 	...
+> 	unsigned long   wait = -1;
 
-typedef int (ide_expiry_t)(ide_drive_t *);
+    Hm, haven't nothiced that this is *unsigned*.
 
-doesn't this mean that expiry returns int, and wait therefore should
-be int as well?
+> 		...
+> 		if (expiry) {
+> 			...
+> 			wait = expiry(drive);
+> 			if (wait > 0) { /* continue */
 
-Roel
+> also note that in include/linux/ide.h:883:
+
+> typedef int (ide_expiry_t)(ide_drive_t *);
+
+> doesn't this mean that expiry returns int, and wait therefore should
+> be int as well?
+
+    It rather means that ide_expiry_t() should return unsigned.
+    However, you're right as ide_dma_timeout_retry() takes *int* as a 2nd 
+argument.
+
+> Roel
+
+MBR, Sergei
