@@ -1,198 +1,55 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Mysteriously slow writes SiI 3124
-Date: Sun, 01 Mar 2009 23:09:30 +0100
-Message-ID: <49AB079A.9090407@rabbit.us>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
+Date: Mon, 2 Mar 2009 09:24:34 +0900 (JST)
+Message-ID: <20090302002434.62707.qmail@web4109.mail.ogk.yahoo.co.jp>
+References: <49AA6C35.9080403@gmail.com>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-2022-jp
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from arx.rabbit.us ([76.244.88.238]:42645 "EHLO arx.rabbit.us"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753438AbZCAWQW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Mar 2009 17:16:22 -0500
-Received: from [10.0.13.6] (unknown [10.0.13.6])
-	by arx.rabbit.us (Postfix) with ESMTP id 437DDD816C
-	for <linux-ide@vger.kernel.org>; Sun,  1 Mar 2009 17:09:36 -0500 (EST)
+Received: from web4109.mail.ogk.yahoo.co.jp ([124.83.200.71]:41634 "HELO
+	web4109.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750900AbZCBAbQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Mar 2009 19:31:16 -0500
+In-Reply-To: <49AA6C35.9080403@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Mark Lord <liml@rtr.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, Robert Hancock <hancockrwd@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, n0diamond@yahoo.co.jp
 
-Hello,
+I will try building a kernel without legacy IDE drivers,
+but meanwhile here's the latest bug.
 
-I have a sil 3124 PCI-X SATA card with 4 drives attached to it.
-When I read simultaneously from all 4 drives, I get the expected
-~220MB/s combined read speed, limited by the presence of a 32bit
-card on the same bus (entire bus runs on 66mhz, mix of 64 and 32
-bit cards). When I write to the drives however I only get half of
-that ~106MB/s combined. Can someone shed some light?
+Knoppix 6.0.1 is built on kernel 2.6.28.4.  Legacy IDE
+drivers still claim /dev/hda and /dev/hdc (the Knoppix CD
+being on /dev/hdc).
 
-All measurements are made on an idle system in single-user mode
+In order to view part of a dump if it occurs, I typed the
+following boot command:
+knoppix 3 lang=en keyboard=jp106
 
+When I try to do a TASKFILE WRITE_DMA (LBA28), the process
+hangs.  No dump.  Ctrl+C and Ctrl+Z were ignored. 
+Ctrl+Alt+F2 switched to a second VT (by the way this no
+longer works if Knoppix 6.0.1 is booted to graphical
+mode).  The second VT responded at first.  Then tried to
+do a dd if=/dev/hda bs=512 count=5 | od, and the second VT
+hanged too.
 
-Combined read:
-root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd if="/dev/${d}2" of=/dev/null count=500 bs=1M & done
-[1] 30243
-[2] 30244
-[3] 30245
-[4] 30246
-root@Arzamas:~/tr# 500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 9.23146 s, 56.8 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 9.3649 s, 56.0 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 9.59152 s, 54.7 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 9.60045 s, 54.6 MB/s
+In the third VT, dmesg showed this error message:
+hda-intel: Invalid position buffer, using LPIB read method
+instead.
 
+Google found several threads where people are blaming this
+error message on audio drivers or wireless LAN drivers. 
+Some people are saying it was fixed somewhere earlier than
+2.6.28.4.  2.6.28.4 tells me it's not fixed, and the
+timing sure doesn't look like audio or wireless LAN.
 
-Combined write:
-root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd of="/dev/${d}2" if=/dev/zero count=500 bs=1M & done
-[1] 30239
-[2] 30240
-[3] 30241
-[4] 30242
-root@Arzamas:~/tr# 500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 19.4508 s, 27.0 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 19.6314 s, 26.7 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 19.7663 s, 26.5 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 19.7598 s, 26.5 MB/s
+I'll try building a kernel without legacy IDE drivers, but
+I wonder which kernel version to try.
 
 
-Individual read (making sure disks are good):
-root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd if="/dev/${d}2" of=/dev/null count=500 bs=1M ; done
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.00963 s, 105 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.15979 s, 102 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.19258 s, 101 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.24153 s, 100 MB/s
-root@Arzamas:~/tr#
-
-
-Individual write:
-root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd of="/dev/${d}2" if=/dev/zero count=500 bs=1M ; done
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.15325 s, 102 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.36731 s, 97.7 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.24908 s, 99.9 MB/s
-500+0 records in
-500+0 records out
-524288000 bytes (524 MB) copied, 5.36189 s, 97.8 MB/s
-root@Arzamas:~/tr#
-
-
-Card:
-02:03.0 Mass storage controller: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller (rev 02)
-	Subsystem: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller
-	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV+ VGASnoop- ParErr+ Stepping+ SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 64, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 25
-	Region 0: Memory at fc5fd800 (64-bit, non-prefetchable) [size=128]
-	Region 2: Memory at fc5f0000 (64-bit, non-prefetchable) [size=32K]
-	Region 4: I/O ports at bc00 [size=16]
-	Expansion ROM at fc480000 [disabled] [size=512K]
-	Capabilities: [64] Power Management version 2
-		Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [40] PCI-X non-bridge device
-		Command: DPERE- ERO+ RBC=512 OST=12
-		Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=2048 DMOST=12 DMCRS=128 RSCEM- 266MHz- 533MHz-
-	Capabilities: [54] MSI: Mask- 64bit+ Count=1/1 Enable-
-		Address: 0000000000000000  Data: 0000
-	Kernel driver in use: sata_sil24
-
-
-Disks (excerpt from kernel bootup):
-sata_sil24 0000:02:03.0: version 1.1
-sata_sil24 0000:02:03.0: PCI INT A -> GSI 25 (level, low) -> IRQ 25
-scsi3 : sata_sil24
-scsi4 : sata_sil24
-scsi5 : sata_sil24
-scsi6 : sata_sil24
-ata3: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f0000 irq 25
-ata4: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f2000 irq 25
-ata5: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f4000 irq 25
-ata6: SATA max UDMA/100 host m128@0xfc5fd800 port 0xfc5f6000 irq 25
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
-ata3.00: ATA-8: ST3500320NS, SN05, max UDMA/133
-ata3.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata3.00: configured for UDMA/100
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
-ata4.00: ATA-8: ST3500320NS, SN05, max UDMA/133
-ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata4.00: configured for UDMA/100
-ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
-ata5.00: ATA-8: ST3500320NS, SN05, max UDMA/133
-ata5.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata5.00: configured for UDMA/100
-ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
-ata6.00: ATA-8: ST3500320NS, SN05, max UDMA/133
-ata6.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata6.00: configured for UDMA/100
-scsi 3:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
-sd 3:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
-sd 3:0:0:0: [sdb] Write Protect is off
-sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 3:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
-sd 3:0:0:0: [sdb] Write Protect is off
-sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sdb: sdb1 sdb2 sdb3
-sd 3:0:0:0: [sdb] Attached SCSI disk
-scsi 4:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
-sd 4:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
-sd 4:0:0:0: [sdc] Write Protect is off
-sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 4:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
-sd 4:0:0:0: [sdc] Write Protect is off
-sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sdc: sdc1 sdc2 sdc3
-sd 4:0:0:0: [sdc] Attached SCSI disk
-scsi 5:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
-sd 5:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
-sd 5:0:0:0: [sdd] Write Protect is off
-sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 5:0:0:0: [sdd] 976773168 512-byte hardware sectors (500108 MB)
-sd 5:0:0:0: [sdd] Write Protect is off
-sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sdd: sdd1 sdd2 sdd3
-sd 5:0:0:0: [sdd] Attached SCSI disk
-scsi 6:0:0:0: Direct-Access     ATA      ST3500320NS      SN05 PQ: 0 ANSI: 5
-sd 6:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
-sd 6:0:0:0: [sde] Write Protect is off
-sd 6:0:0:0: [sde] Mode Sense: 00 3a 00 00
-sd 6:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 6:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
-sd 6:0:0:0: [sde] Write Protect is off
-sd 6:0:0:0: [sde] Mode Sense: 00 3a 00 00
-sd 6:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sde: sde1 sde2 sde3
-sd 6:0:0:0: [sde] Attached SCSI disk
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
