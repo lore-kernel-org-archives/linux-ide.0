@@ -1,61 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: ide_timer_expiry() - shouldn't 'wait' be int?
-Date: Mon, 02 Mar 2009 18:56:19 +0300
-Message-ID: <49AC01A3.4060803@ru.mvista.com>
-References: <49ABEAC0.40407@gmail.com> <200903021550.45608.bzolnier@gmail.com> <49ABFEB3.1080505@ru.mvista.com> <200903021651.23048.bzolnier@gmail.com>
+From: "Foster, Doug F" <doug.f.foster@intel.com>
+Subject: RE: ATAPI question
+Date: Mon, 2 Mar 2009 08:58:24 -0700
+Message-ID: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com>
+References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
+ <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:16262 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752611AbZCBPzr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Mar 2009 10:55:47 -0500
-In-Reply-To: <200903021651.23048.bzolnier@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:47195 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752069AbZCBP63 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 10:58:29 -0500
+In-Reply-To: <49AA84E4.3050108@kernel.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Foster, Doug F" <doug.f.foster@intel.com>
 
-Bartlomiej Zolnierkiewicz wrote:
+Yes, I would be glad to post the traces.  Is there a preferred location?  Otherwise, I can just post them to an Intel FTP server for download.
 
->>>>vi drivers/ide/ide-io.c +906 and note:
+-----Original Message-----
+From: Tejun Heo [mailto:tj@kernel.org]
+Sent: Sunday, March 01, 2009 5:52 AM
+To: Robert Hancock
+Cc: Foster, Doug F; linux-ide@vger.kernel.org
+Subject: Re: ATAPI question
 
->>>>void ide_timer_expiry (unsigned long data)
->>>>{
->>>>	ide_expiry_t *expiry = hwif->expiry;
->>>>	...
->>>>	unsigned long   wait = -1;
->>>>		...
->>>>		if (expiry) {
->>>>			...
->>>>			wait = expiry(drive);
->>>>			if (wait > 0) { /* continue */
+Hello,
 
->>>>also note that in include/linux/ide.h:883:
+Robert Hancock wrote:
+>> Using a SATA analyzer, I find that on an INQUIRY (12h) ATAPI packet
+>> command, the device sets bit-6 (DRDY) and bit-4 (SERV) in the status
+>> register, and bits 0 (CoD) and 1 (IO) are set in the ATAPI Interrupt
+>> Reason Register (ATA Sector Count Register).  After SERVICE is flagged
+>> by the ATAPI device (and not serviced), it doesn't respond properly
+>> from then on.
+>
+> Bit 4 isn't SERV in this context, it's DRQ. (It's only SERV when TCQ is
+> in use, which it isn't.) It looks like this is a READ CAPACITY command
+> that's being issued by PIO. DRQ means the device expects to transfer
+> data - either to receive the CDB or send the response. Presumably that
+> didn't happen for some reason. Are you sure about both the C/D and I/O
+> bits being 1? That would mean command transfer to the host, which
+> doesn't make any sense.
+>
+> You're saying that DRQ never gets cleared after the INQUIRY command?
+> It's possible the device wanted to transfer more data than the PRD table
+> had room for. Not sure what AHCI ends up doing in this case. I'm CCing
+> Tejun who might know more..
 
->>>>typedef int (ide_expiry_t)(ide_drive_t *);
+libata always prepares for extra space for draining so I doubt that.
+Any chance you can post the traces?
 
->>>>doesn't this mean that expiry returns int, and wait therefore should
->>>>be int as well?
-
->>>It does... and it seems like it could cause insanely long timeouts for:
-
->>>* ATA_DMA_ERR error in dma_timer_expiry()
-
->>>* commands without ->expiry in tc86c001_timer_expiry()
->>>  (TC86C001 IDE controller only)
-
->>>This is 2.6.29 material, care to make a patch?
-
->>    Er, it's not that bad as it gets cast back to *int* when calling 
->>ide_dma_timer_expiry().
-
-> This case yes, however look at "wait > 0" one:
-
-> On -1 returned from ->expiry code sets "rather" long timeouts
-> (4294967295/HZ on 32-bit...).
-
-    Ah... ignore me then. :-<
-
-MBR, Sergei
+--
+tejun
