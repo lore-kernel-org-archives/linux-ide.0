@@ -1,63 +1,55 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: ide_timer_expiry() - shouldn't 'wait' be int?
-Date: Mon, 2 Mar 2009 15:58:20 +0100
-Message-ID: <200903021558.20809.bzolnier@gmail.com>
-References: <49ABEAC0.40407@gmail.com> <49ABEF7B.9080005@ru.mvista.com>
+Date: Mon, 2 Mar 2009 15:50:45 +0100
+Message-ID: <200903021550.45608.bzolnier@gmail.com>
+References: <49ABEAC0.40407@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:48606 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543AbZCBO4t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 09:56:49 -0500
-Received: by fxm24 with SMTP id 24so2013143fxm.37
-        for <linux-ide@vger.kernel.org>; Mon, 02 Mar 2009 06:56:46 -0800 (PST)
-In-Reply-To: <49ABEF7B.9080005@ru.mvista.com>
+Received: from fg-out-1718.google.com ([72.14.220.157]:40652 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbZCBO4r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 09:56:47 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so952212fgg.17
+        for <linux-ide@vger.kernel.org>; Mon, 02 Mar 2009 06:56:44 -0800 (PST)
+In-Reply-To: <49ABEAC0.40407@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Monday 02 March 2009, Sergei Shtylyov wrote:
-> Roel Kluin wrote:
+On Monday 02 March 2009, Roel Kluin wrote:
+> vi drivers/ide/ide-io.c +906 and note:
 > 
-> > vi drivers/ide/ide-io.c +906 and note:
+> void ide_timer_expiry (unsigned long data)
+> {
+> 	ide_expiry_t *expiry = hwif->expiry;
+> 	...
+> 	unsigned long   wait = -1;
+> 		...
+> 		if (expiry) {
+> 			...
+> 			wait = expiry(drive);
+> 			if (wait > 0) { /* continue */
 > 
-> > void ide_timer_expiry (unsigned long data)
-> > {
-> > 	ide_expiry_t *expiry = hwif->expiry;
-> > 	...
-> > 	unsigned long   wait = -1;
+> also note that in include/linux/ide.h:883:
 > 
->     Hm, haven't nothiced that this is *unsigned*.
+> typedef int (ide_expiry_t)(ide_drive_t *);
 > 
-> > 		...
-> > 		if (expiry) {
-> > 			...
-> > 			wait = expiry(drive);
-> > 			if (wait > 0) { /* continue */
-> 
-> > also note that in include/linux/ide.h:883:
-> 
-> > typedef int (ide_expiry_t)(ide_drive_t *);
-> 
-> > doesn't this mean that expiry returns int, and wait therefore should
-> > be int as well?
-> 
->     It rather means that ide_expiry_t() should return unsigned.
+> doesn't this mean that expiry returns int, and wait therefore should
+> be int as well?
 
-Seconded.  Roel, could you also handle it?
+It does... and it seems like it could cause insanely long timeouts for:
 
-[ However since this is 2.6.30 stuff and there has been much work in
-  this area recently please base in top of linux-next or pata-2.6 tree. ]
+* ATA_DMA_ERR error in dma_timer_expiry()
 
->     However, you're right as ide_dma_timeout_retry() takes *int* as a 2nd 
-> argument.
+* commands without ->expiry in tc86c001_timer_expiry()
+  (TC86C001 IDE controller only)
 
-Though it works fine (by a luck :) we should also fix it while we're at it.
+This is 2.6.29 material, care to make a patch?
 
 Thanks,
 Bart
