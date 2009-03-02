@@ -1,26 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: ahci fails with SATA DVD drive, IDE mode works
-Date: Mon, 02 Mar 2009 08:02:10 -0500
-Message-ID: <49ABD8D2.6000504@rtr.ca>
-References: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>	<499D2202.7070503@kernel.org>	<20090221181705.0b5f9ed3@dhcp-100-2-144.bos.redhat.com>	<49A4DFD4.3030206@kernel.org>	<20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>	<49A5EB45.6050202@kernel.org> <20090227175746.44acdbfa@dhcp-100-2-144.bos.redhat.com> <49AA7EF9.7000306@kernel.org>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: ide_timer_expiry() - shouldn't 'wait' be int?
+Date: Mon, 02 Mar 2009 15:18:40 +0100
+Message-ID: <49ABEAC0.40407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:55498 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750730AbZCBNCO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Mar 2009 08:02:14 -0500
-In-Reply-To: <49AA7EF9.7000306@kernel.org>
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:62264 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbZCBOSo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 09:18:44 -0500
+Received: by fxm24 with SMTP id 24so1996538fxm.37
+        for <linux-ide@vger.kernel.org>; Mon, 02 Mar 2009 06:18:41 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Tejun Heo wrote:
-> Eh... having SATA tracer would be nice.  Oh well...
-..
+vi drivers/ide/ide-io.c +906 and note:
 
-I'm working on that.. but it will be a while yet.  :)
+void ide_timer_expiry (unsigned long data)
+{
+	ide_expiry_t *expiry = hwif->expiry;
+	...
+	unsigned long   wait = -1;
+		...
+		if (expiry) {
+			...
+			wait = expiry(drive);
+			if (wait > 0) { /* continue */
 
-Cheers
+also note that in include/linux/ide.h:883:
+
+typedef int (ide_expiry_t)(ide_drive_t *);
+
+doesn't this mean that expiry returns int, and wait therefore should
+be int as well?
+
+Roel
