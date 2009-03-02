@@ -1,60 +1,34 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Sun, 01 Mar 2009 20:38:05 -0600
-Message-ID: <49AB468D.6030506@gmail.com>
-References: <20090302002434.62707.qmail@web4109.mail.ogk.yahoo.co.jp>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Backplane mystery
+Date: Mon, 02 Mar 2009 17:46:14 +0900
+Message-ID: <49AB9CD6.1060404@kernel.org>
+References: <49A6B441.8010605@seiner.com> <49A6B683.9060806@rtr.ca> <49A8093A.1030401@seiner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:62349 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757351AbZCBCiN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Mar 2009 21:38:13 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so483076eya.37
-        for <linux-ide@vger.kernel.org>; Sun, 01 Mar 2009 18:38:10 -0800 (PST)
-In-Reply-To: <20090302002434.62707.qmail@web4109.mail.ogk.yahoo.co.jp>
+Received: from hera.kernel.org ([140.211.167.34]:53304 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751873AbZCBIp5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Mar 2009 03:45:57 -0500
+In-Reply-To: <49A8093A.1030401@seiner.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: n0diamond@yahoo.co.jp
-Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, Jens Axboe <jens.axboe@oracle.com>
+To: Yan Seiner <yan@seiner.com>
+Cc: linux-ide@vger.kernel.org
 
-Norman Diamond wrote:
-> I will try building a kernel without legacy IDE drivers,
-> but meanwhile here's the latest bug.
+Yan Seiner wrote:
+> [   82.533526] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> [   82.533606] ata3: link online but device misclassified, retrying
+> [   82.533686] ata3: reset failed (errno=-11), retrying in 9 secs
 > 
-> Knoppix 6.0.1 is built on kernel 2.6.28.4.  Legacy IDE
-> drivers still claim /dev/hda and /dev/hdc (the Knoppix CD
-> being on /dev/hdc).
-> 
-> In order to view part of a dump if it occurs, I typed the
-> following boot command:
-> knoppix 3 lang=en keyboard=jp106
-> 
-> When I try to do a TASKFILE WRITE_DMA (LBA28), the process
-> hangs.  No dump.  Ctrl+C and Ctrl+Z were ignored. 
-> Ctrl+Alt+F2 switched to a second VT (by the way this no
-> longer works if Knoppix 6.0.1 is booted to graphical
-> mode).  The second VT responded at first.  Then tried to
-> do a dd if=/dev/hda bs=512 count=5 | od, and the second VT
-> hanged too.
-> 
-> In the third VT, dmesg showed this error message:
-> hda-intel: Invalid position buffer, using LPIB read method
-> instead.
-> 
-> Google found several threads where people are blaming this
-> error message on audio drivers or wireless LAN drivers. 
-> Some people are saying it was fixed somewhere earlier than
-> 2.6.28.4.  2.6.28.4 tells me it's not fixed, and the
-> timing sure doesn't look like audio or wireless LAN.
+> Is there some way to be more forceful with the reset?  I suspect one of
+> the port multiplier boards is bad at this point.  Is there some way to
+> force a hard reset from user space?  What can I from userspace short of
+> hitting the thing with a hammer?
 
-I'm guessing that's a symptom and not a cause, if the IDE driver is
-causing some kind of partial lockup then that could be messing with the
-audio driver..
+ATA already uses hardreset.  You can trigger it by echoing "- - -" to
+/sys/class/scsi_host/hostN/scan but I doubt it would do any good.  :-(
 
-> 
-> I'll try building a kernel without legacy IDE drivers, but
-> I wonder which kernel version to try.
-
-Normally latest is best..
+-- 
+tejun
