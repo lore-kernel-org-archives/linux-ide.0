@@ -1,58 +1,65 @@
-From: "Foster, Doug F" <doug.f.foster@intel.com>
-Subject: RE: ATAPI question
-Date: Mon, 2 Mar 2009 08:58:24 -0700
-Message-ID: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com>
-References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
- <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ide_timer_expiry() - shouldn't 'wait' be int?
+Date: Mon, 2 Mar 2009 17:15:53 +0100
+Message-ID: <200903021715.53699.bzolnier@gmail.com>
+References: <49ABEAC0.40407@gmail.com> <49ABFF0D.2070600@ru.mvista.com> <200903021651.01867.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47195 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752069AbZCBP63 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 10:58:29 -0500
-In-Reply-To: <49AA84E4.3050108@kernel.org>
-Content-Language: en-US
+Received: from mail-bw0-f178.google.com ([209.85.218.178]:60452 "EHLO
+	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbZCBQOO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2009 11:14:14 -0500
+Received: by bwz26 with SMTP id 26so1995091bwz.37
+        for <linux-ide@vger.kernel.org>; Mon, 02 Mar 2009 08:14:11 -0800 (PST)
+In-Reply-To: <200903021651.01867.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Foster, Doug F" <doug.f.foster@intel.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Roel Kluin <roel.kluin@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Yes, I would be glad to post the traces.  Is there a preferred location?  Otherwise, I can just post them to an Intel FTP server for download.
+On Monday 02 March 2009, Bartlomiej Zolnierkiewicz wrote:
+> On Monday 02 March 2009, Sergei Shtylyov wrote:
+> > Hello, I wrote:
+> > 
+> > >> vi drivers/ide/ide-io.c +906 and note:
+> > 
+> > >> void ide_timer_expiry (unsigned long data)
+> > >> {
+> > >>     ide_expiry_t *expiry = hwif->expiry;
+> > >>     ...
+> > >>     unsigned long   wait = -1;
+> > 
+> > >    Hm, haven't nothiced that this is *unsigned*.
+> > 
+> > >>         ...
+> > >>         if (expiry) {
+> > >>             ...
+> > >>             wait = expiry(drive);
+> > >>             if (wait > 0) { /* continue */
+> > 
+> > >> also note that in include/linux/ide.h:883:
+> > 
+> > >> typedef int (ide_expiry_t)(ide_drive_t *);
+> > 
+> > >> doesn't this mean that expiry returns int, and wait therefore should
+> > >> be int as well?
+> > 
+> > >    It rather means that ide_expiry_t() should return unsigned.
+> > 
+> >     Er, not really, as it can return -1 too.
+> 
+> It can just return 0 instead.
 
------Original Message-----
-From: Tejun Heo [mailto:tj@kernel.org]
-Sent: Sunday, March 01, 2009 5:52 AM
-To: Robert Hancock
-Cc: Foster, Doug F; linux-ide@vger.kernel.org
-Subject: Re: ATAPI question
+This time I got confused.  ide_dma_timeout_retry() takes different actions
+depending on error == -1 and error == 0.
 
-Hello,
+[ BTW I worked on unifying those cases so ->dma_test_irq call can be moved
+  out from ide_dma_timeout_retry() to ide_timer_expiry() (=> it can be later
+  merged with ->expiry tests)... ]
 
-Robert Hancock wrote:
->> Using a SATA analyzer, I find that on an INQUIRY (12h) ATAPI packet
->> command, the device sets bit-6 (DRDY) and bit-4 (SERV) in the status
->> register, and bits 0 (CoD) and 1 (IO) are set in the ATAPI Interrupt
->> Reason Register (ATA Sector Count Register).  After SERVICE is flagged
->> by the ATAPI device (and not serviced), it doesn't respond properly
->> from then on.
->
-> Bit 4 isn't SERV in this context, it's DRQ. (It's only SERV when TCQ is
-> in use, which it isn't.) It looks like this is a READ CAPACITY command
-> that's being issued by PIO. DRQ means the device expects to transfer
-> data - either to receive the CDB or send the response. Presumably that
-> didn't happen for some reason. Are you sure about both the C/D and I/O
-> bits being 1? That would mean command transfer to the host, which
-> doesn't make any sense.
->
-> You're saying that DRQ never gets cleared after the INQUIRY command?
-> It's possible the device wanted to transfer more data than the PRD table
-> had room for. Not sure what AHCI ends up doing in this case. I'm CCing
-> Tejun who might know more..
-
-libata always prepares for extra space for draining so I doubt that.
-Any chance you can post the traces?
-
---
-tejun
+Thanks,
+Bart
