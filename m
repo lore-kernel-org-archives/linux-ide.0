@@ -1,33 +1,70 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA "target mode" (or "Channel-to-Channel" comm mode)
-Date: Tue, 03 Mar 2009 11:38:06 -0500
-Message-ID: <49AD5CEE.4090303@pobox.com>
-References: <49AD34F4.8090008@rtr.ca> <49AD3BA5.3080603@pobox.com>	 <49AD409F.6040102@rtr.ca> <1236096972.3263.12.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/2] libata: add CFA specific identify data words
+Date: Tue, 3 Mar 2009 21:29:29 +0400
+Message-ID: <200903032029.29073.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57664 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757161AbZCCQiT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Mar 2009 11:38:19 -0500
-In-Reply-To: <1236096972.3263.12.camel@localhost.localdomain>
+Received: from [213.79.90.228] ([213.79.90.228]:41186 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753561AbZCCR25 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2009 12:28:57 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
 
-James Bottomley wrote:
-> Yes, but SG_IO began life as being entirely SCSI specific, but it's now
-> the block packet infrastructure.  I don't think anyone has an objection
-> to the SCSI target infrastructure becoming block target
-> infrastructure ... the fields can be made optional or more generic to
-> further this.  Probably it should speak a generic packet with a protocol
-> identifier and let the user space sort out the details.
+Declare and use constants for CFA specific identify data words 162 and 163.
 
-Agreed...
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-	Jeff
+---
+This patch is against the current pata-2.6 series. I'd prefer that Bart merged
+it thru his tree as my next patch adding CF mode support to IDE depends on it.
 
+ drivers/ata/libata-core.c |    7 ++++---
+ include/linux/ata.h       |    2 ++
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
+Index: linux-2.6/drivers/ata/libata-core.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata-core.c
++++ linux-2.6/drivers/ata/libata-core.c
+@@ -1650,8 +1650,8 @@ unsigned long ata_id_xfermask(const u16 
+ 		/*
+ 		 *	Process compact flash extended modes
+ 		 */
+-		int pio = id[163] & 0x7;
+-		int dma = (id[163] >> 3) & 7;
++		int pio = (id[ATA_ID_CFA_MODES] >> 0) & 0x7;
++		int dma = (id[ATA_ID_CFA_MODES] >> 3) & 0x7;
+ 
+ 		if (pio)
+ 			pio_mask |= (1 << 5);
+@@ -2408,7 +2408,8 @@ int ata_dev_configure(struct ata_device 
+ 	/* ATA-specific feature tests */
+ 	if (dev->class == ATA_DEV_ATA) {
+ 		if (ata_id_is_cfa(id)) {
+-			if (id[162] & 1) /* CPRM may make this media unusable */
++			/* CPRM may make this media unusable */
++			if (id[ATA_ID_CFA_KEY_MGMT] & 1)
+ 				ata_dev_printk(dev, KERN_WARNING,
+ 					       "supports DRM functions and may "
+ 					       "not be fully accessable.\n");
+Index: linux-2.6/include/linux/ata.h
+===================================================================
+--- linux-2.6.orig/include/linux/ata.h
++++ linux-2.6/include/linux/ata.h
+@@ -89,6 +89,8 @@ enum {
+ 	ATA_ID_DLF		= 128,
+ 	ATA_ID_CSFO		= 129,
+ 	ATA_ID_CFA_POWER	= 160,
++	ATA_ID_CFA_KEY_MGMT	= 162,
++	ATA_ID_CFA_MODES	= 163,
+ 	ATA_ID_ROT_SPEED	= 217,
+ 	ATA_ID_PIO4		= (1 << 1),
+ 
 
