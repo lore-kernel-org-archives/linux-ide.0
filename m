@@ -1,57 +1,44 @@
-From: "Norman Diamond" <n0diamond@yahoo.co.jp>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Tue, 3 Mar 2009 20:44:49 +0900
-Message-ID: <A1CD73CEEE9F4B0C8020D11EA243D460@DIAMOND8600>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] pata-rb532-cf: platform_get_irq() failure ignored
+Date: Tue, 03 Mar 2009 14:04:26 +0100
+Message-ID: <49AD2ADA.5030109@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-2022-jp";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp08.mail.tnz.yahoo.co.jp ([203.216.226.136]:34888 "HELO
-	smtp08.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752617AbZCCMnZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2009 07:43:25 -0500
+Received: from nf-out-0910.google.com ([64.233.182.186]:14175 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754364AbZCCNE3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2009 08:04:29 -0500
+Received: by nf-out-0910.google.com with SMTP id d21so561228nfb.21
+        for <linux-ide@vger.kernel.org>; Tue, 03 Mar 2009 05:04:26 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Mark Lord <liml@rtr.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Robert Hancock <hancockrwd@gmail.com>
+To: jgarzik@redhat.com
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-I (Norman Diamond) wrote:
+------------------------------>8-------------8<---------------------------------
+platform_get_irq() can return -ENXIO, but since 'irq' is an unsigned int, it
+does not show when the IRQ resource wasn't found.
 
-> Well, it turns out that 2.6.24.3 doesn't work either.  Sometimes
-> HDIO_DRIVE_TASKFILE doesn't just hang a process without a dump, sometimes
-> it hangs other stuff too.  This time I could still switch VT's (after
-> booting Slax to text mode) but couldn't type the name "root" to log in.
-
-Sorry, that one was my fault.
-
-> So does this mean that some part of HDIO_DRIVE_TASKFILE doesn't want to
-> believe the flags I set to use or not use the HOB registers?
-
-No, that problem doesn't occur (in 2.6.24.3 anyway).
-
-WRITE_DMA doesn't work very well when DMA isn't enabled on the drive.  I
-wonder why there was such a widespread hang but not complete hang.  I can
-imagine the driver not checking because the caller is responsible for the
-contents of the taskfile, but I would have expected the drive to return an
-error and the driver to push the error back up, instead of hanging.  Anyway 
-it was my fault.
-
-This unfortunate case was on a Dell Latitude D820 with an Intel ICH7M
-chipset.  The hard drive is SATA and I don't know the interface of the DVD
-drive, but Dell's BIOS sets the ICH7M to present a PATA interface with no
-option to change it.  The hard drive gets /dev/hda, the DVD drive gets
-/dev/hdc, DMA is disabled, and hdparm can't enable DMA on the hard drive.
-Google showed me lots of complaints from people who couldn't enable DMA on
-the DVD drive but it looks like I'm the only one who couldn't enable DMA on
-the hard drive.  Putting hda=noprobe in the boot command line let the hard
-drive become /dev/sda and speed up by a factor of 40.
-
-I understand libata is the biggest answer.  I hope it really handles
-everything but that's going to take a lot of testing to confirm.
-
---------------------------------------
-Power up the Internet with Yahoo! Toolbar.
-http://pr.mail.yahoo.co.jp/toolbar/
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index ebfcda2..fe8178c 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -173,11 +173,12 @@ static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	irq = platform_get_irq(pdev, 0);
+-	if (irq <= 0) {
++	ret = platform_get_irq(pdev, 0);
++	if (ret <= 0) {
+ 		dev_err(&pdev->dev, "no IRQ resource found\n");
+ 		return -ENOENT;
+ 	}
++	irq = ret;
+ 
+ 	gpio = irq_to_gpio(irq);
+ 	if (gpio < 0) {
