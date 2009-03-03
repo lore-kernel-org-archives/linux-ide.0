@@ -1,126 +1,57 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ide: identify data word 53 bit 1 doesn't cover words 62 and 63 (take 2)
-Date: Tue, 3 Mar 2009 15:04:45 +0400
-Message-ID: <200903031404.45443.sshtylyov@ru.mvista.com>
+From: "Norman Diamond" <n0diamond@yahoo.co.jp>
+Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
+Date: Tue, 3 Mar 2009 20:44:49 +0900
+Message-ID: <A1CD73CEEE9F4B0C8020D11EA243D460@DIAMOND8600>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	format=flowed;
+	charset="iso-2022-jp";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.79.90.228] ([213.79.90.228]:40440 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750728AbZCCLEN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2009 06:04:13 -0500
-Content-Disposition: inline
+Received: from smtp08.mail.tnz.yahoo.co.jp ([203.216.226.136]:34888 "HELO
+	smtp08.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752617AbZCCMnZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2009 07:43:25 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Mark Lord <liml@rtr.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Robert Hancock <hancockrwd@gmail.com>
 
-The IDE code assumed for years that the bit 1 of the identify data word 53 also
-covers the validity of the SW/MW DMA information in words 62 and 63, but it has
-always covered only words 64 thru 70, with words 62 and 63 being defined in the
-original ATA spec, not in ATA-2...
+I (Norman Diamond) wrote:
 
-This fix however should only concern *very* old hard disks and rather old CF
-cards...
+> Well, it turns out that 2.6.24.3 doesn't work either.  Sometimes
+> HDIO_DRIVE_TASKFILE doesn't just hang a process without a dump, sometimes
+> it hangs other stuff too.  This time I could still switch VT's (after
+> booting Slax to text mode) but couldn't type the name "root" to log in.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Sorry, that one was my fault.
 
----
-This patch is against the recent Linus' tree...
+> So does this mean that some part of HDIO_DRIVE_TASKFILE doesn't want to
+> believe the flags I set to use or not use the HOB registers?
 
- drivers/ide/ide-dma-sff.c |    7 +++----
- drivers/ide/ide-dma.c     |   32 ++++++++++++++------------------
- 2 files changed, 17 insertions(+), 22 deletions(-)
+No, that problem doesn't occur (in 2.6.24.3 anyway).
 
-Index: linux-2.6/drivers/ide/ide-dma-sff.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-dma-sff.c
-+++ linux-2.6/drivers/ide/ide-dma-sff.c
-@@ -38,10 +38,9 @@ int config_drive_for_dma(ide_drive_t *dr
- 	 * Enable DMA on any drive that has mode2 DMA
- 	 * (multi or single) enabled
- 	 */
--	if (id[ATA_ID_FIELD_VALID] & 2)	/* regular DMA */
--		if ((id[ATA_ID_MWDMA_MODES] & 0x404) == 0x404 ||
--		    (id[ATA_ID_SWDMA_MODES] & 0x404) == 0x404)
--			return 1;
-+	if ((id[ATA_ID_MWDMA_MODES] & 0x404) == 0x404 ||
-+	    (id[ATA_ID_SWDMA_MODES] & 0x404) == 0x404)
-+		return 1;
- 
- 	/* Consult the list of known "good" drives */
- 	if (ide_dma_good_drive(drive))
-Index: linux-2.6/drivers/ide/ide-dma.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-dma.c
-+++ linux-2.6/drivers/ide/ide-dma.c
-@@ -238,12 +238,11 @@ static unsigned int ide_get_mode_mask(id
- 	case XFER_UDMA_0:
- 		if ((id[ATA_ID_FIELD_VALID] & 4) == 0)
- 			break;
--
-+		mask = id[ATA_ID_UDMA_MODES];
- 		if (port_ops && port_ops->udma_filter)
--			mask = port_ops->udma_filter(drive);
-+			mask &= port_ops->udma_filter(drive);
- 		else
--			mask = hwif->ultra_mask;
--		mask &= id[ATA_ID_UDMA_MODES];
-+			mask &= hwif->ultra_mask;
- 
- 		/*
- 		 * avoid false cable warning from eighty_ninty_three()
-@@ -254,18 +253,15 @@ static unsigned int ide_get_mode_mask(id
- 		}
- 		break;
- 	case XFER_MW_DMA_0:
--		if ((id[ATA_ID_FIELD_VALID] & 2) == 0)
--			break;
-+		mask = id[ATA_ID_MWDMA_MODES];
- 		if (port_ops && port_ops->mdma_filter)
--			mask = port_ops->mdma_filter(drive);
-+			mask &= port_ops->mdma_filter(drive);
- 		else
--			mask = hwif->mwdma_mask;
--		mask &= id[ATA_ID_MWDMA_MODES];
-+			mask &= hwif->mwdma_mask;
- 		break;
- 	case XFER_SW_DMA_0:
--		if (id[ATA_ID_FIELD_VALID] & 2) {
--			mask = id[ATA_ID_SWDMA_MODES] & hwif->swdma_mask;
--		} else if (id[ATA_ID_OLD_DMA_MODES] >> 8) {
-+		mask = id[ATA_ID_SWDMA_MODES];
-+		if (!(mask & ATA_SWDMA2) && (id[ATA_ID_OLD_DMA_MODES] >> 8)) {
- 			u8 mode = id[ATA_ID_OLD_DMA_MODES] >> 8;
- 
- 			/*
-@@ -273,8 +269,9 @@ static unsigned int ide_get_mode_mask(id
- 			 * (the maximum allowed mode is XFER_SW_DMA_2)
- 			 */
- 			if (mode <= 2)
--				mask = ((2 << mode) - 1) & hwif->swdma_mask;
-+				mask = (2 << mode) - 1;
- 		}
-+		mask &= hwif->swdma_mask;
- 		break;
- 	default:
- 		BUG();
-@@ -391,11 +388,10 @@ int ide_id_dma_bug(ide_drive_t *drive)
- 		if ((id[ATA_ID_UDMA_MODES] >> 8) &&
- 		    (id[ATA_ID_MWDMA_MODES] >> 8))
- 			goto err_out;
--	} else if (id[ATA_ID_FIELD_VALID] & 2) {
--		if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
--		    (id[ATA_ID_SWDMA_MODES] >> 8))
--			goto err_out;
--	}
-+	} else if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
-+		   (id[ATA_ID_SWDMA_MODES] >> 8))
-+		goto err_out;
-+
- 	return 0;
- err_out:
- 	printk(KERN_ERR "%s: bad DMA info in identify block\n", drive->name);
+WRITE_DMA doesn't work very well when DMA isn't enabled on the drive.  I
+wonder why there was such a widespread hang but not complete hang.  I can
+imagine the driver not checking because the caller is responsible for the
+contents of the taskfile, but I would have expected the drive to return an
+error and the driver to push the error back up, instead of hanging.  Anyway 
+it was my fault.
 
+This unfortunate case was on a Dell Latitude D820 with an Intel ICH7M
+chipset.  The hard drive is SATA and I don't know the interface of the DVD
+drive, but Dell's BIOS sets the ICH7M to present a PATA interface with no
+option to change it.  The hard drive gets /dev/hda, the DVD drive gets
+/dev/hdc, DMA is disabled, and hdparm can't enable DMA on the hard drive.
+Google showed me lots of complaints from people who couldn't enable DMA on
+the DVD drive but it looks like I'm the only one who couldn't enable DMA on
+the hard drive.  Putting hda=noprobe in the boot command line let the hard
+drive become /dev/sda and speed up by a factor of 40.
+
+I understand libata is the biggest answer.  I hope it really handles
+everything but that's going to take a lot of testing to confirm.
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
