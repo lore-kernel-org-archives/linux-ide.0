@@ -1,95 +1,126 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes, -stable] ata_piix: add workaround for Samsung
- DB-P70
-Date: Tue, 03 Mar 2009 13:52:16 +0900
-Message-ID: <49ACB780.1070604@kernel.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ide: identify data word 53 bit 1 doesn't cover words 62 and 63 (take 2)
+Date: Tue, 3 Mar 2009 15:04:45 +0400
+Message-ID: <200903031404.45443.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40065 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753582AbZCCEwb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Mar 2009 23:52:31 -0500
+Received: from [213.79.90.228] ([213.79.90.228]:40440 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750728AbZCCLEN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2009 06:04:13 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, stable@kernel.org, josephjang@gmail.com, mrsohn@gmail.com
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Samsung DB-P70 somehow botched the first ICH9 SATA port.  The board
-doesn't expose the first port but somehow SStatus reports link online
-while failing SRST protocol leading to repeated probe failures and
-thus long boot delay.
+The IDE code assumed for years that the bit 1 of the identify data word 53 also
+covers the validity of the SW/MW DMA information in words 62 and 63, but it has
+always covered only words 64 thru 70, with words 62 and 63 being defined in the
+original ATA spec, not in ATA-2...
 
-Because the BIOS doesn't carry any identifying DMI information, the
-port can't be blacklisted safely.  Fortunately, the controller does
-have subsystem vendor and ID set.  It's unclear whether the subsystem
-IDs are used only for the board but it can be safely worked around by
-disabling SIDPR access and just using SRST works around the problem.
-Even when the workaround is triggered on an unaffected board the only
-side effect will be missing SCR access.
+This fix however should only concern *very* old hard disks and rather old CF
+cards...
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Joseph Jang <josephjang@gmail.com>
-Reported-by: Jonghyon Sohn <mrsohn@gmail.com>
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
 ---
- drivers/ata/ata_piix.c |   37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+This patch is against the recent Linus' tree...
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 54961c0..ef8b30d 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1289,6 +1289,39 @@ static const int *__devinit piix_init_sata_map(struct pci_dev *pdev,
- 	return map;
- }
- 
-+static bool piix_no_sidpr(struct ata_host *host)
-+{
-+	struct pci_dev *pdev = to_pci_dev(host->dev);
-+
-+	/*
-+	 * Samsung DB-P70 only has three ATA ports exposed and
-+	 * curiously the unconnected first port reports link online
-+	 * while not responding to SRST protocol causing excessive
-+	 * detection delay.
-+	 *
-+	 * Unfortunately, the system doesn't carry enough DMI
-+	 * information to identify the machine but does have subsystem
-+	 * vendor and device set.  As it's unclear whether the
-+	 * subsystem vendor/device is used only for this specific
-+	 * board, the port can't be disabled solely with the
-+	 * information; however, turning off SIDPR access works around
-+	 * the problem.  Turn it off.
-+	 *
-+	 * This problem is reported in bnc#441240.
-+	 *
-+	 * https://bugzilla.novell.com/show_bug.cgi?id=441420
-+	 */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2920 &&
-+	    pdev->subsystem_vendor == PCI_VENDOR_ID_SAMSUNG &&
-+	    pdev->subsystem_device == 0xb049) {
-+		dev_printk(KERN_WARNING, host->dev,
-+			   "Samsung DB-P70 detected, disabling SIDPR\n");
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static int __devinit piix_init_sidpr(struct ata_host *host)
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
-@@ -1302,6 +1335,10 @@ static int __devinit piix_init_sidpr(struct ata_host *host)
- 		if (hpriv->map[i] == IDE)
- 			return 0;
- 
-+	/* is it blacklisted? */
-+	if (piix_no_sidpr(host))
-+		return 0;
-+
- 	if (!(host->ports[0]->flags & PIIX_FLAG_SIDPR))
- 		return 0;
- 
+ drivers/ide/ide-dma-sff.c |    7 +++----
+ drivers/ide/ide-dma.c     |   32 ++++++++++++++------------------
+ 2 files changed, 17 insertions(+), 22 deletions(-)
 
--- 
-tejun
+Index: linux-2.6/drivers/ide/ide-dma-sff.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-dma-sff.c
++++ linux-2.6/drivers/ide/ide-dma-sff.c
+@@ -38,10 +38,9 @@ int config_drive_for_dma(ide_drive_t *dr
+ 	 * Enable DMA on any drive that has mode2 DMA
+ 	 * (multi or single) enabled
+ 	 */
+-	if (id[ATA_ID_FIELD_VALID] & 2)	/* regular DMA */
+-		if ((id[ATA_ID_MWDMA_MODES] & 0x404) == 0x404 ||
+-		    (id[ATA_ID_SWDMA_MODES] & 0x404) == 0x404)
+-			return 1;
++	if ((id[ATA_ID_MWDMA_MODES] & 0x404) == 0x404 ||
++	    (id[ATA_ID_SWDMA_MODES] & 0x404) == 0x404)
++		return 1;
+ 
+ 	/* Consult the list of known "good" drives */
+ 	if (ide_dma_good_drive(drive))
+Index: linux-2.6/drivers/ide/ide-dma.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-dma.c
++++ linux-2.6/drivers/ide/ide-dma.c
+@@ -238,12 +238,11 @@ static unsigned int ide_get_mode_mask(id
+ 	case XFER_UDMA_0:
+ 		if ((id[ATA_ID_FIELD_VALID] & 4) == 0)
+ 			break;
+-
++		mask = id[ATA_ID_UDMA_MODES];
+ 		if (port_ops && port_ops->udma_filter)
+-			mask = port_ops->udma_filter(drive);
++			mask &= port_ops->udma_filter(drive);
+ 		else
+-			mask = hwif->ultra_mask;
+-		mask &= id[ATA_ID_UDMA_MODES];
++			mask &= hwif->ultra_mask;
+ 
+ 		/*
+ 		 * avoid false cable warning from eighty_ninty_three()
+@@ -254,18 +253,15 @@ static unsigned int ide_get_mode_mask(id
+ 		}
+ 		break;
+ 	case XFER_MW_DMA_0:
+-		if ((id[ATA_ID_FIELD_VALID] & 2) == 0)
+-			break;
++		mask = id[ATA_ID_MWDMA_MODES];
+ 		if (port_ops && port_ops->mdma_filter)
+-			mask = port_ops->mdma_filter(drive);
++			mask &= port_ops->mdma_filter(drive);
+ 		else
+-			mask = hwif->mwdma_mask;
+-		mask &= id[ATA_ID_MWDMA_MODES];
++			mask &= hwif->mwdma_mask;
+ 		break;
+ 	case XFER_SW_DMA_0:
+-		if (id[ATA_ID_FIELD_VALID] & 2) {
+-			mask = id[ATA_ID_SWDMA_MODES] & hwif->swdma_mask;
+-		} else if (id[ATA_ID_OLD_DMA_MODES] >> 8) {
++		mask = id[ATA_ID_SWDMA_MODES];
++		if (!(mask & ATA_SWDMA2) && (id[ATA_ID_OLD_DMA_MODES] >> 8)) {
+ 			u8 mode = id[ATA_ID_OLD_DMA_MODES] >> 8;
+ 
+ 			/*
+@@ -273,8 +269,9 @@ static unsigned int ide_get_mode_mask(id
+ 			 * (the maximum allowed mode is XFER_SW_DMA_2)
+ 			 */
+ 			if (mode <= 2)
+-				mask = ((2 << mode) - 1) & hwif->swdma_mask;
++				mask = (2 << mode) - 1;
+ 		}
++		mask &= hwif->swdma_mask;
+ 		break;
+ 	default:
+ 		BUG();
+@@ -391,11 +388,10 @@ int ide_id_dma_bug(ide_drive_t *drive)
+ 		if ((id[ATA_ID_UDMA_MODES] >> 8) &&
+ 		    (id[ATA_ID_MWDMA_MODES] >> 8))
+ 			goto err_out;
+-	} else if (id[ATA_ID_FIELD_VALID] & 2) {
+-		if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
+-		    (id[ATA_ID_SWDMA_MODES] >> 8))
+-			goto err_out;
+-	}
++	} else if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
++		   (id[ATA_ID_SWDMA_MODES] >> 8))
++		goto err_out;
++
+ 	return 0;
+ err_out:
+ 	printk(KERN_ERR "%s: bad DMA info in identify block\n", drive->name);
+
