@@ -1,227 +1,81 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 1/3] ide-{floppy,tape}: fix padding for PIO transfers
-Date: Wed,  4 Mar 2009 10:16:54 +0100
-Message-ID: <1236158216-23052-2-git-send-email-petkovbb@gmail.com>
-References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:47866 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753780AbZCDJRG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 04:17:06 -0500
-In-Reply-To: <1236158216-23052-1-git-send-email-petkovbb@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Getting TRIM working
+Date: Wed, 04 Mar 2009 11:20:27 +0200
+Message-ID: <49AE47DB.4030200@panasas.com>
+References: <20090303190700.GD20511@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20090303190700.GD20511@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@gmail.com>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Matthew Wilcox wrote:
+> I'm having trouble getting Linux to spit out an appropriate TRIM
+> command, and I've hit a bit of a wall, so I thought I'd appeal for help.
+> 
+> The symptom is that we send out only 24 bytes and then stop rather than
+> sending out a full 512 byte "sector".
+> 
+> Here's what goes on, as far as I understand it.
+> 
+> We call 'blkdiscard /dev/sda 0 1' which is supposed to TRIM just LBA 0.
+> 
+> We create a bio in blk_ioctl_discard() which sets bi_size to 512 (1 << 9).
+> This is necessary to let the elevators know how many bytes we're going
+> to discard, so it can do merging correctly.
+> 
+> Then, in sd_discard_fn(), we do this:
+> 
+>         bio->bi_size = 0;
+>         if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
+>                 __free_page(page);
+>                 return -ENOMEM;
+>         }
+> 
+> This is where the 24 comes from -- it's the length of the data transmitted
+> to the drive for an unmap of a single range.
+> 
+> Now in ata_scsi_unmap_xlat() we need to turn this SCSI UNMAP command
+> into an ATA TRIM command.  So I do this:
+> 
+>         size = ALIGN(i * 8, 512);
+>         memset(buffer + i * 8, 0, size - i * 8);
+>         old_size = bio_iovec(bio)->bv_len;
+> printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+>                 req->data_len, old_size);
+>         if (size > old_size) {
+>                 bio_add_pc_page(req->q, bio, bio_page(bio),
+>                                         size - old_size, old_size);
+>                 req->data_len = size;
+>         }
+> printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+>                 req->data_len, bio_iovec(bio)->bv_len);
+> 
+> Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
+> Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
+> the drive).  What am I missing?
+> 
+> The current git tree can be found at
+> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090212
+> 
+> I tried a few things yesterday with access to the ATA bus analyser,
+> and the results of that are not found in the git tree.  This patch on
+> top of that git tree makes things better (before yesterday, I didn't
+> know about bv_len, for example):
+> 
 
-* Return number of bytes left to transfer from idetape_{in,out}put_buffers()
-  and number of bytes done from ide_tape_io_buffers().
+I have not inspected the code so please forgive me if I'm talking none-sense.
 
-* Fix padding for PIO transfers in ide_pc_intr() so read/write buffers are
-  always completely processed and then the transfer is padded if necessary.
+What about the length embedded in the CDB, which is usually derived from
+scsi_bufflen(), or other places that look at scsi_bufflen() and not at
+request && it's bios. The later might be bigger then scsi's in split commands
+but the drivers should only consume scsi_bufflen() bytes.
 
-* Remove invalid error messages.
-
-* Remove now superfluous padding from ide{_io_buffers,tape_input_buffers}().
-
-While at it:
-
-* Set pc->bh to NULL in idetape_input_buffers() after all bh-s are done.
-
-* Cache !!(pc->flags & PC_FLAG_WRITING) in local variable in ide_pc_intr().
-
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-atapi.c |   57 +++++++++++++++-------------------------------
- drivers/ide/ide-tape.c  |   32 +++++++++++++-------------
- 2 files changed, 35 insertions(+), 54 deletions(-)
-
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index ff6adea..314e6af 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -108,13 +108,6 @@ int ide_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 		}
- 	}
+Just a shot in the dark
+Boaz
  
--	if (bcount) {
--		printk(KERN_ERR "%s: %d leftover bytes, %s\n", drive->name,
--			bcount, write ? "padding with zeros"
--				      : "discarding data");
--		ide_pad_transfer(drive, write, bcount);
--	}
--
- 	return done;
- }
- EXPORT_SYMBOL_GPL(ide_io_buffers);
-@@ -316,9 +309,10 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 	struct request *rq = hwif->rq;
- 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
- 	xfer_func_t *xferfunc;
--	unsigned int timeout, temp;
-+	unsigned int timeout, done;
- 	u16 bcount;
- 	u8 stat, ireason, dsc = 0;
-+	u8 write = !!(pc->flags & PC_FLAG_WRITING);
- 
- 	debug_log("Enter %s - interrupt handler\n", __func__);
- 
-@@ -427,8 +421,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 		return ide_do_reset(drive);
- 	}
- 
--	if (((ireason & ATAPI_IO) == ATAPI_IO) ==
--		!!(pc->flags & PC_FLAG_WRITING)) {
-+	if (((ireason & ATAPI_IO) == ATAPI_IO) == write) {
- 		/* Hopefully, we will never get here */
- 		printk(KERN_ERR "%s: We wanted to %s, but the device wants us "
- 				"to %s!\n", drive->name,
-@@ -437,45 +430,33 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 		return ide_do_reset(drive);
- 	}
- 
--	if (!(pc->flags & PC_FLAG_WRITING)) {
--		/* Reading - Check that we have enough space */
--		temp = pc->xferred + bcount;
--		if (temp > pc->req_xfer) {
--			if (temp > pc->buf_size) {
--				printk(KERN_ERR "%s: The device wants to send "
--						"us more data than expected - "
--						"discarding data\n",
--						drive->name);
--
--				ide_pad_transfer(drive, 0, bcount);
--				goto next_irq;
--			}
--			debug_log("The device wants to send us more data than "
--				  "expected - allowing transfer\n");
--		}
--		xferfunc = tp_ops->input_data;
--	} else
--		xferfunc = tp_ops->output_data;
-+	xferfunc = write ? tp_ops->output_data : tp_ops->input_data;
- 
- 	if ((drive->media == ide_floppy && !pc->buf) ||
- 	    (drive->media == ide_tape && pc->bh)) {
--		int done = drive->pc_io_buffers(drive, pc, bcount,
--				  !!(pc->flags & PC_FLAG_WRITING));
-+		done = drive->pc_io_buffers(drive, pc, bcount, write);
- 
- 		/* FIXME: don't do partial completions */
- 		if (drive->media == ide_floppy)
- 			ide_complete_rq(drive, 0,
- 					done ? done : ide_rq_bytes(rq));
--	} else
--		xferfunc(drive, NULL, pc->cur_pos, bcount);
-+	} else {
-+		done = min_t(unsigned int, bcount, pc->req_xfer - pc->xferred);
-+		xferfunc(drive, NULL, pc->cur_pos, done);
-+	}
- 
- 	/* Update the current position */
--	pc->xferred += bcount;
--	pc->cur_pos += bcount;
-+	pc->xferred += done;
-+	pc->cur_pos += done;
-+
-+	bcount -= done;
-+
-+	if (bcount)
-+		ide_pad_transfer(drive, write, bcount);
-+
-+	debug_log("[cmd %x] transferred %d bytes, padded %d bytes\n",
-+		  rq->cmd[0], done, bcount);
- 
--	debug_log("[cmd %x] transferred %d bytes on that intr.\n",
--		  rq->cmd[0], bcount);
--next_irq:
- 	/* And set the interrupt handler again */
- 	ide_set_handler(drive, ide_pc_intr, timeout);
- 	return ide_started;
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 733cb51..12a6e5d 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -297,19 +297,15 @@ static struct ide_tape_obj *ide_tape_chrdev_get(unsigned int i)
- 	return tape;
- }
- 
--static void idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
-+static int idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				  unsigned int bcount)
- {
- 	struct idetape_bh *bh = pc->bh;
- 	int count;
- 
- 	while (bcount) {
--		if (bh == NULL) {
--			printk(KERN_ERR "ide-tape: bh == NULL in "
--				"idetape_input_buffers\n");
--			ide_pad_transfer(drive, 0, bcount);
--			return;
--		}
-+		if (bh == NULL)
-+			break;
- 		count = min(
- 			(unsigned int)(bh->b_size - atomic_read(&bh->b_count)),
- 			bcount);
-@@ -323,21 +319,21 @@ static void idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				atomic_set(&bh->b_count, 0);
- 		}
- 	}
-+
- 	pc->bh = bh;
-+
-+	return bcount;
- }
- 
--static void idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
-+static int idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				   unsigned int bcount)
- {
- 	struct idetape_bh *bh = pc->bh;
- 	int count;
- 
- 	while (bcount) {
--		if (bh == NULL) {
--			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
--					__func__);
--			return;
--		}
-+		if (bh == NULL)
-+			break;
- 		count = min((unsigned int)pc->b_count, (unsigned int)bcount);
- 		drive->hwif->tp_ops->output_data(drive, NULL, pc->b_data, count);
- 		bcount -= count;
-@@ -352,6 +348,8 @@ static void idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 			}
- 		}
- 	}
-+
-+	return bcount;
- }
- 
- static void idetape_update_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc)
-@@ -563,12 +561,14 @@ static void ide_tape_handle_dsc(ide_drive_t *drive)
- static int ide_tape_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				unsigned int bcount, int write)
- {
-+	unsigned int bleft;
-+
- 	if (write)
--		idetape_output_buffers(drive, pc, bcount);
-+		bleft = idetape_output_buffers(drive, pc, bcount);
- 	else
--		idetape_input_buffers(drive, pc, bcount);
-+		bleft = idetape_input_buffers(drive, pc, bcount);
- 
--	return bcount;
-+	return bcount - bleft;
- }
- 
- /*
--- 
-1.6.1.3
 
