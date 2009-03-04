@@ -1,91 +1,94 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
-Date: Wed, 04 Mar 2009 18:43:45 +0300
-Message-ID: <49AEA1B1.3050008@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <200902162251.49271.bzolnier@gmail.com> <499A0D0B.7070007@ru.mvista.com> <200902171543.21892.bzolnier@gmail.com> <499AD872.2060605@ru.mvista.com>
+From: "Foster, Doug F" <doug.f.foster@intel.com>
+Subject: RE: ATAPI question
+Date: Wed, 4 Mar 2009 08:44:42 -0700
+Message-ID: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F30B7DE3@azsmsx504.amr.corp.intel.com>
+References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
+ <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org>
+ <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com>
+ <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057418@azsmsx504.amr.corp.intel.com>
+ <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057D00@azsmsx504.amr.corp.intel.com>
+ <49ADDD19.4070605@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.mvista.com ([63.81.120.155]:31279 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751448AbZCDPnQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Mar 2009 10:43:16 -0500
-In-Reply-To: <499AD872.2060605@ru.mvista.com>
+Received: from mga11.intel.com ([192.55.52.93]:47261 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752090AbZCDPov convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 10:44:51 -0500
+In-Reply-To: <49ADDD19.4070605@kernel.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Foster, Doug F" <doug.f.foster@intel.com>
 
-Hello, I wrote:
 
->>>>>>>> There should be no functional changes caused by this patch.
->>>>>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>>>>>> Index: b/drivers/ide/ide-iops.c
->>>>>>>> ===================================================================
->>>>>>>> --- a/drivers/ide/ide-iops.c
->>>>>>>> +++ b/drivers/ide/ide-iops.c
->>>>>>>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
->>>>>>>> {
->>>>>>>>     ide_hwif_t *hwif = drive->hwif;
->>>>>>>>     const struct ide_port_ops *port_ops = hwif->port_ops;
->>>>>>>> +    ide_task_t task;
+-----Original Message-----
+From: Tejun Heo [mailto:tj@kernel.org]
+Sent: Tuesday, March 03, 2009 6:45 PM
+To: Foster, Doug F
+Cc: Robert Hancock; linux-ide@vger.kernel.org
+Subject: Re: ATAPI question
 
->>>>>>>>     if (port_ops && port_ops->selectproc)
->>>>>>>>         port_ops->selectproc(drive);
->>>>>>>>
->>>>>>>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
->>>>>>>> +    memset(&task, 0, sizeof(task));
->>>>>>>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
->>>>>>>> +
->>>>>>>> +    drive->hwif->tf_load(drive, &task);
+Hello, Foster.
 
->>>>>>>   This actually doesn't seem like a bright idea to me, 
->>>>>>> considering that this gets called when starting every request. 
->>>>>>> How will you look at me adding the transport method for writing 
->>>>>>> this register? :-)
+Foster, Doug F wrote:
+> I posted several traces on an FTP server.  To view them, you will
+> need to download the LeCroy SASSuite software.
+>
+> The FTP server is a blind site and the files will only remain there
+> for 24-hours.
+>
+> How to retrieve the files from the FTP server:
+> (My apologies for the Windows directions.  Just do the equivalent in
+> Linux.)
+>
+> Open cmd.exe prompt
+>
+>> ftp ftp.intel.com
+> User: anonymous
+> Password: <Enter anything here>
+> ftp>
+> ftp> binary
+> ftp> cd pub/outgoing
+> ftp> pwd
+> ftp> lcd c:\temp
+> ftp> get ATAPI_1_Plextor.sas
+> ftp> get ATAPI_3_Plextor.sas
+> ftp> get ATAPI_4_Plextor.sas
+> ftp> get ATAPI_5_LiteOn.sas
+> ftp> get ATAPI_6_LiteOn.sas
+> ftp> get ATAPI_7_LiteOn.sas
+> ftp> get ATAPI_8_Plextor.sas
+> ftp> quit
 
->>>> Please check profiles first -- it might not be worth it. [1]
+I can't get them.
 
->>>>>> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
+  ftp> pwd
+  257 "/pub/outgoing" is current directory.
+  ftp> get ATAPI_1_Plextor.sas
+  local: ATAPI_1_Plextor.sas remote: ATAPI_1_Plextor.sas
+  229 Entering Extended Passive Mode (|||51535|)
 
->>>>>>  OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
->>>>>> consistent... well, I'm not excited about the whole idea 
->>>>>> conversion to tf_{load|read}() -- it's not clear what exactly this 
->>>>>> bought us.
+And then nothing.  Or do I have to use active mode?  Any chance you
+can put them somewhere more accessible?  Preferably http?
 
->>>> This was explained some months ago already, so just to recall -- it was
->>>> a part of a bigger work removing duplicated code and allowing 
->>>> abstraction
->>>> of the ATA logic.
+Thanks.
 
->>>> Anyway this is not set in a stone so if you have proposal of a better
->>>> approach please come forward with it.
+--
+Tejun
 
->>>   Er... I think that the previous IN()/OUT() methods were better. 
->>> Note that we ended up using the local version of them in the dafault 
->>> ide_tf_{load}read}() anyway -- as Alan has pointed out it might be worth 
+++++++++++++++++++++++
+Tejun, I will find an alternate way to post later today.  I just tested with a CentOS machine.
 
->> During ide_tf_{load,read}() addition I was a bit too optimistic about
->> the possibility of the quick io{read,write}* conversion later...
+. . . .
+ftp> get ATAPI_1_Plextor.sas
+local: ATAPI_1_Plextor.sas remote: ATAPI_1_Plextor.sas
+227 Enter Passive Mod(198,175,98,65,49,58)
+150 Opening BINARY mode data connection for ATAPI_1_Plextor.sas (197520504 bytes
+226 Tranfer complete.
+197520504 bytes received in 1.2e+02 seconds (1.7e+03 Kbytes/s)
+ftp>
 
->>> splitting those into I/O and memory space versions... although given 
->>> general slowness of the I/O accesses, this is probably not going to 
->>> win much speed-wise.
-
->> Maybe it would be worth to add ->tf_{inb,outb} to struct ide_tp_ops
->> and convert default tp_ops to use them...  OTOH we should reinvestigate
->> the io{read,write}*() way first (maybe things have improved there)...
-
->    Yes, let's not be hasty here...
-
-    What I certainly don't like is how tf_load/read() handle LBA48: there's 
-much of the code duplication going on. I'll think what can be done about it 
-but it may not be easy to tackle... it looks like 'struct ide_taskfile' needs 
-to be reorganized to include 2 6-byte sub-structures.
-
->> Thanks,
->> Bart
-
-MBR, Sergei
-
+Can you try again?  Obviously, the files are big.
