@@ -1,94 +1,42 @@
-From: "Foster, Doug F" <doug.f.foster@intel.com>
-Subject: RE: ATAPI question
-Date: Wed, 4 Mar 2009 08:44:42 -0700
-Message-ID: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F30B7DE3@azsmsx504.amr.corp.intel.com>
-References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
- <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057418@azsmsx504.amr.corp.intel.com>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057D00@azsmsx504.amr.corp.intel.com>
- <49ADDD19.4070605@kernel.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ahci fails with SATA DVD drive, IDE mode works
+Date: Wed, 04 Mar 2009 10:51:02 -0500
+Message-ID: <49AEA366.5070906@rtr.ca>
+References: <20090211174558.505354fe@dhcp-100-2-144.bos.redhat.com>	<499D2202.7070503@kernel.org>	<20090221181705.0b5f9ed3@dhcp-100-2-144.bos.redhat.com>	<49A4DFD4.3030206@kernel.org>	<20090225181530.1c575a30@dhcp-100-2-144.bos.redhat.com>	<49A5EB45.6050202@kernel.org>	<20090227175746.44acdbfa@dhcp-100-2-144.bos.redhat.com>	<49AA7EF9.7000306@kernel.org> <20090303162352.23432dd1@dhcp-100-2-144.bos.redhat.com> <49ADD9C7.7000207@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47261 "EHLO mga11.intel.com"
+Received: from rtr.ca ([76.10.145.34]:44038 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752090AbZCDPov convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 10:44:51 -0500
-In-Reply-To: <49ADDD19.4070605@kernel.org>
-Content-Language: en-US
+	id S1751858AbZCDPvH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Mar 2009 10:51:07 -0500
+In-Reply-To: <49ADD9C7.7000207@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Foster, Doug F" <doug.f.foster@intel.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, linux-ide@vger.kernel.org
 
+Tejun Heo wrote:
+> Chuck Ebbert wrote:
+>> On Sun, 01 Mar 2009 21:26:33 +0900
+>> Tejun Heo <tj@kernel.org> wrote:
+>>
+>>>> I ran 'hdparm -I' here. Why would it send BLANK to the drive??
+>>>> (There was a 1.4 GB DVD-RW in the drive when I did that.)
+>>> CDB 0xa1 is BLANK alright.  Is the problem reproducible?
+>>>
+> 
+> Now that I think about it, 0xa0 is PACKET and 0xa1 is IDENTIFY_ATAPI.
+> You used "hdparm -I /dev/sr0", right?  Mark, any ideas?  Somehow
+> IDENTIFY is getting wrapped inside packet and sent to the device.
+..
 
------Original Message-----
-From: Tejun Heo [mailto:tj@kernel.org]
-Sent: Tuesday, March 03, 2009 6:45 PM
-To: Foster, Doug F
-Cc: Robert Hancock; linux-ide@vger.kernel.org
-Subject: Re: ATAPI question
+Does it do that with the latest versions, hdparm-9.11 or hdparm-9.12 ?
+(probably fine with those)
 
-Hello, Foster.
+In hdparm-9.7 I changed things so that it used ATA_12 rather than ATA_16
+when passing short commands through SCSI.  Worked for for disks, but failed
+for optical drives -- libata doesn't process ATA_12 for ATAPI (oops).
 
-Foster, Doug F wrote:
-> I posted several traces on an FTP server.  To view them, you will
-> need to download the LeCroy SASSuite software.
->
-> The FTP server is a blind site and the files will only remain there
-> for 24-hours.
->
-> How to retrieve the files from the FTP server:
-> (My apologies for the Windows directions.  Just do the equivalent in
-> Linux.)
->
-> Open cmd.exe prompt
->
->> ftp ftp.intel.com
-> User: anonymous
-> Password: <Enter anything here>
-> ftp>
-> ftp> binary
-> ftp> cd pub/outgoing
-> ftp> pwd
-> ftp> lcd c:\temp
-> ftp> get ATAPI_1_Plextor.sas
-> ftp> get ATAPI_3_Plextor.sas
-> ftp> get ATAPI_4_Plextor.sas
-> ftp> get ATAPI_5_LiteOn.sas
-> ftp> get ATAPI_6_LiteOn.sas
-> ftp> get ATAPI_7_LiteOn.sas
-> ftp> get ATAPI_8_Plextor.sas
-> ftp> quit
-
-I can't get them.
-
-  ftp> pwd
-  257 "/pub/outgoing" is current directory.
-  ftp> get ATAPI_1_Plextor.sas
-  local: ATAPI_1_Plextor.sas remote: ATAPI_1_Plextor.sas
-  229 Entering Extended Passive Mode (|||51535|)
-
-And then nothing.  Or do I have to use active mode?  Any chance you
-can put them somewhere more accessible?  Preferably http?
-
-Thanks.
-
---
-Tejun
-
-++++++++++++++++++++++
-Tejun, I will find an alternate way to post later today.  I just tested with a CentOS machine.
-
-. . . .
-ftp> get ATAPI_1_Plextor.sas
-local: ATAPI_1_Plextor.sas remote: ATAPI_1_Plextor.sas
-227 Enter Passive Mod(198,175,98,65,49,58)
-150 Opening BINARY mode data connection for ATAPI_1_Plextor.sas (197520504 bytes
-226 Tranfer complete.
-197520504 bytes received in 1.2e+02 seconds (1.7e+03 Kbytes/s)
-ftp>
-
-Can you try again?  Obviously, the files are big.
+Fixed it again in hdparm-9.11, so just upgrade.
