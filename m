@@ -1,48 +1,22 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 09/15] ide: add "flagged" taskfile flags to struct ide_taskfile
-Date: Wed, 04 Mar 2009 21:32:49 +0300
-Message-ID: <49AEC951.8080609@ru.mvista.com>
-References: <20090201174909.19144.67767.sendpatchset@localhost.localdomain> <20090201175012.19144.87417.sendpatchset@localhost.localdomain> <20090206170425.201346e6.sfr@canb.auug.org.au> <200902081238.18970.bzolnier@gmail.com>
+From: Roly Diegel <abuse@inetia.pl>
+Subject: =?windows-1251?B?UHV0ICQ1MDAtJDEsNTAwIFBlciBEYXkgSW50byBZb3VyIEFjY291bnQ=?=
+Date: Thu, 5 Mar 2009 00:00:53 +0700
+Message-ID: <12055.8825358332$1236191733@news.gmane.org>
+Reply-To: Roly Diegel <kayleahsandler1651@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+        charset="windows-1251"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.mvista.com ([63.81.120.155]:34220 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753485AbZCDScV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Mar 2009 13:32:21 -0500
-In-Reply-To: <200902081238.18970.bzolnier@gmail.com>
+Received: from [58.137.222.2] ([58.137.222.2]:37313 "HELO
+	your.mail.server.name.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1756980AbZCDSdr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 13:33:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-
->>>From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>Subject: [PATCH] ide: add "flagged" taskfile flags to struct ide_taskfile
-
->>>* Add ->ftf_flags field to struct ide_taskfile
->>>  and convert flags for TASKFILE ioctl to use it.
-
->>>* Rename "flagged" taskfile flags:
->>>  - IDE_TFLAG_FLAGGED -> IDE_FTFLAG_FLAGGED
-
->>There were several places where this transformation did not take place as
->>shown by today's linux-next build.
-
-> Thanks, it is now fixed with v2 of the patch, interdiff below:
-
-> ...
-> v2:
-> * Remember to fully update ide-h8300.c, scc_pata.c and tx493{8,9}ide.c
->   (thanks to Stephen Rothwell for noticing).
-
-> There should be no functional changes caused by this patch.
-
-> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+QXJlIHlvdSB1c2VkIHRvIHRoaW5rIHRoYXQgYWxsIHdvcmsgYXQgaG9tZSBvcHBvcnR1bml0aWVzIG9uIHRoZSBJbnRlcm5ldCBhcmUganVzdCBzY2FtIGFydGlzdHMgdHJ5aW5nIHRvIHN0ZWFsIHlvdXIgbW9uZXkuIFdpdGggeW91ciBsYXN0IGJpdCBvZiBob3BlLCB5b3UgY2FuIHRyeSBvdXIgb2ZmZXIsIHdlIGFyZSBoZXJlIHRvIHByZXNlbnQgdG8geW91ciBhdHRlbnRpb24gdG9kYXksIGFuZCB5b3Ugd2lsbCBiZSBnbGFkIHlvdSBkaWQhIEl0IG1heSB0b29rIGEgY291cGxlIG9mIGRheXMgdG8gcmVhbGx5IGdldCB0aGUgaGFuZyBvZiB0aGUgc3lzdGVtLCBidXQgdGhlbiB5b3Ugd2lsbCBiZSB1cCB0byAkMTAwIHBlciBkYXkgaW4gZWFybmluZ3MsIGFuZCBjbGltYmluZyENCg0KV2UgYXJlIHJlY2VpdmluZyBodW5kcmVkcyBvZiBlbWFpbHMgZWFjaCBkYXkgZnJvbSBvdXIgbWVtYmVycywgdGhhbmtpbmcgdXMgZm9yIHByb3ZpZGluZyBzdWNoIGEgZ3JlYXQgcmVzb3VyY2UgdG8gYWN0dWFsbHkgZWFybiBhIHJlYWwgaW5jb21lIG9ubGluZS4NCg0KSWYgeW91IGFyZSBpbnRlcmVzdGVkIGluIHJlY2VpdmluZyBtb3JlIGluZm9ybWF0aW9uIGFib3V0
+ IG91ciB3b3JrIGZyb20gaG9tZSBvZmZlcnMsIGFuZCBwcm9iYWJseSBqb2luIHdpdGggdXMsIHBsZWFzZSBzZW5kIGFuIGVtYWlsIGJhY2sgdG8gMTEzMGJyb29rc2N1bGx5QGdtYWlsLmNvbSBhbmQgd2Ugd2lsbCBnZXQgaW4gdG91Y2ggd2l0aCB5b3UgYWdhaW4uDQoNClRoYW5rcyBmb3IgeW91ciB0aW1lIQ0KDQpMZWdpdCBKb2JzIE9ubGluZQoKCgoKCgoKCgoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUaGlzIGVtYWlsIGhhcyBiZWVuIHdyaXR0ZW4gYW5kIHByb3ZlZCB0byBiZSBpbiBjb21wbGlhbmNlIHdpdGggdGhlIHJlY2VudGx5IGVzdGFibGlzaGVkIGNhbi1zcGFtIGFjdCBsYXcgaW4gVVMuIFdlIGFyZSBub3QgcHJvdm9raW5nIG9yIGZvcmNpbmcgYW55IHBlcnNvbiBpbiBhbnkgd2F5IHRvIHBhcnRpY2lwYXRlIGluIG91ciBwcm9ncmFtcy4gVG8gcGFydGljaXBhdGUgaXMgeW91ciBvd24gZGVjaXNpb24gYW5kIHlvdSBjYXJyeSB0aGUgcmVzcG9uc2liaWxpdHkgb2YgdGFraW5nIGZ1cnRoZXIgcGFydCBpbiB0aGlzIHByb21vdGlvbi4gQW55d2F5LCBpZiB5b3
+ UgZG9uJ3Qgd2FudCB0byByZWNlaXZlIG1vcmUgZ29vZCBvZmZlcnMgZnJvbSB1cywgeW91IGNhbiBzaW1wbHkgVW5zdWJzY3JpYmUgYnkgc2VuZGluZyB1cyBhIG5vdGlmaWNhdGlvbiBlbWFpbCB0byBnZXQub3V0X2Zyb21fbGlzdEB5YWhvby5jb20gd2l0aCBhIG1haWwtc3ViamVjdCBhbmQgdGV4dCAiVW5zdWJzY3JpYmUgbWUiLCBhbmQgd2Ugd2lsbCBnZXQgeW91ciBlbWFpbCBvdXQgb2Ygb3VyIGxpc3Qgd2l0aGluIDEwIGRheXMuCgpUaGlzIG1lc3NhZ2UgaXMgU1RSSUNUTFkgQ09ORklERU5USUFMIGFuZCBpcyBzb2xlbHkgZm9yIHRoZSBpbmRpdmlkdWFsIG9yIG9yZ2FuaXNhdGlvbiB0byB3aG9tIGl0IGlzIGFkZHJlc3NlZC4gSXQgbWF5IGNvbnRhaW4gUFJJVklMRUdFRCBhbmQgQ09ORklERU5USUFMIGluZm9ybWF0aW9uLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCB5b3UgYXJlIGhlcmVieSBub3RpZmllZCB0aGF0IGFueSBkaXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24gb3IgY29weWluZyBvZiB0aGlzIGNvbW11bmljYXRpb24gYW5kIGl0cyBjb250ZW50cyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3Ug
+ YXJlIG5vdCBpbnRlcmVzdGVkIGluIHRoZSBvZmZlcmVkIHByb21vdGlvbnMsIHBsZWFzZSBqdXN0IGRvbid0IGFuc3dlci4gSWYgeW91IHRoaW5rIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgbWVzc2FnZSBhbmQgaXRzIGNvbnRlbnRzIGluIGVycm9yLCBwbGVhc2UgZGVsZXRlIGl0IGZyb20geW91ciBjb21wdXRlciwgb3IgZm9sbG93IHRoZSB1bnN1YnNjcmliaW5nIHByb2NlZHVyZSBzaG93biBhYm92ZS4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgkJ
