@@ -1,51 +1,91 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: Missing support for Intel Corporation 6300ESB PATA Storage
-	Controller [8086:25a2] (rev 02)
-Date: Tue, 3 Mar 2009 23:08:52 -0800
-Message-ID: <20090304070852.GY16405@curie-int.orbis-terrarum.net>
-References: <20090304065910.GX16405@curie-int.orbis-terrarum.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 13/18] ide: use ->tf_load in SELECT_DRIVE()
+Date: Wed, 04 Mar 2009 18:43:45 +0300
+Message-ID: <49AEA1B1.3050008@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <200902162251.49271.bzolnier@gmail.com> <499A0D0B.7070007@ru.mvista.com> <200902171543.21892.bzolnier@gmail.com> <499AD872.2060605@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="soWJpSPh+l8Y6Fy7"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b01.ext.isohunt.com ([208.71.112.51]:39820 "EHLO
-	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755165AbZCDLMY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 06:12:24 -0500
-Content-Disposition: inline
-In-Reply-To: <20090304065910.GX16405@curie-int.orbis-terrarum.net>
+Received: from ns2.mvista.com ([63.81.120.155]:31279 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751448AbZCDPnQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Mar 2009 10:43:16 -0500
+In-Reply-To: <499AD872.2060605@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hello, I wrote:
 
---soWJpSPh+l8Y6Fy7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>>>>>>>> There should be no functional changes caused by this patch.
+>>>>>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>>>>>>> Index: b/drivers/ide/ide-iops.c
+>>>>>>>> ===================================================================
+>>>>>>>> --- a/drivers/ide/ide-iops.c
+>>>>>>>> +++ b/drivers/ide/ide-iops.c
+>>>>>>>> @@ -88,11 +88,15 @@ void SELECT_DRIVE (ide_drive_t *drive)
+>>>>>>>> {
+>>>>>>>>     ide_hwif_t *hwif = drive->hwif;
+>>>>>>>>     const struct ide_port_ops *port_ops = hwif->port_ops;
+>>>>>>>> +    ide_task_t task;
 
-On Tue, Mar 03, 2009 at 10:59:10PM -0800, Robin H. Johnson wrote:
-> Migrating some old boxes over to use libata, and I ran into one with no
-> obvious libata driver.
-Ignore me. Was looking at too-old sources.
+>>>>>>>>     if (port_ops && port_ops->selectproc)
+>>>>>>>>         port_ops->selectproc(drive);
+>>>>>>>>
+>>>>>>>> -    hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
+>>>>>>>> +    memset(&task, 0, sizeof(task));
+>>>>>>>> +    task.tf_flags = IDE_TFLAG_OUT_DEVICE;
+>>>>>>>> +
+>>>>>>>> +    drive->hwif->tf_load(drive, &task);
 
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer & Infra Guy
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+>>>>>>>   This actually doesn't seem like a bright idea to me, 
+>>>>>>> considering that this gets called when starting every request. 
+>>>>>>> How will you look at me adding the transport method for writing 
+>>>>>>> this register? :-)
 
---soWJpSPh+l8Y6Fy7
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+>>>> Please check profiles first -- it might not be worth it. [1]
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+>>>>>> Convert SELECT_DRIVE() to use ->tf_load instead of ->OUTB.
 
-iEYEARECAAYFAkmuKQQACgkQPpIsIjIzwixragCfQnD447WdnsznkzmEt4piQOEP
-7ucAoN2uM1aUhkWlOvftVYCvmoibAJgC
-=fEhB
------END PGP SIGNATURE-----
+>>>>>>  OTOH, adding such a "backdoor" to the taskfile doesn't seem very 
+>>>>>> consistent... well, I'm not excited about the whole idea 
+>>>>>> conversion to tf_{load|read}() -- it's not clear what exactly this 
+>>>>>> bought us.
 
---soWJpSPh+l8Y6Fy7--
+>>>> This was explained some months ago already, so just to recall -- it was
+>>>> a part of a bigger work removing duplicated code and allowing 
+>>>> abstraction
+>>>> of the ATA logic.
+
+>>>> Anyway this is not set in a stone so if you have proposal of a better
+>>>> approach please come forward with it.
+
+>>>   Er... I think that the previous IN()/OUT() methods were better. 
+>>> Note that we ended up using the local version of them in the dafault 
+>>> ide_tf_{load}read}() anyway -- as Alan has pointed out it might be worth 
+
+>> During ide_tf_{load,read}() addition I was a bit too optimistic about
+>> the possibility of the quick io{read,write}* conversion later...
+
+>>> splitting those into I/O and memory space versions... although given 
+>>> general slowness of the I/O accesses, this is probably not going to 
+>>> win much speed-wise.
+
+>> Maybe it would be worth to add ->tf_{inb,outb} to struct ide_tp_ops
+>> and convert default tp_ops to use them...  OTOH we should reinvestigate
+>> the io{read,write}*() way first (maybe things have improved there)...
+
+>    Yes, let's not be hasty here...
+
+    What I certainly don't like is how tf_load/read() handle LBA48: there's 
+much of the code duplication going on. I'll think what can be done about it 
+but it may not be easy to tackle... it looks like 'struct ide_taskfile' needs 
+to be reorganized to include 2 6-byte sub-structures.
+
+>> Thanks,
+>> Bart
+
+MBR, Sergei
+
