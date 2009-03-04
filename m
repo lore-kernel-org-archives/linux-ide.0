@@ -1,121 +1,76 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Mysteriously slow writes SiI 3124
-Date: Wed, 4 Mar 2009 14:06:02 -0500
-Message-ID: <87f94c370903041106g3aba0155l6bd0ca0232a268e@mail.gmail.com>
-References: <49AB079A.9090407@rabbit.us> <49AE294D.2020002@rabbit.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 2/3] libata: fix dma_unmap_sg misuse
+Date: Wed, 04 Mar 2009 11:59:47 -0800
+Message-ID: <200903041959.n24JxmI3028535@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:17166 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755656AbZCDTGF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 14:06:05 -0500
-Received: by qw-out-2122.google.com with SMTP id 5so5150465qwi.37
-        for <linux-ide@vger.kernel.org>; Wed, 04 Mar 2009 11:06:03 -0800 (PST)
-In-Reply-To: <49AE294D.2020002@rabbit.us>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51733 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757335AbZCDUAh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 15:00:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp, bzolnier@gmail.com, tj@kernel.org
 
-On Wed, Mar 4, 2009 at 2:10 AM, Peter Rabbitson <rabbit+list@rabbit.us> wrote:
-> No takers? Can I provide more info/measurements/whatever? I would
-> really like to get to the bottom of this, pretty frustrating.
->
-> Peter Rabbitson wrote:
->> Hello,
->>
->> I have a sil 3124 PCI-X SATA card with 4 drives attached to it.
->> When I read simultaneously from all 4 drives, I get the expected
->> ~220MB/s combined read speed, limited by the presence of a 32bit
->> card on the same bus (entire bus runs on 66mhz, mix of 64 and 32
->> bit cards). When I write to the drives however I only get half of
->> that ~106MB/s combined. Can someone shed some light?
->>
->> All measurements are made on an idle system in single-user mode
->>
->>
->> Combined read:
->> root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd if="/dev/${d}2" of=/dev/null count=500 bs=1M & done
->> [1] 30243
->> [2] 30244
->> [3] 30245
->> [4] 30246
->> root@Arzamas:~/tr# 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 9.23146 s, 56.8 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 9.3649 s, 56.0 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 9.59152 s, 54.7 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 9.60045 s, 54.6 MB/s
->>
->>
->> Combined write:
->> root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd of="/dev/${d}2" if=/dev/zero count=500 bs=1M & done
->> [1] 30239
->> [2] 30240
->> [3] 30241
->> [4] 30242
->> root@Arzamas:~/tr# 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 19.4508 s, 27.0 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 19.6314 s, 26.7 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 19.7663 s, 26.5 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 19.7598 s, 26.5 MB/s
->>
->>
->> Individual read (making sure disks are good):
->> root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd if="/dev/${d}2" of=/dev/null count=500 bs=1M ; done
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 5.00963 s, 105 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 5.15979 s, 102 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 5.19258 s, 101 MB/s
->> 500+0 records in
->> 500+0 records out
->> 524288000 bytes (524 MB) copied, 5.24153 s, 100 MB/s
->> root@Arzamas:~/tr#
->>
->>
->> Individual write:
->> root@Arzamas:~/tr# for d in sde sdb sdc sdd ; do dd of="/dev/${d}2" if=/dev/zero count=500 bs=1M ; done
-<snip>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Did you verify /dev/zero is not the problem.
+libata passes the returned value of dma_map_sg() to dma_unmap_sg(),which
+is the misuse of dma_unmap_sg().
 
-It has been known to have throughput bugs that limit its ability to
-generate zeros.  Strange I know.
+DMA-mapping.txt says:
 
-I always do a quick dd if=/dev/zero of=/dev/null bs=1m count=10000
+To unmap a scatterlist, just call:
 
-type test to make sure I have good functionality in /dev/zero and
-/dev/null.  (Never heard of an issue with /dev/null, but I have to
-send those zeros somewhere.)
+	pci_unmap_sg(pdev, sglist, nents, direction);
 
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+Again, make sure DMA activity has already finished.
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+PLEASE NOTE:  The 'nents' argument to the pci_unmap_sg call must be
+              the _same_ one you passed into the pci_map_sg call,
+	      it should _NOT_ be the 'count' value _returned_ from the
+              pci_map_sg call.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ata/libata-core.c |    4 ++--
+ include/linux/libata.h    |    1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff -puN drivers/ata/libata-core.c~libata-fix-dma_unmap_sg-misuse drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-fix-dma_unmap_sg-misuse
++++ a/drivers/ata/libata-core.c
+@@ -4612,7 +4612,7 @@ void ata_sg_clean(struct ata_queued_cmd 
+ 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+ 
+ 	if (qc->n_elem)
+-		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
++		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
+ 
+ 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+ 	qc->sg = NULL;
+@@ -4727,7 +4727,7 @@ static int ata_sg_setup(struct ata_queue
+ 		return -1;
+ 
+ 	DPRINTK("%d sg elements mapped\n", n_elem);
+-
++	qc->orig_n_elem = qc->n_elem;
+ 	qc->n_elem = n_elem;
+ 	qc->flags |= ATA_QCFLAG_DMAMAP;
+ 
+diff -puN include/linux/libata.h~libata-fix-dma_unmap_sg-misuse include/linux/libata.h
+--- a/include/linux/libata.h~libata-fix-dma_unmap_sg-misuse
++++ a/include/linux/libata.h
+@@ -530,6 +530,7 @@ struct ata_queued_cmd {
+ 	unsigned long		flags;		/* ATA_QCFLAG_xxx */
+ 	unsigned int		tag;
+ 	unsigned int		n_elem;
++	unsigned int		orig_n_elem;
+ 
+ 	int			dma_dir;
+ 
+_
