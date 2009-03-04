@@ -1,43 +1,27 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH #upstream-fixes, -stable] ata_piix: add workaround for
- Samsung DB-P70
-Date: Wed, 04 Mar 2009 10:52:13 -0500
-Message-ID: <49AEA3AD.1080309@rtr.ca>
-References: <49ACB780.1070604@kernel.org> <49AD2DCD.60807@rtr.ca> <49ADE934.6080105@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ATAPI question
+Date: Thu, 05 Mar 2009 01:03:20 +0900
+Message-ID: <49AEA648.6070209@kernel.org>
+References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com> <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057418@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057D00@azsmsx504.amr.corp.intel.com> <49ADDD19.4070605@kernel.org> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F30B7DE3@azsmsx504.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:44041 "EHLO mail.rtr.ca"
+Received: from hera.kernel.org ([140.211.167.34]:57137 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752150AbZCDPwQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Mar 2009 10:52:16 -0500
-In-Reply-To: <49ADE934.6080105@kernel.org>
+	id S1752340AbZCDQDc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Mar 2009 11:03:32 -0500
+In-Reply-To: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F30B7DE3@azsmsx504.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, stable@kernel.org, josephjang@gmail.com, mrsohn@gmail.com
+To: "Foster, Doug F" <doug.f.foster@intel.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Hello, Mark.
-> 
-> Mark Lord wrote:
->> A suggestion, then.  As a follow-up patch, would it be possible
->> to drop the workaround kludge, and restore the missing SCR access,
->> __after the first time that a drive is detected on that port__?
-> 
-> Hmmm... yeah.  Maybe but it would either involve changing ap->ops on
-> the fly (which is a big no no) or wrap SCR access such that it returns
-> -EOPNOTSUPP if the kludge is in effect.
-> 
->> This way, there won't be any funny business for cases where
->> the same ID might occur on different (non-botched) hardware ?
->>
->> Probably overkill, though.  :)
-> 
-> Missing SCR access doesn't impact direct usage too much, so yeah I
-> think it should be fine as it is until there's some evidence that the
-> subsystem IDs are in far wider use.
-..
+Foster, Doug F wrote:
+> Tejun, I will find an alternate way to post later today.  I just
+> tested with a CentOS machine.
 
-Perfectly sensible!
+Jim Paris forwarded it for me.  I now have the files.  Thanks.
+
+-- 
+tejun
