@@ -1,22 +1,125 @@
-From: Roly Diegel <abuse@inetia.pl>
-Subject: =?windows-1251?B?UHV0ICQ1MDAtJDEsNTAwIFBlciBEYXkgSW50byBZb3VyIEFjY291bnQ=?=
-Date: Thu, 5 Mar 2009 00:00:53 +0700
-Message-ID: <12055.8825358332$1236191733@news.gmane.org>
-Reply-To: Roly Diegel <kayleahsandler1651@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
+	scsi-sgpool)objects
+Date: Wed, 04 Mar 2009 12:55:06 -0600
+Message-ID: <1236192906.18999.5.camel@localhost.localdomain>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>
+	 <49ACF8FE.2020904@panasas.com>
+	 <1236093718.3263.3.camel@localhost.localdomain>
+	 <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr>
+	 <1236097526.3263.17.camel@localhost.localdomain>
+	 <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>
+	 <alpine.LFD.2.00.0903032247170.29264@localhost.localdomain>
+	 <1236119195.24019.24.camel@localhost.localdomain>
+	 <alpine.LFD.2.00.0903040249460.29264@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="windows-1251"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [58.137.222.2] ([58.137.222.2]:37313 "HELO
-	your.mail.server.name.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1756980AbZCDSdr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 13:33:47 -0500
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:37886 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754346AbZCDSzP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 13:55:15 -0500
+In-Reply-To: <alpine.LFD.2.00.0903040249460.29264@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-QXJlIHlvdSB1c2VkIHRvIHRoaW5rIHRoYXQgYWxsIHdvcmsgYXQgaG9tZSBvcHBvcnR1bml0aWVzIG9uIHRoZSBJbnRlcm5ldCBhcmUganVzdCBzY2FtIGFydGlzdHMgdHJ5aW5nIHRvIHN0ZWFsIHlvdXIgbW9uZXkuIFdpdGggeW91ciBsYXN0IGJpdCBvZiBob3BlLCB5b3UgY2FuIHRyeSBvdXIgb2ZmZXIsIHdlIGFyZSBoZXJlIHRvIHByZXNlbnQgdG8geW91ciBhdHRlbnRpb24gdG9kYXksIGFuZCB5b3Ugd2lsbCBiZSBnbGFkIHlvdSBkaWQhIEl0IG1heSB0b29rIGEgY291cGxlIG9mIGRheXMgdG8gcmVhbGx5IGdldCB0aGUgaGFuZyBvZiB0aGUgc3lzdGVtLCBidXQgdGhlbiB5b3Ugd2lsbCBiZSB1cCB0byAkMTAwIHBlciBkYXkgaW4gZWFybmluZ3MsIGFuZCBjbGltYmluZyENCg0KV2UgYXJlIHJlY2VpdmluZyBodW5kcmVkcyBvZiBlbWFpbHMgZWFjaCBkYXkgZnJvbSBvdXIgbWVtYmVycywgdGhhbmtpbmcgdXMgZm9yIHByb3ZpZGluZyBzdWNoIGEgZ3JlYXQgcmVzb3VyY2UgdG8gYWN0dWFsbHkgZWFybiBhIHJlYWwgaW5jb21lIG9ubGluZS4NCg0KSWYgeW91IGFyZSBpbnRlcmVzdGVkIGluIHJlY2VpdmluZyBtb3JlIGluZm9ybWF0aW9uIGFib3V0
- IG91ciB3b3JrIGZyb20gaG9tZSBvZmZlcnMsIGFuZCBwcm9iYWJseSBqb2luIHdpdGggdXMsIHBsZWFzZSBzZW5kIGFuIGVtYWlsIGJhY2sgdG8gMTEzMGJyb29rc2N1bGx5QGdtYWlsLmNvbSBhbmQgd2Ugd2lsbCBnZXQgaW4gdG91Y2ggd2l0aCB5b3UgYWdhaW4uDQoNClRoYW5rcyBmb3IgeW91ciB0aW1lIQ0KDQpMZWdpdCBKb2JzIE9ubGluZQoKCgoKCgoKCgoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUaGlzIGVtYWlsIGhhcyBiZWVuIHdyaXR0ZW4gYW5kIHByb3ZlZCB0byBiZSBpbiBjb21wbGlhbmNlIHdpdGggdGhlIHJlY2VudGx5IGVzdGFibGlzaGVkIGNhbi1zcGFtIGFjdCBsYXcgaW4gVVMuIFdlIGFyZSBub3QgcHJvdm9raW5nIG9yIGZvcmNpbmcgYW55IHBlcnNvbiBpbiBhbnkgd2F5IHRvIHBhcnRpY2lwYXRlIGluIG91ciBwcm9ncmFtcy4gVG8gcGFydGljaXBhdGUgaXMgeW91ciBvd24gZGVjaXNpb24gYW5kIHlvdSBjYXJyeSB0aGUgcmVzcG9uc2liaWxpdHkgb2YgdGFraW5nIGZ1cnRoZXIgcGFydCBpbiB0aGlzIHByb21vdGlvbi4gQW55d2F5LCBpZiB5b3
- UgZG9uJ3Qgd2FudCB0byByZWNlaXZlIG1vcmUgZ29vZCBvZmZlcnMgZnJvbSB1cywgeW91IGNhbiBzaW1wbHkgVW5zdWJzY3JpYmUgYnkgc2VuZGluZyB1cyBhIG5vdGlmaWNhdGlvbiBlbWFpbCB0byBnZXQub3V0X2Zyb21fbGlzdEB5YWhvby5jb20gd2l0aCBhIG1haWwtc3ViamVjdCBhbmQgdGV4dCAiVW5zdWJzY3JpYmUgbWUiLCBhbmQgd2Ugd2lsbCBnZXQgeW91ciBlbWFpbCBvdXQgb2Ygb3VyIGxpc3Qgd2l0aGluIDEwIGRheXMuCgpUaGlzIG1lc3NhZ2UgaXMgU1RSSUNUTFkgQ09ORklERU5USUFMIGFuZCBpcyBzb2xlbHkgZm9yIHRoZSBpbmRpdmlkdWFsIG9yIG9yZ2FuaXNhdGlvbiB0byB3aG9tIGl0IGlzIGFkZHJlc3NlZC4gSXQgbWF5IGNvbnRhaW4gUFJJVklMRUdFRCBhbmQgQ09ORklERU5USUFMIGluZm9ybWF0aW9uLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCB5b3UgYXJlIGhlcmVieSBub3RpZmllZCB0aGF0IGFueSBkaXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24gb3IgY29weWluZyBvZiB0aGlzIGNvbW11bmljYXRpb24gYW5kIGl0cyBjb250ZW50cyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3Ug
- YXJlIG5vdCBpbnRlcmVzdGVkIGluIHRoZSBvZmZlcmVkIHByb21vdGlvbnMsIHBsZWFzZSBqdXN0IGRvbid0IGFuc3dlci4gSWYgeW91IHRoaW5rIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgbWVzc2FnZSBhbmQgaXRzIGNvbnRlbnRzIGluIGVycm9yLCBwbGVhc2UgZGVsZXRlIGl0IGZyb20geW91ciBjb21wdXRlciwgb3IgZm9sbG93IHRoZSB1bnN1YnNjcmliaW5nIHByb2NlZHVyZSBzaG93biBhYm92ZS4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgkJ
+On Wed, 2009-03-04 at 03:01 +0100, Thomas Gleixner wrote: 
+> On Tue, 3 Mar 2009, James Bottomley wrote:
+> 
+> > On Tue, 2009-03-03 at 23:07 +0100, Thomas Gleixner wrote:
+> > > On Tue, 3 Mar 2009, Thomas Gleixner wrote:
+> > > > My bad. I was playing with that to get rid of the aic7xxx wreckage on
+> > > > one of my test boxen and forgot to remove it.
+> > > 
+> > > While the one below is definitey not my fault. It's on Linus latest:
+> > > 
+> > >  commit 2450cf51a1bdba7037e91b1bcc494b01c58aaf66
+> > > 
+> > > While compiling a kernel I triggerred the BUG below. Not so nice as it
+> > > took a whole filesystem with it. fsck took more than 20 min to recover
+> > > the leftovers :(
+> > > 
+> > > Thanks,
+> > > 
+> > > 	tglx
+> > > 
+> > > 
+> > > ------------[ cut here ]------------
+> > > kernel BUG at /home/tglx/work/kernel/git/linux-2.6/drivers/scsi/scsi_lib.c:1141!
+> > 
+> > This is BUG_ON(count > sdb->table.nents);
+> > 
+> > It looks like the sg list got split and grew in size ... I suspect this
+> > might be libata related, so cc'ing the ide list.  I suspect either the
+> > block layer initially parametrised this wrongly (tomo bug) or a sg list
+> > got split then requeued (something in libata?).
+> 
+> FYI, after I've lost a full day of work including the results of four
+> "iozone -a -g 4G" runs I tried to reproduce the problem on that
+> machine - the leftovers of the filesystem are pretty useless anyway.
+> 
+> It took about 2hrs to trigger the bug again. Same back trace.
+> 
+> Anything I can do what might help to decode the problem ?
+
+I discussed this with Fujita Tomonori ... we think it's probably in the
+generic block merging code. 
+
+Could you run with this debugging code added until the fault triggers so
+we can get an exact view of what the layout of the request is and why
+we're getting an extra segment on mapping?
+
+Thanks,
+
+James
+
+P.S. I think if you take the BUG() statement out, as long as it's only
+one segment over, the machine should stay up long enough for a clean
+shutdown.
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 940dc32..5219153 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1139,7 +1139,33 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+ 	 * each segment.
+ 	 */
+ 	count = blk_rq_map_sg(req->q, req, sdb->table.sgl);
+-	BUG_ON(count > sdb->table.nents);
++	if (unlikely(count > sdb->table.nents)) {
++		struct bio_vec *bvec;
++		struct req_iterator iter;
++		struct scatterlist *sg;
++		int i=0;
++
++		printk(KERN_ERR "MAPPING miscount %d phys maps to %d\n",
++		       sdb->table.nents, count);
++		blk_dump_rq_flags(req, "Request Flags");
++		
++		printk("DUMPING REQUEST LIST:\n");
++		rq_for_each_segment(bvec, req, iter) {
++			printk("[%d]: phys 0x%lx len 0x%x\n", i,
++			       (unsigned long)page_to_phys(bvec->bv_page) + bvec->bv_offset,
++			       bvec->bv_len);
++			i++;
++		}
++		printk("DUMPING MAPPED LIST:\n");
++		for_each_sg(sdb->table.sgl, sg, count, i) {
++			printk("[%d]: phys 0x%lx len 0x%x\n", i,
++			       (unsigned long)page_to_phys(sg_page(sg)) + sg->offset,
++			       sg->length);
++		}
++		BUG();
++	}
++			
++
+ 	sdb->table.nents = count;
+ 	if (blk_pc_request(req))
+ 		sdb->length = req->data_len;
+
+
