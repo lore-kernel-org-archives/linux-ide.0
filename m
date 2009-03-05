@@ -1,118 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
-Date: Thu, 5 Mar 2009 13:12:29 +0100
-Message-ID: <200903051312.29784.bzolnier@gmail.com>
-References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com> <1236158216-23052-4-git-send-email-petkovbb@gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: SATA "target mode" (or "Channel-to-Channel" comm mode)
+Date: Thu, 5 Mar 2009 21:15:14 +0900
+Message-ID: <20090305211532R.fujita.tomonori@lab.ntt.co.jp>
+References: <49AD3BA5.3080603@pobox.com>
+	<49AD409F.6040102@rtr.ca>
+	<1236096972.3263.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:29598 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbZCEMKf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 07:10:35 -0500
-In-Reply-To: <1236158216-23052-4-git-send-email-petkovbb@gmail.com>
-Content-Disposition: inline
+Received: from sh.osrg.net ([192.16.179.4]:58744 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756304AbZCEMPq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Mar 2009 07:15:46 -0500
+In-Reply-To: <1236096972.3263.12.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: liml@rtr.ca, jgarzik@pobox.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
+On Tue, 03 Mar 2009 16:16:12 +0000
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Hi,
-
-On Wednesday 04 March 2009, Borislav Petkov wrote:
-> ... since some do not transfer any data from the drive and
-> rq->buffer is unset leading to an OOPS when checking VM translations
-> (CONFIG_DEBUG_VIRTUAL).
+> On Tue, 2009-03-03 at 09:37 -0500, Mark Lord wrote:
+> > Jeff Garzik wrote:
+> > > Mark Lord wrote:
+> > >> Time is short, so I'd like to spend it on something that Jeff would
+> > >> actually accept.  Thus this email.
+> > > 
+> > > It depends on the task.
+> > > 
+> > > The miscdev (i.e. chrdev) interface found in drivers/scsi/scsi_tgt_if.c 
+> > > of repo [1] seems pretty generic, simple, small and applicable to 
+> > > portions of the problem presented here...  The basic task in 
+> > > scsi_tgt_if's case is just shoveling packets to/from userspace.
+> > ..
+> > 
+> > Except it's rather SCSI specific, and the userspace frontend even more so.
+> > The code expects a SCSI command block, LUN, TAG, and other fields that
+> > a SATA FIS won't have.  Seems clumsy, particularly when we (in theory)
+> > are trying to decouple libata from SCSI.   But if that's the way,
+> > then I can clumsily wrap each FIS in a fake ATA_16 header or something.
 > 
-> Tested-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> Yes, but SG_IO began life as being entirely SCSI specific, but it's now
+> the block packet infrastructure.  I don't think anyone has an objection
+> to the SCSI target infrastructure becoming block target
+> infrastructure ... the fields can be made optional or more generic to
+> further this.  Probably it should speak a generic packet with a protocol
+> identifier and let the user space sort out the details.
 
-Thanks for fixing it but I worry that the patch is not entirely correct
-(why o why did you have to throw in unrelated changes...?)
-
-also ideally there should have been two patches:
-- minimal bugfix for the buggy patch
-- unification/cleanup of PIO sg setup
-
-> ---
->  drivers/ide/ide-atapi.c  |    9 ++++++++-
->  drivers/ide/ide-cd.c     |    4 ----
->  drivers/ide/ide-floppy.c |    4 ----
->  3 files changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-> index a5596a6..ef78cbf 100644
-> --- a/drivers/ide/ide-atapi.c
-> +++ b/drivers/ide/ide-atapi.c
-> @@ -570,7 +570,7 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
->  
->  ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
->  {
-> -	struct ide_atapi_pc *pc;
-> +	struct ide_atapi_pc *uninitialized_var(pc);
->  	ide_hwif_t *hwif = drive->hwif;
->  	ide_expiry_t *expiry = NULL;
->  	struct request *rq = hwif->rq;
-> @@ -587,6 +587,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
->  
->  		if (drive->dma)
->  			drive->dma = !ide_dma_prepare(drive, cmd);
-> +
-
-?
-
->  	} else {
->  		pc = drive->pc;
->  
-> @@ -614,6 +615,12 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
->  						       : WAIT_TAPE_CMD;
->  	}
->  
-> +	if (drive->media != ide_tape &&
-> +	      !drive->dma && (blk_fs_request(rq) || rq->data_len)) {
-> +		ide_init_sg_cmd(cmd, blk_rq_bytes(rq));
-> +		ide_map_sg(drive, cmd);
-> +	}
-> +
->  	ide_init_packet_cmd(cmd, tf_flags, bcount, drive->dma);
->  
->  	(void)do_rw_taskfile(drive, cmd);
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index 091d414..106cacb 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -916,10 +916,6 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
->  
->  	cmd.rq = rq;
->  
-> -	ide_init_sg_cmd(&cmd,
-> -		blk_fs_request(rq) ? (rq->nr_sectors << 9) : rq->data_len);
-> -	ide_map_sg(drive, &cmd);
-> -
->  	return ide_issue_pc(drive, &cmd);
->  out_end:
->  	nsectors = rq->hard_nr_sectors;
-> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> index 2f8f453..b91deef 100644
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -281,10 +281,6 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
->  		cmd.tf_flags |= IDE_TFLAG_WRITE;
->  
->  	cmd.rq = rq;
-> -
-> -	ide_init_sg_cmd(&cmd, pc->req_xfer);
-
-There was a reason for using ->req_xfer.
-
-I don't see where rq->data_len is set for REQ_TYPE_SPECIAL requests
-(ide_queue_pc_tail() and friends)?
-
-> -	ide_map_sg(drive, &cmd);
-> -
->  	pc->rq = rq;
->  
->  	return ide_floppy_issue_pc(drive, &cmd, pc);
+Mike Christie and I designed a generic target framework, not SCSI
+specific. But we decided to make the framework SCSI specific because
+we thought that nobody except for SCSI wanted the target
+framework. Seems that we were wrong. Let me now if I can help make a
+generic target framework out of the SCSI target framework.
