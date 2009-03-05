@@ -1,105 +1,159 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/3] ide: allow to wrap interrupt handler
-Date: Thu, 5 Mar 2009 14:48:15 +0100
-Message-ID: <200903051448.16002.bzolnier@gmail.com>
-References: <200902031146.59602.stf_xl@wp.pl>
+Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
+Date: Thu, 5 Mar 2009 15:49:22 +0100
+Message-ID: <200903051549.22518.bzolnier@gmail.com>
+References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com> <200903051312.29784.bzolnier@gmail.com> <9ea470500903050553m6ab9dfa5hab340213388a4c67@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:49675 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754140AbZCEOty (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 09:49:54 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so390290fgg.17
-        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2009 06:49:51 -0800 (PST)
-In-Reply-To: <200902031146.59602.stf_xl@wp.pl>
+Received: from fk-out-0910.google.com ([209.85.128.186]:48011 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755083AbZCEOt4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 09:49:56 -0500
+In-Reply-To: <9ea470500903050553m6ab9dfa5hab340213388a4c67@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, linux-arm-kernel@lists.arm.linux.org.uk
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 03 February 2009, Stanislaw Gruszka wrote:
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+On Thursday 05 March 2009, Borislav Petkov wrote:
+> Hi,
+> 
+> On Thu, Mar 5, 2009 at 1:12 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> >
+> > Hi,
+> >
+> > On Wednesday 04 March 2009, Borislav Petkov wrote:
+> >> ... since some do not transfer any data from the drive and
+> >> rq->buffer is unset leading to an OOPS when checking VM translations
+> >> (CONFIG_DEBUG_VIRTUAL).
+> >>
+> >> Tested-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> >> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> >
+> > Thanks for fixing it but I worry that the patch is not entirely correct
+> > (why o why did you have to throw in unrelated changes...?)
+> 
+> What unrelated changes? This is the ide-cd fix for when mapping a NULL
 
-BTW Please remember to check patches with scripts/checkpatch.pl:
+Unrelated to the original issue that the patch tries to fix
+(sg mapping no data commands which OOPS-es w/ DEBUG_VIRTUAL=y):
+- moving ide_init_sg_cmd()+ide_map_sg() to ide_issue_pc()
+- converting the code to use blk_rq_bytes()
 
-WARNING: EXPORT_SYMBOL(foo); should immediately follow its function/variable
-#22: FILE: drivers/ide/ide-io.c:1166:
-+EXPORT_SYMBOL_GPL(ide_intr);
+[ Moreover if you actually cared to write down the proper changelog
+  I'm pretty sure that you would ask yourself whether these changes
+  really belong to a bugfix patch... ]
 
-[2/3 also has a few "WARNING: line over 80 characters" ones...]
+Why not simply do what originally has been suggested:
 
-Thus the applied version looks a bit different:
-
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 1/3] ide: allow to wrap interrupt handler
-
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Andrew Victor <linux@maxim.org.za>
-[bart: minor checkpatch.pl / CodingStyle fixups]
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-io.c    |    1 +
- drivers/ide/ide-probe.c |    7 ++++++-
- include/linux/ide.h     |    1 +
- 3 files changed, 8 insertions(+), 1 deletion(-)
-
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -1162,6 +1162,7 @@ out_early:
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -916,9 +916,11 @@ static ide_startstop_t ide_cd_do_request
  
- 	return irq_ret;
- }
-+EXPORT_SYMBOL_GPL(ide_intr);
+ 	cmd.rq = rq;
  
- /**
-  *	ide_do_drive_cmd	-	issue IDE special command
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -950,6 +950,7 @@ static int ide_port_setup_devices(ide_hw
- static int init_irq (ide_hwif_t *hwif)
- {
- 	struct ide_io_ports *io_ports = &hwif->io_ports;
-+	irq_handler_t irq_handler;
- 	int sa = 0;
+-	ide_init_sg_cmd(&cmd,
+-		blk_fs_request(rq) ? (rq->nr_sectors << 9) : rq->data_len);
+-	ide_map_sg(drive, &cmd);
++	if (blk_fs_request(rq) || rq->data_len) {
++		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ? (rq->nr_sectors << 9)
++							 : rq->data_len);
++		ide_map_sg(drive, &cmd);
++	}
  
- 	mutex_lock(&ide_cfg_mtx);
-@@ -959,6 +960,10 @@ static int init_irq (ide_hwif_t *hwif)
- 	hwif->timer.function = &ide_timer_expiry;
- 	hwif->timer.data = (unsigned long)hwif;
- 
-+	irq_handler = hwif->host->irq_handler;
-+	if (irq_handler == NULL)
-+		irq_handler = ide_intr;
-+
- #if defined(__mc68000__)
- 	sa = IRQF_SHARED;
- #endif /* __mc68000__ */
-@@ -969,7 +974,7 @@ static int init_irq (ide_hwif_t *hwif)
- 	if (io_ports->ctl_addr)
- 		hwif->tp_ops->set_irq(hwif, 1);
- 
--	if (request_irq(hwif->irq, &ide_intr, sa, hwif->name, hwif))
-+	if (request_irq(hwif->irq, irq_handler, sa, hwif->name, hwif))
- 		goto out_up;
- 
- 	if (!hwif->rqsize) {
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -866,6 +866,7 @@ struct ide_host {
- 	unsigned int	n_ports;
- 	struct device	*dev[2];
- 	unsigned int	(*init_chipset)(struct pci_dev *);
-+	irq_handler_t	irq_handler;
- 	unsigned long	host_flags;
- 	void		*host_priv;
- 	ide_hwif_t	*cur_port;	/* for hosts requiring serialization */
+ 	return ide_issue_pc(drive, &cmd);
+ out_end:
+
+?
+
+The bonus is that it can be either queued after the problematic patch
+or just merged with it later (even if it needs to be applied by-hand
+the change is so trivial that it is very unlikely to cause problems).
+
+Doing cleanup is fine but not at the same time because we don't want to
+make things more complex (they are pretty complex already) and thus risk
+introducing new bugs.  Yes, it is tempting to do few things at once and
+save some work, and it is also perfectly fine to do it sometimes but we
+have to draw a line somewhere...
+
+> rq->buffer pointer to an sg. If you mean the [2/3] patch, I had to
+> remove the partial completions for ide-floppy because it was OOPSing on NULL
+> rq-pointer in the interrupt handler. I sent you a pretty detailed OOPS along
+> with backtracking to the offending code line, remember? Also, for reasons of
+> bisectability.
+
+I meant this patch, 2/3 is fine and was applied
+(thanks for fixing it again).
+
+> > also ideally there should have been two patches:
+> > - minimal bugfix for the buggy patch
+> > - unification/cleanup of PIO sg setup
+> >
+> >> ---
+> >>  drivers/ide/ide-atapi.c  |    9 ++++++++-
+> >>  drivers/ide/ide-cd.c     |    4 ----
+> >>  drivers/ide/ide-floppy.c |    4 ----
+> >>  3 files changed, 8 insertions(+), 9 deletions(-)
+> >>
+> 
+> ..
+> 
+> >> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> >> index 091d414..106cacb 100644
+> >> --- a/drivers/ide/ide-cd.c
+> >> +++ b/drivers/ide/ide-cd.c
+> >> @@ -916,10 +916,6 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+> >>
+> >>       cmd.rq = rq;
+> >>
+> >> -     ide_init_sg_cmd(&cmd,
+> >> -             blk_fs_request(rq) ? (rq->nr_sectors << 9) : rq->data_len);
+> >> -     ide_map_sg(drive, &cmd);
+> >> -
+> >>       return ide_issue_pc(drive, &cmd);
+> >>  out_end:
+> >>       nsectors = rq->hard_nr_sectors;
+> >> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+> >> index 2f8f453..b91deef 100644
+> >> --- a/drivers/ide/ide-floppy.c
+> >> +++ b/drivers/ide/ide-floppy.c
+> >> @@ -281,10 +281,6 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
+> >>               cmd.tf_flags |= IDE_TFLAG_WRITE;
+> >>
+> >>       cmd.rq = rq;
+> >> -
+> >> -     ide_init_sg_cmd(&cmd, pc->req_xfer);
+> >
+> > There was a reason for using ->req_xfer.
+> 
+> Yeah, this is also one of those painful places where I cringe everytime I have
+> to look at. We finally have to sit down and decide which is which; sometimes
+> pc->req_xfer _is_ rq->data_len (idefloppy_blockpc_cmd()) and sometimes obviously
+
+This is exactly my point -- these things are tricky so it is very risky to do
+drive-by cleanups together with fixes.
+
+> not. I'll take a look at that whole mess next and try to come up with something
+> more clean.
+
+Ok.
+
+> > I don't see where rq->data_len is set for REQ_TYPE_SPECIAL requests
+> > (ide_queue_pc_tail() and friends)?
+> 
+> me neither :(.
+> 
+> >> -     ide_map_sg(drive, &cmd);
+> >> -
+> >>       pc->rq = rq;
+> >>
+> >>       return ide_floppy_issue_pc(drive, &cmd, pc);
+> 
+> Man, this sucks!
+
+:)
