@@ -1,52 +1,84 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
-Date: Thu, 5 Mar 2009 18:58:40 +0100
-Message-ID: <9ea470500903050958v5d2219d0ha98fb35ae65fb75d@mail.gmail.com>
-References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com>
-	 <200903051549.22518.bzolnier@gmail.com>
-	 <9ea470500903050719m7952f84ct56475c6445846eeb@mail.gmail.com>
-	 <200903051752.41611.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
+	scsi-sgpool)objects
+Date: Thu, 5 Mar 2009 20:32:02 +0100
+Message-ID: <20090305193202.GA647@elte.hu>
+References: <20090305182958Q.fujita.tomonori@lab.ntt.co.jp> <20090305100901.GU11787@kernel.dk> <20090305101436.GV11787@kernel.dk> <20090305192737I.fujita.tomonori@lab.ntt.co.jp> <20090305103023.GW11787@kernel.dk> <20090305104159.GE32407@elte.hu> <20090305110534.GX11787@kernel.dk> <20090305110736.GJ32407@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:41582 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754638AbZCER6n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 12:58:43 -0500
-In-Reply-To: <200903051752.41611.bzolnier@gmail.com>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:45126 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752098AbZCETcW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Mar 2009 14:32:22 -0500
+Content-Disposition: inline
+In-Reply-To: <20090305110736.GJ32407@elte.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tglx@linutronix.de, James.Bottomley@HansenPartnership.com, jengelh@medozas.de, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Mar 5, 2009 at 5:52 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> On Thursday 05 March 2009, Borislav Petkov wrote:
->> Hi,
->>
->> > Unrelated to the original issue that the patch tries to fix
->> > (sg mapping no data commands which OOPS-es w/ DEBUG_VIRTUAL=y):
->> > - moving ide_init_sg_cmd()+ide_map_sg() to ide_issue_pc()
->> > - converting the code to use blk_rq_bytes()
->>
->> aah, ok, now I could get exactly what you meant :). However, (!) ide-floppy is
->> potentially broken in the same way for data-less cmds since we unconditionally
->
-> Indeed, you are right but it seems that this is not a new problem.
 
-Sure, as I said before, nobody's using ide-floppy.
+* Ingo Molnar <mingo@elte.hu> wrote:
 
-> Wait... it makes things "worse" as there should have been 3 patches:
-> (IOW _three_ patchpoints! ;):
->
-> - ide-cd fix for problematic patch
-> - ide-floppy fix for mainline
-> - ide-atapi cleanup for pata tree
+> 
+> * Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > On Thu, Mar 05 2009, Ingo Molnar wrote:
+> > > 
+> > > * Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > 
+> > > > > > Totally untested, comments welcome...
+> > > > > 
+> > > > > Yeah, I think that updating bi_seg_front_size and 
+> > > > > bi_seg_back_size at one place, __blk_recalc_rq_segments, is 
+> > > > > better. I thought about the same way. But we are already in 
+> > > > > -rc7 and this must go into mainline now. So I chose a 
+> > > > > less-intrusive way (similar to what we have done in the 
+> > > > > past).
+> > > > > 
+> > > > > As you know, the merging code is really complicated and we 
+> > > > > could overlook stuff easily. ;) It might be better to 
+> > > > > simplify the merging code a bit.
+> > > > 
+> > > > If someone (Ingo?) is willing to test the last variant, I'd 
+> > > > much rather add that. It does simplify it (imho), and it kills 
+> > > > 23 lines while only adding 9. But a quick response would be 
+> > > > nice, then I can ask Linus to pull it later today.
+> > > 
+> > > sure, can give it a whirl.
+> > > 
+> > > Note that your patch in this thread does no apply cleanly. Could 
+> > > you please send a pull request of your latest fixes that i could 
+> > > pull into tip:out-of-tree for testing purposes?
+> > 
+> > Hmm that's odd, I have no changes in blk-merge.c in my tree 
+> > against Linus'. But you can pull:
+> > 
+> >   git://git.kernel.dk/linux-2.6-block.git for-linus
+> > 
+> > Jens Axboe (2):
+> >       cciss: remove 30 second initial timeout on controller reset
+> >       block: fix missing bio back/front segment size setting in blk_recount_segments()
+> > 
+> > Kris Shannon (1):
+> >       Fix kernel NULL pointer dereference in xen-blkfront
+> > 
+> > Roel Kluin (1):
+> >       loop: don't increment p->offset with (size_t) -EINVAL
+> > 
+> >  block/blk-merge.c            |   25 +++++++++----------------
+> >  drivers/block/cciss.c        |    8 +++-----
+> >  drivers/block/loop.c         |    3 +--
+> >  drivers/block/xen-blkfront.c |    2 ++
+> >  4 files changed, 15 insertions(+), 23 deletions(-)
+> 
+> It pulled without conflicts so we are good. Started testing 
+> it. Once Thomas is around i suspect he'll be able to test it 
+> too with his reproducer.
 
-Yeah, I get the hint. :).
+FYI, here the patches didnt cause any problems.
 
--- 
-Regards/Gruss,
-Boris
+Tested-by: Ingo Molnar <mingo@elte.hu>
+
+	Ingo
