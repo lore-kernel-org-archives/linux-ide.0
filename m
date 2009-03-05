@@ -1,98 +1,121 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/6] ide: merge ->atapi_*put_bytes and ->ata_*put_data
- methods
-Date: Thu, 05 Mar 2009 16:12:59 +0300
-Message-ID: <49AFCFDB.9080203@ru.mvista.com>
-References: <200803302141.03013.bzolnier@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
+Date: Thu, 5 Mar 2009 14:53:28 +0100
+Message-ID: <9ea470500903050553m6ab9dfa5hab340213388a4c67@mail.gmail.com>
+References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com>
+	 <1236158216-23052-4-git-send-email-petkovbb@gmail.com>
+	 <200903051312.29784.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755728AbZCENN4@vger.kernel.org>
-In-Reply-To: <200803302141.03013.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from el-out-1112.google.com ([209.85.162.178]:16524 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753488AbZCENxb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 08:53:31 -0500
+In-Reply-To: <200903051312.29784.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
-Hello.
+Hi,
 
-Bartlomiej Zolnierkiewicz wrote:
+On Thu, Mar 5, 2009 at 1:12 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+>
+> Hi,
+>
+> On Wednesday 04 March 2009, Borislav Petkov wrote:
+>> ... since some do not transfer any data from the drive and
+>> rq->buffer is unset leading to an OOPS when checking VM translations
+>> (CONFIG_DEBUG_VIRTUAL).
+>>
+>> Tested-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+>> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+>
+> Thanks for fixing it but I worry that the patch is not entirely corre=
+ct
+> (why o why did you have to throw in unrelated changes...?)
 
-> * Merge ->atapi_{in,out}put_bytes and ->ata_{in,out}put_data methods
->   into new ->{in,out}put_data methods which take number of bytes to
->   transfer as an argument and always do padding.
+What unrelated changes? This is the ide-cd fix for when mapping a NULL
+rq->buffer pointer to an sg. If you mean the [2/3] patch, I had to
+remove the partial completions for ide-floppy because it was OOPSing on=
+ NULL
+rq-pointer in the interrupt handler. I sent you a pretty detailed OOPS =
+along
+with backtracking to the offending code line, remember? Also, for reaso=
+ns of
+bisectability.
 
-> While at it:
+> also ideally there should have been two patches:
+> - minimal bugfix for the buggy patch
+> - unification/cleanup of PIO sg setup
+>
+>> ---
+>> =A0drivers/ide/ide-atapi.c =A0| =A0 =A09 ++++++++-
+>> =A0drivers/ide/ide-cd.c =A0 =A0 | =A0 =A04 ----
+>> =A0drivers/ide/ide-floppy.c | =A0 =A04 ----
+>> =A03 files changed, 8 insertions(+), 9 deletions(-)
+>>
 
-> * Use 'hwif' or 'drive->hwif' instead of 'HWIF(drive)'.
+=2E.
 
-> There should be no functional changes caused by this patch (all users
-> of ->ata_{in,out}put_data methods were using multiply-of-4 word counts).
+>> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+>> index 091d414..106cacb 100644
+>> --- a/drivers/ide/ide-cd.c
+>> +++ b/drivers/ide/ide-cd.c
+>> @@ -916,10 +916,6 @@ static ide_startstop_t ide_cd_do_request(ide_dr=
+ive_t *drive, struct request *rq,
+>>
+>> =A0 =A0 =A0 cmd.rq =3D rq;
+>>
+>> - =A0 =A0 ide_init_sg_cmd(&cmd,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 blk_fs_request(rq) ? (rq->nr_sectors << 9)=
+ : rq->data_len);
+>> - =A0 =A0 ide_map_sg(drive, &cmd);
+>> -
+>> =A0 =A0 =A0 return ide_issue_pc(drive, &cmd);
+>> =A0out_end:
+>> =A0 =A0 =A0 nsectors =3D rq->hard_nr_sectors;
+>> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+>> index 2f8f453..b91deef 100644
+>> --- a/drivers/ide/ide-floppy.c
+>> +++ b/drivers/ide/ide-floppy.c
+>> @@ -281,10 +281,6 @@ static ide_startstop_t ide_floppy_do_request(id=
+e_drive_t *drive,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 cmd.tf_flags |=3D IDE_TFLAG_WRITE;
+>>
+>> =A0 =A0 =A0 cmd.rq =3D rq;
+>> -
+>> - =A0 =A0 ide_init_sg_cmd(&cmd, pc->req_xfer);
+>
+> There was a reason for using ->req_xfer.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Yeah, this is also one of those painful places where I cringe everytime=
+ I have
+to look at. We finally have to sit down and decide which is which; some=
+times
+pc->req_xfer _is_ rq->data_len (idefloppy_blockpc_cmd()) and sometimes =
+obviously
+not. I'll take a look at that whole mess next and try to come up with s=
+omething
+more clean.
 
-    Congratulations -- you introduced a bug with this patch. ;-)
+> I don't see where rq->data_len is set for REQ_TYPE_SPECIAL requests
+> (ide_queue_pc_tail() and friends)?
 
-> Index: b/drivers/ide/ide-iops.c
-> ===================================================================
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -191,34 +191,45 @@ static void ata_vlb_sync(ide_drive_t *dr
->  
->  /*
->   * This is used for most PIO data transfers *from* the IDE interface
-> + *
-> + * These routines will round up any request for an odd number of bytes,
-> + * so if an odd len is specified, be sure that there's at least one
-> + * extra byte allocated for the buffer.
->   */
-> -static void ata_input_data(ide_drive_t *drive, void *buffer, u32 wcount)
-> +static void ata_input_data(ide_drive_t *drive, void *buf, unsigned int len)
->  {
->  	ide_hwif_t *hwif = drive->hwif;
->  	struct ide_io_ports *io_ports = &hwif->io_ports;
-> +	unsigned long data_addr = io_ports->data_addr;
->  	u8 io_32bit = drive->io_32bit;
->  
-> +	len++;
-> +
+me neither :(.
 
-    Now where is the symmetric len++ in ata_output_data()?
+>> - =A0 =A0 ide_map_sg(drive, &cmd);
+>> -
+>> =A0 =A0 =A0 pc->rq =3D rq;
+>>
+>> =A0 =A0 =A0 return ide_floppy_issue_pc(drive, &cmd, pc);
 
->  	if (io_32bit) {
->  		if (io_32bit & 2) {
->  			unsigned long flags;
->  
->  			local_irq_save(flags);
->  			ata_vlb_sync(drive, io_ports->nsect_addr);
-> -			hwif->INSL(io_ports->data_addr, buffer, wcount);
-> +			hwif->INSL(data_addr, buf, len / 4);
->  			local_irq_restore(flags);
->  		} else
-> -			hwif->INSL(io_ports->data_addr, buffer, wcount);
-> +			hwif->INSL(data_addr, buf, len / 4);
-> +
-> +		if ((len & 3) >= 2)
-> +			hwif->INSW(data_addr, (u8 *)buf + (len & ~3), 1);
->  	} else
-> -		hwif->INSW(io_ports->data_addr, buffer, wcount << 1);
-> +		hwif->INSW(data_addr, buf, len / 2);
->  }
->  
->  /*
->   * This is used for most PIO data transfers *to* the IDE interface
->   */
-> -static void ata_output_data(ide_drive_t *drive, void *buffer, u32 wcount)
-> +static void ata_output_data(ide_drive_t *drive, void *buf, unsigned int len)
->  {
->  	ide_hwif_t *hwif = drive->hwif;
->  	struct ide_io_ports *io_ports = &hwif->io_ports;
-> +	unsigned long data_addr = io_ports->data_addr;
->  	u8 io_32bit = drive->io_32bit;
->  
->  	if (io_32bit) {
+Man, this sucks!
 
-    Patch coming. It turned out to be really good thing that I decided to look 
-into these methods...
-
-MBR, Sergei
+--=20
+Regards/Gruss,
+Boris
