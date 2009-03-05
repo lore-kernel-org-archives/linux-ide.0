@@ -1,70 +1,86 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] libata: add CFA specific identify data words
-Date: Thu, 5 Mar 2009 17:20:23 +0100
-Message-ID: <200903051720.24108.bzolnier@gmail.com>
-References: <20090305154040.GA23182@havoc.gtf.org>
+Subject: Re: [git pull] IDE fixes
+Date: Thu, 5 Mar 2009 17:27:47 +0100
+Message-ID: <200903051727.47877.bzolnier@gmail.com>
+References: <200903051630.32792.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:32879 "EHLO
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:35602 "EHLO
 	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753074AbZCEQUB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 11:20:01 -0500
-In-Reply-To: <20090305154040.GA23182@havoc.gtf.org>
+	with ESMTP id S1752488AbZCEQ0X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Mar 2009 11:26:23 -0500
+In-Reply-To: <200903051630.32792.bzolnier@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 05 March 2009, Jeff Garzik wrote:
-> From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+On Thursday 05 March 2009, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Declare and use constants for CFA specific identify data words 162 and 163.
+> Hi,
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+> Two bug fixes (for odd-length ATAPI PIO transfers from Sergei Shtylyov
+> and for insanely long DMA timeouts from Roel Kluin), some sparse fixes
+> (from Hannes Eder) and a new driver for AT91 Static Memory Controller
+> with Compact Flash True IDE Mode logic (from Stanislaw Gruszka, arch
+> specific part has been acked by a platform maintainer).
+
+Now with <linux/ata.h> change (add CFA identify words for the future use)
+from Sergei & Jeff.
+
+> Linus, please pull from:
 > 
-> ---
-> Sergei said:
-> This patch is against the current pata-2.6 series. I'd prefer that Bart merged
-> it thru his tree as my next patch adding CF mode support to IDE depends on it.
+> master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
 > 
-> jgarzik adds:
-> I didn't see this in your latest submission, Bart.  It is simple and
+> to receive the following updates:
 
-Simply because I haven't yet got to those patches + Sergei mentioned
-that they need to be tested yet.
+ arch/arm/mach-at91/at91sam9263_devices.c |  105 +++++++
+ arch/arm/mach-at91/include/mach/board.h  |    3 +
+ drivers/ide/Kconfig                      |    5 +
+ drivers/ide/Makefile                     |    1 +
+ drivers/ide/at91_ide.c                   |  467 ++++++++++++++++++++++++++++++
+ drivers/ide/ide-disk_proc.c              |    2 +-
+ drivers/ide/ide-floppy_proc.c            |    2 +-
+ drivers/ide/ide-io.c                     |    3 +-
+ drivers/ide/ide-iops.c                   |    2 +
+ drivers/ide/ide-probe.c                  |    7 +-
+ drivers/ide/ide-proc.c                   |    2 +-
+ drivers/ide/ide-tape.c                   |    2 +-
+ include/linux/ata.h                      |    2 +
+ include/linux/hdreg.h                    |    1 -
+ include/linux/ide.h                      |    1 +
+ 15 files changed, 598 insertions(+), 7 deletions(-)
+ create mode 100644 drivers/ide/at91_ide.c
 
-> harmless and might as well go ahead upstream, to eliminate the
-> cross-tree dependency that Sergei speaks of (his patch also touched
-> drivers/ata/libata-core.c, but I excluded that from below).
 
-Fine with me if this makes things easier for everyone.
+Bartlomiej Zolnierkiewicz (1):
+      remove stale comment from <linux/hdreg.h>
 
-I updated git pull request with this patch fixing patch summary
-(this is not libata specific change) and patch description (constants
-are not currently unused) while at it.
+Hannes Eder (1):
+      ide: NULL noise: drivers/ide/ide-*.c
 
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ata: add CFA specific identify data words
+Roel Kluin (1):
+      ide: expiry() returns int, negative expiry() return values won't be noticed
 
-Declare CFA specific identify data words 162 and 163 for future use.
+Sergei Shtylyov (2):
+      ide-iops: fix odd-length ATAPI PIO transfers
+      ata: add CFA specific identify data words
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-[bart: update patch summary/description]
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- include/linux/ata.h       |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Stanislaw Gruszka (3):
+      ide: allow to wrap interrupt handler
+      ide: add at91_ide driver
+      AT91: initialize Compact Flash on AT91SAM9263 cpu
 
-Index: linux-2.6/include/linux/ata.h
-===================================================================
---- linux-2.6.orig/include/linux/ata.h
-+++ linux-2.6/include/linux/ata.h
+[...]
+
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 08a86d5..9a061ac 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
 @@ -89,6 +89,8 @@ enum {
  	ATA_ID_DLF		= 128,
  	ATA_ID_CSFO		= 129,
@@ -73,3 +89,4 @@ Index: linux-2.6/include/linux/ata.h
 +	ATA_ID_CFA_MODES	= 163,
  	ATA_ID_ROT_SPEED	= 217,
  	ATA_ID_PIO4		= (1 << 1),
+ 
