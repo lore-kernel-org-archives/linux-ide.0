@@ -1,34 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
 	scsi-sgpool)objects
-Date: Wed, 04 Mar 2009 18:13:49 -0600
-Message-ID: <1236212029.32072.4.camel@localhost.localdomain>
-References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>
-	 <49ACF8FE.2020904@panasas.com>
-	 <1236093718.3263.3.camel@localhost.localdomain>
-	 <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr>
-	 <1236097526.3263.17.camel@localhost.localdomain>
-	 <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>
-	 <alpine.LFD.2.00.0903032247170.29264@localhost.localdomain>
-	 <1236119195.24019.24.camel@localhost.localdomain>
-	 <alpine.LFD.2.00.0903040249460.29264@localhost.localdomain>
-	 <alpine.LFD.2.00.0903042232270.29264@localhost.localdomain>
-	 <1236207389.21486.19.camel@localhost.localdomain>
+Date: Thu, 5 Mar 2009 17:36:13 +0900
+Message-ID: <20090305173649M.fujita.tomonori@lab.ntt.co.jp>
+References: <alpine.LFD.2.00.0903040249460.29264@localhost.localdomain>
+	<alpine.LFD.2.00.0903042232270.29264@localhost.localdomain>
+	<1236207389.21486.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59057 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751445AbZCEAN5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Mar 2009 19:13:57 -0500
+Received: from sh.osrg.net ([192.16.179.4]:43394 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750719AbZCEIgk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Mar 2009 03:36:40 -0500
 In-Reply-To: <1236207389.21486.19.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: tglx@linutronix.de, jengelh@medozas.de, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 2009-03-04 at 22:56 +0000, James Bottomley wrote:
+CC'ed Jens,
+
+On Wed, 04 Mar 2009 22:56:29 +0000
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
 > On Wed, 2009-03-04 at 22:45 +0100, Thomas Gleixner wrote:
 > > On Wed, 4 Mar 2009, Thomas Gleixner wrote:
 > > 
@@ -40,27 +36,35 @@ On Wed, 2009-03-04 at 22:56 +0000, James Bottomley wrote:
 > 
 > OK, the mapping all checks out correctly ... there must be something
 > wrong with the way we count before mapping.
-> 
-> If you're tracing everything, could you add these static prints to the
-> trace ... they'll trigger a lot, but capturing how they applied to the
-> failing request might tell us why the count is wrong.
 
-Debugging this on IRC, this is the point we reached:
+Yeah, looks we miscalculate nr_phys_segments in the merging path.
 
-ftrace debugging patch:
+blk_recount_segments() needs to set bi_seg_front_size and
+bi_seg_back_size for ll_merge_requests_fn()?
 
-http://tglx.de/~tglx/dbg.patch
-
-We're tracing both blk_recalc_rq_segments() and
-blk_phys_contig_segment()
-
-The results are here:
-
-http://tglx.de/~tglx/t.txt.bz2
-
-Although what they show is that we're missing the point where the
-counting goes wrong (blk_recalc_rq_segments only goes up to 5 max).
-
-James
-
-
+=
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index a104593..efb65b6 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -111,12 +111,19 @@ void blk_recalc_rq_segments(struct request *rq)
+ 
+ void blk_recount_segments(struct request_queue *q, struct bio *bio)
+ {
++	unsigned int seg_size;
+ 	struct bio *nxt = bio->bi_next;
+ 
+ 	bio->bi_next = NULL;
+-	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio, NULL);
++	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio, &seg_size);
+ 	bio->bi_next = nxt;
+ 	bio->bi_flags |= (1 << BIO_SEG_VALID);
++
++	if (bio->bi_phys_segments == 1 && seg_size > bio->bi_seg_front_size)
++		bio->bi_seg_front_size = seg_size;
++	if (bio->bi_phys_segments > bio->bi_seg_back_size)
++		bio->bi_seg_back_size = seg_size;
++
+ }
+ EXPORT_SYMBOL(blk_recount_segments);
+ 
