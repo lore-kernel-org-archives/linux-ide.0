@@ -1,203 +1,98 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Thu, 5 Mar 2009 07:34:04 -0500
-Message-ID: <20090305123404.GA15826@havoc.gtf.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/6] ide: merge ->atapi_*put_bytes and ->ata_*put_data
+ methods
+Date: Thu, 05 Mar 2009 16:12:59 +0300
+Message-ID: <49AFCFDB.9080203@ru.mvista.com>
+References: <200803302141.03013.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:57022 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753452AbZCEMeI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Mar 2009 07:34:08 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755728AbZCENN4@vger.kernel.org>
+In-Reply-To: <200803302141.03013.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+Hello.
 
-Various fixes, nothing major, and some NVIDIA PCI ID maintenance in ahci.
+Bartlomiej Zolnierkiewicz wrote:
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+> * Merge ->atapi_{in,out}put_bytes and ->ata_{in,out}put_data methods
+>   into new ->{in,out}put_data methods which take number of bytes to
+>   transfer as an argument and always do padding.
 
-to receive the following updates:
+> While at it:
 
- drivers/ata/ahci.c        |   24 ++++++++++++------------
- drivers/ata/libata-core.c |   14 ++++++++------
- drivers/ata/libata-eh.c   |    7 +++++--
- drivers/ata/sata_nv.c     |    2 +-
- include/linux/libata.h    |    6 ++++--
- 5 files changed, 30 insertions(+), 23 deletions(-)
+> * Use 'hwif' or 'drive->hwif' instead of 'HWIF(drive)'.
 
-Brandon Ehle (1):
-      sata_nv: fix module parameter description
+> There should be no functional changes caused by this patch (all users
+> of ->ata_{in,out}put_data methods were using multiply-of-4 word counts).
 
-FUJITA Tomonori (1):
-      libata: fix dma_unmap_sg misuse
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Robert Hancock (1):
-      libata: Don't trust current capacity values in identify words 57-58
+    Congratulations -- you introduced a bug with this patch. ;-)
 
-Stuart Hayes (1):
-      libata: change drive ready wait after hard reset to 5s
+> Index: b/drivers/ide/ide-iops.c
+> ===================================================================
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -191,34 +191,45 @@ static void ata_vlb_sync(ide_drive_t *dr
+>  
+>  /*
+>   * This is used for most PIO data transfers *from* the IDE interface
+> + *
+> + * These routines will round up any request for an odd number of bytes,
+> + * so if an odd len is specified, be sure that there's at least one
+> + * extra byte allocated for the buffer.
+>   */
+> -static void ata_input_data(ide_drive_t *drive, void *buffer, u32 wcount)
+> +static void ata_input_data(ide_drive_t *drive, void *buf, unsigned int len)
+>  {
+>  	ide_hwif_t *hwif = drive->hwif;
+>  	struct ide_io_ports *io_ports = &hwif->io_ports;
+> +	unsigned long data_addr = io_ports->data_addr;
+>  	u8 io_32bit = drive->io_32bit;
+>  
+> +	len++;
+> +
 
-Tejun Heo (3):
-      libata: align ap->sector_buf
-      libata: don't use on-stack sense buffer
-      libata: make sure port is thawed when skipping resets
+    Now where is the symmetric len++ in ata_output_data()?
 
-peerchen (1):
-      ahci: Add the Device IDs for MCP89 and remove IDs of MCP7B to/from ahci.c
+>  	if (io_32bit) {
+>  		if (io_32bit & 2) {
+>  			unsigned long flags;
+>  
+>  			local_irq_save(flags);
+>  			ata_vlb_sync(drive, io_ports->nsect_addr);
+> -			hwif->INSL(io_ports->data_addr, buffer, wcount);
+> +			hwif->INSL(data_addr, buf, len / 4);
+>  			local_irq_restore(flags);
+>  		} else
+> -			hwif->INSL(io_ports->data_addr, buffer, wcount);
+> +			hwif->INSL(data_addr, buf, len / 4);
+> +
+> +		if ((len & 3) >= 2)
+> +			hwif->INSW(data_addr, (u8 *)buf + (len & ~3), 1);
+>  	} else
+> -		hwif->INSW(io_ports->data_addr, buffer, wcount << 1);
+> +		hwif->INSW(data_addr, buf, len / 2);
+>  }
+>  
+>  /*
+>   * This is used for most PIO data transfers *to* the IDE interface
+>   */
+> -static void ata_output_data(ide_drive_t *drive, void *buffer, u32 wcount)
+> +static void ata_output_data(ide_drive_t *drive, void *buf, unsigned int len)
+>  {
+>  	ide_hwif_t *hwif = drive->hwif;
+>  	struct ide_io_ports *io_ports = &hwif->io_ports;
+> +	unsigned long data_addr = io_ports->data_addr;
+>  	u8 io_32bit = drive->io_32bit;
+>  
+>  	if (io_32bit) {
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a603bbf..66e012c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -582,18 +582,18 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(NVIDIA, 0x0abd), board_ahci },		/* MCP79 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0abe), board_ahci },		/* MCP79 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0abf), board_ahci },		/* MCP79 */
--	{ PCI_VDEVICE(NVIDIA, 0x0bc8), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bc9), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bca), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bcb), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bcc), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bcd), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bce), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bcf), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bc4), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bc5), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bc6), board_ahci },		/* MCP7B */
--	{ PCI_VDEVICE(NVIDIA, 0x0bc7), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d84), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d85), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d86), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d87), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d88), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d89), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d8a), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d8b), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d8c), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d8d), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d8e), board_ahci },		/* MCP89 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0d8f), board_ahci },		/* MCP89 */
- 
- 	/* SiS */
- 	{ PCI_VDEVICE(SI, 0x1184), board_ahci },		/* SiS 966 */
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9fbf059..060bcd6 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1322,14 +1322,16 @@ static u64 ata_id_n_sectors(const u16 *id)
- {
- 	if (ata_id_has_lba(id)) {
- 		if (ata_id_has_lba48(id))
--			return ata_id_u64(id, 100);
-+			return ata_id_u64(id, ATA_ID_LBA_CAPACITY_2);
- 		else
--			return ata_id_u32(id, 60);
-+			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
- 	} else {
- 		if (ata_id_current_chs_valid(id))
--			return ata_id_u32(id, 57);
-+			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
-+			       id[ATA_ID_CUR_SECTORS];
- 		else
--			return id[1] * id[3] * id[6];
-+			return id[ATA_ID_CYLS] * id[ATA_ID_HEADS] *
-+			       id[ATA_ID_SECTORS];
- 	}
- }
- 
-@@ -4612,7 +4614,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
- 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
- 
- 	if (qc->n_elem)
--		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
-+		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
- 
- 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
- 	qc->sg = NULL;
-@@ -4727,7 +4729,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
- 		return -1;
- 
- 	DPRINTK("%d sg elements mapped\n", n_elem);
--
-+	qc->orig_n_elem = qc->n_elem;
- 	qc->n_elem = n_elem;
- 	qc->flags |= ATA_QCFLAG_DMAMAP;
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index ce2ef04..ea89091 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2423,11 +2423,14 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		}
- 
- 		/* prereset() might have cleared ATA_EH_RESET.  If so,
--		 * bang classes and return.
-+		 * bang classes, thaw and return.
- 		 */
- 		if (reset && !(ehc->i.action & ATA_EH_RESET)) {
- 			ata_for_each_dev(dev, link, ALL)
- 				classes[dev->devno] = ATA_DEV_NONE;
-+			if ((ap->pflags & ATA_PFLAG_FROZEN) &&
-+			    ata_is_host_link(link))
-+				ata_eh_thaw_port(ap);
- 			rc = 0;
- 			goto out;
- 		}
-@@ -2901,7 +2904,7 @@ static int atapi_eh_clear_ua(struct ata_device *dev)
- 	int i;
- 
- 	for (i = 0; i < ATA_EH_UA_TRIES; i++) {
--		u8 sense_buffer[SCSI_SENSE_BUFFERSIZE];
-+		u8 *sense_buffer = dev->link->ap->sector_buf;
- 		u8 sense_key = 0;
- 		unsigned int err_mask;
- 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 55a8eed..f65b537 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -2523,7 +2523,7 @@ static void __exit nv_exit(void)
- module_init(nv_init);
- module_exit(nv_exit);
- module_param_named(adma, adma_enabled, bool, 0444);
--MODULE_PARM_DESC(adma, "Enable use of ADMA (Default: true)");
-+MODULE_PARM_DESC(adma, "Enable use of ADMA (Default: false)");
- module_param_named(swncq, swncq_enabled, bool, 0444);
- MODULE_PARM_DESC(swncq, "Enable use of SWNCQ (Default: true)");
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5d87bc0..dc18b87 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -275,7 +275,7 @@ enum {
- 	 * advised to wait only for the following duration before
- 	 * doing SRST.
- 	 */
--	ATA_TMOUT_PMP_SRST_WAIT	= 1000,
-+	ATA_TMOUT_PMP_SRST_WAIT	= 5000,
- 
- 	/* ATA bus states */
- 	BUS_UNKNOWN		= 0,
-@@ -530,6 +530,7 @@ struct ata_queued_cmd {
- 	unsigned long		flags;		/* ATA_QCFLAG_xxx */
- 	unsigned int		tag;
- 	unsigned int		n_elem;
-+	unsigned int		orig_n_elem;
- 
- 	int			dma_dir;
- 
-@@ -750,7 +751,8 @@ struct ata_port {
- 	acpi_handle		acpi_handle;
- 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
- #endif
--	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
-+	/* owned by EH */
-+	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
- };
- 
- /* The following initializer overrides a method to NULL whether one of
+    Patch coming. It turned out to be really good thing that I decided to look 
+into these methods...
+
+MBR, Sergei
