@@ -1,61 +1,69 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: Re: [PATCH] pata-rb532-cf: platform_get_irq() failure ignored
-Date: Fri, 6 Mar 2009 17:43:18 +0100
-Message-ID: <20090306164318.GF23767@nuty.nwl.cc>
-References: <49AD2ADA.5030109@gmail.com> <49AFC43A.3040206@garzik.org>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: LS-120 eject does not work with libata
+Date: Fri, 6 Mar 2009 18:34:22 +0100
+Message-ID: <200903061834.24907.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([91.121.169.95]:39524 "EHLO orbit.nwl.cc"
+Received: from mail.atlantis.sk ([80.94.52.35]:53752 "EHLO mail.atlantis.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751354AbZCFQxq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Mar 2009 11:53:46 -0500
+	id S1753070AbZCFRef (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Mar 2009 12:34:35 -0500
 Content-Disposition: inline
-In-Reply-To: <49AFC43A.3040206@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Roel Kluin <roel.kluin@gmail.com>, jgarzik@redhat.com, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Florian Fainelli <florian@openwrt.org>
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+Hello,
+I remember fixing LS-120 eject in ide-floppy 3 years ago.
+Found this time thatit does not work with libata (2.6.28):
 
-On Thu, Mar 05, 2009 at 07:23:22AM -0500, Jeff Garzik wrote:
-> Roel Kluin wrote:
-> >------------------------------>8-------------8<---------------------------------
-> >platform_get_irq() can return -ENXIO, but since 'irq' is an unsigned int, 
-> >it
-> >does not show when the IRQ resource wasn't found.
-> >
-> >Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> >---
-> >diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-> >index ebfcda2..fe8178c 100644
-> >--- a/drivers/ata/pata_rb532_cf.c
-> >+++ b/drivers/ata/pata_rb532_cf.c
-> >@@ -173,11 +173,12 @@ static __devinit int rb532_pata_driver_probe(struct 
-> >platform_device *pdev)
-> > 		return -EINVAL;
-> > 	}
-> > 
-> >-	irq = platform_get_irq(pdev, 0);
-> >-	if (irq <= 0) {
-> >+	ret = platform_get_irq(pdev, 0);
-> >+	if (ret <= 0) {
-> > 		dev_err(&pdev->dev, "no IRQ resource found\n");
-> > 		return -ENOENT;
-> > 	}
-> >+	irq = ret;
-> > 
-> > 	gpio = irq_to_gpio(irq);
-> 
-> ACK from Phil or Florian?
+# eject -v /dev/sda
+eject: device name is `/dev/sda'
+eject: expanded name is `/dev/sda'
+eject: `/dev/sda' is not mounted
+eject: `/dev/sda' is not a mount point
+eject: `/dev/sda' is a multipartition device
+eject: trying to eject `/dev/sda' using CD-ROM eject command
+eject: CD-ROM eject command failed
+eject: trying to eject `/dev/sda' using SCSI commands
+eject: SCSI eject succeeded
 
-That's fine for me, though I didn't test it (I managed to break my
-build-machine somehow, in an attempt to having the mainboard properly
-grounded).
+# strace eject -v /dev/sda
+[...]
+write(1, "eject: trying to eject `/dev/sda"..., 54eject: trying to eject `/dev/sda' using SCSI commands
+) = 54
+ioctl(3, SG_GET_VERSION_NUM, 0xbfbaeac4) = 0
+ioctl(3, SG_IO, 0xbfbaea50)             = 0
+ioctl(3, SG_IO, 0xbfbaea50)             = 0
+ioctl(3, SG_IO, 0xbfbaea50)             = 0
+ioctl(3, BLKRRPART, 0xbfbaea50)         = 0
+write(1, "eject: SCSI eject succeeded\n", 28eject: SCSI eject succeeded
+) = 28
+[...]
 
-One could simplify the patch by making the variable 'irq' be signed
-instead of unsigned. This would also prevent "abusing" the variable
-'ret'. What do you think?
+It looks like everything is OK. The only problem is that the disk
+does not eject (only spins up).
 
-Greetings, Phil
+
+It does work when using SCSI generic device:
+# eject -v /dev/sg0
+eject: device name is `/dev/sg0'
+eject: expanded name is `/dev/sg0'
+eject: `/dev/sg0' is not mounted
+eject: `/dev/sg0' is not a mount point
+eject: `/dev/sg0' is not a multipartition device
+eject: trying to eject `/dev/sg0' using CD-ROM eject command
+eject: CD-ROM eject command failed
+eject: trying to eject `/dev/sg0' using SCSI commands
+eject: SCSI eject succeeded
+
+The disk spins up and does some reads (most probably useless) and then ejects.
+
+Now I wonder where the problem is...
+
+-- 
+Ondrej Zary
