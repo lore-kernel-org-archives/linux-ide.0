@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ay1xxx-ide: auide_{in|out}sw() should be static
-Date: Fri, 6 Mar 2009 17:58:31 +0400
-Message-ID: <200903061658.31139.sshtylyov@ru.mvista.com>
+Subject: [PATCH resend] au1xxx-ide: auide_{in|out}sw() should be static
+Date: Fri, 6 Mar 2009 18:25:48 +0400
+Message-ID: <200903061725.48732.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [213.79.90.228] ([213.79.90.228]:49509 "EHLO
+Received: from [213.79.90.228] ([213.79.90.228]:49604 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754181AbZCFN6A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Mar 2009 08:58:00 -0500
+	by vger.kernel.org with ESMTP id S1750811AbZCFOZR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Mar 2009 09:25:17 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -23,6 +23,7 @@ call site for each: in the driver's {in|out}put_data() methods respectively...
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
+Resending with typo in the summary fixed.
 This patch is against the recent pata-2.6 series...
 
  drivers/ide/au1xxx-ide.c |    4 ++--
