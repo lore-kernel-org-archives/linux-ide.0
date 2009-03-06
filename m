@@ -1,69 +1,77 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: LS-120 eject does not work with libata
-Date: Fri, 6 Mar 2009 18:34:22 +0100
-Message-ID: <200903061834.24907.linux@rainbow-software.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Getting TRIM working
+Date: Fri, 6 Mar 2009 12:16:20 -0700
+Message-ID: <20090306191620.GA25995@parisc-linux.org>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.atlantis.sk ([80.94.52.35]:53752 "EHLO mail.atlantis.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753070AbZCFRef (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Mar 2009 12:34:35 -0500
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <49AE47DB.4030200@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hello,
-I remember fixing LS-120 eject in ide-floppy 3 years ago.
-Found this time thatit does not work with libata (2.6.28):
+On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
+> Matthew Wilcox wrote:
+> >         size = ALIGN(i * 8, 512);
+> >         memset(buffer + i * 8, 0, size - i * 8);
+> >         old_size = bio_iovec(bio)->bv_len;
+> > printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+> >                 req->data_len, old_size);
+> >         if (size > old_size) {
+> >                 bio_add_pc_page(req->q, bio, bio_page(bio),
+> >                                         size - old_size, old_size);
+> >                 req->data_len = size;
+> >         }
+> > printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+> >                 req->data_len, bio_iovec(bio)->bv_len);
+> > 
+> > Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
+> > Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
+> > the drive).  What am I missing?
+> 
+> What about the length embedded in the CDB, which is usually derived from
+> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
+> request && it's bios. The later might be bigger then scsi's in split commands
+> but the drivers should only consume scsi_bufflen() bytes.
 
-# eject -v /dev/sda
-eject: device name is `/dev/sda'
-eject: expanded name is `/dev/sda'
-eject: `/dev/sda' is not mounted
-eject: `/dev/sda' is not a mount point
-eject: `/dev/sda' is a multipartition device
-eject: trying to eject `/dev/sda' using CD-ROM eject command
-eject: CD-ROM eject command failed
-eject: trying to eject `/dev/sda' using SCSI commands
-eject: SCSI eject succeeded
+A fine idea, completely true ... I fixed it like this:
 
-# strace eject -v /dev/sda
-[...]
-write(1, "eject: trying to eject `/dev/sda"..., 54eject: trying to eject `/dev/sda' using SCSI commands
-) = 54
-ioctl(3, SG_GET_VERSION_NUM, 0xbfbaeac4) = 0
-ioctl(3, SG_IO, 0xbfbaea50)             = 0
-ioctl(3, SG_IO, 0xbfbaea50)             = 0
-ioctl(3, SG_IO, 0xbfbaea50)             = 0
-ioctl(3, BLKRRPART, 0xbfbaea50)         = 0
-write(1, "eject: SCSI eject succeeded\n", 28eject: SCSI eject succeeded
-) = 28
-[...]
++       old_size = bio_iovec(bio)->bv_len;
++printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
++               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
++       if (size > old_size) {
++               bio_add_pc_page(req->q, bio, bio_page(bio),
++                                       size - old_size, old_size);
++       }
++       scmd->sdb.length = req->data_len = size;
++printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
++               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
++               scmd->sdb.length);
 
-It looks like everything is OK. The only problem is that the disk
-does not eject (only spins up).
+and it howed sdb.length being 24 before, and 512 after.
 
+And the damn thing still spit out 24 bytes onto the bus and stopped.
 
-It does work when using SCSI generic device:
-# eject -v /dev/sg0
-eject: device name is `/dev/sg0'
-eject: expanded name is `/dev/sg0'
-eject: `/dev/sg0' is not mounted
-eject: `/dev/sg0' is not a mount point
-eject: `/dev/sg0' is not a multipartition device
-eject: trying to eject `/dev/sg0' using CD-ROM eject command
-eject: CD-ROM eject command failed
-eject: trying to eject `/dev/sg0' using SCSI commands
-eject: SCSI eject succeeded
+To prove where the bug is, I lied to SCSI.  I changed this:
 
-The disk spins up and does some reads (most probably useless) and then ejects.
+-       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
++       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
 
-Now I wonder where the problem is...
+and we spat out a 512 byte sector to the disc, which accepted it and
+erased the trimmed sector.  Yay.
+
+So we can go back to looking for a *fifth* place where we store the
+length of the data we're transferring.  I'm not convinced this says good
+things about our storage stack that we have so many places where we
+store the length.  There's more than this of course, because there's
+ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
+correctly.
 
 -- 
-Ondrej Zary
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
