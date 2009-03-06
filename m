@@ -1,33 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA "target mode" (or "Channel-to-Channel" comm mode)
-Date: Fri, 06 Mar 2009 06:34:02 -0500
-Message-ID: <49B10A2A.2010207@pobox.com>
-References: <49AD34F4.8090008@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ay1xxx-ide: auide_{in|out}sw() should be static
+Date: Fri, 6 Mar 2009 17:58:31 +0400
+Message-ID: <200903061658.31139.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59703 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750827AbZCFLeL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Mar 2009 06:34:11 -0500
-In-Reply-To: <49AD34F4.8090008@rtr.ca>
+Received: from [213.79.90.228] ([213.79.90.228]:49509 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754181AbZCFN6A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Mar 2009 08:58:00 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Oh BTW...  as a reminder, there is an AHCI clone from ATP out there, 
-that also supports SATA target mode.
+Make auide_{insw|outsw}() 'static' and mark them 'inline' as there's only one
+call site for each: in the driver's {in|out}put_data() methods respectively...
 
-They didn't post a URL to docs, as I recall, but they did make the docs 
-freely available to any who asked.  I have a copy and can email, if 
-anyone wants to take a look.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Also FWIW, the AHCI driver needed a few modifications (that never got 
-done) to support the ATP variant of AHCI.
+---
+This patch is against the recent pata-2.6 series...
 
-	Jeff
+ drivers/ide/au1xxx-ide.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
+Index: linux-2.6/drivers/ide/au1xxx-ide.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/au1xxx-ide.c
++++ linux-2.6/drivers/ide/au1xxx-ide.c
+@@ -50,7 +50,7 @@ static _auide_hwif auide_hwif;
+ 
+ #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA)
+ 
+-void auide_insw(unsigned long port, void *addr, u32 count)
++static inline void auide_insw(unsigned long port, void *addr, u32 count)
+ {
+ 	_auide_hwif *ahwif = &auide_hwif;
+ 	chan_tab_t *ctp;
+@@ -68,7 +68,7 @@ void auide_insw(unsigned long port, void
+ 	ctp->cur_ptr = au1xxx_ddma_get_nextptr_virt(dp);
+ }
+ 
+-void auide_outsw(unsigned long port, void *addr, u32 count)
++static inline void auide_outsw(unsigned long port, void *addr, u32 count)
+ {
+ 	_auide_hwif *ahwif = &auide_hwif;
+ 	chan_tab_t *ctp;
 
