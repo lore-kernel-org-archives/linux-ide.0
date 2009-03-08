@@ -1,106 +1,119 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] ide: add support for CFA specified transfer modes
-Date: Mon, 09 Mar 2009 00:07:09 +0300
-Message-ID: <49B4337D.2030806@ru.mvista.com>
-References: <200903032034.49372.sshtylyov@ru.mvista.com> <200903071723.26150.bzolnier@gmail.com> <49B2A5C1.8090409@ru.mvista.com> <200903081738.01959.bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Getting TRIM working
+Date: Sun, 08 Mar 2009 16:24:40 -0500
+Message-ID: <1236547480.4861.12.camel@localhost.localdomain>
+References: <20090303190700.GD20511@parisc-linux.org>
+	 <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org>
+	 <49B39DCB.3040203@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:5573 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753421AbZCHVHQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Mar 2009 17:07:16 -0400
-In-Reply-To: <200903081738.01959.bzolnier@gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39844 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753852AbZCHVYp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Mar 2009 17:24:45 -0400
+In-Reply-To: <49B39DCB.3040203@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Hello.
+On Sun, 2009-03-08 at 12:28 +0200, Boaz Harrosh wrote:
+> Matthew Wilcox wrote:
+> > On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
+> >> Matthew Wilcox wrote:
+> >>>         size = ALIGN(i * 8, 512);
+> >>>         memset(buffer + i * 8, 0, size - i * 8);
+> >>>         old_size = bio_iovec(bio)->bv_len;
+> >>> printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+> >>>                 req->data_len, old_size);
+> >>>         if (size > old_size) {
+> >>>                 bio_add_pc_page(req->q, bio, bio_page(bio),
+> >>>                                         size - old_size, old_size);
+> >>>                 req->data_len = size;
+> >>>         }
+> >>> printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+> >>>                 req->data_len, bio_iovec(bio)->bv_len);
+> >>>
+> >>> Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
+> >>> Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
+> >>> the drive).  What am I missing?
+> >> What about the length embedded in the CDB, which is usually derived from
+> >> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
+> >> request && it's bios. The later might be bigger then scsi's in split commands
+> >> but the drivers should only consume scsi_bufflen() bytes.
+> > 
+> > A fine idea, completely true ... I fixed it like this:
+> > 
+> > +       old_size = bio_iovec(bio)->bv_len;
+> > +printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
+> > +               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
+> > +       if (size > old_size) {
+> > +               bio_add_pc_page(req->q, bio, bio_page(bio),
+> > +                                       size - old_size, old_size);
+> > +       }
+> > +       scmd->sdb.length = req->data_len = size;
+> > +printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
+> > +               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
+> > +               scmd->sdb.length);
+> > 
+> > and it howed sdb.length being 24 before, and 512 after.
+> > 
+> > And the damn thing still spit out 24 bytes onto the bus and stopped.
+> > 
+> > To prove where the bug is, I lied to SCSI.  I changed this:
+> > 
+> > -       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
+> > +       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
+> > 
+> > and we spat out a 512 byte sector to the disc, which accepted it and
+> > erased the trimmed sector.  Yay.
+> > 
+> > So we can go back to looking for a *fifth* place where we store the
+> > length of the data we're transferring.  I'm not convinced this says good
+> > things about our storage stack that we have so many places where we
+> > store the length.  There's more than this of course, because there's
+> > ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
+> > correctly.
+> > 
+> 
+> That's because you are doing it at the wrong level at the wrong stage.
+> 1. block-level submits a request
+> 2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
+>    Request's sizes are only a recommendation. ULD or scsi-ml may
+>    prepare a smaller command then request. Once command is prepared
+>    request is disregarded, you can bang on it all you want code will
+>    not care about it one bit.
+> 3. LLD executes the scsi-command (Not the block-request)
+> 4. scsi-ml completes command's bytes, at this stage the request might
+>    not be over and, and a reminder is re-prepared so the request can
+>    be complete.
+> 
+> The code above scmd->sdb.length = req->data_len = size; is not allowed
+> and can cause data leaks.
+> 
+> You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
+> alignments and drain buffers that expose some other possible lenght's to ata.
+> 
+> And to your question the missing length above is probably encoded inside the
+> submitted CDB. (scsi_cmnd->cmnd). When you change the length before
+> stage (2) it works.
+> 
+> I think you should be using the drain mechanisms built into ata 
 
-Bartlomiej Zolnierkiewicz wrote:
+OK, so I think you correctly identified the problem;  I don't quite
+think you've identified the solution because draining is all about
+disposing of excess data, in particular we only tend to have one drain
+area per queue (and there could be multiple outstanding discards).
 
->>>> Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes 3/4.
->>>>         
->>> Thanks for picking this up.
->>>       
->>>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->>>>         
->>>> ---
->>>> This patch is against the current pata-2.6 series. Since there were no PIO5
->>>> capable hard drives produced and you also need 66 MHz input clock to actually
->>>> get the difference WRT the setup timing programmed, I decided to simply replace
->>>> the old non-standard PIO mode 5 timings with CFA specified ones.
->>>> Phew, hopefully I haven't overlooked anything -- quite a lot had to be changed.
->>>>         
->>> It looks fine overall, few comments below.
->>>       
+The problem in the prepare is you need to set up a command with data.
+What I'm not quite clear on is why blk_rq_map_kern() on a kmalloc'd
+buffer can't be used.  You'd end up with a dual bio request (one for the
+discard, one for the data), but they should tear down correctly using
+the separate bio teardowns and pass correctly into blk_rq_map_sg() which
+was the original point.
 
-[...]
-
->>>> @@ -90,6 +93,10 @@ u16 ide_pio_cycle_time(ide_drive_t *driv
->>>> 		/* conservative "downgrade" for all pre-ATA2 drives */
->>>> 		if (pio < 3 && cycle < t->cycle)
->>>> 			cycle = 0; /* use standard timing */
->>>> +
->>>> +		/* IORDY must be ignored for CF specific PIO modes */
->>>> +		if (pio > 4 && ata_id_is_cfa(id))
->>>> +			cycle = 0; /* use standard timing */
->>>>         
->>> This comment seems out of place for the code dealing with cycle timing.
->>>       
->>> When it comes to IORDY I recalled that some host drivers already support
->>> "harddisk" PIO5 so they may need to be updated to not force IORDY setting
->>> (seems like at least sl82c105.c is affected).
->>>       
->>     I thought I have taken care of this with the generic code... the need for 
->> the driver-level CF specific changes looks iffy as not all these drivers ever 
->>     
->
-> Theoretically all drivers can drive CF devices using IDE-CF adapters so we
->   
-
-   I keep forgetting about this crap^W nice pieces of hardware... :-/
-
-> shouldn't be making any such assumptions.  There are also some interesting
-> hardware designs, i.e. Vortex 86SX SoC which uses ITE 8211 chipset for IDE
->   
-
-   Do we support it? Ah, I'm seeing. But I'm not seeig any IORDY related 
-logic in it821x.c...
-
-> (embedded x86 devices using this SoC are often equipped with CF slot).
->   
->> drive CF. I need to think about it... won't be the part of this patch in any case.
->>     
->
-> The problem is that <linux/ata.h> lacks ata_id_needs_iordy(id, pio) so
-> drivers are using ata_id_has_iordy() which doesn't know about CF specific
->   
-
-   Still not all are using even this -- e.g. piix.c doesn't. Oh 
-horror... well, Russian has the saying, something like "the initiative 
-should be punished"... :-)
-
-> needs, i.e. sl82c105.c does:
->
->         if (pio > 2 || ata_id_has_iordy(drive->id))
->                 iordy = 0x40;
->   
-
-   Yes, that's clear...
-
-> and since the driver declares PIO5 support once this patch gets applied
-> PIO5 will be used also for CF devices.
->   
-
-   Hm, indeed -- looks like I *did* miss some things. :-/
-
-> Thanks,
-> Bart
->   
-
-MBR, Sergei
+James
 
 
