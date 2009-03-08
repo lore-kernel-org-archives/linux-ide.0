@@ -1,93 +1,98 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
-Date: Sun, 8 Mar 2009 08:53:38 +0100
-Message-ID: <20090308075338.GB4078@liondog.tnic>
-References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com> <200903051549.22518.bzolnier@gmail.com> <9ea470500903050719m7952f84ct56475c6445846eeb@mail.gmail.com> <200903051752.41611.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Getting TRIM working
+Date: Sun, 08 Mar 2009 12:28:27 +0200
+Message-ID: <49B39DCB.3040203@panasas.com>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f178.google.com ([209.85.218.178]:35551 "EHLO
-	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbZCHHxp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Mar 2009 03:53:45 -0400
-Content-Disposition: inline
-In-Reply-To: <200903051752.41611.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20090306191620.GA25995@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Mar 05, 2009 at 05:52:41PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 05 March 2009, Borislav Petkov wrote:
-> > Hi,
-> > 
-> > > Unrelated to the original issue that the patch tries to fix
-> > > (sg mapping no data commands which OOPS-es w/ DEBUG_VIRTUAL=y):
-> > > - moving ide_init_sg_cmd()+ide_map_sg() to ide_issue_pc()
-> > > - converting the code to use blk_rq_bytes()
-> > 
-> > aah, ok, now I could get exactly what you meant :). However, (!) ide-floppy is
-> > potentially broken in the same way for data-less cmds since we unconditionally
+Matthew Wilcox wrote:
+> On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
+>> Matthew Wilcox wrote:
+>>>         size = ALIGN(i * 8, 512);
+>>>         memset(buffer + i * 8, 0, size - i * 8);
+>>>         old_size = bio_iovec(bio)->bv_len;
+>>> printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+>>>                 req->data_len, old_size);
+>>>         if (size > old_size) {
+>>>                 bio_add_pc_page(req->q, bio, bio_page(bio),
+>>>                                         size - old_size, old_size);
+>>>                 req->data_len = size;
+>>>         }
+>>> printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+>>>                 req->data_len, bio_iovec(bio)->bv_len);
+>>>
+>>> Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
+>>> Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
+>>> the drive).  What am I missing?
+>> What about the length embedded in the CDB, which is usually derived from
+>> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
+>> request && it's bios. The later might be bigger then scsi's in split commands
+>> but the drivers should only consume scsi_bufflen() bytes.
 > 
-> Indeed, you are right but it seems that this is not a new problem.
+> A fine idea, completely true ... I fixed it like this:
 > 
-> Wait... it makes things "worse" as there should have been 3 patches:
-> (IOW _three_ patchpoints! ;):
+> +       old_size = bio_iovec(bio)->bv_len;
+> +printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
+> +               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
+> +       if (size > old_size) {
+> +               bio_add_pc_page(req->q, bio, bio_page(bio),
+> +                                       size - old_size, old_size);
+> +       }
+> +       scmd->sdb.length = req->data_len = size;
+> +printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
+> +               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
+> +               scmd->sdb.length);
 > 
-> - ide-cd fix for problematic patch
+> and it howed sdb.length being 24 before, and 512 after.
+> 
+> And the damn thing still spit out 24 bytes onto the bus and stopped.
+> 
+> To prove where the bug is, I lied to SCSI.  I changed this:
+> 
+> -       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
+> +       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
+> 
+> and we spat out a 512 byte sector to the disc, which accepted it and
+> erased the trimmed sector.  Yay.
+> 
+> So we can go back to looking for a *fifth* place where we store the
+> length of the data we're transferring.  I'm not convinced this says good
+> things about our storage stack that we have so many places where we
+> store the length.  There's more than this of course, because there's
+> ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
+> correctly.
+> 
 
-see below
+That's because you are doing it at the wrong level at the wrong stage.
+1. block-level submits a request
+2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
+   Request's sizes are only a recommendation. ULD or scsi-ml may
+   prepare a smaller command then request. Once command is prepared
+   request is disregarded, you can bang on it all you want code will
+   not care about it one bit.
+3. LLD executes the scsi-command (Not the block-request)
+4. scsi-ml completes command's bytes, at this stage the request might
+   not be over and, and a reminder is re-prepared so the request can
+   be complete.
 
-> - ide-floppy fix for mainline
+The code above scmd->sdb.length = req->data_len = size; is not allowed
+and can cause data leaks.
 
-ide-floppy is still royally broken when reading the partition
-information - I've been staring at traces for a while yesterday and
-it looks pretty hairy. What is more, it needs that same fix for
-DEBUG_VIRTUAL as ide-cd since I could reproduce it yesterday. Do you
-still want that for the merge window or you wanna wait until its
-properly fixed?
+You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
+alignments and drain buffers that expose some other possible lenght's to ata.
 
-> - ide-atapi cleanup for pata tree
+And to your question the missing length above is probably encoded inside the
+submitted CDB. (scsi_cmnd->cmnd). When you change the length before
+stage (2) it works.
 
-postponed for now.
+I think you should be using the drain mechanisms built into ata 
 
---
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Fri, 6 Mar 2009 09:35:54 +0100
-Subject: [PATCH] ide-cd: do not map dataless cmds to an sg
-
-since it oopses on the virt_to_page() translation check when
-DEBUG_VIRTUAL is enabled.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-cd.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 091d414..35729a4 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -916,9 +916,11 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 
- 	cmd.rq = rq;
- 
--	ide_init_sg_cmd(&cmd,
--		blk_fs_request(rq) ? (rq->nr_sectors << 9) : rq->data_len);
--	ide_map_sg(drive, &cmd);
-+	if (blk_fs_request(rq) || rq->data_len) {
-+		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ? (rq->nr_sectors << 9)
-+							 : rq->data_len);
-+		ide_map_sg(drive, &cmd);
-+	}
- 
- 	return ide_issue_pc(drive, &cmd);
- out_end:
--- 
-1.6.1.3
-
-
--- 
-Regards/Gruss,
-    Boris.
+Boaz
