@@ -1,98 +1,66 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: Getting TRIM working
-Date: Sun, 08 Mar 2009 12:28:27 +0200
-Message-ID: <49B39DCB.3040203@panasas.com>
-References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/2] ide: add support for CFA specified transfer modes (take 2)
+Date: Sun, 8 Mar 2009 17:43:48 +0100
+Message-ID: <200903081743.49038.bzolnier@gmail.com>
+References: <200903072009.47157.sshtylyov@ru.mvista.com> <49B2E351.3080803@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090306191620.GA25995@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:49752 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbZCHQl4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Mar 2009 12:41:56 -0400
+Received: by fxm24 with SMTP id 24so964804fxm.37
+        for <linux-ide@vger.kernel.org>; Sun, 08 Mar 2009 09:41:54 -0700 (PDT)
+In-Reply-To: <49B2E351.3080803@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
 
-Matthew Wilcox wrote:
-> On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
->> Matthew Wilcox wrote:
->>>         size = ALIGN(i * 8, 512);
->>>         memset(buffer + i * 8, 0, size - i * 8);
->>>         old_size = bio_iovec(bio)->bv_len;
->>> printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
->>>                 req->data_len, old_size);
->>>         if (size > old_size) {
->>>                 bio_add_pc_page(req->q, bio, bio_page(bio),
->>>                                         size - old_size, old_size);
->>>                 req->data_len = size;
->>>         }
->>> printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
->>>                 req->data_len, bio_iovec(bio)->bv_len);
->>>
->>> Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
->>> Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
->>> the drive).  What am I missing?
->> What about the length embedded in the CDB, which is usually derived from
->> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
->> request && it's bios. The later might be bigger then scsi's in split commands
->> but the drivers should only consume scsi_bufflen() bytes.
+On Saturday 07 March 2009, Sergei Shtylyov wrote:
+> Hello, I wrote:
 > 
-> A fine idea, completely true ... I fixed it like this:
+> > Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes 3/4.
+> >
+> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> >
+> > ---
+> > Did two changes after Bart's review:
+> > - fixed wrong mask in ide_config_drive_speed();
+> > - clarified comment in ide_pio_cycle_time().
+> >
+> > This patch is against the current pata-2.6 series. Since there were no PIO5
+> > capable hard drives produced and you also need 66 MHz input clock to actually
+> > get the difference WRT the setup timing programmed, I decided to simply replace
+> > the old non-standard PIO mode 5 timings with CFA specified ones.
+> > Phew, hopefully I haven't overlooked anything -- quite a lot had to be changed.
+> >
+> > Stanislaw, please give it a try -- I don't have any CF hardware now.
+> >   
+> [...]
+> > Index: linux-2.6/drivers/ide/ide-iops.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/ide/ide-iops.c
+> > +++ linux-2.6/drivers/ide/ide-iops.c
+> > @@ -389,6 +389,8 @@ int ide_config_drive_speed(ide_drive_t *
+> >  	id[ATA_ID_UDMA_MODES]  &= ~0xFF00;
+> >  	id[ATA_ID_MWDMA_MODES] &= ~0x0F00;
+> >  	id[ATA_ID_SWDMA_MODES] &= ~0x0F00;
+> > +	if (ata_id_is_cfa(id))
+> > +		id[ATA_ID_CFA_MODES] &= ~0x0FC0;
+> >   
 > 
-> +       old_size = bio_iovec(bio)->bv_len;
-> +printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
-> +               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
-> +       if (size > old_size) {
-> +               bio_add_pc_page(req->q, bio, bio_page(bio),
-> +                                       size - old_size, old_size);
-> +       }
-> +       scmd->sdb.length = req->data_len = size;
-> +printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
-> +               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
-> +               scmd->sdb.length);
-> 
-> and it howed sdb.length being 24 before, and 512 after.
-> 
-> And the damn thing still spit out 24 bytes onto the bus and stopped.
-> 
-> To prove where the bug is, I lied to SCSI.  I changed this:
-> 
-> -       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
-> +       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
-> 
-> and we spat out a 512 byte sector to the disc, which accepted it and
-> erased the trimmed sector.  Yay.
-> 
-> So we can go back to looking for a *fifth* place where we store the
-> length of the data we're transferring.  I'm not convinced this says good
-> things about our storage stack that we have so many places where we
-> store the length.  There's more than this of course, because there's
-> ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
-> correctly.
-> 
+>    Oops, won't this fragment clear the current DMA mode when setting PIO 
+> mode (and so vice versa for CF)?
 
-That's because you are doing it at the wrong level at the wrong stage.
-1. block-level submits a request
-2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
-   Request's sizes are only a recommendation. ULD or scsi-ml may
-   prepare a smaller command then request. Once command is prepared
-   request is disregarded, you can bang on it all you want code will
-   not care about it one bit.
-3. LLD executes the scsi-command (Not the block-request)
-4. scsi-ml completes command's bytes, at this stage the request might
-   not be over and, and a reminder is re-prepared so the request can
-   be complete.
+Indeed, however since we never check selected modes later (except
+ide_id_dma_bug() but its intent is to check for buggy devices)
+there is no much point in all these id hacks and this seems to be
+the perfect opportunity to just remove them.
 
-The code above scmd->sdb.length = req->data_len = size; is not allowed
-and can cause data leaks.
-
-You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
-alignments and drain buffers that expose some other possible lenght's to ata.
-
-And to your question the missing length above is probably encoded inside the
-submitted CDB. (scsi_cmnd->cmnd). When you change the length before
-stage (2) it works.
-
-I think you should be using the drain mechanisms built into ata 
-
-Boaz
+Thanks,
+Bart
