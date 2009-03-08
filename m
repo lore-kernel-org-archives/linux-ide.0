@@ -1,278 +1,103 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
-Date: Sun, 8 Mar 2009 18:08:05 +0100
-Message-ID: <200903081808.05448.bzolnier@gmail.com>
-References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com> <200903051752.41611.bzolnier@gmail.com> <20090308075338.GB4078@liondog.tnic>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Getting TRIM working
+Date: Sun, 08 Mar 2009 19:38:03 +0200
+Message-ID: <49B4027B.9080301@panasas.com>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org> <49B39DCB.3040203@panasas.com> <20090308165447.GN25995@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:64651 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714AbZCHRGI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Mar 2009 13:06:08 -0400
-In-Reply-To: <20090308075338.GB4078@liondog.tnic>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20090308165447.GN25995@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 08 March 2009, Borislav Petkov wrote:
-
-[...]
-
-> > Wait... it makes things "worse" as there should have been 3 patches:
-> > (IOW _three_ patchpoints! ;):
-> > 
-> > - ide-cd fix for problematic patch
+Matthew Wilcox wrote:
+> On Sun, Mar 08, 2009 at 12:28:27PM +0200, Boaz Harrosh wrote:
+>> That's because you are doing it at the wrong level at the wrong stage.
+>> 1. block-level submits a request
+>> 2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
+>>    Request's sizes are only a recommendation. ULD or scsi-ml may
+>>    prepare a smaller command then request. Once command is prepared
+>>    request is disregarded, you can bang on it all you want code will
+>>    not care about it one bit.
 > 
-> see below
-
-Ok, I folded it into the original patch (attached).
-
-> > - ide-floppy fix for mainline
+> I may well be changing more than I need to, but it would be foolish of
+> me to make the assumption at this point that nothing is looking at the
+> request.
 > 
-> ide-floppy is still royally broken when reading the partition
-> information - I've been staring at traces for a while yesterday and
-> it looks pretty hairy. What is more, it needs that same fix for
-> DEBUG_VIRTUAL as ide-cd since I could reproduce it yesterday. Do you
-> still want that for the merge window or you wanna wait until its
-> properly fixed?
-
-If the mainline is broken sg fix can wait but to be honest I don't see much
-point in delaying it (it is an independent problem and the bugfix should be
-a completely safe one-liner).
-
-> > - ide-atapi cleanup for pata tree
+>> 3. LLD executes the scsi-command (Not the block-request)
 > 
-> postponed for now.
+> This is true, *but* some of the lengths in the block request still end
+> up getting used, for example bv_len is used by blk_rq_map_sg() which is
+> called by the LLD.
+> 
 
-Ok...
+I must be running but... What? blk_rq_map_sg() is called by scsi-ml in prep_command
+when allocating and setting up SGs (scsi_sglist())
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: use scatterlists for PIO transfers (non-fs requests) (v2)
+If called by LLD then it's the first I've herd of, and some assumptions at scsi-ml
+surly break.
 
-Convert ide-cd to use scatterlists for PIO transfers and get rid of
-partial completions (except on error) also for non-fs requests.
+This is exactly stage (2) the call to blk_rq_map_sg(), from there on request is
+ignored.
 
-v2:
-Do not map dataless commands to an sg since it oopses on the virt_to_page()
-translation check when DEBUG_VIRTUAL is enabled.  (from Borislav Petkov,
-reported/bisected-by Tetsuo Handa).
+>> 4. scsi-ml completes command's bytes, at this stage the request might
+>>    not be over and, and a reminder is re-prepared so the request can
+>>    be complete.
+>>
+>> The code above scmd->sdb.length = req->data_len = size; is not allowed
+>> and can cause data leaks.
+> 
+> Simply not true.  We are *changing the amount of data we wish to
+> transfer*.  SCSI would have sent down 24 bytes of data.  ATA needs to
+> send down 512 bytes of data.
+> 
 
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-replacement patch for the one in pata tree / linux-next
+That's what you want but you can't do that after stage 2.
 
- drivers/ide/ide-cd.c |  100 +++++++++++++++------------------------------------
- 1 file changed, 30 insertions(+), 70 deletions(-)
+>> You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
+>> alignments and drain buffers that expose some other possible lenght's to ata.
+>>
+>> And to your question the missing length above is probably encoded inside the
+>> submitted CDB. (scsi_cmnd->cmnd). When you change the length before
+>> stage (2) it works.
+> 
+> No, that's not it.  This works (in sd.c):
+> 
+>         if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
+> [...]
+>         rq->cmd_type = REQ_TYPE_BLOCK_PC;
+> 	rq->cmd_len = 10;
+> 	rq->cmd[0] = UNMAP;
+> 	put_unaligned_be16(24, rq->cmd + 7);
+> 
+> So the 24 in the cmd gets ignored.
+> 
+>> I think you should be using the drain mechanisms built into ata 
+> 
+> drain seems only applicable to ATAPI, not to ATA.  The comment says:
+> 
+>  *      ATAPI commands which transfer variable length data to host
+>  *      might overflow due to application error or hardare bug.  This
+>  *      function checks whether overflow should be drained and ignored
+>  *      for @request.
+> 
+> This isn't the case with discard/UNMAP/TRIM.  We know exactly how much
+> data we want to send.  The problem is that I don't know how to update all
+> the required places to change the amount of data being sent.  I don't
+> see any other ATA command which needs to do this, so this is breaking
+> new ground for libata-scsi.
+> 
 
-Index: b/drivers/ide/ide-cd.c
-===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -509,8 +509,10 @@ static int ide_cd_check_ireason(ide_driv
- 	return -1;
- }
- 
--static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct request *rq)
-+static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct ide_cmd *cmd)
- {
-+	struct request *rq = cmd->rq;
-+
- 	ide_debug_log(IDE_DBG_FUNC, "rq->cmd[0]: 0x%x", rq->cmd[0]);
- 
- 	/*
-@@ -518,11 +520,14 @@ static void ide_cd_request_sense_fixup(i
- 	 * and some drives don't send them.  Sigh.
- 	 */
- 	if (rq->cmd[0] == GPCMD_REQUEST_SENSE &&
--	    rq->data_len > 0 && rq->data_len <= 5)
--		while (rq->data_len > 0) {
--			*(u8 *)rq->data++ = 0;
--			--rq->data_len;
-+	    cmd->nleft > 0 && cmd->nleft <= 5) {
-+		unsigned int ofs = cmd->nbytes - cmd->nleft;
-+
-+		while (cmd->nleft > 0) {
-+			*((u8 *)rq->data + ofs++) = 0;
-+			cmd->nleft--;
- 		}
-+	}
- }
- 
- int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
-@@ -613,22 +618,11 @@ static void ide_cd_error_cmd(ide_drive_t
- 		ide_complete_rq(drive, 0, nr_bytes);
- }
- 
--/*
-- * Called from blk_end_request_callback() after the data of the request is
-- * completed and before the request itself is completed. By returning value '1',
-- * blk_end_request_callback() returns immediately without completing it.
-- */
--static int cdrom_newpc_intr_dummy_cb(struct request *rq)
--{
--	return 1;
--}
--
- static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct ide_cmd *cmd = &hwif->cmd;
- 	struct request *rq = hwif->rq;
--	xfer_func_t *xferfunc;
- 	ide_expiry_t *expiry = NULL;
- 	int dma_error = 0, dma, stat, thislen, uptodate = 0;
- 	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
-@@ -678,7 +672,7 @@ static ide_startstop_t cdrom_newpc_intr(
- 
- 	ide_read_bcount_and_ireason(drive, &len, &ireason);
- 
--	thislen = blk_fs_request(rq) ? len : rq->data_len;
-+	thislen = blk_fs_request(rq) ? len : cmd->nleft;
- 	if (thislen > len)
- 		thislen = len;
- 
-@@ -702,9 +696,9 @@ static ide_startstop_t cdrom_newpc_intr(
- 				uptodate = 0;
- 			}
- 		} else if (!blk_pc_request(rq)) {
--			ide_cd_request_sense_fixup(drive, rq);
-+			ide_cd_request_sense_fixup(drive, cmd);
- 			/* complain if we still have data left to transfer */
--			uptodate = rq->data_len ? 0 : 1;
-+			uptodate = cmd->nleft ? 0 : 1;
- 			if (uptodate == 0)
- 				rq->cmd_flags |= REQ_FAILED;
- 		}
-@@ -718,35 +712,15 @@ static ide_startstop_t cdrom_newpc_intr(
- 
- 	cmd->last_xfer_len = 0;
- 
--	if (ireason == 0) {
--		write = 1;
--		xferfunc = hwif->tp_ops->output_data;
--	} else {
--		write = 0;
--		xferfunc = hwif->tp_ops->input_data;
--	}
--
- 	ide_debug_log(IDE_DBG_PC, "data transfer, rq->cmd_type: 0x%x, "
- 				  "ireason: 0x%x",
- 				  rq->cmd_type, ireason);
- 
- 	/* transfer data */
- 	while (thislen > 0) {
--		u8 *ptr = blk_fs_request(rq) ? NULL : rq->data;
--		int blen = rq->data_len;
--
--		/* bio backed? */
--		if (rq->bio) {
--			if (blk_fs_request(rq)) {
--				blen = min_t(int, thislen, cmd->nleft);
--			} else {
--				ptr = bio_data(rq->bio);
--				blen = bio_iovec(rq->bio)->bv_len;
--			}
--		}
-+		int blen = min_t(int, thislen, cmd->nleft);
- 
--		if ((blk_fs_request(rq) && cmd->nleft == 0) ||
--		    (blk_fs_request(rq) == 0 && ptr == NULL)) {
-+		if (cmd->nleft == 0) {
- 			if (blk_fs_request(rq) && !write)
- 				/*
- 				 * If the buffers are full, pipe the rest into
-@@ -763,33 +737,12 @@ static ide_startstop_t cdrom_newpc_intr(
- 			break;
- 		}
- 
--		if (blen > thislen)
--			blen = thislen;
--
--		if (blk_fs_request(rq)) {
--			ide_pio_bytes(drive, cmd, write, blen);
--			cmd->last_xfer_len += blen;
--		} else
--			xferfunc(drive, NULL, ptr, blen);
-+		ide_pio_bytes(drive, cmd, write, blen);
-+		cmd->last_xfer_len += blen;
- 
- 		thislen -= blen;
- 		len -= blen;
- 
--		if (blk_fs_request(rq) == 0) {
--			rq->data_len -= blen;
--
--			/*
--			 * The request can't be completed until DRQ is cleared.
--			 * So complete the data, but don't complete the request
--			 * using the dummy function for the callback feature
--			 * of blk_end_request_callback().
--			 */
--			if (rq->bio)
--				blk_end_request_callback(rq, 0, blen,
--						 cdrom_newpc_intr_dummy_cb);
--			else
--				rq->data += blen;
--		}
- 		if (sense && write == 0)
- 			rq->sense_len += blen;
- 	}
-@@ -814,8 +767,7 @@ out_end:
- 	if (blk_pc_request(rq) && rc == 0) {
- 		unsigned int dlen = rq->data_len;
- 
--		if (dma)
--			rq->data_len = 0;
-+		rq->data_len = 0;
- 
- 		if (blk_end_request(rq, 0, dlen))
- 			BUG();
-@@ -828,13 +780,14 @@ out_end:
- 		if (blk_fs_request(rq)) {
- 			if (cmd->nleft == 0)
- 				uptodate = 1;
--			if (uptodate == 0)
--				ide_cd_error_cmd(drive, cmd);
- 		} else {
- 			if (uptodate <= 0 && rq->errors == 0)
- 				rq->errors = -EIO;
- 		}
- 
-+		if (uptodate == 0)
-+			ide_cd_error_cmd(drive, cmd);
-+
- 		/* make sure it's fully ended */
- 		if (blk_pc_request(rq))
- 			nsectors = (rq->data_len + 511) >> 9;
-@@ -844,6 +797,12 @@ out_end:
- 		if (nsectors == 0)
- 			nsectors = 1;
- 
-+		if (blk_fs_request(rq) == 0) {
-+			rq->data_len -= (cmd->nbytes - cmd->nleft);
-+			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
-+				rq->data_len += cmd->last_xfer_len;
-+		}
-+
- 		ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
- 
- 		if (sense && rc == 2)
-@@ -971,8 +930,9 @@ static ide_startstop_t ide_cd_do_request
- 
- 	cmd.rq = rq;
- 
--	if (blk_fs_request(rq)) {
--		ide_init_sg_cmd(&cmd, rq->nr_sectors << 9);
-+	if (blk_fs_request(rq) || rq->data_len) {
-+		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ? (rq->nr_sectors << 9)
-+							 : rq->data_len);
- 		ide_map_sg(drive, &cmd);
- 	}
- 
+You must do the change before/during stage 2 above. (length get encoded inside
+scsi_sglist()).
+
+Sorry I must be running. If you have a public git with this stuff
+I can have a look tomorrow, or send a .diff I'll apply locally and
+inspect it.
+
+bye
+Boaz
+
