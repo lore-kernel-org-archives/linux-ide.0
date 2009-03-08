@@ -1,91 +1,87 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2] ide: add support for CFA specified transfer modes
-Date: Sun, 8 Mar 2009 17:38:01 +0100
-Message-ID: <200903081738.01959.bzolnier@gmail.com>
-References: <200903032034.49372.sshtylyov@ru.mvista.com> <200903071723.26150.bzolnier@gmail.com> <49B2A5C1.8090409@ru.mvista.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Getting TRIM working
+Date: Sun, 8 Mar 2009 10:54:47 -0600
+Message-ID: <20090308165447.GN25995@parisc-linux.org>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org> <49B39DCB.3040203@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:51540 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695AbZCHQl4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Mar 2009 12:41:56 -0400
-Received: by fxm24 with SMTP id 24so964801fxm.37
-        for <linux-ide@vger.kernel.org>; Sun, 08 Mar 2009 09:41:53 -0700 (PDT)
-In-Reply-To: <49B2A5C1.8090409@ru.mvista.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:46934 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753011AbZCHQzF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Mar 2009 12:55:05 -0400
 Content-Disposition: inline
+In-Reply-To: <49B39DCB.3040203@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-On Saturday 07 March 2009, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes 3/4.
-> 
-> > Thanks for picking this up.
-> 
-> >>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> >>---
-> >>This patch is against the current pata-2.6 series. Since there were no PIO5
-> >>capable hard drives produced and you also need 66 MHz input clock to actually
-> >>get the difference WRT the setup timing programmed, I decided to simply replace
-> >>the old non-standard PIO mode 5 timings with CFA specified ones.
-> >>Phew, hopefully I haven't overlooked anything -- quite a lot had to be changed.
-> 
-> > It looks fine overall, few comments below.
-> 
-> >>@@ -389,6 +389,8 @@ int ide_config_drive_speed(ide_drive_t *
-> >> 	id[ATA_ID_UDMA_MODES]  &= ~0xFF00;
-> >> 	id[ATA_ID_MWDMA_MODES] &= ~0x0F00;
-> >> 	id[ATA_ID_SWDMA_MODES] &= ~0x0F00;
-> >>+	if (ata_id_is_cfa(id))
-> >>+		id[ATA_ID_CFA_MODES] &= ~0x0F30;
-> 
-> > Shouldn't the mask be ~0x0FC0 here?
-> 
->     Oops, indeed. :-<
-> 
-> >>@@ -90,6 +93,10 @@ u16 ide_pio_cycle_time(ide_drive_t *driv
-> >> 		/* conservative "downgrade" for all pre-ATA2 drives */
-> >> 		if (pio < 3 && cycle < t->cycle)
-> >> 			cycle = 0; /* use standard timing */
-> >>+
-> >>+		/* IORDY must be ignored for CF specific PIO modes */
-> >>+		if (pio > 4 && ata_id_is_cfa(id))
-> >>+			cycle = 0; /* use standard timing */
-> 
-> > This comment seems out of place for the code dealing with cycle timing.
-> 
-> > When it comes to IORDY I recalled that some host drivers already support
-> > "harddisk" PIO5 so they may need to be updated to not force IORDY setting
-> > (seems like at least sl82c105.c is affected).
-> 
->     I thought I have taken care of this with the generic code... the need for 
-> the driver-level CF specific changes looks iffy as not all these drivers ever 
+On Sun, Mar 08, 2009 at 12:28:27PM +0200, Boaz Harrosh wrote:
+> That's because you are doing it at the wrong level at the wrong stage.
+> 1. block-level submits a request
+> 2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
+>    Request's sizes are only a recommendation. ULD or scsi-ml may
+>    prepare a smaller command then request. Once command is prepared
+>    request is disregarded, you can bang on it all you want code will
+>    not care about it one bit.
 
-Theoretically all drivers can drive CF devices using IDE-CF adapters so we
-shouldn't be making any such assumptions.  There are also some interesting
-hardware designs, i.e. Vortex 86SX SoC which uses ITE 8211 chipset for IDE
-(embedded x86 devices using this SoC are often equipped with CF slot).
+I may well be changing more than I need to, but it would be foolish of
+me to make the assumption at this point that nothing is looking at the
+request.
 
-> drive CF. I need to think about it... won't be the part of this patch in any case.
+> 3. LLD executes the scsi-command (Not the block-request)
 
-The problem is that <linux/ata.h> lacks ata_id_needs_iordy(id, pio) so
-drivers are using ata_id_has_iordy() which doesn't know about CF specific
-needs, i.e. sl82c105.c does:
+This is true, *but* some of the lengths in the block request still end
+up getting used, for example bv_len is used by blk_rq_map_sg() which is
+called by the LLD.
 
-        if (pio > 2 || ata_id_has_iordy(drive->id))
-                iordy = 0x40;
+> 4. scsi-ml completes command's bytes, at this stage the request might
+>    not be over and, and a reminder is re-prepared so the request can
+>    be complete.
+> 
+> The code above scmd->sdb.length = req->data_len = size; is not allowed
+> and can cause data leaks.
 
-and since the driver declares PIO5 support once this patch gets applied
-PIO5 will be used also for CF devices.
+Simply not true.  We are *changing the amount of data we wish to
+transfer*.  SCSI would have sent down 24 bytes of data.  ATA needs to
+send down 512 bytes of data.
 
-Thanks,
-Bart
+> You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
+> alignments and drain buffers that expose some other possible lenght's to ata.
+> 
+> And to your question the missing length above is probably encoded inside the
+> submitted CDB. (scsi_cmnd->cmnd). When you change the length before
+> stage (2) it works.
+
+No, that's not it.  This works (in sd.c):
+
+        if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
+[...]
+        rq->cmd_type = REQ_TYPE_BLOCK_PC;
+	rq->cmd_len = 10;
+	rq->cmd[0] = UNMAP;
+	put_unaligned_be16(24, rq->cmd + 7);
+
+So the 24 in the cmd gets ignored.
+
+> I think you should be using the drain mechanisms built into ata 
+
+drain seems only applicable to ATAPI, not to ATA.  The comment says:
+
+ *      ATAPI commands which transfer variable length data to host
+ *      might overflow due to application error or hardare bug.  This
+ *      function checks whether overflow should be drained and ignored
+ *      for @request.
+
+This isn't the case with discard/UNMAP/TRIM.  We know exactly how much
+data we want to send.  The problem is that I don't know how to update all
+the required places to change the amount of data being sent.  I don't
+see any other ATA command which needs to do this, so this is breaking
+new ground for libata-scsi.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
