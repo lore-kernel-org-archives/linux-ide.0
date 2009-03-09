@@ -1,32 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] remove stale comment from <linux/hdreg.h>
-Date: Mon, 09 Mar 2009 17:43:52 +0300
-Message-ID: <49B52B28.6040502@ru.mvista.com>
-References: <200902201836.02841.bzolnier@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Getting TRIM working
+Date: Mon, 9 Mar 2009 09:17:16 -0600
+Message-ID: <20090309151715.GT25995@parisc-linux.org>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org> <49B39DCB.3040203@panasas.com> <1236547480.4861.12.camel@localhost.localdomain> <1236547956.4861.17.camel@localhost.localdomain> <20090309083614.GP25995@parisc-linux.org> <1236607495.3318.5.camel@localhost.localdomain> <20090309141451.GS25995@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:23532 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751406AbZCIOn7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Mar 2009 10:43:59 -0400
-In-Reply-To: <200902201836.02841.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090309141451.GS25995@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, David Woodhouse <dwmw2@infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Mon, Mar 09, 2009 at 08:14:51AM -0600, Matthew Wilcox wrote:
+> I added that in an earlier patch:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=commitdiff;h=f6ebf54cb8045a0cab19d73e26a07945c29d1394;hp=1223b373ae0283221b46e70955eb825679c5a6cb
 
-> HDIO_GET_IDENTITY returns 256 words currently.
->
-> Noticed by Norman Diamond.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+I've pushed out a new version of the trim patchset:
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090309
 
-MBR, Sergei
+Now that the ATA bits don't rely on the SCSI bits, I've rearranged the
+SCSI bits to be last (since we seem to be closer to having consensus
+and shipping devices using TRIM than we do UNMAP).
 
+After I've had a chance to do some testing with these patches, I'd like to
+see the first five patches go upstream during the upcoming merge window,
+probably through Jeff's IDE tree.
 
+I'd also like the sixth and seventh patches to go upstream during that
+merge window, since we also need Read Capacity 16 for 4k sector support,
+but that is a different topic for a different thread.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
