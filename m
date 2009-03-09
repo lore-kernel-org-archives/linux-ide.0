@@ -1,17 +1,18 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 04/10] ide: add ide_dma_prepare() helper
-Date: Mon, 09 Mar 2009 17:36:16 +0300
-Message-ID: <49B52960.4000305@ru.mvista.com>
-References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <20090220171209.25429.87753.sendpatchset@localhost.localdomain>
+Subject: Re: [PATCH 08/10] ide: move ide_map_sg() call out from ->dma_setup
+ method
+Date: Mon, 09 Mar 2009 17:42:43 +0300
+Message-ID: <49B52AE3.1030209@ru.mvista.com>
+References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <20090220171236.25429.25264.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:23431 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:23517 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750853AbZCIOgX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Mar 2009 10:36:23 -0400
-In-Reply-To: <20090220171209.25429.87753.sendpatchset@localhost.localdomain>
+	id S1751406AbZCIOmv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Mar 2009 10:42:51 -0400
+In-Reply-To: <20090220171236.25429.25264.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -19,17 +20,59 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> * Add ide_dma_prepare() helper.
->
-> * Convert ide_issue_pc() and do_rw_taskfile() to use it.
->
-> * Make ide_build_sglist() static.
+> Move ide_map_sg() call from ->dma_setup implementations
+> and ide_destroy_dmatable() one from *_build_dmatable() to
+> ide_dma_prepare().
 >
 > There should be no functional changes caused by this patch.
 >
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>   
+[...]
+> Index: b/drivers/ide/au1xxx-ide.c
+> ===================================================================
+> --- a/drivers/ide/au1xxx-ide.c
+> +++ b/drivers/ide/au1xxx-ide.c
+> @@ -272,9 +272,7 @@ static int auide_build_dmatable(ide_driv
+>  	if (count)
+>  		return 1;
+>  
+> - use_pio_instead:
+> -	ide_destroy_dmatable(drive);
+> -
+> +use_pio_instead:
+>   
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+   Could you please get rid of goto and label too, while at it?
+
+> Index: b/drivers/ide/pmac.c
+> ===================================================================
+> --- a/drivers/ide/pmac.c
+> +++ b/drivers/ide/pmac.c
+> @@ -1493,8 +1493,6 @@ static int pmac_ide_build_dmatable(ide_d
+>  	printk(KERN_DEBUG "%s: empty DMA table?\n", drive->name);
+>  
+>  use_pio_instead:
+> -	ide_destroy_dmatable(drive);
+> -
+>  	return 0; /* revert to PIO for this request */
+
+   Ditto...
+
+> Index: b/drivers/ide/sgiioc4.c
+> ===================================================================
+> --- a/drivers/ide/sgiioc4.c
+> +++ b/drivers/ide/sgiioc4.c
+> @@ -478,8 +478,6 @@ static int sgiioc4_build_dmatable(ide_dr
+>  	}
+>  
+>  use_pio_instead:
+> -	ide_destroy_dmatable(drive);
+> -
+>  	return 0;		/* revert to PIO for this request */
+>   
+
+   Ditto...
 
 MBR, Sergei
 
