@@ -1,50 +1,68 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Getting TRIM working
-Date: Mon, 09 Mar 2009 09:52:35 -0400
-Message-ID: <49B51F23.3060907@interlog.com>
-References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org> <49B39DCB.3040203@panasas.com> <1236547480.4861.12.camel@localhost.localdomain> <1236547956.4861.17.camel@localhost.localdomain> <20090309083614.GP25995@parisc-linux.org>
-Reply-To: dgilbert@interlog.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 03/10] ide: destroy DMA mappings after ending DMA
+Date: Mon, 09 Mar 2009 17:00:51 +0300
+Message-ID: <49B52113.3000804@ru.mvista.com>
+References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <20090220171201.25429.29473.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55979 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406AbZCINwp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Mar 2009 09:52:45 -0400
-In-Reply-To: <20090309083614.GP25995@parisc-linux.org>
+Received: from h155.mvista.com ([63.81.120.155]:22843 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751213AbZCIOA7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Mar 2009 10:00:59 -0400
+In-Reply-To: <20090220171201.25429.29473.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Sun, Mar 08, 2009 at 04:32:36PM -0500, James Bottomley wrote:
->> Actually, found the reason, blk_rq_map_kern will blast the original bio
->> from the request.  You could fix this by chaining it back again at the
->> beginning.  If that works, we could just wrap it into a block API to
->> prevent users from having to muck with bios.
-> 
-> How about constructing the TRIM entirely within libata?  I won't be able
-> to test this patch until Oregon wakes up, but is this acceptable?
-> 
-> Advantages:
->  - Don't need to wait for T10 to finish designing UNMAP
+Hello.
 
-The spc4r18.pdf and sbc3r18.pdf drafts were released recently
-at t10.org. Both include thin provisioning items (e.g. see
-UNMAP and WRITE SAME(16) in sbc3r18.pdf). So the design and
-implementation of thin provisioning is pretty well done.
+Bartlomiej Zolnierkiewicz wrote:
 
-If you attempt to download these drafts you will be
-challenged for a t10 login, select guest and supply a name
-(e.g. "incits" is the name of the organization responsible
-for this). I give "Linux" as my company.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: destroy DMA mappings after ending DMA
+>
+> Move ide_destroy_dmatable() call out from ->dma_end method to
+> {ide_pc,cdrom_newpc,ide_dma}_intr(), ide_dma_timeout_retry()
+> and sgiioc4_resetproc().
+>
+> This causes minor/safe behavior changes w.r.t.:
+> * cmd64x.c::cmd64{8,x}_dma_end()
+> * cs5536.c::cs5536_dma_end()
+> * icside.c::icside_dma_end()
+> * it821x.c::it821x_dma_end()
+> * scc_pata.c::__scc_dma_end()
+> * sl82c105.c::sl82c105_dma_end()
+> * tx4939ide.c::tx4939ide_dma_end()
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>   
 
-Doug Gilbert
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Index: b/drivers/ide/sgiioc4.c
+> ===================================================================
+> --- a/drivers/ide/sgiioc4.c
+> +++ b/drivers/ide/sgiioc4.c
+> @@ -259,7 +259,6 @@ static int sgiioc4_dma_end(ide_drive_t *
+>  	}
+>  
+>  	drive->waiting_for_dma = 0;
+> -	ide_destroy_dmatable(drive);
+>  
+>  	return dma_stat;
+>  }
+> @@ -284,6 +283,7 @@ static void
+>  sgiioc4_resetproc(ide_drive_t * drive)
+>  {
+>  	sgiioc4_dma_end(drive);
+> +	ide_destroy_dmatable(drive);
+>  	sgiioc4_clearirq(drive);
+>  }
 
->  - Uses well-tested ATA_16 passthrough layer
->  - Changing the UNMAP implementation to do multiple ranges won't break TRIM
->  - Will be easier to adapt to a future separation of scsi and libata
+   I somewhat doubt that resetproc() can be called with DMA still active...
 
-[snip]
+MBR, Sergei
+
+
