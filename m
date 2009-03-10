@@ -1,60 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Per ATA host sysfs attributes?
-Date: Tue, 10 Mar 2009 19:07:42 -0400
-Message-ID: <49B6F2BE.3000509@pobox.com>
-References: <49B6C99B.9030507@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 03/03] sata_mv implement IRQ coalescing
+Date: Tue, 10 Mar 2009 19:21:20 -0400
+Message-ID: <49B6F5F0.2010905@rtr.ca>
+References: <49B6EE95.1010808@rtr.ca> <49B6EED8.8060205@rtr.ca> <49B6EF18.8050000@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54320 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([76.10.145.34]:39148 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752427AbZCJXHt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Mar 2009 19:07:49 -0400
-In-Reply-To: <49B6C99B.9030507@rtr.ca>
+	id S1754374AbZCJXVX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Mar 2009 19:21:23 -0400
+In-Reply-To: <49B6EF18.8050000@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Grant Grundler <grundler@google.com>
 
 Mark Lord wrote:
-> Guys,
+> Add IRQ coalescing to sata_mv (off by default).
 > 
-> I have added IRQ coalescing to sata_mv, but need a way to activate/tune it.
-> There are two simple parameters:  an IRQ count threshold, and a time 
-> threshold.
+> This feature can reduce total interrupt overhead for RAID setups
+> in some situations, by deferring the interrupt signal until one or both of:
 > 
-> Whenever either the count or the time threshold is exceeded,
-> the chip will generate an interrupt (assuming at least one completed 
-> event).
+> a) a specified io_count (completed SATA commands) is achieved, or
+> b) a specified time interval elapses after an IO completion.
 > 
-> These two parameters are per-chip (actually, per group of four ports 
-> within the chip).
-> How can I export these for setting/query withing sysfs ?
+> For now, module parameters are used to set the irq_coalescing_io_count
+> and irq_coalescing_usecs (timeout) globally.  These may eventually
+> be supplemented with sysfs attributes, so that thresholds can be set
+> on-the-fly and on a per-chip (or even per-host_controller) basis.
 > 
-> It is all rather easy to create per-SCSI-host attrs in sysfs,
-> but I don't see any obvious way to do it per-chip.
-> Suggestions?
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> ---
+> 
+> This is for #upstream libata-dev #upstream
+> 
+> --- old/drivers/ata/sata_mv.c    2009-03-10 18:28:30.000000000 -0400
+> +++ new/drivers/ata/sata_mv.c    2009-03-10 18:48:07.000000000 -0400
+> @@ -34,10 +34,7 @@
+..
 
-The absence of a kobject associated with ata_host is largely the root 
-cause of this problem you've noted.  Long term, we want to move in a 
-direction where we have a "storage_host" container object, containing 
-one or more port-style objects that can be ATA or SCSI.  In that 
-scenario (and what we want to move towards, over the years), the sysfs 
-attachment points should be fairly obvious.
+Ooops.. hold off on 03/03 for the moment.
+I messed up a couple of bits.. will repost (v2) shortly.
 
-Lacking a better suggestion, I suppose the answer is exporting per-chip 
-variables multiple times, once per scsi-host.  Just get the locking 
-right, since multiple sysfs attributes access the same underlying 
-per-chip variable.
-
-
-> For now, I'm doing it with a module parameter,
-> but that's really rather stone-age in the sysfs era.
-
-Indeed!  :)
-
-	Jeff
-
-
-
+-ml
