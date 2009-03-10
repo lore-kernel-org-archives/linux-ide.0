@@ -1,84 +1,51 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3 v3] ide: add at91_ide driver
-Date: Tue, 10 Mar 2009 22:31:31 +0300
-Message-ID: <49B6C013.80605@ru.mvista.com>
-References: <200902181106.54260.stf_xl@wp.pl> <49B6BDCE.3070403@ru.mvista.com> <49B6BE88.1080201@ru.mvista.com> <49B6BF9F.5050705@ru.mvista.com>
+Subject: [PATCH] ide-iops: only clear DMA words on setting DMA mode
+Date: Tue, 10 Mar 2009 23:38:15 +0400
+Message-ID: <200903102238.15619.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:54623 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:54692 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753983AbZCJTaw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Mar 2009 15:30:52 -0400
-In-Reply-To: <49B6BF9F.5050705@ru.mvista.com>
+	id S1754801AbZCJThg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Mar 2009 15:37:36 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-I wrote:
+The bytes indicating current DMA mode in the identify data words 62, 63, and 88
+should only change on setting a DMA mode, so stop clearing them  on setting PIO
+mode in ide_config_drive_speed().  While at it, correct SW/MW DMA mode masks...
 
->>>> This is IDE host driver for AT91 (SAM9, CAP9, AT572D940HF) Static=20
->>>> Memory
->>>> Controller with Compact Flash True IDE Mode logic.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
->>>> Driver have to switch 8/16 bit bus width when accessing Task Tile =
-or=20
->>>> Data
->>>> Register. Moreover some extra things need to be done when setting=20
->>>> PIO mode.
->>>> Only PIO mode is used, hardware have no DMA support. If interrupt=20
->>>> line is
->>>> connected through GPIO extra quirk is needed to cope with fake=20
->>>> interrupts.
+---
+This patch is against the recent Linus' tree...
 
->>>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+ drivers/ide/ide-iops.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
->>>    This is prolly only me, but I afil to compile this driver with t=
-he=20
->>> current arch/arm/configs/at91sam9263ek_defconfig:
+Index: linux-2.6/drivers/ide/ide-iops.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-iops.c
++++ linux-2.6/drivers/ide/ide-iops.c
+@@ -774,9 +774,11 @@ int ide_config_drive_speed(ide_drive_t *
+ 		return error;
+ 	}
+ 
+-	id[ATA_ID_UDMA_MODES]  &= ~0xFF00;
+-	id[ATA_ID_MWDMA_MODES] &= ~0x0F00;
+-	id[ATA_ID_SWDMA_MODES] &= ~0x0F00;
++	if (speed >= XFER_SW_DMA_0) {
++		id[ATA_ID_UDMA_MODES]  &= ~0xFF00;
++		id[ATA_ID_MWDMA_MODES] &= ~0x0700;
++		id[ATA_ID_SWDMA_MODES] &= ~0x0700;
++	}
+ 
+  skip:
+ #ifdef CONFIG_BLK_DEV_IDEDMA
 
->>>   CC      drivers/ide/at91_ide.o
->>> drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_input_data=E2=
-=80=99:
->>> drivers/ide/at91_ide.c:159: error: implicit declaration of function=
-=20
->>> =E2=80=98__ide_mm_insw=E2=80=99
->>> drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_output_data=E2=
-=80=99:
->>> drivers/ide/at91_ide.c:174: error: implicit declaration of function=
-=20
->>> =E2=80=98__ide_mm_outsw=E2=80=99
->>> drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_tf_load=E2=80=
-=99:
->>> drivers/ide/at91_ide.c:192: error: =E2=80=98task=E2=80=99 undeclare=
-d (first use in=20
->>> this function)
->>> drivers/ide/at91_ide.c:192: error: (Each undeclared identifier is=20
->>> reported only
->>> once
->>> drivers/ide/at91_ide.c:192: error: for each function it appears in.=
-)
->>> drivers/ide/at91_ide.c: At top level:
->>> drivers/ide/at91_ide.c:303: warning: initialization from incompatib=
-le=20
->>> pointer type
->>> drivers/ide/at91_ide.c:304: warning: initialization from incompatib=
-le=20
->>> pointer type
->>> make[1]: *** [drivers/ide/at91_ide.o] Error 1
->>> make: *** [drivers/ide/] Error 2
-
->>    Ah, it's only with pata-2.6 series applied. Bart, you clearly nee=
-d=20
->> to include this driver to some of your patches...
-
-    Oops, got muddled in too many follow-ups. :-)
-    Namely, ide-remove-ide_task_t-typedef.patch is incomplete...
-
->    ... and ide-add-flagged_tf_flags-to-struct-ide_taskfile-v2.patch t=
-oo.
-
-MBR, Sergei
