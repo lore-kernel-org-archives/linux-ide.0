@@ -1,111 +1,106 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 3/3] ide-{cd,floppy}: do not map all cmds to an sg
-Date: Tue, 10 Mar 2009 07:08:33 +0100
-Message-ID: <20090310060833.GA7895@liondog.tnic>
-References: <1236158216-23052-1-git-send-email-petkovbb@gmail.com> <200903051752.41611.bzolnier@gmail.com> <20090308075338.GB4078@liondog.tnic> <200903081808.05448.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Frans Pop <elendil@planet.nl>
+Subject: [RFC][PATCH] sata-mv: add module parameter msq_blink_led to enable quirk for SOC
+Date: Tue, 10 Mar 2009 12:36:27 +0100
+Message-ID: <200903101236.30216.elendil@planet.nl>
+References: <200808261124.39282.elendil@planet.nl> <497B2C60.60608@rtr.ca> <200902240933.45874.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:35559 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbZCJGIm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Mar 2009 02:08:42 -0400
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:65058 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751400AbZCJLvq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Mar 2009 07:51:46 -0400
+In-Reply-To: <200902240933.45874.elendil@planet.nl>
 Content-Disposition: inline
-In-Reply-To: <200903081808.05448.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>, Martin Michlmayr <tbm@cyrius.com>
 
-Hi,
-
-> If the mainline is broken sg fix can wait but to be honest I don't see much
-> point in delaying it (it is an independent problem and the bugfix should be
-> a completely safe one-liner).
-
---
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Tue, 10 Mar 2009 07:04:52 +0100
-Subject: [PATCH] ide-floppy: do not map dataless cmds to an sg
-
-since it fails the virt_to_page() translation check with DEBUG_VIRTUAL
-enabled.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+For some Marvell chips the HDD led does not blink when there is disk
+I/O if NCQ is enabled. Only enable the quirk that works around this
+(by enabling blink mode for the led) if parameter msq_blink_led is
+set as it is not clear whether this is a general erratum or related
+to the type of hard disk connected to the controller.
+    
+Signed-off-by: Frans Pop <elendil@planet.nl>
+Cc: Mark Lord <liml@rtr.ca>
+Cc: Saeed Bishara <saeed.bishara@gmail.com>
 ---
- drivers/ide/ide-atapi.c  |   12 ++++++++++++
- drivers/ide/ide-floppy.c |    6 ++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index a5596a6..11a680c 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -90,6 +90,12 @@ static void ide_queue_pc_head(ide_drive_t *drive, struct gendisk *disk,
- 	rq->cmd_flags |= REQ_PREEMPT;
- 	rq->buffer = (char *)pc;
- 	rq->rq_disk = disk;
-+
-+	if (pc->req_xfer) {
-+		rq->data = pc->buf;
-+		rq->data_len = pc->req_xfer;
-+	}
-+
- 	memcpy(rq->cmd, pc->c, 12);
- 	if (drive->media == ide_tape)
- 		rq->cmd[13] = REQ_IDETAPE_PC1;
-@@ -112,6 +118,12 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->buffer = (char *)pc;
-+
-+	if (pc->req_xfer) {
-+		rq->data = pc->buf;
-+		rq->data_len = pc->req_xfer;
-+	}
-+
- 	memcpy(rq->cmd, pc->c, 12);
- 	if (drive->media == ide_tape)
- 		rq->cmd[13] = REQ_IDETAPE_PC1;
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 2f8f453..2b4868d 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -282,8 +282,10 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
+This patch applies on top of my previous patch:
+     sata_mv: enable HDD led blinking when NCQ is active for SOC
+(see: http://marc.info/?l=linux-ide&m=123546443414518&w=2)
+
+I hope this will make that patch more acceptable: it makes the use of the
+quirk more flexible, allowing users who see the issue to activate it while
+allowing others to ignore it and also allowing easy testing whether the
+issue is (still) present.
+
+I've chosen to keep the quirk disabled by default so that we'll continue
+to get reports when someone's led is not working. Hopefully that will
+help find out whether or not the issue is hard disk related or not.
+
+Use of the parameter could be documented on websites such as
+Martin Michlmayr's pages for the QNAP NAS devices on Debian
+(http://www.cyrius.com/debian/orion/qnap/ts-109/).
+
+Cheers,
+FJP
+
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 59355d9..4382d2c 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -723,6 +723,15 @@ static const struct mv_hw_ops mv_soc_ops = {
+ };
  
- 	cmd.rq = rq;
+ /*
++ * module options
++ */
++static int msi;			/* Use PCI msi; either zero (off, default)
++				 * or non-zero */
++static int msq_blink_led;	/* Use blink mode for HDD activity led when
++				 * NCQ is enabled (SOC);
++				 * either zero (off, default) or non-zero */
++
++/*
+  * Functions
+  */
  
--	ide_init_sg_cmd(&cmd, pc->req_xfer);
--	ide_map_sg(drive, &cmd);
-+	if (blk_fs_request(rq) || pc->req_xfer) {
-+		ide_init_sg_cmd(&cmd, pc->req_xfer);
-+		ide_map_sg(drive, &cmd);
-+	}
+@@ -885,6 +894,9 @@ static int mv_has_port_using_ncq(struct ata_host *host)
+ static void mv_quirk_blink_led_when_ncq(struct ata_port *ap,
+ 					int enable)
+ {
++	if (!msq_blink_led)
++		return;
++
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+ 	void __iomem *mmio = hpriv->base;
  
- 	pc->rq = rq;
+@@ -3359,12 +3371,6 @@ static struct pci_driver mv_pci_driver = {
+ 	.remove			= ata_pci_remove_one,
+ };
  
--- 
-1.6.2
-
-
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide-cd: use scatterlists for PIO transfers (non-fs requests) (v2)
-> 
-> Convert ide-cd to use scatterlists for PIO transfers and get rid of
-> partial completions (except on error) also for non-fs requests.
-> 
-> v2:
-> Do not map dataless commands to an sg since it oopses on the virt_to_page()
-> translation check when DEBUG_VIRTUAL is enabled.  (from Borislav Petkov,
-> reported/bisected-by Tetsuo Handa).
-> 
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
-
--- 
-Regards/Gruss,
-    Boris.
+-/*
+- * module options
+- */
+-static int msi;	      /* Use PCI msi; either zero (off, default) or non-zero */
+-
+-
+ /* move to PCI layer or libata core? */
+ static int pci_go_64(struct pci_dev *pdev)
+ {
+@@ -3550,6 +3556,10 @@ MODULE_ALIAS("platform:" DRV_NAME);
+ module_param(msi, int, 0444);
+ MODULE_PARM_DESC(msi, "Enable use of PCI MSI (0=off, 1=on)");
+ #endif
++/* msq_blink_led only has effect for SOC */
++module_param(msq_blink_led, int, 0444);
++MODULE_PARM_DESC(msq_blink_led,
++	"Use blink mode quirk for HDD led when MSQ is enabled (0=off, 1=on)");
+ 
+ module_init(mv_init);
+ module_exit(mv_exit);
