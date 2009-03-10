@@ -1,35 +1,44 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [PATCH] ide: add support for CFA specified transfer modes (take 3)
-Date: Tue, 10 Mar 2009 21:28:11 -0400
-Message-ID: <200903102128.11782.stf_xl@wp.pl>
-References: <200903102242.58158.sshtylyov@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH #upstream-fixes] sata_mv fix MSI irq race condition
+Date: Tue, 10 Mar 2009 16:28:51 -0400
+Message-ID: <49B6CD83.1020904@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:52048 "EHLO mx1.wp.pl"
+Received: from rtr.ca ([76.10.145.34]:34051 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752600AbZCJUSA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Mar 2009 16:18:00 -0400
-In-Reply-To: <200903102242.58158.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+	id S1752860AbZCJU2z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Mar 2009 16:28:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Cezary Manista <cezary.manista@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tuesday 10 March 2009 15:42, Sergei Shtylyov wrote:
-> Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes
-> 3/4.
-[snip]
-> Stanislaw, please give it a try -- I don't have any CF hardware now... :-/
+Fix a (rare) race condition in mv_interrupt() when using MSI.
 
-I wish to, but  I changed my job with the beginning of March.
-Cezary (CCed) from Kelvatek told me, they will work on any
-futher testing and development related with at91_ide.
+The value of hpriv->main_irq_mask_addr can change on on the fly,
+and without this patch we could end up writing back a stale copy
+to the hardware.
 
->From my side I could tell that I will make code revisions and compile
-tests/fixes but now I must return -EBUSY.
+Signed-off-by: Mark Lord <mlord@pobox.com>
+--
 
-Cheers
-Stanislaw Gruszka
+** This is required for 2.6.29 and beyond ***
+
+--- old/drivers/ata/sata_mv.c	2009-03-10 16:19:39.000000000 -0400
++++ new/drivers/ata/sata_mv.c	2009-03-10 16:21:29.000000000 -0400
+@@ -2218,12 +2218,13 @@
+ 		else
+ 			handled = mv_host_intr(host, pending_irqs);
+ 	}
+-	spin_unlock(&host->lock);
+ 
+ 	/* for MSI: unmask; interrupt cause bits will retrigger now */
+ 	if (using_msi)
+ 		writel(hpriv->main_irq_mask, hpriv->main_irq_mask_addr);
+ 
++	spin_unlock(&host->lock);
++
+ 	return IRQ_RETVAL(handled);
+ }
+ 
