@@ -1,133 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3 v3] ide: add at91_ide driver
-Date: Wed, 11 Mar 2009 18:00:44 +0100
-Message-ID: <200903111800.44380.bzolnier@gmail.com>
-References: <200902181106.54260.stf_xl@wp.pl> <49B6BF9F.5050705@ru.mvista.com> <49B6C013.80605@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: add support for CFA specified transfer modes (take
+ 3)
+Date: Wed, 11 Mar 2009 20:07:46 +0300
+Message-ID: <49B7EFE2.3010806@ru.mvista.com>
+References: <200903102242.58158.sshtylyov@ru.mvista.com> <200903111735.40517.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:36933 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753168AbZCKRA5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 13:00:57 -0400
-Received: by mail-ew0-f177.google.com with SMTP id 25so80032ewy.37
-        for <linux-ide@vger.kernel.org>; Wed, 11 Mar 2009 10:00:55 -0700 (PDT)
-In-Reply-To: <49B6C013.80605@ru.mvista.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:5017 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751627AbZCKRHI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Mar 2009 13:07:08 -0400
+In-Reply-To: <200903111735.40517.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
 
-On Tuesday 10 March 2009, Sergei Shtylyov wrote:
-> I wrote:
->=20
-> >>>> This is IDE host driver for AT91 (SAM9, CAP9, AT572D940HF) Stati=
-c=20
-> >>>> Memory
-> >>>> Controller with Compact Flash True IDE Mode logic.
->=20
-> >>>> Driver have to switch 8/16 bit bus width when accessing Task Til=
-e or=20
-> >>>> Data
-> >>>> Register. Moreover some extra things need to be done when settin=
-g=20
-> >>>> PIO mode.
-> >>>> Only PIO mode is used, hardware have no DMA support. If interrup=
-t=20
-> >>>> line is
-> >>>> connected through GPIO extra quirk is needed to cope with fake=20
-> >>>> interrupts.
->=20
-> >>>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->=20
-> >>>    This is prolly only me, but I afil to compile this driver with=
- the=20
-> >>> current arch/arm/configs/at91sam9263ek_defconfig:
->=20
-> >>>   CC      drivers/ide/at91_ide.o
-> >>> drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_input_data=E2=
-=80=99:
-> >>> drivers/ide/at91_ide.c:159: error: implicit declaration of functi=
-on=20
-> >>> =E2=80=98__ide_mm_insw=E2=80=99
-> >>> drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_output_data=
-=E2=80=99:
-> >>> drivers/ide/at91_ide.c:174: error: implicit declaration of functi=
-on=20
-> >>> =E2=80=98__ide_mm_outsw=E2=80=99
-> >>> drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_tf_load=E2=80=
-=99:
-> >>> drivers/ide/at91_ide.c:192: error: =E2=80=98task=E2=80=99 undecla=
-red (first use in=20
-> >>> this function)
-> >>> drivers/ide/at91_ide.c:192: error: (Each undeclared identifier is=
-=20
-> >>> reported only
-> >>> once
-> >>> drivers/ide/at91_ide.c:192: error: for each function it appears i=
-n.)
-> >>> drivers/ide/at91_ide.c: At top level:
-> >>> drivers/ide/at91_ide.c:303: warning: initialization from incompat=
-ible=20
-> >>> pointer type
-> >>> drivers/ide/at91_ide.c:304: warning: initialization from incompat=
-ible=20
-> >>> pointer type
-> >>> make[1]: *** [drivers/ide/at91_ide.o] Error 1
-> >>> make: *** [drivers/ide/] Error 2
->=20
-> >>    Ah, it's only with pata-2.6 series applied. Bart, you clearly n=
-eed=20
-> >> to include this driver to some of your patches...
+Bartlomiej Zolnierkiewicz wrote:
 
-I did and asked people to test the final result (see my mail on merging
-at91_ide)... unfortunately it seems like I missed few spots... :)
+>>Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes 3/4.
 
->     Oops, got muddled in too many follow-ups. :-)
->     Namely, ide-remove-ide_task_t-typedef.patch is incomplete...
+>>Since there were no PIO5 capable hard drives produced and one would also need
+>>66 MHz IDE clock to actually get the difference WRT the address setup timings
+>>programmed, I decided to simply replace the old non-standard PIO mode 5 timings
+>>with the CFA specified ones.
 
-Was a bit more than that, I also needed to merge __ide_mm_* fixup below=
-=2E..
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-[ Anyway please verify that I got it right this time, thanks! ]
+>>---
+>>Changes since the previous take:
+>>- added check for CFA modes to 'sl82c105' driver;
+>>- added identify word 163 copying to ide_driveid_update();
+>>- made change based on just posted ide_config_drive_speed() fixlet...
 
-=46rom: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] at91_ide: use readsw()/writesw() directly
+> applied fixing checkpatch.pl complaint while at it:
 
-Use readsw()/writesw() directly intead of __ide_mm_{in,out}sw() macros.
+> ERROR: space prohibited after that open parenthesis '('
+> #199: FILE: drivers/ide/sl82c105.c:64:
+> +       if ( (pio > 2 || ata_id_has_iordy(drive->id)) && ]
 
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-needed for "ide: include <asm/ide.h> only when needed" patch in pata tr=
-ee
+    Sigh, that one was done on purpose... :-]
 
- drivers/ide/at91_ide.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>>--- linux-2.6.orig/drivers/ide/sl82c105.c
+>>+++ linux-2.6/drivers/ide/sl82c105.c
+>>@@ -61,7 +61,8 @@ static unsigned int get_pio_timings(ide_
+>> 	if (cmd_off == 0)
+>> 		cmd_off = 1;
+>> 
+>>-	if (pio > 2 || ata_id_has_iordy(drive->id))
+>>+	if ( (pio > 2 || ata_id_has_iordy(drive->id)) &&
+>>+	    !(pio > 4 && ata_id_is_cfa(drive->id)))
+>> 		iordy = 0x40;
 
-Index: b/drivers/ide/at91_ide.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- a/drivers/ide/at91_ide.c
-+++ b/drivers/ide/at91_ide.c
-@@ -156,7 +156,7 @@ static void at91_ide_input_data(ide_driv
- 	len++;
-=20
- 	enter_16bit(chipselect, mode);
--	__ide_mm_insw((void __iomem *) io_ports->data_addr, buf, len / 2);
-+	readsw((void __iomem *)io_ports->data_addr, buf, len / 2);
- 	leave_16bit(chipselect, mode);
- }
-=20
-@@ -171,7 +171,7 @@ static void at91_ide_output_data(ide_dri
- 	pdbg("cs %u buf %p len %d\n", chipselect,  buf, len);
-=20
- 	enter_16bit(chipselect, mode);
--	__ide_mm_outsw((void __iomem *) io_ports->data_addr, buf, len / 2);
-+	writesw((void __iomem *)io_ports->data_addr, buf, len / 2);
- 	leave_16bit(chipselect, mode);
- }
+> I guess that it would later make sense to abstract this code into
+> ata_id_needs_iordy(id, pio) helper +
+
+    Er, if we can't reuse libata's stuff, I'd prefer to put this into 
+<linux/ide.h> as ide_dev_use_iordy()...
+
+> cleanup sl82c105 and at91_ide host drivers accordingly?
+
+    Yes.
+
+WBR, Sergei
