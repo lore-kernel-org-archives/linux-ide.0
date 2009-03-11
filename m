@@ -1,74 +1,35 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 08/10] ide: move ide_map_sg() call out from ->dma_setup method
-Date: Wed, 11 Mar 2009 18:36:26 +0100
-Message-ID: <200903111836.27062.bzolnier@gmail.com>
-References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <200903111736.26177.bzolnier@gmail.com> <49B7F074.2080807@ru.mvista.com>
+Subject: Re: [PATCH] ide: move ide_map_sg() call out of ->dma_setup method (take 2)
+Date: Wed, 11 Mar 2009 18:42:32 +0100
+Message-ID: <200903111842.33018.bzolnier@gmail.com>
+References: <200903112023.43307.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:36620 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbZCKReA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 13:34:00 -0400
-In-Reply-To: <49B7F074.2080807@ru.mvista.com>
+Received: from nf-out-0910.google.com ([64.233.182.187]:14190 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509AbZCKRkp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 13:40:45 -0400
+Received: by nf-out-0910.google.com with SMTP id d21so25901nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 11 Mar 2009 10:40:42 -0700 (PDT)
+In-Reply-To: <200903112023.43307.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 On Wednesday 11 March 2009, Sergei Shtylyov wrote:
-> Hello.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > 
-> Bartlomiej Zolnierkiewicz wrote:
+> Move ide_map_sg() call from ->dma_setup implementations and
+> ide_destroy_dmatable() one from *_build_dmatable() to ide_dma_prepare().
 > 
-> >>>Move ide_map_sg() call from ->dma_setup implementations
-> >>>and ide_destroy_dmatable() one from *_build_dmatable() to
-> >>>ide_dma_prepare().
+> There should be no functional changes caused by this patch.
 > 
-> >>>There should be no functional changes caused by this patch.
-> 
-> >>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> >>[...]
-> >>
-> >>>Index: b/drivers/ide/au1xxx-ide.c
-> >>>===================================================================
-> >>>--- a/drivers/ide/au1xxx-ide.c
-> >>>+++ b/drivers/ide/au1xxx-ide.c
-> >>>@@ -272,9 +272,7 @@ static int auide_build_dmatable(ide_driv
-> >>> 	if (count)
-> >>> 		return 1;
-> >>> 
-> >>>- use_pio_instead:
-> >>>-	ide_destroy_dmatable(drive);
-> >>>-
-> >>>+use_pio_instead:
-> 
-> >>   Could you please get rid of goto and label too, while at it?
-> 
-> > Sorry but since this patch has been already merged
-> 
->     Merged where?!
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-To pata tree, two weeks ago.
-
-I try to limit touching merged stuff as much as possible so people working
-with pata tree don't get surprised too much (sometimes it is impossible but
-this doesn't discourage me from trying).  
-
-[ Some people may argue that existing stuff shouldn't change at all but
-  IMO it is all case specific and this trade-off is acceptable for fixing
-  regressions / preserving bisectability... ]
-
-> > it would be too much work/noise for too little gain IMO.
-> 
->     Will you take a reworked patch from me?
-
-Well, OK this time if it won't cause rejects in later patches... though stuff
-like that is really much more efficient done in incremental patches.
-
-Thanks,
-Bart
+applied
