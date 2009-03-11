@@ -1,58 +1,41 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: Re: Off-by-one in both LIBATA and IDE drivers
-Date: Wed, 11 Mar 2009 17:38:46 +0900 (JST)
-Message-ID: <20090311083846.5137.qmail@web4112.mail.ogk.yahoo.co.jp>
-References: <20090311082725.37cb1883@lxorguk.ukuu.org.uk>
-Reply-To: n0diamond@yahoo.co.jp
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ATAPI question
+Date: Wed, 11 Mar 2009 18:31:11 +0900
+Message-ID: <49B784DF.1090802@kernel.org>
+References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com> <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057418@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057D00@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3215B07@azsmsx504.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web4112.mail.ogk.yahoo.co.jp ([124.83.200.74]:42835 "HELO
-	web4112.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752129AbZCKIit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 04:38:49 -0400
-In-Reply-To: <20090311082725.37cb1883@lxorguk.ukuu.org.uk>
+Received: from hera.kernel.org ([140.211.167.34]:44554 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751938AbZCKJar (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Mar 2009 05:30:47 -0400
+In-Reply-To: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3215B07@azsmsx504.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, n0diamond@yahoo.co.jp
+To: "Foster, Doug F" <doug.f.foster@intel.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
-> Norman Diamond <n0diamond@yahoo.co.jp> wrote:
-> 
->> It looks like both LIBATA and the old IDE drivers
->> have an off-by-one error in deciding whether to use
->> READ SECTOR(S) instead of READ SECTOR(S) EXT.
-> 
-> This was fixed some time ago, you need a newer
-> kernel.
+Hello,
 
-Well, either that or I need an older kernel.  It was also
-fixed in 2.6.20, for which I think there was a ready-made
-Slax distribution.
+Foster, Doug F wrote:
+> Did anyone get a chance to look at these traces?
+> Any thoughts on what the problem is?
+> Any guidance on experiments that I should try?
+> Is there anything else that I can provide to help?
 
-On another topic, trying 2.6.20 in whatever Slax
-distribution it was, an Intel ICH7M had DMA enabled on
-both /dev/hda and /dev/hdc.  I understand that the change
-which was made shortly after that is considered to be by
-design not a bug.  In 2.6.20 I didn't even have to type a
-"combined_mode" parameter, it just worked.  I understand
-that the addition and subsequent deletion of the
-"combined_mode" parameter are considered to be by design
-not bugs.  But it is not at all pleasant that my /dev/hda
-runs at 1.3 megabytes per second in 2.6.24.3 and later,
-when it used to run at 45 megabytes per second in 2.6.20. 
-Yeah I know libata is supposed to solve all this stuff. 
-Removed some bugs and added others.
+Yeap, I just did.  I'm looking at ATAPI_7_LiteOn.sas.  The offending
+one is the one ending with the FIS 22.723 807 202, right?
 
-I can't go newer than 2.6.24.3 until I find a version
-where TASKFILEs start working again.  There might not be
-one.  Yeah I know libata is supposed to solve all this
-stuff.  I wonder how much time I'll need and how many
-varieties of hardware I'll have to buy to see if it's
-really fixed.
+On the bus level, everything seems fine.  The host prepares for
+96bytes transfer and device does it and successfully sends D2H Reg FIS
+for command completion.  The only thing I can think of is the draining
+buffer confusing the controller somehow.  If you make
+libata-scsi.c::atapi_drain_needed() always return zero, does anything
+change?
 
+Thanks.
 
---------------------------------------
-Power up the Internet with Yahoo! Toolbar.
-http://pr.mail.yahoo.co.jp/toolbar/
+-- 
+tejun
