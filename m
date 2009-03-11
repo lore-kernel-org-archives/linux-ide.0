@@ -1,67 +1,58 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: add support for CFA specified transfer modes (take
- 3)
-Date: Wed, 11 Mar 2009 20:07:46 +0300
-Message-ID: <49B7EFE2.3010806@ru.mvista.com>
-References: <200903102242.58158.sshtylyov@ru.mvista.com> <200903111735.40517.bzolnier@gmail.com>
+Subject: Re: [PATCH 08/10] ide: move ide_map_sg() call out from ->dma_setup
+ method
+Date: Wed, 11 Mar 2009 20:10:12 +0300
+Message-ID: <49B7F074.2080807@ru.mvista.com>
+References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <20090220171236.25429.25264.sendpatchset@localhost.localdomain> <49B52AE3.1030209@ru.mvista.com> <200903111736.26177.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:5017 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:5070 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751627AbZCKRHI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Mar 2009 13:07:08 -0400
-In-Reply-To: <200903111735.40517.bzolnier@gmail.com>
+	id S1751884AbZCKRJd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Mar 2009 13:09:33 -0400
+In-Reply-To: <200903111736.26177.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes 3/4.
+>>>Move ide_map_sg() call from ->dma_setup implementations
+>>>and ide_destroy_dmatable() one from *_build_dmatable() to
+>>>ide_dma_prepare().
 
->>Since there were no PIO5 capable hard drives produced and one would also need
->>66 MHz IDE clock to actually get the difference WRT the address setup timings
->>programmed, I decided to simply replace the old non-standard PIO mode 5 timings
->>with the CFA specified ones.
+>>>There should be no functional changes caused by this patch.
 
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
->>---
->>Changes since the previous take:
->>- added check for CFA modes to 'sl82c105' driver;
->>- added identify word 163 copying to ide_driveid_update();
->>- made change based on just posted ide_config_drive_speed() fixlet...
+>>[...]
+>>
+>>>Index: b/drivers/ide/au1xxx-ide.c
+>>>===================================================================
+>>>--- a/drivers/ide/au1xxx-ide.c
+>>>+++ b/drivers/ide/au1xxx-ide.c
+>>>@@ -272,9 +272,7 @@ static int auide_build_dmatable(ide_driv
+>>> 	if (count)
+>>> 		return 1;
+>>> 
+>>>- use_pio_instead:
+>>>-	ide_destroy_dmatable(drive);
+>>>-
+>>>+use_pio_instead:
 
-> applied fixing checkpatch.pl complaint while at it:
+>>   Could you please get rid of goto and label too, while at it?
 
-> ERROR: space prohibited after that open parenthesis '('
-> #199: FILE: drivers/ide/sl82c105.c:64:
-> +       if ( (pio > 2 || ata_id_has_iordy(drive->id)) && ]
+> Sorry but since this patch has been already merged
 
-    Sigh, that one was done on purpose... :-]
+    Merged where?!
 
->>--- linux-2.6.orig/drivers/ide/sl82c105.c
->>+++ linux-2.6/drivers/ide/sl82c105.c
->>@@ -61,7 +61,8 @@ static unsigned int get_pio_timings(ide_
->> 	if (cmd_off == 0)
->> 		cmd_off = 1;
->> 
->>-	if (pio > 2 || ata_id_has_iordy(drive->id))
->>+	if ( (pio > 2 || ata_id_has_iordy(drive->id)) &&
->>+	    !(pio > 4 && ata_id_is_cfa(drive->id)))
->> 		iordy = 0x40;
+> it would be too much work/noise for too little gain IMO.
 
-> I guess that it would later make sense to abstract this code into
-> ata_id_needs_iordy(id, pio) helper +
+    Will you take a reworked patch from me?
 
-    Er, if we can't reuse libata's stuff, I'd prefer to put this into 
-<linux/ide.h> as ide_dev_use_iordy()...
-
-> cleanup sl82c105 and at91_ide host drivers accordingly?
-
-    Yes.
-
-WBR, Sergei
+MBR, Sergei
