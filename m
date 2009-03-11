@@ -1,47 +1,78 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 03/03] sata_mv implement IRQ coalescing
-Date: Tue, 10 Mar 2009 19:21:20 -0400
-Message-ID: <49B6F5F0.2010905@rtr.ca>
-References: <49B6EE95.1010808@rtr.ca> <49B6EED8.8060205@rtr.ca> <49B6EF18.8050000@rtr.ca>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Off-by-one in both LIBATA and IDE drivers
+Date: Wed, 11 Mar 2009 10:50:39 +0900 (JST)
+Message-ID: <20090311015039.42922.qmail@web4115.mail.ogk.yahoo.co.jp>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-2022-jp
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:39148 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754374AbZCJXVX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Mar 2009 19:21:23 -0400
-In-Reply-To: <49B6EF18.8050000@rtr.ca>
+Received: from web4115.mail.ogk.yahoo.co.jp ([124.83.200.77]:42394 "HELO
+	web4115.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753967AbZCKBun (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Mar 2009 21:50:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Grant Grundler <grundler@google.com>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: n0diamond@yahoo.co.jp
 
-Mark Lord wrote:
-> Add IRQ coalescing to sata_mv (off by default).
-> 
-> This feature can reduce total interrupt overhead for RAID setups
-> in some situations, by deferring the interrupt signal until one or both of:
-> 
-> a) a specified io_count (completed SATA commands) is achieved, or
-> b) a specified time interval elapses after an IO completion.
-> 
-> For now, module parameters are used to set the irq_coalescing_io_count
-> and irq_coalescing_usecs (timeout) globally.  These may eventually
-> be supplemented with sysfs attributes, so that thresholds can be set
-> on-the-fly and on a per-chip (or even per-host_controller) basis.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
-> ---
-> 
-> This is for #upstream libata-dev #upstream
-> 
-> --- old/drivers/ata/sata_mv.c    2009-03-10 18:28:30.000000000 -0400
-> +++ new/drivers/ata/sata_mv.c    2009-03-10 18:48:07.000000000 -0400
-> @@ -34,10 +34,7 @@
-..
+It looks like both LIBATA and the old IDE drivers have an
+off-by-one error in deciding whether to use READ SECTOR(S)
+instead of READ SECTOR(S) EXT.
 
-Ooops.. hold off on 03/03 for the moment.
-I messed up a couple of bits.. will repost (v2) shortly.
+Sorry the kernel numbers are in the range around 2.6.24. 
+Knoppix 6.0.1 has a newer kernel but doesn't have hdparm,
+so I haven't tested it yet.  Also this adds onto a thread
+that I started in linux-kernel yesterday, but a lot of
+information here is new.
 
--ml
+LBA number 0x0fffffff fits in 28 bits but READ SECTOR(S)
+can't reliably handle it.  In my testing the largest LBA
+number that could be read reliably using READ SECTOR(S) is
+0x0ffffffe.
+
+It looks like a Western Digital drive could handle sector
+number 0x0fffffff in LBA28, but Toshiba and Seagate
+couldn't.
+
+This can be reproduced using commands
+hdparm --read-sector 268435455 /dev/sda
+or
+hdparm --read-sector 268435455 /dev/hda
+depending on which driver is involved.
+
+Sectors 268435454 and 268435456 have no problem.  I didn't
+take a close look but a pretty obvious guess is that LBA28
+worked for the preceding one and LBA48 worked for the
+following one.
+
+If LIBATA is in charge, dmesg shows that the command was
+0x20 (READ SECTOR) and the sector number appears to be
+correct, but the error bit is IDNF.
+
+If IDE is in charge, dmesg shows that the command was 0x20
+(READ SECTOR) and the sector number is shown as 16777215
+instead of 268435455.  This looks like an error in the
+error message to compound the error in the main code. 
+I'll guess the command had the additional nibble correct,
+just that LBA28 can't handle it.
+
+Sometimes the dd command can read that sector but
+sometimes not.  If dd fails then dmesg shows several error
+messages with sector numbers, 0x0ffffff8, 268435448, and
+33554431.  Someone decides 8 sectors should be read so the
+start sector makes sense in both hex and decimal, but the
+error sector is missing three bits instead of missing an
+entire nibble.  And here, the command code is 0xc8, READ
+DMA, LBA28 again.  This one needs changing to READ DMA
+EXT.
+
+All drives in my test were SATA, and the chipsets were
+ICH7 or ICH7M, but BIOSes differed in setting ICH7 to
+expose IDE or SATA interfaces.  In the case with ICH7 and
+full SATA operation, the Western Digital drive worked but
+Seagate failed.
+
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
