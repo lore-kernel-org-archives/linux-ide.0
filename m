@@ -1,44 +1,56 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [PATCH,v2][1/2] sata-mv: enable HDD led blinking when NCQ is active for GenIIe
-Date: Wed, 11 Mar 2009 14:08:34 +0100
-Message-ID: <200903111408.37298.elendil@planet.nl>
-References: <200903110813.25650.elendil@planet.nl> <200903110815.52650.elendil@planet.nl> <49B7B2C9.10203@rtr.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Keep shadow last_ctl up to date during resets
+Date: Wed, 11 Mar 2009 22:11:22 +0900
+Message-ID: <49B7B87A.1020107@kernel.org>
+References: <49B65125.7030201@st.com> <49B76B81.9000407@kernel.org> <49B7AE6E.4010704@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:59765 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753201AbZCKNIk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 09:08:40 -0400
-In-Reply-To: <49B7B2C9.10203@rtr.ca>
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:38507 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753132AbZCKNMI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Mar 2009 09:12:08 -0400
+In-Reply-To: <49B7AE6E.4010704@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Stuart MENEFY <stuart.menefy@st.com>, linux-ide@vger.kernel.org
 
-On Wednesday 11 March 2009, Mark Lord wrote:
-> > +static const struct mv_hw_ops mv6xxx_iie_ops = {
-> > +	.inherits		= &mv6xxx_ops,
-> > +	.enable_led_blink	= mv_iie_enable_led_blink,
-> > +};
-> > +
->
-> I'm afraid I just don't understand the purpose of "inherits" above.
-> This field appears to never be referenced anywhere.
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> Stuart MENEFY wrote:
+>>> libata keeps a shadow copy of the ATA CTL register (which is write
+>>> only),
+>>> and only writes to the hardware when the required value doesn't match
+>>> the shadow. However this copy wasn't being maintained when performing
+>>> reset functions. This could cause problems for the first operation after
+>>> a reset when the correct value might not be written to the CTL register.
+>>>
+>>> This problem was observed when hotplugging a drive: the identify command
+>>> was being issued with interrupts enabled, when they should have been
+>>> disabled.
+>>>
+>>> Signed-off-by: Stuart Menefy <stuart.menefy@st.com>
+>>
+>> Nice catch.  Maybe a nice addition would be a ata_sff_write_to_ctl()
+>> or something which always does the right thing.
+>>
+>> Acked-by: Tejun Heo <tj@kernel.org>
+> ..
+> 
+> Mmm.. I wonder if this is severe enough to warrant backporting
+> to -stable for the past couple of releases?
 
-Fun, as it's also used in mv6_ops and mv_iie_ops. That's where I copied it 
-from. I really don't have anywhere near the C fu to think up such 
-constructs all by myself :-D
+Yeah, I think it can be responsible for at least some of runaway IRQs
+during detection on ata_piix and is likely to be a good candidate for
+-stable but I think it would be better to see how it does on -rc first
+for a while before pushing this -stable.  sata_nv breakages very well
+showed how messed up things can get with obvious fixes.  :-)
 
-What it does (I've been assuming) is include any ops defined in the struct 
-that is being referred to. So mv6xxx_iie_ops gets all the ops defined for 
-mv6xxx_ops plus mv_iie_enable_led_blink.
+Thanks.
 
-> (or did I miss an update to the C programming language at some point? 
-> :)
->
-
-You're still way ahead of me.
+-- 
+tejun
