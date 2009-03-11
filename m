@@ -1,75 +1,74 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: add support for CFA specified transfer modes (take 3)
-Date: Wed, 11 Mar 2009 18:34:01 +0100
-Message-ID: <200903111834.01712.bzolnier@gmail.com>
-References: <200903102242.58158.sshtylyov@ru.mvista.com> <200903111735.40517.bzolnier@gmail.com> <49B7EFE2.3010806@ru.mvista.com>
+Subject: Re: [PATCH 08/10] ide: move ide_map_sg() call out from ->dma_setup method
+Date: Wed, 11 Mar 2009 18:36:26 +0100
+Message-ID: <200903111836.27062.bzolnier@gmail.com>
+References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <200903111736.26177.bzolnier@gmail.com> <49B7F074.2080807@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:53064 "EHLO
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:36620 "EHLO
 	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106AbZCKReA (ORCPT
+	with ESMTP id S1751428AbZCKReA (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 13:34:00 -0400
-Received: by ewy25 with SMTP id 25so91797ewy.37
-        for <linux-ide@vger.kernel.org>; Wed, 11 Mar 2009 10:33:56 -0700 (PDT)
-In-Reply-To: <49B7EFE2.3010806@ru.mvista.com>
+In-Reply-To: <49B7F074.2080807@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Wednesday 11 March 2009, Sergei Shtylyov wrote:
+> Hello.
+> 
 > Bartlomiej Zolnierkiewicz wrote:
 > 
-> >>Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes 3/4.
+> >>>Move ide_map_sg() call from ->dma_setup implementations
+> >>>and ide_destroy_dmatable() one from *_build_dmatable() to
+> >>>ide_dma_prepare().
 > 
-> >>Since there were no PIO5 capable hard drives produced and one would also need
-> >>66 MHz IDE clock to actually get the difference WRT the address setup timings
-> >>programmed, I decided to simply replace the old non-standard PIO mode 5 timings
-> >>with the CFA specified ones.
+> >>>There should be no functional changes caused by this patch.
 > 
-> >>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> >>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > 
-> >>---
-> >>Changes since the previous take:
-> >>- added check for CFA modes to 'sl82c105' driver;
-> >>- added identify word 163 copying to ide_driveid_update();
-> >>- made change based on just posted ide_config_drive_speed() fixlet...
+> >>[...]
+> >>
+> >>>Index: b/drivers/ide/au1xxx-ide.c
+> >>>===================================================================
+> >>>--- a/drivers/ide/au1xxx-ide.c
+> >>>+++ b/drivers/ide/au1xxx-ide.c
+> >>>@@ -272,9 +272,7 @@ static int auide_build_dmatable(ide_driv
+> >>> 	if (count)
+> >>> 		return 1;
+> >>> 
+> >>>- use_pio_instead:
+> >>>-	ide_destroy_dmatable(drive);
+> >>>-
+> >>>+use_pio_instead:
 > 
-> > applied fixing checkpatch.pl complaint while at it:
+> >>   Could you please get rid of goto and label too, while at it?
 > 
-> > ERROR: space prohibited after that open parenthesis '('
-> > #199: FILE: drivers/ide/sl82c105.c:64:
-> > +       if ( (pio > 2 || ata_id_has_iordy(drive->id)) && ]
+> > Sorry but since this patch has been already merged
 > 
->     Sigh, that one was done on purpose... :-]
-> 
-> >>--- linux-2.6.orig/drivers/ide/sl82c105.c
-> >>+++ linux-2.6/drivers/ide/sl82c105.c
-> >>@@ -61,7 +61,8 @@ static unsigned int get_pio_timings(ide_
-> >> 	if (cmd_off == 0)
-> >> 		cmd_off = 1;
-> >> 
-> >>-	if (pio > 2 || ata_id_has_iordy(drive->id))
-> >>+	if ( (pio > 2 || ata_id_has_iordy(drive->id)) &&
-> >>+	    !(pio > 4 && ata_id_is_cfa(drive->id)))
-> >> 		iordy = 0x40;
-> 
-> > I guess that it would later make sense to abstract this code into
-> > ata_id_needs_iordy(id, pio) helper +
-> 
->     Er, if we can't reuse libata's stuff, I'd prefer to put this into 
+>     Merged where?!
 
-We can't reuse libata's ata_pio_need_iordy() since it resides in
-libata-core.c and also checks controller's capabilities.
+To pata tree, two weeks ago.
 
-> <linux/ide.h> as ide_dev_use_iordy()...
+I try to limit touching merged stuff as much as possible so people working
+with pata tree don't get surprised too much (sometimes it is impossible but
+this doesn't discourage me from trying).  
 
-Also fine with me, though I see no reason why not to move it to
-<linux/ata.h> so libata guys can use it inside ata_pio_need_iordy().
+[ Some people may argue that existing stuff shouldn't change at all but
+  IMO it is all case specific and this trade-off is acceptable for fixing
+  regressions / preserving bisectability... ]
+
+> > it would be too much work/noise for too little gain IMO.
+> 
+>     Will you take a reworked patch from me?
+
+Well, OK this time if it won't cause rejects in later patches... though stuff
+like that is really much more efficient done in incremental patches.
 
 Thanks,
 Bart
