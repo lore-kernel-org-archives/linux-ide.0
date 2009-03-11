@@ -1,41 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ATAPI question
-Date: Wed, 11 Mar 2009 18:31:11 +0900
-Message-ID: <49B784DF.1090802@kernel.org>
-References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com> <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057418@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057D00@azsmsx504.amr.corp.intel.com> <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3215B07@azsmsx504.amr.corp.intel.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: Keep shadow last_ctl up to date during resets
+Date: Wed, 11 Mar 2009 08:28:30 -0400
+Message-ID: <49B7AE6E.4010704@rtr.ca>
+References: <49B65125.7030201@st.com> <49B76B81.9000407@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44554 "EHLO hera.kernel.org"
+Received: from rtr.ca ([76.10.145.34]:57675 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938AbZCKJar (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Mar 2009 05:30:47 -0400
-In-Reply-To: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3215B07@azsmsx504.amr.corp.intel.com>
+	id S1754806AbZCKM2e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Mar 2009 08:28:34 -0400
+In-Reply-To: <49B76B81.9000407@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Foster, Doug F" <doug.f.foster@intel.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Stuart MENEFY <stuart.menefy@st.com>, linux-ide@vger.kernel.org
 
-Hello,
+Tejun Heo wrote:
+> Hello,
+> 
+> Stuart MENEFY wrote:
+>> libata keeps a shadow copy of the ATA CTL register (which is write only),
+>> and only writes to the hardware when the required value doesn't match
+>> the shadow. However this copy wasn't being maintained when performing
+>> reset functions. This could cause problems for the first operation after
+>> a reset when the correct value might not be written to the CTL register.
+>>
+>> This problem was observed when hotplugging a drive: the identify command
+>> was being issued with interrupts enabled, when they should have been
+>> disabled.
+>>
+>> Signed-off-by: Stuart Menefy <stuart.menefy@st.com>
+> 
+> Nice catch.  Maybe a nice addition would be a ata_sff_write_to_ctl()
+> or something which always does the right thing.
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+..
 
-Foster, Doug F wrote:
-> Did anyone get a chance to look at these traces?
-> Any thoughts on what the problem is?
-> Any guidance on experiments that I should try?
-> Is there anything else that I can provide to help?
+Mmm.. I wonder if this is severe enough to warrant backporting
+to -stable for the past couple of releases? 
 
-Yeap, I just did.  I'm looking at ATAPI_7_LiteOn.sas.  The offending
-one is the one ending with the FIS 22.723 807 202, right?
-
-On the bus level, everything seems fine.  The host prepares for
-96bytes transfer and device does it and successfully sends D2H Reg FIS
-for command completion.  The only thing I can think of is the draining
-buffer confusing the controller somehow.  If you make
-libata-scsi.c::atapi_drain_needed() always return zero, does anything
-change?
-
-Thanks.
-
--- 
-tejun
