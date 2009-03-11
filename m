@@ -1,36 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Per ATA host sysfs attributes?
-Date: Tue, 10 Mar 2009 16:12:11 -0400
-Message-ID: <49B6C99B.9030507@rtr.ca>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [PATCH] ide: add support for CFA specified transfer modes (take 3)
+Date: Tue, 10 Mar 2009 21:28:11 -0400
+Message-ID: <200903102128.11782.stf_xl@wp.pl>
+References: <200903102242.58158.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:49203 "EHLO mail.rtr.ca"
+Received: from mx1.wp.pl ([212.77.101.5]:52048 "EHLO mx1.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754255AbZCJUMP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Mar 2009 16:12:15 -0400
+	id S1752600AbZCJUSA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Mar 2009 16:18:00 -0400
+In-Reply-To: <200903102242.58158.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Cezary Manista <cezary.manista@gmail.com>
 
-Guys,
+On Tuesday 10 March 2009 15:42, Sergei Shtylyov wrote:
+> Add support for the CompactFlash specific PIO modes 5/6 and MWDMA modes
+> 3/4.
+[snip]
+> Stanislaw, please give it a try -- I don't have any CF hardware now... :-/
 
-I have added IRQ coalescing to sata_mv, but need a way to activate/tune it.
-There are two simple parameters:  an IRQ count threshold, and a time threshold.
+I wish to, but  I changed my job with the beginning of March.
+Cezary (CCed) from Kelvatek told me, they will work on any
+futher testing and development related with at91_ide.
 
-Whenever either the count or the time threshold is exceeded,
-the chip will generate an interrupt (assuming at least one completed event).
+>From my side I could tell that I will make code revisions and compile
+tests/fixes but now I must return -EBUSY.
 
-These two parameters are per-chip (actually, per group of four ports within the chip).
-How can I export these for setting/query withing sysfs ?
-
-It is all rather easy to create per-SCSI-host attrs in sysfs,
-but I don't see any obvious way to do it per-chip. 
-
-Suggestions?
-
-For now, I'm doing it with a module parameter,
-but that's really rather stone-age in the sysfs era.
-
-Thanks.
+Cheers
+Stanislaw Gruszka
