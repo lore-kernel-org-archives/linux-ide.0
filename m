@@ -1,59 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch 1/3] libata: change drive ready wait after hard reset
- to 5s
-Date: Thu, 12 Mar 2009 11:19:37 +0900
-Message-ID: <49B87139.3080700@kernel.org>
-References: <200903041959.n24Jxl2X028532@imap1.linux-foundation.org> <49B76AA9.2030707@kernel.org> <DFEF91B22ED07447AB6AA4B237F913F902185BD2@ausx3mpc125.aus.amer.dell.com>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: Off-by-one in both LIBATA and IDE drivers
+Date: Thu, 12 Mar 2009 11:28:25 +0900 (JST)
+Message-ID: <20090312022825.44571.qmail@web4106.mail.ogk.yahoo.co.jp>
+References: <49B85312.5030905@gmail.com>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-2022-jp
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37147 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751422AbZCLCU3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Mar 2009 22:20:29 -0400
-In-Reply-To: <DFEF91B22ED07447AB6AA4B237F913F902185BD2@ausx3mpc125.aus.amer.dell.com>
+Received: from web4106.mail.ogk.yahoo.co.jp ([124.83.200.68]:24587 "HELO
+	web4106.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755620AbZCLC2b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 22:28:31 -0400
+In-Reply-To: <49B85312.5030905@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stuart_Hayes@Dell.com
-Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, n0diamond@yahoo.co.jp
 
-Hello,
-
-Stuart_Hayes@Dell.com wrote:
-> Tejun Heo wrote:
->> Hello,
->>
->> akpm@linux-foundation.org wrote:
->>> From: Stuart Hayes <stuart_hayes@dell.com>
+Robert Hancock wrote:
+> Norman Diamond wrote:
+>> Alan Cox wrote:
+>>> Norman Diamond wrote:
 >>>
->>> This fixes problems during resume with drives that take longer than
->>> 1s to be ready.  The ATA-6 spec appears to allow 5 seconds for a
->>> drive to be ready. 
+>>>> It looks like both LIBATA and the old IDE drivers
+>>>> have an off-by-one error in deciding whether to
+>>>> use READ SECTOR(S) instead of READ SECTOR(S) EXT.
 >>>
->>> On one affected system, this patch changes "PM: resume devices
->>> took..." message from 17 seconds to 4 seconds, and gets rid of a lot
->>> of ugly timeout/error messages.
->> Can you please attach log for this?  Which controller was it?
->>
+>>> This was fixed some time ago, you need a newer
+>>> kernel.
+>> 
+>> Well, either that or I need an older kernel.  It
+>> was also fixed in 2.6.20, for which I think there
+>> was a ready-made Slax distribution.
+>> 
+>> On another topic, trying 2.6.20 in whatever Slax
+>> distribution it was, an Intel ICH7M had DMA
+>> enabled on both /dev/hda and /dev/hdc.  I
+>> understand that [subsequent changes losing DMA]
+>> is considered to be by design not a bug.
 > 
-> Here's the relevant bits of the log... I don't have a copy of a whole
-> log, but I should be able to get one if there's something missing that
-> you need from this.  I had a more detailed description of what was
-> happening in a question I posted to linux-scsi back in January
-> (http://kerneltrap.org/index.php?q=mailarchive/linux-scsi/2009/1/20/4777
-> 124).
+> You really shouldn't use the IDE drivers with SATA
+> devices, if that's what you're talking about as far
+> as the previous behavior. They were really never
+> designed for it.
 
-After looking at the code, I think your patch is doing the right
-thing.  I was worried about controllers which don't have any mechanism
-to pass in the first D2H Reg FIS to the driver (sil24, for example)
-but in those cases the wait logic there isn't used at all.  The only
-problem would be with some port multipliers which don't send first D2H
-Reg FIS after hardreset on controllers which can act on them (ahci).
-This will incur 5sec detection delay on those devices but well I think
-we can trade them off for more common cases.
+There's next to nothing that I can do about it.
+If the BIOS sets the Intel chip to present an ATA
+interface then the IDE drivers take control early in
+the boot process.  If the BIOS sets the Intel chip to
+present a SATA interface then LIBATA takes control
+early in the boot process.
 
-late-but-Acked-by: Tejun Heo <tj@kernel.org>
+I'm considering constructing a boot menu where the
+default command line has hda=noprobe hdb=noprobe
+hdc=noprobe hdd=noprobe, and an alternate boot option
+omits those.  Even if this will be reliable enough, it
+won't be easy to explain to customers (if you don't
+believe that then read some tech support stories).
 
--- 
-tejun
+> Realistically, although some people still work on
+> it, testing coverage of the old IDE drivers is not
+> that great these days, since most distributions no
+> longer use it.
+
+Even Knoppix 6.0.1, whose kernel isn't too antique
+yet, assigned /dev/hda and /dev/hdc on my Dell D820
+with ICH7M.
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
