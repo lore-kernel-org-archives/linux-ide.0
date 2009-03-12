@@ -1,45 +1,82 @@
-From: "Foster, Doug F" <doug.f.foster@intel.com>
-Subject: RE: ATAPI question
-Date: Thu, 12 Mar 2009 14:02:30 -0700
-Message-ID: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F32F8895@azsmsx504.amr.corp.intel.com>
-References: <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCE7C7@azsmsx504.amr.corp.intel.com>
- <49A8AAC6.2090201@gmail.com> <49AA84E4.3050108@kernel.org>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F2FCEDF6@azsmsx504.amr.corp.intel.com>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057418@azsmsx504.amr.corp.intel.com>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3057D00@azsmsx504.amr.corp.intel.com>
- <3EAC55E3B6CF7348B3E2CAB2774ADA0403F3215B07@azsmsx504.amr.corp.intel.com>
- <49B784DF.1090802@kernel.org>
+From: Norman Diamond <n0diamond@yahoo.co.jp>
+Subject: Re: Off-by-one in both LIBATA and IDE drivers
+Date: Fri, 13 Mar 2009 08:02:30 +0900 (JST)
+Message-ID: <20090312230230.95814.qmail@web4110.mail.ogk.yahoo.co.jp>
+References: <49B91C98.4090309@rtr.ca>
+Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-2022-jp
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9596 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755829AbZCLVCd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2009 17:02:33 -0400
-In-Reply-To: <49B784DF.1090802@kernel.org>
-Content-Language: en-US
+Received: from web4110.mail.ogk.yahoo.co.jp ([124.83.200.72]:20976 "HELO
+	web4110.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754832AbZCLXCe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2009 19:02:34 -0400
+In-Reply-To: <49B91C98.4090309@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Foster, Doug F" <doug.f.foster@intel.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, n0diamond@yahoo.co.jp
 
-Tejun wrote:
-Yeap, I just did.  I'm looking at ATAPI_7_LiteOn.sas.  The offending
-one is the one ending with the FIS 22.723 807 202, right?
+Mark Lord wrote:
+> Norman Diamond wrote:
+>> Jim Paris wrote:
+>>> Norman Diamond wrote:
+>>>>
+>>>> It looks like both LIBATA and the old IDE drivers
+>>>> have an off-by-one error in deciding whether to
+>>>> use READ SECTOR(S) instead of READ SECTOR(S) EXT.
 
-On the bus level, everything seems fine.  The host prepares for
-96bytes transfer and device does it and successfully sends D2H Reg FIS
-for command completion.  The only thing I can think of is the draining
-buffer confusing the controller somehow.  If you make
-libata-scsi.c::atapi_drain_needed() always return zero, does anything
-change?
+I don't know for sure now but the old IDE drivers
+might be OK on this matter.  When hdparm got errors
+I thought they were the driver's fault, but now it's
+clear it was hdparm's fault.
 
-++++++++++++++++++++
-Tejun,
+It still seems doubtful whether LIBATA is fully fixed.
 
-The problem occurs in 2.6.18.8 which doesn't have atapi_drain_needed() and in 2.6.28.7 which does.  I had atapi_drain_needed() return zero on 2.6.28.7 with no change in behavior.
+>>> This was fixed here:
+>>>
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=97b697a11b07e2ebfa69c488132596cc5eb24119
 
-If you click the ATA button (ATA application layer) on the above trace and expand the IN and OUT boxes on transaction 22.723 597 590, you see the DRDY, SERV, I/O, C/D pattern that I described before.  Does this pattern make sense in this context?  Do you think that this pattern is of concern or should we be looking elsewhere for the problem?
+(Though that patch doesn't mention two suspicious .c
+files that compare sector numbers to expressions
+1UL << 28 and 1 << 28.)
 
-Doug
+>> I'm still having trouble after applying the same
+>> patch to 2.6.24.3 (applying it three times in order
+>> to build Slax).
+>> Does hdparm construct its own taskfiles for ATA and
+>> SATA in order to produce an error trying to read
+>> sector number 0x0fffffff even after I patched the
+>> kernel?
+> 
+> What, *exactly*, do you mean there.
+
+hdparm --read-sector 268435455 /dev/hda
+and
+hdparm --read-sector 268435455 /dev/sda
+still gave errors even after I patched LIBATA in
+kernel 2.6.24.3.  The exceptions are Western Digital
+drives that apparently accept LBA28 instructions on
+that sector number.
+
+> Yes, hdparm constructs its own taskfiles for the
+> --read-sector subcommand.
+
+Thank you.  So I think my build of Slax now will work
+except for two obscure chipsets under LIBATA, and will
+work for every situation that I'm aware of under the
+old IDE drivers (though the old IDE drivers will run
+unbearably slowly in some cases).
+
+> Are you hitting these errors with the latest hdparm
+> (9.12)?
+
+Sorry, I just checked and it's hdparm 8.6.  Anyway
+it's a relief to see that I probably have a build
+working well enough for present needs, and I just have
+to use tools other than that build's version of hdparm
+to test it.
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
