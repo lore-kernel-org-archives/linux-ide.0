@@ -1,51 +1,75 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: Re: Kernel bug crashing in HDIO_DRIVE_TASKFILE
-Date: Thu, 12 Mar 2009 08:00:09 +0900 (JST)
-Message-ID: <20090311230009.50404.qmail@web4108.mail.ogk.yahoo.co.jp>
-References: <200903112333.05478.bzolnier@gmail.com>
-Reply-To: n0diamond@yahoo.co.jp
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Off-by-one in both LIBATA and IDE drivers
+Date: Wed, 11 Mar 2009 18:10:58 -0600
+Message-ID: <49B85312.5030905@gmail.com>
+References: <20090311082725.37cb1883@lxorguk.ukuu.org.uk> <20090311083846.5137.qmail@web4112.mail.ogk.yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web4108.mail.ogk.yahoo.co.jp ([124.83.200.70]:24896 "HELO
-	web4108.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750897AbZCKXAM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2009 19:00:12 -0400
-In-Reply-To: <200903112333.05478.bzolnier@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:59096 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753000AbZCLALP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Mar 2009 20:11:15 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LhYVz-0003Oo-6i
+	for linux-ide@vger.kernel.org; Thu, 12 Mar 2009 00:11:11 +0000
+Received: from s0106000c41bb86e1.ss.shawcable.net ([70.76.47.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 12 Mar 2009 00:11:11 +0000
+Received: from hancockrwd by s0106000c41bb86e1.ss.shawcable.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 12 Mar 2009 00:11:11 +0000
+In-Reply-To: <20090311083846.5137.qmail@web4112.mail.ogk.yahoo.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Chuck Ebbert <cebbert@redhat.com>, Robert Hancock <hancockrwd@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, n0diamond@yahoo.co.jp
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Monday 02 March 2009, Norman Diamond wrote:
+Norman Diamond wrote:
+> Alan Cox wrote:
+>> Norman Diamond <n0diamond@yahoo.co.jp> wrote:
 >>
->> Knoppix 6.0.1 is built on kernel 2.6.28.4.  Legacy
->> IDE drivers still claim /dev/hda and /dev/hdc (the
->> Knoppix CD being on /dev/hdc).
->> 
->> When I try to do a TASKFILE WRITE_DMA (LBA28), the
->> process hangs.  No dump.  Ctrl+C and Ctrl+Z were
->> ignored. 
+>>> It looks like both LIBATA and the old IDE drivers
+>>> have an off-by-one error in deciding whether to use
+>>> READ SECTOR(S) instead of READ SECTOR(S) EXT.
+>> This was fixed some time ago, you need a newer
+>> kernel.
 > 
-> Could you post source code of your program or at
-> least the minimal test case reproducing the problem?
+> Well, either that or I need an older kernel.  It was also
+> fixed in 2.6.20, for which I think there was a ready-made
+> Slax distribution.
+> 
+> On another topic, trying 2.6.20 in whatever Slax
+> distribution it was, an Intel ICH7M had DMA enabled on
+> both /dev/hda and /dev/hdc.  I understand that the change
+> which was made shortly after that is considered to be by
+> design not a bug.  In 2.6.20 I didn't even have to type a
+> "combined_mode" parameter, it just worked.  I understand
+> that the addition and subsequent deletion of the
+> "combined_mode" parameter are considered to be by design
+> not bugs.  But it is not at all pleasant that my /dev/hda
+> runs at 1.3 megabytes per second in 2.6.24.3 and later,
+> when it used to run at 45 megabytes per second in 2.6.20. 
+> Yeah I know libata is supposed to solve all this stuff. 
+> Removed some bugs and added others.
 
-Sorry, that one was my fault, as mentioned last week.
-When kernels 2.6.28.4, 2.6.24.3, etc., don't enable
-DMA on Intel ICH7M chipsets, it is my fault for trying
-to use WRITE_DMA.
+You really shouldn't use the IDE drivers with SATA devices, if that's
+what you're talking about as far as the previous behavior. They were
+really never designed for it.
 
-I am leaning towards reverting to kernel 2.6.20,
-because there was a Slax distribution for it, it
-enabled DMA on Intel ICH7M chipsets, and on other
-machines where ICH7 presented a SATA interface its
-LIBATA could access LBA sector address 0x0fffffff.
-I've been told (can't test personally) that 2.6.20
-had trouble with AMD chipsets, but Intel users
-outnumber AMD users.  I probably have to rebuild that
-Slax with TASKFILEs enabled and see if they work.
+> 
+> I can't go newer than 2.6.24.3 until I find a version
+> where TASKFILEs start working again.  There might not be
+> one.  Yeah I know libata is supposed to solve all this
+> stuff.  I wonder how much time I'll need and how many
+> varieties of hardware I'll have to buy to see if it's
+> really fixed.
 
---------------------------------------
-Power up the Internet with Yahoo! Toolbar.
-http://pr.mail.yahoo.co.jp/toolbar/
+Realistically, although some people still work on it, testing coverage
+of the old IDE drivers is not that great these days, since most
+distributions no longer use it. The crusty, byzantine IDE code base
+doesn't exactly make it easy for the inexperienced to debug problems,
+either..
+
