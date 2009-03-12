@@ -1,59 +1,43 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Off-by-one in both LIBATA and IDE drivers
-Date: Wed, 11 Mar 2009 22:26:08 -0600
-Message-ID: <49B88EE0.2000208@gmail.com>
-References: <20090312022825.44571.qmail@web4106.mail.ogk.yahoo.co.jp>
+Subject: Re: segate drives are not getting detected in SIL3114 and promise
+ card
+Date: Wed, 11 Mar 2009 22:32:41 -0600
+Message-ID: <49B89069.9040001@gmail.com>
+References: <3fb94e50903112046t24a480a6lcd49a771c706f555@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:51090 "EHLO
+Received: from qw-out-2122.google.com ([74.125.92.27]:51974 "EHLO
 	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbZCLE0O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2009 00:26:14 -0400
-In-Reply-To: <20090312022825.44571.qmail@web4106.mail.ogk.yahoo.co.jp>
+	with ESMTP id S1751485AbZCLEcq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2009 00:32:46 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so327297qwi.37
+        for <linux-ide@vger.kernel.org>; Wed, 11 Mar 2009 21:32:44 -0700 (PDT)
+In-Reply-To: <3fb94e50903112046t24a480a6lcd49a771c706f555@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: n0diamond@yahoo.co.jp
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Sagar Borikar <sagar.borikar@gmail.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Norman Diamond wrote:
-> There's next to nothing that I can do about it.
-> If the BIOS sets the Intel chip to present an ATA
-> interface then the IDE drivers take control early in
-> the boot process.  If the BIOS sets the Intel chip to
-> present a SATA interface then LIBATA takes control
-> early in the boot process.
+Sagar Borikar wrote:
+> Hi,
 > 
-> I'm considering constructing a boot menu where the
-> default command line has hda=noprobe hdb=noprobe
-> hdc=noprobe hdd=noprobe, and an alternate boot option
-> omits those.  Even if this will be reliable enough, it
-> won't be easy to explain to customers (if you don't
-> believe that then read some tech support stories).
+> We have found that some 1TB (ST31000340AS model) and 750GB hard drives
+> are not getting detected after reboot of NAS system.
+> If I remove and insert it again, sometimes it get detected. Overall,
+> its stochastic behaviour of the detection. This happens only in case
+> of seagate drives and that too with 1TB and 750GB.
+> 
 
-I think that at some point the IDE drivers were updated to be less
-aggressive about taking control of anything that looked like an IDE
-controller, but I'm not certain. These kind of problems are kind of
-inevitable when you configure two drivers that will attach to the same
-device, it's hard to control which one will attach. (It's especially bad
-if two drivers will attach to different parts of the same controller,
-which is the combined mode fiasco we had for a while.)
-
-Newer distributions like Fedora are generally setting CONFIG_IDE=n
-entirely and avoid the problem.
+(snip)
 
 > 
->> Realistically, although some people still work on
->> it, testing coverage of the old IDE drivers is not
->> that great these days, since most distributions no
->> longer use it.
 > 
-> Even Knoppix 6.0.1, whose kernel isn't too antique
-> yet, assigned /dev/hda and /dev/hdc on my Dell D820
-> with ICH7M.
+> Same issue is seen on silicon image 3114 with 4 drive controller.But
+> surprisingly  this is not observed on 3512, 2 bay controller.
+> We are using 2.6.18 kernel and on MIPS architecture.
 > 
-> --------------------------------------
-> Power up the Internet with Yahoo! Toolbar.
-> http://pr.mail.yahoo.co.jp/toolbar/
+> Any pointers?
 
+2.6.18 is pretty ancient at this point, can you try a newer kernel?
