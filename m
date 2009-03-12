@@ -1,35 +1,39 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH,v2][1/2] sata-mv: enable HDD led blinking when NCQ is
  active for GenIIe
-Date: Thu, 12 Mar 2009 10:14:41 -0400
-Message-ID: <49B918D1.7020407@rtr.ca>
-References: <200903110813.25650.elendil@planet.nl> <200903111408.37298.elendil@planet.nl> <49B7C782.9070004@rtr.ca> <200903121240.55194.elendil@planet.nl>
+Date: Thu, 12 Mar 2009 10:15:19 -0400
+Message-ID: <49B918F7.2060401@rtr.ca>
+References: <200903110813.25650.elendil@planet.nl> <200903111408.37298.elendil@planet.nl> <49B7C782.9070004@rtr.ca> <200903121240.55194.elendil@planet.nl> <49B918D1.7020407@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:39207 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:39213 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754705AbZCLOOp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Mar 2009 10:14:45 -0400
-In-Reply-To: <200903121240.55194.elendil@planet.nl>
+	id S1755472AbZCLOPW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Mar 2009 10:15:22 -0400
+In-Reply-To: <49B918D1.7020407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Frans Pop <elendil@planet.nl>
 Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
 
-Frans Pop wrote:
-> On Wednesday 11 March 2009, Mark Lord wrote:
-..
->> Can you test this there and confirm that it still works for you?
->> Please try switching NCQ on/off etc.. just to make sure.
+Mark Lord wrote:
+> Frans Pop wrote:
+>> On Wednesday 11 March 2009, Mark Lord wrote:
+> ..
+>>> Can you test this there and confirm that it still works for you?
+>>> Please try switching NCQ on/off etc.. just to make sure.
+>>
+>> The LED behavior is correct with NCQ enabled: slow blink.
+>> But if I disable NCQ blink mode is not turned off, the led continues 
+>> the slow blinking. So it looks as if just calling 
+>> mv_soc_led_blink_disable in mv_edma_cfg is not sufficient.
+> ..
 > 
-> The LED behavior is correct with NCQ enabled: slow blink.
-> But if I disable NCQ blink mode is not turned off, the led continues the 
-> slow blinking. So it looks as if just calling mv_soc_led_blink_disable in 
-> mv_edma_cfg is not sufficient.
+> Exactly, *how*, did you "disable NCQ blink mode".
 ..
 
-Exactly, *how*, did you "disable NCQ blink mode".
+Or rather, exactly *how* did you "disable NCQ" ?
 
-thanks
+Thanks
