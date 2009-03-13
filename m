@@ -1,130 +1,142 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3 v3] ide: add at91_ide driver
-Date: Fri, 13 Mar 2009 22:13:03 +0300
-Message-ID: <49BAB03F.7070507@ru.mvista.com>
-References: <200902181106.54260.stf_xl@wp.pl> <200903111800.44380.bzolnier@gmail.com> <49BA9838.5010801@ru.mvista.com> <200903131947.49361.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git pull] IDE fixes
+Date: Fri, 13 Mar 2009 21:49:12 +0100
+Message-ID: <200903132149.12780.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:54851 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750821AbZCMTM0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Mar 2009 15:12:26 -0400
-In-Reply-To: <200903131947.49361.bzolnier@gmail.com>
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:48115 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbZCMUsC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Mar 2009 16:48:02 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
 
->>>>>>>>This is IDE host driver for AT91 (SAM9, CAP9, AT572D940HF) Stat=
-ic=20
->>>>>>>>Memory Controller with Compact Flash True IDE Mode logic.
+Hi,
 
->>>>>>>>Driver have to switch 8/16 bit bus width when accessing Task Ti=
-le or=20
->>>>>>>>Data
->>>>>>>>Register. Moreover some extra things need to be done when setti=
-ng=20
->>>>>>>>PIO mode.
->>>>>>>>Only PIO mode is used, hardware have no DMA support. If interru=
-pt=20
->>>>>>>>line is
->>>>>>>>connected through GPIO extra quirk is needed to cope with fake=20
->>>>>>>>interrupts.
+ide-floppy regression fix (from Borislav Petkov) and an important
+bug fix for DMA mapping code (from FUJITA Tomonori).
 
->>>>>>>>Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
->>>>>>>  This is prolly only me, but I afil to compile this driver with=
- the=20
->>>>>>>current arch/arm/configs/at91sam9263ek_defconfig:
+Linus, please pull from:
 
->>>>>>> CC      drivers/ide/at91_ide.o
->>>>>>>drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_input_data=
-=E2=80=99:
->>>>>>>drivers/ide/at91_ide.c:159: error: implicit declaration of funct=
-ion=20
->>>>>>>=E2=80=98__ide_mm_insw=E2=80=99
->>>>>>>drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_output_dat=
-a=E2=80=99:
->>>>>>>drivers/ide/at91_ide.c:174: error: implicit declaration of funct=
-ion=20
->>>>>>>=E2=80=98__ide_mm_outsw=E2=80=99
->>>>>>>drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_tf_load=E2=
-=80=99:
->>>>>>>drivers/ide/at91_ide.c:192: error: =E2=80=98task=E2=80=99 undecl=
-ared (first use in=20
->>>>>>>this function)
->>>>>>>drivers/ide/at91_ide.c:192: error: (Each undeclared identifier i=
-s=20
->>>>>>>reported only
->>>>>>>once
->>>>>>>drivers/ide/at91_ide.c:192: error: for each function it appears =
-in.)
->>>>>>>drivers/ide/at91_ide.c: At top level:
->>>>>>>drivers/ide/at91_ide.c:303: warning: initialization from incompa=
-tible=20
->>>>>>>pointer type
->>>>>>>drivers/ide/at91_ide.c:304: warning: initialization from incompa=
-tible=20
->>>>>>>pointer type
->>>>>>>make[1]: *** [drivers/ide/at91_ide.o] Error 1
->>>>>>>make: *** [drivers/ide/] Error 2
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
 
->>>>>>  Ah, it's only with pata-2.6 series applied. Bart, you clearly n=
-eed=20
->>>>>>to include this driver to some of your patches...
+to receive the following updates:
 
->>>I did and asked people to test the final result (see my mail on merg=
-ing
->>>at91_ide)... unfortunately it seems like I missed few spots... :)
+ drivers/ide/ide-atapi.c  |   12 ++++++++++++
+ drivers/ide/ide-dma.c    |   12 +++++++++---
+ drivers/ide/ide-floppy.c |    6 ++++--
+ include/linux/ide.h      |    1 +
+ 4 files changed, 26 insertions(+), 5 deletions(-)
 
->>>>   Oops, got muddled in too many follow-ups.  :-)=20
 
->>>>>    Namely, ide-remove-ide_task_t-typedef.patch is incomplete...
+Borislav Petkov (1):
+      ide-floppy: do not map dataless cmds to an sg
 
->>>Was a bit more than that, I also needed to merge __ide_mm_* fixup be=
-low...
+FUJITA Tomonori (1):
+      ide: save the returned value of dma_map_sg
 
->>>[ Anyway please verify that I got it right this time, thanks! ]
 
->>    No, looks like you haven't again:
-
->>Applying patch ide-pass-command-instead-of-request-to-ide_pio_datablo=
-ck.patch
->>1 out of 3 hunks FAILED
->>missing header for unified diff at line 208 of patch
->>The text leading up to this was:
->>--------------------------
->>|                       printk(KERN_ERR "%s: multimode not set!\n",
->>|                                       drive->name);
->>--------------------------
->>No file to patch.  Skipping patch.
->>11 out of 11 hunks ignored
->>Patch ide-pass-command-instead-of-request-to-ide_pio_datablock.patch =
-does not=20
->>apply (enforce with -f)
-
->>    It appears that this patch has 2 hunks repeated twice now...
-
-> Strangely, the problem seems to be on your side this time as the patc=
-h
-> applies just fine here and AFAIK Stephen has successfully applied it =
-to
-> linux-next (also md5sum of patch on kernel.org matches the local copy=
-).
-
-> Did you forgot to re-sync the whole pata-2.6 tree by any chance?
-
-    This was a result of re-sync... something went awry when downloadin=
-g the=20
-patch indeed -- perhaps I didn't really overwrite it and appended inste=
-ad. :-<
-
-> Thanks,
-> Bart
-
-WBR, Sergei
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index e96c012..e9d042d 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -140,6 +140,12 @@ static void ide_queue_pc_head(ide_drive_t *drive, struct gendisk *disk,
+ 	rq->cmd_flags |= REQ_PREEMPT;
+ 	rq->buffer = (char *)pc;
+ 	rq->rq_disk = disk;
++
++	if (pc->req_xfer) {
++		rq->data = pc->buf;
++		rq->data_len = pc->req_xfer;
++	}
++
+ 	memcpy(rq->cmd, pc->c, 12);
+ 	if (drive->media == ide_tape)
+ 		rq->cmd[13] = REQ_IDETAPE_PC1;
+@@ -159,6 +165,12 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	rq->buffer = (char *)pc;
++
++	if (pc->req_xfer) {
++		rq->data = pc->buf;
++		rq->data_len = pc->req_xfer;
++	}
++
+ 	memcpy(rq->cmd, pc->c, 12);
+ 	if (drive->media == ide_tape)
+ 		rq->cmd[13] = REQ_IDETAPE_PC1;
+diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
+index 72ebab0..059c90b 100644
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -128,6 +128,7 @@ int ide_build_sglist(ide_drive_t *drive, struct request *rq)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct scatterlist *sg = hwif->sg_table;
++	int i;
+ 
+ 	ide_map_sg(drive, rq);
+ 
+@@ -136,8 +137,13 @@ int ide_build_sglist(ide_drive_t *drive, struct request *rq)
+ 	else
+ 		hwif->sg_dma_direction = DMA_TO_DEVICE;
+ 
+-	return dma_map_sg(hwif->dev, sg, hwif->sg_nents,
+-			  hwif->sg_dma_direction);
++	i = dma_map_sg(hwif->dev, sg, hwif->sg_nents, hwif->sg_dma_direction);
++	if (i) {
++		hwif->orig_sg_nents = hwif->sg_nents;
++		hwif->sg_nents = i;
++	}
++
++	return i;
+ }
+ EXPORT_SYMBOL_GPL(ide_build_sglist);
+ 
+@@ -156,7 +162,7 @@ void ide_destroy_dmatable(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 
+-	dma_unmap_sg(hwif->dev, hwif->sg_table, hwif->sg_nents,
++	dma_unmap_sg(hwif->dev, hwif->sg_table, hwif->orig_sg_nents,
+ 		     hwif->sg_dma_direction);
+ }
+ EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 3eab1c6..317ec62 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -327,8 +327,10 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
+ 		return ide_stopped;
+ 	}
+ 
+-	ide_init_sg_cmd(drive, rq);
+-	ide_map_sg(drive, rq);
++	if (blk_fs_request(rq) || pc->req_xfer) {
++		ide_init_sg_cmd(drive, rq);
++		ide_map_sg(drive, rq);
++	}
+ 
+ 	pc->sg = hwif->sg_table;
+ 	pc->sg_cnt = hwif->sg_nents;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index e0cedfe..25087ae 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -797,6 +797,7 @@ typedef struct hwif_s {
+ 	struct scatterlist *sg_table;
+ 	int sg_max_nents;		/* Maximum number of entries in it */
+ 	int sg_nents;			/* Current number of entries in it */
++	int orig_sg_nents;
+ 	int sg_dma_direction;		/* dma transfer direction */
+ 
+ 	/* data phase of the active command (currently only valid for PIO/DMA) */
