@@ -1,81 +1,50 @@
 From: Norman Diamond <n0diamond@yahoo.co.jp>
 Subject: Re: Off-by-one in both LIBATA and IDE drivers
-Date: Fri, 13 Mar 2009 08:02:30 +0900 (JST)
-Message-ID: <20090312230230.95814.qmail@web4110.mail.ogk.yahoo.co.jp>
-References: <49B91C98.4090309@rtr.ca>
+Date: Fri, 13 Mar 2009 16:41:19 +0900 (JST)
+Message-ID: <20090313074120.48682.qmail@web4108.mail.ogk.yahoo.co.jp>
+References: <20090312230230.95814.qmail@web4110.mail.ogk.yahoo.co.jp>
 Reply-To: n0diamond@yahoo.co.jp
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-2022-jp
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web4110.mail.ogk.yahoo.co.jp ([124.83.200.72]:20976 "HELO
-	web4110.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754832AbZCLXCe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2009 19:02:34 -0400
-In-Reply-To: <49B91C98.4090309@rtr.ca>
+Received: from web4108.mail.ogk.yahoo.co.jp ([124.83.200.70]:23383 "HELO
+	web4108.mail.ogk.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751200AbZCMHlX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Mar 2009 03:41:23 -0400
+In-Reply-To: <20090312230230.95814.qmail@web4110.mail.ogk.yahoo.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, n0diamond@yahoo.co.jp
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Jim Paris <jim@jtan.com>, Robert Hancock <hancockrwd@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, n0diamond@yahoo.co.jp
 
-Mark Lord wrote:
-> Norman Diamond wrote:
->> Jim Paris wrote:
->>> Norman Diamond wrote:
->>>>
->>>> It looks like both LIBATA and the old IDE drivers
->>>> have an off-by-one error in deciding whether to
->>>> use READ SECTOR(S) instead of READ SECTOR(S) EXT.
+LIBATA with the patch to ata.h now handles all sectors on
+hard drives that it recognizes.
 
-I don't know for sure now but the old IDE drivers
-might be OK on this matter.  When hdparm got errors
-I thought they were the driver's fault, but now it's
-clear it was hdparm's fault.
+An example of a hard drive that it recognizes is one that
+is attached to an Intel ICH7M chipset when hda=noprobe
+hdc=noprobe have been specified in the boot command.
 
-It still seems doubtful whether LIBATA is fully fixed.
+An example of a hard drive that it doesn't recognize is
+one that is attached to an Intel PIIX4 chipset when
+hda=noprobe hdc=noprobe have been specified in the boot
+command.
 
->>> This was fixed here:
->>>
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=97b697a11b07e2ebfa69c488132596cc5eb24119
+In either case, the boot parameters persuade the old IDE
+drivers not to grab the controllers.
 
-(Though that patch doesn't mention two suspicious .c
-files that compare sector numbers to expressions
-1UL << 28 and 1 << 28.)
+With ICH7M, LIBATA takes over and runs both the hard drive
+and DVD at full speed.
 
->> I'm still having trouble after applying the same
->> patch to 2.6.24.3 (applying it three times in order
->> to build Slax).
->> Does hdparm construct its own taskfiles for ATA and
->> SATA in order to produce an error trying to read
->> sector number 0x0fffffff even after I patched the
->> kernel?
-> 
-> What, *exactly*, do you mean there.
+With PIIX4, LIBATA initializes.  End of story.  Slax can't
+find its own CD.  If I only use hda=noprobe then the old
+IDE controller assigns hdc to the CD and Slax finds it,
+but the hard drive is still undetected.  Behaviour is the
+same under VMware as in a genuine old PC.
 
-hdparm --read-sector 268435455 /dev/hda
-and
-hdparm --read-sector 268435455 /dev/sda
-still gave errors even after I patched LIBATA in
-kernel 2.6.24.3.  The exceptions are Western Digital
-drives that apparently accept LBA28 instructions on
-that sector number.
+LIBATA's PIIX drivers are built in along with everything
+else.  They just seem not to get executed.
 
-> Yes, hdparm constructs its own taskfiles for the
-> --read-sector subcommand.
-
-Thank you.  So I think my build of Slax now will work
-except for two obscure chipsets under LIBATA, and will
-work for every situation that I'm aware of under the
-old IDE drivers (though the old IDE drivers will run
-unbearably slowly in some cases).
-
-> Are you hitting these errors with the latest hdparm
-> (9.12)?
-
-Sorry, I just checked and it's hdparm 8.6.  Anyway
-it's a relief to see that I probably have a build
-working well enough for present needs, and I just have
-to use tools other than that build's version of hdparm
-to test it.
+What am I missing?
 
 --------------------------------------
 Power up the Internet with Yahoo! Toolbar.
