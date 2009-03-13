@@ -1,124 +1,235 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3 v3] ide: add at91_ide driver
-Date: Fri, 13 Mar 2009 19:47:49 +0100
-Message-ID: <200903131947.49361.bzolnier@gmail.com>
-References: <200902181106.54260.stf_xl@wp.pl> <200903111800.44380.bzolnier@gmail.com> <49BA9838.5010801@ru.mvista.com>
+Subject: IDE subsystem status report
+Date: Fri, 13 Mar 2009 20:02:41 +0100
+Message-ID: <200903132002.41599.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f175.google.com ([209.85.218.175]:54551 "EHLO
-	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbZCMTCK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Mar 2009 15:02:10 -0400
-Received: by bwz23 with SMTP id 23so232981bwz.37
-        for <linux-ide@vger.kernel.org>; Fri, 13 Mar 2009 12:02:06 -0700 (PDT)
-In-Reply-To: <49BA9838.5010801@ru.mvista.com>
+Received: from fg-out-1718.google.com ([72.14.220.156]:43737 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbZCMTCM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Mar 2009 15:02:12 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org, Andrew Victor <avictor.za@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-On Friday 13 March 2009, Sergei Shtylyov wrote:
-> Hello.
->=20
-> Bartlomiej Zolnierkiewicz wrote:
->=20
-> >>>>>>This is IDE host driver for AT91 (SAM9, CAP9, AT572D940HF) Stat=
-ic=20
-> >>>>>>Memory Controller with Compact Flash True IDE Mode logic.
->=20
-> >>>>>>Driver have to switch 8/16 bit bus width when accessing Task Ti=
-le or=20
-> >>>>>>Data
-> >>>>>>Register. Moreover some extra things need to be done when setti=
-ng=20
-> >>>>>>PIO mode.
-> >>>>>>Only PIO mode is used, hardware have no DMA support. If interru=
-pt=20
-> >>>>>>line is
-> >>>>>>connected through GPIO extra quirk is needed to cope with fake=20
-> >>>>>>interrupts.
->=20
-> >>>>>>Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->=20
-> >>>>>   This is prolly only me, but I afil to compile this driver wit=
-h the=20
-> >>>>>current arch/arm/configs/at91sam9263ek_defconfig:
->=20
-> >>>>>  CC      drivers/ide/at91_ide.o
-> >>>>>drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_input_data=
-=E2=80=99:
-> >>>>>drivers/ide/at91_ide.c:159: error: implicit declaration of funct=
-ion=20
-> >>>>>=E2=80=98__ide_mm_insw=E2=80=99
-> >>>>>drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_output_dat=
-a=E2=80=99:
-> >>>>>drivers/ide/at91_ide.c:174: error: implicit declaration of funct=
-ion=20
-> >>>>>=E2=80=98__ide_mm_outsw=E2=80=99
-> >>>>>drivers/ide/at91_ide.c: In function =E2=80=98at91_ide_tf_load=E2=
-=80=99:
-> >>>>>drivers/ide/at91_ide.c:192: error: =E2=80=98task=E2=80=99 undecl=
-ared (first use in=20
-> >>>>>this function)
-> >>>>>drivers/ide/at91_ide.c:192: error: (Each undeclared identifier i=
-s=20
-> >>>>>reported only
-> >>>>>once
-> >>>>>drivers/ide/at91_ide.c:192: error: for each function it appears =
-in.)
-> >>>>>drivers/ide/at91_ide.c: At top level:
-> >>>>>drivers/ide/at91_ide.c:303: warning: initialization from incompa=
-tible=20
-> >>>>>pointer type
-> >>>>>drivers/ide/at91_ide.c:304: warning: initialization from incompa=
-tible=20
-> >>>>>pointer type
-> >>>>>make[1]: *** [drivers/ide/at91_ide.o] Error 1
-> >>>>>make: *** [drivers/ide/] Error 2
->=20
-> >>>>   Ah, it's only with pata-2.6 series applied. Bart, you clearly =
-need=20
-> >>>>to include this driver to some of your patches...
->=20
-> > I did and asked people to test the final result (see my mail on mer=
-ging
-> > at91_ide)... unfortunately it seems like I missed few spots... :)
->=20
-> >>    Oops, got muddled in too many follow-ups.  :-)=20
-> >>>     Namely, ide-remove-ide_task_t-typedef.patch is incomplete...
->=20
-> > Was a bit more than that, I also needed to merge __ide_mm_* fixup b=
-elow...
->=20
-> > [ Anyway please verify that I got it right this time, thanks! ]
->=20
->     No, looks like you haven't again:
->=20
-> Applying patch ide-pass-command-instead-of-request-to-ide_pio_datablo=
-ck.patch
-> 1 out of 3 hunks FAILED
-> missing header for unified diff at line 208 of patch
-> The text leading up to this was:
-> --------------------------
-> |                       printk(KERN_ERR "%s: multimode not set!\n",
-> |                                       drive->name);
-> --------------------------
-> No file to patch.  Skipping patch.
-> 11 out of 11 hunks ignored
-> Patch ide-pass-command-instead-of-request-to-ide_pio_datablock.patch =
-does not=20
-> apply (enforce with -f)
->=20
->     It appears that this patch has 2 hunks repeated twice now...
 
-Strangely, the problem seems to be on your side this time as the patch
-applies just fine here and AFAIK Stephen has successfully applied it to
-linux-next (also md5sum of patch on kernel.org matches the local copy).
+Hi,
 
-Did you forgot to re-sync the whole pata-2.6 tree by any chance?
+Since there hasn't been an update on the current status of the development in
+a rather (too) long time and there are some misunderstandings w.r.t. old/new
+design of the subsystem I decided to prepare this short document.
+
+Questions, comments and suggestions are welcomed.
 
 Thanks,
 Bart
+--
+
+
+IDE Subsystem Status Report
+===========================
+
+
+1. Introduction
+
+  I've noticed that besides the usual summaries given in the pull requests and
+few LKML specific discussions there haven't been much updates on the status of
+IDE subsystem (CONFIG_IDE, not to be mistaken with CONFIG_ATA).  Reasons for
+that are that there was a lot of overdue work to take care of first and as we
+were getting through it new things kept popping out, also since the code was
+in a flux making a summary would be difficult.  As things are becoming more
+peaceful I thought that it would be a good moment to briefly describe what has
+been achieved during the last two years (2.6.20-rc6 to 2.6.29-rc6 time-frame).
+
+
+2. Outline
+
+  The intention of this document is to give the reader an overview of changes
+done to IDE subsystem and future development directions.  I tried to not go
+too much into IDE specific technical details so it should be also parseable
+for people who are not familiar with IDE subsystem internals or ATA hardware
+specifics (if you would like to know more you are always encouraged to hang at
+linux-ide@vger.kernel.org and/or read commit logs).
+
+  Lets start with trying to measure the total amount of changes to drivers/ide/
+directory during 2.6.20-rc6 to 2.6.29-rc6 period:
+
+$ git diff v2.6.20-rc6..v2.6.29-rc6 drivers/ide/ | diffstat
+...
+ 158 files changed, 36251 insertions(+), 45315 deletions(-)
+
+and then comparing it to the current size of drivers/ide/:
+
+$ wc -l drivers/ide/*.c
+...
+  42046 total
+
+it shows us that the total subsystem code shrank by ~18% (in reality even more
+than that but I was too lazy to account IDE changes outside main directory,
+i.e. removal of arch specific IDE hooks) which is not a such bad result given
+that we kept on adding new features and hardware support.  While diffstat
+output is a bit blurred by the fact that the superfluous drivers/ide/
+sub-directories have been removed it seems that we've almost completely
+rewrote the subsystem so that it now barely resembles the old 2.4.x design
+(just before I took over IDE in 2.5.7x days most of 2.5.x changes have been
+dropped and subsystem has been reverted to 2.4.x).   The main reason behind
+such large-scale changes is that without doing this work it was practically
+impossible to maintain/debug the old code-base (some people showed concern
+about amount of changes or/and their scope but I hope that we proved over time
+that such large-scale changes can be done without breaking things too much).
+  As many of you know, IDE subsystem is not the only way to drive ATA devices
+in Linux.  The other one (ATA-to-SCSI driver) lives in drivers/ata directory
+and also supports modern SATA hardware (while IDE supports only some first
+generation SATA controllers).  Many distros have switched to using libata also
+for PATA and probably more will go in this direction.  However, currently,
+libata is not a full replacement for IDE (especially for embedded appliances
+and non-x86 hardware) so keeping IDE maintainable and not leaving users in the
+cold makes much sense IMO.
+
+
+3. Changes history.
+
+  Next three subpoints describe in more detail changes done to the core code,
+host drivers and device drivers.
+
+3.1. Core code
+
+Core code changes include but are not limited to:
+
+* Redesigning  the monolithic architecture to a more flexible/maintainable
+  one in which we have mandatory core parts and optional features (thanks to
+  Kconfig language they are automatically selectable by the code that needs
+  them so user don't have to even know about them) like IDE SFF DMA support
+  (CONFIG_BLK_DEV_IDEDMA_SFF), IDE timings library (CONFIG_IDE_TIMINGS) or
+  ATAPI support (CONFIG_IDE_ATAPI)
+
+* Using all available features (like DMA support) by default if available
+  (safe fallback is provided by the new kernel parameters interface when
+  necessary) and removing redundant config options (i.e. CONFIG_IDEDMA_AUTO,
+  CONFIG_IDEDMA_IVB, CONFIG_IDEPCI_SHARE_IRQ, CONFIG_IDE_MAX_HWIFS).
+
+* Untangling of PIO/DMA tuning from host drivers, fixing/enhancing core code
+  PIO/DMA tuning support and adding sane host driver interfaces for setting
+  timings (with a great deal of work and help from Sergei Shtylyov).
+
+* Adding interface for reading/writing IDE settings which allowed closing many
+  races (from Elias Oltmanns).
+
+* Adding IDE ACPI support (from Hannes Reinecke).
+
+* Adding disk head parking support (from Elias Oltmanns).
+
+* Adding warm-plug support using a simple sysfs interface.
+
+* Adding generic IDE DMA layer independent from PCI BMDMA specifics and then
+  converting all DMA capable host drivers to use it.
+
+* Dynamic allocation of port/device data structures and support for fully
+  modular host drivers (preserving the legacy ordering of /dev/hd* devices).
+
+* Sanitizing taskfile based interface for processing commands and switching
+  all commands (fs requests ones, special commands and the ones generated by
+  HDIO_DRIVE_{CMD,TASK,TASKFILE} ioctls) over it.
+
+* Improving/simplifying support for serialized interfaces by adding struct
+  ide_host and using bit-locking instead of per ide_hwgroup_t locking.
+
+* Scalability improvements: global ide_lock spinlock was replaced by per-port
+  ones, this in turn allowed introducing per-device request queues and greatly
+  simplifying the code choosing the next device to be serviced.
+
+* Removing no longer needed "hwgroup" support (ide_hwgroup_t & friends).
+
+* Reworking the request handling code to not process the next command in the
+  IRQ-context after finishing the previous one (instead just let block layer
+  to call into the subsystem again).
+
+* Switching all MMIO hosts drivers over to generic MMIO support.
+
+* Abstracting code responsible for legacy /proc/ide/ support and making the
+  interface optional (CONFIG_IDE_PROC_FS).
+
+* Moving legacy hd driver to drivers/block/ (from Adrian Bunk).
+
+* There were also countless bugfixes and cleanups...
+
+3.2. Host drivers
+
+* Most host drivers have been rewritten alongside the core code rewrite.
+
+* New hardware support (not counting simple PCI IDs additions etc.):
+
+- Delkin/ASKA/Workbit Cardbus IDE (from Mark Lord)
+
+- Platform IDE (from Anton Vorontsov)
+
+- AMD CS5536 IDE (based on older driver by Martin K. Petersen)
+
+- IT8172 IDE (from Shane McDonald)
+
+- IT8213 IDE (from Jack Lee)
+
+- Toshiba TC86C001 IDE (from Sergei Shtylyov)
+
+- Toshiba's Cell IDE (from Kou Ishizaki)
+
+- TX4938 IDE (from Atsushi Nemoto)
+
+- TX4939 IDE (ditto)
+
+- Palmchip bk3710 IDE (Anton Salnikov)
+
+* Removed hardware support:
+
+- MPC8xx IDE [platform support removed from the kernel]
+
+- HPT34x IDE [broken, proper support now present in the kernel]
+
+- CRIS IDE [broken, to be reintroduced if needed]
+
+* Not to mention the countless bugfixes and cleanups...
+
+3.3. Device drivers
+
+* All device drivers have been completely rewritten (with a lot of work on
+  sanitizing ide-cd, ide-floppy and ide-tape from Borislav Petkov).
+
+* Code for ATAPI support present in ide-{cd,floppy,tape,scsi} drivers has
+  been unified and moved to the core code (with a lot of help from Borislav).
+
+* Later ide-disk and ide-floppy drivers have been merged into ide-gd driver
+  (generic ATA/ATAPI disk driver) and deprecated ide-scsi driver has been
+  finally removed.
+
+* Lets not forget about countless bugfixes and cleanups...
+
+
+4. Reporting problems
+
+  There were some changes in this area.  Namely all bug-reports should go
+through linux-ide@vger.kernel.org mailing list (kernel bugzilla has been
+configured in such way that all bugs against IDE component are assigned to
+linux-ide ML initially).  Please also keep in mind that project is based on
+a voluntary work so while we try to treat regression reports with the utmost
+urgency the old bugs are dealt with in the best effort manner.
+
+
+5. Future plans
+
+  The subsystem is in good shape now so I think that no more radical changes
+like the ones that happened recently will be needed.  We will just concentrate
+on keeping things working till better solutions take over.
+
+
+6. Thanks
+
+  I would like to thank all contributors (special thanks to Sergei Shtylyov
+and Borislav Petkov) and users (even if it sometimes seems like there is no
+apparent action we are always taking notes and using the feedback), also many
+thanks to libata developers since some of changes were either inspired by
+libata changes or ported over.
