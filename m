@@ -1,146 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Fri, 13 Mar 2009 15:03:14 -0400
-Message-ID: <20090313190314.GA27157@havoc.gtf.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH,v2][1/2] sata-mv: enable HDD led blinking when NCQ is
+ active for GenIIe
+Date: Fri, 13 Mar 2009 15:09:07 -0400
+Message-ID: <49BAAF53.70300@rtr.ca>
+References: <200903110813.25650.elendil@planet.nl> <200903130907.15965.elendil@planet.nl> <49BA59FA.1020205@rtr.ca> <200903131919.09525.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759985AbZCMTDk@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:33729 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750886AbZCMTJM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Mar 2009 15:09:12 -0400
+In-Reply-To: <200903131919.09525.elendil@planet.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
 
+Frans Pop wrote:
+> On Friday 13 March 2009, Mark Lord wrote:
+>> --- old/drivers/ata/sata_mv.c	2009-03-12 10:23:41.000000000 -0400
+>> +++ new/drivers/ata/sata_mv.c	2009-03-13 09:03:47.000000000 -0400
+>> @@ -1455,9 +1455,8 @@
+>>  		struct ata_port *this_ap = host->ports[port];
+>>  		struct mv_port_priv *pp = this_ap->private_data;
+>>
+>> -		if (pp->pp_flags & MV_PP_FLAG_EDMA_EN)
+>> -			if (pp->pp_flags & MV_PP_FLAG_NCQ_EN)
+>> -				return;
+>> +		if (pp->pp_flags & MV_PP_FLAG_NCQ_EN)
+>> +			return;
+> 
+> I expect that if NCQ is disabled using the method I've used so far, the 
+> led behavior would still be correct, but...
+..
 
-The ata_piix and sata_mv problems are reasonable isolated,
-but the libata core fix is notable...
+I fully expect it to work, actually, but we do need confirmation
+from you that it does work in real-life.  :)
 
-Failure to maintain the cached version of that register properly
-could (and probably did) lead to screaming interrupt situations,
-or situations where PIO polling data xfer failed.
+> The reason I included the test for both in my patches is that if DMA gets 
+> disabled (which IIUC also disables NCQ) only the MV_PP_FLAG_EDMA_EN flag 
+> gets unset in mv_stop_edma, and not the NCQ flag (AFAICT). So that would 
+> result in blink mode remaining enabled while it shouldn't be.
+..
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+That is no longer true in the latest sata_mv.c that you are testing with.
+It calls mv_edma_cfg() from mv_stop_edma() now, so it *should* be fine.
+But we do need you to test it.
 
-to receive the following updates:
+Thanks!
 
- drivers/ata/ata_piix.c   |   37 +++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-sff.c |    6 +++++-
- drivers/ata/sata_mv.c    |    3 ++-
- 3 files changed, 44 insertions(+), 2 deletions(-)
+> Note that e.g. the last if statement in mv_qc_defer also tests both.
+..
 
-Mark Lord (1):
-      sata_mv: fix MSI irq race condition
+I might fix that one someday, too.
 
-Stuart MENEFY (1):
-      libata: Keep shadow last_ctl up to date during resets
-
-Tejun Heo (1):
-      ata_piix: add workaround for Samsung DB-P70
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 54961c0..ef8b30d 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1289,6 +1289,39 @@ static const int *__devinit piix_init_sata_map(struct pci_dev *pdev,
- 	return map;
- }
- 
-+static bool piix_no_sidpr(struct ata_host *host)
-+{
-+	struct pci_dev *pdev = to_pci_dev(host->dev);
-+
-+	/*
-+	 * Samsung DB-P70 only has three ATA ports exposed and
-+	 * curiously the unconnected first port reports link online
-+	 * while not responding to SRST protocol causing excessive
-+	 * detection delay.
-+	 *
-+	 * Unfortunately, the system doesn't carry enough DMI
-+	 * information to identify the machine but does have subsystem
-+	 * vendor and device set.  As it's unclear whether the
-+	 * subsystem vendor/device is used only for this specific
-+	 * board, the port can't be disabled solely with the
-+	 * information; however, turning off SIDPR access works around
-+	 * the problem.  Turn it off.
-+	 *
-+	 * This problem is reported in bnc#441240.
-+	 *
-+	 * https://bugzilla.novell.com/show_bug.cgi?id=441420
-+	 */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2920 &&
-+	    pdev->subsystem_vendor == PCI_VENDOR_ID_SAMSUNG &&
-+	    pdev->subsystem_device == 0xb049) {
-+		dev_printk(KERN_WARNING, host->dev,
-+			   "Samsung DB-P70 detected, disabling SIDPR\n");
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static int __devinit piix_init_sidpr(struct ata_host *host)
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
-@@ -1302,6 +1335,10 @@ static int __devinit piix_init_sidpr(struct ata_host *host)
- 		if (hpriv->map[i] == IDE)
- 			return 0;
- 
-+	/* is it blacklisted? */
-+	if (piix_no_sidpr(host))
-+		return 0;
-+
- 	if (!(host->ports[0]->flags & PIIX_FLAG_SIDPR))
- 		return 0;
- 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 714cb04..f93dc02 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2066,6 +2066,7 @@ static int ata_bus_softreset(struct ata_port *ap, unsigned int devmask,
- 	iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
- 	udelay(20);	/* FIXME: flush */
- 	iowrite8(ap->ctl, ioaddr->ctl_addr);
-+	ap->last_ctl = ap->ctl;
- 
- 	/* wait the port to become ready */
- 	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
-@@ -2190,8 +2191,10 @@ void ata_sff_postreset(struct ata_link *link, unsigned int *classes)
- 	}
- 
- 	/* set up device control */
--	if (ap->ioaddr.ctl_addr)
-+	if (ap->ioaddr.ctl_addr) {
- 		iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
-+		ap->last_ctl = ap->ctl;
-+	}
- }
- EXPORT_SYMBOL_GPL(ata_sff_postreset);
- 
-@@ -2534,6 +2537,7 @@ void ata_bus_reset(struct ata_port *ap)
- 	if (ap->flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST)) {
- 		/* set up device control for ATA_FLAG_SATA_RESET */
- 		iowrite8(ap->ctl, ioaddr->ctl_addr);
-+		ap->last_ctl = ap->ctl;
- 	}
- 
- 	DPRINTK("EXIT\n");
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 7007edd..74b1080 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2218,12 +2218,13 @@ static irqreturn_t mv_interrupt(int irq, void *dev_instance)
- 		else
- 			handled = mv_host_intr(host, pending_irqs);
- 	}
--	spin_unlock(&host->lock);
- 
- 	/* for MSI: unmask; interrupt cause bits will retrigger now */
- 	if (using_msi)
- 		writel(hpriv->main_irq_mask, hpriv->main_irq_mask_addr);
- 
-+	spin_unlock(&host->lock);
-+
- 	return IRQ_RETVAL(handled);
- }
- 
+Cheers
