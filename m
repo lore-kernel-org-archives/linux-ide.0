@@ -1,22 +1,22 @@
 From: =?UTF-8?Q?Erik_Inge_Bols=C3=B8?= <knan-lkml@anduin.net>
-Subject: [PATCH 16/73] pata_cs5530: use ata.h mode mask defines
-Date: Sat, 14 Mar 2009 20:13:41 +0100 (CET)
-Message-ID: <alpine.BSF.1.00.0903142013330.59456@anduin.net>
+Subject: [PATCH 17/73] pata_cs5535: use ata.h mode mask defines
+Date: Sat, 14 Mar 2009 20:13:51 +0100 (CET)
+Message-ID: <alpine.BSF.1.00.0903142013460.59456@anduin.net>
 References: <alpine.BSF.1.00.0903141850260.53715@anduin.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anduin.net ([213.225.74.230]:61118 "EHLO anduin.net"
+Received: from anduin.net ([213.225.74.230]:61136 "EHLO anduin.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753983AbZCNTNn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:13:43 -0400
+	id S1754011AbZCNTNy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:13:54 -0400
 Received: from localhost ([127.0.0.1])
 	by anduin.net with esmtps (TLSv1:AES256-SHA:256)
 	(Exim 4.69 (FreeBSD))
 	(envelope-from <knan-lkml@anduin.net>)
-	id 1LiZIj-000FZY-Bm
-	for linux-ide@vger.kernel.org; Sat, 14 Mar 2009 20:13:41 +0100
+	id 1LiZIt-000Fa0-Qj
+	for linux-ide@vger.kernel.org; Sat, 14 Mar 2009 20:13:51 +0100
 In-Reply-To: <alpine.BSF.1.00.0903141850260.53715@anduin.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -26,34 +26,25 @@ No functional changes in this patch.
 
 Signed-off-by: Erik Inge Bols=C3=B8 <knan-lkml@anduin.net>
 ---
- drivers/ata/pata_cs5530.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/pata_cs5535.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index bba4533..c974b05 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -298,15 +298,15 @@ static int cs5530_init_one(struct pci_dev *pdev, =
-const struct pci_device_id *id)
+diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
+index 8b236af..d33aa28 100644
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -181,8 +181,8 @@ static int cs5535_init_one(struct pci_dev *dev, con=
+st struct pci_device_id *id)
  {
  	static const struct ata_port_info info =3D {
  		.flags =3D ATA_FLAG_SLAVE_POSS,
 -		.pio_mask =3D 0x1f,
 -		.mwdma_mask =3D 0x07,
--		.udma_mask =3D 0x07,
 +		.pio_mask =3D ATA_PIO4,
 +		.mwdma_mask =3D ATA_MWDMA2,
-+		.udma_mask =3D ATA_UDMA2,
- 		.port_ops =3D &cs5530_port_ops
+ 		.udma_mask =3D ATA_UDMA4,
+ 		.port_ops =3D &cs5535_port_ops
  	};
- 	/* The docking connector doesn't do UDMA, and it seems not MWDMA */
- 	static const struct ata_port_info info_palmax_secondary =3D {
- 		.flags =3D ATA_FLAG_SLAVE_POSS,
--		.pio_mask =3D 0x1f,
-+		.pio_mask =3D ATA_PIO4,
- 		.port_ops =3D &cs5530_port_ops
- 	};
- 	const struct ata_port_info *ppi[] =3D { &info, NULL };
 --=20
 1.5.6.3
 
