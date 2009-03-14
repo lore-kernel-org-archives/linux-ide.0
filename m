@@ -1,22 +1,22 @@
 From: =?UTF-8?Q?Erik_Inge_Bols=C3=B8?= <knan-lkml@anduin.net>
-Subject: [PATCH 29/73] pata_ixp4xx_cf: use ata.h mode mask defines
-Date: Sat, 14 Mar 2009 20:15:56 +0100 (CET)
-Message-ID: <alpine.BSF.1.00.0903142015510.59456@anduin.net>
+Subject: [PATCH 30/73] pata_jmicron: use ata.h mode mask defines
+Date: Sat, 14 Mar 2009 20:16:04 +0100 (CET)
+Message-ID: <alpine.BSF.1.00.0903142015590.59456@anduin.net>
 References: <alpine.BSF.1.00.0903141850260.53715@anduin.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anduin.net ([213.225.74.230]:61670 "EHLO anduin.net"
+Received: from anduin.net ([213.225.74.230]:61692 "EHLO anduin.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754557AbZCNTP6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:15:58 -0400
+	id S1754607AbZCNTQJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:16:09 -0400
 Received: from localhost ([127.0.0.1])
 	by anduin.net with esmtps (TLSv1:AES256-SHA:256)
 	(Exim 4.69 (FreeBSD))
 	(envelope-from <knan-lkml@anduin.net>)
-	id 1LiZKu-000FcQ-9j
-	for linux-ide@vger.kernel.org; Sat, 14 Mar 2009 20:15:56 +0100
+	id 1LiZL2-000FcZ-4T
+	for linux-ide@vger.kernel.org; Sat, 14 Mar 2009 20:16:04 +0100
 In-Reply-To: <alpine.BSF.1.00.0903141850260.53715@anduin.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -26,25 +26,25 @@ No functional changes in this patch.
 
 Signed-off-by: Erik Inge Bols=C3=B8 <knan-lkml@anduin.net>
 ---
- drivers/ata/pata_ixp4xx_cf.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ata/pata_jmicron.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.=
-c
-index b173c15..19fdecf 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -176,7 +176,7 @@ static __devinit int ixp4xx_pata_probe(struct platf=
-orm_device *pdev)
- 	ap =3D host->ports[0];
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 38cf1ab..3a1474a 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -136,8 +136,8 @@ static int jmicron_init_one (struct pci_dev *pdev, =
+const struct pci_device_id *i
+ 	static const struct ata_port_info info =3D {
+ 		.flags	=3D ATA_FLAG_SLAVE_POSS,
 =20
- 	ap->ops	=3D &ixp4xx_port_ops;
--	ap->pio_mask =3D 0x1f; /* PIO4 */
-+	ap->pio_mask =3D ATA_PIO4;
- 	ap->flags |=3D ATA_FLAG_MMIO | ATA_FLAG_NO_LEGACY | ATA_FLAG_NO_ATAPI=
-;
+-		.pio_mask	=3D 0x1f,
+-		.mwdma_mask	=3D 0x07,
++		.pio_mask	=3D ATA_PIO4,
++		.mwdma_mask	=3D ATA_MWDMA2,
+ 		.udma_mask 	=3D ATA_UDMA5,
 =20
- 	ixp4xx_setup_port(ap, data, cs0->start, cs1->start);
+ 		.port_ops	=3D &jmicron_ops,
 --=20
 1.5.6.3
 
