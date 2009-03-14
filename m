@@ -1,40 +1,97 @@
-From: =?UTF-8?Q?Erik_Inge_Bols=C3=B8?= <knan-lkml@anduin.net>
-Subject: Re: [PATCH 20/73] pata_efar: use ata.h mode mask defines
-Date: Sat, 14 Mar 2009 20:48:41 +0100 (CET)
-Message-ID: <alpine.BSF.1.00.0903142045250.61753@anduin.net>
-References: <alpine.BSF.1.00.0903141850260.53715@anduin.net> <alpine.BSF.1.00.0903142014190.59456@anduin.net> <20090314194522.2e8bbaa1@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 03/10] ide: destroy DMA mappings after ending DMA
+Date: Sat, 14 Mar 2009 20:51:57 +0100
+Message-ID: <200903142051.57971.bzolnier@gmail.com>
+References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain> <20090220171201.25429.29473.sendpatchset@localhost.localdomain> <da824cf30903140012g1565696kd6c69b4cd513f15b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anduin.net ([213.225.74.230]:60681 "EHLO anduin.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754214AbZCNTso convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:48:44 -0400
-In-Reply-To: <20090314194522.2e8bbaa1@lxorguk.ukuu.org.uk>
+Received: from mail-bw0-f175.google.com ([209.85.218.175]:63554 "EHLO
+	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754454AbZCNTuS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:50:18 -0400
+In-Reply-To: <da824cf30903140012g1565696kd6c69b4cd513f15b@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 14 Mar 2009, Alan Cox wrote:
-> On Sat, 14 Mar 2009 20:14:34 +0100 (CET)
-> Erik Inge Bols=C3=B8 <knan-lkml@anduin.net> wrote:
->=20
-> > No functional changes in this patch.
-> > (Looks like it could use one, though.)
->=20
-> Yep - wrong comment. The EFAR is a sort of clone of the PIIX and I co=
-pied
-> the comment while EFAR don't appear to have copied the limitation
 
-Most suspicious thing I noted here was 0x0F =3D UDMA3, though. You prob=
-ably=20
-meant UDMA4?
+Hi,
 
-Will send bugfix patches after I redo the pure conversion in two patche=
-s,=20
-like Jeff says.
+On Saturday 14 March 2009, Grant Grundler wrote:
+> On Fri, Feb 20, 2009 at 6:12 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide: destroy DMA mappings after ending DMA
+> >
+> > Move ide_destroy_dmatable() call out from ->dma_end method to
+> > {ide_pc,cdrom_newpc,ide_dma}_intr(), ide_dma_timeout_retry()
+> > and sgiioc4_resetproc().
+> ...
+> > --- a/drivers/ide/ide-dma-sff.c
+> > +++ b/drivers/ide/ide-dma-sff.c
+> > @@ -310,8 +310,6 @@ int ide_dma_end(ide_drive_t *drive)
+> >        /* clear INTR & ERROR bits */
+> >        ide_dma_sff_write_status(hwif, dma_stat | ATA_DMA_ERR | ATA_DMA_INTR);
+> >
+> > -       /* purge DMA mappings */
+> > -       ide_destroy_dmatable(drive);
+> >        wmb();
+> 
+> Bartlomiej,
+> I think the wmb() could removed as well. The outb/writeb functions are
+> required to be strongly ordered and I don't see anything else touching
+> DMA-able memory here.
 
---
--erik	http://useofwords.blogspot.com/
+Indeed.  IIRC this code precedes the requeirement for outb/writeb to be
+strongly ordered.
+
+Seems like wmb() in ide_dma_start() is also superfluous nowadays...
+
+> BTW, care to remove "mask" usage from this function?
+> It's really not needed (can be replaced with #define).
+
+Feel free to remove it. :)
+
+> I can create separate patches for both. Which git tree should I base
+> them against?
+
+linux-next git tree
+(or pata-2.6 quilt tree)
+
+> ...
+> > --- a/drivers/ide/scc_pata.c
+> > +++ b/drivers/ide/scc_pata.c
+> > @@ -365,8 +365,6 @@ static int __scc_dma_end(ide_drive_t *dr
+> >        dma_stat = scc_dma_sff_read_status(hwif);
+> >        /* clear the INTR & ERROR bits */
+> >        scc_ide_outb(dma_stat | 6, hwif->dma_base + 4);
+> > -       /* purge DMA mappings */
+> > -       ide_destroy_dmatable(drive);
+> >        /* verify good DMA status */
+> >        wmb();
+> 
+> I think this wmb() can be removed too.
+> 
+> ....
+> > --- a/drivers/ide/tx4939ide.c
+> > +++ b/drivers/ide/tx4939ide.c
+> > @@ -335,11 +335,9 @@ static int tx4939ide_dma_end(ide_drive_t
+> >        /* read and clear the INTR & ERROR bits */
+> >        dma_stat = tx4939ide_clear_dma_status(base);
+> >
+> > -       /* purge DMA mappings */
+> > -       ide_destroy_dmatable(drive);
+> > -       /* verify good DMA status */
+> >        wmb();
+> 
+> and this one as well.
+
+Seems so but please cc: scc_pata & tx4939 maintainers on your patch.
+
+Thanks,
+Bart
