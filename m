@@ -1,48 +1,49 @@
-From: =?UTF-8?Q?Erik_Inge_Bols=C3=B8?= <knan-lkml@anduin.net>
-Subject: [PATCH] pata_efar: fix *dma_mask
-Date: Sat, 14 Mar 2009 23:08:20 +0100 (CET)
-Message-ID: <alpine.BSF.1.00.0903142307530.73010@anduin.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 20/73] pata_efar: use ata.h mode mask defines
+Date: Sat, 14 Mar 2009 18:10:31 -0400
+Message-ID: <49BC2B57.9030206@garzik.org>
+References: <alpine.BSF.1.00.0903141850260.53715@anduin.net> <alpine.BSF.1.00.0903142014190.59456@anduin.net> <20090314194522.2e8bbaa1@lxorguk.ukuu.org.uk> <alpine.BSF.1.00.0903142045250.61753@anduin.net> <49BC1643.9020201@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anduin.net ([213.225.74.230]:57611 "EHLO anduin.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53504 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751917AbZCNWIX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 18:08:23 -0400
+	id S1755132AbZCNWKu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 Mar 2009 18:10:50 -0400
+In-Reply-To: <49BC1643.9020201@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: =?UTF-8?B?RXJpayBJbmdlIEJvbHPDuA==?= <knan-lkml@anduin.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-According to Alan:
->and yes the EFAR does UDMA66.
+Sergei Shtylyov wrote:
+> Hello.
+>=20
+> Erik Inge Bols=C3=B8 wrote:
+>=20
+>>>> No functional changes in this patch.
+>>>> (Looks like it could use one, though.)
+>>>>      =20
+>>> Yep - wrong comment. The EFAR is a sort of clone of the PIIX and I=20
+>>> copied
+>>> the comment while EFAR don't appear to have copied the limitation
+>>>    =20
+>>
+>> Most suspicious thing I noted here was 0x0F =3D UDMA3, though. You=20
+>> probably meant UDMA4?
+>>
+>> Will send bugfix patches after I redo the pure conversion in two=20
+>> patches, like Jeff says.
+>>  =20
+>=20
+>   It makes more sense to put the fixes *before* the cleanups.
 
-mwdma:
->Yep - wrong comment. The EFAR is a sort of clone of the PIIX and I
->copied the comment while EFAR don't appear to have copied the
->limitation
+Quite true...
 
-Signed-off-by: Erik Inge Bols=C3=B8 <knan-lkml@anduin.net>
----
- drivers/ata/pata_efar.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+	Jeff
 
-diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index bd498cc..2085e0a 100644
---- a/drivers/ata/pata_efar.c
-+++ b/drivers/ata/pata_efar.c
-@@ -252,8 +252,8 @@ static int efar_init_one (struct pci_dev *pdev, con=
-st struct pci_device_id *ent)
- 	static const struct ata_port_info info =3D {
- 		.flags		=3D ATA_FLAG_SLAVE_POSS,
- 		.pio_mask	=3D ATA_PIO4,
--		.mwdma_mask	=3D ATA_MWDMA2, /* mwdma1-2 */
--		.udma_mask 	=3D ATA_UDMA3, /* UDMA 66 */
-+		.mwdma_mask	=3D ATA_MWDMA2,
-+		.udma_mask 	=3D ATA_UDMA4,
- 		.port_ops	=3D &efar_ops,
- 	};
- 	const struct ata_port_info *ppi[] =3D { &info, NULL };
---=20
-1.5.6.3
+
+
+
