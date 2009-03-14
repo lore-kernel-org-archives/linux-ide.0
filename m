@@ -1,46 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 20/73] pata_efar: use ata.h mode mask defines
-Date: Sat, 14 Mar 2009 23:40:35 +0300
-Message-ID: <49BC1643.9020201@ru.mvista.com>
-References: <alpine.BSF.1.00.0903141850260.53715@anduin.net> <alpine.BSF.1.00.0903142014190.59456@anduin.net> <20090314194522.2e8bbaa1@lxorguk.ukuu.org.uk> <alpine.BSF.1.00.0903142045250.61753@anduin.net>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH 03/10] ide: destroy DMA mappings after ending DMA
+Date: Sat, 14 Mar 2009 21:45:38 +0100
+Message-ID: <da824cf30903141345l55f51571u92e0d5787aa61d7d@mail.gmail.com>
+References: <20090220171139.25429.26702.sendpatchset@localhost.localdomain>
+	 <20090220171201.25429.29473.sendpatchset@localhost.localdomain>
+	 <da824cf30903140012g1565696kd6c69b4cd513f15b@mail.gmail.com>
+	 <200903142051.57971.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:3366 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751749AbZCNUko (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Mar 2009 16:40:44 -0400
-In-Reply-To: <alpine.BSF.1.00.0903142045250.61753@anduin.net>
+Received: from smtp-out.google.com ([216.239.33.17]:43310 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbZCNUpq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 16:45:46 -0400
+In-Reply-To: <200903142051.57971.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?RXJpayBJbmdlIEJvbHPDuA==?= <knan-lkml@anduin.net>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
-
-Erik Inge Bols=C3=B8 wrote:
-
->>> No functional changes in this patch.
->>> (Looks like it could use one, though.)
->>>      =20
->> Yep - wrong comment. The EFAR is a sort of clone of the PIIX and I c=
-opied
->> the comment while EFAR don't appear to have copied the limitation
->>    =20
+On Sat, Mar 14, 2009 at 8:51 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+...
+>> I can create separate patches for both. Which git tree should I base
+>> them against?
 >
-> Most suspicious thing I noted here was 0x0F =3D UDMA3, though. You pr=
-obably=20
-> meant UDMA4?
->
-> Will send bugfix patches after I redo the pure conversion in two patc=
-hes,=20
-> like Jeff says.
->  =20
+> linux-next git tree
+> (or pata-2.6 quilt tree)
 
-   It makes more sense to put the fixes *before* the cleanups.
+I've not used quilt yet and can only deal with git in a very crude way.
+Thanks for the references!
 
-MBR, Sergei
+....
+> Seems so but please cc: scc_pata & tx4939 maintainers on your patch.
 
+Yes, will do!
 
+thanks,
+grant
