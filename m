@@ -1,54 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH,v2][1/2] sata-mv: enable HDD led blinking when NCQ is
- active for GenIIe
-Date: Sat, 14 Mar 2009 10:53:29 -0400
-Message-ID: <49BBC4E9.3080708@rtr.ca>
-References: <200903110813.25650.elendil@planet.nl> <49BA59FA.1020205@rtr.ca> <200903131919.09525.elendil@planet.nl> <200903141257.43628.elendil@planet.nl>
+From: =?UTF-8?Q?Erik_Inge_Bols=C3=B8?= <knan-lkml@anduin.net>
+Subject: [PATCH 01/73] pata_acpi: use ata.h mode mask defines
+Date: Sat, 14 Mar 2009 20:07:45 +0100 (CET)
+Message-ID: <alpine.BSF.1.00.0903142006120.59309@anduin.net>
+References: <alpine.BSF.1.00.0903141850260.53715@anduin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:38909 "EHLO mail.rtr.ca"
+Received: from anduin.net ([213.225.74.230]:60044 "EHLO anduin.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751765AbZCNOxe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Mar 2009 10:53:34 -0400
-In-Reply-To: <200903141257.43628.elendil@planet.nl>
+	id S1752784AbZCNTHs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Mar 2009 15:07:48 -0400
+Received: from localhost ([127.0.0.1])
+	by anduin.net with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.69 (FreeBSD))
+	(envelope-from <knan-lkml@anduin.net>)
+	id 1LiZCz-000FRS-JL
+	for linux-ide@vger.kernel.org; Sat, 14 Mar 2009 20:07:45 +0100
+In-Reply-To: <alpine.BSF.1.00.0903141850260.53715@anduin.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-ide@vger.kernel.org
 
-Frans Pop wrote:
-> I missed the fact that you now call mv_edma_cfg from mv_stop_edma, so the 
-> simplification is now indeed possible.
-> 
-> Tested and everything still works.
-> 
->> I have so far not tested the led bahavior when DMA is disabled (not
->> even sure if that's possible for a running system).
-> 
-> It seems that with libata-based drivers disabling dma is only possible at 
-> boot time and not dynamically, so this isn't possible anyway.
-> I don't know if access errors could cause the driver to fall back to PIO, 
-> but I don't really want to test that :-)
-..
+No functional changes in this patch.
 
-Yeah, tricky to see that.  With sata_mv, though, DMA is disabled
-for any irregular (non block layer R/W) commands.
+Signed-off-by: Erik Inge Bols=C3=B8 <knan-lkml@anduin.net>
+---
+ drivers/ata/pata_acpi.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-So the code path is being exercised, just too quickly to see if
-the LED actually blinks much in non-DMA modes.
-I think you could test the non-DMA mode with this:
-
-  #!/bin/bash
-  i=0
-  while ( sleep 0.3 ) ; do hdparm --read-sector $i --direct /dev/sda ; i=$((i + 1)) ; done
-
-That should work.
-you could even vary the sleep value to change the observed LED blinking rate.
-
-I'll queue up the patch for 2.6.29 now, but if you could try the above
-then that would also be cool.
-
-Thanks
+diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
+index 8b77a98..d8f35fe 100644
+--- a/drivers/ata/pata_acpi.c
++++ b/drivers/ata/pata_acpi.c
+@@ -246,9 +246,9 @@ static int pacpi_init_one (struct pci_dev *pdev, co=
+nst struct pci_device_id *id)
+ 	static const struct ata_port_info info =3D {
+ 		.flags		=3D ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+=20
+-		.pio_mask	=3D 0x1f,
+-		.mwdma_mask	=3D 0x07,
+-		.udma_mask 	=3D 0x7f,
++		.pio_mask	=3D ATA_PIO4,
++		.mwdma_mask	=3D ATA_MWDMA2,
++		.udma_mask 	=3D ATA_UDMA6,
+=20
+ 		.port_ops	=3D &pacpi_ops,
+ 	};
+--=20
+1.5.6.3
 
