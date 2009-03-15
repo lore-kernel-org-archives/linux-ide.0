@@ -1,49 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 20/73] pata_efar: use ata.h mode mask defines
-Date: Sat, 14 Mar 2009 18:10:31 -0400
-Message-ID: <49BC2B57.9030206@garzik.org>
-References: <alpine.BSF.1.00.0903141850260.53715@anduin.net> <alpine.BSF.1.00.0903142014190.59456@anduin.net> <20090314194522.2e8bbaa1@lxorguk.ukuu.org.uk> <alpine.BSF.1.00.0903142045250.61753@anduin.net> <49BC1643.9020201@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] New: Seagate STT20000A no longer works
+Date: Sun, 15 Mar 2009 01:23:45 -0700 (PDT)
+Message-ID: <bug-12874-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53504 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755132AbZCNWKu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Mar 2009 18:10:50 -0400
-In-Reply-To: <49BC1643.9020201@ru.mvista.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59903 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751183AbZCOIYy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Mar 2009 04:24:54 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2F8NjRH014598
+	for <linux-ide@vger.kernel.org>; Sun, 15 Mar 2009 01:24:21 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: =?UTF-8?B?RXJpayBJbmdlIEJvbHPDuA==?= <knan-lkml@anduin.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
-> Hello.
->=20
-> Erik Inge Bols=C3=B8 wrote:
->=20
->>>> No functional changes in this patch.
->>>> (Looks like it could use one, though.)
->>>>      =20
->>> Yep - wrong comment. The EFAR is a sort of clone of the PIIX and I=20
->>> copied
->>> the comment while EFAR don't appear to have copied the limitation
->>>    =20
->>
->> Most suspicious thing I noted here was 0x0F =3D UDMA3, though. You=20
->> probably meant UDMA4?
->>
->> Will send bugfix patches after I redo the pure conversion in two=20
->> patches, like Jeff says.
->>  =20
->=20
->   It makes more sense to put the fixes *before* the cleanups.
+http://bugzilla.kernel.org/show_bug.cgi?id=12874
 
-Quite true...
-
-	Jeff
+           Summary: Seagate STT20000A no longer works
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.29-rc7
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: koraq@xs4all.nl
 
 
+Latest working kernel version: 2.6.25
+Earliest failing kernel version: 2.6.26
+Distribution: Debian Lenny (tested with vanilla kernel)
+Hardware Environment: i386
+Problem Description: 
+The Seagate STT20000A tapestreamer is no longer usable 
+when modprobing the ide_tape module there's kernel BUG.
+
+It was reported on the lkml[1][2], I tested with 2.6.29-rc7
+and the problem still remains. Attached the boot dmesg and
+the kernel BUG dmesg. Please let me know if more information
+is needed. 
+
+[1]http://marc.info/?l=linux-kernel&m=122203193728465&w=2
+[2]http://marc.info/?l=linux-kernel&m=122202406417545&w=2
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
