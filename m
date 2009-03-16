@@ -1,30 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] ide-disk: use ATA_ERR
-Date: Mon, 16 Mar 2009 18:59:33 +0100
-Message-ID: <200903161859.33704.bzolnier@gmail.com>
-References: <200903161833.08744.sshtylyov@ru.mvista.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: ATA support for 4k sector size
+Date: Mon, 16 Mar 2009 11:11:15 -0700
+Message-ID: <49BE9643.8050703@zytor.com>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	 <yq1hc2iumg9.fsf@sermon.lab.mkp.net> <20090226025043.GJ1363@mit.edu>	 <20090226030735.GA16891@parisc-linux.org>	 <yq1eixlg4mn.fsf@sermon.lab.mkp.net> <49A6B604.1060702@zytor.com>	 <yq1iqmxey1o.fsf@sermon.lab.mkp.net> <49A70379.3050306@zytor.com>	 <87f94c370903160751t6de5ed2t40163a6590ba633@mail.gmail.com>	 <49BE7DEF.1060005@zytor.com> <87f94c370903161037q52ff5e1nb7512726e58e652c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:10291 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757094AbZCPSIF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Mar 2009 14:08:05 -0400
-Received: by fk-out-0910.google.com with SMTP id f33so1484927fkf.5
-        for <linux-ide@vger.kernel.org>; Mon, 16 Mar 2009 11:08:00 -0700 (PDT)
-In-Reply-To: <200903161833.08744.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from terminus.zytor.com ([198.137.202.10]:47838 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760361AbZCPSLq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Mar 2009 14:11:46 -0400
+In-Reply-To: <87f94c370903161037q52ff5e1nb7512726e58e652c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-On Monday 16 March 2009, Sergei Shtylyov wrote:
-> Make use of ATA_ERR instead of hard-coded value in idedisk_set_max_address()
-> and idedisk_read_native_max_address().
+Greg Freemyer wrote:
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> I'm not intimate with the details, but I would hope most boot loaders
+> by now use LBA values to find the boot code, not CHS.
+> 
 
-applied
+Yes, for "true" hard drives this is pretty much universal these days 
+(except for MS-DOS and its ilk.)  For USB and so on some BIOSes are 
+still stuck in old times.  Sigh.
+
+> If so the issue becomes the partitioning tools (fdisk etc.) putting
+> the partitions at the right place.  Can't those tools bypass the bios
+> somehow and ask the drive itself what it's geometry is?
+
+It can, but it MUST NOT do so.  The fields that are to be entered into 
+the partition table are BIOS CHS values, not any other kind of CHS.
+
+> From what I understand Vista has already made the jump and is now
+> ignoring CHS and instead just putting the first partition at 1 MiB
+> into the drive.  (sector 2048 with 512 byte sectors.)
+> 
+> Sounds like fdisk and friends should be updated to do the same.
+
+Yes, that is way overdue.
+
+> A bigger issue in my mind is lots of clones, images, etc. are probably
+> LBA based today and simply start the first partition at sector 63.
+> Thus the hardware vendors will need to have drives that perform well
+> with partitions that start at sector 63.  The existing scheme
+> described may be as good as it gets for that need.
+> 
+> Also, how are SDD manufacturers handling this.  Their erase blocks
+> don't align with partitions that start at sector 63 either I assume?
+
+Some SDD manufacturers (I don't know which ones) are actually examining 
+the partition table and doing different things.  I know this because 
+they are permanently bricked if one writes an invalid partition table.
+
+Not recommended.
+
+	-hpa
+
