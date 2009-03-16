@@ -1,190 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] ide: use ATA_HOB
-Date: Mon, 16 Mar 2009 19:34:31 +0400
-Message-ID: <200903161834.31142.sshtylyov@ru.mvista.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: ATA support for 4k sector size
+Date: Mon, 16 Mar 2009 09:27:27 -0700
+Message-ID: <49BE7DEF.1060005@zytor.com>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	 <49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>	 <20090226025043.GJ1363@mit.edu>	 <20090226030735.GA16891@parisc-linux.org>	 <yq1eixlg4mn.fsf@sermon.lab.mkp.net> <49A6B604.1060702@zytor.com>	 <yq1iqmxey1o.fsf@sermon.lab.mkp.net> <49A70379.3050306@zytor.com> <87f94c370903160751t6de5ed2t40163a6590ba633@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:40968 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753322AbZCPPdr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Mar 2009 11:33:47 -0400
-Content-Disposition: inline
+Received: from terminus.zytor.com ([198.137.202.10]:56296 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061AbZCPQ3B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Mar 2009 12:29:01 -0400
+In-Reply-To: <87f94c370903160751t6de5ed2t40163a6590ba633@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-Make use of ATA_HOB instead of hard-coded value in the tf_read() method.
+Greg Freemyer wrote:
+> If the reported geometry of these drives was changed to have sectors /
+> track be a multiple of 8, wouldn't that fix most of the issues.
+> 
+> ie. If the drive were to report 56 sectors per track, then a
+> traditional partitioning tool would start the first partition as
+> sector 56 and a Vista like partitioning tool would place the first
+> partition at sector 2048.  Both would have the same 4K sector
+> alignment.
+> 
+> If my logic is sound, anyway to get this recommendation upstream to
+> hardware manufacturers.  It seems like an almost trivial change for
+> them.
+> 
+> FYI: It sounds to me like partitioning tools should totally drop
+> efforts to align with cylinders, instead they should start asking what
+> the unit of atomic read/writes is at the physical layer and if any
+> offsets are needed to align the partition with the atomic write areas.
+> 
+> That would fit better for both SSD technology and for this 4K sectors
+> issue than trying to continue to support cylinders at all.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+As long as BIOSes played along with it (which some of them may not do --
+remember the geometry that matters is the one reported by the BIOS)
+However, it definitely would be a major step in the right direction, as
+it would let *most* systems Do The Right Thing instead of weirdly
+misaligning the partitions and trying to cope with that.
 
----
-This patch is atop of the latest pata-2.6 series...
+	-hpa
 
- drivers/ide/at91_ide.c   |    4 ++--
- drivers/ide/ide-h8300.c  |    4 ++--
- drivers/ide/ide-io-std.c |    4 ++--
- drivers/ide/ns87415.c    |    4 ++--
- drivers/ide/scc_pata.c   |    4 ++--
- drivers/ide/tx4938ide.c  |    4 ++--
- drivers/ide/tx4939ide.c  |    4 ++--
- 7 files changed, 14 insertions(+), 14 deletions(-)
-
-Index: linux-2.6/drivers/ide/ide-h8300.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-h8300.c
-+++ linux-2.6/drivers/ide/ide-h8300.c
-@@ -98,7 +98,7 @@ static void h8300_tf_read(ide_drive_t *d
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = inb(io_ports->feature_addr);
-@@ -114,7 +114,7 @@ static void h8300_tf_read(ide_drive_t *d
- 		tf->device = inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature = inb(io_ports->feature_addr);
-Index: linux-2.6/drivers/ide/ide-io-std.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-io-std.c
-+++ linux-2.6/drivers/ide/ide-io-std.c
-@@ -166,7 +166,7 @@ void ide_tf_read(ide_drive_t *drive, str
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	tf_outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	tf_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = tf_inb(io_ports->feature_addr);
-@@ -182,7 +182,7 @@ void ide_tf_read(ide_drive_t *drive, str
- 		tf->device = tf_inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		tf_outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		tf_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature = tf_inb(io_ports->feature_addr);
-Index: linux-2.6/drivers/ide/ns87415.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ns87415.c
-+++ linux-2.6/drivers/ide/ns87415.c
-@@ -74,7 +74,7 @@ static void superio_tf_read(ide_drive_t 
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = inb(io_ports->feature_addr);
-@@ -90,7 +90,7 @@ static void superio_tf_read(ide_drive_t 
- 		tf->device = superio_ide_inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature = inb(io_ports->feature_addr);
-Index: linux-2.6/drivers/ide/scc_pata.c
-===================================================================
---- linux-2.6.orig/drivers/ide/scc_pata.c
-+++ linux-2.6/drivers/ide/scc_pata.c
-@@ -709,7 +709,7 @@ static void scc_tf_read(ide_drive_t *dri
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	scc_ide_outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	scc_ide_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = scc_ide_inb(io_ports->feature_addr);
-@@ -725,7 +725,7 @@ static void scc_tf_read(ide_drive_t *dri
- 		tf->device = scc_ide_inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		scc_ide_outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		scc_ide_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature = scc_ide_inb(io_ports->feature_addr);
-Index: linux-2.6/drivers/ide/tx4938ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/tx4938ide.c
-+++ linux-2.6/drivers/ide/tx4938ide.c
-@@ -142,7 +142,7 @@ static void tx4938ide_tf_read(ide_drive_
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	tx4938ide_outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	tx4938ide_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = tx4938ide_inb(io_ports->feature_addr);
-@@ -158,7 +158,7 @@ static void tx4938ide_tf_read(ide_drive_
- 		tf->device = tx4938ide_inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		tx4938ide_outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		tx4938ide_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature =
-Index: linux-2.6/drivers/ide/tx4939ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/tx4939ide.c
-+++ linux-2.6/drivers/ide/tx4939ide.c
-@@ -509,7 +509,7 @@ static void tx4939ide_tf_read(ide_drive_
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	tx4939ide_outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	tx4939ide_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = tx4939ide_inb(io_ports->feature_addr);
-@@ -525,7 +525,7 @@ static void tx4939ide_tf_read(ide_drive_
- 		tf->device = tx4939ide_inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		tx4939ide_outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		tx4939ide_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature =
-Index: linux-2.6/drivers/ide/at91_ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/at91_ide.c
-+++ linux-2.6/drivers/ide/at91_ide.c
-@@ -242,7 +242,7 @@ static void at91_ide_tf_read(ide_drive_t
- 	}
- 
- 	/* be sure we're looking at the low order bits */
--	ide_mm_outb(ATA_DEVCTL_OBS & ~0x80, io_ports->ctl_addr);
-+	ide_mm_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_IN_FEATURE)
- 		tf->feature = ide_mm_inb(io_ports->feature_addr);
-@@ -258,7 +258,7 @@ static void at91_ide_tf_read(ide_drive_t
- 		tf->device = ide_mm_inb(io_ports->device_addr);
- 
- 	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		ide_mm_outb(ATA_DEVCTL_OBS | 0x80, io_ports->ctl_addr);
-+		ide_mm_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
- 
- 		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_FEATURE)
- 			tf->hob_feature = ide_mm_inb(io_ports->feature_addr);
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
