@@ -1,50 +1,50 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to
-	CREDITS
-Date: Thu, 19 Mar 2009 06:39:19 +0100
-Message-ID: <20090319053919.GA24137@liondog.tnic>
-References: <200903182201.32668.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Tim Small <tim@buttersideup.com>
+Subject: AHCI link power management and surprise hotplug
+Date: Thu, 19 Mar 2009 11:03:37 +0000
+Message-ID: <49C22689.9050005@buttersideup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:28050 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753022AbZCSFj3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Mar 2009 01:39:29 -0400
-Content-Disposition: inline
-In-Reply-To: <200903182201.32668.bzolnier@gmail.com>
+Received: from relay1.allsecurenet.com ([66.111.57.92]:39920 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204AbZCSLdx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Mar 2009 07:33:53 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gadi Oxman <gadio@netvision.net.il>, Paul Bristow <paul@paulbristow.net>
+To: linux-ide@vger.kernel.org
+Cc: kristen.c.accardi@intel.com
 
-On Wed, Mar 18, 2009 at 10:01:32PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS
-> 
-> Ben Hutchings noticed that MAINTAINERS somehow still contain old
-> ide-{floppy,tape} entries.  Fix it by moving them to CREDITS (kudos
-> to Gadi and Paul for all the early hard work on ide-{floppy,tape}).
-> 
-> Cc: Gadi Oxman <gadio@netvision.net.il>
-> Cc: Paul Bristow <paul@paulbristow.net>
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
-> Borislav, maybe it would make sense to rename IDE/ATAPI CDROM DRIVER
-> entry to IDE/ATAPI DRIVERS one nowadays (you're the one doing most of
-> ATAPI work anyway :)?
+Hello,
 
-... after you, of course :).
+I've been configuring SATA link power management
+(Documentation/scsi/link_power_management_policy.txt) on servers which
+use software RAID for a while, but I happened to come across this in the
+ICH9 datasheet:
 
-Fine with me. The easiest would be if you fold the change into the same patch.
+"
+For reliable device removal notification while in AHCI operation without
+the use of interlock switches (surprise removal), interface power
+management should be disabled for the associated port. See Section 7.3.1
+of the AHCI Specification for more information.
+"
 
-> 
->  CREDITS     |    9 +++++++++
->  MAINTAINERS |   13 -------------
->  2 files changed, 9 insertions(+), 13 deletions(-)
 
--- 
-Regards/Gruss,
-    Boris.
+Is this actually an issue from a libata point of view?  Do I need to
+ensure that link power management is disabled prior to hot-removal, and
+if so, I suppose link_power_management_policy.txt should be updated to
+reflect this...
+
+On a related topic, is there any way to do anything other than
+"surprise" removal with libata?  It'd be nice to put a drive to sleep
+(e.g. with "hdparm -Y"), and ensure that nothing comes along and causes
+the drive to be reset and spin the drive attached to that SATA port back
+up prior to a removal and reinsertion.
+
+I'm assuming that physically unplugging a non-spinning drive is
+preferable to unplugging a spinning one from a drive longevity point of
+view (I use SATA drives as removable backup medium in some cases).
+
+Cheers,
+
+Tim.
