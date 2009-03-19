@@ -1,34 +1,32 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12874] Seagate STT20000A no longer works
-Date: Wed, 18 Mar 2009 16:04:06 -0700 (PDT)
-Message-ID: <20090318230406.C00D110800E@picon.linux-foundation.org>
-References: <bug-12874-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata-core More robust parsing for multi_count(v3)
+Date: Thu, 19 Mar 2009 09:23:35 +0900
+Message-ID: <49C19087.5000307@gmail.com>
+References: <49C1047D.4000008@rtr.ca> <49C11A0C.3070502@rtr.ca> <49C11ED4.2030307@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40595 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751629AbZCRXFM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Mar 2009 19:05:12 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2IN46ej022619
-	for <linux-ide@vger.kernel.org>; Wed, 18 Mar 2009 16:04:42 -0700
-In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
+Received: from ti-out-0910.google.com ([209.85.142.185]:28543 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333AbZCSAXn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Mar 2009 20:23:43 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so147750tid.23
+        for <linux-ide@vger.kernel.org>; Wed, 18 Mar 2009 17:23:40 -0700 (PDT)
+In-Reply-To: <49C11ED4.2030307@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12874
+Hello, Mark.
 
+Mark Lord wrote:
+> +            if (cnt && cnt <= max && (max & (max - 1)) == 0) {
 
+Can you please include <linux/log2.h> and use is_power_of_2() instead?
 
-
-
-------- Comment #6 from koraq@xs4all.nl  2009-03-18 16:04 -------
-Created an attachment (id=20587)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=20587&action=view)
-ide-tape.dsm
-
+Thanks.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+tejun
