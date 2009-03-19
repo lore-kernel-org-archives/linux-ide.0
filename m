@@ -1,483 +1,217 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 1/2] ide: turn selectproc() method into dev_select() method
-Date: Thu, 19 Mar 2009 19:31:43 +0400
-Message-ID: <200903191831.43621.sshtylyov@ru.mvista.com>
+Subject: [PATCH 2/2] ide: inline SELECT_DRIVE()
+Date: Thu, 19 Mar 2009 19:35:13 +0400
+Message-ID: <200903191835.13048.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:65438 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:65504 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756775AbZCSPbD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Mar 2009 11:31:03 -0400
+	id S1754405AbZCSPea (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Mar 2009 11:34:30 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org
+Cc: linux-ide@vger.kernel.org
 
-Turn selectproc() method into dev_select() method by teaching it to write to the
-device register and moving it from 'struct ide_port_ops' to 'struct ide_tp_ops'.
+Since SELECT_DRIVE() has boiled down to a mere dev_select() method call, it now
+makes sense to just inline it...
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
 This patch is atop of the latest pata-2.6 series...
 
-Ben, could you please verify my changes to the PowerMac IDE driver?
+ drivers/ide/ide-eh.c    |    7 ++++---
+ drivers/ide/ide-io.c    |    2 +-
+ drivers/ide/ide-iops.c  |    7 +------
+ drivers/ide/ide-pm.c    |    5 +++--
+ drivers/ide/ide-probe.c |   15 ++++++++-------
+ drivers/ide/ns87415.c   |    2 +-
+ include/linux/ide.h     |    1 -
+ 7 files changed, 18 insertions(+), 21 deletions(-)
 
- drivers/ide/ht6560b.c    |   20 ++++++++++++++--
- drivers/ide/ide-io-std.c |   12 +++++++++
- drivers/ide/ide-iops.c   |   12 ---------
- drivers/ide/ns87415.c    |   22 +++++++++++++----
- drivers/ide/pmac.c       |   58 +++++++++++++++++++++++++++++++----------------
- drivers/ide/qd65xx.c     |   21 ++++++++++++++---
- drivers/ide/trm290.c     |   21 ++++++++++++-----
- drivers/ide/tx4939ide.c  |    2 -
- include/linux/ide.h      |    5 +---
- 9 files changed, 124 insertions(+), 49 deletions(-)
-
-Index: linux-2.6/drivers/ide/ht6560b.c
+Index: linux-2.6/drivers/ide/ide-eh.c
 ===================================================================
---- linux-2.6.orig/drivers/ide/ht6560b.c
-+++ linux-2.6/drivers/ide/ht6560b.c
-@@ -103,7 +103,7 @@
- /*
-  * This routine is invoked from ide.c to prepare for access to a given drive.
-  */
--static void ht6560b_selectproc (ide_drive_t *drive)
-+static void ht6560b_dev_select(ide_drive_t *drive)
+--- linux-2.6.orig/drivers/ide/ide-eh.c
++++ linux-2.6/drivers/ide/ide-eh.c
+@@ -165,11 +165,12 @@ static ide_startstop_t do_reset1(ide_dri
+ static ide_startstop_t atapi_reset_pollfunc(ide_drive_t *drive)
  {
  	ide_hwif_t *hwif = drive->hwif;
- 	unsigned long flags;
-@@ -143,6 +143,8 @@ static void ht6560b_selectproc (ide_driv
- #endif
- 	}
- 	local_irq_restore(flags);
-+
-+	outb(drive->select | ATA_DEVICE_OBS, hwif->io_ports.device_addr);
- }
++	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+ 	u8 stat;
  
- /*
-@@ -305,15 +307,29 @@ static int probe_ht6560b;
- module_param_named(probe, probe_ht6560b, bool, 0);
- MODULE_PARM_DESC(probe, "probe for HT6560B chipset");
+-	SELECT_DRIVE(drive);
++	tp_ops->dev_select(drive);
+ 	udelay(10);
+-	stat = hwif->tp_ops->read_status(hwif);
++	stat = tp_ops->read_status(hwif);
  
-+static const struct ide_tp_ops ht6560b_tp_ops = {
-+	.exec_command		= ide_exec_command,
-+	.read_status		= ide_read_status,
-+	.read_altstatus		= ide_read_altstatus,
-+	.write_devctl		= ide_write_devctl,
-+
-+	.dev_select		= ht6560b_dev_select,
-+	.tf_load		= ide_tf_load,
-+	.tf_read		= ide_tf_read,
-+
-+	.input_data		= ide_input_data,
-+	.output_data		= ide_output_data,
-+};
-+
- static const struct ide_port_ops ht6560b_port_ops = {
- 	.init_dev		= ht6560b_init_dev,
- 	.set_pio_mode		= ht6560b_set_pio_mode,
--	.selectproc		= ht6560b_selectproc,
- };
- 
- static const struct ide_port_info ht6560b_port_info __initdata = {
- 	.name			= DRV_NAME,
- 	.chipset		= ide_ht6560b,
-+	.tp_ops 		= &ht6560b_tp_ops,
- 	.port_ops		= &ht6560b_port_ops,
- 	.host_flags		= IDE_HFLAG_SERIALIZE | /* is this needed? */
- 				  IDE_HFLAG_NO_DMA |
-Index: linux-2.6/drivers/ide/ide-io-std.c
+ 	if (OK_STAT(stat, 0, ATA_BUSY))
+ 		printk(KERN_INFO "%s: ATAPI reset complete\n", drive->name);
+@@ -348,7 +349,7 @@ static ide_startstop_t do_reset1(ide_dri
+ 	/* For an ATAPI device, first try an ATAPI SRST. */
+ 	if (drive->media != ide_disk && !do_not_try_atapi) {
+ 		pre_reset(drive);
+-		SELECT_DRIVE(drive);
++		tp_ops->dev_select(drive);
+ 		udelay(20);
+ 		tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
+ 		ndelay(400);
+Index: linux-2.6/drivers/ide/ide-io.c
 ===================================================================
---- linux-2.6.orig/drivers/ide/ide-io-std.c
-+++ linux-2.6/drivers/ide/ide-io-std.c
-@@ -73,6 +73,18 @@ void ide_write_devctl(ide_hwif_t *hwif, 
- }
- EXPORT_SYMBOL_GPL(ide_write_devctl);
+--- linux-2.6.orig/drivers/ide/ide-io.c
++++ linux-2.6/drivers/ide/ide-io.c
+@@ -348,7 +348,7 @@ static ide_startstop_t start_request (id
+ 	if (blk_pm_request(rq))
+ 		ide_check_pm_state(drive, rq);
  
-+void ide_dev_select(ide_drive_t *drive)
-+{
-+	ide_hwif_t *hwif = drive->hwif;
-+	u8 select = drive->select | ATA_DEVICE_OBS;
-+
-+	if (hwif->host_flags & IDE_HFLAG_MMIO)
-+		writeb(select, (void __iomem *)hwif->io_ports.device_addr);
-+	else
-+		outb(select, hwif->io_ports.device_addr);
-+}
-+EXPORT_SYMBOL_GPL(ide_dev_select);
-+
- void ide_tf_load(ide_drive_t *drive, struct ide_cmd *cmd)
- {
- 	ide_hwif_t *hwif = drive->hwif;
+-	SELECT_DRIVE(drive);
++	drive->hwif->tp_ops->dev_select(drive);
+ 	if (ide_wait_stat(&startstop, drive, drive->ready_stat,
+ 			  ATA_BUSY | ATA_DRQ, WAIT_READY)) {
+ 		printk(KERN_ERR "%s: drive not ready for command\n", drive->name);
 Index: linux-2.6/drivers/ide/ide-iops.c
 ===================================================================
 --- linux-2.6.orig/drivers/ide/ide-iops.c
 +++ linux-2.6/drivers/ide/ide-iops.c
-@@ -29,17 +29,7 @@
+@@ -27,11 +27,6 @@
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
  
- void SELECT_DRIVE(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif = drive->hwif;
--	const struct ide_port_ops *port_ops = hwif->port_ops;
--	struct ide_cmd cmd;
+-void SELECT_DRIVE(ide_drive_t *drive)
+-{
+-	drive->hwif->tp_ops->dev_select(drive);
+-}
 -
--	if (port_ops && port_ops->selectproc)
--		port_ops->selectproc(drive);
--
--	memset(&cmd, 0, sizeof(cmd));
--	cmd.tf_flags = IDE_TFLAG_OUT_DEVICE;
--
--	drive->hwif->tp_ops->tf_load(drive, &cmd);
-+	drive->hwif->tp_ops->dev_select(drive);
- }
- 
  void SELECT_MASK(ide_drive_t *drive, int mask)
+ {
+ 	const struct ide_port_ops *port_ops = drive->hwif->port_ops;
+@@ -347,7 +342,7 @@ int ide_config_drive_speed(ide_drive_t *
+ 	disable_irq_nosync(hwif->irq);
+ 
+ 	udelay(1);
+-	SELECT_DRIVE(drive);
++	tp_ops->dev_select(drive);
+ 	SELECT_MASK(drive, 1);
+ 	udelay(1);
+ 	tp_ops->write_devctl(hwif, ATA_NIEN | ATA_DEVCTL_OBS);
+Index: linux-2.6/drivers/ide/ide-pm.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-pm.c
++++ linux-2.6/drivers/ide/ide-pm.c
+@@ -223,6 +223,7 @@ void ide_check_pm_state(ide_drive_t *dri
+ 		 * point.
+ 		 */
+ 		ide_hwif_t *hwif = drive->hwif;
++		const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+ 		struct request_queue *q = drive->queue;
+ 		unsigned long flags;
+ 		int rc;
+@@ -232,8 +233,8 @@ void ide_check_pm_state(ide_drive_t *dri
+ 		rc = ide_wait_not_busy(hwif, 35000);
+ 		if (rc)
+ 			printk(KERN_WARNING "%s: bus not ready on wakeup\n", drive->name);
+-		SELECT_DRIVE(drive);
+-		hwif->tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
++		tp_ops->dev_select(drive);
++		tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
+ 		rc = ide_wait_not_busy(hwif, 100000);
+ 		if (rc)
+ 			printk(KERN_WARNING "%s: drive not ready on wakeup\n", drive->name);
+Index: linux-2.6/drivers/ide/ide-probe.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-probe.c
++++ linux-2.6/drivers/ide/ide-probe.c
+@@ -390,13 +390,13 @@ static int do_probe (ide_drive_t *drive,
+ 	 * (e.g. crw9624 as drive0 with disk as slave)
+ 	 */
+ 	msleep(50);
+-	SELECT_DRIVE(drive);
++	tp_ops->dev_select(drive);
+ 	msleep(50);
+ 
+ 	if (ide_read_device(drive) != drive->select && present == 0) {
+ 		if (drive->dn & 1) {
+ 			/* exit with drive0 selected */
+-			SELECT_DRIVE(hwif->devices[0]);
++			tp_ops->dev_select(hwif->devices[0]);
+ 			/* allow ATA_BUSY to assert & clear */
+ 			msleep(50);
+ 		}
+@@ -422,7 +422,7 @@ static int do_probe (ide_drive_t *drive,
+ 			printk(KERN_ERR "%s: no response (status = 0x%02x), "
+ 					"resetting drive\n", drive->name, stat);
+ 			msleep(50);
+-			SELECT_DRIVE(drive);
++			tp_ops->dev_select(drive);
+ 			msleep(50);
+ 			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
+ 			(void)ide_busy_sleep(hwif, WAIT_WORSTCASE, 0);
+@@ -441,7 +441,7 @@ static int do_probe (ide_drive_t *drive,
+ 	}
+ 	if (drive->dn & 1) {
+ 		/* exit with drive0 selected */
+-		SELECT_DRIVE(hwif->devices[0]);
++		tp_ops->dev_select(hwif->devices[0]);
+ 		msleep(50);
+ 		/* ensure drive irq is clear */
+ 		(void)tp_ops->read_status(hwif);
+@@ -605,6 +605,7 @@ out:
+ 
+ static int ide_port_wait_ready(ide_hwif_t *hwif)
+ {
++	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+ 	ide_drive_t *drive;
+ 	int i, rc;
+ 
+@@ -627,8 +628,8 @@ static int ide_port_wait_ready(ide_hwif_
+ 		/* Ignore disks that we will not probe for later. */
+ 		if ((drive->dev_flags & IDE_DFLAG_NOPROBE) == 0 ||
+ 		    (drive->dev_flags & IDE_DFLAG_PRESENT)) {
+-			SELECT_DRIVE(drive);
+-			hwif->tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
++			tp_ops->dev_select(drive);
++			tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
+ 			mdelay(2);
+ 			rc = ide_wait_not_busy(hwif, 35000);
+ 			if (rc)
+@@ -640,7 +641,7 @@ static int ide_port_wait_ready(ide_hwif_
+ out:
+ 	/* Exit function with master reselected (let's be sane) */
+ 	if (i)
+-		SELECT_DRIVE(hwif->devices[0]);
++		tp_ops->dev_select(hwif->devices[0]);
+ 
+ 	return rc;
+ }
 Index: linux-2.6/drivers/ide/ns87415.c
 ===================================================================
 --- linux-2.6.orig/drivers/ide/ns87415.c
 +++ linux-2.6/drivers/ide/ns87415.c
-@@ -182,10 +182,12 @@ static void ns87415_prepare_drive (ide_d
- 	local_irq_restore(flags);
- }
- 
--static void ns87415_selectproc (ide_drive_t *drive)
-+static void ns87415_dev_select(ide_drive_t *drive)
- {
- 	ns87415_prepare_drive(drive,
- 			      !!(drive->dev_flags & IDE_DFLAG_USING_DMA));
-+
-+	outb(drive->select | ATA_DEVICE_OBS, drive->hwif->io_ports.device_addr);
- }
- 
- static void ns87415_dma_start(ide_drive_t *drive)
-@@ -229,7 +231,7 @@ static void __devinit init_hwif_ns87415 
- 	 * Also, leave IRQ masked during drive probing, to prevent infinite
- 	 * interrupts from a potentially floating INTA..
- 	 *
--	 * IRQs get unmasked in selectproc when drive is first used.
-+	 * IRQs get unmasked in dev_select() when drive is first used.
- 	 */
- 	(void) pci_read_config_dword(dev, 0x40, &ctrl);
- 	(void) pci_read_config_byte(dev, 0x09, &progif);
-@@ -281,8 +283,18 @@ static void __devinit init_hwif_ns87415 
- 	outb(0x60, hwif->dma_base + ATA_DMA_STATUS);
- }
- 
--static const struct ide_port_ops ns87415_port_ops = {
--	.selectproc		= ns87415_selectproc,
-+static const struct ide_tp_ops ht6560b_tp_ops = {
-+	.exec_command		= ide_exec_command,
-+	.read_status		= ide_read_status,
-+	.read_altstatus		= ide_read_altstatus,
-+	.write_devctl		= ide_write_devctl,
-+
-+	.dev_select		= ns87415_dev_select,
-+	.tf_load		= ide_tf_load,
-+	.tf_read		= ide_tf_read,
-+
-+	.input_data		= ide_input_data,
-+	.output_data		= ide_output_data,
- };
- 
- static const struct ide_dma_ops ns87415_dma_ops = {
-@@ -299,7 +311,7 @@ static const struct ide_dma_ops ns87415_
- static const struct ide_port_info ns87415_chipset __devinitdata = {
- 	.name		= DRV_NAME,
- 	.init_hwif	= init_hwif_ns87415,
--	.port_ops	= &ns87415_port_ops,
-+	.tp_ops 	= &ns87415_tp_ops,
- 	.dma_ops	= &ns87415_dma_ops,
- 	.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA |
- 			  IDE_HFLAG_NO_ATAPI_DMA,
-Index: linux-2.6/drivers/ide/pmac.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pmac.c
-+++ linux-2.6/drivers/ide/pmac.c
-@@ -404,8 +404,6 @@ kauai_lookup_timing(struct kauai_timing*
- #define IDE_WAKEUP_DELAY	(1*HZ)
- 
- static int pmac_ide_init_dma(ide_hwif_t *, const struct ide_port_info *);
--static void pmac_ide_selectproc(ide_drive_t *drive);
--static void pmac_ide_kauai_selectproc(ide_drive_t *drive);
- 
- #define PMAC_IDE_REG(x) \
- 	((void __iomem *)((drive)->hwif->io_ports.data_addr + (x)))
-@@ -415,8 +413,7 @@ static void pmac_ide_kauai_selectproc(id
-  * timing register when selecting that unit. This version is for
-  * ASICs with a single timing register
-  */
--static void
--pmac_ide_selectproc(ide_drive_t *drive)
-+static void pmac_ide_apply_timings(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	pmac_ide_hwif_t *pmif =
-@@ -434,8 +431,7 @@ pmac_ide_selectproc(ide_drive_t *drive)
-  * timing register when selecting that unit. This version is for
-  * ASICs with a dual timing register (Kauai)
-  */
--static void
--pmac_ide_kauai_selectproc(ide_drive_t *drive)
-+static void pmac_ide_kauai_apply_timings(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	pmac_ide_hwif_t *pmif =
-@@ -464,9 +460,25 @@ pmac_ide_do_update_timings(ide_drive_t *
- 	if (pmif->kind == controller_sh_ata6 ||
- 	    pmif->kind == controller_un_ata6 ||
- 	    pmif->kind == controller_k2_ata6)
--		pmac_ide_kauai_selectproc(drive);
-+		pmac_ide_kauai_apply_timings(drive);
- 	else
--		pmac_ide_selectproc(drive);
-+		pmac_ide_apply_timings(drive);
-+}
-+
-+static void pmac_dev_select(ide_drive_t *drive)
-+{
-+	pmac_ide_apply_timings(drive);
-+
-+	writeb(drive->select | ATA_DEVICE_OBS,
-+	       (void __iomem *)drive->hwif->io_ports.device_addr);
-+}
-+
-+static void pmac_kauai_dev_select(ide_drive_t *drive)
-+{
-+	pmac_ide_kauai_apply_timings(drive);
-+
-+	writeb(drive->select | ATA_DEVICE_OBS,
-+	       (void __iomem *)drive->hwif->io_ports.device_addr);
- }
- 
- static void pmac_exec_command(ide_hwif_t *hwif, u8 cmd)
-@@ -947,6 +959,7 @@ static const struct ide_tp_ops pmac_tp_o
- 	.read_altstatus		= ide_read_altstatus,
- 	.write_devctl		= pmac_write_devctl,
- 
-+	.dev_select		= pmac_dev_select,
- 	.tf_load		= ide_tf_load,
- 	.tf_read		= ide_tf_read,
- 
-@@ -954,19 +967,24 @@ static const struct ide_tp_ops pmac_tp_o
- 	.output_data		= ide_output_data,
- };
- 
--static const struct ide_port_ops pmac_ide_ata6_port_ops = {
--	.init_dev		= pmac_ide_init_dev,
--	.set_pio_mode		= pmac_ide_set_pio_mode,
--	.set_dma_mode		= pmac_ide_set_dma_mode,
--	.selectproc		= pmac_ide_kauai_selectproc,
--	.cable_detect		= pmac_ide_cable_detect,
-+static const struct ide_tp_ops pmac_ata6_tp_ops = {
-+	.exec_command		= pmac_exec_command,
-+	.read_status		= ide_read_status,
-+	.read_altstatus		= ide_read_altstatus,
-+	.write_devctl		= pmac_write_devctl,
-+
-+	.dev_select		= pmac_kauai_dev_select,
-+	.tf_load		= ide_tf_load,
-+	.tf_read		= ide_tf_read,
-+
-+	.input_data		= ide_input_data,
-+	.output_data		= ide_output_data,
- };
- 
- static const struct ide_port_ops pmac_ide_ata4_port_ops = {
- 	.init_dev		= pmac_ide_init_dev,
- 	.set_pio_mode		= pmac_ide_set_pio_mode,
- 	.set_dma_mode		= pmac_ide_set_dma_mode,
--	.selectproc		= pmac_ide_selectproc,
- 	.cable_detect		= pmac_ide_cable_detect,
- };
- 
-@@ -974,7 +992,6 @@ static const struct ide_port_ops pmac_id
- 	.init_dev		= pmac_ide_init_dev,
- 	.set_pio_mode		= pmac_ide_set_pio_mode,
- 	.set_dma_mode		= pmac_ide_set_dma_mode,
--	.selectproc		= pmac_ide_selectproc,
- };
- 
- static const struct ide_dma_ops pmac_dma_ops;
-@@ -1011,15 +1028,18 @@ static int __devinit pmac_ide_setup_devi
- 	pmif->broken_dma = pmif->broken_dma_warn = 0;
- 	if (of_device_is_compatible(np, "shasta-ata")) {
- 		pmif->kind = controller_sh_ata6;
--		d.port_ops = &pmac_ide_ata6_port_ops;
-+		d.tp_ops = &pmac_ata6_tp_ops;
-+		d.port_ops = &pmac_ide_ata4_port_ops;
- 		d.udma_mask = ATA_UDMA6;
- 	} else if (of_device_is_compatible(np, "kauai-ata")) {
- 		pmif->kind = controller_un_ata6;
--		d.port_ops = &pmac_ide_ata6_port_ops;
-+		d.tp_ops = &pmac_ata6_tp_ops;
-+		d.port_ops = &pmac_ide_ata4_port_ops;
- 		d.udma_mask = ATA_UDMA5;
- 	} else if (of_device_is_compatible(np, "K2-UATA")) {
- 		pmif->kind = controller_k2_ata6;
--		d.port_ops = &pmac_ide_ata6_port_ops;
-+		d.tp_ops = &pmac_ata6_tp_ops;
-+		d.port_ops = &pmac_ide_ata4_port_ops;
- 		d.udma_mask = ATA_UDMA5;
- 	} else if (of_device_is_compatible(np, "keylargo-ata")) {
- 		if (strcmp(np->name, "ata-4") == 0) {
-Index: linux-2.6/drivers/ide/qd65xx.c
-===================================================================
---- linux-2.6.orig/drivers/ide/qd65xx.c
-+++ linux-2.6/drivers/ide/qd65xx.c
-@@ -90,13 +90,15 @@ static int timings[4]={-1,-1,-1,-1}; /* 
-  * This routine is invoked to prepare for access to a given drive.
-  */
- 
--static void qd65xx_select(ide_drive_t *drive)
-+static void qd65xx_dev_select(ide_drive_t *drive)
- {
- 	u8 index = ((	(QD_TIMREG(drive)) & 0x80 ) >> 7) |
- 			(QD_TIMREG(drive) & 0x02);
- 
- 	if (timings[index] != QD_TIMING(drive))
- 		outb(timings[index] = QD_TIMING(drive), QD_TIMREG(drive));
-+
-+	outb(drive->select | ATA_DEVICE_OBS, drive->hwif->io_ports.device_addr);
- }
- 
- /*
-@@ -309,20 +311,33 @@ static void __init qd6580_init_dev(ide_d
- 	drive->drive_data = (drive->dn & 1) ? t2 : t1;
- }
- 
-+static const struct ide_tp_ops qd65xx_tp_ops = {
-+	.exec_command		= ide_exec_command,
-+	.read_status		= ide_read_status,
-+	.read_altstatus		= ide_read_altstatus,
-+	.write_devctl		= ide_write_devctl,
-+
-+	.dev_select		= qd65xx_dev_select,
-+	.tf_load		= ide_tf_load,
-+	.tf_read		= ide_tf_read,
-+
-+	.input_data		= ide_input_data,
-+	.output_data		= ide_output_data,
-+};
-+
- static const struct ide_port_ops qd6500_port_ops = {
- 	.init_dev		= qd6500_init_dev,
- 	.set_pio_mode		= qd6500_set_pio_mode,
--	.selectproc		= qd65xx_select,
- };
- 
- static const struct ide_port_ops qd6580_port_ops = {
- 	.init_dev		= qd6580_init_dev,
- 	.set_pio_mode		= qd6580_set_pio_mode,
--	.selectproc		= qd65xx_select,
- };
- 
- static const struct ide_port_info qd65xx_port_info __initdata = {
- 	.name			= DRV_NAME,
-+	.tp_ops 		= &qd65xx_tp_ops,
- 	.chipset		= ide_qd65xx,
- 	.host_flags		= IDE_HFLAG_IO_32BIT |
- 				  IDE_HFLAG_NO_DMA,
-Index: linux-2.6/drivers/ide/trm290.c
-===================================================================
---- linux-2.6.orig/drivers/ide/trm290.c
-+++ linux-2.6/drivers/ide/trm290.c
-@@ -171,10 +171,11 @@ static void trm290_prepare_drive (ide_dr
- 	local_irq_restore(flags);
- }
- 
--static void trm290_selectproc (ide_drive_t *drive)
-+static void trm290_dev_select(ide_drive_t *drive)
- {
- 	trm290_prepare_drive(drive, !!(drive->dev_flags & IDE_DFLAG_USING_DMA));
--}
-+
-+	outb(drive->select | ATA_DEVICE_OBS, drive->hwif->io_ports.device_addr);}
- 
- static int trm290_dma_check(ide_drive_t *drive, struct ide_cmd *cmd)
- {
-@@ -298,8 +299,18 @@ static void __devinit init_hwif_trm290(i
- #endif
- }
- 
--static const struct ide_port_ops trm290_port_ops = {
--	.selectproc		= trm290_selectproc,
-+static const struct ide_tp_ops trm290_tp_ops = {
-+	.exec_command		= ide_exec_command,
-+	.read_status		= ide_read_status,
-+	.read_altstatus		= ide_read_altstatus,
-+	.write_devctl		= ide_write_devctl,
-+
-+	.dev_select		= trm290_dev_select,
-+	.tf_load		= ide_tf_load,
-+	.tf_read		= ide_tf_read,
-+
-+	.input_data		= ide_input_data,
-+	.output_data		= ide_output_data,
- };
- 
- static struct ide_dma_ops trm290_dma_ops = {
-@@ -315,7 +326,7 @@ static struct ide_dma_ops trm290_dma_ops
- static const struct ide_port_info trm290_chipset __devinitdata = {
- 	.name		= DRV_NAME,
- 	.init_hwif	= init_hwif_trm290,
--	.port_ops	= &trm290_port_ops,
-+	.tp_ops 	= &trm290_tp_ops,
- 	.dma_ops	= &trm290_dma_ops,
- 	.host_flags	= IDE_HFLAG_TRM290 |
- 			  IDE_HFLAG_NO_ATAPI_DMA |
-Index: linux-2.6/drivers/ide/tx4939ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/tx4939ide.c
-+++ linux-2.6/drivers/ide/tx4939ide.c
-@@ -429,7 +429,7 @@ static void tx4939ide_tf_load_fixup(ide_
- 	 * Fix ATA100 CORE System Control Register. (The write to the
- 	 * Device/Head register may write wrong data to the System
- 	 * Control Register)
--	 * While Sys_Ctl is written here, selectproc is not needed.
-+	 * While Sys_Ctl is written here, dev_select() is not needed.
- 	 */
- 	tx4939ide_writew(sysctl, base, TX4939IDE_Sys_Ctl);
- }
+@@ -259,7 +259,7 @@ static void __devinit init_hwif_ns87415 
+ #ifdef __sparc_v9__
+ 		/*
+ 		 * XXX: Reset the device, if we don't it will not respond to
+-		 *      SELECT_DRIVE() properly during first ide_probe_port().
++		 *      dev_select() properly during first ide_probe_port().
+ 		 */
+ 		timeout = 10000;
+ 		outb(12, hwif->io_ports.ctl_addr);
 Index: linux-2.6/include/linux/ide.h
 ===================================================================
 --- linux-2.6.orig/include/linux/ide.h
 +++ linux-2.6/include/linux/ide.h
-@@ -603,7 +603,7 @@ struct ide_drive_s {
+@@ -1175,7 +1175,6 @@ void ide_tf_read(ide_drive_t *, struct i
+ void ide_input_data(ide_drive_t *, struct ide_cmd *, void *, unsigned int);
+ void ide_output_data(ide_drive_t *, struct ide_cmd *, void *, unsigned int);
  
- 	unsigned int	bios_cyl;	/* BIOS/fdisk/LILO number of cyls */
- 	unsigned int	cyl;		/* "real" number of cyls */
--	unsigned int	drive_data;	/* used by set_pio_mode/selectproc */
-+	unsigned int	drive_data;	/* used by set_pio_mode/dev_select() */
- 	unsigned int	failures;	/* current failure count */
- 	unsigned int	max_failures;	/* maximum allowed failure count */
- 	u64		probed_capacity;/* initial reported media capacity (ide-cd only currently) */
-@@ -661,6 +661,7 @@ struct ide_tp_ops {
- 	u8	(*read_altstatus)(struct hwif_s *);
- 	void	(*write_devctl)(struct hwif_s *, u8);
+-extern void SELECT_DRIVE(ide_drive_t *);
+ void SELECT_MASK(ide_drive_t *, int);
  
-+	void	(*dev_select)(ide_drive_t *);
- 	void	(*tf_load)(ide_drive_t *, struct ide_cmd *);
- 	void	(*tf_read)(ide_drive_t *, struct ide_cmd *);
- 
-@@ -678,7 +679,6 @@ extern const struct ide_tp_ops default_t
-  * @init_dev:		host specific initialization of a device
-  * @set_pio_mode:	routine to program host for PIO mode
-  * @set_dma_mode:	routine to program host for DMA mode
-- * @selectproc:		tweaks hardware to select drive
-  * @reset_poll:		chipset polling based on hba specifics
-  * @pre_reset:		chipset specific changes to default for device-hba resets
-  * @resetproc:		routine to reset controller after a disk reset
-@@ -695,7 +695,6 @@ struct ide_port_ops {
- 	void	(*init_dev)(ide_drive_t *);
- 	void	(*set_pio_mode)(ide_drive_t *, const u8);
- 	void	(*set_dma_mode)(ide_drive_t *, const u8);
--	void	(*selectproc)(ide_drive_t *);
- 	int	(*reset_poll)(ide_drive_t *);
- 	void	(*pre_reset)(ide_drive_t *);
- 	void	(*resetproc)(ide_drive_t *);
+ u8 ide_read_error(ide_drive_t *);
 
