@@ -1,63 +1,63 @@
-From: "Norman Diamond" <n0diamond@yahoo.co.jp>
-Subject: Overagressive failing of disk reads, both LIBATA and IDE
-Date: Fri, 20 Mar 2009 11:12:11 +0900
-Message-ID: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Overagressive failing of disk reads, both LIBATA and IDE
+Date: Thu, 19 Mar 2009 23:32:55 -0400
+Message-ID: <49C30E67.4060702@rtr.ca>
+References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-2022-jp";
-	reply-type=original
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp05.mail.tnz.yahoo.co.jp ([203.216.246.68]:36131 "HELO
-	smtp05.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757507AbZCTDUp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Mar 2009 23:20:45 -0400
+Received: from rtr.ca ([76.10.145.34]:33879 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752565AbZCTDdE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Mar 2009 23:33:04 -0400
+In-Reply-To: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Norman Diamond <n0diamond@yahoo.co.jp>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-For months I was wondering how a disk could do this:
-dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=4  # succeeds
-dd if=/dev/hda of=/dev/null bs=512 skip=551544 count=4  # succeeds
-dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=8  # fails
+Norman Diamond wrote:
+> For months I was wondering how a disk could do this:
+> dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=4  # succeeds
+> dd if=/dev/hda of=/dev/null bs=512 skip=551544 count=4  # succeeds
+> dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=8  # fails
+> 
+> It turns out the disk isn't doing that.  Linux is.  The old IDE drivers did
+> it, but with LIBATA the same thing happens to /dev/sda.  In later examples
+> also, the same happens to /dev/sda as /dev/hda.
+..
 
-It turns out the disk isn't doing that.  Linux is.  The old IDE drivers did
-it, but with LIBATA the same thing happens to /dev/sda.  In later examples
-also, the same happens to /dev/sda as /dev/hda.
+You can blame me for the IDE driver not doing that properly.
+But for libata, it's the SCSI layer.
 
-Here's what the disk is really responsible for:
-dd if=/dev/hda of=/dev/null bs=512 skip=551562 count=1  # really fails
+I've been patching this for years for my clients,
+and will be updating the patch soon-ish and trying
+again to get it into upstream kernels.
 
-Here's Linux to blame again:
-dd if=/dev/hda of=/dev/null bs=512 skip=551561 count=1  # fails
+Here's the (now ancient) 2.6.20 version for SLES10:
 
-When the drive reports an uncorrectable media error, Linux correctly records
-it in the log.  But when the app didn't ask for that block, when blocks that
-the app asked for were all read, Linux incorrectly reports failure to the
-app.
+* * *
 
-I don't know how Linux decides how many blocks to read ahead, but no matter
-how many it chooses, read ahead is read ahead.  Go ahead and record it in
-the log.  I'd also like to suggest that if a user is logged in on the screen
-(whether X11 or text) see if we can warn them that their disk is dying.  But
-don't return a failure to the app.  If the blocks that the app asked for
-were read, we should give them to the app, successfully.
+Allow SCSI to continue with the remaining blocks of a request
+after encountering a media error.  Otherwise, it may just fail
+the entire request, even though some blocks were fine and needed
+by a completely different process than the one that wanted the bad block(s).
 
-Sheesh.
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-P.S.
-One would expect this to persuade the hard drive to relocate the block:
-dd if=/dev/zero of=/dev/hda bs=512 seek=551562 count=1
-But it doesn't because Linux wants to read 4 blocks, modify 1, and write 4
-blocks.  The read fails.
-
-One would expect this to persuade the hard drive to relocate the block:
-dd if=/dev/zero of=/dev/hda bs=512 seek=551560 count=4
-But it doesn't because the hard drive reports success.  If an app tries to
-read the bad sector again it still fails.  So the drive has egregiously bad
-firmware.  That doesn't excuse Linux.
-
---------------------------------------
-Power up the Internet with Yahoo! Toolbar.
-http://pr.mail.yahoo.co.jp/toolbar/
+--- linux-2.6.16.60-0.6/drivers/scsi/scsi_lib.c	2008-03-10 13:46:03.000000000 -0400
++++ linux/drivers/scsi/scsi_lib.c	2008-03-21 11:54:09.000000000 -0400
+@@ -888,6 +888,12 @@
+ 	 */
+ 	if (sense_valid && !sense_deferred) {
+ 		switch (sshdr.sense_key) {
++		case MEDIUM_ERROR:
++		/* Bad sector.  Fail it, and then continue the rest of the request. */
++		if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
++			cmd->retries = 0;       // go around again..
++			return;
++		}
+ 		case UNIT_ATTENTION:
+ 			if (cmd->device->removable) {
+ 				/* Detected disc change.  Set a bit
