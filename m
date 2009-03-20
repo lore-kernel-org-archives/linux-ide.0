@@ -1,54 +1,122 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: AHCI link power management and surprise hotplug
-Date: Fri, 20 Mar 2009 10:42:57 -0700
-Message-ID: <20090320104257.5cf1e7cc@appleyard>
-References: <49C22689.9050005@buttersideup.com>
-Reply-To: kristen.c.accardi@intel.com
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS
+Date: Fri, 20 Mar 2009 19:46:25 +0100
+Message-ID: <200903201946.26121.bzolnier@gmail.com>
+References: <200903182201.32668.bzolnier@gmail.com> <20090319053919.GA24137@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50177 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753146AbZCTRma (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Mar 2009 13:42:30 -0400
-In-Reply-To: <49C22689.9050005@buttersideup.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:49492 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbZCTTG7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Mar 2009 15:06:59 -0400
+In-Reply-To: <20090319053919.GA24137@liondog.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gadi Oxman <gadio@netvision.net.il>, Paul Bristow <paul@paulbristow.net>
 
-On Thu, 19 Mar 2009 04:03:37 -0700
-Tim Small <tim@buttersideup.com> wrote:
+On Thursday 19 March 2009, Borislav Petkov wrote:
+> On Wed, Mar 18, 2009 at 10:01:32PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS
+> > 
+> > Ben Hutchings noticed that MAINTAINERS somehow still contain old
+> > ide-{floppy,tape} entries.  Fix it by moving them to CREDITS (kudos
+> > to Gadi and Paul for all the early hard work on ide-{floppy,tape}).
+> > 
+> > Cc: Gadi Oxman <gadio@netvision.net.il>
+> > Cc: Paul Bristow <paul@paulbristow.net>
+> > Cc: Borislav Petkov <petkovbb@gmail.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> > Borislav, maybe it would make sense to rename IDE/ATAPI CDROM DRIVER
+> > entry to IDE/ATAPI DRIVERS one nowadays (you're the one doing most of
+> > ATAPI work anyway :)?
+> 
+> ... after you, of course :).
+> 
+> Fine with me. The easiest would be if you fold the change into the same patch.
 
-> Hello,
-> 
-> I've been configuring SATA link power management
-> (Documentation/scsi/link_power_management_policy.txt) on servers which
-> use software RAID for a while, but I happened to come across this in the
-> ICH9 datasheet:
-> 
-> "
-> For reliable device removal notification while in AHCI operation without
-> the use of interlock switches (surprise removal), interface power
-> management should be disabled for the associated port. See Section 7.3.1
-> of the AHCI Specification for more information.
-> "
-> 
-> 
-> Is this actually an issue from a libata point of view?  Do I need to
-> ensure that link power management is disabled prior to hot-removal, and
-> if so, I suppose link_power_management_policy.txt should be updated to
-> reflect this...
+OK, done!
 
-Hi,
-Yes - this is an issue.  Right now we disable hotplug when link power
-management is enabled because when your link is in a lower power state
-it cannot detect the phy state changes.  Most platforms I've seen do
-not support the interlock switches - so ATM link pwr management and 
-hotplug are mutually excludive.  I agree that the documentation
-should reflect this - would you like to submit a patch to the
-link_power_management_policy.txt file?
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS (take 2)
 
-Thanks!
-Kristen
+Ben Hutchings noticed that MAINTAINERS somehow still contain old
+ide-{floppy,tape} entries.  Fix it by moving them to CREDITS (kudos
+to Gadi and Paul for all the early hard work on ide-{floppy,tape}).
+
+v2:
+Rename IDE/ATAPI CDROM DRIVER entry to IDE/ATAPI DRIVERS one.
+
+Cc: Gadi Oxman <gadio@netvision.net.il>
+Cc: Paul Bristow <paul@paulbristow.net>
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ CREDITS     |    9 +++++++++
+ MAINTAINERS |   15 +--------------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
+
+Index: b/CREDITS
+===================================================================
+--- a/CREDITS
++++ b/CREDITS
+@@ -495,6 +495,11 @@ S: Kopmansg 2
+ S: 411 13  Goteborg
+ S: Sweden
+ 
++N: Paul Bristow
++E: paul@paulbristow.net
++W: http://paulbristow.net/linux/idefloppy.html
++D: Maintainer of IDE/ATAPI floppy driver
++
+ N: Dominik Brodowski
+ E: linux@brodo.de
+ W: http://www.brodo.de/
+@@ -2642,6 +2647,10 @@ S: C/ Mieses 20, 9-B
+ S: Valladolid 47009
+ S: Spain
+ 
++N: Gadi Oxman
++E: gadio@netvision.net.il
++D: Original author and maintainer of IDE/ATAPI floppy/tape drivers
++
+ N: Greg Page
+ E: gpage@sovereign.org
+ D: IPX development and support
+Index: b/MAINTAINERS
+===================================================================
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2173,25 +2173,12 @@ L:	linux-ide@vger.kernel.org
+ T:	quilt kernel.org/pub/linux/kernel/people/bart/pata-2.6/
+ S:	Maintained
+ 
+-IDE/ATAPI CDROM DRIVER
++IDE/ATAPI DRIVERS
+ P:	Borislav Petkov
+ M:	petkovbb@gmail.com
+ L:	linux-ide@vger.kernel.org
+ S:	Maintained
+ 
+-IDE/ATAPI FLOPPY DRIVERS
+-P:	Paul Bristow
+-M:	Paul Bristow <paul@paulbristow.net>
+-W:	http://paulbristow.net/linux/idefloppy.html
+-L:	linux-kernel@vger.kernel.org
+-S:	Maintained
+-
+-IDE/ATAPI TAPE DRIVERS
+-P:	Gadi Oxman
+-M:	Gadi Oxman <gadio@netvision.net.il>
+-L:	linux-kernel@vger.kernel.org
+-S:	Maintained
+-
+ IDLE-I7300
+ P:	Andy Henroid
+ M:	andrew.d.henroid@intel.com
