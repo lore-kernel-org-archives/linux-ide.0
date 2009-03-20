@@ -1,78 +1,18 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata-core More robust parsing for multi_count(v5)
-Date: Thu, 19 Mar 2009 23:37:31 -0400
-Message-ID: <49C30F7B.30800@rtr.ca>
-References: <49C1047D.4000008@rtr.ca> <49C11A0C.3070502@rtr.ca> <49C11ED4.2030307@rtr.ca> <49C19087.5000307@gmail.com> <49C190F1.7010202@kernel.org> <49C28133.8050401@rtr.ca> <49C281A5.5080404@rtr.ca> <49C2D642.90706@kernel.org>
+From: "Jennie" <sbonnick@chamonet.com>
+Subject: Who did that?
+Date: Fri, 20 Mar 2009 02:55:28 -0600
+Message-ID: <20090320025528.4010705@chamonet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:40427 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751338AbZCTDhi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Mar 2009 23:37:38 -0400
-In-Reply-To: <49C2D642.90706@kernel.org>
+Received: from c-24-1-26-42.hsd1.il.comcast.net ([24.1.26.42]:17312 "HELO
+	c-24-1-26-42.hsd1.il.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752196AbZCTIpt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Mar 2009 04:45:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, Mark.
-> 
-> Mark Lord wrote:
->> Make libata more robust when parsing the multi_count
->> field from a drive's identify data.  This prevents us from
->> attempting to use dubious multi_count values ad infinitum.
->>
->> Reset dev->multi_count to zero and reprobe it each time
->> through this routine, as it can change on device reset.
->>
->> Also ensure that the reported "maximum" value is valid
->> and is a power of two, and that the reported "count" value
->> is valid and also a power of two.  And that the "count"
->> value is not greater than the "maximum" value.
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
-> 
-> Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> The patch looks safe to me although requiring power_of_2 on max seems
-> a bit too strict.
-..
+Why did they explode bomb there? http://fjava.globalantiterror.com/save.php
 
-Just a safeguard against bad IDENTIFY data.
-I've never seen a drive that specified anything there
-other than 1, 8, or 16,  and the ATA spec specifically
-recommends against using settings that are not powers of 2.
-
-> For configuration, ata_dev_configure() is the right
-> place.  I think the following should work.
-> 
-> * add dev->multi_limit which is initialized to -1 on ata_dev_init().
-> 
-> * during ata_dev_configure() if multi_limit < 0, set it to device max.
-> 
-> * set dev->multi to rounddown_pow_of_two(multi_limit) and issue
->   SET_MULTI.
-> 
-> On EH side, ata_eh_speed_down() is the place to handle it.  It can
-> probably piggy back on ATA_EH_SPDN_SPEED_DOWN block.  All it has to do
-> is reducing dev->multi_limit.  dev_config will run later and apply it.
-..
-
-I won't have time to pursue this in the near/foreseeable future,
-so if you feel the urge.. please do it.  Otherwise I might get to
-it in a few months from now.
-
-> I'm not sure how the speed down strategy should exactly be tho.  It is
-> distinguisible from regular transfer errors?
-..
-
-I don't really have a recommendation there, other than to simply stop
-using multi_count if there are repeated PIO errors.  Seems like a reasonable
-strategy, when all else is failing.
-
-We really need to add SET_MULTIPLE smarts to libata at some point.
-
-Cheers
