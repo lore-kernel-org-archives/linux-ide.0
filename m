@@ -1,122 +1,30 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS
-Date: Fri, 20 Mar 2009 19:46:25 +0100
-Message-ID: <200903201946.26121.bzolnier@gmail.com>
-References: <200903182201.32668.bzolnier@gmail.com> <20090319053919.GA24137@liondog.tnic>
+Subject: Re: [PATCH 2/2] ide: inline SELECT_DRIVE()
+Date: Fri, 20 Mar 2009 20:03:05 +0100
+Message-ID: <200903202003.05283.bzolnier@gmail.com>
+References: <200903191835.13048.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-fx0-f158.google.com ([209.85.220.158]:49492 "EHLO
 	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbZCTTG7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Mar 2009 15:06:59 -0400
-In-Reply-To: <20090319053919.GA24137@liondog.tnic>
+	with ESMTP id S1757542AbZCTTHB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Mar 2009 15:07:01 -0400
+Received: by mail-fx0-f158.google.com with SMTP id 2so1031058fxm.37
+        for <linux-ide@vger.kernel.org>; Fri, 20 Mar 2009 12:07:00 -0700 (PDT)
+In-Reply-To: <200903191835.13048.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gadi Oxman <gadio@netvision.net.il>, Paul Bristow <paul@paulbristow.net>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thursday 19 March 2009, Borislav Petkov wrote:
-> On Wed, Mar 18, 2009 at 10:01:32PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS
-> > 
-> > Ben Hutchings noticed that MAINTAINERS somehow still contain old
-> > ide-{floppy,tape} entries.  Fix it by moving them to CREDITS (kudos
-> > to Gadi and Paul for all the early hard work on ide-{floppy,tape}).
-> > 
-> > Cc: Gadi Oxman <gadio@netvision.net.il>
-> > Cc: Paul Bristow <paul@paulbristow.net>
-> > Cc: Borislav Petkov <petkovbb@gmail.com>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > Borislav, maybe it would make sense to rename IDE/ATAPI CDROM DRIVER
-> > entry to IDE/ATAPI DRIVERS one nowadays (you're the one doing most of
-> > ATAPI work anyway :)?
+On Thursday 19 March 2009, Sergei Shtylyov wrote:
+> Since SELECT_DRIVE() has boiled down to a mere dev_select() method call, it now
+> makes sense to just inline it...
 > 
-> ... after you, of course :).
-> 
-> Fine with me. The easiest would be if you fold the change into the same patch.
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-OK, done!
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] MAINTAINERS: move old ide-{floppy,tape} entries to CREDITS (take 2)
-
-Ben Hutchings noticed that MAINTAINERS somehow still contain old
-ide-{floppy,tape} entries.  Fix it by moving them to CREDITS (kudos
-to Gadi and Paul for all the early hard work on ide-{floppy,tape}).
-
-v2:
-Rename IDE/ATAPI CDROM DRIVER entry to IDE/ATAPI DRIVERS one.
-
-Cc: Gadi Oxman <gadio@netvision.net.il>
-Cc: Paul Bristow <paul@paulbristow.net>
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- CREDITS     |    9 +++++++++
- MAINTAINERS |   15 +--------------
- 2 files changed, 10 insertions(+), 14 deletions(-)
-
-Index: b/CREDITS
-===================================================================
---- a/CREDITS
-+++ b/CREDITS
-@@ -495,6 +495,11 @@ S: Kopmansg 2
- S: 411 13  Goteborg
- S: Sweden
- 
-+N: Paul Bristow
-+E: paul@paulbristow.net
-+W: http://paulbristow.net/linux/idefloppy.html
-+D: Maintainer of IDE/ATAPI floppy driver
-+
- N: Dominik Brodowski
- E: linux@brodo.de
- W: http://www.brodo.de/
-@@ -2642,6 +2647,10 @@ S: C/ Mieses 20, 9-B
- S: Valladolid 47009
- S: Spain
- 
-+N: Gadi Oxman
-+E: gadio@netvision.net.il
-+D: Original author and maintainer of IDE/ATAPI floppy/tape drivers
-+
- N: Greg Page
- E: gpage@sovereign.org
- D: IPX development and support
-Index: b/MAINTAINERS
-===================================================================
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2173,25 +2173,12 @@ L:	linux-ide@vger.kernel.org
- T:	quilt kernel.org/pub/linux/kernel/people/bart/pata-2.6/
- S:	Maintained
- 
--IDE/ATAPI CDROM DRIVER
-+IDE/ATAPI DRIVERS
- P:	Borislav Petkov
- M:	petkovbb@gmail.com
- L:	linux-ide@vger.kernel.org
- S:	Maintained
- 
--IDE/ATAPI FLOPPY DRIVERS
--P:	Paul Bristow
--M:	Paul Bristow <paul@paulbristow.net>
--W:	http://paulbristow.net/linux/idefloppy.html
--L:	linux-kernel@vger.kernel.org
--S:	Maintained
--
--IDE/ATAPI TAPE DRIVERS
--P:	Gadi Oxman
--M:	Gadi Oxman <gadio@netvision.net.il>
--L:	linux-kernel@vger.kernel.org
--S:	Maintained
--
- IDLE-I7300
- P:	Andy Henroid
- M:	andrew.d.henroid@intel.com
+applied
