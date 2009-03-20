@@ -1,63 +1,78 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: Overagressive failing of disk reads, both LIBATA and IDE
-Date: Thu, 19 Mar 2009 23:32:55 -0400
-Message-ID: <49C30E67.4060702@rtr.ca>
-References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
+Subject: Re: [PATCH] libata-core More robust parsing for multi_count(v5)
+Date: Thu, 19 Mar 2009 23:37:31 -0400
+Message-ID: <49C30F7B.30800@rtr.ca>
+References: <49C1047D.4000008@rtr.ca> <49C11A0C.3070502@rtr.ca> <49C11ED4.2030307@rtr.ca> <49C19087.5000307@gmail.com> <49C190F1.7010202@kernel.org> <49C28133.8050401@rtr.ca> <49C281A5.5080404@rtr.ca> <49C2D642.90706@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33879 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:40427 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752565AbZCTDdE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Mar 2009 23:33:04 -0400
-In-Reply-To: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
+	id S1751338AbZCTDhi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Mar 2009 23:37:38 -0400
+In-Reply-To: <49C2D642.90706@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Norman Diamond <n0diamond@yahoo.co.jp>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Norman Diamond wrote:
-> For months I was wondering how a disk could do this:
-> dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=4  # succeeds
-> dd if=/dev/hda of=/dev/null bs=512 skip=551544 count=4  # succeeds
-> dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=8  # fails
+Tejun Heo wrote:
+> Hello, Mark.
 > 
-> It turns out the disk isn't doing that.  Linux is.  The old IDE drivers did
-> it, but with LIBATA the same thing happens to /dev/sda.  In later examples
-> also, the same happens to /dev/sda as /dev/hda.
+> Mark Lord wrote:
+>> Make libata more robust when parsing the multi_count
+>> field from a drive's identify data.  This prevents us from
+>> attempting to use dubious multi_count values ad infinitum.
+>>
+>> Reset dev->multi_count to zero and reprobe it each time
+>> through this routine, as it can change on device reset.
+>>
+>> Also ensure that the reported "maximum" value is valid
+>> and is a power of two, and that the reported "count" value
+>> is valid and also a power of two.  And that the "count"
+>> value is not greater than the "maximum" value.
+>>
+>> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> The patch looks safe to me although requiring power_of_2 on max seems
+> a bit too strict.
 ..
 
-You can blame me for the IDE driver not doing that properly.
-But for libata, it's the SCSI layer.
+Just a safeguard against bad IDENTIFY data.
+I've never seen a drive that specified anything there
+other than 1, 8, or 16,  and the ATA spec specifically
+recommends against using settings that are not powers of 2.
 
-I've been patching this for years for my clients,
-and will be updating the patch soon-ish and trying
-again to get it into upstream kernels.
+> For configuration, ata_dev_configure() is the right
+> place.  I think the following should work.
+> 
+> * add dev->multi_limit which is initialized to -1 on ata_dev_init().
+> 
+> * during ata_dev_configure() if multi_limit < 0, set it to device max.
+> 
+> * set dev->multi to rounddown_pow_of_two(multi_limit) and issue
+>   SET_MULTI.
+> 
+> On EH side, ata_eh_speed_down() is the place to handle it.  It can
+> probably piggy back on ATA_EH_SPDN_SPEED_DOWN block.  All it has to do
+> is reducing dev->multi_limit.  dev_config will run later and apply it.
+..
 
-Here's the (now ancient) 2.6.20 version for SLES10:
+I won't have time to pursue this in the near/foreseeable future,
+so if you feel the urge.. please do it.  Otherwise I might get to
+it in a few months from now.
 
-* * *
+> I'm not sure how the speed down strategy should exactly be tho.  It is
+> distinguisible from regular transfer errors?
+..
 
-Allow SCSI to continue with the remaining blocks of a request
-after encountering a media error.  Otherwise, it may just fail
-the entire request, even though some blocks were fine and needed
-by a completely different process than the one that wanted the bad block(s).
+I don't really have a recommendation there, other than to simply stop
+using multi_count if there are repeated PIO errors.  Seems like a reasonable
+strategy, when all else is failing.
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
+We really need to add SET_MULTIPLE smarts to libata at some point.
 
---- linux-2.6.16.60-0.6/drivers/scsi/scsi_lib.c	2008-03-10 13:46:03.000000000 -0400
-+++ linux/drivers/scsi/scsi_lib.c	2008-03-21 11:54:09.000000000 -0400
-@@ -888,6 +888,12 @@
- 	 */
- 	if (sense_valid && !sense_deferred) {
- 		switch (sshdr.sense_key) {
-+		case MEDIUM_ERROR:
-+		/* Bad sector.  Fail it, and then continue the rest of the request. */
-+		if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
-+			cmd->retries = 0;       // go around again..
-+			return;
-+		}
- 		case UNIT_ATTENTION:
- 			if (cmd->device->removable) {
- 				/* Detected disc change.  Set a bit
+Cheers
