@@ -1,65 +1,48 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] ide: turn selectproc() method into dev_select() method
-Date: Fri, 20 Mar 2009 20:02:53 +0100
-Message-ID: <200903202002.55510.bzolnier@gmail.com>
-References: <200903191831.43621.sshtylyov@ru.mvista.com> <49C2688A.3070808@ru.mvista.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] libata: ahci enclosure save new led state
+Date: Fri, 20 Mar 2009 14:14:23 -0500
+Message-ID: <20090320191423.GA16289@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:48187 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbZCTTHB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Mar 2009 15:07:01 -0400
-Received: by bwz17 with SMTP id 17so1009786bwz.37
-        for <linux-ide@vger.kernel.org>; Fri, 20 Mar 2009 12:06:58 -0700 (PDT)
-In-Reply-To: <49C2688A.3070808@ru.mvista.com>
+Received: from mx2.redhat.com ([66.187.237.31]:36739 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755432AbZCTTQE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Mar 2009 15:16:04 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
 
-On Thursday 19 March 2009, Sergei Shtylyov wrote:
-> Hello, I wrote:
->=20
-> > Turn selectproc() method into dev_select() method by teaching it to=
- write to the
-> > device register and moving it from 'struct ide_port_ops' to 'struct=
- ide_tp_ops'.
->=20
-> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->=20
-> [...]
->=20
-> > Index: linux-2.6/drivers/ide/trm290.c
-> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > --- linux-2.6.orig/drivers/ide/trm290.c
-> > +++ linux-2.6/drivers/ide/trm290.c
-> > @@ -171,10 +171,11 @@ static void trm290_prepare_drive (ide_dr
-> >  	local_irq_restore(flags);
-> >  }
-> > =20
-> > -static void trm290_selectproc (ide_drive_t *drive)
-> > +static void trm290_dev_select(ide_drive_t *drive)
-> >  {
-> >  	trm290_prepare_drive(drive, !!(drive->dev_flags & IDE_DFLAG_USING=
-_DMA));
-> > -}
-> > +
-> > +	outb(drive->select | ATA_DEVICE_OBS, drive->hwif->io_ports.device=
-_addr);}
->=20
->     Oops, I keep forgetting about running checkpatch.pl first. :-<
->     Bart, do I need to repost, or you can fix it while applying?
+ahci_transmit_led_message saves off the led_state
+with a value that includes the port number OR'd
+in, this incorrect value maybe reported back
+in ahci_led_store.
 
-fixed while applying
+For instance, if you turn off all the leds for
+port 1 and cat the value back it will report 1
+instead of 0.
 
-ditto for:
+# echo 0 > /sys/class/scsi_host/host1/em_message
+# cat /sys/class/scsi_host/host1/em_message
+1
 
-drivers/ide/ns87415.c:314: error: =E2=80=98ns87415_tp_ops=E2=80=99 unde=
-clared here (not in a function)
-make[1]: *** [drivers/ide/ns87415.o] Error 1
-make: *** [drivers/ide/ns87415.o] Error 2
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/ahci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 66e012c..288f12f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1348,7 +1348,7 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 	writel(message[1], mmio + hpriv->em_loc+4);
+ 
+ 	/* save off new led state for port/slot */
+-	emp->led_state = message[1];
++	emp->led_state = state;
+ 
+ 	/*
+ 	 * tell hardware to transmit the message
