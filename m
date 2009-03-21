@@ -1,59 +1,61 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: Overagressive failing of disk reads, both LIBATA and IDE
-Date: Sat, 21 Mar 2009 10:18:22 -0500
-Message-ID: <1237648702.4600.16.camel@localhost.localdomain>
-References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
-	 <49C30E67.4060702@rtr.ca> <1237645333.4600.9.camel@localhost.localdomain>
-	 <20090321151028.2ac4101f@lxorguk.ukuu.org.uk>
+Date: Sat, 21 Mar 2009 11:20:21 -0400
+Message-ID: <49C505B5.9020804@rtr.ca>
+References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>	 <49C30E67.4060702@rtr.ca> <1237645333.4600.9.camel@localhost.localdomain>	 <49C4FFFB.5000601@rtr.ca> <1237648115.4600.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60393 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751399AbZCUPSc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Mar 2009 11:18:32 -0400
-In-Reply-To: <20090321151028.2ac4101f@lxorguk.ukuu.org.uk>
+Received: from rtr.ca ([76.10.145.34]:53269 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752859AbZCUPU2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 21 Mar 2009 11:20:28 -0400
+In-Reply-To: <1237648115.4600.12.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Norman Diamond <n0diamond@yahoo.co.jp>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mark Lord <lkml@rtr.ca>, Norman Diamond <n0diamond@yahoo.co.jp>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, 2009-03-21 at 15:10 +0000, Alan Cox wrote:
-> > Using the disk supplied data about where the error occurred (provided
-> > the disk returns it) eliminates all the readahead problems like the one
+James Bottomley wrote:
+> On Sat, 2009-03-21 at 10:55 -0400, Mark Lord wrote:
+..
+>> The patch *does* use the disk supplied data about the error,
+>> and returns success for sectors up to that point.  Where it differs
+>> from mainline SCSI, is that it then continues attempting the remaining
+>> 2000 sectors (or whatever) of the request, hoping that not all of
+>> them are bad.
 > 
-> ATA disks do provide sector information generally, as do CD-ROMs, in fact
-> we actually decode it for error reporting so probably all the bits are
-> there to improve any reporting for most read side cases.
-> 
-> >From some of the traces I have been debugging I am not convinced the scsi
-> mid layer does the right thing any more. It uses to be handling CD-R
-> media (where the end of media is not well defined) but nowdays seems to
-> be reporting errors even when told that the I/O partly succeeded. I need
-> to debug that case further however but as I don't have one of the problem
-> drives its a bit tricky.
+> Um, but so does SCSI without your patch ... that was my point.
+..
 
-OK, so in modern kernels, this is done in the ULD ... specifically for
-disks in sd.c:sd_done and for CD/DVD in sr.c:sr_done().
+Does it?  I thought it still just failed everything after the first
+bad sector?  Kudos are due if that's working now.
 
-The sr.c one looks crufty in that I don't think it handles descriptor
-sense at all, so perhaps it should be updated to match the sd one?
+..
+> I don't really think we'd do that.  The problem, as you say is request
+> combination.  I think if we really wanted to do this, we'd have block do
+> it.  Each separate request that's merged gets a separate bio, and block
+> already has capabilities to pick up per bio errors, so we'd do the
+> partial completion of the failing bio then skip to the next one in the
+> request to try.  That would completely solve both readahead problems and
+> request merging ones.
+..
 
-> > above.  Perhaps just turning of readahead for disks that don't supply
-> > error location information would be a reasonable workaround?
-> 
-> Not really. From a performance perspective Mark's patch is vastly
-> superior because it punishes the incredibly rare error case not the
-> routine working performance. Avoiding the need to do either would be even
-> better - as would fixing the block layer not to mess up retries in this
-> situation.
-> 
-> For low speed devices like MMC cards and flash it might make sense not to
-> merge unrelated requests however so that only the relevant one fails.
+Yeah, that's a reasonable way to tackle.  And you're right, we *did* discuss
+this back two years ago.  It just never made it as far as new code.  :)
 
-See other email for suggestion how to do this at the block level.
+Something else that might be good here, would be to have the md layer
+pass down a (per-bio?) flag indicating whether it has redundacy capability
+or not for the I/O.  Eg. healthy RAID1/4/5/10 etc.. would set the flag,
+and SCSI could then just abort immediately on a bad sector, with NO retries
+beyond the first bad one.
 
-James
+On RAID0, or a degraded (no spares) RAID1 etc, it would not set the flag,
+so SCSI would try harder to recover the data, as we're discussing above.
+
+This sounds like FAST_FAIL, but is different.  And the hint needs to
+come from the upper layer that is performing redundancy.
+
 
 
