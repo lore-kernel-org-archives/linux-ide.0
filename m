@@ -1,43 +1,81 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata-core More robust parsing for multi_count(v5)
-Date: Sat, 21 Mar 2009 14:02:50 +0000
-Message-ID: <20090321140250.6569644d@lxorguk.ukuu.org.uk>
-References: <49C1047D.4000008@rtr.ca>
-	<49C11A0C.3070502@rtr.ca>
-	<49C11ED4.2030307@rtr.ca>
-	<49C19087.5000307@gmail.com>
-	<49C190F1.7010202@kernel.org>
-	<49C28133.8050401@rtr.ca>
-	<49C281A5.5080404@rtr.ca>
-	<49C2D642.90706@kernel.org>
-	<49C39690.6090802@rtr.ca>
-	<49C396CF.7030202@rtr.ca>
-	<20090320140714.2e7770d0@lxorguk.ukuu.org.uk>
-	<49C3B7E9.2000505@rtr.ca>
-	<49C4235D.5070303@kernel.org>
-	<49C43ABA.4010601@pobox.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Overagressive failing of disk reads, both LIBATA and IDE
+Date: Sat, 21 Mar 2009 09:22:13 -0500
+Message-ID: <1237645333.4600.9.camel@localhost.localdomain>
+References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>
+	 <49C30E67.4060702@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34666 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751970AbZCUODH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Mar 2009 10:03:07 -0400
-In-Reply-To: <49C43ABA.4010601@pobox.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60584 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752150AbZCUOWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Mar 2009 10:22:18 -0400
+In-Reply-To: <49C30E67.4060702@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Norman Diamond <n0diamond@yahoo.co.jp>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> Yeah, that has long been a design decision -- avoid all the mechanics of 
-> PIO-Multi, simply because we did not have much of a need for it (and 
-> still don't).
-> 
-> Albert Lee worked on PIO-Multi a while ago, which was mainly to get 
-> ATA_{12,16} working, IIRC.
-> 
-> But overall, I don't see much of a need to introduce it into the main stack?
+On Thu, 2009-03-19 at 23:32 -0400, Mark Lord wrote:
+> Norman Diamond wrote:
+> > For months I was wondering how a disk could do this:
+> > dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=4  # succeeds
+> > dd if=/dev/hda of=/dev/null bs=512 skip=551544 count=4  # succeeds
+> > dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=8  # fails
 
-I don't see a need - and if we do its more important IMHO to get the PIO
-paths out of the irq handlers before doing so.
+This basically means the drive doesn't report where in the requested
+transfer the error occurred.  If we have that information, we'd return
+all sectors up to that LBA as OK and all at or beyond as -EIO, so the
+readahead wouldn't matter.
+
+> > It turns out the disk isn't doing that.  Linux is.  The old IDE drivers did
+> > it, but with LIBATA the same thing happens to /dev/sda.  In later examples
+> > also, the same happens to /dev/sda as /dev/hda.
+> ..
+> 
+> You can blame me for the IDE driver not doing that properly.
+> But for libata, it's the SCSI layer.
+> 
+> I've been patching this for years for my clients,
+> and will be updating the patch soon-ish and trying
+> again to get it into upstream kernels.
+> 
+> Here's the (now ancient) 2.6.20 version for SLES10:
+> 
+> * * *
+> 
+> Allow SCSI to continue with the remaining blocks of a request
+> after encountering a media error.  Otherwise, it may just fail
+> the entire request, even though some blocks were fine and needed
+> by a completely different process than the one that wanted the bad block(s).
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> --- linux-2.6.16.60-0.6/drivers/scsi/scsi_lib.c	2008-03-10 13:46:03.000000000 -0400
+> +++ linux/drivers/scsi/scsi_lib.c	2008-03-21 11:54:09.000000000 -0400
+> @@ -888,6 +888,12 @@
+>  	 */
+>  	if (sense_valid && !sense_deferred) {
+>  		switch (sshdr.sense_key) {
+> +		case MEDIUM_ERROR:
+> +		/* Bad sector.  Fail it, and then continue the rest of the request. */
+> +		if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
+> +			cmd->retries = 0;       // go around again..
+> +			return;
+> +		}
+
+But we've been over this.  You can't apply something like this because
+it ignores retries and chunks up the request a sector at a time.  For
+the enterprise that can increase failure time from a few seconds to
+hours for 512k transfers.
+
+Using the disk supplied data about where the error occurred (provided
+the disk returns it) eliminates all the readahead problems like the one
+above.  Perhaps just turning of readahead for disks that don't supply
+error location information would be a reasonable workaround?
+
+James
+
+
