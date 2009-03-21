@@ -1,69 +1,41 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: Overagressive failing of disk reads, both LIBATA and IDE
-Date: Sat, 21 Mar 2009 10:55:55 -0400
-Message-ID: <49C4FFFB.5000601@rtr.ca>
-References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600>	 <49C30E67.4060702@rtr.ca> <1237645333.4600.9.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata-core More robust parsing for multi_count(v5)
+Date: Sat, 21 Mar 2009 10:59:40 -0400
+Message-ID: <49C500DC.7020006@rtr.ca>
+References: <49C1047D.4000008@rtr.ca>	<49C11A0C.3070502@rtr.ca>	<49C11ED4.2030307@rtr.ca>	<49C19087.5000307@gmail.com>	<49C190F1.7010202@kernel.org>	<49C28133.8050401@rtr.ca>	<49C281A5.5080404@rtr.ca>	<49C2D642.90706@kernel.org>	<49C39690.6090802@rtr.ca>	<49C396CF.7030202@rtr.ca>	<20090320140714.2e7770d0@lxorguk.ukuu.org.uk>	<49C3B7E9.2000505@rtr.ca>	<49C4235D.5070303@kernel.org>	<49C43ABA.4010601@pobox.com> <20090321140250.6569644d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:42094 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:44331 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754564AbZCUO4F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 21 Mar 2009 10:56:05 -0400
-In-Reply-To: <1237645333.4600.9.camel@localhost.localdomain>
+	id S1754856AbZCUO7r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 21 Mar 2009 10:59:47 -0400
+In-Reply-To: <20090321140250.6569644d@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mark Lord <liml@rtr.ca>, Norman Diamond <n0diamond@yahoo.co.jp>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-James Bottomley wrote:
-> On Thu, 2009-03-19 at 23:32 -0400, Mark Lord wrote:
-..
->> Allow SCSI to continue with the remaining blocks of a request
->> after encountering a media error.  Otherwise, it may just fail
->> the entire request, even though some blocks were fine and needed
->> by a completely different process than the one that wanted the bad block(s).
+Alan Cox wrote:
+>> Yeah, that has long been a design decision -- avoid all the mechanics of 
+>> PIO-Multi, simply because we did not have much of a need for it (and 
+>> still don't).
 >>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
+>> Albert Lee worked on PIO-Multi a while ago, which was mainly to get 
+>> ATA_{12,16} working, IIRC.
 >>
->> --- linux-2.6.16.60-0.6/drivers/scsi/scsi_lib.c	2008-03-10 13:46:03.000000000 -0400
->> +++ linux/drivers/scsi/scsi_lib.c	2008-03-21 11:54:09.000000000 -0400
->> @@ -888,6 +888,12 @@
->>  	 */
->>  	if (sense_valid && !sense_deferred) {
->>  		switch (sshdr.sense_key) {
->> +		case MEDIUM_ERROR:
->> +		/* Bad sector.  Fail it, and then continue the rest of the request. */
->> +		if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
->> +			cmd->retries = 0;       // go around again..
->> +			return;
->> +		}
+>> But overall, I don't see much of a need to introduce it into the main stack?
 > 
-> But we've been over this.  You can't apply something like this because
-> it ignores retries and chunks up the request a sector at a time.  For
-> the enterprise that can increase failure time from a few seconds to
-> hours for 512k transfers.
-> 
-> Using the disk supplied data about where the error occurred (provided
-> the disk returns it) eliminates all the readahead problems like the one
-> above.  Perhaps just turning of readahead for disks that don't supply
-> error location information would be a reasonable workaround?
+> I don't see a need - and if we do its more important IMHO to get the PIO
+> paths out of the irq handlers before doing so.
 ..
 
-The patch *does* use the disk supplied data about the error,
-and returns success for sectors up to that point.  Where it differs
-from mainline SCSI, is that it then continues attempting the remaining
-2000 sectors (or whatever) of the request, hoping that not all of
-them are bad.
+That's not a new concern, given that we *already* perform multi-sector I/O.
 
-It's not perfect, and likely no longer applies/works cleanly on the
-latest kernels.  And perhaps it really ought to fail a "block" rather
-than a "sector" at a time as it seeks clean media after the fault.
+And it's not really related to improving the implementation to be better
+aware of multi-sector I/O and interaction with EH.
 
-I think it could be even more clever, using a binary search or something
-on the remaining chunks, so that it takes less time to skip over a huge
-stretch of sequential bad sectors (scratch on media).  That would probably
-be best all around.
+But yeah, a good thing nonetheless.
 
 Cheers
