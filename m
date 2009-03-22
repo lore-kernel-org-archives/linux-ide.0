@@ -1,62 +1,116 @@
-From: "Norman Diamond" <n0diamond@yahoo.co.jp>
-Subject: Re: Overagressive failing of disk reads, both LIBATA and IDE
-Date: Sun, 22 Mar 2009 11:15:47 +0900
-Message-ID: <B102BBC50D804F2AB32D6519849EF6F6@DIAMOND8600>
-References: <F79C774361EF45A6A68BC08F8621E406@DIAMOND8600> <49C30E67.4060702@rtr.ca> <1237645333.4600.9.camel@localhost.localdomain>
+From: =?KOI8-R?Q?=F7=CC=C1=C4=C9=CD=C9=D2_=E4=C1=DB=C5=D7=D3=CB=C9=CA?=
+	<vladimir.dashevsky@gmail.com>
+Subject: Re: hot plug on ICH9 with AHCI on
+Date: Sun, 22 Mar 2009 15:51:35 +0300
+Message-ID: <49C63457.8040203@gmail.com>
+References: <49C171D7.1080706@gmail.com> <49C2F9B5.90000@kernel.org> <49C36816.306@gmail.com> <49C39933.4020501@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-2022-jp";
-	reply-type=original
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp01.mail.tnz.yahoo.co.jp ([203.216.246.64]:32031 "HELO
-	smtp01.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752331AbZCVCQB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Mar 2009 22:16:01 -0400
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:55749 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669AbZCVMx2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Mar 2009 08:53:28 -0400
+Received: by ewy9 with SMTP id 9so1268461ewy.37
+        for <linux-ide@vger.kernel.org>; Sun, 22 Mar 2009 05:53:25 -0700 (PDT)
+In-Reply-To: <49C39933.4020501@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Lord <liml@rtr.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> On Thu, 2009-03-19 at 23:32 -0400, Mark Lord wrote:
->> Norman Diamond wrote:
->>> For months I was wondering how a disk could do this:
->>> dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=4  # succeeds
->>> dd if=/dev/hda of=/dev/null bs=512 skip=551544 count=4  # succeeds
->>> dd if=/dev/hda of=/dev/null bs=512 skip=551540 count=8  # fails
+Tejun!
+
+Here are my comments on our previous conversation
+>> Well, I partially agree. Surely, EMI problems should not break the link
+>> forever but I do not agree with the algorithm. When the drive is being
+>> removed it gets out during millisectonds. I mean the time between loss
+>> of link and detection that port is not populated. So, I can imagine that
+>> driver could be going to retry reset one but it had to abort this action
+>> once it got the drive is removed at all. Not in 15 second and even not
+>> in 5 seconds but in 0.01 second. So, 
+> Heh... that will fail any EMI test.  There simply isn't anything to be
+> earned by shortening the period.  The only thing that can go wrong
+> with longer delay is if the user unplugs the drive, plugs it in
+> another host modifies the content and replug it before the detach
+> happens.  If the user does that, well, he/she deserves a corrupt
+> filesystem.
+>   
+I think you are not right here. If we are talking about EMI problems I 
+can say that the strategy of many retries is worse than one read of port 
+present status. EMI noise occurs at the time while software tries to 
+re-establish connection with empty link because there is no link 
+terminatiion. It's just like a car engine that has lost its muffler. It 
+produces lots of noise. It is better to turn the link off as soon as we 
+know there is no device on the port. That's why retries should last only 
+until that state is reported by hardware. And I think hardware reports 
+that state much faster than in 15 or even 5 seconds. In ICH9 it reports 
+this just immediately.
+>>> That's SCSI sd driver shutting down.  As hot unplugging is
+>>> surprise-removal, sd's shutdown sequence arrives after the device is
+>>> actually gone and failed immediately.
+>>>
+>>>       
+>> Ok. So, this is notmal. We just need to inform SCSI driver first, isn't it?
+>>     
 >
-> This basically means the drive doesn't report where in the requested
-> transfer the error occurred.  If we have that information, we'd return all
-> sectors up to that LBA as OK and all at or beyond as -EIO, so the
-> readahead wouldn't matter.
+> If you hot unplug, how do you notify SCSI driver first?
+>   
+Well, there are some strange comments in FAQs that older ICH chips (5 to 
+8) do not fully support hot plug, while the newer ones have better 
+support for this. Then there is an explanation of what is proper hotplug 
+support. That explanation says of surprise-removal support. However, I 
+do not mind of notifying system before a actually remove the drive. Just 
+because it may take a long time to shut down drive activity and it will 
+be better to indicate this explicitly to user.
+>>
+>> Well, some drives store their firmware on disk, so they cannot work with
+>> host until fully spinned up. I heard that drive started to spin up in
+>> two or more seconds after being inserted. So, what is the indended
+>> driver behavior? It simply performs soft resets until drive answer ot
+>> this, isn't it? If the drive gets ready faster it will be fewer failed
+>> soft resets in log, right?
+>>     
+>
+> The goal is being robust.  With numerous hardware combinations, that's
+> about the only way to keep things manageable.  Things don't always
+> work as described in the spec.  Again, the only down side is one or
+> more failed attempts and log about those.  Why do you care?
+>   
+It's just because one of my jobs is writing high performance embedded 
+real-time software were logs are almost the only way to know what 
+happens in hardware. After  several years of  such practice there is a 
+habit of suspecting side effects of each stralge log line. That's whay I 
+do care :-)
+I just want to understand that this softreset failure is a normal 
+behavior for that particular case.
 
-That's exactly what my submission suggested Linux should do, because that's
-exactly what Linux isn't doing.  The defective sector number is 551562.
-Linux makes varying decisions on how much to read ahead, and when its
-readahead includes the defective sector Linux doesn't do what you and I want
-it to do.
+> ahci doesn't use PCS to detect dummy ports.  It uses PORT_IMPL ahci
+> register.  If PORT_IMPL changes according to which ports are occupied
+> that's a BIOS bug.  Can you post the output of "dmidecode"?
+>   
+Yes, you were right, it was a BIOS bug. I have downloaded latest BIOS 
+from the vendor's web site and now PI register allways reports all six 
+ports implemented.
 
-The way I discovered the actual defective sector number is that one time
-last week I noticed it in dmesg output.  After noticing it, investigation
-became a lot easier.  I don't remember if I noticed it for hda (old IDE) or
-sda (LIBATA) but either way the drive put the defective sector number in its
-error report.  When readahead was long enough to reach sector 551562 the
-drive told the PC.
+>>> echo 1 > /sys/block/sdX/device/delete
+>>>  
+>>>       
+>> Can I be sure this will stop the drive sefely (without of cached data
+>> loss)?
+>>     
+>
+> Yes.
+>   
+Ok. So, one more question. How can I know exactly when device deletion 
+has completed after sending this command? For example, consider that 
+there some data in cache that needs 3 seconds to be sync-ed to disk. How 
+can I know that I must wait for 3 seconds before a can actually remove 
+the drive? Should I check the presence of some other filename in 
+/sys/block/sdX/ or do something else?
 
-Regarding other threads of this discussion, I/Os are not being merged with 
-other processes.  I'm running either Slax or Knoppix from a live CD, and the 
-only one accessing the hard drive is me.
+Thank you!
 
-In cases where Slax or Knoppix includes a sufficiently recent hdparm, I 
-could attempt reads of individual sectors.  551561 is OK.  551563 is OK. 
-551562 has an uncorrectable media error.  I had mentioned that the drive has 
-egregiously bad firmware (which doesn't excuse Linux).  That includes an 
-effort to relocate the sector by using hdparm to write sector 551562, 
-whereupon Hitachi drives me crazy.  The drive reports success but subsequent 
-reads still fail. 
+With best regards, Vladimir Dashevsky
 
---------------------------------------
-Power up the Internet with Yahoo! Toolbar.
-http://pr.mail.yahoo.co.jp/toolbar/
