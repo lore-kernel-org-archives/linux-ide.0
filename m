@@ -1,51 +1,44 @@
-From: TOMARI Hisanobu <posco.grubb@gmail.com>
-Subject: [PATCH] IDE cable detection on Apple PowerBook
-Date: Sun, 22 Mar 2009 10:17:04 +0900
-Message-ID: <20090322101704.80473ee8.posco.grubb@gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: ATA support for 4k sector size
+Date: Sat, 21 Mar 2009 21:20:40 -0400
+Message-ID: <gq43p9$505$1@ger.gmane.org>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	 <yq1hc2iumg9.fsf@sermon.lab.mkp.net> <20090226025043.GJ1363@mit.edu>	 <20090226030735.GA16891@parisc-linux.org>	 <yq1eixlg4mn.fsf@sermon.lab.mkp.net> <49A6B604.1060702@zytor.com>	 <yq1iqmxey1o.fsf@sermon.lab.mkp.net> <49A70379.3050306@zytor.com>	 <87f94c370903160751t6de5ed2t40163a6590ba633@mail.gmail.com>	 <49BE7DEF.1060005@zytor.com> <87f94c370903161037q52ff5e1nb7512726e58e652c@mail.gmail.com> <49BE9643.8050703@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:30020 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbZCVBRN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Mar 2009 21:17:13 -0400
-Received: by ti-out-0910.google.com with SMTP id i7so1078454tid.23
-        for <linux-ide@vger.kernel.org>; Sat, 21 Mar 2009 18:17:10 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753566AbZCVBVJ@vger.kernel.org>
+In-Reply-To: <49BE9643.8050703@zytor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: bzolnier@gmail.com, benh@kernel.crashing.org
 
-This patch against 2.6.28.8 modifies the behavior of 80c cable detection 
-of drivers/ide/pmac.c.
-As IDE cable used on Apple PowerBook/iBook laptops are always of "Short 40" 
-type when the firmware says it's 80 conductor one, the cable detection should 
-return ATA_CBL_PATA40_SHORT on those machines.
-This enables to automatically use UDMA5 even with drives that doesn't correctly 
-detect those cables on Apple laptops.
+H. Peter Anvin wrote:
+> Greg Freemyer wrote:
+>>
+>> I'm not intimate with the details, but I would hope most boot loaders
+>> by now use LBA values to find the boot code, not CHS.
+>>
+> 
+> Yes, for "true" hard drives this is pretty much universal these days 
+> (except for MS-DOS and its ilk.)  For USB and so on some BIOSes are 
+> still stuck in old times.  Sigh.
+> 
+>> If so the issue becomes the partitioning tools (fdisk etc.) putting
+>> the partitions at the right place.  Can't those tools bypass the bios
+>> somehow and ask the drive itself what it's geometry is?
+> 
+> It can, but it MUST NOT do so.  The fields that are to be entered into 
+> the partition table are BIOS CHS values, not any other kind of CHS.
+> 
+I can recall playing with the disk "geometry" in the expert part of fdisk and 
+not getting any particular bad effects, so I'm not sure why you MUST NOT other 
+than the SSD you mentioned. However, the reason it was long ago is that aligning 
+things in some possibly batter way didn't make a measurable difference in 
+performance, so I went back to defaults, so I agree with your advice, it doesn't 
+seem to help.
 
-Signed-off-by: TOMARI Hisanobu <posco.grubb@gmail.com>
-
---- linux-2.6.28.8/drivers/ide/pmac.c.orig	2009-03-21 23:07:19.177956922 +0900
-+++ linux-2.6.28.8/drivers/ide/pmac.c	2009-03-22 09:57:58.774048828 +0900
-@@ -917,10 +917,19 @@ static u8 pmac_ide_cable_detect(ide_hwif
- 		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	struct device_node *np = pmif->node;
- 	const char *cable = of_get_property(np, "cable-type", NULL);
-+	struct device_node *root = of_find_node_by_path("/");
-+	const char *model = of_get_property(root, "model", NULL);
- 
- 	/* Get cable type from device-tree. */
- 	if (cable && !strncmp(cable, "80-", 3))
-+	  {
-+	    /* Some drives fail to detect 80c cable in PowerBook */
-+	    /* These machine use proprietary short IDE cable anyway */
-+	    if (!strncmp(model,"PowerBook", 9))
-+		return ATA_CBL_PATA40_SHORT;
-+	    else
- 		return ATA_CBL_PATA80;
-+	  }
- 
- 	/*
- 	 * G5's seem to have incorrect cable type in device-tree.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+   "We have more to fear from the bungling of the incompetent than from
+the machinations of the wicked."  - from Slashdot
