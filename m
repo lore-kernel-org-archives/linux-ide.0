@@ -1,91 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: bug in use-ide_pio_bytes patch?
-Date: Mon, 23 Mar 2009 19:44:29 +0900
-Message-ID: <49C7680D.6070108@kernel.org>
-References: <49C72C1B.5080601@kernel.org> <200903231127.25698.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] ide: turn selectproc() method into dev_select() method
+Date: Mon, 23 Mar 2009 13:47:03 +0300
+Message-ID: <49C768A7.4010701@ru.mvista.com>
+References: <200903191831.43621.sshtylyov@ru.mvista.com> <49C2688A.3070808@ru.mvista.com> <200903202002.55510.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49670 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828AbZCWKof (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Mar 2009 06:44:35 -0400
-In-Reply-To: <200903231127.25698.bzolnier@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:14806 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752598AbZCWKqP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Mar 2009 06:46:15 -0400
+In-Reply-To: <200903202002.55510.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
-
-Hi,
+Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org
 
 Bartlomiej Zolnierkiewicz wrote:
->> It completes ide_floppy requests in the DMA handling block; however,
->> those requests are gonna be completed again later in the regular
->> completion path again.  I think the above part can be simply dropped?
-> 
-> I'm not sure I get it -- could you point me to the other completion path?
 
-static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
-{
-....	
-	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
-....
-		if (rc || (drive->media == ide_tape && (stat & ATA_ERR))) {
-			if (drive->media == ide_floppy)
-				printk(KERN_ERR "%s: DMA %s error\n",
-					drive->name, rq_data_dir(pc->rq)
-						     ? "write" : "read");
-			pc->flags |= PC_FLAG_DMA_ERROR;
-		} else {
-			pc->xferred = pc->req_xfer;
-			if (drive->pc_update_buffers)
-				drive->pc_update_buffers(drive, pc);
+>>Hello, I wrote:
 
-			if (drive->media == ide_floppy)
-1:				ide_complete_rq(drive, 0, blk_rq_bytes(rq));
-		}
-		debug_log("%s: DMA finished\n", drive->name);
-	}
+>>>Turn selectproc() method into dev_select() method by teaching it to =
+write to the
+>>>device register and moving it from 'struct ide_port_ops' to 'struct =
+ide_tp_ops'.
 
-	/* No more interrupts */
-	if ((stat & ATA_DRQ) == 0) {
-...
-		/* Command finished - Call the callback function */
-		uptodate = drive->pc_callback(drive, dsc);
+>>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-		if (uptodate == 0)
-			drive->failed_pc = NULL;
+>>[...]
 
-		if (blk_special_request(rq)) {
-			rq->errors = 0;
-2:			ide_complete_rq(drive, 0, blk_rq_bytes(rq));
-		} else {
-			unsigned int done;
+>>>Index: linux-2.6/drivers/ide/trm290.c
+>>>=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>>--- linux-2.6.orig/drivers/ide/trm290.c
+>>>+++ linux-2.6/drivers/ide/trm290.c
+>>>@@ -171,10 +171,11 @@ static void trm290_prepare_drive (ide_dr
+>>> 	local_irq_restore(flags);
+>>> }
+>>>=20
+>>>-static void trm290_selectproc (ide_drive_t *drive)
+>>>+static void trm290_dev_select(ide_drive_t *drive)
+>>> {
+>>> 	trm290_prepare_drive(drive, !!(drive->dev_flags & IDE_DFLAG_USING_=
+DMA));
+>>>-}
+>>>+
+>>>+	outb(drive->select | ATA_DEVICE_OBS, drive->hwif->io_ports.device_=
+addr);}
 
-			if (blk_fs_request(rq) == 0 && uptodate <= 0) {
-				if (rq->errors == 0)
-					rq->errors = -EIO;
-			}
+>>    Oops, I keep forgetting about running checkpatch.pl first. :-<
+>>    Bart, do I need to repost, or you can fix it while applying?
 
-			if (drive->media == ide_tape)
-				done = ide_rq_bytes(rq); /* FIXME */
-			else
-				done = blk_rq_bytes(rq);
+> fixed while applying
 
-3:			ide_complete_rq(drive, uptodate ? 0 : -EIO, done);
-		}
+> ditto for:
 
-		return ide_stopped;
-	}
-...
-}
+> drivers/ide/ns87415.c:314: error: =E2=80=98ns87415_tp_ops=E2=80=99 un=
+declared here (not in a function)
+> make[1]: *** [drivers/ide/ns87415.o] Error 1
+> make: *** [drivers/ide/ns87415.o] Error 2
 
-#1 completely completes the request after which it shouldn't be
-accessed, but rq is accessed afterwards and #2 or #3 will be called on
-the rq again.  Am I missing something?
+    Since the patch has turned to ve fatally defective in yet another w=
+ay,=20
+I'll have to recast/resend it anyway...
 
-Thanks.
-
--- 
-tejun
+MBR, Sergei
