@@ -1,70 +1,62 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] ide: turn selectproc() method into dev_select() method
-Date: Mon, 23 Mar 2009 13:47:03 +0300
-Message-ID: <49C768A7.4010701@ru.mvista.com>
-References: <200903191831.43621.sshtylyov@ru.mvista.com> <49C2688A.3070808@ru.mvista.com> <200903202002.55510.bzolnier@gmail.com>
+Subject: Re: [PATCH] IDE cable detection on Apple PowerBook
+Date: Mon, 23 Mar 2009 13:57:03 +0300
+Message-ID: <49C76AFF.5090008@ru.mvista.com>
+References: <20090322101704.80473ee8.posco.grubb@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:14806 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:15080 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752598AbZCWKqP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Mar 2009 06:46:15 -0400
-In-Reply-To: <200903202002.55510.bzolnier@gmail.com>
+	id S1753161AbZCWK4Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Mar 2009 06:56:16 -0400
+In-Reply-To: <20090322101704.80473ee8.posco.grubb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org
+To: TOMARI Hisanobu <posco.grubb@gmail.com>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, benh@kernel.crashing.org
 
-Bartlomiej Zolnierkiewicz wrote:
+TOMARI Hisanobu wrote:
 
->>Hello, I wrote:
+> This patch against 2.6.28.8 modifies the behavior of 80c cable detection 
+> of drivers/ide/pmac.c.
+> As IDE cable used on Apple PowerBook/iBook laptops are always of "Short 40" 
+> type when the firmware says it's 80 conductor one, the cable detection should 
+> return ATA_CBL_PATA40_SHORT on those machines.
+> This enables to automatically use UDMA5 even with drives that doesn't correctly 
+> detect those cables on Apple laptops.
 
->>>Turn selectproc() method into dev_select() method by teaching it to =
-write to the
->>>device register and moving it from 'struct ide_port_ops' to 'struct =
-ide_tp_ops'.
+> Signed-off-by: TOMARI Hisanobu <posco.grubb@gmail.com>
 
->>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> --- linux-2.6.28.8/drivers/ide/pmac.c.orig	2009-03-21 23:07:19.177956922 +0900
+> +++ linux-2.6.28.8/drivers/ide/pmac.c	2009-03-22 09:57:58.774048828 +0900
+> @@ -917,10 +917,19 @@ static u8 pmac_ide_cable_detect(ide_hwif
+>  		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
+>  	struct device_node *np = pmif->node;
+>  	const char *cable = of_get_property(np, "cable-type", NULL);
+> +	struct device_node *root = of_find_node_by_path("/");
+> +	const char *model = of_get_property(root, "model", NULL);
+>  
+>  	/* Get cable type from device-tree. */
+>  	if (cable && !strncmp(cable, "80-", 3))
+> +	  {
 
->>[...]
+    Unacceptable style, brace should be on the same line with *if*; run your 
+patch thru scripts/checkpatch.pl please...
 
->>>Index: linux-2.6/drivers/ide/trm290.c
->>>=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>>--- linux-2.6.orig/drivers/ide/trm290.c
->>>+++ linux-2.6/drivers/ide/trm290.c
->>>@@ -171,10 +171,11 @@ static void trm290_prepare_drive (ide_dr
->>> 	local_irq_restore(flags);
->>> }
->>>=20
->>>-static void trm290_selectproc (ide_drive_t *drive)
->>>+static void trm290_dev_select(ide_drive_t *drive)
->>> {
->>> 	trm290_prepare_drive(drive, !!(drive->dev_flags & IDE_DFLAG_USING_=
-DMA));
->>>-}
->>>+
->>>+	outb(drive->select | ATA_DEVICE_OBS, drive->hwif->io_ports.device_=
-addr);}
+> +	    /* Some drives fail to detect 80c cable in PowerBook */
+> +	    /* These machine use proprietary short IDE cable anyway */
 
->>    Oops, I keep forgetting about running checkpatch.pl first. :-<
->>    Bart, do I need to repost, or you can fix it while applying?
+    s/machine/machines/
 
-> fixed while applying
+> +	    if (!strncmp(model,"PowerBook", 9))
+> +		return ATA_CBL_PATA40_SHORT;
+> +	    else
+>  		return ATA_CBL_PATA80;
+> +	  }
+>  
+>  	/*
+>  	 * G5's seem to have incorrect cable type in device-tree.
 
-> ditto for:
-
-> drivers/ide/ns87415.c:314: error: =E2=80=98ns87415_tp_ops=E2=80=99 un=
-declared here (not in a function)
-> make[1]: *** [drivers/ide/ns87415.o] Error 1
-> make: *** [drivers/ide/ns87415.o] Error 2
-
-    Since the patch has turned to ve fatally defective in yet another w=
-ay,=20
-I'll have to recast/resend it anyway...
-
-MBR, Sergei
+WBR, Sergei
