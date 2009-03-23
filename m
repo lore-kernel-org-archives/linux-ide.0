@@ -1,38 +1,52 @@
-From: Raz <raziebe@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: How to configure 36 disks ?
-Date: Mon, 23 Mar 2009 18:28:07 +0200
-Message-ID: <5d96567b0903230928p794e4140y9263f4095beb5b52@mail.gmail.com>
-References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
-	 <49C7B778.7000604@xman.org>
+Date: Mon, 23 Mar 2009 12:45:23 -0400
+Message-ID: <87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
+References: <49C7AC2C.9090307@tmr.com>
+	 <174852.24274.qm@web51309.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-aio@kvack.org>
-In-Reply-To: <49C7B778.7000604@xman.org>
+In-Reply-To: <174852.24274.qm@web51309.mail.re2.yahoo.com>
 Sender: owner-linux-aio@kvack.org
-To: Christopher Smith <x@xman.org>
-Cc: Jon@ehardcastle.com, Bill Davidsen <davidsen@tmr.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jon@ehardcastle.com
+Cc: Raz <raziebe@gmail.com>, Bill Davidsen <davidsen@tmr.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Mar 23, 2009 at 6:23 PM, Christopher Smith <x@xman.org> wrote:
-> Jon Hardcastle wrote:
->>
->> I'd like to understand how you even go attaching that many devices to a
->> system.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not
->> enterprise.. and i have slammed into case/power/sat slot issues already.
->> What sort of hardware must one use to grow to a 36 array system!
+On Mon, Mar 23, 2009 at 12:02 PM, Jon Hardcastle
+<jd_hardcastle@yahoo.com> wrote:
 >
-> You can always use this approach:
->
-> http://www.youtube.com/watch?v=96dWOEa4Djs
->
-> --Chris
->
-> P.S.: Sorry, couldn't resist.
->
->
-me too.
-http://blogs.sun.com/observatory/entry/don_t_shout_at_your
+> I'd like to understand how you even go attaching that many devices to a s=
+ystem.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not =
+enterprise.. and i have slammed into case/power/sat slot issues already. Wh=
+at sort of hardware must one use to grow to a 36 array system!
+
+For the drives you could get a few big enclosures:
+
+http://www.pc-pitstop.com/sata_enclosures/sat122urd.asp
+http://www.pc-pitstop.com/sata_enclosures/scsas16rm.asp
+
+I don't think these offer PMP (port multiplexer) support.  I would
+look for ones that did if you're serious about doing something like
+this.
+
+If you used PMP with 4x drives per sata port, you would only need 9
+sata ports in the PC to control the 36 drives.  Not sure what the
+limits of PMP is, but 4x seems reasonable to me.
+
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-aio' in
