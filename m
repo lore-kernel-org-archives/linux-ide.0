@@ -1,39 +1,30 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 8728] IT8211 IDE CDROM support cause hardlock on bootup
-Date: Mon, 23 Mar 2009 11:16:11 -0700 (PDT)
-Message-ID: <20090323181612.0902C108066@picon.linux-foundation.org>
-References: <bug-8728-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] ide: turn selectproc() method into dev_select() method (take 2)
+Date: Mon, 23 Mar 2009 21:09:15 +0100
+Message-ID: <200903232109.15688.bzolnier@gmail.com>
+References: <200903231518.07703.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36852 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754543AbZCWTdv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Mar 2009 15:33:51 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2NJWfNV015762
-	for <linux-ide@vger.kernel.org>; Mon, 23 Mar 2009 12:33:15 -0700
-In-Reply-To: <bug-8728-11633@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:53631 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752758AbZCWUJn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Mar 2009 16:09:43 -0400
+Received: by bwz17 with SMTP id 17so1928605bwz.37
+        for <linux-ide@vger.kernel.org>; Mon, 23 Mar 2009 13:09:40 -0700 (PDT)
+In-Reply-To: <200903231518.07703.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org, petkovbb@gmail.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=8728
+On Monday 23 March 2009, Sergei Shtylyov wrote:
+> Turn selectproc() method into dev_select() method by teaching it to write to the
+> device register and moving it from 'struct ide_port_ops' to 'struct ide_tp_ops'.
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-
-alan@lxorguk.ukuu.org.uk changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|scsi_drivers-other@kernel-  |io_ide@kernel-bugs.osdl.org
-                   |bugs.osdl.org               |
-          Component|Other                       |IDE
-            Product|SCSI Drivers                |IO/Storage
-            Summary|SCSI CDROM support cause    |IT8211 IDE CDROM support
-                   |hardlock on bootup          |cause hardlock on bootup
-
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+applied in place of old patch
