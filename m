@@ -1,106 +1,57 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 14/14] ide-cd: use bio for request sense
-Date: Wed, 25 Mar 2009 01:06:16 +0900
-Message-ID: <1237910776-10983-15-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/14] ide-floppy: block pc always uses bio
+Date: Wed, 25 Mar 2009 01:06:10 +0900
+Message-ID: <1237910776-10983-9-git-send-email-tj@kernel.org>
 References: <1237910776-10983-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41841 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:41836 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762136AbZCXQGm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Mar 2009 12:06:42 -0400
+	id S1762207AbZCXQGj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Mar 2009 12:06:39 -0400
 In-Reply-To: <1237910776-10983-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-Impact: unify request data buffer handling
+Impact: remove unnecessary code path
 
-rq->data is used mostly to pass kernel buffer through request queue
-without using bio.  There are only a couple of places which still do
-this in kernel and converting to bio isn't difficult.
-
-This patch converts ide-cd to use bio instead of rq->data for request
-sense and internal pc commands.  As request sense is issued from
-atomic context, drive->request_sense_bio and ->request_sense_bvec[2]
-are used via bio_map_kern_prealloc().  Internal pc commands use
-blk_rq_map_kern().
-
-cdrom_do_block_pc() now doesn't have to deal with REQ_TYPE_ATA_PC
-special case.  Simplified.
+Block pc requests always use bio and rq->data is always NULL.  No need
+to worry about !rq->bio cases in idefloppy_block_pc_cmd().  Note that
+ide-atapi uses ide_pio_bytes() for bio PIO transfer which handle sg
+fine.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 ---
- drivers/ide/ide-cd.c |   31 ++++++++++++++++++-------------
- 1 files changed, 18 insertions(+), 13 deletions(-)
+ drivers/ide/ide-floppy.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index de6ce8d..22c95b9 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -209,8 +209,12 @@ static void cdrom_analyze_sense_data(ide_drive_t *drive,
- static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 				      struct request *failed_command)
- {
--	struct cdrom_info *info		= drive->driver_data;
--	struct request *rq		= &drive->request_sense_rq;
-+	struct cdrom_info *info	= drive->driver_data;
-+	struct request *rq	= &drive->request_sense_rq;
-+	struct bio *bio		= &drive->request_sense_bio;
-+	struct bio_vec *bvec	= drive->request_sense_bvec;
-+	unsigned int bvec_len	= ARRAY_SIZE(drive->request_sense_bvec);
-+	int error;
- 
- 	ide_debug_log(IDE_DBG_SENSE, "enter");
- 
-@@ -224,10 +228,12 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 	rq->cmd_type = REQ_TYPE_ATA_PC;
- 	rq->rq_disk = info->disk;
- 
--	rq->data = sense;
-+	error = blk_rq_map_kern_prealloc(drive->queue, rq, bio, bvec, bvec_len,
-+					 sense, 18, true);
-+	BUG_ON(error);
-+
- 	rq->cmd[0] = GPCMD_REQUEST_SENSE;
- 	rq->cmd[4] = 18;
--	rq->data_len = 18;
- 
- 	rq->cmd_type = REQ_TYPE_SENSE;
- 	rq->cmd_flags |= REQ_PREEMPT;
-@@ -556,8 +562,12 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
- 		rq->cmd_flags |= cmd_flags;
- 		rq->timeout = timeout;
- 		if (buffer) {
--			rq->data = buffer;
--			rq->data_len = *bufflen;
-+			error = blk_rq_map_kern(drive->queue, rq, buffer,
-+						*bufflen, __GFP_WAIT);
-+			if (error) {
-+				blk_put_request(rq);
-+				return error;
-+			}
- 		}
- 
- 		error = blk_execute_rq(drive->queue, info->disk, rq, 0);
-@@ -847,15 +857,10 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 	drive->dma = 0;
- 
- 	/* sg request */
--	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
-+	if (rq->bio) {
- 		struct request_queue *q = drive->queue;
-+		char *buf = bio_data(rq->bio);
- 		unsigned int alignment;
--		char *buf;
--
--		if (rq->bio)
--			buf = bio_data(rq->bio);
--		else
--			buf = rq->data;
- 
- 		drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 2b4868d..3b22e06 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -216,15 +216,13 @@ static void idefloppy_blockpc_cmd(struct ide_disk_obj *floppy,
+ 	ide_init_pc(pc);
+ 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
+ 	pc->rq = rq;
+-	if (rq->data_len && rq_data_dir(rq) == WRITE)
+-		pc->flags |= PC_FLAG_WRITING;
+-	pc->buf = rq->data;
+-	if (rq->bio)
++	if (rq->data_len) {
+ 		pc->flags |= PC_FLAG_DMA_OK;
+-	/*
+-	 * possibly problematic, doesn't look like ide-floppy correctly
+-	 * handled scattered requests if dma fails...
+-	 */
++		if (rq_data_dir(rq) == WRITE)
++			pc->flags |= PC_FLAG_WRITING;
++	}
++	/* pio will be performed by ide_pio_bytes() which handles sg fine */
++	pc->buf = NULL;
+ 	pc->req_xfer = pc->buf_size = rq->data_len;
+ }
  
 -- 
 1.6.0.2
