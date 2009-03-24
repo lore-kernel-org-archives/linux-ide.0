@@ -1,158 +1,116 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/14] block: implement blk_rq_map_kern_prealloc()
-Date: Wed, 25 Mar 2009 01:06:05 +0900
-Message-ID: <1237910776-10983-4-git-send-email-tj@kernel.org>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc cleanups
+Date: Wed, 25 Mar 2009 01:06:02 +0900
+Message-ID: <1237910776-10983-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41799 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:41793 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759886AbZCXQGa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Mar 2009 12:06:30 -0400
-In-Reply-To: <1237910776-10983-1-git-send-email-tj@kernel.org>
+	id S1761399AbZCXQG3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Mar 2009 12:06:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
 
-Impact: implement new API
+Hello, Bartlomiej, Jens.
 
-There still are a few places where request is allocated statically and
-manually initialized.  Till now, those sites used their own custom
-mechanisms to pass data buffer through request queue.  This patch
-implements blk_rq_map_kern_prealloc() which initializes rq with
-pre-allocated bio and bvec so that those code paths can be converted
-to bio.
+This patchset contains mostly IDE cleanups around rq->buffer, data and
+special usage.  Over time, the meanings of those three fields became
+blurry.  Be default, they mean
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
----
- block/blk-map.c        |   50 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/bio.c               |   23 ++++++++++++++++++++++
- include/linux/bio.h    |    3 ++
- include/linux/blkdev.h |    4 +++
- 4 files changed, 80 insertions(+), 0 deletions(-)
+->buffer  : kernel address of the current bio segment, NULL for !bio
+	    requests and could be NULL if the address is high
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index f103729..c50aac2 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -317,3 +317,53 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	return 0;
- }
- EXPORT_SYMBOL(blk_rq_map_kern);
-+
-+/**
-+ * blk_rq_map_kern_prealloc - map kernel data using preallocated structures
-+ * @q:		request queue where request should be inserted
-+ * @rq:		request to fill
-+ * @bio:	bio to use
-+ * @bvec:	bio_vec array to use
-+ * @bvec_len:	the number of available bvecs in @bvec
-+ * @kbuf:	the kernel buffer to map
-+ * @len:	length of @kbuf
-+ * @force:	bypass @kbuf alignment and on stack check
-+ *
-+ * Description:
-+ *    @len bytes at @kbuf will be mapped into @rq using @bio and
-+ *    @bvec.  The buffer must be suitable for direct mapping and
-+ *    should not require more than @bvec_len elements to map.  This
-+ *    function doesn't do any allocation and can be called from atomic
-+ *    context.  0 is returned on success, -errno on failure.  Note
-+ *    that this function does not handle bouncing.
-+ *
-+ *    WARNING: Using this function is strongly discouraged.  Use
-+ *    blk_rq_map_kern() if at all possible.
-+ */
-+int blk_rq_map_kern_prealloc(struct request_queue *q,
-+			     struct request *rq, struct bio *bio,
-+			     struct bio_vec *bvec, unsigned short bvec_len,
-+			     void *kbuf, unsigned int len, bool force)
-+{
-+	int error;
-+
-+	if (len > (q->max_hw_sectors << 9))
-+		return -EINVAL;
-+	if (!len || !kbuf)
-+		return -EINVAL;
-+	if (!force &&
-+	    (!blk_rq_aligned(q, kbuf, len) || object_is_on_stack(kbuf)))
-+		return -EINVAL;
-+
-+	error = bio_map_kern_prealloc(q, bio, bvec, bvec_len, kbuf, len);
-+	if (error)
-+		return error;
-+
-+	if (rq_data_dir(rq) == WRITE)
-+		bio->bi_rw |= (1 << BIO_RW);
-+
-+	blk_rq_bio_prep(q, rq, bio);
-+	rq->buffer = rq->data = NULL;
-+	return 0;
-+}
-+EXPORT_SYMBOL(blk_rq_map_kern_prealloc);
-diff --git a/fs/bio.c b/fs/bio.c
-index 746b566..ab3c9c9 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -1165,6 +1165,29 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
- 	return bio;
- }
- 
-+/**
-+ *	bio_map_kern_prealloc - map kernel address into preallocated bio/bvec
-+ *	@q: the struct request_queue for the bio
-+ *	@bio: bio to initialize
-+ *	@bvec: bio_vec array to initialize
-+ *	@bvec_len: how many elements are available in @bvec
-+ *	@data: pointer to buffer to map
-+ *	@len: length in bytes
-+ *
-+ *	Map @data into @bvec and initialize @bio with it.  If there
-+ *	aren't enough @bvec entries, -EINVAL is returned.
-+ */
-+int bio_map_kern_prealloc(struct request_queue *q, struct bio *bio,
-+			  struct bio_vec *bvec, unsigned short bvec_len,
-+			  void *data, unsigned int len)
-+{
-+	bio_init(bio);
-+	bio->bi_io_vec = bvec;
-+	bio->bi_max_vecs = bvec_len;
-+
-+	return __bio_map_kern(q, bio, data, len);
-+}
-+
- static void bio_copy_kern_endio(struct bio *bio, int err)
- {
- 	struct bio_vec *bvec;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index d8bd43b..39619eb 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -388,6 +388,9 @@ extern struct bio *bio_map_user_iov(struct request_queue *,
- extern void bio_unmap_user(struct bio *);
- extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
- 				gfp_t);
-+extern int bio_map_kern_prealloc(struct request_queue *q, struct bio *bio,
-+				 struct bio_vec *bvec, unsigned short bvec_len,
-+				 void *data, unsigned int len);
- extern struct bio *bio_copy_kern(struct request_queue *, void *, unsigned int,
- 				 gfp_t, int);
- extern void bio_set_pages_dirty(struct bio *bio);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 465d6ba..e322e94 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -781,6 +781,10 @@ extern int blk_rq_map_user(struct request_queue *, struct request *,
- 			   gfp_t);
- extern int blk_rq_unmap_user(struct bio *);
- extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, unsigned int, gfp_t);
-+extern int blk_rq_map_kern_prealloc(struct request_queue *q,
-+			struct request *rq, struct bio *bio,
-+			struct bio_vec *bvec, unsigned short bvec_len,
-+			void *kbuf, unsigned int len, bool force);
- extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
- 			       struct rq_map_data *, struct sg_iovec *, int,
- 			       unsigned int, gfp_t);
--- 
-1.6.0.2
+->data    : direct data pointer specified by LLD for !fs requests
 
+->special : LLD-specific pointer for special requests, opaque to block
+	    layer, also used as general opaque pointer
+
+Currently, IDE is the biggest offender to the above conventions and
+uses all three fields as opaque pointers depending on situation.  This
+complicates both IDE and block layer.  Also, with SCSI completely
+switched over to bio for everything, there only very few places which
+still use direct pointer for !fs requests.  This patchset updates IDE
+such that it only uses special for opaque pointer and always uses bio
+for data handling.
+
+This patchset contains the following patches.
+
+ 0001-block-clear-req-errors-on-bio-completion-only-for.patch
+ 0002-block-reorganize-__-bio_map_kern.patch
+ 0003-block-implement-blk_rq_map_kern_prealloc.patch
+ 0004-ide-use-blk_run_queue-instead-of-blk_start_queuei.patch
+ 0005-ide-don-t-set-REQ_SOFTBARRIER.patch
+ 0006-ide-kill-unused-ide_cmd-special.patch
+ 0007-ide-cd-clear-sense-buffer-before-issuing-request-se.patch
+ 0008-ide-floppy-block-pc-always-uses-bio.patch
+ 0009-ide-taskfile-don-t-abuse-rq-buffer.patch
+ 0010-ide-atapi-don-t-abuse-rq-buffer.patch
+ 0011-ide-cd-don-t-abuse-rq-buffer.patch
+ 0012-ide-pm-don-t-abuse-rq-data.patch
+ 0013-ide-atapi-use-bio-for-request-sense.patch
+ 0014-ide-cd-use-bio-for-request-sense.patch
+
+0001-0003 are block layer ones.  As IDE uses data requests which
+aren't either FS or PC, 0001 update rq completion such that rq->errors
+is not cleared accidentally for those requests.  0002-0003 implements
+blk_rq_map_kern_prealloc() which will be used for bio-mapping sense
+buffer.  This is necessary because IDE issues request sense from IRQ
+context.  I think it would be best if this first three patches can go
+through pata-2.6 as impact on other blk users is minimal (0001 has
+possbility of affecting other users but all the current few users look
+okay).  Jens, what do you think?
+
+0004-0007 are misc cleanup patches.
+
+0008 drops unnecessary rq->data handling path from
+idefloppy_blockpc_cmd() as block PCs always use bio for data transfer.
+
+0009-0014 clean up rq->buffer and data usages.  If it's used for
+opaque pointer, rq->special is used instead.  If for data, the data is
+mapped using either blk_rq_map_kern() or blk_rq_map_kern_prealloc().
+
+ide-cd and floppy are tested.  I don't have access to ide tape device,
+so it hasn't been tested but given that atapi changes are shared
+between floppy and tape, I don't think too much could be broken for
+tape.  I'm trying to get a IDE tape drive but it's quite difficult to
+come by over here.  :-(
+
+This patchset will allow further IDE and block layer cleanup and ease
+future improvements to block layer.
+
+This patchset is on top of linux-next pata-2.6 tree as of 2009-03-23.
+Git tree is available at the following vector but please DO NOT pull
+from the following git tree as pata-2.6 tree is quilt-based and the
+base tree I used isn't the one which is gonna go upstream.  The
+following tree is for review only.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git ide-phase1
+
+Bartlomiej, if you're okay with the changes and Jens acks the patches
+and pushing the first three patches via pata-2.6, please feel free to
+include these patches into your tree.
+
+This patchset contains the following changes.
+
+ block/blk-core.c           |   10 +++--
+ block/blk-map.c            |   50 ++++++++++++++++++++++++++++
+ drivers/ide/ide-atapi.c    |   42 +++++++++++++----------
+ drivers/ide/ide-cd.c       |   51 ++++++++++++++---------------
+ drivers/ide/ide-disk.c     |    1
+ drivers/ide/ide-floppy.c   |   16 +++------
+ drivers/ide/ide-io.c       |    7 +--
+ drivers/ide/ide-ioctls.c   |    1
+ drivers/ide/ide-park.c     |    7 +--
+ drivers/ide/ide-pm.c       |   36 +++++++-------------
+ drivers/ide/ide-tape.c     |   10 +++--
+ drivers/ide/ide-taskfile.c |   18 ++++++----
+ fs/bio.c                   |   79 ++++++++++++++++++++++++++-------------------
+ include/linux/bio.h        |    3 +
+ include/linux/blkdev.h     |    4 ++
+ include/linux/ide.h        |    4 +-
+ 16 files changed, 205 insertions(+), 134 deletions(-)
+
+Thanks.
+
+--
+tejun
