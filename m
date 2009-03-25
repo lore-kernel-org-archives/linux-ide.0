@@ -1,203 +1,192 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 04/10] ide-tape: use standard data transfer mechanism
-Date: Wed, 25 Mar 2009 16:12:11 +0100
-Message-ID: <9ea470500903250812r19970910h12d197716d262c82@mail.gmail.com>
-References: <1237990673-8358-1-git-send-email-tj@kernel.org>
-	 <1237990673-8358-5-git-send-email-tj@kernel.org>
-Reply-To: petkovbb@gmail.com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 03/14] block: implement blk_rq_map_kern_prealloc()
+Date: Wed, 25 Mar 2009 17:18:35 +0200
+Message-ID: <49CA4B4B.50408@panasas.com>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <1237910776-10983-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761840AbZCYPM0@vger.kernel.org>
-In-Reply-To: <1237990673-8358-5-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:55615 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762633AbZCYPUQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2009 11:20:16 -0400
+In-Reply-To: <1237910776-10983-4-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
-On Wed, Mar 25, 2009 at 3:17 PM, Tejun Heo <tj@kernel.org> wrote:
-> Impact: use standard way to transfer data
->
-> Now that data area is represented with bio, there is no need to use
-> custom data transfer methods. =A0Drop idetape_io_buffers() and
-> idetape_update_buffers(). =A0pc->bh is set to null to tell ide-atapi =
-to
-> use standard data transfer mechanism and idetape_bh byte counts are
-> updated by the issuer on completion using the residual count.
->
+Tejun Heo wrote:
+> Impact: implement new API
+> 
+> There still are a few places where request is allocated statically and
+> manually initialized.  Till now, those sites used their own custom
+> mechanisms to pass data buffer through request queue.  This patch
+> implements blk_rq_map_kern_prealloc() which initializes rq with
+> pre-allocated bio and bvec so that those code paths can be converted
+> to bio.
+> 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Jens Axboe <axboe@kernel.dk>
+
+Hi dear Tejun Heo
+
+I have a similar, totally unrelated patch queued, perhaps we can unify
+the efforts, to satisfy both our needs in one stone.
+
+I've sent this patch:
+http://www.spinics.net/lists/linux-scsi/msg34082.html
+
+In an effort to un-export blk_rq_append_bio().
+
+Perhaps you could reorder the code below a bit?
+
+My proposal is:
+* blk_rq_map_kern_prealloc => is simplified to be
+    int blk_rq_map_bio(struct request_queue *q, struct request *rq,
+		       struct bio *bio);
+
+* The extra checks currently inside blk_rq_map_kern_prealloc are moved
+  to bio_map_kern_prealloc()
+
+* Users call bio_map_kern_prealloc() directly and then use blk_rq_map_bio()
+  in a two stage process.
+
+So blk_rq_map_bio becomes a BLOCK_PC command's way of a pre-allocated bio
+the way FS_PC commands use generic_make_request.
+
+Thanks for doing all this. BTW' how close are we to remove req->data and req->buffer
+
+Have a good day
+Boaz
+
 > ---
-> =A0drivers/ide/ide-tape.c | =A0 84 +++-------------------------------=
--------------
-> =A01 files changed, 6 insertions(+), 78 deletions(-)
->
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index bd0e839..dd37fd7 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -292,65 +292,6 @@ static struct ide_tape_obj *ide_tape_chrdev_get(=
-unsigned int i)
-> =A0 =A0 =A0 =A0return tape;
-> =A0}
->
-> -static int idetape_input_buffers(ide_drive_t *drive, struct ide_atap=
-i_pc *pc,
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 uns=
-igned int bcount)
-> -{
-> - =A0 =A0 =A0 struct idetape_bh *bh =3D pc->bh;
-> - =A0 =A0 =A0 int count;
-> -
-> - =A0 =A0 =A0 if (bcount && bh) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 count =3D min(
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned int)(bh->b_si=
-ze - atomic_read(&bh->b_count)),
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bcount);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 drive->hwif->tp_ops->input_data(drive, =
-NULL, bh->b_data +
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 atomic_read(&bh->b_count), count);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bcount -=3D count;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 atomic_add(count, &bh->b_count);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (atomic_read(&bh->b_count) =3D=3D bh=
-->b_size)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->bh =3D NULL;
-> - =A0 =A0 =A0 }
-> -
-> - =A0 =A0 =A0 return bcount;
-> -}
-> -
-> -static int idetape_output_buffers(ide_drive_t *drive, struct ide_ata=
-pi_pc *pc,
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
-unsigned int bcount)
-> -{
-> - =A0 =A0 =A0 struct idetape_bh *bh =3D pc->bh;
-> - =A0 =A0 =A0 int count;
-> -
-> - =A0 =A0 =A0 if (bcount && bh) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 count =3D min((unsigned int)pc->b_count=
-, (unsigned int)bcount);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 drive->hwif->tp_ops->output_data(drive,=
- NULL, pc->b_data, count);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bcount -=3D count;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->b_data +=3D count;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->b_count -=3D count;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!pc->b_count)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->bh =3D NULL;
-> - =A0 =A0 =A0 }
-> -
-> - =A0 =A0 =A0 return bcount;
-> -}
-> -
-> -static void idetape_update_buffers(ide_drive_t *drive, struct ide_at=
-api_pc *pc)
-> -{
-> - =A0 =A0 =A0 struct idetape_bh *bh =3D pc->bh;
-> - =A0 =A0 =A0 unsigned int bcount =3D pc->xferred;
-> -
-> - =A0 =A0 =A0 if (pc->flags & PC_FLAG_WRITING)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
-> - =A0 =A0 =A0 if (bcount) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (bh =3D=3D NULL || bcount > bh->b_si=
-ze) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_ERR "ide-ta=
-pe: bh =3D=3D NULL in %s\n",
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 __func__);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 atomic_set(&bh->b_count, bcount);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (atomic_read(&bh->b_count) =3D=3D bh=
-->b_size)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->bh =3D NULL;
-> - =A0 =A0 =A0 }
-> -}
-> -
-> =A0/*
-> =A0* called on each failed packet command retry to analyze the reques=
-t sense. We
-> =A0* currently do not utilize this information.
-> @@ -368,12 +309,10 @@ static void idetape_analyze_error(ide_drive_t *=
-drive, u8 *sense)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->c[0], tape->sense_key, tape->asc,=
- tape->ascq);
->
-> =A0 =A0 =A0 =A0/* Correct pc->xferred by asking the tape. =A0 =A0 =A0=
- */
-> - =A0 =A0 =A0 if (pc->flags & PC_FLAG_DMA_ERROR) {
-> + =A0 =A0 =A0 if (pc->flags & PC_FLAG_DMA_ERROR)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc->xferred =3D pc->req_xfer -
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0tape->blk_size *
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0get_unaligned_be32(&se=
-nse[3]);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 idetape_update_buffers(drive, pc);
-> - =A0 =A0 =A0 }
->
-> =A0 =A0 =A0 =A0/*
-> =A0 =A0 =A0 =A0 * If error was the result of a zero-length read or wr=
-ite command,
-> @@ -520,19 +459,6 @@ static void ide_tape_handle_dsc(ide_drive_t *dri=
-ve)
-> =A0 =A0 =A0 =A0idetape_postpone_request(drive);
-> =A0}
->
-> -static int ide_tape_io_buffers(ide_drive_t *drive, struct ide_atapi_=
-pc *pc,
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigne=
-d int bcount, int write)
-> -{
-> - =A0 =A0 =A0 unsigned int bleft;
-> -
-> - =A0 =A0 =A0 if (write)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bleft =3D idetape_output_buffers(drive,=
- pc, bcount);
-> - =A0 =A0 =A0 else
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bleft =3D idetape_input_buffers(drive, =
-pc, bcount);
-> -
-> - =A0 =A0 =A0 return bcount - bleft;
-> -}
-> -
-> =A0/*
-> =A0* Packet Command Interface
-> =A0*
-> @@ -685,7 +611,7 @@ static void ide_tape_create_rw_cmd(idetape_tape_t=
- *tape,
-> =A0 =A0 =A0 =A0ide_init_pc(pc);
-> =A0 =A0 =A0 =A0put_unaligned(cpu_to_be32(length), (unsigned int *) &p=
-c->c[1]);
-> =A0 =A0 =A0 =A0pc->c[1] =3D 1;
-> - =A0 =A0 =A0 pc->bh =3D bh;
-> + =A0 =A0 =A0 pc->bh =3D NULL;
-> =A0 =A0 =A0 =A0pc->buf =3D NULL;
-> =A0 =A0 =A0 =A0pc->buf_size =3D length * tape->blk_size;
-> =A0 =A0 =A0 =A0pc->req_xfer =3D pc->buf_size;
-> @@ -1083,7 +1009,11 @@ static int idetape_queue_rw_tail(ide_drive_t *=
-drive, int cmd, int blocks,
->
-> =A0 =A0 =A0 =A0blk_execute_rq(drive->queue, tape->disk, rq, 0);
->
-> + =A0 =A0 =A0 /* calculate the number of transferred bytes and update=
- bh */
-> =A0 =A0 =A0 =A0size -=3D rq->data_len;
-> + =A0 =A0 =A0 if (cmd =3D=3D REQ_IDETAPE_READ)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 atomic_add(size, &bh->b_count);
+>  block/blk-map.c        |   50 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/bio.c               |   23 ++++++++++++++++++++++
+>  include/linux/bio.h    |    3 ++
+>  include/linux/blkdev.h |    4 +++
+>  4 files changed, 80 insertions(+), 0 deletions(-)
+> 
+> diff --git a/block/blk-map.c b/block/blk-map.c
+> index f103729..c50aac2 100644
+> --- a/block/blk-map.c
+> +++ b/block/blk-map.c
+> @@ -317,3 +317,53 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL(blk_rq_map_kern);
 > +
-> =A0 =A0 =A0 =A0ret =3D size;
-> =A0 =A0 =A0 =A0if (rq->errors =3D=3D IDE_DRV_ERROR_GENERAL)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EIO;
-> @@ -2037,8 +1967,6 @@ static void idetape_setup(ide_drive_t *drive, i=
-detape_tape_t *tape, int minor)
-> =A0 =A0 =A0 =A0u16 *ctl =3D (u16 *)&tape->caps[12];
->
-> =A0 =A0 =A0 =A0drive->pc_callback =A0 =A0 =A0 =3D ide_tape_callback;
-> - =A0 =A0 =A0 drive->pc_update_buffers =3D idetape_update_buffers;
-> - =A0 =A0 =A0 drive->pc_io_buffers =A0 =A0 =3D ide_tape_io_buffers;
+> +/**
+> + * blk_rq_map_kern_prealloc - map kernel data using preallocated structures
+> + * @q:		request queue where request should be inserted
+> + * @rq:		request to fill
+> + * @bio:	bio to use
+> + * @bvec:	bio_vec array to use
+> + * @bvec_len:	the number of available bvecs in @bvec
+> + * @kbuf:	the kernel buffer to map
+> + * @len:	length of @kbuf
+> + * @force:	bypass @kbuf alignment and on stack check
+> + *
+> + * Description:
+> + *    @len bytes at @kbuf will be mapped into @rq using @bio and
+> + *    @bvec.  The buffer must be suitable for direct mapping and
+> + *    should not require more than @bvec_len elements to map.  This
+> + *    function doesn't do any allocation and can be called from atomic
+> + *    context.  0 is returned on success, -errno on failure.  Note
+> + *    that this function does not handle bouncing.
+> + *
+> + *    WARNING: Using this function is strongly discouraged.  Use
+> + *    blk_rq_map_kern() if at all possible.
+> + */
+> +int blk_rq_map_kern_prealloc(struct request_queue *q,
+> +			     struct request *rq, struct bio *bio,
+> +			     struct bio_vec *bvec, unsigned short bvec_len,
+> +			     void *kbuf, unsigned int len, bool force)
+> +{
+> +	int error;
+> +
+> +	if (len > (q->max_hw_sectors << 9))
+> +		return -EINVAL;
+> +	if (!len || !kbuf)
+> +		return -EINVAL;
+> +	if (!force &&
+> +	    (!blk_rq_aligned(q, kbuf, len) || object_is_on_stack(kbuf)))
+> +		return -EINVAL;
+> +
+> +	error = bio_map_kern_prealloc(q, bio, bvec, bvec_len, kbuf, len);
+> +	if (error)
+> +		return error;
+> +
+> +	if (rq_data_dir(rq) == WRITE)
+> +		bio->bi_rw |= (1 << BIO_RW);
+> +
+> +	blk_rq_bio_prep(q, rq, bio);
+> +	rq->buffer = rq->data = NULL;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(blk_rq_map_kern_prealloc);
+> diff --git a/fs/bio.c b/fs/bio.c
+> index 746b566..ab3c9c9 100644
+> --- a/fs/bio.c
+> +++ b/fs/bio.c
+> @@ -1165,6 +1165,29 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
+>  	return bio;
+>  }
+>  
+> +/**
+> + *	bio_map_kern_prealloc - map kernel address into preallocated bio/bvec
+> + *	@q: the struct request_queue for the bio
+> + *	@bio: bio to initialize
+> + *	@bvec: bio_vec array to initialize
+> + *	@bvec_len: how many elements are available in @bvec
+> + *	@data: pointer to buffer to map
+> + *	@len: length in bytes
+> + *
+> + *	Map @data into @bvec and initialize @bio with it.  If there
+> + *	aren't enough @bvec entries, -EINVAL is returned.
+> + */
+> +int bio_map_kern_prealloc(struct request_queue *q, struct bio *bio,
+> +			  struct bio_vec *bvec, unsigned short bvec_len,
+> +			  void *data, unsigned int len)
+> +{
+> +	bio_init(bio);
+> +	bio->bi_io_vec = bvec;
+> +	bio->bi_max_vecs = bvec_len;
+> +
+> +	return __bio_map_kern(q, bio, data, len);
+> +}
+> +
+>  static void bio_copy_kern_endio(struct bio *bio, int err)
+>  {
+>  	struct bio_vec *bvec;
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index d8bd43b..39619eb 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -388,6 +388,9 @@ extern struct bio *bio_map_user_iov(struct request_queue *,
+>  extern void bio_unmap_user(struct bio *);
+>  extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
+>  				gfp_t);
+> +extern int bio_map_kern_prealloc(struct request_queue *q, struct bio *bio,
+> +				 struct bio_vec *bvec, unsigned short bvec_len,
+> +				 void *data, unsigned int len);
+>  extern struct bio *bio_copy_kern(struct request_queue *, void *, unsigned int,
+>  				 gfp_t, int);
+>  extern void bio_set_pages_dirty(struct bio *bio);
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 465d6ba..e322e94 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -781,6 +781,10 @@ extern int blk_rq_map_user(struct request_queue *, struct request *,
+>  			   gfp_t);
+>  extern int blk_rq_unmap_user(struct bio *);
+>  extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, unsigned int, gfp_t);
+> +extern int blk_rq_map_kern_prealloc(struct request_queue *q,
+> +			struct request *rq, struct bio *bio,
+> +			struct bio_vec *bvec, unsigned short bvec_len,
+> +			void *kbuf, unsigned int len, bool force);
+>  extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+>  			       struct rq_map_data *, struct sg_iovec *, int,
+>  			       unsigned int, gfp_t);
 
-You might just as well remove those two ide_drive_t members since
-they're used only by ide-tape.
-
---=20
-Regards/Gruss,
-Boris
