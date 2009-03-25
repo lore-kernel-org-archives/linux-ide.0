@@ -1,46 +1,158 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 10/10] ide: drop rq->data handling from ide_map_sg()
-Date: Wed, 25 Mar 2009 23:17:53 +0900
-Message-ID: <1237990673-8358-11-git-send-email-tj@kernel.org>
-References: <1237990673-8358-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/10 REPOST] ide-tape: use bio to carry data area
+Date: Wed, 25 Mar 2009 23:24:07 +0900
+Message-ID: <49CA3E87.8010308@kernel.org>
+References: <1237990673-8358-1-git-send-email-tj@kernel.org> <1237990673-8358-4-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57751 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:43341 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761681AbZCYOSL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Mar 2009 10:18:11 -0400
-In-Reply-To: <1237990673-8358-1-git-send-email-tj@kernel.org>
+	id S1756923AbZCYOYP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Mar 2009 10:24:15 -0400
+In-Reply-To: <1237990673-8358-4-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
 
-Impact: remove code path which is no longer necessary
+Impact: use standard way to carry data area in request
 
-All IDE data transfers now use rq->bio.  Simplify ide_map_sg()
-accordingly.
+ide-tape uses rq in an interesting way.  For r/w requests, rq->special
+is used to carry a private buffer management structure idetape_bh and
+rq->nr_sectors and current_nr_sectors are initialized to the number of
+idetape blocks which isn't necessary 512 bytes.  Also,
+rq->current_nr_sectors is used to report back the residual count in
+units of idetape blocks.
+
+This peculiarity taxes both block layer and ide.  ide-atapi has
+different paths and hooks to accomodate it and what a rq means becomes
+quite confusing and making changes at the block layer becomes quite
+difficult and error-prone.
+
+This patch makes ide-tape use bio instead.  With the previous patch,
+ide-tape currently is using single contiguos buffer so replacing it is
+easy.  All that's necessary is doing blk_rq_map_kern() on issue, map
+bio to sg in idetape_do_request() and use rq->data_len for residual
+count instead of rq->current_nr_sectors.
+
+This change also nicely removes the FIXME in ide_pc_intr() where
+ide-tape rqs need to be completed using ide_rq_bytes() instead of
+blk_rq_bytes() (although this didn't really matter as the request
+didn't have bio).
+
+Note that this patch only changes how the data areas are carried in
+requests.  Data transfer is still done using idetape_bh.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ide/ide-io.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+Sorry, wrote description to the wrong file.  git tree updated as well.
 
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 9ad9bc1..6746171 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -244,11 +244,7 @@ void ide_map_sg(ide_drive_t *drive, struct ide_cmd *cmd)
- 	struct scatterlist *sg = hwif->sg_table;
- 	struct request *rq = cmd->rq;
+ drivers/ide/ide-atapi.c |    5 +----
+ drivers/ide/ide-tape.c  |   39 ++++++++++++++++++++++-----------------
+ 2 files changed, 23 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 2b456c4..53e811d 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -372,10 +372,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 		 * ->pc_callback() might change rq->data_len for
+ 		 * residual count, cache total length.
+ 		 */
+-		if (drive->media == ide_tape)
+-			done = ide_rq_bytes(rq);	/* FIXME */
+-		else
+-			done = blk_rq_bytes(rq);
++		done = blk_rq_bytes(rq);
  
--	if (!rq->bio) {
--		sg_init_one(sg, rq->data, rq->data_len);
--		cmd->sg_nents = 1;
--	} else
--		cmd->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
-+	cmd->sg_nents = blk_rq_map_sg(drive->queue, rq, sg);
+ 		/* Command finished - Call the callback function */
+ 		uptodate = drive->pc_callback(drive, dsc);
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 3a7bd98..bd0e839 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -458,7 +458,7 @@ static int ide_tape_callback(ide_drive_t *drive, int dsc)
+ 		}
+ 
+ 		tape->first_frame += blocks;
+-		rq->current_nr_sectors -= blocks;
++		rq->data_len -= blocks * tape->blk_size;
+ 
+ 		if (pc->error) {
+ 			uptodate = 0;
+@@ -799,10 +799,6 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 		pc = (struct ide_atapi_pc *)rq->special;
+ 		rq->cmd[13] &= ~(REQ_IDETAPE_PC1);
+ 		rq->cmd[13] |= REQ_IDETAPE_PC2;
+-		if (pc->req_xfer) {
+-			ide_init_sg_cmd(&cmd, pc->req_xfer);
+-			ide_map_sg(drive, &cmd);
+-		}
+ 		goto out;
+ 	}
+ 	if (rq->cmd[13] & REQ_IDETAPE_PC2) {
+@@ -812,6 +808,10 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	BUG();
+ 
+ out:
++	if (pc->req_xfer) {
++		ide_init_sg_cmd(&cmd, pc->req_xfer);
++		ide_map_sg(drive, &cmd);
++	}
+ 	if (rq_data_dir(rq))
+ 		cmd.tf_flags |= IDE_TFLAG_WRITE;
+ 
+@@ -1061,32 +1061,37 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+ 				 struct idetape_bh *bh)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
++	size_t size = blocks * tape->blk_size;
+ 	struct request *rq;
+-	int ret, errors;
++	int ret;
+ 
+ 	debug_log(DBG_SENSE, "%s: cmd=%d\n", __func__, cmd);
++	BUG_ON(cmd != REQ_IDETAPE_READ && cmd != REQ_IDETAPE_WRITE);
+ 
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	rq->cmd[13] = cmd;
+ 	rq->rq_disk = tape->disk;
+-	rq->special = (void *)bh;
+ 	rq->sector = tape->first_frame;
+-	rq->nr_sectors = blocks;
+-	rq->current_nr_sectors = blocks;
+-	blk_execute_rq(drive->queue, tape->disk, rq, 0);
+ 
+-	errors = rq->errors;
+-	ret = tape->blk_size * (blocks - rq->current_nr_sectors);
+-	blk_put_request(rq);
++	if (size) {
++		ret = blk_rq_map_kern(drive->queue, rq, bh->b_data, size,
++				      __GFP_WAIT);
++		if (ret)
++			goto out_put;
++	}
+ 
+-	if ((cmd & (REQ_IDETAPE_READ | REQ_IDETAPE_WRITE)) == 0)
+-		return 0;
++	blk_execute_rq(drive->queue, tape->disk, rq, 0);
++
++	size -= rq->data_len;
++	ret = size;
++	if (rq->errors == IDE_DRV_ERROR_GENERAL)
++		ret = -EIO;
+ 
+ 	if (tape->merge_bh)
+ 		idetape_init_merge_buffer(tape);
+-	if (errors == IDE_DRV_ERROR_GENERAL)
+-		return -EIO;
++out_put:
++	blk_put_request(rq);
+ 	return ret;
  }
- EXPORT_SYMBOL_GPL(ide_map_sg);
  
 -- 
 1.6.0.2
