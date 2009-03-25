@@ -1,159 +1,203 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/10 REPOST] ide-tape: use bio to carry data area
-Date: Wed, 25 Mar 2009 23:24:07 +0900
-Message-ID: <49CA3E87.8010308@kernel.org>
-References: <1237990673-8358-1-git-send-email-tj@kernel.org> <1237990673-8358-4-git-send-email-tj@kernel.org>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 04/10] ide-tape: use standard data transfer mechanism
+Date: Wed, 25 Mar 2009 16:12:11 +0100
+Message-ID: <9ea470500903250812r19970910h12d197716d262c82@mail.gmail.com>
+References: <1237990673-8358-1-git-send-email-tj@kernel.org>
+	 <1237990673-8358-5-git-send-email-tj@kernel.org>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43341 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756923AbZCYOYP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Mar 2009 10:24:15 -0400
-In-Reply-To: <1237990673-8358-4-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761840AbZCYPM0@vger.kernel.org>
+In-Reply-To: <1237990673-8358-5-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Impact: use standard way to carry data area in request
+On Wed, Mar 25, 2009 at 3:17 PM, Tejun Heo <tj@kernel.org> wrote:
+> Impact: use standard way to transfer data
+>
+> Now that data area is represented with bio, there is no need to use
+> custom data transfer methods. =A0Drop idetape_io_buffers() and
+> idetape_update_buffers(). =A0pc->bh is set to null to tell ide-atapi =
+to
+> use standard data transfer mechanism and idetape_bh byte counts are
+> updated by the issuer on completion using the residual count.
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+> =A0drivers/ide/ide-tape.c | =A0 84 +++-------------------------------=
+-------------
+> =A01 files changed, 6 insertions(+), 78 deletions(-)
+>
+> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> index bd0e839..dd37fd7 100644
+> --- a/drivers/ide/ide-tape.c
+> +++ b/drivers/ide/ide-tape.c
+> @@ -292,65 +292,6 @@ static struct ide_tape_obj *ide_tape_chrdev_get(=
+unsigned int i)
+> =A0 =A0 =A0 =A0return tape;
+> =A0}
+>
+> -static int idetape_input_buffers(ide_drive_t *drive, struct ide_atap=
+i_pc *pc,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 uns=
+igned int bcount)
+> -{
+> - =A0 =A0 =A0 struct idetape_bh *bh =3D pc->bh;
+> - =A0 =A0 =A0 int count;
+> -
+> - =A0 =A0 =A0 if (bcount && bh) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 count =3D min(
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned int)(bh->b_si=
+ze - atomic_read(&bh->b_count)),
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bcount);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 drive->hwif->tp_ops->input_data(drive, =
+NULL, bh->b_data +
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 atomic_read(&bh->b_count), count);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bcount -=3D count;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 atomic_add(count, &bh->b_count);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (atomic_read(&bh->b_count) =3D=3D bh=
+->b_size)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->bh =3D NULL;
+> - =A0 =A0 =A0 }
+> -
+> - =A0 =A0 =A0 return bcount;
+> -}
+> -
+> -static int idetape_output_buffers(ide_drive_t *drive, struct ide_ata=
+pi_pc *pc,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+unsigned int bcount)
+> -{
+> - =A0 =A0 =A0 struct idetape_bh *bh =3D pc->bh;
+> - =A0 =A0 =A0 int count;
+> -
+> - =A0 =A0 =A0 if (bcount && bh) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 count =3D min((unsigned int)pc->b_count=
+, (unsigned int)bcount);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 drive->hwif->tp_ops->output_data(drive,=
+ NULL, pc->b_data, count);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bcount -=3D count;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->b_data +=3D count;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->b_count -=3D count;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!pc->b_count)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->bh =3D NULL;
+> - =A0 =A0 =A0 }
+> -
+> - =A0 =A0 =A0 return bcount;
+> -}
+> -
+> -static void idetape_update_buffers(ide_drive_t *drive, struct ide_at=
+api_pc *pc)
+> -{
+> - =A0 =A0 =A0 struct idetape_bh *bh =3D pc->bh;
+> - =A0 =A0 =A0 unsigned int bcount =3D pc->xferred;
+> -
+> - =A0 =A0 =A0 if (pc->flags & PC_FLAG_WRITING)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> - =A0 =A0 =A0 if (bcount) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (bh =3D=3D NULL || bcount > bh->b_si=
+ze) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_ERR "ide-ta=
+pe: bh =3D=3D NULL in %s\n",
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 __func__);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 atomic_set(&bh->b_count, bcount);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (atomic_read(&bh->b_count) =3D=3D bh=
+->b_size)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->bh =3D NULL;
+> - =A0 =A0 =A0 }
+> -}
+> -
+> =A0/*
+> =A0* called on each failed packet command retry to analyze the reques=
+t sense. We
+> =A0* currently do not utilize this information.
+> @@ -368,12 +309,10 @@ static void idetape_analyze_error(ide_drive_t *=
+drive, u8 *sense)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pc->c[0], tape->sense_key, tape->asc,=
+ tape->ascq);
+>
+> =A0 =A0 =A0 =A0/* Correct pc->xferred by asking the tape. =A0 =A0 =A0=
+ */
+> - =A0 =A0 =A0 if (pc->flags & PC_FLAG_DMA_ERROR) {
+> + =A0 =A0 =A0 if (pc->flags & PC_FLAG_DMA_ERROR)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc->xferred =3D pc->req_xfer -
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0tape->blk_size *
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0get_unaligned_be32(&se=
+nse[3]);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 idetape_update_buffers(drive, pc);
+> - =A0 =A0 =A0 }
+>
+> =A0 =A0 =A0 =A0/*
+> =A0 =A0 =A0 =A0 * If error was the result of a zero-length read or wr=
+ite command,
+> @@ -520,19 +459,6 @@ static void ide_tape_handle_dsc(ide_drive_t *dri=
+ve)
+> =A0 =A0 =A0 =A0idetape_postpone_request(drive);
+> =A0}
+>
+> -static int ide_tape_io_buffers(ide_drive_t *drive, struct ide_atapi_=
+pc *pc,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigne=
+d int bcount, int write)
+> -{
+> - =A0 =A0 =A0 unsigned int bleft;
+> -
+> - =A0 =A0 =A0 if (write)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bleft =3D idetape_output_buffers(drive,=
+ pc, bcount);
+> - =A0 =A0 =A0 else
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bleft =3D idetape_input_buffers(drive, =
+pc, bcount);
+> -
+> - =A0 =A0 =A0 return bcount - bleft;
+> -}
+> -
+> =A0/*
+> =A0* Packet Command Interface
+> =A0*
+> @@ -685,7 +611,7 @@ static void ide_tape_create_rw_cmd(idetape_tape_t=
+ *tape,
+> =A0 =A0 =A0 =A0ide_init_pc(pc);
+> =A0 =A0 =A0 =A0put_unaligned(cpu_to_be32(length), (unsigned int *) &p=
+c->c[1]);
+> =A0 =A0 =A0 =A0pc->c[1] =3D 1;
+> - =A0 =A0 =A0 pc->bh =3D bh;
+> + =A0 =A0 =A0 pc->bh =3D NULL;
+> =A0 =A0 =A0 =A0pc->buf =3D NULL;
+> =A0 =A0 =A0 =A0pc->buf_size =3D length * tape->blk_size;
+> =A0 =A0 =A0 =A0pc->req_xfer =3D pc->buf_size;
+> @@ -1083,7 +1009,11 @@ static int idetape_queue_rw_tail(ide_drive_t *=
+drive, int cmd, int blocks,
+>
+> =A0 =A0 =A0 =A0blk_execute_rq(drive->queue, tape->disk, rq, 0);
+>
+> + =A0 =A0 =A0 /* calculate the number of transferred bytes and update=
+ bh */
+> =A0 =A0 =A0 =A0size -=3D rq->data_len;
+> + =A0 =A0 =A0 if (cmd =3D=3D REQ_IDETAPE_READ)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 atomic_add(size, &bh->b_count);
+> +
+> =A0 =A0 =A0 =A0ret =3D size;
+> =A0 =A0 =A0 =A0if (rq->errors =3D=3D IDE_DRV_ERROR_GENERAL)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EIO;
+> @@ -2037,8 +1967,6 @@ static void idetape_setup(ide_drive_t *drive, i=
+detape_tape_t *tape, int minor)
+> =A0 =A0 =A0 =A0u16 *ctl =3D (u16 *)&tape->caps[12];
+>
+> =A0 =A0 =A0 =A0drive->pc_callback =A0 =A0 =A0 =3D ide_tape_callback;
+> - =A0 =A0 =A0 drive->pc_update_buffers =3D idetape_update_buffers;
+> - =A0 =A0 =A0 drive->pc_io_buffers =A0 =A0 =3D ide_tape_io_buffers;
 
-ide-tape uses rq in an interesting way.  For r/w requests, rq->special
-is used to carry a private buffer management structure idetape_bh and
-rq->nr_sectors and current_nr_sectors are initialized to the number of
-idetape blocks which isn't necessary 512 bytes.  Also,
-rq->current_nr_sectors is used to report back the residual count in
-units of idetape blocks.
+You might just as well remove those two ide_drive_t members since
+they're used only by ide-tape.
 
-This peculiarity taxes both block layer and ide.  ide-atapi has
-different paths and hooks to accomodate it and what a rq means becomes
-quite confusing and making changes at the block layer becomes quite
-difficult and error-prone.
-
-This patch makes ide-tape use bio instead.  With the previous patch,
-ide-tape currently is using single contiguos buffer so replacing it is
-easy.  All that's necessary is doing blk_rq_map_kern() on issue, map
-bio to sg in idetape_do_request() and use rq->data_len for residual
-count instead of rq->current_nr_sectors.
-
-This change also nicely removes the FIXME in ide_pc_intr() where
-ide-tape rqs need to be completed using ide_rq_bytes() instead of
-blk_rq_bytes() (although this didn't really matter as the request
-didn't have bio).
-
-Note that this patch only changes how the data areas are carried in
-requests.  Data transfer is still done using idetape_bh.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>
----
-Sorry, wrote description to the wrong file.  git tree updated as well.
-
- drivers/ide/ide-atapi.c |    5 +----
- drivers/ide/ide-tape.c  |   39 ++++++++++++++++++++++-----------------
- 2 files changed, 23 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 2b456c4..53e811d 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -372,10 +372,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 		 * ->pc_callback() might change rq->data_len for
- 		 * residual count, cache total length.
- 		 */
--		if (drive->media == ide_tape)
--			done = ide_rq_bytes(rq);	/* FIXME */
--		else
--			done = blk_rq_bytes(rq);
-+		done = blk_rq_bytes(rq);
- 
- 		/* Command finished - Call the callback function */
- 		uptodate = drive->pc_callback(drive, dsc);
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 3a7bd98..bd0e839 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -458,7 +458,7 @@ static int ide_tape_callback(ide_drive_t *drive, int dsc)
- 		}
- 
- 		tape->first_frame += blocks;
--		rq->current_nr_sectors -= blocks;
-+		rq->data_len -= blocks * tape->blk_size;
- 
- 		if (pc->error) {
- 			uptodate = 0;
-@@ -799,10 +799,6 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 		pc = (struct ide_atapi_pc *)rq->special;
- 		rq->cmd[13] &= ~(REQ_IDETAPE_PC1);
- 		rq->cmd[13] |= REQ_IDETAPE_PC2;
--		if (pc->req_xfer) {
--			ide_init_sg_cmd(&cmd, pc->req_xfer);
--			ide_map_sg(drive, &cmd);
--		}
- 		goto out;
- 	}
- 	if (rq->cmd[13] & REQ_IDETAPE_PC2) {
-@@ -812,6 +808,10 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	BUG();
- 
- out:
-+	if (pc->req_xfer) {
-+		ide_init_sg_cmd(&cmd, pc->req_xfer);
-+		ide_map_sg(drive, &cmd);
-+	}
- 	if (rq_data_dir(rq))
- 		cmd.tf_flags |= IDE_TFLAG_WRITE;
- 
-@@ -1061,32 +1061,37 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
- 				 struct idetape_bh *bh)
- {
- 	idetape_tape_t *tape = drive->driver_data;
-+	size_t size = blocks * tape->blk_size;
- 	struct request *rq;
--	int ret, errors;
-+	int ret;
- 
- 	debug_log(DBG_SENSE, "%s: cmd=%d\n", __func__, cmd);
-+	BUG_ON(cmd != REQ_IDETAPE_READ && cmd != REQ_IDETAPE_WRITE);
- 
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd[13] = cmd;
- 	rq->rq_disk = tape->disk;
--	rq->special = (void *)bh;
- 	rq->sector = tape->first_frame;
--	rq->nr_sectors = blocks;
--	rq->current_nr_sectors = blocks;
--	blk_execute_rq(drive->queue, tape->disk, rq, 0);
- 
--	errors = rq->errors;
--	ret = tape->blk_size * (blocks - rq->current_nr_sectors);
--	blk_put_request(rq);
-+	if (size) {
-+		ret = blk_rq_map_kern(drive->queue, rq, bh->b_data, size,
-+				      __GFP_WAIT);
-+		if (ret)
-+			goto out_put;
-+	}
- 
--	if ((cmd & (REQ_IDETAPE_READ | REQ_IDETAPE_WRITE)) == 0)
--		return 0;
-+	blk_execute_rq(drive->queue, tape->disk, rq, 0);
-+
-+	size -= rq->data_len;
-+	ret = size;
-+	if (rq->errors == IDE_DRV_ERROR_GENERAL)
-+		ret = -EIO;
- 
- 	if (tape->merge_bh)
- 		idetape_init_merge_buffer(tape);
--	if (errors == IDE_DRV_ERROR_GENERAL)
--		return -EIO;
-+out_put:
-+	blk_put_request(rq);
- 	return ret;
- }
- 
--- 
-1.6.0.2
-
+--=20
+Regards/Gruss,
+Boris
