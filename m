@@ -1,183 +1,127 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/10] ide-tape: use byte size instead of sectors on rw issue functions
-Date: Wed, 25 Mar 2009 23:17:50 +0900
-Message-ID: <1237990673-8358-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 09/10] ide-atapi: kill unused fields and callbacks
+Date: Wed, 25 Mar 2009 23:17:52 +0900
+Message-ID: <1237990673-8358-10-git-send-email-tj@kernel.org>
 References: <1237990673-8358-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57748 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:57752 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761563AbZCYOSK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Mar 2009 10:18:10 -0400
+	id S1761751AbZCYOSM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Mar 2009 10:18:12 -0400
 In-Reply-To: <1237990673-8358-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-Impact: cleanup
+Impact: remove fields code paths which are no longer necessary
 
-Byte size is what most issue functions deal with, make
-idetape_queue_rw_tail() and its wrappers take byte size instead of
-sector counts.  idetape_chrdev_read() and write() functions are
-converted to use tape->buffer_size instead of ctl from tape->cap.
+Now that ide-tape uses standard mechanisms to transfer data, special
+case handling for bh handling can be dropped from ide-atapi.  Drop the
+followings.
 
-This cleans up code a little bit and will ease the next r/w
-reimplementation.
+* pc->cur_pos, b_count, bh and b_data
+* drive->pc_update_buffers() and pc_io_buffers().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ide/ide-tape.c |   45 ++++++++++++++++++++-------------------------
- 1 files changed, 20 insertions(+), 25 deletions(-)
+ drivers/ide/ide-atapi.c |   15 +++------------
+ drivers/ide/ide-tape.c  |    1 -
+ include/linux/ide.h     |   12 ------------
+ 3 files changed, 3 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 53e811d..bbb8da1 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -317,9 +317,6 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 			pc->flags |= PC_FLAG_DMA_ERROR;
+ 		} else {
+ 			pc->xferred = pc->req_xfer;
+-			if (drive->pc_update_buffers)
+-				drive->pc_update_buffers(drive, pc);
+-
+ 			if (drive->media == ide_floppy)
+ 				ide_complete_rq(drive, 0, blk_rq_bytes(rq));
+ 		}
+@@ -420,16 +417,11 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 		return ide_do_reset(drive);
+ 	}
+ 
+-	if (drive->media == ide_tape && pc->bh)
+-		done = drive->pc_io_buffers(drive, pc, bcount, write);
+-	else {
+-		done = min_t(unsigned int, bcount, cmd->nleft);
+-		ide_pio_bytes(drive, cmd, write, done);
+-	}
++	done = min_t(unsigned int, bcount, cmd->nleft);
++	ide_pio_bytes(drive, cmd, write, done);
+ 
+-	/* Update the current position */
++	/* Update transferred byte count */
+ 	pc->xferred += done;
+-	pc->cur_pos += done;
+ 
+ 	bcount -= done;
+ 
+@@ -610,7 +602,6 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, struct ide_cmd *cmd)
+ 
+ 		/* We haven't transferred any data yet */
+ 		pc->xferred = 0;
+-		pc->cur_pos = pc->buf;
+ 
+ 		tf_flags = IDE_TFLAG_OUT_DEVICE;
+ 		bcount = ((drive->media == ide_tape) ?
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index c013954..5fc3282 100644
+index 95e9131..557f073 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -879,15 +879,15 @@ static void ide_tape_discard_merge_buffer(ide_drive_t *drive,
-  * Generate a read/write request for the block device interface and wait for it
-  * to be serviced.
-  */
--static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks)
-+static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int size)
- {
- 	idetape_tape_t *tape = drive->driver_data;
--	size_t size = blocks * tape->blk_size;
+@@ -593,7 +593,6 @@ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+ 	ide_init_pc(pc);
+ 	put_unaligned(cpu_to_be32(length), (unsigned int *) &pc->c[1]);
+ 	pc->c[1] = 1;
+-	pc->bh = NULL;
+ 	pc->buf = NULL;
+ 	pc->buf_size = length * tape->blk_size;
+ 	pc->req_xfer = pc->buf_size;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 8d3bb27..996adae 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -397,11 +397,7 @@ struct ide_atapi_pc {
+ 
+ 	/* data buffer */
+ 	u8 *buf;
+-	/* current buffer position */
+-	u8 *cur_pos;
+ 	int buf_size;
+-	/* missing/available data on the current buffer */
+-	int b_count;
+ 
+ 	/* the corresponding request */
  	struct request *rq;
- 	int ret;
+@@ -414,10 +410,6 @@ struct ide_atapi_pc {
+ 	 */
+ 	u8 pc_buf[IDE_PC_BUFFER_SIZE];
  
- 	debug_log(DBG_SENSE, "%s: cmd=%d\n", __func__, cmd);
- 	BUG_ON(cmd != REQ_IDETAPE_READ && cmd != REQ_IDETAPE_WRITE);
-+	BUG_ON(size < 0 || size % tape->blk_size);
+-	/* idetape only */
+-	struct idetape_bh *bh;
+-	char *b_data;
+-
+ 	unsigned long timeout;
+ };
  
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
-@@ -954,17 +954,16 @@ static void idetape_create_space_cmd(struct ide_atapi_pc *pc, int count, u8 cmd)
- }
+@@ -630,10 +622,6 @@ struct ide_drive_s {
+ 	/* callback for packet commands */
+ 	int  (*pc_callback)(struct ide_drive_s *, int);
  
- /* Queue up a character device originated write request. */
--static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
-+static int idetape_add_chrdev_write_request(ide_drive_t *drive, int size)
- {
- 	debug_log(DBG_CHRDEV, "Enter %s\n", __func__);
+-	void (*pc_update_buffers)(struct ide_drive_s *, struct ide_atapi_pc *);
+-	int  (*pc_io_buffers)(struct ide_drive_s *, struct ide_atapi_pc *,
+-			      unsigned int, int);
+-
+ 	ide_startstop_t (*irq_handler)(struct ide_drive_s *);
  
--	return idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, blocks);
-+	return idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, size);
- }
- 
- static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
- {
- 	idetape_tape_t *tape = drive->driver_data;
--	int blocks;
- 
- 	if (tape->chrdev_dir != IDETAPE_DIR_WRITE) {
- 		printk(KERN_ERR "ide-tape: bug: Trying to empty merge buffer"
-@@ -972,15 +971,10 @@ static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
- 		return;
- 	}
- 	if (tape->buf) {
--		blocks = tape->valid / tape->blk_size;
--		if (tape->valid % tape->blk_size) {
--			blocks++;
--			memset(tape->buf + tape->valid, 0,
--			       tape->blk_size - tape->valid % tape->blk_size);
--		}
--		(void) idetape_add_chrdev_write_request(drive, blocks);
--	}
--	if (tape->buf != NULL) {
-+		size_t aligned = roundup(tape->valid, tape->blk_size);
-+
-+		memset(tape->cur + tape->valid, 0, aligned - tape->valid);
-+		idetape_add_chrdev_write_request(drive, aligned);
- 		kfree(tape->buf);
- 		tape->buf = NULL;
- 	}
-@@ -1034,9 +1028,9 @@ static int idetape_init_rw(ide_drive_t *drive, int dir)
- }
- 
- /* called from idetape_chrdev_read() to service a chrdev read request. */
--static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
-+static int idetape_add_chrdev_read_request(ide_drive_t *drive, int size)
- {
--	debug_log(DBG_PROCS, "Enter %s, %d blocks\n", __func__, blocks);
-+	debug_log(DBG_PROCS, "Enter %s, %d bytes\n", __func__, size);
- 
- 	/* If we are at a filemark, return a read length of 0 */
- 	if (test_bit(IDE_AFLAG_FILEMARK, &drive->atapi_flags))
-@@ -1044,7 +1038,7 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
- 
- 	idetape_init_rw(drive, IDETAPE_DIR_READ);
- 
--	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks);
-+	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, size);
- }
- 
- static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
-@@ -1056,8 +1050,7 @@ static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
- 	while (bcount) {
- 		unsigned int count = min(tape->buffer_size, bcount);
- 
--		idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE,
--				      count / tape->blk_size);
-+		idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, count);
- 		bcount -= count;
- 	}
- }
-@@ -1189,7 +1182,6 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
- 	ide_drive_t *drive = tape->drive;
- 	ssize_t bytes_read, temp, actually_read = 0, rc;
- 	ssize_t ret = 0;
--	u16 ctl = *(u16 *)&tape->caps[12];
- 
- 	debug_log(DBG_CHRDEV, "Enter %s, count %Zd\n", __func__, count);
- 
-@@ -1214,7 +1206,8 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
- 		tape->valid -= actually_read;
- 	}
- 	while (count >= tape->buffer_size) {
--		bytes_read = idetape_add_chrdev_read_request(drive, ctl);
-+		bytes_read = idetape_add_chrdev_read_request(drive,
-+							     tape->buffer_size);
- 		if (bytes_read <= 0)
- 			goto finish;
- 		if (copy_to_user(buf, tape->cur, bytes_read))
-@@ -1224,7 +1217,8 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
- 		actually_read += bytes_read;
- 	}
- 	if (count) {
--		bytes_read = idetape_add_chrdev_read_request(drive, ctl);
-+		bytes_read = idetape_add_chrdev_read_request(drive,
-+							     tape->buffer_size);
- 		if (bytes_read <= 0)
- 			goto finish;
- 		temp = min((unsigned long)count, (unsigned long)bytes_read);
-@@ -1252,7 +1246,6 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
- 	ide_drive_t *drive = tape->drive;
- 	ssize_t actually_written = 0;
- 	ssize_t ret = 0;
--	u16 ctl = *(u16 *)&tape->caps[12];
- 	int rc;
- 
- 	/* The drive is write protected. */
-@@ -1280,7 +1273,8 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
- 
- 		if (tape->valid == tape->buffer_size) {
- 			ssize_t retval;
--			retval = idetape_add_chrdev_write_request(drive, ctl);
-+			retval = idetape_add_chrdev_write_request(drive,
-+							tape->buffer_size);
- 			if (retval <= 0)
- 				return (retval);
- 		}
-@@ -1291,7 +1285,8 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
- 			ret = -EFAULT;
- 		buf += tape->buffer_size;
- 		count -= tape->buffer_size;
--		retval = idetape_add_chrdev_write_request(drive, ctl);
-+		retval = idetape_add_chrdev_write_request(drive,
-+							  tape->buffer_size);
- 		actually_written += tape->buffer_size;
- 		if (retval <= 0)
- 			return (retval);
+ 	unsigned long atapi_flags;
 -- 
 1.6.0.2
 
