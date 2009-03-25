@@ -1,41 +1,32 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: ahci enclosure save new led state
-Date: Tue, 24 Mar 2009 22:43:05 -0400
-Message-ID: <49C99A39.4090903@garzik.org>
-References: <20090320191423.GA16289@dhcp-210.hsv.redhat.com>
+Subject: Re: [PATCH 1/4] pata_artop: Serializing support
+Date: Tue, 24 Mar 2009 22:46:20 -0400
+Message-ID: <49C99AFC.8040107@garzik.org>
+References: <20090324101952.9152.30261.stgit@localhost.localdomain> <20090324102139.9152.87330.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36695 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:45704 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753276AbZCYCnL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Mar 2009 22:43:11 -0400
-In-Reply-To: <20090320191423.GA16289@dhcp-210.hsv.redhat.com>
+	id S1753659AbZCYCqZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Mar 2009 22:46:25 -0400
+In-Reply-To: <20090324102139.9152.87330.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-David Milburn wrote:
-> ahci_transmit_led_message saves off the led_state
-> with a value that includes the port number OR'd
-> in, this incorrect value maybe reported back
-> in ahci_led_store.
+Alan Cox wrote:
+> From: Alan Cox <alan@redhat.com>
 > 
-> For instance, if you turn off all the leds for
-> port 1 and cat the value back it will report 1
-> instead of 0.
+> Enable both ports on the 6210 and serialize them
 > 
-> # echo 0 > /sys/class/scsi_host/host1/em_message
-> # cat /sys/class/scsi_host/host1/em_message
-> 1
-> 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> Signed-off-by: Alan Cox <alan@redhat.com>
 > ---
->  drivers/ata/ahci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+>  block/blk-settings.c     |    2 +-
 
-applied
+applied 1-2, after removing the block/* comment changes (not my area)
 
 
