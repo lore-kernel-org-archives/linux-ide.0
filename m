@@ -1,126 +1,95 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.29 regression: ATA bus errors on resume
-Date: Wed, 25 Mar 2009 02:06:59 -0400
-Message-ID: <49C9CA03.7040603@garzik.org>
-References: <cjlqb-7sp-1@gated-at.bofh.it> <cjq6y-6sq-11@gated-at.bofh.it> <49C9BEC8.9020403@devnull.org>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: bug in use-ide_pio_bytes patch?
+Date: Wed, 25 Mar 2009 10:15:55 +0100
+Message-ID: <20090325091555.GA5073@liondog.tnic>
+References: <49C72C1B.5080601@kernel.org> <200903231127.25698.bzolnier@gmail.com> <49C7680D.6070108@kernel.org> <200903231243.51078.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43611 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754098AbZCYGHI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Mar 2009 02:07:08 -0400
-In-Reply-To: <49C9BEC8.9020403@devnull.org>
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:62669 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759083AbZCYJQC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2009 05:16:02 -0400
+Received: by bwz17 with SMTP id 17so2572756bwz.37
+        for <linux-ide@vger.kernel.org>; Wed, 25 Mar 2009 02:15:59 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <200903231243.51078.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Niel Lambrechts <niel.lambrechts@gmail.com>
-Cc: "linux.kernel" <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Niel Lambrechts wrote:
-> On 03/25/2009 03:30 AM, Theodore Tso wrote:
->> On Tue, Mar 24, 2009 at 10:25:57PM +0200, Niel Lambrechts wrote:
->>> Hi,
->>>
->>> After upgrading to 2.6.29 I get the below errors after resuming from
->>> hibernating with s2disk. I ran fsck and tried doing the same thing again
->>> in 2.6.28.9-pae, but do not get any errors there.
->> The ext4 errors are interleaved with hardware errors, and the ext4
->> errors are about I/O errors.
->>
->> EXT4-fs error (device sda6): __ext4_get_inode_loc: unable to read inode block - inode=2346519
->> EXT4-fs error (device sda6) in ext4_reserve_inode_write: IO failure
->>
->> This looks more like a hibernation problem than an ext4 problem.
->> Looks like the hard drive is being left in some inconsistent state
->> after resuming from hibernation.
->>
->>      	   	       		   	   - Ted
-> 
-> Thanks for the info Theodore, this is definitely looks like some type of
-> regression in 2.6.29, as the problem is not evident when I s2disk using
-> 2.6.28.9, even after multiple suspend/resume cycles.
-> 
-> I found some 'ATA bus errors' and 'SError' messages in
-> /var/log/messages, so I've attached the messages from both 2.6.29 and
-> 2.6.28 for comparison.
+On Mon, Mar 23, 2009 at 12:43:50PM +0100, Bartlomiej Zolnierkiewicz wrote:
 
-Well, here is the interpretation of messages:
+> It seems like we really should remove "1:" but it would be best to retest
+> ide-floppy with this change.  Borislav, could you add this to your queue?
 
-> ata1.00: irq_stat 0x00400008, PHY RDY changed
-> ata1: SError: { PHYRdyChg CommWake }
+Done.
 
-Your SATA hardware flags a connect-or-disconnect event ("PHY RDY"), 
-which requires us to abort a bunch of queued commands:
+---
+From: Borislav Petkov <petkovbb@gmail.com>
+Date: Wed, 25 Mar 2009 10:10:18 +0100
+Subject: [PATCH] ide-floppy: do not complete rq's prematurely
 
-> ata1.00: cmd 60/18:00:77:88:6f/00:00:0e:00:00/40 tag 0 ncq 12288 in
->          res 50/00:30:07:b3:10/00:00:0c:00:00/40 Emask 0x10 (ATA bus error)
-[...]
-> ata1.00: cmd 60/30:68:07:b3:10/00:00:0c:00:00/40 tag 13 ncq 24576 in
->          res 50/00:30:07:b3:10/00:00:0c:00:00/40 Emask 0x10 (ATA bus error)
+... and access them afterwards. Simplify rq completing code while at it.
 
-  ...through the 14th command (tag 13).
+Spotted-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-atapi.c |   13 ++++++-------
+ 1 files changed, 6 insertions(+), 7 deletions(-)
 
-> Mar 24 21:29:14 linux-7vph kernel: ata1: hard resetting link
-> Mar 24 21:29:14 linux-7vph kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: configured for UDMA/133
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: configured for UDMA/133
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 11a680c..6d2f97f 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -308,16 +308,14 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 			pc->xferred = pc->req_xfer;
+ 			if (drive->pc_update_buffers)
+ 				drive->pc_update_buffers(drive, pc);
+-
+-			if (drive->media == ide_floppy)
+-				ide_complete_rq(drive, 0, blk_rq_bytes(rq));
+ 		}
+ 		debug_log("%s: DMA finished\n", drive->name);
+ 	}
+ 
+ 	/* No more interrupts */
+ 	if ((stat & ATA_DRQ) == 0) {
+-		int uptodate;
++		int uptodate, error;
++		unsigned int done;
+ 
+ 		debug_log("Packet command completed, %d bytes transferred\n",
+ 			  pc->xferred);
+@@ -364,9 +362,9 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 
+ 		if (blk_special_request(rq)) {
+ 			rq->errors = 0;
+-			ide_complete_rq(drive, 0, blk_rq_bytes(rq));
++			done = blk_rq_bytes(rq);
++			error = 0;
+ 		} else {
+-			unsigned int done;
+ 
+ 			if (blk_fs_request(rq) == 0 && uptodate <= 0) {
+ 				if (rq->errors == 0)
+@@ -378,9 +376,10 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+ 			else
+ 				done = blk_rq_bytes(rq);
+ 
+-			ide_complete_rq(drive, uptodate ? 0 : -EIO, done);
++			error = uptodate ? 0 : -EIO;
+ 		}
+ 
++		ide_complete_rq(drive, error, done);
+ 		return ide_stopped;
+ 	}
+ 
+-- 
+1.6.2.1
 
-
-SATA link is reset, and ACPI is re-run.
-
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Sense Key : Aborted Command [current] [descriptor]
-> Mar 24 21:29:14 linux-7vph kernel: Descriptor sense data with sense descriptors (in hex):
-> Mar 24 21:29:14 linux-7vph kernel:         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
-> Mar 24 21:29:14 linux-7vph kernel:         0c 10 b3 07 
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Add. Sense: No additional sense information
-> Mar 24 21:29:14 linux-7vph kernel: end_request: I/O error, dev sda, sector 242190455
-
-The SCSI subsystem aborts each of the queued commands.
-
-> Mar 24 21:29:14 linux-7vph kernel: ata1: EH complete
-
-SATA error handling completes
-
-> Mar 24 21:29:14 linux-7vph kernel: EXT4-fs error (device sda6): __ext4_get_inode_loc: unable to read inode block - inode=2330178, block=9338883
-
-ext4 pukes, because of SATA/SCSI errors
-
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors: (200 GB/186 GiB)
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write Protect is off
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors: (200 GB/186 GiB)
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write Protect is off
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-
-SCSI finished re-initialization.
-
-So from this, a few observations and open questions:
-
-Why didn't these SCSI commands get retried?
-
-Were they left over from prior to resume?
-
-Did SCSI error out the commands too soon?  The probing is not complete 
-until AFTER the sector errors, I note.
-
-Did the system resume before ACPI resume and SCSI resume completed?  It 
-sure looks that way, from the log.
-
-Does the asynchronous probing play a role here?
-
-	Jeff
-
-
-
+-- 
+Regards/Gruss,
+    Boris.
