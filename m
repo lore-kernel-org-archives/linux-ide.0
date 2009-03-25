@@ -1,39 +1,34 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12874] Seagate STT20000A no longer works
-Date: Wed, 25 Mar 2009 08:42:07 GMT
-Message-ID: <200903250842.n2P8g79H027540@demeter.kernel.org>
-References: <bug-12874-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: turn selectproc() method into dev_select() method
+ (take 4)
+Date: Wed, 25 Mar 2009 14:25:45 +0300
+Message-ID: <49CA14B9.9030402@ru.mvista.com>
+References: <200903242106.59175.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:43632 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753803AbZCYJ0w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2009 05:26:52 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n2P8g7Nq027541
-	for <linux-ide@vger.kernel.org>; Wed, 25 Mar 2009 08:42:07 GMT
-In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:13815 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750838AbZCYLY6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Mar 2009 07:24:58 -0400
+In-Reply-To: <200903242106.59175.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org, petkovbb@gmail.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12874
+Hello, I wrote:
 
+> Turn selectproc() method into dev_select() method by teaching it to write to the
+> device register and moving it from 'struct ide_port_ops' to 'struct ide_tp_ops'.
 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+> ---
+> Changes since the 3rd take:
+> - added dev_select() method reference to 'superio_tp_ops' in ns87415.c...
 
+    Now if I only declared ide_dev_select()... sigh. :-<
 
---- Comment #9 from Borislav Petkov <bbpetkov@yahoo.de>  2009-03-25 08:42:07 ---
-Hi,
-
-can you apply the debug patch attached and send me the modprobe output again.
-The patch is against stock 2.6.29 but it should apply fine against 2.6.29-rc7.
-
-Thanks,
-Boris.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+WBR, Sergei
