@@ -1,42 +1,49 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: bug in use-ide_pio_bytes patch?
-Date: Thu, 26 Mar 2009 21:19:58 +0100
-Message-ID: <200903262119.58966.bzolnier@gmail.com>
-References: <49C72C1B.5080601@kernel.org> <200903231243.51078.bzolnier@gmail.com> <20090325091555.GA5073@liondog.tnic>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] Removing PCI dependency of ahci and making it amba bus
+ 	compatible
+Date: Fri, 27 Mar 2009 10:10:10 +0900
+Message-ID: <49CC2772.7080205@gmail.com>
+References: <3fb94e50903260700r36365d4ue27edf43b5ee9efd@mail.gmail.com> <49CC2704.7050102@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:64377 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754622AbZCZVTU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Mar 2009 17:19:20 -0400
-Received: by mail-bw0-f169.google.com with SMTP id 17so746159bwz.37
-        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2009 14:19:18 -0700 (PDT)
-In-Reply-To: <20090325091555.GA5073@liondog.tnic>
-Content-Disposition: inline
+Received: from ti-out-0910.google.com ([209.85.142.187]:23922 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933733AbZC0BKS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Mar 2009 21:10:18 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so537689tid.23
+        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2009 18:10:15 -0700 (PDT)
+In-Reply-To: <49CC2704.7050102@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sagar Borikar <sagar.borikar@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Wednesday 25 March 2009, Borislav Petkov wrote:
-> On Mon, Mar 23, 2009 at 12:43:50PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> > It seems like we really should remove "1:" but it would be best to retest
-> > ide-floppy with this change.  Borislav, could you add this to your queue?
-> 
-> Done.
-> 
-> ---
-> From: Borislav Petkov <petkovbb@gmail.com>
-> Date: Wed, 25 Mar 2009 10:10:18 +0100
-> Subject: [PATCH] ide-floppy: do not complete rq's prematurely
-> 
-> ... and access them afterwards. Simplify rq completing code while at it.
-> 
-> Spotted-by: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+Hello,
 
-applied, thanks!
+Tejun Heo wrote:
+> Sagar Borikar wrote:
+>> Currently  ahci driver assumes that the SATA controller is hooked up
+>> to the PCI. There are couple of devices like Synopsis Designware SATA
+>> controller with ahci sits on AHB interface and not on PCI. This patch
+>> is currently tied up to our platform and I have removed PCI dependent
+>> calls from the the driver. I still have to make it bus independent.
+>> Please review the patch and let me know if its fine.
+>>
+>> All comments are welcome. Also please note that this is not
+>> replacement of the existing ahci.c file I am going to create a new
+>> file for ahci_ahb.c But for review, I have compared against ahci.c
+>> Thanks
+> 
+> Sagar, the amba changes look fine although I have no way of verifying
+> whether it works or not, but you just converted ahci from pci
+> dependent to amba dependent.  The patch can't really be merged unless
+> we're willing to break all PCI ahci systems in favor of the amba one.
+> :-)
+
+Oops, you already mentioned this.  Sorry about not reading before
+replying.
+
+-- 
+tejun
