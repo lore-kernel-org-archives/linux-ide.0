@@ -1,50 +1,53 @@
-From: Niel Lambrechts <niel.lambrechts@gmail.com>
-Subject: Re: 2.6.29 regression: ATA bus errors on resume
-Date: Sat, 28 Mar 2009 12:22:24 +0200
-Message-ID: <49CDFA60.9080403@gmail.com>
-References: <cjtH6-3Ll-13@gated-at.bofh.it>	<cjtH6-3Ll-15@gated-at.bofh.it>	<cjtH6-3Ll-11@gated-at.bofh.it>	<cjutt-577-11@gated-at.bofh.it>	<cjJCb-47c-23@gated-at.bofh.it>	<49CD24BC.8040303@devnull.org> <20090327153044.3234722d@infradead.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [eSATA] 2.6.28.7: IO errors
+Date: Sat, 28 Mar 2009 11:38:30 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
+References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange> <20090327235817.GP8014@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:63355 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753224AbZC1KWX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Mar 2009 06:22:23 -0400
-In-Reply-To: <20090327153044.3234722d@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20090327235817.GP8014@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: "linux.kernel" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Pavel Machek <pavel@ucw.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-On 03/28/2009 12:30 AM, Arjan van de Ven wrote:
-> On Fri, 27 Mar 2009 21:10:52 +0200
-> Niel Lambrechts <niel.lambrechts@gmail.com> wrote:
->
->   
->> I'm seeing some dubious looking ATA messages even on 2.6.28.9-pae,
->> although with all the 2.6.28 variants I used s2disk/resume has always
->> worked. I was wondering if these "errors" perhaps play more of a role
->> in 2.6.29, perhaps due to the async. changes that was mentioned?
->>     
->
-> unless you actively enabled this via a kernel command line option there
-> are no async changes in 2.6.29 in terms of behavior.
->
->
->   
-The only non-default option I had was 'modeset=1'. From Jeff's earlier
-comment I understood the probing behaviour changed.
+Hi Matthew,
 
-The fundamental difference is that in 2.6.29 everything initially seems
-okay, but then there is a
-ata1.00: exception Emask 0x10 SAct 0x3f SErr 0x50000 action0xe frozen
-ata1.00: irq_stat 0x00400008, PHY RDY changed
+On Fri, 27 Mar 2009, Matthew Wilcox wrote:
 
-There's nothing frozen it 2.6.28.
+> On Sat, Mar 28, 2009 at 12:18:38AM +0100, Guennadi Liakhovetski wrote:
+> > I'm using an external eSATA / USB / Firewire 2x1T RAID from WD in RAID1 
+> 
+> Looks like your problems are solved by
+> 9062712fa9ed13b531dfc2228086650b8bd6a255
 
-Should I log a kernel bug, what's the best way forward and is there
-anything more I can do to help?
+(added Tejun as the patch author and owner of similar hardware)
 
-cheers
-Niel
+AFAIU, that patch improves or fixes error handling on those drives, and 
+the symptom, that Tejun was observing, was that the drive was hanging and 
+required a power cycle.
+
+In my case the drive didn't need a power cycle, and error handling did 
+work, AFAICS, but even just having that error seems not healthy for the 
+data, which is confirmed by ext4 errors. Am I right? (BTW, I was 
+impressed, that after replugging the drive to firewire and running fsck on 
+a 800G big ext4 partition, it only needed around a second or two to replay 
+the journal and then it was ok! I hope the fileystem also has indeed been 
+repaired...)
+
+Error handling is great, but I think what I want is to avoid such errors 
+altogether. So, my question was - can those errors be indeed caused by the 
+unstable eSATA connector in the drive? Tejun, you have similar drives, do 
+yours also have such a problem? How are you solving it? Is the only way to 
+improve the connector stability by milling the plastic casing to actually 
+be able to insert the connector properly or by contacting the retailer for 
+a replacement?... Sorry, these are not directly Linux driver questions, 
+but the questions are really what those error messages tell me about the 
+possible reasons for the problem:-)
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
