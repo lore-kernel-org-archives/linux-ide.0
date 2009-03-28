@@ -1,30 +1,46 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [eSATA] 2.6.28.7: IO errors
-Date: Fri, 27 Mar 2009 17:58:17 -0600
-Message-ID: <20090327235817.GP8014@parisc-linux.org>
-References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 13/14] ide-atapi: use bio for request sense
+Date: Sat, 28 Mar 2009 09:43:24 +0100
+Message-ID: <20090328084324.GA1742@liondog.tnic>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <1237910776-10983-14-git-send-email-tj@kernel.org>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:60557 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbZC0X6f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Mar 2009 19:58:35 -0400
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:59834 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbZC1Inc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Mar 2009 04:43:32 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
+In-Reply-To: <1237910776-10983-14-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-On Sat, Mar 28, 2009 at 12:18:38AM +0100, Guennadi Liakhovetski wrote:
-> I'm using an external eSATA / USB / Firewire 2x1T RAID from WD in RAID1 
+On Wed, Mar 25, 2009 at 01:06:15AM +0900, Tejun Heo wrote:
+> Impact: unify request data buffer handling
+> 
+> rq->data is used mostly to pass kernel buffer through request queue
+> without using bio.  There are only a couple of places which still do
+> this in kernel and converting to bio isn't difficult.
+> 
+> This patch converts ide-atapi to use bio instead of rq->data.  For
+> ide_queue_pc_tail() which can block, blk_rq_map_kern() is used.  For
+> ide_queue_pc_head() which is used for request sense and called from
+> atomic context, drive->request_sense_bio and ->request_sense_bvec[2]
+> are added and used via bio_map_kern_prealloc().
+> 
+> ide-tape is updated to map sg for special requests.
+> 
+> This change makes all ide-atapi commands except for tape bh ones use
+> bio.  Drop tp_ops->output/input_data path from ide_pc_intr().
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Jens Axboe <axboe@kernel.dk>
 
-Looks like your problems are solved by
-9062712fa9ed13b531dfc2228086650b8bd6a255
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Regards/Gruss,
+    Boris.
