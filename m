@@ -1,55 +1,58 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] de: drivers/ide/ide-atapi.c needs <linux/scatterlist.h>
-Date: Sun, 29 Mar 2009 22:33:03 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0903292229400.23398@anakin>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Removing PCI dependency of ahci and making it amba bus
+  compatible
+Date: Sun, 29 Mar 2009 18:46:57 -0400
+Message-ID: <49CFFA61.8000107@pobox.com>
+References: <3fb94e50903260700r36365d4ue27edf43b5ee9efd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757455AbZC2Ud1@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:49999 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751536AbZC2WrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Mar 2009 18:47:08 -0400
+In-Reply-To: <3fb94e50903260700r36365d4ue27edf43b5ee9efd@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sagar Borikar <sagar.borikar@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On m68k:
-| drivers/ide/ide-atapi.c: In function 'ide_io_buffers':
-| drivers/ide/ide-atapi.c:87: error: implicit declaration of function 'sg_page'
-| drivers/ide/ide-atapi.c:87: warning: passing argument 1 of 'PageHighMem' makes pointer from integer without a cast
-| drivers/ide/ide-atapi.c:91: warning: passing argument 1 of 'kmap_atomic' makes pointer from integer without a cast
-| drivers/ide/ide-atapi.c:96: error: implicit declaration of function 'sg_virt'
-| drivers/ide/ide-atapi.c:96: warning: assignment makes pointer from integer without a cast
-| drivers/ide/ide-atapi.c:107: error: implicit declaration of function 'sg_next'
-| drivers/ide/ide-atapi.c:107: warning: assignment makes pointer from integer without a cast
+Comments:
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
-No idea where it got introduced. 2.6.29 was fine.
+* I am concerned at the unmodified duplication of so much code.  Given 
+that so little core AHCI modification was done, I would be interested in 
+exploring alternatives to wholesale code duplication.
 
- drivers/ide/ide-atapi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+* Avoid global variables.  Use a private struct and hpriv rather than 
+creating globals such as 'amba_base'
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 6adc5b4..445d157 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -6,6 +6,8 @@
- #include <linux/cdrom.h>
- #include <linux/delay.h>
- #include <linux/ide.h>
-+#include <linux/scatterlist.h>
-+
- #include <scsi/scsi.h>
- 
- #ifdef DEBUG
--- 
-1.6.2.1
+* calls to ioremap() must handle NULL return values.  You can 
+ahci_save_initial_config() from a simple table lookup to an actual map
 
-Gr{oetje,eeting}s,
+* Don't add magic numbers like '0' to replace AHCI_PCI_BAR.  Create your 
+own symbol AMBA_IOMAP_IDX or somesuch, with value zero.
 
-						Geert
+* ahci_configure_dma_masks() is wrong.  You must call generic DMA 
+mapping API or amba bus DMA mapping API (if exists), since you cannot 
+call PCI DMA mapping API.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+* amba_request_regions() should pass the driver name ("ahci"), not the 
+more-generic "sata"
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+* we put spaces between all function parameters.  You incorrect elide 
+spaces such as in this example:
+
+-	rc = ahci_reset_controller(host);
++	rc = ahci_reset_controller(host,pdev);
+
+* there is nothing AMBA-specific about the implementation of function 
+ata_amba_remove_one().  I would rather ata_amba_remove_one() be a 
+one-line call to a function that works on generic struct device-based 
+devices.
+
+	Jeff
+
+
+
+
