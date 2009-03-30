@@ -1,69 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Removing PCI dependency of ahci and making it amba bus
-  compatible
-Date: Sun, 29 Mar 2009 22:26:49 -0400
-Message-ID: <49D02DE9.4080106@garzik.org>
-References: <3fb94e50903260700r36365d4ue27edf43b5ee9efd@mail.gmail.com> <49CFFA61.8000107@pobox.com> <3fb94e50903291900x2caac3c7nc30c842015570089@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [eSATA] 2.6.28.7: IO errors
+Date: Mon, 30 Mar 2009 17:25:10 +0900
+Message-ID: <49D081E6.5010609@kernel.org>
+References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange> <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42475 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756167AbZC3C0y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Mar 2009 22:26:54 -0400
-In-Reply-To: <3fb94e50903291900x2caac3c7nc30c842015570089@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sagar Borikar <sagar.borikar@gmail.com>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Sagar Borikar wrote:
-> Thanks Jeff! Much appreciated all your comments.
-> Shall send the modified patch soon.
+Hello,
+
+Guennadi Liakhovetski wrote:
+> Hi Matthew,
 > 
-> On Mon, Mar 30, 2009 at 4:16 AM, Jeff Garzik <jgarzik@pobox.com> wrote:
->> Comments:
->>
->> * I am concerned at the unmodified duplication of so much code.  Given that
->> so little core AHCI modification was done, I would be interested in
->> exploring alternatives to wholesale code duplication.
+> On Fri, 27 Mar 2009, Matthew Wilcox wrote:
 > 
-> So do you want to have a new file for ahci amba changes?
-
-Well, two alternatives come to mind:
-
-* add amba changes to ahci.c.  Plenty of drivers are multi-bus, and AHCI 
-need not be any different.  sata_mv works on PCI and SoC embedded, for 
-example.
-
-* create libahci.c containing most of the code, and let ahci.c and 
-ahci-amba.c contain only bus-specific code.
-
-I would lean towards the first solution.
-
-
->> * ahci_configure_dma_masks() is wrong.  You must call generic DMA mapping
->> API or amba bus DMA mapping API (if exists), since you cannot call PCI DMA
->> mapping API.
+>> On Sat, Mar 28, 2009 at 12:18:38AM +0100, Guennadi Liakhovetski wrote:
+>>> I'm using an external eSATA / USB / Firewire 2x1T RAID from WD in RAID1 
+>> Looks like your problems are solved by
+>> 9062712fa9ed13b531dfc2228086650b8bd6a255
 > 
-> amba doesn't have dma mapping. So that's why I explicitly set the dma
-> mapping stuff for platform specific although I haven't done that port
-> specific.
+> (added Tejun as the patch author and owner of similar hardware)
 
-All Linux architectures must support the generic DMA mapping interface, 
-even if it is a no-op implementation like i386.
+Thanks for forwarding.
 
-If you peek "under the hood", the PCI DMA mapping interface is really 
-just a wrapper for the generic DMA interface.
+> AFAIU, that patch improves or fixes error handling on those drives, and 
+> the symptom, that Tejun was observing, was that the drive was hanging and 
+> required a power cycle.
+> 
+> In my case the drive didn't need a power cycle, and error handling did 
+> work, AFAICS, but even just having that error seems not healthy for the 
+> data, which is confirmed by ext4 errors. Am I right?
 
-The right thing to do is convert AHCI's DMA mask setup code from PCI DMA 
-mapping to generic DMA mapping API, and then make sure that amba fully 
-implements the generic DMA mapping API.
+No, your drive checked out after the last error even after the link
+speed had been lowered to 1.5Gbps, so the EH did everything it could
+but no candy.  The drive still checked out.
 
-Regards,
+> Error handling is great, but I think what I want is to avoid such errors 
+> altogether. So, my question was - can those errors be indeed caused by the 
+> unstable eSATA connector in the drive? Tejun, you have similar drives, do 
+> yours also have such a problem? How are you solving it?
 
-	Jeff
+I don't use the drives extensively but shorter cables seem to solve a
+lot of the issues during testing.  Or rather, longer cables triggered
+a LOT of problems.
 
+> Is the only way to improve the connector stability by milling the
+> plastic casing to actually be able to insert the connector properly
+> or by contacting the retailer for a replacement?... Sorry, these are
+> not directly Linux driver questions, but the questions are really
+> what those error messages tell me about the possible reasons for the
+> problem:-)
 
+Give a shot at shorter cable.
 
+Good luck!
+
+-- 
+tejun
