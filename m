@@ -1,49 +1,59 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [eSATA] 2.6.28.7: IO errors
-Date: Mon, 30 Mar 2009 12:57:29 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
-References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
- <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
- <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange>
- <49D0972D.3020407@kernel.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
+Date: Mon, 30 Mar 2009 14:14:13 +0300
+Message-ID: <49D0A985.7090307@panasas.com>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:53973 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751086AbZC3K50 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:57:26 -0400
-In-Reply-To: <49D0972D.3020407@kernel.org>
+Received: from gw-ca.panasas.com ([209.116.51.66]:1106 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750993AbZC3LQI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2009 07:16:08 -0400
+In-Reply-To: <49D08CEC.3010705@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-On Mon, 30 Mar 2009, Tejun Heo wrote:
+On 03/30/2009 12:12 PM, Tejun Heo wrote:
+> Borislav Petkov wrote:
+>> On Sat, Mar 28, 2009 at 02:51:01PM +0100, Bartlomiej Zolnierkiewicz wrote:
+>>
+>> [..]
+>>
+>>>> Bartlomiej, if you're okay with the changes and Jens acks the patches
+>>>> and pushing the first three patches via pata-2.6, please feel free to
+>>>> include these patches into your tree.
+>>> Everything looks fine to me.  Once I get Jens' ack (block bits)
+>>> and Borislav's one (ATAPI bits) I'll happily merge this patchset.
+>> Yep, I just finished testing the whole series here so you can go ahead
+>> and apply them pending a recast of patch 07/14 you'll hopefully be
+>> receiving soon from Tejun.
+> 
+> After the earlier discussion with Boaz Harrosh, I ended up redoing the
+> blk_rq_map_{kern|user}_*() stuff and am now in the process of testing
+> it.  The patchset is rather large (20+ patches).  As the prealloc
+> patch would fit on top of that series, I think it would be better to
+> sequence things via git merge.  Is there a git tree I can use for
+> pata-2.6 changes?  Or is the current linus master okay?
+> 
+> Thanks.
+> 
+> P.S.: Boaz, the above patchset implements blk_rq_map_kern_sgl() 
 
-> Hello,
-> 
-> Guennadi Liakhovetski wrote:
-> > Hm, using a 62cm long cable ATM, should it be even shorter? It's going to 
-> > be difficult physically then:-(
-> 
-> 62cm looks short enough.  My long cable is much longer like 2m
-> 
-> > But what about your drives - dies the 
-> > connector fit well in the slot and sits firmaly there? With my disk looks 
-> > likt the connector cannot be inserted completely because of too small a 
-> > hole in plastic:-(
-> 
-> But mine fits well and firmly, so maybe you need to take out the knife
-> after all.
+What is blk_rq_map_kern_sgl() ? I'm not sure I remember ?
 
-yeah, warranty, you know:-( I contacted the retailer, will see. but it's 
-strange - I bought mine in December 08, so, it's new enough, so, why?... 
-The opening in the case is ~4.8mm, the plastic part of the connector on 
-the eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
+What is it's API? and what does it do?
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
+> and
+> kills the SCSI layer hack.  That was the issue you were trying to
+> solve, right?
+> 
+
+If you post URL of git tree I can have a look and start an early review
+if you want
+
+Thanks for doing this
+Boaz
