@@ -1,81 +1,49 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.29 regression: ATA bus errors on resume
-Date: Mon, 30 Mar 2009 17:55:23 +0900
-Message-ID: <49D088FB.7000705@kernel.org>
-References: <cjtH6-3Ll-13@gated-at.bofh.it> <cjtH6-3Ll-15@gated-at.bofh.it> <cjtH6-3Ll-11@gated-at.bofh.it> <cjutt-577-11@gated-at.bofh.it> <cjJCb-47c-23@gated-at.bofh.it> <49CD24BC.8040303@devnull.org>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
+Date: Mon, 30 Mar 2009 18:12:12 +0900
+Message-ID: <49D08CEC.3010705@kernel.org>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51502 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:58398 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753686AbZC3I7O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Mar 2009 04:59:14 -0400
-In-Reply-To: <49CD24BC.8040303@devnull.org>
+	id S1752429AbZC3JMc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Mar 2009 05:12:32 -0400
+In-Reply-To: <20090328140405.GA2741@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Niel Lambrechts <niel.lambrechts@gmail.com>
-Cc: "linux.kernel" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Pavel Machek <pavel@ucw.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux IDE mailing list <linux-ide@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jeff@garzik.org>
+To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 
-Hello,
+Borislav Petkov wrote:
+> On Sat, Mar 28, 2009 at 02:51:01PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> 
+> [..]
+> 
+>>> Bartlomiej, if you're okay with the changes and Jens acks the patches
+>>> and pushing the first three patches via pata-2.6, please feel free to
+>>> include these patches into your tree.
+>> Everything looks fine to me.  Once I get Jens' ack (block bits)
+>> and Borislav's one (ATAPI bits) I'll happily merge this patchset.
+> 
+> Yep, I just finished testing the whole series here so you can go ahead
+> and apply them pending a recast of patch 07/14 you'll hopefully be
+> receiving soon from Tejun.
 
-For some reason, I can't find the original thread, so replying here.
-
-Niel Lambrechts wrote:
->>>>> The ext4 errors are interleaved with hardware errors, and the ext4
->>>>> errors are about I/O errors.
->>>>>
->>>>> EXT4-fs error (device sda6): __ext4_get_inode_loc: unable to read inode block - inode=2346519
->>>>> EXT4-fs error (device sda6) in ext4_reserve_inode_write: IO failure
->>>>>
->>>>> This looks more like a hibernation problem than an ext4 problem.
->>>>> Looks like the hard drive is being left in some inconsistent state
->>>>> after resuming from hibernation.
-
-Yeap, ext4 is just the victim here.
-
->>>> ata1.00: irq_stat 0x00400008, PHY RDY changed
->>>> ata1: SError: { PHYRdyChg CommWake }
->>> Your SATA hardware flags a connect-or-disconnect event ("PHY RDY"), 
->>> which requires us to abort a bunch of queued commands:
->>>
->>>> ata1.00: cmd 60/18:00:77:88:6f/00:00:0e:00:00/40 tag 0 ncq 12288 in
->>>>          res 50/00:30:07:b3:10/00:00:0c:00:00/40 Emask 0x10 (ATA bus error)
->>> [...]
-...
->>> The SCSI subsystem aborts each of the queued commands.
->> No .. this is the SCSI subsystem receives an ABORTED COMMAND return in
->> sense data for each of the outstanding I/Os
->>
->> The only place these are generated is in ata_sense_to_error() which only
->> occurs if there's some type of ata error.
->>
->> If I had to theorise, I'd say the system suspended with commands
->> outstanding to the device.  On resume, the device gets reset and returns
->> some type of ATA error which gets translated to ABORTED COMMAND which
->> causes a failure.
->>
->> In the mid layer, we translate ABORTED_COMMAND into a retry until the
->> command runs out of them ... could it be there's a race readying the
->> device and we run through the retries before it can accept the command?
-
-When libata-eh thinks that the problem isn't worth retrying, it sets
-scmd->retries to scmd->allowed so that it gets aborted immediately.
-The code is in ata_eh_qc_complete().
-
-Whether a command is to be retried or not is determined with
-ATA_QCFLAG_RETRY which is set in ata_eh_link_autopsy() for each failed
-command.  Immediate-failure criteria is pretty strict - only driver
-software errors (AC_ERR_INVALID) and PC or other special commands
-which failed which got aborted by the device get the immediate pink
-slip.  In this case, the commands are from FS and failed with
-AC_ERR_ATA_BUS, so it definitely doesn't fit into the criteria.
-Strange.
-
-How reproducible is the problem?  Are you interested in trying out
-some debug patches?
+After the earlier discussion with Boaz Harrosh, I ended up redoing the
+blk_rq_map_{kern|user}_*() stuff and am now in the process of testing
+it.  The patchset is rather large (20+ patches).  As the prealloc
+patch would fit on top of that series, I think it would be better to
+sequence things via git merge.  Is there a git tree I can use for
+pata-2.6 changes?  Or is the current linus master okay?
 
 Thanks.
+
+P.S.: Boaz, the above patchset implements blk_rq_map_kern_sgl() and
+kills the SCSI layer hack.  That was the issue you were trying to
+solve, right?
 
 -- 
 tejun
