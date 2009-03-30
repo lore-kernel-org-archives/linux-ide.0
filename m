@@ -1,51 +1,66 @@
-From: Dmitri Vorobiev <dmitri.vorobiev@movial.com>
-Subject: [PATCH 1/1] ide: add missing include into drivers/ide/ide-atapi.c
-Date: Mon, 30 Mar 2009 11:37:09 +0300
-Message-ID: <1238402229-19824-1-git-send-email-dmitri.vorobiev@movial.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755497AbZC3Ihk@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Dmitri Vorobiev <dmitri.vorobiev@movial.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.29 regression: ATA bus errors on resume
+Date: Mon, 30 Mar 2009 17:43:17 +0900
+Message-ID: <49D08625.8070701@gmail.com>
+References: <cjtH6-3Ll-13@gated-at.bofh.it> <20090327153044.3234722d@infradead.org> <49CDFA60.9080403@gmail.com> <200903281506.03364.rjw@sisk.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ti-out-0910.google.com ([209.85.142.190]:14916 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755039AbZC3InZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2009 04:43:25 -0400
+In-Reply-To: <200903281506.03364.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Niel Lambrechts <niel.lambrechts@gmail.com>, Arjan van de Ven <arjan@infradead.org>, "linux.kernel" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-A missing include in drivers/ide/ide-atapi.c has produced the following
-build error on MIPS:
+Hello,
 
-  CC      drivers/ide/ide-atapi.o
-drivers/ide/ide-atapi.c: In function 'ide_io_buffers':
-drivers/ide/ide-atapi.c:86: error: implicit declaration of function 'sg_page'
-drivers/ide/ide-atapi.c:86: warning: passing argument 1 of 'PageHighMem'
-makes pointer from integer without a cast
-drivers/ide/ide-atapi.c:90: warning: passing argument 1 of 'kmap_atomic'
-makes pointer from integer without a cast
-drivers/ide/ide-atapi.c:95: error: implicit declaration of function 'sg_virt'
-drivers/ide/ide-atapi.c:95: warning: assignment makes pointer from
-integer without a cast
-drivers/ide/ide-atapi.c:106: error: implicit declaration of function 'sg_next'
-drivers/ide/ide-atapi.c:106: warning: assignment makes pointer from
-integer without a cast
-make[2]: *** [drivers/ide/ide-atapi.o] Error 1
-make[1]: *** [drivers/ide] Error 2
-make: *** [drivers] Error 2
+Rafael J. Wysocki wrote:
+> On Saturday 28 March 2009, Niel Lambrechts wrote:
+>> On 03/28/2009 12:30 AM, Arjan van de Ven wrote:
+>>> On Fri, 27 Mar 2009 21:10:52 +0200
+>>> Niel Lambrechts <niel.lambrechts@gmail.com> wrote:
+>>>
+>>>   
+>>>> I'm seeing some dubious looking ATA messages even on 2.6.28.9-pae,
+>>>> although with all the 2.6.28 variants I used s2disk/resume has always
+>>>> worked. I was wondering if these "errors" perhaps play more of a role
+>>>> in 2.6.29, perhaps due to the async. changes that was mentioned?
+>>>>     
+>>> unless you actively enabled this via a kernel command line option there
+>>> are no async changes in 2.6.29 in terms of behavior.
+>>>
+>>>
+>>>   
+>> The only non-default option I had was 'modeset=1'. From Jeff's earlier
+>> comment I understood the probing behaviour changed.
+>>
+>> The fundamental difference is that in 2.6.29 everything initially seems
+>> okay, but then there is a
+>> ata1.00: exception Emask 0x10 SAct 0x3f SErr 0x50000 action0xe frozen
+>> ata1.00: irq_stat 0x00400008, PHY RDY changed
+>>
+>> There's nothing frozen it 2.6.28.
+>>
+>> Should I log a kernel bug, what's the best way forward and is there
+>> anything more I can do to help?
+> 
+> Let Tejun have a look a this, perhaps?
 
-This patch adds the missing include and fixes the build error above.
+What Niel is seeing is probably caused by libata EH somehow moving
+forward too fast and receiving the second PHY changed event after the
+initial reset is complete.  That or the thaw routine is broken and
+doesn't clear hotplug event properly.  Actually, this double reset
+seems to happen quite often, so it might be about time to drill it
+down and find out what's really going on.  But, generally, it isn't a
+serious problem, all that happens is EH doing another round.  The
+original one looks quite serious tho.  I'll reply separately.
 
-Signed-off-by: Dmitri Vorobiev <dmitri.vorobiev@movial.com>
----
- drivers/ide/ide-atapi.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Thanks.
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 6adc5b4..97f116f 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -6,6 +6,7 @@
- #include <linux/cdrom.h>
- #include <linux/delay.h>
- #include <linux/ide.h>
-+#include <linux/scatterlist.h>
- #include <scsi/scsi.h>
- 
- #ifdef DEBUG
 -- 
-1.5.6.3
+tejun
