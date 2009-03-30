@@ -1,37 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
-Date: Tue, 31 Mar 2009 02:20:22 +0900
-Message-ID: <49D0FF56.3080205@kernel.org>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org> <49D0A985.7090307@panasas.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Mon, 30 Mar 2009 20:20:36 GMT
+Message-ID: <200903302020.n2UKKa1w005898@demeter.kernel.org>
+References: <bug-12874-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757733AbZC3RUs@vger.kernel.org>
-In-Reply-To: <49D0A985.7090307@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:53284 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760950AbZC3UUi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2009 16:20:38 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n2UKKavJ005899
+	for <linux-ide@vger.kernel.org>; Mon, 30 Mar 2009 20:20:36 GMT
+In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Boaz Harrosh wrote:
->> P.S.: Boaz, the above patchset implements blk_rq_map_kern_sgl() 
-> 
-> What is blk_rq_map_kern_sgl() ? I'm not sure I remember ?
-> What is it's API? and what does it do?
-> 
->> and kills the SCSI layer hack.  That was the issue you were trying
->> to solve, right?
-> 
-> If you post URL of git tree I can have a look and start an early review
-> if you want
+http://bugzilla.kernel.org/show_bug.cgi?id=12874
 
-Here's the patchset.  It builds but I haven't even booted it yet, so
-expect some breakages.
 
-  http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=map-untested
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git map-untested
 
-Thanks.
+
+
+--- Comment #10 from Mark de Wever <koraq@xs4all.nl>  2009-03-30 20:20:36 ---
+Created an attachment (id=20746)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=20746)
+2.6.29-rc7 modprobe output with debug patch
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
