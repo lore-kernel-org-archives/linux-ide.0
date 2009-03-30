@@ -1,49 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
-Date: Mon, 30 Mar 2009 18:12:12 +0900
-Message-ID: <49D08CEC.3010705@kernel.org>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [eSATA] 2.6.28.7: IO errors
+Date: Mon, 30 Mar 2009 11:48:25 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0903301144400.4455@axis700.grange>
+References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
+ <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
+ <49D081E6.5010609@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58398 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752429AbZC3JMc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Mar 2009 05:12:32 -0400
-In-Reply-To: <20090328140405.GA2741@liondog.tnic>
+Received: from mail.gmx.net ([213.165.64.20]:46965 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754087AbZC3Js0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Mar 2009 05:48:26 -0400
+In-Reply-To: <49D081E6.5010609@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Borislav Petkov wrote:
-> On Sat, Mar 28, 2009 at 02:51:01PM +0100, Bartlomiej Zolnierkiewicz wrote:
+On Mon, 30 Mar 2009, Tejun Heo wrote:
+
+> Hello,
 > 
-> [..]
+> Guennadi Liakhovetski wrote:
+> > Hi Matthew,
+> > 
+> > On Fri, 27 Mar 2009, Matthew Wilcox wrote:
+> > 
+> >> On Sat, Mar 28, 2009 at 12:18:38AM +0100, Guennadi Liakhovetski wrote:
+> >>> I'm using an external eSATA / USB / Firewire 2x1T RAID from WD in RAID1 
+> >> Looks like your problems are solved by
+> >> 9062712fa9ed13b531dfc2228086650b8bd6a255
+> > 
+> > (added Tejun as the patch author and owner of similar hardware)
 > 
->>> Bartlomiej, if you're okay with the changes and Jens acks the patches
->>> and pushing the first three patches via pata-2.6, please feel free to
->>> include these patches into your tree.
->> Everything looks fine to me.  Once I get Jens' ack (block bits)
->> and Borislav's one (ATAPI bits) I'll happily merge this patchset.
+> Thanks for forwarding.
+
+Thanks for replying:-)
+
+> > AFAIU, that patch improves or fixes error handling on those drives, and 
+> > the symptom, that Tejun was observing, was that the drive was hanging and 
+> > required a power cycle.
+> > 
+> > In my case the drive didn't need a power cycle, and error handling did 
+> > work, AFAICS, but even just having that error seems not healthy for the 
+> > data, which is confirmed by ext4 errors. Am I right?
 > 
-> Yep, I just finished testing the whole series here so you can go ahead
-> and apply them pending a recast of patch 07/14 you'll hopefully be
-> receiving soon from Tejun.
+> No, your drive checked out after the last error even after the link
+> speed had been lowered to 1.5Gbps, so the EH did everything it could
+> but no candy.  The drive still checked out.
+> 
+> > Error handling is great, but I think what I want is to avoid such errors 
+> > altogether. So, my question was - can those errors be indeed caused by the 
+> > unstable eSATA connector in the drive? Tejun, you have similar drives, do 
+> > yours also have such a problem? How are you solving it?
+> 
+> I don't use the drives extensively but shorter cables seem to solve a
+> lot of the issues during testing.  Or rather, longer cables triggered
+> a LOT of problems.
+> 
+> > Is the only way to improve the connector stability by milling the
+> > plastic casing to actually be able to insert the connector properly
+> > or by contacting the retailer for a replacement?... Sorry, these are
+> > not directly Linux driver questions, but the questions are really
+> > what those error messages tell me about the possible reasons for the
+> > problem:-)
+> 
+> Give a shot at shorter cable.
 
-After the earlier discussion with Boaz Harrosh, I ended up redoing the
-blk_rq_map_{kern|user}_*() stuff and am now in the process of testing
-it.  The patchset is rather large (20+ patches).  As the prealloc
-patch would fit on top of that series, I think it would be better to
-sequence things via git merge.  Is there a git tree I can use for
-pata-2.6 changes?  Or is the current linus master okay?
+Hm, using a 62cm long cable ATM, should it be even shorter? It's going to 
+be difficult physically then:-( But what about your drives - dies the 
+connector fit well in the slot and sits firmaly there? With my disk looks 
+likt the connector cannot be inserted completely because of too small a 
+hole in plastic:-(
 
-Thanks.
-
-P.S.: Boaz, the above patchset implements blk_rq_map_kern_sgl() and
-kills the SCSI layer hack.  That was the issue you were trying to
-solve, right?
-
--- 
-tejun
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
