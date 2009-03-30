@@ -1,43 +1,36 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [eSATA] 2.6.28.7: IO errors
-Date: Mon, 30 Mar 2009 12:51:31 -0400
-Message-ID: <49D0F893.9070306@rtr.ca>
-References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange> <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange> <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange> <49D0972D.3020407@kernel.org> <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and  misc
+ cleanups
+Date: Tue, 31 Mar 2009 02:21:53 +0900
+Message-ID: <49D0FFB1.5080202@kernel.org>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org> <200903301650.11429.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Tejun Heo <tj@kernel.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:51567 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752056AbZC3RWC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Mar 2009 13:22:02 -0400
+In-Reply-To: <200903301650.11429.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: petkovbb@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
 
-Guennadi Liakhovetski wrote:
-> On Mon, 30 Mar 2009, Tejun Heo wrote:
-> 
->> Hello,
->>
->> Guennadi Liakhovetski wrote:
->>> Hm, using a 62cm long cable ATM, should it be even shorter? It's going to 
->>> be difficult physically then:-(
->> 62cm looks short enough.  My long cable is much longer like 2m
->>
->>> But what about your drives - dies the 
->>> connector fit well in the slot and sits firmaly there? With my disk looks 
->>> likt the connector cannot be inserted completely because of too small a 
->>> hole in plastic:-(
->> But mine fits well and firmly, so maybe you need to take out the knife
->> after all.
-> 
-> yeah, warranty, you know:-( I contacted the retailer, will see. but it's 
-> strange - I bought mine in December 08, so, it's new enough, so, why?... 
-> The opening in the case is ~4.8mm, the plastic part of the connector on 
-> the eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
-..
+Hello, Bartlomiej.
 
-Speaking of which.. dealextreme.com sells surprisingly excellent eSATA
-cables with really sturdy connectors.  Very cheap pricing, too,
-with free shipping worldwide.  An easy way to eliminate cable fuss.
+Bartlomiej Zolnierkiewicz wrote:
+> Not yet, we discussed this two weeks ago and the only thing that changed
+> in the meantime is that we are in the merge window now and I'm ultra busy
+> instead of being just really busy.  Do not worry though -- your last two
+> patchsets are a very good motivator for quilt->git conversion (much better
+> than i.e. some unproductive preaching).
 
-Cheers
+Sounds greate.  Just lemme know when your tree is ready.  I'll prep
+cleanly merged git tree you and Jens can pull from.
+
+Thanks.
+
+-- 
+tejun
