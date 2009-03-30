@@ -1,59 +1,186 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
-Date: Mon, 30 Mar 2009 14:14:13 +0300
-Message-ID: <49D0A985.7090307@panasas.com>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git pull] IDE updates part 2
+Date: Mon, 30 Mar 2009 16:33:19 +0200
+Message-ID: <200903301633.19485.bzolnier@gmail.com>
+References: <200903271302.56379.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:1106 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750993AbZC3LQI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2009 07:16:08 -0400
-In-Reply-To: <49D08CEC.3010705@kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.188]:39922 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754829AbZC3Oav (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2009 10:30:51 -0400
+In-Reply-To: <200903271302.56379.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/30/2009 12:12 PM, Tejun Heo wrote:
-> Borislav Petkov wrote:
->> On Sat, Mar 28, 2009 at 02:51:01PM +0100, Bartlomiej Zolnierkiewicz wrote:
->>
->> [..]
->>
->>>> Bartlomiej, if you're okay with the changes and Jens acks the patches
->>>> and pushing the first three patches via pata-2.6, please feel free to
->>>> include these patches into your tree.
->>> Everything looks fine to me.  Once I get Jens' ack (block bits)
->>> and Borislav's one (ATAPI bits) I'll happily merge this patchset.
->> Yep, I just finished testing the whole series here so you can go ahead
->> and apply them pending a recast of patch 07/14 you'll hopefully be
->> receiving soon from Tejun.
+On Friday 27 March 2009, Bartlomiej Zolnierkiewicz wrote:
 > 
-> After the earlier discussion with Boaz Harrosh, I ended up redoing the
-> blk_rq_map_{kern|user}_*() stuff and am now in the process of testing
-> it.  The patchset is rather large (20+ patches).  As the prealloc
-> patch would fit on top of that series, I think it would be better to
-> sequence things via git merge.  Is there a git tree I can use for
-> pata-2.6 changes?  Or is the current linus master okay?
+> Hi,
 > 
-> Thanks.
+> More "uninteresting" IDE changes:
 > 
-> P.S.: Boaz, the above patchset implements blk_rq_map_kern_sgl() 
+> - make all host drivers use struct ide_port_info
+> - sanitize command/request completion API
+> - replace ide_task_t by struct ide_cmd
+> - improve debugging scheme (from Borislav Petkov)
+> - misc fixes/cleanups
 
-What is blk_rq_map_kern_sgl() ? I'm not sure I remember ?
+ping?
 
-What is it's API? and what does it do?
+These changes are not _that_ uninteresting to not apply them. ;)
 
-> and
-> kills the SCSI layer hack.  That was the issue you were trying to
-> solve, right?
+More importantly they are holding back "part 3"...
+
+> Linus, please pull from:
 > 
+> master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+> 
+> to receive the following updates:
+> 
+>  arch/m68k/include/asm/ide.h |   73 -------
+>  drivers/ide/alim15x3.c      |    9 +-
+>  drivers/ide/at91_ide.c      |   70 ++++----
+>  drivers/ide/au1xxx-ide.c    |   39 +---
+>  drivers/ide/buddha.c        |   11 +-
+>  drivers/ide/cmd64x.c        |    6 +-
+>  drivers/ide/cs5536.c        |    2 +-
+>  drivers/ide/delkin_cb.c     |    1 +
+>  drivers/ide/dtc2278.c       |    3 +-
+>  drivers/ide/falconide.c     |   45 ++++-
+>  drivers/ide/gayle.c         |    7 +-
+>  drivers/ide/hpt366.c        |    6 +-
+>  drivers/ide/icside.c        |   24 +--
+>  drivers/ide/ide-4drives.c   |    3 +-
+>  drivers/ide/ide-acpi.c      |   10 +-
+>  drivers/ide/ide-atapi.c     |  123 +++++++-----
+>  drivers/ide/ide-cd.c        |  155 ++++++++-------
+>  drivers/ide/ide-cd.h        |    4 +-
+>  drivers/ide/ide-cs.c        |    1 +
+>  drivers/ide/ide-devsets.c   |    4 +-
+>  drivers/ide/ide-disk.c      |  171 ++++++++---------
+>  drivers/ide/ide-disk_proc.c |   28 ++--
+>  drivers/ide/ide-dma-sff.c   |   37 ++---
+>  drivers/ide/ide-dma.c       |   39 ++--
+>  drivers/ide/ide-eh.c        |   30 ++-
+>  drivers/ide/ide-floppy.c    |  156 ++++++---------
+>  drivers/ide/ide-gd.c        |   10 +-
+>  drivers/ide/ide-gd.h        |    4 +-
+>  drivers/ide/ide-generic.c   |    8 +-
+>  drivers/ide/ide-h8300.c     |   66 ++++----
+>  drivers/ide/ide-io-std.c    |   73 ++++----
+>  drivers/ide/ide-io.c        |  285 ++++++++++-----------------
+>  drivers/ide/ide-ioctls.c    |   44 ++--
+>  drivers/ide/ide-iops.c      |   66 +++----
+>  drivers/ide/ide-lib.c       |   20 +-
+>  drivers/ide/ide-park.c      |   19 +-
+>  drivers/ide/ide-pm.c        |   42 +++--
+>  drivers/ide/ide-pnp.c       |    6 +-
+>  drivers/ide/ide-probe.c     |   95 ++++------
+>  drivers/ide/ide-proc.c      |   16 +-
+>  drivers/ide/ide-tape.c      |  123 +++++--------
+>  drivers/ide/ide-taskfile.c  |  448 ++++++++++++++++++++-----------------------
+>  drivers/ide/ide_arm.c       |    6 +-
+>  drivers/ide/it821x.c        |    2 +-
+>  drivers/ide/macide.c        |    7 +-
+>  drivers/ide/ns87415.c       |   36 ++--
+>  drivers/ide/palm_bk3710.c   |   13 +-
+>  drivers/ide/pdc202xx_old.c  |    4 +-
+>  drivers/ide/pmac.c          |   32 +---
+>  drivers/ide/q40ide.c        |   15 +-
+>  drivers/ide/sc1200.c        |    2 +-
+>  drivers/ide/scc_pata.c      |  115 +++++------
+>  drivers/ide/setup-pci.c     |    4 +
+>  drivers/ide/sgiioc4.c       |   30 +--
+>  drivers/ide/siimage.c       |    2 +-
+>  drivers/ide/sl82c105.c      |    2 +-
+>  drivers/ide/tc86c001.c      |    2 +-
+>  drivers/ide/trm290.c        |   15 +-
+>  drivers/ide/tx4938ide.c     |   68 ++++----
+>  drivers/ide/tx4939ide.c     |  109 +++++------
+>  include/linux/ide.h         |  239 ++++++++++++-----------
+>  61 files changed, 1418 insertions(+), 1667 deletions(-)
+> 
+> 
+> Bartlomiej Zolnierkiewicz (67):
+>       icside: use struct ide_port_info also for PCB version 5 (v2)
+>       ide_arm: use struct ide_port_info
+>       ide-generic: use struct ide_port_info
+>       ide-pnp: use struct ide_port_info
+>       buddha: use struct ide_port_info
+>       macide: use struct ide_port_info
+>       ide: move ->rqsize init from init_irq() to ide_init_port()
+>       ide: remove IDE_ARCH_INTR (v2)
+>       ide: remove IDE_ARCH_LOCK (v2)
+>       ide: make m68k host drivers use IDE_HFLAG_MMIO
+>       ide: cleanup <asm-m68k/ide.h>
+>       at91_ide: use readsw()/writesw() directly
+>       ide: include <asm/ide.h> only when needed
+>       scc_pata: remove DECLARE_SCC_DEV() macro (v2)
+>       ide: fix memleak on failure in probe_for_drive()
+>       ide: fix error message in pre_task_out_intr()
+>       ide: allow host drivers to specify IRQ flags
+>       ide: remove now superfluous check from ide_host_register()
+>       ide: add IDE_HFLAG_DTC2278 host flag
+>       ide: add IDE_HFLAG_4DRIVES host flag
+>       ide: add "flagged" taskfile flags to struct ide_taskfile (v2)
+>       ide: complete power step in ide_complete_pm_request()
+>       ide: factor out completion of taskfile from ide_end_drive_cmd()
+>       ide: move request type specific code from ide_end_drive_cmd() to callers (v3)
+>       ide: no need to read Status and Error registers for "empty" taskfile requests
+>       ide: remove ->data_phase field from ide_hwif_t
+>       ide: move smart_enable() call out from get_smart_data()
+>       icside: icside_dma_setup() fixes
+>       trm290: trm290_dma_setup() fix
+>       au1xxx-ide: auide_dma_end() cleanup
+>       ide: remove no longer needed PC_FLAG_TIMEDOUT packet command flag
+>       ide-floppy: remove superfluous check from ide_floppy_end_request()
+>       ide-tape: remove superfluous tape->lock
+>       ide: move ->failed_pc to ide_drive_t
+>       ide: use ->end_request only for private device driver requests
+>       ide-{floppy,tape}: cleanup ide*_end_request()
+>       ide: remove ->end_request method
+>       ide: return request status from ->pc_callback method
+>       ide: use blk_fs_request() check in ide-taskfile.c
+>       ide: call ide_build_sglist() prior to ->dma_setup (v2)
+>       ide: remove ide_task_t typedef
+>       ide: pass command instead of request to ide_pio_datablock()
+>       ide: move command related fields from ide_hwif_t to struct ide_cmd
+>       ide: set IDE_TFLAG_WRITE basing on data phase used in ide_taskfile_ioctl()
+>       ide: use ata_tf_protocols enums
+>       ide: merge task_{in,out}_intr()
+>       ide: inline task_in_unexpected() into task_pio_intr()
+>       ide: unify exit paths in task_pio_intr()
+>       ide: task_error() -> task_error_cmd()
+>       ide: use ide_complete_cmd() for head unload commands
+>       ide: use ide_complete_cmd() for REQ_UNPARK_HEADS
+>       ide: sanitize ide_finish_cmd()
+>       ide: make ide_special_rq() BUG() on unknown requests
+>       ide: add ide_end_rq() (v2)
+>       ide: sanitize ide_end_rq()
+>       ide: pass error value to ide_complete_rq()
+>       ide: move rq->errors quirk out from ide_end_request()
+>       ide: remove BUG() from ide_complete_rq()
+>       ide: pass number of bytes to complete to ide_complete_rq()
+>       ide: use ide_end_rq() in ide_complete_rq()
+>       ide: remove ide_end_request()
+>       ide: pass command to ide_map_sg()
+>       ide: use do_rw_taskfile() for ATA_CMD_PACKET commands
+>       ide: set hwif->expiry prior to calling [__]ide_set_handler()
+>       ide: add ->dma_timer_expiry method and remove ->dma_exec_cmd one (v2)
+>       ide: remove ide_execute_pkt_cmd() (v2)
+>       ide: keep track of number of bytes instead of sectors in struct ide_cmd
+> 
+> Borislav Petkov (2):
+>       ide: improve debugging scheme
+>       ide-cd: use ide_drive_t's rq in cdrom_queue_request_sense
+> 
+> Kevin Hilman (1):
+>       IDE: palm_bk3710: use ioremap instead of arch-specific IO_ADDRESS()
 
-If you post URL of git tree I can have a look and start an early review
-if you want
-
-Thanks for doing this
-Boaz
+[...]
