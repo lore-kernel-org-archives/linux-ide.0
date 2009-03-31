@@ -1,36 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
-Date: Tue, 31 Mar 2009 18:10:24 +0900
-Message-ID: <49D1DE00.9030600@gmail.com>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org> <49D0A985.7090307@panasas.com> <49D0FF56.3080205@kernel.org> <49D1D7A3.40303@panasas.com> <49D1DCE2.1050201@kernel.org>
+From: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
+Subject: Re: [PATCH] linux-next remove wmb() from ide-dma-sff.c and scc_pata.c
+Date: Tue, 31 Mar 2009 18:33:56 +0900
+Message-ID: <49D1E384.8080009@toshiba.co.jp>
+References: <da824cf30903301739l688e8eb2r46086953245ebbe5@mail.gmail.com>
+	<alpine.LRH.2.00.0903310950040.9551@vixen.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:13295 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752374AbZCaJKb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 05:10:31 -0400
-In-Reply-To: <49D1DCE2.1050201@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
+In-Reply-To: <alpine.LRH.2.00.0903310950040.9551@vixen.sonytel.be>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, IDE/ATA Devel <linux-ide@vger.kernel.org>
+Cc: Linux/MIPS Development <linux-mips@linux-mips.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Atsushi Nemoto <anemo@mba.ocn.ne.jp>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Grant Grundler <grundler@google.com>, LKML <linux-kernel@google.com>
 List-Id: linux-ide@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-I really should proof read before hitting the send button.  My head is
-somehow pretty good at messing up sentences.
+2009/03/31 16:51, Geert Uytterhoeven wrote:
+> On Mon, 30 Mar 2009, Grant Grundler wrote:
+>> Followup to "[PATCH 03/10] ide: destroy DMA mappings after ending DMA"
+>> email on March 14th:
+>>     http://lkml.org/lkml/2009/3/14/17
+>>
+>> No maintainer is listed for "Toshiba CELL Reference Set IDE" (BLK_DEV_CELLEB)
+>> or tx4939ide.c in MAINTAINERS. I've CC'd "Ishizaki Kou" @Toshiba (Maintainer for
+>> "Spidernet Network Driver for CELL") and linuxppc-dev list in the hope
+>> someone else
+>> would know or would be able to ACK this patch.
+> 
+> tx49xx is MIPS, for Nemoto-san.
 
-Tejun Heo wrote:
-> The reason why I want with sgl is because it's the sg mapping
-                   went                    it has
-...
-> wouldn't be that large anyway.  Both aren't worth worrying about
-> considering how relative coldness of the path and other overhead of
+The patch looks good for Toshiba Cell Reference Set.
+I think the patch will be acked by IDE maintainer.
 
-Eh.. that was a nice mix of "how the path is relatively cold" and
-"relative coldness of the path".  :-)
+Thank you for informing me of the contribution.
 
-Thanks.
+Regards,
 
--- 
-tejun
+-- Yoshi
