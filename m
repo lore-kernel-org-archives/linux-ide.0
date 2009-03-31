@@ -1,70 +1,183 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: EP93xx PIO IDE driver proposal
-Date: Tue, 31 Mar 2009 14:36:25 +0400
-Message-ID: <49D1F229.4000602@ru.mvista.com>
-References: <49CCD7C4.8000207@inov.pt> <49CFDD8F.1030306@bluewatersys.com>	<BD79186B4FD85F4B8E60E381CAEE1909014E2E09@mi8nycmail19.Mi8.com>	<49D0CAE4.9090306@inov.pt> <49D12669.4030207@bluewatersys.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
+Date: Tue, 31 Mar 2009 16:04:39 +0300
+Message-ID: <49D214E7.2040908@panasas.com>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org> <49D0A985.7090307@panasas.com> <49D0FF56.3080205@kernel.org> <49D1D7A3.40303@panasas.com> <49D1DCE2.1050201@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:15806 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751246AbZCaKgg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Mar 2009 06:36:36 -0400
-In-Reply-To: <49D12669.4030207@bluewatersys.com>
+Received: from gw-ca.panasas.com ([209.116.51.66]:26516 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752823AbZCaNHa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 09:07:30 -0400
+In-Reply-To: <49D1DCE2.1050201@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ryan Mallon <ryan@bluewatersys.com>
-Cc: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>, H Hartley Sweeten <hartleys@visionengravers.com>, linux-arm-kernel@lists.arm.linux.org.uk, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Hello.
+On 03/31/2009 12:05 PM, Tejun Heo wrote:
+> Hello, Boaz.
+> 
+> Boaz Harrosh wrote:
+>> I hope you have not been working on stabilizing this code yet, I've
+>> just seen it this mornning (Israel time). It has obvious bugs, in
+>> the use of scatterlists.
+> 
+> Actually, I'm now and it's mostly working now.
+> 
 
-Ryan Mallon wrote:
+hmm, I've seen for example use of:
+sg_set_page(&sg,,)   on a stack scatterlist entry, and call to a function
+that does for_each_sg(), but the for_each_sg() looks for a terminating bit.
+You must do sg_init_one() or sg_init_table() first.
 
->> +static void
->> +ep93xx_ide_pio_set_irq(ide_hwif_t *hwif, int on)
->> +{
->> +    u8 ctl = ATA_DEVCTL_OBS;
->> +
->> +    if (on == 4) { /* hack for SRST */
->> +        ctl |= 4;
->> +        on &= ~4;
->> +    }
->> +
->> +    ctl |= on ? 0 : 2;
->>     
->
-> This function all seems a bit magic/hackish. Can you replace the
-> numbers here with #defines to make it clear what is being done.
-> You may also want to expand on the comment here to explain why the
-> 'hack' is needed.
->   
+Are these code paths exercised?
 
-   It's standard implementation of this method, and looks the same in 
-all the other IDE drivers that redefine it. It's going to be gone in 
-2.6.30, so it's not worth wasting time...
+>> But before you go running to fix them. Don't. I don't like the
+>> scatter-list API at all. We where working hard to remove them from
+>> scsi and I don't like them for block layer either.
+>>
+>> If it is for my personal needs then all I need is a simple: "I have
+>> this bio please attach it to a request". The reason I have a bio is
+>> because it comes from a filesystem and because I will be needing to
+>> use the raid engines that are bio based.
+>>
+>> I must have confused you with my blk_rq_map_pages() patches, these
+>> where made just as an example of the ugliness and fragility of not
+>> using bios. It was suppose to be a bad example, not to be
+>> accepted. (Hence the absence of my Singed-off-by:) Scatterlists are
+>> bad because they are two times too fat for what they do here, they
+>> need to be allocated, chained and slabbed, and finally they need to
+>> be converted to a bio. Working directly with a bio is the shortest
+>> route.
+> 
+> sgl or bvec doesn't make much of difference.  The only difference
+> between sgl and bvec is the extra entries for DMA mapping.  
 
->> +
->> +    ep93xx_ide_pio_writeb(hwif->config_data, ctl,
->> hwif->io_ports.ctl_addr);
->> +}
->> +
->> +static void
->> +ep93xx_ide_pio_tf_load(ide_drive_t *drive, ide_task_t *task)
->> +{
->> +    ide_hwif_t *hwif = drive->hwif;
->> +    struct ide_io_ports *io_ports = &hwif->io_ports;
->> +    struct ide_taskfile *tf = &task->tf;
->> +    u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
->>     
->
-> Don't give local variables names with all capitals. What is hihi anyway?
->   
+Exactly, and in 32bit largemem that part is 200% of the first
+part, so bvec can be 33% of sgl at times, and 50% usually.
 
-  He must've copied that from the other drivers, so that question is to 
-the IDE maintainever rather. :-)
+> The
+> problem is that there needs to be common way to describe the pages.
+> The reason why the blk/bio mapping looks that complex is because all
+> four cases - user map/copy and kern map/copy - are similar but subtly
+> different.  Without a common medium to carry the list of pages, each
+> path ended up mixing what's common with what's different and thus the
+> not quite manageable code.
 
+Yes, the mess is more historical, and patch by patch wise, then actual
+technical difficulty. And it is more accommodating to what user code has
+at hand then what makes block-layer clean.
 
-MBR, Sergei
+> 
+> The reason why I want with sgl is because it's the sg mapping
+> iterator.  
 
+Actually no! "sg mapping iterator" success. it has that chaining
+ugliness and bit markers. And all that missing information from it.
+It was born out of necessity, and was a nightmare to stabilize around
+the 2.6.21st kernel if I remember correctly.
 
+At the time there was that long argument of it needing to be an sg_table
+and chained at the table level. Because look how much information is missing
+form a scatterlist. Like the length, the allocated size associated data, ... 
+scatterlist is both too large and too little to be a nice carrier structure
+for pages.
+
+Other than that, using bvec or sgl wouldn't make any
+> difference.  All that's necessary is common carrier of page/offset/len
+> list.
+> 
+
+bvec has the same shortages as a scatterlist, a good carrier is a bio
+
+> But given the use of sgl there, I don't think the performance
+> arguments holds much ground.  How high performance or scalability is
+> required in PC bio map paths?  The added cost is at the most one more
+> sgl allocation and use of more sparse data structure which BTW
+> wouldn't be that large anyway.  
+
+One pageful of scatterlist can be as small as 128 nents. This is a stupid
+512K. This is way too small for any real IO. Start chaining these and you get
+a nightmare. The governing structure should be something much longer, and smarter.
+(Don't even think of allocating something linearly bigger then one page
+it does not work).
+
+> Both aren't worth worrying about
+> considering how relative coldness of the path and other overhead of
+> doing IO.
+> 
+
+Not true, with ram-disk performance benchmarks we could see 3-6% difference
+with an extra sccaterlist allocation. SSDs and RDMA devices come close to
+ram disk performance these days.
+
+> If you think sgl is too heavy for things like this, the right way to
+> go is to introduce some generic mechanism to carry sg chunks and use
+> it in bio, but I don't think the overhead of the current sgl justifies
+> that.  If you have qualms about the sgl API, please clean it up.  
+
+sgl is a compromise with historical code at the DMA and LLD level.
+It should not have any new users above the block layer.
+
+> I
+> just don't think bvec should be used outside of block/fs interface.
+> As I wrote before, non-FS users have no reason to worry about bio.
+> All it should think about is the requst it needs to issue and the
+> memory area it's gonna use as in/out buffers.  bio just doesn't have a
+> place there.
+> 
+
+I don't understand what happens to all the people that start to work on the block
+layer, they start getting defensive about bio being private to the request
+level. But the Genie is out of the bag already (I know cats and bottles).
+bio is already heavily used above the block layer from directly inside filesystems
+to all kind of raid engines, DM MD managers, multi paths, integrity information ...
+
+Because bio is exactly that Ideal page carrier you are talking about.
+The usage pattern needed by everybody everywhere is:
+Allocate an abstract container starting empty. add some pages to it,
+grow / chain endlessly as needed, (or as constrained from other factors).
+Submit it down the stack. Next stage can re-use it, split it, merge it, mux
+it demux it, bounce it, hang event notifiers, the works.
+
+The only such structure today is a bio. If an API should be cleaned up it
+is the bio API. Add the nice iterator to it if you like sg_next() a lot.
+
+Make it so clean that all users of block-request take a bio, easily add
+pages / memory segments to it, and then submit it into a request with a single
+API, blk_req_add_bio(). or better blk_make_request(bio).
+
+Inventing half baked intermediate linear structures will not hold.
+
+>> I do not understand what was your intention for the
+>> blk_rq_map_kern_sgl() how's the user for it?
+> 
+> Well, the only in-kern user which was tinkering with rq/bio internals
+> was scsi_req_map_sg().  Do you have another user?
+> 
+
+scsi_req_map_sg() is gone. All its users now go directly to blk_rq_map_*
+and submit requests directly. So there are no external users of sgl.
+(Should be submitted soon)
+
+>> BTW: now you absolutely must do something with the name of
+>> blk_rq_map_sg() which does not do any mapping and does not change
+>> request at all.
+> 
+> Heh... yeap, definitely.  Can you think of a good one?
+> 
+
+I would say blk_rq_fill_sgl, maybe
+
+> Thanks.
+> 
+
+Other then the sgl usage I like your clean ups a lot, I do however have
+some comments. Should I hold these until you post them or start shooting
+away?
+
+Thanks
+Boaz
