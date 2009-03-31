@@ -1,38 +1,74 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12874] Seagate STT20000A no longer works
-Date: Tue, 31 Mar 2009 08:11:40 GMT
-Message-ID: <200903310811.n2V8BeiG003904@demeter.kernel.org>
-References: <bug-12874-11633@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
+Date: Tue, 31 Mar 2009 11:43:15 +0300
+Message-ID: <49D1D7A3.40303@panasas.com>
+References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org> <49D0A985.7090307@panasas.com> <49D0FF56.3080205@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56047 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045AbZCaILm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 04:11:42 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n2V8BecO003905
-	for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2009 08:11:40 GMT
-In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
+Received: from yx-out-2324.google.com ([74.125.44.28]:63113 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbZCaIpQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 04:45:16 -0400
+In-Reply-To: <49D0FF56.3080205@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12874
+On 03/30/2009 08:20 PM, Tejun Heo wrote:
+> Boaz Harrosh wrote:
+>>> P.S.: Boaz, the above patchset implements blk_rq_map_kern_sgl() 
+>> What is blk_rq_map_kern_sgl() ? I'm not sure I remember ?
+>> What is it's API? and what does it do?
+>>
+>>> and kills the SCSI layer hack.  That was the issue you were trying
+>>> to solve, right?
+>> If you post URL of git tree I can have a look and start an early review
+>> if you want
+> 
+> Here's the patchset.  It builds but I haven't even booted it yet, so
+> expect some breakages.
+> 
+>   http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=map-untested
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git map-untested
+> 
+> Thanks.
+> 
 
+Hi Tejun.
 
+I hope you have not been working on stabilizing this code yet, I've just seen
+it this mornning (Israel time). It has obvious bugs, in the use of scatterlists.
 
+But before you go running to fix them. Don't. I don't like the scatter-list API
+at all. We where working hard to remove them from scsi and I don't like them
+for block layer either. 
 
+If it is for my personal needs then all I need is a simple:
+"I have this bio please attach it to a request". The reason I have a bio
+is because it comes from a filesystem and because I will be needing to use
+the raid engines that are bio based.
 
---- Comment #12 from Borislav Petkov <bbpetkov@yahoo.de>  2009-03-31 08:11:40 ---
-Hi Mark,
+I must have confused you with my blk_rq_map_pages() patches, these where made just
+as an example of the ugliness and fragility of not using bios. It was suppose to be
+a bad example, not to be accepted. (Hence the absence of my Singed-off-by:)
 
-here's a fix. Please do test and let me know whether it fixes your bug.
+Scatterlists are bad because they are two times too fat for what they do here, they
+need to be allocated, chained and slabbed, and finally they need to be converted to
+a bio. Working directly with a bio is the shortest route.
 
-Thanks,
-Boris.
+Looking at the patches it seems you are changing them as I write (git-web is freezing)
+So I sending this mail now. I was in the process of looking at them from the beginning.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+So far it looks like a very deep change, I have some comments, but it will need a proper
+review.
+
+I do not understand what was your intention for the blk_rq_map_kern_sgl() how's
+the user for it?
+
+BTW: now you absolutely must do something with the name of blk_rq_map_sg() which does not
+do any mapping and does not change request at all.
+
+Boaz
