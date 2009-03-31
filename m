@@ -1,39 +1,76 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/4] ide: call {in|out}put_data() methods from tf_{read|load}()
- methods (take 3)
-Date: Tue, 31 Mar 2009 22:59:17 +0400
-Message-ID: <49D26805.9080407@ru.mvista.com>
-References: <200903312224.15089.sshtylyov@ru.mvista.com> <200903312032.21513.bzolnier@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] ide: Fix host drivers that need IRQF_SHARED
+Date: Tue, 31 Mar 2009 21:16:55 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0903312115050.29238@anakin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25069 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1761926AbZCaS6r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Mar 2009 14:58:47 -0400
-In-Reply-To: <200903312032.21513.bzolnier@gmail.com>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:51564 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303AbZCaTRB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 15:17:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+commit 255115fb35f80735c21a1cbe9809e9795a3af26e ("ide: allow host drivers to
+specify IRQ flags") added irq_flags fields to struct ide_port_info and struct
+ide_host.  Drivers can now set ide_port_info.irq_flags = IRQF_SHARED, while
+init_irq() passes ide_host.irq_flags to request_irq().
 
->>Handle IDE_FTFLAG_{IN|OUT}_DATA flags in tf_{read|load}() methods by calling
->>{in|out}put_data() methods to transfer 2 bytes -- this will allow us to move
->>that handling out of those methods altogether...
+Unfortunately ide_host.irq_flags is never set, causing (on ARAnyM):
 
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+| Uniform Multi-Platform E-IDE driver
+| ide: Falcon IDE controller
+| Probing IDE interface ide0...
+| hda: Sarge m68k, ATA DISK drive
+| init_irq: sa = 0
+| ide0: disabled, unable to get IRQ 15
+| ide0: failed to initialize IDE interface
+| ide0: disabling port
 
->>---
->>Changes since take 2:
->>- removed no longer used mm_{inw|outw}() from ide-h8300.c...
+Solve this by copying ide_port_info.irq_flags to ide_host.irq_flags in
+ide_host_alloc().
 
-> No... please... just make it an incremental change.
+This bug probably affects the following IDE host drivers:
+  - buddha
+  - delkin_cb
+  - falconide
+  - gayle
+  - ide-cs
+  - macide
+  - q40ide
+  - scc_pata
+  - sgiioc4
 
-> "take 2" was already applied and I'm pushing it to Linus RIGHT NOW
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/ide/ide-probe.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-    OK, I didn't know that.
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 5488645..4ad37d6 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1317,6 +1317,7 @@ struct ide_host *ide_host_alloc(const struct ide_port_info *d, hw_regs_t **hws)
+ 		host->get_lock     = d->get_lock;
+ 		host->release_lock = d->release_lock;
+ 		host->host_flags = d->host_flags;
++		host->irq_flags = d->irq_flags;
+ 	}
+ 
+ 	return host;
+-- 
+1.6.2.1
 
-MBR, Sergei
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
