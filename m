@@ -1,80 +1,54 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH] tx4939ide: remove wmb()
-Date: Tue, 31 Mar 2009 09:36:15 -0700
-Message-ID: <da824cf30903310936p75469518j9bb28421b1ee81b8@mail.gmail.com>
-References: <1238516136-15852-1-git-send-email-anemo@mba.ocn.ne.jp>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] at91_ide: fix ->ftf_flags handling
+Date: Tue, 31 Mar 2009 19:34:30 +0200
+Message-ID: <200903311934.30792.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:60185 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768AbZCaQgV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 12:36:21 -0400
-In-Reply-To: <1238516136-15852-1-git-send-email-anemo@mba.ocn.ne.jp>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:53574 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753522AbZCaR7F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 13:59:05 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Tue, Mar 31, 2009 at 9:15 AM, Atsushi Nemoto <anemo@mba.ocn.ne.jp> w=
-rote:
-> * define CHECK_DMA_MASK
-> * remove use of wmb()
->
-> Suggested-by: Grant Grundler <grundler@google.com>
+Fix some incorrect IDE_FTFLAG_* changes which slipped in commit
+"ide: add "flagged" taskfile flags to struct ide_taskfile (v2)"
+(commit 19710d25d50ae0be05eebe4231ed8918b1092d82) few days ago.
 
-Thank you for the attribution!
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/at91_ide.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-But I think proper header would be:
-    Reported-by: Grant Grundler <grundler@google.com>
-
-But in this case, since i've looked at the code and am under the
-illusion I understand it, I'm comfortable with:
-    Reviewed-by: Grant Grundler <grundler@google.com>
-
-thanks!
-grant
-
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-> ---
-> This patch is against linux-next 20090331.
->
-> =C2=A0drivers/ide/tx4939ide.c | =C2=A0 =C2=A06 +++---
-> =C2=A01 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
-> index cc269c0..48186ae 100644
-> --- a/drivers/ide/tx4939ide.c
-> +++ b/drivers/ide/tx4939ide.c
-> @@ -327,15 +327,15 @@ static int tx4939ide_dma_end(ide_drive_t *drive=
-)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* read and clear the INTR & ERROR bits */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0dma_stat =3D tx4939ide_clear_dma_status(ba=
-se);
->
-> - =C2=A0 =C2=A0 =C2=A0 wmb();
-> +#define CHECK_DMA_MASK (ATA_DMA_ACTIVE | ATA_DMA_ERR | ATA_DMA_INTR)
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* verify good DMA status */
-> - =C2=A0 =C2=A0 =C2=A0 if ((dma_stat & (ATA_DMA_INTR | ATA_DMA_ERR | =
-ATA_DMA_ACTIVE)) =3D=3D 0 &&
-> + =C2=A0 =C2=A0 =C2=A0 if ((dma_stat & CHECK_DMA_MASK) =3D=3D 0 &&
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(ctl & (TX4939IDE_INT_XFEREN=
-D | TX4939IDE_INT_HOST)) =3D=3D
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(TX4939IDE_INT_XFEREND | TX4=
-939IDE_INT_HOST))
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* INT_IDE los=
-t... bug? */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;
-> - =C2=A0 =C2=A0 =C2=A0 return ((dma_stat & (ATA_DMA_INTR | ATA_DMA_ER=
-R | ATA_DMA_ACTIVE)) !=3D
-> + =C2=A0 =C2=A0 =C2=A0 return ((dma_stat & CHECK_DMA_MASK) !=3D
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ATA_DMA_INTR) =
-? 0x10 | dma_stat : 0;
-> =C2=A0}
->
-> --
-> 1.5.6.3
->
->
+Index: b/drivers/ide/at91_ide.c
+===================================================================
+--- a/drivers/ide/at91_ide.c
++++ b/drivers/ide/at91_ide.c
+@@ -192,10 +192,10 @@ static void at91_ide_tf_load(ide_drive_t
+ 	struct ide_taskfile *tf = &cmd->tf;
+ 	u8 HIHI = (cmd->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+ 
+-	if (cmd->tf_flags & IDE_FTFLAG_FLAGGED)
++	if (cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
+ 		HIHI = 0xFF;
+ 
+-	if (cmd->tf_flags & IDE_FTFLAG_OUT_DATA) {
++	if (cmd->ftf_flags & IDE_FTFLAG_OUT_DATA) {
+ 		u16 data = (tf->hob_data << 8) | tf->data;
+ 
+ 		at91_ide_output_data(drive, NULL, &data, 2);
+@@ -233,7 +233,7 @@ static void at91_ide_tf_read(ide_drive_t
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+ 	struct ide_taskfile *tf = &cmd->tf;
+ 
+-	if (cmd->tf_flags & IDE_FTFLAG_IN_DATA) {
++	if (cmd->ftf_flags & IDE_FTFLAG_IN_DATA) {
+ 		u16 data;
+ 
+ 		at91_ide_input_data(drive, NULL, &data, 2);
