@@ -1,46 +1,70 @@
-From: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
-Subject: Re: [PATCH] linux-next remove wmb() from ide-dma-sff.c and scc_pata.c
-Date: Tue, 31 Mar 2009 18:33:56 +0900
-Message-ID: <49D1E384.8080009@toshiba.co.jp>
-References: <da824cf30903301739l688e8eb2r46086953245ebbe5@mail.gmail.com>
-	<alpine.LRH.2.00.0903310950040.9551@vixen.sonytel.be>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: EP93xx PIO IDE driver proposal
+Date: Tue, 31 Mar 2009 14:36:25 +0400
+Message-ID: <49D1F229.4000602@ru.mvista.com>
+References: <49CCD7C4.8000207@inov.pt> <49CFDD8F.1030306@bluewatersys.com>	<BD79186B4FD85F4B8E60E381CAEE1909014E2E09@mi8nycmail19.Mi8.com>	<49D0CAE4.9090306@inov.pt> <49D12669.4030207@bluewatersys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
-In-Reply-To: <alpine.LRH.2.00.0903310950040.9551@vixen.sonytel.be>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, IDE/ATA Devel <linux-ide@vger.kernel.org>
-Cc: Linux/MIPS Development <linux-mips@linux-mips.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Atsushi Nemoto <anemo@mba.ocn.ne.jp>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Grant Grundler <grundler@google.com>, LKML <linux-kernel@google.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:15806 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751246AbZCaKgg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Mar 2009 06:36:36 -0400
+In-Reply-To: <49D12669.4030207@bluewatersys.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ryan Mallon <ryan@bluewatersys.com>
+Cc: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>, H Hartley Sweeten <hartleys@visionengravers.com>, linux-arm-kernel@lists.arm.linux.org.uk, linux-ide@vger.kernel.org
 
-2009/03/31 16:51, Geert Uytterhoeven wrote:
-> On Mon, 30 Mar 2009, Grant Grundler wrote:
->> Followup to "[PATCH 03/10] ide: destroy DMA mappings after ending DMA"
->> email on March 14th:
->>     http://lkml.org/lkml/2009/3/14/17
->>
->> No maintainer is listed for "Toshiba CELL Reference Set IDE" (BLK_DEV_CELLEB)
->> or tx4939ide.c in MAINTAINERS. I've CC'd "Ishizaki Kou" @Toshiba (Maintainer for
->> "Spidernet Network Driver for CELL") and linuxppc-dev list in the hope
->> someone else
->> would know or would be able to ACK this patch.
-> 
-> tx49xx is MIPS, for Nemoto-san.
+Hello.
 
-The patch looks good for Toshiba Cell Reference Set.
-I think the patch will be acked by IDE maintainer.
+Ryan Mallon wrote:
 
-Thank you for informing me of the contribution.
+>> +static void
+>> +ep93xx_ide_pio_set_irq(ide_hwif_t *hwif, int on)
+>> +{
+>> +    u8 ctl = ATA_DEVCTL_OBS;
+>> +
+>> +    if (on == 4) { /* hack for SRST */
+>> +        ctl |= 4;
+>> +        on &= ~4;
+>> +    }
+>> +
+>> +    ctl |= on ? 0 : 2;
+>>     
+>
+> This function all seems a bit magic/hackish. Can you replace the
+> numbers here with #defines to make it clear what is being done.
+> You may also want to expand on the comment here to explain why the
+> 'hack' is needed.
+>   
 
-Regards,
+   It's standard implementation of this method, and looks the same in 
+all the other IDE drivers that redefine it. It's going to be gone in 
+2.6.30, so it's not worth wasting time...
 
--- Yoshi
+>> +
+>> +    ep93xx_ide_pio_writeb(hwif->config_data, ctl,
+>> hwif->io_ports.ctl_addr);
+>> +}
+>> +
+>> +static void
+>> +ep93xx_ide_pio_tf_load(ide_drive_t *drive, ide_task_t *task)
+>> +{
+>> +    ide_hwif_t *hwif = drive->hwif;
+>> +    struct ide_io_ports *io_ports = &hwif->io_ports;
+>> +    struct ide_taskfile *tf = &task->tf;
+>> +    u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+>>     
+>
+> Don't give local variables names with all capitals. What is hihi anyway?
+>   
+
+  He must've copied that from the other drivers, so that question is to 
+the IDE maintainever rather. :-)
+
+
+MBR, Sergei
+
+
