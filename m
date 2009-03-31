@@ -1,54 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] at91_ide: fix ->ftf_flags handling
-Date: Tue, 31 Mar 2009 19:34:30 +0200
-Message-ID: <200903311934.30792.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: turn selectproc() method into dev_select() method
+ (take 5)
+Date: Tue, 31 Mar 2009 22:19:32 +0400
+Message-ID: <49D25EB4.7060608@ru.mvista.com>
+References: <200903251439.54468.sshtylyov@ru.mvista.com> <200903262118.14931.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:53574 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753522AbZCaR7F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2009 13:59:05 -0400
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:24518 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754447AbZCaSTG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Mar 2009 14:19:06 -0400
+In-Reply-To: <200903262118.14931.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org, petkovbb@gmail.com
 
-Fix some incorrect IDE_FTFLAG_* changes which slipped in commit
-"ide: add "flagged" taskfile flags to struct ide_taskfile (v2)"
-(commit 19710d25d50ae0be05eebe4231ed8918b1092d82) few days ago.
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/at91_ide.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+>>Turn selectproc() method into dev_select() method by teaching it to write to the
+>>device register and moving it from 'struct ide_port_ops' to 'struct ide_tp_ops'.
 
-Index: b/drivers/ide/at91_ide.c
-===================================================================
---- a/drivers/ide/at91_ide.c
-+++ b/drivers/ide/at91_ide.c
-@@ -192,10 +192,10 @@ static void at91_ide_tf_load(ide_drive_t
- 	struct ide_taskfile *tf = &cmd->tf;
- 	u8 HIHI = (cmd->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
- 
--	if (cmd->tf_flags & IDE_FTFLAG_FLAGGED)
-+	if (cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
- 		HIHI = 0xFF;
- 
--	if (cmd->tf_flags & IDE_FTFLAG_OUT_DATA) {
-+	if (cmd->ftf_flags & IDE_FTFLAG_OUT_DATA) {
- 		u16 data = (tf->hob_data << 8) | tf->data;
- 
- 		at91_ide_output_data(drive, NULL, &data, 2);
-@@ -233,7 +233,7 @@ static void at91_ide_tf_read(ide_drive_t
- 	struct ide_io_ports *io_ports = &hwif->io_ports;
- 	struct ide_taskfile *tf = &cmd->tf;
- 
--	if (cmd->tf_flags & IDE_FTFLAG_IN_DATA) {
-+	if (cmd->ftf_flags & IDE_FTFLAG_IN_DATA) {
- 		u16 data;
- 
- 		at91_ide_input_data(drive, NULL, &data, 2);
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+>>---
+>>Changes since the 4th take:
+>>- added ide_dev_select() declaration to <linux/ide.h> at last... :-/
+
+> Seems like putting a bit more time into re-auditing the whole patch after
+> first issues are discovered/fixed wouldn't hurt...
+
+    What actually helped was actully compiling the patch. :-)
+
+> and yes, the same can be said about re-reviewing it in this case...
+
+    ;-)
+
+MBR, Sergei
