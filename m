@@ -1,34 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
-Date: Wed, 01 Apr 2009 21:11:51 +0000
-Message-ID: <1238620311.3318.99.camel@mulgrave.int.hansenpartnership.com>
+Date: Wed, 1 Apr 2009 17:23:29 -0400
+Message-ID: <87f94c370904011423m1c48dbd1vb934789cb02fc979@mail.gmail.com>
 References: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59063 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752643AbZDAVWk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2009 17:22:40 -0400
+Received: from yx-out-2324.google.com ([74.125.44.30]:3414 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756363AbZDAVXb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2009 17:23:31 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so231942yxl.1
+        for <linux-ide@vger.kernel.org>; Wed, 01 Apr 2009 14:23:29 -0700 (PDT)
 In-Reply-To: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: salimmu@beardog.cca.cpqcorp.net
 Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, scameron@beardog.cca.cpqcorp.net, mike.miller@hp.com, steve.cameron@hp.com
 
-On Wed, 2009-04-01 at 15:51 -0500, salimmu@beardog.cca.cpqcorp.net
-wrote:
-> +       mode = cdb[1] & 0x07; /* First 3 bits 0x07=00000111 */
+A signature block with the company name misspelled.
 
-SPC-3 defines this field as 5 bits; SPC-2 defined it as 4; it was only
-the ancient SPC standard that defined it as three.
+I'd look real close at the patch.
 
-I think you need to up this to 5 bits otherwise you might get
-interference from line verification attempts using the echo buffer
-(which is defined as mode 10 ... and would translate to 2 if you just
-believe the first 3 bits).
+On Wed, Apr 1, 2009 at 4:51 PM,  <salimmu@beardog.cca.cpqcorp.net> wrote:
+> Attach is a patch that adds translation of scsi WRITE_BUFFER to ATA_DOWNLOAD_MICROCODE command. This patch enables firmware flashing of sata drives that are registered as scsi devices under linux; hence scsi to ata translation is needed. This patch provides the translation.
+>
+> Imran Salim
+> Hewlett Pacakrd Company
+> Houston, TX
+> (281) 514-1531
+>
+>
 
-James
 
 
+-- 
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
