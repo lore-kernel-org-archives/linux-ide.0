@@ -1,199 +1,329 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
-Date: Wed, 01 Apr 2009 14:50:48 +0300
-Message-ID: <49D35518.3040901@panasas.com>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org> <200903281451.01361.bzolnier@gmail.com> <20090328140405.GA2741@liondog.tnic> <49D08CEC.3010705@kernel.org> <49D0A985.7090307@panasas.com> <49D0FF56.3080205@kernel.org> <49D1D7A3.40303@panasas.com> <49D1DCE2.1050201@kernel.org> <49D214E7.2040908@panasas.com> <49D21DF8.1020302@kernel.org>
+From: Justin Fletcher <gerph@gerph.org>
+Subject: Problems with >3 drives on an eSATA portmultiplier
+Date: Wed, 1 Apr 2009 14:54:55 +0100 (BST)
+Message-ID: <Pine.LNX.4.63.0904011454020.3947@buttercup.gerph.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:18515 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755542AbZDALwz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2009 07:52:55 -0400
-In-Reply-To: <49D21DF8.1020302@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.177]:50217 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759478AbZDANzB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2009 09:55:01 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by buttercup.gerph.org (Postfix) with ESMTP id 15C454BBDA
+	for <linux-ide@vger.kernel.org>; Wed,  1 Apr 2009 14:54:55 +0100 (BST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 03/31/2009 04:43 PM, Tejun Heo wrote:
-> Hello, Boaz.
-> 
-Hi Tejun
+Hiya,
 
-> Boaz Harrosh wrote:
->> On 03/31/2009 12:05 PM, Tejun Heo wrote:
->>> Hello, Boaz.
->>>
-> 
->>> sgl or bvec doesn't make much of difference.  The only difference
->>> between sgl and bvec is the extra entries for DMA mapping.  
->> Exactly, and in 32bit largemem that part is 200% of the first
->> part, so bvec can be 33% of sgl at times, and 50% usually.
-> 
-> And why would all that matter for temporary short-lived sgls on a
-> relatively cold path?
-> 
+I've been having problems recently with my external eSATA drives failing 
+to be recognised when there are more than 3 plugged in at one time.
 
-It's use is un-common yes, but it is not cold. It is very hot for it's
-users. Any SG_IO users from sg, bsg and other go threw here sometimes
-very hotly.
+Summary of problem:
 
-My benchmarks where done with the sg3_dd utility, going threw sg.c
-for direct IO submission. (sg3 utils package)
+When one drive is connected in the external box, everything is fine.
 
-I will use some such path for the exofs filesystem which is very
-hot for me
+When two are connected, everything is fine.
 
-> 
-> What?  If you're unhappy with sgl interface, improve it.  Don't go
-> around it.  Yeah, it took some work to work the sgl changes out but
-> it's stable now, so why not use it?
-> 
+When three are connected, it can sometimes take a while for them all to 
+be detected and mounted.
 
-I hate it, but pragmatically I will be too lazy to do anything
-about it.
+When four are connected, it almost never detects them properly or mounts 
+them. Occassionally I get all 4 mounted, and rarely I get just 1 or 2 of 
+the drives mounted.
 
-Again it is heavily used low down in drivers land, and DMA times
-which is what it is. It is not used in mm or VFS or user-mode-to-kernel.
-I thought we where talking about the interface above block layer.
-scatter lists have no place there.
+When five are connected, it's not mounting the drives.
 
->> At the time there was that long argument of it needing to be an
->> sg_table and chained at the table level. Because look how much
->> information is missing form a scatterlist. Like the length, the
->> allocated size associated data, ...  scatterlist is both too large
->> and too little to be a nice carrier structure for pages.
-> 
-> Again, then, please go ahead and improve it.  Whether you like it or
-> not, it's the de-facto standard segment carrying structure which is
-> widely used.  You can't go around that.
-> 
->> Other than that, using bvec or sgl wouldn't make any
->>> difference.  All that's necessary is common carrier of page/offset/len
->>> list.
->>>
->> bvec has the same shortages as a scatterlist, a good carrier is a bio
-> 
-> bio is _NOT_ designed to be a generic page carrier.  Please do not
-> abuse the interface just because the code is there.  If you think the
-> currnent sg code is lacking, improve it and then apply it to bio if
-> possible, don't twist and abuse bio.
-> 
 
-I'm only using bio the exact same way as other filesystems. The only
-difference is that I need it with a block_pc command.
+More details:
 
->>> But given the use of sgl there, I don't think the performance
->>> arguments holds much ground.  How high performance or scalability is
->>> required in PC bio map paths?  The added cost is at the most one more
->>> sgl allocation and use of more sparse data structure which BTW
->>> wouldn't be that large anyway.  
->> One pageful of scatterlist can be as small as 128 nents. This is a
->> stupid 512K. This is way too small for any real IO. Start chaining
->> these and you get a nightmare. The governing structure should be
->> something much longer, and smarter.  (Don't even think of allocating
->> something linearly bigger then one page it does not work).
-> 
-> I'm not trying to use sgl inside block layer.  I'm using it as page
-> carrier for kernel API (what else would you use?) and page carrier for
-> internal implementation because sgl has some useful helpers to deal
-> with them.
-> 
->>> Both aren't worth worrying about considering how relative coldness
->>> of the path and other overhead of doing IO.
->> Not true, with ram-disk performance benchmarks we could see 3-6% difference
->> with an extra sccaterlist allocation. SSDs and RDMA devices come close to
->> ram disk performance these days.
-> 
-> And you're doing that via PC requests using blk_rq_map_*() interface?
-> Wouldn't those IOs go through regular bio channel?
-> 
+The kernel I'm using now is 2.6.29 with no patches applied.
 
-Sure, that's the point. I need a block_pc command interface that is just as
-hot as current "regular bio channel".
+The system I'm using is a MSI motherboard, with a SiI eSATA controller 
+(a 3132, specifically this 
+one: http://www.span.com/catalog/product_info.php?products_id=15995 ) 
+connected though the only PCI express card on the MB.
 
-And so do CD-burners, tapes, you name it. Any none FS heavy usage of
-scsi devices, who's usage does not fit the narrow READ/WRITE flat array
-of sectors. They can have very heavy I/O, osd for instance.
+The bridgeboard in my external box is a NA910C, with a SiI3726 onboard 
+(specifically this 
+one: http://www.span.com/catalog/product_info.php?products_id=15709 ).
 
->>> If you think sgl is too heavy for things like this, the right way to
->>> go is to introduce some generic mechanism to carry sg chunks and use
->>> it in bio, but I don't think the overhead of the current sgl justifies
->>> that.  If you have qualms about the sgl API, please clean it up.  
->> sgl is a compromise with historical code at the DMA and LLD level.
->> It should not have any new users above the block layer.
-> 
-> bio is something which should be exported outside of block layer?
-> 
+The method of disconnecting the drives is to remove the SATA cable from 
+the bridge board.
 
-It is today, it's used in the interface between filesystems and block-layer
-and in-between stacked block devices.
+The eSATA cable has been replaced with another one (both 1M long) and 
+this has had no effect.
 
->>> I just don't think bvec should be used outside of block/fs
->>> interface.  As I wrote before, non-FS users have no reason to worry
->>> about bio.  All it should think about is the requst it needs to
->>> issue and the memory area it's gonna use as in/out buffers.  bio
->>> just doesn't have a place there.
->> I don't understand what happens to all the people that start to work
->> on the block layer, they start getting defensive about bio being
->> private to the request level. But the Genie is out of the bag
->> already (I know cats and bottles).  bio is already heavily used
->> above the block layer from directly inside filesystems to all kind
->> of raid engines, DM MD managers, multi paths, integrity information
->> ...
->>
->> Because bio is exactly that Ideal page carrier you are talking about.
->> The usage pattern needed by everybody everywhere is:
->> Allocate an abstract container starting empty. add some pages to it,
->> grow / chain endlessly as needed, (or as constrained from other factors).
->> Submit it down the stack. Next stage can re-use it, split it, merge it, mux
->> it demux it, bounce it, hang event notifiers, the works.
->>
->> The only such structure today is a bio. If an API should be cleaned up it
->> is the bio API. Add the nice iterator to it if you like sg_next() a lot.
->>
->> Make it so clean that all users of block-request take a bio, easily add
->> pages / memory segments to it, and then submit it into a request with a single
->> API, blk_req_add_bio(). or better blk_make_request(bio).
->>
->> Inventing half baked intermediate linear structures will not hold.
-> 
-> Thanks for the credit but I didn't invent sgl.
-> 
-> bio is unit of block IO viewed from filesystems.  Let's leave it
-> there.  If you're unhappy with sg_table or sgl, what needs to be done
-> is extending sg_table such that it does all the great things you
-> described above and then integrating it into bio.  If the extra fields
-> for DMA mapping matters, create a new structure which will be used for
-> that purpose and build API around it and then replace private bvec
-> handling inside bio and apply the new API gradually replacing sgl
-> usages where it makes sense.
-> 
-> In all seriousness, using bio as generic page list carrier is a
-> horrible horrible idea.  That's a path which will lead to strange
-> situations.  bio isa an interface tightly tied to block and fs
-> interface.  No one else has any business playing with it.  md/dm got
-> caught up inbetween and I know that people haven't been happy with the
-> situation and there haven been attempts to move over to request based
-> implementation although I don't know what happened thereafter, so
-> please stop pushing bio as generic data carrier because it is not and
-> should not ever be.
-> 
-> For now, the only thing that matter is whether to use sgl in
-> blk_rq_map_kern_sgl() or not.  I suppose you're pushing for using bio
-> instead, right?
-> 
+All the drives in the external box are Western Digital. 3 are 500G 
+drives, 2 are 1T 'Green Power' drives.
 
-Currently I do not see any candidate users for blk_rq_map_kern_sgl().
-sg.c was that last user and TOMO has converted that to blk_rq_map_user/_iov
-with map_data at places. It should all be going into 2.6.30.
+Once detected, the drives are mounted (and subsequently unmounted) by 
+udev rules.
 
-Me I will not use sgl. My main motivation is exofs, an osd based
-filesystem, and pNFS-objects-layout driver. Both of which leave in
-"fs" space. The only solution, which I currently have implemented,
-is using bios. sgl is not an option.
 
-Thanks
-Boaz
+History:
+
+The full 5 drives were working and being mounted correctly in the past. 
+However, due to many upgrades and confusing hardware problems at the 
+same time, trying to identify when that was has become a problem for me 
+- I can't say when it was working. When it was working I had a JMB362 
+PCIexpress card (specifically this one: 
+http://www.span.com/catalog/product_info.php?products_id=16361 ). This 
+has been replaced by the SiI card in order to determine if the card is a 
+problem; the problems persist and have the same symptoms. (should it be 
+necessary for diagnosis, I can put the JMB362 card back). I can say for 
+certain that the failures I'm seeing have happened at least on kernels 
+2.6.28.3, 2.6.28.4 and 2.6.29.
+
+During testing combinations of drives have been changed, and the bridge 
+board ports that they are plugged in to. This has not appeared to make 
+any difference - the factor in this equation is the number of drives 
+that are connected.
+
+
+Typical failure:
+
+A typical reads something like this (taken from kern.log from messages 
+collected during initialisation):
+
+Apr  1 11:43:23 buttercup kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.02: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to write SCR 1 (Emask=0x1)
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.03: hardreset failed (port not ready)
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1: controller in dubious state, performing PORT_RST
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.02: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.03: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to write SCR 2 (Emask=0x1)
+Apr  1 11:43:23 buttercup kernel: ata1.03: COMRESET failed (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1: controller in dubious state, performing PORT_RST
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.02: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.03: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 2 (Emask=0x1)
+Apr  1 11:43:23 buttercup kernel: ata1.03: COMRESET failed (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to recover link after 3 tries, disabling
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1: controller in dubious state, performing PORT_RST
+
+... and so on until it tries detaching the port multiplier ...
+
+Apr  1 11:43:23 buttercup kernel: ata1: controller in dubious state, performing PORT_RST
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: failed to read SCR 2 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.01: COMRESET failed (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1.01: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.01: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.01: failed to recover link after 3 tries, disabling
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.04: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.04: COMRESET failed (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1.04: failed to write SCR 1 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.04: failed to clear SError.N (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1: failed to recover PMP after 5 tries, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.15: Port Multiplier detaching
+Apr  1 11:43:23 buttercup kernel: ata1.00: disabled
+Apr  1 11:43:23 buttercup kernel: ata1: exception Emask 0x13 SAct 0x0 SErr 0x40d0000 action 0xe frozen t4
+Apr  1 11:43:23 buttercup kernel: ata1: irq_stat 0x01100010, PHY RDY changed
+Apr  1 11:43:23 buttercup kernel: ata1: SError: { PHYRdyChg CommWake 10B8B DevExch }
+Apr  1 11:43:23 buttercup kernel: ata1: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.02: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.03: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: COMRESET failed (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.02: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to read SCR 0 (Emask=0x1)
+Apr  1 11:43:23 buttercup kernel: ata1.02: COMRESET failed (errno=-5)
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.02: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.02: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to read SCR 0 (Emask=0x1)
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to read SCR 1 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.02: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.03: hardreset failed (port not ready)
+Apr  1 11:43:23 buttercup kernel: ata1.03: failed to read SCR 0 (Emask=0x40)
+Apr  1 11:43:23 buttercup kernel: ata1.03: reset failed, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.15: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1: controller in dubious state, performing PORT_RST
+
+... and the sequence repeats until it gets fed up ...
+
+Apr  1 11:43:23 buttercup kernel: ata1: controller in dubious state, performing PORT_RST
+Apr  1 11:43:23 buttercup kernel: ata1.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.01: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.01: SATA link down (SStatus 221 SControl 300)
+Apr  1 11:43:23 buttercup kernel: ata1.05: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.00: ATA-8: WDC WD5000AAKS-00YGA0, 12.01C02, max UDMA/133
+Apr  1 11:43:23 buttercup kernel: ata1.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+Apr  1 11:43:23 buttercup kernel: ata1.00: configured for UDMA/100
+Apr  1 11:43:23 buttercup kernel: ata1.04: PHY status changed but maxed out on retries, giving up
+Apr  1 11:43:23 buttercup kernel: ata1.04: Manully issue scan to resume this link
+Apr  1 11:43:23 buttercup kernel: ata1: PMP SError.N set for some ports, repeating recovery
+Apr  1 11:43:23 buttercup kernel: ata1.00: hard resetting link
+Apr  1 11:43:23 buttercup kernel: ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Apr  1 11:43:23 buttercup kernel: ata1.00: configured for UDMA/100
+Apr  1 11:43:23 buttercup kernel: ata1: EH pending after 5 tries, giving up
+Apr  1 11:43:23 buttercup kernel: ata1: EH complete
+
+
+As can be seen, it got as far as identifying one of the drives in this 
+configuration on the final attempt, but the other 3 were not detected 
+properly.
+
+
+My gut feeling:
+
+There's some timing problem involved here - either the drives are being 
+sent commands when they're not ready, or they're being timed out before 
+they have a chance to respond after a reset. As the problem gets worse 
+(to the point of always failing) with more drives, I'm thinking of some 
+overall timeout that's being triggered but the individual drives are 
+getting less and less time to handle it. For example, drive 1 reset at 
+1s, drive 2 reset at 2s, drive 3 reset at 3s, etc, but an overall 
+timeout of 8s, so by the time that drive 5 has been reset, it only has 
+3s to respond and its initialisation takes longer than that so it never 
+does). Not knowing what is involved here, this may be complete rubbish 
+and is purely guesswork on my part.
+
+
+More details from kernel logs:
+
+Because I'm not sure what's useful, and I wanted to capture some timings 
+for the sequences of events, I've captured kernel logs of the a number 
+of drive combinations. In each case the PC was turned off, the box was 
+turned off, the SATA leads were connected as required for the test, then 
+the box turned on, a few seconds waited for the box to settle, then the 
+PC turned on. The system booted into 2.6.29 and then waited until it had 
+settled to a login prompt. At this point, the drive box was turned off. 
+The system then shut down whatever drives it had detected after 
+determining that the PMP had gone away. The drive box was then turned on 
+again. This second initialisation of the box should ensure that there 
+are timings present in the kernel logs which determine how long it was 
+between events.
+
+The numbering of the logs indicates which drives were connected - these 
+are drives numbers from 1-5, not the numbers used in the log messages 
+which are 0-4 (it just makes more sense for me to think of them as 
+drives 1-5 not 0-4).
+
+Drives 1-3 are 500G, drives 4-5 are 1T.
+
+In the logs it can also be seen that there are two ATA drives connected 
+to the MB, and two SATA drives connected to the MB. Neither of these 
+appear to exhibit any other problems.
+
+The logs can be found at:
+
+http://usenet.gerph.org/SATA/
+
+
+sata-15-kern.log:
+    2 drives connected.
+    All detected during initialisation.
+    All detected on restarting box.
+
+sata-45-kern.log:
+    2 drives connected.
+    All detected during initialisation.
+    All detected on restarting box, although it reset the port 3 times.
+
+sata-125-kern.log:
+    3 drives connected.
+    All detected during initialisation, but after doing so it then tried
+    to re-detect later (which was successful)
+    All detected on restarting box, although it reset the port 2 times
+    and had SCSI errors reported which it recovered from.
+
+sata-345-kern.log:
+    3 drives connected.
+    1 detected during initialisation, only drive 4 was initialised
+    properly; during init 3 had been IDENTIFYd but the port was then
+    reset and more attempts made.
+    All detected on restarting box, although it reset the port 2 times
+    and had other errors reported which it recovered from.
+
+sata-1235-kern.log:
+    4 drives connected.
+    1 detected during initialisation (drive 1), many attempts made.
+    None detected on restarting box, although it retried many times.
+
+sata-12345-kern.log:
+    5 drives connected.
+    None detected during initialisation, many attempts made.
+    Ineffective - no output when the external box was turned off, nor
+    when it was turned on.
+
+
+Finally:
+
+I can provide more information, more combinations and try different 
+kernel configurations if it's found to be useful for this. I'm sorry if 
+this information is too verbose, or if I've missed something out - 
+please let me know and I'll try to do tests or fill in the blanks.
+
+
+Hope someone can help with this!
+
+
+-- 
+Gerph <http://gerph.org/>
+[ All information, speculation, opinion or data within, or attached to,
+   this email is private and confidential. Such content may not be
+   disclosed to third parties, or a public forum, without explicit
+   permission being granted. ]
