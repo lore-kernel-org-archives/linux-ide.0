@@ -1,43 +1,128 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: Linux 2.6.29
-Date: Wed, 01 Apr 2009 14:34:33 -0400
-Message-ID: <49D3B3B9.1070409@rtr.ca>
-References: <20090324093245.GA22483@elte.hu> <20090324101011.6555a0b9@lxorguk.ukuu.org.uk> <20090324103111.GA26691@elte.hu> <20090324132032.GK5814@mit.edu> <alpine.LFD.2.00.0903241053200.3032@localhost.localdomain> <20090324184549.GE32307@mit.edu> <alpine.LFD.2.00.0903241218130.3032@localhost.localdomain> <49C93AB0.6070300@garzik.org> <20090325093913.GJ27476@kernel.dk> <49CA86BD.6060205@garzik.org> <20090325194341.GB27476@kernel.dk> <49D281D8.8030203@garzik.org> <49D2930A.5030905@redhat.com> <49D29797.80200@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/2] at91_ide: remove custom tf_{ead|load}() methods
+Date: Wed, 1 Apr 2009 23:17:48 +0400
+Message-ID: <200904012317.48069.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:42301 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755202AbZDASeg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Apr 2009 14:34:36 -0400
-In-Reply-To: <49D29797.80200@garzik.org>
+Received: from h155.mvista.com ([63.81.120.155]:51226 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1764095AbZDATRU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Apr 2009 15:17:20 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Ingo Molnar <mingo@elte.hu>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Mark Lord <liml@rtr.ca>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Ric Wheeler wrote:
->> Jeff Garzik wrote:
->>> Jens Axboe wrote:
-..
->>> IMO we could look at this too, or perhaps come up with an alternate 
->>> proposal like FLUSH CACHE RANGE(s).
-> 
->> I agree that it is worth getting better mechanisms in place - the 
->> cache flush is really primitive. Now we just need a victim to sit in 
->> on T13/T10 standards meetings :-)
-> 
-> 
-> Heck, we could even do a prototype implementation with the help of Mark 
-> Lord's sata_mv target mode support...
-..
+Since tf_{read|load}() methods of this driver have now become identical to their
+standard counterparts using MMIO accesses, there's no need to override those
+anymore...
 
-Speaking of which.. you probably won't see the preliminary rev
-of sata_mv + target_mode until sometime this weekend.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-It's going to be something quite simple for 2.6.30,
-and we can expand on that in later kernels.
+---
+The patch is against the current Linus' tree...
 
-Cheers
+ drivers/ide/at91_ide.c |   78 +------------------------------------------------
+ 1 files changed, 2 insertions(+), 76 deletions(-)
+
+Index: linux-2.6/drivers/ide/at91_ide.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/at91_ide.c
++++ linux-2.6/drivers/ide/at91_ide.c
+@@ -185,80 +185,6 @@ static void ide_mm_outb(u8 value, unsign
+ 	writeb(value, (void __iomem *) port);
+ }
+ 
+-static void at91_ide_tf_load(ide_drive_t *drive, struct ide_cmd *cmd)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct ide_io_ports *io_ports = &hwif->io_ports;
+-	struct ide_taskfile *tf = &cmd->tf;
+-	u8 HIHI = (cmd->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+-
+-	if (cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
+-		HIHI = 0xFF;
+-
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_FEATURE)
+-		ide_mm_outb(tf->hob_feature, io_ports->feature_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_NSECT)
+-		ide_mm_outb(tf->hob_nsect, io_ports->nsect_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAL)
+-		ide_mm_outb(tf->hob_lbal, io_ports->lbal_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAM)
+-		ide_mm_outb(tf->hob_lbam, io_ports->lbam_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAH)
+-		ide_mm_outb(tf->hob_lbah, io_ports->lbah_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_FEATURE)
+-		ide_mm_outb(tf->feature, io_ports->feature_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_NSECT)
+-		ide_mm_outb(tf->nsect, io_ports->nsect_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAL)
+-		ide_mm_outb(tf->lbal, io_ports->lbal_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAM)
+-		ide_mm_outb(tf->lbam, io_ports->lbam_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAH)
+-		ide_mm_outb(tf->lbah, io_ports->lbah_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_DEVICE)
+-		ide_mm_outb((tf->device & HIHI) | drive->select, io_ports->device_addr);
+-}
+-
+-static void at91_ide_tf_read(ide_drive_t *drive, struct ide_cmd *cmd)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct ide_io_ports *io_ports = &hwif->io_ports;
+-	struct ide_taskfile *tf = &cmd->tf;
+-
+-	/* be sure we're looking at the low order bits */
+-	ide_mm_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_IN_ERROR)
+-		tf->error  = ide_mm_inb(io_ports->feature_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_NSECT)
+-		tf->nsect  = ide_mm_inb(io_ports->nsect_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_LBAL)
+-		tf->lbal   = ide_mm_inb(io_ports->lbal_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_LBAM)
+-		tf->lbam   = ide_mm_inb(io_ports->lbam_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_LBAH)
+-		tf->lbah   = ide_mm_inb(io_ports->lbah_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_DEVICE)
+-		tf->device = ide_mm_inb(io_ports->device_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
+-		ide_mm_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
+-
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_ERROR)
+-			tf->hob_error = ide_mm_inb(io_ports->feature_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_NSECT)
+-			tf->hob_nsect = ide_mm_inb(io_ports->nsect_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAL)
+-			tf->hob_lbal  = ide_mm_inb(io_ports->lbal_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAM)
+-			tf->hob_lbam  = ide_mm_inb(io_ports->lbam_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAH)
+-			tf->hob_lbah  = ide_mm_inb(io_ports->lbah_addr);
+-	}
+-}
+-
+ static void at91_ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
+ {
+ 	struct ide_timing *timing;
+@@ -284,8 +210,8 @@ static const struct ide_tp_ops at91_ide_
+ 	.write_devctl	= ide_write_devctl,
+ 
+ 	.dev_select	= ide_dev_select,
+-	.tf_load	= at91_ide_tf_load,
+-	.tf_read	= at91_ide_tf_read,
++	.tf_load	= ide_tf_load,
++	.tf_read	= ide_tf_read,
+ 
+ 	.input_data	= at91_ide_input_data,
+ 	.output_data	= at91_ide_output_data,
+
