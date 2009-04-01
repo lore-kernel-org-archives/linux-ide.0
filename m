@@ -1,129 +1,130 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH resend 2/2] ide-h8300: remove custom tf_{read|load}() methods
-Date: Wed, 1 Apr 2009 23:21:14 +0400
-Message-ID: <200904012321.14661.sshtylyov@ru.mvista.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] ide: falconide/q40ide - Use __ide_mm_{in,out}sw() for data
+ transfer
+Date: Wed, 1 Apr 2009 22:43:50 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0904012243060.29342@anakin>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:51314 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759501AbZDATUo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Apr 2009 15:20:44 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Since tf_{read|load}() methods of this driver have now become identical to their
-standard counterparts using I/O port accesses, there's no need to override those
-anymore...
+Both of commits f94116aeec7a299640dd692128e1d22178affa8d ("ide: cleanup
+<asm-m68k/ide.h>") and 15a453a955f89f6545118770c669b52e925368bd ("ide: include
+<asm/ide.h> only when needed") break falconide:
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+| Uniform Multi-Platform E-IDE driver
+| ide: Falcon IDE controller
+| Probing IDE interface ide0...
+| hda: Sarge m68k, ATA DISK drive
+| ide0 at 0xfff00000 on irq 15 (serialized)
+| ide-gd driver 1.18
+| hda: max request size: 128KiB
+| hda: 2118816 sectors (1084 MB) w/256KiB Cache, CHS=2102/16/63
+|  hda:<4>hda: lost interrupt
 
+This happens because falconide relies on {in,out}sw() being redefined in
+<asm/ide.h>, as included by <linux/ide.h>, which is no longer the case.
+Use __ide_mm_{in,out}sw() from <asm/ide.h> instead, just like
+ide_{in,out}put_data() do.
+
+The same problem seems to exist in q40ide.
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 ---
-The patch is against the current Linus' tree...
+ drivers/ide/falconide.c |   13 +++++++++----
+ drivers/ide/q40ide.c    |   14 ++++++++++----
+ 2 files changed, 19 insertions(+), 8 deletions(-)
 
- drivers/ide/ide-h8300.c |   79 +-----------------------------------------------
- 1 files changed, 2 insertions(+), 77 deletions(-)
-
-Index: linux-2.6/drivers/ide/ide-h8300.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-h8300.c
-+++ linux-2.6/drivers/ide/ide-h8300.c
-@@ -22,81 +22,6 @@
- 	(r);				\
- })
+diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
+index b368a5e..1f790da 100644
+--- a/drivers/ide/falconide.c
++++ b/drivers/ide/falconide.c
+@@ -20,6 +20,7 @@
+ #include <asm/atarihw.h>
+ #include <asm/atariints.h>
+ #include <asm/atari_stdma.h>
++#include <asm/ide.h>
  
--static void h8300_tf_load(ide_drive_t *drive, struct ide_cmd *cmd)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct ide_io_ports *io_ports = &hwif->io_ports;
--	struct ide_taskfile *tf = &cmd->tf;
--	u8 HIHI = (cmd->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
--
--	if (cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
--		HIHI = 0xFF;
--
--	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_FEATURE)
--		outb(tf->hob_feature, io_ports->feature_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_NSECT)
--		outb(tf->hob_nsect, io_ports->nsect_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAL)
--		outb(tf->hob_lbal, io_ports->lbal_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAM)
--		outb(tf->hob_lbam, io_ports->lbam_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAH)
--		outb(tf->hob_lbah, io_ports->lbah_addr);
--
--	if (cmd->tf_flags & IDE_TFLAG_OUT_FEATURE)
--		outb(tf->feature, io_ports->feature_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_NSECT)
--		outb(tf->nsect, io_ports->nsect_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAL)
--		outb(tf->lbal, io_ports->lbal_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAM)
--		outb(tf->lbam, io_ports->lbam_addr);
--	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAH)
--		outb(tf->lbah, io_ports->lbah_addr);
--
--	if (cmd->tf_flags & IDE_TFLAG_OUT_DEVICE)
--		outb((tf->device & HIHI) | drive->select,
--		     io_ports->device_addr);
--}
--
--static void h8300_tf_read(ide_drive_t *drive, struct ide_cmd *cmd)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct ide_io_ports *io_ports = &hwif->io_ports;
--	struct ide_taskfile *tf = &cmd->tf;
--
--	/* be sure we're looking at the low order bits */
--	outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
--
--	if (cmd->tf_flags & IDE_TFLAG_IN_ERROR)
--		tf->error  = inb(io_ports->feature_addr);
--	if (cmd->tf_flags & IDE_TFLAG_IN_NSECT)
--		tf->nsect  = inb(io_ports->nsect_addr);
--	if (cmd->tf_flags & IDE_TFLAG_IN_LBAL)
--		tf->lbal   = inb(io_ports->lbal_addr);
--	if (cmd->tf_flags & IDE_TFLAG_IN_LBAM)
--		tf->lbam   = inb(io_ports->lbam_addr);
--	if (cmd->tf_flags & IDE_TFLAG_IN_LBAH)
--		tf->lbah   = inb(io_ports->lbah_addr);
--	if (cmd->tf_flags & IDE_TFLAG_IN_DEVICE)
--		tf->device = inb(io_ports->device_addr);
--
--	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
--		outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
--
--		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_ERROR)
--			tf->hob_error = inb(io_ports->feature_addr);
--		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_NSECT)
--			tf->hob_nsect = inb(io_ports->nsect_addr);
--		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAL)
--			tf->hob_lbal  = inb(io_ports->lbal_addr);
--		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAM)
--			tf->hob_lbam  = inb(io_ports->lbam_addr);
--		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAH)
--			tf->hob_lbah  = inb(io_ports->lbah_addr);
--	}
--}
--
- static void mm_outsw(unsigned long addr, void *buf, u32 len)
+ #define DRV_NAME "falconide"
+ 
+@@ -67,8 +68,10 @@ static void falconide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
  {
- 	unsigned short *bp = (unsigned short *)buf;
-@@ -130,8 +55,8 @@ static const struct ide_tp_ops h8300_tp_
- 	.write_devctl		= ide_write_devctl,
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
  
- 	.dev_select		= ide_dev_select,
--	.tf_load		= h8300_tf_load,
--	.tf_read		= h8300_tf_read,
-+	.tf_load		= ide_tf_load,
-+	.tf_read		= ide_tf_read,
+-	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+-		return insw(data_addr, buf, (len + 1) / 2);
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
++		__ide_mm_insw(data_addr, buf, (len + 1) / 2);
++		return;
++	}
  
- 	.input_data		= h8300_input_data,
- 	.output_data		= h8300_output_data,
+ 	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+ }
+@@ -78,8 +81,10 @@ static void falconide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 
+-	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+-		return outsw(data_addr, buf, (len + 1) / 2);
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
++		__ide_mm_outsw(data_addr, buf, (len + 1) / 2);
++		return;
++	}
+ 
+ 	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+ }
+diff --git a/drivers/ide/q40ide.c b/drivers/ide/q40ide.c
+index 2a43a2f..f054186 100644
+--- a/drivers/ide/q40ide.c
++++ b/drivers/ide/q40ide.c
+@@ -16,6 +16,8 @@
+ #include <linux/blkdev.h>
+ #include <linux/ide.h>
+ 
++#include <asm/ide.h>
++
+     /*
+      *  Bases of the IDE interfaces
+      */
+@@ -77,8 +79,10 @@ static void q40ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 
+-	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+-		return insw(data_addr, buf, (len + 1) / 2);
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
++		__ide_mm_insw(data_addr, buf, (len + 1) / 2);
++		return;
++	}
+ 
+ 	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+ }
+@@ -88,8 +92,10 @@ static void q40ide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
+ {
+ 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 
+-	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
+-		return outsw(data_addr, buf, (len + 1) / 2);
++	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
++		__ide_mm_outsw(data_addr, buf, (len + 1) / 2);
++		return;
++	}
+ 
+ 	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+ }
+-- 
+1.6.2.1
 
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
