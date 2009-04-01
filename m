@@ -1,35 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata_check_status_mmio exception kernel panic
-Date: Wed, 01 Apr 2009 12:37:58 +0900
-Message-ID: <49D2E196.3040509@kernel.org>
-References: <3fb94e50903312006y12717b8dh7dd7769f3f5b1dda@mail.gmail.com>
+From: James Andrewartha <jamesa@daa.com.au>
+Subject: Re: Mysteriously slow writes SiI 3124
+Date: Wed, 01 Apr 2009 13:34:00 +0800
+Message-ID: <49D2FCC8.1060204@daa.com.au>
+References: <49AB079A.9090407@rabbit.us> <49AE294D.2020002@rabbit.us> <da824cf30903040910gff4d99en8fc8097fc6a05668@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55720 "EHLO hera.kernel.org"
+Received: from quoll.daa.com.au ([203.17.251.1]:40214 "EHLO quoll.daa.com.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754724AbZDADhc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Mar 2009 23:37:32 -0400
-In-Reply-To: <3fb94e50903312006y12717b8dh7dd7769f3f5b1dda@mail.gmail.com>
+	id S1750902AbZDAFmL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Apr 2009 01:42:11 -0400
+In-Reply-To: <da824cf30903040910gff4d99en8fc8097fc6a05668@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sagar Borikar <sagar.borikar@gmail.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Grant Grundler <grundler@google.com>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-ide@vger.kernel.org
 
-Hello,
+Grant Grundler wrote:
+> On Tue, Mar 3, 2009 at 11:10 PM, Peter Rabbitson <rabbit+list@rabbit.us> wrote:
+>> No takers? Can I provide more info/measurements/whatever? I would
+>> really like to get to the bottom of this, pretty frustrating.
+> 
+> Are you ok with wild guesses?
+> This sounds remarkable similar to the performance of the equivalent
+> PCIe SATA controller from Silicon Image (3132). The 3132 has 1 PCI-E
+> lane and should able to move more than 220 MB/s or so. But in fact can
+> only read 120MB/s and write 170MB/s.
 
-Sagar Borikar wrote:
-> We are facing random kernel panics on drive removal when IO is
-> happening to RAID. Note that kernel panic is random and not every time
-> it happens. This is mips based production system and kernel is 2.6.18.
-> Unfortunately we can't upgrade the kernel as its on field.
-
-2.6.18 is way too old and the mentioned function has been removed a
-lont time ago in favor of iomem support.  Can you please give a shot
-at more recent kernel?
-
-Thanks.
+The hardware is limited:
+http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Silicon_Image_3124
+http://www.mail-archive.com/linux-ide@vger.kernel.org/msg10143.html
+http://markmail.org/message/dkwn2imwkjg7aeyl
 
 -- 
-tejun
+James Andrewartha
