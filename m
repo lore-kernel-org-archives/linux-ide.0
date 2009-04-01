@@ -1,130 +1,149 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] ide: falconide/q40ide - Use __ide_mm_{in,out}sw() for data
- transfer
-Date: Wed, 1 Apr 2009 22:43:50 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0904012243060.29342@anakin>
+From: salimmu@beardog.cca.cpqcorp.net
+Subject: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
+Date: Wed, 1 Apr 2009 15:51:15 -0500
+Message-ID: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="zYM0uCDKw75PZbzx"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:30826 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbZDAUvQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2009 16:51:16 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, scameron@beardog.cca.cpqcorp.net, mike.miller@hp.com, steve.cameron@hp.com
 
-Both of commits f94116aeec7a299640dd692128e1d22178affa8d ("ide: cleanup
-<asm-m68k/ide.h>") and 15a453a955f89f6545118770c669b52e925368bd ("ide: include
-<asm/ide.h> only when needed") break falconide:
 
-| Uniform Multi-Platform E-IDE driver
-| ide: Falcon IDE controller
-| Probing IDE interface ide0...
-| hda: Sarge m68k, ATA DISK drive
-| ide0 at 0xfff00000 on irq 15 (serialized)
-| ide-gd driver 1.18
-| hda: max request size: 128KiB
-| hda: 2118816 sectors (1084 MB) w/256KiB Cache, CHS=2102/16/63
-|  hda:<4>hda: lost interrupt
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-This happens because falconide relies on {in,out}sw() being redefined in
-<asm/ide.h>, as included by <linux/ide.h>, which is no longer the case.
-Use __ide_mm_{in,out}sw() from <asm/ide.h> instead, just like
-ide_{in,out}put_data() do.
+Attach is a patch that adds translation of scsi WRITE_BUFFER to ATA_DOWNLOAD_MICROCODE command. This patch enables firmware flashing of sata drives that are registered as scsi devices under linux; hence scsi to ata translation is needed. This patch provides the translation.
 
-The same problem seems to exist in q40ide.
+Imran Salim
+Hewlett Pacakrd Company
+Houston, TX
+(281) 514-1531
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/ide/falconide.c |   13 +++++++++----
- drivers/ide/q40ide.c    |   14 ++++++++++----
- 2 files changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
-index b368a5e..1f790da 100644
---- a/drivers/ide/falconide.c
-+++ b/drivers/ide/falconide.c
-@@ -20,6 +20,7 @@
- #include <asm/atarihw.h>
- #include <asm/atariints.h>
- #include <asm/atari_stdma.h>
-+#include <asm/ide.h>
- 
- #define DRV_NAME "falconide"
- 
-@@ -67,8 +68,10 @@ static void falconide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
- {
- 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
- 
--	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
--		return insw(data_addr, buf, (len + 1) / 2);
-+	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
-+		__ide_mm_insw(data_addr, buf, (len + 1) / 2);
-+		return;
-+	}
- 
- 	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="linux-2.6.16.60-0.21-atawritebuffer.patch"
+
+diff -burp linux-2.6.16.60-0.21/drivers/ata/libata-scsi.c linux-2.6.16.60-0.21.ver1.[coderefactor]/drivers/ata/libata-scsi.c
+--- linux-2.6.16.60-0.21/drivers/ata/libata-scsi.c	2009-03-06 07:45:22.000000000 -0500
++++ linux-2.6.16.60-0.21.ver1.[coderefactor]/drivers/ata/libata-scsi.c	2009-03-09 08:15:36.000000000 -0400
+@@ -1417,6 +1417,78 @@ nothing_to_do:
+ 	return 1;
  }
-@@ -78,8 +81,10 @@ static void falconide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
- {
- 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
  
--	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
--		return outsw(data_addr, buf, (len + 1) / 2);
-+	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
-+		__ide_mm_outsw(data_addr, buf, (len + 1) / 2);
-+		return;
-+	}
- 
- 	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
- }
-diff --git a/drivers/ide/q40ide.c b/drivers/ide/q40ide.c
-index 2a43a2f..f054186 100644
---- a/drivers/ide/q40ide.c
-+++ b/drivers/ide/q40ide.c
-@@ -16,6 +16,8 @@
- #include <linux/blkdev.h>
- #include <linux/ide.h>
- 
-+#include <asm/ide.h>
++/*
++ *	ata_scsi_write_buffer_xlat - Translates SCSI 'Write Buffer' command
++ *	into ATA equivalent 'Download Microcode' command. This function is
++ *	implemented according to following spec.
++ * 		Working Draft American National Standard Information Technology
++ *	 	SCSI/ATA Translation-2 (SAT-2)
++ *	 	T10/1826-D Rev 5 Date: June 22, 2008
++ *	@qc: Storage for translated ATA taskfile
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++static unsigned int ata_scsi_write_buffer_xlat(struct ata_queued_cmd *qc)
++{
++	/* scsi */
++	int mode = 0;
++	int buff_id = 0;
++	int buff_offset = 0;
++	int parm_list_len = 0;
 +
-     /*
-      *  Bases of the IDE interfaces
-      */
-@@ -77,8 +79,10 @@ static void q40ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
- {
- 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
- 
--	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
--		return insw(data_addr, buf, (len + 1) / 2);
-+	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
-+		__ide_mm_insw(data_addr, buf, (len + 1) / 2);
-+		return;
++	/* ata */
++	int n_sect = 0;
++
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	const u8 *cdb = scmd->cmnd;
++	struct ata_taskfile *tf = &qc->tf;
++
++	mode = cdb[1] & 0x07; /* First 3 bits 0x07=00000111 */
++	buff_id = cdb[2];
++
++	buff_offset |= cdb[3] << 24;
++	buff_offset |= cdb[4] << 16;
++	buff_offset |= cdb[5];
++
++	parm_list_len |= cdb[6] << 16;
++	parm_list_len |= cdb[7] << 8;
++	parm_list_len |= cdb[8];
++
++	n_sect = parm_list_len / ATA_SECT_SIZE;
++	qc->nsect = n_sect;
++
++	tf->nsect =  n_sect & 0xff;
++	tf->lbal  = (n_sect >> 8) & 0xff;
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR | ATA_TFLAG_WRITE;
++
++	switch (mode) {
++	case 0x02:
++		if (buff_id == 0 && buff_offset == 0 && parm_list_len == 512) {
++			tf->command = ATA_CMD_WRITE_BUFFER;
++			tf->protocol = ATA_PROT_PIO;
++		} else {
++			ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
++		}
++		break;
++	case 0x05:
++		tf->command = ATA_CMD_DOWNLOAD_MICROCODE;
++		tf->protocol = ATA_PROT_PIO;
++		tf->feature = 7;
++		break;
++	case 0x07:
++		tf->command = ATA_CMD_DOWNLOAD_MICROCODE;
++		tf->protocol = ATA_PROT_PIO;
++		tf->feature = 3;
++		break;
++	default:
++		ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
++		return 1;
 +	}
- 
- 	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
- }
-@@ -88,8 +92,10 @@ static void q40ide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
++
++	return 0;
++}
++
+ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
  {
- 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
+ 	struct ata_port *ap = qc->ap;
+@@ -2730,6 +2802,9 @@ static inline ata_xlat_func_t ata_get_xl
+ 	case WRITE_16:
+ 		return ata_scsi_rw_xlat;
  
--	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS))
--		return outsw(data_addr, buf, (len + 1) / 2);
-+	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
-+		__ide_mm_outsw(data_addr, buf, (len + 1) / 2);
-+		return;
-+	}
- 
- 	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
- }
--- 
-1.6.2.1
++	case WRITE_BUFFER:
++		return ata_scsi_write_buffer_xlat;
++
+ 	case SYNCHRONIZE_CACHE:
+ 		if (ata_try_flush_cache(dev))
+ 			return ata_scsi_flush_xlat;
+diff -burp linux-2.6.16.60-0.21/include/linux/ata.h linux-2.6.16.60-0.21.ver1.[coderefactor]/include/linux/ata.h
+--- linux-2.6.16.60-0.21/include/linux/ata.h	2009-03-06 07:45:53.000000000 -0500
++++ linux-2.6.16.60-0.21.ver1.[coderefactor]/include/linux/ata.h	2009-03-06 06:29:44.000000000 -0500
+@@ -130,6 +130,7 @@ enum {
+ 	ATA_CMD_STANDBY		= 0xE2, /* place in standby power mode */
+ 	ATA_CMD_IDLE		= 0xE3, /* place in idle power mode */
+ 	ATA_CMD_EDD		= 0x90,	/* execute device diagnostic */
++	ATA_CMD_DOWNLOAD_MICROCODE = 0x92,
+ 	ATA_CMD_FLUSH		= 0xE7,
+ 	ATA_CMD_FLUSH_EXT	= 0xEA,
+ 	ATA_CMD_ID_ATA		= 0xEC,
+@@ -150,6 +151,7 @@ enum {
+ 	ATA_CMD_WRITE_MULTI	= 0xC5,
+ 	ATA_CMD_WRITE_MULTI_EXT	= 0x39,
+ 	ATA_CMD_WRITE_MULTI_FUA_EXT = 0xCE,
++	ATA_CMD_WRITE_BUFFER	= 0xE8,
+ 	ATA_CMD_SET_FEATURES	= 0xEF,
+ 	ATA_CMD_PACKET		= 0xA0,
+ 	ATA_CMD_VERIFY		= 0x40,
+Signed-off-by: Imran Salim <imran.salim@hp.com>
 
-Gr{oetje,eeting}s,
 
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+--zYM0uCDKw75PZbzx--
