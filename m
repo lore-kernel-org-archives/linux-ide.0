@@ -1,55 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [patch 2.6.29-davinci1 git] dm6446evm CF support
-Date: Wed, 01 Apr 2009 22:12:25 +0400
-Message-ID: <49D3AE89.1080500@ru.mvista.com>
-References: <200904010308.13718.david-b@pacbell.net> <49D35C38.7070107@ru.mvista.com> <200904011009.10608.david-b@pacbell.net>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: Linux 2.6.29
+Date: Wed, 01 Apr 2009 14:34:33 -0400
+Message-ID: <49D3B3B9.1070409@rtr.ca>
+References: <20090324093245.GA22483@elte.hu> <20090324101011.6555a0b9@lxorguk.ukuu.org.uk> <20090324103111.GA26691@elte.hu> <20090324132032.GK5814@mit.edu> <alpine.LFD.2.00.0903241053200.3032@localhost.localdomain> <20090324184549.GE32307@mit.edu> <alpine.LFD.2.00.0903241218130.3032@localhost.localdomain> <49C93AB0.6070300@garzik.org> <20090325093913.GJ27476@kernel.dk> <49CA86BD.6060205@garzik.org> <20090325194341.GB27476@kernel.dk> <49D281D8.8030203@garzik.org> <49D2930A.5030905@redhat.com> <49D29797.80200@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:50157 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933435AbZDASLy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Apr 2009 14:11:54 -0400
-In-Reply-To: <200904011009.10608.david-b@pacbell.net>
+Received: from rtr.ca ([76.10.145.34]:42301 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755202AbZDASeg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Apr 2009 14:34:36 -0400
+In-Reply-To: <49D29797.80200@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: DaVinci <davinci-linux-open-source@linux.davincidsp.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Ingo Molnar <mingo@elte.hu>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Mark Lord <liml@rtr.ca>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hello.
+Jeff Garzik wrote:
+> Ric Wheeler wrote:
+>> Jeff Garzik wrote:
+>>> Jens Axboe wrote:
+..
+>>> IMO we could look at this too, or perhaps come up with an alternate 
+>>> proposal like FLUSH CACHE RANGE(s).
+> 
+>> I agree that it is worth getting better mechanisms in place - the 
+>> cache flush is really primitive. Now we just need a victim to sit in 
+>> on T13/T10 standards meetings :-)
+> 
+> 
+> Heck, we could even do a prototype implementation with the help of Mark 
+> Lord's sata_mv target mode support...
+..
 
-David Brownell wrote:
+Speaking of which.. you probably won't see the preliminary rev
+of sata_mv + target_mode until sometime this weekend.
 
->>>+config MACH_DAVINCI_EVM_CF
->>>+     bool "Use CompactFlash, not IDE drive"
->>>+     depends on MACH_DAVINCI_EVM && BLK_DEV_PALMCHIP_BK3710
->>>+     help
->>>+       Enable this if you want to use a CompactFlash card instead of
->>>+       an IDE/ATA drive.  The CF card will be used in "True IDE" mode.
->>>+
->>>+       At this writing, CF insert and remove events are not supported.
->>>+       Insert the CF at boot time, and leave it there until you power
->>>+       the system off.
->>>+
+It's going to be something quite simple for 2.6.30,
+and we can expand on that in later kernels.
 
->>    This instruction is already obsolete. As I've already noted, IDE core now 
->>supports warm plug via sysfs, see Documentation/ide/warm-plug-howto.txt. One 
->>can plug and unplug any time, this just won't be automatically noticed by the 
->>kernel, so one will need to notify it.
-
-> CF insert and remove events are very different from writing
-> some sysfs files.  They are handled through a pcmcia_socket
-> abstraction ... and are completely hands-off.  Socket events
-> include card insert/removal detection, and socket operations
-> include power on/off and reset.  I don't know that "true-IDE"
-> links work through those sockets, though.
-
-> That said ... I tried that manual workaround; it didn't work.
-
-> So:  no, that instruction is far from obsolete.
-
-    So, it would only work with real hard disks... sigh. Sorry for 
-disinformation then -- I hoped warm plug could've been helpful for CF.
-
-MBR, Sergei
+Cheers
