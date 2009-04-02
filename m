@@ -1,62 +1,103 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH 4/5] ide: Add support for TRIM
-Date: Thu, 2 Apr 2009 09:51:17 -0700
-Message-ID: <20090402165117.GQ2661@linux.intel.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <49D4E0C3.7080808@ru.mvista.com> <20090402162846.GO2661@linux.intel.com> <49D4E9EB.80207@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 5/5] libata: Add support for TRIM
+Date: Thu, 02 Apr 2009 13:20:01 -0400
+Message-ID: <49D4F3C1.3070200@rtr.ca>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <1238683047-13588-5-git-send-email-willy@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:6758 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932740AbZDBQvT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 12:51:19 -0400
-Content-Disposition: inline
-In-Reply-To: <49D4E9EB.80207@ru.mvista.com>
+Received: from rtr.ca ([76.10.145.34]:38953 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933478AbZDBRUE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Apr 2009 13:20:04 -0400
+In-Reply-To: <1238683047-13588-5-git-send-email-willy@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, David Woodhouse <David.Woodhouse@intel.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com
 
-On Thu, Apr 02, 2009 at 08:38:03PM +0400, Sergei Shtylyov wrote:
-> Hello.
->>>> +	task->tf_flags   = IDE_TFLAG_LBA48 | IDE_TFLAG_OUT_HOB |
->>>> +			   IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE |
->
->>>   The last 3 flags are going to be obsoleted too...
->
->> So if I remove them today, the command will still work?
->
->     s/obsoleted/renamed and moved to another other field/ -- I'm going to 
-> submit a patchset refactoring 'struct ide_cmd and 'struct ide-taskfile' 
-> at last...
+Matthew Wilcox wrote:
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> ---
+>  drivers/ata/libata-scsi.c |   46 +++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 46 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index b9747fa..d4c8b8b 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1029,6 +1029,46 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
+>  	desc[11] = block;
+>  }
+>  
+> +static int ata_discard_fn(struct request_queue *q, struct request *req,
+> +							struct bio *bio)
+> +{
+> +	unsigned size;
+> +	struct page *page = alloc_page(GFP_KERNEL);
+> +	if (!page)
+> +		goto error;
+> +
+> +	size = ata_set_lba_range_entries(page_address(page), PAGE_SIZE / 8,
+> +					bio->bi_sector, bio_sectors(bio));
+> +	bio->bi_size = 0;
+> +	if (bio_add_pc_page(q, bio, page, size, 0) < size)
+> +		goto free_page;
+> +
+> +	req->cmd_type = REQ_TYPE_BLOCK_PC;
+> +	req->cmd_len = 16;
+> +	req->cmd[0] = ATA_16;
+> +	req->cmd[1] = (6 << 1) | 1;		/* dma, 48-bit */
+> +	req->cmd[2] = 0x6;			/* length, direction */
+> +	req->cmd[3] = 0;			/* feature high */
+> +	req->cmd[4] = ATA_DSM_TRIM;		/* feature low */
+> +	req->cmd[5] = (size / 512) >> 8;	/* nsect high */
+> +	req->cmd[6] = size / 512;		/* nsect low */
+> +	req->cmd[7] = 0;			/* lba */
+> +	req->cmd[8] = 0;			/* lba */
+> +	req->cmd[9] = 0;			/* lba */
+> +	req->cmd[10] = 0;			/* lba */
+> +	req->cmd[11] = 0;			/* lba */
+> +	req->cmd[12] = 0;			/* lba */
+> +	req->cmd[13] = ATA_LBA;			/* device */
+> +	req->cmd[14] = ATA_CMD_DSM;		/* command */
+> +	req->cmd[15] = 0;			/* control */
+> +
+> +	return 0;
+> + free_page:
+> +	__free_page(page);
+> + error:
+> +	return -ENOMEM;
+> +}
+> +
+>  static void ata_scsi_sdev_config(struct scsi_device *sdev)
+>  {
+>  	sdev->use_10_for_rw = 1;
+> @@ -1077,6 +1117,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+>  	/* configure max sectors */
+>  	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
+>  
+> +	if (ata_id_has_trim(dev->id))
+> +		blk_queue_set_discard(sdev->request_queue, ata_discard_fn);
+> +
+>  	if (dev->class == ATA_DEV_ATAPI) {
+>  		struct request_queue *q = sdev->request_queue;
+>  		void *buf;
+> @@ -2385,6 +2428,9 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+>  		/* sector size */
+>  		rbuf[10] = ATA_SECT_SIZE >> 8;
+>  		rbuf[11] = ATA_SECT_SIZE & 0xff;
+> +
+> +		if (ata_id_has_trim(args->id))
+> +			rbuf[14] = 0x80;
+>  	}
+>  
+>  	return 0;
+..
 
-Since I'm coding to today's kernel, not to a patch which doesn't exist
-yet, taking them out won't work very well.
+Now we just need an implementation of ata_discard_fn()
+that issues the CFA ERASE SECTORS command instead of TRIM
+when speaking to a CFA device.
 
-I've not been paying much attention to drivers/ide, so I've no idea
-whether the following patch works.  It does at least compile:
-
-+++ b/drivers/ide/ide-disk.c
-@@ -407,7 +407,7 @@ static void idedisk_prepare_flush(struct request_queue *q, s
- static int idedisk_prepare_discard(struct request_queue *q, struct request *rq,
-                                                        struct bio *bio)
- {
--       ide_task_t *task;
-+       struct ide_cmd *task;
-        unsigned size;
-        struct page *page = alloc_page(GFP_KERNEL);
-        if (!page)
-@@ -432,8 +432,8 @@ static int idedisk_prepare_discard(struct request_queue *q, 
- 
-        task->tf_flags   = IDE_TFLAG_LBA48 | IDE_TFLAG_OUT_HOB |
-                           IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE |
--                          IDE_TFLAG_DYN;
--       task->data_phase = TASKFILE_OUT_DMA;
-+                          IDE_TFLAG_DYN | IDE_TFLAG_WRITE;
-+       task->protocol = ATA_PROT_DMA;
- 
-        rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-        rq->special = task;
-
-If I've understood 0dfb991c6943c810175376b58d1c29cfe532541b correctly,
-this should be equivalent.  Bart?
+Ah, life is good!
