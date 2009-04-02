@@ -1,47 +1,50 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: [PATCH 2/5] Make DISCARD_BARRIER and DISCARD_NOBARRIER writes instead of reads
-Date: Thu,  2 Apr 2009 10:37:24 -0400
-Message-ID: <1238683047-13588-2-git-send-email-willy@linux.intel.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
+Date: Thu, 2 Apr 2009 15:25:57 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A7788672E68F231@GVW0547EXC.americas.hpqcorp.net>
+References: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-147-143.d-ip.magma.ca ([64.26.147.143]:41821
-	"EHLO gonzo.int.wil.cx" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762196AbZDBO6v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 10:58:51 -0400
-In-Reply-To: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:21279 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839AbZDBP0h convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 11:26:37 -0400
+In-Reply-To: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com
-Cc: David Woodhouse <dwmw2@infradead.org>, David Woodhouse <David.Woodhouse@intel.com>, Matthew Wilcox <willy@linux.intel.com>
+To: "salimmu@beardog.cca.cpqcorp.net" <salimmu@beardog.cca.cpqcorp.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "scameron@beardog.cca.cpqcorp.net" <scameron@beardog.cca.cpqcorp.net>, "Cameron, Steve" <Steve.Cameron@hp.com>, "Benesh, Scott" <scott.benesh@hp.com>
 
-From: David Woodhouse <dwmw2@infradead.org>
-
-The commands are conceptually writes, and in the case of IDE and SCSI
-commands actually are writes.  They were only reads because we thought
-that would interact better with the elevators.  Now the elevators know
-about discard requests, that advantage no longer exists.
-
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
----
- include/linux/fs.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 61211ad..e5dc992 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -98,8 +98,8 @@ struct inodes_stat_t {
- #define WRITE_SYNC	(WRITE | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_UNPLUG))
- #define SWRITE_SYNC	(SWRITE | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_UNPLUG))
- #define WRITE_BARRIER	(WRITE | (1 << BIO_RW_BARRIER))
--#define DISCARD_NOBARRIER (1 << BIO_RW_DISCARD)
--#define DISCARD_BARRIER ((1 << BIO_RW_DISCARD) | (1 << BIO_RW_BARRIER))
-+#define DISCARD_NOBARRIER (WRITE | (1 << BIO_RW_DISCARD))
-+#define DISCARD_BARRIER (DISCARD_NOBARRIER | (1 << BIO_RW_BARRIER))
  
- #define SEL_IN		1
- #define SEL_OUT		2
--- 
-1.6.2.1
 
+> -----Original Message-----
+> From: salimmu@beardog.cca.cpqcorp.net 
+> [mailto:salimmu@beardog.cca.cpqcorp.net] 
+> Sent: Wednesday, April 01, 2009 3:51 PM
+> To: linux-ide@vger.kernel.org
+> Cc: jgarzik@pobox.com; scameron@beardog.cca.cpqcorp.net; 
+> Miller, Mike (OS Dev); Cameron, Steve
+> Subject: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
+> 
+> Attach is a patch that adds translation of scsi WRITE_BUFFER 
+
+Never send patches as attachments. You're fortunate anyone bothered to look at it.
+Always send patches inline from a mail client that does not munge up the test.
+
+-- mikem
+
+
+> to ATA_DOWNLOAD_MICROCODE command. This patch enables 
+> firmware flashing of sata drives that are registered as scsi 
+> devices under linux; hence scsi to ata translation is needed. 
+> This patch provides the translation.
+> 
+> Imran Salim
+> Hewlett Pacakrd Company
+> Houston, TX
+> (281) 514-1531
+> 
+> 
