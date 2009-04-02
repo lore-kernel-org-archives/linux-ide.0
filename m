@@ -1,72 +1,84 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/5] ata: Add TRIM infrastructure
-Date: Thu, 02 Apr 2009 19:55:39 +0400
-Message-ID: <49D4DFFB.8070201@ru.mvista.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com>
+Subject: Re: [PATCH 4/5] ide: Add support for TRIM
+Date: Thu, 02 Apr 2009 19:58:59 +0400
+Message-ID: <49D4E0C3.7080808@ru.mvista.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:9468 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:9556 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751527AbZDBPzL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Apr 2009 11:55:11 -0400
-In-Reply-To: <1238683047-13588-3-git-send-email-willy@linux.intel.com>
+	id S1753417AbZDBP63 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Apr 2009 11:58:29 -0400
+In-Reply-To: <1238683047-13588-4-git-send-email-willy@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Matthew Wilcox <willy@linux.intel.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, David Woodhouse <David.Woodhouse@intel.com>
 
+Hello.
+
 Matthew Wilcox wrote:
 
-> This is common code shared between the IDE and libata implementations
+> From: David Woodhouse <David.Woodhouse@intel.com>
 
 > Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+> [modified to reduce amount of special casing needed for discard]
 > Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
-[...]
 
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index 6617c9f..cb79b7a 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -29,6 +29,8 @@
->  #ifndef __LINUX_ATA_H__
->  #define __LINUX_ATA_H__
+
+> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+> index c998cf8..ed34bd3 100644
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+> @@ -404,6 +404,52 @@ static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+>  	rq->special = cmd;
+>  }
 >  
-> +#include <linux/kernel.h>
-> +#include <linux/string.h>
->  #include <linux/types.h>
->  #include <asm/byteorder.h>
->  
-> @@ -91,6 +93,7 @@ enum {
->  	ATA_ID_CFA_POWER	= 160,
->  	ATA_ID_CFA_KEY_MGMT	= 162,
->  	ATA_ID_CFA_MODES	= 163,
-> +	ATA_ID_DATA_SET_MGMT	= 169,
->  	ATA_ID_ROT_SPEED	= 217,
->  	ATA_ID_PIO4		= (1 << 1),
->  
-> @@ -248,6 +251,7 @@ enum {
->  	ATA_CMD_SMART		= 0xB0,
->  	ATA_CMD_MEDIA_LOCK	= 0xDE,
->  	ATA_CMD_MEDIA_UNLOCK	= 0xDF,
-> +	ATA_CMD_DSM		= 0x06,
->  	/* marked obsolete in the ATA/ATAPI-7 spec */
->  	ATA_CMD_RESTORE		= 0x10,
->  
-> @@ -321,6 +325,9 @@ enum {
->  	ATA_SMART_READ_VALUES	= 0xD0,
->  	ATA_SMART_READ_THRESHOLDS = 0xD1,
->  
-> +	/* feature values for Data Set Management */
-> +	ATA_DSM_TRIM		= 0x01,
+> +static int idedisk_prepare_discard(struct request_queue *q, struct request *rq,
+> +							struct bio *bio)
+
+    Weird indentation.
+
+> +{
+> +	ide_task_t *task;
+
+    This patch is already obsolete as 'ide_task_t' is gone. Use 'struct 
+ide_cmd' instead.
+
+> +	unsigned size;
+> +	struct page *page = alloc_page(GFP_KERNEL);
+
+    Missing empty line after the declaration block...
+
+> +	if (!page)
+> +		goto error;
+
+    Unneeded goto -- why not just return?
+
 > +
->  	/* password used in LBA Mid / LBA High for executing SMART commands */
->  	ATA_SMART_LBAM_PASS	= 0x4F,
->  	ATA_SMART_LBAH_PASS	= 0xC2,
+> +	/* FIXME: map struct ide_taskfile on rq->cmd[] */
+> +	task = kzalloc(sizeof(*task), GFP_KERNEL);
+> +	if (!task)
+> +		goto free_page;
+> +
+> +	size = ata_set_lba_range_entries(page_address(page), PAGE_SIZE,
+> +					bio->bi_sector, bio_sectors(bio));
+> +	bio->bi_size = 0;
+> +	if (bio_add_pc_page(q, bio, page, size, 0) < size)
+> +		goto free_task;
+> +
+> +	task->tf.command = ATA_CMD_DSM;
+> +	task->tf.feature = ATA_DSM_TRIM;
+> +	task->tf.hob_feature = 0x00;
+> +	task->tf.nsect = size / 512;
+> +	task->tf.hob_nsect = (size / 512) >> 8;
+> +
+> +	task->tf_flags   = IDE_TFLAG_LBA48 | IDE_TFLAG_OUT_HOB |
+> +			   IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE |
 
-    I wonder where to read about the word 169 and commnand 0x06... what's it 
-all about?
+    The last 3 flags are going to be obsoleted too...
 
-WBR, Sergei
+MBR, Sergei
