@@ -1,24 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: IDE, packet commands and REQ_TYPE_SENSE?
-Date: Thu, 02 Apr 2009 05:36:38 -0400
-Message-ID: <49D48726.6040106@garzik.org>
-References: <49D48600.2070109@garzik.org>
+From: Dmitri Vorobiev <dmitri.vorobiev@movial.com>
+Subject: Re: [PATCH] de: drivers/ide/ide-atapi.c needs <linux/scatterlist.h>
+Date: Thu, 02 Apr 2009 13:56:39 +0300
+Message-ID: <49D499E7.9020603@movial.com>
+References: <Pine.LNX.4.64.0903292229400.23398@anakin> <200903302229.31846.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35661 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761566AbZDBJgn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Apr 2009 05:36:43 -0400
-In-Reply-To: <49D48600.2070109@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762204AbZDBK4x@vger.kernel.org>
+In-Reply-To: <200903302229.31846.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE mailing list <linux-ide@vger.kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Can we get rid of REQ_TYPE_SENSE?
+Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 29 March 2009, Geert Uytterhoeven wrote:
+>> On m68k:
+>> | drivers/ide/ide-atapi.c: In function 'ide_io_buffers':
+>> | drivers/ide/ide-atapi.c:87: error: implicit declaration of function 'sg_page'
+>> | drivers/ide/ide-atapi.c:87: warning: passing argument 1 of 'PageHighMem' makes pointer from integer without a cast
+>> | drivers/ide/ide-atapi.c:91: warning: passing argument 1 of 'kmap_atomic' makes pointer from integer without a cast
+>> | drivers/ide/ide-atapi.c:96: error: implicit declaration of function 'sg_virt'
+>> | drivers/ide/ide-atapi.c:96: warning: assignment makes pointer from integer without a cast
+>> | drivers/ide/ide-atapi.c:107: error: implicit declaration of function 'sg_next'
+>> | drivers/ide/ide-atapi.c:107: warning: assignment makes pointer from integer without a cast
+>>
+>> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> 
+> thanks, applied
+> 
+> [ Dmitri, sorry but m68k was faster than MIPS this time ;) ]
 
-Strike that, I forgot about blk_sense_request()
+That's OK for me as long as Malta builds again :)
 
+Dmitri
