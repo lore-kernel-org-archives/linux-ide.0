@@ -1,62 +1,54 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problems with >3 drives on an eSATA portmultiplier
-Date: Thu, 02 Apr 2009 09:28:46 +0900
-Message-ID: <49D406BE.3080103@kernel.org>
-References: <Pine.LNX.4.63.0904011454020.3947@buttercup.gerph.org>	 <da824cf30904010945i5a33f049v15745c79293d22ad@mail.gmail.com>	 <Pine.LNX.4.63.0904011801160.3947@buttercup.gerph.org> <da824cf30904011046x46da9b69u28f00472a49ebc20@mail.gmail.com>
+Subject: Re: PMPs
+Date: Thu, 02 Apr 2009 09:30:52 +0900
+Message-ID: <49D4073C.4010101@kernel.org>
+References: <alpine.DEB.1.10.0904012109180.28814@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58813 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35571 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753888AbZDBA25 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Apr 2009 20:28:57 -0400
-In-Reply-To: <da824cf30904011046x46da9b69u28f00472a49ebc20@mail.gmail.com>
+	id S1759357AbZDBAbB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Apr 2009 20:31:01 -0400
+In-Reply-To: <alpine.DEB.1.10.0904012109180.28814@uplift.swm.pp.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Justin Fletcher <gerph@gerph.org>, linux-ide@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-ide@vger.kernel.org
 
-Grant Grundler wrote:
->> I could drop down to 2.6.26 and rebuild my kernel with support for that
->> controller - I hadn't done this before because I cannot then use my DVB-S
->> card, but... I could live without that for the test.
+Hello,
+
+Mikael Abrahamsson wrote:
+> I have a SiL based PCI-E card and a PMP:
 > 
-> If someone could comment on  2.6.28 or 2.6.29, you could avoid running
-> this test.
-
-Hmmm... I don't really remember changing much, so it should be fine.
-Can you please give a shot at 2.6.26 anyway?  Also, kernel logs with
-JMB controller would be helpful too as ahci tends to better show what's
-really going on and failing during reset.
-
->> I've replaced the PSU once already - it was replaced on 6th Feb, with a
->> Sumvision 450W 20+4pin SATA PSU. Those 5 drives + the bridge board and fan
->> are the only things being powered by that PSU. I should have thought that
->> even during drive initialisation 5 drives wouldn't exceed 450W. Anyhow, this
->> was one of my first thoughts. I could get another PSU (I think I might be
->> able to find one around here), but having replaced it so recently, I'm
->> uncomfortable doing so.
->>
->> Is a 450W PSU going to be able to supply enough power for those drives ?
+> 02:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA
+> Raid II Controller (rev 01)
 > 
-> It's not just about how many watts. Both 12v and 5v "rails" need to
-> provide enough power.  But if this worked before, I would assume the
-> replacement is working too.
+> ata8.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
 > 
-> And in general, yes, a 450W should be plenty for 5 drives plus PMP
-> board. Especially if the OS is "staggering" the spinup so only one
-> or two drives are spinning up at the same time.  I know I've had to
-> fix "staggered spinup" in the past (2.6.18) but don't recall if it's
-> fixed in current 2.6.28 or .29 kernels.
+> I'm using Ubuntu 8.10 kernel 2.6.27-11-generic #1 SMP Thu Jan 29
+> 19:24:39 UTC 2009 i686 GNU/Linux
+> 
+> I'm running into all kinds of weird behaviour, like only P1 (port 1
+> out of 5) on the PMP working with single drive. Also, it seems to
+> differ whether I have a WD or Samsung drive, the WD drive works
+> alone in P1 and P2 of the PMP, with the Samsung drive only working
+> alone in P1. If I put the Samsung drive in P1 and put the WD drive
+> in P3, the P3 drive isn't recognised upon hotplug. If I unplug
+> Samsung P1 drive and re-insert it in the same P1 hotswat bay again,
+> drives in both P1 and P3 are recognised upon P1 spinning up and
+> being recognised.
+> 
+> Is this a known problem?
+> 
+> This is perfectly reproducible, I can provide logs if that would
+> help.  I'm also willing to try 2.6.29.x if there has been work done
+> after 2.6.27.
 
-libata never had proper provision for staggered spin up.  If it works,
-it's just because they're being probed sequentially.  :-)
-
-Anyways, 3132 + 3726 should work.  Both 3726 and 4726 pretty much
-require its first port to be always occupied (or it's fake config
-drive jumps arounds and freaks out) and hotplug is often flaky but
-other than that it should generally work.
+You need to keep the first port occupied for 3726/4726; otherwise, the
+fake config disk jumps around and it just goes belly up.  Do you
+experience problems even with the first port occupied?
 
 Thanks.
 
