@@ -1,50 +1,72 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
-Date: Thu, 2 Apr 2009 15:25:57 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A7788672E68F231@GVW0547EXC.americas.hpqcorp.net>
-References: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/5] ata: Add TRIM infrastructure
+Date: Thu, 02 Apr 2009 19:55:39 +0400
+Message-ID: <49D4DFFB.8070201@ru.mvista.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:21279 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752839AbZDBP0h convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 11:26:37 -0400
-In-Reply-To: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
-Content-Language: en-US
+Received: from h155.mvista.com ([63.81.120.155]:9468 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751527AbZDBPzL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Apr 2009 11:55:11 -0400
+In-Reply-To: <1238683047-13588-3-git-send-email-willy@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "salimmu@beardog.cca.cpqcorp.net" <salimmu@beardog.cca.cpqcorp.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "scameron@beardog.cca.cpqcorp.net" <scameron@beardog.cca.cpqcorp.net>, "Cameron, Steve" <Steve.Cameron@hp.com>, "Benesh, Scott" <scott.benesh@hp.com>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, David Woodhouse <David.Woodhouse@intel.com>
 
- 
+Matthew Wilcox wrote:
 
-> -----Original Message-----
-> From: salimmu@beardog.cca.cpqcorp.net 
-> [mailto:salimmu@beardog.cca.cpqcorp.net] 
-> Sent: Wednesday, April 01, 2009 3:51 PM
-> To: linux-ide@vger.kernel.org
-> Cc: jgarzik@pobox.com; scameron@beardog.cca.cpqcorp.net; 
-> Miller, Mike (OS Dev); Cameron, Steve
-> Subject: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
-> 
-> Attach is a patch that adds translation of scsi WRITE_BUFFER 
+> This is common code shared between the IDE and libata implementations
 
-Never send patches as attachments. You're fortunate anyone bothered to look at it.
-Always send patches inline from a mail client that does not munge up the test.
+> Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
--- mikem
+[...]
 
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 6617c9f..cb79b7a 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -29,6 +29,8 @@
+>  #ifndef __LINUX_ATA_H__
+>  #define __LINUX_ATA_H__
+>  
+> +#include <linux/kernel.h>
+> +#include <linux/string.h>
+>  #include <linux/types.h>
+>  #include <asm/byteorder.h>
+>  
+> @@ -91,6 +93,7 @@ enum {
+>  	ATA_ID_CFA_POWER	= 160,
+>  	ATA_ID_CFA_KEY_MGMT	= 162,
+>  	ATA_ID_CFA_MODES	= 163,
+> +	ATA_ID_DATA_SET_MGMT	= 169,
+>  	ATA_ID_ROT_SPEED	= 217,
+>  	ATA_ID_PIO4		= (1 << 1),
+>  
+> @@ -248,6 +251,7 @@ enum {
+>  	ATA_CMD_SMART		= 0xB0,
+>  	ATA_CMD_MEDIA_LOCK	= 0xDE,
+>  	ATA_CMD_MEDIA_UNLOCK	= 0xDF,
+> +	ATA_CMD_DSM		= 0x06,
+>  	/* marked obsolete in the ATA/ATAPI-7 spec */
+>  	ATA_CMD_RESTORE		= 0x10,
+>  
+> @@ -321,6 +325,9 @@ enum {
+>  	ATA_SMART_READ_VALUES	= 0xD0,
+>  	ATA_SMART_READ_THRESHOLDS = 0xD1,
+>  
+> +	/* feature values for Data Set Management */
+> +	ATA_DSM_TRIM		= 0x01,
+> +
+>  	/* password used in LBA Mid / LBA High for executing SMART commands */
+>  	ATA_SMART_LBAM_PASS	= 0x4F,
+>  	ATA_SMART_LBAH_PASS	= 0xC2,
 
-> to ATA_DOWNLOAD_MICROCODE command. This patch enables 
-> firmware flashing of sata drives that are registered as scsi 
-> devices under linux; hence scsi to ata translation is needed. 
-> This patch provides the translation.
-> 
-> Imran Salim
-> Hewlett Pacakrd Company
-> Houston, TX
-> (281) 514-1531
-> 
-> 
+    I wonder where to read about the word 169 and commnand 0x06... what's it 
+all about?
+
+WBR, Sergei
