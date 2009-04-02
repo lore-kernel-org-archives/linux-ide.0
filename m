@@ -1,84 +1,25 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/5] ide: Add support for TRIM
-Date: Thu, 02 Apr 2009 19:58:59 +0400
-Message-ID: <49D4E0C3.7080808@ru.mvista.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH 3/5] ata: Add TRIM infrastructure
+Date: Thu, 2 Apr 2009 09:18:35 -0700
+Message-ID: <20090402161835.GN2661@linux.intel.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <49D4DFFB.8070201@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:9556 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753417AbZDBP63 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Apr 2009 11:58:29 -0400
-In-Reply-To: <1238683047-13588-4-git-send-email-willy@linux.intel.com>
+Received: from mga12.intel.com ([143.182.124.36]:35267 "EHLO
+	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751749AbZDBQSi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 12:18:38 -0400
+Content-Disposition: inline
+In-Reply-To: <49D4DFFB.8070201@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, David Woodhouse <David.Woodhouse@intel.com>
 
-Hello.
+On Thu, Apr 02, 2009 at 07:55:39PM +0400, Sergei Shtylyov wrote:
+>    I wonder where to read about the word 169 and commnand 0x06... what's 
+> it all about?
 
-Matthew Wilcox wrote:
-
-> From: David Woodhouse <David.Woodhouse@intel.com>
-
-> Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-> [modified to reduce amount of special casing needed for discard]
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-
-
-
-> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-> index c998cf8..ed34bd3 100644
-> --- a/drivers/ide/ide-disk.c
-> +++ b/drivers/ide/ide-disk.c
-> @@ -404,6 +404,52 @@ static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
->  	rq->special = cmd;
->  }
->  
-> +static int idedisk_prepare_discard(struct request_queue *q, struct request *rq,
-> +							struct bio *bio)
-
-    Weird indentation.
-
-> +{
-> +	ide_task_t *task;
-
-    This patch is already obsolete as 'ide_task_t' is gone. Use 'struct 
-ide_cmd' instead.
-
-> +	unsigned size;
-> +	struct page *page = alloc_page(GFP_KERNEL);
-
-    Missing empty line after the declaration block...
-
-> +	if (!page)
-> +		goto error;
-
-    Unneeded goto -- why not just return?
-
-> +
-> +	/* FIXME: map struct ide_taskfile on rq->cmd[] */
-> +	task = kzalloc(sizeof(*task), GFP_KERNEL);
-> +	if (!task)
-> +		goto free_page;
-> +
-> +	size = ata_set_lba_range_entries(page_address(page), PAGE_SIZE,
-> +					bio->bi_sector, bio_sectors(bio));
-> +	bio->bi_size = 0;
-> +	if (bio_add_pc_page(q, bio, page, size, 0) < size)
-> +		goto free_task;
-> +
-> +	task->tf.command = ATA_CMD_DSM;
-> +	task->tf.feature = ATA_DSM_TRIM;
-> +	task->tf.hob_feature = 0x00;
-> +	task->tf.nsect = size / 512;
-> +	task->tf.hob_nsect = (size / 512) >> 8;
-> +
-> +	task->tf_flags   = IDE_TFLAG_LBA48 | IDE_TFLAG_OUT_HOB |
-> +			   IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE |
-
-    The last 3 flags are going to be obsoleted too...
-
-MBR, Sergei
+It's in d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf which can be found on
+the t13 website.
