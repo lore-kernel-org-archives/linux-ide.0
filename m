@@ -1,72 +1,32 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/5] ide: Add support for TRIM
-Date: Thu, 02 Apr 2009 20:38:03 +0400
-Message-ID: <49D4E9EB.80207@ru.mvista.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <49D4E0C3.7080808@ru.mvista.com> <20090402162846.GO2661@linux.intel.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH 3/5] ata: Add TRIM infrastructure
+Date: Thu, 2 Apr 2009 09:47:42 -0700
+Message-ID: <20090402164742.GP2661@linux.intel.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <49D4DFFB.8070201@ru.mvista.com> <20090402161835.GN2661@linux.intel.com> <49D4E8B8.5000301@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:10110 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1764553AbZDBQhc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Apr 2009 12:37:32 -0400
-In-Reply-To: <20090402162846.GO2661@linux.intel.com>
+Received: from mga10.intel.com ([192.55.52.92]:8026 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932258AbZDBQro (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 12:47:44 -0400
+Content-Disposition: inline
+In-Reply-To: <49D4E8B8.5000301@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, David Woodhouse <David.Woodhouse@intel.com>
 
-Hello.
+On Thu, Apr 02, 2009 at 08:32:56PM +0400, Sergei Shtylyov wrote:
+> Matthew Wilcox wrote:
+>
+>>>   I wonder where to read about the word 169 and commnand 0x06... 
+>>> what's it all about?
+>
+>> It's in d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf which can be found on
+>> the t13 website.
+>
+>    But since neither ATA/PI-7 nor ATA/PI-8 mention neither the word nor  
+> command, why your validity check requires only ATA/PI-7+ compliance?
 
-Matthew Wilcox wrote:
-
->>> +static int idedisk_prepare_discard(struct request_queue *q, struct 
->>>request *rq,
->>>+							struct bio *bio)
-
->>   Weird indentation.
-
-> Not at all.  New line, so tab the next line over as far as it will go
-> without falling off the 80-column limit.  It's fairly common.
-
-> To quote Documentation/CodingStyle:
-
->   Statements longer than 80 columns will be broken into sensible chunks.
->   Descendants are always substantially shorter than the parent and are placed
->   substantially to the right. The same applies to function headers with a long
->   argument list. Long strings are as well broken into shorter strings.  The
->   only exception to this is where exceeding 80 columns significantly increases
->   readability and does not hide information.
-
-    That's all clear, it's just that the second line was overly indented, at 
-least to my taste. :-)
-
->>>+{
->>>+	ide_task_t *task;
-
->>   This patch is already obsolete as 'ide_task_t' is gone. Use 'struct  
->>ide_cmd' instead.
-
-> Thanks, fixed.
-
->>>+	unsigned size;
->>>+	struct page *page = alloc_page(GFP_KERNEL);
-
->>   Missing empty line after the declaration block...
-
-> Empty line not necessary.
-
-    Usually it's there.
-
->>>+	task->tf_flags   = IDE_TFLAG_LBA48 | IDE_TFLAG_OUT_HOB |
->>>+			   IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE |
-
->>   The last 3 flags are going to be obsoleted too...
-
-> So if I remove them today, the command will still work?
-
-     s/obsoleted/renamed and moved to another other field/ -- I'm going to 
-submit a patchset refactoring 'struct ide_cmd and 'struct ide-taskfile' at last...
-
-MBR, Sergei
+Because there are ATA-7 devices which implement this feature.
