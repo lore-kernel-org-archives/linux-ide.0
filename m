@@ -1,56 +1,99 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: PMPs
-Date: Thu, 02 Apr 2009 09:30:52 +0900
-Message-ID: <49D4073C.4010101@kernel.org>
-References: <alpine.DEB.1.10.0904012109180.28814@uplift.swm.pp.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 1/3] ide-cd: move status checking into the IRQ handler
+Date: Thu,  2 Apr 2009 08:58:37 +0200
+Message-ID: <1238655519-10074-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35571 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759357AbZDBAbB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Apr 2009 20:31:01 -0400
-In-Reply-To: <alpine.DEB.1.10.0904012109180.28814@uplift.swm.pp.se>
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:58300 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545AbZDBG6r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 02:58:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
+There should be no functional change resulting from this patch.
 
-Mikael Abrahamsson wrote:
-> I have a SiL based PCI-E card and a PMP:
-> 
-> 02:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA
-> Raid II Controller (rev 01)
-> 
-> ata8.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> 
-> I'm using Ubuntu 8.10 kernel 2.6.27-11-generic #1 SMP Thu Jan 29
-> 19:24:39 UTC 2009 i686 GNU/Linux
-> 
-> I'm running into all kinds of weird behaviour, like only P1 (port 1
-> out of 5) on the PMP working with single drive. Also, it seems to
-> differ whether I have a WD or Samsung drive, the WD drive works
-> alone in P1 and P2 of the PMP, with the Samsung drive only working
-> alone in P1. If I put the Samsung drive in P1 and put the WD drive
-> in P3, the P3 drive isn't recognised upon hotplug. If I unplug
-> Samsung P1 drive and re-insert it in the same P1 hotswat bay again,
-> drives in both P1 and P3 are recognised upon P1 spinning up and
-> being recognised.
-> 
-> Is this a known problem?
-> 
-> This is perfectly reproducible, I can provide logs if that would
-> help.  I'm also willing to try 2.6.29.x if there has been work done
-> after 2.6.27.
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-cd.c |   38 ++++++++++++++++----------------------
+ 1 files changed, 16 insertions(+), 22 deletions(-)
 
-You need to keep the first port occupied for 3726/4726; otherwise, the
-fake config disk jumps around and it just goes belly up.  Do you
-experience problems even with the first port occupied?
-
-Thanks.
-
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 35729a4..a4afd90 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -271,29 +271,18 @@ static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
+  * 1: if the request will be going through error recovery.
+  * 2: if the request should be ended.
+  */
+-static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
++static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq = hwif->rq;
+-	int stat, err, sense_key;
+-
+-	/* check for errors */
+-	stat = hwif->tp_ops->read_status(hwif);
+-
+-	if (stat_ret)
+-		*stat_ret = stat;
+-
+-	if (OK_STAT(stat, good_stat, BAD_R_STAT))
+-		return 0;
++	int err, sense_key;
+ 
+ 	/* get the IDE error register */
+ 	err = ide_read_error(drive);
+ 	sense_key = err >> 4;
+ 
+-	ide_debug_log(IDE_DBG_RQ, "stat: 0x%x, good_stat: 0x%x, cmd[0]: 0x%x, "
+-				  "rq->cmd_type: 0x%x, err: 0x%x",
+-				  stat, good_stat, rq->cmd[0], rq->cmd_type,
+-				  err);
++	ide_debug_log(IDE_DBG_RQ, "cmd[0]: 0x%x, rq->cmd_type: 0x%x, err: 0x%x",
++				  rq->cmd[0], rq->cmd_type, err);
+ 
+ 	if (blk_sense_request(rq)) {
+ 		/*
+@@ -624,12 +613,12 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 	struct ide_cmd *cmd = &hwif->cmd;
+ 	struct request *rq = hwif->rq;
+ 	ide_expiry_t *expiry = NULL;
+-	int dma_error = 0, dma, stat, thislen, uptodate = 0;
++	int dma_error = 0, dma, thislen, uptodate = 0;
+ 	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
+ 	int sense = blk_sense_request(rq);
+ 	unsigned int timeout;
+ 	u16 len;
+-	u8 ireason;
++	u8 ireason, stat;
+ 
+ 	ide_debug_log(IDE_DBG_PC, "cmd[0]: 0x%x, write: 0x%x",
+ 				  rq->cmd[0], write);
+@@ -648,11 +637,16 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 		}
+ 	}
+ 
+-	rc = cdrom_decode_status(drive, 0, &stat);
+-	if (rc) {
+-		if (rc == 2)
+-			goto out_end;
+-		return ide_stopped;
++	/* check status */
++	stat = hwif->tp_ops->read_status(hwif);
++
++	if (!OK_STAT(stat, 0, BAD_R_STAT)) {
++		rc = cdrom_decode_status(drive, stat);
++		if (rc) {
++			if (rc == 2)
++				goto out_end;
++			return ide_stopped;
++		}
+ 	}
+ 
+ 	/* using dma, transfer is complete now */
 -- 
-tejun
+1.6.2.1
+
