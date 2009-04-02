@@ -1,130 +1,115 @@
 From: Matthew Wilcox <willy@linux.intel.com>
-Subject: [PATCH 1/5] Block: Discard may need to allocate pages
-Date: Thu,  2 Apr 2009 10:37:23 -0400
-Message-ID: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
+Subject: [PATCH 3/5] ata: Add TRIM infrastructure
+Date: Thu,  2 Apr 2009 10:37:25 -0400
+Message-ID: <1238683047-13588-3-git-send-email-willy@linux.intel.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
+ <1238683047-13588-2-git-send-email-willy@linux.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-147-143.d-ip.magma.ca ([64.26.147.143]:38951
+Received: from ottawa-hs-64-26-147-143.d-ip.magma.ca ([64.26.147.143]:41822
 	"EHLO gonzo.int.wil.cx" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759031AbZDBOsv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 10:48:51 -0400
+	with ESMTP id S1762198AbZDBO64 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Apr 2009 10:58:56 -0400
+In-Reply-To: <1238683047-13588-2-git-send-email-willy@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com
-Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>, David Woodhouse <David.Woodhouse@intel.com>
 
-From: Matthew Wilcox <matthew@wil.cx>
+This is common code shared between the IDE and libata implementations
 
-SCSI and ATA both need to send data to the device.  In order to do this,
-the BIO must be allocated with room for a page to be added, and the bio
-needs to be passed to the discard prep function.  We also need to free
-the page attached to the BIO before we free it.
-
-init_request_from_bio() is not currently called from a context which
-forbids sleeping, and to make sure it stays that way (so we don't have
-to use GFP_ATOMIC), add a might_sleep() to it.
-
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- block/blk-barrier.c       |    4 +++-
- block/blk-core.c          |    4 +++-
- block/ioctl.c             |    4 +++-
- drivers/mtd/mtd_blkdevs.c |    2 +-
- include/linux/blkdev.h    |    3 ++-
- 5 files changed, 12 insertions(+), 5 deletions(-)
+ include/linux/ata.h |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 41 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-barrier.c b/block/blk-barrier.c
-index f7dae57..82a3035 100644
---- a/block/blk-barrier.c
-+++ b/block/blk-barrier.c
-@@ -356,6 +356,8 @@ static void blkdev_discard_end_io(struct bio *bio, int err)
- 		clear_bit(BIO_UPTODATE, &bio->bi_flags);
- 	}
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 6617c9f..cb79b7a 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -29,6 +29,8 @@
+ #ifndef __LINUX_ATA_H__
+ #define __LINUX_ATA_H__
  
-+	if (bio_has_data(bio))
-+		__free_page(bio_page(bio));
- 	bio_put(bio);
++#include <linux/kernel.h>
++#include <linux/string.h>
+ #include <linux/types.h>
+ #include <asm/byteorder.h>
+ 
+@@ -91,6 +93,7 @@ enum {
+ 	ATA_ID_CFA_POWER	= 160,
+ 	ATA_ID_CFA_KEY_MGMT	= 162,
+ 	ATA_ID_CFA_MODES	= 163,
++	ATA_ID_DATA_SET_MGMT	= 169,
+ 	ATA_ID_ROT_SPEED	= 217,
+ 	ATA_ID_PIO4		= (1 << 1),
+ 
+@@ -248,6 +251,7 @@ enum {
+ 	ATA_CMD_SMART		= 0xB0,
+ 	ATA_CMD_MEDIA_LOCK	= 0xDE,
+ 	ATA_CMD_MEDIA_UNLOCK	= 0xDF,
++	ATA_CMD_DSM		= 0x06,
+ 	/* marked obsolete in the ATA/ATAPI-7 spec */
+ 	ATA_CMD_RESTORE		= 0x10,
+ 
+@@ -321,6 +325,9 @@ enum {
+ 	ATA_SMART_READ_VALUES	= 0xD0,
+ 	ATA_SMART_READ_THRESHOLDS = 0xD1,
+ 
++	/* feature values for Data Set Management */
++	ATA_DSM_TRIM		= 0x01,
++
+ 	/* password used in LBA Mid / LBA High for executing SMART commands */
+ 	ATA_SMART_LBAM_PASS	= 0x4F,
+ 	ATA_SMART_LBAH_PASS	= 0xC2,
+@@ -723,6 +730,14 @@ static inline int ata_id_has_unload(const u16 *id)
+ 	return 0;
  }
  
-@@ -387,7 +389,7 @@ int blkdev_issue_discard(struct block_device *bdev,
- 		return -EOPNOTSUPP;
- 
- 	while (nr_sects && !ret) {
--		bio = bio_alloc(gfp_mask, 0);
-+		bio = bio_alloc(gfp_mask, 1);
- 		if (!bio)
- 			return -ENOMEM;
- 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 996ed90..7899761 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1095,6 +1095,8 @@ EXPORT_SYMBOL(blk_put_request);
- 
- void init_request_from_bio(struct request *req, struct bio *bio)
- {
-+	might_sleep();
++static inline int ata_id_has_trim(const u16 *id)
++{
++	if (ata_id_major_version(id) >= 7 &&
++	    (id[ATA_ID_DATA_SET_MGMT] & 1))
++		return 1;
++	return 0;
++}
 +
- 	req->cpu = bio->bi_comp_cpu;
- 	req->cmd_type = REQ_TYPE_FS;
- 
-@@ -1118,7 +1120,7 @@ void init_request_from_bio(struct request *req, struct bio *bio)
- 		req->cmd_flags |= REQ_DISCARD;
- 		if (bio_barrier(bio))
- 			req->cmd_flags |= REQ_SOFTBARRIER;
--		req->q->prepare_discard_fn(req->q, req);
-+		req->q->prepare_discard_fn(req->q, req, bio);
- 	} else if (unlikely(bio_barrier(bio)))
- 		req->cmd_flags |= (REQ_HARDBARRIER | REQ_NOMERGE);
- 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 0f22e62..088a9ba 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -145,7 +145,7 @@ static int blk_ioctl_discard(struct block_device *bdev, uint64_t start,
- 		DECLARE_COMPLETION_ONSTACK(wait);
- 		struct bio *bio;
- 
--		bio = bio_alloc(GFP_KERNEL, 0);
-+		bio = bio_alloc(GFP_KERNEL, 1);
- 		if (!bio)
- 			return -ENOMEM;
- 
-@@ -170,6 +170,8 @@ static int blk_ioctl_discard(struct block_device *bdev, uint64_t start,
- 			ret = -EOPNOTSUPP;
- 		else if (!bio_flagged(bio, BIO_UPTODATE))
- 			ret = -EIO;
-+		if (bio_has_data(bio))
-+			__free_page(bio_page(bio));
- 		bio_put(bio);
- 	}
- 	return ret;
-diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
-index 1409f01..2b6ed4b 100644
---- a/drivers/mtd/mtd_blkdevs.c
-+++ b/drivers/mtd/mtd_blkdevs.c
-@@ -33,7 +33,7 @@ struct mtd_blkcore_priv {
- };
- 
- static int blktrans_discard_request(struct request_queue *q,
--				    struct request *req)
-+				    struct request *req, struct bio *bio)
+ static inline int ata_id_current_chs_valid(const u16 *id)
  {
- 	req->cmd_type = REQ_TYPE_LINUX_BLOCK;
- 	req->cmd[0] = REQ_LB_OP_DISCARD;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 465d6ba..9d9bd7b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -260,7 +260,8 @@ typedef void (request_fn_proc) (struct request_queue *q);
- typedef int (make_request_fn) (struct request_queue *q, struct bio *bio);
- typedef int (prep_rq_fn) (struct request_queue *, struct request *);
- typedef void (unplug_fn) (struct request_queue *);
--typedef int (prepare_discard_fn) (struct request_queue *, struct request *);
-+typedef int (prepare_discard_fn) (struct request_queue *, struct request *,
-+							struct bio *bio);
+ 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
+@@ -863,6 +878,32 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+ #endif
+ }
  
- struct bio_vec;
- struct bvec_merge_data {
++/*
++ * Write up to 'max' LBA Range Entries to the buffer that will cover the
++ * extent from sector to sector + count.  This is used for TRIM and for
++ * ADD LBA(S) TO NV CACHE PINNED SET.
++ */
++static inline unsigned ata_set_lba_range_entries(void *_buffer, unsigned max,
++						u64 sector, unsigned long count)
++{
++	__le64 *buffer = _buffer;
++	unsigned i = 0;
++
++	while (i < max) {
++		u64 entry = sector |
++			((u64)(count > 0xffff ? 0xffff : count) << 48);
++		buffer[i++] = __cpu_to_le64(entry);
++		if (count <= 0xffff)
++			break;
++		count -= 0xffff;
++		sector += 0xffff;
++	}
++
++	max = ALIGN(i * 8, 512);
++	memset(buffer + i, 0, max - i * 8);
++	return max;
++}
++
+ static inline int is_multi_taskfile(struct ata_taskfile *tf)
+ {
+ 	return (tf->command == ATA_CMD_READ_MULTI) ||
 -- 
 1.6.2.1
 
