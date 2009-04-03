@@ -1,125 +1,45 @@
-From: "Courtney-Bakke, Julia (ISS H/W EPR)" <julia.courtney-bakke@hp.com>
-Subject: RE: Bug 453808 - qc timeout probing TEAC DV-28E-V CD/DVD drive on
- SATA/PATA bridge
-Date: Fri, 3 Apr 2009 20:07:51 +0000
-Message-ID: <5F516AEA4F45A442880A3EC2002FBDC563A430914A@GVW1096EXB.americas.hpqcorp.net>
-References: <5F516AEA4F45A442880A3EC2002FBDC563A4309148@GVW1096EXB.americas.hpqcorp.net>
- <200904031601.22088.bzolnier@gmail.com>
- <5F516AEA4F45A442880A3EC2002FBDC563A4309149@GVW1096EXB.americas.hpqcorp.net>
- <200904031815.29407.bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
+Date: Fri, 03 Apr 2009 15:24:15 -0500
+Message-ID: <1238790255.3359.85.camel@mulgrave.int.hansenpartnership.com>
+References: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
+	 <49D4F4F4.6040406@rtr.ca>  <49D66C75.9050005@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:23628 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933186AbZDCUJd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Apr 2009 16:09:33 -0400
-In-Reply-To: <200904031815.29407.bzolnier@gmail.com>
-Content-Language: en-US
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46488 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762534AbZDCUYS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Apr 2009 16:24:18 -0400
+In-Reply-To: <49D66C75.9050005@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <liml@rtr.ca>, salimmu@beardog.cca.cpqcorp.net, linux-ide@vger.kernel.org, scameron@beardog.cca.cpqcorp.net, mike.miller@hp.com, steve.cameron@hp.com
 
- Jeff,
-I'm a hardware engineer at Hewlett-Packard. Some of our hardware customers are experiencing the qc-timeout documented in 
-https://bugzilla.redhat.com/show_bug.cgi?id=453808
-
-Specifically the issue is described as follows:
-From: Mohamed 
-Sent: Tuesday, February 10, 2009 4:24 PM
-To: guild-test(mailer list); ipc-platform-team(mailer list)
-Subject: 7828H4 Kernel message
-
-Hi,
-I see the following messages continuously appear on the 7828H4 server console. This server is running with Guild TT 11 - Build 10 and performing the CUCMBE load test. 
-
-Feb 10 16:45:59 cores1 kern 4 kernel: ata3.00: qc timeout (cmd 0xa0)
-Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: (BMDMA stat 0x25)
-Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x25 data 8 in
-Feb 10 16:45:59 cores1 kern 4 kernel:          res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
-Feb 10 16:46:06 cores1 kern 4 kernel: ata3: port is slow to respond, please be patient (Status 0xd0)
-Feb 10 16:46:29 cores1 kern 3 kernel: ata3: port failed to respond (30 secs, Status 0xd0)
-Feb 10 16:46:29 cores1 kern 6 kernel: ata3: soft resetting port
-Feb 10 16:46:29 cores1 kern 6 kernel: ata3.00: configured for UDMA/33
-Feb 10 16:46:29 cores1 kern 6 kernel: ata3: EH complete
-These messages are recorded at /var/log/active/syslog/messages. Is this a known issue ?
-
- 
-
-Do you know whether increasing ata_probe_timeout actually helped the problem?
-I edited /sys/module/libata/ata_probe_timeout and changed its value 
-from 30000 to 100000  -qc timeouts still occur. Did I implement the workaround correctly?
- 
-Thanks,
-Julia courtney-Bakke
-Hardware Engineer
-Industry Standard Servers
-Hewlett-Packard
- 
-
- 
-
- 
-
- 
-
------Original Message-----
-From: Bartlomiej Zolnierkiewicz [mailto:bzolnier@gmail.com] 
-Sent: Friday, April 03, 2009 11:15 AM
-To: Courtney-Bakke, Julia (ISS H/W EPR)
-Subject: Re: Bug 453808 - qc timeout probing TEAC DV-28E-V CD/DVD drive on SATA/PATA bridge
-
-
-For libata issues please contact libata Maintainer:
-
-	Jeff Garzik <jgarzik@pobox.com>
-
-also if possible try to use linux-ide@vger.kernel.org mailing list instead of private mails for discussing Linux ATA issues.
-
-On Friday 03 April 2009, Courtney-Bakke, Julia (ISS H/W EPR) wrote:
-> Actually ... This is the bug I had a question about.
-> 
-> Bug 453808 - qc timeout probing TEAC DV-28E-V CD/DVD drive on 
-> SATA/PATA bridge
-> 
-> Do you know whether increasing ata_probe_timeout actually helped the 
-> problem.
-> 
-> I edited /sys/module/libata/ata_probe_timeout and changed its value 
-> from 30000 to 100000
-> 
-> -qc timeouts still occur
-> 
-> Did I implement the workaround correctly?
-> 
-> Thanks,
-> Julia courtney-Bakke
-> Hardware epr
-> 
-> 
-> 
-> -----Original Message-----
-> From: Bartlomiej Zolnierkiewicz [mailto:bzolnier@gmail.com]
-> Sent: Friday, April 03, 2009 9:01 AM
-> To: Courtney-Bakke, Julia (ISS H/W EPR)
-> Subject: Re: Bug 10887 - Kernel report fake device busy intermittently
-> 
-> 
-> Hi,
-> 
-> On Friday 03 April 2009, Courtney-Bakke, Julia (ISS H/W EPR) wrote:
-> > Hello,
-> > I work in engineering for Hewlett Packard.  We have customers in the field that are experiencing Bug 10887 - Kernel report fake device busy intermittently.
+On Fri, 2009-04-03 at 16:07 -0400, Jeff Garzik wrote:
+> Mark Lord wrote:
+> > salimmu@beardog.cca.cpqcorp.net wrote:
+> >> Attach is a patch that adds translation of scsi WRITE_BUFFER to 
+> >> ATA_DOWNLOAD_MICROCODE command.\
+> > ..
 > > 
-> > Is the only workaround to patch and recompile kernel?
+> > Do we really need or want this extra code in-kernel?
+> > 
+> > This type of thing is already doable from user-space with SG_IO + ATA_16.
+> > Eg.  hdparm --fwdownload
 > 
-> As a workaround you may try to fix your user-space to not access /proc/ide/hd*/identify (if this is acceptable).
-> 
-> Unfortunately to fully fix the issue revised kernel is needed.
-> 
-> Thanks,
-> Bart
-> 
+> If it can be done in userspace, I don't see much reason to add emulation 
+> in libata-scsi.c...
+
+The only reason I might be able to see it isn't for firmware download,
+agreed, since nothing in the kernel would ever use it.
+
+If were were going to add some type of domain validation to the lines in
+SAS/SATA using write buffer echo tests, it might be more plausible, but
+that isn't the purpose of the patch.
+
+James
+
 
