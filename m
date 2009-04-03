@@ -1,139 +1,85 @@
-From: Justin Fletcher <gerph@gerph.org>
-Subject: Re: Problems with >3 drives on an eSATA portmultiplier
-Date: Fri, 3 Apr 2009 22:06:21 +0100 (BST)
-Message-ID: <Pine.LNX.4.63.0904032140500.3742@buttercup.gerph.org>
-References: <Pine.LNX.4.63.0904011454020.3947@buttercup.gerph.org>
- <da824cf30904010945i5a33f049v15745c79293d22ad@mail.gmail.com>
- <Pine.LNX.4.63.0904011801160.3947@buttercup.gerph.org>
- <da824cf30904011046x46da9b69u28f00472a49ebc20@mail.gmail.com>
- <49D406BE.3080103@kernel.org>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: Bug 453808 - qc timeout probing TEAC DV-28E-V CD/DVD drive on
+ SATA/PATA bridge
+Date: Fri, 03 Apr 2009 18:02:35 -0500
+Message-ID: <49D6958B.2060601@redhat.com>
+References: <5F516AEA4F45A442880A3EC2002FBDC563A4309148@GVW1096EXB.americas.hpqcorp.net> <200904031601.22088.bzolnier@gmail.com> <5F516AEA4F45A442880A3EC2002FBDC563A4309149@GVW1096EXB.americas.hpqcorp.net> <200904031815.29407.bzolnier@gmail.com> <5F516AEA4F45A442880A3EC2002FBDC563A430914A@GVW1096EXB.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:56818 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755897AbZDCVGY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Apr 2009 17:06:24 -0400
-In-Reply-To: <49D406BE.3080103@kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:55941 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757315AbZDCXCZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Apr 2009 19:02:25 -0400
+In-Reply-To: <5F516AEA4F45A442880A3EC2002FBDC563A430914A@GVW1096EXB.americas.hpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Grant Grundler <grundler@google.com>, linux-ide@vger.kernel.org
+To: "Courtney-Bakke, Julia (ISS H/W EPR)" <julia.courtney-bakke@hp.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
 
-On Thu, 2 Apr 2009, Tejun Heo wrote:
+Hello Julia,
 
-> Grant Grundler wrote:
->>> I could drop down to 2.6.26 and rebuild my kernel with support for that
->>> controller - I hadn't done this before because I cannot then use my DVB-S
->>> card, but... I could live without that for the test.
->>
->> If someone could comment on  2.6.28 or 2.6.29, you could avoid running
->> this test.
->
-> Hmmm... I don't really remember changing much, so it should be fine.
-> Can you please give a shot at 2.6.26 anyway?  Also, kernel logs with
-> JMB controller would be helpful too as ahci tends to better show what's
-> really going on and failing during reset.
+Courtney-Bakke, Julia (ISS H/W EPR) wrote:
+>  Jeff,
+> I'm a hardware engineer at Hewlett-Packard. Some of our hardware customers are experiencing the qc-timeout documented in 
+> https://bugzilla.redhat.com/show_bug.cgi?id=453808
+> 
+> Specifically the issue is described as follows:
+> From: Mohamed 
+> Sent: Tuesday, February 10, 2009 4:24 PM
+> To: guild-test(mailer list); ipc-platform-team(mailer list)
+> Subject: 7828H4 Kernel message
+> 
+> Hi,
+> I see the following messages continuously appear on the 7828H4 server console. This server is running with Guild TT 11 - Build 10 and performing the CUCMBE load test. 
+> 
+> Feb 10 16:45:59 cores1 kern 4 kernel: ata3.00: qc timeout (cmd 0xa0)
+> Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: (BMDMA stat 0x25)
+> Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x25 data 8 in
+> Feb 10 16:45:59 cores1 kern 4 kernel:          res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
+> Feb 10 16:46:06 cores1 kern 4 kernel: ata3: port is slow to respond, please be patient (Status 0xd0)
+> Feb 10 16:46:29 cores1 kern 3 kernel: ata3: port failed to respond (30 secs, Status 0xd0)
+> Feb 10 16:46:29 cores1 kern 6 kernel: ata3: soft resetting port
+> Feb 10 16:46:29 cores1 kern 6 kernel: ata3.00: configured for UDMA/33
+> Feb 10 16:46:29 cores1 kern 6 kernel: ata3: EH complete
+> These messages are recorded at /var/log/active/syslog/messages. Is this a known issue ?
+> 
+>  
+> 
+> Do you know whether increasing ata_probe_timeout actually helped the problem?
+> I edited /sys/module/libata/ata_probe_timeout and changed its value 
+> from 30000 to 100000  -qc timeouts still occur. Did I implement the workaround correctly?
+>  
 
-I tried the JMB controller again with 2.6.26, and with drives 1,2,3 
-connected. This was different to what had happened previously - there are 
-two lights on the bridgeboard, green and red. Most of the time they're 
-both on. When the JMB controller was connected (even in the BIOS screen) 
-these lights flashed on and off about once a second. Occassionally they'd 
-settle into the on state. The log of booting into 2.6.26 is here:
+Increasing ata_probe_timeout won't help this problem, and it is reproducible
+on a hp dl320g5p running 2.6.29
 
-http://usenet.gerph.org/SATA/sata-123-2.6.26-jmb-kern.log
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATAPI: DV-28E-V, C.AB, max UDMA/33
+ata4.00: configured for UDMA/33
+isa bounce pool size: 16 pages
+scsi 3:0:0:0: CD-ROM            TEAC     DV-28E-V         C.AB PQ: 0 ANSI: 5
+   .
+   .
+ata4.00: qc timeout (cmd 0xa0)
+ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata4.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+          cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+          res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
+ata4.00: status: { DRDY ERR }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/33
+ata4: EH complete
+  .
+  .
 
-and mostly consists of:
+Some other information passed on to me (mentioning for this
+list), experimentally putting a delay in between ata_dev_read_id()
+and ata_dev_set_xfermode(), actually right before issuing  the
+set features command prevented the timeout.
 
-Apr  3 20:33:43 buttercup kernel: ata1: exception Emask 0x10 SAct 0x0 SErr 0x4000000 action 0xe frozen
-Apr  3 20:33:43 buttercup kernel: ata1: irq_stat 0x00000040, connection status changed
-Apr  3 20:33:43 buttercup kernel: ata1: SError: { DevExch }
-Apr  3 20:33:43 buttercup kernel: ata1: hard resetting link
-Apr  3 20:33:44 buttercup kernel: ata1: SATA link down (SStatus 0 SControl 300)
-Apr  3 20:33:44 buttercup kernel: ata1: EH complete
+David
 
-repeated over and over whilst the light was flashing (not in time with 
-it).
-
-An interesting (?) thing here is that at 20:34:27 in the log the light 
-stayed on for a bit and we managed to read details from the drives. Then 
-the light went back to flashing regularly again.
-
-I also booted into 2.6.29 with this configuration (but with drives 3,4,5) 
-and got a similar effect, except for the constant light:
-
-http://usenet.gerph.org/SATA/sata-345-2.6.29-jmb-kern.log
-
-I don't think it's particularly surprising that this exhibits the same 
-results, given that even during the BIOS the light flashes in the same 
-way.
-
-I removed and re-fitted the JMB card as part of these tests, in case it 
-was not seated properly in the slot (unlikely, as it was detected, but 
-just to be sure, I did this anyhow). I also exchanged the eSATA cables to 
-try to eliminate them. No change in behaviour was observed.
-
-Having tried this, I reinserted the SiI card and rebuilt 2.6.26 with 
-support for it (and increased the debug buffer). Whilst in the BIOS and 
-after booting normally, the bridge board lights are almost constantly on. 
-They only seem to go off when the link is reset. Booting with drives 
-1,2,3,4 connected (which should be a failure, or only partially detect the 
-drives according to the 2.6.29 results) gave me:
-
-http://usenet.gerph.org/SATA/sata-1234-2.6.26-sil-kern.log
-
-which did many resets during the initialisation and never detected any 
-drives. Turning the external box off and on again did not cause it to 
-re-detect the drives (as if it was just completely ignoring the interface 
-now).
-
-Repeating the test with drives 3,4,5 and the 2.6.26 kernel and the sil 
-card gave me the following log:
-
-http://usenet.gerph.org/SATA/sata-345-2.6.26-sil-kern.log
-
-This managed to identify 2 of the 3 drives during initialisation. When the 
-box was turned off and on again it only detected 2 of the 3.
-
->>> I've replaced the PSU once already - it was replaced on 6th Feb, with a
->>> Sumvision 450W 20+4pin SATA PSU. Those 5 drives + the bridge board and fan
->>> are the only things being powered by that PSU. I should have thought that
->>> even during drive initialisation 5 drives wouldn't exceed 450W. Anyhow, this
->>> was one of my first thoughts. I could get another PSU (I think I might be
->>> able to find one around here), but having replaced it so recently, I'm
->>> uncomfortable doing so.
->>>
->>> Is a 450W PSU going to be able to supply enough power for those drives ?
->>
->> It's not just about how many watts. Both 12v and 5v "rails" need to
->> provide enough power.  But if this worked before, I would assume the
->> replacement is working too.
->>
->> And in general, yes, a 450W should be plenty for 5 drives plus PMP
->> board. Especially if the OS is "staggering" the spinup so only one
->> or two drives are spinning up at the same time.  I know I've had to
->> fix "staggered spinup" in the past (2.6.18) but don't recall if it's
->> fixed in current 2.6.28 or .29 kernels.
->
-> libata never had proper provision for staggered spin up.  If it works,
-> it's just because they're being probed sequentially.  :-)
->
-> Anyways, 3132 + 3726 should work.  Both 3726 and 4726 pretty much
-> require its first port to be always occupied (or it's fake config
-> drive jumps arounds and freaks out) and hotplug is often flaky but
-> other than that it should generally work.
-
-So my using ports 3,4,5 only probably isn't all that useful for it ?
-
-Even still, I'm not sure that the behaviour that I'm seeing is down to a 
-driver issue now. I'd appreciate any other thoughts based on the extra 
-info I've given. I may just bite the bullet and try a replacement bridge 
-board and see if that helps.
-
--- 
-Gerph <http://gerph.org/>
-[ All information, speculation, opinion or data within, or attached to,
-   this email is private and confidential. Such content may not be
-   disclosed to third parties, or a public forum, without explicit
-   permission being granted. ]
