@@ -1,45 +1,81 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: LibATA SCSI WRITE_BUFFER to ATA DOWNLOAD_MICROCODE patch
-Date: Fri, 03 Apr 2009 15:24:15 -0500
-Message-ID: <1238790255.3359.85.camel@mulgrave.int.hansenpartnership.com>
-References: <20090401205115.GA32307@beardog.cca.cpqcorp.net>
-	 <49D4F4F4.6040406@rtr.ca>  <49D66C75.9050005@pobox.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH v2] libata: ahci enclosure management bios workaround
+Date: Fri, 3 Apr 2009 15:36:41 -0500
+Message-ID: <20090403203641.GA16179@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46488 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762534AbZDCUYS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Apr 2009 16:24:18 -0400
-In-Reply-To: <49D66C75.9050005@pobox.com>
+Received: from mx2.redhat.com ([66.187.237.31]:54169 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754368AbZDCUis (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Apr 2009 16:38:48 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, salimmu@beardog.cca.cpqcorp.net, linux-ide@vger.kernel.org, scameron@beardog.cca.cpqcorp.net, mike.miller@hp.com, steve.cameron@hp.com
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
 
-On Fri, 2009-04-03 at 16:07 -0400, Jeff Garzik wrote:
-> Mark Lord wrote:
-> > salimmu@beardog.cca.cpqcorp.net wrote:
-> >> Attach is a patch that adds translation of scsi WRITE_BUFFER to 
-> >> ATA_DOWNLOAD_MICROCODE command.\
-> > ..
-> > 
-> > Do we really need or want this extra code in-kernel?
-> > 
-> > This type of thing is already doable from user-space with SG_IO + ATA_16.
-> > Eg.  hdparm --fwdownload
-> 
-> If it can be done in userspace, I don't see much reason to add emulation 
-> in libata-scsi.c...
+During driver initialization ahci_start_port may not be able
+to turn LEDs off because the hardware may still be transmitting
+a message. And since the BIOS may not be setting the LEDs to
+off the drive LEDs may end up in a fault state. This has
+been seen on ICH9r and ICH10r when configured in AHCI mode
+instead of RAID mode, this patch doesn't key off a specific
+set of device IDs but will give the EM transmit bit a chance
+to clear if busy.
 
-The only reason I might be able to see it isn't for firmware download,
-agreed, since nothing in the kernel would ever use it.
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/ahci.c |   17 +++++++++++++++--
+ 1 files changed, 15 insertions(+), 2 deletions(-)
 
-If were were going to add some type of domain validation to the lines in
-SAS/SATA using write buffer echo tests, it might be more plausible, but
-that isn't the purpose of the patch.
-
-James
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 788bba2..6ca4bc0 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -78,6 +78,7 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 					ssize_t size);
+ #define MAX_SLOTS 8
++#define MAX_RETRY 15
+ 
+ enum {
+ 	AHCI_PCI_BAR		= 5,
+@@ -1115,6 +1116,8 @@ static void ahci_start_port(struct ata_port *ap)
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	struct ata_link *link;
+ 	struct ahci_em_priv *emp;
++	ssize_t rc;
++	int i;
+ 
+ 	/* enable FIS reception */
+ 	ahci_start_fis_rx(ap);
+@@ -1126,7 +1129,17 @@ static void ahci_start_port(struct ata_port *ap)
+ 	if (ap->flags & ATA_FLAG_EM) {
+ 		ata_for_each_link(link, ap, EDGE) {
+ 			emp = &pp->em_priv[link->pmp];
+-			ahci_transmit_led_message(ap, emp->led_state, 4);
++
++			/* EM Transmit bit maybe busy during init */
++			for (i = 0; i < MAX_RETRY; i++) {
++				rc = ahci_transmit_led_message(ap,
++							       emp->led_state,
++							       4);
++				if (rc == -EBUSY)
++					udelay(100);
++				else
++					break;
++			}
+ 		}
+ 	}
+ 
+@@ -1331,7 +1344,7 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 	em_ctl = readl(mmio + HOST_EM_CTL);
+ 	if (em_ctl & EM_CTL_TM) {
+ 		spin_unlock_irqrestore(ap->lock, flags);
+-		return -EINVAL;
++		return -EBUSY;
+ 	}
+ 
+ 	/*
 
