@@ -1,68 +1,111 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 2/3] ide-cd: cleanup cdrom_decode_status
-Date: Fri, 3 Apr 2009 06:58:03 +0200
-Message-ID: <20090403045803.GA3732@liondog.tnic>
-References: <1238655519-10074-2-git-send-email-petkovbb@gmail.com> <200904030108.39927.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756885AbZDCE61@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200904030108.39927.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH 1/3] ide-cd: carve out an ide_cd_breathe()-helper for fs write requests
+Date: Fri,  3 Apr 2009 09:58:37 +0200
+Message-ID: <1238745519-19389-1-git-send-email-petkovbb@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:48645 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbZDCH6s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Apr 2009 03:58:48 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+There should be no functional change resulting from this patch.
 
-On Fri, Apr 03, 2009 at 01:08:39AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 02 April 2009, Borislav Petkov wrote:
-> > - have (almost) equal handling of commands based solely on sense_key
-> 
-> I'm having a VERY hard time trying to review this patch because at
-> the same time that codepaths were merged if()s were replaced by switch()
-> which in turn resulted in change of intendation... on top of that
-> the patch description is very vague about this part of the changes...
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-cd.c |   65 +++++++++++++++++++++++++++++--------------------
+ 1 files changed, 38 insertions(+), 27 deletions(-)
 
-I completely and exactly understand what you are saying :), I thought so
-too when I looked at the diffs yesterday. Well, if it's any consolation, the
-patches've been tested so they seem to work :). Anyway, split version coming
-up...
-
-> We're dealing with tricky error recovery code here and it is very easy
-> for subtle bugs to slip in => it is very important to have the changes
-> easily reviewable by as many people as possible.
-
-..
-
-> > @@ -614,14 +589,15 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
-> >  	struct request *rq = hwif->rq;
-> >  	ide_expiry_t *expiry = NULL;
-> >  	int dma_error = 0, dma, thislen, uptodate = 0;
-> > -	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
-> > +	int write, uninitialized_var(rc), nsectors;
-> 
-> Why is uninitialized_var() here now?
-
-because gcc is whining that it might be uninitialized although I've
-doublechecked all codepaths returning a valid error. It is there to shut
-up this warning, actually.
-
-> >  	int sense = blk_sense_request(rq);
-> >  	unsigned int timeout;
-> >  	u16 len;
-> >  	u8 ireason, stat;
-> >  
-> > -	ide_debug_log(IDE_DBG_PC, "cmd[0]: 0x%x, write: 0x%x",
-> > -				  rq->cmd[0], write);
-> > +	write = (rq_data_dir(rq) == WRITE) ? 1 : 0;
-> > 
-> > +	ide_debug_log(IDE_DBG_PC, "cmd: 0x%x, write: 0x%x", rq->cmd[0], write);
-> >  
-> >  	/* check for errors */
-> >  	dma = drive->dma;
-
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index a4afd90..7bbdeb7 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -265,7 +265,43 @@ static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
+ 		cdrom_analyze_sense_data(drive, NULL, sense);
+ }
+ 
++
+ /*
++ * Allow the drive 5 seconds to recover; some devices will return NOT_READY
++ * while flushing data from cache.
++ *
++ * returns: 0 failed (write timeout expired)
++ *	    1 success
++ */
++static int ide_cd_breathe(ide_drive_t *drive, struct request *rq)
++{
++
++	struct cdrom_info *info = drive->driver_data;
++
++	if (!rq->errors)
++		info->write_timeout = jiffies +	ATAPI_WAIT_WRITE_BUSY;
++
++	rq->errors = 1;
++
++	if (time_after(jiffies, info->write_timeout))
++		return 0;
++	else {
++		struct request_queue *q = drive->queue;
++		unsigned long flags;
++
++		/*
++		 * take a breather relying on the unplug timer to kick us again
++		 */
++
++		spin_lock_irqsave(q->queue_lock, flags);
++		blk_plug_device(q);
++		spin_unlock_irqrestore(q->queue_lock, flags);
++
++		return 1;
++	}
++}
++
++/**
+  * Returns:
+  * 0: if the request should be continued.
+  * 1: if the request will be going through error recovery.
+@@ -348,36 +384,11 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+ 				/* fail the request */
+ 				printk(KERN_ERR PFX "%s: tray open\n",
+ 						drive->name);
+-				do_end_request = 1;
+ 			} else {
+-				struct cdrom_info *info = drive->driver_data;
+-
+-				/*
+-				 * Allow the drive 5 seconds to recover, some
+-				 * devices will return this error while flushing
+-				 * data from cache.
+-				 */
+-				if (!rq->errors)
+-					info->write_timeout = jiffies +
+-							ATAPI_WAIT_WRITE_BUSY;
+-				rq->errors = 1;
+-				if (time_after(jiffies, info->write_timeout))
+-					do_end_request = 1;
+-				else {
+-					struct request_queue *q = drive->queue;
+-					unsigned long flags;
+-
+-					/*
+-					 * take a breather relying on the unplug
+-					 * timer to kick us again
+-					 */
+-					spin_lock_irqsave(q->queue_lock, flags);
+-					blk_plug_device(q);
+-					spin_unlock_irqrestore(q->queue_lock, flags);
+-
++				if (ide_cd_breathe(drive, rq))
+ 					return 1;
+-				}
+ 			}
++			do_end_request = 1;
+ 		} else if (sense_key == UNIT_ATTENTION) {
+ 			/* media change */
+ 			cdrom_saw_media_change(drive);
 -- 
-Regards/Gruss,
-    Boris.
+1.6.2.1
+
