@@ -1,83 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata_check_status_mmio exception kernel panic
-Date: Sat, 04 Apr 2009 13:58:52 +0900
-Message-ID: <49D6E90C.5030109@kernel.org>
-References: <3fb94e50903312006y12717b8dh7dd7769f3f5b1dda@mail.gmail.com> <49D64DE0.8060400@sutus.com>
+From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+Subject: Odd RAID failure
+Date: Sat, 4 Apr 2009 12:32:03 -0500
+Message-ID: <20090404173205.GIRT22375.cdptpa-omta01.mail.rr.com@Leslie>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44603 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754292AbZDDQqQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Apr 2009 12:46:16 -0400
-In-Reply-To: <49D64DE0.8060400@sutus.com>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:39371 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbZDDRcH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Apr 2009 13:32:07 -0400
+Received: from Leslie ([68.203.168.150]) by cdptpa-omta01.mail.rr.com
+          with ESMTP
+          id <20090404173205.GIRT22375.cdptpa-omta01.mail.rr.com@Leslie>
+          for <linux-ide@vger.kernel.org>; Sat, 4 Apr 2009 17:32:05 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dustin Harrison <d.harrison@sutus.com>
-Cc: Sagar Borikar <sagar.borikar@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
 
-Hello,
+I've been discussing this problem over on the linux-raid list, and one of
+the participants suggested I post to this list to see if someone here has
+any suggestions.
 
-Dustin Harrison wrote:
-> I also run a MIPS platform and have seen this problem in 2.6.22.  It
-> stems from the Sil3512 (and possibly others) not allowing read
-> access to the taskfile registers while a DMA transfer is active.
-> What happens for me is that when DMA_ENABLE is true the Sil3512 (in
-> my case) will disallow reads to the taskfile registers.  So any
-> event that triggers a port freeze during an interrupt while DMA is
-> active causes a bus error to be thrown when the ata_check_status
-> call fires.
+I'm having a severe problem whose root cause I cannot determine.  I have a
+RAID 6 array managed by mdadm running on Debian "Lenny" with a 3.2GHz AMD
+Athlon 64 x 2 processor and 4G of RAM.  The kernel is 2.6.26-1-amd64.  There
+are ten 1 Terabyte SATA drives, unpartitioned, fully allocated to the
+/dev/md0 device. The drive are served by 3 Silicon Image SATA port
+multipliers and a Silicon Image 4 port eSATA controller.  The /dev/md0
+device is also unpartitioned, and all 8T of active space is formatted as a
+single Reiserfs file system.  The entire volume is mounted to /RAID.
+Various directories on the volume are shared using both NFS and SAMBA.
 
-Thanks a lot for diagnosing the problem.
+Performance of the RAID system is very good.  The array can read and write
+at over 450 Mbps, and I don't know if the limit is the array itself or the
+network, but since the performance is more than adequate I really am not
+concerned which is the case.
 
-> I cannot reproduce this on x86.  I assume it handles the taskfile
-> read error differently.
+The issue is the entire array will occasionally pause completely for about
+40 seconds when a file is created.  This does not always happen, but the
+situation is easily reproducible.  The frequency at which the symptom occurs
+seems to be related to the transfer load on the array.  If no other
+transfers are in process, then the failure seems somewhat more rare, perhaps
+accompanying less than 1 file creation in 10..  During heavy file transfer
+activity, sometimes the system halts with every other file creation.
+Although I have observed many dozens of these events, I have never once
+observed it to happen except when a file creation occurs. 
+Reading and writing existing files never triggers the event, although any
+read or write occurring during the event is halted for the duration. 
+(There is one cron jog which runs every half-hour that creates a tiny file;
+this is the most common failure vector.)  There are other drives formatted
+with other file systems on the machine, but the issue has never been seen on
+any of the other drives.  When the array runs its regularly scheduled health
+check, the problem is much worse.  Not only does it lock up with almost
+every single file creation, but the lock-up time is much longer - sometimes
+in excess of 2 minutes.
 
-I think we just get 0xff on IO read errors.
-
-> As a workaround I have used this patch on sata_sil.c to cover up the
-> problem and stop the kernel panics.  But I don't think this is the
-> best approach.
->
-> --- drivers/ata/sata_sil.c.orig 2009-04-01 18:15:55.000000000 -0700
-> +++ drivers/ata/sata_sil.c      2009-04-03 10:51:56.000000000 -0700
-> @@ -454,6 +454,23 @@
->  err_hsm:
->        qc->err_mask |= AC_ERR_HSM;
->  freeze:
-> +
-> +       /* Before we do a port freeze we need to ensure DMA_ENABLE is off.
-> +       * This is because the controller will not give us access to the
-> taskfile
-> +       * registers while a DMA is in progress and ata_qc_complete is
-> the first
-> +       * function executed in ata_port_freeze. ata_port_freeze will
-> attempt to
-> +       * access the tf registers and give us a host bus error kernel
-> panic.
-> +       *
-> +       * This code is repeated from ata_bmdma_stop because we may not
-> have a
-> +       * valid qc to pass to ata_bmdma_stop.
-> +       */
-> +       iowrite8(ioread8(ap->ioaddr.bmdma_addr) & ~SIL_DMA_ENABLE,
-> ap->ioaddr.bmdma_addr);
-> +
-> +       /* According to ata_bmdma_stop, an HDMA transition requires on
-> PIO cycle.
-> +        *  But we can't read a taskfile register.
-> +       */
-> +       ioread8(ap->ioaddr.bmdma_addr)
-> +
->        ata_port_freeze(ap);
-
-Can you please move the logic to sil_freeze() and see whether it
-works?  The freeze handler is supposed to put the controller into idle
-(or at least not-crazy) state, so things like this fit there.
-
-Thanks.
-
--- 
-tejun
+Transfers via Linux based utilities (ftp, NFS, cp, mv, rsync, etc) all
+recover after the event, but SAMBA based transfers frequently fail, both
+reads and writes.  According to iostat, the writes to all 10 drives and to
+the array halt abruptly and completely, and reads from 5 of the drives stop
+completely, but 5 of the drives still show a dribble of reads happening.  It
+is always the same 5 drives.
 
