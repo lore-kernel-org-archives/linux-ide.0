@@ -1,32 +1,36 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
 Subject: Re: [PATCH 3/5] ide-cd: convert cdrom_decode_status() to use
 	switch statements
-Date: Sun, 5 Apr 2009 08:09:11 +0200
-Message-ID: <20090405060911.GC4189@liondog.tnic>
-References: <20090403195757.31438.16866.sendpatchset@localhost.localdomain> <20090403195810.31438.66965.sendpatchset@localhost.localdomain>
+Date: Sun, 5 Apr 2009 08:25:27 +0200
+Message-ID: <20090405062527.GA774@liondog.tnic>
+References: <20090403195757.31438.16866.sendpatchset@localhost.localdomain> <20090403195810.31438.66965.sendpatchset@localhost.localdomain> <20090405060911.GC4189@liondog.tnic>
 Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:50459 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754789AbZDEGJS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Apr 2009 02:09:18 -0400
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:49069 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752240AbZDEGZe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Apr 2009 02:25:34 -0400
 Content-Disposition: inline
-In-Reply-To: <20090403195810.31438.66965.sendpatchset@localhost.localdomain>
+In-Reply-To: <20090405060911.GC4189@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Apr 03, 2009 at 09:58:10PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide-cd: convert cdrom_decode_status() to use switch statements
+On Sun, Apr 05, 2009 at 08:09:11AM +0200, Borislav Petkov wrote:
+> On Fri, Apr 03, 2009 at 09:58:10PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide-cd: convert cdrom_decode_status() to use switch statements
+> 
+> Here's a rediffed version:
 
-Here's a rediffed version:
+Sorry, I'd forgotten the ide_cd_breathe patch, so here's the correct one:
+
 ---
 From: Borislav Petkov <petkovbb@gmail.com>
-Date: Sun, 5 Apr 2009 08:07:17 +0200
+Date: Sun, 5 Apr 2009 08:20:47 +0200
 Subject: [PATCH] ide-cd: convert cdrom_decode_status() to use switch statements
 
 Convert cdrom_decode_status() to use switch statements in
@@ -44,10 +48,10 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
  1 files changed, 32 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index d95a2f0..df01b91 100644
+index e946f0e..43db330 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -304,15 +304,14 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -340,15 +340,14 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  		if (blk_pc_request(rq) && !rq->errors)
  			rq->errors = SAM_STAT_CHECK_CONDITION;
  
@@ -68,7 +72,7 @@ index d95a2f0..df01b91 100644
  			/*
  			 * Don't print error message for this condition--
  			 * SFF8090i indicates that 5/24/00 is the correct
-@@ -320,9 +319,13 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -356,9 +355,13 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  			 * drive doesn't have that capability.
  			 * cdrom_log_sense() knows this!
  			 */
@@ -85,7 +89,7 @@ index d95a2f0..df01b91 100644
  		}
  
  		rq->cmd_flags |= REQ_FAILED;
-@@ -342,12 +345,11 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -378,12 +381,11 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  		if (blk_noretry_request(rq))
  			do_end_request = 1;
  
@@ -100,18 +104,18 @@ index d95a2f0..df01b91 100644
  				if (!quiet)
  					printk(KERN_ERR PFX "%s: tray open\n",
  						drive->name);
-@@ -381,8 +383,8 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -392,8 +394,8 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  					return 1;
- 				}
  			}
+ 			do_end_request = 1;
 -		} else if (sense_key == UNIT_ATTENTION) {
 -			/* media change */
-+		break;
++			break;
 +		case UNIT_ATTENTION:
  			cdrom_saw_media_change(drive);
  
  			/*
-@@ -391,8 +393,9 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -402,8 +404,9 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  			 */
  			if (++rq->errors > ERROR_MAX)
  				do_end_request = 1;
@@ -123,7 +127,7 @@ index d95a2f0..df01b91 100644
  			/*
  			 * No point in retrying after an illegal request or data
  			 * protect error.
-@@ -400,7 +403,8 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -411,7 +414,8 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  			if (!quiet)
  				ide_dump_status(drive, "command error", stat);
  			do_end_request = 1;
@@ -133,7 +137,7 @@ index d95a2f0..df01b91 100644
  			/*
  			 * No point in re-trying a zillion times on a bad
  			 * sector. If we got here the error is not correctable.
-@@ -409,19 +413,22 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+@@ -420,19 +424,22 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  				ide_dump_status(drive, "media error "
  						"(bad sector)",	stat);
  			do_end_request = 1;
@@ -166,6 +170,7 @@ index d95a2f0..df01b91 100644
  		/*
 -- 
 1.6.2.1
+
 
 -- 
 Regards/Gruss,
