@@ -1,91 +1,55 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 03/03] sata_mv: replace 0x1f with ATA_PIO4 (v2)
-Date: Mon, 06 Apr 2009 15:22:21 -0400
-Message-ID: <49DA566D.9040501@rtr.ca>
-References: <49DA2DFD.4010402@rtr.ca> <49DA2E33.4050704@rtr.ca> <49DA2E76.7000800@rtr.ca>
+Subject: [PATCH 05/07] sata_mv: workaround errata SATA#26
+Date: Mon, 06 Apr 2009 15:24:57 -0400
+Message-ID: <49DA5709.7060005@rtr.ca>
+References: <49DA2DFD.4010402@rtr.ca> <49DA2E33.4050704@rtr.ca> <49DA2E76.7000800@rtr.ca> <49DA566D.9040501@rtr.ca> <49DA56DE.3000200@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33159 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:33202 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752049AbZDFTWX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 15:22:23 -0400
-In-Reply-To: <49DA2E76.7000800@rtr.ca>
+	id S1753516AbZDFTY7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Apr 2009 15:24:59 -0400
+In-Reply-To: <49DA56DE.3000200@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Saeed Bishara <saeed@marvell.com>, =?UTF-8?B?RXJpayBJbmdlIEJvbHPDuA==?= <knan-lkml@anduin.net>
+Cc: Saeed Bishara <saeed@marvell.com>
 
-Cosmetic change: replace .pio_mask=3D0x1f with .pio_mask=3DATA_PIO4 eve=
-rywhere.
-Originally from Erik Inge Bols=C3=B8, now reworked for latest sata_mv.
+Workaround for errata SATA#26.
 
-Signed-off-by: Erik Inge Bols=C3=B8 <knan-lkml@anduin.net>
+Prevents accidently putting a drive to sleep when attempting COMRESET,
+by ORing 0xf000 with the values written to SCR_CONTROL.
+
 Signed-off-by: Mark Lord <mlord@pobox.com>
----
 
-Resending to try and fix spelling of Bols=C3=B8's name,
-and also to copy him on the email.
-
---- old/drivers/ata/sata_mv.c	2009-04-06 12:06:20.000000000 -0400
-+++ new/drivers/ata/sata_mv.c	2009-04-06 12:23:32.000000000 -0400
-@@ -694,49 +694,49 @@
- static const struct ata_port_info mv_port_info[] =3D {
- 	{  /* chip_504x */
- 		.flags		=3D MV_GEN_I_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv5_ops,
- 	},
- 	{  /* chip_508x */
- 		.flags		=3D MV_GEN_I_FLAGS | MV_FLAG_DUAL_HC,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv5_ops,
- 	},
- 	{  /* chip_5080 */
- 		.flags		=3D MV_GEN_I_FLAGS | MV_FLAG_DUAL_HC,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv5_ops,
- 	},
- 	{  /* chip_604x */
- 		.flags		=3D MV_GEN_II_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv6_ops,
- 	},
- 	{  /* chip_608x */
- 		.flags		=3D MV_GEN_II_FLAGS | MV_FLAG_DUAL_HC,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv6_ops,
- 	},
- 	{  /* chip_6042 */
- 		.flags		=3D MV_GEN_IIE_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv_iie_ops,
- 	},
- 	{  /* chip_7042 */
- 		.flags		=3D MV_GEN_IIE_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv_iie_ops,
- 	},
- 	{  /* chip_soc */
- 		.flags		=3D MV_GEN_IIE_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv_iie_ops,
- 	},
+--- old/drivers/ata/sata_mv.c	2009-04-06 13:29:05.000000000 -0400
++++ new/drivers/ata/sata_mv.c	2009-04-06 14:20:53.000000000 -0400
+@@ -1296,7 +1296,25 @@
+ 	unsigned int ofs = mv_scr_offset(sc_reg_in);
+ 
+ 	if (ofs != 0xffffffffU) {
+-		writelfl(val, mv_ap_base(link->ap) + ofs);
++		void __iomem *addr = mv_ap_base(link->ap) + ofs;
++		if (sc_reg_in == SCR_CONTROL) {
++			/*
++			 * Workaround for 88SX60x1 FEr SATA#26:
++			 *
++			 * COMRESETs have to take care not to accidently
++			 * put the drive to sleep when writing SCR_CONTROL.
++			 * Setting bits 12..15 prevents this problem.
++			 *
++			 * So if we see an outbound COMMRESET, set those bits.
++			 * Ditto for the followup write that clears the reset.
++			 *
++			 * The proprietary driver does this for
++			 * all chip versions, and so do we.
++			 */
++			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
++				val |= 0xf000;
++		}
++		writelfl(val, addr);
+ 		return 0;
+ 	} else
+ 		return -EINVAL;
