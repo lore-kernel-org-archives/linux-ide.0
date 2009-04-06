@@ -1,88 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 03/03] sata_mv: replace 0x1f with ATA_PIO4
-Date: Mon, 06 Apr 2009 12:31:50 -0400
-Message-ID: <49DA2E76.7000800@rtr.ca>
-References: <49DA2DFD.4010402@rtr.ca> <49DA2E33.4050704@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: [PATCH] tx4939ide: Fix tx4939ide_{in,out}put_data_swap argument
+Date: Tue,  7 Apr 2009 01:36:41 +0900
+Message-ID: <1239035801-9603-1-git-send-email-anemo@mba.ocn.ne.jp>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:34661 "EHLO mail.rtr.ca"
+Received: from mba.ocn.ne.jp ([122.1.235.107]:50074 "EHLO smtp.mba.ocn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752681AbZDFQbw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 12:31:52 -0400
-In-Reply-To: <49DA2E33.4050704@rtr.ca>
+	id S1752293AbZDFQgi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Apr 2009 12:36:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Saeed Bishara <saeed@marvell.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Cosmetic change: replace .pio_mask=3D0x1f with .pio_mask=3DATA_PIO4 eve=
-rywhere.
-Originally from Erik Inge Bols=C3=83=C2=B8, now reworked for latest sat=
-a_mv.
+The commit adb1af9 ("ide: pass command instead of request to
+ide_pio_datablock()") missed tx4939ide driver.
 
-Signed-off-by: Erik Inge Bols=C3=83=C2=B8 <knan-lkml@anduin.net>
-Signed-off-by: Mark Lord <mlord@pobox.com>
+Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+---
+ drivers/ide/tx4939ide.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
---- old/drivers/ata/sata_mv.c	2009-04-06 12:06:20.000000000 -0400
-+++ new/drivers/ata/sata_mv.c	2009-04-06 12:23:32.000000000 -0400
-@@ -694,49 +694,49 @@
- static const struct ata_port_info mv_port_info[] =3D {
- 	{  /* chip_504x */
- 		.flags		=3D MV_GEN_I_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv5_ops,
- 	},
- 	{  /* chip_508x */
- 		.flags		=3D MV_GEN_I_FLAGS | MV_FLAG_DUAL_HC,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv5_ops,
- 	},
- 	{  /* chip_5080 */
- 		.flags		=3D MV_GEN_I_FLAGS | MV_FLAG_DUAL_HC,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv5_ops,
- 	},
- 	{  /* chip_604x */
- 		.flags		=3D MV_GEN_II_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv6_ops,
- 	},
- 	{  /* chip_608x */
- 		.flags		=3D MV_GEN_II_FLAGS | MV_FLAG_DUAL_HC,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv6_ops,
- 	},
- 	{  /* chip_6042 */
- 		.flags		=3D MV_GEN_IIE_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv_iie_ops,
- 	},
- 	{  /* chip_7042 */
- 		.flags		=3D MV_GEN_IIE_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv_iie_ops,
- 	},
- 	{  /* chip_soc */
- 		.flags		=3D MV_GEN_IIE_FLAGS,
--		.pio_mask	=3D 0x1f,	/* pio0-4 */
-+		.pio_mask	=3D ATA_PIO4,
- 		.udma_mask	=3D ATA_UDMA6,
- 		.port_ops	=3D &mv_iie_ops,
- 	},
+diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
+index 2aad79b..571ad24 100644
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -445,7 +445,7 @@ static void tx4939ide_tf_load(ide_drive_t *drive, struct ide_cmd *cmd)
+ #ifdef __BIG_ENDIAN
+ 
+ /* custom iops (independent from SWAP_IO_SPACE) */
+-static void tx4939ide_input_data_swap(ide_drive_t *drive, struct request *rq,
++static void tx4939ide_input_data_swap(ide_drive_t *drive, struct ide_cmd *cmd,
+ 				void *buf, unsigned int len)
+ {
+ 	unsigned long port = drive->hwif->io_ports.data_addr;
+@@ -457,7 +457,7 @@ static void tx4939ide_input_data_swap(ide_drive_t *drive, struct request *rq,
+ 	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
+ }
+ 
+-static void tx4939ide_output_data_swap(ide_drive_t *drive, struct request *rq,
++static void tx4939ide_output_data_swap(ide_drive_t *drive, struct ide_cmd *cmd,
+ 				void *buf, unsigned int len)
+ {
+ 	unsigned long port = drive->hwif->io_ports.data_addr;
+-- 
+1.5.6.3
+
