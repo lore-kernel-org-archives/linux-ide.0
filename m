@@ -1,47 +1,87 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: [PATCH] tx4939ide: Fix tx4939ide_{in,out}put_data_swap argument
-Date: Tue,  7 Apr 2009 01:36:41 +0900
-Message-ID: <1239035801-9603-1-git-send-email-anemo@mba.ocn.ne.jp>
+From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Subject: 2.6.29.1 BUG: unable to handle kernel NULL pointer dereference at
+ (null)
+Date: Mon, 06 Apr 2009 20:11:20 +0200
+Message-ID: <49DA45C8.8070303@nets.rwth-aachen.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:50074 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293AbZDFQgi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 12:36:38 -0400
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:56013 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750804AbZDFSLq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 14:11:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-The commit adb1af9 ("ide: pass command instead of request to
-ide_pio_datablock()") missed tx4939ide driver.
+Hi,
 
-Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
----
- drivers/ide/tx4939ide.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+perhaps cs5536 is broken?
+This is with one CF card present on ALIX 2c2:
 
-diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
-index 2aad79b..571ad24 100644
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -445,7 +445,7 @@ static void tx4939ide_tf_load(ide_drive_t *drive, struct ide_cmd *cmd)
- #ifdef __BIG_ENDIAN
- 
- /* custom iops (independent from SWAP_IO_SPACE) */
--static void tx4939ide_input_data_swap(ide_drive_t *drive, struct request *rq,
-+static void tx4939ide_input_data_swap(ide_drive_t *drive, struct ide_cmd *cmd,
- 				void *buf, unsigned int len)
- {
- 	unsigned long port = drive->hwif->io_ports.data_addr;
-@@ -457,7 +457,7 @@ static void tx4939ide_input_data_swap(ide_drive_t *drive, struct request *rq,
- 	__ide_flush_dcache_range((unsigned long)buf, roundup(len, 2));
- }
- 
--static void tx4939ide_output_data_swap(ide_drive_t *drive, struct request *rq,
-+static void tx4939ide_output_data_swap(ide_drive_t *drive, struct ide_cmd *cmd,
- 				void *buf, unsigned int len)
- {
- 	unsigned long port = drive->hwif->io_ports.data_addr;
--- 
-1.5.6.3
+[    2.857215] Uniform Multi-Platform E-IDE driver
+[    2.871238] cs5536 0000:00:0f.2: IDE controller (0x1022:0x209a rev 0x01)
+[    2.891486] cs5536 0000:00:0f.2: not 100% native mode: will probe
+irqs later
+[    2.912718] BUG: unable to handle kernel NULL pointer dereference at
+(null)
+[    2.933857] IP: [<(null)>] (null)
+[    2.944014] *pde = 00000000
+[    2.952788] Oops: 0000 [#1]
+[    2.956215] last sysfs file:
+[    2.956215] Modules linked in:
+[    2.956215]
+[    2.956215] Pid: 1, comm: swapper Not tainted (2.6.29.1-ah #1)
+[    2.956215] EIP: 0060:[<00000000>] EFLAGS: 00010246 CPU: 0
+[    2.956215] EIP is at 0x0
+[    2.956215] EAX: ce925400 EBX: ce925400 ECX: ce925400 EDX: c0372ebc
+[    2.956215] ESI: c0372dec EDI: cf4aa858 EBP: cf416d14 ESP: cf416d04
+[    2.956215]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+[    2.956215] Process swapper (pid: 1, ti=cf416000 task=cf41fb40
+task.ti=cf416)
+[    2.956215] Stack:
+[    2.956215]  c027815f ce925400 c0372dec 0000ff00 cf416d2c c0278722
+cf4aa800 0
+[    2.956215]  c0372dec ce92543c cf416d6c c0276a9e cf416d7c cf416e7c
+c0372dec 0
+[    2.956215]  ce925400 00000000 c03e0c48 cf4aa8c0 01000005 c0372dec
+00000000 0
+[    2.956215] Call Trace:
+[    2.956215]  [<c027815f>] ? ide_pci_check_simplex+0x4e/0x83
+[    2.956215]  [<c0278722>] ? ide_hwif_setup_dma+0x63/0xcd
+[    2.956215]  [<c0276a9e>] ? ide_host_register+0x169/0x52f
+[    2.956215]  [<c027884a>] ? ide_pci_init_one+0xbe/0xd5
+[    2.956215]  [<c01133a2>] ? update_curr+0x60/0x93
+[    2.956215]  [<c02395bf>] ? idr_get_empty_slot+0x132/0x1f5
+[    2.956215]  [<c02962a4>] ? raw_pci_read+0x4c/0x57
+[    2.956215]  [<c0296392>] ? pci_read+0x1d/0x23
+[    2.956215]  [<c0242a7d>] ? pci_bus_read_config_dword+0x2c/0x44
+[    2.956215]  [<c027a219>] ? cs5536_init_one+0x4f/0x54
+[    2.956215]  [<c024648d>] ? local_pci_probe+0xe/0x10
+[    2.956215]  [<c0246599>] ? pci_device_probe+0x4b/0x69
+[    2.956215]  [<c0269a05>] ? driver_probe_device+0x9b/0x112
+[    2.956215]  [<c0269ac8>] ? __driver_attach+0x4c/0x6b
+[    2.956215]  [<c0269101>] ? bus_for_each_dev+0x36/0x57
+[    2.956215]  [<c02698af>] ? driver_attach+0x14/0x16
+[    2.956215]  [<c0269a7c>] ? __driver_attach+0x0/0x6b
+[    2.956215]  [<c026958b>] ? bus_add_driver+0x97/0x1a7
+[    2.956215]  [<c0269c63>] ? driver_register+0x71/0xcd
+[    2.956215]  [<c024674d>] ? __pci_register_driver+0x2e/0x5d
+[    2.956215]  [<c0452069>] ? cs5536_init+0x14/0x16
+[    2.956215]  [<c0101049>] ? _stext+0x49/0x10b
+[    2.956215]  [<c0452055>] ? cs5536_init+0x0/0x16
+[    2.956215]  [<c0182200>] ? proc_create_data+0x8a/0x8d
+[    2.956215]  [<c013a16c>] ? register_irq_proc+0x6a/0x83
+[    2.956215]  [<c043e6d0>] ? kernel_init+0x6d/0xbb
+[    2.956215]  [<c043e663>] ? kernel_init+0x0/0xbb
+[    2.956215]  [<c010319f>] ? kernel_thread_helper+0x7/0x10
+[    2.956215] Code:  Bad EIP value.
+[    2.956215] EIP: [<00000000>] 0x0 SS:ESP 0068:cf416d04
+[    3.638455] ---[ end trace f6947cc280ce4929 ]---
+[    3.652402] Kernel panic - not syncing: Attempted to kill init!
+
+Best regards,
+Arnd
 
