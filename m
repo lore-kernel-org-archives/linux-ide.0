@@ -1,62 +1,124 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2] ide-cd: cdrom_decode_status: use return codes instead of naked numbers
-Date: Mon, 6 Apr 2009 23:00:15 +0200
-Message-ID: <200904062300.16108.bzolnier@gmail.com>
-References: <1238922962-19727-2-git-send-email-petkovbb@gmail.com>
+Subject: Re: [PATCH 1/5] ide-cd: respect REQ_QUIET for fs requests in cdrom_decode_status()
+Date: Mon, 6 Apr 2009 22:58:40 +0200
+Message-ID: <200904062258.41148.bzolnier@gmail.com>
+References: <20090403195757.31438.16866.sendpatchset@localhost.localdomain> <20090405051342.GB4189@liondog.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-fx0-f158.google.com ([209.85.220.158]:55424 "EHLO
 	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757938AbZDFVLm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 17:11:42 -0400
-In-Reply-To: <1238922962-19727-2-git-send-email-petkovbb@gmail.com>
+	with ESMTP id S1757664AbZDFVLk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 17:11:40 -0400
+In-Reply-To: <20090405051342.GB4189@liondog.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Sunday 05 April 2009, Borislav Petkov wrote:
-> Remove unused SECTOR_SIZE while at it.
+> On Fri, Apr 03, 2009 at 09:57:57PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide-cd: respect REQ_QUIET for fs requests in cdrom_decode_status()
+> > 
+> > Cc: Borislav Petkov <petkovbb@gmail.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/ide/ide-cd.c |   15 ++++++++++-----
+> >  1 file changed, 10 insertions(+), 5 deletions(-)
+> > 
+> > Index: b/drivers/ide/ide-cd.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -382,7 +382,8 @@ static int cdrom_decode_status(ide_drive
+> >  				cdrom_saw_media_change(drive);
+> >  
+> >  				/* fail the request */
+> > -				printk(KERN_ERR PFX "%s: tray open\n",
+> > +				if ((rq->cmd_flags & REQ_QUIET) == 0)
+> > +					printk(KERN_ERR PFX "%s: tray open\n",
+> >  						drive->name);
+> >  			} else {
+> >  				if (ide_cd_breathe(drive, rq))
+> > @@ -405,19 +406,23 @@ static int cdrom_decode_status(ide_drive
+> >  			 * No point in retrying after an illegal request or data
+> >  			 * protect error.
+> >  			 */
+> > -			ide_dump_status(drive, "command error", stat);
+> > +			if ((rq->cmd_flags & REQ_QUIET) == 0)
+> > +				ide_dump_status(drive, "command error", stat);
+> >  			do_end_request = 1;
+> >  		} else if (sense_key == MEDIUM_ERROR) {
+> >  			/*
+> >  			 * No point in re-trying a zillion times on a bad
+> >  			 * sector. If we got here the error is not correctable.
+> >  			 */
+> > -			ide_dump_status(drive, "media error (bad sector)",
+> > -					stat);
+> > +			if ((rq->cmd_flags & REQ_QUIET) == 0)
+> > +				ide_dump_status(drive, "media error "
+> > +						"(bad sector)", stat);
+> >  			do_end_request = 1;
+> >  		} else if (sense_key == BLANK_CHECK) {
+> >  			/* disk appears blank ?? */
+> > -			ide_dump_status(drive, "media error (blank)", stat);
+> > +			if ((rq->cmd_flags & REQ_QUIET) == 0)
+> > +				ide_dump_status(drive, "media error (blank)",
+> > +						stat);
+> >  			do_end_request = 1;
+> >  		} else if ((err & ~ATA_ABORTED) != 0) {
+> >  			/* go to the default handler for other errors */
+> 
+> 
+> Let's cache the REQ_QUIET value instead, for slightly better readability:
+> 
+> ---
+> From: Borislav Petkov <petkovbb@gmail.com>
+> Date: Sun, 5 Apr 2009 06:40:50 +0200
+> Subject: [PATCH] ide-cd: respect REQ_QUIET for fs requests in cdrom_decode_status()
 > 
 > There should be no functional change resulting from this patch.
 > 
+> Suggested-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-[...]
+Yes, this version is better, applied.
 
-> @@ -431,7 +425,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
->  	/* if we got a CHECK_CONDITION status, queue a request sense command */
->  	if (stat & ATA_ERR)
->  		cdrom_queue_request_sense(drive, NULL, NULL);
-> -	return 1;
-> +	return REQ_RECOVER;
->  
->  end_request:
->  	if (stat & ATA_ERR) {
-> @@ -445,9 +439,9 @@ end_request:
->  		hwif->rq = NULL;
->  
->  		cdrom_queue_request_sense(drive, rq->sense, rq);
-> -		return 1;
-> -	} else
-> -		return 2;
-> +		return REQ_RECOVER;
-> +	}
-> +	return REQ_FAIL;
->  }
+I also applied patches 2-5 (correcting "From:" line in patches 3 & 5,
+re-adding your attribution to 3-5 and fixing "S-o-b:" order in 3-5).
 
-Could it be that cdrom_newpc_intr() chunk got lost somewhere along the way,
-IIRC it was there?
+[ S-o-B order should be:
 
-[...]
-  
-> +/* internal decode_status codes */
-> +#define REQ_CONT               0
-> +#define REQ_RECOVER            1
-> +#define REQ_FAIL               2
+  - me
+  - you
+  - me (this one added now)
 
-Did you notice my comments about REQ_* in previous mail?
+  to show the correct patch history -- the fact that I'm also
+  the final committer doesn't matter. ]
+
+Patch #5 had a small whitespace mismatch introduced while re-diffing
+(also fixed now):
+
+@@ -412,13 +413,14 @@
+ 		} else if (++rq->errors > ERROR_MAX)
+ 			/* we've racked up too many retries, abort */
+ 			do_end_request = 1;
++
++
+ 	}
+ 
+ 	if (blk_fs_request(rq) == 0) {
+ 		rq->cmd_flags |= REQ_FAILED;
+ 		do_end_request = 1;
+ 	}
+-
+ 	/*
+ 	 * End a request through request sense analysis when we have sense data.
+ 	 * We need this in order to perform end of media processing.
+
+Thanks,
+Bart
