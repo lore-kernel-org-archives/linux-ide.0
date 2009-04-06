@@ -1,63 +1,55 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH 1/5] Block: Discard may need to allocate pages
-Date: Mon, 6 Apr 2009 13:34:51 -0700
-Message-ID: <20090406203451.GA24758@linux.intel.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13026] cs5536 is broken
+Date: Mon, 6 Apr 2009 20:42:48 GMT
+Message-ID: <200904062042.n36KgmnA007895@demeter.kernel.org>
+References: <bug-13026-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755275AbZDFUfS@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49D8A3D7.5070507@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:43456 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbZDFUmu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 16:42:50 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n36Kgm85007896
+	for <linux-ide@vger.kernel.org>; Mon, 6 Apr 2009 20:42:48 GMT
+In-Reply-To: <bug-13026-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Apr 05, 2009 at 03:28:07PM +0300, Boaz Harrosh wrote:
-> > +	if (bio_has_data(bio))
-> > +		__free_page(bio_page(bio));
+http://bugzilla.kernel.org/show_bug.cgi?id=13026
+
+
+Sergei Shtylyov <sshtylyov@ru.mvista.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bzolnier@gmail.com,
+                   |                            |sshtylyov@ru.mvista.com
+         AssignedTo|io_ide@kernel-bugs.osdl.org |sshtylyov@ru.mvista.com
+
+
+
+
+--- Comment #1 from Sergei Shtylyov <sshtylyov@ru.mvista.com>  2009-04-06 20:42:47 ---
+(In reply to comment #0)
+> Subject    : 2.6.29.1 BUG: unable to handle kernel NULL pointer dereference at
+> (null)
+> Submitter  : Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+> Date       : 2009-04-06 18:11
+> References : http://marc.info/?l=linux-kernel&m=123904159829771&w=4
+> Handled-By : Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Patch      : http://marc.info/?l=linux-kernel&m=123904273731477&w=4
 > 
-> Page freed which was allocated by the LLD
+> This entry is being used for tracking a regression from 2.6.28.  Please don't
+> close it until the problem is fixed in the mainline.
 
-Not by the LLD.  By the ULD.
+This is not a regression from 2.6.28 -- the driver just wasn't there at this
+time, it only got merged in 2.6.29 timeframe. It's not even a regression from
+2.6.29 -- the driver was merged already broken. :-)
 
-> blkdev_issue_discard() and blk_ioctl_discard() has half a page
-> of common (and changing) code, could be done to use a common
-> helper that sets policy about bio allocation sizes and such.
-
-Sure, could be done.
-
-> > -		req->q->prepare_discard_fn(req->q, req);
-> > +		req->q->prepare_discard_fn(req->q, req, bio);
-> 
-> Allocation of bio page could be done commonly here.
-
-Not all prepare_discard_fn() implementations need or want a bio page.
-The CFA ERASE SECTORS command is a non-data command, for example.
-
-> The prepare_discard_fn() is made to return the needed size. It is not as if we actually
-> give the driver a choice about the allocation.
-
-Umm ... prepare_discard_fn() needs to fill in the page.  I don't
-understand what code you propose here.
-
-> > -		bio = bio_alloc(GFP_KERNEL, 0);
-> > +		bio = bio_alloc(GFP_KERNEL, 1);
-> 
-> This is deja vu, don't you think ;)
-
-Yep.
-
-> I have one question:
-> 
-> At [PATCH 4/5] and [PATCH 4/5] you do:
-> +	struct page *page = alloc_page(GFP_KERNEL);
-> 
-> does that zero the alloced page? since if I understand correctly this page
-> will go on the wire, a SW target on the other size could snoop random Kernel
-> memory, is that allowed? OK I might be totally clueless here.
-
-The prepare_discard_fn() is responsible for not leaking data.  The ATA
-one does it via memset() to a 512 byte boundary.  The SCSI one
-initialises the 24 bytes that it sends on the wire.  I don't think
-either implementation leaks uninitialised data.
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
