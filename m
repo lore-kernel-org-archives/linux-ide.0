@@ -1,93 +1,62 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/6] ide: simplify 'struct ide_taskfile'
-Date: Mon, 6 Apr 2009 23:14:17 +0200
-Message-ID: <200904062314.17249.bzolnier@gmail.com>
-References: <200904022259.28077.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] ide-cd: cdrom_decode_status: use return codes instead of naked numbers
+Date: Mon, 6 Apr 2009 23:00:15 +0200
+Message-ID: <200904062300.16108.bzolnier@gmail.com>
+References: <1238922962-19727-2-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:43876 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756385AbZDFVLr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 17:11:47 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so851169fga.17
-        for <linux-ide@vger.kernel.org>; Mon, 06 Apr 2009 14:11:45 -0700 (PDT)
-In-Reply-To: <200904022259.28077.sshtylyov@ru.mvista.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:55424 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757938AbZDFVLm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 17:11:42 -0400
+In-Reply-To: <1238922962-19727-2-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 02 April 2009, Sergei Shtylyov wrote:
-> Make 'struct ide_taskfile' cover only 8 register values and thus put two such
-> fields ('tf' and 'hob') into 'struct ide_cmd', dropping unnecessary 'tf_array'
-> field from it.
+On Sunday 05 April 2009, Borislav Petkov wrote:
+> Remove unused SECTOR_SIZE while at it.
 > 
-> This required changing the prototype of ide_get_lba_addr() and ide_tf_dump().
+> There should be no functional change resulting from this patch.
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
 [...]
 
-> Index: linux-2.6/drivers/ide/ide-disk.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ide/ide-disk.c
-> +++ linux-2.6/drivers/ide/ide-disk.c
-> @@ -105,18 +105,19 @@ static ide_startstop_t __ide_do_rw_disk(
->  			pr_debug("%s: LBA=0x%012llx\n", drive->name,
->  					(unsigned long long)block);
+> @@ -431,7 +425,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+>  	/* if we got a CHECK_CONDITION status, queue a request sense command */
+>  	if (stat & ATA_ERR)
+>  		cdrom_queue_request_sense(drive, NULL, NULL);
+> -	return 1;
+> +	return REQ_RECOVER;
 >  
-> -			tf->hob_nsect = (nsectors >> 8) & 0xff;
-> -			tf->hob_lbal  = (u8)(block >> 24);
-> -			if (sizeof(block) != 4) {
-> -				tf->hob_lbam = (u8)((u64)block >> 32);
-> -				tf->hob_lbah = (u8)((u64)block >> 40);
-> -			}
-> -
->  			tf->nsect  = nsectors & 0xff;
->  			tf->lbal   = (u8) block;
->  			tf->lbam   = (u8)(block >>  8);
->  			tf->lbah   = (u8)(block >> 16);
+>  end_request:
+>  	if (stat & ATA_ERR) {
+> @@ -445,9 +439,9 @@ end_request:
+>  		hwif->rq = NULL;
 >  
-> +			tf = &cmd.hob;
-> +			tf->nsect = (nsectors >> 8) & 0xff;
-> +			tf->lbal  = (u8)(block >> 24);
-> +			if (sizeof(block) != 4) {
-> +				tf->lbam = (u8)((u64)block >> 32);
-> +				tf->lbah = (u8)((u64)block >> 40);
-> +			}
+>  		cdrom_queue_request_sense(drive, rq->sense, rq);
+> -		return 1;
+> -	} else
+> -		return 2;
+> +		return REQ_RECOVER;
+> +	}
+> +	return REQ_FAIL;
+>  }
 
-The only drawback of having identical structures for tf and hob
-is that it is now possible to try setting hob->{command,status,device}
-instead of tf's field.
+Could it be that cdrom_newpc_intr() chunk got lost somewhere along the way,
+IIRC it was there?
 
-i.e. this chunk needed following fixup:
+[...]
+  
+> +/* internal decode_status codes */
+> +#define REQ_CONT               0
+> +#define REQ_RECOVER            1
+> +#define REQ_FAIL               2
 
-diff -u b/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
---- b/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -109,6 +109,7 @@
- 			tf->lbal   = (u8) block;
- 			tf->lbam   = (u8)(block >>  8);
- 			tf->lbah   = (u8)(block >> 16);
-+			tf->device = ATA_LBA;
- 
- 			tf = &cmd.hob;
- 			tf->nsect = (nsectors >> 8) & 0xff;
-@@ -126,10 +127,8 @@
- 			tf->lbal   = block;
- 			tf->lbam   = block >>= 8;
- 			tf->lbah   = block >>= 8;
--			tf->device = (block >> 8) & 0xf;
-+			tf->device = ((block >> 8) & 0xf) | ATA_LBA;
- 		}
--
--		tf->device |= ATA_LBA;
- 	} else {
- 		unsigned int sect, head, cyl, track;
- 
-Probably BUG_ON() on non-zero hob->{command,device} in do_rw_taskfile()
-would be very useful for catching such problems early...
+Did you notice my comments about REQ_* in previous mail?
