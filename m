@@ -1,97 +1,143 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 04/07] sata_mv: workaround errata PCI#7
-Date: Mon, 06 Apr 2009 15:24:14 -0400
-Message-ID: <49DA56DE.3000200@rtr.ca>
-References: <49DA2DFD.4010402@rtr.ca> <49DA2E33.4050704@rtr.ca> <49DA2E76.7000800@rtr.ca> <49DA566D.9040501@rtr.ca>
+Subject: [PATCH 06/07] sata_mv: cosmetic renames
+Date: Mon, 06 Apr 2009 15:25:39 -0400
+Message-ID: <49DA5733.3050206@rtr.ca>
+References: <49DA2DFD.4010402@rtr.ca> <49DA2E33.4050704@rtr.ca> <49DA2E76.7000800@rtr.ca> <49DA566D.9040501@rtr.ca> <49DA56DE.3000200@rtr.ca> <49DA5709.7060005@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33189 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:33213 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756750AbZDFTYQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 15:24:16 -0400
-In-Reply-To: <49DA566D.9040501@rtr.ca>
+	id S1753282AbZDFTZl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Apr 2009 15:25:41 -0400
+In-Reply-To: <49DA5709.7060005@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 Cc: Saeed Bishara <saeed@marvell.com>
 
-Workaround for 60x1-B2 errata PCI#7.
+Add _OFS suffix to more of the register offset names,
+for consistency with the rest of the driver.
 
-Write-combining may be unreliable when chip operates in PCI-X mode,
-so disable write-combining when in PCI-X mode.
+Also tag the defines for LTMODE and PHY_MODE4 to note
+that read-after-write is necessary when updating those regs.
 
-Also, update the errata comments at the top of sata_mv,
-and include a note about errata PCI#11.
+No code changes here.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
---
 
-Expanding the original 3-part patch series to 7-parts now.
-
-
---- old/drivers/ata/sata_mv.c	2009-04-06 12:23:32.000000000 -0400
-+++ new/drivers/ata/sata_mv.c	2009-04-06 13:24:28.000000000 -0400
-@@ -28,10 +28,6 @@
- /*
-  * sata_mv TODO list:
-  *
-- * --> More errata workarounds for PCI-X.
-- *
-- * --> Complete a full errata audit for all chipsets to identify others.
-- *
-  * --> Develop a low-power-consumption strategy, and implement it.
-  *
-  * --> Add sysfs attributes for per-chip / per-HC IRQ coalescing thresholds.
-@@ -44,6 +40,15 @@
-  *       connect two SATA ports.
-  */
+--- old/drivers/ata/sata_mv.c	2009-04-06 14:20:53.000000000 -0400
++++ new/drivers/ata/sata_mv.c	2009-04-06 15:00:16.000000000 -0400
+@@ -272,17 +272,17 @@
+ 	SATA_FIS_IRQ_CAUSE_OFS	= 0x364,
+ 	SATA_FIS_IRQ_AN		= (1 << 9),	/* async notification */
  
-+/*
-+ * 80x1-B2 errata PCI#11:
-+ *
-+ * Users of the 6041/6081 Rev.B2 chips (current is C0)
-+ * should be careful to insert those cards only onto PCI-X bus #0,
-+ * and only in device slots 0..7, not higher.  The chips may not
-+ * work correctly otherwise  (note: this is a pretty rare condition).
-+ */
-+
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-@@ -181,6 +186,7 @@
- 	/* PCI interface registers */
+-	LTMODE_OFS		= 0x30c,
++	LTMODE_OFS		= 0x30c,	/* requires read-after-write */
+ 	LTMODE_BIT8		= (1 << 8),	/* unknown, but necessary */
  
- 	PCI_COMMAND_OFS		= 0xc00,
-+	PCI_COMMAND_MWRCOM	= (1 << 4),	/* PCI Master Write Combining */
- 	PCI_COMMAND_MRDTRIG	= (1 << 7),	/* PCI Master Read Trigger */
+-	PHY_MODE3		= 0x310,
+-	PHY_MODE4		= 0x314,
++	PHY_MODE2_OFS		= 0x330,
++	PHY_MODE3_OFS		= 0x310,
++	PHY_MODE4_OFS		= 0x314,	/* requires read-after-write */
+ 	PHY_MODE4_CFG_MASK	= 0x00000003,	/* phy internal config field */
+ 	PHY_MODE4_CFG_VALUE	= 0x00000001,	/* phy internal config field */
+ 	PHY_MODE4_RSVD_ZEROS	= 0x5de3fffa,	/* Gen2e always write zeros */
+ 	PHY_MODE4_RSVD_ONES	= 0x00000005,	/* Gen2e always write ones */
  
- 	PCI_MAIN_CMD_STS_OFS	= 0xd30,
-@@ -3527,6 +3533,18 @@
- 	return 1; /* okay */
+-	PHY_MODE2		= 0x330,
+ 	SATA_IFCTL_OFS		= 0x344,
+ 	SATA_TESTCTL_OFS	= 0x348,
+ 	SATA_IFSTAT_OFS		= 0x34c,
+@@ -3168,7 +3168,7 @@
+ 	}
+ 
+ 	port_mmio = mv_port_base(mmio, idx);
+-	tmp = readl(port_mmio + PHY_MODE2);
++	tmp = readl(port_mmio + PHY_MODE2_OFS);
+ 
+ 	hpriv->signal[idx].amps = tmp & 0x700;	/* bits 10:8 */
+ 	hpriv->signal[idx].pre = tmp & 0xe0;	/* bits 7:5 */
+@@ -3192,25 +3192,25 @@
+ 	u32 m2, m3;
+ 
+ 	if (fix_phy_mode2) {
+-		m2 = readl(port_mmio + PHY_MODE2);
++		m2 = readl(port_mmio + PHY_MODE2_OFS);
+ 		m2 &= ~(1 << 16);
+ 		m2 |= (1 << 31);
+-		writel(m2, port_mmio + PHY_MODE2);
++		writel(m2, port_mmio + PHY_MODE2_OFS);
+ 
+ 		udelay(200);
+ 
+-		m2 = readl(port_mmio + PHY_MODE2);
++		m2 = readl(port_mmio + PHY_MODE2_OFS);
+ 		m2 &= ~((1 << 16) | (1 << 31));
+-		writel(m2, port_mmio + PHY_MODE2);
++		writel(m2, port_mmio + PHY_MODE2_OFS);
+ 
+ 		udelay(200);
+ 	}
+ 
+ 	/*
+-	 * Gen-II/IIe PHY_MODE3 errata RM#2:
++	 * Gen-II/IIe PHY_MODE3_OFS errata RM#2:
+ 	 * Achieves better receiver noise performance than the h/w default:
+ 	 */
+-	m3 = readl(port_mmio + PHY_MODE3);
++	m3 = readl(port_mmio + PHY_MODE3_OFS);
+ 	m3 = (m3 & 0x1f) | (0x5555601 << 5);
+ 
+ 	/* Guideline 88F5182 (GL# SATA-S11) */
+@@ -3218,7 +3218,7 @@
+ 		m3 &= ~0x1c;
+ 
+ 	if (fix_phy_mode4) {
+-		u32 m4 = readl(port_mmio + PHY_MODE4);
++		u32 m4 = readl(port_mmio + PHY_MODE4_OFS);
+ 		/*
+ 		 * Enforce reserved-bit restrictions on GenIIe devices only.
+ 		 * For earlier chipsets, force only the internal config field
+@@ -3228,17 +3228,18 @@
+ 			m4 = (m4 & ~PHY_MODE4_RSVD_ZEROS) | PHY_MODE4_RSVD_ONES;
+ 		else
+ 			m4 = (m4 & ~PHY_MODE4_CFG_MASK) | PHY_MODE4_CFG_VALUE;
+-		writel(m4, port_mmio + PHY_MODE4);
++		writel(m4, port_mmio + PHY_MODE4_OFS);
+ 	}
+ 	/*
+ 	 * Workaround for 60x1-B2 errata SATA#13:
+ 	 * Any write to PHY_MODE4 (above) may corrupt PHY_MODE3,
+ 	 * so we must always rewrite PHY_MODE3 after PHY_MODE4.
++	 * Or ensure we use writelfl() when writing PHY_MODE4.
+ 	 */
+-	writel(m3, port_mmio + PHY_MODE3);
++	writel(m3, port_mmio + PHY_MODE3_OFS);
+ 
+ 	/* Revert values of pre-emphasis and signal amps to the saved ones */
+-	m2 = readl(port_mmio + PHY_MODE2);
++	m2 = readl(port_mmio + PHY_MODE2_OFS);
+ 
+ 	m2 &= ~MV_M2_PREAMP_MASK;
+ 	m2 |= hpriv->signal[port].amps;
+@@ -3251,7 +3252,7 @@
+ 		m2 |= 0x0000900F;
+ 	}
+ 
+-	writel(m2, port_mmio + PHY_MODE2);
++	writel(m2, port_mmio + PHY_MODE2_OFS);
  }
  
-+static void mv_60x1b2_errata_pci7(struct ata_host *host)
-+{
-+	struct mv_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->base;
-+
-+	/* workaround for 60x1-B2 errata PCI#7 */
-+	if (mv_in_pcix_mode(host)) {
-+		u32 reg = readl(mmio + PCI_COMMAND_OFS);
-+		writelfl(reg & ~PCI_COMMAND_MWRCOM, mmio + PCI_COMMAND_OFS);
-+	}
-+}
-+
- static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
-@@ -3580,6 +3598,7 @@
+ /* TODO: use the generic LED interface to configure the SATA Presence */
+@@ -3269,7 +3270,7 @@
+ 	u32 tmp;
  
- 		switch (pdev->revision) {
- 		case 0x7:
-+			mv_60x1b2_errata_pci7(host);
- 			hp_flags |= MV_HP_ERRATA_60X1B2;
- 			break;
- 		case 0x9:
+ 	port_mmio = mv_port_base(mmio, idx);
+-	tmp = readl(port_mmio + PHY_MODE2);
++	tmp = readl(port_mmio + PHY_MODE2_OFS);
+ 
+ 	hpriv->signal[idx].amps = tmp & 0x700;	/* bits 10:8 */
+ 	hpriv->signal[idx].pre = tmp & 0xe0;	/* bits 7:5 */
