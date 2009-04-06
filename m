@@ -1,71 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 06/07] sata_mv: cosmetic renames
-Date: Mon, 06 Apr 2009 16:12:01 -0400
-Message-ID: <49DA6211.203@rtr.ca>
-References: <49DA2DFD.4010402@rtr.ca> <49DA2E33.4050704@rtr.ca> <49DA2E76.7000800@rtr.ca> <49DA566D.9040501@rtr.ca> <49DA56DE.3000200@rtr.ca> <49DA5709.7060005@rtr.ca> <49DA5733.3050206@rtr.ca> <49DA5D30.4000704@pobox.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13026] New: cs5536 is broken
+Date: Mon, 6 Apr 2009 20:34:21 GMT
+Message-ID: <bug-13026-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:45442 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752594AbZDFUME (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 16:12:04 -0400
-In-Reply-To: <49DA5D30.4000704@pobox.com>
+Received: from demeter.kernel.org ([140.211.167.39]:58163 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbZDFUeX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 16:34:23 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n36KYL9F007092
+	for <linux-ide@vger.kernel.org>; Mon, 6 Apr 2009 20:34:21 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Add _OFS suffix to more of the register offset names,
->> for consistency with the rest of the driver.
->>
->> Also tag the defines for LTMODE and PHY_MODE4 to note
->> that read-after-write is necessary when updating those regs.
->>
->> No code changes here.
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
->>
->> --- old/drivers/ata/sata_mv.c    2009-04-06 14:20:53.000000000 -0400
->> +++ new/drivers/ata/sata_mv.c    2009-04-06 15:00:16.000000000 -0400
->> @@ -272,17 +272,17 @@
->>     SATA_FIS_IRQ_CAUSE_OFS    = 0x364,
->>     SATA_FIS_IRQ_AN        = (1 << 9),    /* async notification */
->>
->> -    LTMODE_OFS        = 0x30c,
->> +    LTMODE_OFS        = 0x30c,    /* requires read-after-write */
->>     LTMODE_BIT8        = (1 << 8),    /* unknown, but necessary */
->>
->> -    PHY_MODE3        = 0x310,
->> -    PHY_MODE4        = 0x314,
->> +    PHY_MODE2_OFS        = 0x330,
->> +    PHY_MODE3_OFS        = 0x310,
->> +    PHY_MODE4_OFS        = 0x314,    /* requires read-after-write */
->>     PHY_MODE4_CFG_MASK    = 0x00000003,    /* phy internal config 
->> field */
->>     PHY_MODE4_CFG_VALUE    = 0x00000001,    /* phy internal config 
->> field */
->>     PHY_MODE4_RSVD_ZEROS    = 0x5de3fffa,    /* Gen2e always write 
->> zeros */
->>     PHY_MODE4_RSVD_ONES    = 0x00000005,    /* Gen2e always write ones */
-> 
-> _OFS suffix is redundant, and not often used in other Linux drivers.
-..
+http://bugzilla.kernel.org/show_bug.cgi?id=13026
 
-Yeah, I agree it's kinda fugly, too.
-But that's what was there from the earlier maintainers
-(Brett and yourself, I guess), so for now I'm just keeping it consistent.
+           Summary: cs5536 is broken
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.29.1
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: rjw@sisk.pl
+            Blocks: 12398
+        Regression: No
 
-I might now try patch 08 follow-up to rename all of that stuff,
-if you're happy with the series thus far.  Plan is to drop the _OFS stuff,
-and also make a bunch of the register prefixes more consistent as well.
 
-Currenly, some regs use MV_ whereas others don't, and some have SATA_
-at the start but related registers don't.
+Subject    : 2.6.29.1 BUG: unable to handle kernel NULL pointer dereference at
+(null)
+Submitter  : Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Date       : 2009-04-06 18:11
+References : http://marc.info/?l=linux-kernel&m=123904159829771&w=4
+Handled-By : Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Patch      : http://marc.info/?l=linux-kernel&m=123904273731477&w=4
 
-Any preferences there?  It's all the same to me.
+This entry is being used for tracking a regression from 2.6.28.  Please don't
+close it until the problem is fixed in the mainline.
 
-Cheers
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
