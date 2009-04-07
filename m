@@ -1,40 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
-Date: Tue, 07 Apr 2009 13:15:08 +0400
-Message-ID: <49DB199C.3040305@ru.mvista.com>
-References: <200902152230.38271.sshtylyov@ru.mvista.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: can I freeze I/O for some time to a given disk / md / dm
+Date: Tue, 07 Apr 2009 11:23:05 +0200
+Message-ID: <49DB1B79.1070905@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:32226 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753415AbZDGJPP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Apr 2009 05:15:15 -0400
-In-Reply-To: <200902152230.38271.sshtylyov@ru.mvista.com>
+Received: from mx03.syneticon.net ([78.111.66.105]:33108 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbZDGJXL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 05:23:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Linux IDE <linux-ide@vger.kernel.org>, Gabor Gombas <gombasg@sztaki.hu>
 
-Hello, I wrote:
+> On Tue, Dec 16, 2008 at 01:01:27PM +0100, Tomasz Chmielewski wrote:
+> 
+>> Is it possible to "freeze I/O" for some time to a given disk / md / dm  
+>> device?
+>>
+>> Say, "freeze I/O" so that userspace waits for any response for 30, 60  
+>> seconds or more?
+> 
+> For real disks you can use /sys/block/sdX/device/unload_heads to achieve
+> something similar (see Documentation/laptops/disk-shock-protection.txt
+> in the kernel source about how to use it). That won't work for md/dm
+> devices though.
 
-> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal bacause:
->
-> - it always initializes the padding buffer to 0 which is not really needed in
->   both the read and write cases;
->
-> - it has to use memcpy() to transfer a single byte from/to the padding buffer;
->
-> - it uses io{read|write}16() accessors which swap bytes on the big endian CPUs
->   and so have to additionally convert the data from/to the little endian format
->   instead of using io{read|write}16_rep() accessors which are not supposed to
->   change the byte ordering.
->
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+For drives which don't support "unload_heads" plain hdparm should work:
 
-   Jeff, have you forgotten about this one?
+hdparm -Y /dev/sdX
 
-MBR, Sergei
+(possibly repeated in a loop for some time).
 
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
 
