@@ -1,64 +1,156 @@
-From: =?UTF-8?B?0JTQsNC90LjQu9CwINCW0YPQutC+0YbQutC40Lk=?=
-	<optimusgd@gmail.com>
-Subject: Re: [Bugme-new] [Bug 13001] New: PCI-DMA: Out of IOMMU space
-Date: Tue, 7 Apr 2009 10:05:25 +0500
-Message-ID: <db2b43030904062205q283f64fal395e61f985a8108b@mail.gmail.com>
-References: <bug-13001-10286@http.bugzilla.kernel.org/>
-	 <20090404114559.ce20eb9c.akpm@linux-foundation.org>
-	 <20090406234816.05242d4e@lxorguk.ukuu.org.uk>
-	 <20090407104905Q.fujita.tomonori@lab.ntt.co.jp>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 1/2] ide-cd: reverse NOT_READY sense key logic
+Date: Tue, 7 Apr 2009 08:16:33 +0200
+Message-ID: <20090407061633.GA4532@liondog.tnic>
+References: <1238922962-19727-1-git-send-email-petkovbb@gmail.com> <200904062259.15556.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:59015 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbZDGFF2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 01:05:28 -0400
-Received: by fxm2 with SMTP id 2so2156996fxm.37
-        for <linux-ide@vger.kernel.org>; Mon, 06 Apr 2009 22:05:26 -0700 (PDT)
-In-Reply-To: <20090407104905Q.fujita.tomonori@lab.ntt.co.jp>
+Received: from fg-out-1718.google.com ([72.14.220.159]:56303 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710AbZDGGQm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 02:16:42 -0400
+Content-Disposition: inline
+In-Reply-To: <200904062259.15556.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: alan@lxorguk.ukuu.org.uk, akpm@linux-foundation.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, x86@kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I can't turn on CONFIG_IOMMU_LEAK and CONFIG_IOMMU_DEBUG because
-2.6.26.1 not have such options in .config. Maybe git kernel have this
-options? Bug triggered when i try mount sata drive on sata_nv and usb
-hdd on echi_hcd. In all other cases i have no problem.
+On Mon, Apr 06, 2009 at 10:59:15PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 05 April 2009, Borislav Petkov wrote:
+> > Make the case of flushing the drive's cache explicit.
+> > 
+> > There should be no functional change resulting from this patch.
+> > 
+> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> > ---
+> >  drivers/ide/ide-cd.c |    8 ++++----
+> >  1 files changed, 4 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> > index 2989aa8..2aa13d8 100644
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -341,15 +341,15 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+> >  
+> >  	switch (sense_key) {
+> >  	case NOT_READY:
+> > -		if (blk_fs_request(rq) == 0 || rq_data_dir(rq) == READ) {
+> > +		if (blk_fs_request(rq) && rq_data_dir(rq) == WRITE) {
+> > +			if (ide_cd_breathe(drive, rq))
+> > +				return 1;
+> > +		} else {
+> >  			cdrom_saw_media_change(drive);
+> >  
+> >  			if (blk_fs_request(rq) && !quiet)
+> 
+> Didn't we want to remove this blk_fs_request() while at it?
 
-Also i have mysterious problem similar to
-http://lkml.org/lkml/2009/1/11/302 . It prevent me return to normally
-working before 2.6.28 kernel. Once boot 2.6.29 and found DMA bug i'm
-reboot to old working 2.6.28 and seen that my eth0 and eth1 forcedetch
-died with "no link during initialization". Restart interfaces, remove
-insert module don't help.
-I'm not change configs, i'm not rebuild old kernel. I'm not touch it
-at all. Reboot to 2.6.29 and network work. Cold restart won't help,
-and i not won't reset BIOS. I looked to dmesg 2.6.28 and seen that
-irqs for forcedetch look different from other 2.6.28 kernel dmesgs.
-So 2.6.29 do strange things with my machine, and that things live cold
-restart. I don't know what happens, i can't understand and can't open
-case and hardreset bios all time when i want return to old working
-kernel. Can you explain me what wrong?
+Originally I thought so too but I did some testing with booting with the cdrom
+drive tray open and it did quite spam the logs:
 
-2009/4/7 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>:
-> On Mon, 6 Apr 2009 23:48:16 +0100
-> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->
->> > > Mar 31 20:59:01 rngmhpamd end_request: I/O error, dev sdc, sector 1137
->> > > Mar 31 20:59:01 rngmhpamd __ratelimit: 246 callbacks suppressed
->> >
->> > Do we have any debugging option for dumping the current PCI DMA
->> > allocations, find out where it has all gone?
->>
->> Turn on CONFIG_IOMMU_LEAK and CONFIG_IOMMU_DEBUG for a test run.
->
-> These options don't tell who leaks dma mappings so possibly it isn't
-> very helpful.
->
-> There is no interesting changes in GART IOMMU between 2.6.28 and
-> 2.6.29 so probably this is a driver bug. It's necessary to find out
-> which driver leaks dma mappings.
->
+[    2.395573] ide-cd driver 5.00
+[    2.395888] khelper used greatest stack depth: 6612 bytes left
+[    2.396742] ide-cd: hdc: ATAPI 40X DVD-ROM CD-R/RW drive, 2048kB Cache
+[    2.396957] Uniform CD-ROM driver Revision: 3.20
+[    2.397248] ide-cd: hdc: tray open
+[    2.398805] ide-cd: hdc: tray open
+[    2.399770] ide-cd: hdc: tray open
+[    2.400650] 8139too Fast Ethernet driver 0.9.28
+[    2.400718] 8139too 0000:03:0a.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[    2.401393] eth0: RealTek RTL8139 at 0xe0806f00, 00:0c:6e:aa:a2:81, IRQ 17
+[    2.401445] eth0:  Identified 8139 chip type 'RTL-8101'
+[    2.401514] netconsole: local port 6665
+[    2.401561] netconsole: local IP 192.168.45.26
+[    2.401608] netconsole: interface eth0
+[    2.401654] netconsole: remote port 6666
+[    2.401700] netconsole: remote IP 192.168.45.14
+[    2.401747] netconsole: remote ethernet address ff:ff:ff:ff:ff:ff
+[    2.401796] netconsole: device eth0 not up yet, forcing it
+[    2.401928] eth0: link up, 100Mbps, full-duplex, lpa 0x45E1
+[    2.402043] netconsole: carrier detect appears untrustworthy, waiting 4 seconds
+[    6.406042] console [netcon0] enabled
+[    6.435024] netconsole: network logging started
+[    6.435077] usbmon: debugfs is not available
+[    6.435245] PNP: PS/2 Controller [PNP0303:PS2K,PNP0f13:PS2M] at 0x60,0x64 irq 1,12
+[    6.438098] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    6.438158] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    6.438316] mice: PS/2 mouse device common for all mice
+[    6.438547] cpuidle: using governor ladder
+[    6.438609] cpuidle: using governor menu
+[    6.438800] Advanced Linux Sound Architecture Driver Version 1.0.19.
+[    6.439525] Yamaha DS-1 PCI 0000:03:07.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+[    6.440022] Yamaha DS-1 PCI 0000:03:07.0: firmware: using built-in firmware yamaha/ds1_dsp.fw
+[    6.440093] Yamaha DS-1 PCI 0000:03:07.0: firmware: using built-in firmware yamaha/ds1_ctrl.fw
+[    6.457531] input: AT Translated Set 2 keyboard as /class/input/input0
+[    6.634147] ALSA device list:
+[    6.634206]   #0: Yamaha DS-1 (YMF724) at 0xdfef8000, irq 16
+[    6.634802] TCP cubic registered
+[    6.634853] NET: Registered protocol family 17
+[    6.634918] Using IPI No-Shortcut mode
+[    7.253175] input: PS/2 Logitech Mouse as /class/input/input1
+[    7.279277] register_blkdev: cannot get major 3 for hd
+[    7.297104] kjournald starting.  Commit interval 5 seconds
+[    7.297124] EXT3-fs: mounted filesystem with ordered data mode.
+[    7.297146] VFS: Mounted root (ext3 filesystem) readonly on device 3:1.
+[    7.297222] Freeing unused kernel memory: 240k freed
+[    9.748854] mount used greatest stack depth: 6220 bytes left
+[   10.823537] ide-cd: hdc: tray open
+[   10.828431] ide-cd: hdc: tray open
+[   10.829755] ide-cd: hdc: tray open
+[   10.830731] ide-cd: hdc: tray open
+[   10.837324] cdrom_id used greatest stack depth: 6200 bytes left
+[   10.867196] ide-cd: hdc: tray open
+[   10.876886] ide-cd: hdc: tray open
+[   10.878511] ide-cd: hdc: tray open
+[   10.879802] ide-cd: hdc: tray open
+[   13.741320] Adding 976744k swap on /dev/hda2.  Priority:-1 extents:1 across:976744k
+
+so maybe this was the reason for filtering out the pc requests - scream
+only if it really matters. For example this is what happens when you
+eject the drive while playing a dvd:
+
+[  543.636691] mplayer used greatest stack depth: 5948 bytes left
+[  652.373673] ide-cd: hdc: tray open
+[  652.374723] end_request: I/O error, dev hdc, sector 23640
+[  652.374735] Buffer I/O error on device hdc, logical block 2955
+[  652.374747] Buffer I/O error on device hdc, logical block 2956
+[  652.374756] Buffer I/O error on device hdc, logical block 2957
+[  652.374762] Buffer I/O error on device hdc, logical block 2958
+[  652.374828] Buffer I/O error on device hdc, logical block 2959
+[  652.374835] Buffer I/O error on device hdc, logical block 2960
+[  652.374842] Buffer I/O error on device hdc, logical block 2961
+[  652.374905] Buffer I/O error on device hdc, logical block 2962
+[  652.374912] Buffer I/O error on device hdc, logical block 2963
+[  652.374919] Buffer I/O error on device hdc, logical block 2964
+[  652.376255] ide-cd: hdc: tray open
+[  652.377559] end_request: I/O error, dev hdc, sector 23896
+[  652.378237] ide-cd: hdc: tray open
+[  652.379527] end_request: I/O error, dev hdc, sector 23640
+[  652.379865] ide-cd: hdc: tray open
+[  652.380490] end_request: I/O error, dev hdc, sector 23640
+[  652.380747] ide-cd: hdc: tray open
+[  652.381492] end_request: I/O error, dev hdc, sector 23648
+[  652.381749] ide-cd: hdc: tray open
+[  652.382541] end_request: I/O error, dev hdc, sector 23648
+...
+
+The question now is: does it really matter to say something when all
+those udev helpers and the SMART daemon try to query the device during
+booting and it is NOT_READY? I'm tending towards a solution where we
+don't say anything - after you close the tray you still get rescanned
+together with receiving a bunch of udev events into the queue so I'm not
+worried about those requests at all. The way it is done now is IMHO the
+most reasonable solution wrt to verbosity based on error gravity. This
+is why I left it in.
+
+And since it is the original behavior I didn't add anything to the
+commit messages but it probably could be a good idea the acknowledge
+the existence of that blk_fs_request(rq) check there with a comment or
+similar.
+
+-- 
+Regards/Gruss,
+    Boris.
