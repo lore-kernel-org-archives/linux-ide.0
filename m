@@ -1,57 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/2] sata_sil: disable DMA engine in ->freeze
-Date: Tue, 7 Apr 2009 19:23:31 -0400
-Message-ID: <20090407232331.GA16190@havoc.gtf.org>
-References: <20090407232247.GA16086@havoc.gtf.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: "ahci: drop intx manipulation on msi enable" breaks ULI M1575
+Date: Tue, 07 Apr 2009 16:57:12 -0700
+Message-ID: <49DBE858.9040004@kernel.org>
+References: <49DB6914.1030107@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:39270 "EHLO havoc.gtf.org"
+Received: from hera.kernel.org ([140.211.167.34]:38443 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750804AbZDGXXc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Apr 2009 19:23:32 -0400
-Content-Disposition: inline
-In-Reply-To: <20090407232247.GA16086@havoc.gtf.org>
+	id S1753849AbZDGX6R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Apr 2009 19:58:17 -0400
+In-Reply-To: <49DB6914.1030107@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, d.harrison@sutus.com, sagar.borikar@gmail.com
+To: Timur Tabi <timur@freescale.com>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
+Hello,
 
-Dustin, please see if these two patches solve your problem?
+Timur Tabi wrote:
+>> ahci: drop intx manipulation on msi enable
+>>     
+>>     There's no need to turn off intx explicitly on msi enable.  This is
+>>     automatically handled by pci.  Drop it.
+>>     
+>>     This might be needed on machines if the BIOS turns intx off during
+>>     boot.  However, there's no evidence of such behavior for ahci and
+>>     the only such case seems to be ICH5 PATA according to ata_piix.
+>>     Also, given the way ahci operates, it's highly unlikely BIOS ever
+>>     disables IRQ for the controller.  However, as this change has slight
+>>     possibility of introducing failure, please schedule it for #upstream.
+> 
+> breaks SATA support on a Freescale MPC8610 HPCD (PowerPC) reference
+> board.  When I apply the patch, I get this result during boot:
+...
+> This board uses a ULI M1575 for SATA support.
+> 
+> Unfortunately, I don't know enough about SATA or PCI interrupts to
+> understand why you made the change or why it breaks on my board.
 
+cc'ing Jeff.
 
-commit a6a2da59f2a4ba834a6e20e2d2a4d030bb9371ea
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Tue Apr 7 19:18:32 2009 -0400
+Hmmm... that means intx isn't set by default.  I'm not sure what is
+the right thing to do here.  I think it's something which should be
+handled by the PCI layer.  Oh well, maybe we should just revert the
+change and keep setting intx?
 
-    [libata] sata_sil: disable DMA engine in sil_freeze()
-    
-    We must disable the DMA engine before accessing taskfile registers.
-    
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+Thanks.
 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index e67ce8e..896975f 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -565,6 +565,19 @@ static void sil_freeze(struct ata_port *ap)
- 	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
- 	writel(tmp, mmio_base + SIL_SYSCFG);
- 	readl(mmio_base + SIL_SYSCFG);	/* flush */
-+
-+	/* Ensure DMA_ENABLE is off.
-+	 *
-+	 * This is because the controller will not give us access to the
-+	 * taskfile registers while a DMA is in progress
-+	 */
-+	iowrite8(ioread8(ap->ioaddr.bmdma_addr) & ~SIL_DMA_ENABLE,
-+		 ap->ioaddr.bmdma_addr);
-+
-+	/* According to ata_bmdma_stop, an HDMA transition requires
-+	 * on PIO cycle. But we can't read a taskfile register.
-+	 */
-+	ioread8(ap->ioaddr.bmdma_addr);
- }
- 
- static void sil_thaw(struct ata_port *ap)
+-- 
+tejun
