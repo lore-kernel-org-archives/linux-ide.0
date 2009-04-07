@@ -1,324 +1,140 @@
-From: =?UTF-8?B?0JTQsNC90LjQu9CwINCW0YPQutC+0YbQutC40Lk=?=
-	<optimusgd@gmail.com>
-Subject: Fwd: [Bugme-new] [Bug 13001] New: PCI-DMA: Out of IOMMU space
-Date: Tue, 7 Apr 2009 21:52:08 +0500
-Message-ID: <db2b43030904070952k5fe88addsa1b664fc1d4e89a9@mail.gmail.com>
-References: <bug-13001-10286@http.bugzilla.kernel.org/>
-	 <20090404114559.ce20eb9c.akpm@linux-foundation.org>
-	 <db2b43030904050239t6abf1c35q216c24a215276269@mail.gmail.com>
-	 <da824cf30904070914m2e9deaf8o4236fa2173480fe9@mail.gmail.com>
-	 <db2b43030904070946x495cf76et2fd4571f0ac96634@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] at91_ide: remove custom tf_{read|load}() methods (take 2)
+Date: Tue, 7 Apr 2009 21:07:33 +0400
+Message-ID: <200904072107.33324.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:63614 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753230AbZDGQwK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 12:52:10 -0400
-Received: by bwz17 with SMTP id 17so2395104bwz.37
-        for <linux-ide@vger.kernel.org>; Tue, 07 Apr 2009 09:52:08 -0700 (PDT)
-In-Reply-To: <db2b43030904070946x495cf76et2fd4571f0ac96634@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:41477 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753437AbZDGRGy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Apr 2009 13:06:54 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, x86@kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
 
-=46orgot reply to all, sorry
+Since tf_{read|load}() methods of this driver have now become identical to their
+standard counterparts using MMIO accesses, there's no need to override those
+anymore...
 
----------- Forwarded message ----------
-=46rom: =D0=94=D0=B0=D0=BD=D0=B8=D0=BB=D0=B0 =D0=96=D1=83=D0=BA=D0=BE=D1=
-=86=D0=BA=D0=B8=D0=B9 <optimusgd@gmail.com>
-Date: 2009/4/7
-Subject: Re: [Bugme-new] [Bug 13001] New: PCI-DMA: Out of IOMMU space
-To: Grant Grundler <grundler@google.com>
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
+---
+Remove ide_mm_{inb|outb}() that somehow fell out of my attention...
+This incorporates the patch posted by Stanislaw Gruszka today.
 
-Yes, in attachment clear dmesg, warnings in bugreport body
+ drivers/ide/at91_ide.c |   88 +------------------------------------------------
+ 1 files changed, 2 insertions(+), 86 deletions(-)
 
->Apr =C2=A03 13:38:46 rngmhpamd sata_nv 0000:00:05.0: PCI-DMA: Out of I=
-OMMU space for 4096 bytes
->Apr =C2=A03 13:38:46 rngmhpamd sata_nv 0000:00:05.0: PCI-DMA: Out of I=
-OMMU space for 4096 bytes
+Index: linux-2.6/drivers/ide/at91_ide.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/at91_ide.c
++++ linux-2.6/drivers/ide/at91_ide.c
+@@ -175,90 +175,6 @@ static void at91_ide_output_data(ide_dri
+ 	leave_16bit(chipselect, mode);
+ }
+ 
+-static u8 ide_mm_inb(unsigned long port)
+-{
+-	return readb((void __iomem *) port);
+-}
+-
+-static void ide_mm_outb(u8 value, unsigned long port)
+-{
+-	writeb(value, (void __iomem *) port);
+-}
+-
+-static void at91_ide_tf_load(ide_drive_t *drive, struct ide_cmd *cmd)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct ide_io_ports *io_ports = &hwif->io_ports;
+-	struct ide_taskfile *tf = &cmd->tf;
+-	u8 HIHI = (cmd->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+-
+-	if (cmd->ftf_flags & IDE_FTFLAG_FLAGGED)
+-		HIHI = 0xFF;
+-
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_FEATURE)
+-		ide_mm_outb(tf->hob_feature, io_ports->feature_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_NSECT)
+-		ide_mm_outb(tf->hob_nsect, io_ports->nsect_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAL)
+-		ide_mm_outb(tf->hob_lbal, io_ports->lbal_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAM)
+-		ide_mm_outb(tf->hob_lbam, io_ports->lbam_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_HOB_LBAH)
+-		ide_mm_outb(tf->hob_lbah, io_ports->lbah_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_FEATURE)
+-		ide_mm_outb(tf->feature, io_ports->feature_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_NSECT)
+-		ide_mm_outb(tf->nsect, io_ports->nsect_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAL)
+-		ide_mm_outb(tf->lbal, io_ports->lbal_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAM)
+-		ide_mm_outb(tf->lbam, io_ports->lbam_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_LBAH)
+-		ide_mm_outb(tf->lbah, io_ports->lbah_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_OUT_DEVICE)
+-		ide_mm_outb((tf->device & HIHI) | drive->select, io_ports->device_addr);
+-}
+-
+-static void at91_ide_tf_read(ide_drive_t *drive, struct ide_cmd *cmd)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct ide_io_ports *io_ports = &hwif->io_ports;
+-	struct ide_taskfile *tf = &cmd->tf;
+-
+-	/* be sure we're looking at the low order bits */
+-	ide_mm_outb(ATA_DEVCTL_OBS, io_ports->ctl_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_IN_ERROR)
+-		tf->error  = ide_mm_inb(io_ports->feature_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_NSECT)
+-		tf->nsect  = ide_mm_inb(io_ports->nsect_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_LBAL)
+-		tf->lbal   = ide_mm_inb(io_ports->lbal_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_LBAM)
+-		tf->lbam   = ide_mm_inb(io_ports->lbam_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_LBAH)
+-		tf->lbah   = ide_mm_inb(io_ports->lbah_addr);
+-	if (cmd->tf_flags & IDE_TFLAG_IN_DEVICE)
+-		tf->device = ide_mm_inb(io_ports->device_addr);
+-
+-	if (cmd->tf_flags & IDE_TFLAG_LBA48) {
+-		ide_mm_outb(ATA_HOB | ATA_DEVCTL_OBS, io_ports->ctl_addr);
+-
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_ERROR)
+-			tf->hob_error = ide_mm_inb(io_ports->feature_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_NSECT)
+-			tf->hob_nsect = ide_mm_inb(io_ports->nsect_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAL)
+-			tf->hob_lbal  = ide_mm_inb(io_ports->lbal_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAM)
+-			tf->hob_lbam  = ide_mm_inb(io_ports->lbam_addr);
+-		if (cmd->tf_flags & IDE_TFLAG_IN_HOB_LBAH)
+-			tf->hob_lbah  = ide_mm_inb(io_ports->lbah_addr);
+-	}
+-}
+-
+ static void at91_ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
+ {
+ 	struct ide_timing *timing;
+@@ -284,8 +200,8 @@ static const struct ide_tp_ops at91_ide_
+ 	.write_devctl	= ide_write_devctl,
+ 
+ 	.dev_select	= ide_dev_select,
+-	.tf_load	= at91_ide_tf_load,
+-	.tf_read	= at91_ide_tf_read,
++	.tf_load	= ide_tf_load,
++	.tf_read	= ide_tf_read,
+ 
+ 	.input_data	= at91_ide_input_data,
+ 	.output_data	= at91_ide_output_data,
 
-I got "PCI-DMA: Out of IOMMU space" while trying write data to usb or
-sata hdd before all other error messages. After that usb and sata
-drives lost. All other noise is attempts to communicate with died
-devices.
-
->Kernel command line:
->mce=3Dbootlog root=3D/dev/ram0 real_root=3D/dev/evms/root init=3D/linu=
-xrc
-I'm boot from 3ware raid with evmc
->iommu=3Dallowdac,merge,memaper=3D3
-This is from Documentation/x86/x86_64/boot-options.txt
-iommu=3Dallowdac Im try to avoid DMA bug. May be that not need.
-allowdac =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Allow double-address cycle =
-(DAC) mode, i.e. DMA >4GB.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 DAC is used with 32-bit PCI to push a 64-bit address in
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 two cycles. When off all DMA over >4GB is forced through
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 an IOMMU or software bounce buffering.
-merge =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Do scatter-gather=
- (SG) merging.
-memaper[=3D<order>] =C2=A0Allocate an own aperture over RAM with size 3=
-2MB<<order.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 (default: order=3D1, i.e. 64MB)
-With default apperture, 64mb, DMA leak very fast, now i have
-memaper=3D5, 1 gb, becouse i must do my job and can't rollback to 2.6.2=
-8
-due strange mysterious problem with forcedeth nics that i can't
-explain and solve. If solution for DMA leak will not be found, i'm try
-to fill bugreport about problem with nics.
-
->3w_9xxx.use_msi=3D1 snd-hda-intel.enable_msi=3D1 doevms quiet
-I prefer use msi on that hardware.
->...
->Your BIOS doesn't leave a aperture memory hole
->Please enable the IOMMU option in the BIOS setup
->This costs you 256 MB of RAM
-
-xw9400 BIOS do not have IOMMU option in the BIOS setup. Now this costs
-me 1gb of ram
-
-Anyway, i can stable reproduce bug without all this whistlers
-
-2009/4/7 Grant Grundler <grundler@google.com>:
-> 2009/4/5 =D0=94=D0=B0=D0=BD=D0=B8=D0=BB=D0=B0 =D0=96=D1=83=D0=BA=D0=BE=
-=D1=86=D0=BA=D0=B8=D0=B9 <optimusgd@gmail.com>:
->> 2009/4/4 Andrew Morton <akpm@linux-foundation.org>:
->>>
->>> (switched to email. =C2=A0Please respond via emailed reply-to-all, =
-not via the
->>> bugzilla web interface).
->>>
->>> On Fri, 3 Apr 2009 09:30:19 GMT bugzilla-daemon@bugzilla.kernel.org=
- wrote:
->>>
->>>> http://bugzilla.kernel.org/show_bug.cgi?id=3D13001
->>>>
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Summary: PCI-DMA: Out of =
-IOMMU space
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Product: Platform Specifi=
-c/Hardware
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Version: 2.5
->>>> =C2=A0 =C2=A0 Kernel Version: 2.6.29-gentoo
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Platform: All
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 OS/Version: Linux
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Tree: Mainline
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Status: NEW
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Severity: normal
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Priority: P1
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Component: x86-64
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 AssignedTo: platform_x86_64@kernel-bug=
-s.osdl.org
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 ReportedBy: optimusgd@gmail.com
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Regression: Yes
->>>>
->>>>
->>>> Created an attachment (id=3D20789)
->>>> =C2=A0--> (http://bugzilla.kernel.org/attachment.cgi?id=3D20789)
->>>> hwreport generated info
->>>>
->>>> After some IO activity the "PCI-DMA: Out of IOMMU space" message a=
-ppear.
->>>> 2.6.28-gentoo-r4 work ok, so it is regression.
->>>
->>> It is indeed a regression.
->>>
->>>> Dmesg fragments:
->>>>
->>>>
->>>> Apr =C2=A03 13:38:46 rngmhpamd sata_nv 0000:00:05.0: PCI-DMA: Out =
-of IOMMU space for
->>>> 4096 bytes
->
-> The bug report has a "dmesg" attachment but I wasn't able to find the
-> "Out of IOMMU space" message in the dmesg. =C2=A0Can that be correcte=
-d?
-> I was looking for IDE/SATA errors *before* the IOMMU errors.
->
-> But I was surprised to find these bits:
-> ...
-> Kernel command line: mce=3Dbootlog root=3D/dev/ram0
-> real_root=3D/dev/evms/root init=3D/linuxrc iommu=3Dallowdac,merge,mem=
-aper=3D3
-> 3w_9xxx.use_msi=3D1 snd-hda-intel.enable_msi=3D1 doevms quiet
-> Initializing CPU#0
-> ...
-> Your BIOS doesn't leave a aperture memory hole
-> Please enable the IOMMU option in the BIOS setup
-> This costs you 256 MB of RAM
-> ...
->
-> I'm not familiar with iommu=3D parameter nor the warning about the BI=
-OS.
-> Any comments on that?
->
-> thanks,
-> grant
->
->>>> Apr =C2=A03 13:38:46 rngmhpamd sata_nv 0000:00:05.0: PCI-DMA: Out =
-of IOMMU space for
->>>> 4096 bytes
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1: EH in SWNCQ mode,QC:qc_active=
- 0x1 sactive 0x1
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1: SWNCQ:qc_active 0x0 defer_bit=
-s 0x0
->>>> last_issue_tag 0xfafbfcfd
->>>> Apr =C2=A03 13:38:46 rngmhpamd dhfis 0x0 dmafis 0x0 sdbfis 0x0
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1: ATA_REG 0x50 ERR_REG 0x0
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1: tag : dhfis dmafis sdbfis sac=
-itve
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1.00: exception Emask 0x0 SAct 0=
-x1 SErr 0x0 action
->>>> 0x6
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1.00: cmd 60/08:00:00:00:00/00:0=
-0:00:00:00/40 tag
->>>> 0 ncq 4096 in
->>>> Apr =C2=A03 13:38:46 rngmhpamd res 50/00:00:00:00:00/00:45:00:00:0=
-0/a0 Emask 0x40
->>>> (internal error)
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1.00: status: { DRDY }
->>>> Apr =C2=A03 13:38:46 rngmhpamd ata1: hard resetting link
->>>
->>> Are these scary-looking messages also present in 2.6.28?
->>>
->>> If so, perhaps the ata code is leaking DMA memory on the error-hand=
-ling path?
->>>
->>>> Apr =C2=A03 13:38:47 rngmhpamd ata1: SATA link up 3.0 Gbps (SStatu=
-s 123 SControl
->>>> 300)
->>>> Apr =C2=A03 13:38:47 rngmhpamd ata1.00: configured for UDMA/100
->>>> Apr =C2=A03 13:38:47 rngmhpamd ata1: EH complete
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] 488397168 512-byt=
-e hardware
->>>> sectors: (250 GB/232 GiB)
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] Write Protect is =
-off
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] Mode Sense: 00 3a=
- 00 00
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] Write cache: enab=
-led, read cache:
->>>> enabled, doesn't support DPO or FUA
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] 488397168 512-byt=
-e hardware
->>>> sectors: (250 GB/232 GiB)
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] Write Protect is =
-off
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] Mode Sense: 00 3a=
- 00 00
->>>> Apr =C2=A03 13:38:47 rngmhpamd sd 1:0:0:0: [sdb] Write cache: enab=
-led, read cache:
->>>> enabled, doesn't support DPO or FUA
->>>>
->>>> And
->>>>
->>>> Mar 31 20:56:18 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 4608 bytes
->>>> Mar 31 20:56:18 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 69632 bytes
->>>> Mar 31 20:56:48 rngmhpamd usb 1-4: reset high speed USB device usi=
-ng ehci_hcd
->>>> and address 8
->>>> Mar 31 20:56:48 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 11776 bytes
->>>> Mar 31 20:56:48 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 69632 bytes
->>>> Mar 31 20:57:19 rngmhpamd usb 1-4: reset high speed USB device usi=
-ng ehci_hcd
->>>> and address 8
->>>> Mar 31 20:57:19 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 11776 bytes
->>>> Mar 31 20:57:19 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 69632 bytes
->>>> Mar 31 20:57:50 rngmhpamd usb 1-4: reset high speed USB device usi=
-ng ehci_hcd
->>>> and address 8
->>>> Mar 31 20:57:50 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 11776 bytes
->>>> Mar 31 20:57:50 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 69632 bytes
->>>> Mar 31 20:58:21 rngmhpamd usb 1-4: reset high speed USB device usi=
-ng ehci_hcd
->>>> and address 8
->>>> Mar 31 20:58:21 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 11776 bytes
->>>> Mar 31 20:58:21 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 69632 bytes
->>>> Mar 31 20:58:52 rngmhpamd usb 1-4: reset high speed USB device usi=
-ng ehci_hcd
->>>> and address 8
->>>> Mar 31 20:58:52 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 11776 bytes
->>>> Mar 31 20:58:52 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out of I=
-OMMU space
->>>> for 69632 bytes
->>>> Mar 31 20:59:01 rngmhpamd sd 8:0:0:0: [sdc] Unhandled error code
->>>> Mar 31 20:59:01 rngmhpamd sd 8:0:0:0: [sdc] Result: hostbyte=3D0x0=
-7
->>>> driverbyte=3D0x00
->>>> Mar 31 20:59:01 rngmhpamd end_request: I/O error, dev sdc, sector =
-1137
->>>> Mar 31 20:59:01 rngmhpamd __ratelimit: 246 callbacks suppressed
->>>
->>> Do we have any debugging option for dumping the current PCI DMA
->>> allocations, find out where it has all gone?
->>>
->>>
->>
->> Upgrade to 2.6.29-gentoo-r1 (2.6.29.1), problem is still here, can
->> easyly trigger it. I boot with default apperture, 64mb, and while
->> write to usb-hdd get this:
->>
->> Apr =C2=A05 14:28:56 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out o=
-f IOMMU
->> space for 65536 bytes
->> Apr =C2=A05 14:28:56 rngmhpamd ehci_hcd 0000:00:02.1: PCI-DMA: Out o=
-f IOMMU
->> space for 65536 bytes
->> Apr =C2=A05 14:29:27 rngmhpamd usb 1-4: reset high speed USB device =
-using
->> ehci_hcd and address 6
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-ide"=
- in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->>
->
-
-
-
---
-=D0=A1 =D1=83=D0=B2=D0=B0=D0=B6=D0=B5=D0=BD=D0=B8=D0=B5=D0=BC =D0=94=D0=
-=B0=D0=BD=D0=B8=D0=BB=D0=B0 =D0=96=D1=83=D0=BA=D0=BE=D1=86=D0=BA=D0=B8=D0=
-=B9, =D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D0=BD=D1=8B=D0=B9 =D0=B0=D0=B4=
-=D0=BC=D0=B8=D0=BD=D0=B8=D1=81=D1=82=D1=80=D0=B0=D1=82=D0=BE=D1=80 =D0=97=
-=D0=90=D0=9E "=D0=A0=D0=BE=D1=81=D0=BD=D0=B5=D1=84=D1=82=D0=B5=D0=B3=D0=
-=B0=D0=B7=D0=BC=D0=B0=D1=88"
-
-
-
---=20
-=D0=A1 =D1=83=D0=B2=D0=B0=D0=B6=D0=B5=D0=BD=D0=B8=D0=B5=D0=BC =D0=94=D0=
-=B0=D0=BD=D0=B8=D0=BB=D0=B0 =D0=96=D1=83=D0=BA=D0=BE=D1=86=D0=BA=D0=B8=D0=
-=B9, =D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D0=BD=D1=8B=D0=B9 =D0=B0=D0=B4=
-=D0=BC=D0=B8=D0=BD=D0=B8=D1=81=D1=82=D1=80=D0=B0=D1=82=D0=BE=D1=80 =D0=97=
-=D0=90=D0=9E "=D0=A0=D0=BE=D1=81=D0=BD=D0=B5=D1=84=D1=82=D0=B5=D0=B3=D0=
-=B0=D0=B7=D0=BC=D0=B0=D1=88"
