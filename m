@@ -1,53 +1,39 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] at91_ide: remove unused ide_mm_{outb,inb}
-Date: Tue, 07 Apr 2009 13:06:18 +0400
-Message-ID: <49DB178A.8060508@ru.mvista.com>
-References: <200904062341.59908.stf_xl@wp.pl>
+Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
+Date: Tue, 07 Apr 2009 13:15:08 +0400
+Message-ID: <49DB199C.3040305@ru.mvista.com>
+References: <200902152230.38271.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:32051 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:32226 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750703AbZDGJG0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Apr 2009 05:06:26 -0400
-In-Reply-To: <200904062341.59908.stf_xl@wp.pl>
+	id S1753415AbZDGJPP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Apr 2009 05:15:15 -0400
+In-Reply-To: <200902152230.38271.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Hello.
+Hello, I wrote:
 
-Stanislaw Gruszka wrote:
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->   
-[...]
-> diff --git a/drivers/ide/at91_ide.c b/drivers/ide/at91_ide.c
-> index 4f3725d..c48dc61 100644
-> --- a/drivers/ide/at91_ide.c
-> +++ b/drivers/ide/at91_ide.c
-> @@ -174,16 +174,6 @@ static void at91_ide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
->  	leave_16bit(chipselect, mode);
->  }
->  
-> -static u8 ide_mm_inb(unsigned long port)
-> -{
-> -	return readb((void __iomem *) port);
-> -}
-> -
-> -static void ide_mm_outb(u8 value, unsigned long port)
-> -{
-> -	writeb(value, (void __iomem *) port);
-> -}
-> -
->  static void at91_ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
->  {
->  	struct ide_timing *timing;
->   
+> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal bacause:
+>
+> - it always initializes the padding buffer to 0 which is not really needed in
+>   both the read and write cases;
+>
+> - it has to use memcpy() to transfer a single byte from/to the padding buffer;
+>
+> - it uses io{read|write}16() accessors which swap bytes on the big endian CPUs
+>   and so have to additionally convert the data from/to the little endian format
+>   instead of using io{read|write}16_rep() accessors which are not supposed to
+>   change the byte ordering.
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-   Oops, that should have been a part of my patch removing 
-at91_ide_tf_{load|read}(). I'll recast...
+   Jeff, have you forgotten about this one?
 
 MBR, Sergei
 
