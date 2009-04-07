@@ -1,27 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Bugme-new] [Bug 13001] New: PCI-DMA: Out of IOMMU space
-Date: Mon, 6 Apr 2009 23:48:16 +0100
-Message-ID: <20090406234816.05242d4e@lxorguk.ukuu.org.uk>
-References: <bug-13001-10286@http.bugzilla.kernel.org/>
-	<20090404114559.ce20eb9c.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] ata_piix: VGN-BX297XP wants the controller
+ power up on suspend
+Date: Mon, 06 Apr 2009 20:01:48 -0400
+Message-ID: <49DA97EC.7040600@garzik.org>
+References: <49D17582.7090208@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44041 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754890AbZDFWtI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Apr 2009 18:49:08 -0400
-In-Reply-To: <20090404114559.ce20eb9c.akpm@linux-foundation.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:42346 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752223AbZDGABy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Apr 2009 20:01:54 -0400
+In-Reply-To: <49D17582.7090208@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, optimusgd@gmail.com, x86@kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, GNUtoo@no-log.org
 
-> > Mar 31 20:59:01 rngmhpamd end_request: I/O error, dev sdc, sector 1137
-> > Mar 31 20:59:01 rngmhpamd __ratelimit: 246 callbacks suppressed
+Tejun Heo wrote:
+> Sony VGN-BX297XP fails suspend if the controller is powered down when
+> calling into ACPI suspend.  Add the machine to piix_broken_suspend
+> list.
 > 
-> Do we have any debugging option for dumping the current PCI DMA
-> allocations, find out where it has all gone?
+> This problem was reported by GNUtoo@no-log.org on bko#10293.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Rafael J. Wysocki <rjw@sisk.pl>
+> Reported-by: GNUtoo@no-log.org
 
-Turn on CONFIG_IOMMU_LEAK and CONFIG_IOMMU_DEBUG for a test run.
+applied
+
+
