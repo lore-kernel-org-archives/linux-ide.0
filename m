@@ -1,75 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git pull] IDE updates part 4
-Date: Wed, 8 Apr 2009 00:59:43 +0200
-Message-ID: <200904080059.43698.bzolnier@gmail.com>
-References: <200904080020.43175.bzolnier@gmail.com> <49DBD3EE.3010601@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata-eh: call freeze hook before port abort
+Date: Tue, 07 Apr 2009 15:58:08 -0700
+Message-ID: <49DBDA80.2020204@gmail.com>
+References: <49DBC7F1.3040801@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:38882 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbZDGW5Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 18:57:16 -0400
-In-Reply-To: <49DBD3EE.3010601@garzik.org>
-Content-Disposition: inline
+Received: from ti-out-0910.google.com ([209.85.142.190]:57933 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403AbZDGW5d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 18:57:33 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so2567575tid.23
+        for <linux-ide@vger.kernel.org>; Tue, 07 Apr 2009 15:57:31 -0700 (PDT)
+In-Reply-To: <49DBC7F1.3040801@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Wednesday 08 April 2009 00:30:06 Jeff Garzik wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > - TRIM support ("discard" operation for SSD devices)
-> >   (David Woodhouse & Matthew Wilcox)
-> > 
-> >   Since this is a new feature and hasn't seen much testing with production
-> >   devices it is not enabled by default yet (requires use of "ide_core.trim=1"
-> >   kernel parameter).
-> 
-> 
-> As noted by Matthew, this appears to be missing the requisite block support?
+Hello,
 
-I had this nice feeling of missing some detail but I didn't have time to think
-about it too much since I was rushing to get all changes integrated for the last
-pre -rc1 pull request.  Now it is late due to premature TRIM support... :)
+Jeff Garzik wrote:
+> This patch looks like it might work for !PMP setups, but I am not so
+> sure about PMP.
 
-However it is not all that bad since we can just leave things as they are for
-now and disable TRIM support until block changes get merged with patch below.
+Looks good to me too.  PMP shouldn't make any difference if the port
+is being frozen.  The new behavior is more correct.
 
-[ I added it to the pull request.  Sorry Linus, this is the best I can do ATM
-  before failing asleep -- if this is not acceptable I'll revisit pull request
-  tomorrow. ]
+> Any comments?  This should help begin addressing the problem where
+> hardware needs the DMA engine turned off before accessing the
+> taskfile registers -- something needed for ata_port_abort() via
+> ata_qc_complete().
 
->From 316f69abbb73595d0950c56c3b293534056d112e Mon Sep 17 00:00:00 2001
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Wed, 8 Apr 2009 00:42:59 +0200
-Subject: [PATCH] ide: disable TRIM until block layer support gets merged
+Yeah, if this can work around the reported problem, I think this is
+the correct way to fix it.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Thanks.
 
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index 7b7cd76..4ed66d0 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -178,11 +178,14 @@ EXPORT_SYMBOL_GPL(ide_pci_clk);
- module_param_named(pci_clock, ide_pci_clk, int, 0);
- MODULE_PARM_DESC(pci_clock, "PCI bus clock frequency (in MHz)");
- 
-+/* needs block layer support */
-+#if 0
- int ide_trim = 0;
- EXPORT_SYMBOL_GPL(ide_trim);
- 
- module_param_named(trim, ide_trim, int, 0);
- MODULE_PARM_DESC(trim, "TRIM support (0=off, 1=on)");
-+#endif
- 
- static int ide_set_dev_param_mask(const char *s, struct kernel_param *kp)
- {
 -- 
-1.6.0.6
-
+tejun
