@@ -1,34 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v2] libata: ahci enclosure management bios workaround
-Date: Mon, 06 Apr 2009 20:02:34 -0400
-Message-ID: <49DA981A.2000502@garzik.org>
-References: <20090403203641.GA16179@dhcp-210.hsv.redhat.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/03] sata_mv: revert SoC irq breakage
+Date: Mon, 06 Apr 2009 20:16:26 -0400
+Message-ID: <49DA9B5A.8050809@pobox.com>
+References: <49DA2DFD.4010402@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42377 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53325 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757959AbZDGACj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 20:02:39 -0400
-In-Reply-To: <20090403203641.GA16179@dhcp-210.hsv.redhat.com>
+	id S1751314AbZDGAQc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Apr 2009 20:16:32 -0400
+In-Reply-To: <49DA2DFD.4010402@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Maxime Bizon <mbizon@freebox.fr>, Lennert Buytenhek <buytenh@marvell.com>, Saeed Bishara <saeed@marvell.com>
 
-David Milburn wrote:
-> During driver initialization ahci_start_port may not be able
-> to turn LEDs off because the hardware may still be transmitting
-> a message. And since the BIOS may not be setting the LEDs to
-> off the drive LEDs may end up in a fault state. This has
-> been seen on ICH9r and ICH10r when configured in AHCI mode
-> instead of RAID mode, this patch doesn't key off a specific
-> set of device IDs but will give the EM transmit bit a chance
-> to clear if busy.
+Mark Lord wrote:
+> Revert most of commit 6be96ac1d5e4d913e1f48299db083ada5321803b2,
+> originally from Lennert Buijtenheck (Marvell) and Saeed Bishara (Marvell),
+> since that commit causes sata_mv to oops at startup on SOC "Kirkwood".
 > 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> The SOC variants do not have the hpriv->irq_{cause,mask}_ofs registers,
+> so don't try to write to them!
+> 
+> This patch should also be considered for -stable.
+> 
+> Reported-by: Maxime Bizon <mbizon@freebox.fr>
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 
-applied
+applied 1-8
 
+
+> Note: I am mostly in the dark about the sata_mv SOC stuff,
+> since I have incomplete documentation and no hardware to test with.
+
+As much as we'd like to always have a test kit for each bit of source 
+under our perview, that almost never happens as the driver set expands 
+[or, in sata_mv's case, as the driver expands].
+
+You just do as best you can, and poke various people for 
+testing/verification of other stuff
 
