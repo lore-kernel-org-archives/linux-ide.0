@@ -1,27 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git pull] IDE updates part 4
-Date: Wed, 8 Apr 2009 01:19:21 +0200
-Message-ID: <200904080119.22102.bzolnier@gmail.com>
-References: <200904080020.43175.bzolnier@gmail.com> <49DBD3EE.3010601@garzik.org> <200904080059.43698.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH 1/2] libata EH: freeze port before aborting commands
+Date: Tue, 7 Apr 2009 19:22:47 -0400
+Message-ID: <20090407232247.GA16086@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:37820 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760343AbZDGXPx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 19:15:53 -0400
-In-Reply-To: <200904080059.43698.bzolnier@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760592AbZDGXXH@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, d.harrison@sutus.com, sagar.borikar@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 08 April 2009 00:59:43 Bartlomiej Zolnierkiewicz wrote:
 
-> [ I added it to the pull request.  Sorry Linus, this is the best I can do ATM
->   before failing asleep -- if this is not acceptable I'll revisit pull request
-           ^^^^^^^
-I failed to spot it.
+commit 9c2fd3d1955572d3d1ee596b5f81c9768dde896e
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Tue Apr 7 19:13:15 2009 -0400
+
+    [libata] EH: freeze port before aborting commands
+    
+    Call the ->freeze() hook before aborting qc's, because some hardware
+    requires special handling prior to accessing the taskfile registers
+    (for diagnosis/analysis/reset).  Most notably, hardware may wish to
+    disable the DMA engine or interrupts in the ->freeze() hook.
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+
+---
+Alan, we should create ata_sff_bmdma_freeze() and use that to turn off
+the PCI IDE BMDMA engine in ->freeze(), too, I think...
+
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 0183131..b79cbd6 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -999,7 +999,9 @@ static void __ata_port_freeze(struct ata_port *ap)
+  *	ata_port_freeze - abort & freeze port
+  *	@ap: ATA port to freeze
+  *
+- *	Abort and freeze @ap.
++ *	Abort and freeze @ap.  The freeze operation must be called
++ *	first, because some hardware requires special operations
++ *	before the taskfile registers are accessible.
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+@@ -1013,8 +1015,8 @@ int ata_port_freeze(struct ata_port *ap)
+ 
+ 	WARN_ON(!ap->ops->error_handler);
+ 
+-	nr_aborted = ata_port_abort(ap);
+ 	__ata_port_freeze(ap);
++	nr_aborted = ata_port_abort(ap);
+ 
+ 	return nr_aborted;
+ }
