@@ -1,38 +1,34 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bugme-new] [Bug 13001] New: PCI-DMA: Out of IOMMU space
-Date: Tue, 7 Apr 2009 10:49:12 +0900
-Message-ID: <20090407104905Q.fujita.tomonori@lab.ntt.co.jp>
-References: <bug-13001-10286@http.bugzilla.kernel.org/>
-	<20090404114559.ce20eb9c.akpm@linux-foundation.org>
-	<20090406234816.05242d4e@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: ata_check_status_mmio exception kernel panic
+Date: Mon, 06 Apr 2009 22:59:36 -0400
+Message-ID: <49DAC198.1090708@pobox.com>
+References: <3fb94e50903312006y12717b8dh7dd7769f3f5b1dda@mail.gmail.com> <49D64DE0.8060400@sutus.com> <49D6E90C.5030109@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:43983 "EHLO sh.osrg.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36065 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757733AbZDGBvi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Apr 2009 21:51:38 -0400
-In-Reply-To: <20090406234816.05242d4e@lxorguk.ukuu.org.uk>
+	id S1751863AbZDGDAu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Apr 2009 23:00:50 -0400
+In-Reply-To: <49D6E90C.5030109@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, optimusgd@gmail.com, x86@kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Dustin Harrison <d.harrison@sutus.com>, Sagar Borikar <sagar.borikar@gmail.com>, linux-ide@vger.kernel.org
 
-On Mon, 6 Apr 2009 23:48:16 +0100
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+Tejun Heo wrote:
+> Can you please move the logic to sil_freeze() and see whether it
+> works?  The freeze handler is supposed to put the controller into idle
+> (or at least not-crazy) state, so things like this fit there.
 
-> > > Mar 31 20:59:01 rngmhpamd end_request: I/O error, dev sdc, sector 1137
-> > > Mar 31 20:59:01 rngmhpamd __ratelimit: 246 callbacks suppressed
-> > 
-> > Do we have any debugging option for dumping the current PCI DMA
-> > allocations, find out where it has all gone?
-> 
-> Turn on CONFIG_IOMMU_LEAK and CONFIG_IOMMU_DEBUG for a test run.
+ata_qc_complete() is called before ->freeze(), and ata_qc_complete() 
+needs taskfile access to fill the result TF.
 
-These options don't tell who leaks dma mappings so possibly it isn't
-very helpful.
+I thought about ->pre_freeze(), but now I wonder if we shouldn't just 
+call __ata_port_freeze() before ata_port_abort(), in ata_port_freeze()?
 
-There is no interesting changes in GART IOMMU between 2.6.28 and
-2.6.29 so probably this is a driver bug. It's necessary to find out
-which driver leaks dma mappings.
+	Jeff
+
+
+
