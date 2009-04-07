@@ -1,61 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] libata-eh: call freeze hook before port abort
-Date: Tue, 07 Apr 2009 17:38:57 -0400
-Message-ID: <49DBC7F1.3040801@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] at91_ide: remove custom tf_{read|load}() methods (take 2)
+Date: Tue, 7 Apr 2009 20:40:15 +0200
+Message-ID: <200904072040.15676.bzolnier@gmail.com>
+References: <200904072107.33324.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090409040109070601090808"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58431 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754615AbZDGVjA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Apr 2009 17:39:00 -0400
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:45110 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761627AbZDGVk4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 17:40:56 -0400
+Received: by mail-fx0-f158.google.com with SMTP id 2so2531294fxm.37
+        for <linux-ide@vger.kernel.org>; Tue, 07 Apr 2009 14:40:56 -0700 (PDT)
+In-Reply-To: <200904072107.33324.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, stf_xl@wp.pl
 
-This is a multi-part message in MIME format.
---------------090409040109070601090808
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tuesday 07 April 2009 19:07:33 Sergei Shtylyov wrote:
+> Since tf_{read|load}() methods of this driver have now become identical to their
+> standard counterparts using MMIO accesses, there's no need to override those
+> anymore...
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> 
+> ---
+> Remove ide_mm_{inb|outb}() that somehow fell out of my attention...
+> This incorporates the patch posted by Stanislaw Gruszka today.
 
-
-Tejun,
-
-This patch looks like it might work for !PMP setups, but I am not so 
-sure about PMP.
-
-Any comments?  This should help begin addressing the problem where 
-hardware needs the DMA engine turned off before accessing the taskfile 
-registers -- something needed for ata_port_abort() via ata_qc_complete().
-
-	Jeff
-
-
-
-
-
---------------090409040109070601090808
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0183131..0b7ed40 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1013,8 +1013,8 @@ int ata_port_freeze(struct ata_port *ap)
- 
- 	WARN_ON(!ap->ops->error_handler);
- 
--	nr_aborted = ata_port_abort(ap);
- 	__ata_port_freeze(ap);
-+	nr_aborted = ata_port_abort(ap);
- 
- 	return nr_aborted;
- }
-
---------------090409040109070601090808--
+Your patch was already in pata-2.6 tree so I just applied Stanislaw's
+one on top of it.
