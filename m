@@ -1,53 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
+From: Timur Tabi <timur@freescale.com>
 Subject: Re: "ahci: drop intx manipulation on msi enable" breaks ULI M1575
-Date: Tue, 07 Apr 2009 16:57:12 -0700
-Message-ID: <49DBE858.9040004@kernel.org>
-References: <49DB6914.1030107@freescale.com>
+Date: Tue, 7 Apr 2009 19:36:23 -0500
+Message-ID: <ed82fe3e0904071736w55dff582y8ac2681f6410865b@mail.gmail.com>
+References: <49DB6914.1030107@freescale.com> <49DBE858.9040004@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38443 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753849AbZDGX6R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Apr 2009 19:58:17 -0400
-In-Reply-To: <49DB6914.1030107@freescale.com>
+Received: from qw-out-2122.google.com ([74.125.92.25]:61353 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759983AbZDHAgZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2009 20:36:25 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so3308993qwh.37
+        for <linux-ide@vger.kernel.org>; Tue, 07 Apr 2009 17:36:24 -0700 (PDT)
+In-Reply-To: <49DBE858.9040004@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Timur Tabi <timur@freescale.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Linux PPC Development <linuxppc-dev@ozlabs.org>
 
-Hello,
+On Tue, Apr 7, 2009 at 6:57 PM, Tejun Heo <tj@kernel.org> wrote:
 
-Timur Tabi wrote:
->> ahci: drop intx manipulation on msi enable
->>     
->>     There's no need to turn off intx explicitly on msi enable.  This is
->>     automatically handled by pci.  Drop it.
->>     
->>     This might be needed on machines if the BIOS turns intx off during
->>     boot.  However, there's no evidence of such behavior for ahci and
->>     the only such case seems to be ICH5 PATA according to ata_piix.
->>     Also, given the way ahci operates, it's highly unlikely BIOS ever
->>     disables IRQ for the controller.  However, as this change has slight
->>     possibility of introducing failure, please schedule it for #upstream.
-> 
-> breaks SATA support on a Freescale MPC8610 HPCD (PowerPC) reference
-> board.  When I apply the patch, I get this result during boot:
-...
-> This board uses a ULI M1575 for SATA support.
-> 
-> Unfortunately, I don't know enough about SATA or PCI interrupts to
-> understand why you made the change or why it breaks on my board.
+> Hmmm... that means intx isn't set by default. =A0I'm not sure what is
+> the right thing to do here. =A0I think it's something which should be
+> handled by the PCI layer. =A0Oh well, maybe we should just revert the
+> change and keep setting intx?
 
-cc'ing Jeff.
+cc'ing linuxppc-dev
 
-Hmmm... that means intx isn't set by default.  I'm not sure what is
-the right thing to do here.  I think it's something which should be
-handled by the PCI layer.  Oh well, maybe we should just revert the
-change and keep setting intx?
+I really don't know what should be done.  It seems to make sense to
+have the PCI layer enable interrupts.
 
-Thanks.
+This seems to be a powerpc-specific bug, but I don't know enough of
+the PCI subsystem.
 
--- 
-tejun
+--=20
+Timur Tabi
+Linux kernel developer at Freescale
