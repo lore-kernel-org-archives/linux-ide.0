@@ -1,34 +1,54 @@
-From: Timur Tabi <timur@freescale.com>
-Subject: Re: "ahci: drop intx manipulation on msi enable" breaks ULI M1575
-Date: Wed, 8 Apr 2009 06:40:49 -0500
-Message-ID: <ed82fe3e0904080440w130b5dc5of6d5ed3051ed04e2@mail.gmail.com>
-References: <49DB6914.1030107@freescale.com> <49DBE858.9040004@kernel.org>
-	<ed82fe3e0904071736w55dff582y8ac2681f6410865b@mail.gmail.com>
-	<1239156559.10104.7.camel@localhost>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] libata: add CFA specific identify data words
+Date: Wed, 08 Apr 2009 15:46:59 +0400
+Message-ID: <49DC8EB3.4040404@ru.mvista.com>
+References: <200903032029.29073.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
-In-Reply-To: <1239156559.10104.7.camel@localhost>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-To: michael@ellerman.id.au
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Linux PPC Development <linuxppc-dev@ozlabs.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:56454 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932929AbZDHLqU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Apr 2009 07:46:20 -0400
+In-Reply-To: <200903032029.29073.sshtylyov@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On Tue, Apr 7, 2009 at 9:09 PM, Michael Ellerman <michael@ellerman.id.au> wrote:
+Sergei Shtylyov wrote:
 
-> Have you confirmed that INTX is disabled before that call?
+> Declare and use constants for CFA specific identify data words 162 and 163.
 
-How do I do that?
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
--- 
-Timur Tabi
-Linux kernel developer at Freescale
+    Jeff, have you forgotten about this one too?
+
+> Index: linux-2.6/drivers/ata/libata-core.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/libata-core.c
+> +++ linux-2.6/drivers/ata/libata-core.c
+> @@ -1650,8 +1650,8 @@ unsigned long ata_id_xfermask(const u16 
+>  		/*
+>  		 *	Process compact flash extended modes
+>  		 */
+> -		int pio = id[163] & 0x7;
+> -		int dma = (id[163] >> 3) & 7;
+> +		int pio = (id[ATA_ID_CFA_MODES] >> 0) & 0x7;
+> +		int dma = (id[ATA_ID_CFA_MODES] >> 3) & 0x7;
+>  
+>  		if (pio)
+>  			pio_mask |= (1 << 5);
+> @@ -2408,7 +2408,8 @@ int ata_dev_configure(struct ata_device 
+>  	/* ATA-specific feature tests */
+>  	if (dev->class == ATA_DEV_ATA) {
+>  		if (ata_id_is_cfa(id)) {
+> -			if (id[162] & 1) /* CPRM may make this media unusable */
+> +			/* CPRM may make this media unusable */
+> +			if (id[ATA_ID_CFA_KEY_MGMT] & 1)
+>  				ata_dev_printk(dev, KERN_WARNING,
+>  					       "supports DRM functions and may "
+>  					       "not be fully accessable.\n");
+
+MBR, Sergei
