@@ -1,55 +1,255 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [eSATA] 2.6.28.7: IO errors
-Date: Wed, 8 Apr 2009 22:00:48 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0904082200020.4722@axis700.grange>
-References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
- <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
- <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange>
- <49D0972D.3020407@kernel.org> <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
- <49D0F893.9070306@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] sata_sx4: refresh and convert to new EH
+Date: Wed, 8 Apr 2009 16:05:11 -0400
+Message-ID: <20090408200511.GA24071@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <49D0F893.9070306@rtr.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <tj@kernel.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:52479 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756236AbZDHUFN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Apr 2009 16:05:13 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-On Mon, 30 Mar 2009, Mark Lord wrote:
 
-> Guennadi Liakhovetski wrote:
-> > On Mon, 30 Mar 2009, Tejun Heo wrote:
-> > 
-> > > Hello,
-> > > 
-> > > Guennadi Liakhovetski wrote:
-> > > > Hm, using a 62cm long cable ATM, should it be even shorter? It's going
-> > > > to be difficult physically then:-(
-> > > 62cm looks short enough.  My long cable is much longer like 2m
-> > > 
-> > > > But what about your drives - dies the connector fit well in the slot and
-> > > > sits firmaly there? With my disk looks likt the connector cannot be
-> > > > inserted completely because of too small a hole in plastic:-(
-> > > But mine fits well and firmly, so maybe you need to take out the knife
-> > > after all.
-> > 
-> > yeah, warranty, you know:-( I contacted the retailer, will see. but it's
-> > strange - I bought mine in December 08, so, it's new enough, so, why?... The
-> > opening in the case is ~4.8mm, the plastic part of the connector on the
-> > eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
-> ..
-> 
-> Speaking of which.. dealextreme.com sells surprisingly excellent eSATA
-> cables with really sturdy connectors.  Very cheap pricing, too,
-> with free shipping worldwide.  An easy way to eliminate cable fuss.
+I reviewed and refreshed libata-dev.git#new-eh, now renamed to #sx4.
 
-Haven't tried that cable, but here's a confirmation of my observation:
+Several bugs and missing pieces in the new-EH conversion were addressed
+(often by copying highly similar code from sata_promise, a highly
+similar chip)
 
-http://forums.techguy.org/hardware/580140-esata-drive-not-recognized.html
+The only thing left is some "it still works" testing...  any takers?
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
+
+
+
+commit 51aca756268d405fb7cbfc887c55c92185e03b53
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Wed Apr 8 16:02:18 2009 -0400
+
+    [libata] sata_sx4: convert to new exception handling methods
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index dce3dcc..1ce98af 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -213,8 +213,9 @@ struct pdc_host_priv {
+ 
+ 
+ static int pdc_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+-static void pdc_eng_timeout(struct ata_port *ap);
+-static void pdc_20621_phy_reset(struct ata_port *ap);
++static void pdc_error_handler(struct ata_port *ap);
++static void pdc_freeze(struct ata_port *ap);
++static void pdc_thaw(struct ata_port *ap);
+ static int pdc_port_start(struct ata_port *ap);
+ static void pdc20621_qc_prep(struct ata_queued_cmd *qc);
+ static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+@@ -233,6 +234,10 @@ static void pdc20621_put_to_dimm(struct ata_host *host,
+ 				 void *psource, u32 offset, u32 size);
+ static void pdc20621_irq_clear(struct ata_port *ap);
+ static unsigned int pdc20621_qc_issue(struct ata_queued_cmd *qc);
++static int pdc_softreset(struct ata_link *link, unsigned int *class,
++			 unsigned long deadline);
++static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
++static int pdc_check_atapi_dma(struct ata_queued_cmd *qc);
+ 
+ 
+ static struct scsi_host_template pdc_sata_sht = {
+@@ -243,20 +248,24 @@ static struct scsi_host_template pdc_sata_sht = {
+ 
+ /* TODO: inherit from base port_ops after converting to new EH */
+ static struct ata_port_operations pdc_20621_ops = {
+-	.sff_tf_load		= pdc_tf_load_mmio,
+-	.sff_tf_read		= ata_sff_tf_read,
+-	.sff_check_status	= ata_sff_check_status,
+-	.sff_exec_command	= pdc_exec_command_mmio,
+-	.sff_dev_select		= ata_sff_dev_select,
+-	.phy_reset		= pdc_20621_phy_reset,
++	.inherits		= &ata_sff_port_ops,
++
++	.check_atapi_dma	= pdc_check_atapi_dma,
+ 	.qc_prep		= pdc20621_qc_prep,
+ 	.qc_issue		= pdc20621_qc_issue,
+-	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
+-	.sff_data_xfer		= ata_sff_data_xfer,
+-	.eng_timeout		= pdc_eng_timeout,
+-	.sff_irq_clear		= pdc20621_irq_clear,
+-	.sff_irq_on		= ata_sff_irq_on,
++
++	.freeze			= pdc_freeze,
++	.thaw			= pdc_thaw,
++	.softreset		= pdc_softreset,
++	.error_handler		= pdc_error_handler,
++	.lost_interrupt		= ATA_OP_NULL,
++	.post_internal_cmd	= pdc_post_internal_cmd,
++
+ 	.port_start		= pdc_port_start,
++
++	.sff_tf_load		= pdc_tf_load_mmio,
++	.sff_exec_command	= pdc_exec_command_mmio,
++	.sff_irq_clear		= pdc20621_irq_clear,
+ };
+ 
+ static const struct ata_port_info pdc_port_info[] = {
+@@ -310,14 +319,6 @@ static int pdc_port_start(struct ata_port *ap)
+ 	return 0;
+ }
+ 
+-static void pdc_20621_phy_reset(struct ata_port *ap)
+-{
+-	VPRINTK("ENTER\n");
+-	ap->cbl = ATA_CBL_SATA;
+-	ata_port_probe(ap);
+-	ata_bus_reset(ap);
+-}
+-
+ static inline void pdc20621_ata_sg(struct ata_taskfile *tf, u8 *buf,
+ 				   unsigned int portno,
+ 					   unsigned int total_len)
+@@ -859,40 +860,115 @@ static irqreturn_t pdc20621_interrupt(int irq, void *dev_instance)
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+-static void pdc_eng_timeout(struct ata_port *ap)
++static void pdc_freeze(struct ata_port *ap)
+ {
+-	u8 drv_stat;
+-	struct ata_host *host = ap->host;
+-	struct ata_queued_cmd *qc;
+-	unsigned long flags;
++	void __iomem *mmio = ap->ioaddr.cmd_addr;
++	u32 tmp;
+ 
+-	DPRINTK("ENTER\n");
++	/* FIXME: if all 4 ATA engines are stopped, also stop HDMA engine */
+ 
+-	spin_lock_irqsave(&host->lock, flags);
++	tmp = readl(mmio + PDC_CTLSTAT);
++	tmp |= PDC_MASK_INT;
++	tmp &= ~PDC_DMA_ENABLE;
++	writel(tmp, mmio + PDC_CTLSTAT);
++	readl(mmio + PDC_CTLSTAT); /* flush */
++}
+ 
+-	qc = ata_qc_from_tag(ap, ap->link.active_tag);
++static void pdc_thaw(struct ata_port *ap)
++{
++	void __iomem *mmio = ap->ioaddr.cmd_addr;
++	void __iomem *mmio_base;
++	u32 tmp;
+ 
+-	switch (qc->tf.protocol) {
+-	case ATA_PROT_DMA:
+-	case ATA_PROT_NODATA:
+-		ata_port_printk(ap, KERN_ERR, "command timeout\n");
+-		qc->err_mask |= __ac_err_mask(ata_wait_idle(ap));
+-		break;
++	/* FIXME: start HDMA engine, if zero ATA engines running */
+ 
+-	default:
+-		drv_stat = ata_sff_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
++	/* reading SEQ mask register clears IRQ */
++	mmio_base = ap->host->iomap[PDC_MMIO_BAR] + PDC_CHIP0_OFS;
++	readl(mmio_base + PDC_20621_SEQMASK);
+ 
+-		ata_port_printk(ap, KERN_ERR,
+-				"unknown timeout, cmd 0x%x stat 0x%x\n",
+-				qc->tf.command, drv_stat);
++	/* turn IRQ back on */
++	tmp = readl(mmio + PDC_CTLSTAT);
++	tmp &= ~PDC_MASK_INT;
++	writel(tmp, mmio + PDC_CTLSTAT);
++	readl(mmio + PDC_CTLSTAT); /* flush */
++}
+ 
+-		qc->err_mask |= ac_err_mask(drv_stat);
+-		break;
++static void pdc_reset_port(struct ata_port *ap)
++{
++	void __iomem *mmio = ap->ioaddr.cmd_addr + PDC_CTLSTAT;
++	unsigned int i;
++	u32 tmp;
++
++	/* FIXME: handle HDMA copy engine */
++
++	for (i = 11; i > 0; i--) {
++		tmp = readl(mmio);
++		if (tmp & PDC_RESET)
++			break;
++
++		udelay(100);
++
++		tmp |= PDC_RESET;
++		writel(tmp, mmio);
+ 	}
+ 
+-	spin_unlock_irqrestore(&host->lock, flags);
+-	ata_eh_qc_complete(qc);
+-	DPRINTK("EXIT\n");
++	tmp &= ~PDC_RESET;
++	writel(tmp, mmio);
++	readl(mmio);	/* flush */
++}
++
++static int pdc_softreset(struct ata_link *link, unsigned int *class,
++			 unsigned long deadline)
++{
++	pdc_reset_port(link->ap);
++	return ata_sff_softreset(link, class, deadline);
++}
++
++static void pdc_error_handler(struct ata_port *ap)
++{
++	if (!(ap->pflags & ATA_PFLAG_FROZEN))
++		pdc_reset_port(ap);
++
++	ata_std_error_handler(ap);
++}
++
++static void pdc_post_internal_cmd(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++
++	/* make DMA engine forget about the failed command */
++	if (qc->flags & ATA_QCFLAG_FAILED)
++		pdc_reset_port(ap);
++}
++
++static int pdc_check_atapi_dma(struct ata_queued_cmd *qc)
++{
++	u8 *scsicmd = qc->scsicmd->cmnd;
++	int pio = 1; /* atapi dma off by default */
++
++	/* Whitelist commands that may use DMA. */
++	switch (scsicmd[0]) {
++	case WRITE_12:
++	case WRITE_10:
++	case WRITE_6:
++	case READ_12:
++	case READ_10:
++	case READ_6:
++	case 0xad: /* READ_DVD_STRUCTURE */
++	case 0xbe: /* READ_CD */
++		pio = 0;
++	}
++	/* -45150 (FFFF4FA2) to -1 (FFFFFFFF) shall use PIO mode */
++	if (scsicmd[0] == WRITE_10) {
++		unsigned int lba =
++			(scsicmd[2] << 24) |
++			(scsicmd[3] << 16) |
++			(scsicmd[4] << 8) |
++			scsicmd[5];
++		if (lba >= 0xFFFF4FA2)
++			pio = 1;
++	}
++	return pio;
+ }
+ 
+ static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf)
