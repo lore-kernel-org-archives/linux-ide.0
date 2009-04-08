@@ -1,70 +1,55 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/2] sata_sil: disable DMA engine in ->freeze
-Date: Wed, 08 Apr 2009 15:49:57 -0400
-Message-ID: <49DCFFE5.7080807@garzik.org>
-References: <20090407232247.GA16086@havoc.gtf.org>	 <20090407232331.GA16190@havoc.gtf.org> <3fb94e50904072213n637525b1w4b032544dcef3618@mail.gmail.com> <49DC3357.3030703@garzik.org> <49DCFCEE.7040000@sutus.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [eSATA] 2.6.28.7: IO errors
+Date: Wed, 8 Apr 2009 22:00:48 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0904082200020.4722@axis700.grange>
+References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
+ <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
+ <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange>
+ <49D0972D.3020407@kernel.org> <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
+ <49D0F893.9070306@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51104 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763555AbZDHTuH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Apr 2009 15:50:07 -0400
-In-Reply-To: <49DCFCEE.7040000@sutus.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <49D0F893.9070306@rtr.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dustin Harrison <d.harrison@sutus.com>, Tejun Heo <htejun@gmail.com>
-Cc: Sagar Borikar <sagar.borikar@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Dustin Harrison wrote:
-> Jeff Garzik wrote:
->> Sagar Borikar wrote:
->>> This patch works for our platform.
->>
->> Did you try both patches together?  Both are required for the solution.
->>
-> Thanks for updating the patch Jeff.  I see you spotted the reason why I 
-> didn't put the code into sil_freeze.  I tested your patch and it 
-> prevented the kernel panic.  I now get the following output, which seems 
-> to be correct to me.
+On Mon, 30 Mar 2009, Mark Lord wrote:
+
+> Guennadi Liakhovetski wrote:
+> > On Mon, 30 Mar 2009, Tejun Heo wrote:
+> > 
+> > > Hello,
+> > > 
+> > > Guennadi Liakhovetski wrote:
+> > > > Hm, using a 62cm long cable ATM, should it be even shorter? It's going
+> > > > to be difficult physically then:-(
+> > > 62cm looks short enough.  My long cable is much longer like 2m
+> > > 
+> > > > But what about your drives - dies the connector fit well in the slot and
+> > > > sits firmaly there? With my disk looks likt the connector cannot be
+> > > > inserted completely because of too small a hole in plastic:-(
+> > > But mine fits well and firmly, so maybe you need to take out the knife
+> > > after all.
+> > 
+> > yeah, warranty, you know:-( I contacted the retailer, will see. but it's
+> > strange - I bought mine in December 08, so, it's new enough, so, why?... The
+> > opening in the case is ~4.8mm, the plastic part of the connector on the
+> > eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
+> ..
 > 
-> WARNING: at drivers/ata/libata-core.c:5209 ata_qc_complete()
+> Speaking of which.. dealextreme.com sells surprisingly excellent eSATA
+> cables with really sturdy connectors.  Very cheap pricing, too,
+> with free shipping worldwide.  An easy way to eliminate cable fuss.
 
-hum, my patch would indeed trigger this WARN_ON_ONCE() in ata_qc_complete():
+Haven't tried that cable, but here's a confirmation of my observation:
 
-         if (ap->ops->error_handler) {
-                 struct ata_device *dev = qc->dev;
-                 struct ata_eh_info *ehi = &dev->link->eh_info;
+http://forums.techguy.org/hardware/580140-esata-drive-not-recognized.html
 
-                 WARN_ON_ONCE(ap->pflags & ATA_PFLAG_FROZEN);
-
-Tejun, was that WARN_ON() originally added to detect spurious callers? 
-Or, completions after the EH started?
-
-AFAICS, libata still owns the qc's at this point, so it should not be a 
-problem to complete them when the port is frozen.
-
-	Jeff
-
-
-
-
-> Call Trace:
-> [<80107ed0>] dump_stack+0x8/0x34
-> [<802f92e0>] ata_qc_complete+0x58/0x114
-> [<80303aec>] ata_port_abort+0xc4/0x104
-> [<80306870>] sil_interrupt+0x340/0x384
-> [<80146cc0>] handle_IRQ_event+0x54/0xb8
-> [<80146dc0>] __do_IRQ+0x9c/0x11c
-> [<80102670>] ll_sutuspci_irq+0xe8/0x158
-> [<8010161c>] do_extended_irq+0xa0/0x104
-> [<80102b94>] ret_from_irq+0x0/0x4
-> [<8029c4fc>] both_aligned+0x1c/0x64
-> [<8014a9a4>] file_read_actor+0xac/0x154
-> [<8014a564>] do_generic_mapping_read+0x210/0x5a4
-> [<8014ce98>] generic_file_aio_read+0x180/0x1d4
-> [<8016cba4>] do_sync_read+0xc4/0x128
-> [<8016ccbc>] vfs_read+0xb4/0x154
-> [<8016d02c>] sys_read+0x54/0x98
-> [<8010a620>] stack_done+0x20/0x3c
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
