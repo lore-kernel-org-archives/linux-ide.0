@@ -1,62 +1,26 @@
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: [PATCH 4/5] ide: Add support for TRIM
-Date: Wed, 8 Apr 2009 09:14:04 +0200
-Message-ID: <20090408071404.GA2656@gentoox2.trippelsdorf.de>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <49DB8B54.7050402@garzik.org> <49DB9422.5040702@rtr.ca> <20090407181033.GA2673@gentoox2.trippelsdorf.de> <49DBB071.6000105@rtr.ca>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: libata errors
+Date: Wed, 8 Apr 2009 10:14:31 +0200
+Message-ID: <18908.23783.745239.601473@pilspetsen.it.uu.se>
+References: <4b215b9d0904071340w16a65b5bs64f6161b6042b4f1@mail.gmail.com>
+	<49DBC889.3080304@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out-43.synserver.de ([217.119.50.43]:1123 "HELO
-	smtp-out-43.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751975AbZDHHOK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Apr 2009 03:14:10 -0400
-Content-Disposition: inline
-In-Reply-To: <49DBB071.6000105@rtr.ca>
+Received: from aun.it.uu.se ([130.238.12.36]:39398 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757618AbZDHIOl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Apr 2009 04:14:41 -0400
+In-Reply-To: <49DBC889.3080304@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, David Woodhouse <David.Woodhouse@intel.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Matt Grice <mcjgrice@gmail.com>, linux-ide@vger.kernel.org
 
-On Tue, Apr 07, 2009 at 03:58:41PM -0400, Mark Lord wrote:
-> Markus Trippelsdorf wrote:
-> > On Tue, Apr 07, 2009 at 01:57:54PM -0400, Mark Lord wrote:
-> >> Are there any commercially available SSDs that have this feature yet?
-> >> Anyone know which ones?
-> > 
-> > OCZ will release a new firmware for their Vertex line in the coming
-> > days, which will feature ATA TRIM support.
-> > And since they get their firmware directly from Indilinx, all SSDs
-> > with this controller will be TRIM ready in the future.
-> > 
-> > http://www.ocztechnologyforum.com/forum/showthread.php?t=54373
-> ..
-> 
-> Mmm.. sounds like they really don't understand "standards" there.
-> All of that nonsense about waiting until their proprietary "trim utility"
-> is working on Windows-7 before looking at a Linux implementation.
-> 
-> WTF?  So long as they implement the required ATA opcode (correctly),
-> then it should "just work" fine on Linux.  But that Windows-centred
-> discussion there really doesn't sound encouraging.
-> 
-> But hey, if they do get their act together, then the Vertex series
-> are supposedly the second-best consumer SSDs available these days,
-> after the highly touted/priced Intel ones.  :)
+Jeff Garzik writes:
+ > If its ahci, try using ata_piix.  I am beginning to think that ATAPI on 
+ > AHCI is broken.
 
-The new firmware is out and looks promising:
-
-########## Begin SSD TRIM output ##########
-word21 bit10 = 1: support for the DATA SET MANAGEMENT is changeable.
-word169 bit0 = 1: device supports the Trim bit of DATA SET MANAGEMENT command.
-  word69 bit14 = 1: Trim function of the DATA SET MANAGEMENT command supports determinate behavior.
-########## End SSD TRIM output ##########
-
-This is the output from a modified hdparm, that checks the relevant
-bits. 
-
-(I didn't run hdparm on my machine, because I'm waiting for a flasher that
-doesn't require XP. I just copied the output from:
-http://www.ocztechnologyforum.com/forum/showpost.php?p=371277&postcount=28 )
-
--- 
-Markus
+I use a SATAPI DVD-writer on AHCI (Intel 965) on a semi-regular
+basis, and it's never had any issues with recent 2.6.2x kernels.
