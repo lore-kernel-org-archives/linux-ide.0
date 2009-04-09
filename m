@@ -1,76 +1,49 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PROPOSED] ata: Report 16/32bit PIO as best we can
-Date: Thu, 09 Apr 2009 09:25:24 -0400
-Message-ID: <49DDF744.1090209@garzik.org>
-References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk> <49DDF1EB.2060200@rtr.ca>
+Date: Thu, 09 Apr 2009 09:33:20 -0400
+Message-ID: <49DDF920.70801@garzik.org>
+References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk>	<49DDEF02.7090004@garzik.org>	<20090409135323.5b2bed4b@lxorguk.ukuu.org.uk>	<49DDF33E.6000102@garzik.org> <20090409141254.283d9f11@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34184 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55254 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753468AbZDINZa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Apr 2009 09:25:30 -0400
-In-Reply-To: <49DDF1EB.2060200@rtr.ca>
+	id S1759139AbZDINdX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Apr 2009 09:33:23 -0400
+In-Reply-To: <20090409141254.283d9f11@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Alan Cox wrote:
->> Something like this then ?
->>
->>
->> The legacy old IDE API for this is a bit primitive so we try and map 
->> stuff
->> sensibly onto it.
->>
->> - Add flags2 as we ran out of flags
->> - Set PIO over DMA devices to report 32bit
->> - Add ability to change the PIO32 settings if the controller permits it
->> - Add that functionality into the sff drivers
->> - Add that functionality into the VLB legacy driver
->> - Turn on the 32bit PIO on the ninja32 and add support there
->>
->> Signed-off-by: Alan Cox <alan@linux.intel.com>
-> ..
+Alan Cox wrote:
+>> With the attached patch, you can use ->flags for the two new flags, and 
+>> you can set those bits in the driver where you set the other 
+>> ATA_FLAG_xxx bits.
 > 
-> By all means go ahead with something like this,
-> and thanks for doing it, Alan.
+> Its half way but I realised there is another reason that doesn't work
+> (and indeed why the device private flags are asking for trouble)
 > 
-> But.. these do look rather suspiciously like sysfs attrs to me.
-> 
-> We didn't have a sysfs in the IDE days (so Gadi added the klunky
-> procfs "settings" thing for there), but we do now.
-> 
-> I'm happy to update hdparm to check sysfs if that's where this
-> ends up, or to do almost nothing for it if we stick with the ioctls.
+> What are the locking sematics for ap->flags ?
 
-hmmm, Tejun's storage summit presentation would be quite relevant at 
-this juncture :)
+In general, for both driver-private flags and ATA_FLAG_xxx, the flags 
+should be set at compile or pci_driver::probe() time, and never touched 
+after that.
 
-The short answer:  we need a control mechanism for tasks such SATA PHY 
-twiddling, host controller reset, host controller configuration 
-(set/clear 32-bit I/O in this example), ...
+So your patch is a bit of abuse, really, by fiddling with ap->flags at 
+all ;-)  The drivers, for example, never touch the driver-private flags 
+after they are set at init.  The core will occasionally twiddle flags, 
+inside of spin_lock_irqsave(ap->lock)
 
-sysfs attrs are desired for this, but we've held off largely because 
-this is all intertwined with the long term direction of "storage model", 
-"transport protocol" and libata's eventual move away from strict SCSI 
-dependency.
+Since they are legacy ioctls, I think that reflecting current reality 
+should be sufficient.  That is what the current set does:
 
-I think the best place for sysfs attr attachment is an ata_transport 
-module, something that's needed to be written for quite a while.  You 
-can see some of the eventual direction in scsi_transport_*.[ch] and 
-raid_class.c.
+	* GET: return "16 bit"
+	* SET: if "16 bit" return success else fail
 
-Eventually I hope to reach a point where the current crop of SATA+SAS 
-controllers out in the field (e.g. mvsas) will attach to 
-scsi_transport_sas or ata_transport, depending on controller port 
-configuration and attached device(s).  And for the sake of users' 
-sanity, a single utility should be used to configure a SATA+SAS 
-controller port.  Requiring use of hdparm when the port is in SATA mode, 
-and sg_* when the port is in SAS mode, is a bit annoying.
+Thus 'set' has always been an illusion for libata.  It's really been 
+read-only.
 
 	Jeff
 
