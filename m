@@ -1,51 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Bug 453808 - qc timeout probing TEAC DV-28E-V CD/DVD drive on
- SATA/PATA bridge
-Date: Thu, 09 Apr 2009 11:24:42 -0700
-Message-ID: <49DE3D6A.1070601@kernel.org>
-References: <5F516AEA4F45A442880A3EC2002FBDC563A4309148@GVW1096EXB.americas.hpqcorp.net> <200904031601.22088.bzolnier@gmail.com> <5F516AEA4F45A442880A3EC2002FBDC563A4309149@GVW1096EXB.americas.hpqcorp.net> <200904031815.29407.bzolnier@gmail.com> <5F516AEA4F45A442880A3EC2002FBDC563A430914A@GVW1096EXB.americas.hpqcorp.net>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Odd RAID failure
+Date: Thu, 9 Apr 2009 14:42:32 -0400
+Message-ID: <87f94c370904091142m79c60d7cy2e377c40b2f7f0c1@mail.gmail.com>
+References: <20090404173205.GIRT22375.cdptpa-omta01.mail.rr.com@Leslie>
+	 <49DE3AB2.5030503@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57603 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751908AbZDISYO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Apr 2009 14:24:14 -0400
-In-Reply-To: <5F516AEA4F45A442880A3EC2002FBDC563A430914A@GVW1096EXB.americas.hpqcorp.net>
+Received: from an-out-0708.google.com ([209.85.132.240]:5346 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757203AbZDISmw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Apr 2009 14:42:52 -0400
+Received: by an-out-0708.google.com with SMTP id d14so679992and.1
+        for <linux-ide@vger.kernel.org>; Thu, 09 Apr 2009 11:42:51 -0700 (PDT)
+In-Reply-To: <49DE3AB2.5030503@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Courtney-Bakke, Julia (ISS H/W EPR)" <julia.courtney-bakke@hp.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: lrhorer@satx.rr.com, linux-ide@vger.kernel.org
 
-Hello,
+On Thu, Apr 9, 2009 at 2:13 PM, Tejun Heo <tj@kernel.org> wrote:
+> Lelsie Rhorer wrote:
+> ...
+>> The issue is the entire array will occasionally pause completely for=
+ about
+>> 40 seconds when a file is created. =A0This does not always happen, b=
+ut the
+>> situation is easily reproducible.
+>
+> Does the kernel whine about anything when this happens?
 
-Courtney-Bakke, Julia (ISS H/W EPR) wrote:
-> I see the following messages continuously appear on the 7828H4 server console. This server is running with Guild TT 11 - Build 10 and performing the CUCMBE load test. 
-> 
-> Feb 10 16:45:59 cores1 kern 4 kernel: ata3.00: qc timeout (cmd 0xa0)
-> Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: (BMDMA stat 0x25)
-> Feb 10 16:45:59 cores1 kern 3 kernel: ata3.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x25 data 8 in
-> Feb 10 16:45:59 cores1 kern 4 kernel:          res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
-> Feb 10 16:46:06 cores1 kern 4 kernel: ata3: port is slow to respond, please be patient (Status 0xd0)
-> Feb 10 16:46:29 cores1 kern 3 kernel: ata3: port failed to respond (30 secs, Status 0xd0)
-> Feb 10 16:46:29 cores1 kern 6 kernel: ata3: soft resetting port
-> Feb 10 16:46:29 cores1 kern 6 kernel: ata3.00: configured for UDMA/33
-> Feb 10 16:46:29 cores1 kern 6 kernel: ata3: EH complete
-> These messages are recorded at /var/log/active/syslog/messages. Is this a known issue ?
+Tejun,
 
-Which kernel version is it?  I don't think it's a recent one.  The
-atapi dma filter wouldn't let data 8 in command to use DMA.  Can you
-please give a shot at 2.6.29 and see whether it makes any difference?
+There is a long thread on linux-raid about this issue:
 
-> Do you know whether increasing ata_probe_timeout actually helped the problem?
-> I edited /sys/module/libata/ata_probe_timeout and changed its value 
-> from 30000 to 100000  -qc timeouts still occur. Did I implement the workaround correctly?
+http://markmail.org/message/a32fsnsaa5mmpthw
 
-ata_probe_timeout probably won't work around anything.
+Per the thread, Leslie is not seeing anything in the logs.
 
-Thanks.
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+=46irst 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
+df
 
--- 
-tejun
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
