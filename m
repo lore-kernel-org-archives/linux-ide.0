@@ -1,52 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PROPOSED] ata: Report 16/32bit PIO as best we can
-Date: Thu, 09 Apr 2009 09:33:20 -0400
-Message-ID: <49DDF920.70801@garzik.org>
-References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk>	<49DDEF02.7090004@garzik.org>	<20090409135323.5b2bed4b@lxorguk.ukuu.org.uk>	<49DDF33E.6000102@garzik.org> <20090409141254.283d9f11@lxorguk.ukuu.org.uk>
+Date: Thu, 9 Apr 2009 14:41:10 +0100
+Message-ID: <20090409144110.34654dd9@lxorguk.ukuu.org.uk>
+References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk>
+	<49DDEF02.7090004@garzik.org>
+	<20090409135323.5b2bed4b@lxorguk.ukuu.org.uk>
+	<49DDF33E.6000102@garzik.org>
+	<20090409141254.283d9f11@lxorguk.ukuu.org.uk>
+	<49DDF920.70801@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55254 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759139AbZDINdX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Apr 2009 09:33:23 -0400
-In-Reply-To: <20090409141254.283d9f11@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44987 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752072AbZDINlC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Apr 2009 09:41:02 -0400
+In-Reply-To: <49DDF920.70801@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> With the attached patch, you can use ->flags for the two new flags, and 
->> you can set those bits in the driver where you set the other 
->> ATA_FLAG_xxx bits.
+> > What are the locking sematics for ap->flags ?
 > 
-> Its half way but I realised there is another reason that doesn't work
-> (and indeed why the device private flags are asking for trouble)
+> In general, for both driver-private flags and ATA_FLAG_xxx, the flags 
+> should be set at compile or pci_driver::probe() time, and never touched 
+> after that.
+
+Ok we should document that.
+
 > 
-> What are the locking sematics for ap->flags ?
+> So your patch is a bit of abuse, really, by fiddling with ap->flags at 
+> all ;-)  The drivers, for example, never touch the driver-private flags 
+> after they are set at init.  The core will occasionally twiddle flags, 
+> inside of spin_lock_irqsave(ap->lock)
 
-In general, for both driver-private flags and ATA_FLAG_xxx, the flags 
-should be set at compile or pci_driver::probe() time, and never touched 
-after that.
+Which is the lock I am using
 
-So your patch is a bit of abuse, really, by fiddling with ap->flags at 
-all ;-)  The drivers, for example, never touch the driver-private flags 
-after they are set at init.  The core will occasionally twiddle flags, 
-inside of spin_lock_irqsave(ap->lock)
+> Thus 'set' has always been an illusion for libata.  It's really been 
+> read-only.
 
-Since they are legacy ioctls, I think that reflecting current reality 
-should be sufficient.  That is what the current set does:
-
-	* GET: return "16 bit"
-	* SET: if "16 bit" return success else fail
-
-Thus 'set' has always been an illusion for libata.  It's really been 
-read-only.
-
-	Jeff
-
-
-
-
+Which nicely solves the flags2 problem - we have flags, and we have
+dynamic flags and if we move the other changing flags into dynflags over
+time all will be happy.
