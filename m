@@ -1,75 +1,45 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] hpt366: use ATA_DMA_* constants
-Date: Thu, 9 Apr 2009 16:38:50 +0400
-Message-ID: <200904091638.50949.sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PROPOSED] ata: Report 16/32bit PIO as best we can
+Date: Thu, 09 Apr 2009 08:50:10 -0400
+Message-ID: <49DDEF02.7090004@garzik.org>
+References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:15789 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932739AbZDIMiJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Apr 2009 08:38:09 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:36397 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760909AbZDIMuO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Apr 2009 08:50:14 -0400
+In-Reply-To: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
-Use ATA_DMA_* constants instead of the bare numbers for the BMIDE register bits.
+Alan Cox wrote:
+> Something like this then ?
+> 
+> 
+> The legacy old IDE API for this is a bit primitive so we try and map stuff
+> sensibly onto it.
+> 
+> - Add flags2 as we ran out of flags
+> - Set PIO over DMA devices to report 32bit
+> - Add ability to change the PIO32 settings if the controller permits it
+> - Add that functionality into the sff drivers
+> - Add that functionality into the VLB legacy driver
+> - Turn on the 32bit PIO on the ninja32 and add support there
+> 
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+I think the flag2 stuff needs a closer look WRT driver setup, but 
+overall looks good.
 
----
-This patch is atop the recent pata-2.6 series...
+Consider it ACK'd, if I cannot come up with anything better for flags2 :)
 
- drivers/ide/hpt366.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+	Jeff
 
-Index: linux-2.6/drivers/ide/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/hpt366.c
-+++ linux-2.6/drivers/ide/hpt366.c
-@@ -3,7 +3,7 @@
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-  * Portions Copyright (C) 2003		Red Hat Inc
-  * Portions Copyright (C) 2007		Bartlomiej Zolnierkiewicz
-- * Portions Copyright (C) 2005-2008	MontaVista Software, Inc.
-+ * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
-  *
-  * Thanks to HighPoint Technologies for their assistance, and hardware.
-  * Special Thanks to Jon Burchmore in SanDiego for the deep pockets, his
-@@ -810,7 +810,7 @@ static void hpt370_irq_timeout(ide_drive
- 	/* get DMA command mode */
- 	dma_cmd = inb(hwif->dma_base + ATA_DMA_CMD);
- 	/* stop DMA */
--	outb(dma_cmd & ~0x1, hwif->dma_base + ATA_DMA_CMD);
-+	outb(dma_cmd & ~ATA_DMA_START, hwif->dma_base + ATA_DMA_CMD);
- 	hpt370_clear_engine(drive);
- }
- 
-@@ -827,11 +827,11 @@ static int hpt370_dma_end(ide_drive_t *d
- 	ide_hwif_t *hwif	= drive->hwif;
- 	u8  dma_stat		= inb(hwif->dma_base + ATA_DMA_STATUS);
- 
--	if (dma_stat & 0x01) {
-+	if (dma_stat & ATA_DMA_ACTIVE) {
- 		/* wait a little */
- 		udelay(20);
- 		dma_stat = inb(hwif->dma_base + ATA_DMA_STATUS);
--		if (dma_stat & 0x01)
-+		if (dma_stat & ATA_DMA_ACTIVE)
- 			hpt370_irq_timeout(drive);
- 	}
- 	return ide_dma_end(drive);
-@@ -853,7 +853,7 @@ static int hpt374_dma_test_irq(ide_drive
- 
- 	dma_stat = inb(hwif->dma_base + ATA_DMA_STATUS);
- 	/* return 1 if INTR asserted */
--	if (dma_stat & 4)
-+	if (dma_stat & ATA_DMA_INTR)
- 		return 1;
- 
- 	return 0;
+
+
 
