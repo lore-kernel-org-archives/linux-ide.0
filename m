@@ -1,54 +1,54 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: Odd RAID failure
-Date: Thu, 9 Apr 2009 14:42:32 -0400
-Message-ID: <87f94c370904091142m79c60d7cy2e377c40b2f7f0c1@mail.gmail.com>
-References: <20090404173205.GIRT22375.cdptpa-omta01.mail.rr.com@Leslie>
-	 <49DE3AB2.5030503@kernel.org>
+Date: Thu, 09 Apr 2009 13:05:11 -0700
+Message-ID: <49DE54F7.1070408@kernel.org>
+References: <20090404173205.GIRT22375.cdptpa-omta01.mail.rr.com@Leslie>	 <49DE3AB2.5030503@kernel.org> <87f94c370904091142m79c60d7cy2e377c40b2f7f0c1@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:5346 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757203AbZDISmw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Apr 2009 14:42:52 -0400
-Received: by an-out-0708.google.com with SMTP id d14so679992and.1
-        for <linux-ide@vger.kernel.org>; Thu, 09 Apr 2009 11:42:51 -0700 (PDT)
-In-Reply-To: <49DE3AB2.5030503@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:35729 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759901AbZDIUEm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Apr 2009 16:04:42 -0400
+In-Reply-To: <87f94c370904091142m79c60d7cy2e377c40b2f7f0c1@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
 Cc: lrhorer@satx.rr.com, linux-ide@vger.kernel.org
 
-On Thu, Apr 9, 2009 at 2:13 PM, Tejun Heo <tj@kernel.org> wrote:
-> Lelsie Rhorer wrote:
-> ...
->> The issue is the entire array will occasionally pause completely for=
- about
->> 40 seconds when a file is created. =A0This does not always happen, b=
-ut the
->> situation is easily reproducible.
->
-> Does the kernel whine about anything when this happens?
+Hello,
 
-Tejun,
+Greg Freemyer wrote:
+> On Thu, Apr 9, 2009 at 2:13 PM, Tejun Heo <tj@kernel.org> wrote:
+>> Lelsie Rhorer wrote:
+>> ...
+>>> The issue is the entire array will occasionally pause completely for about
+>>> 40 seconds when a file is created.  This does not always happen, but the
+>>> situation is easily reproducible.
+>> Does the kernel whine about anything when this happens?
+> 
+> Tejun,
+> 
+> There is a long thread on linux-raid about this issue:
+> 
+> http://markmail.org/message/a32fsnsaa5mmpthw
+> 
+> Per the thread, Leslie is not seeing anything in the logs.
 
-There is a long thread on linux-raid about this issue:
+That was a long thread.  Heh... yeah, at the first look, it looks like
+more of VM / FS interaction problem than low level driver problem.
+Using blktrace/blkparse to track IO insertion, issue and completion
+latencies would help to whether the problem is above the block layer
+or below it.
 
-http://markmail.org/message/a32fsnsaa5mmpthw
+If you can bear with slower operation, keeping issuing sync repeatedly
+(ie. something like while true; do sync; sleep 1; done) and see how
+the behavior changes might shed some light on what's going on too.
+Also, disabling journal and seeing how the behavior changes could be
+revealing too.
 
-Per the thread, Leslie is not seeing anything in the logs.
+Thanks.
 
-Greg
---=20
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-=46irst 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
-df
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+-- 
+tejun
