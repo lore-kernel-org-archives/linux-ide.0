@@ -1,26 +1,50 @@
-From: Hans Holmberg <hasse@gotshifted.com>
-Subject: sata_sil & pmp ?
-Date: Fri, 10 Apr 2009 12:37:33 +0200
-Message-ID: <49DF216D.6080208@gotshifted.com>
-Reply-To: hasse@gotshifted.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Fri, 10 Apr 2009 12:48:31 GMT
+Message-ID: <200904101248.n3ACmVkA020649@demeter.kernel.org>
+References: <bug-12874-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from proxy3.bredband.net ([195.54.101.73]:43507 "EHLO
-	proxy3.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495AbZDJKhe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Apr 2009 06:37:34 -0400
-Received: from ironport2.bredband.com (195.54.101.122) by proxy3.bredband.net (7.3.139)
-        id 49DA1642001A6785 for linux-ide@vger.kernel.org; Fri, 10 Apr 2009 12:37:31 +0200
+Received: from demeter.kernel.org ([140.211.167.39]:33303 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936713AbZDJMsc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Apr 2009 08:48:32 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3ACmVpZ020650
+	for <linux-ide@vger.kernel.org>; Fri, 10 Apr 2009 12:48:31 GMT
+In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-I wonder if there is any plans to add pmp support to the sata_sil module ?
+http://bugzilla.kernel.org/show_bug.cgi?id=12874
 
-I know there's an ugly patch that kind of works, but it seems nothing 
-has happened since it was posted.
 
-/HH
+Sergei Shtylyov <sshtylyov@ru.mvista.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sshtylyov@ru.mvista.com
+
+
+
+
+--- Comment #24 from Sergei Shtylyov <sshtylyov@ru.mvista.com>  2009-04-10 12:48:29 ---
+(In reply to comment #20)
+> Hmm, seems like the buffer is quite botched or the drive replies with some mode
+> parameter headers I cannot correlate.
+
+If you mean this line:
+
+[   42.272638] caps:  70 0 6 0 0 0 0 a 0 0 0 0 29 0 0 0 0 0 0 0 0 0 0 0
+
+
+this is the extended sense data with its characteristic 1st byte of 0x70,
+8-byte header with sense key UNIT ATTENTION, 10 bytes of additinal length and
+ASC of 0x29 meaning "reset hs occured".
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
