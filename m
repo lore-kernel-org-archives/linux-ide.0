@@ -1,35 +1,41 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Odd RAID failure
-Date: Thu, 9 Apr 2009 23:43:23 -0500
-Message-ID: <20090410044328.TFNN5844.cdptpa-omta02.mail.rr.com@Leslie>
-References: <20090410022606.RHQT2520.cdptpa-omta04.mail.rr.com@Leslie>
-Reply-To: <lrhorer@satx.rr.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Fri, 10 Apr 2009 10:06:05 GMT
+Message-ID: <200904101006.n3AA659A004166@demeter.kernel.org>
+References: <bug-12874-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.123]:35220 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752582AbZDJEn3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Apr 2009 00:43:29 -0400
-Received: from Leslie ([68.203.168.150]) by cdptpa-omta02.mail.rr.com
-          with ESMTP
-          id <20090410044328.TFNN5844.cdptpa-omta02.mail.rr.com@Leslie>
-          for <linux-ide@vger.kernel.org>; Fri, 10 Apr 2009 04:43:28 +0000
-In-Reply-To: <20090410022606.RHQT2520.cdptpa-omta04.mail.rr.com@Leslie>
+Received: from demeter.kernel.org ([140.211.167.39]:43125 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685AbZDJKGG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Apr 2009 06:06:06 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3AA65Ag004167
+	for <linux-ide@vger.kernel.org>; Fri, 10 Apr 2009 10:06:05 GMT
+In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-> > If you can bear with slower operation, keeping issuing sync repeatedly
-> > (ie. something like while true; do sync; sleep 1; done) and see how
-> > the behavior changes might shed some light on what's going on too.
-> 
-> I wouldn't expect it to have any diagnostic value, really.  The sync
-> command
-> locks up just like every other disk I/O when the event occurs.
+http://bugzilla.kernel.org/show_bug.cgi?id=12874
 
-I tried this and it doesn't seem to have made a difference.  Neither does
-using noop as the scheduler.
 
+
+
+
+--- Comment #20 from Borislav Petkov <bbpetkov@yahoo.de>  2009-04-10 10:06:04 ---
+Hmm, seems like the buffer is quite botched or the drive replies with some mode
+parameter headers I cannot correlate. Ok, let's now enable full debugging -
+please apply the following patch ontop of the other two you have already
+applied on your tree. This time you should expect more output so you should add
+'log_buf_len=10M ignore_loglevel' to the kernel command line to make sure you
+catch it all. And as always, please send me the whole output.
+
+Thanks,
+Boris.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
