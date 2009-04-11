@@ -1,40 +1,38 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: sata_sil & pmp ?
-Date: Sat, 11 Apr 2009 12:10:33 -0600
-Message-ID: <49E0DD19.2080603@gmail.com>
-References: <49DF216D.6080208@gotshifted.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Implementing NVMHCI...
+Date: Sat, 11 Apr 2009 20:32:46 +0100
+Message-ID: <20090411203246.513a0892@lxorguk.ukuu.org.uk>
+References: <49E0D47B.9070205@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:26549 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757731AbZDKSKi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Apr 2009 14:10:38 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1593778ywb.1
-        for <linux-ide@vger.kernel.org>; Sat, 11 Apr 2009 11:10:37 -0700 (PDT)
-In-Reply-To: <49DF216D.6080208@gotshifted.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39322 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753930AbZDKTdn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Apr 2009 15:33:43 -0400
+In-Reply-To: <49E0D47B.9070205@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hasse@gotshifted.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Hans Holmberg wrote:
-> I wonder if there is any plans to add pmp support to the sata_sil module ?
-> 
-> I know there's an ugly patch that kind of works, but it seems nothing 
-> has happened since it was posted.
+> 	  The spec describes the sector size as
+> 	  "512, 1k, 2k, 4k, 8k, etc."   It will be interesting to reach
+> 	  "etc" territory.
 
-It looks like the controller does have some support for at least setting 
-the PMP field in the transmitted FIS. I'm not sure if it includes 
-everything that's needed for full PMP support though. I saw that there 
-was some talk of a patch to add this, but I'm not sure how fully working 
-it was.
+Over 4K will be fun.
 
-The Silicon Image 311x controllers are kind of funny beasts. Technically 
-since they support transparent FIS reception and interlock for all FIS 
-types, you could implement just about any SATA feature such as NCQ, 
-ATAPI AN, etc. by overriding the handling of the required FISes. NCQ 
-might be kind of expensive though, as you'd likely have to take a whole 
-lot of extra interrupts for FISes to examine to get that to work, you'd 
-basically be doing most of the SATA state machine in software..
+> - ahci.c becomes a tiny stub with a pci_device_id match table,
+>    calling functions in libahci.c.
+
+It needs to a be a little bit bigger because of the folks wanting to do
+non PCI AHCI, so you need a little bit of PCI wrapping etc
+
+>    With a brand new command set, might as well avoid SCSI completely IMO,
+>    and create a brand new block device.
+
+Providing we allow for the (inevitable ;)) joys of NVHCI over SAS etc 8)
+
+
+Alan
