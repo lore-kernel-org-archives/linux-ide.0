@@ -1,27 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/3] libahci and friends
-Date: Sun, 12 Apr 2009 13:43:59 -0400
-Message-ID: <49E2285F.2070908@garzik.org>
-References: <20090412172453.GA5763@havoc.gtf.org> <49E226C8.2000308@garzik.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Implementing NVMHCI...
+Date: Sun, 12 Apr 2009 12:35:49 -0600
+Message-ID: <49E23485.4020904@gmail.com>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <alpine.LFD.2.00.0904120820410.4583@localhost.localdomain> <49E21E8A.2040005@gmail.com> <alpine.LFD.2.00.0904121012500.4583@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43126 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751904AbZDLRoD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Apr 2009 13:44:03 -0400
-In-Reply-To: <49E226C8.2000308@garzik.org>
+Received: from yx-out-2324.google.com ([74.125.44.29]:29669 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbZDLSfz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Apr 2009 14:35:55 -0400
+In-Reply-To: <alpine.LFD.2.00.0904121012500.4583@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Cc: Sagar Borikar <sagar.borikar@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Szabolcs Szakacsits <szaka@ntfs-3g.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-Jeff Garzik wrote:
+Linus Torvalds wrote:
+> IOW, when you allocate a new 32kB cluster, you will have to allocate 8 
+> pages to do IO on it (since you'll have to initialize the diskspace), but 
+> you can still literally treat those pages as _individual_ pages, and you 
+> can write them out in any order, and you can free them (and then look them 
+> up) one at a time.
 > 
-> This patchset creates libahci, as mentioned in the recent NVMHCI thread:
-> http://marc.info/?l=linux-kernel&m=123947130114037&w=2
+> Notice? The cluster size really only ends up being a disk-space allocation 
+> issue, not an issue for actually caching the end result or for the actual 
+> size of the IO.
 
-This is stored on the 'libahci' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+Right.. I didn't realize we were actually that smart (not writing out 
+the entire cluster when dirtying one page) but I guess it makes sense.
 
+> 
+> The hardware sector size is very different. If you have a 32kB hardware 
+> sector size, that implies that _all_ IO has to be done with that 
+> granularity. Now you can no longer treat the eight pages as individual 
+> pages - you _have_ to write them out and read them in as one entity. If 
+> you dirty one page, you effectively dirty them all. You can not drop and 
+> re-allocate pages one at a time any more.
+> 
+> 				Linus
+
+I suspect that in this case trying to gang together multiple pages 
+inside the VM to actually handle it this way all the way through would 
+be insanity. My guess is the only way you could sanely do it is the 
+read-modify-write approach when writing out the data (in the block layer 
+maybe?) where the read can be optimized away if the pages for the entire 
+hardware sector are already in cache or the write is large enough to 
+replace the entire sector. I assume we already do this in the md code 
+somewhere for cases like software RAID 5 with a stripe size of >4KB..
+
+That obviously would have some performance drawbacks compared to a 
+smaller sector size, but if the device is bound and determined to use 
+bigger sectors internally one way or the other and the alternative is 
+the drive does R-M-W internally to emulate smaller sectors - which for 
+some devices seems to be the case - maybe it makes more sense to do it 
+in the kernel if we have more information to allow us to do it more 
+efficiently. (Though, at least on the normal ATA disk side of things, 4K 
+is the biggest number I've heard tossed about for a future expanded 
+sector size, but flash devices like this may be another story..)
