@@ -1,44 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Implementing NVMHCI...
-Date: Sun, 12 Apr 2009 13:29:52 -0400
-Message-ID: <49E22510.90608@garzik.org>
-References: <49E0D47B.9070205@garzik.org>	<20090411203246.513a0892@lxorguk.ukuu.org.uk>	<alpine.LFD.2.00.0904111250370.4583@localhost.localdomain>	<da824cf30904111449y5cb7c178ldf5291506ad6b393@mail.gmail.com> <20090412002527.631a5a89@lxorguk.ukuu.org.uk> <49E1F967.9090106@rtr.ca>
+Subject: [PATCH 0/3] libahci and friends
+Date: Sun, 12 Apr 2009 13:37:12 -0400
+Message-ID: <49E226C8.2000308@garzik.org>
+References: <20090412172453.GA5763@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48049 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:51435 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753503AbZDLRan (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Apr 2009 13:30:43 -0400
-In-Reply-To: <49E1F967.9090106@rtr.ca>
+	id S1751206AbZDLRhQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Apr 2009 13:37:16 -0400
+In-Reply-To: <20090412172453.GA5763@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Sagar Borikar <sagar.borikar@gmail.com>
 
-Mark Lord wrote:
-> Alan Cox wrote:
-> ..
->> Alternatively you go for read-modify-write (nasty performance hit
->> especially for RAID or a log structured fs).
-> ..
-> 
-> Initially, at least, I'd guess that this NVM-HCI thing is all about
-> built-in flash memory on motherboards, to hold the "instant-boot"
-> software that hardware companies (eg. ASUS) are rapidly growing fond of.
-> 
-> At present, that means a mostly read-only Linux installation,
-> though MS for sure are hoping for Moore's Law to kick in and
-> provide sufficient space for a copy of Vista there or something.
 
-Yeah... instant boot, and "trusted boot" (booting a signed image), 
-storage of useful details like boot drive layouts, etc.
+This patchset creates libahci, as mentioned in the recent NVMHCI thread:
+http://marc.info/?l=linux-kernel&m=123947130114037&w=2
 
-I'm sure we can come up with other funs uses, too...
+Although these changes help set the groundwork for NVMHCI support, they 
+are also more immediately useful in three cases:
+
+- Marvell PATA support.  Marvell 6101, 6121, 6145 (and others?) added a 
+PATA support to an existing AHCI SATA design.  The controller supports 
+both PATA and SATA.  SATA is compatible with AHCI.  PATA uses new DMA 
+data structures and reset methods.
+
+- ACard support.  ATP 8620 is a 99% AHCI clone, that primarily differs 
+in its DMA data structures.
+
+- non-PCI support.  Sagar Borikar posted some preliminary work, getting 
+AHCI going on a non-PCI bus.  My libahci work should hopefully assist 
+Sagar.  http://marc.info/?l=linux-ide&m=123807608819226&w=2
+
+Regards,
 
 	Jeff
-
 
 
 
