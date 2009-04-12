@@ -1,47 +1,57 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv: increate the IORDY timeout for the soc controllers
-Date: Sun, 12 Apr 2009 10:37:48 -0400
-Message-ID: <49E1FCBC.5010101@rtr.ca>
-References: <20090411160815.GA10995@deprecation.cyrius.com>
+Subject: Re: [PATCH] libata-core More robust parsing for multi_count(v5)
+Date: Sun, 12 Apr 2009 11:10:45 -0400
+Message-ID: <49E20475.1080409@rtr.ca>
+References: <49C1047D.4000008@rtr.ca> <49C11A0C.3070502@rtr.ca> <49C11ED4.2030307@rtr.ca> <49C19087.5000307@gmail.com> <49C190F1.7010202@kernel.org> <49C28133.8050401@rtr.ca> <49C281A5.5080404@rtr.ca> <49C2D642.90706@kernel.org> <49C39690.6090802@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:43805 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:55570 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751662AbZDLOhu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Apr 2009 10:37:50 -0400
-In-Reply-To: <20090411160815.GA10995@deprecation.cyrius.com>
+	id S1754124AbZDLPKr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Apr 2009 11:10:47 -0400
+In-Reply-To: <49C39690.6090802@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Martin Michlmayr wrote:
-> From: Saeed Bishara <saeed@marvell.com>
+Mark Lord wrote:
+> Tejun,
 > 
-> The old value (in clock cycles) is not suitable for soc devices that
-> have internal clock more that 150MHz.
+> I need a way to limit the multi_count to a specific maximum
+> value for sata_mv.  ISTR that some PATA chips may also have
+> an upper hardware limit on multi_count.
 > 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
-> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+> Generally, "8" is safe for all chipsets.  Going above that
+> requires knowledge of what the chipset can tolerate.
 > 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 5315b5f..f19f2e3 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -3330,7 +3330,7 @@ static void mv_soc_reset_hc_port(struct mv_host_priv *hpriv,
->  	ZERO(0x024);		/* respq outp */
->  	ZERO(0x020);		/* respq inp */
->  	ZERO(0x02c);		/* test control */
-> -	writel(0xbc, port_mmio + EDMA_IORDY_TMOUT);
-> +	writel(0x800, port_mmio + EDMA_IORDY_TMOUT);
->  }
->  
->  #undef ZERO
+> How about a u8 multi_count_max field in the ata_host struct?
+> Use 0xff for "multi_count not allowed", and anything else
+> in there as an upper limit for the chipset.
+..
+Alan Cox wrote:
+>
+> If its only one driver why not do it the way we do things like transfer
+> length limits for LBA48 (see pata_it821x and others)
 ..
 
-I want to see somebody actually test/verify that
-this works with PIO/MWDMA2 devices (eg. CF cards) first.
+Okay, I've looked at pata_it821x.c now, and I just don't see it.
+That particular driver seems to limit *all* transfers to 256 max,
+not just those of a particular protocol, like mult-sect I/O.
 
-Test results?
+Am I missing something there?
+
+The limit for sata_mv chipsets seems to actually be 7-sectors or less
+for read/write multiple.  Which means a max of 4 in practice.
+
+Similarly, we should also be preventing *any* PIO of more than one DRQ
+for sata_mv.  But I don't see a sensible way to do that either.
+
+In practice, that part does seem to work fine with the PIO polling
+that sata_mv uses.
+
+But what to do about the read/write multiple issue ?
+
+???
