@@ -1,65 +1,51 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: david@lang.hm
 Subject: Re: Implementing NVMHCI...
-Date: Sat, 11 Apr 2009 17:49:41 -0700 (PDT)
-Message-ID: <alpine.LFD.2.00.0904111725570.4583@localhost.localdomain>
+Date: Sat, 11 Apr 2009 18:15:36 -0700 (PDT)
+Message-ID: <alpine.DEB.1.10.0904111810360.28893@asgard.lang.hm>
 References: <49E0D47B.9070205@garzik.org> <20090411203246.513a0892@lxorguk.ukuu.org.uk> <alpine.LFD.2.00.0904111250370.4583@localhost.localdomain> <da824cf30904111449y5cb7c178ldf5291506ad6b393@mail.gmail.com> <20090412002527.631a5a89@lxorguk.ukuu.org.uk>
- <49E12D03.5070906@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51856 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752784AbZDLAzX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Apr 2009 20:55:23 -0400
-In-Reply-To: <49E12D03.5070906@garzik.org>
+Received: from mail.lang.hm ([64.81.33.126]:47183 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751987AbZDLBRx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 11 Apr 2009 21:17:53 -0400
+In-Reply-To: <20090412002527.631a5a89@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Grant Grundler <grundler@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
+On Sun, 12 Apr 2009, Alan Cox wrote:
 
+>> We've abstract the DMA mapping/SG list handling enough that the
+>> block size should make no more difference than it does for the
+>> MTU size of a network.
+>
+> You need to start managing groups of pages in the vm and keeping them
+> together and writing them out together and paging them together even if
+> one of them is dirty and the other isn't. You have to deal with cases
+> where a process forks and the two pages are dirtied one in each but still
+> have to be written together.
 
-On Sat, 11 Apr 2009, Jeff Garzik wrote:
-> 
-> Or just ignore the extra length, thereby excising the 'read-modify' step...
-> Total storage is halved or worse, but you don't take as much of a performance
-> hit.
+gaining this sort of ability would not be a bad thing. with current 
+hardware (SSDs and raid arrays) you can very easily be in a situation 
+where it's much cheaper to deal with a group of related pages as one group 
+rather than processing them individually. this is just an extention of the 
+same issue.
 
-Well, the people who want > 4kB sectors usually want _much_ bigger (ie 
-32kB sectors), and if you end up doing the "just use the first part" 
-thing, you're wasting 7/8ths of the space. 
+David Lang
 
-Yes, it's doable, and yes, it obviously makes for a simple driver thing, 
-but no, I don't think people will consider it acceptable to lose that much 
-of their effective size of the disk.
-
-I suspect people would scream even with a 8kB sector.
-
-Treating all writes as read-modify-write cycles on a driver level (and 
-then opportunistically avoiding the read part when you are lucky and see 
-bigger contiguous writes) is likely more acceptable. But it _will_ suck 
-dick from a performance angle, because no regular filesystem will care 
-enough, so even with nicely behaved big writes, the two end-points will 
-have a fairly high chance of requiring a rmw cycle.
-
-Even the journaling ones that might have nice logging write behavior tend 
-to have a non-logging part that then will behave badly. Rather few 
-filesystems are _purely_ log-based, and the ones that are tend to have 
-various limitations. Most commonly read performance just sucks.
-
-We just merged nilfs2, and I _think_ that one is a pure logging filesystem 
-with just linear writes (within a segment). But I think random read 
-performance (think: loading executables off the disk) is bad.
-
-And people tend to really dislike hardware that forces a particular 
-filesystem on them. Guess how big the user base is going to be if you 
-cannot format the device as NTFS, for example? Hint: if a piece of 
-hardware only works well with special filesystems, that piece of hardware 
-won't be a big seller. 
-
-Modern technology needs big volume to become cheap and relevant.
-
-And maybe I'm wrong, and NTFS works fine as-is with sectors >4kB. But let 
-me doubt that.
-
-			Linus
+> Alternatively you go for read-modify-write (nasty performance hit
+> especially for RAID or a log structured fs).
+>
+> Yes you can do it but it sure won't be pretty with a conventional fs.
+> Some of the log structured file systems have no problems with this and
+> some kinds of journalling can help but for a typical block file system
+> it'll suck.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
