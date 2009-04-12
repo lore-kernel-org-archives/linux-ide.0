@@ -1,49 +1,47 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: Implementing NVMHCI...
-Date: Sun, 12 Apr 2009 10:23:35 -0400
-Message-ID: <49E1F967.9090106@rtr.ca>
-References: <49E0D47B.9070205@garzik.org>	<20090411203246.513a0892@lxorguk.ukuu.org.uk>	<alpine.LFD.2.00.0904111250370.4583@localhost.localdomain>	<da824cf30904111449y5cb7c178ldf5291506ad6b393@mail.gmail.com> <20090412002527.631a5a89@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] sata_mv: increate the IORDY timeout for the soc controllers
+Date: Sun, 12 Apr 2009 10:37:48 -0400
+Message-ID: <49E1FCBC.5010101@rtr.ca>
+References: <20090411160815.GA10995@deprecation.cyrius.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37903 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:43805 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752372AbZDLOXi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Apr 2009 10:23:38 -0400
-In-Reply-To: <20090412002527.631a5a89@lxorguk.ukuu.org.uk>
+	id S1751662AbZDLOhu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Apr 2009 10:37:50 -0400
+In-Reply-To: <20090411160815.GA10995@deprecation.cyrius.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Grant Grundler <grundler@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+Martin Michlmayr wrote:
+> From: Saeed Bishara <saeed@marvell.com>
+> 
+> The old value (in clock cycles) is not suitable for soc devices that
+> have internal clock more that 150MHz.
+> 
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 5315b5f..f19f2e3 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -3330,7 +3330,7 @@ static void mv_soc_reset_hc_port(struct mv_host_priv *hpriv,
+>  	ZERO(0x024);		/* respq outp */
+>  	ZERO(0x020);		/* respq inp */
+>  	ZERO(0x02c);		/* test control */
+> -	writel(0xbc, port_mmio + EDMA_IORDY_TMOUT);
+> +	writel(0x800, port_mmio + EDMA_IORDY_TMOUT);
+>  }
+>  
+>  #undef ZERO
 ..
-> Alternatively you go for read-modify-write (nasty performance hit
-> especially for RAID or a log structured fs).
-..
 
-Initially, at least, I'd guess that this NVM-HCI thing is all about
-built-in flash memory on motherboards, to hold the "instant-boot"
-software that hardware companies (eg. ASUS) are rapidly growing fond of.
+I want to see somebody actually test/verify that
+this works with PIO/MWDMA2 devices (eg. CF cards) first.
 
-At present, that means a mostly read-only Linux installation,
-though MS for sure are hoping for Moore's Law to kick in and
-provide sufficient space for a copy of Vista there or something.
-
-The point being, it's probable *initial* intended use is for a
-run-time read-only filesystem, so having to do dirty R-M-W sequences
-for writes might not be a significant issue.
-
-At present.  And even if it were, it might not be much worse than
-having the hardware itself do it internally, which is what would 
-have to happen if it always only ever showed 4KB to us.
-
-Longer term, as flash densities increase, we're going to end up
-with motherboards that have huge SSDs built-in, through an interface
-like this one, or over a virtual SATA link or something.
-
-I wonder how long until "desktop/notebook" computers no longer
-have replaceable "hard disks" at all?
-
-Cheers
+Test results?
