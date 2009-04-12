@@ -1,49 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_sx4: refresh and convert to new EH
-Date: Sun, 12 Apr 2009 07:19:02 -0400
-Message-ID: <49E1CE26.9050401@garzik.org>
-References: <20090408200511.GA24071@havoc.gtf.org> <a4423d670904111946w2a8f3839n27b77f5473076563@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Implementing NVMHCI...
+Date: Sun, 12 Apr 2009 10:23:35 -0400
+Message-ID: <49E1F967.9090106@rtr.ca>
+References: <49E0D47B.9070205@garzik.org>	<20090411203246.513a0892@lxorguk.ukuu.org.uk>	<alpine.LFD.2.00.0904111250370.4583@localhost.localdomain>	<da824cf30904111449y5cb7c178ldf5291506ad6b393@mail.gmail.com> <20090412002527.631a5a89@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44991 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([76.10.145.34]:37903 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754655AbZDLLTF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Apr 2009 07:19:05 -0400
-In-Reply-To: <a4423d670904111946w2a8f3839n27b77f5473076563@mail.gmail.com>
+	id S1752372AbZDLOXi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Apr 2009 10:23:38 -0400
+In-Reply-To: <20090412002527.631a5a89@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Grant Grundler <grundler@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-Alexander Beregalov wrote:
-> 2009/4/9 Jeff Garzik <jeff@garzik.org>:
->> I reviewed and refreshed libata-dev.git#new-eh, now renamed to #sx4.
->>
->> Several bugs and missing pieces in the new-EH conversion were addressed
->> (often by copying highly similar code from sata_promise, a highly
->> similar chip)
->>
->> The only thing left is some "it still works" testing...  any takers?
->>
-> 
-> Hi Jeff
-> 
-> I have SX4000 card, it is based on the same PDC20621 chip, but has PATA ports
-> (without PATA-SATA bridges).
-> Can I help?
-> 
-> I am newbie here, but I will try to modify the driver to support PATA
-> card as well
-> and test your patch.
+Alan Cox wrote:
+..
+> Alternatively you go for read-modify-write (nasty performance hit
+> especially for RAID or a log structured fs).
+..
 
-It's unknown how well, or what is needed, to support the SX4000.  You 
-are welcome to dive in and figure out what is needed, but you'd be 
-asking questions to which we wouldn't have answers.
+Initially, at least, I'd guess that this NVM-HCI thing is all about
+built-in flash memory on motherboards, to hold the "instant-boot"
+software that hardware companies (eg. ASUS) are rapidly growing fond of.
 
-	Jeff
+At present, that means a mostly read-only Linux installation,
+though MS for sure are hoping for Moore's Law to kick in and
+provide sufficient space for a copy of Vista there or something.
 
+The point being, it's probable *initial* intended use is for a
+run-time read-only filesystem, so having to do dirty R-M-W sequences
+for writes might not be a significant issue.
 
+At present.  And even if it were, it might not be much worse than
+having the hardware itself do it internally, which is what would 
+have to happen if it always only ever showed 4KB to us.
 
+Longer term, as flash densities increase, we're going to end up
+with motherboards that have huge SSDs built-in, through an interface
+like this one, or over a virtual SATA link or something.
 
+I wonder how long until "desktop/notebook" computers no longer
+have replaceable "hard disks" at all?
+
+Cheers
