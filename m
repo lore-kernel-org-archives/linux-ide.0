@@ -1,41 +1,42 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv: increate the IORDY timeout for the soc 	controllers
-Date: Mon, 13 Apr 2009 08:49:35 -0400
-Message-ID: <49E334DF.4030703@rtr.ca>
-References: <20090411160815.GA10995@deprecation.cyrius.com>	 <49E1FCBC.5010101@rtr.ca> <c70ff3ad0904130013n319510c4w5ae071076717f2bd@mail.gmail.com>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: [PATCH] sata_mv: increate the IORDY timeout for the soc
+	controllers
+Date: Mon, 13 Apr 2009 16:11:01 +0300
+Message-ID: <c70ff3ad0904130611u56f43d24me413e27b7bbb3b3d@mail.gmail.com>
+References: <20090411160815.GA10995@deprecation.cyrius.com>
+	 <49E1FCBC.5010101@rtr.ca>
+	 <c70ff3ad0904130013n319510c4w5ae071076717f2bd@mail.gmail.com>
+	 <49E334DF.4030703@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33147 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751287AbZDMMtj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 08:49:39 -0400
-In-Reply-To: <c70ff3ad0904130013n319510c4w5ae071076717f2bd@mail.gmail.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:58605 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbZDMNLE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 09:11:04 -0400
+Received: by fxm2 with SMTP id 2so1983143fxm.37
+        for <linux-ide@vger.kernel.org>; Mon, 13 Apr 2009 06:11:01 -0700 (PDT)
+In-Reply-To: <49E334DF.4030703@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
+To: Mark Lord <liml@rtr.ca>
 Cc: Martin Michlmayr <tbm@cyrius.com>, Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
 
-saeed bishara wrote:
-> On Sun, Apr 12, 2009 at 5:37 PM, Mark Lord <liml@rtr.ca> wrote:
->> Martin Michlmayr wrote:
->>> From: Saeed Bishara <saeed@marvell.com>
-> 
->> I want to see somebody actually test/verify that
->> this works with PIO/MWDMA2 devices (eg. CF cards) first.
 >>
->> Test results?
-> PIO mode is always used, at least for the identify command. the patch
-> works and needed for the Kirkwood SoC which runs at 200KHz.
-..
+>> PIO mode is always used, at least for the identify command. the patch
+>> works and needed for the Kirkwood SoC which runs at 200KHz.
+>
+> ..
+>
+> Errr.. IDENTIFY is often a "special case" command,
+> and rarely, if ever, uses IORDY.
+I think you misunderstand the EDMA IORDY timer, The EDMA IORDY
+register defines the timeout when doing PIO data transfers and the
+data is not ready, for example, when doing PIO read, the CPU will
+access the data register to fetch the data from internal fifo, in case
+that fifo is emptied for too long time (the data stopped to come), the
+HW will release the CPU to prevent hanging the system.
 
-Errr.. IDENTIFY is often a "special case" command,
-and rarely, if ever, uses IORDY.
 
-How about some other result?
-
-The past couple of patches from you before these *broke* the driver,
-which is why I'd like to see this and future patches verified first.
-
-Thanks.
+saeed
