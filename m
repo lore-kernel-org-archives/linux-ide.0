@@ -1,79 +1,40 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc
-	cleanups
-Date: Mon, 13 Apr 2009 19:07:57 +0900
-Message-ID: <20090413190615C.fujita.tomonori@lab.ntt.co.jp>
-References: <49E2EFBE.5000709@garzik.org>
-	<20090413172143B.fujita.tomonori@lab.ntt.co.jp>
-	<49E2F84C.6080804@garzik.org>
+From: Avi Kivity <avi@redhat.com>
+Subject: Re: Implementing NVMHCI...
+Date: Mon, 13 Apr 2009 14:18:51 +0300
+Message-ID: <49E31F9B.3030602@redhat.com>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <alpine.LFD.2.00.0904120820410.4583@localhost.localdomain> <49E21E8A.2040005@gmail.com> <alpine.LFD.2.00.0904121012500.4583@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:59489 "EHLO sh.osrg.net"
+Received: from mx2.redhat.com ([66.187.237.31]:42012 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754259AbZDMKKG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 06:10:06 -0400
-In-Reply-To: <49E2F84C.6080804@garzik.org>
+	id S1753832AbZDMLT5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 07:19:57 -0400
+In-Reply-To: <alpine.LFD.2.00.0904121012500.4583@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, tj@kernel.org, petkovbb@gmail.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-On Mon, 13 Apr 2009 04:31:08 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+Linus Torvalds wrote:
+> The hardware sector size is very different. If you have a 32kB hardware 
+> sector size, that implies that _all_ IO has to be done with that 
+> granularity. Now you can no longer treat the eight pages as individual 
+> pages - you _have_ to write them out and read them in as one entity. If 
+> you dirty one page, you effectively dirty them all. You can not drop and 
+> re-allocate pages one at a time any more.
+>   
 
-> FUJITA Tomonori wrote:
-> > On Mon, 13 Apr 2009 03:54:38 -0400
-> > Jeff Garzik <jeff@garzik.org> wrote:
-> > 
-> >> FUJITA Tomonori wrote:
-> >>> On Tue, 31 Mar 2009 16:04:39 +0300
-> >>> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >>>
-> >>>>> I
-> >>>>> just don't think bvec should be used outside of block/fs interface.
-> >>>>> As I wrote before, non-FS users have no reason to worry about bio.
-> >>>>> All it should think about is the requst it needs to issue and the
-> >>>>> memory area it's gonna use as in/out buffers.  bio just doesn't have a
-> >>>>> place there.
-> >>>>>
-> >>>> I don't understand what happens to all the people that start to work on the block
-> >>>> layer, they start getting defensive about bio being private to the request
-> >>>> level. But the Genie is out of the bag already (I know cats and bottles).
-> >>>> bio is already heavily used above the block layer from directly inside filesystems
-> >>>> to all kind of raid engines, DM MD managers, multi paths, integrity information ...
-> >>>>
-> >>>> Because bio is exactly that Ideal page carrier you are talking about.
-> >>> Wrong. multi path doesn't use bio. md accesses to the bio internal
-> >>> (it's not nice) and has the own way to carry pages. dm has the own
-> >>> mechanism on the top of bio. And bio doesn't work nicely for file
-> >>> systems such as btrfs, which handle multiple devices.
-> >>>
-> >>> Please stop your wrong argument 'bio is the ideal page carrier'.
-> >> What is the multi-device problem with bio?
-> > 
-> > Well, if it works nicely, I guess that we don't have something like
-> > drivers/dm/{dm-bio-record.h, dm-bio-list.h}, btrfs_multi_bio struct,
-> > or md's own page carrier?
-> 
-> It was an honest question.  I am seeking information, not denying your 
-> argument.
-> 
-> What, specifically, is this multi-device problem with bio, please?
+You can still drop clean pages.  Sure, that costs you performance as 
+you'll have to do re-read them in order to write a dirty page, but in 
+the common case, the clean pages around would still be available and 
+you'd avoid it.
 
-dm-bio-record.h says:
+Applications that randomly write to large files can be tuned to use the 
+disk sector size.  As for the rest, they're either read-only (executable 
+mappings) or sequential.
 
-/*
- * There are lots of mutable fields in the bio struct that get
- * changed by the lower levels of the block layer.  Some targets,
- * such as multipath, may wish to resubmit a bio on error.  The
- * functions in this file help the target record and restore the
- * original bio state.
- */
+-- 
+error compiling committee.c: too many arguments to function
 
-
-I guess that dm-bio-list.h is a way to link multiple bios for multiple
-devices to a single structure but others use bio->bi_next for a
-different purpose (for example, building a large request in the block
-mapping API) so it's confusing.
