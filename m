@@ -1,67 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] libata: add CFA specific identify data words
-Date: Mon, 13 Apr 2009 20:58:39 +0400
-Message-ID: <49E36F3F.6080907@ru.mvista.com>
-References: <200903032029.29073.sshtylyov@ru.mvista.com> <49DC8EB3.4040404@ru.mvista.com> <49DCA588.7030403@pobox.com> <49E36CCE.6030304@ru.mvista.com> <49E36D97.4040606@pobox.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PROPOSED] ata: Report 16/32bit PIO as best we can
+Date: Mon, 13 Apr 2009 12:57:55 -0400
+Message-ID: <49E36F13.2010903@garzik.org>
+References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk>	<49DDF1EB.2060200@rtr.ca>	<20090409140857.578a9146@lxorguk.ukuu.org.uk>	<49E36939.2050402@garzik.org> <20090413173921.0880e16a@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:22656 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751200AbZDMQ5w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 12:57:52 -0400
-In-Reply-To: <49E36D97.4040606@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:35930 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751486AbZDMQ6A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:58:00 -0400
+In-Reply-To: <20090413173921.0880e16a@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, gwendal@google.com
 
-Jeff Garzik wrote:
+Alan Cox wrote:
+> On Mon, 13 Apr 2009 12:32:57 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
+> 
+>>> I'm not sure sysfs helps much anyway - you have to open the device file
+>>> and keep it open while accessing the sysfs nodes anyway (something huge
+>>> numbers of apps hopelessly fail to do so)  
+>> FWIW...  here is the sysfs work I referred to (in a message sent several 
+>> days ago in this thread)...
+>>
+>> http://lwn.net/Articles/294608/
+> 
+> Which indeed shows the same problems. There is nothing to stop changes in
+> the rest of the topology from causing me to write to the sysfs at the
+> wrong moment and reconfigure/misconfigure a different object to the one
+> intended.
 
->>>>> Declare and use constants for CFA specific identify data words 162 
->>>>> and 163.
+The horse has already left the barn, on that one...
 
->>>>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Google's ata transport class is consistent with existing transport class 
+work in the kernel.  It is also consistent with recent admonitions in 
+the osdblk thread, regarding the "one piece of data per sysfs file" rule.
 
->>>>    Jeff, have you forgotten about this one too?
+Personally I think a netlink-like approach to managing and controlling 
+SAS and ATA would be better, but that's not what gets merged...
 
->>>>> Index: linux-2.6/drivers/ata/libata-core.c
->>>>> ===================================================================
->>>>> --- linux-2.6.orig/drivers/ata/libata-core.c
->>>>> +++ linux-2.6/drivers/ata/libata-core.c
->>>>> @@ -1650,8 +1650,8 @@ unsigned long ata_id_xfermask(const 
->>>>> u16          /*
->>>>>           *    Process compact flash extended modes
->>>>>           */
->>>>> -        int pio = id[163] & 0x7;
->>>>> -        int dma = (id[163] >> 3) & 7;
->>>>> +        int pio = (id[ATA_ID_CFA_MODES] >> 0) & 0x7;
->>>>> +        int dma = (id[ATA_ID_CFA_MODES] >> 3) & 0x7;
->>>>>  
->>>>>          if (pio)
->>>>>              pio_mask |= (1 << 5);
->>>>> @@ -2408,7 +2408,8 @@ int ata_dev_configure(struct ata_device      
->>>>> /* ATA-specific feature tests */
->>>>>      if (dev->class == ATA_DEV_ATA) {
->>>>>          if (ata_id_is_cfa(id)) {
->>>>> -            if (id[162] & 1) /* CPRM may make this media unusable */
->>>>> +            /* CPRM may make this media unusable */
->>>>> +            if (id[ATA_ID_CFA_KEY_MGMT] & 1)
->>>>>                  ata_dev_printk(dev, KERN_WARNING,
->>>>>                             "supports DRM functions and may "
->>>>>                             "not be fully accessable.\n");
+	Jeff
 
->>> This you'll need to resend...
 
->>    I wonder why you're telling me this only now
 
-> Because you asked "have you forgotten about this one?" on April 8th.
-
-    I mean why didn't you tell me to resubmit when you split off the ata.h 
-part of the original patch? I was under impression that you would queue this 
-part too...
-
->     Jeff
-
-MBR, Sergei
