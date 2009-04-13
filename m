@@ -1,38 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH 02/02] sata_mv: workaround for multi_count errata sata24
-Date: Mon, 13 Apr 2009 16:40:34 +0100
-Message-ID: <20090413164034.20f1695a@lxorguk.ukuu.org.uk>
-References: <49E359D6.1090309@rtr.ca>
-	<49E35A5E.4020204@rtr.ca>
+Date: Mon, 13 Apr 2009 11:44:01 -0400
+Message-ID: <49E35DC1.2090007@rtr.ca>
+References: <49E359D6.1090309@rtr.ca>	<49E35A5E.4020204@rtr.ca> <20090413164034.20f1695a@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50920 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752603AbZDMPjc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 11:39:32 -0400
-In-Reply-To: <49E35A5E.4020204@rtr.ca>
+Received: from rtr.ca ([76.10.145.34]:39300 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751863AbZDMPoD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 11:44:03 -0400
+In-Reply-To: <20090413164034.20f1695a@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Mon, 13 Apr 2009 11:29:34 -0400
-Mark Lord <liml@rtr.ca> wrote:
-
-> Workaround for errata SATA#24 in sata_mv.
-> This errata affects WRITE_MULTI* commands when
-> the device multi_count produces a DRQ block size >= 4Kbytes.
+Alan Cox wrote:
+> On Mon, 13 Apr 2009 11:29:34 -0400
+> Mark Lord <liml@rtr.ca> wrote:
 > 
-> We work around it here by converting such operations
-> into ordinary PIO_WRITEs instead.
+>> Workaround for errata SATA#24 in sata_mv.
+>> This errata affects WRITE_MULTI* commands when
+>> the device multi_count produces a DRQ block size >= 4Kbytes.
+>>
+>> We work around it here by converting such operations
+>> into ordinary PIO_WRITEs instead.
+>>
+>> Note that this might result in a PIO FUA write unavoidably being converted
+>> into a non-FUA write.  In practice, any system using FUA is also going to be
+>> using DMA rather than PIO, so this shouldn't affect anyone in the real world.
 > 
-> Note that this might result in a PIO FUA write unavoidably being converted
-> into a non-FUA write.  In practice, any system using FUA is also going to be
-> using DMA rather than PIO, so this shouldn't affect anyone in the real world.
+> You can just screen the FUA bit from the identify data when you do the
+> drive setup to avoid that bit.
+..
 
-You can just screen the FUA bit from the identify data when you do the
-drive setup to avoid that bit.
+I think doing it at identify time would prevent DMA FUA commands,
+which are fine in sata_mv.
 
-Alan
+So the only place to really hit it exactly, is at command construction
+or issue time.
+
+cheers
