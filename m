@@ -1,151 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Mon, 13 Apr 2009 05:27:13 -0400
-Message-ID: <20090413092713.GA27458@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata errors
+Date: Mon, 13 Apr 2009 05:30:04 -0400
+Message-ID: <49E3061C.4030006@pobox.com>
+References: <4b215b9d0904071340w16a65b5bs64f6161b6042b4f1@mail.gmail.com>	<49DBC889.3080304@pobox.com> <18908.23783.745239.601473@pilspetsen.it.uu.se> <49E0DAC0.1030901@gmail.com> <49E22FD3.2010005@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:58026 "EHLO havoc.gtf.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:54203 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752401AbZDMJ1P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 05:27:15 -0400
-Content-Disposition: inline
+	id S1752992AbZDMJa1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 05:30:27 -0400
+In-Reply-To: <49E22FD3.2010005@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, Matt Grice <mcjgrice@gmail.com>, linux-ide@vger.kernel.org
+
+Tejun Heo wrote:
+> Hello,
+> 
+> Robert Hancock wrote:
+>> I tend to doubt that the driver is doing the wrong thing.
+> 
+> I've tested everything including recording and cd ripping and most of
+> my devices seem happy but you never know.
+> 
+>> I suspect it's more that ATAPI devices on SATA are about as
+>> standards-compliant in general as ATAPI devices on PATA (which is to
+>> say not very good) and some of them break if the controller does
+>> something slightly differently or with different timing, which is
+>> quite possible in AHCI mode.
+>>
+>> Tejun was looking at some SATA analyzer traces of a few drives that were
+>> apparently failing consistently on AHCI. Tejun, did you get anywhere
+>> with this?
+> 
+> I need to take a deeper look at that but in general I couldn't find
+> anything standing out.  After a series of ATAPI changes (IIRC, the DMA
+> padding change was the last thing), most ATAPI bug reports got
+> resolved and I'm not getting many ATAPI failure bug reports other than
+> recent ahci ones anymore.  I'm not sure whethre it indicates that we
+> finally got it right or something else tho.
+> 
+> Jeff, what kind of failure are you seeing?
+
+Hardware:  SATA DVD-ROM/CD-RW devices, AHCI, ICH$foo
+
+Reading and writing data CDs and DVDs works fine.  Ripping audio CDs 
+using gRip application leads to timeouts almost immediately.
+
+	Jeff
 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-to receive the following updates:
-
- drivers/ata/ahci.c        |   57 ++++++++++++++++++++++++++-------------------
- drivers/ata/libata-core.c |    4 +--
- drivers/ata/sata_via.c    |    2 +-
- 3 files changed, 35 insertions(+), 28 deletions(-)
-
-Jeff Garzik (1):
-      [libata] sata_via: kill uninit'd var warning
-
-Tejun Heo (1):
-      ahci: force CAP_NCQ for earlier NV MCPs
-
-Vegard Nossum (1):
-      ata: fix obviously wrong comment
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 57be6be..08186ec 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -114,6 +114,7 @@ enum {
- 	board_ahci_sb700	= 5, /* for SB700 and SB800 */
- 	board_ahci_mcp65	= 6,
- 	board_ahci_nopmp	= 7,
-+	board_ahci_yesncq	= 8,
- 
- 	/* global controller registers */
- 	HOST_CAP		= 0x00, /* host capabilities */
-@@ -469,6 +470,14 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
-+	/* board_ahci_yesncq */
-+	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- };
- 
- static const struct pci_device_id ahci_pci_tbl[] = {
-@@ -535,30 +544,30 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(NVIDIA, 0x045d), board_ahci_mcp65 },	/* MCP65 */
- 	{ PCI_VDEVICE(NVIDIA, 0x045e), board_ahci_mcp65 },	/* MCP65 */
- 	{ PCI_VDEVICE(NVIDIA, 0x045f), board_ahci_mcp65 },	/* MCP65 */
--	{ PCI_VDEVICE(NVIDIA, 0x0550), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0551), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0552), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0553), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0557), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0558), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f3), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f4), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f5), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f6), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f7), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f8), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f9), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07fa), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07fb), board_ahci },		/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0550), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0551), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0552), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0553), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0557), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0558), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci_yesncq },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f3), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f4), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f5), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f6), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f7), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f8), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07f9), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07fa), board_ahci_yesncq },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x07fb), board_ahci_yesncq },	/* MCP73 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0ad0), board_ahci },		/* MCP77 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0ad1), board_ahci },		/* MCP77 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0ad2), board_ahci },		/* MCP77 */
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e7ea77c..065507c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6110,13 +6110,11 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 			ata_port_printk(ap, KERN_INFO, "DUMMY\n");
- 	}
- 
--	/* perform each probe synchronously */
--	DPRINTK("probe begin\n");
-+	/* perform each probe asynchronously */
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 		async_schedule(async_port_probe, ap);
- 	}
--	DPRINTK("probe end\n");
- 
- 	return 0;
- }
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 98e8c50..bdd43c7 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -566,7 +566,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	static int printed_version;
- 	unsigned int i;
- 	int rc;
--	struct ata_host *host;
-+	struct ata_host *host = NULL;
- 	int board_id = (int) ent->driver_data;
- 	const unsigned *bar_sizes;
- 
