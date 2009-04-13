@@ -1,49 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv: sgpio for nvidia mcp55 -v3
-Date: Mon, 13 Apr 2009 04:18:39 -0400
-Message-ID: <49E2F55F.5060108@garzik.org>
-References: <20061031104055.GA8898@infradead.org>	 <15F501D1A78BD343BE8F4D8DB854566B0C8DDCF5@hkemmail01.nvidia.com>	 <86802c440711062009t7e98d27fqdfb466b9843da060@mail.gmail.com> <86802c440901180120u3e60e73dm53a37b7cd9034915@mail.gmail.com> <4972F4E5.3030203@kernel.org> <49768355.4040301@kernel.org> <4977DAAF.5060006@kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc
+	cleanups
+Date: Mon, 13 Apr 2009 17:22:01 +0900
+Message-ID: <20090413172143B.fujita.tomonori@lab.ntt.co.jp>
+References: <49D214E7.2040908@panasas.com>
+	<20090413163957P.fujita.tomonori@lab.ntt.co.jp>
+	<49E2EFBE.5000709@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51480 "EHLO mail.dvmed.net"
+Received: from sh.osrg.net ([192.16.179.4]:37093 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753968AbZDMISw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 04:18:52 -0400
-In-Reply-To: <4977DAAF.5060006@kernel.org>
+	id S1753026AbZDMIYO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 04:24:14 -0400
+In-Reply-To: <49E2EFBE.5000709@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>
+To: jeff@garzik.org
+Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, tj@kernel.org, petkovbb@gmail.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Yinghai Lu wrote:
-> Impact: new features
+On Mon, 13 Apr 2009 03:54:38 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> FUJITA Tomonori wrote:
+> > On Tue, 31 Mar 2009 16:04:39 +0300
+> > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > 
+> >>> I
+> >>> just don't think bvec should be used outside of block/fs interface.
+> >>> As I wrote before, non-FS users have no reason to worry about bio.
+> >>> All it should think about is the requst it needs to issue and the
+> >>> memory area it's gonna use as in/out buffers.  bio just doesn't have a
+> >>> place there.
+> >>>
+> >> I don't understand what happens to all the people that start to work on the block
+> >> layer, they start getting defensive about bio being private to the request
+> >> level. But the Genie is out of the bag already (I know cats and bottles).
+> >> bio is already heavily used above the block layer from directly inside filesystems
+> >> to all kind of raid engines, DM MD managers, multi paths, integrity information ...
+> >>
+> >> Because bio is exactly that Ideal page carrier you are talking about.
+> > 
+> > Wrong. multi path doesn't use bio. md accesses to the bio internal
+> > (it's not nice) and has the own way to carry pages. dm has the own
+> > mechanism on the top of bio. And bio doesn't work nicely for file
+> > systems such as btrfs, which handle multiple devices.
+> > 
+> > Please stop your wrong argument 'bio is the ideal page carrier'.
 > 
-> based on patch on
->     http://marc.info/?l=linux-ide&m=116289338705418&w=2
-> 
-> 1. update the patch for 2.6.19 to latest upstream ( 2.6.28?)
-> 2. fix shared sgpio to support several mcp55 + io55, so every mcp55 have
->    seperate spinlock
-> 3. use scratch_source as numbering of sgpio instead of address of struct,
->    so could go through kexec/kdump
-> 
-> v2: revert NV_ON and NV_OFF, so turn on Activity LED all the time when disk is idle.
-> v3: use one timer per sgpio instead of per nv_host, so for mcp55+io55 system will use 2 timers
->     instead of 6 timers.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/ata/sata_nv.c |  562 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 562 insertions(+)
+> What is the multi-device problem with bio?
+
+Well, if it works nicely, I guess that we don't have something like
+drivers/dm/{dm-bio-record.h, dm-bio-list.h}, btrfs_multi_bio struct,
+or md's own page carrier?
 
 
-Is this really over 500 LOC, just to blink some lights from the data 
-xfer hot path?  :)
+> The idea behind bio is to be the ideal page carrier :)  It sounds like 
+> bio needs revision, not abandonment.
 
-	Jeff
+I think that bio was designed to be an ideal page carrier for file
+systems. But it's ideal not for everyone. I don't think that Boaz's
+argument to use bio everywhere such as under drivers/scsi is a good
+idea.
 
-
-
+Yeah, a structure for page carrier needs revision anyway. At least, we
+need to unify the way (or code) to handle multiple devices.
