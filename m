@@ -1,56 +1,61 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata errors
-Date: Mon, 13 Apr 2009 05:30:04 -0400
-Message-ID: <49E3061C.4030006@pobox.com>
-References: <4b215b9d0904071340w16a65b5bs64f6161b6042b4f1@mail.gmail.com>	<49DBC889.3080304@pobox.com> <18908.23783.745239.601473@pilspetsen.it.uu.se> <49E0DAC0.1030901@gmail.com> <49E22FD3.2010005@kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 03/14] block: implement blk_rq_map_kern_prealloc()
+Date: Mon, 13 Apr 2009 19:07:56 +0900
+Message-ID: <20090413190400H.fujita.tomonori@lab.ntt.co.jp>
+References: <49CAE425.5050009@kernel.org>
+	<49CB31DB.2040608@gmail.com>
+	<49CB3765.4070406@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54203 "EHLO mail.dvmed.net"
+Received: from sh.osrg.net ([192.16.179.4]:59469 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752992AbZDMJa1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 05:30:27 -0400
-In-Reply-To: <49E22FD3.2010005@kernel.org>
+	id S1755405AbZDMKII (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 06:08:08 -0400
+In-Reply-To: <49CB3765.4070406@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, Matt Grice <mcjgrice@gmail.com>, linux-ide@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: htejun@gmail.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello,
-> 
-> Robert Hancock wrote:
->> I tend to doubt that the driver is doing the wrong thing.
-> 
-> I've tested everything including recording and cd ripping and most of
-> my devices seem happy but you never know.
-> 
->> I suspect it's more that ATAPI devices on SATA are about as
->> standards-compliant in general as ATAPI devices on PATA (which is to
->> say not very good) and some of them break if the controller does
->> something slightly differently or with different timing, which is
->> quite possible in AHCI mode.
->>
->> Tejun was looking at some SATA analyzer traces of a few drives that were
->> apparently failing consistently on AHCI. Tejun, did you get anywhere
->> with this?
-> 
-> I need to take a deeper look at that but in general I couldn't find
-> anything standing out.  After a series of ATAPI changes (IIRC, the DMA
-> padding change was the last thing), most ATAPI bug reports got
-> resolved and I'm not getting many ATAPI failure bug reports other than
-> recent ahci ones anymore.  I'm not sure whethre it indicates that we
-> finally got it right or something else tho.
-> 
-> Jeff, what kind of failure are you seeing?
+On Thu, 26 Mar 2009 10:05:57 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Hardware:  SATA DVD-ROM/CD-RW devices, AHCI, ICH$foo
+> On 03/26/2009 09:42 AM, Tejun Heo wrote:
+> > Hello,
+> > 
+> > A few issues.
+> > 
+> > Tejun Heo wrote:
+> >>> Perhaps you could reorder the code below a bit?
+> >>>
+> >>> My proposal is:
+> >>> * blk_rq_map_kern_prealloc => is simplified to be
+> >>>     int blk_rq_map_bio(struct request_queue *q, struct request *rq,
+> >>> 		       struct bio *bio);
+> > 
+> > The thing is that the prealloc variant should be allowed to be called
+> > from IRQ context and blk_queue_bounce() shouldn't be called.
+> > Hmmm... well, the caller is supposed to know what it's doing and maybe
+> > we can just add a comment that it shouldn't be called with buffers
+> > which might get bounced from IRQ context.
+> > 
+> 
+> Hmm that is a problem. I would suggest a flag or a check. My bios come
+> from VFS they need bouncing.
+> 
+> Can you think of a solution?
+> 
+> We could just call blk_queue_bounce(). IRQ callers need to make sure their
+> buffers don't need bouncing anyway, so there is no such bug right? If a programmer
+> gets it wrong he will get a BUG check that tells him that.
 
-Reading and writing data CDs and DVDs works fine.  Ripping audio CDs 
-using gRip application leads to timeouts almost immediately.
+If I understand the old IDE code, it's broken about the kernel buffer
+bouncing.
 
-	Jeff
-
+Fixing this in the old ide needs a big surgery, I think. When I
+converted the old ide code to use the block layer API to allocate a
+request, I gave up the requests on the stack (used in IRQ).
 
 
