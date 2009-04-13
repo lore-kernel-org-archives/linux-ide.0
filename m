@@ -1,85 +1,94 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 01/02] sata_mv: tidy up qc->tf usage in qc_prep() functions
-Date: Mon, 13 Apr 2009 11:27:18 -0400
-Message-ID: <49E359D6.1090309@rtr.ca>
+Subject: [PATCH 02/02] sata_mv: workaround for multi_count errata sata24
+Date: Mon, 13 Apr 2009 11:29:34 -0400
+Message-ID: <49E35A5E.4020204@rtr.ca>
+References: <49E359D6.1090309@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:45538 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:60649 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751792AbZDMP1V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 11:27:21 -0400
+	id S1752225AbZDMP3g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 11:29:36 -0400
+In-Reply-To: <49E359D6.1090309@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tidy up qc->tf accesses in the mv_qc_prep() functions.
+Workaround for errata SATA#24 in sata_mv.
+This errata affects WRITE_MULTI* commands when
+the device multi_count produces a DRQ block size >= 4Kbytes.
+
+We work around it here by converting such operations
+into ordinary PIO_WRITEs instead.
+
+Note that this might result in a PIO FUA write unavoidably being converted
+into a non-FUA write.  In practice, any system using FUA is also going to be
+using DMA rather than PIO, so this shouldn't affect anyone in the real world.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 ---
-
 For upstream-linus, please.
-In preparation for the multi_count errata patch which follows.
 
 --- old/drivers/ata/sata_mv.c.upstream	2009-04-13 09:46:51.000000000 -0400
-+++ new/drivers/ata/sata_mv.c	2009-04-13 10:09:54.000000000 -0400
-@@ -1898,17 +1898,17 @@
- 	struct ata_port *ap = qc->ap;
- 	struct mv_port_priv *pp = ap->private_data;
- 	__le16 *cw;
--	struct ata_taskfile *tf;
++++ new/drivers/ata/sata_mv.c	2009-04-13 10:11:26.000000000 -0400
+@@ -1881,6 +1881,39 @@
+ 	return status;
+ }
+ 
++static void mv_rw_multi_errata_sata24(struct ata_queued_cmd *qc)
++{
 +	struct ata_taskfile *tf = &qc->tf;
++	/*
++	 * Workaround for 88SX60x1 FEr SATA#24.
++	 *
++	 * Chip may corrupt WRITEs if multi_count >= 4kB.
++	 * Note that READs are unaffected.
++	 *
++	 * It's not clear if this errata really means "4K bytes",
++	 * or if it always happens for multi_count > 7
++	 * regardless of device sector_size.
++	 *
++	 * So, for safety, any write with multi_count > 7
++	 * gets converted here into a regular PIO write instead:
++	 */
++	if ((tf->flags & ATA_TFLAG_WRITE) && is_multi_taskfile(tf)) {
++		if (qc->dev->multi_count > 7) {
++			switch (tf->command) {
++			case ATA_CMD_WRITE_MULTI:
++				tf->command = ATA_CMD_PIO_WRITE;
++				break;
++			case ATA_CMD_WRITE_MULTI_FUA_EXT:
++				tf->flags &= ~ATA_TFLAG_FUA; /* ugh */
++				/* fall through */
++			case ATA_CMD_WRITE_MULTI_EXT:
++				tf->command = ATA_CMD_PIO_WRITE_EXT;
++				break;
++			}
++		}
++	}
++}
++
+ /**
+  *      mv_qc_prep - Host specific command preparation.
+  *      @qc: queued command to prepare
+@@ -1902,9 +1935,16 @@
  	u16 flags = 0;
  	unsigned in_index;
  
--	if ((qc->tf.protocol != ATA_PROT_DMA) &&
--	    (qc->tf.protocol != ATA_PROT_NCQ))
-+	if ((tf->protocol != ATA_PROT_DMA) &&
-+	    (tf->protocol != ATA_PROT_NCQ))
+-	if ((tf->protocol != ATA_PROT_DMA) &&
+-	    (tf->protocol != ATA_PROT_NCQ))
++	switch (tf->protocol) {
++	case ATA_PROT_DMA:
++	case ATA_PROT_NCQ:
++		break;	/* continue below */
++	case ATA_PROT_PIO:
++		mv_rw_multi_errata_sata24(qc);
++		return;
++	default:
  		return;
++	}
  
  	/* Fill in command request block
  	 */
--	if (!(qc->tf.flags & ATA_TFLAG_WRITE))
-+	if (!(tf->flags & ATA_TFLAG_WRITE))
- 		flags |= CRQB_FLAG_READ;
- 	WARN_ON(MV_MAX_Q_DEPTH <= qc->tag);
- 	flags |= qc->tag << CRQB_TAG_SHIFT;
-@@ -1924,7 +1924,6 @@
- 	pp->crqb[in_index].ctrl_flags = cpu_to_le16(flags);
- 
- 	cw = &pp->crqb[in_index].ata_cmd[0];
--	tf = &qc->tf;
- 
- 	/* Sadly, the CRQB cannot accomodate all registers--there are
- 	 * only 11 bytes...so we must pick and choose required
-@@ -1990,16 +1989,16 @@
- 	struct ata_port *ap = qc->ap;
- 	struct mv_port_priv *pp = ap->private_data;
- 	struct mv_crqb_iie *crqb;
--	struct ata_taskfile *tf;
-+	struct ata_taskfile *tf = &qc->tf;
- 	unsigned in_index;
- 	u32 flags = 0;
- 
--	if ((qc->tf.protocol != ATA_PROT_DMA) &&
--	    (qc->tf.protocol != ATA_PROT_NCQ))
-+	if ((tf->protocol != ATA_PROT_DMA) &&
-+	    (tf->protocol != ATA_PROT_NCQ))
- 		return;
- 
- 	/* Fill in Gen IIE command request block */
--	if (!(qc->tf.flags & ATA_TFLAG_WRITE))
-+	if (!(tf->flags & ATA_TFLAG_WRITE))
- 		flags |= CRQB_FLAG_READ;
- 
- 	WARN_ON(MV_MAX_Q_DEPTH <= qc->tag);
-@@ -2015,7 +2014,6 @@
- 	crqb->addr_hi = cpu_to_le32((pp->sg_tbl_dma[qc->tag] >> 16) >> 16);
- 	crqb->flags = cpu_to_le32(flags);
- 
--	tf = &qc->tf;
- 	crqb->ata_cmd[0] = cpu_to_le32(
- 			(tf->command << 16) |
- 			(tf->feature << 24)
