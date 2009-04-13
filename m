@@ -1,75 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Fw: [PATCH] ahci: add ACard 8620 support (rough draft)
-Date: Mon, 13 Apr 2009 07:37:05 -0400
-Message-ID: <49E323E1.90907@garzik.org>
-References: <000d01c9b815$73006700$b500a8c0@JasonWuNB> <49E31219.1000301@acard.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv: increate the IORDY timeout for the soc 	controllers
+Date: Mon, 13 Apr 2009 08:49:35 -0400
+Message-ID: <49E334DF.4030703@rtr.ca>
+References: <20090411160815.GA10995@deprecation.cyrius.com>	 <49E1FCBC.5010101@rtr.ca> <c70ff3ad0904130013n319510c4w5ae071076717f2bd@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42037 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([76.10.145.34]:33147 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750730AbZDMLhL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 07:37:11 -0400
-In-Reply-To: <49E31219.1000301@acard.com>
+	id S1751287AbZDMMtj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 08:49:39 -0400
+In-Reply-To: <c70ff3ad0904130013n319510c4w5ae071076717f2bd@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jimyeh98@acard.com
-Cc: jason wu <jason_wu@acard.com>, =?UTF-8?B?IuiOiuaWh+iIiShKYXNvbiBDaHVh?= =?UTF-8?B?bmcpIg==?= <jason@acard.com>, =?UTF-8?B?IumZs+WKm+iqoChSaWNoYXI=?= =?UTF-8?B?ZCBDaGVuKSI=?= <rchern@acard.com>, =?UTF-8?B?Iue/geiMguizgChEYQ==?= =?UTF-8?B?bmllbCBXZW5nKSI=?= <dweng@acard.com>, =?UTF-8?B?IuWQs+S9s+eSiyg=?= =?UTF-8?B?TGF1cmVuY2UgV3UpIg==?= <laurence@acard.com>, =?UTF-8?B?IumZs+W+tw==?= =?UTF-8?B?5aiBKERlcndlaSBDaGVuKSI=?= <derwei@acard.com>, =?UTF-8?B?IumZsw==?= =?UTF-8?B?6YeR5riFKEdlaW5nQ2hpbmcgQ2hlbiki?= <geingching@acard.com>, =?UTF-8?B?IueroOeip+WxryhUZXJyeSBDaGFuZyki?= <terryc@acard.com>, =?UTF-8?B?IuWKieengOiIiFxcKEphbWVzIExpdVxcKSI=?= <jamesliu@acard.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org, Tejun Heo <htejun@gmail.com>
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: Martin Michlmayr <tbm@cyrius.com>, Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
 
-Jim Yeh wrote:
-> Dear Jeff,
+saeed bishara wrote:
+> On Sun, Apr 12, 2009 at 5:37 PM, Mark Lord <liml@rtr.ca> wrote:
+>> Martin Michlmayr wrote:
+>>> From: Saeed Bishara <saeed@marvell.com>
 > 
-> This is Jim,an IC PM from ACARD Technology. Thanks for your effort on 
-> building Linux driver for ACARD ATP8620. Since ACARD already have a 
-> verified AHCI driver for ATP8620, we'd like to submit this one for the 
-> kernel built-in driver (please see attachment). This driver support 
-> Linux Kernel 2.6.29 AHCI mode for ATP8620 (2ch SATA IC) and ATP8624 (4ch 
-> SATA IC). It already passed our own stability and compatibility test 
-> with SATA devices like HDD, ODD, or PortMultiplier. If you have any 
-> question or need the hardware for testing, please don't hesitate to 
-> contact me. Thanks again for your help.
+>> I want to see somebody actually test/verify that
+>> this works with PIO/MWDMA2 devices (eg. CF cards) first.
+>>
+>> Test results?
+> PIO mode is always used, at least for the identify command. the patch
+> works and needed for the Kirkwood SoC which runs at 200KHz.
+..
 
-Thank you for your email.
+Errr.. IDENTIFY is often a "special case" command,
+and rarely, if ever, uses IORDY.
 
-We understand you have verified your driver, but it is standard Linux 
-driver policy to avoid code duplication.  Multiple implementations of 
-AHCI drivers implies several negative factors:
+How about some other result?
 
-* each bug fix must be reviewed across multiple AHCI drivers, to 
-determine if the bug fix must be copied
+The past couple of patches from you before these *broke* the driver,
+which is why I'd like to see this and future patches verified first.
 
-* non-uniform user experience, depending on AHCI platform
-
-* Shared AHCI code gets much more testing and verification.
-
-* When a hardware vendor's AHCI chip reaches End Of Life, or the company 
-goes out of business, users are not abandoned.
-
-So, for the official Linux kernel drivers that are shipped by Red Hat, 
-Novell/SuSE, Canonical and other vendors, we will need to modify the 
-existing Linux AHCI driver to support ATP8620 and ATP8624.
-
-
-And yes -- test hardware would be greatly appreciated!  If you could 
-send these, that would be appreciated:
-
-	To Tejun Heo
-	------------
-	1 x ATP8620
-	1 x ATP8624
-
-	To Jeff Garzik
-	--------------
-	1 x ATP8620
-	1 x ATP8624
-
-I assume this is PCI, PCI-X or PCI-Express form factor?
-
-Regards and thanks,
-
-	Jeff
-
-
-
-
+Thanks.
