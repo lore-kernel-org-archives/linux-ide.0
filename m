@@ -1,123 +1,81 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 14/14] ide-cd: use bio for request sense
-Date: Mon, 13 Apr 2009 10:52:33 +0200
-Message-ID: <20090413085233.GA10115@liondog.tnic>
-References: <1237910776-10983-1-git-send-email-tj@kernel.org> <1237910776-10983-15-git-send-email-tj@kernel.org>
-Reply-To: petkovbb@gmail.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_sx4: refresh and convert to new EH
+Date: Mon, 13 Apr 2009 05:09:05 -0400
+Message-ID: <49E30131.2020408@garzik.org>
+References: <20090408200511.GA24071@havoc.gtf.org>	 <a4423d670904111946w2a8f3839n27b77f5473076563@mail.gmail.com>	 <49E1CE26.9050401@garzik.org> <a4423d670904121923l391d67cake297c5a71ca49ace@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:57643 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584AbZDMIwk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 04:52:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1237910776-10983-15-git-send-email-tj@kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:60685 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300AbZDMJJK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 05:09:10 -0400
+In-Reply-To: <a4423d670904121923l391d67cake297c5a71ca49ace@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Mar 25, 2009 at 01:06:16AM +0900, Tejun Heo wrote:
-> Impact: unify request data buffer handling
+Alexander Beregalov wrote:
+> 2009/4/12 Jeff Garzik <jeff@garzik.org>:
+>> Alexander Beregalov wrote:
+>>> 2009/4/9 Jeff Garzik <jeff@garzik.org>:
+>>>> I reviewed and refreshed libata-dev.git#new-eh, now renamed to #sx4.
+>>>>
+>>>> Several bugs and missing pieces in the new-EH conversion were addressed
+>>>> (often by copying highly similar code from sata_promise, a highly
+>>>> similar chip)
+>>>>
+>>>> The only thing left is some "it still works" testing...  any takers?
+>>>>
+>>> Hi Jeff
+>>>
+>>> I have SX4000 card, it is based on the same PDC20621 chip, but has PATA
+>>> ports
+>>> (without PATA-SATA bridges).
+>>> Can I help?
+>>>
+>>> I am newbie here, but I will try to modify the driver to support PATA
+>>> card as well
+>>> and test your patch.
+>> It's unknown how well, or what is needed, to support the SX4000.  You are
+>> welcome to dive in and figure out what is needed, but you'd be asking
+>> questions to which we wouldn't have answers.
 > 
-> rq->data is used mostly to pass kernel buffer through request queue
-> without using bio.  There are only a couple of places which still do
-> this in kernel and converting to bio isn't difficult.
-> 
-> This patch converts ide-cd to use bio instead of rq->data for request
-> sense and internal pc commands.  As request sense is issued from
-> atomic context, drive->request_sense_bio and ->request_sense_bvec[2]
-> are used via bio_map_kern_prealloc().  Internal pc commands use
-> blk_rq_map_kern().
-> 
-> cdrom_do_block_pc() now doesn't have to deal with REQ_TYPE_ATA_PC
-> special case.  Simplified.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> ---
->  drivers/ide/ide-cd.c |   31 ++++++++++++++++++-------------
->  1 files changed, 18 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index de6ce8d..22c95b9 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -209,8 +209,12 @@ static void cdrom_analyze_sense_data(ide_drive_t *drive,
->  static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
->  				      struct request *failed_command)
->  {
-> -	struct cdrom_info *info		= drive->driver_data;
-> -	struct request *rq		= &drive->request_sense_rq;
-> +	struct cdrom_info *info	= drive->driver_data;
-> +	struct request *rq	= &drive->request_sense_rq;
-> +	struct bio *bio		= &drive->request_sense_bio;
-> +	struct bio_vec *bvec	= drive->request_sense_bvec;
-> +	unsigned int bvec_len	= ARRAY_SIZE(drive->request_sense_bvec);
-> +	int error;
->  
->  	ide_debug_log(IDE_DBG_SENSE, "enter");
->  
-> @@ -224,10 +228,12 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
->  	rq->cmd_type = REQ_TYPE_ATA_PC;
+> I found Promise provided docs for FreeBSD team.
+> http://unix.derkeiler.com/Mailing-Lists/FreeBSD/performance/2003-07/0043.html
 
-by the way, this line can go too, since the correct type is REQ_TYPE_SENSE now.
+Well, you can find several docs at 
+http://gkernel.sourceforge.net/specs/promise/
 
->  	rq->rq_disk = info->disk;
->  
-> -	rq->data = sense;
-> +	error = blk_rq_map_kern_prealloc(drive->queue, rq, bio, bvec, bvec_len,
-> +					 sense, 18, true);
-> +	BUG_ON(error);
-> +
->  	rq->cmd[0] = GPCMD_REQUEST_SENSE;
->  	rq->cmd[4] = 18;
-> -	rq->data_len = 18;
->  
->  	rq->cmd_type = REQ_TYPE_SENSE;
->  	rq->cmd_flags |= REQ_PREEMPT;
-> @@ -556,8 +562,12 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
->  		rq->cmd_flags |= cmd_flags;
->  		rq->timeout = timeout;
->  		if (buffer) {
-> -			rq->data = buffer;
-> -			rq->data_len = *bufflen;
-> +			error = blk_rq_map_kern(drive->queue, rq, buffer,
-> +						*bufflen, __GFP_WAIT);
-> +			if (error) {
-> +				blk_put_request(rq);
-> +				return error;
-> +			}
->  		}
->  
->  		error = blk_execute_rq(drive->queue, info->disk, rq, 0);
-> @@ -847,15 +857,10 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
->  	drive->dma = 0;
->  
->  	/* sg request */
-> -	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
-> +	if (rq->bio) {
->  		struct request_queue *q = drive->queue;
-> +		char *buf = bio_data(rq->bio);
->  		unsigned int alignment;
-> -		char *buf;
-> -
-> -		if (rq->bio)
-> -			buf = bio_data(rq->bio);
-> -		else
-> -			buf = rq->data;
->  
->  		drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
->  
-> -- 
-> 1.6.0.2
+
+>> I do have the sx4000 in the works (thanks to Promise who has provided docs
+>> and HW to make this happen)..
+> Can we ask them too? :)
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Interesting, I cut off all unrelated lines from freebsd/ata/ata-chipset.c
+> and it seems SX4/SX4000 driver is only about 700 lines long.
 
--- 
-Regards/Gruss,
-    Boris.
+The current FreeBSD has split up things into multiple files.  You can 
+check out the kernel via
+
+	cd $repo
+	mkdir -p freebsd/src
+	cd freebsd
+	svn checkout svn://svn.freebsd.org/base/head/sys src/sys
+	cd src/sys/dev/ata/chipsets
+
+and indeed ata-promise.c has plenty of SX4[000] goodies to mess around with!
+
+Also, check out this stuff from sata_promise maintainer Mikael:
+http://marc.info/?l=linux-ide&m=121144512109826&w=2
+http://marc.info/?l=linux-ide&m=121135828227724&w=2
+
+My revised sata_sx4.c is currently stored on the "sx4" branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+	Jeff
+
+
+
