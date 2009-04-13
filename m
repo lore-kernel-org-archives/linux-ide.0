@@ -1,37 +1,60 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ahci: force CAP_NCQ for earlier NV MCPs
-Date: Mon, 13 Apr 2009 04:27:38 -0400
-Message-ID: <49E2F77A.5020502@garzik.org>
-References: <49DD164B.6000809@kernel.org>
+Subject: Re: [PATCHSET pata-2.6] ide: rq->buffer, data, special and misc	cleanups
+Date: Mon, 13 Apr 2009 04:31:08 -0400
+Message-ID: <49E2F84C.6080804@garzik.org>
+References: <49D214E7.2040908@panasas.com>	<20090413163957P.fujita.tomonori@lab.ntt.co.jp>	<49E2EFBE.5000709@garzik.org> <20090413172143B.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51184 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55302 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754135AbZDMI1m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 04:27:42 -0400
-In-Reply-To: <49DD164B.6000809@kernel.org>
+	id S1753422AbZDMIbP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 04:31:15 -0400
+In-Reply-To: <20090413172143B.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>, zaceni2@yandex.ru
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: bharrosh@panasas.com, tj@kernel.org, petkovbb@gmail.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Along with MCP65, MCP67 and 73 also don't set CAP_NCQ.  Force it.
-> Reported by zaceni@yandex.ru on bko#13014 and confirmed by Peer Chen.
+FUJITA Tomonori wrote:
+> On Mon, 13 Apr 2009 03:54:38 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: NightFox <zaceni2@yandex.ru>
-> Cc: Peer Chen <pchen@nvidia.com>
-> ---
->  drivers/ata/ahci.c |   57 ++++++++++++++++++++++++++++++-----------------------
->  1 file changed, 33 insertions(+), 24 deletions(-)
+>> FUJITA Tomonori wrote:
+>>> On Tue, 31 Mar 2009 16:04:39 +0300
+>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>>
+>>>>> I
+>>>>> just don't think bvec should be used outside of block/fs interface.
+>>>>> As I wrote before, non-FS users have no reason to worry about bio.
+>>>>> All it should think about is the requst it needs to issue and the
+>>>>> memory area it's gonna use as in/out buffers.  bio just doesn't have a
+>>>>> place there.
+>>>>>
+>>>> I don't understand what happens to all the people that start to work on the block
+>>>> layer, they start getting defensive about bio being private to the request
+>>>> level. But the Genie is out of the bag already (I know cats and bottles).
+>>>> bio is already heavily used above the block layer from directly inside filesystems
+>>>> to all kind of raid engines, DM MD managers, multi paths, integrity information ...
+>>>>
+>>>> Because bio is exactly that Ideal page carrier you are talking about.
+>>> Wrong. multi path doesn't use bio. md accesses to the bio internal
+>>> (it's not nice) and has the own way to carry pages. dm has the own
+>>> mechanism on the top of bio. And bio doesn't work nicely for file
+>>> systems such as btrfs, which handle multiple devices.
+>>>
+>>> Please stop your wrong argument 'bio is the ideal page carrier'.
+>> What is the multi-device problem with bio?
 > 
->  drivers/ata/ahci.c |   57 ++++++++++++++++++++++++++++++-----------------------
->  1 file changed, 33 insertions(+), 24 deletions(-)
+> Well, if it works nicely, I guess that we don't have something like
+> drivers/dm/{dm-bio-record.h, dm-bio-list.h}, btrfs_multi_bio struct,
+> or md's own page carrier?
 
-applied
+It was an honest question.  I am seeking information, not denying your 
+argument.
 
+What, specifically, is this multi-device problem with bio, please?
 
+	Jeff
 
