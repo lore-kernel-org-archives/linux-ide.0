@@ -1,76 +1,41 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] libata: add CFA specific identify data words
-Date: Mon, 13 Apr 2009 13:16:53 -0400
-Message-ID: <49E37385.6070506@pobox.com>
-References: <200903032029.29073.sshtylyov@ru.mvista.com> <49DC8EB3.4040404@ru.mvista.com> <49DCA588.7030403@pobox.com> <49E36CCE.6030304@ru.mvista.com> <49E36D97.4040606@pobox.com> <49E36F3F.6080907@ru.mvista.com>
+Subject: Re: [PATCH 02/02] sata_mv: workaround for multi_count errata sata24
+Date: Mon, 13 Apr 2009 13:25:28 -0400
+Message-ID: <49E37588.10506@pobox.com>
+References: <49E359D6.1090309@rtr.ca> <49E35A5E.4020204@rtr.ca> <49E35BF8.1070402@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51146 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:42001 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734AbZDMRRJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 13:17:09 -0400
-In-Reply-To: <49E36F3F.6080907@ru.mvista.com>
+	id S1750734AbZDMRZc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 13:25:32 -0400
+In-Reply-To: <49E35BF8.1070402@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Sergei Shtylyov wrote:
-> Jeff Garzik wrote:
-> 
->>>>>> Declare and use constants for CFA specific identify data words 162 
->>>>>> and 163.
-> 
->>>>>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
->>>>>    Jeff, have you forgotten about this one too?
-> 
->>>>>> Index: linux-2.6/drivers/ata/libata-core.c
->>>>>> ===================================================================
->>>>>> --- linux-2.6.orig/drivers/ata/libata-core.c
->>>>>> +++ linux-2.6/drivers/ata/libata-core.c
->>>>>> @@ -1650,8 +1650,8 @@ unsigned long ata_id_xfermask(const 
->>>>>> u16          /*
->>>>>>           *    Process compact flash extended modes
->>>>>>           */
->>>>>> -        int pio = id[163] & 0x7;
->>>>>> -        int dma = (id[163] >> 3) & 7;
->>>>>> +        int pio = (id[ATA_ID_CFA_MODES] >> 0) & 0x7;
->>>>>> +        int dma = (id[ATA_ID_CFA_MODES] >> 3) & 0x7;
->>>>>>  
->>>>>>          if (pio)
->>>>>>              pio_mask |= (1 << 5);
->>>>>> @@ -2408,7 +2408,8 @@ int ata_dev_configure(struct ata_device      
->>>>>> /* ATA-specific feature tests */
->>>>>>      if (dev->class == ATA_DEV_ATA) {
->>>>>>          if (ata_id_is_cfa(id)) {
->>>>>> -            if (id[162] & 1) /* CPRM may make this media unusable */
->>>>>> +            /* CPRM may make this media unusable */
->>>>>> +            if (id[ATA_ID_CFA_KEY_MGMT] & 1)
->>>>>>                  ata_dev_printk(dev, KERN_WARNING,
->>>>>>                             "supports DRM functions and may "
->>>>>>                             "not be fully accessable.\n");
-> 
->>>> This you'll need to resend...
-> 
->>>    I wonder why you're telling me this only now
-> 
->> Because you asked "have you forgotten about this one?" on April 8th.
-> 
->    I mean why didn't you tell me to resubmit when you split off the 
-> ata.h part of the original patch? I was under impression that you would 
-> queue this part too...
+Mark Lord wrote:
+> Someday I'll fix that, if you guys don't beat me to it.
+> I suppose we just need to issue the SET_MULTIPLE command from
+> the drive revalidation code. 
 
-It got lost in the confusion, I suppose.  I figured you would resubmit 
-when you posted the IDE version.
+IMO this would be a good idea to do, across many ATA devices.
 
-If you recall, you requested that this go via Bart's tree on March 3rd. 
-  Then Bart did a big push without it.  So, to prevent delaying you 
-further, I split off the ata.h patch and forwarded that upstream.
+IIRC there is at least one other chip that snoops the set-multiple 
+command, and sets internal chip parameters.
+
+Thus, like SET FEATURES - XFER MODE, it seems wise to unconditionally 
+issue SET MULTIPLE for ATA devices, under the logic that it 
+more-thoroughly initializes the controller and device, ensuring we are 
+at a known state at all times.
+
+Wanna do a patch?  :)  Although not the greatest code location, I'm 
+guessing ata_dev_read_id() would probably be the place...  Ideally we 
+would have a post-IDENTIFY reset sequence function.
 
 	Jeff
-
 
 
