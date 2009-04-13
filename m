@@ -1,67 +1,90 @@
-From: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: Re: [PATCH] sata_sx4: refresh and convert to new EH
-Date: Mon, 13 Apr 2009 06:23:50 +0400
-Message-ID: <a4423d670904121923l391d67cake297c5a71ca49ace@mail.gmail.com>
-References: <20090408200511.GA24071@havoc.gtf.org>
-	 <a4423d670904111946w2a8f3839n27b77f5473076563@mail.gmail.com>
-	 <49E1CE26.9050401@garzik.org>
+From: Avi Kivity <avi@redhat.com>
+Subject: Re: Implementing NVMHCI...
+Date: Mon, 13 Apr 2009 09:32:54 +0300
+Message-ID: <49E2DC96.6090407@redhat.com>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:61779 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752923AbZDMCXx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Apr 2009 22:23:53 -0400
-In-Reply-To: <49E1CE26.9050401@garzik.org>
+Received: from mx2.redhat.com ([66.187.237.31]:50980 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754440AbZDMGdZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Apr 2009 02:33:25 -0400
+In-Reply-To: <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-2009/4/12 Jeff Garzik <jeff@garzik.org>:
-> Alexander Beregalov wrote:
->>
->> 2009/4/9 Jeff Garzik <jeff@garzik.org>:
->>>
->>> I reviewed and refreshed libata-dev.git#new-eh, now renamed to #sx4=
-=2E
->>>
->>> Several bugs and missing pieces in the new-EH conversion were addre=
-ssed
->>> (often by copying highly similar code from sata_promise, a highly
->>> similar chip)
->>>
->>> The only thing left is some "it still works" testing... =C2=A0any t=
-akers?
->>>
->>
->> Hi Jeff
->>
->> I have SX4000 card, it is based on the same PDC20621 chip, but has P=
-ATA
->> ports
->> (without PATA-SATA bridges).
->> Can I help?
->>
->> I am newbie here, but I will try to modify the driver to support PAT=
-A
->> card as well
->> and test your patch.
+Linus Torvalds wrote:
+> On Sun, 12 Apr 2009, Avi Kivity wrote:
+>   
+>> A quick test shows that it can.  I didn't try mmap(), but copying files around
+>> worked.
+>>     
 >
-> It's unknown how well, or what is needed, to support the SX4000. =C2=A0=
-You are
-> welcome to dive in and figure out what is needed, but you'd be asking
-> questions to which we wouldn't have answers.
+> You being who you are, I'm assuming you're doing this in a virtual 
+> environment, so you might be able to see the IO patterns..
+>
+>   
 
-I found Promise provided docs for FreeBSD team.
-http://unix.derkeiler.com/Mailing-Lists/FreeBSD/performance/2003-07/004=
-3.html
->I do have the sx4000 in the works (thanks to Promise who has provided =
-docs
->and HW to make this happen)..
-Can we ask them too? :)
+Yes.  I just used the Windows performance counters rather than mess with 
+qemu for the test below.
 
-Interesting, I cut off all unrelated lines from freebsd/ata/ata-chipset=
-=2Ec
-and it seems SX4/SX4000 driver is only about 700 lines long.
+> Can you tell if it does the IO in chunks of 16kB or smaller? That can be 
+> hard to see with trivial tests (since any filesystem will try to chunk up 
+> writes regardless of how small the cache entry is, and on file creation it 
+> will have to write the full 16kB anyway just to initialize the newly 
+> allocated blocks on disk), but there's a couple of things that should be 
+> reasonably good litmus tests of what WNT does internally:
+>
+>  - create a big file, 
+
+Just creating a 5GB file in a 64KB filesystem was interesting - Windows 
+was throwing out 256KB I/Os even though I was generating 1MB writes  
+(and cached too).  Looks like a paranoid IDE driver (qemu exposes a PIIX4).
+
+> then rewrite just a few bytes in it, and look at the 
+>    IO pattern of the result. Does it actually do the rewrite IO as one 
+>    16kB IO, or does it do sub-blocking?
+>   
+
+It generates 4KB writes (I was generating aligned 512 byte overwrites).  
+What's more interesting, it was also issuing 32KB reads to fill the 
+cache, not 64KB.  Since the number of reads and writes per second is 
+almost equal, it's not splitting a 64KB read into two.
+
+>    If the latter, then the 16kB thing is just a filesystem layout issue, 
+>    not an internal block-size issue, and WNT would likely have exactly the 
+>    same issues as Linux.
+>   
+
+A 1 byte write on an ordinary file generates a RMW, same as a 4KB write 
+on a 16KB block.  So long as the filesystem is just a layer behind the 
+pagecache (which I think is the case on Windows), I don't see what 
+issues it can have.
+
+>  - can you tell how many small files it will cache in RAM without doing 
+>    IO? If it always uses 16kB blocks for caching, it will be able to cache 
+>    a _lot_ fewer files in the same amount of RAM than with a smaller block 
+>    size.
+>   
+
+I'll do this later, but given the 32KB reads for the test above, I'm 
+guessing it will cache pages, not blocks.
+
+> Of course, the _really_ conclusive thing (in a virtualized environment) is 
+> to just make the virtual disk only able to do 16kB IO accesses (and with 
+> 16kB alignment). IOW, actually emulate a disk with a 16kB hard sector 
+> size, and reporting a 16kB sector size to the READ CAPACITY command. If it 
+> works then, then clearly WNT has no issues with bigger sectors.
+>   
+
+I don't think IDE supports this?  And Windows 2008 doesn't like the LSI 
+emulated device we expose.
+
+-- 
+I have a truly marvellous patch that fixes the bug which this
+signature is too narrow to contain.
+
