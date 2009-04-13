@@ -1,50 +1,46 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 02/02] sata_mv: workaround for multi_count errata sata24
-Date: Mon, 13 Apr 2009 11:36:24 -0400
-Message-ID: <49E35BF8.1070402@rtr.ca>
-References: <49E359D6.1090309@rtr.ca> <49E35A5E.4020204@rtr.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Implementing NVMHCI...
+Date: Mon, 13 Apr 2009 10:38:02 -0500
+Message-ID: <1239637082.3278.36.camel@mulgrave.int.hansenpartnership.com>
+References: <20090412091228.GA29937@elte.hu>
+	 <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net>
+	 <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com>
+	 <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain>
+	 <49E2DC96.6090407@redhat.com>
+	 <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:56581 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995AbZDMPg0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Apr 2009 11:36:26 -0400
-In-Reply-To: <49E35A5E.4020204@rtr.ca>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45057 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752569AbZDMPiB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 11:38:01 -0400
+In-Reply-To: <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Avi Kivity <avi@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-Mark Lord wrote:
-> Workaround for errata SATA#24 in sata_mv.
-> This errata affects WRITE_MULTI* commands when
-> the device multi_count produces a DRQ block size >= 4Kbytes.
+On Mon, 2009-04-13 at 08:10 -0700, Linus Torvalds wrote:
+> On Mon, 13 Apr 2009, Avi Kivity wrote:
+> > > Of course, the _really_ conclusive thing (in a virtualized environment) is
+> > > to just make the virtual disk only able to do 16kB IO accesses (and with
+> > > 16kB alignment). IOW, actually emulate a disk with a 16kB hard sector size,
+> > > and reporting a 16kB sector size to the READ CAPACITY command. If it works
+> > > then, then clearly WNT has no issues with bigger sectors.
+> > 
+> > I don't think IDE supports this?  And Windows 2008 doesn't like the LSI
+> > emulated device we expose.
 > 
-> We work around it here by converting such operations
-> into ordinary PIO_WRITEs instead.
-> 
-> Note that this might result in a PIO FUA write unavoidably being converted
-> into a non-FUA write.  In practice, any system using FUA is also going to be
-> using DMA rather than PIO, so this shouldn't affect anyone in the real world.
-..
+> Yeah, you'd have to have the OS use the SCSI commands for disk discovery, 
+> so at least a SATA interface. With IDE disks, the sector size always has 
+> to be 512 bytes, I think.
 
-Testing this was a real bear.
+Actually, the latest ATA rev supports different sector sizes in
+preparation for native 4k sector size SATA disks (words 117-118 of
+IDENTIFY).  Matthew Wilcox already has the patches for libata ready.
 
-The drives I have here are among those which cannot do R/W MULTI
-prior to having a SET_MULTIPLE command issued to them by libata.
+James
 
-Which libata currently does not do.
 
-This means that libata is unable to cope with non-DMA devices
-that report a non-zero multi_count value at startup.
-
-I simulated this scenario in sata_mv by changing the .udma_mask field
-to zero for the card under test.  System sat there retrying the
-partition table read over and over and over and over..  :)
-
-Someday I'll fix that, if you guys don't beat me to it.
-I suppose we just need to issue the SET_MULTIPLE command from
-the drive revalidation code.  
-
-Cheers
