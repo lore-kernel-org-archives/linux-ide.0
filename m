@@ -1,93 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH UPDATED #upstream-fixes] libata: handle SEMB signature better
-Date: Wed, 15 Apr 2009 06:21:10 +0900
-Message-ID: <49E4FE46.1010006@kernel.org>
-References: <49E466DE.7020701@kernel.org> <49E47DBF.9060502@garzik.org> <49E4FA13.1090400@kernel.org> <49E4FB42.7010609@garzik.org>
+From: Mark de Wever <koraq@xs4all.nl>
+Subject: Re: [bug#12874] Seagate STT20000A no longer works
+Date: Tue, 14 Apr 2009 23:34:23 +0200
+Message-ID: <20090414213422.GA2719@localhost>
+References: <20090410174247.GA12885@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34244 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751744AbZDNVWU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 17:22:20 -0400
-In-Reply-To: <49E4FB42.7010609@garzik.org>
+Received: from smtp-vbr3.xs4all.nl ([194.109.24.23]:4170 "EHLO
+	smtp-vbr3.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753626AbZDNVnF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2009 17:43:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20090410174247.GA12885@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, David Haun <drhaun88@gmail.com>, liw@liw.fi, jmcarranza@gmail.com
+To: petkovbb@gmail.com
+Cc: sshtylyov@ru.mvista.com, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-WDC WD1600JS-62MHB5 successfully hits the window between ATA/ATAPI-7
-and Serial ATA II standards and reports 3c/c3 signature which now is
-assigned to SEMB.  Make ata_dev_classify() report ATA_DEV_SEMB on the
-sig and let ata_dev_read_id() work around it by trying IDENTIFY once.
+On Fri, Apr 10, 2009 at 07:42:47PM +0200, Borislav Petkov wrote:
+> Now, without having tested it since I don't have the hardware, would
+> something in the lines below be a sensible kludge for now? I guess we
+> should have similar error handling for the other MODE SENSE call sites
+> and propagate some error status from idetape_get_mode_sense_results()
+> upwards to idetape_setup()? 
 
-This fixes bko#11579.
+I tested with 'tmp fix 2' [1] and 'dump drive caps and dbg rqs' [2] and
+the patch below applied and had another divide error. Attached the full
+dmesg. 
 
-UPDATED: Jeff spotted stupid bug caused by lingering debug code.
+> Yeah, I know, the driver needs a lot of massaging in order even to
+> start looking ok... :)
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: David Haun <drhaun88@gmail.com>
-Reported-by: Lars Wirzenius <liw@liw.fi>
-Reported-by: Juan Manuel <jmcarranza@gmail.com>
----
- drivers/ata/libata-core.c |   18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+:-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 065507c..a61af38 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1231,6 +1231,9 @@ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
- 	 *
- 	 * We follow the current spec and consider that 0x69/0x96
- 	 * identifies a port multiplier and 0x3c/0xc3 a SEMB device.
-+	 * Unfortunately, WDC WD1600JS-62MHB5 (a hard drive) reports
-+	 * SEMB signature.  This is worked around in
-+	 * ata_dev_read_id().
- 	 */
- 	if ((tf->lbam == 0) && (tf->lbah == 0)) {
- 		DPRINTK("found ATA device by sig\n");
-@@ -1248,8 +1251,8 @@ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
- 	}
- 
- 	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3)) {
--		printk(KERN_INFO "ata: SEMB device ignored\n");
--		return ATA_DEV_SEMB_UNSUP; /* not yet */
-+		DPRINTK("found SEMB device by sig (could be ATA device)\n");
-+		return ATA_DEV_SEMB;
- 	}
- 
- 	DPRINTK("unknown device\n");
-@@ -2080,6 +2083,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 	struct ata_taskfile tf;
- 	unsigned int err_mask = 0;
- 	const char *reason;
-+	bool is_semb = class == ATA_DEV_SEMB;
- 	int may_fallback = 1, tried_spinup = 0;
- 	int rc;
- 
-@@ -2090,6 +2094,8 @@ retry:
- 	ata_tf_init(dev, &tf);
- 
- 	switch (class) {
-+	case ATA_DEV_SEMB:
-+		class = ATA_DEV_ATA;	/* some hard drives report SEMB sig */
- 	case ATA_DEV_ATA:
- 		tf.command = ATA_CMD_ID_ATA;
- 		break;
-@@ -2126,6 +2132,14 @@ retry:
- 			return -ENOENT;
- 		}
- 
-+		if (is_semb) {
-+			ata_dev_printk(dev, KERN_INFO, "IDENTIFY failed on "
-+				       "device w/ SEMB sig, disabled\n");
-+			/* SEMB is not supported yet */
-+			*p_class = ATA_DEV_SEMB_UNSUP;
-+			return 0;
-+		}
-+
- 		if ((err_mask == AC_ERR_DEV) && (tf.feature & ATA_ABORTED)) {
- 			/* Device or controller might have reported
- 			 * the wrong device class.  Give a shot at the
+Do you want me to do the full caps debug test [3] ?
+
+Another question; I'm still using 2.6.29-rc7 as test kernel, do you
+prefer to keep using that version or move to 2.6.30-rc1?
+
+[1] http://bugzilla.kernel.org/attachment.cgi?id=20822
+[2] http://bugzilla.kernel.org/attachment.cgi?id=20873
+[3] http://bugzilla.kernel.org/show_bug.cgi?id=12874#c20
+
+-- 
+Regards,
+Mark de Wever
+
+> __
+> 
+> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> index 70e7876..827485a 100644
+> --- a/drivers/ide/ide-tape.c
+> +++ b/drivers/ide/ide-tape.c
+> @@ -2095,6 +2095,21 @@ static void idetape_get_mode_sense_results(ide_drive_t *drive)
+>  		put_unaligned(540,  (u16 *)&tape->caps[14]);
+>  		put_unaligned(6*52, (u16 *)&tape->caps[16]);
+>  		return;
+> +
+> +	} else if ((pc.buf[0] & 0x7f) == 0x70) {
+> +		/* unit attention: power on reset or device reset/not ready to
+> +		 * ready transition */
+> +		if ((pc.buf[2] & 0xf) == 0x6 &&
+> +		     (pc.buf[12] == 0x29 || pc.buf[12] == 0x28) &&
+> +		     pc.buf[13] == 0x0) {
+> +			tape->failed_pc = &pc;
+> +			ide_retry_pc(drive, tape->disk);
+> +		}
+> +		else {
+> +			printk(KERN_ERR "%s: error getting caps page\n",
+> +					drive->name);
+> +			return;
+> +		}
+>  	}
+>  	caps = pc.buf + 4 + pc.buf[3];
