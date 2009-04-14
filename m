@@ -1,78 +1,88 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Implementing NVMHCI...
-Date: Tue, 14 Apr 2009 07:45:08 -0400
-Message-ID: <49E47744.3040103@garzik.org>
-References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org> <49E46779.1040106@redhat.com>
+Subject: Re: [PATCH] sata_sx4: speed up ECC initialization
+Date: Tue, 14 Apr 2009 07:57:57 -0400
+Message-ID: <49E47A45.60902@garzik.org>
+References: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41388 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:43667 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752541AbZDNLpm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 07:45:42 -0400
-In-Reply-To: <49E46779.1040106@redhat.com>
+	id S1751838AbZDNL6B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Apr 2009 07:58:01 -0400
+In-Reply-To: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Avi Kivity <avi@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Avi Kivity wrote:
-> Jeff Garzik wrote:
->> Speaking of RMW...    in one sense, we have to deal with RMW anyway. 
->> Upcoming ATA hard drives will be configured with a normal 512b sector 
->> API interface, but underlying physical sector size is 1k or 4k.
->>
->> The disk performs the RMW for us, but we must be aware of physical 
->> sector size in order to determine proper alignment of on-disk data, to 
->> minimize RMW cycles.
->>
+Alexander Beregalov wrote:
+> ECC initialization takes too long. It writes zeroes by portions of 4
+> byte, it takes more than 6 minutes to initialize 512Mb DIMM module.
+> Change portion to 1Mb.
 > 
-> Virtualization has the same issue.  OS installers will typically setup 
-> the first partition at sector 63, and that means every page-sized block 
-> access will be misaligned.  Particularly bad when the guest's disk is 
-> backed on a regular file.
+> before:
+> [10857.207576] pdc20621_dimm_init: Start ECC initialization
+> [11235.333118] pdc20621_dimm_init: Finish ECC initialization
 > 
-> Windows 2008 aligns partitions on a 1MB boundary, IIRC.
-
-Makes a lot of sense...
-
-
->> At the moment, it seems like most of the effort to get these ATA 
->> devices to perform efficiently is in getting partition / RAID stripe 
->> offsets set up properly.
->>
->> So perhaps for NVMHCI we could
->> (a) hardcode NVM sector size maximum at 4k
->> (b) do RMW in the driver for sector size >4k, and
+> after:
+> [ 1005.126437] pdc20621_dimm_init: Local DIMM Speed = 100
+> [ 1005.128111] pdc20621_dimm_init: Local DIMM Size = 512MB
+> [ 1005.133508] Local DIMM ECC Enabled
+> [ 1005.236482] pdc20621_dimm_init: Start ECC initialization
+> [ 1031.278098] pdc20621_dimm_init: Finish ECC initialization
 > 
-> Why not do it in the block layer?  That way it isn't limited to one driver.
-
-Sure.  "in the driver" is a highly relative phrase :)  If there is code 
-to be shared among multiple callsites, let's share it.
-
-
->> (c) export information indicating the true sector size, in a manner 
->> similar to how the ATA driver passes that info to userland 
->> partitioning tools.
+> Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+> ---
+>  drivers/ata/sata_sx4.c |   10 ++++++----
+>  1 files changed, 6 insertions(+), 4 deletions(-)
 > 
-> Eventually we'll want to allow filesystems to make use of the native 
-> sector size.
+> diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+> index dce3dcc..d329501 100644
+> --- a/drivers/ata/sata_sx4.c
+> +++ b/drivers/ata/sata_sx4.c
+> @@ -1208,7 +1208,6 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+>  {
+>  	int speed, size, length;
+>  	u32 addr, spd0, pci_status;
+> -	u32 tmp = 0;
+>  	u32 time_period = 0;
+>  	u32 tcount = 0;
+>  	u32 ticks = 0;
+> @@ -1323,14 +1322,17 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+>  	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
+>  			  PDC_DIMM_SPD_TYPE, &spd0);
+>  	if (spd0 == 0x02) {
+> +		void *buf;
+>  		VPRINTK("Start ECC initialization\n");
+>  		addr = 0;
+>  		length = size * 1024 * 1024;
+> +		buf = kzalloc(PDC_20621_PAGE_SIZE * 32, GFP_KERNEL);
+>  		while (addr < length) {
+> -			pdc20621_put_to_dimm(host, (void *) &tmp, addr,
+> -					     sizeof(u32));
+> -			addr += sizeof(u32);
+> +			pdc20621_put_to_dimm(host, buf, addr,
+> +					     PDC_20621_PAGE_SIZE * 32);
+> +			addr += PDC_20621_PAGE_SIZE * 32;
+>  		}
+> +		kfree(buf);
 
-At the kernel level, you mean?
+Comments:
 
-Filesystems already must deal with issues such as avoiding RAID stripe 
-boundaries (man mke2fs, search for 'RAID').
+1) on an older machine, where these things might be found, 1MB might be 
+a lot -- particularly if there is a lot of VM fragmentation.  Please 
+reduce the size a bit -- I suppose 128k is not unbearably slow?
 
-So I hope that same code should be applicable to cases where the 
-"logical sector size" (as exported by storage interface) differs from 
-"physical sector size" (the underlying hardware sector size, not 
-directly accessible by OS).
+2) Rather than repeating 'page size * 32' calculation multiple times, 
+put it into a named constant somewhere.
 
-But if you are talking about filesystems directly supporting sector 
-sizes >4kb, well, I'll let Linus and others settle that debate :)  I 
-will just write the driver once the dust settles...
+Other than that, looks ok!
 
 	Jeff
+
+
+
 
 
