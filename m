@@ -1,42 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13086] pata_via can't initialize 2nd HDD on VIA VX800 chipsets
- (problem in via_tf_load)
-Date: Tue, 14 Apr 2009 06:02:43 GMT
-Message-ID: <200904140602.n3E62h2d028178@demeter.kernel.org>
-References: <bug-13086-11633@http.bugzilla.kernel.org/>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Implementing NVMHCI...
+Date: Tue, 14 Apr 2009 09:22:13 +0200
+Message-ID: <874owr8ztm.fsf@basil.nowhere.org>
+References: <20090412091228.GA29937@elte.hu>
+	<Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net>
+	<20090412162018.6c1507b4@lxorguk.ukuu.org.uk>
+	<49E213AE.4060506@redhat.com>
+	<alpine.LFD.2.00.0904120950050.4583@localhost.localdomain>
+	<49E2DC96.6090407@redhat.com>
+	<alpine.LFD.2.00.0904130747440.4583@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:60663 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846AbZDNGCo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2009 02:02:44 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3E62hmA028179
-	for <linux-ide@vger.kernel.org>; Tue, 14 Apr 2009 06:02:43 GMT
-In-Reply-To: <bug-13086-11633@http.bugzilla.kernel.org/>
+Received: from one.firstfloor.org ([213.235.205.2]:49883 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbZDNHWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2009 03:22:18 -0400
+In-Reply-To: <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> (Linus Torvalds's message of "Mon, 13 Apr 2009 08:10:40 -0700 (PDT)")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Avi Kivity <avi@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13086
+Linus Torvalds <torvalds@linux-foundation.org> writes:
+>
+> You absolutely do _not_ want to manage memory in 16kB chunks (or 64kB for 
+> your example!).
 
+AFAIK at least for user visible anonymous memory Windows uses 64k 
+chunks. At least that is what Cygwin's mmap exposes. I don't know
+if it does the same for disk cache.
 
-Andrew Morton <akpm@linux-foundation.org> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|IDE                         |Serial ATA
-         AssignedTo|io_ide@kernel-bugs.osdl.org |jgarzik@pobox.com
-
-
-
-
---- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2009-04-14 06:02:42 ---
-Reassigned to ata/pata.
-
+-Andi
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+ak@linux.intel.com -- Speaking for myself only.
