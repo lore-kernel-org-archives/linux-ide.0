@@ -1,50 +1,67 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 17:49:17 -0500
-Message-ID: <1239749357.3638.3.camel@mulgrave>
-References: <49E335BA.3020103@panasas.com>
-	 <200904141654.24067.bzolnier@gmail.com>
-	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
-	 <200904150009.06539.bzolnier@gmail.com>
+Date: Tue, 14 Apr 2009 19:14:54 -0400
+Message-ID: <49E518EE.1000104@garzik.org>
+References: <49E335BA.3020103@panasas.com> <200904141654.24067.bzolnier@gmail.com> <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk> <200904150009.06539.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:35595 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750839AbZDNXPL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Apr 2009 19:15:11 -0400
 In-Reply-To: <200904150009.06539.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Wed, 2009-04-15 at 00:09 +0200, Bartlomiej Zolnierkiewicz wrote:
+Bartlomiej Zolnierkiewicz wrote:
+> We actually used quite a lot of libata PATA changes on the host driver front
+> (though because of the lack of incremental libata PATA changes and the need
+> to fix some IDE specific issues first this was not that easy) so maybe if we
+> could agree on some mid-point way back in 2005 we would be in a completely
+> different place today.
+> 
+> Lets not repeat the history again.
+> 
+>>> The fact that it is much harder to do nowadays than in 2004-2005 (without
+>>> ATAPI support, PATA support and heavy dependence on SCSI infrastructure)
+>>> is only _your_ fault.
+>> Really - you could have contributed too. Anyway I wrote most of the PATA
+>> bits, Tejun wrote a ton of stuff including EH, and Albert Lee wrote
+>> chunks of it too.
+> 
+> I did a bit work.  Check your host drivers. :)
+> 
+>> So that would be Red Hat, SuSE and IBM who are to blame right, not just
+>> Jeff ? Sounds like a conspiracy to me ;)
+> 
+> There is no conspiracy there.
+> 
+> Just the good old game known from elsewhere.
+> 
+> Top layer modern day kernel hacking is based on business principles.
+> 
+> However, like they say "Hate the Game, Not the Player". :)
+> 
+> There is really nothing wrong with it as long as we don't state
+> otherwise to new people so they are fully aware of the situation.
 
-OK, look, guys, could we stop this argument?  It's becoming a bit old.
+Actually, libata got started even before I was at Red Hat.  As I alluded 
+to at the bottom of the libata announcement[1], rewriting the IDE driver 
+into something clean and modern was one of my Projects To Do Before I 
+Die -- that is, projects not sponsored by any business or group or 
+conspiracy, but rather things I feel personally are very important to 
+the advancement of Linux.
 
-For the record, I was unhappy to have libata pata in SCSI, but it got
-moved into drivers/ata shortly after, limiting my influence.  I thought
-having a slow wind down of legacy pata in drivers/ide but moving to
-libata for sata was the correct split.  I agree with Jeff that the SCSI
-layer did provide unique features that SATA/NCQ needed at the time ...
-but I also think we need to move them into block sooner rather than
-later.
+And I have been very fortunate that other talented hackers (including 
+yourself) have been willing to work on one of my dream projects.
 
-I'm the last person ever to proscribe a kernel subsystem that has
-willing volunteers, so drivers/ide is yours as long as you want to
-maintain it.  I can certainly see the merits of a thinner stack to the
-embedded world, and not a few embedded developers seem to agree.
+	Jeff
 
-As far as moving it out of SCSI goes, I've always been a supporter of
-this.  Tejun looks like he's willing to execute, so I feel much more
-sanguine that it will happen.  The point of the notes was really to draw
-attention to something I hadn't realised:  we can't refactor block to
-get libata out of SCSI without also changing drivers/ide, which does
-make the problem harder.
 
-On a final note about the urgency of getting libata out of SCSI: Intel
-has been worrying for a while about the fatness of the SCSI/libata
-stack, and its effects on performance, especially command transmission
-via SAT, so I'm hoping they'll be supporting the effort.
 
-Jmaes
-
+[1] http://www.kernel-traffic.org/kernel-traffic/kt20030616_219.html#7
 
