@@ -1,59 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: PMPs
-Date: Tue, 14 Apr 2009 19:46:47 +0900
-Message-ID: <49E46997.2060302@kernel.org>
-References: <alpine.DEB.1.10.0904012109180.28814@uplift.swm.pp.se> <49D4073C.4010101@kernel.org> <alpine.DEB.1.10.0904081958100.29570@uplift.swm.pp.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Implementing NVMHCI...
+Date: Tue, 14 Apr 2009 07:45:08 -0400
+Message-ID: <49E47744.3040103@garzik.org>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org> <49E46779.1040106@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33289 "EHLO hera.kernel.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:41388 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752204AbZDNKq4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 06:46:56 -0400
-In-Reply-To: <alpine.DEB.1.10.0904081958100.29570@uplift.swm.pp.se>
+	id S1752541AbZDNLpm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Apr 2009 07:45:42 -0400
+In-Reply-To: <49E46779.1040106@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-ide@vger.kernel.org
+To: Avi Kivity <avi@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-Mikael Abrahamsson wrote:
-> On Thu, 2 Apr 2009, Tejun Heo wrote:
+Avi Kivity wrote:
+> Jeff Garzik wrote:
+>> Speaking of RMW...    in one sense, we have to deal with RMW anyway. 
+>> Upcoming ATA hard drives will be configured with a normal 512b sector 
+>> API interface, but underlying physical sector size is 1k or 4k.
+>>
+>> The disk performs the RMW for us, but we must be aware of physical 
+>> sector size in order to determine proper alignment of on-disk data, to 
+>> minimize RMW cycles.
+>>
 > 
->> You need to keep the first port occupied for 3726/4726; otherwise, the
->> fake config disk jumps around and it just goes belly up.  Do you
->> experience problems even with the first port occupied?
+> Virtualization has the same issue.  OS installers will typically setup 
+> the first partition at sector 63, and that means every page-sized block 
+> access will be misaligned.  Particularly bad when the guest's disk is 
+> backed on a regular file.
 > 
-> Yes, I just did some tests again (this time with 2.6.28-11-generic
-> #41-Ubuntu SMP Wed Apr 8 04:38:53 UTC 2009 i686 GNU/Linux)
-> 
-> If I cold-boot the machine with drives in bay 0 (samsung) and 1 (WD),
-> everything is fine. I then unplug the drive in 1, and put it in 2. This
-> drive isn't recognised at all (I can't see anything happening in dmesg).
-> Re-seating the drive in 0 makes both drives pop back in again.
-> 
-> [   16.558305] ata12.00: ATA-8: SAMSUNG HD501LJ, CR100-10, max UDMA7
-> [   16.569850] ata12.01: ATA-8: WDC WD5000AAKS-00YGA0, 12.01C02, max
-> UDMA/133
-> [   16.571285] scsi 11:0:0:0: Direct-Access     ATA      SAMSUNG
-> HD501LJ  CR10 PQ: 0 ANSI: 5
-> [   16.576818] scsi 11:1:0:0: Direct-Access     ATA      WDC
-> WD5000AAKS-0 12.0 PQ: 0 ANSI: 5
-> 
-> If I now unplug both, and first put in 0 (WD) and then 2(samsung),
-> samsung isn't recognised, doesn't matter if I move samsung from 2 to 1.
-> In this configuration, 0(WD), 1(samsung), re-seating 0 doesn't make the
-> samsung become visible again:
-> 
-> [ 1083.656011] ata12.01: failed to IDENTIFY (I/O error, err_mask=0x11)
-> [ 1083.656014] ata12.01: failed to recover link after 3 tries, disabling
-> 
-> Removing both and going back to 0 (samsung) and 1 (WD) make both drives
-> visible again.
+> Windows 2008 aligns partitions on a 1MB boundary, IIRC.
 
-Can you please try 2.6.29 and post full kernel log?
+Makes a lot of sense...
 
-Thanks.
 
--- 
-tejun
+>> At the moment, it seems like most of the effort to get these ATA 
+>> devices to perform efficiently is in getting partition / RAID stripe 
+>> offsets set up properly.
+>>
+>> So perhaps for NVMHCI we could
+>> (a) hardcode NVM sector size maximum at 4k
+>> (b) do RMW in the driver for sector size >4k, and
+> 
+> Why not do it in the block layer?  That way it isn't limited to one driver.
+
+Sure.  "in the driver" is a highly relative phrase :)  If there is code 
+to be shared among multiple callsites, let's share it.
+
+
+>> (c) export information indicating the true sector size, in a manner 
+>> similar to how the ATA driver passes that info to userland 
+>> partitioning tools.
+> 
+> Eventually we'll want to allow filesystems to make use of the native 
+> sector size.
+
+At the kernel level, you mean?
+
+Filesystems already must deal with issues such as avoiding RAID stripe 
+boundaries (man mke2fs, search for 'RAID').
+
+So I hope that same code should be applicable to cases where the 
+"logical sector size" (as exported by storage interface) differs from 
+"physical sector size" (the underlying hardware sector size, not 
+directly accessible by OS).
+
+But if you are talking about filesystems directly supporting sector 
+sizes >4kb, well, I'll let Linus and others settle that debate :)  I 
+will just write the driver once the dust settles...
+
+	Jeff
+
+
