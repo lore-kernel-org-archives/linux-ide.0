@@ -1,59 +1,89 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Implementing NVMHCI...
-Date: Tue, 14 Apr 2009 08:21:38 -0400
-Message-ID: <49E47FD2.3010705@garzik.org>
-References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org> <49E46779.1040106@redhat.com> <49E47744.3040103@garzik.org> <49E47CD0.3090008@redhat.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_hpt37x: fix HPT370 DMA timeouts
+Date: Tue, 14 Apr 2009 18:39:14 +0400
+Message-ID: <200904141839.14755.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45327 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752907AbZDNMWK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 08:22:10 -0400
-In-Reply-To: <49E47CD0.3090008@redhat.com>
+Received: from h155.mvista.com ([63.81.120.155]:49470 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750746AbZDNOi3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Apr 2009 10:38:29 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Avi Kivity <avi@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-Avi Kivity wrote:
-> Jeff Garzik wrote:
->>>> (c) export information indicating the true sector size, in a manner 
->>>> similar to how the ATA driver passes that info to userland 
->>>> partitioning tools.
->>>
->>> Eventually we'll want to allow filesystems to make use of the native 
->>> sector size.
->>
->> At the kernel level, you mean?
->>
-> 
-> Yes.  You'll want to align extents and I/O requests on that boundary.
+The libata driver has copied the code from the IDE driver which caused a post
+2.4.18 regression on many HPT370[A] chips -- DMA stopped to work completely,
+only causing timeouts.  Now remove hpt370_bmdma_start() for good...
 
-Sure.  And RAID today presents these issues to the filesystem...
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-man mke2fs(8), and look at extended options 'stride' and 'stripe-width'. 
-  It includes mention of RMW issues.
+---
+The patch is against the recent Linus' tree. It's intended to go into all
+stable kernels starting with 2.6.19, when the PATA drivers were first merged.
 
+See http://marc.info/?l=linux-ide&m=123912061904872 for the IDE driver patch.
 
->> But if you are talking about filesystems directly supporting sector 
->> sizes >4kb, well, I'll let Linus and others settle that debate :)  I 
->> will just write the driver once the dust settles...
-> 
-> IMO drivers should expose whatever sector size the device have, 
-> filesystems should expose their block size, and the block layer should 
-> correct any impedance mismatches by doing RMW.
-> 
-> Unfortunately, sector size > fs block size means a lot of pointless 
-> locking for the RMW, so if large sector sizes take off, we'll have to 
-> adjust filesystems to use larger block sizes.
+ drivers/ata/pata_hpt37x.c |   22 ++--------------------
+ 1 files changed, 2 insertions(+), 20 deletions(-)
 
-Don't forget the case where the device does RMW for you, and does not 
-permit direct access to physical sector size (all operations are in 
-terms of logical sector size).
-
-	Jeff
-
-
+Index: linux-2.6/drivers/ata/pata_hpt37x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
++++ linux-2.6/drivers/ata/pata_hpt37x.c
+@@ -8,7 +8,7 @@
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+  * Portions Copyright (C) 2003		Red Hat Inc
+- * Portions Copyright (C) 2005-2007	MontaVista Software, Inc.
++ * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
+  *
+  * TODO
+  *	Look into engine reset on timeout errors. Should not be	required.
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.11"
++#define DRV_VERSION	"0.6.12"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -445,23 +445,6 @@ static void hpt370_set_dmamode(struct at
+ }
+ 
+ /**
+- *	hpt370_bmdma_start		-	DMA engine begin
+- *	@qc: ATA command
+- *
+- *	The 370 and 370A want us to reset the DMA engine each time we
+- *	use it. The 372 and later are fine.
+- */
+-
+-static void hpt370_bmdma_start(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
+-	udelay(10);
+-	ata_bmdma_start(qc);
+-}
+-
+-/**
+  *	hpt370_bmdma_end		-	DMA engine stop
+  *	@qc: ATA command
+  *
+@@ -598,7 +581,6 @@ static struct scsi_host_template hpt37x_
+ static struct ata_port_operations hpt370_port_ops = {
+ 	.inherits	= &ata_bmdma_port_ops,
+ 
+-	.bmdma_start 	= hpt370_bmdma_start,
+ 	.bmdma_stop	= hpt370_bmdma_stop,
+ 
+ 	.mode_filter	= hpt370_filter,
 
