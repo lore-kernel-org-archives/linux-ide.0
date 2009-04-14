@@ -1,58 +1,72 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: libata errors
-Date: Mon, 13 Apr 2009 18:56:31 -0600
-Message-ID: <49E3DF3F.2020502@gmail.com>
-References: <4b215b9d0904071340w16a65b5bs64f6161b6042b4f1@mail.gmail.com>	<49DBC889.3080304@pobox.com> <18908.23783.745239.601473@pilspetsen.it.uu.se> <49E0DAC0.1030901@gmail.com> <49E22FD3.2010005@kernel.org> <49E3061C.4030006@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Alexander Beregalov <a.beregalov@gmail.com>
+Subject: [PATCH] sata_sx4: speed up ECC initialization
+Date: Tue, 14 Apr 2009 06:26:22 +0400
+Message-ID: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:47496 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbZDNA4i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 20:56:38 -0400
-Received: by fxm2 with SMTP id 2so2209977fxm.37
-        for <linux-ide@vger.kernel.org>; Mon, 13 Apr 2009 17:56:36 -0700 (PDT)
-In-Reply-To: <49E3061C.4030006@pobox.com>
+Received: from fg-out-1718.google.com ([72.14.220.156]:20111 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbZDNC01 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 22:26:27 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so720505fga.17
+        for <linux-ide@vger.kernel.org>; Mon, 13 Apr 2009 19:26:25 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, Mikael Pettersson <mikpe@it.uu.se>, Matt Grice <mcjgrice@gmail.com>, linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, Alexander Beregalov <a.beregalov@gmail.com>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Hello,
->>
->> Robert Hancock wrote:
->>> I tend to doubt that the driver is doing the wrong thing.
->>
->> I've tested everything including recording and cd ripping and most of
->> my devices seem happy but you never know.
->>
->>> I suspect it's more that ATAPI devices on SATA are about as
->>> standards-compliant in general as ATAPI devices on PATA (which is to
->>> say not very good) and some of them break if the controller does
->>> something slightly differently or with different timing, which is
->>> quite possible in AHCI mode.
->>>
->>> Tejun was looking at some SATA analyzer traces of a few drives that were
->>> apparently failing consistently on AHCI. Tejun, did you get anywhere
->>> with this?
->>
->> I need to take a deeper look at that but in general I couldn't find
->> anything standing out.  After a series of ATAPI changes (IIRC, the DMA
->> padding change was the last thing), most ATAPI bug reports got
->> resolved and I'm not getting many ATAPI failure bug reports other than
->> recent ahci ones anymore.  I'm not sure whethre it indicates that we
->> finally got it right or something else tho.
->>
->> Jeff, what kind of failure are you seeing?
-> 
-> Hardware:  SATA DVD-ROM/CD-RW devices, AHCI, ICH$foo
-> 
-> Reading and writing data CDs and DVDs works fine.  Ripping audio CDs 
-> using gRip application leads to timeouts almost immediately.
+ECC initialization takes too long. It writes zeroes by portions of 4
+byte, it takes more than 6 minutes to initialize 512Mb DIMM module.
+Change portion to 1Mb.
 
-Well, it's a potentially unusual transfer length compared to other 
-commands, which might be part of it. Do you have some error output? It 
-would be useful to look at the reported failed CDB.
+before:
+[10857.207576] pdc20621_dimm_init: Start ECC initialization
+[11235.333118] pdc20621_dimm_init: Finish ECC initialization
+
+after:
+[ 1005.126437] pdc20621_dimm_init: Local DIMM Speed = 100
+[ 1005.128111] pdc20621_dimm_init: Local DIMM Size = 512MB
+[ 1005.133508] Local DIMM ECC Enabled
+[ 1005.236482] pdc20621_dimm_init: Start ECC initialization
+[ 1031.278098] pdc20621_dimm_init: Finish ECC initialization
+
+Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+---
+ drivers/ata/sata_sx4.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index dce3dcc..d329501 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -1208,7 +1208,6 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+ {
+ 	int speed, size, length;
+ 	u32 addr, spd0, pci_status;
+-	u32 tmp = 0;
+ 	u32 time_period = 0;
+ 	u32 tcount = 0;
+ 	u32 ticks = 0;
+@@ -1323,14 +1322,17 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+ 	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
+ 			  PDC_DIMM_SPD_TYPE, &spd0);
+ 	if (spd0 == 0x02) {
++		void *buf;
+ 		VPRINTK("Start ECC initialization\n");
+ 		addr = 0;
+ 		length = size * 1024 * 1024;
++		buf = kzalloc(PDC_20621_PAGE_SIZE * 32, GFP_KERNEL);
+ 		while (addr < length) {
+-			pdc20621_put_to_dimm(host, (void *) &tmp, addr,
+-					     sizeof(u32));
+-			addr += sizeof(u32);
++			pdc20621_put_to_dimm(host, buf, addr,
++					     PDC_20621_PAGE_SIZE * 32);
++			addr += PDC_20621_PAGE_SIZE * 32;
+ 		}
++		kfree(buf);
+ 		VPRINTK("Finish ECC initialization\n");
+ 	}
+ 	return 0;
+-- 
+1.6.2.2
+
