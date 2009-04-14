@@ -1,88 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_sx4: speed up ECC initialization
-Date: Tue, 14 Apr 2009 07:57:57 -0400
-Message-ID: <49E47A45.60902@garzik.org>
-References: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
+From: Szabolcs Szakacsits <szaka@ntfs-3g.com>
+Subject: Re: Implementing NVMHCI...
+Date: Tue, 14 Apr 2009 14:58:11 +0300 (EEST)
+Message-ID: <Pine.LNX.4.62.0904141447520.13379@tamago.serverit.net>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net>
+ <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com>
+ <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com>
+ <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com>
+ <49E46437.5000804@garzik.org> <49E46779.1040106@redhat.com>
+ <49E47744.3040103@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43667 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751838AbZDNL6B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 07:58:01 -0400
-In-Reply-To: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
+Received: from tamago.serverit.net ([91.189.209.155]:57395 "EHLO
+	mail.hosting2.serverit.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755330AbZDNL7V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2009 07:59:21 -0400
+In-Reply-To: <49E47744.3040103@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Avi Kivity <avi@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-Alexander Beregalov wrote:
-> ECC initialization takes too long. It writes zeroes by portions of 4
-> byte, it takes more than 6 minutes to initialize 512Mb DIMM module.
-> Change portion to 1Mb.
+
+On Tue, 14 Apr 2009, Jeff Garzik wrote:
+> Avi Kivity wrote:
+> > Jeff Garzik wrote:
+> > > Speaking of RMW...    in one sense, we have to deal with RMW anyway.
+> > > Upcoming ATA hard drives will be configured with a normal 512b sector API
+> > > interface, but underlying physical sector size is 1k or 4k.
+> > > 
+> > > The disk performs the RMW for us, but we must be aware of physical sector
+> > > size in order to determine proper alignment of on-disk data, to minimize
+> > > RMW cycles.
+> > > 
+> > 
+> > Virtualization has the same issue.  OS installers will typically setup the
+> > first partition at sector 63, and that means every page-sized block access
+> > will be misaligned.  Particularly bad when the guest's disk is backed on a
+> > regular file.
+> > 
+> > Windows 2008 aligns partitions on a 1MB boundary, IIRC.
 > 
-> before:
-> [10857.207576] pdc20621_dimm_init: Start ECC initialization
-> [11235.333118] pdc20621_dimm_init: Finish ECC initialization
-> 
-> after:
-> [ 1005.126437] pdc20621_dimm_init: Local DIMM Speed = 100
-> [ 1005.128111] pdc20621_dimm_init: Local DIMM Size = 512MB
-> [ 1005.133508] Local DIMM ECC Enabled
-> [ 1005.236482] pdc20621_dimm_init: Start ECC initialization
-> [ 1031.278098] pdc20621_dimm_init: Finish ECC initialization
-> 
-> Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
-> ---
->  drivers/ata/sata_sx4.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-> index dce3dcc..d329501 100644
-> --- a/drivers/ata/sata_sx4.c
-> +++ b/drivers/ata/sata_sx4.c
-> @@ -1208,7 +1208,6 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
->  {
->  	int speed, size, length;
->  	u32 addr, spd0, pci_status;
-> -	u32 tmp = 0;
->  	u32 time_period = 0;
->  	u32 tcount = 0;
->  	u32 ticks = 0;
-> @@ -1323,14 +1322,17 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
->  	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
->  			  PDC_DIMM_SPD_TYPE, &spd0);
->  	if (spd0 == 0x02) {
-> +		void *buf;
->  		VPRINTK("Start ECC initialization\n");
->  		addr = 0;
->  		length = size * 1024 * 1024;
-> +		buf = kzalloc(PDC_20621_PAGE_SIZE * 32, GFP_KERNEL);
->  		while (addr < length) {
-> -			pdc20621_put_to_dimm(host, (void *) &tmp, addr,
-> -					     sizeof(u32));
-> -			addr += sizeof(u32);
-> +			pdc20621_put_to_dimm(host, buf, addr,
-> +					     PDC_20621_PAGE_SIZE * 32);
-> +			addr += PDC_20621_PAGE_SIZE * 32;
->  		}
-> +		kfree(buf);
+> Makes a lot of sense...
 
-Comments:
+Since Vista at least the first partition is 2048 sector aligned.
 
-1) on an older machine, where these things might be found, 1MB might be 
-a lot -- particularly if there is a lot of VM fragmentation.  Please 
-reduce the size a bit -- I suppose 128k is not unbearably slow?
+	Szaka
 
-2) Rather than repeating 'page size * 32' calculation multiple times, 
-put it into a named constant somewhere.
-
-Other than that, looks ok!
-
-	Jeff
-
-
-
-
-
+--
+NTFS-3G: http://ntfs-3g.org
