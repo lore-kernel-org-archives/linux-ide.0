@@ -1,36 +1,53 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Implementing NVMHCI...
-Date: Tue, 14 Apr 2009 09:22:13 +0200
-Message-ID: <874owr8ztm.fsf@basil.nowhere.org>
-References: <20090412091228.GA29937@elte.hu>
-	<Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net>
-	<20090412162018.6c1507b4@lxorguk.ukuu.org.uk>
-	<49E213AE.4060506@redhat.com>
-	<alpine.LFD.2.00.0904120950050.4583@localhost.localdomain>
-	<49E2DC96.6090407@redhat.com>
-	<alpine.LFD.2.00.0904130747440.4583@localhost.localdomain>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC] ahci: implement handoff quirk
+Date: Tue, 14 Apr 2009 18:16:16 +0900
+Message-ID: <49E45460.8010809@kernel.org>
+References: <485882FE.1060409@kernel.org> <49E0CB5B.3070807@garzik.org> <49E0D8B7.8010206@kernel.org> <49E0DB1E.8070701@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:49883 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbZDNHWS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2009 03:22:18 -0400
-In-Reply-To: <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> (Linus Torvalds's message of "Mon, 13 Apr 2009 08:10:40 -0700 (PDT)")
+Received: from hera.kernel.org ([140.211.167.34]:55048 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751166AbZDNJRW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Apr 2009 05:17:22 -0400
+In-Reply-To: <49E0DB1E.8070701@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Avi Kivity <avi@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, "Zhao, Richard" <Richard.Zhao@amd.com>, shane.huang@amd.com
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
->
-> You absolutely do _not_ want to manage memory in 16kB chunks (or 64kB for 
-> your example!).
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Jeff Garzik wrote:
+>>> We probably need to do this...
+>>>
+>>> it's not a controller requirement but a BIOS one, so in theory even an
+>>> existing, deployed AHCI 1.2 platform could suddenly require BIOS/OS
+>>> handoff, if a BIOS update suddenly starts doing new and weird stuff
+>>> in SMI.
+>>>
+>>> Note that we need to do BIOS/OS handoff upon resume as well as at boot
+>>> time.
+>>
+>> Yeah, probably.  Do you know of any system which makes use of this
+>> feature?  I'm a bit uneasy about committing it without any testing.
+> 
+> I don't.
+> 
+> But the purpose of the feature is to tell BIOS to cleanup and stop using
+> the hardware.  It's a dumb feature, because of compatibility realities,
+> but hey, other network and SCSI drivers have been doing this sort of
+> synchronization with their on-board firmwares for years.
+> 
+> IMO the more dangerous route is to continue loading ahci, without first
+> telling the BIOS to clean up and get out of our way.
 
-AFAIK at least for user visible anonymous memory Windows uses 64k 
-chunks. At least that is what Cygwin's mmap exposes. I don't know
-if it does the same for disk cache.
+Hmmm.... yeah, I'm just worried a bit about adding a chunk of
+completely untested code.  How about adding a big fat warning message
+which gets triggered if the handoff thing seems to be active?
 
--Andi
+Thanks.
+
 -- 
-ak@linux.intel.com -- Speaking for myself only.
+tejun
