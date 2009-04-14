@@ -1,72 +1,113 @@
-From: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: [PATCH] sata_sx4: speed up ECC initialization
-Date: Tue, 14 Apr 2009 06:26:22 +0400
-Message-ID: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
+From: Jim Yeh <jimyeh98@acard.com>
+Subject: Re: Fw: [PATCH] ahci: add ACard 8620 support (rough draft)
+Date: Tue, 14 Apr 2009 10:28:00 +0800
+Message-ID: <49E3F4B0.1080909@acard.com>
+References: <000d01c9b815$73006700$b500a8c0@JasonWuNB> <49E31219.1000301@acard.com> <49E323E1.90907@garzik.org>
+Reply-To: jimyeh98@acard.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:20111 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721AbZDNC01 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 22:26:27 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so720505fga.17
-        for <linux-ide@vger.kernel.org>; Mon, 13 Apr 2009 19:26:25 -0700 (PDT)
+Received: from 219-80-62-20.static.tfn.net.tw ([219.80.62.20]:50660 "EHLO
+	Thunder.acard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139AbZDNDCq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Apr 2009 23:02:46 -0400
+In-Reply-To: <49E323E1.90907@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, Alexander Beregalov <a.beregalov@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: jason wu <jason_wu@acard.com>, =?UTF-8?B?IuiOiuaWh+iIiShKYXNvbiBDaHVh?= =?UTF-8?B?bmcpIg==?= <jason@acard.com>, =?UTF-8?B?IumZs+WKm+iqoChSaWNoYXI=?= =?UTF-8?B?ZCBDaGVuKSI=?= <rchern@acard.com>, =?UTF-8?B?Iue/geiMguizgChEYQ==?= =?UTF-8?B?bmllbCBXZW5nKSI=?= <dweng@acard.com>, =?UTF-8?B?IuWQs+S9s+eSiyg=?= =?UTF-8?B?TGF1cmVuY2UgV3UpIg==?= <laurence@acard.com>, =?UTF-8?B?IumZs+W+tw==?= =?UTF-8?B?5aiBKERlcndlaSBDaGVuKSI=?= <derwei@acard.com>, =?UTF-8?B?IumZsw==?= =?UTF-8?B?6YeR5riFKEdlaW5nQ2hpbmcgQ2hlbiki?= <geingching@acard.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org, Tejun Heo <htejun@gmail.com>
 
-ECC initialization takes too long. It writes zeroes by portions of 4
-byte, it takes more than 6 minutes to initialize 512Mb DIMM module.
-Change portion to 1Mb.
+Dear Jeff,
 
-before:
-[10857.207576] pdc20621_dimm_init: Start ECC initialization
-[11235.333118] pdc20621_dimm_init: Finish ECC initialization
+Thanks for your explanation. We agree with you.
 
-after:
-[ 1005.126437] pdc20621_dimm_init: Local DIMM Speed = 100
-[ 1005.128111] pdc20621_dimm_init: Local DIMM Size = 512MB
-[ 1005.133508] Local DIMM ECC Enabled
-[ 1005.236482] pdc20621_dimm_init: Start ECC initialization
-[ 1031.278098] pdc20621_dimm_init: Finish ECC initialization
+ I'll prepare the hardware for your testing. The form factor of PCB wil=
+l=20
+be a 32bit PCI-base add-on card. Please advise the address for both of=20
+yours. It is expected to be sent by next week.
 
-Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
----
- drivers/ata/sata_sx4.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+Regards,
+=20
+Jim Yeh
+Product Manager
+Marketing Dept.
+ACARD Technology Corp.
+TEL:886-2-85122290#3244
 
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index dce3dcc..d329501 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -1208,7 +1208,6 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
- {
- 	int speed, size, length;
- 	u32 addr, spd0, pci_status;
--	u32 tmp = 0;
- 	u32 time_period = 0;
- 	u32 tcount = 0;
- 	u32 ticks = 0;
-@@ -1323,14 +1322,17 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
- 	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
- 			  PDC_DIMM_SPD_TYPE, &spd0);
- 	if (spd0 == 0x02) {
-+		void *buf;
- 		VPRINTK("Start ECC initialization\n");
- 		addr = 0;
- 		length = size * 1024 * 1024;
-+		buf = kzalloc(PDC_20621_PAGE_SIZE * 32, GFP_KERNEL);
- 		while (addr < length) {
--			pdc20621_put_to_dimm(host, (void *) &tmp, addr,
--					     sizeof(u32));
--			addr += sizeof(u32);
-+			pdc20621_put_to_dimm(host, buf, addr,
-+					     PDC_20621_PAGE_SIZE * 32);
-+			addr += PDC_20621_PAGE_SIZE * 32;
- 		}
-+		kfree(buf);
- 		VPRINTK("Finish ECC initialization\n");
- 	}
- 	return 0;
--- 
-1.6.2.2
 
+
+Jeff Garzik =E6=8F=90=E5=88=B0:
+> Jim Yeh wrote:
+>> Dear Jeff,
+>>
+>> This is Jim,an IC PM from ACARD Technology. Thanks for your effort o=
+n=20
+>> building Linux driver for ACARD ATP8620. Since ACARD already have a=20
+>> verified AHCI driver for ATP8620, we'd like to submit this one for=20
+>> the kernel built-in driver (please see attachment). This driver=20
+>> support Linux Kernel 2.6.29 AHCI mode for ATP8620 (2ch SATA IC) and=20
+>> ATP8624 (4ch SATA IC). It already passed our own stability and=20
+>> compatibility test with SATA devices like HDD, ODD, or=20
+>> PortMultiplier. If you have any question or need the hardware for=20
+>> testing, please don't hesitate to contact me. Thanks again for your=20
+>> help.
+>
+> Thank you for your email.
+>
+> We understand you have verified your driver, but it is standard Linux=
+=20
+> driver policy to avoid code duplication.  Multiple implementations of=
+=20
+> AHCI drivers implies several negative factors:
+>
+> * each bug fix must be reviewed across multiple AHCI drivers, to=20
+> determine if the bug fix must be copied
+>
+> * non-uniform user experience, depending on AHCI platform
+>
+> * Shared AHCI code gets much more testing and verification.
+>
+> * When a hardware vendor's AHCI chip reaches End Of Life, or the=20
+> company goes out of business, users are not abandoned.
+>
+> So, for the official Linux kernel drivers that are shipped by Red Hat=
+,=20
+> Novell/SuSE, Canonical and other vendors, we will need to modify the=20
+> existing Linux AHCI driver to support ATP8620 and ATP8624.
+>
+>
+> And yes -- test hardware would be greatly appreciated!  If you could=20
+> send these, that would be appreciated:
+>
+>     To Tejun Heo
+>     ------------
+>     1 x ATP8620
+>     1 x ATP8624
+>
+>     To Jeff Garzik
+>     --------------
+>     1 x ATP8620
+>     1 x ATP8624
+>
+> I assume this is PCI, PCI-X or PCI-Express form factor?
+>
+> Regards and thanks,
+>
+>     Jeff
+>
+>
+>
+>
+>
+> __________ Information from ESET NOD32 Antivirus, version of virus=20
+> signature database 4005 (20090413) __________
+>
+> The message was checked by ESET NOD32 Antivirus.
+>
+> http://www.eset.com
+>
+>
+>
+>
