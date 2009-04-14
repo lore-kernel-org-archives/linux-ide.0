@@ -1,96 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: handle SEMB signature better
-Date: Tue, 14 Apr 2009 19:35:10 +0900
-Message-ID: <49E466DE.7020701@kernel.org>
+From: Avi Kivity <avi@redhat.com>
+Subject: Re: Implementing NVMHCI...
+Date: Tue, 14 Apr 2009 13:37:45 +0300
+Message-ID: <49E46779.1040106@redhat.com>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49891 "EHLO hera.kernel.org"
+Received: from mx2.redhat.com ([66.187.237.31]:57158 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750856AbZDNKgT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 06:36:19 -0400
+	id S1751003AbZDNKlm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Apr 2009 06:41:42 -0400
+In-Reply-To: <49E46437.5000804@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, David Haun <drhaun88@gmail.com>, liw@liw.fi, jmcarranza@gmail.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 
-WDC WD1600JS-62MHB5 successfully hits the window between ATA/ATAPI-7
-and Serial ATA II standards and reports 3c/c3 signature which now is
-assigned to SEMB.  Make ata_dev_classify() report ATA_DEV_SEMB on the
-sig and let ata_dev_read_id() work around it by trying IDENTIFY once.
+Jeff Garzik wrote:
+> Speaking of RMW...    in one sense, we have to deal with RMW anyway. 
+> Upcoming ATA hard drives will be configured with a normal 512b sector 
+> API interface, but underlying physical sector size is 1k or 4k.
+>
+> The disk performs the RMW for us, but we must be aware of physical 
+> sector size in order to determine proper alignment of on-disk data, to 
+> minimize RMW cycles.
+>
 
-This fixes bko#11579.
+Virtualization has the same issue.  OS installers will typically setup 
+the first partition at sector 63, and that means every page-sized block 
+access will be misaligned.  Particularly bad when the guest's disk is 
+backed on a regular file.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: David Haun <drhaun88@gmail.com>
-Reported-by: Lars Wirzenius <liw@liw.fi>
-Reported-by: Juan Manuel <jmcarranza@gmail.com>
---
- drivers/ata/libata-core.c |   19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+Windows 2008 aligns partitions on a 1MB boundary, IIRC.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 065507c..8f7d217 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1231,6 +1231,9 @@ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
- 	 *
- 	 * We follow the current spec and consider that 0x69/0x96
- 	 * identifies a port multiplier and 0x3c/0xc3 a SEMB device.
-+	 * Unfortunately, WDC WD1600JS-62MHB5 (a hard drive) reports
-+	 * SEMB signature.  This is worked around in
-+	 * ata_dev_read_id().
- 	 */
- 	if ((tf->lbam == 0) && (tf->lbah == 0)) {
- 		DPRINTK("found ATA device by sig\n");
-@@ -1248,8 +1251,8 @@ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
- 	}
- 
- 	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3)) {
--		printk(KERN_INFO "ata: SEMB device ignored\n");
--		return ATA_DEV_SEMB_UNSUP; /* not yet */
-+		DPRINTK("found SEMB device by sig (could be ATA device)\n");
-+		return ATA_DEV_SEMB;
- 	}
- 
- 	DPRINTK("unknown device\n");
-@@ -2080,6 +2083,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 	struct ata_taskfile tf;
- 	unsigned int err_mask = 0;
- 	const char *reason;
-+	bool is_semb = class == ATA_DEV_SEMB;
- 	int may_fallback = 1, tried_spinup = 0;
- 	int rc;
- 
-@@ -2090,6 +2094,8 @@ retry:
- 	ata_tf_init(dev, &tf);
- 
- 	switch (class) {
-+	case ATA_DEV_SEMB:
-+		class = ATA_DEV_ATA;	/* some hard drives report SEMB sig */
- 	case ATA_DEV_ATA:
- 		tf.command = ATA_CMD_ID_ATA;
- 		break;
-@@ -2119,6 +2125,7 @@ retry:
- 	else
- 		err_mask = ata_do_dev_read_id(dev, &tf, id);
- 
-+	err_mask |= AC_ERR_DEV;
- 	if (err_mask) {
- 		if (err_mask & AC_ERR_NODEV_HINT) {
- 			ata_dev_printk(dev, KERN_DEBUG,
-@@ -2126,6 +2133,14 @@ retry:
- 			return -ENOENT;
- 		}
- 
-+		if (is_semb) {
-+			ata_dev_printk(dev, KERN_INFO, "IDENTIFY failed on "
-+				       "device w/ SEMB sig, disabled\n");
-+			/* SEMB is not supported yet */
-+			*p_class = ATA_DEV_SEMB_UNSUP;
-+			return 0;
-+		}
-+
- 		if ((err_mask == AC_ERR_DEV) && (tf.feature & ATA_ABORTED)) {
- 			/* Device or controller might have reported
- 			 * the wrong device class.  Give a shot at the
+> At the moment, it seems like most of the effort to get these ATA 
+> devices to perform efficiently is in getting partition / RAID stripe 
+> offsets set up properly.
+>
+> So perhaps for NVMHCI we could
+> (a) hardcode NVM sector size maximum at 4k
+> (b) do RMW in the driver for sector size >4k, and
+
+Why not do it in the block layer?  That way it isn't limited to one driver.
+
+> (c) export information indicating the true sector size, in a manner 
+> similar to how the ATA driver passes that info to userland 
+> partitioning tools.
+
+Eventually we'll want to allow filesystems to make use of the native 
+sector size.
+
+-- 
+I have a truly marvellous patch that fixes the bug which this
+signature is too narrow to contain.
+
