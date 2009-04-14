@@ -1,89 +1,140 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_hpt37x: fix HPT370 DMA timeouts
-Date: Tue, 14 Apr 2009 18:39:14 +0400
-Message-ID: <200904141839.14755.sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: LSF Papers online?
+Date: Tue, 14 Apr 2009 16:54:23 +0200
+Message-ID: <200904141654.24067.bzolnier@gmail.com>
+References: <49E335BA.3020103@panasas.com> <200904140324.59657.bzolnier@gmail.com> <49E461E8.10106@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49470 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750746AbZDNOi3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 10:38:29 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <49E461E8.10106@garzik.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-The libata driver has copied the code from the IDE driver which caused a post
-2.4.18 regression on many HPT370[A] chips -- DMA stopped to work completely,
-only causing timeouts.  Now remove hpt370_bmdma_start() for good...
+On Tuesday 14 April 2009 12:14:00 Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > On Tuesday 14 April 2009 00:24:57 Jeff Garzik wrote:
+> >> Bartlomiej Zolnierkiewicz wrote:
+> >>> I've started reading it and immediately noticed a thing which made by day. :-)
+> >>>
+> >>> Sorry if it will sound off-topic or undiplomatic but it is the best occasion
+> >>> to straighten up some facts:
+> >>>
+> >>>  "Discussion then moved on to the current status of getting libata out of
+> >>>   SCSI: we have had several successes, notably timer handling and pieces of
+> >>>   error handling have moved up to block. Unfortunately, the current progress
+> >>>   has reached the point where it's being impeded by the legacy IDE subsystem
+> >>>
+> >>> Heh, you can also blame the lack of world peace on the legacy IDE subsystem.
+> >>>
+> >>> I wonder who came up with this ridiculous excuse (I'm sure it wasn't James!).
+> > 
+> > It was you!? :)
+> > 
+> >>> The thing is that during last _five_ years almost nothing was done in this
+> >>> direction.  Despite the fact that it was #1 condition under which the whole
+> >>> code has been merged.  Sorry to say it but it seems like the whole merge
+> >>> strategy was to over-promise things now and worry about delivery later.
+> >> Yet, shockingly, users have been happily using libata despite all these 
+> >> horrors.
+> > 
+> > That was not the issue raised:
+> > 
+> > If you think that you can take a "I will deliver later" credit from the
+> > developers community and later cover it up by "this is still my goal, I
+> > just need to find some suckers to do it for me" and think that you won by
+> > fooling people you're sadly mistaken and will most likely have a reality
+> > check one day (not from me, I really don't care that much to waste my
+> > precious time on proving you wrong).
+> 
+> The project you refer to -- move libata out of SCSI -- is far less 
+> important than another project:  keep libata going amidst new SAS and 
+> SATA hardware.
+> 
+> Choosing to use the SCSI driver infrastructure was a solid technical 
+> decision in the beginning, and time has proven that true:  since we were 
+> inside SCSI, ATAPI and SAT support came naturally.  Support for SAS+SATA 
+> controllers came naturally.
+> 
+> So it was absolutely the right thing to do for Linux users, to 
+> de-prioritize the libata-out-of-SCSI project.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+You made this decision yourself without consulting it with anybody.
 
----
-The patch is against the recent Linus' tree. It's intended to go into all
-stable kernels starting with 2.6.19, when the PATA drivers were first merged.
+> The users were not, and are not, asking for it.  It will even introduce 
+> some breakage if you're not careful.
 
-See http://marc.info/?l=linux-ide&m=123912061904872 for the IDE driver patch.
+The users were not asking for many other things, i.e. libata PATA.
 
- drivers/ata/pata_hpt37x.c |   22 ++--------------------
- 1 files changed, 2 insertions(+), 20 deletions(-)
+> The only people who even mention it are a few key IDE and block layer 
+> developers - me, you, Tejun, Jens, sometimes James B.  Linus has 
+> probably forgotten, but for I occasionally mention it at kernel summits.
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -8,7 +8,7 @@
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-  * Portions Copyright (C) 2003		Red Hat Inc
-- * Portions Copyright (C) 2005-2007	MontaVista Software, Inc.
-+ * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
-  *
-  * TODO
-  *	Look into engine reset on timeout errors. Should not be	required.
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.11"
-+#define DRV_VERSION	"0.6.12"
- 
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -445,23 +445,6 @@ static void hpt370_set_dmamode(struct at
- }
- 
- /**
-- *	hpt370_bmdma_start		-	DMA engine begin
-- *	@qc: ATA command
-- *
-- *	The 370 and 370A want us to reset the DMA engine each time we
-- *	use it. The 372 and later are fine.
-- */
--
--static void hpt370_bmdma_start(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
--	udelay(10);
--	ata_bmdma_start(qc);
--}
--
--/**
-  *	hpt370_bmdma_end		-	DMA engine stop
-  *	@qc: ATA command
-  *
-@@ -598,7 +581,6 @@ static struct scsi_host_template hpt37x_
- static struct ata_port_operations hpt370_port_ops = {
- 	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_start 	= hpt370_bmdma_start,
- 	.bmdma_stop	= hpt370_bmdma_stop,
- 
- 	.mode_filter	= hpt370_filter,
+Did you you forget about Intel guys and other people working on SSDs?
 
+> I think Linux users are happy that they were delivered a working ATA 
+> driver of a much more clean design.  That is the delivery that matters.
+
+It was clean design in 2003.
+
+Now it is yet another fairly complex piece of code.
+
+i.e. please go into libata-eh.c, try to make sense out of it and track all
+subtle libata-SCSI-block interactions (yes, the code is clean by mingo's
+cleanness standard -- this is not the point here)
+
+To keep the design clean and modern the constant _significant_ maintenance
+work is needed.
+
+I also don't buy this "That is the delivery that matters" mantra repeated
+by some people.  Agreed delivery is the most important thing but how you get
+there is also very important in the longer-term.
+
+> Even with the benefit of hindsight, I don't see that libata development 
+> should have happened any other way.
+
+How's about starting with working on the existing ATA/IDE subsystem?
+
+You lacked _any_ hands-on experience with it.
+
+You were given green light on libata simply because we had no other choice:
+you came up with the full solution without any previous discussions and used
+the same "think about users" excuse.
+
+The SATA features that needed SCSI infrastructure came 2 years later.
+
+> Moving libata out of SCSI is now a long term, far off goal.  A goal that 
+> implies many intermediate steps, cleanups to block, libata, IDE, SCSI 
+> and other block drivers.
+
+"far off"?
+
+The fact that it is much harder to do nowadays than in 2004-2005 (without
+ATAPI support, PATA support and heavy dependence on SCSI infrastructure)
+is only _your_ fault.
+
+> I am highly confident we will reach this goal eventually, but there is 
+> no rush.  If it takes ten years, fine.  THIS IS THE PROCESS.  The end 
+> result will be that all storage drivers in the kernel are improved.
+
+"eventually"?
+
+"no rush"?
+
+"ten years"?
+
+I don't have that much patience left.
+
+> We steer this ship by having a general idea of where we want to go, not 
+> a specific roadmap.  Interesting, unexpected things happen during the 
+> journey, perhaps taking you down a different course.  Open source... 
+> it's all very zen.  :)
+
+Please save us the management fairy-tales and just show us the code.
+
+Thanks,
+Bart
