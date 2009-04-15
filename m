@@ -1,115 +1,88 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: LSF Papers online?
-Date: Wed, 15 Apr 2009 15:38:20 +0200
-Message-ID: <200904151538.20546.bzolnier@gmail.com>
-References: <49E335BA.3020103@panasas.com> <200904150009.06539.bzolnier@gmail.com> <20090415102829.7fec55f2@lxorguk.ukuu.org.uk>
+From: Roderick Colenbrander <thunderbird2k@gmail.com>
+Subject: RFC Patch: Use x86 init_hwif in the alim15x3 for x86-like PowerPC
+	systems
+Date: Wed, 15 Apr 2009 16:34:22 +0200
+Message-ID: <c8485d470904150734s47ce0f27y3ae984355e823d9f@mail.gmail.com>
+References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:5659 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080AbZDONmK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Apr 2009 09:42:10 -0400
-In-Reply-To: <20090415102829.7fec55f2@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:39914 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753590AbZDOOeY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Apr 2009 10:34:24 -0400
+Received: by bwz17 with SMTP id 17so2938104bwz.37
+        for <linux-ide@vger.kernel.org>; Wed, 15 Apr 2009 07:34:22 -0700 (PDT)
+In-Reply-To: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Wednesday 15 April 2009 11:28:29 Alan Cox wrote:
-> > I just wanted to have clear vision of the process instead of "lets merge
-> > it now and worry about real users later".
-> 
-> There was a simple vision which was to provide full coverage for all the
-> relevant ATA controllers using the libata core ASAP and leave the old IDE
-> code "as is". That was what was done.
+Hi,
 
-You took the "shortcut" instead of fixing the issue the "proper" way.
+I'm using a Xilinx ML510 it features a PowerPC 440 cpu inside a
+Virtex-5 FPGA. The board also contains a ALI M1533 south bridge
+for IDE, USB and Audio. I did a lot of work to get the pci bus working
+on this board and it works correctly but the default init code
+of the alim15x3 driver doesn't work for me. The driver explicitly
+disabled some initialization code for powerpc after uncommenting this
+code it works properly. Benjamin Herrenschmidt and I think this
+!CONFIG_PPC check should be removed because the system behaves
+like a real 'x86' system (also the i8259 interrupt controller is used).
 
-Namely, you defined "relevant" and "full coverage" as you wanted.
+Regards,
+Roderick Colenbrander
 
-Depending on the level of difficulty of the task.
 
-Wasn't IDE PMAC relevant back in 2005?
+=46rom 1c40c2f1485ecd3bc5ad7a3af537cb94de0877c3 Mon Sep 17 00:00:00 200=
+1
+=46rom: Roderick Colenbrander <thunderbird2k@gmail.com>
+Date: Wed, 15 Apr 2009 10:45:17 +0200
+Subject: [PATCH] Use the 'x86' init_hwif code in the alim15x3 for
+x86-like PowerPC boards like Xilinx ML310/410/510.
 
-It was much more relevant than CMD640 or legacy VLB drivers that you ported.
+---
+=A0drivers/ide/alim15x3.c |=A0=A0=A0 9 +++++----
+=A01 files changed, 5 insertions(+), 4 deletions(-)
 
-It is 2009 now and IDE PMAC is still much more relevant than some other
-stuff that you're working on.
+diff --git a/drivers/ide/alim15x3.c b/drivers/ide/alim15x3.c
+index 537da1c..9176c0f 100644
+--- a/drivers/ide/alim15x3.c
++++ b/drivers/ide/alim15x3.c
+@@ -402,14 +402,15 @@ static u8 ali_cable_detect(ide_hwif_t *hwif)
+=A0=A0=A0=A0 return cbl;
+=A0}
 
-Wasn't 32-bit PIO important for embedded systems back then?
-[it happened only recently]
+-#if !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC)
++#if !defined(CONFIG_SPARC64)
+=A0/**
+=A0 *=A0=A0=A0 init_hwif_ali15x3=A0=A0=A0 -=A0=A0=A0 Initialize the ALI=
+ IDE x86 stuff
+=A0 *=A0=A0=A0 @hwif: interface to configure
+=A0 *
+=A0 *=A0=A0=A0 Obtain the IRQ tables for an ALi based IDE solution on t=
+he PC
+- *=A0=A0=A0 class platforms. This part of the code isn't applicable to=
+ the
+- *=A0=A0=A0 Sparc and PowerPC systems.
++ *=A0=A0=A0 class platforms. This part of the code isn't applicable to
++ *=A0=A0=A0 Sparc systems. It is usable on 'x86-like' PowerPC systems
++ *=A0=A0=A0=A0=A0 which use a Ali M15x3 south bridge like e.g. Xilinx =
+ML310/410/510.
+=A0 */
 
-You also threw in a bunch of regressions because you didn't start from
-fixing IDE host drivers in incremental evolutionary way.
+=A0static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+@@ -455,7 +456,7 @@ static void __devinit init_hwif_ali15x3 (ide_hwif_t=
+ *hwif)
+=A0}
+=A0#else
+=A0#define init_hwif_ali15x3 NULL
+-#endif /* !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC) */
++#endif /* !defined(CONFIG_SPARC64) */
 
-You didn't even care to backport some obvious/critical fixes to IDE,
-the same IDE that all distributions (including _your_ past employer)
-were still shipping.
-
-Yes, doing it your way was faster for _you_ and gave _you_ huge competition
-advantage but prevented any reasonable review/help from _other_ people.
-
-Reinventing the whole subsystem is not a single person project.
-
-It is just physically impossible to do it properly.
-
-The complexity and the scale is too large and there will be always things
-that you miss or that other people are better at.
-
-> > Every uncomfortable technical issue raised was addressed with direct
-> > "IDE is teh crap" shouting 
-> 
-> Sorry but you are re-inventing history here. The old IDE layer was crap,
-> and for sound technical reasons including the error handling and the
-> horrible locking problems from the design level up caused by the
-> reset/error/timeout handling paths and the polled speed change on CRC
-> error change down.
-
-That was not the issue raised.
-
-> I spent years working on that stuff. Throwing it all away was not my idea
-
-So what?
-
-This doesn't make you special in any way.
-
-Few other people had similar experiences.
-
-> of fun, but it was clearly the right technical decision. I'm very happy
-> with the state of libata PATA.
-
-Maybe it is the time to retire from kernel hacking then? ;)
-
-You see, I'm not happy with the state of IDE, libata, SCSI, block
-and many other things.  I know that I'll _never_ be.  I also bet that
-most of people working with me feel in the exactly same way.
-
-More seriously, it is 2009 now.
-
-Four years after initial libata PATA introduction and I could still
-spend few next weeks sending one IDE -> libata regression fix per day,
-ranging from possible data corruption through lack of hardware support
-to duplicated code [most of issues can be tracked back to 2005].
-
-However I simply do not care.
-
-I don't need libata PATA.
-
-I don't use it, I'm not paid to work on it and it is not my project.
-
-It seems that it I'm not the only one who misunderstood the free software.
-
-If you are not interested in people wanting to improve _your_ project
-then we can end up the discussion here.
-
-You may not like me but this is pretty lame excuse for denying me
-merit and in turn damaging _your_ own project.
-
-Re-read my previous mail and ping me when you are back to the rational
-thinking.
-
-Till then I'm done with this topic.
+=A0/**
+=A0 *=A0=A0=A0 init_dma_ali15x3=A0=A0=A0 -=A0=A0=A0 set up DMA on ALi15=
+x3
+--
+1.5.6.3
