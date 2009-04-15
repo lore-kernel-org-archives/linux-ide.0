@@ -1,88 +1,42 @@
-From: Roderick Colenbrander <thunderbird2k@gmail.com>
-Subject: RFC Patch: Use x86 init_hwif in the alim15x3 for x86-like PowerPC
-	systems
-Date: Wed, 15 Apr 2009 16:34:22 +0200
-Message-ID: <c8485d470904150734s47ce0f27y3ae984355e823d9f@mail.gmail.com>
-References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: LSF Papers online?
+Date: Wed, 15 Apr 2009 15:56:14 +0100
+Message-ID: <20090415155614.3765ba63@lxorguk.ukuu.org.uk>
+References: <49E335BA.3020103@panasas.com>
+	<200904150009.06539.bzolnier@gmail.com>
+	<20090415102829.7fec55f2@lxorguk.ukuu.org.uk>
+	<200904151538.20546.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:39914 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590AbZDOOeY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Apr 2009 10:34:24 -0400
-Received: by bwz17 with SMTP id 17so2938104bwz.37
-        for <linux-ide@vger.kernel.org>; Wed, 15 Apr 2009 07:34:22 -0700 (PDT)
-In-Reply-To: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200904151538.20546.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi,
+> You may not like me but this is pretty lame excuse for denying me
+> merit and in turn damaging _your_ own project.
 
-I'm using a Xilinx ML510 it features a PowerPC 440 cpu inside a
-Virtex-5 FPGA. The board also contains a ALI M1533 south bridge
-for IDE, USB and Audio. I did a lot of work to get the pci bus working
-on this board and it works correctly but the default init code
-of the alim15x3 driver doesn't work for me. The driver explicitly
-disabled some initialization code for powerpc after uncommenting this
-code it works properly. Benjamin Herrenschmidt and I think this
-!CONFIG_PPC check should be removed because the system behaves
-like a real 'x86' system (also the i8259 interrupt controller is used).
+Oh finally we get the truth. You are peeved someone went off and did the
+job that needed doing and it wasn't you.
 
-Regards,
-Roderick Colenbrander
+Firstly it isn't *my* project. I just contribute chunks of code to it. I
+didn't even start the shift to put PATA drivers into libata, I just
+picked up a job that needed doing, did it and for the most part have now
+moved on to trying to tackle the tty layer.
 
+I really don't care about the whole merit thing. You'll note when Linus
+asked me to maintain 2.4 I said no, when some young punk called DaveM
+showed up and proved way better than me at networking code I simply
+handed over maintainership.
 
-=46rom 1c40c2f1485ecd3bc5ad7a3af537cb94de0877c3 Mon Sep 17 00:00:00 200=
-1
-=46rom: Roderick Colenbrander <thunderbird2k@gmail.com>
-Date: Wed, 15 Apr 2009 10:45:17 +0200
-Subject: [PATCH] Use the 'x86' init_hwif code in the alim15x3 for
-x86-like PowerPC boards like Xilinx ML310/410/510.
+There are plenty of projects where you can go play full contact ego wars
+all day but Linux isn't one of them. I fix stuff that needs fixing, I
+write stuff that needs writing and above all I try and get things into a
+state where other people take them over because they feel confident they
+can. If someone comes along and does the job better I'm not peeved I'm
+happy because it means Linux is better too.
 
----
-=A0drivers/ide/alim15x3.c |=A0=A0=A0 9 +++++----
-=A01 files changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ide/alim15x3.c b/drivers/ide/alim15x3.c
-index 537da1c..9176c0f 100644
---- a/drivers/ide/alim15x3.c
-+++ b/drivers/ide/alim15x3.c
-@@ -402,14 +402,15 @@ static u8 ali_cable_detect(ide_hwif_t *hwif)
-=A0=A0=A0=A0 return cbl;
-=A0}
-
--#if !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC)
-+#if !defined(CONFIG_SPARC64)
-=A0/**
-=A0 *=A0=A0=A0 init_hwif_ali15x3=A0=A0=A0 -=A0=A0=A0 Initialize the ALI=
- IDE x86 stuff
-=A0 *=A0=A0=A0 @hwif: interface to configure
-=A0 *
-=A0 *=A0=A0=A0 Obtain the IRQ tables for an ALi based IDE solution on t=
-he PC
-- *=A0=A0=A0 class platforms. This part of the code isn't applicable to=
- the
-- *=A0=A0=A0 Sparc and PowerPC systems.
-+ *=A0=A0=A0 class platforms. This part of the code isn't applicable to
-+ *=A0=A0=A0 Sparc systems. It is usable on 'x86-like' PowerPC systems
-+ *=A0=A0=A0=A0=A0 which use a Ali M15x3 south bridge like e.g. Xilinx =
-ML310/410/510.
-=A0 */
-
-=A0static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
-@@ -455,7 +456,7 @@ static void __devinit init_hwif_ali15x3 (ide_hwif_t=
- *hwif)
-=A0}
-=A0#else
-=A0#define init_hwif_ali15x3 NULL
--#endif /* !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC) */
-+#endif /* !defined(CONFIG_SPARC64) */
-
-=A0/**
-=A0 *=A0=A0=A0 init_dma_ali15x3=A0=A0=A0 -=A0=A0=A0 set up DMA on ALi15=
-x3
---
-1.5.6.3
+Alan
