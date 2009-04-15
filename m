@@ -1,71 +1,62 @@
-From: Artem Bityutskiy <dedekind@infradead.org>
-Subject: Re: Implementing NVMHCI...
-Date: Wed, 15 Apr 2009 09:37:50 +0300
-Message-ID: <1239777470.3390.164.camel@localhost.localdomain>
-References: <20090412091228.GA29937@elte.hu>
-	 <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net>
-	 <alpine.LFD.2.00.0904120820410.4583@localhost.localdomain>
-	 <6934efce0904141052j3d4f87cey9fc4b802303aa73b@mail.gmail.com>
-Reply-To: dedekind@infradead.org
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] sata_sx4: speed up ECC initialization
+Date: Wed, 15 Apr 2009 10:02:46 +0200
+Message-ID: <18917.38054.452176.604309@pilspetsen.it.uu.se>
+References: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>
+	<49E47A45.60902@garzik.org>
+	<20090414200054.GB17134@orion>
+	<49E4F047.3030500@garzik.org>
+	<a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:23495 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbZDOGjf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Apr 2009 02:39:35 -0400
-In-Reply-To: <6934efce0904141052j3d4f87cey9fc4b802303aa73b@mail.gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:33428 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751185AbZDOIDz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Apr 2009 04:03:55 -0400
+In-Reply-To: <a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jared Hulbert <jaredeh@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>, David Woodhouse <dwmw2@infradead.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Tue, 2009-04-14 at 10:52 -0700, Jared Hulbert wrote:
->         It really isn't worth it. It's much better for everybody to
->         just be aware
->         of the incredible level of pure suckage of a general-purpose
->         disk that has
->         hardware sectors >4kB. Just educate people that it's not good=
-=2E
->         Avoid the
->         whole insane suckage early, rather than be disappointed in
->         hardware that
->         is total and utter CRAP and just causes untold problems.
->=20
-> I don't disagree that >4KB DISKS are a bad idea. But I don't think
-> that's what's going on here.  As I read it, NVMHCI would plug into th=
-e
-> MTD subsystem, not the block subsystem.
->=20
->=20
-> NVMHCI, as far as I understand the spec, is not trying to be a
-> general-purpose disk, it's for exposing more or less the raw NAND.  A=
-s
-> far as I can tell it's a DMA engine spec for large arrays of NAND.
-> BTW, anybody actually seen a NVMHCI device or plan on making one?
+Alexander Beregalov writes:
+ > >> From: Alexander Beregalov <a.beregalov@gmail.com>
+ > >> Date: Tue, 14 Apr 2009 23:55:52 +0400
+ > >> Subject: [PATCH v2] sata_sx4: speed up ECC initialization
+ > >>
+ > >> ECC initialization takes too long. It writes zeroes by portions
+ > >> of 4 byte, it takes more than 6 minutes on my machine to initiali=
+ze
+ > >> 512Mb ECC DIMM module. Change portion to 128Kb - it significantly
+ > >> reduces initialization time.
+ > >>
+ > >> Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+ > >> ---
+ > >> =C2=A0drivers/ata/sata_sx4.c | =C2=A0 11 +++++++----
+ > >> =C2=A01 files changed, 7 insertions(+), 4 deletions(-)
+ > >
+ > >
+ > > Applied, to libata-dev.git#upstream
+ > >
+ > > Thanks!
+ > >
+ > > So... =C2=A0 the $64,000 question: =C2=A0does sata_sx4 work for yo=
+u?
+ >=20
+ > No, not yet! :)
+ > It works without disks ;)
+ > It has found disks, but got timeout from them.
+ > Some specific functions should be added to ops structure.
+ >=20
+ > At first I am trying to understand how to detect cable type.
+ > I have two examples: from Promise partial source code and from FreeB=
+SD.
+ >=20
+ > But PGuide says the chip automatically detects cable type.
+ > Does it mean the driver should not do anything with it? - I will try=
+ it.
 
-I briefly glanced at the doc, and it does not look like this is an
-interface to expose raw NAND. E.g., I could not find "erase" operation.
-I could not find information about bad eraseblocks.
-
-It looks like it is not about raw NANDs. May be about "managed" NANDs.
-
-Also, the following sentences from the "Outside of Scope" sub-section
-suggest I'm right:
-"NVMHCI is also specified above any non-volatile memory management, lik=
-e
-wear leveling. Erases and other management tasks for NVM technologies
-like NAND are abstracted.".
-
-So it says NVMHCI is _above_ wear levelling, which means FTL would be
-_inside_ the NVMHCI device, which is not about raw NAND.
-
-But I may be wrong, I spent less than 10 minutes looking at the doc,
-sorry.
-
---=20
-Best regards,
-Artem Bityutskiy (=D0=91=D0=B8=D1=82=D1=8E=D1=86=D0=BA=D0=B8=D0=B9 =D0=90=
-=D1=80=D1=82=D1=91=D0=BC)
-
+No, it means you query the chip and report what it detected
+to libata. The cable type affects speed settings.
