@@ -1,67 +1,75 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 19:14:54 -0400
-Message-ID: <49E518EE.1000104@garzik.org>
-References: <49E335BA.3020103@panasas.com> <200904141654.24067.bzolnier@gmail.com> <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk> <200904150009.06539.bzolnier@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Frequent Head Unload Problem
+Date: Tue, 14 Apr 2009 19:27:16 -0600
+Message-ID: <49E537F4.8000807@gmail.com>
+References: <49E4BF3E.9040105@gavsworld.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35595 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750839AbZDNXPL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Apr 2009 19:15:11 -0400
-In-Reply-To: <200904150009.06539.bzolnier@gmail.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:43335 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755710AbZDOB10 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2009 21:27:26 -0400
+Received: by fxm2 with SMTP id 2so2686070fxm.37
+        for <linux-ide@vger.kernel.org>; Tue, 14 Apr 2009 18:27:23 -0700 (PDT)
+In-Reply-To: <49E4BF3E.9040105@gavsworld.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Gavin Cameron <gavin@gavsworld.net>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> We actually used quite a lot of libata PATA changes on the host driver front
-> (though because of the lack of incremental libata PATA changes and the need
-> to fix some IDE specific issues first this was not that easy) so maybe if we
-> could agree on some mid-point way back in 2005 we would be in a completely
-> different place today.
+Gavin Cameron wrote:
+> Hi,
 > 
-> Lets not repeat the history again.
+> It's been a while since I've been in touch. I previously had 2 problems:
+> 1. PATA DVD writer not working
+> 2. Frequent HDD head unloads
 > 
->>> The fact that it is much harder to do nowadays than in 2004-2005 (without
->>> ATAPI support, PATA support and heavy dependence on SCSI infrastructure)
->>> is only _your_ fault.
->> Really - you could have contributed too. Anyway I wrote most of the PATA
->> bits, Tejun wrote a ton of stuff including EH, and Albert Lee wrote
->> chunks of it too.
-> 
-> I did a bit work.  Check your host drivers. :)
-> 
->> So that would be Red Hat, SuSE and IBM who are to blame right, not just
->> Jeff ? Sounds like a conspiracy to me ;)
-> 
-> There is no conspiracy there.
-> 
-> Just the good old game known from elsewhere.
-> 
-> Top layer modern day kernel hacking is based on business principles.
-> 
-> However, like they say "Hate the Game, Not the Player". :)
-> 
-> There is really nothing wrong with it as long as we don't state
-> otherwise to new people so they are fully aware of the situation.
+> I eventually caved in and replaced the PATA DVD drive with a SATA and 
+> that works perfectly. However, this head unloading in really annoying 
+> primarily because the noise the drives makes just doens't sound healthy 
+> - it's a high pitch squeal and then a couple of clicks.
 
-Actually, libata got started even before I was at Red Hat.  As I alluded 
-to at the bottom of the libata announcement[1], rewriting the IDE driver 
-into something clean and modern was one of my Projects To Do Before I 
-Die -- that is, projects not sponsored by any business or group or 
-conspiracy, but rather things I feel personally are very important to 
-the advancement of Linux.
+Can you tell which drive is doing it? I'm assuming it's not both.. If 
+you can figure out which one you can try some different APM values to 
+see if that helps anything. You could also try disabling the standby 
+timer in case that's doing it, with "hdparm -S 0".
 
-And I have been very fortunate that other talented hackers (including 
-yourself) have been willing to work on one of my dream projects.
+If none of those help, there may not be a lot else you can do about it. 
+The OS really has no control over when the drive decides to unload, 
+other than those settings..
 
-	Jeff
-
-
-
-[1] http://www.kernel-traffic.org/kernel-traffic/kt20030616_219.html#7
+> 
+> Anyway, a reminder of the basic system:
+>     * ASUS M2V M/B (VIA K8T890 / VIA VT8237A chipset)
+>     * AMD Athlon 64 X2 6000+
+>     * SATA LiteOn DVD RAM/RW
+>     * Ubuntu 9.04 (Beta) - kernel 2.6.28-11-generic
+> 
+> Since I last was in touch, I've converted the system to Ubuntu (I was 
+> hoping that it was a Fedora quirk) with no change in head unloads with 
+> either 8.10 or 9.04.
+> 
+> I've tried the following in /etc/rc.local :
+> /sbin/hdparm -B 254 /dev/sda
+> /sbin/hdparm -B 254 /dev/sdb
+> 
+> Which makes no difference at all. Also, I tried setting 255, but that 
+> also had no affect.
+> 
+> I've included all of the normal files that I think you may need:
+> 
+> sudo dmidecode > dmidecode.txt
+> sudo hdparm -I /dev/sda > hdparm-sda.txt
+> sudo hdparm -I /dev/sdb > hdparm-sdb.txt
+> sudo smartctl -a /dev/sda > smartctl-sda.txt
+> sudo smartctl -a /dev/sdb > smartctl-sdb.txt
+> lsmod > lsmod.txt
+> 
+> Hopefully you can find the root of the problem.
+> 
+> Best regards,
+> Gavin.
+> 
 
