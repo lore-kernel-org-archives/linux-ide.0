@@ -1,100 +1,104 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: LSF Papers online?
-Date: Thu, 16 Apr 2009 11:37:02 -0500
-Message-ID: <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
-References: <49E335BA.3020103@panasas.com>
-	 <200904141654.24067.bzolnier@gmail.com>
-	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
-	 <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave>
-	 <49E53AE6.4010803@gmail.com>
-	 <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
+Date: Thu, 16 Apr 2009 11:45:53 -0600
+Message-ID: <20090416174553.GE1926@parisc-linux.org>
+References: <49E335BA.3020103@panasas.com> <200904141654.24067.bzolnier@gmail.com> <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk> <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave> <49E53AE6.4010803@gmail.com> <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com> <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35667 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754240AbZDPQhE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Apr 2009 12:37:04 -0400
-In-Reply-To: <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:42777 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755603AbZDPRpz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Apr 2009 13:45:55 -0400
+Content-Disposition: inline
+In-Reply-To: <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Grant Grundler <grundler@google.com>, Robert Hancock <hancockrwd@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 2009-04-15 at 23:31 -0700, Grant Grundler wrote:
-> On Tue, Apr 14, 2009 at 6:39 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> > James Bottomley wrote:
+On Thu, Apr 16, 2009 at 11:37:02AM -0500, James Bottomley wrote:
+> of data.   I fully agree that some of the less smart SATA controllers
+> have a lot of catching up to do in this space, but that isn't
+> necessarily a driver issue; you can't polish a turd as the saying
+> goes ...
 
-[...]
-> > Compared to
-> > any kind of hardware/controller interactions I wouldn't say it's likely to
-> > be a significant bottleneck at all. In oprofile runs I've done with heavy
-> > ATA activity, the top time consumers are the interrupt handlers,
-> 
-> interrupts just introduce completion reporting latency. Interrupt mitigation
-> techinques/smarter controller can reduce this.
+I guess you haven't seen the episode of Mythbusters where they manage
+to do exactly that?  ;-)
 
-For sure smarter controllers; I'm less convinced on interrupt mitigation
-techniques, primarily because smart controllers tend to do batch
-completion anyway.
+> IOPS are starting to come up because SSDs are saying they prefer many
+> smaller transactions to an accumulated larger one.  I'm still not
 
-The reason storage shouldn't really need interrupt mitigation (like NAPI
-for networks) is that we shouldn't ever really be surprised by an
-interrupt, unlike networks.  We should always know what payloads will be
-coming at us from the device (and have buffers ready and waiting).  Most
-SCSI controllers (including the SAS ones) do all of this today: You can
-send out I/O and on some of them get under two interrupts per gigabyte
-of data.   I fully agree that some of the less smart SATA controllers
-have a lot of catching up to do in this space, but that isn't
-necessarily a driver issue; you can't polish a turd as the saying
-goes ...
+I don't think that's what SSDs are saying.  The protocol (and controllers)
+still work better if you send down one 128k IO than 32 4k IOs.  But with
+the low latency of doing accesses, it's better to send down a 16k IO
+now than it is to wait around a bit and see if another 16k IO comes along.
 
-> > command issue paths,
-> 
-> Hrm? Is this in the device driver?
-> 
-> > code that actually is poking IO registers.
-> 
-> Stupid controller design. NICs have been able to run without
-> MMIO *Reads* in the performance for more than 5 years now.
-> New "Enterprise" SAS/SATA controllers are better but I'm not
-> at liberty to discuss those. (sorry)
+> entirely convinced that trying to rightsize is wrong here:  most of the
+> FS data is getting more contiguous, so even for SSDs we can merge
+> without a lot of work.  A simple back of the envelope calculation can
+> give the rightizing:  If you want a SSD to max out at its 31 allowed
+> tags saturating a 3G sata link, then you're talking 10M per tag per
 
-That's both a protocol and a controller issue for SATA: some of the ATA
-transfer modes (like pio) have a lot higher overhead (and,
-unfortunately, less offload in the controller) in the protocol stack and
-can be unavoidable on certain transactions.
+Better than that, only 8MB of data per tag per second.  SATA effectively
+limits you to 250MB/s.  That's 2016 IOPS per tag.  Of course, this
+assumes you're only doing the NCQ commands and not, say, issuing TRIM
+or something.
 
-> > The libata-scsi code
-> > hasn't even shown up on the radar in my experience.
-> 
-> It won't for normal disk IOPS rates (<1000 IOPS per disk).
-> Run it at 20K or 50K IOPS and see again.
-> NICs are pushing alot more than that.
+> second.  If we assume a 4k sector size, that's 2500 IOPS per tag
+> (there's no real point doing less than 4k, because that has us splitting
+> the page cache). Or, to put it another way, over 75k IOPS for a single
+> SSD doesn't make sense ... the interesting question is whether it would
+> make more sense to align on, say 16k io and so expect to max out at 20k
+> IOPS.
 
-So again, we get to this terminology problem:  NICs tend to have a fixed
-packet size (the network MTU) so IOPS/s makes a lot of sense for them.
-In most storage transactions we don't really have MTU limitations, so we
-try to right size the outgoing transactions to maximize for bandwidth,
-so IOPS don't tell the full story.  (after all, if I see all my packets
-are 128k, I can artificially reduce the merge limit to 64k and double my
-IOPS).
+If we're serious about getting 2000 IOPS per tag, then the round-trip
+inside the kernel to recycle a tag has to be less than 500 microseconds.
+Do you have a good idea about how to measure what that is today?
+Here's the call path taken by the AHCI driver:
 
-IOPS are starting to come up because SSDs are saying they prefer many
-smaller transactions to an accumulated larger one.  I'm still not
-entirely convinced that trying to rightsize is wrong here:  most of the
-FS data is getting more contiguous, so even for SSDs we can merge
-without a lot of work.  A simple back of the envelope calculation can
-give the rightizing:  If you want a SSD to max out at its 31 allowed
-tags saturating a 3G sata link, then you're talking 10M per tag per
-second.  If we assume a 4k sector size, that's 2500 IOPS per tag
-(there's no real point doing less than 4k, because that has us splitting
-the page cache). Or, to put it another way, over 75k IOPS for a single
-SSD doesn't make sense ... the interesting question is whether it would
-make more sense to align on, say 16k io and so expect to max out at 20k
-IOPS.
+ahci_interrupt()
+ahci_port_intr()
+ata_qc_complete_multiple()
+ata_qc_complete()
+__ata_qc_complete()
+ata_scsi_qc_complete() [qc->complete_fn]
+scsi_done() [qc->scsidone]
+blk_complete_request()
+__blk_complete_request()
+raise_softirq_irqoff()
+...
+blk_done_softirq()
+scsi_softirq_done() [rq->q->softirq_done_fn]
+scsi_finish_command()
+scsi_io_completion()
+scsi_end_request()
+scsi_next_command()
+scsi_run_queue()
+__blk_run_queue()
+blk_invoke_request_fn()
+scsi_request_fn() [q->request_fn]
+scsi_dispatch_cmd()
+ata_scsi_translate() [host->hostt->queuecommand]
+ata_qc_issue()
+ahci_qc_issue() [ap->ops->qc_issue]
 
-James
+I can see a few ways to cut down the latency between knowing a tag is
+no longer used and starting the next command.
 
+We could pretend the AHCI driver has a queue depth of 64, queue up
+commands in the driver, swap the tags over, and send out the next command
+before we process this command.
 
+This is similar to a technique that's used in some old SCSI drivers that
+didn't support tagged commands at all -- a second command was queued
+inside the driver while the first was executing on the device.
+
+But then, we had that big movement towards elimintaing queues from inside
+drivers ... maybe we need another way.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
