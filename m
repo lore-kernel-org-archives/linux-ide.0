@@ -1,42 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_sil: enable 32-bit PIO
-Date: Thu, 16 Apr 2009 15:24:48 -0400
-Message-ID: <49E78600.5090306@garzik.org>
-References: <49E417B8.8070504@gmail.com>
+Subject: Re: [PROPOSAL] ata: Report 16/32bit PIO as best we can
+Date: Thu, 16 Apr 2009 15:29:06 -0400
+Message-ID: <49E78702.5080308@garzik.org>
+References: <20090409163107.3744.14309.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37915 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41988 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757889AbZDPTYv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Apr 2009 15:24:51 -0400
-In-Reply-To: <49E417B8.8070504@gmail.com>
+	id S1755404AbZDPT3K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Apr 2009 15:29:10 -0400
+In-Reply-To: <20090409163107.3744.14309.stgit@t61.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: ide <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> 32-bit PIO seems to work fine on sata_sil hardware (tested on SiI3114) and is
-> listed as OK in the Silicon Image datasheets. Enable it.
+Alan Cox wrote:
+> The legacy old IDE API for this is a bit primitive so we try and map stuff
+> sensibly onto it.
 > 
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+> - Set PIO over DMA devices to report 32bit
+> - Add ability to change the PIO32 settings if the controller permits it
+> - Add that functionality into the sff drivers
+> - Add that functionality into the VLB legacy driver
+> - Turn on the 32bit PIO on the ninja32 and add support there
 > 
-> diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-> index e67ce8e..030ec07 100644
-> --- a/drivers/ata/sata_sil.c
-> +++ b/drivers/ata/sata_sil.c
-> @@ -183,7 +183,7 @@ static struct scsi_host_template sil_sht = {
->  };
->  
->  static struct ata_port_operations sil_ops = {
-> -	.inherits		= &ata_bmdma_port_ops,
-> +	.inherits		= &ata_bmdma32_port_ops,
->  	.dev_config		= sil_dev_config,
->  	.set_mode		= sil_set_mode,
->  	.bmdma_setup            = sil_bmdma_setup,
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ---
+> 
+>  drivers/ata/libata-scsi.c  |   30 ++++++++++++++++++++++++++----
+>  drivers/ata/libata-sff.c   |   27 +++++++++++++++++++++++++++
+>  drivers/ata/pata_legacy.c  |   33 ++++++++++++++++++++-------------
+>  drivers/ata/pata_ninja32.c |    4 +++-
+>  include/linux/libata.h     |    8 ++++++++
+>  5 files changed, 84 insertions(+), 18 deletions(-)
 
-applied
+applied to #upstream-fixes
 
 
