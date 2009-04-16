@@ -1,33 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: use ATA_ID_CFA_*
-Date: Thu, 16 Apr 2009 15:23:19 -0400
-Message-ID: <49E785A7.2060807@pobox.com>
-References: <200904132050.00352.sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_sil: enable 32-bit PIO
+Date: Thu, 16 Apr 2009 15:24:48 -0400
+Message-ID: <49E78600.5090306@garzik.org>
+References: <49E417B8.8070504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37878 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37915 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758338AbZDPTXW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Apr 2009 15:23:22 -0400
-In-Reply-To: <200904132050.00352.sshtylyov@ru.mvista.com>
+	id S1757889AbZDPTYv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Apr 2009 15:24:51 -0400
+In-Reply-To: <49E417B8.8070504@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: ide <linux-ide@vger.kernel.org>
 
-Sergei Shtylyov wrote:
-> Use ATA_ID_CFA_* constants for CFA specific identify data words 162 and 163.
+Robert Hancock wrote:
+> 32-bit PIO seems to work fine on sata_sil hardware (tested on SiI3114) and is
+> listed as OK in the Silicon Image datasheets. Enable it.
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 > 
-> ---
-> Resending now (when it's too late already :-)...
-> This patch is against the recent Linus' tree.
-> 
->  drivers/ata/libata-core.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
+> diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+> index e67ce8e..030ec07 100644
+> --- a/drivers/ata/sata_sil.c
+> +++ b/drivers/ata/sata_sil.c
+> @@ -183,7 +183,7 @@ static struct scsi_host_template sil_sht = {
+>  };
+>  
+>  static struct ata_port_operations sil_ops = {
+> -	.inherits		= &ata_bmdma_port_ops,
+> +	.inherits		= &ata_bmdma32_port_ops,
+>  	.dev_config		= sil_dev_config,
+>  	.set_mode		= sil_set_mode,
+>  	.bmdma_setup            = sil_bmdma_setup,
 
 applied
 
