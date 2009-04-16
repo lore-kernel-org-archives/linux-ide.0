@@ -1,42 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PROPOSAL] ata: Report 16/32bit PIO as best we can
-Date: Thu, 16 Apr 2009 15:29:06 -0400
-Message-ID: <49E78702.5080308@garzik.org>
-References: <20090409163107.3744.14309.stgit@t61.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] hpt366: use ATA_DMA_* constants
+Date: Thu, 16 Apr 2009 20:58:25 +0200
+Message-ID: <200904162058.25731.bzolnier@gmail.com>
+References: <200904091638.50949.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41988 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755404AbZDPT3K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Apr 2009 15:29:10 -0400
-In-Reply-To: <20090409163107.3744.14309.stgit@t61.ukuu.org.uk>
+Received: from fk-out-0910.google.com ([209.85.128.189]:35201 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754283AbZDPTjM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Apr 2009 15:39:12 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so261819fkq.5
+        for <linux-ide@vger.kernel.org>; Thu, 16 Apr 2009 12:39:10 -0700 (PDT)
+In-Reply-To: <200904091638.50949.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> The legacy old IDE API for this is a bit primitive so we try and map stuff
-> sensibly onto it.
+On Thursday 09 April 2009 14:38:50 Sergei Shtylyov wrote:
+> Use ATA_DMA_* constants instead of the bare numbers for the BMIDE register bits.
 > 
-> - Set PIO over DMA devices to report 32bit
-> - Add ability to change the PIO32 settings if the controller permits it
-> - Add that functionality into the sff drivers
-> - Add that functionality into the VLB legacy driver
-> - Turn on the 32bit PIO on the ninja32 and add support there
-> 
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
-> ---
-> 
->  drivers/ata/libata-scsi.c  |   30 ++++++++++++++++++++++++++----
->  drivers/ata/libata-sff.c   |   27 +++++++++++++++++++++++++++
->  drivers/ata/pata_legacy.c  |   33 ++++++++++++++++++++-------------
->  drivers/ata/pata_ninja32.c |    4 +++-
->  include/linux/libata.h     |    8 ++++++++
->  5 files changed, 84 insertions(+), 18 deletions(-)
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-applied to #upstream-fixes
-
-
+applied
