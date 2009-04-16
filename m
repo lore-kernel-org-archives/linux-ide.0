@@ -1,30 +1,78 @@
-From: Edward Shao <laface.tw@gmail.com>
-Subject: Question about ALPM, HIPM and DIPM
-Date: Thu, 16 Apr 2009 11:03:10 +0800
-Message-ID: <ff05f3d00904152003s1938f20crec86c6d62a2ef3bf@mail.gmail.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: LSF Papers online?
+Date: Wed, 15 Apr 2009 23:31:13 -0700
+Message-ID: <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
+References: <49E335BA.3020103@panasas.com>
+	 <200904141654.24067.bzolnier@gmail.com>
+	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
+	 <200904150009.06539.bzolnier@gmail.com>
+	 <1239749357.3638.3.camel@mulgrave> <49E53AE6.4010803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:51677 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966AbZDPDDL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Apr 2009 23:03:11 -0400
-Received: by rv-out-0506.google.com with SMTP id b25so2843077rvf.5
-        for <linux-ide@vger.kernel.org>; Wed, 15 Apr 2009 20:03:10 -0700 (PDT)
+Received: from smtp-out.google.com ([216.239.33.17]:44604 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755804AbZDPGbS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Apr 2009 02:31:18 -0400
+In-Reply-To: <49E53AE6.4010803@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi~folks,
+On Tue, Apr 14, 2009 at 6:39 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
+> James Bottomley wrote:
+>>
+>> On a final note about the urgency of getting libata out of SCSI: Intel
+>> has been worrying for a while about the fatness of the SCSI/libata
+>> stack, and its effects on performance, especially command transmission
+>> via SAT, so I'm hoping they'll be supporting the effort.
+>
+> I really don't see this as being a big driver for this move. If you look at
+> the code that does the translation of SCSI commands to ATA commands, there
+> really is not much there at all of any consequence to CPU usage.
 
-I'm wondering about AHCI ALPM, SATA HIPM and DIPM.
+It's measurable. Just need to get sufficient IO rates going. Normal JBOD/RAID
+controllers don't care.
 
-* ALPM is HIPM for AHCI?
-* If ALPM is enabled but SATA HDD does not support HIPM (only DIPM),
-ALPM is effective?
+See Matthew "the Intel guy" :) Wilcox and Kristen Accardi's paper at LSF2008:
+    http://iou.parisc-linux.org/lsf2008/IO-latency-Kristen-Carlson-Accardi.pdf
 
-Thanks you very much.
+or just google for "Matthew Wilcox SSD perf" - first four hits I
+looked at are what I expected:
+    hardware.slashdot.org/article.pl?sid=09/02/13/2337258&from=rss
+    markmail.org/message/w22r6y4gik7bjf2w
+    https://kerneltrap.org/mailarchive/linux-scsi/2008/12/10/4388804/thread
+    www.usenix.org/events/lsf08/tech/IO_Carlson_Accardi_SATA.pdf
 
-Best Regards,
-Edward
+(last one is the official location of the same paper)
+
+> Compared to
+> any kind of hardware/controller interactions I wouldn't say it's likely to
+> be a significant bottleneck at all. In oprofile runs I've done with heavy
+> ATA activity, the top time consumers are the interrupt handlers,
+
+interrupts just introduce completion reporting latency. Interrupt mitigation
+techinques/smarter controller can reduce this.
+
+> command issue paths,
+
+Hrm? Is this in the device driver?
+
+> code that actually is poking IO registers.
+
+Stupid controller design. NICs have been able to run without
+MMIO *Reads* in the performance for more than 5 years now.
+New "Enterprise" SAS/SATA controllers are better but I'm not
+at liberty to discuss those. (sorry)
+
+> The libata-scsi code
+> hasn't even shown up on the radar in my experience.
+
+It won't for normal disk IOPS rates (<1000 IOPS per disk).
+Run it at 20K or 50K IOPS and see again.
+NICs are pushing alot more than that.
+
+hth,
+grant
