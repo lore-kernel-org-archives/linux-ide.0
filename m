@@ -1,41 +1,30 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 5/5] libata: Add support for TRIM
-Date: Thu, 16 Apr 2009 16:25:41 -0400
-Message-ID: <49E79445.3080806@rtr.ca>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <1238683047-13588-5-git-send-email-willy@linux.intel.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [git patches] libata fixes
+Date: Thu, 16 Apr 2009 16:28:15 -0400
+Message-ID: <49E794DF.8050001@rtr.ca>
+References: <20090416193924.GA27823@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:59324 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:49595 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751975AbZDPUZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Apr 2009 16:25:43 -0400
-In-Reply-To: <1238683047-13588-5-git-send-email-willy@linux.intel.com>
+	id S1751975AbZDPU2Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Apr 2009 16:28:16 -0400
+In-Reply-To: <20090416193924.GA27823@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> ---
->  drivers/ata/libata-scsi.c |   46 +++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 46 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index b9747fa..d4c8b8b 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-...
+Jeff Garzik wrote:
+> Various minor fixes, and a small libata.h cleanup.
+..
 
-It works.  :)
+Any chance you could also push out the last of the sata_mv errata workarounds?
+That's the one that prevents data corruption for multisector WRITEs.
 
-I'm using TRIM on a 120GB OCZ Vertex SSD here now,
-and instrumented ata_discard_fn() to log what it does.
-Seems to work perfectly, and the sector ranges for TRIM
-match those given by "hdparm --fibmap" for the files I've tried.
+[PATCH 01/02] sata_mv: tidy up qc->tf usage in qc_prep() functions
+[PATCH 02/02] sata_mv: workaround for multi_count errata sata24
 
-Does this also TRIM metadata (eg. block bitmaps and the like) ?
-
-Thanks Matthew (and others).
+Thanks
