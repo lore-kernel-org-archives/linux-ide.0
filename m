@@ -1,30 +1,116 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [git patches] libata fixes
-Date: Thu, 16 Apr 2009 16:28:15 -0400
-Message-ID: <49E794DF.8050001@rtr.ca>
-References: <20090416193924.GA27823@havoc.gtf.org>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: RFC Patch: Use x86 init_hwif in the alim15x3 for x86-like
+	PowerPC systems
+Date: Fri, 17 Apr 2009 00:57:35 +0400
+Message-ID: <20090416205735.GA26519@oksana.dev.rtsoft.ru>
+References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
+	<c8485d470904150734s47ce0f27y3ae984355e823d9f@mail.gmail.com>
+	<200904162130.01237.bzolnier@gmail.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:49595 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751975AbZDPU2Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Apr 2009 16:28:16 -0400
-In-Reply-To: <20090416193924.GA27823@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <200904162130.01237.bzolnier@gmail.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Roderick Colenbrander <thunderbird2k@gmail.com>, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Various minor fixes, and a small libata.h cleanup.
-..
+On Thu, Apr 16, 2009 at 09:30:00PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi,
+> 
+> On Wednesday 15 April 2009 16:34:22 Roderick Colenbrander wrote:
+> > Hi,
+> > 
+> > I'm using a Xilinx ML510 it features a PowerPC 440 cpu inside a
+> > Virtex-5 FPGA. The board also contains a ALI M1533 south bridge
+> > for IDE, USB and Audio. I did a lot of work to get the pci bus working
+> > on this board and it works correctly but the default init code
+> > of the alim15x3 driver doesn't work for me. The driver explicitly
+> > disabled some initialization code for powerpc after uncommenting this
+> > code it works properly. Benjamin Herrenschmidt and I think this
+> > !CONFIG_PPC check should be removed because the system behaves
+> > like a real 'x86' system (also the i8259 interrupt controller is used).
+> 
+> Ben, I guess you are OK with the change and there are no longer other
+> platforms requiring CONFIG_PPC check below?  [I don't see your ACK here]
 
-Any chance you could also push out the last of the sata_mv errata workarounds?
-That's the one that prevents data corruption for multisector WRITEs.
+I'd like to nak this patch. It'll break MPC8610HPCD boards.
 
-[PATCH 01/02] sata_mv: tidy up qc->tf usage in qc_prep() functions
-[PATCH 02/02] sata_mv: workaround for multi_count errata sata24
+See commit 6d1cee44361b8d06ccd1812e80448d86ae60dfe3
 
-Thanks
+I'm not sure how should we handle this for Xilinx PPC, MPC8610
+PPC and Sparc all at the same time, but it's obvious that #ifdef
+isn't enough any longer...
+
+
+
+> > Regards,
+> > Roderick Colenbrander
+> > 
+> > 
+> > From 1c40c2f1485ecd3bc5ad7a3af537cb94de0877c3 Mon Sep 17 00:00:00 2001
+> > From: Roderick Colenbrander <thunderbird2k@gmail.com>
+> > Date: Wed, 15 Apr 2009 10:45:17 +0200
+> > Subject: [PATCH] Use the 'x86' init_hwif code in the alim15x3 for
+> > x86-like PowerPC boards like Xilinx ML310/410/510.
+> 
+> Roderick, please add your "Signed-off-by:" line
+> (per Documentation/SubmittingPatches).
+> 
+> Thanks.
+> 
+> > ---
+> >  drivers/ide/alim15x3.c |    9 +++++----
+> >  1 files changed, 5 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/ide/alim15x3.c b/drivers/ide/alim15x3.c
+> > index 537da1c..9176c0f 100644
+> > --- a/drivers/ide/alim15x3.c
+> > +++ b/drivers/ide/alim15x3.c
+> > @@ -402,14 +402,15 @@ static u8 ali_cable_detect(ide_hwif_t *hwif)
+> >      return cbl;
+> >  }
+> > 
+> > -#if !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC)
+> > +#if !defined(CONFIG_SPARC64)
+> >  /**
+> >   *    init_hwif_ali15x3    -    Initialize the ALI IDE x86 stuff
+> >   *    @hwif: interface to configure
+> >   *
+> >   *    Obtain the IRQ tables for an ALi based IDE solution on the PC
+> > - *    class platforms. This part of the code isn't applicable to the
+> > - *    Sparc and PowerPC systems.
+> > + *    class platforms. This part of the code isn't applicable to
+> > + *    Sparc systems. It is usable on 'x86-like' PowerPC systems
+> > + *      which use a Ali M15x3 south bridge like e.g. Xilinx ML310/410/510.
+> >   */
+> > 
+> >  static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+> > @@ -455,7 +456,7 @@ static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+> >  }
+> >  #else
+> >  #define init_hwif_ali15x3 NULL
+> > -#endif /* !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC) */
+> > +#endif /* !defined(CONFIG_SPARC64) */
+> > 
+> >  /**
+> >   *    init_dma_ali15x3    -    set up DMA on ALi15x3
+> > --
+> > 1.5.6.3
+
+-- 
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
