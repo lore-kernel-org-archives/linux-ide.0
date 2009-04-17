@@ -1,310 +1,153 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 14/15] ide-cd,atapi: use bio for internal commands
-Date: Fri, 17 Apr 2009 18:33:21 +0900
-Message-ID: <1239960802-31978-15-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/15] ide-cd: convert to using generic sense request
+Date: Fri, 17 Apr 2009 18:33:19 +0900
+Message-ID: <1239960802-31978-13-git-send-email-tj@kernel.org>
 References: <1239960802-31978-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39993 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:39995 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757962AbZDQJds (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1759984AbZDQJds (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 17 Apr 2009 05:33:48 -0400
 In-Reply-To: <1239960802-31978-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@googlemail.com, bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Borislav Petkov <petkovbb@gmail.com>, Tejun Heo <tj@kernel.org>
 
-Impact: unify request data buffer handling
+From: Borislav Petkov <petkovbb@googlemail.com>
 
-rq->data is used mostly to pass kernel buffer through request queue
-without using bio.  There are only a couple of places which still do
-this in kernel and converting to bio isn't difficult.
+Preallocate a sense request in the ->do_request method and reinitialize
+it only on demand, in case it's been consumed in the IRQ handler path.
+The reason for this is that we don't want to be mapping rq to bio in
+the IRQ path and introduce all kinds of unnecessary hacks to the block
+layer.
 
-This patch converts ide-cd and atapi to use bio instead of rq->data
-for request sense and internal pc commands.  With previous change to
-unify sense request handling, this is relatively easily achieved by
-adding blk_rq_map_kern() during sense_rq prep and PC issue.
+tj: * Both user and kernel PC requests expect sense data to be stored
+      in separate storage other than drive->sense_data.  Copy sense
+      data to rq->sense on completion if rq->sense is not NULL.  This
+      fixes bogus sense data on PC requests.
 
-If blk_rq_map_kern() fails for sense, the error is deferred till sense
-issue and aborts the failed command which triggered the sense.  Note
-that this is a slim possibility as sense prep is done on each command
-issue, so for the above condition to actually trigger, all preps since
-the last sense issue till the issue of the request which would require
-a sense should fail.
+As a result, remove cdrom_queue_request_sense.
 
-* do_request functions might sleep now.  This should be okay as ide
-  request_fn - do_ide_request() - is invoked only from make_request
-  and plug work.  Make sure this is the case by adding might_sleep()
-  to do_ide_request().
-
-* Functions which access the read sense data before the sense request
-  is complete now should access bio_data(sense_rq->bio) as the sense
-  buffer might have been copied during blk_rq_map_kern().
-
-* ide-tape updated to map sg.
-
-* cdrom_do_block_pc() now doesn't have to deal with REQ_TYPE_ATA_PC
-  special case.  Simplified.
-
-* tp_ops->output/input_data path dropped from ide_pc_intr().
-
+CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ide/ide-atapi.c |   52 ++++++++++++++++++++++++++++-------------------
- drivers/ide/ide-cd.c    |   28 ++++++++++++------------
- drivers/ide/ide-io.c    |    3 ++
- drivers/ide/ide-tape.c  |    3 ++
- include/linux/ide.h     |    2 +-
- 5 files changed, 52 insertions(+), 36 deletions(-)
+ drivers/ide/ide-cd.c |   54 +++++++++++--------------------------------------
+ drivers/ide/ide-cd.h |    4 ---
+ 2 files changed, 12 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 972c522..5cefe12 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -94,16 +94,18 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
- 	rq->special = (char *)pc;
- 
- 	if (pc->req_xfer) {
--		rq->data = pc->buf;
--		rq->data_len = pc->req_xfer;
-+		error = blk_rq_map_kern(drive->queue, rq, pc->buf, pc->req_xfer,
-+					GFP_NOIO);
-+		if (error)
-+			goto put_req;
- 	}
- 
- 	memcpy(rq->cmd, pc->c, 12);
- 	if (drive->media == ide_tape)
- 		rq->cmd[13] = REQ_IDETAPE_PC1;
- 	error = blk_execute_rq(drive->queue, disk, rq, 0);
-+put_req:
- 	blk_put_request(rq);
--
- 	return error;
- }
- EXPORT_SYMBOL_GPL(ide_queue_pc_tail);
-@@ -168,6 +170,7 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
- 	struct request_sense *sense = &drive->sense_data;
- 	struct request *sense_rq = &drive->sense_rq;
- 	unsigned int cmd_len, sense_len;
-+	int err;
- 
- 	debug_log("%s: enter\n", __func__);
- 
-@@ -193,13 +196,19 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
- 	memset(sense, 0, sizeof(*sense));
- 
- 	blk_rq_init(rq->q, sense_rq);
--	sense_rq->rq_disk = rq->rq_disk;
- 
--	sense_rq->data = sense;
-+	err = blk_rq_map_kern(drive->queue, sense_rq, sense, sense_len,
-+			      GFP_NOIO);
-+	if (unlikely(err)) {
-+		if (printk_ratelimit())
-+			printk(KERN_WARNING "%s: failed to map sense buffer\n",
-+			       drive->name);
-+		return;
-+	}
-+
-+	sense_rq->rq_disk = rq->rq_disk;
- 	sense_rq->cmd[0] = GPCMD_REQUEST_SENSE;
- 	sense_rq->cmd[4] = cmd_len;
--	sense_rq->data_len = sense_len;
--
- 	sense_rq->cmd_type = REQ_TYPE_SENSE;
- 	sense_rq->cmd_flags |= REQ_PREEMPT;
- 
-@@ -210,9 +219,14 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
- }
- EXPORT_SYMBOL_GPL(ide_prep_sense);
- 
--void ide_queue_sense_rq(ide_drive_t *drive, void *special)
-+int ide_queue_sense_rq(ide_drive_t *drive, void *special)
- {
--	BUG_ON(!drive->sense_rq_armed);
-+	/* deferred failure from ide_prep_sense() */
-+	if (!drive->sense_rq_armed) {
-+		printk(KERN_WARNING "%s: failed queue sense request\n",
-+		       drive->name);
-+		return -ENOMEM;
-+	}
- 
- 	drive->sense_rq.special = special;
- 	drive->sense_rq_armed = false;
-@@ -221,6 +235,7 @@ void ide_queue_sense_rq(ide_drive_t *drive, void *special)
- 
- 	elv_add_request(drive->queue, &drive->sense_rq,
- 			ELEVATOR_INSERT_FRONT, 0);
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(ide_queue_sense_rq);
- 
-@@ -239,13 +254,14 @@ void ide_retry_pc(ide_drive_t *drive)
- 	/* init pc from sense_rq */
- 	ide_init_pc(pc);
- 	memcpy(pc->c, sense_rq->cmd, 12);
--	pc->buf = sense_rq->data;
-+	pc->buf = bio_data(sense_rq->bio);	/* pointer to mapped address */
- 	pc->req_xfer = sense_rq->data_len;
- 
- 	if (drive->media == ide_tape)
- 		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
- 
--	ide_queue_sense_rq(drive, pc);
-+	if (ide_queue_sense_rq(drive, pc))
-+		ide_complete_rq(drive, -EIO, blk_rq_bytes(drive->hwif->rq));
- }
- EXPORT_SYMBOL_GPL(ide_retry_pc);
- 
-@@ -317,7 +333,6 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 	struct ide_cmd *cmd = &hwif->cmd;
- 	struct request *rq = hwif->rq;
- 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
--	xfer_func_t *xferfunc;
- 	unsigned int timeout, done;
- 	u16 bcount;
- 	u8 stat, ireason, dsc = 0;
-@@ -411,7 +426,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 					rq->errors = -EIO;
- 			}
- 
--			if (drive->media == ide_tape)
-+			if (drive->media == ide_tape && !rq->bio)
- 				done = ide_rq_bytes(rq); /* FIXME */
- 			else
- 				done = blk_rq_bytes(rq);
-@@ -448,16 +463,11 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 		return ide_do_reset(drive);
- 	}
- 
--	xferfunc = write ? tp_ops->output_data : tp_ops->input_data;
--
--	if (drive->media == ide_floppy && pc->buf == NULL) {
-+	if (drive->media == ide_tape && pc->bh)
-+		done = drive->pc_io_buffers(drive, pc, bcount, write);
-+	else {
- 		done = min_t(unsigned int, bcount, cmd->nleft);
- 		ide_pio_bytes(drive, cmd, write, done);
--	} else if (drive->media == ide_tape && pc->bh) {
--		done = drive->pc_io_buffers(drive, pc, bcount, write);
--	} else {
--		done = min_t(unsigned int, bcount, pc->req_xfer - pc->xferred);
--		xferfunc(drive, NULL, pc->cur_pos, done);
- 	}
- 
- 	/* Update the current position */
 diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 7b21c7e..392a5bd 100644
+index eb3c299..7b21c7e 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -210,10 +210,12 @@ static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
+@@ -206,44 +206,6 @@ static void cdrom_analyze_sense_data(ide_drive_t *drive,
+ 	ide_cd_log_error(drive->name, failed_command, sense);
+ }
+ 
+-static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+-				      struct request *failed_command)
+-{
+-	struct cdrom_info *info		= drive->driver_data;
+-	struct request *rq		= &drive->request_sense_rq;
+-
+-	ide_debug_log(IDE_DBG_SENSE, "enter");
+-
+-	if (sense == NULL)
+-		sense = &info->sense_data;
+-
+-	memset(sense, 0, 18);
+-
+-	/* stuff the sense request in front of our current request */
+-	blk_rq_init(NULL, rq);
+-	rq->cmd_type = REQ_TYPE_ATA_PC;
+-	rq->rq_disk = info->disk;
+-
+-	rq->data = sense;
+-	rq->cmd[0] = GPCMD_REQUEST_SENSE;
+-	rq->cmd[4] = 18;
+-	rq->data_len = 18;
+-
+-	rq->cmd_type = REQ_TYPE_SENSE;
+-	rq->cmd_flags |= REQ_PREEMPT;
+-
+-	/* NOTE! Save the failed command in "rq->special" */
+-	rq->special = (void *)failed_command;
+-
+-	if (failed_command)
+-		ide_debug_log(IDE_DBG_SENSE, "failed_cmd: 0x%x",
+-					     failed_command->cmd[0]);
+-
+-	drive->hwif->rq = NULL;
+-
+-	elv_add_request(drive->queue, rq, ELEVATOR_INSERT_FRONT, 0);
+-}
+-
+ static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
  {
  	/*
- 	 * For REQ_TYPE_SENSE, "rq->special" points to the original
--	 * failed request
-+	 * failed request.  Also, the sense data should be read
-+	 * directly from rq which might be different from the original
-+	 * sense buffer if it got copied during mapping.
+@@ -251,11 +213,16 @@ static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
+ 	 * failed request
  	 */
  	struct request *failed = (struct request *)rq->special;
--	struct request_sense *sense = &drive->sense_data;
-+	void *sense = bio_data(rq->bio);
+-	struct cdrom_info *info = drive->driver_data;
+-	void *sense = &info->sense_data;
++	struct request_sense *sense = &drive->sense_data;
  
  	if (failed) {
  		if (failed->sense) {
-@@ -398,7 +400,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
++			/*
++			 * Sense is always read into drive->sense_data.
++			 * Copy back if the failed request has its
++			 * sense pointer set.
++			 */
++			memcpy(failed->sense, sense, 18);
+ 			sense = failed->sense;
+ 			failed->sense_len = rq->sense_len;
+ 		}
+@@ -431,7 +398,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
  
  	/* if we got a CHECK_CONDITION status, queue a request sense command */
  	if (stat & ATA_ERR)
--		ide_queue_sense_rq(drive, NULL);
-+		return ide_queue_sense_rq(drive, NULL) ? 2 : 1;
+-		cdrom_queue_request_sense(drive, NULL, NULL);
++		ide_queue_sense_rq(drive, NULL);
  	return 1;
  
  end_request:
-@@ -412,8 +414,7 @@ end_request:
+@@ -445,7 +412,7 @@ end_request:
  
  		hwif->rq = NULL;
  
--		ide_queue_sense_rq(drive, rq);
--		return 1;
-+		return ide_queue_sense_rq(drive, rq) ? 2 : 1;
+-		cdrom_queue_request_sense(drive, rq->sense, rq);
++		ide_queue_sense_rq(drive, rq);
+ 		return 1;
  	} else
  		return 2;
- }
-@@ -507,8 +508,12 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
- 		rq->cmd_flags |= cmd_flags;
- 		rq->timeout = timeout;
- 		if (buffer) {
--			rq->data = buffer;
--			rq->data_len = *bufflen;
-+			error = blk_rq_map_kern(drive->queue, rq, buffer,
-+						*bufflen, GFP_NOIO);
-+			if (error) {
-+				blk_put_request(rq);
-+				return error;
-+			}
- 		}
+@@ -893,6 +860,9 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 		goto out_end;
+ 	}
  
- 		error = blk_execute_rq(drive->queue, info->disk, rq, 0);
-@@ -802,15 +807,10 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 	drive->dma = 0;
++	/* prepare sense request for this command */
++	ide_prep_sense(drive, rq);
++
+ 	memset(&cmd, 0, sizeof(cmd));
  
- 	/* sg request */
--	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
-+	if (rq->bio) {
- 		struct request_queue *q = drive->queue;
-+		char *buf = bio_data(rq->bio);
- 		unsigned int alignment;
--		char *buf;
+ 	if (rq_data_dir(rq))
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 1d97101..93a3cf1 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -87,10 +87,6 @@ struct cdrom_info {
+ 
+ 	struct atapi_toc *toc;
+ 
+-	/* The result of the last successful request sense command
+-	   on this device. */
+-	struct request_sense sense_data;
 -
--		if (rq->bio)
--			buf = bio_data(rq->bio);
--		else
--			buf = rq->data;
- 
- 		drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
- 
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 9b9e8b1..3245c2d 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -481,6 +481,9 @@ void do_ide_request(struct request_queue *q)
- 
- 	spin_unlock_irq(q->queue_lock);
- 
-+	/* HLD do_request() callback might sleep, make sure it's okay */
-+	might_sleep();
-+
- 	if (ide_lock_host(host, hwif))
- 		goto plug_device_2;
- 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 8324dfa..9b762a2 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -850,6 +850,9 @@ out:
- 
- 	cmd.rq = rq;
- 
-+	ide_init_sg_cmd(&cmd, pc->req_xfer);
-+	ide_map_sg(drive, &cmd);
-+
- 	return ide_tape_issue_pc(drive, &cmd, pc);
- }
- 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 9e67cca..1957461 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1183,7 +1183,7 @@ void ide_create_request_sense_cmd(ide_drive_t *, struct ide_atapi_pc *);
- void ide_retry_pc(ide_drive_t *drive);
- 
- void ide_prep_sense(ide_drive_t *drive, struct request *rq);
--void ide_queue_sense_rq(ide_drive_t *drive, void *special);
-+int ide_queue_sense_rq(ide_drive_t *drive, void *special);
- 
- int ide_cd_expiry(ide_drive_t *);
+ 	u8 max_speed;		/* Max speed of the drive. */
+ 	u8 current_speed;	/* Current speed of the drive. */
  
 -- 
 1.6.0.2
