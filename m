@@ -1,56 +1,73 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] v3 fix error on drivers/ata/pata_legacy.c
-Date: Fri, 17 Apr 2009 06:41:45 -0400
-Message-ID: <49E85CE9.4090306@pobox.com>
-References: <20090417073259.GA6366@helight> <20090417112713.04ed51d7@lxorguk.ukuu.org.uk>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 02/15] ide-tape: remove back-to-back REQUEST_SENSE
+	detection
+Date: Fri, 17 Apr 2009 13:03:31 +0200
+Message-ID: <9ea470500904170403n621f84det8cfec405131d893c@mail.gmail.com>
+References: <1239960802-31978-1-git-send-email-tj@kernel.org>
+	 <1239960802-31978-3-git-send-email-tj@kernel.org>
+	 <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com>
+	 <49E85B6F.7080603@kernel.org> <49E85CA7.2060801@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51180 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760724AbZDQKlv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Apr 2009 06:41:51 -0400
-In-Reply-To: <20090417112713.04ed51d7@lxorguk.ukuu.org.uk>
+Received: from mail-bw0-f176.google.com ([209.85.218.176]:57038 "EHLO
+	mail-bw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131AbZDQLDe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 07:03:34 -0400
+Received: by bwz24 with SMTP id 24so486341bwz.13
+        for <linux-ide@vger.kernel.org>; Fri, 17 Apr 2009 04:03:32 -0700 (PDT)
+In-Reply-To: <49E85CA7.2060801@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Zhenwen Xu <helight.xu@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Fri, 17 Apr 2009 15:32:59 +0800
-> Zhenwen Xu <helight.xu@gmail.com> wrote:
->=20
->> fix those errors:
->>
->> drivers/ata/pata_legacy.c: In function =E2=80=98pdc_data_xfer_vlb=E2=
-=80=99:
->> drivers/ata/pata_legacy.c:289: error: =E2=80=98ap=E2=80=99 undeclare=
-d (first use in this function)
->> drivers/ata/pata_legacy.c:289: error: (Each undeclared identifier is=
- reported only once
->> drivers/ata/pata_legacy.c:289: error: for each function it appears i=
-n.)
->> drivers/ata/pata_legacy.c: At top level:
->> drivers/ata/pata_legacy.c:869: error: =E2=80=98ATA_PFLAG_PIO32_CHANG=
-E=E2=80=99 undeclared here (not in a
->> +function)
->> make[2]: *** [drivers/ata/pata_legacy.o] Error 1
->> make[1]: *** [drivers/ata] Error 2
->=20
-> Looks good to me. I shall have to find something larger than PROPOSED=
- in
-> the patch title to stop Jeff applying things that were discussion cod=
-e
+Hi
 
-It had a 'signed-off-by', which I took to mean, it was a proposed patch=
-=20
-that was OK to merge once people were happy...  Sorry about that=20
-misinterpretation.
+On Fri, Apr 17, 2009 at 12:40 PM, Tejun Heo <htejun@gmail.com> wrote:
+> Tejun Heo wrote:
+>> I don't really care one way or the other but the error condition
+>> itself looked somewhat pointless to me, so I just killed it. =A0Is t=
+he
+>> error messasge really worth guaranteeing drive->pc can be accessed
+>> after completion? =A0That's a nasty and fragile guarantee. =A0If suc=
+h
+>> check is really necessary, the proper way to do it would be recordin=
+g
+>> whether the last command was request sense in some persistent data
+>> structure not trying to access a data structure which the code doesn=
+'t
+>> own anymore.
 
-	Jeff
+Honestly, I don't know. The code predates even the initial git commit o=
+f the
+kernel so I guess nobody knows? And yeah, such a check looks a bit too =
+much so I
+won't have any problem with removing it. Nevertheless, we need the smal=
+l fix
+above in the ->do_request callback for all other packet commands since =
+ide-tape
+uses currently ide_queue_pc_tail() for sending those. I know, I know, i=
+t is ugly
+and we're working on it :).
 
 
+> Yet another problem is that idetape_flush_tape_buffers() uses pc whic=
+h
+> is on stack which drive->pc ends up pointing directly to, so it won't
+> work. =A0Nobody expects that the pointer it passed into an API should=
+ be
+> accessible by the API implementation after it was done with it.
+> That's just a silly thing to do.
 
+The whole on stack passing should be pass=E9 :) soon since we're about =
+to kill
+those ide_atapi_pc's. As I said before, this is very old code that is r=
+eally
+rusty and we're trying to janitor it slowly.
 
+--=20
+Regards/Gruss,
+Boris
