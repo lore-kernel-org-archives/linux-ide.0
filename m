@@ -1,52 +1,57 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 5/5] libata: Add support for TRIM
-Date: Fri, 17 Apr 2009 15:44:47 -0400
-Message-ID: <49E8DC2F.8050307@rtr.ca>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <1238683047-13588-5-git-send-email-willy@linux.intel.com> <49E79445.3080806@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 02/15] ide-tape: remove back-to-back REQUEST_SENSE 	detection
+Date: Sat, 18 Apr 2009 06:12:07 +0900
+Message-ID: <49E8F0A7.5040208@gmail.com>
+References: <1239960802-31978-1-git-send-email-tj@kernel.org>	 <1239960802-31978-3-git-send-email-tj@kernel.org>	 <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com>	 <49E85B6F.7080603@kernel.org> <49E85CA7.2060801@gmail.com> <9ea470500904170403n621f84det8cfec405131d893c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33075 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbZDQTou (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Apr 2009 15:44:50 -0400
-In-Reply-To: <49E79445.3080806@rtr.ca>
+Received: from ti-out-0910.google.com ([209.85.142.185]:23435 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752043AbZDQVLW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 17:11:22 -0400
+Received: by ti-out-0910.google.com with SMTP id 11so667911tim.23
+        for <linux-ide@vger.kernel.org>; Fri, 17 Apr 2009 14:11:21 -0700 (PDT)
+In-Reply-To: <9ea470500904170403n621f84det8cfec405131d893c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com
+To: petkovbb@gmail.com
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Matthew Wilcox wrote:
->> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
->> ---
->>  drivers/ata/libata-scsi.c |   46 
->> +++++++++++++++++++++++++++++++++++++++++++++
->>  1 files changed, 46 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->> index b9747fa..d4c8b8b 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
-> ...
+Hello,
+
+Borislav Petkov wrote:
+> Honestly, I don't know. The code predates even the initial git
+> commit of the kernel so I guess nobody knows?
+
+Heh.. maybe Mark does.
+
+> And yeah, such a check looks a bit too much so I won't have any
+> problem with removing it. Nevertheless, we need the small fix above
+> in the ->do_request callback for all other packet commands since
+> ide-tape uses currently ide_queue_pc_tail() for sending those. I
+> know, I know, it is ugly and we're working on it :).
+
+Can you explain a bit more about the bug?  I'm not really following.
+
+>> Yet another problem is that idetape_flush_tape_buffers() uses pc which
+>> is on stack which drive->pc ends up pointing directly to, so it won't
+>> work.  Nobody expects that the pointer it passed into an API should be
+>> accessible by the API implementation after it was done with it.
+>> That's just a silly thing to do.
 > 
-> It works.  :)
-> 
-> I'm using TRIM on a 120GB OCZ Vertex SSD here now,
-..
+> The whole on stack passing should be passe :) soon since we're about to kill
+> those ide_atapi_pc's.
 
-I take that back now.  The command is apparently failing,
-but we don't log the failure, and nor do we stop attempting
-to continue to use it on future TRIMs.
+Hooray.
 
-I dug deeper into the kernel side, when my own attempts in hdparm
-all failed, both using SG_IO directly and using the BLKDISCARD ioctl().
+> As I said before, this is very old code that is really rusty and
+> we're trying to janitor it slowly.
 
-The commands are simply rejected by the drive, with status=0x51, err=0x04.
+Yeap, sure.
 
-Everything *looks* okay on the Linux side, so I'm guessing that the OCZ
-drive uses a vendor-unique opcode or protocol for it.  They do have it
-in there for a windows tool, but no further info than that.
+Thanks.
 
--ml
+-- 
+tejun
