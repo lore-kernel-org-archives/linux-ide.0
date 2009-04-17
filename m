@@ -1,23 +1,83 @@
-From: Roly Bennett <hookskhooks@symon.com>
-Subject: =?windows-1251?B?R2V0IFBhaWQgZm9yIEVhc3kgV29yayBmcm9tIEhvbWU=?=
-Date: Fri, 17 Apr 2009 11:40:22 +0700
-Message-ID: <22990.5261927799$1239947684@news.gmane.org>
-Reply-To: Roly Bennett <13601myrrine.peroff@gmail.com>
+From: Zhenwen Xu <helight.xu@gmail.com>
+Subject: [PATCH]v2 fix error on drivers/ata/pata_legacy.c
+Date: Fri, 17 Apr 2009 14:20:04 +0800
+Message-ID: <20090417062004.GA6201@helight>
+Reply-To: Zhenwen Xu <helight.xu@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="windows-1251"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from google-58-137-222-2.google.com ([58.137.222.2]:41057 "HELO
-	your.mail.server.name.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1752251AbZDQFxN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 01:53:13 -0400
+Received: from ti-out-0910.google.com ([209.85.142.188]:16110 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbZDQGVe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 02:21:34 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-QXJlIHlvdSBzaWNrIGFuZCB0aXJlZCBvZiBhbGwgdGhlIG1vbmV5LW1ha2luZyBzY2FtcyBvbiB0aGUgd2ViPyBJZiB5b3UncmUgbG9va2luZyBmb3IgdGhlIHJlYWwgZGVhbCB3aGVuIGl0IGNvbWVzIHRvIG1ha2luZyBtb25leSBmcm9tIGhvbWUsIHRoZW4gdGhpcyBtYXkgYmUgdGhlIG1vc3QgaW1wb3J0YW50IG1lc3NhZ2UgeW91IHdpbGwgZXZlciByZWFkIG9ubGluZSENCg0KV2hhdCBpZiB0aGVyZSB3YXMgYSBzeXN0ZW0gdGhhdCB5b3UgY291bGQgdXNlIGluIHRoZSBjb21mb3J0IG9mIHlvdXIgb3duIGhvbWUgYW5kIG1ha2UgbW9yZSBtb25leSB0aGFuIHlvdSBldmVyIGNvdWxkIGluIHlvdXIgam9iLCB1c2luZyBqdXN0IHlvdXIgY29tcHV0ZXIgYW5kIHRoZSBJbnRlcm5ldD8NCg0KV2hhdCBpZiBpdCBvbmx5IHRvb2sgYSBjb3VwbGUgb2YgaG91cnMgcGVyIGRheSBhbmQgd2FzIGF2YWlsYWJsZSB3b3JsZHdpZGU/IFNvdW5kcyB0b28gZ29vZCB0byBiZSB0cnVlPyBJdCBpc24ndCEgWW91IGNhbiBldmVuIHN0YXJ0IHdvcmtpbmcgaW4ganVzdCBhIGZldyBtaW51dGVzIGZyb20gbm93LiBXZSBhcmUgaGVyZSB0byBleHBsYWluISBTaW1wbHkgc2Vu
- ZCB1cyBhbiBhc3dlciB0byBkb21pbmlrLm9sdmV5MTUyNDBAZ21haWwuY29tIGlmIHlvdSBhcmUgaW50ZXJlc3RlZCBpbiBvdXIgcHJvbW90aW9uLCBzbyB3ZSBjYW4gYW5zd2VyIHlvdSBiYWNrIHdpdGggZnVydGhlciBkZXRhaWxzLg0KDQpCZXN0IFJlZ2FyZHMsDQpMZWdpdCBPbmxpbmUgSm9icwoKCgoKCgoKCgoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUaGlzIGVtYWlsIGhhcyBiZWVuIHdyaXR0ZW4gYW5kIHByb3ZlZCB0byBiZSBpbiBjb21wbGlhbmNlIHdpdGggdGhlIHJlY2VudGx5IGVzdGFibGlzaGVkIGNhbi1zcGFtIGFjdCBsYXcgaW4gVVMuIFdlIGFyZSBub3QgcHJvdm9raW5nIG9yIGZvcmNpbmcgYW55IHBlcnNvbiBpbiBhbnkgd2F5IHRvIHBhcnRpY2lwYXRlIGluIG91ciBwcm9ncmFtcy4gVG8gcGFydGljaXBhdGUgaXMgeW91ciBvd24gZGVjaXNpb24gYW5kIHlvdSBjYXJyeSB0aGUgcmVzcG9uc2liaWxpdHkgb2YgdGFraW5nIGZ1cnRoZXIgcGFydCBpbiB0aGlzIHByb21vdGlvbi4gQW55d2F5LCBpZiB5b3UgZG9uJ3Qgd2FudCB0byByZWNlaXZlIG1vcm
- UgZ29vZCBvZmZlcnMgZnJvbSB1cywgeW91IGNhbiBzaW1wbHkgVW5zdWJzY3JpYmUgYnkgc2VuZGluZyB1cyBhIG5vdGlmaWNhdGlvbiBlbWFpbCB0byBnZXQubWVfb3V0X25vd0B5YWhvby5jb20gd2l0aCBhIG1haWwtc3ViamVjdCBhbmQgdGV4dCAiVW5zdWJzY3JpYmUgbWUiLCBhbmQgd2Ugd2lsbCBnZXQgeW91ciBlbWFpbCBvdXQgb2Ygb3VyIGxpc3Qgd2l0aGluIDEwIGRheXMuCgpUaGlzIG1lc3NhZ2UgaXMgU1RSSUNUTFkgQ09ORklERU5USUFMIGFuZCBpcyBzb2xlbHkgZm9yIHRoZSBpbmRpdmlkdWFsIG9yIG9yZ2FuaXNhdGlvbiB0byB3aG9tIGl0IGlzIGFkZHJlc3NlZC4gSXQgbWF5IGNvbnRhaW4gUFJJVklMRUdFRCBhbmQgQ09ORklERU5USUFMIGluZm9ybWF0aW9uLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCB5b3UgYXJlIGhlcmVieSBub3RpZmllZCB0aGF0IGFueSBkaXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24gb3IgY29weWluZyBvZiB0aGlzIGNvbW11bmljYXRpb24gYW5kIGl0cyBjb250ZW50cyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50
- IHlvdSBzaG91bGQgbm90IHJlYWQsIGNvcHksIGRpc3RyaWJ1dGUsIGRpc2Nsb3NlIG9yIG90aGVyd2lzZSB1c2UgdGhlIGluZm9ybWF0aW9uIGluIHRoaXMgZW1haWwuIEVtYWlsIG1heSBiZSBzdXNjZXB0aWJsZSB0byBkYXRhIGNvcnJ1cHRpb24sIGludGVyY2VwdGlvbiBhbmQgdW5hdXRob3Jpc2VkIGFtZW5kbWVudCwgYW5kIHdlIGRvIG5vdCBhY2NlcHQgbGlhYmlsaXR5IGZvciBhbnkgc3VjaCBjb3JydXB0aW9uLCBpbnRlcmNlcHRpb24gb3IgYW1lbmRtZW50IG9yIHRoZSBjb25zZXF1ZW5jZXMgdGhlcmVvZiBvciB5b3VyIHJlbGlhbmNlIG9uIGFueSBpbmZvcm1hdGlvbiBjb250YWluZWQgdGhlcmVpbiBpZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LiBJZiB5b3UgYXJlIG5vdCBpbnRlcmVzdGVkIGluIHRoZSBvZmZlcmVkIHByb21vdGlvbnMsIHBsZWFzZSBqdXN0IGRvbid0IGFuc3dlci4gSWYgeW91IHRoaW5rIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgbWVzc2FnZSBhbmQgaXRzIGNvbnRlbnRzIGluIGVycm9yLCBwbGVhc2UgZGVsZXRlIGl0IGZyb20geW91ciBjb21wdXRlciwgb3IgZm9sbG93IHRoZSB1bnN1YnNjcmliaW
- 5nIHByb2NlZHVyZSBzaG93biBhYm92ZS4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgkJ
+fix those errors:
+
+drivers/ata/pata_legacy.c: In function =E2=80=98pdc_data_xfer_vlb=E2=80=
+=99:
+drivers/ata/pata_legacy.c:289: error: =E2=80=98ap=E2=80=99 undeclared (=
+first use in this function)
+drivers/ata/pata_legacy.c:289: error: (Each undeclared identifier is re=
+ported only once
+drivers/ata/pata_legacy.c:289: error: for each function it appears in.)
+drivers/ata/pata_legacy.c: At top level:
+drivers/ata/pata_legacy.c:869: error: =E2=80=98ATA_PFLAG_PIO32_CHANGE=E2=
+=80=99 undeclared here (not in a
++function)
+make[2]: *** [drivers/ata/pata_legacy.o] Error 1
+make[1]: *** [drivers/ata] Error 2
+
+
+=46rom 80584279bc9dbc2d5dbb7c9dcfd4dcc6b39ad70c Mon Sep 17 00:00:00 200=
+1
+=46rom: Zhenwen Xu <Helight.Xu@gmail.com>
+Date: Fri, 17 Apr 2009 14:18:18 +0800
+Subject: [PATCH] fix error on drivers/ata/pata_legacy.c
+
+Signed-off-by: Zhenwen Xu <helight.xu@gmail.com>
+---
+ drivers/ata/pata_legacy.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 6f985be..bb30589 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -285,10 +285,11 @@ static unsigned int pdc_data_xfer_vlb(struct ata_=
+device *dev,
+ 			unsigned char *buf, unsigned int buflen, int rw)
+ {
+ 	int slop =3D buflen & 3;
++	struct ata_port *ap =3D dev->link->ap;
++
+ 	/* 32bit I/O capable *and* we need to write a whole number of dwords =
+*/
+ 	if (ata_id_has_dword_io(dev->id) && (slop =3D=3D 0 || slop =3D=3D 3)
+ 					&& (ap->pflags & ATA_PFLAG_PIO32)) {
+-		struct ata_port *ap =3D dev->link->ap;
+ 		unsigned long flags;
+=20
+ 		local_irq_save(flags);
+@@ -866,7 +867,7 @@ static struct legacy_controller controllers[] =3D {
+ 			0,			0,			NULL },
+ 	{"PDC20230",	&pdc20230_port_ops,	0x7,
+ 			ATA_FLAG_NO_IORDY,
+-			ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32_CHANGE,	NULL },
++			ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE,	NULL },
+ 	{"HT6560A",	&ht6560a_port_ops,	0x07,
+ 			ATA_FLAG_NO_IORDY,	0,			NULL },
+ 	{"HT6560B",	&ht6560b_port_ops,	0x1F,
+--=20
+1.5.6.5
+
+--=20
+---------------------------------
+Zhenwen Xu - Open and Free
+Home Page:	http://zhwen.org
+My Studio:	http://dim4.cn
