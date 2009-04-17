@@ -1,49 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 02/15] ide-tape: remove back-to-back REQUEST_SENSE 	detection
-Date: Fri, 17 Apr 2009 17:27:11 -0400
-Message-ID: <49E8F42F.2090005@rtr.ca>
-References: <1239960802-31978-1-git-send-email-tj@kernel.org>	 <1239960802-31978-3-git-send-email-tj@kernel.org>	 <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com>	 <49E85B6F.7080603@kernel.org> <49E85CA7.2060801@gmail.com> <9ea470500904170403n621f84det8cfec405131d893c@mail.gmail.com> <49E8F0A7.5040208@gmail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Implementing NVMHCI...
+Date: Fri, 17 Apr 2009 15:45:24 -0700
+Message-ID: <49E90684.6020707@zytor.com>
+References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org> <49E46779.1040106@redhat.com> <49E47744.3040103@garzik.org> <Pine.LNX.4.62.0904141447520.13379@tamago.serverit.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:60215 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753606AbZDQV1O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Apr 2009 17:27:14 -0400
-In-Reply-To: <49E8F0A7.5040208@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759597AbZDQWwn@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.62.0904141447520.13379@tamago.serverit.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Szabolcs Szakacsits <szaka@ntfs-3g.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Avi Kivity <avi@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: petkovbb@gmail.com, bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello,
+Szabolcs Szakacsits wrote:
+>>>
+>>> Windows 2008 aligns partitions on a 1MB boundary, IIRC.
+>> Makes a lot of sense...
 > 
-> Borislav Petkov wrote:
->> Honestly, I don't know. The code predates even the initial git
->> commit of the kernel so I guess nobody knows?
+> Since Vista at least the first partition is 2048 sector aligned.
 > 
-> Heh.. maybe Mark does.
-..
+> 	Szaka
+> 
 
-I may have known once -- I'm sure Gadi explained it to me,
-but my memory doesn't have it any more.
+2048 * 512 = 1 MB, yes.
 
->>> Yet another problem is that idetape_flush_tape_buffers() uses pc which
->>> is on stack which drive->pc ends up pointing directly to, so it won't
->>> work.  Nobody expects that the pointer it passed into an API should be
->>> accessible by the API implementation after it was done with it.
->>> That's just a silly thing to do.
->> The whole on stack passing should be passe :)
-..
+I *think* it's actually 1 MB and not 2048 sectors, but yes, they've 
+finally dumped the idiotic DOS misalignment.  Unfortunately the GNU 
+parted people have said that the parted code is too fragile to fix 
+parted in this way.  Sigh.
 
-Nowadays, for sure.
-
-But back then, the kernel was able to map all physical memory
-at once, so lots of code did things that way.  Over time, much of
-it has been "fixed" to handle newer machines with tons of RAM.
-
-I guess you've just found more of it to modernize.  :)
-
-Cheers
+	-hpa
