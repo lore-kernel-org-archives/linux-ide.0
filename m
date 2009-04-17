@@ -1,100 +1,102 @@
-From: Zhenwen Xu <helight.xu@gmail.com>
-Subject: [PATCH] v3 fix error on drivers/ata/pata_legacy.c
-Date: Fri, 17 Apr 2009 15:32:59 +0800
-Message-ID: <20090417073259.GA6366@helight>
-Reply-To: Zhenwen Xu <helight.xu@gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: RFC Patch: Use x86 init_hwif in the alim15x3 for x86-like
+ PowerPC systems
+Date: Fri, 17 Apr 2009 09:40:19 +0200
+Message-ID: <1239954019.7443.47.camel@pasglop>
+References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
+	 <c8485d470904150734s47ce0f27y3ae984355e823d9f@mail.gmail.com>
+	 <200904162130.01237.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759892AbZDQHen@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:35911 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753228AbZDQHkb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Apr 2009 03:40:31 -0400
+In-Reply-To: <200904162130.01237.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Roderick Colenbrander <thunderbird2k@gmail.com>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-fix those errors:
+On Thu, 2009-04-16 at 21:30 +0200, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> 
+> On Wednesday 15 April 2009 16:34:22 Roderick Colenbrander wrote:
+> > Hi,
+> > 
+> > I'm using a Xilinx ML510 it features a PowerPC 440 cpu inside a
+> > Virtex-5 FPGA. The board also contains a ALI M1533 south bridge
+> > for IDE, USB and Audio. I did a lot of work to get the pci bus working
+> > on this board and it works correctly but the default init code
+> > of the alim15x3 driver doesn't work for me. The driver explicitly
+> > disabled some initialization code for powerpc after uncommenting this
+> > code it works properly. Benjamin Herrenschmidt and I think this
+> > !CONFIG_PPC check should be removed because the system behaves
+> > like a real 'x86' system (also the i8259 interrupt controller is used).
+> 
+> Ben, I guess you are OK with the change and there are no longer other
+> platforms requiring CONFIG_PPC check below?  [I don't see your ACK here]
 
-drivers/ata/pata_legacy.c: In function =E2=80=98pdc_data_xfer_vlb=E2=80=
-=99:
-drivers/ata/pata_legacy.c:289: error: =E2=80=98ap=E2=80=99 undeclared (=
-first use in this function)
-drivers/ata/pata_legacy.c:289: error: (Each undeclared identifier is re=
-ported only once
-drivers/ata/pata_legacy.c:289: error: for each function it appears in.)
-drivers/ata/pata_legacy.c: At top level:
-drivers/ata/pata_legacy.c:869: error: =E2=80=98ATA_PFLAG_PIO32_CHANGE=E2=
-=80=99 undeclared here (not in a
-+function)
-make[2]: *** [drivers/ata/pata_legacy.o] Error 1
-make[1]: *** [drivers/ata] Error 2
+Yup. I don't see a case where the hack would be of any use, so I'm
+happy to remove us from the test. Whenever a 8259 is present we
+assign it the legacy interrupts 1...15 with a virtual==physical mapping
+so all those x86-ish things should run just fine.
 
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
+> > Regards,
+> > Roderick Colenbrander
+> > 
+> > 
+> > From 1c40c2f1485ecd3bc5ad7a3af537cb94de0877c3 Mon Sep 17 00:00:00 2001
+> > From: Roderick Colenbrander <thunderbird2k@gmail.com>
+> > Date: Wed, 15 Apr 2009 10:45:17 +0200
+> > Subject: [PATCH] Use the 'x86' init_hwif code in the alim15x3 for
+> > x86-like PowerPC boards like Xilinx ML310/410/510.
+> 
+> Roderick, please add your "Signed-off-by:" line
+> (per Documentation/SubmittingPatches).
+> 
+> Thanks.
+> 
+> > ---
+> >  drivers/ide/alim15x3.c |    9 +++++----
+> >  1 files changed, 5 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/ide/alim15x3.c b/drivers/ide/alim15x3.c
+> > index 537da1c..9176c0f 100644
+> > --- a/drivers/ide/alim15x3.c
+> > +++ b/drivers/ide/alim15x3.c
+> > @@ -402,14 +402,15 @@ static u8 ali_cable_detect(ide_hwif_t *hwif)
+> >      return cbl;
+> >  }
+> > 
+> > -#if !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC)
+> > +#if !defined(CONFIG_SPARC64)
+> >  /**
+> >   *    init_hwif_ali15x3    -    Initialize the ALI IDE x86 stuff
+> >   *    @hwif: interface to configure
+> >   *
+> >   *    Obtain the IRQ tables for an ALi based IDE solution on the PC
+> > - *    class platforms. This part of the code isn't applicable to the
+> > - *    Sparc and PowerPC systems.
+> > + *    class platforms. This part of the code isn't applicable to
+> > + *    Sparc systems. It is usable on 'x86-like' PowerPC systems
+> > + *      which use a Ali M15x3 south bridge like e.g. Xilinx ML310/410/510.
+> >   */
+> > 
+> >  static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+> > @@ -455,7 +456,7 @@ static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+> >  }
+> >  #else
+> >  #define init_hwif_ali15x3 NULL
+> > -#endif /* !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC) */
+> > +#endif /* !defined(CONFIG_SPARC64) */
+> > 
+> >  /**
+> >   *    init_dma_ali15x3    -    set up DMA on ALi15x3
+> > --
+> > 1.5.6.3
 
-
-=46rom 171dedab9e29534e911e0f4d23ea0a183edf75e9 Mon Sep 17 00:00:00 200=
-1
-=46rom: Zhenwen Xu <Helight.Xu@gmail.com>
-Date: Fri, 17 Apr 2009 15:30:54 +0800
-Subject: [PATCH] fix error on drivers/ata/pata_legacy.c
-
-Signed-off-by: Zhenwen Xu <helight.xu@gmail.com>
----
- drivers/ata/pata_legacy.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 6f985be..f72c6c5 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -285,10 +285,11 @@ static unsigned int pdc_data_xfer_vlb(struct ata_=
-device *dev,
- 			unsigned char *buf, unsigned int buflen, int rw)
- {
- 	int slop =3D buflen & 3;
-+	struct ata_port *ap =3D dev->link->ap;
-+
- 	/* 32bit I/O capable *and* we need to write a whole number of dwords =
-*/
- 	if (ata_id_has_dword_io(dev->id) && (slop =3D=3D 0 || slop =3D=3D 3)
- 					&& (ap->pflags & ATA_PFLAG_PIO32)) {
--		struct ata_port *ap =3D dev->link->ap;
- 		unsigned long flags;
-=20
- 		local_irq_save(flags);
-@@ -866,7 +867,7 @@ static struct legacy_controller controllers[] =3D {
- 			0,			0,			NULL },
- 	{"PDC20230",	&pdc20230_port_ops,	0x7,
- 			ATA_FLAG_NO_IORDY,
--			ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32_CHANGE,	NULL },
-+			ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE,	NULL },
- 	{"HT6560A",	&ht6560a_port_ops,	0x07,
- 			ATA_FLAG_NO_IORDY,	0,			NULL },
- 	{"HT6560B",	&ht6560b_port_ops,	0x1F,
-@@ -877,13 +878,13 @@ static struct legacy_controller controllers[] =3D=
- {
- 			0,			0,			NULL },
- 	{"QDI6500",	&qdi6500_port_ops,	0x07,
- 			ATA_FLAG_NO_IORDY,
--			ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32_CHANGE,    qdi_port },
-+			ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE,    qdi_port },
- 	{"QDI6580",	&qdi6580_port_ops,	0x1F,
--			0, ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32_CHANGE, qdi_port },
-+			0, ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE, qdi_port },
- 	{"QDI6580DP",	&qdi6580dp_port_ops,	0x1F,
--			0, ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32_CHANGE, qdi_port },
-+			0, ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE, qdi_port },
- 	{"W83759A",	&winbond_port_ops,	0x1F,
--			0, ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32_CHANGE,
-+			0, ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE,
- 								winbond_port }
- };
-=20
---=20
-1.5.6.5
-
---=20
----------------------------------
-Zhenwen Xu - Open and Free
-Home Page:	http://zhwen.org
-My Studio:	http://dim4.cn
