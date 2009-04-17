@@ -1,12 +1,12 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 06/15] ide-cd: clear sense buffer before issuing request sense
-Date: Fri, 17 Apr 2009 18:33:13 +0900
-Message-ID: <1239960802-31978-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/15] ide-taskfile: don't abuse rq->buffer
+Date: Fri, 17 Apr 2009 18:33:15 +0900
+Message-ID: <1239960802-31978-9-git-send-email-tj@kernel.org>
 References: <1239960802-31978-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39984 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:39985 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759230AbZDQJdo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1757962AbZDQJdo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 17 Apr 2009 05:33:44 -0400
 In-Reply-To: <1239960802-31978-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,49 +14,81 @@ List-Id: linux-ide@vger.kernel.org
 To: petkovbb@googlemail.com, bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-Impact: code simplification
+Impact: rq->buffer usage cleanup
 
-ide_cd_request_sense_fixup() clears the tail of the sense buffer if
-the device didn't completely fill it.  This patch makes
-cdrom_queue_request_sense() clear the sense buffer before issuing the
-command instead of clearing it afterwards.  This simplifies code and
-eases future changes.
+ide_raw_taskfile() directly uses rq->buffer to carry pointer to the
+data buffer.  This complicates both block interface and ide backend
+request handling.  Use blk_rq_map_kern() instead and drop special
+handling for REQ_TYPE_ATA_TASKFILE from ide_map_sg().
+
+Note that REQ_RW setting is moved upwards as blk_rq_map_kern() uses it
+to initialize bio rw flag.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
 ---
- drivers/ide/ide-cd.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/ide/ide-io.c       |    5 +----
+ drivers/ide/ide-taskfile.c |   18 +++++++++++-------
+ 2 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 3aec19d..509f129 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -217,6 +217,8 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 	if (sense == NULL)
- 		sense = &info->sense_data;
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 35dc38d..9b9e8b1 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -248,10 +248,7 @@ void ide_map_sg(ide_drive_t *drive, struct ide_cmd *cmd)
+ 	struct scatterlist *sg = hwif->sg_table;
+ 	struct request *rq = cmd->rq;
  
-+	memset(sense, 0, 18);
+-	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
+-		sg_init_one(sg, rq->buffer, rq->nr_sectors * SECTOR_SIZE);
+-		cmd->sg_nents = 1;
+-	} else if (!rq->bio) {
++	if (!rq->bio) {
+ 		sg_init_one(sg, rq->data, rq->data_len);
+ 		cmd->sg_nents = 1;
+ 	} else
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index 4aa6223..f400eb4 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -424,7 +424,9 @@ int ide_raw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd, u8 *buf,
+ 
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
+-	rq->buffer = buf;
 +
- 	/* stuff the sense request in front of our current request */
- 	blk_rq_init(NULL, rq);
- 	rq->cmd_type = REQ_TYPE_ATA_PC;
-@@ -504,14 +506,8 @@ static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct ide_cmd *cmd)
- 	 * and some drives don't send them.  Sigh.
++	if (cmd->tf_flags & IDE_TFLAG_WRITE)
++		rq->cmd_flags |= REQ_RW;
+ 
+ 	/*
+ 	 * (ks) We transfer currently only whole sectors.
+@@ -432,18 +434,20 @@ int ide_raw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd, u8 *buf,
+ 	 * if we would find a solution to transfer any size.
+ 	 * To support special commands like READ LONG.
  	 */
- 	if (rq->cmd[0] == GPCMD_REQUEST_SENSE &&
--	    cmd->nleft > 0 && cmd->nleft <= 5) {
--		unsigned int ofs = cmd->nbytes - cmd->nleft;
+-	rq->hard_nr_sectors = rq->nr_sectors = nsect;
+-	rq->hard_cur_sectors = rq->current_nr_sectors = nsect;
 -
--		while (cmd->nleft > 0) {
--			*((u8 *)rq->data + ofs++) = 0;
--			cmd->nleft--;
--		}
--	}
-+	    cmd->nleft > 0 && cmd->nleft <= 5)
-+		cmd->nleft = 0;
+-	if (cmd->tf_flags & IDE_TFLAG_WRITE)
+-		rq->cmd_flags |= REQ_RW;
++	if (nsect) {
++		error = blk_rq_map_kern(drive->queue, rq, buf,
++					nsect * SECTOR_SIZE, __GFP_WAIT);
++		if (error)
++			goto put_req;
++	}
+ 
+ 	rq->special = cmd;
+ 	cmd->rq = rq;
+ 
+ 	error = blk_execute_rq(drive->queue, NULL, rq, 0);
+-	blk_put_request(rq);
+ 
++put_req:
++	blk_put_request(rq);
+ 	return error;
  }
  
- int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
 -- 
 1.6.0.2
 
