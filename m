@@ -1,52 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/3] AHCI updates: Marvell AHCI PATA works;	pata_marvell
- fate?
-Date: Fri, 17 Apr 2009 15:14:37 -0400
-Message-ID: <49E8D51D.70400@garzik.org>
-References: <20090417023949.GA14469@havoc.gtf.org> <20090417105031.607a771e@lxorguk.ukuu.org.uk> <20090417180316.GA7134@sci.fi>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 5/5] libata: Add support for TRIM
+Date: Fri, 17 Apr 2009 15:44:47 -0400
+Message-ID: <49E8DC2F.8050307@rtr.ca>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <1238683047-13588-2-git-send-email-willy@linux.intel.com> <1238683047-13588-3-git-send-email-willy@linux.intel.com> <1238683047-13588-4-git-send-email-willy@linux.intel.com> <1238683047-13588-5-git-send-email-willy@linux.intel.com> <49E79445.3080806@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40392 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([76.10.145.34]:33075 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751445AbZDQTOl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Apr 2009 15:14:41 -0400
-In-Reply-To: <20090417180316.GA7134@sci.fi>
+	id S1751330AbZDQTou (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Apr 2009 15:44:50 -0400
+In-Reply-To: <49E79445.3080806@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com
 
-Ville Syrj=E4l=E4 wrote:
-> On Fri, Apr 17, 2009 at 10:50:31AM +0100, Alan Cox wrote:
->>> Marvell PATA on 6121 and similar chips should also work, but that h=
-asn't
->>> yet been tested.  Here's the full list of what still needs testing:
->>>
->>> - master + slave devices
->>> - ATAPI
->>> - 6121 (6123? others?)
->> LBA48
+Mark Lord wrote:
+> Matthew Wilcox wrote:
+>> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+>> ---
+>>  drivers/ata/libata-scsi.c |   46 
+>> +++++++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 46 insertions(+), 0 deletions(-)
 >>
->>
->>> Also, there is the open question of how to deal with pata_marvell
->>> co-existence
->> I think for the moment make PATA support by AHCI a config option and=
- as
->> soon as we trust it we can get rid of the option and of pata_marvell=
-=2E
->=20
-> How does this relate to 6101 which is a PATA only controller? Would t=
-hat
-> continue to use pata_marvell or does this new stuff support such thin=
-gs
-> too?
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index b9747fa..d4c8b8b 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+> ...
+> 
+> It works.  :)
+> 
+> I'm using TRIM on a 120GB OCZ Vertex SSD here now,
+..
 
-I'm pretty sure 6101 will behave similarly to 6121, but have not verifi=
-ed.
+I take that back now.  The command is apparently failing,
+but we don't log the failure, and nor do we stop attempting
+to continue to use it on future TRIMs.
 
-	Jeff
+I dug deeper into the kernel side, when my own attempts in hdparm
+all failed, both using SG_IO directly and using the BLKDISCARD ioctl().
 
+The commands are simply rejected by the drive, with status=0x51, err=0x04.
 
+Everything *looks* okay on the Linux side, so I'm guessing that the OCZ
+drive uses a vendor-unique opcode or protocol for it.  They do have it
+in there for a windows tool, but no further info than that.
 
+-ml
