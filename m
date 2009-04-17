@@ -1,102 +1,86 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: RFC Patch: Use x86 init_hwif in the alim15x3 for x86-like
- PowerPC systems
-Date: Fri, 17 Apr 2009 09:40:19 +0200
-Message-ID: <1239954019.7443.47.camel@pasglop>
-References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
-	 <c8485d470904150734s47ce0f27y3ae984355e823d9f@mail.gmail.com>
-	 <200904162130.01237.bzolnier@gmail.com>
+From: Thomas Jackowski <aXe@hadiko.de>
+Subject: Re: Errors on ICH10R with Seagate HDDs
+Date: Fri, 17 Apr 2009 11:10:59 +0200
+Message-ID: <49E847A3.9070100@hadiko.de>
+References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:35911 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753228AbZDQHkb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Apr 2009 03:40:31 -0400
-In-Reply-To: <200904162130.01237.bzolnier@gmail.com>
+Received: from smtp1.rz.uni-karlsruhe.de ([129.13.185.217]:41985 "EHLO
+	smtp1.rz.uni-karlsruhe.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbZDQJLE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 05:11:04 -0400
+Received: from postamt.hadiko.de ([2001:638:204:10:21b:21ff:fe22:d9c2] helo=[IPv6:2001:638:204:10:21b:21ff:fe22:d9c2])
+	by nce3.hadiko.de with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
+	(Exim 4.50)
+	id 1Luk69-0007cY-EF
+	for linux-ide@vger.kernel.org; Fri, 17 Apr 2009 11:11:01 +0200
+In-Reply-To: <49DE39E2.7070505@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Roderick Colenbrander <thunderbird2k@gmail.com>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: linux-ide@vger.kernel.org
 
-On Thu, 2009-04-16 at 21:30 +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> On Wednesday 15 April 2009 16:34:22 Roderick Colenbrander wrote:
-> > Hi,
-> > 
-> > I'm using a Xilinx ML510 it features a PowerPC 440 cpu inside a
-> > Virtex-5 FPGA. The board also contains a ALI M1533 south bridge
-> > for IDE, USB and Audio. I did a lot of work to get the pci bus working
-> > on this board and it works correctly but the default init code
-> > of the alim15x3 driver doesn't work for me. The driver explicitly
-> > disabled some initialization code for powerpc after uncommenting this
-> > code it works properly. Benjamin Herrenschmidt and I think this
-> > !CONFIG_PPC check should be removed because the system behaves
-> > like a real 'x86' system (also the i8259 interrupt controller is used).
-> 
-> Ben, I guess you are OK with the change and there are no longer other
-> platforms requiring CONFIG_PPC check below?  [I don't see your ACK here]
+Hi,
 
-Yup. I don't see a case where the hack would be of any use, so I'm
-happy to remove us from the test. Whenever a 8259 is present we
-assign it the legacy interrupts 1...15 with a virtual==physical mapping
-so all those x86-ish things should run just fine.
+yes this was AHCI. NCQ was enabled. I forgot to mention kernel version:
+2.6.26-1-amd64 (Debian Lenny)
 
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+So here is my test:
+Enabled AHCI in BIOS.
 
-> > Regards,
-> > Roderick Colenbrander
-> > 
-> > 
-> > From 1c40c2f1485ecd3bc5ad7a3af537cb94de0877c3 Mon Sep 17 00:00:00 2001
-> > From: Roderick Colenbrander <thunderbird2k@gmail.com>
-> > Date: Wed, 15 Apr 2009 10:45:17 +0200
-> > Subject: [PATCH] Use the 'x86' init_hwif code in the alim15x3 for
-> > x86-like PowerPC boards like Xilinx ML310/410/510.
-> 
-> Roderick, please add your "Signed-off-by:" line
-> (per Documentation/SubmittingPatches).
-> 
-> Thanks.
-> 
-> > ---
-> >  drivers/ide/alim15x3.c |    9 +++++----
-> >  1 files changed, 5 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/ide/alim15x3.c b/drivers/ide/alim15x3.c
-> > index 537da1c..9176c0f 100644
-> > --- a/drivers/ide/alim15x3.c
-> > +++ b/drivers/ide/alim15x3.c
-> > @@ -402,14 +402,15 @@ static u8 ali_cable_detect(ide_hwif_t *hwif)
-> >      return cbl;
-> >  }
-> > 
-> > -#if !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC)
-> > +#if !defined(CONFIG_SPARC64)
-> >  /**
-> >   *    init_hwif_ali15x3    -    Initialize the ALI IDE x86 stuff
-> >   *    @hwif: interface to configure
-> >   *
-> >   *    Obtain the IRQ tables for an ALi based IDE solution on the PC
-> > - *    class platforms. This part of the code isn't applicable to the
-> > - *    Sparc and PowerPC systems.
-> > + *    class platforms. This part of the code isn't applicable to
-> > + *    Sparc systems. It is usable on 'x86-like' PowerPC systems
-> > + *      which use a Ali M15x3 south bridge like e.g. Xilinx ML310/410/510.
-> >   */
-> > 
-> >  static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
-> > @@ -455,7 +456,7 @@ static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
-> >  }
-> >  #else
-> >  #define init_hwif_ali15x3 NULL
-> > -#endif /* !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC) */
-> > +#endif /* !defined(CONFIG_SPARC64) */
-> > 
-> >  /**
-> >   *    init_dma_ali15x3    -    set up DMA on ALi15x3
-> > --
-> > 1.5.6.3
+[    0.000000] Command line: root=/dev/md1 ro libata.force=noncq
+[    0.000000] Kernel command line: root=/dev/md1 ro libata.force=noncq
+[...]
+[    3.237941] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 
+0x3f impl SATA mode
+[    3.238000] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo 
+pmp pio slum part
 
+Ah, NCQ still activated.
+/sys/block/sdc/device/queue_depth shows 31.
+
+I guess NCQ still activated even with libata.force=noncq ?
+
+
+Now here is my second test:
+Disabled AHCI in BIOS.
+
+ata_piix is used now. Did some IO, can't force any freezes.
+
+
+In the meantime I found topics like this:
+http://forums.seagate.com/stx/board/message?board.id=ata_drives&thread.id=2879&view=by_date_ascending&page=1
+
+This looks like a firmware bug. I think I should contact Seagate ;) or 
+any other ideas?
+
+Bye
+
+
+
+Tejun Heo wrote:
+> Hello,
+> 
+> Thomas Jackowski wrote:
+>> This is /dev/sdc. /dev/sdd and /dev/sde is the same model with the same
+>> Firmware. I'm using a RAID5 on these 3 HDDs.
+>> Because of the Seagate Firmware Bug I had to upgrade the firmware from
+>> 'SD15' to 'SD1A'. The upgrade was successful.
+>>
+>> Before the upgrade there were no problems, after the upgrade I have
+>> trouble like this:
+> ...
+>> [14144.875931] ata4.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0
+> 
+> Timeout on IDENTIFY.
+> 
+>> [507139.744602] ata5.00: cmd e5/00:00:00:00:00/00:00:00:00:00/00 tag 0
+>> [507453.049519] ata4.00: cmd e5/00:00:00:00:00/00:00:00:00:00/00 tag 0
+> 
+> and two timeouts on CHK_POWER.
+> 
+> ahci, right?  Given that the problem appeared after firmware update,
+> it seems to indicate firmware problem.  Does libata.force=noncq make
+> any difference?
+> 
