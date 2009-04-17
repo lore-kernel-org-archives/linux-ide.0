@@ -1,73 +1,127 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 02/15] ide-tape: remove back-to-back REQUEST_SENSE
-	detection
-Date: Fri, 17 Apr 2009 13:03:31 +0200
-Message-ID: <9ea470500904170403n621f84det8cfec405131d893c@mail.gmail.com>
-References: <1239960802-31978-1-git-send-email-tj@kernel.org>
-	 <1239960802-31978-3-git-send-email-tj@kernel.org>
-	 <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com>
-	 <49E85B6F.7080603@kernel.org> <49E85CA7.2060801@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: RFC Patch: Use x86 init_hwif in the alim15x3 for x86-like
+	PowerPC systems
+Date: Fri, 17 Apr 2009 16:40:14 +0400
+Message-ID: <20090417124014.GA8944@oksana.dev.rtsoft.ru>
+References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com> <c8485d470904150734s47ce0f27y3ae984355e823d9f@mail.gmail.com> <200904162130.01237.bzolnier@gmail.com> <1239954019.7443.47.camel@pasglop>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f176.google.com ([209.85.218.176]:57038 "EHLO
-	mail-bw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbZDQLDe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 07:03:34 -0400
-Received: by bwz24 with SMTP id 24so486341bwz.13
-        for <linux-ide@vger.kernel.org>; Fri, 17 Apr 2009 04:03:32 -0700 (PDT)
-In-Reply-To: <49E85CA7.2060801@gmail.com>
+Received: from [213.79.90.228] ([213.79.90.228]:13503 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753936AbZDQMkQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 08:40:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1239954019.7443.47.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Roderick Colenbrander <thunderbird2k@gmail.com>, linuxppc-dev@ozlabs.org
 
-Hi
+On Fri, Apr 17, 2009 at 09:40:19AM +0200, Benjamin Herrenschmidt wrote:
+> On Thu, 2009-04-16 at 21:30 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > Hi,
+> > 
+> > On Wednesday 15 April 2009 16:34:22 Roderick Colenbrander wrote:
+> > > Hi,
+> > > 
+> > > I'm using a Xilinx ML510 it features a PowerPC 440 cpu inside a
+> > > Virtex-5 FPGA. The board also contains a ALI M1533 south bridge
+> > > for IDE, USB and Audio. I did a lot of work to get the pci bus working
+> > > on this board and it works correctly but the default init code
+> > > of the alim15x3 driver doesn't work for me. The driver explicitly
+> > > disabled some initialization code for powerpc after uncommenting this
+> > > code it works properly. Benjamin Herrenschmidt and I think this
+> > > !CONFIG_PPC check should be removed because the system behaves
+> > > like a real 'x86' system (also the i8259 interrupt controller is used).
+> > 
+> > Ben, I guess you are OK with the change and there are no longer other
+> > platforms requiring CONFIG_PPC check below?  [I don't see your ACK here]
+> 
+> Yup. I don't see a case where the hack would be of any use, so I'm
+> happy to remove us from the test. Whenever a 8259 is present we
+> assign it the legacy interrupts 1...15 with a virtual==physical mapping
+> so all those x86-ish things should run just fine.
 
-On Fri, Apr 17, 2009 at 12:40 PM, Tejun Heo <htejun@gmail.com> wrote:
-> Tejun Heo wrote:
->> I don't really care one way or the other but the error condition
->> itself looked somewhat pointless to me, so I just killed it. =A0Is t=
-he
->> error messasge really worth guaranteeing drive->pc can be accessed
->> after completion? =A0That's a nasty and fragile guarantee. =A0If suc=
-h
->> check is really necessary, the proper way to do it would be recordin=
-g
->> whether the last command was request sense in some persistent data
->> structure not trying to access a data structure which the code doesn=
-'t
->> own anymore.
+But they don't. On MPC8610HPCD we have IDE interrupt directly
+connected to the MPIC line (through PCI sideband interrupt), and
+i8259 is _completely_ disabled in the bridge.
 
-Honestly, I don't know. The code predates even the initial git commit o=
-f the
-kernel so I guess nobody knows? And yeah, such a check looks a bit too =
-much so I
-won't have any problem with removing it. Nevertheless, we need the smal=
-l fix
-above in the ->do_request callback for all other packet commands since =
-ide-tape
-uses currently ide_queue_pc_tail() for sending those. I know, I know, i=
-t is ugly
-and we're working on it :).
+See this commit:
 
+  commit 6d1cee44361b8d06ccd1812e80448d86ae60dfe3
+  Author: Anton Vorontsov <avorontsov@ru.mvista.com>
+  Date:   Tue Apr 29 22:57:38 2008 +0200
+  
+      alim15x3: disable init_hwif_ali15x3 for PowerPC
 
-> Yet another problem is that idetape_flush_tape_buffers() uses pc whic=
-h
-> is on stack which drive->pc ends up pointing directly to, so it won't
-> work. =A0Nobody expects that the pointer it passed into an API should=
- be
-> accessible by the API implementation after it was done with it.
-> That's just a silly thing to do.
+> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-The whole on stack passing should be pass=E9 :) soon since we're about =
-to kill
-those ide_atapi_pc's. As I said before, this is very old code that is r=
-eally
-rusty and we're trying to janitor it slowly.
+If the patch applied, MPC8610HPCD will be broken.
 
---=20
-Regards/Gruss,
-Boris
+We need at least some machine_is() check.
+
+> > > Regards,
+> > > Roderick Colenbrander
+> > > 
+> > > 
+> > > From 1c40c2f1485ecd3bc5ad7a3af537cb94de0877c3 Mon Sep 17 00:00:00 2001
+> > > From: Roderick Colenbrander <thunderbird2k@gmail.com>
+> > > Date: Wed, 15 Apr 2009 10:45:17 +0200
+> > > Subject: [PATCH] Use the 'x86' init_hwif code in the alim15x3 for
+> > > x86-like PowerPC boards like Xilinx ML310/410/510.
+> > 
+> > Roderick, please add your "Signed-off-by:" line
+> > (per Documentation/SubmittingPatches).
+> > 
+> > Thanks.
+> > 
+> > > ---
+> > >  drivers/ide/alim15x3.c |    9 +++++----
+> > >  1 files changed, 5 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/ide/alim15x3.c b/drivers/ide/alim15x3.c
+> > > index 537da1c..9176c0f 100644
+> > > --- a/drivers/ide/alim15x3.c
+> > > +++ b/drivers/ide/alim15x3.c
+> > > @@ -402,14 +402,15 @@ static u8 ali_cable_detect(ide_hwif_t *hwif)
+> > >      return cbl;
+> > >  }
+> > > 
+> > > -#if !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC)
+> > > +#if !defined(CONFIG_SPARC64)
+> > >  /**
+> > >   *    init_hwif_ali15x3    -    Initialize the ALI IDE x86 stuff
+> > >   *    @hwif: interface to configure
+> > >   *
+> > >   *    Obtain the IRQ tables for an ALi based IDE solution on the PC
+> > > - *    class platforms. This part of the code isn't applicable to the
+> > > - *    Sparc and PowerPC systems.
+> > > + *    class platforms. This part of the code isn't applicable to
+> > > + *    Sparc systems. It is usable on 'x86-like' PowerPC systems
+> > > + *      which use a Ali M15x3 south bridge like e.g. Xilinx ML310/410/510.
+> > >   */
+> > > 
+> > >  static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+> > > @@ -455,7 +456,7 @@ static void __devinit init_hwif_ali15x3 (ide_hwif_t *hwif)
+> > >  }
+> > >  #else
+> > >  #define init_hwif_ali15x3 NULL
+> > > -#endif /* !defined(CONFIG_SPARC64) && !defined(CONFIG_PPC) */
+> > > +#endif /* !defined(CONFIG_SPARC64) */
+> > > 
+> > >  /**
+> > >   *    init_dma_ali15x3    -    set up DMA on ALi15x3
+> > > --
+> > > 1.5.6.3
+> 
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@ozlabs.org
+> https://ozlabs.org/mailman/listinfo/linuxppc-dev
+
+-- 
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
