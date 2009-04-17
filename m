@@ -1,33 +1,84 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Implementing NVMHCI...
-Date: Fri, 17 Apr 2009 15:45:24 -0700
-Message-ID: <49E90684.6020707@zytor.com>
-References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org> <49E46779.1040106@redhat.com> <49E47744.3040103@garzik.org> <Pine.LNX.4.62.0904141447520.13379@tamago.serverit.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: libata git repo guide (was Re: [PATCH 01/02] sata_mv: tidy up qc->tf
+ usage in qc_prep() functions)
+Date: Fri, 17 Apr 2009 18:59:51 -0400
+Message-ID: <49E909E7.3070709@pobox.com>
+References: <49E359D6.1090309@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759597AbZDQWwn@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.62.0904141447520.13379@tamago.serverit.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Szabolcs Szakacsits <szaka@ntfs-3g.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Avi Kivity <avi@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:53349 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752815AbZDQW77 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Apr 2009 18:59:59 -0400
+In-Reply-To: <49E359D6.1090309@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Mark Lord <liml@rtr.ca>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Matthew Wilcox <willy@linux.intel.com>
 
-Szabolcs Szakacsits wrote:
->>>
->>> Windows 2008 aligns partitions on a 1MB boundary, IIRC.
->> Makes a lot of sense...
-> 
-> Since Vista at least the first partition is 2048 sector aligned.
-> 
-> 	Szaka
-> 
+Mark Lord wrote:
+> For upstream-linus, please.
 
-2048 * 512 = 1 MB, yes.
 
-I *think* it's actually 1 MB and not 2048 sectors, but yes, they've 
-finally dumped the idiotic DOS misalignment.  Unfortunately the GNU 
-parted people have said that the parted code is too fragile to fix 
-parted in this way.  Sigh.
+Any volunteers wanna format and post this to the wiki? 
+http://ata.wiki.kernel.org/
 
-	-hpa
+For what it's worth, upstream-linus is for Linus only, not for anyone else.
+
+Relevant branches of libata-dev.git:
+
+ALL		All libata code I consider acceptable for public
+		testing.  Intended for Andrew Morton's -mm tree,
+		but I am always looking for people to help test!
+
+NEXT		libata code intended for current kernel + 1
+		This is a subset of ALL, and is intended for
+		the linux-next tree, and even more rigorous
+		public testing.
+
+upstream-fixes	This branch exists when the merge window is NOT open.
+		Fixes queued for Linus go here, during -rc.  Generally
+		I push to Linus pretty rapidly, though, so programmers
+		are encouraged to send patches diff'd against Linus
+		upstream during -rc.
+
+upstream	libata code intended for current kernel + 1.  When the
+		merge window is closed, patches are queued here.  When
+		the merge window is open, fixes for Linus are also
+		queued here.
+
+		Generally upstream==NEXT, but this is not guaranteed.
+
+		i.e. sometimes I will put a fix on a separate git
+		branch, and then merge that into the mix, such that
+
+			NEXT == upstream + fix-that-needs-testing
+
+And then there are individual branches that pop in and out of existence, 
+as I do my own work.  For example, currently active branches are
+
+fixes-eh-freeze	  Freeze ordering fix recently discussed; needs some
+		codepath review before I am sure it is safe. (NEXT)
+
+libahci		libahci patchset recently posted (NEXT, ALL)
+
+sectsize	Variable sector size patch.  Will not go into
+		#upstream branch until I satisfy some request of
+		willy's, which slips my mind at the moment (ALL)
+
+sx4		sata_sx4 new EH conversion (ALL)
+
+And last, but not least,
+
+master		Vanilla Linux kernel, with no changes from me.
+
+		Exists to indicate the root of all above branches,
+		so that "git log master..libahci" or
+		"git diff master..upstream" works as expected.
+
+
+NOTE:  All of the branches except 'master' may be rebased.
+
+
