@@ -1,46 +1,103 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 02/02] sata_mv: workaround for multi_count errata sata24
-Date: Fri, 17 Apr 2009 21:11:27 -0400
-Message-ID: <49E928BF.5060402@rtr.ca>
-References: <49E359D6.1090309@rtr.ca> <49E35A5E.4020204@rtr.ca> <49E90AD9.7070706@pobox.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Frequent Head Unload Problem
+Date: Fri, 17 Apr 2009 19:24:47 -0600
+Message-ID: <49E92BDF.7060507@gmail.com>
+References: <49E4BF3E.9040105@gavsworld.net> <49E537F4.8000807@gmail.com> <49E666B2.6090708@gavsworld.net> <49E67576.8070704@gmail.com> <49E8C14D.7020907@gavsworld.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:47497 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752777AbZDRBLa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Apr 2009 21:11:30 -0400
-In-Reply-To: <49E90AD9.7070706@pobox.com>
+Received: from yw-out-2324.google.com ([74.125.46.30]:36516 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753295AbZDRBYw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2009 21:24:52 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so806703ywb.1
+        for <linux-ide@vger.kernel.org>; Fri, 17 Apr 2009 18:24:51 -0700 (PDT)
+In-Reply-To: <49E8C14D.7020907@gavsworld.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Gavin Cameron <gavin@gavsworld.net>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Workaround for errata SATA#24 in sata_mv.
->> This errata affects WRITE_MULTI* commands when
->> the device multi_count produces a DRQ block size >= 4Kbytes.
->>
->> We work around it here by converting such operations
->> into ordinary PIO_WRITEs instead.
->>
->> Note that this might result in a PIO FUA write unavoidably being 
->> converted
->> into a non-FUA write.  In practice, any system using FUA is also going 
->> to be
->> using DMA rather than PIO, so this shouldn't affect anyone in the real 
->> world.
+Gavin Cameron wrote:
+>> Can you try doing smartctl -a on both drives before and after you hear 
+>> the noise and see if it seems to match up with any of the counters 
+>> changing?
 > 
-> I'm applying this, but I think a follow-up patch would be nice:  it 
-> seems like a one-time printk, indicating the FUA conversion is active, 
-> could be a help in case someone does care.
-..
+> Here's the build up:
+> sudo smartctl -a /dev/sda > sda_start
+> sudo smartctl -a /dev/sdb > sdb_start
+> ... a few mins while noises go on ...
+> sudo smartctl -a /dev/sda > sda_end
+> sudo smartctl -a /dev/sdb > sdb_end
+> 
+> Here are the results:
+> diff sda_start sda_end
+> 13c13
+> < Local Time is:    Fri Apr 17 16:03:40 2009 BST
+> ---
+>  > Local Time is:    Fri Apr 17 16:17:20 2009 BST
+> 66c66
+> < 194 Temperature_Celsius     0x0002   253   253   000    Old_age 
+> Always       -       17 (Lifetime Min/Max 9/38)
+> ---
+>  > 194 Temperature_Celsius     0x0002   240   240   000    Old_age 
+> Always       -       25 (Lifetime Min/Max 9/38)
+> 88a89
+>  >
+> 
+> So nothing there apart from the temperature. However:
+> diff sdb_start sdb_end
+> 13c13
+> < Local Time is:    Fri Apr 17 16:03:42 2009 BST
+> ---
+>  > Local Time is:    Fri Apr 17 16:17:26 2009 BST
+> 57,59c57,59
+> <   7 Seek_Error_Rate         0x000a   199   199   000    Old_age 
+> Always       -       80
+> <   8 Seek_Time_Performance   0x0027   246   238   187    Pre-fail 
+> Always       -       39281
+> <   9 Power_On_Minutes        0x0032   229   229   000    Old_age 
+> Always       -       710h+53m
+> ---
+>  >   7 Seek_Error_Rate         0x000a   199   198   000    Old_age 
+> Always       -       43
+>  >   8 Seek_Time_Performance   0x0027   246   238   187    Pre-fail 
+> Always       -       45449
+>  >   9 Power_On_Minutes        0x0032   229   229   000    Old_age 
+> Always       -       711h+07m
+> 65,66c65,66
+> < 194 Temperature_Celsius     0x0032   037   253   000    Old_age 
+> Always       -       17
+> < 195 Hardware_ECC_Recovered  0x000a   253   251   000    Old_age 
+> Always       -       36907
+> ---
+>  > 194 Temperature_Celsius     0x0032   037   253   000    Old_age 
+> Always       -       24
+>  > 195 Hardware_ECC_Recovered  0x000a   253   251   000    Old_age 
+> Always       -       31779
+> 70c70
+> < 199 UDMA_CRC_Error_Count    0x0008   084   001   000    Old_age 
+> Offline      -       768
+> ---
+>  > 199 UDMA_CRC_Error_Count    0x0008   100   001   000    Old_age 
+> Offline      -       768
+> 72c72
+> < 201 Soft_Read_Error_Rate    0x000a   253   252   000    Old_age 
+> Always       -       0
+> ---
+>  > 201 Soft_Read_Error_Rate    0x000a   253   252   000    Old_age 
+> Always       -       2
+> 100a101
+>  >
+> 
+> Looks to me like this drive could well be on its way out! None of the 
+> counters (Start_Stop_Count for example) were changing, but lots of CRC 
+> and error counts are.
+> 
+> What do you think? Just a knackered drive and nothing to do with libata 
+> at all?
 
-Seems like .text bloat to me.
+Yeah, it's possible that what you're hearing isn't a head unload at all, 
+but some kind of abnormal recalibration noise, etc.
 
-But if you want it, I'll cook up patches for both ata_rwcmd_protocol()
-in libata-core.c as well as sata_mv.c later on.
-
-Cheers
