@@ -1,68 +1,158 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: [PATCH 1/2] ide: Stop disks on reboot for laptop which cuts power
-Date: Sat, 18 Apr 2009 12:45:58 +0200
-Message-ID: <20090418124558.0426f74c@neptune.home>
-References: <20090418124415.1dc82273@neptune.home>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git pull] IDE fixes
+Date: Sat, 18 Apr 2009 18:09:38 +0200
+Message-ID: <200904181809.40031.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ppp-110-141.adsl.restena.lu ([158.64.110.141]:36082 "EHLO
-	bonbons.gotdns.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbZDRKzs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Apr 2009 06:55:48 -0400
-In-Reply-To: <20090418124415.1dc82273@neptune.home>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64492 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756893AbZDRQSa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Apr 2009 12:18:30 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-My laptop (Acer Travelmate 660) always cuts the power when rebooting
-which causes the disk to emergency-park it's head.
 
-Add a dmi check to stop disk as for shutdown on this laptop.
+Hi,
 
-Signed-off-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
----
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index 1aebdf1..4b6b71e 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -7,6 +7,7 @@
- #include <linux/mutex.h>
- #include <linux/ide.h>
- #include <linux/hdreg.h>
-+#include <linux/dmi.h>
-=20
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define IDE_DISK_MINORS		(1 << PARTN_BITS)
-@@ -99,6 +100,19 @@ static void ide_gd_resume(ide_drive_t *drive)
- 		(void)drive->disk_ops->get_capacity(drive);
+Linus, please pull from 'for-linus' branch of:
+
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git for-linus
+
+to receive the following updates:
+
+ drivers/ide/cs5536.c |    1 +
+ drivers/ide/hpt366.c |   14 ++++++++------
+ drivers/ide/ide-io.c |   11 +++++++----
+ drivers/ide/pmac.c   |    2 +-
+ 4 files changed, 17 insertions(+), 11 deletions(-)
+
+
+Bartlomiej Zolnierkiewicz (1):
+      ide: fix barriers support
+
+Jack Stone (1):
+      ide: Remove void casts
+
+Sergei Shtylyov (3):
+      hpt366: fix HPT370 DMA timeouts
+      hpt366: use ATA_DMA_* constants
+      cs5536: define dma_sff_read_status() method
+
+
+diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
+index 353a35b..0332a95 100644
+--- a/drivers/ide/cs5536.c
++++ b/drivers/ide/cs5536.c
+@@ -236,6 +236,7 @@ static const struct ide_dma_ops cs5536_dma_ops = {
+ 	.dma_test_irq		= ide_dma_test_irq,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+ 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
++	.dma_sff_read_status	= ide_dma_sff_read_status,
+ };
+ 
+ static const struct ide_port_info cs5536_info = {
+diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
+index a0eb87f..0feb66c 100644
+--- a/drivers/ide/hpt366.c
++++ b/drivers/ide/hpt366.c
+@@ -3,7 +3,7 @@
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+  * Portions Copyright (C) 2003		Red Hat Inc
+  * Portions Copyright (C) 2007		Bartlomiej Zolnierkiewicz
+- * Portions Copyright (C) 2005-2008	MontaVista Software, Inc.
++ * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
+  *
+  * Thanks to HighPoint Technologies for their assistance, and hardware.
+  * Special Thanks to Jon Burchmore in SanDiego for the deep pockets, his
+@@ -114,6 +114,8 @@
+  *   the register setting lists into the table indexed by the clock selected
+  * - set the correct hwif->ultra_mask for each individual chip
+  * - add Ultra and MW DMA mode filtering for the HPT37[24] based SATA cards
++ * - stop resetting HPT370's state machine before each DMA transfer as that has
++ *   caused more harm than good
+  *	Sergei Shtylyov, <sshtylyov@ru.mvista.com> or <source@mvista.com>
+  */
+ 
+@@ -133,7 +135,7 @@
+ #define DRV_NAME "hpt366"
+ 
+ /* various tuning parameters */
+-#define HPT_RESET_STATE_ENGINE
++#undef	HPT_RESET_STATE_ENGINE
+ #undef	HPT_DELAY_INTERRUPT
+ 
+ static const char *quirk_drives[] = {
+@@ -808,7 +810,7 @@ static void hpt370_irq_timeout(ide_drive_t *drive)
+ 	/* get DMA command mode */
+ 	dma_cmd = inb(hwif->dma_base + ATA_DMA_CMD);
+ 	/* stop DMA */
+-	outb(dma_cmd & ~0x1, hwif->dma_base + ATA_DMA_CMD);
++	outb(dma_cmd & ~ATA_DMA_START, hwif->dma_base + ATA_DMA_CMD);
+ 	hpt370_clear_engine(drive);
  }
-=20
-+static const struct dmi_system_id ide_coldreboot_table[] =3D {
-+	{
-+		/* Acer TravelMate 66x cuts power during reboot */
-+		.ident   =3D "Acer TravelMate 660",
-+		.matches =3D {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "TravelMate 660"),
-+		},
-+	},
-+
-+	{ }	/* terminate list */
-+};
-+
- static void ide_gd_shutdown(ide_drive_t *drive)
- {
- #ifdef	CONFIG_ALPHA
-@@ -115,7 +129,8 @@ static void ide_gd_shutdown(ide_drive_t *drive)
- 	   the disk to expire its write cache. */
- 	if (system_state !=3D SYSTEM_POWER_OFF) {
- #else
--	if (system_state =3D=3D SYSTEM_RESTART) {
-+	if (system_state =3D=3D SYSTEM_RESTART &&
-+		!dmi_check_system(ide_coldreboot_table)) {
- #endif
- 		drive->disk_ops->flush(drive);
- 		return;
+ 
+@@ -825,11 +827,11 @@ static int hpt370_dma_end(ide_drive_t *drive)
+ 	ide_hwif_t *hwif	= drive->hwif;
+ 	u8  dma_stat		= inb(hwif->dma_base + ATA_DMA_STATUS);
+ 
+-	if (dma_stat & 0x01) {
++	if (dma_stat & ATA_DMA_ACTIVE) {
+ 		/* wait a little */
+ 		udelay(20);
+ 		dma_stat = inb(hwif->dma_base + ATA_DMA_STATUS);
+-		if (dma_stat & 0x01)
++		if (dma_stat & ATA_DMA_ACTIVE)
+ 			hpt370_irq_timeout(drive);
+ 	}
+ 	return ide_dma_end(drive);
+@@ -851,7 +853,7 @@ static int hpt374_dma_test_irq(ide_drive_t *drive)
+ 
+ 	dma_stat = inb(hwif->dma_base + ATA_DMA_STATUS);
+ 	/* return 1 if INTR asserted */
+-	if (dma_stat & 4)
++	if (dma_stat & ATA_DMA_INTR)
+ 		return 1;
+ 
+ 	return 0;
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 2ae02b8..35dc38d 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -102,11 +102,14 @@ void ide_complete_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat, u8 err)
+ 			drive->dev_flags |= IDE_DFLAG_PARKED;
+ 	}
+ 
+-	if (rq && rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
+-		memcpy(rq->special, cmd, sizeof(*cmd));
++	if (rq && rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
++		struct ide_cmd *orig_cmd = rq->special;
+ 
+-	if (cmd->tf_flags & IDE_TFLAG_DYN)
+-		kfree(cmd);
++		if (cmd->tf_flags & IDE_TFLAG_DYN)
++			kfree(orig_cmd);
++		else
++			memcpy(orig_cmd, cmd, sizeof(*cmd));
++	}
+ }
+ 
+ /* obsolete, blk_rq_bytes() should be used instead */
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index 052b9bf..f76e4e6 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1682,7 +1682,7 @@ static int __devinit pmac_ide_init_dma(ide_hwif_t *hwif,
+ 	 * The +2 is +1 for the stop command and +1 to allow for
+ 	 * aligning the start address to a multiple of 16 bytes.
+ 	 */
+-	pmif->dma_table_cpu = (struct dbdma_cmd*)pci_alloc_consistent(
++	pmif->dma_table_cpu = pci_alloc_consistent(
+ 		dev,
+ 		(MAX_DCMDS + 2) * sizeof(struct dbdma_cmd),
+ 		&hwif->dmatable_dma);
