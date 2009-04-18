@@ -1,68 +1,182 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PATCH pata-2.6] ide: clean up ide-tape, take#2
-Date: Sun, 19 Apr 2009 08:58:32 +0900
-Message-ID: <1240099122-18381-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/10] ide-tape: unify r/w init paths
+Date: Sun, 19 Apr 2009 08:58:38 +0900
+Message-ID: <1240099122-18381-7-git-send-email-tj@kernel.org>
+References: <1240099122-18381-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57756 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:57772 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752519AbZDRX6w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 18 Apr 2009 19:58:52 -0400
+	id S1753280AbZDRX65 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Apr 2009 19:58:57 -0400
+In-Reply-To: <1240099122-18381-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@googlemail.com, bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello, Bartlomiej, Jens, Borislav.
+Impact: cleanup
 
-Upon ack, please pull from the following git tree.
+Read and write init paths are almost identical.  Unify them into
+idetape_init_rw().
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git ide-phase2
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ide/ide-tape.c |  110 ++++++++++++++++++++----------------------------
+ 1 files changed, 46 insertions(+), 64 deletions(-)
 
-This is the second take of clean-up-ide-tape patchset.  Please read
-the head message on the last take[L] for general description.
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index d2e9c09..4da7fa9 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -987,42 +987,50 @@ static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
+ 	tape->chrdev_dir = IDETAPE_DIR_NONE;
+ }
+ 
+-static int idetape_init_read(ide_drive_t *drive)
++static int idetape_init_rw(ide_drive_t *drive, int dir)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+-	int bytes_read;
++	int rc;
+ 
+-	/* Initialize read operation */
+-	if (tape->chrdev_dir != IDETAPE_DIR_READ) {
+-		if (tape->chrdev_dir == IDETAPE_DIR_WRITE) {
+-			ide_tape_flush_merge_buffer(drive);
+-			idetape_flush_tape_buffers(drive);
+-		}
+-		if (tape->buf || tape->valid) {
+-			printk(KERN_ERR "ide-tape: valid should be 0 now\n");
+-			tape->valid = 0;
+-		}
+-		tape->buf = kmalloc(tape->buffer_size, GFP_KERNEL);
+-		if (!tape->buf)
+-			return -ENOMEM;
+-		tape->chrdev_dir = IDETAPE_DIR_READ;
+-		tape->cur = tape->buf;
++	BUG_ON(dir != IDETAPE_DIR_READ && dir != IDETAPE_DIR_WRITE);
+ 
+-		/*
+-		 * Issue a read 0 command to ensure that DSC handshake is
+-		 * switched from completion mode to buffer available mode.
+-		 * No point in issuing this if DSC overlap isn't supported, some
+-		 * drives (Seagate STT3401A) will return an error.
+-		 */
+-		if (drive->dev_flags & IDE_DFLAG_DSC_OVERLAP) {
+-			bytes_read = idetape_queue_rw_tail(drive,
+-							REQ_IDETAPE_READ, 0);
+-			if (bytes_read < 0) {
+-				kfree(tape->buf);
+-				tape->buf = NULL;
+-				tape->chrdev_dir = IDETAPE_DIR_NONE;
+-				return bytes_read;
+-			}
++	if (tape->chrdev_dir == dir)
++		return 0;
++
++	if (tape->chrdev_dir == IDETAPE_DIR_READ)
++		ide_tape_discard_merge_buffer(drive, 1);
++	else if (tape->chrdev_dir == IDETAPE_DIR_WRITE) {
++		ide_tape_flush_merge_buffer(drive);
++		idetape_flush_tape_buffers(drive);
++	}
++
++	if (tape->buf || tape->valid) {
++		printk(KERN_ERR "ide-tape: valid should be 0 now\n");
++		tape->valid = 0;
++	}
++
++	tape->buf = kmalloc(tape->buffer_size, GFP_KERNEL);
++	if (!tape->buf)
++		return -ENOMEM;
++	tape->chrdev_dir = dir;
++	tape->cur = tape->buf;
++
++	/*
++	 * Issue a 0 rw command to ensure that DSC handshake is
++	 * switched from completion mode to buffer available mode.  No
++	 * point in issuing this if DSC overlap isn't supported, some
++	 * drives (Seagate STT3401A) will return an error.
++	 */
++	if (drive->dev_flags & IDE_DFLAG_DSC_OVERLAP) {
++		int cmd = dir == IDETAPE_DIR_READ ? REQ_IDETAPE_READ
++						  : REQ_IDETAPE_WRITE;
++
++		rc = idetape_queue_rw_tail(drive, cmd, 0);
++		if (rc < 0) {
++			kfree(tape->buf);
++			tape->buf = NULL;
++			tape->chrdev_dir = IDETAPE_DIR_NONE;
++			return rc;
+ 		}
+ 	}
+ 
+@@ -1038,7 +1046,7 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
+ 	if (test_bit(IDE_AFLAG_FILEMARK, &drive->atapi_flags))
+ 		return 0;
+ 
+-	idetape_init_read(drive);
++	idetape_init_rw(drive, IDETAPE_DIR_READ);
+ 
+ 	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks);
+ }
+@@ -1195,7 +1203,7 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
+ 			    (count % tape->blk_size) == 0)
+ 				tape->user_bs_factor = count / tape->blk_size;
+ 	}
+-	rc = idetape_init_read(drive);
++	rc = idetape_init_rw(drive, IDETAPE_DIR_READ);
+ 	if (rc < 0)
+ 		return rc;
+ 	if (count == 0)
+@@ -1249,6 +1257,7 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 	ssize_t actually_written = 0;
+ 	ssize_t ret = 0;
+ 	u16 ctl = *(u16 *)&tape->caps[12];
++	int rc;
+ 
+ 	/* The drive is write protected. */
+ 	if (tape->write_prot)
+@@ -1257,36 +1266,9 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 	debug_log(DBG_CHRDEV, "Enter %s, count %Zd\n", __func__, count);
+ 
+ 	/* Initialize write operation */
+-	if (tape->chrdev_dir != IDETAPE_DIR_WRITE) {
+-		if (tape->chrdev_dir == IDETAPE_DIR_READ)
+-			ide_tape_discard_merge_buffer(drive, 1);
+-		if (tape->buf || tape->valid) {
+-			printk(KERN_ERR "ide-tape: valid should be 0 now\n");
+-			tape->valid = 0;
+-		}
+-		tape->buf = kmalloc(tape->buffer_size, GFP_KERNEL);
+-		if (!tape->buf)
+-			return -ENOMEM;
+-		tape->chrdev_dir = IDETAPE_DIR_WRITE;
+-		tape->cur = tape->buf;
+-
+-		/*
+-		 * Issue a write 0 command to ensure that DSC handshake is
+-		 * switched from completion mode to buffer available mode. No
+-		 * point in issuing this if DSC overlap isn't supported, some
+-		 * drives (Seagate STT3401A) will return an error.
+-		 */
+-		if (drive->dev_flags & IDE_DFLAG_DSC_OVERLAP) {
+-			ssize_t retval = idetape_queue_rw_tail(drive,
+-							REQ_IDETAPE_WRITE, 0);
+-			if (retval < 0) {
+-				kfree(tape->buf);
+-				tape->buf = NULL;
+-				tape->chrdev_dir = IDETAPE_DIR_NONE;
+-				return retval;
+-			}
+-		}
+-	}
++	rc = idetape_init_rw(drive, IDETAPE_DIR_WRITE);
++	if (rc < 0)
++		return rc;
+ 	if (count == 0)
+ 		return (0);
+ 	if (tape->valid < tape->buffer_size) {
+-- 
+1.6.0.2
 
-Changes from the last take are
-
-* Tested with Seagate STT8000A rev 5.44 and various fixes bugs
-  including a few already existing ones.
-
-* 0003 and 0004 of the last take are merged into one.  The first one
-  converted data carrier to bio and the second changed data transfer
-  mechanism accordingly.  As blk_rq_map_kern() can produce scatter IO
-  the first one without the second didn't work.
-
-* Rebased.
-
-This patchset contains the following ten patches.
-
- 0001-ide-tape-floppy-fix-failed-command-completion-after.patch
- 0002-ide-atapi-tape-floppy-allow-pc_callback-to-chan.patch
- 0003-ide-tape-use-single-continuous-buffer.patch
- 0004-ide-tape-use-standard-data-transfer-mechanism.patch
- 0005-ide-tape-kill-idetape_bh.patch
- 0006-ide-tape-unify-r-w-init-paths.patch
- 0007-ide-tape-use-byte-size-instead-of-sectors-on-rw-iss.patch
- 0008-ide-tape-simplify-read-write-functions.patch
- 0009-ide-atapi-kill-unused-fields-and-callbacks.patch
- 0010-ide-drop-rq-data-handling-from-ide_map_sg.patch
-
-and is on top of
-
-  linux-pata-2.6#for-next (15da90b516e9da92cc1d90001e640fd6707d0e27)
-+ [1] ide-rq-buffer-data-special-cleanups patchset, take#2
-
-and contains the following changes.
-
- drivers/ide/ide-atapi.c  |   29 -
- drivers/ide/ide-floppy.c |    4 
- drivers/ide/ide-io.c     |    6 
- drivers/ide/ide-tape.c   |  722 ++++++++++-------------------------------------
- include/linux/ide.h      |   12 
- 5 files changed, 170 insertions(+), 603 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[L] http://thread.gmane.org/gmane.linux.ide/39316
-[1] http://thread.gmane.org/gmane.linux.ide/39930
