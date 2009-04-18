@@ -1,95 +1,347 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 02/15] ide-tape: remove back-to-back REQUEST_SENSE detection
-Date: Sat, 18 Apr 2009 18:51:49 +0200
-Message-ID: <200904181851.50010.bzolnier@gmail.com>
-References: <1239960802-31978-1-git-send-email-tj@kernel.org> <1239960802-31978-3-git-send-email-tj@kernel.org> <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:61111 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbZDRQyh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Apr 2009 12:54:37 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so597853fkq.5
-        for <linux-ide@vger.kernel.org>; Sat, 18 Apr 2009 09:54:36 -0700 (PDT)
-In-Reply-To: <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH/RFC 09/16] m68k: amiga - Amiga Gayle IDE platform device conversion
+Date: Sat, 18 Apr 2009 20:52:17 +0200
+Message-ID: <1240080744-14995-10-git-send-email-geert@linux-m68k.org>
+References: <1240080744-14995-1-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-2-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-3-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-4-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-5-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-6-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-7-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-8-git-send-email-geert@linux-m68k.org>
+ <1240080744-14995-9-git-send-email-geert@linux-m68k.org>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <1240080744-14995-9-git-send-email-geert@linux-m68k.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-On Friday 17 April 2009 12:23:13 Borislav Petkov wrote:
-> Hi,
-> 
-> On Fri, Apr 17, 2009 at 11:33 AM, Tejun Heo <tj@kernel.org> wrote:
-> > Impact: fix an oops which always triggers
-> >
-> > ide_tape_issue_pc() assumed drive->pc isn't NULL on invocation when
-> > checking for back-to-back request sense issues but drive->pc can be
-> > NULL and even when it's not NULL, it's not safe to dereference it once
-> > the previous command is complete because pc could have been freed or
-> > was on stack.  Kill back-to-back REQUEST_SENSE detection.
-> >
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
-> > ---
-> >  drivers/ide/ide-tape.c |    6 ------
-> >  1 files changed, 0 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> > index cb942a9..3a53e08 100644
-> > --- a/drivers/ide/ide-tape.c
-> > +++ b/drivers/ide/ide-tape.c
-> > @@ -614,12 +614,6 @@ static ide_startstop_t ide_tape_issue_pc(ide_drive_t *drive,
-> >  {
-> >        idetape_tape_t *tape = drive->driver_data;
-> >
-> > -       if (drive->pc->c[0] == REQUEST_SENSE &&
-> > -           pc->c[0] == REQUEST_SENSE) {
-> > -               printk(KERN_ERR "ide-tape: possible ide-tape.c bug - "
-> > -                       "Two request sense in serial were issued\n");
-> > -       }
-> > -
-> >        if (drive->failed_pc == NULL && pc->c[0] != REQUEST_SENSE)
-> >                drive->failed_pc = pc;
-> >
-> 
-> I hit that too when debugging an ide-tape problem a user has
-> (http://bugzilla.kernel.org/show_bug.cgi?id=12874). However, this is not the
-> proper solution since, currently, ide-tape stuffs all packet commands in
-> rq->buffer or rq->special now after your changes. It has to get them out of
-> there in the ->do_request callback and set drive->pc to point to the current
-> packet command in flight through the IRQ handler. And since ide_tape_issue_pc()
-> is called by the ->do_request callback we should have the drive->pc always
-> valid.
-> 
-> How about something like that instead:
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-ide@vger.kernel.org
+---
+ arch/m68k/amiga/platform.c       |   63 +++++++++++++++-
+ arch/m68k/include/asm/amigayle.h |    6 ++
+ drivers/ide/gayle.c              |  156 +++++++++++++++++++++-----------------
+ 3 files changed, 153 insertions(+), 72 deletions(-)
 
-Can't we just apply them both? :)
+diff --git a/arch/m68k/amiga/platform.c b/arch/m68k/amiga/platform.c
+index 027e4ca..907f6f5 100644
+--- a/arch/m68k/amiga/platform.c
++++ b/arch/m68k/amiga/platform.c
+@@ -11,6 +11,7 @@
+ #include <linux/zorro.h>
+ 
+ #include <asm/amigahw.h>
++#include <asm/amigayle.h>
+ 
+ 
+ #ifdef CONFIG_ZORRO
+@@ -55,7 +56,24 @@ static int __init amiga_init_bus(void)
+ 
+ subsys_initcall(amiga_init_bus);
+ 
+-#endif /* CONFIG_ZORRO */
++
++static int z_dev_present(zorro_id id)
++{
++	unsigned int i;
++
++	for (i = 0; i < zorro_num_autocon; i++)
++		if (zorro_autocon[i].rom.er_Manufacturer == ZORRO_MANUF(id) &&
++		    zorro_autocon[i].rom.er_Product == ZORRO_PROD(id))
++			return 1;
++
++	return 0;
++}
++
++#else /* !CONFIG_ZORRO */
++
++static inline int z_dev_present(zorro_id id) { return 0; }
++
++#endif /* !CONFIG_ZORRO */
+ 
+ 
+ static const struct resource a3000_scsi_resource __initconst = {
+@@ -72,8 +90,36 @@ static const struct resource a4000t_scsi_resource __initconst = {
+ };
+ 
+ 
++static const struct resource a1200_ide_resource __initconst = {
++	.start	= 0xda0000,
++	.end	= 0xda1fff,
++	.flags	= IORESOURCE_MEM,
++};
++
++static const struct gayle_ide_platform_data a1200_ide_pdata __initconst = {
++	.base		= 0xda0000,
++	.irqport	= 0xda9000,
++	.explicit_ack	= 1,
++};
++
++
++static const struct resource a4000_ide_resource __initconst = {
++	.start	= 0xdd2000,
++	.end	= 0xdd3fff,
++	.flags	= IORESOURCE_MEM,
++};
++
++static const struct gayle_ide_platform_data a4000_ide_pdata __initconst = {
++	.base		= 0xdd2020,
++	.irqport	= 0xdd3020,
++	.explicit_ack	= 0,
++};
++
++
+ static int __init amiga_init_devices(void)
+ {
++	struct platform_device *pdev;
++
+ 	if (!MACH_IS_AMIGA)
+ 		return -ENODEV;
+ 
+@@ -99,6 +145,21 @@ static int __init amiga_init_devices(void)
+ 		platform_device_register_simple("amiga-a4000t-scsi", -1,
+ 						&a4000t_scsi_resource, 1);
+ 
++	if (AMIGAHW_PRESENT(A1200_IDE) ||
++	    z_dev_present(ZORRO_PROD_MTEC_VIPER_MK_V_E_MATRIX_530_SCSI_IDE)) {
++		pdev = platform_device_register_simple("amiga-gayle-ide", -1,
++						       &a1200_ide_resource, 1);
++		platform_device_add_data(pdev, &a1200_ide_pdata,
++					 sizeof(a1200_ide_pdata));
++	}
++
++	if (AMIGAHW_PRESENT(A4000_IDE)) {
++		pdev = platform_device_register_simple("amiga-gayle-ide", -1,
++						       &a4000_ide_resource, 1);
++		platform_device_add_data(pdev, &a4000_ide_pdata,
++					 sizeof(a4000_ide_pdata));
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/arch/m68k/include/asm/amigayle.h b/arch/m68k/include/asm/amigayle.h
+index bb5a6aa..a01453d 100644
+--- a/arch/m68k/include/asm/amigayle.h
++++ b/arch/m68k/include/asm/amigayle.h
+@@ -104,4 +104,10 @@ struct GAYLE {
+ #define GAYLE_CFG_250NS		0x00
+ #define GAYLE_CFG_720NS		0x0c
+ 
++struct gayle_ide_platform_data {
++	unsigned long base;
++	unsigned long irqport;
++	int explicit_ack;	/* A1200 IDE needs explicit ack */
++};
++
+ #endif /* asm-m68k/amigayle.h */
+diff --git a/drivers/ide/gayle.c b/drivers/ide/gayle.c
+index c711951..093e976 100644
+--- a/drivers/ide/gayle.c
++++ b/drivers/ide/gayle.c
+@@ -16,6 +16,7 @@
+ #include <linux/init.h>
+ #include <linux/zorro.h>
+ #include <linux/module.h>
++#include <linux/platform_device.h>
+ 
+ #include <asm/setup.h>
+ #include <asm/amigahw.h>
+@@ -24,15 +25,6 @@
+ 
+ 
+     /*
+-     *  Bases of the IDE interfaces
+-     */
+-
+-#define GAYLE_BASE_4000	0xdd2020	/* A4000/A4000T */
+-#define GAYLE_BASE_1200	0xda0000	/* A1200/A600 and E-Matrix 530 */
+-
+-#define GAYLE_IDEREG_SIZE	0x2000
+-
+-    /*
+      *  Offsets from one of the above bases
+      */
+ 
+@@ -66,26 +58,25 @@ MODULE_PARM_DESC(doubler, "enable support for IDE doublers");
+      *  Check and acknowledge the interrupt status
+      */
+ 
+-static int gayle_ack_intr_a4000(ide_hwif_t *hwif)
++static inline int gayle_ack_intr(ide_hwif_t *hwif)
+ {
+-    unsigned char ch;
++	unsigned char ch;
+ 
+-    ch = z_readb(hwif->io_ports.irq_addr);
+-    if (!(ch & GAYLE_IRQ_IDE))
+-	return 0;
+-    return 1;
++	ch = z_readb(hwif->io_ports.irq_addr);
++	if (!(ch & GAYLE_IRQ_IDE))
++		return 0;
++	return 1;
+ }
+ 
+-static int gayle_ack_intr_a1200(ide_hwif_t *hwif)
++static int gayle_ack_intr_explicit(ide_hwif_t *hwif)
+ {
+-    unsigned char ch;
++	int ret = gayle_ack_intr(hwif);
++	if (!ret)
++		return 0;
+ 
+-    ch = z_readb(hwif->io_ports.irq_addr);
+-    if (!(ch & GAYLE_IRQ_IDE))
+-	return 0;
+-    (void)z_readb(hwif->io_ports.status_addr);
+-    z_writeb(0x7c, hwif->io_ports.irq_addr);
+-    return 1;
++	(void)z_readb(hwif->io_ports.status_addr);
++	z_writeb(0x7c, hwif->io_ports.irq_addr);
++	return 1;
+ }
+ 
+ static void __init gayle_setup_ports(hw_regs_t *hw, unsigned long base,
+@@ -120,64 +111,87 @@ static const struct ide_port_info gayle_port_info = {
+      *  Probe for a Gayle IDE interface (and optionally for an IDE doubler)
+      */
+ 
+-static int __init gayle_init(void)
++static int __init amiga_gayle_ide_probe(struct platform_device *pdev)
+ {
+-    unsigned long phys_base, res_start, res_n;
+-    unsigned long base, ctrlport, irqport;
+-    ide_ack_intr_t *ack_intr;
+-    int a4000, i, rc;
+-    hw_regs_t hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
+-
+-    if (!MACH_IS_AMIGA)
+-	return -ENODEV;
+-
+-    if ((a4000 = AMIGAHW_PRESENT(A4000_IDE)) || AMIGAHW_PRESENT(A1200_IDE))
+-	goto found;
+-
+-#ifdef CONFIG_ZORRO
+-    if (zorro_find_device(ZORRO_PROD_MTEC_VIPER_MK_V_E_MATRIX_530_SCSI_IDE,
+-			  NULL))
+-	goto found;
+-#endif
+-    return -ENODEV;
+-
+-found:
+-	printk(KERN_INFO "ide: Gayle IDE controller (A%d style%s)\n",
+-			 a4000 ? 4000 : 1200,
+-			 ide_doubler ? ", IDE doubler" : "");
+-
+-	if (a4000) {
+-	    phys_base = GAYLE_BASE_4000;
+-	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_4000);
+-	    ack_intr = gayle_ack_intr_a4000;
+-	} else {
+-	    phys_base = GAYLE_BASE_1200;
+-	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_1200);
+-	    ack_intr = gayle_ack_intr_a1200;
++	struct resource *res;
++	struct gayle_ide_platform_data *pdata;
++	unsigned long base, ctrlport, irqport;
++	ide_ack_intr_t *ack_intr;
++	unsigned int i;
++	int error;
++	hw_regs_t hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
++	struct ide_host *host;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	if (!request_mem_region(res->start, resource_size(res), "IDE"))
++		return -EBUSY;
++
++	pdata = pdev->dev.platform_data;
++	pr_info("ide: Gayle IDE controller (A%u style%s)\n",
++		pdata->explicit_ack ? 1200 : 4000,
++		ide_doubler ? ", IDE doubler" : "");
++
++	base = (unsigned long)ZTWO_VADDR(pdata->base);
++	ctrlport = 0;
++	irqport = (unsigned long)ZTWO_VADDR(pdata->irqport);
++	ack_intr = pdata->explicit_ack ? gayle_ack_intr_explicit
++				       : gayle_ack_intr;
++
++	for (i = 0; i < GAYLE_NUM_PROBE_HWIFS; i++, base += GAYLE_NEXT_PORT) {
++		if (GAYLE_HAS_CONTROL_REG)
++			ctrlport = base + GAYLE_CONTROL;
++
++		gayle_setup_ports(&hw[i], base, ctrlport, irqport, ack_intr);
++		hws[i] = &hw[i];
+ 	}
+ 
+-	res_start = ((unsigned long)phys_base) & ~(GAYLE_NEXT_PORT-1);
+-	res_n = GAYLE_IDEREG_SIZE;
++	error = ide_host_add(&gayle_port_info, hws, &host);
++	if (error)
++		goto out;
+ 
+-	if (!request_mem_region(res_start, res_n, "IDE"))
+-		return -EBUSY;
++	platform_set_drvdata(pdev, host);
++	return 0;
++
++out:
++	release_mem_region(res->start, resource_size(res));
++	return error;
++}
++
++static int __exit amiga_gayle_ide_remove(struct platform_device *pdev)
++{
++	struct ide_host *host = pdev->dev.driver_data;
++	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 
+-    for (i = 0; i < GAYLE_NUM_PROBE_HWIFS; i++) {
+-	base = (unsigned long)ZTWO_VADDR(phys_base + i * GAYLE_NEXT_PORT);
+-	ctrlport = GAYLE_HAS_CONTROL_REG ? (base + GAYLE_CONTROL) : 0;
++	ide_host_remove(host);
++	release_mem_region(res->start, resource_size(res));
++	return 0;
++}
+ 
+-	gayle_setup_ports(&hw[i], base, ctrlport, irqport, ack_intr);
++static struct platform_driver amiga_gayle_ide_driver = {
++	.remove = __exit_p(amiga_gayle_ide_remove),
++	.driver   = {
++		.name	= "amiga-gayle-ide",
++		.owner	= THIS_MODULE,
++	},
++};
+ 
+-	hws[i] = &hw[i];
+-    }
++static int __init amiga_gayle_ide_init(void)
++{
++	return platform_driver_probe(&amiga_gayle_ide_driver,
++				     amiga_gayle_ide_probe);
++}
+ 
+-    rc = ide_host_add(&gayle_port_info, hws, NULL);
+-    if (rc)
+-	release_mem_region(res_start, res_n);
++module_init(amiga_gayle_ide_init);
+ 
+-    return rc;
++static void __exit amiga_gayle_ide_exit(void)
++{
++	platform_driver_unregister(&amiga_gayle_ide_driver);
+ }
+ 
+-module_init(gayle_init);
++module_exit(amiga_gayle_ide_exit);
+ 
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:amiga-gayle-ide");
+-- 
+1.6.2.3
 
-Could it be that we just need to take care if this case:
-
-        if (rq->cmd[13] & REQ_IDETAPE_PC2) {
-                idetape_media_access_finished(drive);
-                return ide_stopped;
-        }
-
-[all other code-paths set pc before calling ide_tape_issue_pc()]
-
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index 4e6181c..171dbcd 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -792,6 +792,9 @@ static ide_startstop_t
-> idetape_do_request(ide_drive_t *drive,
->  	struct request *postponed_rq = tape->postponed_rq;
->  	u8 stat;
-> 
-> +	if (rq->cmd_type == REQ_TYPE_SPECIAL)
-> +		drive->pc = (struct ide_atapi_pc *) rq->buffer;
-> +
->  	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu,"
->  			" current_nr_sectors: %u\n",
->  			(unsigned long long)rq->sector, rq->nr_sectors,
