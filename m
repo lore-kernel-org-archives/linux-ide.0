@@ -1,484 +1,599 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/10] ide-tape: use single continuous buffer
-Date: Sun, 19 Apr 2009 08:58:35 +0900
-Message-ID: <1240099122-18381-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/10] ide-tape: kill idetape_bh
+Date: Sun, 19 Apr 2009 08:58:37 +0900
+Message-ID: <1240099122-18381-6-git-send-email-tj@kernel.org>
 References: <1240099122-18381-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57766 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:57777 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753130AbZDRX6y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 18 Apr 2009 19:58:54 -0400
+	id S1753397AbZDRX65 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Apr 2009 19:58:57 -0400
 In-Reply-To: <1240099122-18381-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@googlemail.com, bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-Impact: simpler buffer allocation and handling, kills OOM, fix DMA transfers
+Impact: kill now unnecessary idetape_bh
 
-ide-tape has its own multiple buffer mechanism using struct
-idetape_bh.  It allocates buffer with decreasing order-of-two
-allocations so that it results in minimum number of segments.
-However, the implementation is quite complex and works in a way that
-no other block or ide driver works necessitating a lot of special case
-handling.
+With everything using standard mechanisms, there is no need for
+idetape_bh anymore.  Kill it and use tape->buf, cur and valid to
+describe data buffer instead.
 
-The benefit this complex allocation scheme brings is questionable as
-PIO or DMA the number of segments (16 maximum) doesn't make any
-noticeable difference and it also doesn't negate the need for multiple
-order allocation which can fail under memory pressure or high
-fragmentation although it does lower the highest order necessary by
-one when the buffer size isn't power of two.
+Changes worth mentioning are...
 
-As the first step to remove the custom buffer management, this patch
-makes ide-tape allocate single continous buffer.  The maximum order is
-four.  I doubt the change would cause any trouble but if it ever
-matters, it should be converted to regular sg mechanism like everyone
-else and even in that case dropping custom buffer handling and moving
-to standard mechanism first make sense as an intermediate step.
+* idetape_queue_rq_tail() now always queue tape->buf and and adjusts
+  buffer state properly before completion.
 
-This patch makes the first bh to contain the whole buffer and drops
-multi bh handling code.  Following patches will make further changes.
-
-This patch has the side effect of killing OOM triggered by allocation
-path and fixing DMA transfers.  Previously, bug in alloc path
-triggered OOM on command issue and commands were passed to DMA engine
-without DMA-mapping all the segments.
+* idetape_pad_zeros() clears the buffer only once.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ide/ide-tape.c |  258 +++++++++++-------------------------------------
- 1 files changed, 59 insertions(+), 199 deletions(-)
+ drivers/ide/ide-tape.c |  305 +++++++++++++-----------------------------------
+ 1 files changed, 84 insertions(+), 221 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 8226d52..b2afbc7 100644
+index b373ac8..d2e9c09 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -134,7 +134,6 @@ enum {
- struct idetape_bh {
- 	u32 b_size;
- 	atomic_t b_count;
--	struct idetape_bh *b_reqnext;
- 	char *b_data;
+@@ -131,12 +131,6 @@ enum {
+ 	IDETAPE_DIR_WRITE = (1 << 2),
  };
  
-@@ -228,10 +227,6 @@ typedef struct ide_tape_obj {
- 	char *b_data;
- 	int b_count;
- 
--	int pages_per_buffer;
--	/* Wasted space in each stage */
--	int excess_bh_size;
+-struct idetape_bh {
+-	u32 b_size;
+-	atomic_t b_count;
+-	char *b_data;
+-};
 -
+ /* Tape door status */
+ #define DOOR_UNLOCKED			0
+ #define DOOR_LOCKED			1
+@@ -218,14 +212,12 @@ typedef struct ide_tape_obj {
+ 
+ 	/* Data buffer size chosen based on the tape's recommendation */
+ 	int buffer_size;
+-	/* merge buffer */
+-	struct idetape_bh *merge_bh;
+-	/* size of the merge buffer */
+-	int merge_bh_size;
+-	/* pointer to current buffer head within the merge buffer */
+-	struct idetape_bh *bh;
+-	char *b_data;
+-	int b_count;
++	/* Staging buffer of buffer_size bytes */
++	void *buf;
++	/* The read/write cursor */
++	void *cur;
++	/* The number of valid bytes in buf */
++	size_t valid;
+ 
  	/* Measures average tape speed */
  	unsigned long avg_time;
- 	int avg_size;
-@@ -303,9 +298,7 @@ static int idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 	struct idetape_bh *bh = pc->bh;
- 	int count;
- 
--	while (bcount) {
--		if (bh == NULL)
--			break;
-+	if (bcount && bh) {
- 		count = min(
- 			(unsigned int)(bh->b_size - atomic_read(&bh->b_count)),
- 			bcount);
-@@ -313,15 +306,10 @@ static int idetape_input_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 					atomic_read(&bh->b_count), count);
- 		bcount -= count;
- 		atomic_add(count, &bh->b_count);
--		if (atomic_read(&bh->b_count) == bh->b_size) {
--			bh = bh->b_reqnext;
--			if (bh)
--				atomic_set(&bh->b_count, 0);
--		}
-+		if (atomic_read(&bh->b_count) == bh->b_size)
-+			pc->bh = NULL;
+@@ -351,15 +343,6 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
  	}
- 
--	pc->bh = bh;
--
- 	return bcount;
  }
  
-@@ -331,22 +319,14 @@ static int idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 	struct idetape_bh *bh = pc->bh;
- 	int count;
- 
--	while (bcount) {
--		if (bh == NULL)
--			break;
-+	if (bcount && bh) {
- 		count = min((unsigned int)pc->b_count, (unsigned int)bcount);
- 		drive->hwif->tp_ops->output_data(drive, NULL, pc->b_data, count);
- 		bcount -= count;
- 		pc->b_data += count;
- 		pc->b_count -= count;
--		if (!pc->b_count) {
--			bh = bh->b_reqnext;
--			pc->bh = bh;
--			if (bh) {
--				pc->b_data = bh->b_data;
--				pc->b_count = atomic_read(&bh->b_count);
--			}
--		}
-+		if (!pc->b_count)
-+			pc->bh = NULL;
- 	}
- 
- 	return bcount;
-@@ -355,24 +335,20 @@ static int idetape_output_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- static void idetape_update_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc)
- {
- 	struct idetape_bh *bh = pc->bh;
--	int count;
- 	unsigned int bcount = pc->xferred;
- 
- 	if (pc->flags & PC_FLAG_WRITING)
- 		return;
--	while (bcount) {
--		if (bh == NULL) {
-+	if (bcount) {
-+		if (bh == NULL || bcount > bh->b_size) {
- 			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
- 					__func__);
- 			return;
- 		}
--		count = min((unsigned int)bh->b_size, (unsigned int)bcount);
--		atomic_set(&bh->b_count, count);
-+		atomic_set(&bh->b_count, bcount);
- 		if (atomic_read(&bh->b_count) == bh->b_size)
--			bh = bh->b_reqnext;
--		bcount -= count;
-+			pc->bh = NULL;
- 	}
--	pc->bh = bh;
- }
- 
- /*
-@@ -439,24 +415,10 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
- /* Free data buffers completely. */
- static void ide_tape_kfree_buffer(idetape_tape_t *tape)
- {
--	struct idetape_bh *prev_bh, *bh = tape->merge_bh;
--
--	while (bh) {
--		u32 size = bh->b_size;
--
--		while (size) {
--			unsigned int order = fls(size >> PAGE_SHIFT)-1;
--
--			if (bh->b_data)
--				free_pages((unsigned long)bh->b_data, order);
-+	struct idetape_bh *bh = tape->merge_bh;
- 
--			size &= (order-1);
--			bh->b_data += (1 << order) * PAGE_SIZE;
--		}
--		prev_bh = bh;
--		bh = bh->b_reqnext;
--		kfree(prev_bh);
--	}
-+	kfree(bh->b_data);
-+	kfree(bh);
- }
- 
- static void ide_tape_handle_dsc(ide_drive_t *);
-@@ -861,117 +823,50 @@ out:
- }
- 
- /*
-- * The function below uses __get_free_pages to allocate a data buffer of size
-- * tape->buffer_size (or a bit more). We attempt to combine sequential pages as
-- * much as possible.
-- *
-- * It returns a pointer to the newly allocated buffer, or NULL in case of
-- * failure.
-+ * It returns a pointer to the newly allocated buffer, or NULL in case
-+ * of failure.
-  */
- static struct idetape_bh *ide_tape_kmalloc_buffer(idetape_tape_t *tape,
--						  int full, int clear)
+-/* Free data buffers completely. */
+-static void ide_tape_kfree_buffer(idetape_tape_t *tape)
 -{
--	struct idetape_bh *prev_bh, *bh, *merge_bh;
--	int pages = tape->pages_per_buffer;
--	unsigned int order, b_allocd;
--	char *b_data = NULL;
+-	struct idetape_bh *bh = tape->merge_bh;
 -
--	merge_bh = kmalloc(sizeof(struct idetape_bh), GFP_KERNEL);
--	bh = merge_bh;
--	if (bh == NULL)
--		goto abort;
+-	kfree(bh->b_data);
+-	kfree(bh);
+-}
 -
--	order = fls(pages) - 1;
--	bh->b_data = (char *) __get_free_pages(GFP_KERNEL, order);
--	if (!bh->b_data)
--		goto abort;
--	b_allocd = (1 << order) * PAGE_SIZE;
--	pages &= (order-1);
+ static void ide_tape_handle_dsc(ide_drive_t *);
+ 
+ static int ide_tape_callback(ide_drive_t *drive, int dsc)
+@@ -603,8 +586,7 @@ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+ 				   struct ide_atapi_pc *pc, struct request *rq,
+ 				   u8 opcode)
+ {
+-	struct idetape_bh *bh = (struct idetape_bh *)rq->special;
+-	unsigned int length = rq->current_nr_sectors;
++	unsigned int length = rq->nr_sectors;
+ 
+ 	ide_init_pc(pc);
+ 	put_unaligned(cpu_to_be32(length), (unsigned int *) &pc->c[1]);
+@@ -616,14 +598,11 @@ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+ 	if (pc->req_xfer == tape->buffer_size)
+ 		pc->flags |= PC_FLAG_DMA_OK;
+ 
+-	if (opcode == READ_6) {
++	if (opcode == READ_6)
+ 		pc->c[0] = READ_6;
+-		atomic_set(&bh->b_count, 0);
+-	} else if (opcode == WRITE_6) {
++	else if (opcode == WRITE_6) {
+ 		pc->c[0] = WRITE_6;
+ 		pc->flags |= PC_FLAG_WRITING;
+-		pc->b_data = bh->b_data;
+-		pc->b_count = atomic_read(&bh->b_count);
+ 	}
+ 
+ 	memcpy(rq->cmd, pc->c, 12);
+@@ -639,10 +618,8 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	struct ide_cmd cmd;
+ 	u8 stat;
+ 
+-	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu,"
+-			" current_nr_sectors: %u\n",
+-			(unsigned long long)rq->sector, rq->nr_sectors,
+-			rq->current_nr_sectors);
++	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu\n"
++		  (unsigned long long)rq->sector, rq->nr_sectors);
+ 
+ 	if (!(blk_special_request(rq) || blk_sense_request(rq))) {
+ 		/* We do not support buffer cache originated requests. */
+@@ -749,89 +726,6 @@ out:
+ }
+ 
+ /*
+- * It returns a pointer to the newly allocated buffer, or NULL in case
+- * of failure.
+- */
+-static struct idetape_bh *ide_tape_kmalloc_buffer(idetape_tape_t *tape,
+-						  int full)
+-{
+-	struct idetape_bh *bh;
 -
--	if (clear)
--		memset(bh->b_data, 0, b_allocd);
--	bh->b_reqnext = NULL;
--	bh->b_size = b_allocd;
+-	bh = kmalloc(sizeof(struct idetape_bh), GFP_KERNEL);
+-	if (!bh)
+-		return NULL;
+-
+-	bh->b_data = kmalloc(tape->buffer_size, GFP_KERNEL);
+-	if (!bh->b_data) {
+-		kfree(bh);
+-		return NULL;
+-	}
+-
+-	bh->b_size = tape->buffer_size;
 -	atomic_set(&bh->b_count, full ? bh->b_size : 0);
-+						  int full)
-+{
-+	struct idetape_bh *bh;
- 
--	while (pages) {
--		order = fls(pages) - 1;
--		b_data = (char *) __get_free_pages(GFP_KERNEL, order);
--		if (!b_data)
--			goto abort;
--		b_allocd = (1 << order) * PAGE_SIZE;
 -
--		if (clear)
--			memset(b_data, 0, b_allocd);
+-	return bh;
+-}
 -
--		/* newly allocated page frames below buffer header or ...*/
--		if (bh->b_data == b_data + b_allocd) {
--			bh->b_size += b_allocd;
--			bh->b_data -= b_allocd;
--			if (full)
--				atomic_add(b_allocd, &bh->b_count);
--			continue;
+-static int idetape_copy_stage_from_user(idetape_tape_t *tape,
+-					const char __user *buf, int n)
+-{
+-	struct idetape_bh *bh = tape->bh;
+-	int ret = 0;
+-
+-	if (n) {
+-		if (bh == NULL || n > bh->b_size - atomic_read(&bh->b_count)) {
+-			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
+-					__func__);
+-			return 1;
 -		}
--		/* they are above the header */
--		if (b_data == bh->b_data + bh->b_size) {
--			bh->b_size += b_allocd;
--			if (full)
--				atomic_add(b_allocd, &bh->b_count);
--			continue;
+-		if (copy_from_user(bh->b_data + atomic_read(&bh->b_count), buf,
+-				   n))
+-			ret = 1;
+-		atomic_add(n, &bh->b_count);
+-		if (atomic_read(&bh->b_count) == bh->b_size)
+-			tape->bh = NULL;
+-	}
+-
+-	return ret;
+-}
+-
+-static int idetape_copy_stage_to_user(idetape_tape_t *tape, char __user *buf,
+-				      int n)
+-{
+-	struct idetape_bh *bh = tape->bh;
+-	int ret = 0;
+-
+-	if (n) {
+-		if (bh == NULL || n > tape->b_count) {
+-			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
+-					__func__);
+-			return 1;
 -		}
--		prev_bh = bh;
--		bh = kmalloc(sizeof(struct idetape_bh), GFP_KERNEL);
--		if (!bh) {
--			free_pages((unsigned long) b_data, order);
--			goto abort;
--		}
--		bh->b_reqnext = NULL;
--		bh->b_data = b_data;
--		bh->b_size = b_allocd;
--		atomic_set(&bh->b_count, full ? bh->b_size : 0);
--		prev_bh->b_reqnext = bh;
-+	bh = kmalloc(sizeof(struct idetape_bh), GFP_KERNEL);
-+	if (!bh)
-+		return NULL;
+-		if (copy_to_user(buf, tape->b_data, n))
+-			ret = 1;
+-		tape->b_data += n;
+-		tape->b_count -= n;
+-		if (!tape->b_count)
+-			tape->bh = NULL;
+-	}
+-	return ret;
+-}
+-
+-static void idetape_init_merge_buffer(idetape_tape_t *tape)
+-{
+-	struct idetape_bh *bh = tape->merge_bh;
+-	tape->bh = tape->merge_bh;
+-
+-	if (tape->chrdev_dir == IDETAPE_DIR_WRITE)
+-		atomic_set(&bh->b_count, 0);
+-	else {
+-		tape->b_data = bh->b_data;
+-		tape->b_count = atomic_read(&bh->b_count);
+-	}
+-}
+-
+-/*
+  * Write a filemark if write_filemark=1. Flush the device buffers without
+  * writing a filemark otherwise.
+  */
+@@ -928,10 +822,10 @@ static void __ide_tape_discard_merge_buffer(ide_drive_t *drive)
+ 		return;
  
--		pages &= (order-1);
-+	bh->b_data = kmalloc(tape->buffer_size, GFP_KERNEL);
-+	if (!bh->b_data) {
-+		kfree(bh);
-+		return NULL;
+ 	clear_bit(IDE_AFLAG_FILEMARK, &drive->atapi_flags);
+-	tape->merge_bh_size = 0;
+-	if (tape->merge_bh != NULL) {
+-		ide_tape_kfree_buffer(tape);
+-		tape->merge_bh = NULL;
++	tape->valid = 0;
++	if (tape->buf != NULL) {
++		kfree(tape->buf);
++		tape->buf = NULL;
  	}
  
--	bh->b_size -= tape->excess_bh_size;
--	if (full)
--		atomic_sub(tape->excess_bh_size, &bh->b_count);
--	return merge_bh;
--abort:
--	ide_tape_kfree_buffer(tape);
--	return NULL;
-+	bh->b_size = tape->buffer_size;
-+	atomic_set(&bh->b_count, full ? bh->b_size : 0);
-+
-+	return bh;
- }
- 
- static int idetape_copy_stage_from_user(idetape_tape_t *tape,
- 					const char __user *buf, int n)
+ 	tape->chrdev_dir = IDETAPE_DIR_NONE;
+@@ -985,8 +879,7 @@ static void ide_tape_discard_merge_buffer(ide_drive_t *drive,
+  * Generate a read/write request for the block device interface and wait for it
+  * to be serviced.
+  */
+-static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+-				 struct idetape_bh *bh)
++static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks)
  {
- 	struct idetape_bh *bh = tape->bh;
--	int count;
- 	int ret = 0;
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	size_t size = blocks * tape->blk_size;
+@@ -1000,11 +893,10 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	rq->cmd[13] = cmd;
+ 	rq->rq_disk = tape->disk;
+-	rq->special = (void *)bh;
+ 	rq->sector = tape->first_frame;
  
--	while (n) {
--		if (bh == NULL) {
-+	if (n) {
-+		if (bh == NULL || n > bh->b_size - atomic_read(&bh->b_count)) {
- 			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
- 					__func__);
- 			return 1;
- 		}
--		count = min((unsigned int)
--				(bh->b_size - atomic_read(&bh->b_count)),
--				(unsigned int)n);
- 		if (copy_from_user(bh->b_data + atomic_read(&bh->b_count), buf,
--				count))
-+				   n))
- 			ret = 1;
--		n -= count;
--		atomic_add(count, &bh->b_count);
--		buf += count;
--		if (atomic_read(&bh->b_count) == bh->b_size) {
--			bh = bh->b_reqnext;
--			if (bh)
--				atomic_set(&bh->b_count, 0);
--		}
-+		atomic_add(n, &bh->b_count);
-+		if (atomic_read(&bh->b_count) == bh->b_size)
-+			tape->bh = NULL;
- 	}
--	tape->bh = bh;
-+
+ 	if (size) {
+-		ret = blk_rq_map_kern(drive->queue, rq, bh->b_data, size,
++		ret = blk_rq_map_kern(drive->queue, rq, tape->buf, size,
+ 				      __GFP_WAIT);
+ 		if (ret)
+ 			goto out_put;
+@@ -1012,17 +904,17 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+ 
+ 	blk_execute_rq(drive->queue, tape->disk, rq, 0);
+ 
+-	/* calculate the number of transferred bytes and update bh */
++	/* calculate the number of transferred bytes and update buffer state */
+ 	size -= rq->data_len;
++	tape->cur = tape->buf;
+ 	if (cmd == REQ_IDETAPE_READ)
+-		atomic_add(size, &bh->b_count);
++		tape->valid = size;
++	else
++		tape->valid = 0;
+ 
+ 	ret = size;
+ 	if (rq->errors == IDE_DRV_ERROR_GENERAL)
+ 		ret = -EIO;
+-
+-	if (tape->merge_bh)
+-		idetape_init_merge_buffer(tape);
+ out_put:
+ 	blk_put_request(rq);
  	return ret;
- }
- 
-@@ -979,30 +874,20 @@ static int idetape_copy_stage_to_user(idetape_tape_t *tape, char __user *buf,
- 				      int n)
+@@ -1064,49 +956,33 @@ static void idetape_create_space_cmd(struct ide_atapi_pc *pc, int count, u8 cmd)
+ /* Queue up a character device originated write request. */
+ static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
  {
- 	struct idetape_bh *bh = tape->bh;
--	int count;
- 	int ret = 0;
+-	idetape_tape_t *tape = drive->driver_data;
+-
+ 	debug_log(DBG_CHRDEV, "Enter %s\n", __func__);
  
--	while (n) {
--		if (bh == NULL) {
-+	if (n) {
-+		if (bh == NULL || n > tape->b_count) {
- 			printk(KERN_ERR "ide-tape: bh == NULL in %s\n",
- 					__func__);
- 			return 1;
- 		}
--		count = min(tape->b_count, n);
--		if  (copy_to_user(buf, tape->b_data, count))
-+		if (copy_to_user(buf, tape->b_data, n))
- 			ret = 1;
--		n -= count;
--		tape->b_data += count;
--		tape->b_count -= count;
--		buf += count;
--		if (!tape->b_count) {
--			bh = bh->b_reqnext;
--			tape->bh = bh;
--			if (bh) {
--				tape->b_data = bh->b_data;
--				tape->b_count = atomic_read(&bh->b_count);
--			}
--		}
-+		tape->b_data += n;
-+		tape->b_count -= n;
-+		if (!tape->b_count)
-+			tape->bh = NULL;
- 	}
- 	return ret;
+-	return idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE,
+-				     blocks, tape->merge_bh);
++	return idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, blocks);
  }
-@@ -1254,7 +1139,7 @@ static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
+ 
  static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
  {
  	idetape_tape_t *tape = drive->driver_data;
--	int blocks, min;
-+	int blocks;
- 	struct idetape_bh *bh;
+ 	int blocks;
+-	struct idetape_bh *bh;
  
  	if (tape->chrdev_dir != IDETAPE_DIR_WRITE) {
-@@ -1269,31 +1154,16 @@ static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
- 	if (tape->merge_bh_size) {
- 		blocks = tape->merge_bh_size / tape->blk_size;
- 		if (tape->merge_bh_size % tape->blk_size) {
--			unsigned int i;
--
-+			unsigned int i = tape->blk_size -
-+				tape->merge_bh_size % tape->blk_size;
+ 		printk(KERN_ERR "ide-tape: bug: Trying to empty merge buffer"
+ 				" but we are not writing.\n");
+ 		return;
+ 	}
+-	if (tape->merge_bh_size > tape->buffer_size) {
+-		printk(KERN_ERR "ide-tape: bug: merge_buffer too big\n");
+-		tape->merge_bh_size = tape->buffer_size;
+-	}
+-	if (tape->merge_bh_size) {
+-		blocks = tape->merge_bh_size / tape->blk_size;
+-		if (tape->merge_bh_size % tape->blk_size) {
+-			unsigned int i = tape->blk_size -
+-				tape->merge_bh_size % tape->blk_size;
++	if (tape->buf) {
++		blocks = tape->valid / tape->blk_size;
++		if (tape->valid % tape->blk_size) {
  			blocks++;
--			i = tape->blk_size - tape->merge_bh_size %
--				tape->blk_size;
--			bh = tape->bh->b_reqnext;
--			while (bh) {
--				atomic_set(&bh->b_count, 0);
--				bh = bh->b_reqnext;
--			}
- 			bh = tape->bh;
--			while (i) {
--				if (bh == NULL) {
--					printk(KERN_INFO "ide-tape: bug,"
--							 " bh NULL\n");
--					break;
--				}
--				min = min(i, (unsigned int)(bh->b_size -
--						atomic_read(&bh->b_count)));
-+			if (bh) {
- 				memset(bh->b_data + atomic_read(&bh->b_count),
--						0, min);
--				atomic_add(min, &bh->b_count);
--				i -= min;
--				bh = bh->b_reqnext;
--			}
-+				       0, i);
-+				atomic_add(i, &bh->b_count);
-+			} else
-+				printk(KERN_INFO "ide-tape: bug, bh NULL\n");
+-			bh = tape->bh;
+-			if (bh) {
+-				memset(bh->b_data + atomic_read(&bh->b_count),
+-				       0, i);
+-				atomic_add(i, &bh->b_count);
+-			} else
+-				printk(KERN_INFO "ide-tape: bug, bh NULL\n");
++			memset(tape->buf + tape->valid, 0,
++			       tape->blk_size - tape->valid % tape->blk_size);
  		}
  		(void) idetape_add_chrdev_write_request(drive, blocks);
- 		tape->merge_bh_size = 0;
-@@ -1321,7 +1191,7 @@ static int idetape_init_read(ide_drive_t *drive)
- 					 " 0 now\n");
- 			tape->merge_bh_size = 0;
+-		tape->merge_bh_size = 0;
+ 	}
+-	if (tape->merge_bh != NULL) {
+-		ide_tape_kfree_buffer(tape);
+-		tape->merge_bh = NULL;
++	if (tape->buf != NULL) {
++		kfree(tape->buf);
++		tape->buf = NULL;
+ 	}
+ 	tape->chrdev_dir = IDETAPE_DIR_NONE;
+ }
+@@ -1122,15 +998,15 @@ static int idetape_init_read(ide_drive_t *drive)
+ 			ide_tape_flush_merge_buffer(drive);
+ 			idetape_flush_tape_buffers(drive);
  		}
--		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0, 0);
-+		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0);
- 		if (!tape->merge_bh)
+-		if (tape->merge_bh || tape->merge_bh_size) {
+-			printk(KERN_ERR "ide-tape: merge_bh_size should be"
+-					 " 0 now\n");
+-			tape->merge_bh_size = 0;
++		if (tape->buf || tape->valid) {
++			printk(KERN_ERR "ide-tape: valid should be 0 now\n");
++			tape->valid = 0;
+ 		}
+-		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0);
+-		if (!tape->merge_bh)
++		tape->buf = kmalloc(tape->buffer_size, GFP_KERNEL);
++		if (!tape->buf)
  			return -ENOMEM;
  		tape->chrdev_dir = IDETAPE_DIR_READ;
-@@ -1368,23 +1238,18 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
++		tape->cur = tape->buf;
+ 
+ 		/*
+ 		 * Issue a read 0 command to ensure that DSC handshake is
+@@ -1140,11 +1016,10 @@ static int idetape_init_read(ide_drive_t *drive)
+ 		 */
+ 		if (drive->dev_flags & IDE_DFLAG_DSC_OVERLAP) {
+ 			bytes_read = idetape_queue_rw_tail(drive,
+-							REQ_IDETAPE_READ, 0,
+-							tape->merge_bh);
++							REQ_IDETAPE_READ, 0);
+ 			if (bytes_read < 0) {
+-				ide_tape_kfree_buffer(tape);
+-				tape->merge_bh = NULL;
++				kfree(tape->buf);
++				tape->buf = NULL;
+ 				tape->chrdev_dir = IDETAPE_DIR_NONE;
+ 				return bytes_read;
+ 			}
+@@ -1157,8 +1032,6 @@ static int idetape_init_read(ide_drive_t *drive)
+ /* called from idetape_chrdev_read() to service a chrdev read request. */
+ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
+ {
+-	idetape_tape_t *tape = drive->driver_data;
+-
+ 	debug_log(DBG_PROCS, "Enter %s, %d blocks\n", __func__, blocks);
+ 
+ 	/* If we are at a filemark, return a read length of 0 */
+@@ -1167,27 +1040,21 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
+ 
+ 	idetape_init_read(drive);
+ 
+-	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks,
+-				     tape->merge_bh);
++	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks);
+ }
+ 
  static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
  {
  	idetape_tape_t *tape = drive->driver_data;
--	struct idetape_bh *bh;
-+	struct idetape_bh *bh = tape->merge_bh;
- 	int blocks;
+-	struct idetape_bh *bh = tape->merge_bh;
+-	int blocks;
++
++	memset(tape->buf, 0, tape->buffer_size);
  
  	while (bcount) {
- 		unsigned int count;
+-		unsigned int count;
++		unsigned int count = min(tape->buffer_size, bcount);
  
--		bh = tape->merge_bh;
- 		count = min(tape->buffer_size, bcount);
+-		count = min(tape->buffer_size, bcount);
++		idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE,
++				      count / tape->blk_size);
  		bcount -= count;
- 		blocks = count / tape->blk_size;
--		while (count) {
--			atomic_set(&bh->b_count,
--				   min(count, (unsigned int)bh->b_size));
--			memset(bh->b_data, 0, atomic_read(&bh->b_count));
--			count -= atomic_read(&bh->b_count);
--			bh = bh->b_reqnext;
--		}
-+		atomic_set(&bh->b_count, count);
-+		memset(bh->b_data, 0, atomic_read(&bh->b_count));
-+
- 		idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, blocks,
- 				      tape->merge_bh);
+-		blocks = count / tape->blk_size;
+-		atomic_set(&bh->b_count, count);
+-		memset(bh->b_data, 0, atomic_read(&bh->b_count));
+-
+-		idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, blocks,
+-				      tape->merge_bh);
  	}
-@@ -1596,7 +1461,7 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
- 				"should be 0 now\n");
- 			tape->merge_bh_size = 0;
+ }
+ 
+@@ -1267,7 +1134,7 @@ static int idetape_space_over_filemarks(ide_drive_t *drive, short mt_op,
+ 	}
+ 
+ 	if (tape->chrdev_dir == IDETAPE_DIR_READ) {
+-		tape->merge_bh_size = 0;
++		tape->valid = 0;
+ 		if (test_and_clear_bit(IDE_AFLAG_FILEMARK, &drive->atapi_flags))
+ 			++count;
+ 		ide_tape_discard_merge_buffer(drive, 0);
+@@ -1333,20 +1200,20 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
+ 		return rc;
+ 	if (count == 0)
+ 		return (0);
+-	if (tape->merge_bh_size) {
+-		actually_read = min((unsigned int)(tape->merge_bh_size),
+-				    (unsigned int)count);
+-		if (idetape_copy_stage_to_user(tape, buf, actually_read))
++	if (tape->valid) {
++		actually_read = min_t(unsigned int, tape->valid, count);
++		if (copy_to_user(buf, tape->cur, actually_read))
+ 			ret = -EFAULT;
+ 		buf += actually_read;
+-		tape->merge_bh_size -= actually_read;
+ 		count -= actually_read;
++		tape->cur += actually_read;
++		tape->valid -= actually_read;
+ 	}
+ 	while (count >= tape->buffer_size) {
+ 		bytes_read = idetape_add_chrdev_read_request(drive, ctl);
+ 		if (bytes_read <= 0)
+ 			goto finish;
+-		if (idetape_copy_stage_to_user(tape, buf, bytes_read))
++		if (copy_to_user(buf, tape->cur, bytes_read))
+ 			ret = -EFAULT;
+ 		buf += bytes_read;
+ 		count -= bytes_read;
+@@ -1357,10 +1224,11 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
+ 		if (bytes_read <= 0)
+ 			goto finish;
+ 		temp = min((unsigned long)count, (unsigned long)bytes_read);
+-		if (idetape_copy_stage_to_user(tape, buf, temp))
++		if (copy_to_user(buf, tape->cur, temp))
+ 			ret = -EFAULT;
+ 		actually_read += temp;
+-		tape->merge_bh_size = bytes_read-temp;
++		tape->cur += temp;
++		tape->valid -= temp;
+ 	}
+ finish:
+ 	if (!actually_read && test_bit(IDE_AFLAG_FILEMARK, &drive->atapi_flags)) {
+@@ -1392,16 +1260,15 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 	if (tape->chrdev_dir != IDETAPE_DIR_WRITE) {
+ 		if (tape->chrdev_dir == IDETAPE_DIR_READ)
+ 			ide_tape_discard_merge_buffer(drive, 1);
+-		if (tape->merge_bh || tape->merge_bh_size) {
+-			printk(KERN_ERR "ide-tape: merge_bh_size "
+-				"should be 0 now\n");
+-			tape->merge_bh_size = 0;
++		if (tape->buf || tape->valid) {
++			printk(KERN_ERR "ide-tape: valid should be 0 now\n");
++			tape->valid = 0;
  		}
--		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0, 0);
-+		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0);
- 		if (!tape->merge_bh)
+-		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0);
+-		if (!tape->merge_bh)
++		tape->buf = kmalloc(tape->buffer_size, GFP_KERNEL);
++		if (!tape->buf)
  			return -ENOMEM;
  		tape->chrdev_dir = IDETAPE_DIR_WRITE;
-@@ -1970,7 +1835,7 @@ static void idetape_write_release(ide_drive_t *drive, unsigned int minor)
+-		idetape_init_merge_buffer(tape);
++		tape->cur = tape->buf;
+ 
+ 		/*
+ 		 * Issue a write 0 command to ensure that DSC handshake is
+@@ -1411,11 +1278,10 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 		 */
+ 		if (drive->dev_flags & IDE_DFLAG_DSC_OVERLAP) {
+ 			ssize_t retval = idetape_queue_rw_tail(drive,
+-							REQ_IDETAPE_WRITE, 0,
+-							tape->merge_bh);
++							REQ_IDETAPE_WRITE, 0);
+ 			if (retval < 0) {
+-				ide_tape_kfree_buffer(tape);
+-				tape->merge_bh = NULL;
++				kfree(tape->buf);
++				tape->buf = NULL;
+ 				tape->chrdev_dir = IDETAPE_DIR_NONE;
+ 				return retval;
+ 			}
+@@ -1423,23 +1289,19 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 	}
+ 	if (count == 0)
+ 		return (0);
+-	if (tape->merge_bh_size) {
+-		if (tape->merge_bh_size >= tape->buffer_size) {
+-			printk(KERN_ERR "ide-tape: bug: merge buf too big\n");
+-			tape->merge_bh_size = 0;
+-		}
+-		actually_written = min((unsigned int)
+-				(tape->buffer_size - tape->merge_bh_size),
+-				(unsigned int)count);
+-		if (idetape_copy_stage_from_user(tape, buf, actually_written))
+-				ret = -EFAULT;
++	if (tape->valid < tape->buffer_size) {
++		actually_written = min_t(unsigned int,
++					 tape->buffer_size - tape->valid,
++					 count);
++		if (copy_from_user(tape->cur, buf, actually_written))
++			ret = -EFAULT;
+ 		buf += actually_written;
+-		tape->merge_bh_size += actually_written;
+ 		count -= actually_written;
++		tape->cur += actually_written;
++		tape->valid += actually_written;
+ 
+-		if (tape->merge_bh_size == tape->buffer_size) {
++		if (tape->valid == tape->buffer_size) {
+ 			ssize_t retval;
+-			tape->merge_bh_size = 0;
+ 			retval = idetape_add_chrdev_write_request(drive, ctl);
+ 			if (retval <= 0)
+ 				return (retval);
+@@ -1447,7 +1309,7 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 	}
+ 	while (count >= tape->buffer_size) {
+ 		ssize_t retval;
+-		if (idetape_copy_stage_from_user(tape, buf, tape->buffer_size))
++		if (copy_from_user(tape->cur, buf, tape->buffer_size))
+ 			ret = -EFAULT;
+ 		buf += tape->buffer_size;
+ 		count -= tape->buffer_size;
+@@ -1458,9 +1320,10 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 	}
+ 	if (count) {
+ 		actually_written += count;
+-		if (idetape_copy_stage_from_user(tape, buf, count))
++		if (copy_from_user(tape->cur, buf, count))
+ 			ret = -EFAULT;
+-		tape->merge_bh_size += count;
++		tape->cur += count;
++		tape->valid += count;
+ 	}
+ 	return ret ? ret : actually_written;
+ }
+@@ -1623,7 +1486,7 @@ static int idetape_chrdev_ioctl(struct inode *inode, struct file *file,
+ 		idetape_flush_tape_buffers(drive);
+ 	}
+ 	if (cmd == MTIOCGET || cmd == MTIOCPOS) {
+-		block_offset = tape->merge_bh_size /
++		block_offset = tape->valid /
+ 			(tape->blk_size * tape->user_bs_factor);
+ 		position = idetape_read_position(drive);
+ 		if (position < 0)
+@@ -1771,12 +1634,12 @@ static void idetape_write_release(ide_drive_t *drive, unsigned int minor)
  	idetape_tape_t *tape = drive->driver_data;
  
  	ide_tape_flush_merge_buffer(drive);
--	tape->merge_bh = ide_tape_kmalloc_buffer(tape, 1, 0);
-+	tape->merge_bh = ide_tape_kmalloc_buffer(tape, 1);
- 	if (tape->merge_bh != NULL) {
+-	tape->merge_bh = ide_tape_kmalloc_buffer(tape, 1);
+-	if (tape->merge_bh != NULL) {
++	tape->buf = kmalloc(tape->buffer_size, GFP_KERNEL);
++	if (tape->buf != NULL) {
  		idetape_pad_zeros(drive, tape->blk_size *
  				(tape->user_bs_factor - 1));
-@@ -2201,11 +2066,6 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 		tape->buffer_size = *ctl * tape->blk_size;
+-		ide_tape_kfree_buffer(tape);
+-		tape->merge_bh = NULL;
++		kfree(tape->buf);
++		tape->buf = NULL;
  	}
- 	buffer_size = tape->buffer_size;
--	tape->pages_per_buffer = buffer_size / PAGE_SIZE;
--	if (buffer_size % PAGE_SIZE) {
--		tape->pages_per_buffer++;
--		tape->excess_bh_size = PAGE_SIZE - buffer_size % PAGE_SIZE;
--	}
+ 	idetape_write_filemark(drive);
+ 	idetape_flush_tape_buffers(drive);
+@@ -2042,7 +1905,7 @@ static void ide_tape_release(struct device *dev)
+ 	ide_drive_t *drive = tape->drive;
+ 	struct gendisk *g = tape->disk;
  
- 	/* select the "best" DSC read/write polling freq */
- 	speed = max(*(u16 *)&tape->caps[14], *(u16 *)&tape->caps[8]);
+-	BUG_ON(tape->merge_bh_size);
++	BUG_ON(tape->valid);
+ 
+ 	drive->dev_flags &= ~IDE_DFLAG_DSC_OVERLAP;
+ 	drive->driver_data = NULL;
 -- 
 1.6.0.2
 
