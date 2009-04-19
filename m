@@ -1,46 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 02/15] ide-tape: remove back-to-back REQUEST_SENSE	detection
-Date: Sun, 19 Apr 2009 16:36:16 +0900
-Message-ID: <49EAD470.50401@gmail.com>
-References: <1239960802-31978-1-git-send-email-tj@kernel.org> <1239960802-31978-3-git-send-email-tj@kernel.org> <9ea470500904170323k2adbe63q5488c63fe368d328@mail.gmail.com> <49E85B6F.7080603@kernel.org> <49E85CA7.2060801@gmail.com> <9ea470500904170403n621f84det8cfec405131d893c@mail.gmail.com> <49E8F0A7.5040208@gmail.com> <20090418194839.GA2848@liondog.tnic> <49EA489E.6080809@gmail.com> <20090419072829.GA2906@liondog.tnic>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Errors on ICH10R with Seagate HDDs
+Date: Sun, 19 Apr 2009 17:56:38 +0900
+Message-ID: <49EAE746.4040303@kernel.org>
+References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:8514 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193AbZDSHgX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Apr 2009 03:36:23 -0400
-Received: by ti-out-0910.google.com with SMTP id 11so994011tim.23
-        for <linux-ide@vger.kernel.org>; Sun, 19 Apr 2009 00:36:21 -0700 (PDT)
-In-Reply-To: <20090419072829.GA2906@liondog.tnic>
+Received: from hera.kernel.org ([140.211.167.34]:59362 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752484AbZDSI4y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Apr 2009 04:56:54 -0400
+In-Reply-To: <49E847A3.9070100@hadiko.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Thomas Jackowski <aXe@hadiko.de>
+Cc: linux-ide@vger.kernel.org
 
 Hello,
 
-Borislav Petkov wrote:
->> No, that's checking whether the _previous_ command was REQUEST_SENSE
->> which is guaranteed to be set if drive->failed_pc is not NULL.
->> drive->pc is set to the current command at the start of
->> ide_tape_issue_pc().
+Thomas Jackowski wrote:
+> yes this was AHCI. NCQ was enabled. I forgot to mention kernel version:
+> 2.6.26-1-amd64 (Debian Lenny)
+
+Can you please try 2.6.29?
+
+> So here is my test:
+> Enabled AHCI in BIOS.
 > 
-> Damn! Now it all falls into place nicely, thanks for clarifying that. My
-> original bug analysis was simply plain wrong.
+> [    0.000000] Command line: root=/dev/md1 ro libata.force=noncq
+> [    0.000000] Kernel command line: root=/dev/md1 ro libata.force=noncq
+> [...]
+> [    3.237941] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps
+> 0x3f impl SATA mode
+> [    3.238000] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo
+> pmp pio slum part
 > 
-> So, drive->pc means two things: the previous command - until the moment
-> when it is overwritten with the upcoming command from the current
-> request _and_ the current command which is being issued.
+> Ah, NCQ still activated.
+> /sys/block/sdc/device/queue_depth shows 31.
+> 
+> I guess NCQ still activated even with libata.force=noncq ?
 
-And whether the previous pc is accessible or not depends on which
-command it actually was and if failed_pc is set, it's guaranteed to be
-valid.
+Well, if the module is loaded from initrd, you need to jump through
+some loops to get the parameter passed to libata.ko.  You can also
+disable NCQ by echoing 1 to queue_depth.
 
-> This is all quite b0rked...
+> Now here is my second test: Disabled AHCI in BIOS.
+> 
+> ata_piix is used now. Did some IO, can't force any freezes.
+> 
+> In the meantime I found topics like this:
+> http://forums.seagate.com/stx/board/message?board.id=ata_drives&thread.id=2879&view=by_date_ascending&page=1
+> 
+> This looks like a firmware bug. I think I should contact Seagate ;) or
+> any other ideas?
 
-Yeah, it's all way too fragile.  :-(
+Hmmm... please verify with ahci w/o NCQ.  If that works fine too,
+please go ahead and contact Seagate.
+
+Thanks.
 
 -- 
 tejun
