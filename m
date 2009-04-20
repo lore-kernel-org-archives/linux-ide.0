@@ -1,64 +1,58 @@
-From: Kurt Roeckx <kurt@roeckx.be>
-Subject: Re: sata_promise: Keeps saying SATA link down (SStatus 0 SControl
-	0)
-Date: Mon, 20 Apr 2009 20:25:03 +0200
-Message-ID: <20090420182503.GA10768@roeckx.be>
-References: <20080113234320.GA6225@roeckx.be> <18315.7567.747367.84127@harpo.it.uu.se> <20080115000953.GA2799@roeckx.be> <18316.31910.973794.732242@harpo.it.uu.se> <20080115173557.GA3033@roeckx.be> <18317.54768.524651.128063@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 4/6] PalmLD IDE
+Date: Mon, 20 Apr 2009 22:38:38 +0200
+Message-ID: <200904202238.39229.bzolnier@gmail.com>
+References: <200903222223.10572.marek.vasut@gmail.com> <200904191814.05722.marek.vasut@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:46383 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbZDTSaL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2009 14:30:11 -0400
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:63085 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755361AbZDTUem (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2009 16:34:42 -0400
+Received: by bwz7 with SMTP id 7so1427003bwz.37
+        for <linux-ide@vger.kernel.org>; Mon, 20 Apr 2009 13:34:40 -0700 (PDT)
+In-Reply-To: <200904191814.05722.marek.vasut@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <18317.54768.524651.128063@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-arm-kernel@lists.arm.linux.org.uk, Eric Miao <eric.y.miao@gmail.com>, linux-ide@vger.kernel.org
 
-On Wed, Jan 16, 2008 at 11:01:20AM +0100, Mikael Pettersson wrote:
-> Kurt Roeckx writes:
->  > On Tue, Jan 15, 2008 at 10:28:06AM +0100, Mikael Pettersson wrote:
->  > >  > 00:08.0 RAID bus controller: Promise Technology, Inc. PDC20376 (FastTrak 376) (rev 02)
->  > > ...
->  > >  > 00:08.0 0104: 105a:3376 (rev 02)
->  > > 
->  > > Let me guess, this is a Promise chip included on the mainboard
->  > > as a RAID controller, and not an add-on PCI card?
->  > 
->  > Yes, it's a K8V motherboard which has that onboard.
->  > 
->  > > If it's a mainboard chip, please enter the BIOS and see if it
->  > > can be configured for non-RAID mode. If it can, please reconfigure
->  > > it and boot Linux. Does it still claim to be a 20376 or is it
->  > > now a 20378?
->  > 
->  > I can't find an option to turn that off in the BIOS.  If it did, I'd
->  > probably have turned it off already.  I've also opened the case and it
->  > says PDC20376 on the chip.
+On Sunday 19 April 2009 18:14:05 Marek Vasut wrote:
+> On Sunday 22 of March 2009 22:23:10 Marek Vasut wrote:
+> > > Dne Saturday 16 of August 2008 11:08:03 Russell King - ARM Linux 
+> napsal(a):
+> > > > On Wed, Aug 13, 2008 at 10:52:23PM +0200, Marek Vasut wrote:
+> > > > > This patch adds palmld ide channel support, same as previous patch, I
+> > > > > think this can be merged since it wont break anything.
+> > > >
+> > > > I think this one also needs review by the Linux ATA folk.  Mention to
+> > > > them that it's part of a patchset for ARM and that you'd prefer it
+> > > > to be merged into the ARM tree.
+> > > >
+> > > > > +static const char drvname[] = "pata_palmld";
+> > > > > +MODULE_ALIAS("platform: "drvname);
+> > > >
+> > > > Have you tried building this as a module?  Also, IIRC, there isn't
+> > > > supposed to be a space after the colon...
+> > >
+> > > Ok, I fixed the issues and CCed linux-ide and the maintainer.
+> > >
+> > > Thanks
+> >
+> > Hi, Im resending this patch since it was totally ignored last time. It
+> > still applies correctly. It'd be for the best to push this through
+> > arm-kernel tree.
+> >
+> > Best regards
+> > Marek Vasut
 > 
-> Ok. I haven't yet found any information about the 20376 which
-> could explain why the 20376 fails while the 20378 works.
-> For now, you can disable hotplugging in the driver by applying
-> the patch below. This should at least bring back some stability
-> to your system.
-> 
-> Longer-term I guess I'll have to invent a blacklist mechanism
-> to automatically prevent 20376 chips from enabling hotplugging.
-> That is, unless someone can show me a system where a 20376
-> actually does work with hotplugging, in which case I'd need a
-> module parameter (yuck) or some form of dynamic detection of
-> this condition.
+> It's still being totally ignored on both mailing lists ... why? Thanks
 
-Hi,
+I don't know the answer for your question but this patch is not for me.
 
-I'm still having this problem with a 2.6.29 kernel.  I want to
-avoid always having to patch my kernel, so I would like to see
-some solution to this.  What do you think that the best way
-forward is?
-
-
-Kurt
-
+Please take me off cc: list unless you're also going to submit *IDE* driver
+(sorry, I have no time to review libata patches).  Thanks.
