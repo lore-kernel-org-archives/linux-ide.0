@@ -1,38 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [GIT PATCH pata-2.6] ide: rq->buffer, data, special and misc
- cleanups, take#2
-Date: Mon, 20 Apr 2009 20:59:28 +0900
-Message-ID: <49EC63A0.10204@gmail.com>
-References: <1239960802-31978-1-git-send-email-tj@kernel.org> <49EA4995.9060800@kernel.org> <49EA4E5B.80001@gmail.com> <200904201347.10736.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 06/10] ide-tape: unify r/w init paths
+Date: Mon, 20 Apr 2009 17:20:26 +0400
+Message-ID: <49EC769A.2080004@ru.mvista.com>
+References: <1240099122-18381-1-git-send-email-tj@kernel.org> <1240099122-18381-7-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:17523 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754751AbZDTL7f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2009 07:59:35 -0400
-Received: by ti-out-0910.google.com with SMTP id 11so1317392tim.23
-        for <linux-ide@vger.kernel.org>; Mon, 20 Apr 2009 04:59:33 -0700 (PDT)
-In-Reply-To: <200904201347.10736.bzolnier@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:57679 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755246AbZDTNTb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Apr 2009 09:19:31 -0400
+In-Reply-To: <1240099122-18381-7-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: petkovbb@googlemail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: petkovbb@googlemail.com, bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 19 April 2009 00:04:11 Tejun Heo wrote:
->> Hello,
->>
->> Okay, tree rebased.  Please pull from the following git tree.
->>
->>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git ide-phase1
->>
->> Top commit id is fc38b521dcffcb07447cd98fedc56f495c10b90d.
-> 
-> I merged it into for-next branch.  Thanks!
+Hello.
 
-Thanks.
+Tejun Heo wrote:
 
--- 
-tejun
+> Impact: cleanup
+
+> Read and write init paths are almost identical.  Unify them into
+> idetape_init_rw().
+
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
