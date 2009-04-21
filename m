@@ -1,56 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [patch 2.6.30-rc2 2/2] palm_bk3710:  UDMA performance fix
-Date: Tue, 21 Apr 2009 14:02:22 +0400
-Message-ID: <49ED99AE.3020100@ru.mvista.com>
-References: <200904201841.10989.david-b@pacbell.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Is sata_nv compatible with async scsi scan?
+Date: Tue, 21 Apr 2009 06:27:56 -0400
+Message-ID: <49ED9FAC.1080303@garzik.org>
+References: <49ED6FD7.3070307@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:19270 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753446AbZDUKBZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Apr 2009 06:01:25 -0400
-In-Reply-To: <200904201841.10989.david-b@pacbell.net>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <49ED6FD7.3070307@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Benny Halevy <bhalevy@panasas.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, DaVinci <davinci-linux-open-source@linux.davincidsp.com>
 
-David Brownell wrote:
+Benny Halevy wrote:
+> Hi Jeff,
+> 
+> Since 2.6.29 I'm having intermittent problems with booting kernels.
+> After supposedly waiting for scsi async scan to complete,
+> quite frequently I see errors from the init resume process
+> when it fails to find the swap partition and later the root
+> file system fails to load.
+> 
+> A workaround that I found to be helpful is booting the kernel
+> with scsi_mod.scan=sync so I suspect sata_nv has a problem
+> with asynchronous scanning.
 
-> Fix UDMA throughput bug:  tCYC averages t2CYCTYP/2, but the code
-> previously assumed it was the same as t2CYCTYP.
+Personally, I think the whole system is broken, so continue to use this 
+workaround until it gets fixed upstream.  This sounds like some timing 
+issues related to waiting for the device probe to finish, something that 
+people keep breaking (witness my USB flash drive boot breakage).
 
-    Wow, thanks for finding it!
-    IIUC however, this should have only affected UDMA writes, not reads 
-because on reads the device controls the strobe timing.
+	Jeff
 
-> (That is, it was using just one clock edge, not both.)
 
-    There's no way only one clock edge could have been used since it would 
-have resulted in CRC errors, so this comment is not to the point.
 
-> On one system this change increased throughput by almost 4x: UDMA/66
-> sometimes topped 23 MB/sec (on a drive known to do much better).  On
-> another system it was around a 10% win (UDMA/66 up to 7+ MB/sec).
-
-    It's interesting that on my DM6467 EVM UDMA/66 reads topped at about 29-30 
-MB/s even without this patch (measuread with hdparm), and on DM6446 EVM they 
-were only slightly slower...
-
-> The difference might be caused by the ratio between memory and IDE
-> clocks.  In the system with large speedup, this was exactly 2 (as a
-> workaround for a rev 1.1 silicon bug).  The other system used a more
-> standard ratio of 1.63 (and rev 2.1 silicon) ... clock domain synch
-> might have some issues, they're not unheard-of.
-
-    Interesting...
-
-> Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
-
-    The patch itself is:
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
