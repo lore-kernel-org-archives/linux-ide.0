@@ -1,31 +1,237 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Marek Vasut <marek.vasut@gmail.com>
 Subject: Re: [PATCH 4/6] PalmLD IDE
-Date: Mon, 20 Apr 2009 22:17:50 +0100
-Message-ID: <20090420221750.5de11027@lxorguk.ukuu.org.uk>
-References: <200903222223.10572.marek.vasut@gmail.com>
-	<200904191814.05722.marek.vasut@gmail.com>
-	<200904202238.39229.bzolnier@gmail.com>
-	<200904202253.06559.marek.vasut@gmail.com>
+Date: Tue, 21 Apr 2009 02:05:59 +0200
+Message-ID: <200904210205.59971.marek.vasut@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_n3Q7Jlk2EPmLHyC"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42184 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756587AbZDTVRm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2009 17:17:42 -0400
-In-Reply-To: <200904202253.06559.marek.vasut@gmail.com>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:40837 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517AbZDUAF4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2009 20:05:56 -0400
+Received: by bwz7 with SMTP id 7so1501084bwz.37
+        for <linux-ide@vger.kernel.org>; Mon, 20 Apr 2009 17:05:54 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-arm-kernel@lists.arm.linux.org.uk, Eric Miao <eric.y.miao@gmail.com>, linux-ide@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-arm-kernel@lists.arm.linux.org.uk, Eric Miao <eric.y.miao@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> > Please take me off cc: list unless you're also going to submit *IDE* driver
-> > (sorry, I have no time to review libata patches).  Thanks.
-> 
-> That's good to know, where should I send it then? Thanks
+--Boundary-00=_n3Q7Jlk2EPmLHyC
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Send it this way for review.
+Here it is, I hope it's not too rotten yet.
 
-Alan
+--Boundary-00=_n3Q7Jlk2EPmLHyC
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="0004-PalmLD-IDE-support.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0004-PalmLD-IDE-support.patch"
 
+=46rom 8881f9cbf66a3050de328f6c020f864ca04c1e9b Mon Sep 17 00:00:00 2001
+=46rom: Marek <marek.vasut@gmail.com>
+Date: Sat, 16 Aug 2008 16:25:34 +0200
+Subject: [PATCH] PalmLD: IDE support
+ Support for Palm LifeDrive's internal harddrive
+
+=2D--
+ drivers/ata/Kconfig       |    9 +++
+ drivers/ata/Makefile      |    1 +
+ drivers/ata/pata_palmld.c |  145 +++++++++++++++++++++++++++++++++++++++++=
+++++
+ 3 files changed, 155 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/pata_palmld.c
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index ae84949..8e43d11 100644
+=2D-- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -533,6 +533,15 @@ config PATA_OPTIDMA
+=20
+ 	  If unsure, say N.
+=20
++config PATA_PALMLD
++	tristate "Palm LifeDrive PATA support"
++	depends on MACH_PALMLD
++	help
++	  This option enables support for Palm LifeDrive's internal ATA
++	  port via the new ATA layer.
++
++	  If unsure, say N.
++
+ config PATA_PCMCIA
+ 	tristate "PCMCIA PATA support"
+ 	depends on PCMCIA
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 674965f..2b393c9 100644
+=2D-- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -50,6 +50,7 @@ obj-$(CONFIG_PATA_MPC52xx)	+=3D pata_mpc52xx.o
+ obj-$(CONFIG_PATA_MARVELL)	+=3D pata_marvell.o
+ obj-$(CONFIG_PATA_MPIIX)	+=3D pata_mpiix.o
+ obj-$(CONFIG_PATA_OLDPIIX)	+=3D pata_oldpiix.o
++obj-$(CONFIG_PATA_PALMLD)	+=3D pata_palmld.o
+ obj-$(CONFIG_PATA_PCMCIA)	+=3D pata_pcmcia.o
+ obj-$(CONFIG_PATA_PDC2027X)	+=3D pata_pdc2027x.o
+ obj-$(CONFIG_PATA_PDC_OLD)	+=3D pata_pdc202xx_old.o
+diff --git a/drivers/ata/pata_palmld.c b/drivers/ata/pata_palmld.c
+new file mode 100644
+index 0000000..f0693f8
+=2D-- /dev/null
++++ b/drivers/ata/pata_palmld.c
+@@ -0,0 +1,145 @@
++/*
++ * drivers/ata/pata_palmld.c
++ *
++ * Driver for IDE channel in Palm LifeDrive
++ *
++ * Based on research of:
++ *		Alex Osborne <ato@meshy.org>
++ *
++ * Rewrite for mainline:
++ *		Marek Vasut <marek.vasut@gmail.com>
++ *
++ * Rewritten version based on pata_ixp4xx_cf.c:
++ * ixp4xx PATA/Compact Flash driver
++ * Copyright (C) 2006-07 Tower Technologies
++ * Author: Alessandro Zummo <a.zummo@towertech.it>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/libata.h>
++#include <linux/irq.h>
++#include <linux/platform_device.h>
++#include <linux/delay.h>
++#include <linux/gpio.h>
++
++#include <scsi/scsi_host.h>
++#include <mach/palmld.h>
++
++#define DRV_NAME "pata_palmld"
++
++static struct scsi_host_template palmld_sht =3D {
++	ATA_PIO_SHT(DRV_NAME),
++};
++
++static struct ata_port_operations palmld_port_ops =3D {
++	.inherits		=3D &ata_sff_port_ops,
++	.sff_data_xfer		=3D ata_sff_data_xfer_noirq,
++	.cable_detect		=3D ata_cable_40wire,
++};
++
++static __devinit int palmld_pata_probe(struct platform_device *pdev)
++{
++	struct ata_host *host;
++	struct ata_port *ap;
++	void __iomem *mem;
++	int ret;
++
++	/* allocate host */
++	host =3D ata_host_alloc(&pdev->dev, 1);
++	if (!host)
++		return -ENOMEM;
++
++	/* remap drive's physical memory address */
++	mem =3D devm_ioremap(&pdev->dev, PALMLD_IDE_PHYS, 0x1000);
++	if (!mem)
++		return -ENOMEM;
++
++	/* request and activate power GPIO, IRQ GPIO */
++	ret =3D gpio_request(GPIO_NR_PALMLD_IDE_PWEN, "HDD PWR");
++	if (ret)
++		goto err1;
++	ret =3D gpio_direction_output(GPIO_NR_PALMLD_IDE_PWEN, 1);
++	if (ret)
++		goto err2;
++
++	ret =3D gpio_request(GPIO_NR_PALMLD_IDE_IRQ, "HDD IRQ");
++	if (ret)
++		goto err2;
++	ret =3D gpio_direction_input(GPIO_NR_PALMLD_IDE_IRQ);
++	if (ret)
++		goto err3;
++
++	/* we'd better wait for drive's ready signal here
++	  (if we knew where it will come from) */
++	msleep(300);
++
++	/* setup the ata port */
++	ap =3D host->ports[0];
++	ap->ops	=3D &palmld_port_ops;
++	ap->pio_mask =3D ATA_PIO4;
++	ap->flags |=3D ATA_FLAG_MMIO | ATA_FLAG_NO_LEGACY | ATA_FLAG_NO_ATAPI;
++
++	/* memory mapping voodoo */
++	ap->ioaddr.cmd_addr =3D mem + 0x10;
++	ap->ioaddr.altstatus_addr =3D mem + 0xe;
++	ap->ioaddr.ctl_addr =3D mem + 0xe;
++
++	/* start the port */
++	ata_sff_std_ports(&ap->ioaddr);
++
++	/* activate host */
++	return ata_host_activate(host, gpio_to_irq(GPIO_NR_PALMLD_IDE_IRQ),
++					ata_sff_interrupt, IRQF_TRIGGER_RISING,
++					&palmld_sht);
++err3:
++	gpio_free(GPIO_NR_PALMLD_IDE_IRQ);
++err2:
++	gpio_free(GPIO_NR_PALMLD_IDE_PWEN);
++err1:
++	return ret;
++}
++
++static __devexit int palmld_pata_remove(struct platform_device *dev)
++{
++	struct ata_host *host =3D platform_get_drvdata(dev);
++
++	ata_host_detach(host);
++
++	gpio_free(GPIO_NR_PALMLD_IDE_PWEN);
++	gpio_free(GPIO_NR_PALMLD_IDE_IRQ);
++
++	return 0;
++}
++
++static struct platform_driver palmld_pata_platform_driver =3D {
++	.driver	 =3D {
++		.name   =3D DRV_NAME,
++		.owner  =3D THIS_MODULE,
++	},
++	.probe		=3D palmld_pata_probe,
++	.remove		=3D __devexit_p(palmld_pata_remove),
++};
++
++static int __init palmld_pata_init(void)
++{
++	return platform_driver_register(&palmld_pata_platform_driver);
++}
++
++static void __exit palmld_pata_exit(void)
++{
++	platform_driver_unregister(&palmld_pata_platform_driver);
++}
++
++MODULE_AUTHOR("Marek Vasut <marek.vasut@gmail.com>");
++MODULE_DESCRIPTION("PalmLD PATA driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:" DRV_NAME);
++
++module_init(palmld_pata_init);
++module_exit(palmld_pata_exit);
+=2D-=20
+1.5.6
+
+
+--Boundary-00=_n3Q7Jlk2EPmLHyC--
