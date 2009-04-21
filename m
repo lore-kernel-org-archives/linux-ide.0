@@ -1,58 +1,87 @@
-From: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH 4/6] PalmLD IDE
-Date: Tue, 21 Apr 2009 19:44:08 +0200
-Message-ID: <200904211944.08970.marek.vasut@gmail.com>
-References: <200904210205.59971.marek.vasut@gmail.com> <200904211652.34576.marek.vasut@gmail.com> <20090421161933.334bc5a2@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [BUILD FAILURE 07/12] Next April 14 : PPC64 randconfig [drivers/ide/pmac.c]
+Date: Tue, 21 Apr 2009 21:04:37 +0200
+Message-ID: <200904212104.38664.bzolnier@gmail.com>
+References: <1239733759.5344.79.camel@subratamodak.linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:49730 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753597AbZDURoG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Apr 2009 13:44:06 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so961679muf.1
-        for <linux-ide@vger.kernel.org>; Tue, 21 Apr 2009 10:44:03 -0700 (PDT)
-In-Reply-To: <20090421161933.334bc5a2@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1239733759.5344.79.camel@subratamodak.linux.ibm.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-next-owner@vger.kernel.org
+To: subrata@linux.vnet.ibm.com
+Cc: Linuxppc-dev <Linuxppc-dev@ozlabs.org>, Paul Mackerras <paulus@samba.org>, Greg KH <greg@kroah.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next <linux-next@vger.kernel.org>, sachinp <sachinp@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, Alexander Beregalov <a.beregalov@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-arm-kernel@lists.arm.linux.org.uk, Eric Miao <eric.y.miao@gmail.com>, linux-ide@vger.kernel.org
 
-On Tuesday 21 of April 2009 17:19:33 Alan Cox wrote:
-> > http://www.palm.com/us/support/contact/environment/disassem_inst_Lifedriv
-> >e.pdf , see slide 10 and 15 for yourself, I think noone would want to
-> > solder anything into that device ;-)
->
-> Agreed but if the hardware can do it you don't need the flag. Obviously
-> not very important in this case.
+On Tuesday 14 April 2009 20:29:19 Subrata Modak wrote:
+> Observed the following build error:
+> ---
+> CC [M]  drivers/ide/pmac.o
+> drivers/ide/pmac.c: In function =E2=80=98pmac_ide_init_dev=E2=80=99:
+> drivers/ide/pmac.c:955: error: implicit declaration of function
+> =E2=80=98check_media_bay_by_base=E2=80=99
+> drivers/ide/pmac.c: In function =E2=80=98pmac_ide_setup_device=E2=80=99=
+:
+> drivers/ide/pmac.c:1090: error: implicit declaration of function
+> =E2=80=98media_bay_set_ide_infos=E2=80=99
+> make[2]: *** [drivers/ide/pmac.o] Error 1
+> make[1]: *** [drivers/ide] Error 2
+> make: *** [drivers] Error 2
+> ---
 
-OK, we can remove that, I'll resend the patch.
->
-> > > +	/* we'd better wait for drive's ready signal here
-> > > +	  (if we knew where it will come from) */
-> > > +	msleep(300);
-> > >
-> > > Our probe code should already be waiting for ready signals  ?
-> >
-> > The drive asserts some GPIO when it becomes ready, dunno which one though
-> > so we just wait here.
->
-> Ok so the ATA bus side ready isn't sufficient for your hardware ?
+Should be fixed by:
 
-I can retry without the delay, but I'm quite afraid I ran into problems 
-without it. Btw. I rewrote that driver more than half year ago, so I don't 
-really recall the details, sorry, I don't want to misinform you here.
->
-> > > The only other question is a general architectural one as to whether it
-> > > would be better to set up the GPIO etc and create a pata_platform
-> > > platform device (possibly tweaking pata_platform flags to allow the
-> > > caller to indicate generic pio with mode setting by set features
-> > > command)
-> >
-> > I already explained this to Eric, there isn't any other obscure hardware
-> > I think. Or if this is concerning something else, I'll recheck later.
+=46rom: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide-pmac: fix modular build for CONFIG_PMAC_MEDIABAY=3D=
+y
 
+On Tuesday 14 April 2009 20:29:19 Subrata Modak wrote:
+> Observed the following build error:
+> ---
+> CC [M]  drivers/ide/pmac.o
+> drivers/ide/pmac.c: In function =E2=80=98pmac_ide_init_dev=E2=80=99:
+> drivers/ide/pmac.c:955: error: implicit declaration of function
+> =E2=80=98check_media_bay_by_base=E2=80=99
+> drivers/ide/pmac.c: In function =E2=80=98pmac_ide_setup_device=E2=80=99=
+:
+> drivers/ide/pmac.c:1090: error: implicit declaration of function
+> =E2=80=98media_bay_set_ide_infos=E2=80=99
+> make[2]: *** [drivers/ide/pmac.o] Error 1
+> make[1]: *** [drivers/ide] Error 2
+> make: *** [drivers] Error 2
+> ---
 
+IDE PMAC host driver can be modular now so we need to export
+check_media_bay_by_base() and media_bay_set_ide_infos().
+
+Reported-by: Subrata Modak <subrata@linux.vnet.ibm.com>
+Cc: Paul Mackerras <paulus@samba.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/macintosh/mediabay.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: b/drivers/macintosh/mediabay.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- a/drivers/macintosh/mediabay.c
++++ b/drivers/macintosh/mediabay.c
+@@ -447,6 +447,7 @@ int check_media_bay_by_base(unsigned lon
+=20
+ 	return -ENODEV;
+ }
++EXPORT_SYMBOL_GPL(check_media_bay_by_base);
+=20
+ int media_bay_set_ide_infos(struct device_node* which_bay, unsigned lo=
+ng base,
+ 			    int irq, ide_hwif_t *hwif)
+@@ -486,6 +487,7 @@ int media_bay_set_ide_infos(struct devic
+=20
+ 	return -ENODEV;
+ }
++EXPORT_SYMBOL_GPL(media_bay_set_ide_infos);
+ #endif /* CONFIG_BLK_DEV_IDE_PMAC */
+=20
+ static void media_bay_step(int i)
