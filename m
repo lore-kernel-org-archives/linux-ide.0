@@ -1,237 +1,203 @@
-From: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH 4/6] PalmLD IDE
-Date: Tue, 21 Apr 2009 02:05:59 +0200
-Message-ID: <200904210205.59971.marek.vasut@gmail.com>
+From: David Brownell <david-b-yBeKhBN/0LDR7s880joybQ@public.gmane.org>
+Subject: [patch 2.6.30-rc2 1/2] palm_bk3710: those registers/bitfields don't
+	exist
+Date: Mon, 20 Apr 2009 18:19:56 -0700
+Message-ID: <200904201819.56559.david-b@pacbell.net>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_n3Q7Jlk2EPmLHyC"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:40837 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754517AbZDUAF4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2009 20:05:56 -0400
-Received: by bwz7 with SMTP id 7so1501084bwz.37
-        for <linux-ide@vger.kernel.org>; Mon, 20 Apr 2009 17:05:54 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-arm-kernel@lists.arm.linux.org.uk, Eric Miao <eric.y.miao@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
-
---Boundary-00=_n3Q7Jlk2EPmLHyC
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
 Content-Disposition: inline
+List-Unsubscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
+	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://linux.omap.com/pipermail/davinci-linux-open-source>
+List-Post: <mailto:davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+List-Help: <mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=help>
+List-Subscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
+	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=subscribe>
+Sender: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
+Errors-To: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
+To: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, DaVinci <davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+List-Id: linux-ide@vger.kernel.org
 
-Here it is, I hope it's not too rotten yet.
+From: David Brownell <dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 
---Boundary-00=_n3Q7Jlk2EPmLHyC
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="0004-PalmLD-IDE-support.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0004-PalmLD-IDE-support.patch"
+Bugfixes noted by checking the code against the controller
+documentation (TI document number SPRUE21):
 
-=46rom 8881f9cbf66a3050de328f6c020f864ca04c1e9b Mon Sep 17 00:00:00 2001
-=46rom: Marek <marek.vasut@gmail.com>
-Date: Sat, 16 Aug 2008 16:25:34 +0200
-Subject: [PATCH] PalmLD: IDE support
- Support for Palm LifeDrive's internal harddrive
+ - Remove declarations for eight non-existent registers (!);
+   and remove accesses to two of them.
 
-=2D--
- drivers/ata/Kconfig       |    9 +++
- drivers/ata/Makefile      |    1 +
- drivers/ata/pata_palmld.c |  145 +++++++++++++++++++++++++++++++++++++++++=
-++++
- 3 files changed, 155 insertions(+), 0 deletions(-)
- create mode 100644 drivers/ata/pata_palmld.c
+ - Remove access to various non-existent bitfields in some of
+   the registers which *do* exist (those fields must-be-zero).
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index ae84949..8e43d11 100644
-=2D-- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -533,6 +533,15 @@ config PATA_OPTIDMA
-=20
- 	  If unsure, say N.
-=20
-+config PATA_PALMLD
-+	tristate "Palm LifeDrive PATA support"
-+	depends on MACH_PALMLD
-+	help
-+	  This option enables support for Palm LifeDrive's internal ATA
-+	  port via the new ATA layer.
-+
-+	  If unsure, say N.
-+
- config PATA_PCMCIA
- 	tristate "PCMCIA PATA support"
- 	depends on PCMCIA
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 674965f..2b393c9 100644
-=2D-- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -50,6 +50,7 @@ obj-$(CONFIG_PATA_MPC52xx)	+=3D pata_mpc52xx.o
- obj-$(CONFIG_PATA_MARVELL)	+=3D pata_marvell.o
- obj-$(CONFIG_PATA_MPIIX)	+=3D pata_mpiix.o
- obj-$(CONFIG_PATA_OLDPIIX)	+=3D pata_oldpiix.o
-+obj-$(CONFIG_PATA_PALMLD)	+=3D pata_palmld.o
- obj-$(CONFIG_PATA_PCMCIA)	+=3D pata_pcmcia.o
- obj-$(CONFIG_PATA_PDC2027X)	+=3D pata_pdc2027x.o
- obj-$(CONFIG_PATA_PDC_OLD)	+=3D pata_pdc202xx_old.o
-diff --git a/drivers/ata/pata_palmld.c b/drivers/ata/pata_palmld.c
-new file mode 100644
-index 0000000..f0693f8
-=2D-- /dev/null
-+++ b/drivers/ata/pata_palmld.c
-@@ -0,0 +1,145 @@
-+/*
-+ * drivers/ata/pata_palmld.c
-+ *
-+ * Driver for IDE channel in Palm LifeDrive
-+ *
-+ * Based on research of:
-+ *		Alex Osborne <ato@meshy.org>
-+ *
-+ * Rewrite for mainline:
-+ *		Marek Vasut <marek.vasut@gmail.com>
-+ *
-+ * Rewritten version based on pata_ixp4xx_cf.c:
-+ * ixp4xx PATA/Compact Flash driver
-+ * Copyright (C) 2006-07 Tower Technologies
-+ * Author: Alessandro Zummo <a.zummo@towertech.it>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/libata.h>
-+#include <linux/irq.h>
-+#include <linux/platform_device.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+
-+#include <scsi/scsi_host.h>
-+#include <mach/palmld.h>
-+
-+#define DRV_NAME "pata_palmld"
-+
-+static struct scsi_host_template palmld_sht =3D {
-+	ATA_PIO_SHT(DRV_NAME),
-+};
-+
-+static struct ata_port_operations palmld_port_ops =3D {
-+	.inherits		=3D &ata_sff_port_ops,
-+	.sff_data_xfer		=3D ata_sff_data_xfer_noirq,
-+	.cable_detect		=3D ata_cable_40wire,
-+};
-+
-+static __devinit int palmld_pata_probe(struct platform_device *pdev)
-+{
-+	struct ata_host *host;
-+	struct ata_port *ap;
-+	void __iomem *mem;
-+	int ret;
-+
-+	/* allocate host */
-+	host =3D ata_host_alloc(&pdev->dev, 1);
-+	if (!host)
-+		return -ENOMEM;
-+
-+	/* remap drive's physical memory address */
-+	mem =3D devm_ioremap(&pdev->dev, PALMLD_IDE_PHYS, 0x1000);
-+	if (!mem)
-+		return -ENOMEM;
-+
-+	/* request and activate power GPIO, IRQ GPIO */
-+	ret =3D gpio_request(GPIO_NR_PALMLD_IDE_PWEN, "HDD PWR");
-+	if (ret)
-+		goto err1;
-+	ret =3D gpio_direction_output(GPIO_NR_PALMLD_IDE_PWEN, 1);
-+	if (ret)
-+		goto err2;
-+
-+	ret =3D gpio_request(GPIO_NR_PALMLD_IDE_IRQ, "HDD IRQ");
-+	if (ret)
-+		goto err2;
-+	ret =3D gpio_direction_input(GPIO_NR_PALMLD_IDE_IRQ);
-+	if (ret)
-+		goto err3;
-+
-+	/* we'd better wait for drive's ready signal here
-+	  (if we knew where it will come from) */
-+	msleep(300);
-+
-+	/* setup the ata port */
-+	ap =3D host->ports[0];
-+	ap->ops	=3D &palmld_port_ops;
-+	ap->pio_mask =3D ATA_PIO4;
-+	ap->flags |=3D ATA_FLAG_MMIO | ATA_FLAG_NO_LEGACY | ATA_FLAG_NO_ATAPI;
-+
-+	/* memory mapping voodoo */
-+	ap->ioaddr.cmd_addr =3D mem + 0x10;
-+	ap->ioaddr.altstatus_addr =3D mem + 0xe;
-+	ap->ioaddr.ctl_addr =3D mem + 0xe;
-+
-+	/* start the port */
-+	ata_sff_std_ports(&ap->ioaddr);
-+
-+	/* activate host */
-+	return ata_host_activate(host, gpio_to_irq(GPIO_NR_PALMLD_IDE_IRQ),
-+					ata_sff_interrupt, IRQF_TRIGGER_RISING,
-+					&palmld_sht);
-+err3:
-+	gpio_free(GPIO_NR_PALMLD_IDE_IRQ);
-+err2:
-+	gpio_free(GPIO_NR_PALMLD_IDE_PWEN);
-+err1:
-+	return ret;
-+}
-+
-+static __devexit int palmld_pata_remove(struct platform_device *dev)
-+{
-+	struct ata_host *host =3D platform_get_drvdata(dev);
-+
-+	ata_host_detach(host);
-+
-+	gpio_free(GPIO_NR_PALMLD_IDE_PWEN);
-+	gpio_free(GPIO_NR_PALMLD_IDE_IRQ);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver palmld_pata_platform_driver =3D {
-+	.driver	 =3D {
-+		.name   =3D DRV_NAME,
-+		.owner  =3D THIS_MODULE,
-+	},
-+	.probe		=3D palmld_pata_probe,
-+	.remove		=3D __devexit_p(palmld_pata_remove),
-+};
-+
-+static int __init palmld_pata_init(void)
-+{
-+	return platform_driver_register(&palmld_pata_platform_driver);
-+}
-+
-+static void __exit palmld_pata_exit(void)
-+{
-+	platform_driver_unregister(&palmld_pata_platform_driver);
-+}
-+
-+MODULE_AUTHOR("Marek Vasut <marek.vasut@gmail.com>");
-+MODULE_DESCRIPTION("PalmLD PATA driver");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("platform:" DRV_NAME);
-+
-+module_init(palmld_pata_init);
-+module_exit(palmld_pata_exit);
-=2D-=20
-1.5.6
+ - Provide comment to replace bogus reset logic (removed above,
+   it relied on non-existent bitfields).  Resets require GPIO
+   help; this driver doesn't currently know about that.
 
+With some minor cleanup:  relocate a comment, avoid an extra
+lookup of the PIO timings.
 
---Boundary-00=_n3Q7Jlk2EPmLHyC--
+Signed-off-by: David Brownell <dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+---
+ drivers/ide/palm_bk3710.c |   67 +++++++++++---------------------------------
+ 1 file changed, 18 insertions(+), 49 deletions(-)
+
+--- a/drivers/ide/palm_bk3710.c
++++ b/drivers/ide/palm_bk3710.c
+@@ -50,16 +50,9 @@ struct palm_bk3710_udmatiming {
+ #define BK3710_BMICP		0x00
+ #define BK3710_BMISP		0x02
+ #define BK3710_BMIDTP		0x04
+-#define BK3710_BMICS		0x08
+-#define BK3710_BMISS		0x0A
+-#define BK3710_BMIDTS		0x0C
+ #define BK3710_IDETIMP		0x40
+-#define BK3710_IDETIMS		0x42
+-#define BK3710_SIDETIM		0x44
+-#define BK3710_SLEWCTL		0x45
+ #define BK3710_IDESTATUS	0x47
+ #define BK3710_UDMACTL		0x48
+-#define BK3710_UDMATIM		0x4A
+ #define BK3710_MISCCTL		0x50
+ #define BK3710_REGSTB		0x54
+ #define BK3710_REGRCVR		0x58
+@@ -71,7 +64,6 @@ struct palm_bk3710_udmatiming {
+ #define BK3710_UDMATRP		0x70
+ #define BK3710_UDMAENV		0x74
+ #define BK3710_IORDYTMP		0x78
+-#define BK3710_IORDYTMS		0x7C
+ 
+ static unsigned ideclk_period; /* in nanoseconds */
+ 
+@@ -98,11 +90,6 @@ static void palm_bk3710_setudmamode(void
+ 	trp = DIV_ROUND_UP(palm_bk3710_udmatimings[mode].rptime,
+ 			   ideclk_period) - 1;
+ 
+-	/* udmatim Register */
+-	val16 = readw(base + BK3710_UDMATIM) & (dev ? 0xFF0F : 0xFFF0);
+-	val16 |= (mode << (dev ? 4 : 0));
+-	writew(val16, base + BK3710_UDMATIM);
+-
+ 	/* udmastb Ultra DMA Access Strobe Width */
+ 	val32 = readl(base + BK3710_UDMASTB) & (0xFF << (dev ? 0 : 8));
+ 	val32 |= (t0 << (dev ? 8 : 0));
+@@ -163,10 +150,11 @@ static void palm_bk3710_setpiomode(void 
+ 	u32 val32;
+ 	struct ide_timing *t;
+ 
++	t = ide_timing_find_mode(XFER_PIO_0 + mode);
++
+ 	/* PIO Data Setup */
+ 	t0 = DIV_ROUND_UP(cycletime, ideclk_period);
+-	t2 = DIV_ROUND_UP(ide_timing_find_mode(XFER_PIO_0 + mode)->active,
+-			  ideclk_period);
++	t2 = DIV_ROUND_UP(t->active, ideclk_period);
+ 
+ 	t2i = t0 - t2 - 1;
+ 	t2 -= 1;
+@@ -187,7 +175,6 @@ static void palm_bk3710_setpiomode(void 
+ 	}
+ 
+ 	/* TASKFILE Setup */
+-	t = ide_timing_find_mode(XFER_PIO_0 + mode);
+ 	t0 = DIV_ROUND_UP(t->cyc8b, ideclk_period);
+ 	t2 = DIV_ROUND_UP(t->act8b, ideclk_period);
+ 
+@@ -236,42 +223,23 @@ static void palm_bk3710_set_pio_mode(ide
+ static void __devinit palm_bk3710_chipinit(void __iomem *base)
+ {
+ 	/*
+-	 * enable the reset_en of ATA controller so that when ata signals
+-	 * are brought out, by writing into device config. at that
+-	 * time por_n signal should not be 'Z' and have a stable value.
++	 * REVISIT:  the ATA reset signal needs to be managed through a
++	 * GPIO, which means it should come from platform_data.  Until
++	 * we get and use such information, we have to trust that things
++	 * have been reset before we get here.
+ 	 */
+-	writel(0x0300, base + BK3710_MISCCTL);
+-
+-	/* wait for some time and deassert the reset of ATA Device. */
+-	mdelay(100);
+-
+-	/* Deassert the Reset */
+-	writel(0x0200, base + BK3710_MISCCTL);
+ 
+ 	/*
+ 	 * Program the IDETIMP Register Value based on the following assumptions
+ 	 *
+ 	 * (ATA_IDETIMP_IDEEN		, ENABLE ) |
+-	 * (ATA_IDETIMP_SLVTIMEN	, DISABLE) |
+-	 * (ATA_IDETIMP_RDYSMPL		, 70NS)    |
+-	 * (ATA_IDETIMP_RDYRCVRY	, 50NS)    |
+-	 * (ATA_IDETIMP_DMAFTIM1	, PIOCOMP) |
+ 	 * (ATA_IDETIMP_PREPOST1	, DISABLE) |
+-	 * (ATA_IDETIMP_RDYSEN1		, DISABLE) |
+-	 * (ATA_IDETIMP_PIOFTIM1	, DISABLE) |
+-	 * (ATA_IDETIMP_DMAFTIM0	, PIOCOMP) |
+ 	 * (ATA_IDETIMP_PREPOST0	, DISABLE) |
+-	 * (ATA_IDETIMP_RDYSEN0		, DISABLE) |
+-	 * (ATA_IDETIMP_PIOFTIM0	, DISABLE)
+-	 */
+-	writew(0xB388, base + BK3710_IDETIMP);
+-
+-	/*
+-	 * Configure  SIDETIM  Register
+-	 * (ATA_SIDETIM_RDYSMPS1	,120NS ) |
+-	 * (ATA_SIDETIM_RDYRCYS1	,120NS )
++	 *
++	 * DM6446 silicon rev 2.1 and earlier have no observed net benefit
++	 * from enabling prefetch/postwrite.
+ 	 */
+-	writeb(0, base + BK3710_SIDETIM);
++	writew(BIT(15), base + BK3710_IDETIMP);
+ 
+ 	/*
+ 	 * UDMACTL Ultra-ATA DMA Control
+@@ -283,11 +251,11 @@ static void __devinit palm_bk3710_chipin
+ 
+ 	/*
+ 	 * MISCCTL Miscellaneous Conrol Register
+-	 * (ATA_MISCCTL_RSTMODEP	, 1) |
+-	 * (ATA_MISCCTL_RESETP		, 0) |
++	 * (ATA_MISCCTL_HWNHLD1P	, 1 cycle)
++	 * (ATA_MISCCTL_HWNHLD0P	, 1 cycle)
+ 	 * (ATA_MISCCTL_TIMORIDE	, 1)
+ 	 */
+-	writel(0x201, base + BK3710_MISCCTL);
++	writel(0x001, base + BK3710_MISCCTL);
+ 
+ 	/*
+ 	 * IORDYTMP IORDY Timer for Primary Register
+@@ -357,10 +325,9 @@ static int __init palm_bk3710_probe(stru
+ 
+ 	clk_enable(clk);
+ 	rate = clk_get_rate(clk);
+-	ideclk_period = 1000000000UL / rate;
+ 
+-	/* Register the IDE interface with Linux ATA Interface */
+-	memset(&hw, 0, sizeof(hw));
++	/* NOTE:  round *down* to meet minimum timings; we count in clocks */
++	ideclk_period = 1000000000UL / rate;
+ 
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (mem == NULL) {
+@@ -390,6 +357,7 @@ static int __init palm_bk3710_probe(stru
+ 	/* Configure the Palm Chip controller */
+ 	palm_bk3710_chipinit(base);
+ 
++	memset(&hw, 0, sizeof(hw));
+ 	for (i = 0; i < IDE_NR_PORTS - 2; i++)
+ 		hw.io_ports_array[i] = (unsigned long)
+ 				(base + IDE_PALM_ATA_PRI_REG_OFFSET + i);
+@@ -402,6 +370,7 @@ static int __init palm_bk3710_probe(stru
+ 	palm_bk3710_port_info.udma_mask = rate < 100000000 ? ATA_UDMA4 :
+ 							     ATA_UDMA5;
+ 
++	/* Register the IDE interface with Linux */
+ 	rc = ide_host_add(&palm_bk3710_port_info, hws, NULL);
+ 	if (rc)
+ 		goto out;
