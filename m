@@ -1,48 +1,48 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [git pull] IDE fixes
-Date: Wed, 22 Apr 2009 21:22:34 +0200
-Message-ID: <20090422192234.GA4126@uranus.ravnborg.org>
-References: <200904222048.15556.bzolnier@gmail.com> <1240427207.21848.81.camel@localhost>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
+Date: Wed, 22 Apr 2009 19:27:25 +0000
+Message-ID: <1240428445.3431.22.camel@mulgrave.int.hansenpartnership.com>
+References: <20090422090929.GA14928@havoc.gtf.org>
+	 <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>
+	 <49EF337F.1030804@ngrt.de>  <20090422161856.1251f8a0@lxorguk.ukuu.org.uk>
+	 <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
+	 <49EF63A6.8040103@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pfepb.post.tele.dk ([195.41.46.236]:32918 "EHLO
-	pfepb.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071AbZDVTU1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2009 15:20:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1240427207.21848.81.camel@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755830AbZDVT1m@vger.kernel.org>
+In-Reply-To: <49EF63A6.8040103@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Apr 22, 2009 at 12:06:47PM -0700, Joe Perches wrote:
-> On Wed, 2009-04-22 at 20:48 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> > index 3aec19d..3d4e099 100644
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -609,7 +609,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
-> >  	struct request *rq = hwif->rq;
-> >  	ide_expiry_t *expiry = NULL;
-> >  	int dma_error = 0, dma, thislen, uptodate = 0;
-> > -	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
-> > +	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0, nsectors;
-> >  	int sense = blk_sense_request(rq);
-> >  	unsigned int timeout;
-> >  	u16 len;
+On Wed, 2009-04-22 at 14:36 -0400, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > On Wed, 2009-04-22 at 16:18 +0100, Alan Cox wrote:
+> >>> Don't forget, there are ATAPI devices (some Sony CD burners and old 
+> >>> phase-changers come into mind) which *do* have multiple LUNs sitting 
+> >>> beyond the PATA port. I don't know if libata supports such setups (my 
+> >>> old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
+> >> It's a long time ago since I tested it but my 5 CD changer was correctly
+> >> supported by libata (or more accurately by sr...).
+> > 
+> > Well, sr supports the discovered CD/DVD; ch is the actual changer
+> > manager.  Usually ch attaches to one LUN and sr attaches to another.
 > 
-> I think ide is the only subsystem to use the
-> initialization style of "?:," with additional
-> declarations.
-> 
-> Would it be better to use a more standard style?
-> 
-> maybe:
-> 	int dma_error = 0, dma, thislen, uptodate = 0, rc = 0, nsectors;
-> 	int write = ((rq_data_dir(rq) == WRITE) ? 1 : 0;
+> Like Alan's, if I understand him correctly, my PATA ATAPI CD changer 
+> simply presents a bunch of addressible LUNs.  I never loaded, nor seemed 
+> to need, ch.
 
-Better to move assignment after variable definition.
+Yes, they both seem to be non standard changer implementations that just
+present as many CDs as they could chage to.
 
-	Sam
+The ch is actually a driver for devices which conform to the SCSI Media
+Changer standard, which tends to present  LUN zero as the smc device and
+LUN1 as the selected CD/DVD
+
+> I should boot a current libata and see how it behaves...
+
+Might be fun.
+
+James
