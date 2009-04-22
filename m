@@ -1,48 +1,107 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 19:27:25 +0000
-Message-ID: <1240428445.3431.22.camel@mulgrave.int.hansenpartnership.com>
-References: <20090422090929.GA14928@havoc.gtf.org>
-	 <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>
-	 <49EF337F.1030804@ngrt.de>  <20090422161856.1251f8a0@lxorguk.ukuu.org.uk>
-	 <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
-	 <49EF63A6.8040103@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git pull] IDE fixes
+Date: Wed, 22 Apr 2009 21:43:46 +0200
+Message-ID: <200904222143.47220.bzolnier@gmail.com>
+References: <200904222048.15556.bzolnier@gmail.com> <1240427207.21848.81.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755830AbZDVT1m@vger.kernel.org>
-In-Reply-To: <49EF63A6.8040103@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:56053 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbZDVTkU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2009 15:40:20 -0400
+In-Reply-To: <1240427207.21848.81.camel@localhost>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2009-04-22 at 14:36 -0400, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > On Wed, 2009-04-22 at 16:18 +0100, Alan Cox wrote:
-> >>> Don't forget, there are ATAPI devices (some Sony CD burners and old 
-> >>> phase-changers come into mind) which *do* have multiple LUNs sitting 
-> >>> beyond the PATA port. I don't know if libata supports such setups (my 
-> >>> old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
-> >> It's a long time ago since I tested it but my 5 CD changer was correctly
-> >> supported by libata (or more accurately by sr...).
-> > 
-> > Well, sr supports the discovered CD/DVD; ch is the actual changer
-> > manager.  Usually ch attaches to one LUN and sr attaches to another.
+On Wednesday 22 April 2009 21:06:47 Joe Perches wrote:
+> On Wed, 2009-04-22 at 20:48 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> > index 3aec19d..3d4e099 100644
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -609,7 +609,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+> >  	struct request *rq = hwif->rq;
+> >  	ide_expiry_t *expiry = NULL;
+> >  	int dma_error = 0, dma, thislen, uptodate = 0;
+> > -	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc, nsectors;
+> > +	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0, nsectors;
+> >  	int sense = blk_sense_request(rq);
+> >  	unsigned int timeout;
+> >  	u16 len;
 > 
-> Like Alan's, if I understand him correctly, my PATA ATAPI CD changer 
-> simply presents a bunch of addressible LUNs.  I never loaded, nor seemed 
-> to need, ch.
+> I think ide is the only subsystem to use the
+> initialization style of "?:," with additional
+> declarations.
 
-Yes, they both seem to be non standard changer implementations that just
-present as many CDs as they could chage to.
+Well, nothing wrong with it per se.
 
-The ch is actually a driver for devices which conform to the SCSI Media
-Changer standard, which tends to present  LUN zero as the smc device and
-LUN1 as the selected CD/DVD
+> Would it be better to use a more standard style?
+> 
+> maybe:
+> 	int dma_error = 0, dma, thislen, uptodate = 0, rc = 0, nsectors;
+> 	int write = ((rq_data_dir(rq) == WRITE) ? 1 : 0;
 
-> I should boot a current libata and see how it behaves...
+Personally I would prefer:
 
-Might be fun.
+	int write = !!(rq_data_dir(rq) == WRITE);
 
-James
+However the old code is also fine with me.
+
+> > diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
+> > index c7acca0..d1513b4 100644
+> > --- a/drivers/ide/palm_bk3710.c
+> > +++ b/drivers/ide/palm_bk3710.c
+> []
+> > @@ -75,13 +67,19 @@ struct palm_bk3710_udmatiming {
+> >  
+> >  static unsigned ideclk_period; /* in nanoseconds */
+> >  
+> > +struct palm_bk3710_udmatiming {
+> > +	unsigned int rptime;	/* tRP -- Ready to pause time (nsec) */
+> > +	unsigned int cycletime;	/* tCYCTYP2/2 -- avg Cycle Time (nsec) */
+> > +				/* tENV is always a minimum of 20 nsec */
+> > +};
+> > +
+> >  static const struct palm_bk3710_udmatiming palm_bk3710_udmatimings[6] = {
+> > -	{160, 240},		/* UDMA Mode 0 */
+> > -	{125, 160},		/* UDMA Mode 1 */
+> > -	{100, 120},		/* UDMA Mode 2 */
+> > -	{100, 90},		/* UDMA Mode 3 */
+> > -	{100, 60},		/* UDMA Mode 4 */
+> > -	{85,  40},		/* UDMA Mode 5 */
+> > +	{160, 240 / 2,},	/* UDMA Mode 0 */
+> > +	{125, 160 / 2,},	/* UDMA Mode 1 */
+> > +	{100, 120 / 2,},	/* UDMA Mode 2 */
+> > +	{100, 90 / 2,},		/* UDMA Mode 3 */
+> > +	{100, 60 / 2,},		/* UDMA Mode 4 */
+> > +	{85,  40 / 2,},		/* UDMA Mode 5 */
+> >  };
+> >  
+> >  static void palm_bk3710_setudmamode(void __iomem *base, unsigned int dev,
+> 
+> Odd looking commas.
+> 
+> Maybe:
+> 
+> 	{.rptime = 160, .cycletime = 240 / 2 },	/* UDMA Mode 0 */
+> etc.
+
+I really don't consider this an improvement from readability perspective
+and I also don't like the added code duplication...
+
+IMO we should just remove extra commas and add some whitespaces.
+
+I have also more general (process oriented) comment:
+
+All patches have been posted to linux-kernel or linux-ide for review before
+and it is _much_ more efficient to raise issues (including CodingStyle ones)
+during "review phase" instead of during "push to Linus" phase.
+
+Thanks,
+Bart
