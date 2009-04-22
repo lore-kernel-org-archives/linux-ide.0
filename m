@@ -1,37 +1,48 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch 2.6.30-rc2 2/2] palm_bk3710:  UDMA performance fix
-Date: Wed, 22 Apr 2009 23:05:54 +0200
-Message-ID: <200904222305.54820.bzolnier@gmail.com>
-References: <200904201841.10989.david-b@pacbell.net> <200904222026.11495.bzolnier@gmail.com> <200904221343.14414.david-b@pacbell.net>
+Subject: Re: [git pull] IDE fixes
+Date: Wed, 22 Apr 2009 23:41:37 +0200
+Message-ID: <200904222341.37846.bzolnier@gmail.com>
+References: <200904222048.15556.bzolnier@gmail.com> <200904222143.47220.bzolnier@gmail.com> <1240430103.21848.101.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:44388 "EHLO
+Received: from rv-out-0506.google.com ([209.85.198.230]:46383 "EHLO
 	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667AbZDVVCB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2009 17:02:01 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so151104rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2009 14:02:00 -0700 (PDT)
-In-Reply-To: <200904221343.14414.david-b@pacbell.net>
+	with ESMTP id S1752987AbZDVVig (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2009 17:38:36 -0400
+In-Reply-To: <1240430103.21848.101.camel@localhost>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, DaVinci <davinci-linux-open-source@linux.davincidsp.com>
+To: Joe Perches <joe@perches.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 22 April 2009 22:43:14 David Brownell wrote:
-> On Wednesday 22 April 2009, Bartlomiej Zolnierkiewicz wrote:
-> > applied
+On Wednesday 22 April 2009 21:55:03 Joe Perches wrote:
+> On Wed, 2009-04-22 at 21:43 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > IMO we should just remove extra commas and add some whitespaces.
 > 
-> By the way ... what about the first patch,
-> which removed accesses to all those non-existent
-> registers and bitfields?
+> Your choice.
+> Ignore, reject, accept, improve, fine by me.
+> 
+> > I have also more general (process oriented) comment:
+> > 
+> > All patches have been posted to linux-kernel or linux-ide for review before
+> > and it is _much_ more efficient to raise issues (including CodingStyle ones)
+> > during "review phase" instead of during "push to Linus" phase.
+> 
+> Maybe for you, but I'm an intermittent
+> and random reader.
 
-I didn't see any discussion on it and it looked less urgent / more risky
-(it is not uncommon for documentation to lack some data) than patch #2.
+For everybody involved in the process -- this includes you.
 
-Should it also go upstream for 2.6.30?
+I'm not the original author of many patches so I simply cannot be
+correcting every single issue because:
 
-Sergei?
+a) it is physically impossible
+
+b) it doesn't really educate people
+
+Thanks,
+Bart
