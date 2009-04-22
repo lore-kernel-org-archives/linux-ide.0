@@ -1,37 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 14:36:22 -0400
-Message-ID: <49EF63A6.8040103@garzik.org>
-References: <20090422090929.GA14928@havoc.gtf.org>	 <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>	 <49EF337F.1030804@ngrt.de>  <20090422161856.1251f8a0@lxorguk.ukuu.org.uk> <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [patch 2.6.30-rc2 2/2] palm_bk3710:  UDMA performance fix
+Date: Wed, 22 Apr 2009 20:26:10 +0200
+Message-ID: <200904222026.11495.bzolnier@gmail.com>
+References: <200904201841.10989.david-b@pacbell.net> <49ED99AE.3020100@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.231]:19484 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbZDVSpR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2009 14:45:17 -0400
+Received: by rv-out-0506.google.com with SMTP id b25so2484355rvf.5
+        for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2009 11:45:16 -0700 (PDT)
+In-Reply-To: <49ED99AE.3020100@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: David Brownell <david-b@pacbell.net>, linux-ide@vger.kernel.org, DaVinci <davinci-linux-open-source@linux.davincidsp.com>
 
-James Bottomley wrote:
-> On Wed, 2009-04-22 at 16:18 +0100, Alan Cox wrote:
->>> Don't forget, there are ATAPI devices (some Sony CD burners and old 
->>> phase-changers come into mind) which *do* have multiple LUNs sitting 
->>> beyond the PATA port. I don't know if libata supports such setups (my 
->>> old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
->> It's a long time ago since I tested it but my 5 CD changer was correctly
->> supported by libata (or more accurately by sr...).
+On Tuesday 21 April 2009 12:02:22 Sergei Shtylyov wrote:
+> David Brownell wrote:
 > 
-> Well, sr supports the discovered CD/DVD; ch is the actual changer
-> manager.  Usually ch attaches to one LUN and sr attaches to another.
+> > Fix UDMA throughput bug:  tCYC averages t2CYCTYP/2, but the code
+> > previously assumed it was the same as t2CYCTYP.
+> 
+>     Wow, thanks for finding it!
+>     IIUC however, this should have only affected UDMA writes, not reads 
+> because on reads the device controls the strobe timing.
+> 
+> > (That is, it was using just one clock edge, not both.)
+> 
+>     There's no way only one clock edge could have been used since it would 
+> have resulted in CRC errors, so this comment is not to the point.
+> 
+> > On one system this change increased throughput by almost 4x: UDMA/66
+> > sometimes topped 23 MB/sec (on a drive known to do much better).  On
+> > another system it was around a 10% win (UDMA/66 up to 7+ MB/sec).
+> 
+>     It's interesting that on my DM6467 EVM UDMA/66 reads topped at about 29-30 
+> MB/s even without this patch (measuread with hdparm), and on DM6446 EVM they 
+> were only slightly slower...
+> 
+> > The difference might be caused by the ratio between memory and IDE
+> > clocks.  In the system with large speedup, this was exactly 2 (as a
+> > workaround for a rev 1.1 silicon bug).  The other system used a more
+> > standard ratio of 1.63 (and rev 2.1 silicon) ... clock domain synch
+> > might have some issues, they're not unheard-of.
+> 
+>     Interesting...
+> 
+> > Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
+> 
+>     The patch itself is:
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Like Alan's, if I understand him correctly, my PATA ATAPI CD changer 
-simply presents a bunch of addressible LUNs.  I never loaded, nor seemed 
-to need, ch.
-
-I should boot a current libata and see how it behaves...
-
-	Jeff
-
-
-
+applied
