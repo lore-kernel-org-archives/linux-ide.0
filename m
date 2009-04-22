@@ -1,62 +1,62 @@
-From: David Brownell <david-b-yBeKhBN/0LDR7s880joybQ@public.gmane.org>
-Subject: Re: [patch 2.6.30-rc2 2/2] palm_bk3710:  UDMA performance fix
-Date: Wed, 22 Apr 2009 15:29:23 -0700
-Message-ID: <200904221529.23427.david-b@pacbell.net>
-References: <200904201841.10989.david-b@pacbell.net>
-	<200904221343.14414.david-b@pacbell.net>
-	<200904222305.54820.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git pull] IDE fixes
+Date: Thu, 23 Apr 2009 00:58:59 +0200
+Message-ID: <200904230059.00680.bzolnier@gmail.com>
+References: <200904222048.15556.bzolnier@gmail.com> <200904222341.37846.bzolnier@gmail.com> <2c0942db0904221502x266b66far303102c019e5e0cb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
-In-Reply-To: <200904222305.54820.bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.232]:44291 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbZDVWzR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2009 18:55:17 -0400
+In-Reply-To: <2c0942db0904221502x266b66far303102c019e5e0cb@mail.gmail.com>
 Content-Disposition: inline
-List-Unsubscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
-	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://linux.omap.com/pipermail/davinci-linux-open-source>
-List-Post: <mailto:davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
-List-Help: <mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=help>
-List-Subscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
-	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=subscribe>
-Sender: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
-Errors-To: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
-To: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, DaVinci <davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ray Lee <ray-lk@madrabbit.org>
+Cc: Joe Perches <joe@perches.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 22 April 2009, Bartlomiej Zolnierkiewicz wrote:
+On Thursday 23 April 2009 00:02:38 Ray Lee wrote:
+> On Wed, Apr 22, 2009 at 2:41 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Wednesday 22 April 2009 21:55:03 Joe Perches wrote:
+> >> On Wed, 2009-04-22 at 21:43 +0200, Bartlomiej Zolnierkiewicz wrote:
+> >> > IMO we should just remove extra commas and add some whitespaces.
+> >>
+> >> Your choice.
+> >> Ignore, reject, accept, improve, fine by me.
+> >>
+> >> > I have also more general (process oriented) comment:
+> >> >
+> >> > All patches have been posted to linux-kernel or linux-ide for review before
+> >> > and it is _much_ more efficient to raise issues (including CodingStyle ones)
+> >> > during "review phase" instead of during "push to Linus" phase.
+> >>
+> >> Maybe for you, but I'm an intermittent
+> >> and random reader.
+> >
+> > For everybody involved in the process -- this includes you.
+> >
+> > I'm not the original author of many patches so I simply cannot be
+> > correcting every single issue because:
+> >
+> > a) it is physically impossible
+> >
+> > b) it doesn't really educate people
 > 
-> > By the way ... what about the first patch,
-> > which removed accesses to all those non-existent
-> > registers and bitfields?
-> 
-> I didn't see any discussion on it and it looked less urgent / more risky
-> (it is not uncommon for documentation to lack some data) than patch #2.
+> His point is that you can queue a follow-up patch to remove the
+> ugliness. Just because it didn't get caught until the push stage
+> doesn't mean the code needs to stay set in stone for the rest of
+> eternity.
 
-It's uncommon for TI's documentation to be that far off,
-for that long, though.  "Lacking" docs for 50% of the
-registers, for several years ... doesn't make sense.
+I get his point and of course patches are welcomed.
 
-The current reset handling is clearly broken:  the docs
-are quite explicit that the controller doesn't drive the
-reset signal, it's got to be done through a GPIO.  The
-board designs match that part of the docs.  The code is
-thus contrary to *all* other documentation.
+However my point is that it is still suboptimal way to address
+the issue in the long-term and from my perspective the long-term
+is what really matters.
 
-Early DaVinci drivers sometimes exhibited a flagrant
-disregard for chip documentation.  This driver is from
-about that era.  Maybe it started from prototypes using
-the a different controller design, for example.
-
-
-> Should it also go upstream for 2.6.30?
-
-I can't say either patch would be urgent for 2.6.30,
-but of course it's good that bugfixes merge ASAP.
-
-Since we're only at RC3, I'd be inclined to push both
-up right now.  If we were at RC6 or so, I'd hold off
-till the next merge window.
-
-- Dave
+Thanks,
+Bart
