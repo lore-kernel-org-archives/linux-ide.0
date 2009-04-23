@@ -1,62 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git pull] IDE fixes
-Date: Thu, 23 Apr 2009 00:51:24 +0200
-Message-ID: <200904230051.24622.bzolnier@gmail.com>
-References: <200904222048.15556.bzolnier@gmail.com> <200904222341.37846.bzolnier@gmail.com> <2c0942db0904221502x266b66far303102c019e5e0cb@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2 of 8] block: Export I/O topology for block devices and  partitions
+Date: Thu, 23 Apr 2009 09:17:30 -0400
+Message-ID: <yq1mya7bjbp.fsf@sermon.lab.mkp.net>
+References: <patchbomb.1240464567@sermon.lab.mkp.net>
+	<cbdae69a14895dab8ba7.1240464569@sermon.lab.mkp.net>
+	<20090423105145.GW4593@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:8635 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379AbZDWMVU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Apr 2009 08:21:20 -0400
-In-Reply-To: <2c0942db0904221502x266b66far303102c019e5e0cb@mail.gmail.com>
-Content-Disposition: inline
+Received: from acsinet12.oracle.com ([141.146.126.234]:59618 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341AbZDWNTJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Apr 2009 09:19:09 -0400
+In-Reply-To: <20090423105145.GW4593@kernel.dk> (Jens Axboe's message of "Thu,
+	23 Apr 2009 12:51:45 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ray Lee <ray-lk@madrabbit.org>
-Cc: Joe Perches <joe@perches.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thursday 23 April 2009 00:02:38 Ray Lee wrote:
-> On Wed, Apr 22, 2009 at 2:41 PM, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> > On Wednesday 22 April 2009 21:55:03 Joe Perches wrote:
-> >> On Wed, 2009-04-22 at 21:43 +0200, Bartlomiej Zolnierkiewicz wrote:
-> >> > IMO we should just remove extra commas and add some whitespaces.
-> >>
-> >> Your choice.
-> >> Ignore, reject, accept, improve, fine by me.
-> >>
-> >> > I have also more general (process oriented) comment:
-> >> >
-> >> > All patches have been posted to linux-kernel or linux-ide for review before
-> >> > and it is _much_ more efficient to raise issues (including CodingStyle ones)
-> >> > during "review phase" instead of during "push to Linus" phase.
-> >>
-> >> Maybe for you, but I'm an intermittent
-> >> and random reader.
-> >
-> > For everybody involved in the process -- this includes you.
-> >
-> > I'm not the original author of many patches so I simply cannot be
-> > correcting every single issue because:
-> >
-> > a) it is physically impossible
-> >
-> > b) it doesn't really educate people
-> 
-> His point is that you can queue a follow-up patch to remove the
-> ugliness. Just because it didn't get caught until the push stage
-> doesn't mean the code needs to stay set in stone for the rest of
-> eternity.
+>>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
 
-I get his point and of course patches are welcomed.
+>> + unsigned int alignment;
+>> + unsigned int granularity;
+>> + unsigned int min_io;
+>> + unsigned int opt_io;
+>> 
+>> unsigned long seg_boundary_mask; void *dma_drain_buffer;
 
-However my point is that it is still suboptimal way to address
-the issue in the long-term and from my perspective the long-term
-is what really matters.
+Jens> Patch looks fine, but can we group these by name please? alignment
+Jens> could be anything.
 
-Thanks,
-Bart
+Jens> + unsigned int io_alignment;
+Jens> + unsigned int io_granularity;
+Jens> + unsigned int io_min;
+Jens> + unsigned int io_opt;
+
+Sure, no problem.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
