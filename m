@@ -1,109 +1,113 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 4 of 8] sd: Physical block size and alignment support
-Date: Thu, 23 Apr 2009 01:29:31 -0400
-Message-ID: <fc4cc94aa1e2612b3489.1240464571@sermon.lab.mkp.net>
+Subject: [PATCH 7 of 8] scsi_debug: Add support for physical block exponent and
+	alignment
+Date: Thu, 23 Apr 2009 01:29:34 -0400
+Message-ID: <9dc9e358b1cee5222c80.1240464574@sermon.lab.mkp.net>
 References: <patchbomb.1240464567@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:54671 "EHLO jaguar.mkp.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752529AbZDWFtZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Apr 2009 01:49:25 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 In-Reply-To: <patchbomb.1240464567@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Extract physical block size and lowest aligned LBA from READ
-CAPACITY(16) response and adjust queue parameters.
+This patch adds support for setting the physical block exponent and
+lowest aligned LBA in the READ CAPACITY(16) response.
 
-Report physical block size and alignment when applicable.
+The B0 VPD page is adjusted accordingly.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-2 files changed, 22 insertions(+), 2 deletions(-)
-drivers/scsi/sd.c |   23 +++++++++++++++++++++--
-drivers/scsi/sd.h |    1 +
+1 file changed, 29 insertions(+), 1 deletion(-)
+drivers/scsi/scsi_debug.c |   30 +++++++++++++++++++++++++++++-
 
 
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1306,6 +1306,7 @@ static int read_capacity_16(struct scsi_
- 	int sense_valid = 0;
- 	int the_result;
- 	int retries = 3;
-+	unsigned int alignment;
- 	unsigned long long lba;
- 	unsigned sector_size;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -101,6 +101,8 @@ static const char * scsi_debug_version_d
+ #define DEF_DIF 0
+ #define DEF_GUARD 0
+ #define DEF_ATO 1
++#define DEF_PHYSBLK_EXP 0
++#define DEF_LOWEST_ALIGNED 0
  
-@@ -1346,6 +1347,16 @@ static int read_capacity_16(struct scsi_
+ /* bit mask values for scsi_debug_opts */
+ #define SCSI_DEBUG_OPT_NOISE   1
+@@ -156,6 +158,8 @@ static int scsi_debug_dix = DEF_DIX;
+ static int scsi_debug_dif = DEF_DIF;
+ static int scsi_debug_guard = DEF_GUARD;
+ static int scsi_debug_ato = DEF_ATO;
++static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
++static int scsi_debug_lowest_aligned = DEF_LOWEST_ALIGNED;
  
- 	sector_size =	(buffer[8] << 24) | (buffer[9] << 16) |
- 			(buffer[10] << 8) | buffer[11];
+ static int scsi_debug_cmnd_count = 0;
+ 
+@@ -657,7 +661,12 @@ static unsigned char vpdb0_data[] = {
+ 
+ static int inquiry_evpd_b0(unsigned char * arr)
+ {
++	unsigned int gran;
 +
-+	/* Logical blocks per physical block exponent */
-+	sdkp->hw_sector_size = (1 << (buffer[13] & 0xf)) * sector_size;
-+
-+	/* Lowest aligned logical block */
-+	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
-+	blk_queue_alignment(sdp->request_queue, alignment);
-+	if (alignment && sdkp->first_scan)
-+		sd_printk(KERN_NOTICE, sdkp, "%u-byte alignment\n", alignment);
-+
- 	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
- 		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
- 		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
-@@ -1402,6 +1413,7 @@ static int read_capacity_10(struct scsi_
+ 	memcpy(arr, vpdb0_data, sizeof(vpdb0_data));
++	gran = 1 << scsi_debug_physblk_exp;
++	arr[2] = (gran >> 8) & 0xff;
++	arr[3] = gran & 0xff;
+ 	if (sdebug_store_sectors > 0x400) {
+ 		arr[4] = (sdebug_store_sectors >> 24) & 0xff;
+ 		arr[5] = (sdebug_store_sectors >> 16) & 0xff;
+@@ -945,6 +954,9 @@ static int resp_readcap16(struct scsi_cm
+ 	arr[9] = (scsi_debug_sector_size >> 16) & 0xff;
+ 	arr[10] = (scsi_debug_sector_size >> 8) & 0xff;
+ 	arr[11] = scsi_debug_sector_size & 0xff;
++	arr[13] = scsi_debug_physblk_exp & 0xf;
++	arr[14] = (scsi_debug_lowest_aligned >> 8) & 0x3f;
++	arr[15] = scsi_debug_lowest_aligned & 0xff;
  
- 	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
- 			(buffer[6] << 8) | buffer[7];
-+	sdkp->hw_sector_size = sector_size;
- 	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
- 		(buffer[2] << 8) | buffer[3];
+ 	if (scsi_debug_dif) {
+ 		arr[12] = (scsi_debug_dif - 1) << 1; /* P_TYPE */
+@@ -2380,6 +2392,8 @@ module_param_named(dix, scsi_debug_dix, 
+ module_param_named(dif, scsi_debug_dif, int, S_IRUGO);
+ module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
+ module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
++module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
++module_param_named(lowest_aligned, scsi_debug_lowest_aligned, int, S_IRUGO);
  
-@@ -1526,11 +1538,17 @@ got_data:
- 		string_get_size(sz, STRING_UNITS_10, cap_str_10,
- 				sizeof(cap_str_10));
- 
--		if (sdkp->first_scan || old_capacity != sdkp->capacity)
-+		if (sdkp->first_scan || old_capacity != sdkp->capacity) {
- 			sd_printk(KERN_NOTICE, sdkp,
--				  "%llu %d-byte hardware sectors: (%s/%s)\n",
-+				  "%llu %d-byte logical blocks: (%s/%s)\n",
- 				  (unsigned long long)sdkp->capacity,
- 				  sector_size, cap_str_10, cap_str_2);
-+
-+			if (sdkp->hw_sector_size != sector_size)
-+				sd_printk(KERN_NOTICE, sdkp,
-+					  "%u-byte physical blocks\n",
-+					  sdkp->hw_sector_size);
-+		}
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+@@ -2401,7 +2415,9 @@ MODULE_PARM_DESC(ptype, "SCSI peripheral
+ MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
+ MODULE_PARM_DESC(virtual_gb, "virtual gigabyte size (def=0 -> use dev_size_mb)");
+ MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique dev ids)");
+-MODULE_PARM_DESC(sector_size, "hardware sector size in bytes (def=512)");
++MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
++MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
++MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
+ MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
+ MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
+@@ -2874,6 +2890,18 @@ static int __init scsi_debug_init(void)
+ 		return -EINVAL;
  	}
  
- 	/* Rescale capacity to 512-byte units */
-@@ -1543,6 +1561,7 @@ got_data:
- 	else if (sector_size == 256)
- 		sdkp->capacity >>= 1;
- 
-+	blk_queue_granularity(sdp->request_queue, sdkp->hw_sector_size);
- 	sdkp->device->sector_size = sector_size;
- }
- 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -45,6 +45,7 @@ struct scsi_disk {
- 	unsigned int	openers;	/* protected by BKL for now, yuck */
- 	sector_t	capacity;	/* size in 512-byte sectors */
- 	u32		index;
-+	unsigned short	hw_sector_size;
- 	u8		media_present;
- 	u8		write_prot;
- 	u8		protection_type;/* Data Integrity Field */
++	if (scsi_debug_physblk_exp > 15) {
++		printk(KERN_ERR "scsi_debug_init: invalid physblk_exp %u\n",
++		       scsi_debug_physblk_exp);
++		return -EINVAL;
++	}
++
++	if (scsi_debug_lowest_aligned > 0x3fff) {
++		printk(KERN_ERR "scsi_debug_init: lowest_aligned too big: %u\n",
++		       scsi_debug_lowest_aligned);
++		return -EINVAL;
++	}
++
+ 	if (scsi_debug_dev_size_mb < 1)
+ 		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
+ 	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
 
 
