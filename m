@@ -1,68 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 6 of 8] sd: Block limits VPD support
-Date: Thu, 23 Apr 2009 01:29:33 -0400
-Message-ID: <9fb4f29d232e14ef9953.1240464573@sermon.lab.mkp.net>
-References: <patchbomb.1240464567@sermon.lab.mkp.net>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
+Date: Thu, 23 Apr 2009 08:35:42 +0200
+Message-ID: <20090423063542.GK4593@kernel.dk>
+References: <20090422090929.GA14928@havoc.gtf.org> <49EEE225.3010700@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <patchbomb.1240464567@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([93.163.65.50]:58411 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752252AbZDWGfn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Apr 2009 02:35:43 -0400
+Content-Disposition: inline
+In-Reply-To: <49EEE225.3010700@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Query the block limits VPD page and adjust queue minimum and optimal I/O
-sizes.
+On Wed, Apr 22 2009, Jeff Garzik wrote:
+> Jeff Garzik wrote:
+>> Currently, libata creates a Scsi_Host per port.  This was originally
+>> done to leverage SCSI's infrastructure to arbitrate among master/slave
+>> devices, but is not needed for most modern SATA controllers.   And I
+>> _think_ it is not needed for master/slave if done properly, either.
+>
+> BTW note the above, with regards to the libata SCSI->block conversion.  
+> libata currently relies on SCSI for some amount of generic device  
+> arbitration, in several situations (see ->qc_defer,  
+> SCSI_MLQUEUE_.*_BUSY).  libata expects SCSI to be intelligent and not  
+> starve devices, etc.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Defer looks like internal policy, I don't see that functioning any
+different in the block layer. SCSI_MLQUEUE_*_BUSY in SCSI is primarily
+using the block layer functionality of BLKPREP_DEFER to begin with, so I
+think we're pretty close to providing all that already.
 
----
-1 file changed, 24 insertions(+)
-drivers/scsi/sd.c |   24 ++++++++++++++++++++++++
-
-
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1801,6 +1801,29 @@ void sd_read_app_tag_own(struct scsi_dis
- }
- 
- /**
-+ * sd_read_block_limits - Query disk device for preferred I/O sizes.
-+ * @disk: disk to query
-+ */
-+static void sd_read_block_limits(struct scsi_disk *sdkp)
-+{
-+	unsigned int sector_sz = sdkp->device->sector_size;
-+	char *buffer;
-+
-+	/* Block Limits VPD */
-+	buffer = scsi_get_vpd_page(sdkp->device, 0xb0);
-+
-+	if (buffer == NULL)
-+		return;
-+
-+	blk_queue_min_io(sdkp->disk->queue,
-+			 get_unaligned_be16(&buffer[6]) * sector_sz);
-+	blk_queue_opt_io(sdkp->disk->queue,
-+			 get_unaligned_be32(&buffer[12]) * sector_sz);
-+
-+	kfree(buffer);
-+}
-+
-+/**
-  * sd_read_block_characteristics - Query block dev. characteristics
-  * @disk: disk to query
-  */
-@@ -1860,6 +1883,7 @@ static int sd_revalidate_disk(struct gen
- 	 */
- 	if (sdkp->media_present) {
- 		sd_read_capacity(sdkp, buffer);
-+		sd_read_block_limits(sdkp);
- 		sd_read_block_characteristics(sdkp);
- 		sd_read_write_protect_flag(sdkp, buffer);
- 		sd_read_cache_type(sdkp, buffer);
-
+-- 
+Jens Axboe
 
