@@ -1,60 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: clear ering on resume
-Date: Thu, 23 Apr 2009 09:55:28 +0900
-Message-ID: <49EFBC80.6070109@kernel.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 0 of 8] I/O topology patch kit
+Date: Thu, 23 Apr 2009 01:29:27 -0400
+Message-ID: <patchbomb.1240464567@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60013 "EHLO hera.kernel.org"
+Received: from jaguar.mkp.net ([192.139.46.146]:54635 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753436AbZDWA4g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Apr 2009 20:56:36 -0400
+	id S1751436AbZDWFtT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Apr 2009 01:49:19 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, vbotka@novell.com
+To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org
 
-Error timestamps are in jiffies which doesn't run while suspended and
-PHY events during resume isn't too uncommon.  When the two are
-combined, it can lead to unnecessary speed downs if the machine is
-suspended and resumed repeatedly.  Clear error history on resume.
 
-This was reported and verified in bnc#486803 by Vladimir Botka.
+Here is another take of my I/O topology patches.  There was quite a bit
+of discussion at the FS & Storage workshop about the need to describe
+regions.  Sanity prevailed, and the region code and associated
+complexity is now gone.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Vladimir Botka <vbotka@novell.com>
----
- drivers/ata/libata-eh.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+There are changes in various subsystems, all depending on the block
+layer bits.  To avoid breaking bisection I ended up creating a new block
+layer stacking function.  Once all patches are in place we can deprecate
+the old one.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0183131..ff0f496 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3494,6 +3494,8 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
-  */
- static void ata_eh_handle_port_resume(struct ata_port *ap)
- {
-+	struct ata_link *link;
-+	struct ata_device *dev;
- 	unsigned long flags;
- 	int rc = 0;
- 
-@@ -3508,6 +3510,17 @@ static void ata_eh_handle_port_resume(struct ata_port *ap)
- 
- 	WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
- 
-+	/*
-+	 * Error timestamps are in jiffies which doesn't run while
-+	 * suspended and PHY events during resume isn't too uncommon.
-+	 * When the two are combined, it can lead to unnecessary speed
-+	 * downs if the machine is suspended and resumed repeatedly.
-+	 * Clear error history.
-+	 */
-+	ata_for_each_link(link, ap, HOST_FIRST)
-+		ata_for_each_dev(dev, link, ALL)
-+			ata_ering_clear(&dev->ering);
-+
- 	ata_acpi_set_state(ap, PMSG_ON);
- 
- 	if (ap->ops->port_resume)
+Comments and suggestions welcome.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
+
