@@ -1,48 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 5 of 8] sd: Detect non-rotational devices
-Date: Thu, 23 Apr 2009 10:39:41 -0400
-Message-ID: <49F07DAD.7080107@garzik.org>
-References: <patchbomb.1240464567@sermon.lab.mkp.net> <d14109aa6209be628074.1240464572@sermon.lab.mkp.net> <20090423105245.GX4593@kernel.dk> <49F04C71.6050304@garzik.org> <20090423113841.GK1926@parisc-linux.org> <yq1r5zjbje2.fsf@sermon.lab.mkp.net> <49F06E3B.104@garzik.org> <1240495814.3514.8.camel@mulgrave.int.hansenpartnership.com> <20090423141644.GP1926@parisc-linux.org>
+From: Konrad Rzeszutek <konrad@virtualiron.com>
+Subject: Re: [PATCH 4 of 8] sd: Physical block size and alignment support
+Date: Thu, 23 Apr 2009 12:37:00 -0400
+Message-ID: <20090423163700.GB8350@mars.virtualiron.com>
+References: <patchbomb.1240464567@sermon.lab.mkp.net> <fc4cc94aa1e2612b3489.1240464571@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52724 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757792AbZDWOjz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Apr 2009 10:39:55 -0400
-In-Reply-To: <20090423141644.GP1926@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <fc4cc94aa1e2612b3489.1240464571@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Thu, Apr 23, 2009 at 02:10:13PM +0000, James Bottomley wrote:
->> I'm with Jeff on this one.  We had an identically similar problem with
->> REPORT LUNS, which, today is the basis of SCSI discovery.
+On Thu, Apr 23, 2009 at 01:29:31AM -0400, Martin K. Petersen wrote:
+> Extract physical block size and lowest aligned LBA from READ
+> CAPACITY(16) response and adjust queue parameters.
 > 
-> Yes, REPORT LUNS is quite essential.
+> Report physical block size and alignment when applicable.
 > 
-> It's not exactly in the same category as reporting device form factor
-> and rotational speed.  If REPORT LUNS is wrong, we're in really deep
-> trouble.  If device form factr is wrong ... umm ... nothing much happens.
-> If rotational speed is wrong, we might have a suboptimal IO pattern.
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+.. snip ..
+> -		if (sdkp->first_scan || old_capacity != sdkp->capacity)
+> +		if (sdkp->first_scan || old_capacity != sdkp->capacity) {
+>  			sd_printk(KERN_NOTICE, sdkp,
+> -				  "%llu %d-byte hardware sectors: (%s/%s)\n",
+> +				  "%llu %d-byte logical blocks: (%s/%s)\n",
+>  				  (unsigned long long)sdkp->capacity,
+>  				  sector_size, cap_str_10, cap_str_2);
+> +
+> +			if (sdkp->hw_sector_size != sector_size)
+> +				sd_printk(KERN_NOTICE, sdkp,
+> +					  "%u-byte physical blocks\n",
+> +					  sdkp->hw_sector_size);
 
-If the general attitude is "oh, that info might be wrong", why will app 
-developers bother at all?
+With the changes in the read_capacity_16 (where you set the
+hw_sector_size) this won't be printed (at least on first probe).
+Should this be printed irregardless of that?
 
-It is better to return zeroes than have a decent probability of 
-returning garbage.  I value predictability much more than adopting a 
-generalized rule to handle a few special case early adopters.
-
-
-> It's also fixable by udev.
-
-By that logic we should leave it to udev to handle the ata_version <= 7 
-stuff, since that is the early adopter special case.
-
-	Jeff
-
-
-
+Another question  - should the Documentation/*.txt have an entry about what a
+'logical block', and 'physical block' is vs. 'hardware sector' ?
