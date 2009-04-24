@@ -1,109 +1,100 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 4 of 9] sd: Physical block size and alignment support
-Date: Fri, 24 Apr 2009 01:32:25 -0400
-Message-ID: <9e781fb3bf2468498d22.1240551145@sermon.lab.mkp.net>
+Subject: [PATCH 1 of 9] block: Expose stacked device queues in sysfs
+Date: Fri, 24 Apr 2009 01:32:22 -0400
+Message-ID: <e3d7773539a9455e7974.1240551142@sermon.lab.mkp.net>
 References: <patchbomb.1240551141@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:42230 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:42199 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752847AbZDXFgK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1752226AbZDXFgK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 24 Apr 2009 01:36:10 -0400
 In-Reply-To: <patchbomb.1240551141@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide
 
-Extract physical block size and lowest aligned LBA from READ
-CAPACITY(16) response and adjust queue parameters.
+Currently stacking devices do not have a queue directory in sysfs.
+However, many of the I/O characteristics like sector size, maximum
+request size, etc. are queue properties.
 
-Report physical block size and alignment when applicable.
+This patch enables the queue directory for MD/DM devices.  The elevator
+code has been modified to deal with queues that do not have an I/O
+scheduler.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-2 files changed, 22 insertions(+), 2 deletions(-)
-drivers/scsi/sd.c |   23 +++++++++++++++++++++--
-drivers/scsi/sd.h |    1 +
+2 files changed, 15 insertions(+), 4 deletions(-)
+block/blk-sysfs.c |    6 +++---
+block/elevator.c  |   13 ++++++++++++-
 
 
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1306,6 +1306,7 @@ static int read_capacity_16(struct scsi_
- 	int sense_valid = 0;
- 	int the_result;
- 	int retries = 3;
-+	unsigned int alignment;
- 	unsigned long long lba;
- 	unsigned sector_size;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -393,9 +393,6 @@ int blk_register_queue(struct gendisk *d
+ 	if (WARN_ON(!q))
+ 		return -ENXIO;
  
-@@ -1346,6 +1347,16 @@ static int read_capacity_16(struct scsi_
+-	if (!q->request_fn)
+-		return 0;
+-
+ 	ret = kobject_add(&q->kobj, kobject_get(&disk_to_dev(disk)->kobj),
+ 			  "%s", "queue");
+ 	if (ret < 0)
+@@ -403,6 +400,9 @@ int blk_register_queue(struct gendisk *d
  
- 	sector_size =	(buffer[8] << 24) | (buffer[9] << 16) |
- 			(buffer[10] << 8) | buffer[11];
+ 	kobject_uevent(&q->kobj, KOBJ_ADD);
+ 
++	if (!q->request_fn)
++		return 0;
 +
-+	/* Logical blocks per physical block exponent */
-+	sdkp->hw_sector_size = (1 << (buffer[13] & 0xf)) * sector_size;
+ 	ret = elv_register_queue(q);
+ 	if (ret) {
+ 		kobject_uevent(&q->kobj, KOBJ_REMOVE);
+diff --git a/block/elevator.c b/block/elevator.c
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -592,6 +592,9 @@ void elv_drain_elevator(struct request_q
+  */
+ void elv_quiesce_start(struct request_queue *q)
+ {
++	if (!q->elevator)
++		return;
 +
-+	/* Lowest aligned logical block */
-+	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
-+	blk_queue_io_alignment(sdp->request_queue, alignment);
-+	if (alignment && sdkp->first_scan)
-+		sd_printk(KERN_NOTICE, sdkp, "%u-byte alignment\n", alignment);
+ 	queue_flag_set(QUEUE_FLAG_ELVSWITCH, q);
+ 
+ 	/*
+@@ -1179,6 +1182,9 @@ ssize_t elv_iosched_store(struct request
+ 	char elevator_name[ELV_NAME_MAX];
+ 	struct elevator_type *e;
+ 
++	if (!q->elevator)
++		return count;
 +
- 	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
- 		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
- 		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
-@@ -1402,6 +1413,7 @@ static int read_capacity_10(struct scsi_
+ 	strlcpy(elevator_name, name, sizeof(elevator_name));
+ 	strstrip(elevator_name);
  
- 	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
- 			(buffer[6] << 8) | buffer[7];
-+	sdkp->hw_sector_size = sector_size;
- 	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
- 		(buffer[2] << 8) | buffer[3];
+@@ -1202,10 +1208,15 @@ ssize_t elv_iosched_store(struct request
+ ssize_t elv_iosched_show(struct request_queue *q, char *name)
+ {
+ 	struct elevator_queue *e = q->elevator;
+-	struct elevator_type *elv = e->elevator_type;
++	struct elevator_type *elv;
+ 	struct elevator_type *__e;
+ 	int len = 0;
  
-@@ -1526,11 +1538,17 @@ got_data:
- 		string_get_size(sz, STRING_UNITS_10, cap_str_10,
- 				sizeof(cap_str_10));
- 
--		if (sdkp->first_scan || old_capacity != sdkp->capacity)
-+		if (sdkp->first_scan || old_capacity != sdkp->capacity) {
- 			sd_printk(KERN_NOTICE, sdkp,
--				  "%llu %d-byte hardware sectors: (%s/%s)\n",
-+				  "%llu %d-byte logical blocks: (%s/%s)\n",
- 				  (unsigned long long)sdkp->capacity,
- 				  sector_size, cap_str_10, cap_str_2);
++	if (!q->elevator)
++		return sprintf(name, "none\n");
 +
-+			if (sdkp->hw_sector_size != sector_size)
-+				sd_printk(KERN_NOTICE, sdkp,
-+					  "%u-byte physical blocks\n",
-+					  sdkp->hw_sector_size);
-+		}
- 	}
- 
- 	/* Rescale capacity to 512-byte units */
-@@ -1543,6 +1561,7 @@ got_data:
- 	else if (sector_size == 256)
- 		sdkp->capacity >>= 1;
- 
-+	blk_queue_io_granularity(sdp->request_queue, sdkp->hw_sector_size);
- 	sdkp->device->sector_size = sector_size;
- }
- 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -45,6 +45,7 @@ struct scsi_disk {
- 	unsigned int	openers;	/* protected by BKL for now, yuck */
- 	sector_t	capacity;	/* size in 512-byte sectors */
- 	u32		index;
-+	unsigned short	hw_sector_size;
- 	u8		media_present;
- 	u8		write_prot;
- 	u8		protection_type;/* Data Integrity Field */
++	elv = e->elevator_type;
++
+ 	spin_lock(&elv_list_lock);
+ 	list_for_each_entry(__e, &elv_list, list) {
+ 		if (!strcmp(elv->elevator_name, __e->elevator_name))
 
 
