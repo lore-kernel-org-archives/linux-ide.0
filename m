@@ -1,50 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Carl Henrik Lunde <chlunde@ping.uio.no>
 Subject: Re: [PATCH 2 of 9] block: Export I/O topology for block devices and
- 	partitions
-Date: Fri, 24 Apr 2009 08:54:37 -0400
-Message-ID: <49F1B68D.3010304@garzik.org>
-References: <patchbomb.1240551141@sermon.lab.mkp.net> <72f4e15760670febdb40.1240551143@sermon.lab.mkp.net> <ac3eb2510904240514y660973abj7621864e11e514f2@mail.gmail.com>
+	partitions
+Date: Fri, 24 Apr 2009 16:37:17 +0200
+Message-ID: <ed038eb20904240737u4d248b63s580f7d4d1831e173@mail.gmail.com>
+References: <patchbomb.1240551141@sermon.lab.mkp.net>
+	 <72f4e15760670febdb40.1240551143@sermon.lab.mkp.net>
+	 <ac3eb2510904240514y660973abj7621864e11e514f2@mail.gmail.com>
+	 <49F1B68D.3010304@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39248 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751204AbZDXMzR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Apr 2009 08:55:17 -0400
-In-Reply-To: <ac3eb2510904240514y660973abj7621864e11e514f2@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <49F1B68D.3010304@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Kay Sievers <kay.sievers@vrfy.org>, rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Kay Sievers wrote:
-> On Fri, Apr 24, 2009 at 07:32, Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
->> +What:          /sys/block/<disk>/alignment
->> +What:          /sys/block/<disk>/<partition>/alignment
->> +What:          /sys/block/<disk>/queue/minimum_io_size
->> +What:          /sys/block/<disk>/queue/optimal_io_size
-> 
-> Wouldn't it be good to include "sector", like the queue files do? The
-> alignment of a partition could mean many things.
->   /sys/block/<disk>/sector_alignment
->   /sys/block/<disk>/<partition>/sector_alignment
-> 
-> And prefixing the io values might be easier to read when they show up
-> in a group?
->   /sys/block/<disk>/queue/io_minimum_size
->   /sys/block/<disk>/queue/io_optimal_size
->   /sys/block/<disk>/queue/io_...
+> On Fri, Apr 24, 2009 at 07:32, Martin K. Petersen <martin.petersen@or=
+acle.com> wrote:
+> +What: =A0 =A0 =A0 =A0 =A0/sys/block/<disk>/alignment
+> +What: =A0 =A0 =A0 =A0 =A0/sys/block/<disk>/<partition>/alignment
+> +What: =A0 =A0 =A0 =A0 =A0/sys/block/<disk>/queue/minimum_io_size
+> +What: =A0 =A0 =A0 =A0 =A0/sys/block/<disk>/queue/optimal_io_size
 
-Why do we need all this syscall overhead just to read individual data items?
+Would it also be possible and useful to include the number of
+spindles/channels, i.e., how many requests the device can handle
+concurrently?  CFQ could for example serve two time slices
+concurrently if you have sequential reads and the device reports two
+spindles.
 
-Isn't it dumb to require 30 userland syscalls simply to input a 
-10-member data structure?
-
-netlink looks more and more attractive for anything non-trivial.
-
-	Jeff
-
-
-
+[sorry for replying in the middle of the thread, but I didn't get the
+original email]
+--=20
+mvh
+Carl Henrik
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
