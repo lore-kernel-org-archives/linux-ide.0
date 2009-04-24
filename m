@@ -1,75 +1,114 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 8 of 9] libata: Report disk alignment and physical block size
-Date: Fri, 24 Apr 2009 01:32:29 -0400
-Message-ID: <47f4f448a804a2d24f10.1240551149__34641.3754778498$1240551507$gmane$org@sermon.lab.mkp.net>
+Subject: [PATCH 9 of 9] libata: Media rotation rate and form factor heuristics
+Date: Fri, 24 Apr 2009 01:32:30 -0400
+Message-ID: <2fc5b2aa370a8ad47db1.1240551150__16951.2747823775$1240551510$gmane$org@sermon.lab.mkp.net>
 References: <patchbomb.1240551141@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:42238 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:42241 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753699AbZDXFgM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1753747AbZDXFgM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 24 Apr 2009 01:36:12 -0400
 In-Reply-To: <patchbomb.1240551141@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide
 
-For disks with 4KB sectors, report the correct block size and alignment
-when filling out the READ CAPACITY(16) response.
+This patch delegates setting the queue NONROT flag to SCSI.
 
-This patch is based upon code from Matthew Wilcox' 4KB ATA tree.  I
-fixed the bug I reported a while back caused by ATA and SCSI using
-different approaches to describing the alignment.
+It also provides new heuristics for parsing both the form factor and
+media rotation rate ATA IDENFITY words.
+
+The reported ATA version must be 7 or greater and the device must return
+values defined as valid in the standard.  Only then are the
+characteristics reported to SCSI via the VPD B1 page.
+
+This seems like a reasonable compromise to me considering that we have
+been shipping several kernel releases that key off the rotation rate bit
+without any version checking whatsoever.  With no complaints so far.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-1 file changed, 22 insertions(+), 1 deletion(-)
-drivers/ata/libata-scsi.c |   23 ++++++++++++++++++++++-
+2 files changed, 34 insertions(+), 9 deletions(-)
+drivers/ata/libata-scsi.c |   15 ++++++---------
+include/linux/ata.h       |   28 ++++++++++++++++++++++++++++
 
 
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -2376,7 +2376,23 @@ saving_not_supp:
-  */
- static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+@@ -1119,10 +1119,6 @@ static int ata_scsi_dev_config(struct sc
+ 
+ 		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
+ 	} else {
+-		if (ata_id_is_ssd(dev->id))
+-			queue_flag_set_unlocked(QUEUE_FLAG_NONROT,
+-						sdev->request_queue);
+-
+ 		/* ATA devices must be sector aligned */
+ 		blk_queue_update_dma_alignment(sdev->request_queue,
+ 					       ATA_SECT_SIZE - 1);
+@@ -2142,13 +2138,14 @@ static unsigned int ata_scsiop_inq_89(st
+ 
+ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
  {
--	u64 last_lba = args->dev->n_sectors - 1; /* LBA of the last block */
-+	struct ata_device *dev = args->dev;
-+	u64 last_lba = dev->n_sectors - 1; /* LBA of the last block */
-+	u8 log_per_phys = 0;
-+	u16 lowest_aligned = 0;
-+	u16 word_106 = dev->id[106];
-+	u16 word_209 = dev->id[209];
++	int form_factor = ata_id_form_factor(args->id);
++	int media_rotation_rate = ata_id_rotation_rate(args->id);
 +
-+	if ((word_106 & 0xc000) == 0x4000) {
-+		/* Number and offset of logical sectors per physical sector */
-+		if (word_106 & (1 << 13))
-+			log_per_phys = word_106 & 0xf;
-+		if ((word_209 & 0xc000) == 0x4000) {
-+			u16 first = dev->id[209] & 0x3fff;
-+			if (first > 0)
-+				lowest_aligned = (1 << log_per_phys) - first;
-+		}
-+	}
- 
- 	VPRINTK("ENTER\n");
- 
-@@ -2407,6 +2423,11 @@ static unsigned int ata_scsiop_read_cap(
- 		/* sector size */
- 		rbuf[10] = ATA_SECT_SIZE >> 8;
- 		rbuf[11] = ATA_SECT_SIZE & 0xff;
-+
-+		rbuf[12] = 0;
-+		rbuf[13] = log_per_phys;
-+		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
-+		rbuf[15] = lowest_aligned;
- 	}
+ 	rbuf[1] = 0xb1;
+ 	rbuf[3] = 0x3c;
+-	if (ata_id_major_version(args->id) > 7) {
+-		rbuf[4] = args->id[217] >> 8;
+-		rbuf[5] = args->id[217];
+-		rbuf[7] = args->id[168] & 0xf;
+-	}
++	rbuf[4] = media_rotation_rate >> 8;
++	rbuf[5] = media_rotation_rate;
++	rbuf[7] = form_factor;
  
  	return 0;
+ }
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -730,6 +730,34 @@ static inline int ata_id_has_unload(cons
+ 	return 0;
+ }
+ 
++static inline int ata_id_form_factor(const u16 *id)
++{
++	u16 val = id[168];
++
++	if (ata_id_major_version(id) < 7 || val == 0 || val == 0xffff)
++		return 0;
++
++	val &= 0xf;
++
++	if (val > 5)
++		return 0;
++
++	return val;
++}
++
++static inline int ata_id_rotation_rate(const u16 *id)
++{
++	u16 val = id[217];
++
++	if (ata_id_major_version(id) < 7 || val == 0 || val == 0xffff)
++		return 0;
++
++	if (val > 1 && val < 0x401)
++		return 0;
++
++	return val;
++}
++
+ static inline int ata_id_has_trim(const u16 *id)
+ {
+ 	if (ata_id_major_version(id) >= 7 &&
 
 
