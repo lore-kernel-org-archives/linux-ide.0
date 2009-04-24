@@ -1,40 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch] Enable parallel scan on ata_piix
-Date: Fri, 24 Apr 2009 06:29:37 -0400
-Message-ID: <49F19491.2030901@garzik.org>
-References: <20090423214411.515310df@infradead.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: update IDE entry
+Date: Fri, 24 Apr 2009 11:54:04 +0200
+Message-ID: <200904241154.04860.bzolnier@gmail.com>
+References: <200904232248.31735.bzolnier@gmail.com> <49F17390.7070003@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52901 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752654AbZDXK3m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Apr 2009 06:29:42 -0400
-In-Reply-To: <20090423214411.515310df@infradead.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:40840 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753613AbZDXKas (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Apr 2009 06:30:48 -0400
+In-Reply-To: <49F17390.7070003@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Arjan van de Ven wrote:
-> Hi,
+On Friday 24 April 2009 10:08:48 Sergei Shtylyov wrote:
+> Hello.
 > 
-> This patch turns on parallel scanning for the ata_piix driver.
-> This driver is used on most netbooks (no AHCI for cheap storage it seems).
-> The scan is the dominating time factor in the kernel boot for these
-> devices; with this flag it gets cut in half for the device I used
-> for testing (eeepc).
-> Alan took a look at the driver source and concluded that it ought to be safe
-> to do for this driver.
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> > By a popular demand quilt tree was replaced by a git one.
+> >
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  MAINTAINERS |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > Index: b/MAINTAINERS
+> > ===================================================================
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -2743,7 +2743,7 @@ IDE SUBSYSTEM
+> >  P:	Bartlomiej Zolnierkiewicz
+> >  M:	bzolnier@gmail.com
+> >  L:	linux-ide@vger.kernel.org
+> > -T:	quilt kernel.org/pub/linux/kernel/people/bart/pata-2.6/
+> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6.git
+> >   
+> 
+>   Does that mean that the patches that have been already accepeted into 
+> the git tree, can't be updated afterwards (i.e. I have a habit of 
+> sometimes sending several takes of the same patch)?
 
-I tend to doubt "safe", given the complicated and buggy silicon state 
-machine that recreates the legacy IDE interface on SATA...
+Yes, please just send incremental updates once the patch has been merged.
 
-	Jeff
-
-
-
-
+Thanks,
+Bart
