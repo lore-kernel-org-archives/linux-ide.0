@@ -1,53 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: update IDE entry
-Date: Fri, 24 Apr 2009 11:54:04 +0200
-Message-ID: <200904241154.04860.bzolnier@gmail.com>
-References: <200904232248.31735.bzolnier@gmail.com> <49F17390.7070003@ru.mvista.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
+Date: Fri, 24 Apr 2009 13:00:49 +0200
+Message-ID: <49F19BE1.6030104@s5r6.in-berlin.de>
+References: <20090422090929.GA14928@havoc.gtf.org> <da824cf30904221208l42e41d38g5af52b1b3b5ea9a1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:40840 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753613AbZDXKas (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Apr 2009 06:30:48 -0400
-In-Reply-To: <49F17390.7070003@ru.mvista.com>
-Content-Disposition: inline
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:57231 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812AbZDXLAs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Apr 2009 07:00:48 -0400
+In-Reply-To: <da824cf30904221208l42e41d38g5af52b1b3b5ea9a1@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Friday 24 April 2009 10:08:48 Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > By a popular demand quilt tree was replaced by a git one.
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  MAINTAINERS |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > Index: b/MAINTAINERS
-> > ===================================================================
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -2743,7 +2743,7 @@ IDE SUBSYSTEM
-> >  P:	Bartlomiej Zolnierkiewicz
-> >  M:	bzolnier@gmail.com
-> >  L:	linux-ide@vger.kernel.org
-> > -T:	quilt kernel.org/pub/linux/kernel/people/bart/pata-2.6/
-> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6.git
-> >   
-> 
->   Does that mean that the patches that have been already accepeted into 
-> the git tree, can't be updated afterwards (i.e. I have a habit of 
-> sometimes sending several takes of the same patch)?
+Grant Grundler wrote:
+> Data Center
+> environments (not just Google's) like to track disks in many different
+> ways, including the SCSI identifiers since this one "key" for physical
+> location. Breaking the current mappings is going to cause some people
+> a world of pain
 
-Yes, please just send incremental updates once the patch has been merged.
+If by SCSI identifiers you mean the Linux SCSI core's h:c:i:l, then
+remember that these are scsi-core internal artifacts without any meaning
+to lower and upper layers whatsoever, including userspace.  (Exception:
+ The c:i:l part has some significance with SCSI Parallel Interface
+attached hardware.)
 
-Thanks,
-Bart
+> since they will need to manually build (and integrate)
+> old->new maps of the SCSI identifiers.
+
+Stock udev already provides mapping according to actually useful
+identifiers (if the respective transport provides them: persistent and
+unique identifiers of targets and logical units).
+-- 
+Stefan Richter
+-=====-==--= -=-- ==---
+http://arcgraph.de/sr/
