@@ -1,44 +1,42 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH 2 of 9] block: Export I/O topology for block devices and
-	partitions
-Date: Fri, 24 Apr 2009 14:14:44 +0200
-Message-ID: <ac3eb2510904240514y660973abj7621864e11e514f2@mail.gmail.com>
-References: <patchbomb.1240551141@sermon.lab.mkp.net> <72f4e15760670febdb40.1240551143@sermon.lab.mkp.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 9 of 9] libata: Media rotation rate and form factor heuristics
+Date: Fri, 24 Apr 2009 06:30:54 -0600
+Message-ID: <20090424123054.GA1926@parisc-linux.org>
+References: <patchbomb.1240551141@sermon.lab.mkp.net> <2fc5b2aa370a8ad47db1.1240551150@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <72f4e15760670febdb40.1240551143@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:45895 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752655AbZDXMaz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Apr 2009 08:30:55 -0400
+Content-Disposition: inline
+In-Reply-To: <2fc5b2aa370a8ad47db1.1240551150@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Apr 24, 2009 at 07:32, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
-> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/alignment
-> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/<partition=
->/alignment
-> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/queue/mini=
-mum_io_size
-> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/queue/opti=
-mal_io_size
+On Fri, Apr 24, 2009 at 01:32:30AM -0400, Martin K. Petersen wrote:
+> This patch delegates setting the queue NONROT flag to SCSI.
+> 
+> It also provides new heuristics for parsing both the form factor and
+> media rotation rate ATA IDENFITY words.
+> 
+> The reported ATA version must be 7 or greater and the device must return
+> values defined as valid in the standard.  Only then are the
+> characteristics reported to SCSI via the VPD B1 page.
+> 
+> This seems like a reasonable compromise to me considering that we have
+> been shipping several kernel releases that key off the rotation rate bit
+> without any version checking whatsoever.  With no complaints so far.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Wouldn't it be good to include "sector", like the queue files do? The
-alignment of a partition could mean many things.
-  /sys/block/<disk>/sector_alignment
-  /sys/block/<disk>/<partition>/sector_alignment
+Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
 
-And prefixing the io values might be easier to read when they show up
-in a group?
-  /sys/block/<disk>/queue/io_minimum_size
-  /sys/block/<disk>/queue/io_optimal_size
-  /sys/block/<disk>/queue/io_...
-
-Thanks,
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
