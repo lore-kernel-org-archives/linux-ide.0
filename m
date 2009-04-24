@@ -1,25 +1,49 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 7 of 9] scsi_debug: Add support for physical block exponent and	alignment
-Date: Fri, 24 Apr 2009 02:14:33 -0400
-Message-ID: <yq1ab66a88m.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1240551141@sermon.lab.mkp.net>
-	<7ec2d82b188a9e9d4c56.1240551148@sermon.lab.mkp.net>
-	<49F157B8.4000507@interlog.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] MAINTAINERS: update IDE entry
+Date: Fri, 24 Apr 2009 12:08:48 +0400
+Message-ID: <49F17390.7070003@ru.mvista.com>
+References: <200904232248.31735.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <49F157B8.4000507@interlog.com> (Douglas Gilbert's message of
-	"Fri, 24 Apr 2009 02:10:00 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:35485 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753533AbZDXII4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Apr 2009 04:08:56 -0400
+In-Reply-To: <200904232248.31735.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+Hello.
 
-Doug> BTW Does scsi_debug identify itself (in VPD b1h) as a SSD?
+Bartlomiej Zolnierkiewicz wrote:
 
-Yep!
+> By a popular demand quilt tree was replaced by a git one.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  MAINTAINERS |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Index: b/MAINTAINERS
+> ===================================================================
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -2743,7 +2743,7 @@ IDE SUBSYSTEM
+>  P:	Bartlomiej Zolnierkiewicz
+>  M:	bzolnier@gmail.com
+>  L:	linux-ide@vger.kernel.org
+> -T:	quilt kernel.org/pub/linux/kernel/people/bart/pata-2.6/
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6.git
+>   
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+  Does that mean that the patches that have been already accepeted into 
+the git tree, can't be updated afterwards (i.e. I have a habit of 
+sometimes sending several takes of the same patch)?
+
+WBR, Sergei
+
+
