@@ -1,44 +1,78 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2 of 9] block: Export I/O topology for block devices and  partitions
-Date: Fri, 24 Apr 2009 11:16:32 -0400
-Message-ID: <yq1skjy84kv.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1240551141@sermon.lab.mkp.net>
-	<72f4e15760670febdb40.1240551143@sermon.lab.mkp.net>
-	<ac3eb2510904240514y660973abj7621864e11e514f2@mail.gmail.com>
-	<49F1B68D.3010304@garzik.org>
-	<ed038eb20904240737u4d248b63s580f7d4d1831e173@mail.gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] MAINTAINERS: update IDE entry
+Date: Fri, 24 Apr 2009 18:41:42 +0200
+Message-ID: <9ea470500904240941s53f41b2dq1c4e5bc85b6244d7@mail.gmail.com>
+References: <200904232248.31735.bzolnier@gmail.com>
+	 <49F17390.7070003@ru.mvista.com>
+	 <200904241154.04860.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <ed038eb20904240737u4d248b63s580f7d4d1831e173@mail.gmail.com>
-	(Carl Henrik Lunde's message of "Fri, 24 Apr 2009 16:37:17 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Carl Henrik Lunde <chlunde@ping.uio.no>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Garzik <jeff@garzik.org>, Kay Sievers <kay.sievers@vrfy.org>, rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:53112 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbZDXQlo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Apr 2009 12:41:44 -0400
+In-Reply-To: <200904241154.04860.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Carl" == Carl Henrik Lunde <chlunde@ping.uio.no> writes:
+Hi,
 
-Carl> Would it also be possible and useful to include the number of
-Carl> spindles/channels, i.e., how many requests the device can handle
-Carl> concurrently?  CFQ could for example serve two time slices
-Carl> concurrently if you have sequential reads and the device reports
-Carl> two spindles.
+On Fri, Apr 24, 2009 at 11:54 AM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Friday 24 April 2009 10:08:48 Sergei Shtylyov wrote:
+>> Hello.
+>>
+>> Bartlomiej Zolnierkiewicz wrote:
+>>
+>> > By a popular demand quilt tree was replaced by a git one.
+>> >
+>> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> > ---
+>> > =A0MAINTAINERS | =A0 =A02 +-
+>> > =A01 file changed, 1 insertion(+), 1 deletion(-)
+>> >
+>> > Index: b/MAINTAINERS
+>> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> > --- a/MAINTAINERS
+>> > +++ b/MAINTAINERS
+>> > @@ -2743,7 +2743,7 @@ IDE SUBSYSTEM
+>> > =A0P: Bartlomiej Zolnierkiewicz
+>> > =A0M: bzolnier@gmail.com
+>> > =A0L: linux-ide@vger.kernel.org
+>> > -T: quilt kernel.org/pub/linux/kernel/people/bart/pata-2.6/
+>> > +T: git git://git.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6=
+=2Egit
+>> >
+>>
+>> =A0 Does that mean that the patches that have been already accepeted=
+ into
+>> the git tree, can't be updated afterwards (i.e. I have a habit of
+>> sometimes sending several takes of the same patch)?
+>
+> Yes, please just send incremental updates once the patch has been mer=
+ged.
 
-We don't really have a way to get that information at this point.
+Or, you can interactively rebase the tree to the commit right before th=
+e patch
+to be replaced and then add the updated patch in place of the old one. =
+There's a
+very hands-on example in the manpage in section "INTERACTIVE MODE."
 
-The values exported in my patch set is what the storage vendors in T10
-could agree on.  I simply applied them to DM and MD devices as well.
+A problem with that might be that others who've pulled from your branch=
+ will see
+the rewritten history with a new SHA1 commit, but that would be still o=
+k since
+we'll be pulling from the linux-next branch and the for-linus branch is=
+ the one
+that is cast in stone once Linus pulls from you.
 
-We're talking to SSD vendors about having their devices export some
-characteristics that would allow us to schedule I/O more intelligently.
-The effort of defining what those values might be is work in progress.
-There has been murmurs about T13 adopting the T10 knobs, much like it
-happened with form factor and media rotation rate.
-
-For more traditional storage we don't really have a good way to
-distinguish between a 10GB LUN on a million dollar array and a single
-disk drive.  Rotation rate can help and we already use and export that.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--=20
+Regards/Gruss,
+Boris
