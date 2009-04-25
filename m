@@ -1,40 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Delay on intialization ide subsystem(most likely)
-Date: Sat, 25 Apr 2009 16:48:38 +0200
-Message-ID: <200904251648.38389.bzolnier@gmail.com>
-References: <20090425170203.74603b9c@power-debian>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13120] BUG: using rootfstype=ext4 causes oops
+Date: Sat, 25 Apr 2009 21:00:30 GMT
+Message-ID: <200904252100.n3PL0Ugf028067@demeter.kernel.org>
+References: <bug-13120-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:39302 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684AbZDYOoY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2009 10:44:24 -0400
-Received: by fxm2 with SMTP id 2so1549301fxm.37
-        for <linux-ide@vger.kernel.org>; Sat, 25 Apr 2009 07:44:22 -0700 (PDT)
-In-Reply-To: <20090425170203.74603b9c@power-debian>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:45790 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbZDYVAa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2009 17:00:30 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3PL0UjM028068
+	for <linux-ide@vger.kernel.org>; Sat, 25 Apr 2009 21:00:30 GMT
+In-Reply-To: <bug-13120-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Gusev <a.gusev1980@mail.ru>
-Cc: linux-ide@vger.kernel.org, petkovbb@gmail.com
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13120
 
 
-Hi,
+Rafael J. Wysocki <rjw@sisk.pl> changed:
 
-On Saturday 25 April 2009 15:02:03 Andrey Gusev wrote:
-> Hello!
-> 
-> I have tested linux-2.6.30-rc3 on my system and find some problems. One
-> of them is delaying on initialization IDE subsystem. I don't have this
-> problem on 2.6.29.1. The difference is looked on log of dmesg.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |CODE_FIX
 
-Unfortunately this doesn't give us any hint about the root cause of
-the bug so please try narrowing the problem down to the specific change
-using git-bisect (sorry, there were 212 drivers/ide/ commits during
-v2.6.29..v2.6.30-rc3 and much much more non-drivers/ide/ ones).
 
-Thanks,
-Bart
+
+
+--- Comment #2 from Rafael J. Wysocki <rjw@sisk.pl>  2009-04-25 20:58:44 ---
+Fixed by commit f505d49ffd25ed062e76ffd17568d3937fcd338c .
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
