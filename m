@@ -1,52 +1,128 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: Implementing NVMHCI...
-Date: Sat, 25 Apr 2009 10:26:59 +0200
-Message-ID: <20090425082659.GH2428@ucw.cz>
-References: <20090412091228.GA29937@elte.hu> <Pine.LNX.4.62.0904121806060.9521@tamago.serverit.net> <20090412162018.6c1507b4@lxorguk.ukuu.org.uk> <49E213AE.4060506@redhat.com> <alpine.LFD.2.00.0904120950050.4583@localhost.localdomain> <49E2DC96.6090407@redhat.com> <alpine.LFD.2.00.0904130747440.4583@localhost.localdomain> <49E45E9C.1020105@redhat.com> <49E46437.5000804@garzik.org>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: Stop disks on reboot for laptop which cuts power
+Date: Sat, 25 Apr 2009 11:18:18 +0200
+Message-ID: <20090425111818.1728cf21@neptune.home>
+References: <cslAV-2lq-113@gated-at.bofh.it>
+	<9f0e232d-4901-4e60-ac83-c14a6405202d@z5g2000yqn.googlegroups.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:50654 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbZDYI1J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2009 04:27:09 -0400
-Content-Disposition: inline
-In-Reply-To: <49E46437.5000804@garzik.org>
+Received: from ppp-111-148.adsl.restena.lu ([158.64.111.148]:58761 "EHLO
+	bonbons.gotdns.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753953AbZDYJ0g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2009 05:26:36 -0400
+In-Reply-To: <9f0e232d-4901-4e60-ac83-c14a6405202d@z5g2000yqn.googlegroups.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Avi Kivity <avi@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szabolcs Szakacsits <szaka@ntfs-3g.com>, Grant Grundler <grundler@google.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Arjan van de Ven <arjan@infradead.org>
+To: Ciprian Dorin =?UTF-8?B?Q3LEg2NpdW4=?= <ciprian.craciun@gmail.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Hi!
+On Sat, 25 April 2009 Ciprian Dorin Craciun wrote:
+> On Apr 18, 7:30=C2=A0pm, Bruno Pr=C3=A9mont <bonb...@linux-vserver.or=
+g> wrote:
+> > Hi,
+> >
+> > During shutdown (power off) the disks are stopped gracefully thus
+> > the stopping is skipped for reboot case.
+> >
+> > On my Acer Travelmate 660 reboot is more like power-off as it cuts
+> > all power during reboot which currently causes the disk to
+> > emergency-park its head (noisy and shortens disk life).
+> >
+> > This patch series adds a DMI-based check to ide-gd and sd to still
+> > stop the disks for affected laptop during reboot.
+> >
+> > Has been compile an run-tested with libata and just compile-tested
+> > for ide.
+> >
+> > Bruno Pr=C3=A9mont
+>=20
+>     (I've tried to reply to the group by google-groups, but it didn't
+> worked...)
+>=20
+>     I have a Benq JoyBook S32 laptop that has the same behaviour...
+> I've applied you patch, and just replaced the condition (dmi_...) wit=
+h
+> true, and now my laptop works OK while rebooting (it doesn't just cut
+> power to the disks)...
+>=20
+>     So I would say this is a very needed patch for the mainline
+> kernel... Will it be included? Also how do I add my laptop to the
+> table provided in your patch?
+>=20
+>     Thanks,
+>     Ciprian Craciun.
+>=20
+Just a note, my patches do not change the BIOS behavior on reboot, thus
+power is still being cut if it was so before applying the patches. But
+it stops the disks first so those do not suffer from the power cut.
 
->> Well, no one is talking about 64KB granularity for in-core files.  Like 
->> you noticed, Windows uses the mmu page size.  We could keep doing that, 
->> and still have 16KB+ sector sizes.  It just means a RMW if you don't  
->> happen to have the adjoining clean pages in cache.
->>
->> Sure, on a rotating disk that's a disaster, but we're talking SSD here, 
->> so while you're doubling your access time, you're doubling a fairly  
->> small quantity.  The controller would do the same if it exposed smaller 
->> sectors, so there's no huge loss.
->>
->> We still lose on disk storage efficiency, but I'm guessing that a 
->> modern tree with some object files with debug information and a .git 
->> directory it won't be such a great hit.  For more mainstream uses, it 
->> would be negligible.
->
->
-> Speaking of RMW...    in one sense, we have to deal with RMW anyway.  
-> Upcoming ATA hard drives will be configured with a normal 512b sector  
-> API interface, but underlying physical sector size is 1k or 4k.
->
-> The disk performs the RMW for us, but we must be aware of physical  
-> sector size in order to determine proper alignment of on-disk data, to  
-> minimize RMW cycles.
+The variant for IDE-GD is on its way for inclusion, for the SD one I
+don't know.
 
-Also... RMW hsa some nasty reliability implications. If we use 1KB
-block size ext3 (or something like that), unrelated data may now be
-damaged during powerfail. Filesystems can not handle that :-(.
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Below is a sample patch to add your system to the list, please check if
+it works when applied on top of my 2 patches. If it doesn't you will
+have to adjust the name of your laptop's manufacturer and it's product
+name to correctly match your system. Please report if it works (or what
+manufacturer/product name it works with) for you.
+The right information can be extracted from dmidecode (System
+Information block)
+
+
+Tejun suggested eventually stopping the disks for all machines though
+as far as I can see here my laptop is the only one affected out of a
+dozen different boxes I have around. (eventually just doing it for
+laptops might be reasonable as generalization)
+
+Bruno
+
+---
+
+sd, ide-gd: stop disk on reboot for Benq JoyBook S32
+
+Ciprian Craciun reported that Benq JoyBook S32 was affected by
+the same power-cut on reboot as Acer TravelMate 660, so add it
+to the list.
+
+---
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 4b6b71e..a78813d 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -109,6 +109,14 @@ static const struct dmi_system_id ide_coldreboot_t=
+able[] =3D {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "TravelMate 660"),
+ 		},
+ 	},
++	{
++		/* Benq JoyBook S32 cuts power during reboot */
++		.ident   =3D "Benq JoyBook S32",
++		.matches =3D {
++			DMI_MATCH(DMI_SYS_VENDOR, "Benq"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "JoyBook S32"),
++		},
++	},
+=20
+ 	{ }	/* terminate list */
+ };
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fdad8bc..68c828a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2137,6 +2137,14 @@ static const struct dmi_system_id sd_coldreboot_=
+table[] =3D {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "TravelMate 660"),
+ 		},
+ 	},
++	{
++		/* Benq JoyBook S32 cuts power during reboot */
++		.ident   =3D "Benq JoyBook S32",
++		.matches =3D {
++			DMI_MATCH(DMI_SYS_VENDOR, "Benq"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "JoyBook S32"),
++		},
++	},
+=20
+ 	{ }	/* terminate list */
+ };
