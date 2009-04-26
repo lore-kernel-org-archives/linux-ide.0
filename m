@@ -1,68 +1,89 @@
-From: Andrey Gusev <a.gusev1980@mail.ru>
-Subject: Re: Delay on intialization ide subsystem(most likely)
-Date: Mon, 27 Apr 2009 02:20:28 +0400
-Message-ID: <20090427022028.2f922b6f@power-debian>
-References: <20090425170203.74603b9c@power-debian>
-	<200904251648.38389.bzolnier@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH] libata: fix suspend/resume for ATA SEMB devices
+Date: Sun, 26 Apr 2009 16:38:36 +0200
+Message-ID: <20090426143836.GA3643@liondog.tnic>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx30.mail.ru ([94.100.176.44]:4906 "EHLO mx30.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751882AbZDZWUm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Apr 2009 18:20:42 -0400
-In-Reply-To: <200904251648.38389.bzolnier@gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.186]:58315 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754066AbZDZOim (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Apr 2009 10:38:42 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, petkovbb@gmail.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 25 Apr 2009 16:48:38 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+From: Borislav Petkov <petkovbb@gmail.com>
+Date: Sun, 26 Apr 2009 16:33:34 +0200
+Subject: [PATCH] libata: fix suspend/resume for ATA SEMB devices
 
-> 
-> Hi,
-> 
-> On Saturday 25 April 2009 15:02:03 Andrey Gusev wrote:
-> > Hello!
-> > 
-> > I have tested linux-2.6.30-rc3 on my system and find some problems.
-> > One of them is delaying on initialization IDE subsystem. I don't
-> > have this problem on 2.6.29.1. The difference is looked on log of
-> > dmesg.
-> 
-> Unfortunately this doesn't give us any hint about the root cause of
-> the bug so please try narrowing the problem down to the specific
-> change using git-bisect (sorry, there were 212 drivers/ide/ commits
-> during v2.6.29..v2.6.30-rc3 and much much more non-drivers/ide/ ones).
-> 
-> Thanks,
-> Bart
-> 
+79b42babbac2a5a522b8e269fb2811b6e1063030 fixed identifying ATA devices
+reporting 3c/c3 signature which belongs to SEMB devices now. However,
+suspending the machine with such device (WDC WD2500AAJS-6 01.0) fails
+with the following:
 
-I will finish this, but this machine is not very fast. So, may be partly
-result will be useful. I did checks:
+hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hda: UDMA/100 mode selected
+hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hdb: UDMA/66 mode selected
+sd 1:0:0:0: [sda] Starting disk
+ata5: SATA link down (SStatus 0 SControl 300)
+ata1: SATA link down (SStatus 0 SControl 300)
+ata3: SATA link down (SStatus 0 SControl 300)
+ata6: SATA link down (SStatus 0 SControl 300)
+ata2: softreset failed (device not ready)
+ata2: failed due to HW bug, retry pmp=0
+ata4: softreset failed (device not ready)
+ata4: failed due to HW bug, retry pmp=0
+ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: class mismatch 1 != 7
+ata2.00: revalidation failed (errno=-19)
+ata2: limiting SATA link speed to 1.5 Gbps
+ata4.00: configured for UDMA/133
+ata2: softreset failed (device not ready)
+ata2: failed due to HW bug, retry pmp=0
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: class mismatch 1 != 7
+ata2.00: revalidation failed (errno=-19)
+ata2.00: disabled
+sd 1:0:0:0: rejecting I/O to offline device
+sd 1:0:0:0: [sda] START_STOP FAILED
+sd 1:0:0:0: [sda] Result: hostbyte=0x01 driverbyte=0x00
+PM: Device 1:0:0:0 failed to thaw: error 65536
+sd 3:0:0:0: [sdb] Starting disk
 
-git bisect start
-# good: [8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84] Linux 2.6.29
-git bisect good 8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84
-# bad: [091069740304c979f957ceacec39c461d0192158] Linux 2.6.30-rc3
-git bisect bad 091069740304c979f957ceacec39c461d0192158
-# good: [40f07111be99b71c1e8d40c13cdc38445add787f] V4L/DVB (11166): pvrusb2: Implement status fetching from sub-devices
-git bisect good 40f07111be99b71c1e8d40c13cdc38445add787f
-# good: [ba0e1ebb7ea0616eebc29d2077355bacea62a9d8] Staging: sxg: slicoss: Specify the license for Sahara SXG and Slicoss drivers
-git bisect good ba0e1ebb7ea0616eebc29d2077355bacea62a9d8
+due to a class mismatch in ata_dev_revalidate(). Fix it by adding the
+ATA_DEV_SEMB device class to the check.
 
-git bisect start 'drivers/ide/'
-# good: [ba0e1ebb7ea0616eebc29d2077355bacea62a9d8] Staging: sxg: slicoss: Specify the license for Sahara SXG and Slicoss drivers
-git bisect good ba0e1ebb7ea0616eebc29d2077355bacea62a9d8
-# bad: [091069740304c979f957ceacec39c461d0192158] Linux 2.6.30-rc3
-git bisect bad 091069740304c979f957ceacec39c461d0192158
-# good: [e01f251fd09fa7cb3d352eac7de17bb5d5bd1f9d] ide-cd: convert cdrom_decode_status() to use switch statements
-git bisect good e01f251fd09fa7cb3d352eac7de17bb5d5bd1f9d
-# good: [3153c26b54230d025c6d536e8d3015def4524906] ide: refactor tf_read() method
-git bisect good 3153c26b54230d025c6d536e8d3015def4524906
+CC: Tejun Heo <htejun@gmail.com>
+CC: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ata/libata-core.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Best,
-Andrey
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 17c5d48..c924230 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4091,7 +4091,9 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+ 
+ 	/* fail early if !ATA && !ATAPI to avoid issuing [P]IDENTIFY to PMP */
+ 	if (ata_class_enabled(new_class) &&
+-	    new_class != ATA_DEV_ATA && new_class != ATA_DEV_ATAPI) {
++	    new_class != ATA_DEV_ATA &&
++	    new_class != ATA_DEV_ATAPI &&
++	    new_class != ATA_DEV_SEMB) {
+ 		ata_dev_printk(dev, KERN_INFO, "class mismatch %u != %u\n",
+ 			       dev->class, new_class);
+ 		rc = -ENODEV;
+-- 
+1.6.2.4
+
+-- 
+Regards/Gruss,
+    Boris.
