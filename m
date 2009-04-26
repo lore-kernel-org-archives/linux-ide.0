@@ -1,41 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13120] BUG: using rootfstype=ext4 causes oops
-Date: Sat, 25 Apr 2009 21:00:50 GMT
-Message-ID: <200904252100.n3PL0o7q028123@demeter.kernel.org>
-References: <bug-13120-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Errors on ICH10R with Seagate HDDs
+Date: Sun, 26 Apr 2009 11:00:28 +0900
+Message-ID: <49F3C03C.1090803@kernel.org>
+References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45797 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638AbZDYVAu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2009 17:00:50 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3PL0oVp028124
-	for <linux-ide@vger.kernel.org>; Sat, 25 Apr 2009 21:00:50 GMT
-In-Reply-To: <bug-13120-11633@http.bugzilla.kernel.org/>
+Received: from hera.kernel.org ([140.211.167.34]:47026 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750741AbZDZB7g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Apr 2009 21:59:36 -0400
+In-Reply-To: <49F2E47C.5010803@hadiko.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Thomas Jackowski <aXe@hadiko.de>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13120
+Hello,
 
+Thomas Jackowski wrote:
+> some additional information (2.6.26-1) and ata_piix:
+> [653158.828848] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action
+> 0x6 frozen
+> [653158.828856] ata3.00: cmd e5/00:00:00:00:00/00:00:00:00:00/00 tag 0
+> [653158.828857]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask
+> 0x4 (timeout)
 
-Rafael J. Wysocki <rjw@sisk.pl> changed:
+Hmmm... that's timeout on CHECK POWER.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |CODE_FIX
-             Status|RESOLVED                    |CLOSED
+> [653158.828860] ata3.00: status: { DRDY }
+> [653158.828868] ata3: hard resetting link
+> [653159.331110] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [653159.355648] ata3.00: configured for UDMA/133
+> [653159.355666] ata3: EH complete
+> [653159.371885] sd 2:0:0:0: [sde] 1953523055 512-byte hardware sectors
+> (1000204 MB)
+> [653159.374081] sd 2:0:0:0: [sde] Write Protect is off
+> [653159.374081] sd 2:0:0:0: [sde] Mode Sense: 00 3a 00 00
+> [653159.390212] sd 2:0:0:0: [sde] Write cache: enabled, read cache:
+> enabled, doesn't support DPO or FUA
+> 
+> I tried 2.6.29 and I had no outputs in kernel.log with AHCI and w/o NCQ.
+> But my system still had hiccups (system hangs for a second) so I am not
+> sure if there was just no output to kernel.log (due using debian
+> unstable kernel with eventually mysterious options).
+> 
+> I will observe this and report if any error occurs again.
 
-
-
-
---- Comment #2 from Rafael J. Wysocki <rjw@sisk.pl>  2009-04-25 20:58:44 ---
-Fixed by commit f505d49ffd25ed062e76ffd17568d3937fcd338c .
+Thanks.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
