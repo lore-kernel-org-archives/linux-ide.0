@@ -1,77 +1,78 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH] alim15x3: Remove historical hacks, re-enable init_hwif for
-	PowerPC
-Date: Mon, 27 Apr 2009 22:47:42 +0400
-Message-ID: <20090427184742.GA6435@oksana.dev.rtsoft.ru>
-References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
-	<20090417124014.GA8944@oksana.dev.rtsoft.ru>
-	<1239986984.7210.9.camel@pasglop>
-	<200904172017.18486.bzolnier@gmail.com>
-	<20090417182332.GA18756@oksana.dev.rtsoft.ru>
-	<c8485d470904270146g7b7204eckc58cd57449a41f45@mail.gmail.com>
-Reply-To: avorontsov@ru.mvista.com
+From: Andrey Gusev <a.gusev1980@mail.ru>
+Subject: Re: Delay on intialization ide subsystem(most likely)
+Date: Tue, 28 Apr 2009 00:36:45 +0400
+Message-ID: <20090428003645.12001d30@power-debian>
+References: <20090425170203.74603b9c@power-debian>
+	<200904251648.38389.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
-Content-Disposition: inline
-In-Reply-To: <c8485d470904270146g7b7204eckc58cd57449a41f45@mail.gmail.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linuxppc-dev@ozlabs.org, Roderick Colenbrander <thunderbird2k@gmail.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx39.mail.ru ([94.100.176.53]:51157 "EHLO mx39.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761024AbZD0UhJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Apr 2009 16:37:09 -0400
+In-Reply-To: <200904251648.38389.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, petkovbb@gmail.com
 
-U29tZSB0aW1lIGFnbyB3ZSBoYWQgdG8gZGlzYWJsZSBpbml0X2h3aWYgY2FsbGJhY2sgZm9yIFBv
-d2VyUEMgYnVpbGRzLgpUaGF0IHdhcyBiZWNhdXNlIG9mIGEgaGlzdG9yaWNhbCBJUlEgb3Zlcndy
-aXRlIGluIHRoZSBkcml2ZXIsIHdoaWNoCndhcyBjYXVzaW5nIElERSBtYWxmdW5jdGlvbiBvbiB0
-aGUgTVBDODYxMEhQQ0QgUG93ZXJQQyBib2FyZHMuCgpJdCdzIHVuY2xlYXIgd2hldGhlciB0aGlz
-IG92ZXJ3cml0ZSBpcyBzdGlsbCB1c2VmdWwsIGJ1dCBpdCBpcyBwcm92ZW4KdG8gY2F1c2UgYSBi
-aXQgb2YgaGFybSwgYW5kIHRvZGF5IHNvbWUgUG93ZXJQQyB0YXJnZXRzIChYaWxpbnggTUw1MTAs
-CmFzIHJlcG9ydGVkIGJ5IFJvZGVyaWNrIENvbGVuYnJhbmRlcikgbmVlZCB0aGUgaW5pdF9od2lm
-LCBzbyB3ZSBoYXZlCnRvIHJlLWVuYWJsZSBpdCBhbmQgcmVtb3ZlIHRoZSBvdmVyd3JpdGUuCgpS
-ZXBvcnRlZC1ieTogUm9kZXJpY2sgQ29sZW5icmFuZGVyIDx0aHVuZGVyYmlyZDJrQGdtYWlsLmNv
-bT4KU3VnZ2VzdGVkLWJ5OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiem9sbmllckBnbWFp
-bC5jb20+ClNpZ25lZC1vZmYtYnk6IEFudG9uIFZvcm9udHNvdiA8YXZvcm9udHNvdkBydS5tdmlz
-dGEuY29tPgotLS0KCk9uIE1vbiwgQXByIDI3LCAyMDA5IGF0IDEwOjQ2OjI1QU0gKzAyMDAsIFJv
-ZGVyaWNrIENvbGVuYnJhbmRlciB3cm90ZToKPiA+PiBTZWVtcyBsaWtlIHRoaXMgc2hvdWxkIGFs
-bG93IE1QQzg2MTBIUENEIHRvIHdvcmsgd2l0aCBSb2RlcmljaydzIHBhdGNoCj4gPj4gaWYgdGhl
-IElERSBjb250cm9sbGVyIGlzIHNldCB0byBuYXRpdmUgbW9kZSBhbmQgQUxJIHNvdXRoLWJyaWRn
-ZSBTSVJRCj4gPj4gdGFibGVzIGFyZSBjb3JyZWN0bHkgc2V0IChvciBpZiB0aGlzIGlzIG5vdCBB
-TEkncyBzb3V0aC1icmlkZ2UpLiDCoEFudG9uPwo+ID4KPiA+IE9LLCBJJ2xsIHRlc3QgdGhpcyBh
-cHByb2FjaC4KPiA+Cj4gCj4gRGlkIHRoaXMgYXBwcm9hY2ggd29yayBmb3IgeW91PwoKSSdtIHNv
-cnJ5IGZvciB0aGUgZGVsYXkuIFllcywgaXQgc2VlbSB0byB3b3JrLgoKIGRyaXZlcnMvaWRlL2Fs
-aW0xNXgzLmMgfCAgIDEwICsrKy0tLS0tLS0KIDEgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25z
-KCspLCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvaWRlL2FsaW0xNXgzLmMg
-Yi9kcml2ZXJzL2lkZS9hbGltMTV4My5jCmluZGV4IDUzN2RhMWMuLmU1OWI2ZGUgMTAwNjQ0Ci0t
-LSBhL2RyaXZlcnMvaWRlL2FsaW0xNXgzLmMKKysrIGIvZHJpdmVycy9pZGUvYWxpbTE1eDMuYwpA
-QCAtNDAyLDI3ICs0MDIsMjMgQEAgc3RhdGljIHU4IGFsaV9jYWJsZV9kZXRlY3QoaWRlX2h3aWZf
-dCAqaHdpZikKIAlyZXR1cm4gY2JsOwogfQogCi0jaWYgIWRlZmluZWQoQ09ORklHX1NQQVJDNjQp
-ICYmICFkZWZpbmVkKENPTkZJR19QUEMpCisjaWZuZGVmIENPTkZJR19TUEFSQzY0CiAvKioKICAq
-CWluaXRfaHdpZl9hbGkxNXgzCS0JSW5pdGlhbGl6ZSB0aGUgQUxJIElERSB4ODYgc3R1ZmYKICAq
-CUBod2lmOiBpbnRlcmZhY2UgdG8gY29uZmlndXJlCiAgKgogICoJT2J0YWluIHRoZSBJUlEgdGFi
-bGVzIGZvciBhbiBBTGkgYmFzZWQgSURFIHNvbHV0aW9uIG9uIHRoZSBQQwogICoJY2xhc3MgcGxh
-dGZvcm1zLiBUaGlzIHBhcnQgb2YgdGhlIGNvZGUgaXNuJ3QgYXBwbGljYWJsZSB0byB0aGUKLSAq
-CVNwYXJjIGFuZCBQb3dlclBDIHN5c3RlbXMuCisgKglTcGFyYyBzeXN0ZW1zLgogICovCiAKIHN0
-YXRpYyB2b2lkIF9fZGV2aW5pdCBpbml0X2h3aWZfYWxpMTV4MyAoaWRlX2h3aWZfdCAqaHdpZikK
-IHsKLQlzdHJ1Y3QgcGNpX2RldiAqZGV2ID0gdG9fcGNpX2Rldihod2lmLT5kZXYpOwogCXU4IGlk
-ZWljLCBpbm1pcjsKIAlzOCBpcnFfcm91dGluZ190YWJsZVtdID0geyAtMSwgIDksIDMsIDEwLCA0
-LCAgNSwgNywgIDYsCiAJCQkJICAgICAgMSwgMTEsIDAsIDEyLCAwLCAxNCwgMCwgMTUgfTsKIAlp
-bnQgaXJxID0gLTE7CiAKLQlpZiAoZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9BTF9NNTIy
-OSkKLQkJaHdpZi0+aXJxID0gaHdpZi0+Y2hhbm5lbCA/IDE1IDogMTQ7Ci0KIAlpZiAoaXNhX2Rl
-dikgewogCQkvKgogCQkgKiByZWFkIElERSBpbnRlcmZhY2UgY29udHJvbApAQCAtNDU1LDcgKzQ1
-MSw3IEBAIHN0YXRpYyB2b2lkIF9fZGV2aW5pdCBpbml0X2h3aWZfYWxpMTV4MyAoaWRlX2h3aWZf
-dCAqaHdpZikKIH0KICNlbHNlCiAjZGVmaW5lIGluaXRfaHdpZl9hbGkxNXgzIE5VTEwKLSNlbmRp
-ZiAvKiAhZGVmaW5lZChDT05GSUdfU1BBUkM2NCkgJiYgIWRlZmluZWQoQ09ORklHX1BQQykgKi8K
-KyNlbmRpZiAvKiBDT05GSUdfU1BBUkM2NCAqLwogCiAvKioKICAqCWluaXRfZG1hX2FsaTE1eDMJ
-LQlzZXQgdXAgRE1BIG9uIEFMaTE1eDMKLS0gCjEuNi4yLjIKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGlu
-dXhwcGMtZGV2QG96bGFicy5vcmcKaHR0cHM6Ly9vemxhYnMub3JnL21haWxtYW4vbGlzdGluZm8v
-bGludXhwcGMtZGV2
+On Sat, 25 Apr 2009 16:48:38 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+
+> 
+> Hi,
+> 
+> On Saturday 25 April 2009 15:02:03 Andrey Gusev wrote:
+> > Hello!
+> > 
+> > I have tested linux-2.6.30-rc3 on my system and find some problems.
+> > One of them is delaying on initialization IDE subsystem. I don't
+> > have this problem on 2.6.29.1. The difference is looked on log of
+> > dmesg.
+> 
+> Unfortunately this doesn't give us any hint about the root cause of
+> the bug so please try narrowing the problem down to the specific
+> change using git-bisect (sorry, there were 212 drivers/ide/ commits
+> during v2.6.29..v2.6.30-rc3 and much much more non-drivers/ide/ ones).
+> 
+> Thanks,
+> Bart
+> 
+
+Hello!
+
+
+The full result of bisect is:
+
+
+git bisect start
+# good: [8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84] Linux 2.6.29
+git bisect good 8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84
+# bad: [091069740304c979f957ceacec39c461d0192158] Linux 2.6.30-rc3
+git bisect bad 091069740304c979f957ceacec39c461d0192158
+# good: [40f07111be99b71c1e8d40c13cdc38445add787f] V4L/DVB (11166): pvrusb2: Implement status fetching from sub-devices
+git bisect good 40f07111be99b71c1e8d40c13cdc38445add787f
+# good: [ba0e1ebb7ea0616eebc29d2077355bacea62a9d8] Staging: sxg: slicoss: Specify the license for Sahara SXG and Slicoss drivers
+git bisect good ba0e1ebb7ea0616eebc29d2077355bacea62a9d8
+
+
+git bisect start 'drivers/ide/'
+# good: [ba0e1ebb7ea0616eebc29d2077355bacea62a9d8] Staging: sxg: slicoss: Specify the license for Sahara SXG and Slicoss drivers
+git bisect good ba0e1ebb7ea0616eebc29d2077355bacea62a9d8
+# bad: [091069740304c979f957ceacec39c461d0192158] Linux 2.6.30-rc3
+git bisect bad 091069740304c979f957ceacec39c461d0192158
+# good: [e01f251fd09fa7cb3d352eac7de17bb5d5bd1f9d] ide-cd: convert cdrom_decode_status() to use switch statements
+git bisect good e01f251fd09fa7cb3d352eac7de17bb5d5bd1f9d
+# good: [3153c26b54230d025c6d536e8d3015def4524906] ide: refactor tf_read() method
+git bisect good 3153c26b54230d025c6d536e8d3015def4524906
+# good: [c018f1ee5cf81e58b93d9e93a2ee39cad13dc1ac] hpt366: fix HPT370 DMA timeouts
+git bisect good c018f1ee5cf81e58b93d9e93a2ee39cad13dc1ac
+# bad: [d5f840bf74c09ca5a31e518c9d984999926b5f44] ide: Remove void casts
+git bisect bad d5f840bf74c09ca5a31e518c9d984999926b5f44
+# bad: [59c8d04f5ee97ea46da854e9adbbaa45d988c39d] hpt366: use ATA_DMA_* constants
+git bisect bad 59c8d04f5ee97ea46da854e9adbbaa45d988c39d
+
+
+
