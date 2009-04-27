@@ -1,89 +1,65 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] libata: fix suspend/resume for ATA SEMB devices
-Date: Sun, 26 Apr 2009 16:38:36 +0200
-Message-ID: <20090426143836.GA3643@liondog.tnic>
-Reply-To: petkovbb@gmail.com
+From: Subrata Modak <subrata@linux.vnet.ibm.com>
+Subject: [PATCH] Fix Trivial Warnining in drivers/ata/libata-scsi.c
+Date: Mon, 27 Apr 2009 16:01:24 +0530
+Message-ID: <20090427103124.6941.55106.sendpatchset@subratamodak.linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:58315 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754066AbZDZOim (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Apr 2009 10:38:42 -0400
-Content-Disposition: inline
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:36762 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476AbZD0Kb2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Apr 2009 06:31:28 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e8.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n3RAM9OA016573
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2009 06:22:09 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3RAVRE5056154
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2009 06:31:28 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3RAVRNI026865
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2009 06:31:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Sachin P Sant <sachinp@linux.vnet.ibm.com>, linux-ide@vger.kernel.org, Subrata Modak <subrata@linux.vnet.ibm.com>, Balbir Singh <balbir@linux.vnet.ibm.com>
 
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Sun, 26 Apr 2009 16:33:34 +0200
-Subject: [PATCH] libata: fix suspend/resume for ATA SEMB devices
+Hi Jeff,
 
-79b42babbac2a5a522b8e269fb2811b6e1063030 fixed identifying ATA devices
-reporting 3c/c3 signature which belongs to SEMB devices now. However,
-suspending the machine with such device (WDC WD2500AAJS-6 01.0) fails
-with the following:
+I observed the following warning for drivers/ata/libata-scsi.c:
 
-hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-hda: UDMA/100 mode selected
-hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-hdb: UDMA/66 mode selected
-sd 1:0:0:0: [sda] Starting disk
-ata5: SATA link down (SStatus 0 SControl 300)
-ata1: SATA link down (SStatus 0 SControl 300)
-ata3: SATA link down (SStatus 0 SControl 300)
-ata6: SATA link down (SStatus 0 SControl 300)
-ata2: softreset failed (device not ready)
-ata2: failed due to HW bug, retry pmp=0
-ata4: softreset failed (device not ready)
-ata4: failed due to HW bug, retry pmp=0
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: class mismatch 1 != 7
-ata2.00: revalidation failed (errno=-19)
-ata2: limiting SATA link speed to 1.5 Gbps
-ata4.00: configured for UDMA/133
-ata2: softreset failed (device not ready)
-ata2: failed due to HW bug, retry pmp=0
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: class mismatch 1 != 7
-ata2.00: revalidation failed (errno=-19)
-ata2.00: disabled
-sd 1:0:0:0: rejecting I/O to offline device
-sd 1:0:0:0: [sda] START_STOP FAILED
-sd 1:0:0:0: [sda] Result: hostbyte=0x01 driverbyte=0x00
-PM: Device 1:0:0:0 failed to thaw: error 65536
-sd 3:0:0:0: [sdb] Starting disk
-
-due to a class mismatch in ata_dev_revalidate(). Fix it by adding the
-ATA_DEV_SEMB device class to the check.
-
-CC: Tejun Heo <htejun@gmail.com>
-CC: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+drivers/ata/libata-scsi.c: In function =E2=80=98ata_scsi_scan_host=E2=80=
+=99:
+drivers/ata/libata-scsi.c:3272: warning: =E2=80=98dev=E2=80=99 may be u=
+sed uninitialized in this function
 ---
- drivers/ata/libata-core.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 17c5d48..c924230 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4091,7 +4091,9 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 
- 	/* fail early if !ATA && !ATAPI to avoid issuing [P]IDENTIFY to PMP */
- 	if (ata_class_enabled(new_class) &&
--	    new_class != ATA_DEV_ATA && new_class != ATA_DEV_ATAPI) {
-+	    new_class != ATA_DEV_ATA &&
-+	    new_class != ATA_DEV_ATAPI &&
-+	    new_class != ATA_DEV_SEMB) {
- 		ata_dev_printk(dev, KERN_INFO, "class mismatch %u != %u\n",
- 			       dev->class, new_class);
- 		rc = -ENODEV;
--- 
-1.6.2.4
+In most instances=3D>
+	struct ata_device *dev
+has been initialized except the above instance. My trivial patch below =
+fixes this.
+Please include it if you like it.
 
--- 
-Regards/Gruss,
-    Boris.
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+Cc: Balbir Singh <balbir@linux.vnet.ibm.com>
+Cc: Sachin P Sant <sachinp@linux.vnet.ibm.com>
+Signed-Off-By: Subrata Modak <subrata@linux.vnet.ibm.com>
+---
+
+--- a/drivers/ata/libata-scsi.c	2009-04-27 11:39:27.000000000 +0530
++++ b/drivers/ata/libata-scsi.c	2009-04-27 15:52:17.000000000 +0530
+@@ -3269,7 +3269,7 @@ void ata_scsi_scan_host(struct ata_port=20
+ 	int tries =3D 5;
+ 	struct ata_device *last_failed_dev =3D NULL;
+ 	struct ata_link *link;
+-	struct ata_device *dev;
++	struct ata_device *dev =3D NULL;
+=20
+ 	if (ap->flags & ATA_FLAG_DISABLED)
+ 		return;
+
+---
+Regards--
+Subrata
+
