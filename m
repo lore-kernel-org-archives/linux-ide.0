@@ -1,104 +1,77 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-cd: fix REQ_QUIET tests in cdrom_decode_status
-Date: Mon, 27 Apr 2009 18:03:49 +0200
-Message-ID: <9ea470500904270903n720ab411o4a6c47945442bea4@mail.gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH] alim15x3: Remove historical hacks, re-enable init_hwif for
+	PowerPC
+Date: Mon, 27 Apr 2009 22:47:42 +0400
+Message-ID: <20090427184742.GA6435@oksana.dev.rtsoft.ru>
+References: <c8485d470904150202s1f5c8cd7p34f0eaf4872f3e17@mail.gmail.com>
+	<20090417124014.GA8944@oksana.dev.rtsoft.ru>
+	<1239986984.7210.9.camel@pasglop>
+	<200904172017.18486.bzolnier@gmail.com>
+	<20090417182332.GA18756@oksana.dev.rtsoft.ru>
+	<c8485d470904270146g7b7204eckc58cd57449a41f45@mail.gmail.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:54495 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932098AbZD0QDv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Apr 2009 12:03:51 -0400
-Received: by fxm2 with SMTP id 2so2406168fxm.37
-        for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2009 09:03:49 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <c8485d470904270146g7b7204eckc58cd57449a41f45@mail.gmail.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linuxppc-dev@ozlabs.org, Roderick Colenbrander <thunderbird2k@gmail.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE mailing list <linux-ide@vger.kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Helge Deller <deller@gmx.de>, Jens Axboe <jens.axboe@oracle.com>
 
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Mon, 27 Apr 2009 14:11:32 +0200
-Subject: [PATCH] ide-cd: fix REQ_QUIET tests in cdrom_decode_status
-
-Original patch (dfa4411cc3a690011cab90e9a536938795366cf9) was buggy.
-This is a more proper fix which introduces blk_rq_quiet() macro
-alleviating the need for dumb, too short caching variables.
-
-Thanks to Helge Deller and Bart for debugging this.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-cd.c   |    9 ++++-----
- include/linux/blkdev.h |    1 +
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 6736287..a75e4ee 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -283,7 +283,6 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct request *rq = hwif->rq;
- 	int err, sense_key, do_end_request = 0;
--	u8 quiet = rq->cmd_flags & REQ_QUIET;
-
- 	/* get the IDE error register */
- 	err = ide_read_error(drive);
-@@ -318,7 +317,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
- 		} else {
- 			cdrom_saw_media_change(drive);
-
--			if (blk_fs_request(rq) && !quiet)
-+			if (blk_fs_request(rq) && !blk_rq_quiet(rq))
- 				printk(KERN_ERR PFX "%s: tray open\n",
- 					drive->name);
- 		}
-@@ -353,7 +352,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
- 		 * No point in retrying after an illegal request or data
- 		 * protect error.
- 		 */
--		if (!quiet)
-+		if (!blk_rq_quiet(rq))
- 			ide_dump_status(drive, "command error", stat);
- 		do_end_request = 1;
- 		break;
-@@ -362,14 +361,14 @@ static int cdrom_decode_status(ide_drive_t
-*drive, u8 stat)
- 		 * No point in re-trying a zillion times on a bad sector.
- 		 * If we got here the error is not correctable.
- 		 */
--		if (!quiet)
-+		if (!blk_rq_quiet(rq))
- 			ide_dump_status(drive, "media error "
- 					"(bad sector)", stat);
- 		do_end_request = 1;
- 		break;
- 	case BLANK_CHECK:
- 		/* disk appears blank? */
--		if (!quiet)
-+		if (!blk_rq_quiet(rq))
- 			ide_dump_status(drive, "media error (blank)",
- 					stat);
- 		do_end_request = 1;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index ba54c83..6f841fb 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -598,6 +598,7 @@ enum {
- 				 blk_failfast_transport(rq) ||	\
- 				 blk_failfast_driver(rq))
- #define blk_rq_started(rq)	((rq)->cmd_flags & REQ_STARTED)
-+#define blk_rq_quiet(rq)	((rq)->cmd_flags & REQ_QUIET)
-
- #define blk_account_rq(rq)	(blk_rq_started(rq) && (blk_fs_request(rq)
-|| blk_discard_rq(rq)))
-
--- 
-1.6.2.4
-
-
--- 
-Regards/Gruss,
-Boris
+U29tZSB0aW1lIGFnbyB3ZSBoYWQgdG8gZGlzYWJsZSBpbml0X2h3aWYgY2FsbGJhY2sgZm9yIFBv
+d2VyUEMgYnVpbGRzLgpUaGF0IHdhcyBiZWNhdXNlIG9mIGEgaGlzdG9yaWNhbCBJUlEgb3Zlcndy
+aXRlIGluIHRoZSBkcml2ZXIsIHdoaWNoCndhcyBjYXVzaW5nIElERSBtYWxmdW5jdGlvbiBvbiB0
+aGUgTVBDODYxMEhQQ0QgUG93ZXJQQyBib2FyZHMuCgpJdCdzIHVuY2xlYXIgd2hldGhlciB0aGlz
+IG92ZXJ3cml0ZSBpcyBzdGlsbCB1c2VmdWwsIGJ1dCBpdCBpcyBwcm92ZW4KdG8gY2F1c2UgYSBi
+aXQgb2YgaGFybSwgYW5kIHRvZGF5IHNvbWUgUG93ZXJQQyB0YXJnZXRzIChYaWxpbnggTUw1MTAs
+CmFzIHJlcG9ydGVkIGJ5IFJvZGVyaWNrIENvbGVuYnJhbmRlcikgbmVlZCB0aGUgaW5pdF9od2lm
+LCBzbyB3ZSBoYXZlCnRvIHJlLWVuYWJsZSBpdCBhbmQgcmVtb3ZlIHRoZSBvdmVyd3JpdGUuCgpS
+ZXBvcnRlZC1ieTogUm9kZXJpY2sgQ29sZW5icmFuZGVyIDx0aHVuZGVyYmlyZDJrQGdtYWlsLmNv
+bT4KU3VnZ2VzdGVkLWJ5OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiem9sbmllckBnbWFp
+bC5jb20+ClNpZ25lZC1vZmYtYnk6IEFudG9uIFZvcm9udHNvdiA8YXZvcm9udHNvdkBydS5tdmlz
+dGEuY29tPgotLS0KCk9uIE1vbiwgQXByIDI3LCAyMDA5IGF0IDEwOjQ2OjI1QU0gKzAyMDAsIFJv
+ZGVyaWNrIENvbGVuYnJhbmRlciB3cm90ZToKPiA+PiBTZWVtcyBsaWtlIHRoaXMgc2hvdWxkIGFs
+bG93IE1QQzg2MTBIUENEIHRvIHdvcmsgd2l0aCBSb2RlcmljaydzIHBhdGNoCj4gPj4gaWYgdGhl
+IElERSBjb250cm9sbGVyIGlzIHNldCB0byBuYXRpdmUgbW9kZSBhbmQgQUxJIHNvdXRoLWJyaWRn
+ZSBTSVJRCj4gPj4gdGFibGVzIGFyZSBjb3JyZWN0bHkgc2V0IChvciBpZiB0aGlzIGlzIG5vdCBB
+TEkncyBzb3V0aC1icmlkZ2UpLiDCoEFudG9uPwo+ID4KPiA+IE9LLCBJJ2xsIHRlc3QgdGhpcyBh
+cHByb2FjaC4KPiA+Cj4gCj4gRGlkIHRoaXMgYXBwcm9hY2ggd29yayBmb3IgeW91PwoKSSdtIHNv
+cnJ5IGZvciB0aGUgZGVsYXkuIFllcywgaXQgc2VlbSB0byB3b3JrLgoKIGRyaXZlcnMvaWRlL2Fs
+aW0xNXgzLmMgfCAgIDEwICsrKy0tLS0tLS0KIDEgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25z
+KCspLCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvaWRlL2FsaW0xNXgzLmMg
+Yi9kcml2ZXJzL2lkZS9hbGltMTV4My5jCmluZGV4IDUzN2RhMWMuLmU1OWI2ZGUgMTAwNjQ0Ci0t
+LSBhL2RyaXZlcnMvaWRlL2FsaW0xNXgzLmMKKysrIGIvZHJpdmVycy9pZGUvYWxpbTE1eDMuYwpA
+QCAtNDAyLDI3ICs0MDIsMjMgQEAgc3RhdGljIHU4IGFsaV9jYWJsZV9kZXRlY3QoaWRlX2h3aWZf
+dCAqaHdpZikKIAlyZXR1cm4gY2JsOwogfQogCi0jaWYgIWRlZmluZWQoQ09ORklHX1NQQVJDNjQp
+ICYmICFkZWZpbmVkKENPTkZJR19QUEMpCisjaWZuZGVmIENPTkZJR19TUEFSQzY0CiAvKioKICAq
+CWluaXRfaHdpZl9hbGkxNXgzCS0JSW5pdGlhbGl6ZSB0aGUgQUxJIElERSB4ODYgc3R1ZmYKICAq
+CUBod2lmOiBpbnRlcmZhY2UgdG8gY29uZmlndXJlCiAgKgogICoJT2J0YWluIHRoZSBJUlEgdGFi
+bGVzIGZvciBhbiBBTGkgYmFzZWQgSURFIHNvbHV0aW9uIG9uIHRoZSBQQwogICoJY2xhc3MgcGxh
+dGZvcm1zLiBUaGlzIHBhcnQgb2YgdGhlIGNvZGUgaXNuJ3QgYXBwbGljYWJsZSB0byB0aGUKLSAq
+CVNwYXJjIGFuZCBQb3dlclBDIHN5c3RlbXMuCisgKglTcGFyYyBzeXN0ZW1zLgogICovCiAKIHN0
+YXRpYyB2b2lkIF9fZGV2aW5pdCBpbml0X2h3aWZfYWxpMTV4MyAoaWRlX2h3aWZfdCAqaHdpZikK
+IHsKLQlzdHJ1Y3QgcGNpX2RldiAqZGV2ID0gdG9fcGNpX2Rldihod2lmLT5kZXYpOwogCXU4IGlk
+ZWljLCBpbm1pcjsKIAlzOCBpcnFfcm91dGluZ190YWJsZVtdID0geyAtMSwgIDksIDMsIDEwLCA0
+LCAgNSwgNywgIDYsCiAJCQkJICAgICAgMSwgMTEsIDAsIDEyLCAwLCAxNCwgMCwgMTUgfTsKIAlp
+bnQgaXJxID0gLTE7CiAKLQlpZiAoZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9BTF9NNTIy
+OSkKLQkJaHdpZi0+aXJxID0gaHdpZi0+Y2hhbm5lbCA/IDE1IDogMTQ7Ci0KIAlpZiAoaXNhX2Rl
+dikgewogCQkvKgogCQkgKiByZWFkIElERSBpbnRlcmZhY2UgY29udHJvbApAQCAtNDU1LDcgKzQ1
+MSw3IEBAIHN0YXRpYyB2b2lkIF9fZGV2aW5pdCBpbml0X2h3aWZfYWxpMTV4MyAoaWRlX2h3aWZf
+dCAqaHdpZikKIH0KICNlbHNlCiAjZGVmaW5lIGluaXRfaHdpZl9hbGkxNXgzIE5VTEwKLSNlbmRp
+ZiAvKiAhZGVmaW5lZChDT05GSUdfU1BBUkM2NCkgJiYgIWRlZmluZWQoQ09ORklHX1BQQykgKi8K
+KyNlbmRpZiAvKiBDT05GSUdfU1BBUkM2NCAqLwogCiAvKioKICAqCWluaXRfZG1hX2FsaTE1eDMJ
+LQlzZXQgdXAgRE1BIG9uIEFMaTE1eDMKLS0gCjEuNi4yLjIKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGlu
+dXhwcGMtZGV2QG96bGFicy5vcmcKaHR0cHM6Ly9vemxhYnMub3JnL21haWxtYW4vbGlzdGluZm8v
+bGludXhwcGMtZGV2
