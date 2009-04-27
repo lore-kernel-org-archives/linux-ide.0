@@ -1,22 +1,88 @@
-From: Hadley Fye <sohpmool1@virgilio.it>
-Subject: =?windows-1251?B?TGF0ZXN0IFVTIEdyZWVuIENhcmQgQXBwbGljYXRpb24=?=
-Date: Tue, 28 Apr 2009 00:00:06 +0200
-Message-ID: <17518.7585795813$1240869725@news.gmane.org>
-Reply-To: Hadley Fye <1811lechner.katelynn@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream] ahci: misc cleanups for EM stuff
+Date: Tue, 28 Apr 2009 08:42:52 +0900
+Message-ID: <49F642FC.1090602@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="windows-1251"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 50.244-247-81.adsl-static.isp.belgacom.be ([81.247.244.50]:29851
-	"EHLO google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756170AbZD0WAJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Apr 2009 18:00:09 -0400
+Received: from hera.kernel.org ([140.211.167.34]:37917 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754378AbZD0XnE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Apr 2009 19:43:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
 
-WW91IGhhdmUgaGVhcmQgaXQgc28gbWFueSB0aW1lcyBiZWZvcmU6IHRoZSBVbml0ZWQgU3RhdGVzIGlzIHRoZSBjb3VudHJ5IHdoZXJlIHBlb3BsZSBhcmUgZnJlZSBhbmQgZHJlYW1zIGFyZSBmdWxmaWxsZWQuDQoNClRoZSBHcmVlbiBDYXJkIExvdHRlcnkgb25seSBoYXBwZW5zIG9uY2UgYSB5ZWFyLiBFdmVyeSB5ZWFyIHRoZSByZWd1bGF0aW9ucyBjaGFuZ2UgYW5kIHN1Y2ggY2hhbmdlcyBtYXkgYWN0dWFsbHkgYWZmZWN0IHlvdXIgZWxpZ2liaWxpdHkuIFlvdSBkb24ndCBoYXZlIHRvIGJlIGFtb25nIHRoZSBwZW9wbGUgdGhhdCBhcmUgZGlzcXVhbGlmaWVkIHNpbXBseSBiZWNhdXNlIHRoZWlyIGFwcGxpY2F0aW9uIGlzIGRlZW1lZCB1bmFjY2VwdGFibGUuDQoNCkV4cGVydHMgd2lsbCByZXZpZXcgeW91ciByZWdpc3RyYXRpb24gYW5kIHByb3ZpZGUgcHJvZmVzc2lvbmFsIGFzc2lzdGFuY2Ugd2hlbiBmaWxsaW5nIG91dCBhIEdyZWVuIENhcmQgTG90dGVyeSBhcHBsaWNhdGlvbi4NCg0KQ29uZmlybSB5b3VyIGludGVyZXN0IGF0IDE2MTd2YXJ2ZWwubWVsaW5kYUBnbWFpbC5jb20gdG8gcmVjZWl2ZSBmdXJ0aGVyIGluZm9ybWF0aW9uIGZyb20g
- dXMuDQoNClVTQUdDIERWIExvdHRlcnkgU2VydmljZXMKCgoKCgoKCgoKCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBlbWFpbCBoYXMgYmVlbiB3cml0dGVuIGFuZCBwcm92ZWQgdG8gYmUgaW4gY29tcGxpYW5jZSB3aXRoIHRoZSByZWNlbnRseSBlc3RhYmxpc2hlZCBjYW4tc3BhbSBhY3QgbGF3IGluIFVTLiBXZSBhcmUgbm90IHByb3Zva2luZyBvciBmb3JjaW5nIGFueSBwZXJzb24gaW4gYW55IHdheSB0byBwYXJ0aWNpcGF0ZSBpbiBvdXIgcHJvZ3JhbXMuIFRvIHBhcnRpY2lwYXRlIGlzIHlvdXIgb3duIGRlY2lzaW9uIGFuZCB5b3UgY2FycnkgdGhlIHJlc3BvbnNpYmlsaXR5IG9mIHRha2luZyBmdXJ0aGVyIHBhcnQgaW4gdGhpcyBwcm9tb3Rpb24uIEFueXdheSwgaWYgeW91IGRvbid0IHdhbnQgdG8gcmVjZWl2ZSBtb3JlIGdvb2Qgb2ZmZXJzIGZyb20gdXMsIHlvdSBjYW4gc2ltcGx5IFVuc3Vic2NyaWJlIGJ5IHNlbmRpbmcgdXMgYSBub3RpZmljYXRpb24gZW1haWwgdG8gb3V0X29mX3RoZV9saXN0QHlhaG9vLmNvbSB3aXRoIGEgbWFpbC1zdWJqZWN0IGFuZC
- B0ZXh0ICJVbnN1YnNjcmliZSBtZSIsIGFuZCB3ZSB3aWxsIGdldCB5b3VyIGVtYWlsIG91dCBvZiBvdXIgbGlzdCB3aXRoaW4gMTAgZGF5cy4KClRoaXMgbWVzc2FnZSBpcyBTVFJJQ1RMWSBDT05GSURFTlRJQUwgYW5kIGlzIHNvbGVseSBmb3IgdGhlIGluZGl2aWR1YWwgb3Igb3JnYW5pc2F0aW9uIHRvIHdob20gaXQgaXMgYWRkcmVzc2VkLiBJdCBtYXkgY29udGFpbiBQUklWSUxFR0VEIGFuZCBDT05GSURFTlRJQUwgaW5mb3JtYXRpb24uIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHlvdSBhcmUgaGVyZWJ5IG5vdGlmaWVkIHRoYXQgYW55IGRpc3NlbWluYXRpb24sIGRpc3RyaWJ1dGlvbiBvciBjb3B5aW5nIG9mIHRoaXMgY29tbXVuaWNhdGlvbiBhbmQgaXRzIGNvbnRlbnRzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQgeW91IHNob3VsZCBub3QgcmVhZCwgY29weSwgZGlzdHJpYnV0ZSwgZGlzY2xvc2Ugb3Igb3RoZXJ3aXNlIHVzZSB0aGUgaW5mb3JtYXRpb24gaW4gdGhpcyBlbWFpbC4gRW1haWwgbWF5IGJlIHN1c2NlcHRpYmxlIHRvIGRhdGEgY29ycnVw
- dGlvbiwgaW50ZXJjZXB0aW9uIGFuZCB1bmF1dGhvcmlzZWQgYW1lbmRtZW50LCBhbmQgd2UgZG8gbm90IGFjY2VwdCBsaWFiaWxpdHkgZm9yIGFueSBzdWNoIGNvcnJ1cHRpb24sIGludGVyY2VwdGlvbiBvciBhbWVuZG1lbnQgb3IgdGhlIGNvbnNlcXVlbmNlcyB0aGVyZW9mIG9yIHlvdXIgcmVsaWFuY2Ugb24gYW55IGluZm9ybWF0aW9uIGNvbnRhaW5lZCB0aGVyZWluIGlmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQuIElmIHlvdSBhcmUgbm90IGludGVyZXN0ZWQgaW4gdGhlIG9mZmVyZWQgcHJvbW90aW9ucywgcGxlYXNlIGp1c3QgZG9uJ3QgYW5zd2VyLiBJZiB5b3UgdGhpbmsgeW91IGhhdmUgcmVjZWl2ZWQgdGhpcyBtZXNzYWdlIGFuZCBpdHMgY29udGVudHMgaW4gZXJyb3IsIHBsZWFzZSBkZWxldGUgaXQgZnJvbSB5b3VyIGNvbXB1dGVyLCBvciBmb2xsb3cgdGhlIHVuc3Vic2NyaWJpbmcgcHJvY2VkdXJlIHNob3duIGFib3ZlLgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCQk=
+Make the following EM related cleanups.
+
+* Use msleep(1) instead of udelay(100) and reduce retry count to 5.
+* s/MAX_SLOTS/EM_MAX_SLOTS/
+* s/MAX_RETRY/EM_MAX_RETRY/
+
+[ Impact: cleanup, use of longer and fewer msleep() instead of udelay() ]
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/ahci.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3489085..65677b0 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -77,8 +77,8 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ 			      size_t size);
+ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 					ssize_t size);
+-#define MAX_SLOTS 8
+-#define MAX_RETRY 15
++#define EM_MAX_SLOTS 8
++#define EM_MAX_RETRY 5
+ 
+ enum {
+ 	AHCI_PCI_BAR		= 5,
+@@ -281,8 +281,8 @@ struct ahci_port_priv {
+ 	unsigned int		ncq_saw_dmas:1;
+ 	unsigned int		ncq_saw_sdb:1;
+ 	u32 			intr_mask;	/* interrupts to enable */
+-	struct ahci_em_priv	em_priv[MAX_SLOTS];/* enclosure management info
+-					 	 * per PM slot */
++	/* enclosure management info per PM slot */
++	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
+ };
+ 
+ static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+@@ -1139,12 +1139,12 @@ static void ahci_start_port(struct ata_port *ap)
+ 			emp = &pp->em_priv[link->pmp];
+ 
+ 			/* EM Transmit bit maybe busy during init */
+-			for (i = 0; i < MAX_RETRY; i++) {
++			for (i = 0; i < EM_MAX_RETRY; i++) {
+ 				rc = ahci_transmit_led_message(ap,
+ 							       emp->led_state,
+ 							       4);
+ 				if (rc == -EBUSY)
+-					udelay(100);
++					msleep(1);
+ 				else
+ 					break;
+ 			}
+@@ -1338,7 +1338,7 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 
+ 	/* get the slot number from the message */
+ 	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+-	if (pmp < MAX_SLOTS)
++	if (pmp < EM_MAX_SLOTS)
+ 		emp = &pp->em_priv[pmp];
+ 	else
+ 		return -EINVAL;
+@@ -1406,7 +1406,7 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ 
+ 	/* get the slot number from the message */
+ 	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+-	if (pmp < MAX_SLOTS)
++	if (pmp < EM_MAX_SLOTS)
+ 		emp = &pp->em_priv[pmp];
+ 	else
+ 		return -EINVAL;
