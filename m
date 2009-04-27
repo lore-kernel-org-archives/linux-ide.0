@@ -1,95 +1,22 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Delay on intialization ide subsystem(most likely)
-Date: Mon, 27 Apr 2009 23:21:48 +0200
-Message-ID: <200904272321.48484.bzolnier@gmail.com>
-References: <20090425170203.74603b9c@power-debian> <200904251648.38389.bzolnier@gmail.com> <20090428003645.12001d30@power-debian>
+From: Hadley Fye <sohpmool1@virgilio.it>
+Subject: =?windows-1251?B?TGF0ZXN0IFVTIEdyZWVuIENhcmQgQXBwbGljYXRpb24=?=
+Date: Tue, 28 Apr 2009 00:00:06 +0200
+Message-ID: <17518.7585795813$1240869725@news.gmane.org>
+Reply-To: Hadley Fye <1811lechner.katelynn@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+        charset="windows-1251"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:34025 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754793AbZD0VR1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Apr 2009 17:17:27 -0400
-Received: by bwz7 with SMTP id 7so172192bwz.37
-        for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2009 14:17:26 -0700 (PDT)
-In-Reply-To: <20090428003645.12001d30@power-debian>
-Content-Disposition: inline
+Received: from 50.244-247-81.adsl-static.isp.belgacom.be ([81.247.244.50]:29851
+	"EHLO google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756170AbZD0WAJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Apr 2009 18:00:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Gusev <a.gusev1980@mail.ru>
-Cc: linux-ide@vger.kernel.org, petkovbb@gmail.com
+To: linux-ide@vger.kernel.org
 
-On Monday 27 April 2009 22:36:45 Andrey Gusev wrote:
-> On Sat, 25 Apr 2009 16:48:38 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > 
-> > Hi,
-> > 
-> > On Saturday 25 April 2009 15:02:03 Andrey Gusev wrote:
-> > > Hello!
-> > > 
-> > > I have tested linux-2.6.30-rc3 on my system and find some problems.
-> > > One of them is delaying on initialization IDE subsystem. I don't
-> > > have this problem on 2.6.29.1. The difference is looked on log of
-> > > dmesg.
-> > 
-> > Unfortunately this doesn't give us any hint about the root cause of
-> > the bug so please try narrowing the problem down to the specific
-> > change using git-bisect (sorry, there were 212 drivers/ide/ commits
-> > during v2.6.29..v2.6.30-rc3 and much much more non-drivers/ide/ ones).
-> > 
-> > Thanks,
-> > Bart
-> > 
-> 
-> Hello!
-> 
-> 
-> The full result of bisect is:
-> 
-> 
-> git bisect start
-> # good: [8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84] Linux 2.6.29
-> git bisect good 8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84
-> # bad: [091069740304c979f957ceacec39c461d0192158] Linux 2.6.30-rc3
-> git bisect bad 091069740304c979f957ceacec39c461d0192158
-> # good: [40f07111be99b71c1e8d40c13cdc38445add787f] V4L/DVB (11166): pvrusb2: Implement status fetching from sub-devices
-> git bisect good 40f07111be99b71c1e8d40c13cdc38445add787f
-> # good: [ba0e1ebb7ea0616eebc29d2077355bacea62a9d8] Staging: sxg: slicoss: Specify the license for Sahara SXG and Slicoss drivers
-> git bisect good ba0e1ebb7ea0616eebc29d2077355bacea62a9d8
-> 
-> 
-> git bisect start 'drivers/ide/'
-
-Please note that limiting search space to drivers/ide/ may not give reliable
-results in case problem was introduced by some other kernel area.
-
-> # good: [ba0e1ebb7ea0616eebc29d2077355bacea62a9d8] Staging: sxg: slicoss: Specify the license for Sahara SXG and Slicoss drivers
-> git bisect good ba0e1ebb7ea0616eebc29d2077355bacea62a9d8
-> # bad: [091069740304c979f957ceacec39c461d0192158] Linux 2.6.30-rc3
-> git bisect bad 091069740304c979f957ceacec39c461d0192158
-> # good: [e01f251fd09fa7cb3d352eac7de17bb5d5bd1f9d] ide-cd: convert cdrom_decode_status() to use switch statements
-> git bisect good e01f251fd09fa7cb3d352eac7de17bb5d5bd1f9d
-> # good: [3153c26b54230d025c6d536e8d3015def4524906] ide: refactor tf_read() method
-> git bisect good 3153c26b54230d025c6d536e8d3015def4524906
-> # good: [c018f1ee5cf81e58b93d9e93a2ee39cad13dc1ac] hpt366: fix HPT370 DMA timeouts
-> git bisect good c018f1ee5cf81e58b93d9e93a2ee39cad13dc1ac
-> # bad: [d5f840bf74c09ca5a31e518c9d984999926b5f44] ide: Remove void casts
-> git bisect bad d5f840bf74c09ca5a31e518c9d984999926b5f44
-> # bad: [59c8d04f5ee97ea46da854e9adbbaa45d988c39d] hpt366: use ATA_DMA_* constants
-> git bisect bad 59c8d04f5ee97ea46da854e9adbbaa45d988c39d
-
-Uhh.. something went wrong during bisect.
-
-"hpt366: use ATA_DMA_* constants" cannot be a first bad commit because hpt366
-is not even used on this system.
-
-Could it be that the delay doesn't happen on every boot for "bad" kernels?
-
-Also, is 2.6.30-rc1 okay?
-
-Thanks,
-Bart
+WW91IGhhdmUgaGVhcmQgaXQgc28gbWFueSB0aW1lcyBiZWZvcmU6IHRoZSBVbml0ZWQgU3RhdGVzIGlzIHRoZSBjb3VudHJ5IHdoZXJlIHBlb3BsZSBhcmUgZnJlZSBhbmQgZHJlYW1zIGFyZSBmdWxmaWxsZWQuDQoNClRoZSBHcmVlbiBDYXJkIExvdHRlcnkgb25seSBoYXBwZW5zIG9uY2UgYSB5ZWFyLiBFdmVyeSB5ZWFyIHRoZSByZWd1bGF0aW9ucyBjaGFuZ2UgYW5kIHN1Y2ggY2hhbmdlcyBtYXkgYWN0dWFsbHkgYWZmZWN0IHlvdXIgZWxpZ2liaWxpdHkuIFlvdSBkb24ndCBoYXZlIHRvIGJlIGFtb25nIHRoZSBwZW9wbGUgdGhhdCBhcmUgZGlzcXVhbGlmaWVkIHNpbXBseSBiZWNhdXNlIHRoZWlyIGFwcGxpY2F0aW9uIGlzIGRlZW1lZCB1bmFjY2VwdGFibGUuDQoNCkV4cGVydHMgd2lsbCByZXZpZXcgeW91ciByZWdpc3RyYXRpb24gYW5kIHByb3ZpZGUgcHJvZmVzc2lvbmFsIGFzc2lzdGFuY2Ugd2hlbiBmaWxsaW5nIG91dCBhIEdyZWVuIENhcmQgTG90dGVyeSBhcHBsaWNhdGlvbi4NCg0KQ29uZmlybSB5b3VyIGludGVyZXN0IGF0IDE2MTd2YXJ2ZWwubWVsaW5kYUBnbWFpbC5jb20gdG8gcmVjZWl2ZSBmdXJ0aGVyIGluZm9ybWF0aW9uIGZyb20g
+ dXMuDQoNClVTQUdDIERWIExvdHRlcnkgU2VydmljZXMKCgoKCgoKCgoKCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBlbWFpbCBoYXMgYmVlbiB3cml0dGVuIGFuZCBwcm92ZWQgdG8gYmUgaW4gY29tcGxpYW5jZSB3aXRoIHRoZSByZWNlbnRseSBlc3RhYmxpc2hlZCBjYW4tc3BhbSBhY3QgbGF3IGluIFVTLiBXZSBhcmUgbm90IHByb3Zva2luZyBvciBmb3JjaW5nIGFueSBwZXJzb24gaW4gYW55IHdheSB0byBwYXJ0aWNpcGF0ZSBpbiBvdXIgcHJvZ3JhbXMuIFRvIHBhcnRpY2lwYXRlIGlzIHlvdXIgb3duIGRlY2lzaW9uIGFuZCB5b3UgY2FycnkgdGhlIHJlc3BvbnNpYmlsaXR5IG9mIHRha2luZyBmdXJ0aGVyIHBhcnQgaW4gdGhpcyBwcm9tb3Rpb24uIEFueXdheSwgaWYgeW91IGRvbid0IHdhbnQgdG8gcmVjZWl2ZSBtb3JlIGdvb2Qgb2ZmZXJzIGZyb20gdXMsIHlvdSBjYW4gc2ltcGx5IFVuc3Vic2NyaWJlIGJ5IHNlbmRpbmcgdXMgYSBub3RpZmljYXRpb24gZW1haWwgdG8gb3V0X29mX3RoZV9saXN0QHlhaG9vLmNvbSB3aXRoIGEgbWFpbC1zdWJqZWN0IGFuZC
+ B0ZXh0ICJVbnN1YnNjcmliZSBtZSIsIGFuZCB3ZSB3aWxsIGdldCB5b3VyIGVtYWlsIG91dCBvZiBvdXIgbGlzdCB3aXRoaW4gMTAgZGF5cy4KClRoaXMgbWVzc2FnZSBpcyBTVFJJQ1RMWSBDT05GSURFTlRJQUwgYW5kIGlzIHNvbGVseSBmb3IgdGhlIGluZGl2aWR1YWwgb3Igb3JnYW5pc2F0aW9uIHRvIHdob20gaXQgaXMgYWRkcmVzc2VkLiBJdCBtYXkgY29udGFpbiBQUklWSUxFR0VEIGFuZCBDT05GSURFTlRJQUwgaW5mb3JtYXRpb24uIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHlvdSBhcmUgaGVyZWJ5IG5vdGlmaWVkIHRoYXQgYW55IGRpc3NlbWluYXRpb24sIGRpc3RyaWJ1dGlvbiBvciBjb3B5aW5nIG9mIHRoaXMgY29tbXVuaWNhdGlvbiBhbmQgaXRzIGNvbnRlbnRzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQgeW91IHNob3VsZCBub3QgcmVhZCwgY29weSwgZGlzdHJpYnV0ZSwgZGlzY2xvc2Ugb3Igb3RoZXJ3aXNlIHVzZSB0aGUgaW5mb3JtYXRpb24gaW4gdGhpcyBlbWFpbC4gRW1haWwgbWF5IGJlIHN1c2NlcHRpYmxlIHRvIGRhdGEgY29ycnVw
+ dGlvbiwgaW50ZXJjZXB0aW9uIGFuZCB1bmF1dGhvcmlzZWQgYW1lbmRtZW50LCBhbmQgd2UgZG8gbm90IGFjY2VwdCBsaWFiaWxpdHkgZm9yIGFueSBzdWNoIGNvcnJ1cHRpb24sIGludGVyY2VwdGlvbiBvciBhbWVuZG1lbnQgb3IgdGhlIGNvbnNlcXVlbmNlcyB0aGVyZW9mIG9yIHlvdXIgcmVsaWFuY2Ugb24gYW55IGluZm9ybWF0aW9uIGNvbnRhaW5lZCB0aGVyZWluIGlmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQuIElmIHlvdSBhcmUgbm90IGludGVyZXN0ZWQgaW4gdGhlIG9mZmVyZWQgcHJvbW90aW9ucywgcGxlYXNlIGp1c3QgZG9uJ3QgYW5zd2VyLiBJZiB5b3UgdGhpbmsgeW91IGhhdmUgcmVjZWl2ZWQgdGhpcyBtZXNzYWdlIGFuZCBpdHMgY29udGVudHMgaW4gZXJyb3IsIHBsZWFzZSBkZWxldGUgaXQgZnJvbSB5b3VyIGNvbXB1dGVyLCBvciBmb2xsb3cgdGhlIHVuc3Vic2NyaWJpbmcgcHJvY2VkdXJlIHNob3duIGFib3ZlLgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCQk=
