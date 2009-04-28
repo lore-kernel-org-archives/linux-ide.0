@@ -1,71 +1,34 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3] mg_disk: fix CONFIG_LBD=y warning
-Date: Tue, 28 Apr 2009 20:28:11 +0200
-Message-ID: <200904282028.12047.bzolnier@gmail.com>
-References: <1240890740-3462-1-git-send-email-tj@kernel.org> <200904281728.58209.bzolnier@gmail.com> <49F74672.2090407@garzik.org>
+Subject: Re: [PATCH] ata_piix: ICH7 does not support correct MWDMA timings
+Date: Tue, 28 Apr 2009 20:31:50 +0200
+Message-ID: <200904282031.50656.bzolnier@gmail.com>
+References: <20090424134828.19575.8544.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:37177 "EHLO
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:64858 "EHLO
 	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbZD1SXj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Apr 2009 14:23:39 -0400
-In-Reply-To: <49F74672.2090407@garzik.org>
+	with ESMTP id S1753837AbZD1S1U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Apr 2009 14:27:20 -0400
+Received: by bwz7 with SMTP id 7so718466bwz.37
+        for <linux-ide@vger.kernel.org>; Tue, 28 Apr 2009 11:27:19 -0700 (PDT)
+In-Reply-To: <20090424134828.19575.8544.stgit@t61.ukuu.org.uk>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <tj@kernel.org>, axboe@kernel.dk, linux-kernel@vger.kernel.org, donari75@gmail.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-On Tuesday 28 April 2009 20:09:54 Jeff Garzik wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > On Tuesday 28 April 2009 17:19:34 Mark Lord wrote:
-> >> Tejun Heo wrote:
-> >>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >>>
-> >>> drivers/block/mg_disk.c: In function =E2=80=98mg_dump_status=E2=80=
-=99:
-> >>> drivers/block/mg_disk.c:265: warning: format =E2=80=98%ld=E2=80=99=
- expects type =E2=80=98long int=E2=80=99, but
-> >>> argument 2 has type =E2=80=98sector_t=E2=80=99
-> >>>
-> >>> [ Impact: kill build warning ]
-> >>>
-> >>> Cc: unsik Kim <donari75@gmail.com>
-> >>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >>> Signed-off-by: Tejun Heo <tj@kernel.org>
-> >>> ---
-> >>>  drivers/block/mg_disk.c |    2 +-
-> >>>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >>>
-> >>> diff --git a/drivers/block/mg_disk.c b/drivers/block/mg_disk.c
-> >>> index d3e72ad..f389835 100644
-> >>> --- a/drivers/block/mg_disk.c
-> >>> +++ b/drivers/block/mg_disk.c
-> >>> @@ -79,7 +79,7 @@ static void mg_dump_status(const char *msg, uns=
-igned int stat,
-> >>>  			if (host->breq) {
-> >>>  				req =3D elv_next_request(host->breq);
-> >>>  				if (req)
-> >>> -					printk(", sector=3D%ld", req->sector);
-> >>> +					printk(", sector=3D%u", (u32)req->sector);
-> >> ..
-> >>
-> >> Eh?  Shouldn't that be fixed the other way around, like this:
-> >>
-> >>   +					printk(", sector=3D%llu", (u64)req->sector);
-> >>
-> >> This way, it will still give correct data when sector_t is a u64.
-> >=20
-> > shouldn't matter, req->sector is never > u32 for mg_disk
->=20
-> It never matters... until the code gets copied elsewhere.  IMO wrong=20
-> code should never be kept -- "impossible to hit" just means it is low=
-=20
-> priority :)
+On Friday 24 April 2009 15:48:53 Alan Cox wrote:
+> From: Alan Cox <alan@linux.intel.com>
+> 
+> See Errata documentation. The recommended workaround is to use PIO4 instead
+> which will we automatically do by flagging this mode not available.
+> 
+> (Bart: I believe you'll need this for the old IDE drivers)
 
-Well, if you feel strongly about it feel free to replace my patch with
-your improved version.  You may also fix hd.c (from which the above cod=
-e
-has been copied) while at it.
+Seems so.
+
+I guess that Intel would like to provide fix for old Intel IDE driver itself?
