@@ -1,50 +1,158 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] ide-cd: fix REQ_QUIET tests in cdrom_decode_status
-Date: Wed, 29 Apr 2009 07:26:00 +0200
-Message-ID: <20090429052600.GA3128@liondog.tnic>
-References: <9ea470500904270903n720ab411o4a6c47945442bea4@mail.gmail.com> <49F777BE.6010608@gmx.de>
-Reply-To: petkovbb@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:47536 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbZD2F0L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Apr 2009 01:26:11 -0400
-Received: by bwz7 with SMTP id 7so948781bwz.37
-        for <linux-ide@vger.kernel.org>; Tue, 28 Apr 2009 22:26:09 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <49F777BE.6010608@gmx.de>
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 09/10] ide: cleanup rq->data_len usages
+Date: Wed, 29 Apr 2009 18:13:47 +0900
+Message-ID: <1240996428-10159-10-git-send-email-tj@kernel.org>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1240996428-10159-1-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
+Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Helge Deller <deller@gmx.de>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, sshtylyov@ru.mvista.com
 
-On Tue, Apr 28, 2009 at 11:40:14PM +0200, Helge Deller wrote:
-> Borislav Petkov wrote:
-> > From: Borislav Petkov <petkovbb@gmail.com>
-> > Date: Mon, 27 Apr 2009 14:11:32 +0200
-> > Subject: [PATCH] ide-cd: fix REQ_QUIET tests in cdrom_decode_status
-> > 
-> > Original patch (dfa4411cc3a690011cab90e9a536938795366cf9) was buggy.
-> > This is a more proper fix which introduces blk_rq_quiet() macro
-> > alleviating the need for dumb, too short caching variables.
-> > 
-> > Thanks to Helge Deller and Bart for debugging this.
-> > 
-> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> 
-> Thanks a lot Borislav !
-> As Sergei already mentioned, the patch below is line-wrapped.
-> 
-> Anyway, I applied it on top of 2.6.30-rc3, fixed up the rejections manually 
-> and can confirm that this patch fixes the problems I reported for the parisc 
-> platform.
-> 
-> You may add my signed-off-by when you resend the fixed patch:
+With recent unification of fields, it's now guaranteed that
+rq->data_len always equals blk_rq_bytes().  Convert all direct users
+to accessors.
 
-Thanks, but I sent a fixed one exactly two minutes :) before your message.
+[ Impact: convert direct rq->data_len usages to blk_rq_bytes() ]
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+---
+ drivers/ide/ide-atapi.c  |    4 ++--
+ drivers/ide/ide-cd.c     |   25 +++++++------------------
+ drivers/ide/ide-floppy.c |    4 ++--
+ drivers/ide/ide-io.c     |    2 +-
+ 4 files changed, 12 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index e4a02a0..792534d 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -255,7 +255,7 @@ void ide_retry_pc(ide_drive_t *drive)
+ 	ide_init_pc(pc);
+ 	memcpy(pc->c, sense_rq->cmd, 12);
+ 	pc->buf = bio_data(sense_rq->bio);	/* pointer to mapped address */
+-	pc->req_xfer = sense_rq->data_len;
++	pc->req_xfer = blk_rq_bytes(sense_rq);
+ 
+ 	if (drive->media == ide_tape)
+ 		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
+@@ -303,7 +303,7 @@ int ide_cd_get_xferlen(struct request *rq)
+ 		return 32768;
+ 	else if (blk_sense_request(rq) || blk_pc_request(rq) ||
+ 			 rq->cmd_type == REQ_TYPE_ATA_PC)
+-		return rq->data_len;
++		return blk_rq_bytes(rq);
+ 	else
+ 		return 0;
+ }
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index eb4f3dc..2eadc9d 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -577,7 +577,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 	struct request *rq = hwif->rq;
+ 	ide_expiry_t *expiry = NULL;
+ 	int dma_error = 0, dma, thislen, uptodate = 0;
+-	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0, nsectors;
++	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0;
+ 	int sense = blk_sense_request(rq);
+ 	unsigned int timeout;
+ 	u16 len;
+@@ -707,9 +707,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 
+ out_end:
+ 	if (blk_pc_request(rq) && rc == 0) {
+-		if (blk_end_request(rq, 0, rq->data_len))
+-			BUG();
+-
++		blk_end_request_all(rq, 0);
+ 		hwif->rq = NULL;
+ 	} else {
+ 		if (sense && uptodate)
+@@ -727,22 +725,14 @@ out_end:
+ 			ide_cd_error_cmd(drive, cmd);
+ 
+ 		/* make sure it's fully ended */
+-		if (blk_pc_request(rq))
+-			nsectors = (rq->data_len + 511) >> 9;
+-		else
+-			nsectors = blk_rq_sectors(rq);
+-
+-		if (nsectors == 0)
+-			nsectors = 1;
+-
+ 		if (blk_fs_request(rq) == 0) {
+-			rq->resid_len = rq->data_len -
++			rq->resid_len = blk_rq_bytes(rq) -
+ 				(cmd->nbytes - cmd->nleft);
+ 			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
+ 				rq->resid_len += cmd->last_xfer_len;
+ 		}
+ 
+-		ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
++		ide_complete_rq(drive, uptodate ? 0 : -EIO, blk_rq_bytes(rq));
+ 
+ 		if (sense && rc == 2)
+ 			ide_error(drive, "request sense failure", stat);
+@@ -819,7 +809,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		 */
+ 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+ 		if ((unsigned long)buf & alignment
+-		    || rq->data_len & q->dma_pad_mask
++		    || blk_rq_bytes(rq) & q->dma_pad_mask
+ 		    || object_is_on_stack(buf))
+ 			drive->dma = 0;
+ 	}
+@@ -867,9 +857,8 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 
+ 	cmd.rq = rq;
+ 
+-	if (blk_fs_request(rq) || rq->data_len) {
+-		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ?
+-				(blk_rq_sectors(rq) << 9) : rq->data_len);
++	if (blk_fs_request(rq) || blk_rq_bytes(rq)) {
++		ide_init_sg_cmd(&cmd, blk_rq_bytes(rq));
+ 		ide_map_sg(drive, &cmd);
+ 	}
+ 
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 1c460bd..6509817 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -220,14 +220,14 @@ static void idefloppy_blockpc_cmd(struct ide_disk_obj *floppy,
+ 	ide_init_pc(pc);
+ 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
+ 	pc->rq = rq;
+-	if (rq->data_len) {
++	if (blk_rq_bytes(rq)) {
+ 		pc->flags |= PC_FLAG_DMA_OK;
+ 		if (rq_data_dir(rq) == WRITE)
+ 			pc->flags |= PC_FLAG_WRITING;
+ 	}
+ 	/* pio will be performed by ide_pio_bytes() which handles sg fine */
+ 	pc->buf = NULL;
+-	pc->req_xfer = pc->buf_size = rq->data_len;
++	pc->req_xfer = pc->buf_size = blk_rq_bytes(rq);
+ }
+ 
+ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 59799ca..ca2519d 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -116,7 +116,7 @@ void ide_complete_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat, u8 err)
+ unsigned int ide_rq_bytes(struct request *rq)
+ {
+ 	if (blk_pc_request(rq))
+-		return rq->data_len;
++		return blk_rq_bytes(rq);
+ 	else
+ 		return blk_rq_cur_sectors(rq) << 9;
+ }
 -- 
-Regards/Gruss,
-    Boris.
+1.6.0.2
+
