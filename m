@@ -1,40 +1,35 @@
-From: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
-Subject: Re: [PATCH] m68k: Atari - leave out spurious request_irq for Falcon IDE
-Date: Thu, 30 Apr 2009 07:21:50 +0200 (CEST)
-Message-ID: <alpine.DEB.1.00.0904300715330.7645@zirkon.biophys.uni-duesseldorf.de>
-References: <20090326123822.GD8081@marenka.net>
- <alpine.DEB.1.00.0904160107540.4339@zirkon.biophys.uni-duesseldorf.de>
- <1239862075.12777.14.camel@petr>
- <alpine.DEB.1.00.0904160934480.19859@zirkon.biophys.uni-duesseldorf.de>
- <1239868903.12777.25.camel@petr>
- <alpine.DEB.1.00.0904170314220.18855@zirkon.biophys.uni-duesseldorf.de>
- <alpine.DEB.1.00.0904190308310.8939@zirkon.biophys.uni-duesseldorf.de>
- <alpine.DEB.1.00.0904260751590.30061@zirkon.biophys.uni-duesseldorf.de>
- <alpine.DEB.1.00.0904260909510.32441@zirkon.biophys.uni-duesseldorf.de>
- <alpine.DEB.1.00.0904280735550.18935@zirkon.biophys.uni-duesseldorf.de>
- <10f740e80904280027m307f5850u5373d80b0dfcb7f@mail.gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 02/10] ide-tape: don't initialize rq->sector for rw
+	requests
+Date: Thu, 30 Apr 2009 08:14:38 +0200
+Message-ID: <20090430061438.GB6725@liondog.tnic>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-3-git-send-email-tj@kernel.org>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-reply-to: <10f740e80904280027m307f5850u5373d80b0dfcb7f@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Stephen R Marenka <stephen@marenka.net>, debian-68k@lists.debian.org, linux-m68k@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:57042 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbZD3GOs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Apr 2009 02:14:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1240996428-10159-3-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
 
-Hi Geert,
-
-> > I found I need to have this patch in order to avoid doubly registering the
-> > ST-DMA interrupt for IDE on Falcon.
+On Wed, Apr 29, 2009 at 06:13:40PM +0900, Tejun Heo wrote:
+> rq->sector is set to the tape->first_frame but it's never actually
+> used and not even in the correct unit (512 byte sectors).  Don't set
+> it.
 > 
-> But further it has no ill effects, as it works fine on ARAnyM? Or does
-> it fail on real hardware?
+> [ Impact: cleanup ]
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-IDE reports lost interrupts at the same time as SCSI locks up, but that did 
-happen before the patch the same as after. I'll re-check that if you like ...
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
-And yes, the IDE/SCSI combination fails on real hardware. IDE remains alive, 
-SCSI offlines the timed out device. ARAnyM has no SCSI driver...
-
-	Michael
+-- 
+Regards/Gruss,
+    Boris.
