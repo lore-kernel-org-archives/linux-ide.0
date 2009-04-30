@@ -1,50 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/10] block: add rq->resid_len
-Date: Thu, 30 Apr 2009 10:59:10 +0900
-Message-ID: <49F905EE.2020407@kernel.org>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>	 <1240996428-10159-4-git-send-email-tj@kernel.org> <1241016114.3369.9.camel@mulgrave.int.hansenpartnership.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
+ question)
+Date: Wed, 29 Apr 2009 22:27:46 -0400
+Message-ID: <49F90CA2.4080602@garzik.org>
+References: <E1LzLgA-0004j6-9W@closure.thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55271 "EHLO hera.kernel.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:44431 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752400AbZD3CCt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Apr 2009 22:02:49 -0400
-In-Reply-To: <1241016114.3369.9.camel@mulgrave.int.hansenpartnership.com>
+	id S1754509AbZD3C1t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Apr 2009 22:27:49 -0400
+In-Reply-To: <E1LzLgA-0004j6-9W@closure.thunk.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hello, James.
+Theodore Ts'o wrote:
 
-James Bottomley wrote:
-> This looks good (although I'd like to test it first).
+(you should cc linux-ide...)
 
-Yeah, this will need quite a bit of testing.
+> [ 4563.614247] ata4.00: 390721968 sectors, multi 16: LBA48 NCQ (depth 0/32)
+>                                                                 ^^^^^^^
 
-> Might it not be better to have an accessor setting resid_len?  All
-> the other patches in the series insulate users from the actual
-> members of struct request by accessors, so this is a bit the odd man
-> out.
+That generally means your disk is capable of NCQ, but your controller is 
+not.
 
-I actually think it's better to expose resid_len in this case as the
-semantics of the field is - initialized to zero on issue, contains
-residual count on completion and whatever it contains inbetween is
-upto the low level driver.  Request position or length are different
-as they must contain well defined values throughout request processing
-and both block layer and low level driver should agree on what they
-mean.
+As Tejun noted, try switching to AHCI mode in BIOS.
 
-Fancy words aside, it basically boils down to allowing llds to do
-either "rq->resid_len = blk_rq_bytes() - xferred" on completion or
-"rq->resid_len = blk_rq_bytes()" on issue and "rq->resid_len -=
-increments" while processing.
+	Jeff
 
-It would be better to check that the value is sane on completion tho.
 
-Thanks.
 
--- 
-tejun
