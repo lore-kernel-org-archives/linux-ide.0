@@ -1,52 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/10] block: add rq->resid_len
-Date: Thu, 30 Apr 2009 18:25:42 +0900
-Message-ID: <49F96E96.5040107__25593.6889247552$1241083850$gmane$org@kernel.org>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-4-git-send-email-tj@kernel.org> <1241016114.3369.9.camel@mulgrave.int.hansenpartnership.com> <49F905EE.2020407@kernel.org> <20090430064549.GC6725@liondog.tnic> <49F95101.3010004@kernel.org> <20090430073719.GA9640@liondog.tnic>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
+	question)
+Date: Thu, 30 Apr 2009 07:34:45 -0400
+Message-ID: <20090430113445.GA4809@mit.edu>
+References: <E1LzLgA-0004j6-9W@closure.thunk.org> <49F90CA2.4080602@garzik.org> <20090430083309.437f9248@lithium.local.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48363 "EHLO hera.kernel.org"
+Received: from thunk.org ([69.25.196.29]:36797 "EHLO thunker.thunk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751405AbZD3JaW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Apr 2009 05:30:22 -0400
-In-Reply-To: <20090430073719.GA9640@liondog.tnic>
+	id S1763342AbZD3LfA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Apr 2009 07:35:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20090430083309.437f9248@lithium.local.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.
+To: Alex Buell <alex.buell@munted.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Borislav Petkov wrote:
->>> And I like it too, we've been coming up with all sorts of hacks in
->>> ide-atapi wrt to residual completion and accounting of what got xferred
->>> already and rq->resid_len is much more cleaner, IMHO.
->>>
->>> /me testing...
->> AFAICT, residual count handling in ide was most broken.
-
-Oooh... It was "mostly broken" not "most broken".  Where went my l and
-y?
-
-> Tell me about it :).
+On Thu, Apr 30, 2009 at 08:33:09AM +0100, Alex Buell wrote:
+> On Wed, 29 Apr 2009 22:27:46 -0400, I waved a wand and this message
+> magically appears in front of Jeff Garzik:
 > 
->> This patch doesn't fix anything other than making it report 0
->> resid_len on SG_IO which is usually better than reporting full
->> residual count. The only place inside ide where residual count is used
->> in the tape driver to determine actually transferred size. That part
->> works okay with the patch applied.
+> > As Tejun noted, try switching to AHCI mode in BIOS.
 > 
->> Hmmm... maybe it's about time to finally clean up residual count
->> handling in ide and libata, which BTW doesn't do anything about it at
->> the moment.
-> 
-> Completely agreed. This doesn't do anything about it right now but
-> with rq->resid_len in place I could get rid of a bunch of pc->xferred,
-> cmd->nleft and similar on-stack structs we've been introducing, and use
-> solely an rq in the LLD. I'll get to do some experimenting tomorrow and
-> whip up some cleanup patches in order to see how it could look exactly.
-> Stay tuned.
+> But is there a way to switch modes without needing to go through the
+> BIOS? Some laptops won't let you do that through BIOS. 
 
-Yay, cool.  :-)
+The BIOS setting already is in AHCI mode, and not in "compatibility
+mode".  This is with BIOS version 2.19 on the X61s.  I can check to
+see if there is a newer BIOS revision... hmm, there is a 2.20, but it
+claims the only thing it fixes is:
 
--- 
-tejun
+- Fixed an issue where the AMT menu of BIOS Setup Utility might not be
+  displayed.
+
+I can try upgrading to it and see if it's any better.  Or maybe
+someone on the Linux-thinkpad mailing list with contacts inside Lenovo
+can bug them.  Sounds like there's no way to work around this except
+for a BIOS-level fix then?  :-(
+
+						- Ted
