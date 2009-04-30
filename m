@@ -1,90 +1,28 @@
-From: Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [PATCH] ide: remove driver_data direct access of struct device
-Date: Thu, 30 Apr 2009 15:15:00 -0700
-Message-ID: <20090430221500.GA18462@kroah.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: How to assess PMP register
+Date: Thu, 30 Apr 2009 18:34:11 -0400
+Message-ID: <49FA2763.9040409@rtr.ca>
+References: <fa69d4570904291849p638b849fm856be97c81340624@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:55425 "EHLO coco.kroah.org"
+Received: from rtr.ca ([76.10.145.34]:48143 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750727AbZD3W3b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Apr 2009 18:29:31 -0400
-Content-Disposition: inline
+	id S1754341AbZD3WeN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Apr 2009 18:34:13 -0400
+In-Reply-To: <fa69d4570904291849p638b849fm856be97c81340624@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Greg KH <greg@kroah.com>
+To: s ticket <smticket@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-From: Greg Kroah-Hartman <gregkh@suse.de>
+s ticket wrote:
+> Is there any way to read PMP registers after hardreset/softreset?
+> SATA Controller is marvell 88SX7042 and driver is sata_mv.
+> I try to send 0xE4 and 0xE6 command to read/write PMP registers:
+..
+>         if (ioctl(fd, SG_IO, &io_hdr) == -1) {
+..
 
-In the near future, the driver core is going to not allow direct access
-to the driver_data pointer in struct device.  Instead, the functions
-dev_get_drvdata() and dev_set_drvdata() should be used.  These functions
-have been around since the beginning, so are backwards compatible with
-all older kernel versions.
-
-Cc: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/ide/ide-pm.c       |    6 ++++--
- drivers/ide/ide-probe.c    |    4 ++--
- drivers/ide/ide_platform.c |    2 +-
- 3 files changed, 7 insertions(+), 5 deletions(-)
-
---- a/drivers/ide/ide_platform.c
-+++ b/drivers/ide/ide_platform.c
-@@ -113,7 +113,7 @@ out:
- 
- static int __devexit plat_ide_remove(struct platform_device *pdev)
- {
--	struct ide_host *host = pdev->dev.driver_data;
-+	struct ide_host *host = dev_get_drvdata(&pdev->dev);
- 
- 	ide_host_remove(host);
- 
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -3,7 +3,8 @@
- 
- int generic_ide_suspend(struct device *dev, pm_message_t mesg)
- {
--	ide_drive_t *drive = dev->driver_data, *pair = ide_get_pair_dev(drive);
-+	ide_drive_t *drive = dev_get_drvdata(dev);
-+	ide_drive_t *pair = ide_get_pair_dev(drive);
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct request *rq;
- 	struct request_pm_state rqpm;
-@@ -37,7 +38,8 @@ int generic_ide_suspend(struct device *d
- 
- int generic_ide_resume(struct device *dev)
- {
--	ide_drive_t *drive = dev->driver_data, *pair = ide_get_pair_dev(drive);
-+	ide_drive_t *drive = dev_get_drvdata(dev);
-+	ide_drive_t *pair = ide_get_pair_dev(drive);
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct request *rq;
- 	struct request_pm_state rqpm;
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -550,7 +550,7 @@ static int ide_register_port(ide_hwif_t 
- 
- 	/* register with global device tree */
- 	dev_set_name(&hwif->gendev, hwif->name);
--	hwif->gendev.driver_data = hwif;
-+	dev_set_drvdata(&hwif->gendev, hwif);
- 	if (hwif->gendev.parent == NULL)
- 		hwif->gendev.parent = hwif->dev;
- 	hwif->gendev.release = hwif_release_dev;
-@@ -999,9 +999,9 @@ static void hwif_register_devices(ide_hw
- 		int ret;
- 
- 		dev_set_name(dev, "%u.%u", hwif->index, i);
-+		dev_set_drvdata(dev, drive);
- 		dev->parent = &hwif->gendev;
- 		dev->bus = &ide_bus_type;
--		dev->driver_data = drive;
- 		dev->release = drive_release_dev;
- 
- 		ret = device_register(dev);
+No, there is no existing way to access PMP registers from user space.
