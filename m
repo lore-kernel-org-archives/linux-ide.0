@@ -1,51 +1,28 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/10] block: add rq->resid_len
-Date: Thu, 30 Apr 2009 16:19:29 +0900
-Message-ID: <49F95101.3010004@kernel.org>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-4-git-send-email-tj@kernel.org> <1241016114.3369.9.camel@mulgrave.int.hansenpartnership.com> <49F905EE.2020407@kernel.org> <20090430064549.GC6725@liondog.tnic>
+From: Alex Buell <alex.buell@munted.org.uk>
+Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
+ question)
+Date: Thu, 30 Apr 2009 08:33:09 +0100
+Message-ID: <20090430083309.437f9248@lithium.local.net>
+References: <E1LzLgA-0004j6-9W@closure.thunk.org>
+	<49F90CA2.4080602@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46832 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115AbZD3HWK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Apr 2009 03:22:10 -0400
-In-Reply-To: <20090430064549.GC6725@liondog.tnic>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760670AbZD3Hek@vger.kernel.org>
+In-Reply-To: <49F90CA2.4080602@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.
 
-Borislav Petkov wrote:
->> Fancy words aside, it basically boils down to allowing llds to do
->> either "rq->resid_len = blk_rq_bytes() - xferred" on completion or
->> "rq->resid_len = blk_rq_bytes()" on issue and "rq->resid_len -=
->> increments" while processing.
-> 
-> Actually, the second one sounds more natural: resid_len == data_len on
-> issue and decrementing while travelling through block layer and LLDD,
-> while resid_len == 0 in issue might get confused somewhere.
+On Wed, 29 Apr 2009 22:27:46 -0400, I waved a wand and this message
+magically appears in front of Jeff Garzik:
 
-Yeap, it depends on how the specific low level driver is doing it.
+> As Tejun noted, try switching to AHCI mode in BIOS.
 
-> And I like it too, we've been coming up with all sorts of hacks in
-> ide-atapi wrt to residual completion and accounting of what got xferred
-> already and rq->resid_len is much more cleaner, IMHO.
-> 
-> /me testing...
-
-AFAICT, residual count handling in ide was most broken.  This patch
-doesn't fix anything other than making it report 0 resid_len on SG_IO
-which is usually better than reporting full residual count.  The only
-place inside ide where residual count is used in the tape driver to
-determine actually transferred size.  That part works okay with the
-patch applied.
-
-Hmmm... maybe it's about time to finally clean up residual count
-handling in ide and libata, which BTW doesn't do anything about it at
-the moment.
-
-Thanks.
-
+But is there a way to switch modes without needing to go through the
+BIOS? Some laptops won't let you do that through BIOS. 
 -- 
-tejun
+http://www.munted.org.uk
+
+Fearsome grindings.
