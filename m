@@ -1,55 +1,90 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
-Date: Thu, 30 Apr 2009 14:15:48 -0700
-Message-ID: <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org>
-	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>
-	 <49FA0349.3090706@garzik.org>
+From: Greg Kroah-Hartman <gregkh@suse.de>
+Subject: [PATCH] ide: remove driver_data direct access of struct device
+Date: Thu, 30 Apr 2009 15:15:00 -0700
+Message-ID: <20090430221500.GA18462@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <49FA0349.3090706@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from kroah.org ([198.145.64.141]:55425 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750727AbZD3W3b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Apr 2009 18:29:31 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Greg KH <greg@kroah.com>
 
-On Thu, Apr 30, 2009 at 1:00 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> Tejun Heo wrote:
->>
->> Hello,
->>
->> Jeff Garzik wrote:
->>>
->>> <shrug> =A0I suppose...
->>>
->>> It just seems like a nasty hack, but unfortunately I don't see
->>> anyone stepping up to do it properly -- with a DM device
->>> automatically layered on top that splits the device into separate
->>> regions: one block device for the 'regular' area, and one for the
->>> HPA.
->>
->> Isn't that more hacky? =A0I don't know. =A0All that dm needs to know=
- is
->> the location of the metadata which is located w.r.t. the end of the
->> device which might be at a different location if BIOS tried to pull
->> silly stunts. =A0So, exporting the size BIOS might have used seems l=
-ike
->> a straight forward solution to me.
->
-> "<shrug> I suppose" is basically a reluctant ack, in the absence of o=
-ther
-> solutions :)
->
+From: Greg Kroah-Hartman <gregkh@suse.de>
 
-Couldn't the "fix" also just be a note to users to disable ignore_hpa
-if they notice that there raid arrays are not assembling correctly?
+In the near future, the driver core is going to not allow direct access
+to the driver_data pointer in struct device.  Instead, the functions
+dev_get_drvdata() and dev_set_drvdata() should be used.  These functions
+have been around since the beginning, so are backwards compatible with
+all older kernel versions.
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cc: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/ide/ide-pm.c       |    6 ++++--
+ drivers/ide/ide-probe.c    |    4 ++--
+ drivers/ide/ide_platform.c |    2 +-
+ 3 files changed, 7 insertions(+), 5 deletions(-)
+
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -113,7 +113,7 @@ out:
+ 
+ static int __devexit plat_ide_remove(struct platform_device *pdev)
+ {
+-	struct ide_host *host = pdev->dev.driver_data;
++	struct ide_host *host = dev_get_drvdata(&pdev->dev);
+ 
+ 	ide_host_remove(host);
+ 
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -3,7 +3,8 @@
+ 
+ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+ {
+-	ide_drive_t *drive = dev->driver_data, *pair = ide_get_pair_dev(drive);
++	ide_drive_t *drive = dev_get_drvdata(dev);
++	ide_drive_t *pair = ide_get_pair_dev(drive);
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq;
+ 	struct request_pm_state rqpm;
+@@ -37,7 +38,8 @@ int generic_ide_suspend(struct device *d
+ 
+ int generic_ide_resume(struct device *dev)
+ {
+-	ide_drive_t *drive = dev->driver_data, *pair = ide_get_pair_dev(drive);
++	ide_drive_t *drive = dev_get_drvdata(dev);
++	ide_drive_t *pair = ide_get_pair_dev(drive);
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq;
+ 	struct request_pm_state rqpm;
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -550,7 +550,7 @@ static int ide_register_port(ide_hwif_t 
+ 
+ 	/* register with global device tree */
+ 	dev_set_name(&hwif->gendev, hwif->name);
+-	hwif->gendev.driver_data = hwif;
++	dev_set_drvdata(&hwif->gendev, hwif);
+ 	if (hwif->gendev.parent == NULL)
+ 		hwif->gendev.parent = hwif->dev;
+ 	hwif->gendev.release = hwif_release_dev;
+@@ -999,9 +999,9 @@ static void hwif_register_devices(ide_hw
+ 		int ret;
+ 
+ 		dev_set_name(dev, "%u.%u", hwif->index, i);
++		dev_set_drvdata(dev, drive);
+ 		dev->parent = &hwif->gendev;
+ 		dev->bus = &ide_bus_type;
+-		dev->driver_data = drive;
+ 		dev->release = drive_release_dev;
+ 
+ 		ret = device_register(dev);
