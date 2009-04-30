@@ -1,38 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
-Date: Thu, 30 Apr 2009 10:35:57 -0500
-Message-ID: <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>
-	 <1240996428-10159-9-git-send-email-tj@kernel.org>
-	 <49F9AC04.9060403@panasas.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
+	question)
+Date: Thu, 30 Apr 2009 12:42:26 -0300
+Message-ID: <20090430154226.GE28027@khazad-dum.debian.net>
+References: <E1LzLgA-0004j6-9W@closure.thunk.org> <49F90CA2.4080602@garzik.org> <20090430083309.437f9248@lithium.local.net> <20090430113445.GA4809@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932350AbZD3Ph2@vger.kernel.org>
-In-Reply-To: <49F9AC04.9060403@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:48018 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757807AbZD3Pma (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Apr 2009 11:42:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20090430113445.GA4809@mit.edu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Alex Buell <alex.buell@munted.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Linux
 
-On Thu, 2009-04-30 at 16:47 +0300, Boaz Harrosh wrote:
-> > @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request
-> *req, struct scsi_data_buffer *sdb,
-> >       BUG_ON(count > sdb->table.nents);
-> >       sdb->table.nents = count;
-> >       if (blk_pc_request(req))
-> > -             sdb->length = req->data_len;
-> > +             sdb->length = blk_rq_bytes(req);
-> >       else
-> >               sdb->length = blk_rq_sectors(req) << 9;
-> 
-> Is this true. I thought they must be the same now. I was actually
-> anticipating this if() removed.
+On Thu, 30 Apr 2009, Theodore Tso wrote:
+> I can try upgrading to it and see if it's any better.  Or maybe
+> someone on the Linux-thinkpad mailing list with contacts inside Lenovo
+> can bug them.  Sounds like there's no way to work around this except
+> for a BIOS-level fix then?  :-(
 
-Me too ... there's one of these in scsi_lib.c as well.
+Either me or Thomas Renninger can get in touch with Lenovo, yes.  As usual,
+I need a self-contained, precise report of what is wrong, why it is wrong,
+and what should be done to fix it, so that I can forward it.
 
-The difference comes because filesystem requests are always in sectors,
-but BLOCK_PC requests are always in bytes .... we should be able to wrap
-the accessors so they do the correct conversions.
-
-James
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
