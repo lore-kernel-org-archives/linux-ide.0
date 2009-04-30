@@ -1,29 +1,38 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
-	question)
-Date: Thu, 30 Apr 2009 08:35:08 -0700
-Message-ID: <20090430153508.GA10704@linux.intel.com>
-References: <E1LzLgA-0004j6-9W@closure.thunk.org> <49F90CA2.4080602@garzik.org> <20090430083309.437f9248@lithium.local.net> <49F95719.10701@kernel.org> <20090430144702.46415b90@lxorguk.ukuu.org.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
+Date: Thu, 30 Apr 2009 10:35:57 -0500
+Message-ID: <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org>
+	 <1240996428-10159-9-git-send-email-tj@kernel.org>
+	 <49F9AC04.9060403@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:61005 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763575AbZD3PfJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Apr 2009 11:35:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20090430144702.46415b90@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932350AbZD3Ph2@vger.kernel.org>
+In-Reply-To: <49F9AC04.9060403@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Alex Buell <alex.buell@munted.org.uk>, Jeff Garzik <jeff@garzik.org>, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Matthew Garrett <mjg@redhat.com>
 
-On Thu, Apr 30, 2009 at 02:47:02PM +0100, Alan Cox wrote:
-> > So, at the point of driver load, there just isn't much we can do about
-> > the missing ABAR.  It's sad.  Dunno why some laptop manufacturers
-> > still program the thing into piix mode.  :-(
+On Thu, 2009-04-30 at 16:47 +0300, Boaz Harrosh wrote:
+> > @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request
+> *req, struct scsi_data_buffer *sdb,
+> >       BUG_ON(count > sdb->table.nents);
+> >       sdb->table.nents = count;
+> >       if (blk_pc_request(req))
+> > -             sdb->length = req->data_len;
+> > +             sdb->length = blk_rq_bytes(req);
+> >       else
+> >               sdb->length = blk_rq_sectors(req) << 9;
 > 
-> Forcing out of PIIX mode would need to go into the PCI quirks and be a
-> boot option not a module one - at that point its doable as a header quirk.
+> Is this true. I thought they must be the same now. I was actually
+> anticipating this if() removed.
 
-I think Matthew Garrett already has code to do this.
+Me too ... there's one of these in scsi_lib.c as well.
+
+The difference comes because filesystem requests are always in sectors,
+but BLOCK_PC requests are always in bytes .... we should be able to wrap
+the accessors so they do the correct conversions.
+
+James
