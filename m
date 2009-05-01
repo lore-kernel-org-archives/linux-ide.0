@@ -1,50 +1,46 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
-	question)
-Date: Fri, 1 May 2009 07:09:14 -0700
-Message-ID: <20090501140914.GD10704@linux.intel.com>
-References: <E1LzLgA-0004j6-9W@closure.thunk.org> <49F90CA2.4080602@garzik.org> <20090430083309.437f9248@lithium.local.net> <20090430113445.GA4809@mit.edu> <20090430113814.GB4809@mit.edu> <49FA55A0.8080303@gmail.com> <20090501025132.GA7275@mit.edu> <49FA78B4.2070900@gmail.com> <20090501113533.GB10704@linux.intel.com> <20090501131459.GA7681@mit.edu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
+Date: Fri, 1 May 2009 20:27:58 +0200
+Message-ID: <20090501182758.GC4593@kernel.dk>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-9-git-send-email-tj@kernel.org> <49F9AC04.9060403@panasas.com> <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:50091 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751223AbZEAOJP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 May 2009 10:09:15 -0400
+Received: from brick.kernel.dk ([93.163.65.50]:36514 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753895AbZEAS2A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 May 2009 14:28:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20090501131459.GA7681@mit.edu>
+In-Reply-To: <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Robert Hancock <hancockrwd@gmail.com>, Alex Buell <alex.buell@munted.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On Fri, May 01, 2009 at 09:14:59AM -0400, Theodore Tso wrote:
-> Gaah.... so basically a SATA device (the X25-M) is talking to a
-> SATA-PATA bridge chip, which is then talking the IDE port in the ICH8
-> chipset, which shows up as piix, which we're then pretending is SATA
-> at the OS level via the ata_piix driver.  Did I get that right?
-> (Excuse me while I go find a barf bag....)
-
-Well ... libata doesn't pretend that everything is SATA; it uses
-taskfiles which work for both PATA and SATA.  Other than that, I think
-you've got it right.
-
-> Oh.... and I suspect I know why they did it; I'm guessing they wanted
-> to support PATA Ultrabay devices for backwards compatibility on the
-> X60, and perhaps they were running out of connector pins on the
-> docking station (the Ultrabay slot is on the X61's "media slice"), and
-> they didn't have enough wires to run both PATA and SATA interfaces to
-> the docking station, *and* they wanted to use the same docking station
-> for the X60 and X61 Thinkpads.
+On Thu, Apr 30 2009, James Bottomley wrote:
+> On Thu, 2009-04-30 at 16:47 +0300, Boaz Harrosh wrote:
+> > > @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request
+> > *req, struct scsi_data_buffer *sdb,
+> > >       BUG_ON(count > sdb->table.nents);
+> > >       sdb->table.nents = count;
+> > >       if (blk_pc_request(req))
+> > > -             sdb->length = req->data_len;
+> > > +             sdb->length = blk_rq_bytes(req);
+> > >       else
+> > >               sdb->length = blk_rq_sectors(req) << 9;
+> > 
+> > Is this true. I thought they must be the same now. I was actually
+> > anticipating this if() removed.
 > 
-> Ah, well.  I hope it made sense to *someone* at Lenovo...  It would be
-> interesting to see if they fixed this in the X200 or not.
+> Me too ... there's one of these in scsi_lib.c as well.
+> 
+> The difference comes because filesystem requests are always in sectors,
+> but BLOCK_PC requests are always in bytes .... we should be able to wrap
+> the accessors so they do the correct conversions.
 
-Backwards compatibility is a pain.  It looks like from this lspci:
-https://bugzilla.redhat.com/attachment.cgi?id=317327 that the X200 uses
-ICH9M which doesn't appear to have an IDE port on the chip (document
-316972-004).  So it must be fixed in the X200 ... unless they've put in
-a SATA-PATA bridge in the base, and a PATA-SATA bridge in the ultrabay
-...
+blk_rq_bytes() already takes care of this, it can be used on any type
+request. So just kill the if/else.
 
-Even then, it might work.  I don't know enough about the PATA protocol
-to say.
+-- 
+Jens Axboe
+
