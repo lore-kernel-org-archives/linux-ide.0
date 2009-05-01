@@ -1,37 +1,34 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: No NCQ support on X61s Ultrabay?  (Intel ICH8 SATA controller
-	question)
-Date: Fri, 1 May 2009 14:59:09 +0100
-Message-ID: <20090501135908.GA17872@srcf.ucam.org>
-References: <E1LzLgA-0004j6-9W@closure.thunk.org> <49F90CA2.4080602@garzik.org> <20090430083309.437f9248@lithium.local.net> <20090430113445.GA4809@mit.edu> <20090430113814.GB4809@mit.edu> <49FA55A0.8080303@gmail.com> <20090501025132.GA7275@mit.edu> <49FA78B4.2070900@gmail.com> <20090501113533.GB10704@linux.intel.com> <20090501131459.GA7681@mit.edu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] Add support for Designware SATA controller driver
+Date: Fri, 01 May 2009 10:07:07 -0400
+Message-ID: <49FB020B.8000505@garzik.org>
+References: <1241042419-19774-1-git-send-email-fkan@amcc.com>	 <49FAA434.9040106@garzik.org> <1241167748.1781.3.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:53196 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757463AbZEAN7T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 May 2009 09:59:19 -0400
-Content-Disposition: inline
-In-Reply-To: <20090501131459.GA7681@mit.edu>
+Received: from srv5.dvmed.net ([207.36.208.214]:59032 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752667AbZEAOHL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 May 2009 10:07:11 -0400
+In-Reply-To: <1241167748.1781.3.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Matthew Wilcox <willy@linux.intel.com>, Robert Hancock <hancockrwd@gmail.com>, Alex Buell <alex.buell@munted.org.uk>, Jeff Garzik <jeff@garzik.org>lin
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Feng Kan <fkan@amcc.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-On Fri, May 01, 2009 at 09:14:59AM -0400, Theodore Tso wrote:
+Benjamin Herrenschmidt wrote:
+> Patch 2/2 is just adding the device-tree bits to the platform for
+> this driver to match against, so it's no big deal. However, Feng,
+> we already mentioned that you do a lot of unrelated changes to the
+> Kconfig file that shouldn't be part of this patch, just add the
+> entry for this chip, don't move stuff around in Kconfig, unless I
+> missed a good reason why this is done that way.
 
-> Oh.... and I suspect I know why they did it; I'm guessing they wanted
-> to support PATA Ultrabay devices for backwards compatibility on the
-> X60, and perhaps they were running out of connector pins on the
-> docking station (the Ultrabay slot is on the X61's "media slice"), and
-> they didn't have enough wires to run both PATA and SATA interfaces to
-> the docking station, *and* they wanted to use the same docking station
-> for the X60 and X61 Thinkpads.
 
-SATA ultrabays have a standard SATA connector, which is in the same 
-physical location as the PATA connector on the older bays - it's not 
-possible for a single bay to support both PATA and SATA devices. Bear in 
-mind that the usual use for one of these bays is for optical drives, and 
-SATA slimline drives have only started appearing recently.
+Quite correct -- those drivers/ata/Kconfig changes are bogus.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+	Jeff
+
+
+
