@@ -1,35 +1,31 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len
-Date: Fri, 1 May 2009 20:29:58 +0200
-Message-ID: <20090501182958.GD4593@kernel.dk>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [RFC PATCH 0/3] ide-atapi cleanups
+Date: Fri,  1 May 2009 22:14:21 +0200
+Message-ID: <1241208864-23421-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:47166 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755854AbZEASaA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 May 2009 14:30:00 -0400
-Content-Disposition: inline
-In-Reply-To: <1240996428-10159-1-git-send-email-tj@kernel.org>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:57448 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713AbZEAUO3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 May 2009 16:14:29 -0400
+Received: by bwz7 with SMTP id 7so2475266bwz.37
+        for <linux-ide@vger.kernel.org>; Fri, 01 May 2009 13:14:28 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
+To: bzolnier@gmail.com, tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Apr 29 2009, Tejun Heo wrote:
-> Hello,
-> 
-> Upon ack, please pull from the following git tree.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+Hi Bart, hi Tejun,
 
-Looks sane. When you have collected acks and made suggested changes,
-please repost it and I'll integrate it.
+here's a small conversion attempt to Tejun's struct request API change.
+This is not ripe material yet and has more of a rfc nature so that we
+could see more concretely how LLDDs might use and not abuse :) block
+layer interfaces.
 
-Note that I wont be very responsive the next week or so, taking care of
-a new aspiring kernel hacker.
+This is based ontop of
 
--- 
-Jens Axboe
+git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
 
+and has been lightly tested with ide-floppy.
+
+Thanks,
+Boris.
