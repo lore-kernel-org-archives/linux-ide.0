@@ -1,74 +1,50 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
-Date: Sun, 03 May 2009 16:51:32 +0300
-Message-ID: <49FDA164.3030806@panasas.com>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>	 <1240996428-10159-9-git-send-email-tj@kernel.org>	 <49F9AC04.9060403@panasas.com> <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com> <49FCF423.7040609@kernel.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
+Date: Sun, 3 May 2009 08:48:47 -0600
+Message-ID: <20090503144847.GR8822@parisc-linux.org>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com> <20090503071619.GP8822@parisc-linux.org> <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:32426 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751985AbZECNxC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 May 2009 09:53:02 -0400
-In-Reply-To: <49FCF423.7040609@kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:55261 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbZECOss (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 May 2009 10:48:48 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
 
-On 05/03/2009 04:32 AM, Tejun Heo wrote:
-> James Bottomley wrote:
->> On Thu, 2009-04-30 at 16:47 +0300, Boaz Harrosh wrote:
->>>> @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request
->>> *req, struct scsi_data_buffer *sdb,
->>>>       BUG_ON(count > sdb->table.nents);
->>>>       sdb->table.nents = count;
->>>>       if (blk_pc_request(req))
->>>> -             sdb->length = req->data_len;
->>>> +             sdb->length = blk_rq_bytes(req);
->>>>       else
->>>>               sdb->length = blk_rq_sectors(req) << 9;
->>> Is this true. I thought they must be the same now. I was actually
->>> anticipating this if() removed.
->> Me too ... there's one of these in scsi_lib.c as well.
-> 
-> Not until the next patch.  It's probably safe for scsi to make the
-> switch here but I wanted to do the transition in two logical steps -
-> 1. make all users use accessors in the defined manner without
-> affecting anything else 2. knowing #1 is true for all low level
-> drivers, unify implementation inside block layer.  I had a following
-> patch which tried to do sweep conversion of all llds (which is
-> guaranteed to be safe after #2 has happened) but it looked like more
-> trouble than worth and seems like best left to each subsystem, so
-> please go ahead and clean up subsystems on top of this patchset.  :-)
-> 
->> The difference comes because filesystem requests are always in sectors,
->> but BLOCK_PC requests are always in bytes .... we should be able to wrap
->> the accessors so they do the correct conversions.
-> 
-> After this series is applied, blk_rq_bytes() >> 9 == blk_rq_sectors()
-> is guaranteed (note that blk_rq_sectors() << 9 might not equal
-> blk_rq_bytes() if the data transfer length isn't multiple of 512), so
-> the above if can be removed.  I just didn't want to make the
-> conversion (probably safe for scsi) before the actual unification.
-> 
-> Thanks.
-> 
+On Sun, May 03, 2009 at 02:07:32PM +0100, Hugh Dickins wrote:
+> I notice OCZ hope to have updated Vertex firmware mid-May,
+> such that their TRIM support matches up with (y)ours.
 
-OK, NP. But in this case please note on the side all the places you think
-might be suspect for blk_rq_bytes()/blk_rq_sectors() cosolidation and post the
-list. Because it is now that you are going over the code and it is now that you
-touch exactly all these places. 
+Excellent.
 
-You could even put a "TODO:" comments on all these places in this patch. So to draw
-later patches that audit and remove the TODO:.
+> You have GFP_KERNEL allocations in your discard_fn()s.  I believe that
+> allocations down at that level will need to be GFP_NOIO - the bio mempool
+> might be empty by this point, you don't want memory allocation to get into
+> submitting even more I/O to satisfy your discard_fn().  Does it need its
+> own mempool of reserve pages?  My guess is that you can get away without
+> that, since a failed discard, though regrettable, loses no data.
 
-(Or in trivial places like above that are safe even before these patches, just
- convert them silently, in the sense of least traffic)
+You make a good point.  There's definitely still work to be done around
+error handling.  OTOH, we could always do what IDE does ...
 
-But sure I will see what I can help and send patches for. Tell me when you
-think this is stable enough for me to add patches on top of.
+static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+{
+        ide_drive_t *drive = q->queuedata;
+        struct ide_cmd *cmd = kmalloc(sizeof(*cmd), GFP_ATOMIC);
 
-Thanks
-Boaz
+        /* FIXME: map struct ide_taskfile on rq->cmd[] */
+        BUG_ON(cmd == NULL);
+
+
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
