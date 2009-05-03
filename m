@@ -1,45 +1,99 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len
-Date: Sun, 03 May 2009 11:50:16 +0900
-Message-ID: <49FD0668.4070403@kernel.org>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org> <20090501182958.GD4593@kernel.dk>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH 1/5] Block: Discard may need to allocate pages
+Date: Sat, 2 May 2009 23:11:50 -0700
+Message-ID: <20090503061150.GF10704@linux.intel.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37487 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899AbZECCwZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 2 May 2009 22:52:25 -0400
-In-Reply-To: <20090501182958.GD4593@kernel.dk>
+Received: from mga06.intel.com ([134.134.136.21]:64588 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751019AbZECGLu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 May 2009 02:11:50 -0400
+Content-Disposition: inline
+In-Reply-To: <49D8A3D7.5070507@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, Matthew Wilcox <matthew@wil.cx>
 
-Hello,
 
-Jens Axboe wrote:
-> On Wed, Apr 29 2009, Tejun Heo wrote:
->> Hello,
->>
->> Upon ack, please pull from the following git tree.
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+[I thought I replied to this, but I don't see an indication that I did]
+
+On Sun, Apr 05, 2009 at 03:28:07PM +0300, Boaz Harrosh wrote:
+> > +++ b/block/blk-barrier.c
+> > @@ -356,6 +356,8 @@ static void blkdev_discard_end_io(struct bio *bio, int err)
+> >  		clear_bit(BIO_UPTODATE, &bio->bi_flags);
+> >  	}
+> >  
+> > +	if (bio_has_data(bio))
+> > +		__free_page(bio_page(bio));
 > 
-> Looks sane. When you have collected acks and made suggested changes,
-> please repost it and I'll integrate it.
+> Page freed which was allocated by the LLD
 
-Will do.
+It wasn't allocated by the LLD.  It was allocated by the ULD.
 
-> Note that I wont be very responsive the next week or so, taking care
-> of a new aspiring kernel hacker.
+> >  	bio_put(bio);
+> 
+> OK bio was allocated by user code but shouldn't
 
-Alright.  I'm not getting a lot of work done past few days either cuz
-I purchased fallout3 and still have a serious score to settle with the
-old man.
+?  Are you saying the bio should be allocated by each driver
+implementing a discard operation?
 
-Thanks and have fun with the newbie.  :-)
+> >  	while (nr_sects && !ret) {
+> > -		bio = bio_alloc(gfp_mask, 0);
+> > +		bio = bio_alloc(gfp_mask, 1);
+> 
+> blkdev_issue_discard() and blk_ioctl_discard() has half a page
+> of common (and changing) code, could be done to use a common
+> helper that sets policy about bio allocation sizes and such.
+> 
+> Just my $0.017
 
--- 
-tejun
+Yes, that works nicely.  Thanks for the suggestion.
+
+> > @@ -1118,7 +1120,7 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+> >  		req->cmd_flags |= REQ_DISCARD;
+> >  		if (bio_barrier(bio))
+> >  			req->cmd_flags |= REQ_SOFTBARRIER;
+> > -		req->q->prepare_discard_fn(req->q, req);
+> > +		req->q->prepare_discard_fn(req->q, req, bio);
+> 
+> Allocation of bio page could be done commonly here.
+> The prepare_discard_fn() is made to return the needed size. It is not as if we actually
+> give the driver a choice about the allocation.
+
+Not all drivers need to allocate a page.  Some drivers may need
+to allocate more than one page, depending on how large the range is.
+And the driver can't just return the page size it needs here -- it needs
+to fill in the contents of the page too.
+
+I suppose we could do something fairly disgusting like:
+
+		for (;;) {
+			struct page *page;
+			needed = req->q->prepare_discard_fn(req->q, req, bio);
+			if (!needed)
+				break;
+			page = alloc_page(GFP_KERNEL);
+			if (bio_add_pc_page(q, bio, page, PAGE_SIZE, 0) < PAGE_SIZE)
+				goto fail;
+		}
+
+Then the driver can return 0 => success, anything else => allocate more
+ram, try again.
+
+> I have one question:
+> 
+> At [PATCH 4/5] and [PATCH 4/5] you do:
+> +	struct page *page = alloc_page(GFP_KERNEL);
+> 
+> does that zero the alloced page? since if I understand correctly this page
+> will go on the wire, a SW target on the other size could snoop random Kernel
+> memory, is that allowed? OK I might be totally clueless here.
+
+alloc_page doesn't zero the page.
+
+scsi only sends out 24 bytes of that page on the wire, and it initialises
+all 24 bytes.  ide/ata send multiples of 512 bytes on the wire, and
+they're careful to zero any of the space they're not using.
