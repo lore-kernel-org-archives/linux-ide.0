@@ -1,48 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
-Date: Sun, 3 May 2009 20:48:03 +0200
-Message-ID: <200905032048.04219.bzolnier@gmail.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49FDB21B.3080301@panasas.com> <20090503154216.GU8822@parisc-linux.org>
+Date: Sun, 03 May 2009 14:04:32 -0500
+Message-ID: <1241377472.5596.88.camel@mulgrave.int.hansenpartnership.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
+	 <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com>
+	 <20090503071619.GP8822@parisc-linux.org>
+	 <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>
+	 <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com>
+	 <20090503154216.GU8822@parisc-linux.org> <49FDC786.6070309@panasas.com>
+	 <49FDE3BB.505@garzik.org>  <49FDE50A.4060503@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:41651 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754210AbZECSnQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 May 2009 14:43:16 -0400
-In-Reply-To: <20090503154216.GU8822@parisc-linux.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <49FDE50A.4060503@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Mark Lord <lkml@rtr.ca>
 
-On Sunday 03 May 2009 17:42:16 Matthew Wilcox wrote:
-> On Sun, May 03, 2009 at 06:02:51PM +0300, Boaz Harrosh wrote:
-> > I agree with Hugh. The allocation is done at, too-low in the food chain.
-> > (And that free of buffer at upper layer allocated by lower layer).
-> > 
-> > I think you need to separate the: "does lld need buffer, what size"
-> > from the "here is buffer prepare", so upper layer that can sleep does
-> > sleep.
+On Sun, 2009-05-03 at 14:40 -0400, Jeff Garzik wrote:
+> Jeff Garzik wrote:
+> > (2) determine at init if queue (a) supports explicit DISCARD and/or (b) 
+> > supports DISCARD flag passed with READ or WRITE
 > 
-> So you want two function pointers in the request queue relating to discard?
 > 
-> > In all other buffer needing operations the allocation is done before
-> > submission of request, No?
+> As an aside -- does any existing command set support case #b, above?
+
+Not to my knowledge.
+
+I think discard was modelled on barrier (which can be associated with
+data or stand on its own).
+
+> AFAICT, ATA, SCSI and NVMHCI all have a single, explicit hardware 
+> command to discard/deallocate unused sectors.
 > 
-> It's not true for the flush request (the example I quoted).  Obviously,
-> the solution adopted here by IDE is Bad and Wrong ...
+> Therefore, creating REQ_TYPE_DISCARD seems to eliminate any need for new 
+> hook ->prepare_discard().
 
-When speaking about "the solution" do you mean that quick & ugly hack
-that I needed to fix the unexpected regression during late -rc cycle? ;)
+Well, yes and no ... in the SCSI implementation of either UNMAP or WRITE
+SAME, we still need a data buffer to store either the extents or the
+actual same data.
 
-The proper solution would involve adding 'struct ide_cmd flush_cmd' to
-ide_drive_t but I never got to verify/inquiry that is OK with the block
-layer (if there can be only one flush rq outstanding or if we can have
-both q->pre_flush_rq and q->post_flush_rq queued at the same time)...
+> This provides a 1:1 correspondence between hardware and struct request, 
+> most closely matching the setup of known hardware.
 
-Thanks,
-Bart
+Agreed ... but we still have to allocate the adjunct buffer
+somewhere ....
+
+James
+
+
