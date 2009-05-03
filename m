@@ -1,7 +1,7 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
-Date: Sun, 03 May 2009 14:37:56 -0500
-Message-ID: <1241379476.5596.92.camel@mulgrave.int.hansenpartnership.com>
+Date: Sun, 03 May 2009 14:47:47 -0500
+Message-ID: <1241380067.5596.103.camel@mulgrave.int.hansenpartnership.com>
 References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
 	 <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com>
 	 <20090503071619.GP8822@parisc-linux.org>
@@ -15,10 +15,10 @@ Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44821 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59196 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756619AbZECTh5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 May 2009 15:37:57 -0400
+	by vger.kernel.org with ESMTP id S1751837AbZECTrs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 May 2009 15:47:48 -0400
 In-Reply-To: <49FDEE64.5090302@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -26,17 +26,44 @@ To: Jeff Garzik <jeff@garzik.org>
 Cc: Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
 
 On Sun, 2009-05-03 at 15:20 -0400, Jeff Garzik wrote:
-> Is WRITE SAME associated with this current DISCARD work, or is that just 
-> a similar example?  I'm unfamiliar with its issues...
+> [tangent...]
+> 
+> Does make you wonder if a ->init_rq_fn() would be helpful, one that 
+> could perform gfp_t allocations rather than GFP_ATOMIC?  The idea being 
+> to call ->init_rq_fn() almost immediately after creation of struct 
+> request, by the struct request creator.
 
-It's an adjunct body of work.  T10 apparently ratified both UNMAP and
-the WRITE SAME extensions.  What WRITE SAME does is write the same data
-block to multiple contiguous locations as specified in the CDB.  What
-the thin provisioning update did for it is allow you to specify a flag
-saying I want these sectors unmapped.   The perceived benefit of WRITE
-SAME is that you specify (with the write same data ... presumably all
-zeros) what an unmapped sector will return if it's ever read from again,
-which was a big argument in the UNMAP case.
+Isn't that what the current prep_fn actually is?
+
+> I obviously have not thought in depth about this, but it does seem that 
+> init_rq_fn(), called earlier in struct request lifetime, could eliminate 
+> the need for ->prepare_flush, ->prepare_discard, and perhaps could be a 
+> better place for some of the ->prep_rq_fn logic.
+
+It's hard to see how ... prep_rq_fn is already called pretty early ...
+almost as soon as the elevator has decided to spit out the request
+
+> The creator of struct request generally has more freedom to sleep, and 
+> it seems logical to give low-level drivers a "fill in LLD-specific info" 
+> hook BEFORE the request is ever added to a request_queue.
+
+Unfortunately it's not really possible to find a sleeping context in
+there:  The elevators have to operate from the current
+elv_next_request() context, which, in most drivers can either be user or
+interrupt.
+
+The way the block layer is designed is to pull allocations up the stack
+much closer to the process (usually at the bio creation point) because
+that allows the elevators to operate even in memory starved conditions.
+If we pushed the allocation down into the request level, we'd need some
+type of threading (bad for performance) and the request processing would
+stall when some GFP_KERNEL allocation went out to lunch finding memory.
+
+The ideal for REQ_TYPE_DISCARD seems to be to force a page allocation
+tied to a bio when it's issued at the top.  That way everyone has enough
+memory when it comes down the stack (both extents and WRITE SAME sector
+will fit into a page ... although only just for WRITE SAME on 4k
+sectors).
 
 James
 
