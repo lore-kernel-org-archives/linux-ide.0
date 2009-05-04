@@ -1,54 +1,34 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
-Date: Mon, 04 May 2009 16:03:49 +0200
-Message-ID: <49FEF5C5.6010404@interlog.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>	 <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com>	 <20090503071619.GP8822@parisc-linux.org>	 <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>	 <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com>	 <20090503154216.GU8822@parisc-linux.org> <49FDC786.6070309@panasas.com>	 <49FDE3BB.505@garzik.org>  <49FDE50A.4060503@garzik.org>	 <1241377472.5596.88.camel@mulgrave.int.hansenpartnership.com>	 <49FDEE64.5090302@garzik.org> <1241379476.5596.92.camel@mulgrave.int.hansenpartnership.com>
-Reply-To: dgilbert@interlog.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 08/11] block: cleanup rq->data_len usages
+Date: Mon, 04 May 2009 18:41:32 +0400
+Message-ID: <49FEFE9C.9060102@ru.mvista.com>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:35678 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbZEDOD4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 10:03:56 -0400
-In-Reply-To: <1241379476.5596.92.camel@mulgrave.int.hansenpartnership.com>
+Received: from h155.mvista.com ([63.81.120.155]:43050 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756107AbZEDOkN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 May 2009 10:40:13 -0400
+In-Reply-To: <1241423927-11871-9-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com, "Darrick J. Wong" <djwong@us.ibm.com>
 
-James Bottomley wrote:
-> On Sun, 2009-05-03 at 15:20 -0400, Jeff Garzik wrote:
->> Is WRITE SAME associated with this current DISCARD work, or is that just 
->> a similar example?  I'm unfamiliar with its issues...
-> 
-> It's an adjunct body of work.  T10 apparently ratified both UNMAP and
-> the WRITE SAME extensions.  What WRITE SAME does is write the same data
-> block to multiple contiguous locations as specified in the CDB.  What
-> the thin provisioning update did for it is allow you to specify a flag
-> saying I want these sectors unmapped.   The perceived benefit of WRITE
-> SAME is that you specify (with the write same data ... presumably all
-> zeros) what an unmapped sector will return if it's ever read from again,
-> which was a big argument in the UNMAP case.
+Tejun Heo wrote:
 
-James,
-Your presumption is correct. For the UNMAP bit to be honoured
-in the SCSI WRITE SAME command, the user data part of the
-data-out buffer needs to be all zeros, and, if present,
-the protection data part of the data-out buffer needs
-to be all 0xff_s (i.e. 8 bytes of 0xff). Otherwise the
-UNMAP bit in WRITE SAME command is ignored and it does a
-"normal" WRITE SAME.
+> With recent unification of fields, it's now guaranteed that
+> rq->data_len always equals blk_rq_bytes().  Convert all non-IDE direct
+> users to accessors.  IDE will be converted in a separate patch.
 
-My $0.02's worth was a suggestion to report an error if the
-UNMAP bit was given to WRITE SAME and the data-out
-buffer did not comply with the above pattern. Alternatively
-the data-out buffer could just be ignored. The author
-of the WRITE SAME "unmap" facility duly noted my observations
-and rejected them :-) The wording in sbc3r18.pdf for WRITE SAME
-is contorted so there will be changes. And t10 is still
-having teleconferences about thin provisioning so there may be
-non-trivial changes in the near future.
+> Boaz: spotted incorrect data_len/resid_len conversion in osd.
 
-Doug Gilbert
+> [ Impact: convert direct rq->data_len usages to blk_rq_bytes() ]
+
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
