@@ -1,36 +1,78 @@
-From: s ticket <smticket@gmail.com>
-Subject: Re: How to assess PMP register
-Date: Mon, 4 May 2009 13:04:17 +0800
-Message-ID: <fa69d4570905032204q726728a1qd4be4800b916439a@mail.gmail.com>
-References: <fa69d4570904291849p638b849fm856be97c81340624@mail.gmail.com>
-	 <49FA2763.9040409@rtr.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 07/10] block: drop request->hard_* and *nr_sectors
+Date: Mon, 04 May 2009 14:06:29 +0900
+Message-ID: <49FE77D5.9040909@kernel.org>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-8-git-send-email-tj@kernel.org> <49F9ABAE.60405@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:6488 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751284AbZEDFER convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 01:04:17 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so2106648ywb.1
-        for <linux-ide@vger.kernel.org>; Sun, 03 May 2009 22:04:17 -0700 (PDT)
-In-Reply-To: <49FA2763.9040409@rtr.ca>
+Received: from hera.kernel.org ([140.211.167.34]:45821 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751255AbZEDFQr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 May 2009 01:16:47 -0400
+In-Reply-To: <49F9ABAE.60405@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com
 
->> Is there any way to read PMP registers after hardreset/softreset?
->> SATA Controller is marvell 88SX7042 and driver is sata_mv.
->> I try to send 0xE4 and 0xE6 command to read/write PMP registers:
->
-> ..
->>
->> =A0 =A0 =A0 =A0if (ioctl(fd, SG_IO, &io_hdr) =3D=3D -1) {
->
-> ..
->
-> No, there is no existing way to access PMP registers from user space.
->
-But what's the difference in dealing with '0xE4' and '0xE8' commands.
-I found that only the two commands will reset the link
+Hello, Boaz.
+
+Boaz Harrosh wrote:
+>> @@ -1926,8 +1892,25 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+>>  		bio_iovec(bio)->bv_len -= nr_bytes;
+>>  	}
+>>  
+>> -	blk_recalc_rq_sectors(req, total_bytes >> 9);
+>> +	req->data_len -= total_bytes;
+>> +	req->buffer = bio_data(req->bio);
+>> +
+>> +	/* update sector only for requests with clear definition of sector */
+>> +	if (blk_fs_request(req) || blk_discard_rq(req))
+>> +		req->sector += total_bytes >> 9;
+>> +
+>> +	/*
+>> +	 * If total number of sectors is less than the first segment
+>> +	 * size, something has gone terribly wrong.
+>> +	 */
+>> +	if (blk_rq_bytes(req) < blk_rq_cur_bytes(req)) {
+>> +		printk(KERN_ERR "blk: request botched\n");
+>> +		req->data_len = blk_rq_cur_bytes(req);
+>> +	}
+> 
+> What happens in the last bio/segment?
+
+Can you please elaborate a bit?  Nothing really changes for the last
+bio/segment.
+
+> Is it not allowed with block_pc commands that blk_rq_bytes(req) (was
+> data_len) be smaller then sum_bytes(bio-chain)?
+
+Well, before, it wasn't well defined.  For PC requests w/o bio, any
+completion was full completion which isn't exactly data_len being
+allowed to be shorter than actual data length but more like data_len
+being completely ignored.  If a PC request has bio, the request should
+be completed with full bio data length.  After recent changes, all PC
+requests use bio and thus should fully complete the PC requests and
+this patch doesn't change anything about that.
+
+> Also I never understood the drain is it not appended to the last
+> bio? I thought it is costumery in the Kernel to allow mapping longer
+> then actual length?
+
+drain is implemented in slightly hacky way.  All that's guaranteed is
+extra room in the mapped sgl.  bio never sees it.
+
+> Maybe you would want blk_rq_cur_bytes(req) to return the minimum of
+> the two, and let bio's be longer then bytes requested. (ie. reverse
+> above logic)
+
+No, blk_rq_bytes() == sum of bio_rq_cur_bytes() of all bios in the
+request and must NEVER be shorter than bio_rq_cur_bytes() by
+definition.
+
+Thanks.
+
+-- 
+tejun
