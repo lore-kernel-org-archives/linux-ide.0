@@ -1,51 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
-Date: Mon, 04 May 2009 13:19:56 +0900
-Message-ID: <49FE6CEC.2060802@kernel.org>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>	 <1240996428-10159-9-git-send-email-tj@kernel.org>	 <49F9AC04.9060403@panasas.com> <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com> <49FCF423.7040609@kernel.org> <49FDA164.3030806@panasas.com>
+From: s ticket <smticket@gmail.com>
+Subject: Re: How to assess PMP register
+Date: Mon, 4 May 2009 13:04:17 +0800
+Message-ID: <fa69d4570905032204q726728a1qd4be4800b916439a@mail.gmail.com>
+References: <fa69d4570904291849p638b849fm856be97c81340624@mail.gmail.com>
+	 <49FA2763.9040409@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60863 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750851AbZEDEbJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 May 2009 00:31:09 -0400
-In-Reply-To: <49FDA164.3030806@panasas.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:6488 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751284AbZEDFER convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 01:04:17 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so2106648ywb.1
+        for <linux-ide@vger.kernel.org>; Sun, 03 May 2009 22:04:17 -0700 (PDT)
+In-Reply-To: <49FA2763.9040409@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Hello,
-
-Boaz Harrosh wrote:
-> OK, NP. But in this case please note on the side all the places you
-> think might be suspect for blk_rq_bytes()/blk_rq_sectors()
-> cosolidation and post the list. Because it is now that you are going
-> over the code and it is now that you touch exactly all these places.
-> 
-> You could even put a "TODO:" comments on all these places in this
-> patch. So to draw later patches that audit and remove the TODO:.
-
-Heh... okay.  I'll add a patch for the sweep conversion.
-
-> (Or in trivial places like above that are safe even before these
-> patches, just convert them silently, in the sense of least traffic)
-
-I really don't want to do that.  Things which might look trivial often
-break things and this part of API has been quite fragile, so I'd
-rather put those changes after the actual unification for, if nothing
-else, documentation.
-
-> But sure I will see what I can help and send patches for. Tell me
-> when you think this is stable enough for me to add patches on top
-> of.
-
-Yeap, I just finished saving the wasteland, so the refreshed patchset
-will be posted later today.  :-)
-
-Thanks.
-
--- 
-tejun
+>> Is there any way to read PMP registers after hardreset/softreset?
+>> SATA Controller is marvell 88SX7042 and driver is sata_mv.
+>> I try to send 0xE4 and 0xE6 command to read/write PMP registers:
+>
+> ..
+>>
+>> =A0 =A0 =A0 =A0if (ioctl(fd, SG_IO, &io_hdr) =3D=3D -1) {
+>
+> ..
+>
+> No, there is no existing way to access PMP registers from user space.
+>
+But what's the difference in dealing with '0xE4' and '0xE8' commands.
+I found that only the two commands will reset the link
