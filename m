@@ -1,37 +1,38 @@
-From: Adrian McMenamin <adrian@newgolddream.dyndns.info>
-Subject: Re: [PATCH 05/11] block: convert to pos and nr_sectors accessors
-Date: Mon, 04 May 2009 20:48:20 +0100
-Message-ID: <1241466500.6677.2.camel@localhost.localdomain>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org>
-	 <1241423927-11871-6-git-send-email-tj@kernel.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH] cs5536: define dma_sff_read_status() method
+Date: Mon, 4 May 2009 14:59:06 -0700
+Message-ID: <20090504215906.GC31248@kroah.com>
+References: <200904072003.40866.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1241423927-11871-6-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from kroah.org ([198.145.64.141]:60306 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754362AbZEDWEs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 May 2009 18:04:48 -0400
+Content-Disposition: inline
+In-Reply-To: <200904072003.40866.sshtylyov@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, stable@kernel.org
 
-On Mon, 2009-05-04 at 16:58 +0900, Tejun Heo wrote:
-> With recent cleanups, there is no place where low level driver
-> directly manipulates request fields.  This means that the 'hard'
-> request fields always equal the !hard fields.  Convert all
-> rq->sectors, nr_sectors and current_nr_sectors references to
-> accessors.
+On Tue, Apr 07, 2009 at 08:03:40PM +0400, Sergei Shtylyov wrote:
+> The driver somehow got merged with the initializer for the dma_sff_read_status()
+> method missing which caused kernel panic on bootup.
 > 
-> [ Impact: use pos and nr_sectors accessors ]
+> This should fix the kernel.org bug #13026...
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Acked-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-> Tested-by: Grant Likely <grant.likely@secretlab.ca>
-> Acked-by: Grant Likely <grant.likely@secretlab.ca>
-> Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
-> Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> ---
+> This patch is against the recent Linus' tree.
+> It should go into 2.6.29-stable as the driver was merged/broken in 2.6.29 time.
 
-I have re-tested this on the Dreamcast and it still works :)
+It doesn't apply to the 2.6.29-stable tree at all.
 
-Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
-Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+Care to redo your patch to apply there?
 
+thanks,
+
+greg k-h
