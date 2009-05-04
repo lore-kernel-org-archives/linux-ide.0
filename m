@@ -1,307 +1,329 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Kernel Panic 2.6.29.6 AMD Geode (in CS5536 IDE ?)
-Date: Mon, 04 May 2009 14:54:08 +0400
-Message-ID: <49FEC950.7020606@ru.mvista.com>
-References: <6849c8890905040053jdf71a23u746706b2b7cc798e@mail.gmail.com> <20090504080951.GA21501@liondog.tnic> <200905041047.33781.bzolnier@gmail.com>
+From: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>
+Subject: Re: EP93xx PIO IDE driver proposal
+Date: Mon, 04 May 2009 12:24:25 +0100
+Message-ID: <49FED069.9080501@inov.pt>
+References: <49CCD7C4.8000207@inov.pt>
+	<49CFDD8F.1030306@bluewatersys.com>	<BD79186B4FD85F4B8E60E381CAEE1909014E2E09@mi8nycmail19.Mi8.com>
+	<49D0CAE4.9090306@inov.pt> <49D0E687.4040101@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37372 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753010AbZEDKwr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 May 2009 06:52:47 -0400
-In-Reply-To: <200905041047.33781.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.arm.linux.org.uk>
+In-Reply-To: <49D0E687.4040101@ru.mvista.com>
+List-Unsubscribe: <http://lists.arm.linux.org.uk/mailman/listinfo/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.arm.linux.org.uk?subject=unsubscribe>
+List-Archive: <http://lists.arm.linux.org.uk/lurker/list/linux-arm-kernel.html>
+List-Post: <mailto:linux-arm-kernel@lists.arm.linux.org.uk>
+List-Help: <mailto:linux-arm-kernel-request@lists.arm.linux.org.uk?subject=help>
+List-Subscribe: <http://lists.arm.linux.org.uk/mailman/listinfo/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.arm.linux.org.uk?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.arm.linux.org.uk
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.arm.linux.org.uk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: H Hartley Sweeten <hartleys@visionengravers.com>, Ryan Mallon <ryan@bluewatersys.com>, linux-arm-kernel@lists.arm.linux.org.uk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: petkovbb@gmail.com, TJ <tj.trevelyan@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+Hi,
 
-Bartlomiej Zolnierkiewicz wrote:
+I'm sorry I've been busy all this time and I hadn't got the opportunity =
 
->>>I'm not on the mailing list, so please cc me. If needed I can provid=
-e
->>>further information.
+(untill now) to check this.
+But now I am committed full-time on this.
 
->>>I am trying to build purpose built 2.6.29.2 kernel for my ALIX.2
->>>[http://www.pcengines.ch/alix2d2.htm] instead of the generic all
->>>modular 2.6.26 kernel in Debian.
->>>The idea being is to have a slimmer kernel, no initrd*, and to inclu=
-de
->>>ALIX specific features that the Debian kernel does not have.
+Sergei Shtylyov escreveu:
+> Jo=E3o Ramos wrote:
+>> Here is the revised patch according to your comments.
+>
+>> Most significant changes are:
+> [...]
+>>  - Removed useless blank lines and white-spaces (Ryan);
+>
+>   Not all of them yet. :-)
 
->>>(*support is enabled, but everything needed for boot should be built=
--in)
+I've seen your comments and I fixed those blank lines.
+Sorry, old programming habits ;-) .
 
->>>It is not my first kernel build, I tend to do this for all my
->>>machines. Although it is the first time I have tried to build for th=
-is
->>>system.
+>
+>
+>> Regards,
+>> Jo=E3o
+>>
+>> Patch follows.
+>>
+>> diff -urN linux-2.6.29.orig/arch/arm/mach-ep93xx/core.c =
 
->>>My build environment is as follows:
->>>The host is a 64bit Debian (testing) MacBook pro. However I have a
->>>100% 32bit Debian (stable) chroot install, which I also used for thi=
-s.
->>>I explicitly set ARCH=3Di386 otherwise my 64bit CPU is detected. Thi=
-s is
->>>in effect a cross build, but not for an alien architecture and using
->>>the normal host gcc.
->>>(gcc (Debian 4.3.2-1.1) 4.3.2)
+>> linux-2.6.29/arch/arm/mach-ep93xx/core.c
+>> --- linux-2.6.29.orig/arch/arm/mach-ep93xx/core.c    2009-03-23 =
 
->>>sudo chroot /blah
->>>cd /usr/src/linux-source
->>>make ARCH=3Di386 clean
->>>make ARCH=3Di386 menuconfig
->>>make-kpkg --us -uc --arch i386 binary-arch
+>> 23:12:14.000000000 +0000
+>> +++ linux-2.6.29/arch/arm/mach-ep93xx/core.c    2009-03-30 =
 
->>>scp, install the package and then boot.
+>> 13:52:04.000000000 +0100
+>> @@ -537,6 +537,51 @@
+>>      platform_device_register(&ep93xx_i2c_device);
+>>  }
+>>  =
 
->>>(console seems to be repeated because it is given via grub and compl=
-ied in)
+>> +static struct resource ep93xx_ide_resources[] =3D {
+>> +    [0] =3D {
+>
+>    Your code uses 4-space indentation instead of single-tab -- this =
 
->>>   [Linux-bzImage, setup=3D0x2e00, size=3D0x1b0010]
->>>Probing EDD (edd=3Doff to disable)... ok
->>>Linux version 2.6.29 (2.6.29) (root@vorchan) (gcc version 4.3.2
->>>(Debian 4.3.2-1.1) ) #1 Fri May 1 19:19:04 CEST 2009
->>>KERNEL supported cpus:
->>>  Intel GenuineIntel
->>>  AMD AuthenticAMD
->>>  NSC Geode by NSC
->>>  Cyrix CyrixInstead
->>>  Centaur CentaurHauls
->>>  Transmeta GenuineTMx86
->>>  Transmeta TransmetaCPU
->>>  UMC UMC UMC UMC
->>>PAT not supported by CPU.
->>>BIOS-provided physical RAM map:
->>> BIOS-e820: 0000000000000000 - 00000000000a0000 (usable)
->>> BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
->>> BIOS-e820: 0000000000100000 - 0000000010000000 (usable)
->>> BIOS-e820: 00000000fff00000 - 0000000100000000 (reserved)
->>>DMI not present or invalid.
->>>last_pfn =3D 0x10000 max_arch_pfn =3D 0x100000
->>>Scanning 1 areas for low memory corruption
->>>modified physical RAM map:
->>> modified: 0000000000000000 - 0000000000001000 (usable)
->>> modified: 0000000000001000 - 0000000000010000 (reserved)
->>> modified: 0000000000010000 - 0000000000091000 (usable)
->>> modified: 00000000000f0000 - 0000000000100000 (reserved)
->>> modified: 0000000000100000 - 0000000010000000 (usable)
->>> modified: 00000000fff00000 - 0000000100000000 (reserved)
->>>ACPI Error (tbxfroot-0219): A valid RSDP was not found [20081204]
->>>0MB HIGHMEM available.
->>>256MB LOWMEM available.
->>>  mapped low ram: 0 - 10000000
->>>  low ram: 00000000 - 10000000
->>>  bootmap 00010000 - 00012000
->>>(6 early reservations) =3D=3D> bootmem [0000000000 - 0010000000]
->>>  #0 [0000000000 - 0000001000]   BIOS data page =3D=3D> [0000000000 =
--
->>>0000001000]
->>>  #1 [0000200000 - 000058c8f8]    TEXT DATA BSS =3D=3D> [0000200000 =
--
->>>000058c8f8]
->>>  #2 [000058d000 - 0000590000]    INIT_PG_TABLE =3D=3D> [000058d000 =
--
->>>0000590000]
->>>  #3 [000009f000 - 0000100000]    BIOS reserved =3D=3D> [000009f000 =
--
->>>0000100000]
->>>  #4 [0000010000 - 0000010000]          PGTABLE
->>>  #5 [0000010000 - 0000012000]          BOOTMAP =3D=3D> [0000010000 =
--
->>>0000012000]
->>>Zone PFN ranges:
->>>  DMA      0x00000000 -> 0x00001000
->>>  Normal   0x00001000 -> 0x00010000
->>>  HighMem  0x00010000 -> 0x00010000
->>>Movable zone start PFN for each node
->>>early_node_map[3] active PFN ranges
->>>    0: 0x00000000 -> 0x00000001
->>>    0: 0x00000010 -> 0x00000091
->>>    0: 0x00000100 -> 0x00010000
->>>No local APIC present or hardware disabled
->>>PM: Registered nosave memory: 0000000000001000 - 0000000000010000
->>>PM: Registered nosave memory: 0000000000091000 - 00000000000f0000
->>>PM: Registered nosave memory: 00000000000f0000 - 0000000000100000
->>>Allocating PCI resources starting at 20000000 (gap: 10000000:eff0000=
-0)
->>>Built 1 zonelists in Zone order, mobility grouping on.  Total pages:
->>>64898
->>>Kernel command line: console=3DttyS0,38400
->>>BOOT_IMAGE=3D/boot/vmlinuz-2.6.29 root=3D/dev/hda2 ro console=3DttyS=
-0,38400
->>>Initializing CPU#0
->>>PID hash table entries: 1024 (order: 10, 4096 bytes)
->>>Fast TSC calibration using PIT
->>>Detected 498.050 MHz processor.
->>>console [ttyS0] enabled
->>>Dentry cache hash table entries: 32768 (order: 5, 131072 bytes)
->>>Inode-cache hash table entries: 16384 (order: 4, 65536 bytes)
->>>Memory: 255536k/262144k available (2129k kernel code, 5924k reserved=
-,
->>>878k data, 300k init, 0k highmem)
->>>virtual kernel memory layout:
->>>    fixmap  : 0xfffac000 - 0xfffff000   ( 332 kB)
->>>    pkmap   : 0xff800000 - 0xffc00000   (4096 kB)
->>>    vmalloc : 0xd0800000 - 0xff7fe000   ( 751 MB)
->>>    lowmem  : 0xc0000000 - 0xd0000000   ( 256 MB)
->>>      .init : 0xc04f4000 - 0xc053f000   ( 300 kB)
->>>      .data : 0xc0414513 - 0xc04f00d8   ( 878 kB)
->>>      .text : 0xc0200000 - 0xc0414513   (2129 kB)
->>>Checking if this processor honours the WP bit even in supervisor
->>>mode...Ok.
->>>SLUB: Genslabs=3D12, HWalign=3D32, Order=3D0-3, MinObjects=3D0, CPUs=
-=3D1,
->>>Nodes=3D1
->>>Calibrating delay loop (skipped), value calculated using timer
->>>frequency.. 996.10 BogoMIPS (lpj=3D1992200)
->>>Mount-cache hash table entries: 512
->>>CPU: L1 I Cache: 64K (32 bytes/line), D cache 64K (32 bytes/line)
->>>CPU: L2 Cache: 128K (32 bytes/line)
->>>CPU: Geode(TM) Integrated Processor by AMD PCS stepping 02
->>>Checking 'hlt' instruction... OK.
->>>Freeing SMP alternatives: 0k freed
->>>net_namespace: 940 bytes
->>>regulator: core version 0.5
->>>NET: Registered protocol family 16
->>>geode-mfgpt:  8 MFGPT timers available.
->>>geode-mfgpt:  Registered timer 0
->>>mfgpt-timer:  Registering MFGPT timer 0 as a clock event, using IRQ =
-7
->>>EISA bus registered
->>>PCI: PCI BIOS revision 2.10 entry at 0xfced9, last bus=3D0
->>>PCI: Using configuration type 1 for base access
->>>bio: create slab <bio-0> at 0
->>>ACPI: Interpreter disabled.
->>>SCSI subsystem initialized
->>>usbcore: registered new interface driver usbfs
->>>usbcore: registered new interface driver hub
->>>usbcore: registered new device driver usb
->>>PCI: Probing PCI hardware
->>>pci 0000:00:09.0: PME# supported from D0 D1 D2 D3hot D3cold
->>>pci 0000:00:09.0: PME# disabled
->>>pci 0000:00:0b.0: PME# supported from D0 D1 D2 D3hot D3cold
->>>pci 0000:00:0b.0: PME# disabled
->>>pci 0000:00:0f.4: PME# supported from D0 D3hot D3cold
->>>pci 0000:00:0f.4: PME# disabled
->>>pci 0000:00:0f.5: PME# supported from D0 D3hot D3cold
->>>pci 0000:00:0f.5: PME# disabled
->>>pnp: PnP ACPI: disabled
->>>NET: Registered protocol family 2
->>>IP route cache hash table entries: 2048 (order: 1, 8192 bytes)
->>>TCP established hash table entries: 8192 (order: 4, 65536 bytes)
->>>TCP bind hash table entries: 8192 (order: 3, 32768 bytes)
->>>TCP: Hash tables configured (established 8192 bind 8192)
->>>TCP reno registered
->>>NET: Registered protocol family 1
->>>platform rtc_cmos: registered platform RTC device (no PNP device
->>>found)
->>>Scanning for low memory corruption every 60 seconds
->>>squashfs: version 4.0 (2009/01/31) Phillip Lougher
->>>JFFS2 version 2.2. (NAND) (SUMMARY)  =EF=BF=BD=C2=A9 2001-2006 Red H=
-at, Inc.
->>>msgmni has been set to 499
->>>alg: No test for stdrng (krng)
->>>io scheduler noop registered
->>>io scheduler deadline registered (default)
->>>AMD Geode RNG detected
->>>Hangcheck: starting hangcheck timer 0.9.0 (tick is 180 seconds, marg=
-in
->>>is 60 seconds).
->>>Hangcheck: Using get_cycles().
->>>Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
->>>=EF=BF=BDserial8250: ttyS0 at I/O 0x3f8 (irq =3D 4) is a NS16550A
->>>serial8250: ttyS1 at I/O 0x2f8 (irq =3D 3) is a NS16550A
->>>loop: module loaded
->>>via-rhine.c:v1.10-LK1.4.3 2007-03-06 Written by Donald Becker
->>>eth0: VIA Rhine III (Management Adapter) at 0xe0000000,
->>>00:0d:b9:18:2d:0c, IRQ 10.
->>>eth0: MII PHY found at address 1, status 0x786d advertising 05e1 Lin=
-k c5e1.
->>>eth1: VIA Rhine III (Management Adapter) at 0xe0040000,
->>>00:0d:b9:18:2d:0d, IRQ 15.
->>>eth1: MII PHY found at address 1, status 0x7849 advertising 05e1 Lin=
-k 0000.
->>>Uniform Multi-Platform E-IDE driver
->>>cs5536 0000:00:0f.2: IDE controller (0x1022:0x209a rev 0x01)
->>>cs5536 0000:00:0f.2: not 100% native mode: will probe irqs later
->>>BUG: unable to handle kernel NULL pointer dereference at (null)
->>>IP: [<(null)>] (null)
->>>*pde =3D 00000000
->>>Oops: 0000 [#1]
->>>last sysfs file:
->>>Modules linked in:
->>>
->>>Pid: 1, comm: swapper Not tainted (2.6.29 #1)
->>>EIP: 0060:[<00000000>] EFLAGS: 00010246 CPU: 0
->>>EIP is at 0x0
->>>EAX: cf948000 EBX: cf948000 ECX: cf948000 EDX: c042d248
->>>ESI: c042d178 EDI: cf819c58 EBP: cf819c00 ESP: cf81dd5c
->>> DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
->>>Process swapper (pid: 1, ti=3Dcf81c000 task=3Dcf81a000 task.ti=3Dcf8=
-1c000)
->>>Stack:
->>> c035faab cf948000 c042d178 0000ff00 c03602bf cf948000 00000000 cf94=
-803c
->>> c042d178 c035e4fd cf81deb4 cf83ac00 cf948000 00000000 cf819cc0 0181=
-9c00
->>> 00000000 cf819c00 cf83ac00 c042d178 c036024a 00000000 000001f0 0000=
-01f1
->>>Call Trace:
->>> [<c035faab>] ide_pci_check_simplex+0x4a/0x7b
->>> [<c03602bf>] ide_hwif_setup_dma+0x5b/0xc4
->>> [<c035e4fd>] ide_host_register+0x150/0x50b
->>> [<c036024a>] ide_pci_init_one+0xa2/0xbc
->>> [<c030833f>] idr_get_empty_slot+0x14d/0x234
->>> [<c03084e1>] ida_get_new_above+0xbb/0x172
->>> [<c03aa179>] raw_pci_read+0x4d/0x55
->>> [<c03aa1f3>] pci_read+0x1c/0x21
->>> [<c031679d>] pci_bus_read_config_dword+0x28/0x3f
->>> [<c0360d97>] cs5536_init_one+0x4b/0x4e
->>> [<c031ab56>] local_pci_probe+0xb/0xc
->>> [<c031b378>] pci_device_probe+0x44/0x66
->>> [<c0352add>] driver_probe_device+0x98/0x126
->>> [<c0352bb4>] __driver_attach+0x49/0x67
->>> [<c0352598>] bus_for_each_dev+0x31/0x56
->>> [<c0352995>] driver_attach+0x11/0x13
->>> [<c0352b6b>] __driver_attach+0x0/0x67
->>> [<c0352075>] bus_add_driver+0x91/0x1a1
->>> [<c050bb55>] cs5536_init+0x0/0x11
->>> [<c0352d35>] driver_register+0x7d/0xd3
->>> [<c050bb55>] cs5536_init+0x0/0x11
->>> [<c031b534>] __pci_register_driver+0x2b/0x57
->>> [<c020112b>] _stext+0x43/0x107
->>> [<c028253d>] create_proc_entry+0x73/0x85
->>> [<c02388a8>] register_irq_proc+0x61/0x7a
->>> [<c04f445d>] kernel_init+0x6f/0xbb
->>> [<c04f43ee>] kernel_init+0x0/0xbb
->>> [<c020328f>] kernel_thread_helper+0x7/0x10
->>>Code:  Bad EIP value.
->>>EIP: [<00000000>] 0x0 SS:ESP 0068:cf81dd5c
->>>---[ end trace 1ed52fe562beb9cc ]---
->>>Kernel panic - not syncing: Attempted to kill init!
+> style is not acceptable. I'd advise to run the patch thru =
 
->>>I have tried to tweak the config some more since I captured that dum=
-p,
->>>but they all die before reaching init as above.
->>>I've attached my latest config, which still gives the same error but
->>>is not the exact one for the dump above.
+> scripts/checkpatch.pl to find and fix the coding style mistakes.
 
->>>Would be grateful for help, advice or a patch. If you need anything
->>>further from me please let me know.
+The problem is mainly my mailer settings: it deforms the patch output. =
 
-> This problem is already fixed in Linus' tree -- somebody just needs t=
-o
-> port it to 2.6.29 and then post it to stable@kernel.org for inclusion=
-=2E
+Perhaps next time I should send the patch as an attachment?
+Either way, i've run the patch through both Lindent.pl and checkpatch.pl =
 
-    I have CC'ed stable@kernel.org on the original patch. There was no =
-mail=20
-from the stable kernel team since (unlike for the hpt366 patch posted a=
-t once).
+and fixed some identation issues.
 
-MBR, Sergei
+[...]
+
+
+>
+>> +/*
+>> + * IDE Interface register map default state
+>> + * (shutdown)
+>> + */
+>> +static void
+>> +ep93xx_ide_pio_clean_regs(unsigned long base)
+>> +{
+>> +    /* disable IDE interface initially, ensuring that no device is =
+
+>> selected */
+>> +    writel((IDECTRL_CS0N | IDECTRL_CS1N), IDE_REGISTER(IDECTRL));
+>> +
+>> +    /* clear IDE registers */
+>> +    writel(0, IDE_REGISTER(IDECFG));
+>
+>    Writing 0 to this register generates an invalid cycle on IDE bus if =
+
+> I don't mistake (CS0/1 and DIOR/W all asserted), are you sure you want =
+
+> this?
+
+Zero (0) is the default value for the IDE Configuration Register, as =
+
+stated in EP93xx User's Guide (Section 27, page 11).
+Besides, CS0/1 and DIOR/W lines are controlled through IDE Control Register.
+In that case, perhaps it would be best to have it also set to it's =
+
+default value, deasserting DIOR/W as well:
+
+writel((IDECTRL_CS0N | IDECTRL_CS1N | IDECTRL_DIORN | IDECTRL_DIOWN), =
+
+IDE_REGISTER(IDECTRL));
+
+>
+>> +/*
+>> + * EP93xx IDE PIO low-level hardware initialization routine
+>> + */
+>> +static void
+>> +ep93xx_ide_pio_init_hwif(ide_hwif_t *hwif)
+>> +{
+>> +    unsigned long base =3D hwif->config_data;
+>> +
+>> +    /* enforce reset state */
+>> +    ep93xx_ide_pio_clean_regs(base);
+>> +
+>> +    /* set gpio port E, G and H for IDE */
+>> +    ep93xx_ide_gpio_on_ide();
+>> +
+>> +    /*
+>> +     * configure IDE interface:
+>> +     *   - IDE Master Enable
+>> +     *   - Polled IO Operation
+>> +     *   - PIO Mode 4 (16.67 MBps)
+>> +     *   - 1 Wait State (10 ns)
+>> +     */
+>> +    writel(IDECFG_IDEEN | IDECFG_PIO | IDECFG_PIO_MODE_4 |
+>> +           ((1 << 8) & IDECFG_WST), IDE_REGISTER(IDECFG));
+>> +}
+>> +
+>> +/*
+>> + * EP93xx IDE PIO low-level byte-read procedure.
+>> + */
+>> +static u8
+>> +ep93xx_ide_pio_readb(unsigned long base, unsigned long addr)
+>> +{
+>> +    u32    reg;
+>> +
+>> +    /*
+>> +     * initial state: DIORn=3D1, DIOWn=3D1
+>> +     * write address out
+>> +     * select CS configuration
+>> +     */
+>> +    reg =3D ((addr & 0x07) << 2) | ((addr >> 3) & 0x03) | IDECTRL_DIORN=
+ |
+>> +          IDECTRL_DIOWN;
+>> +    writel(reg, IDE_REGISTER(IDECTRL));
+>> +
+>> +    /*
+>> +     * bring DIORn low
+>> +     */
+>> +    reg &=3D ~IDECTRL_DIORN;
+>> +    writel(reg, IDE_REGISTER(IDECTRL));
+>> +
+>> +    /*
+>> +     * bring DIORn high
+>> +     */
+>> +    reg |=3D IDECTRL_DIORN;
+>> +    writel(reg, IDE_REGISTER(IDECTRL));
+>> +
+>> +    /*
+>> +     * read IDE Data Input Register
+>> +     */
+>> +    return (readl(IDE_REGISTER(IDEDATAIN)) & 0xFF);
+>
+>    Masking is pointless, it's achieved by truncation to 'u8'.
+>
+>> +}
+>
+>    I don't see what warrants minimum active/recovery time here. And I =
+
+> don't see how you're supporitng PIO modes 3/4 as you're not checking =
+
+> -IORDY.
+
+So, you're saying I should check for the IORDY value at the beginning =
+
+and end of each transfer?
+What exactly do you mean by 'warrant minimum active/recovery time'? =
+
+Should I insert manual delays to ensure timing issues?
+
+[...]
+
+>> +/*
+>> + * EP93xx IDE PIO low-level word buffer-read procedure
+>> + */
+>> +static void
+>> +ep93xx_ide_pio_readsw(unsigned long base, unsigned long addr, void =
+
+>> *buf,
+>> +                      unsigned int len)
+>> +{
+>> +    u16    *data =3D (u16 *)buf;
+>> +
+>> +    for (;len;len--)
+>
+>    Put spaces after ; please.
+>
+>> +        *data++ =3D ep93xx_ide_pio_readw(base, addr);
+>
+>    Is this little-endian only code? If not, it's not valid in the big =
+
+> endian mode...
+
+Should I instead use array-indexing code such as:
+
+for (; len; len--, i++)
+    data[i] =3D ep93xx_ide_pio_readw(base, addr);
+
+And the same for 'ep93xx_ide_pio_writesw()' function?
+
+[...]
+
+>
+>> +static struct ide_port_info    ep93xx_ide_pio_port_info =3D {
+>> +    .name        =3D MODULE_NAME,
+>> +    .init_hwif    =3D ep93xx_ide_pio_init_hwif,
+>> +    .tp_ops     =3D &ep93xx_ide_pio_tp_ops,
+>> +    .host_flags    =3D IDE_HFLAG_SINGLE | IDE_HFLAG_NO_DMA | =
+
+>> IDE_HFLAG_MMIO |
+>> +                  IDE_HFLAG_NO_IO_32BIT | IDE_HFLAG_NO_UNMASK_IRQS,
+>> +    .pio_mask    =3D ATA_PIO4,
+>
+>    I'm not seeing the proper support for any of the PIO modes in your =
+
+> driver as yet...
+
+If you mind to explain to me how to, I would appreciate...
+
+>
+>> +static int __devinit ep93xx_ide_pio_probe(struct platform_device *pdev)
+>> +{
+>> +    int    retval;
+>> +
+>> +    void __iomem    *ide_base;
+>> +
+>> +    struct resource    *mem_res;
+>> +    struct resource    *irq_res;
+>> +
+>> +    hw_regs_t    hw;
+>> +    hw_regs_t    *hws[] =3D {&hw, NULL, NULL, NULL};
+>> +
+>> +    struct ide_host    *host;
+>> +
+>> +    /*
+>> +     * collect resources from platform_device structure
+>> +     */
+>> +    mem_res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>> +    if (!mem_res) {
+>> +        dev_err(&pdev->dev, "could not retrieve device memory =
+
+>> resources!\n");
+>> +        retval =3D -ENXIO;
+>> +        goto fail_return;
+>> +    }
+>> +
+>> +    irq_res =3D platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+>
+>    You could also use platform_get_irq()...
+
+Fixed.
+
+>
+>> +    if (!irq_res) {
+>> +        dev_err(&pdev->dev, "could not retrieve device IRQ =
+
+>> resource!\n");
+>> +        retval =3D -ENXIO;
+>> +        goto fail_return;
+>> +    }
+>> +   +    /* request IDE controller registers memory area */
+>> +    if (!request_mem_region(mem_res->start, mem_res->end - =
+
+>> mem_res->start + 1,
+>> +                            MODULE_NAME)) {
+>> +        dev_err(&pdev->dev, "could not request memory resources!\n");
+>> +        retval =3D -EBUSY;
+>> +        goto fail_return;
+>
+>    Pointless goto/label, you could just instead use:
+>
+>     return retval;
+
+Fixed.
+
+Best regards,
+Jo=E3o Ramos
+
+-- =
+
+************************************************************************
+
+    Jo=E3o Ramos        <joao.ramos@inov.pt>
+
+    INOV INESC Inova=E7=E3o - ESTG Leiria
+    Escola Superior de Tecnologia e Gest=E3o de Leiria
+    Ed=EDficio C1, Campus 2
+    Morro do Lena, Alto do Vieiro
+    Leiria
+    2411-901 Leiria
+    Portugal
+
+    Tel: +351244843424
+    Fax: +351244843424
+
+************************************************************************
+
+
+-------------------------------------------------------------------
+List admin: http://lists.arm.linux.org.uk/mailman/listinfo/linux-arm-kernel
+FAQ:        http://www.arm.linux.org.uk/mailinglists/faq.php
+Etiquette:  http://www.arm.linux.org.uk/mailinglists/etiquette.php
