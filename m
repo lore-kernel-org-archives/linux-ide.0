@@ -1,36 +1,50 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
-Date: Mon, 04 May 2009 18:28:07 +0300
-Message-ID: <49FF0987.8040608@panasas.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>	 <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com>	 <20090503071619.GP8822@parisc-linux.org>	 <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>	 <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com>	 <20090503154216.GU8822@parisc-linux.org> <49FDC786.6070309@panasas.com>	 <49FDE3BB.505@garzik.org>  <49FDE50A.4060503@garzik.org>	 <1241377472.5596.88.camel@mulgrave.int.hansenpartnership.com>	 <49FDEE64.5090302@garzik.org> <1241380067.5596.103.camel@mulgrave.int.hansenpartnership.com> <49FE1EFF.2050406@garzik.org>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Mon, 4 May 2009 09:48:37 -0700
+Message-ID: <e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>
+References: <1233456951-992-1-git-send-email-tj@kernel.org>
+	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>
+	 <49FA0349.3090706@garzik.org>
+	 <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
+	 <49FEA127.1000905@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:51932 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755728AbZEDP2P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 11:28:15 -0400
-In-Reply-To: <49FE1EFF.2050406@garzik.org>
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:46066 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756849AbZEDQsi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 12:48:38 -0400
+In-Reply-To: <49FEA127.1000905@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com
 
-On 05/04/2009 01:47 AM, Jeff Garzik wrote:
-> James Bottomley wrote:
->> The ideal for REQ_TYPE_DISCARD seems to be to force a page allocation
->> tied to a bio when it's issued at the top.  That way everyone has enough
->> memory when it comes down the stack (both extents and WRITE SAME sector
->> will fit into a page ... although only just for WRITE SAME on 4k
->> sectors).
-> 
-> Makes sense...
-> 
-> 	Jeff
-> 
+On Mon, May 4, 2009 at 1:02 AM, Tejun Heo <tj@kernel.org> wrote:
+>> Couldn't the "fix" also just be a note to users to disable ignore_hp=
+a
+>> if they notice that there raid arrays are not assembling correctly?
+>
+> I don't know. =A0If it doesn't work automatically, the solution reall=
+y
+> isn't worth much. =A0People generally don't (shouldn't need to) have =
+any
+> idea what HPA is. =A0It basically boils down to "Linux doesn't suppor=
+t
+> RAID". =A0:-)
+>
+> Maybe we should just put this issue to the rest and strongly advise
+> people against BIOS raids.
 
-I second that, let the allocator of the request supply a buffer and free it
-on return/done. Perhaps with a general helper that does all that.
+That's a bit too far :-).  The real issue is that Linux is ignoring a
+property of the platform.  To me ignoring HPA is like ignoring an e820
+reserved memory region.  You might be able to get away with it
+sometimes, but other times it breaks.
 
-Boaz
+However, in the end I think having 'alt_size' available is a useful
+mechanism for discovering and handling the ignore_hpa=3D1 case.   The
+policy about when to trust it can be left to userspace.
+
+Thanks,
+Dan
