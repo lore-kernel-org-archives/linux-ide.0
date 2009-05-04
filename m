@@ -1,38 +1,39 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [PATCH] cs5536: define dma_sff_read_status() method
-Date: Mon, 4 May 2009 14:59:06 -0700
-Message-ID: <20090504215906.GC31248@kroah.com>
-References: <200904072003.40866.sshtylyov@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: How to assess PMP register
+Date: Mon, 04 May 2009 19:37:14 -0400
+Message-ID: <49FF7C2A.6030000@rtr.ca>
+References: <fa69d4570904291849p638b849fm856be97c81340624@mail.gmail.com>	 <49FA2763.9040409@rtr.ca> <fa69d4570905032204q726728a1qd4be4800b916439a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:60306 "EHLO coco.kroah.org"
+Received: from rtr.ca ([76.10.145.34]:33571 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754362AbZEDWEs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 May 2009 18:04:48 -0400
-Content-Disposition: inline
-In-Reply-To: <200904072003.40866.sshtylyov@ru.mvista.com>
+	id S1757898AbZEDXhP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 May 2009 19:37:15 -0400
+In-Reply-To: <fa69d4570905032204q726728a1qd4be4800b916439a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, stable@kernel.org
+To: s ticket <smticket@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Tue, Apr 07, 2009 at 08:03:40PM +0400, Sergei Shtylyov wrote:
-> The driver somehow got merged with the initializer for the dma_sff_read_status()
-> method missing which caused kernel panic on bootup.
-> 
-> This should fix the kernel.org bug #13026...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> ---
-> This patch is against the recent Linus' tree.
-> It should go into 2.6.29-stable as the driver was merged/broken in 2.6.29 time.
+s ticket wrote:
+>>> Is there any way to read PMP registers after hardreset/softreset?
+>>> SATA Controller is marvell 88SX7042 and driver is sata_mv.
+>>> I try to send 0xE4 and 0xE6 command to read/write PMP registers:
+>> ..
+>>>        if (ioctl(fd, SG_IO, &io_hdr) == -1) {
+>> ..
+>>
+>> No, there is no existing way to access PMP registers from user space.
+>>
+> But what's the difference in dealing with '0xE4' and '0xE8' commands.
+> I found that only the two commands will reset the link
+..
 
-It doesn't apply to the 2.6.29-stable tree at all.
+There's no guaranteed way to do that (reset the link) from userspace either.
 
-Care to redo your patch to apply there?
+You're trying to do device driver things -- those should be done inside
+the device driver in the kernel proper.
 
-thanks,
-
-greg k-h
+Cheers
