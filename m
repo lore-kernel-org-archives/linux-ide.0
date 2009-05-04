@@ -1,150 +1,37 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: [PATCH] sata_mv: use new sata phy register settings for new
-	devices
-Date: Mon, 4 May 2009 20:58:50 +0200
-Message-ID: <20090504185850.GA11630@deprecation.cyrius.com>
-References: <20090411160809.GA10922@deprecation.cyrius.com> <da824cf30904111502u50d8f55dj2d0414bb45a49a22@mail.gmail.com> <c70ff3ad0904130026r4aac1ef4le36175ecdfed581c@mail.gmail.com> <49E2EAEC.5030606@garzik.org> <c70ff3ad0904220344x2e2d9ffat2285c76e0ab437c5@mail.gmail.com>
+From: Adrian McMenamin <adrian@newgolddream.dyndns.info>
+Subject: Re: [PATCH 05/11] block: convert to pos and nr_sectors accessors
+Date: Mon, 04 May 2009 20:48:20 +0100
+Message-ID: <1241466500.6677.2.camel@localhost.localdomain>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org>
+	 <1241423927-11871-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:52164 "EHLO
-	sorrow.cyrius.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912AbZEDS7B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 14:59:01 -0400
-Content-Disposition: inline
-In-Reply-To: <c70ff3ad0904220344x2e2d9ffat2285c76e0ab437c5@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1241423927-11871-6-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Grant Grundler <grundler@google.com>, Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
 
-Mark, can this patch go in now?  It's needed to make SATA operational
-on my Kirkwood-based QNAP TS-219 with a Maxtor drive.
+On Mon, 2009-05-04 at 16:58 +0900, Tejun Heo wrote:
+> With recent cleanups, there is no place where low level driver
+> directly manipulates request fields.  This means that the 'hard'
+> request fields always equal the !hard fields.  Convert all
+> rq->sectors, nr_sectors and current_nr_sectors references to
+> accessors.
+> 
+> [ Impact: use pos and nr_sectors accessors ]
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Acked-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+> Tested-by: Grant Likely <grant.likely@secretlab.ca>
+> Acked-by: Grant Likely <grant.likely@secretlab.ca>
+> Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+> Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
 
+I have re-tested this on the Dreamcast and it still works :)
 
-Subject: [PATCH] sata_mv: use new sata phy register settings for new devices
-From: Saeed Bishara <saeed@marvell.com>
+Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
 
-Marvell's new SoC (65 nano) needs different settings for its SATA
-PHY registers.
-
-Tested-by: Martin Michlmayr <tbm@cyrius.com>
-Signed-off-by: Saeed Bishara <saeed@marvell.com>
-
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -293,6 +293,10 @@ enum {
- 	FISCFG_WAIT_DEV_ERR	= (1 << 8),	/* wait for host on DevErr */
- 	FISCFG_SINGLE_SYNC	= (1 << 16),	/* SYNC on DMA activation */
- 
-+	PHY_MODE9_GEN2		= 0x398,
-+	PHY_MODE9_GEN1		= 0x39c,
-+	PHYCFG_OFS		= 0x3a0,	/* only in 65n devices */
-+
- 	MV5_PHY_MODE		= 0x74,
- 	MV5_LTMODE		= 0x30,
- 	MV5_PHY_CTL		= 0x0C,
-@@ -609,6 +613,8 @@ static int mv_soc_reset_hc(struct mv_host_priv *hpriv,
- static void mv_soc_reset_flash(struct mv_host_priv *hpriv,
- 				      void __iomem *mmio);
- static void mv_soc_reset_bus(struct ata_host *host, void __iomem *mmio);
-+static void mv_soc_65n_phy_errata(struct mv_host_priv *hpriv,
-+				  void __iomem *mmio, unsigned int port);
- static void mv_reset_pci_bus(struct ata_host *host, void __iomem *mmio);
- static void mv_reset_channel(struct mv_host_priv *hpriv, void __iomem *mmio,
- 			     unsigned int port_no);
-@@ -807,6 +813,14 @@ static const struct mv_hw_ops mv_soc_ops = {
- 	.reset_bus		= mv_soc_reset_bus,
- };
- 
-+static const struct mv_hw_ops mv_soc_65n_ops = {
-+	.phy_errata		= mv_soc_65n_phy_errata,
-+	.enable_leds		= mv_soc_enable_leds,
-+	.reset_hc		= mv_soc_reset_hc,
-+	.reset_flash		= mv_soc_reset_flash,
-+	.reset_bus		= mv_soc_reset_bus,
-+};
-+
- /*
-  * Functions
-  */
-@@ -3397,6 +3411,53 @@ static void mv_soc_reset_bus(struct ata_host *host, void __iomem *mmio)
- 	return;
- }
- 
-+static void mv_soc_65n_phy_errata(struct mv_host_priv *hpriv,
-+				  void __iomem *mmio, unsigned int port)
-+{
-+	void __iomem *port_mmio = mv_port_base(mmio, port);
-+	u32	reg;
-+
-+	reg = readl(port_mmio + PHY_MODE3);
-+	reg &= ~(0x3 << 27);	/* SELMUPF (bits 28:27) to 1 */
-+	reg |= (0x1 << 27);
-+	reg &= ~(0x3 << 29);	/* SELMUPI (bits 30:29) to 1 */
-+	reg |= (0x1 << 29);
-+	writel(reg, port_mmio + PHY_MODE3);
-+
-+	reg = readl(port_mmio + PHY_MODE4);
-+	reg &= ~0x1;	/* SATU_OD8 (bit 0) to 0, reserved bit 16 must be set */
-+	reg |= (0x1 << 16);
-+	writel(reg, port_mmio + PHY_MODE4);
-+
-+	reg = readl(port_mmio + PHY_MODE9_GEN2);
-+	reg &= ~0xf;	/* TXAMP[3:0] (bits 3:0) to 8 */
-+	reg |= 0x8;
-+	reg &= ~(0x1 << 14);	/* TXAMP[4] (bit 14) to 0 */
-+	writel(reg, port_mmio + PHY_MODE9_GEN2);
-+
-+	reg = readl(port_mmio + PHY_MODE9_GEN1);
-+	reg &= ~0xf;	/* TXAMP[3:0] (bits 3:0) to 8 */
-+	reg |= 0x8;
-+	reg &= ~(0x1 << 14);	/* TXAMP[4] (bit 14) to 0 */
-+	writel(reg, port_mmio + PHY_MODE9_GEN1);
-+}
-+
-+/**
-+ *	soc_is_65 - check if the soc is 65 nano device
-+ *
-+ *	Detect the type of the SoC, this is done by reading the PHYCFG_OFS
-+ *	register, this register should contain non-zero value and it exists only
-+ *	in the 65 nano devices, when reading it from older devices we get 0.
-+ */
-+static bool soc_is_65n(struct mv_host_priv *hpriv)
-+{
-+	void __iomem *port0_mmio = mv_port_base(hpriv->base, 0);
-+
-+	if (readl(port0_mmio + PHYCFG_OFS))
-+		return true;
-+	return false;
-+}
-+
- static void mv_setup_ifcfg(void __iomem *port_mmio, int want_gen2i)
- {
- 	u32 ifcfg = readl(port_mmio + SATA_IFCFG);
-@@ -3737,7 +3798,10 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
- 		}
- 		break;
- 	case chip_soc:
--		hpriv->ops = &mv_soc_ops;
-+		if (soc_is_65n(hpriv))
-+			hpriv->ops = &mv_soc_65n_ops;
-+		else
-+			hpriv->ops = &mv_soc_ops;
- 		hp_flags |= MV_HP_FLAG_SOC | MV_HP_GEN_IIE |
- 			MV_HP_ERRATA_60X1C0;
- 		break;
-@@ -3800,7 +3864,8 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
- 	n_hc = mv_get_hc_count(host->ports[0]->flags);
- 
- 	for (port = 0; port < host->n_ports; port++)
--		hpriv->ops->read_preamp(hpriv, port, mmio);
-+		if (hpriv->ops->read_preamp)
-+			hpriv->ops->read_preamp(hpriv, port, mmio);
- 
- 	rc = hpriv->ops->reset_hc(hpriv, mmio, n_hc);
- 	if (rc)
-
--- 
-Martin Michlmayr
-http://www.cyrius.com/
