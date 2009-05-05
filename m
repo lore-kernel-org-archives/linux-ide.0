@@ -1,39 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len, take#2
-Date: Tue, 05 May 2009 12:59:58 +0900
-Message-ID: <49FFB9BE.1090709@gmail.com>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [stable] [PATCH] cs5536: define dma_sff_read_status() method
+Date: Tue, 05 May 2009 14:35:59 +0400
+Message-ID: <4A00168F.1060308@ru.mvista.com>
+References: <200904072003.40866.sshtylyov@ru.mvista.com> <20090504215906.GC31248@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:39172 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbZEED67 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2009 23:58:59 -0400
-In-Reply-To: <1241423927-11871-1-git-send-email-tj@kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:4752 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754576AbZEEKed (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 May 2009 06:34:33 -0400
+In-Reply-To: <20090504215906.GC31248@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
+To: Greg KH <greg@kroah.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, stable@kernel.org
 
-Hello,
+Greg KH wrote:
 
-Tejun Heo wrote:
-> Upon ack, please pull from the following git tree.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+>>The driver somehow got merged with the initializer for the dma_sff_read_status()
+>>method missing which caused kernel panic on bootup.
 
-git tree has been updated as per comments.
+>>This should fix the kernel.org bug #13026...
 
-* Acked-by:'s added.
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-* Too early blk_rq_bytes() conversion in ide-tape pushed to later
-  patch.
+>>---
+>>This patch is against the recent Linus' tree.
+>>It should go into 2.6.29-stable as the driver was merged/broken in 2.6.29 time.
 
-Both changes are minor and don't make any difference to the final
-result.  The new commit is f7ff5f0d7cda0b0da5e7de36dd97ff75412bbe16.
+> It doesn't apply to the 2.6.29-stable tree at all.
 
-Thanks.
+> Care to redo your patch to apply there?
 
--- 
-tejun
+    Hm, I thought it was obvious enough... will redo.
+
+> thanks,
+
+> greg k-h
+
+MBR, Sergei
