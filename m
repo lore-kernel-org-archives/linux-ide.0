@@ -1,84 +1,126 @@
-From: Tim Connors <tconnors@rather.puzzling.org>
-Subject: sata_sil24 EH complete
-Date: Wed, 6 May 2009 00:22:19 +1000 (EST)
-Message-ID: <alpine.DEB.2.00.0905060004100.15177@dirac.rather.puzzling.org>
+From: Karl Hiramoto <karl@hiramoto.org>
+Subject: [RFC]hpt366/ide-probe  reset drive on probe error.
+Date: Tue, 05 May 2009 16:53:31 +0200
+Message-ID: <4A0052EB.6040502@hiramoto.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ipmail05.adl2.internode.on.net ([203.16.214.145]:39088 "EHLO
-	ipmail05.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751781AbZEEO1a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2009 10:27:30 -0400
+Received: from hapkido.dreamhost.com ([66.33.216.122]:51330 "EHLO
+	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755192AbZEEOym (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2009 10:54:42 -0400
+Received: from spunkymail-a20.g.dreamhost.com (caiajhbdccac.dreamhost.com [208.97.132.202])
+	by hapkido.dreamhost.com (Postfix) with ESMTP id 084AA18578E
+	for <linux-ide@vger.kernel.org>; Tue,  5 May 2009 07:54:43 -0700 (PDT)
+Received: from [192.168.10.51] (81.Red-83-44-145.dynamicIP.rima-tde.net [83.44.145.81])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by spunkymail-a20.g.dreamhost.com (Postfix) with ESMTP id 41A16E252F
+	for <linux-ide@vger.kernel.org>; Tue,  5 May 2009 07:53:36 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-With 2.6.29, when I hotplug a western digital mybook into a 'Silicon
-Image, Inc. SiI 3132 Serial ATA Raid II Controller', the drive is not
-found:
+Hi,
 
+Part of this patch (htp366.c) is commented in an #if 0   in older 
+kernels.   2.6.11 for sure.
 
-*** drive failed due to user induced sillyness
-...
-[18676.308750] sd 0:0:0:0: [sdb] Stopping disk
-[18676.308770] sd 0:0:0:0: [sdb] START_STOP FAILED
-[18676.308774] sd 0:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-*** drive plugged back in
-[18767.821747] ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-[18767.821756] ata1: irq_stat 0x00b40090, PHY RDY changed
-[18767.821775] ata1: hard resetting link
-[18774.633185] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[18774.773591] ata1.00: applying link speed limit horkage to 1.5 Gbps
-[18779.655674] ata1: hard resetting link
-[18781.861074] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-[18782.178565] ata1.00: configured for UDMA/100
-[18782.178579] ata1: EH complete
-
-And then nothing.  The device is still alive - if I plug it back in
-through its usb interface, it comes up normally.  I know from experience
-that if I was to reboot the machine, it would have come up quite nicely
-from boot:
-
-[    9.780090] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[    9.916218] ata1.00: applying link speed limit horkage to 1.5 Gbps
-[   16.981087] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-[   17.291757] ata1.00: configured for UDMA/100
-[   17.291874] scsi 0:0:0:0: Direct-Access     ATA      WD My Book       01.0 PQ: 0 ANSI: 5
-[   17.291959] sd 0:0:0:0: [sdb] 1953525168 512-byte hardware sectors: (1.00 TB/931 GiB)
-[   17.291972] sd 0:0:0:0: [sdb] Write Protect is off
-[   17.291974] sd 0:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-[   17.291994] sd 0:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[   17.292051] sd 0:0:0:0: [sdb] 1953525168 512-byte hardware sectors: (1.00 TB/931 GiB)
-[   17.292150] sd 0:0:0:0: [sdb] Write Protect is off
-[   17.292153] sd 0:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-[   17.292176] sd 0:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[   17.292179]  sdb: sdb1
-[   17.372927] sd 0:0:0:0: [sdb] Attached SCSI disk
-
-This is another attempt plugging in another mybook disk:
-
-[20662.149223] ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-[20662.149233] ata1: irq_stat 0x00a00080, device exchanged
-[20662.149252] ata1: hard resetting link
-[20672.164117] ata1: softreset failed (timeout)
-[20672.164139] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[20672.164143] ata1: link online but device misclassified, retrying
-[20672.164146] ata1: hard resetting link
-[20674.372055] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[20674.510116] ata1.00: applying link speed limit horkage to 1.5 Gbps
-[20679.372028] ata1: hard resetting link
-[20681.572066] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-[20681.880986] ata1.00: configured for UDMA/100
-[20681.880999] ata1: EH complete
-
-Still no /dev/sd*
-
-I haven't tried booting into a kernel prior to these updates:
-http://lkml.org/lkml/2009/2/2/447
+I have an ARM IXP4xx based board with CompactFlash slot that this patch 
+fixes some issues for.    I think the case, is only with a warm boot, 
+where the drive was busy before the board was reset.   There is  no 
+BIOS, only the redboot loader which loads the kernel.
 
 
--- 
-TimC
-Yay! I have found the last bug bug bug bug bug bug bug
-bug bug bug bug bug bug bug bug bug bug bug bug bug bug
-bug bug bu%$@#$@#%$@#    Error: Missing Carrier Signal
+A few questions:
+
+1.  Would this be considerd to be brought into mainline?
+
+2.  How would you port something like this to using the SATA layer?
+
+Would it go to the ata_port_operations.prereset,  softreset or hardreset?
+
+--
+Karl
+
+diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
+index 3377766..ba4b802 100644
+--- a/drivers/ide/hpt366.c
++++ b/drivers/ide/hpt366.c
+@@ -1280,6 +1280,31 @@ static u8 hpt3xx_cable_detect(ide_hwif_t *hwif)
+ 	return (scr1 & ata66) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+ }
+ 
++/** routine to reset disk
++ *
++ * Since SUN Cobalt is attempting to do this operation, I should disclose
++ * this has been a long time ago Thu Jul 27 16:40:57 2000 was the patch date
++ * HOTSWAP ATA Infrastructure.
++ */
++
++static void hpt3xx_reset (ide_drive_t *drive)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	struct pci_dev *dev = to_pci_dev(hwif->dev);
++	unsigned long high_16;
++	u8 reset;
++	u8 reg59h = 0;
++
++	printk(KERN_INFO "%s reset drive channel %d\n", __func__, hwif->channel);
++	high_16 = pci_resource_start(dev, 4);
++
++	reset = hwif->channel ? 0x80 : 0x40;
++
++	pci_read_config_byte(dev, 0x59, &reg59h);
++	pci_write_config_byte(dev, 0x59, reg59h|reset);
++	pci_write_config_byte(dev, 0x59, reg59h);
++}
++
+ static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
+ {
+ 	struct hpt_info *info	= hpt3xx_get_info(hwif->dev);
+@@ -1406,6 +1431,7 @@ static const struct ide_port_ops hpt3xx_port_ops = {
+ 	.set_pio_mode		= hpt3xx_set_pio_mode,
+ 	.set_dma_mode		= hpt3xx_set_mode,
+ 	.quirkproc		= hpt3xx_quirkproc,
++	.resetproc		= hpt3xx_reset,
+ 	.maskproc		= hpt3xx_maskproc,
+ 	.mdma_filter		= hpt3xx_mdma_filter,
+ 	.udma_filter		= hpt3xx_udma_filter,
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 7f264ed..09295b4 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -367,6 +367,7 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
++	const struct ide_port_ops *port_ops = hwif->port_ops;
+ 	u16 *id = drive->id;
+ 	int rc;
+ 	u8 present = !!(drive->dev_flags & IDE_DFLAG_PRESENT), stat;
+@@ -427,9 +428,20 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
+ 		/* ensure drive IRQ is clear */
+ 		stat = tp_ops->read_status(hwif);
+ 
+-		if (rc == 1)
++		if (rc == 1) {
+ 			printk(KERN_ERR "%s: no response (status = 0x%02x)\n",
+ 					drive->name, stat);
++
++			if (port_ops->resetproc) {
++				port_ops->resetproc(drive);
++				msleep(50);
++			}
++			tp_ops->dev_select(drive);
++			msleep(50);
++			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
++			(void)ide_busy_sleep(hwif, WAIT_WORSTCASE, 0);
++			rc = ide_dev_read_id(drive, cmd, id);
++		}
+ 	} else {
+ 		/* not present or maybe ATAPI */
+ 		rc = 3;
+
+
