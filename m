@@ -1,57 +1,32 @@
-From: Tim Connors <tconnors+linuxkml@astro.swin.edu.au>
-Subject: Re: sata_sil24 EH complete
-Date: Wed, 6 May 2009 10:38:58 +1000 (EST)
-Message-ID: <alpine.DEB.2.00.0905061038340.14678@dirac.rather.puzzling.org>
-References: <alpine.DEB.2.00.0905060004100.15177@dirac.rather.puzzling.org> <4A00DA98.5060201@kernel.org>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] Fix ide-tape compilation error.
+Date: Wed, 6 May 2009 08:10:48 +0200
+Message-ID: <20090506061048.GA3406@liondog.tnic>
+References: <9ea470500904200230k5f0ea050u7411b7c9d9be7098@mail.gmail.com> <20090505211259.GA2723@localhost> <20090505211939.GA6281@localhost>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([203.16.214.146]:20231 "EHLO
-	ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754159AbZEFAqM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2009 20:46:12 -0400
-In-Reply-To: <4A00DA98.5060201@kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:47258 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751372AbZEFGKx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 May 2009 02:10:53 -0400
+Received: by fxm2 with SMTP id 2so5169362fxm.37
+        for <linux-ide@vger.kernel.org>; Tue, 05 May 2009 23:10:52 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20090505211939.GA6281@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Mark de Wever <koraq@xs4all.nl>
+Cc: sshtylyov@ru.mvista.com, bzolnier@gmail.com, linux-ide@vger.kernel.org, TejunHeo <tj@kernel.org>
 
-On Wed, 6 May 2009, Tejun Heo wrote:
+On Tue, May 05, 2009 at 11:19:39PM +0200, Mark de Wever wrote:
+> This error only occurs when IDETAPE_DEBUG_LOG is enabled.
+> 
+> Signed-off-by: Mark de Wever <koraq@xs4all.nl>
 
-> Tim Connors wrote:
-> > With 2.6.29, when I hotplug a western digital mybook into a 'Silicon
-> > Image, Inc. SiI 3132 Serial ATA Raid II Controller', the drive is not
-> > found:
-> >
-> >
-> > *** drive failed due to user induced sillyness
-> > ...
-> > [18676.308750] sd 0:0:0:0: [sdb] Stopping disk
-> > [18676.308770] sd 0:0:0:0: [sdb] START_STOP FAILED
-> > [18676.308774] sd 0:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-> > *** drive plugged back in
-> > [18767.821747] ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-> > [18767.821756] ata1: irq_stat 0x00b40090, PHY RDY changed
-> > [18767.821775] ata1: hard resetting link
-> > [18774.633185] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> > [18774.773591] ata1.00: applying link speed limit horkage to 1.5 Gbps
-> > [18779.655674] ata1: hard resetting link
-> > [18781.861074] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-> > [18782.178565] ata1.00: configured for UDMA/100
-> > [18782.178579] ata1: EH complete
-> >
-> > And then nothing.  The device is still alive - if I plug it back in
-> > through its usb interface, it comes up normally.  I know from experience
-> > that if I was to reboot the machine, it would have come up quite nicely
-> > from boot:
->
-> Hmm... "ata1.00: configured for UDMA/100" means libata part of
-> configuration went okay but it looks like SCSI probing didn't kick in
-> for reason.  Is this always reproducible?
-
-100% of time if it is plugged in after boot.
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
 -- 
-TimC
-The generation of random numbers is too important to be left to chance.
-  -- Robert R. Coveyou, Oak Ridge National Laboratory.
+Regards/Gruss,
+    Boris.
