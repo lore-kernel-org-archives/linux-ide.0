@@ -1,79 +1,63 @@
-From: Konstantinos Margaritis <markos@codex.gr>
-Subject: [PATCH] fix sata_sil compilation on non-DMI platforms
-Date: Wed, 6 May 2009 20:09:27 +0300
-Message-ID: <200905062009.28087.markos@codex.gr>
+From: Feng Kan <fkan@amcc.com>
+Subject: Re: [PATCH 1/2] Added support for Designware SATA controller driver
+Date: Wed, 06 May 2009 10:44:24 -0700
+Message-ID: <4A01CC78.3060004@amcc.com>
+References: <1241211767-32697-1-git-send-email-fkan@amcc.com> <49FB68F2.10301@freescale.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_IRcAKc+GQXIXaxB"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lvps87-230-20-158.dedicated.hosteurope.de ([87.230.20.158]:46309
-	"EHLO lvps87-230-20-158.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755238AbZEFRTL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 May 2009 13:19:11 -0400
-Received: from ilmater.localnet (athedsl-420568.home.otenet.gr [79.131.194.214])
-	(using SSLv3 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by lvps87-230-20-158.dedicated.hosteurope.de (Postfix) with ESMTPSA id 8FD2EAFE801C
-	for <linux-ide@vger.kernel.org>; Wed,  6 May 2009 19:09:34 +0200 (CEST)
+Received: from sdcmail01.amcc.com ([198.137.200.72]:25525 "EHLO
+	sdcmail01.amcc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbZEFRox (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 May 2009 13:44:53 -0400
+In-Reply-To: <49FB68F2.10301@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Scott Wood <scottwood@freescale.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Mark Miesfeld <miesfeld@gmail.com>
 
---Boundary-00=_IRcAKc+GQXIXaxB
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hi Scott:
 
-(not subscribed please CC me)
+I agree with your statement, however this driver is wrapped with this 
+AHB DMA controller.
+It would be very hard for it to work on non 460EX platforms. I can 
+expand the depend in
+the future if it is available on more cores.
 
-I tried to compile sata_sil on a 2.6.27 kernel on powerpc32 and I found that 
-it failed to compile -lots of dmi related errors. I found that I had to 
-include the broken_systems handling code in #ifdef CONFIG_DMI (DMI is not 
-supported on platforms other than i386/x86_64). 
+Thanks
+Feng Kan
 
-Lennert on #mklinux told me that this commit broke the non-dmi support, and 
-that a similar patch to mine is used on ARM systems :
+Scott Wood wrote:
+> Feng Kan wrote:
+>> This adds support for the Designware SATA controller.
+>>
+>> Signed-off-by: Feng Kan <fkan@amcc.com>
+>> Signed-off-by: Mark Miesfeld <miesfeld@gmail.com>
+>> ---
+>>  drivers/ata/Kconfig    |   10 +
+>>  drivers/ata/Makefile   |    1 +
+>>  drivers/ata/sata_dwc.c | 2053 
+>> ++++++++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 2064 insertions(+), 0 deletions(-)
+>>  create mode 100644 drivers/ata/sata_dwc.c
+>>
+>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>> index 0bcf264..c3d0b24 100644
+>> --- a/drivers/ata/Kconfig
+>> +++ b/drivers/ata/Kconfig
+>> @@ -72,6 +72,16 @@ config SATA_FSL
+>>  
+>>        If unsure, say N.
+>>  
+>> +config SATA_DWC
+>> +    tristate "DesignWare Cores SATA support"
+>> +     depends on 460EX
+>
+> That "depends" looks too specific -- we don't want to grow a list if 
+> this controller gets added to other chips.
+>
+> Only depend on what this driver actually needs in order to function.
+>
+> -Scott
 
-commit e57db7bde7bff95ae812736ca00c73bd5271455b
-SATA Sil: Blacklist system that spins off disks during ACPI power off
-
-With this patch, sata_sil compiles on ppc (and I guess on other platforms). 
-I'm using it for a while with no problems with a Delock 4-port SATA PCI card.
-
-Regards
-
--- 
-Konstantinos Margaritis
-Codex
-http://www.codex.gr
-
---Boundary-00=_IRcAKc+GQXIXaxB
-Content-Type: text/x-patch;
-  charset="us-ascii";
-  name="sata_sil.c.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="sata_sil.c.patch"
-
---- sata_sil.c.orig	2009-05-06 20:03:16.472876188 +0300
-+++ sata_sil.c	2009-05-06 20:04:22.693209638 +0300
-@@ -698,6 +698,7 @@
- 
- static bool sil_broken_system_poweroff(struct pci_dev *pdev)
- {
-+#ifdef CONFIG_DMI
- 	static const struct dmi_system_id broken_systems[] = {
- 		{
- 			.ident = "HP Compaq nx6325",
-@@ -718,7 +719,7 @@
- 		/* apply the quirk only to on-board controllers */
- 		return slot == PCI_SLOT(pdev->devfn);
- 	}
--
-+#endif
- 	return false;
- }
- 
-
---Boundary-00=_IRcAKc+GQXIXaxB--
