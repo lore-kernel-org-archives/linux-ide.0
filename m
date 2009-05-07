@@ -1,163 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len, take#2
-Date: Thu, 07 May 2009 11:48:11 +0900
-Message-ID: <4A024BEB.305@gmail.com>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org> <49FFB9BE.1090709@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH] libata: Add multi-count transfer debugging
+Date: Wed, 06 May 2009 23:02:47 -0600
+Message-ID: <4A026B77.2000801@gmail.com>
+References: <4A01946E.1020300@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <49FFB9BE.1090709@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from yx-out-2324.google.com ([74.125.44.28]:18843 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbZEGFCv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 May 2009 01:02:51 -0400
+Received: by yx-out-2324.google.com with SMTP id 3so341154yxj.1
+        for <linux-ide@vger.kernel.org>; Wed, 06 May 2009 22:02:50 -0700 (PDT)
+In-Reply-To: <4A01946E.1020300@gmx.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Ward Vandewege <ward@gnu.org>
 
-Tejun Heo wrote:
-> Hello,
+Carl-Daniel Hailfinger wrote:
+> On my Asus M2A-VM (SB600) board, the SATA disks use multi-count
+> transfers only with some BIOS variants.
+> Dumping the relevant config words helps debugging a lot.
 > 
-> Tejun Heo wrote:
->> Upon ack, please pull from the following git tree.
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+> Signed-off-by: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
 > 
-> git tree has been updated as per comments.
+> --- a/drivers/ata/libata-core.c	2009-05-06 14:24:32.000000000 +0200
+> +++ b/drivers/ata/libata-core.c	2009-05-06 15:27:06.000000000 +0200
+> @@ -2390,11 +2390,11 @@
+>  	/* print device capabilities */
+>  	if (ata_msg_probe(ap))
+>  		ata_dev_printk(dev, KERN_DEBUG,
+> -			       "%s: cfg 49:%04x 82:%04x 83:%04x 84:%04x "
+> -			       "85:%04x 86:%04x 87:%04x 88:%04x\n",
+> +			       "%s: cfg 47:%04x 49:%04x 59:%04x 82:%04x 83:%04x"
+> +			       " 84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
+>  			       __func__,
+> -			       id[49], id[82], id[83], id[84],
+> -			       id[85], id[86], id[87], id[88]);
+> +			       id[47], id[49], id[59], id[82], id[83],
+> +			       id[84], id[85], id[86], id[87], id[88]);
+>  
+>  	/* initialize to-be-configured parameters */
+>  	dev->flags &= ~ATA_DFLAG_CFG_MASK;
 > 
-> * Acked-by:'s added.
 > 
-> * Too early blk_rq_bytes() conversion in ide-tape pushed to later
->   patch.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Both changes are minor and don't make any difference to the final
-> result.  The new commit is f7ff5f0d7cda0b0da5e7de36dd97ff75412bbe16.
 
-Tree updated again.  Changes are...
-
-* I forgot to convert new drivers (mg_disk and swim) to accessors.
-  0005-block-convert-to-pos-and-nr_sectors-accessors.patch updated to
-  convert these new drivers.
-
-* Acked-by added.
-
-The new commit is 1df2a196e28cc8f97919dc530dc1c019e1d3a968.
-
-diff f7ff5f0d..1df2a196 follows.  The conversions are straight
-forward.
-
- drivers/block/mg_disk.c |   25 +++++++++++++------------
- drivers/block/swim.c    |    6 +++---
- 2 files changed, 16 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/block/mg_disk.c b/drivers/block/mg_disk.c
-index 71e56cc..826c349 100644
---- a/drivers/block/mg_disk.c
-+++ b/drivers/block/mg_disk.c
-@@ -220,7 +220,8 @@ static void mg_dump_status(const char *msg, unsigned int stat,
- 			if (host->breq) {
- 				req = elv_next_request(host->breq);
- 				if (req)
--					printk(", sector=%u", (u32)req->sector);
-+					printk(", sector=%u",
-+					       (unsigned int)blk_rq_pos(req));
- 			}
- 
- 		}
-@@ -493,12 +494,12 @@ static void mg_read(struct request *req)
- 	u32 j;
- 	struct mg_host *host = req->rq_disk->private_data;
- 
--	if (mg_out(host, req->sector, req->nr_sectors, MG_CMD_RD, NULL) !=
--			MG_ERR_NONE)
-+	if (mg_out(host, blk_rq_pos(req), blk_rq_sectors(req),
-+		   MG_CMD_RD, NULL) != MG_ERR_NONE)
- 		mg_bad_rw_intr(host);
- 
- 	MG_DBG("requested %d sects (from %ld), buffer=0x%p\n",
--	       req->nr_sectors, req->sector, req->buffer);
-+	       blk_rq_sectors(req), blk_rq_pos(req), req->buffer);
- 
- 	do {
- 		u16 *buff = (u16 *)req->buffer;
-@@ -522,14 +523,14 @@ static void mg_write(struct request *req)
- 	u32 j;
- 	struct mg_host *host = req->rq_disk->private_data;
- 
--	if (mg_out(host, req->sector, req->nr_sectors, MG_CMD_WR, NULL) !=
--			MG_ERR_NONE) {
-+	if (mg_out(host, blk_rq_pos(req), blk_rq_sectors(req),
-+		   MG_CMD_WR, NULL) != MG_ERR_NONE) {
- 		mg_bad_rw_intr(host);
- 		return;
- 	}
- 
- 	MG_DBG("requested %d sects (from %ld), buffer=0x%p\n",
--	       req->nr_sectors, req->sector, req->buffer);
-+	       blk_rq_sectors(req), blk_rq_pos(req), req->buffer);
- 
- 	do {
- 		u16 *buff = (u16 *)req->buffer;
-@@ -579,7 +580,7 @@ ok_to_read:
- 			      (i << 1));
- 
- 	MG_DBG("sector %ld, remaining=%ld, buffer=0x%p\n",
--			req->sector, req->nr_sectors - 1, req->buffer);
-+	       blk_rq_pos(req), blk_rq_sectors(req) - 1, req->buffer);
- 
- 	/* send read confirm */
- 	outb(MG_CMD_RD_CONF, (unsigned long)host->dev_base + MG_REG_COMMAND);
-@@ -609,7 +610,7 @@ static void mg_write_intr(struct mg_host *host)
- 			break;
- 		if (!MG_READY_OK(i))
- 			break;
--		if ((req->nr_sectors <= 1) || (i & ATA_DRQ))
-+		if ((blk_rq_sectors(req) <= 1) || (i & ATA_DRQ))
- 			goto ok_to_write;
- 	} while (0);
- 	mg_dump_status("mg_write_intr", i, host);
-@@ -627,7 +628,7 @@ ok_to_write:
- 			buff++;
- 		}
- 		MG_DBG("sector %ld, remaining=%ld, buffer=0x%p\n",
--				req->sector, req->nr_sectors, req->buffer);
-+		       blk_rq_pos(req), blk_rq_sectors(req), req->buffer);
- 		host->mg_do_intr = mg_write_intr;
- 		mod_timer(&host->timer, jiffies + 3 * HZ);
- 	}
-@@ -749,9 +750,9 @@ static void mg_request(struct request_queue *q)
- 
- 		del_timer(&host->timer);
- 
--		sect_num = req->sector;
-+		sect_num = blk_rq_pos(req);
- 		/* deal whole segments */
--		sect_cnt = req->nr_sectors;
-+		sect_cnt = blk_rq_sectors(req);
- 
- 		/* sanity check */
- 		if (sect_num >= get_capacity(req->rq_disk) ||
-diff --git a/drivers/block/swim.c b/drivers/block/swim.c
-index 97ef426..fc6a1c3 100644
---- a/drivers/block/swim.c
-+++ b/drivers/block/swim.c
-@@ -531,7 +531,7 @@ static void redo_fd_request(struct request_queue *q)
- 	while ((req = elv_next_request(q))) {
- 
- 		fs = req->rq_disk->private_data;
--		if (req->sector < 0 || req->sector >= fs->total_secs) {
-+		if (blk_rq_pos(req) >= fs->total_secs) {
- 			__blk_end_request_cur(req, -EIO);
- 			continue;
- 		}
-@@ -551,8 +551,8 @@ static void redo_fd_request(struct request_queue *q)
- 			__blk_end_request_cur(req, -EIO);
- 			break;
- 		case READ:
--			if (floppy_read_sectors(fs, req->sector,
--						req->current_nr_sectors,
-+			if (floppy_read_sectors(fs, blk_rq_pos(req),
-+						blk_rq_cur_sectors(req),
- 						req->buffer)) {
- 				__blk_end_request_cur(req, -EIO);
- 				continue;
-
--- 
-tejun
+Keep in mind that multi-count transfers are only meaningful for PIO 
+read/write commands (it controls the number of sectors transferred for 
+each DRQ assertion), which would only be used if the device didn't 
+support DMA - unlikely for SATA..
