@@ -1,187 +1,163 @@
-From: Feng Kan <fkan@amcc.com>
-Subject: [PATCH 2/3 v3] Added AMCC 460EX Canyonlands SATA support.
-Date: Wed,  6 May 2009 10:49:41 -0700
-Message-ID: <1241632181-2592-1-git-send-email-fkan@amcc.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sdcmail01.amcc.com ([198.137.200.72]:35531 "EHLO
-	sdcmail01.amcc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045AbZEFRt7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 May 2009 13:49:59 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len, take#2
+Date: Thu, 07 May 2009 11:48:11 +0900
+Message-ID: <4A024BEB.305@gmail.com>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <49FFB9BE.1090709@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <49FFB9BE.1090709@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
-Cc: Feng Kan <fkan@amcc.com>
 
-Signed-off-by: Feng Kan <fkan@amcc.com>
----
- arch/powerpc/boot/dts/canyonlands.dts  |    8 ++
- arch/powerpc/platforms/44x/Makefile    |    4 +
- arch/powerpc/platforms/44x/amcc-sata.c |  125 ++++++++++++++++++++++++++++++++
- 3 files changed, 137 insertions(+), 0 deletions(-)
- create mode 100644 arch/powerpc/platforms/44x/amcc-sata.c
+Tejun Heo wrote:
+> Hello,
+> 
+> Tejun Heo wrote:
+>> Upon ack, please pull from the following git tree.
+>>
+>>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+> 
+> git tree has been updated as per comments.
+> 
+> * Acked-by:'s added.
+> 
+> * Too early blk_rq_bytes() conversion in ide-tape pushed to later
+>   patch.
+> 
+> Both changes are minor and don't make any difference to the final
+> result.  The new commit is f7ff5f0d7cda0b0da5e7de36dd97ff75412bbe16.
 
-diff --git a/arch/powerpc/boot/dts/canyonlands.dts b/arch/powerpc/boot/dts/canyonlands.dts
-index 5fd1ad0..b536223 100644
---- a/arch/powerpc/boot/dts/canyonlands.dts
-+++ b/arch/powerpc/boot/dts/canyonlands.dts
-@@ -163,6 +163,14 @@
-                         interrupts = <0x1e 4>;
-                 };
+Tree updated again.  Changes are...
+
+* I forgot to convert new drivers (mg_disk and swim) to accessors.
+  0005-block-convert-to-pos-and-nr_sectors-accessors.patch updated to
+  convert these new drivers.
+
+* Acked-by added.
+
+The new commit is 1df2a196e28cc8f97919dc530dc1c019e1d3a968.
+
+diff f7ff5f0d..1df2a196 follows.  The conversions are straight
+forward.
+
+ drivers/block/mg_disk.c |   25 +++++++++++++------------
+ drivers/block/swim.c    |    6 +++---
+ 2 files changed, 16 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/block/mg_disk.c b/drivers/block/mg_disk.c
+index 71e56cc..826c349 100644
+--- a/drivers/block/mg_disk.c
++++ b/drivers/block/mg_disk.c
+@@ -220,7 +220,8 @@ static void mg_dump_status(const char *msg, unsigned int stat,
+ 			if (host->breq) {
+ 				req = elv_next_request(host->breq);
+ 				if (req)
+-					printk(", sector=%u", (u32)req->sector);
++					printk(", sector=%u",
++					       (unsigned int)blk_rq_pos(req));
+ 			}
  
-+                SATA0: sata@bffd1000 {
-+                        compatible = "amcc,sata-460ex";
-+			reg = <4 0xbffd1000 0x800 4 0xbffd0800 0x400>;
-+                        interrupt-parent = <&UIC3>;
-+                        interrupts = <0 4       /* SATA */
-+                                      5 4>;     /* AHBDMA */
-+                };
-+
- 		POB0: opb {
- 			compatible = "ibm,opb-460ex", "ibm,opb";
- 			#address-cells = <1>;
-diff --git a/arch/powerpc/platforms/44x/Makefile b/arch/powerpc/platforms/44x/Makefile
-index 01f51da..fa0a999 100644
---- a/arch/powerpc/platforms/44x/Makefile
-+++ b/arch/powerpc/platforms/44x/Makefile
-@@ -4,3 +4,7 @@ obj-$(CONFIG_EBONY)	+= ebony.o
- obj-$(CONFIG_SAM440EP) 	+= sam440ep.o
- obj-$(CONFIG_WARP)	+= warp.o
- obj-$(CONFIG_XILINX_VIRTEX_5_FXT) += virtex.o
-+ifeq ($(CONFIG_SATA_DWC),y)
-+obj-$(CONFIG_CANYONLANDS) += amcc-sata.o
-+endif
-+
-diff --git a/arch/powerpc/platforms/44x/amcc-sata.c b/arch/powerpc/platforms/44x/amcc-sata.c
-new file mode 100644
-index 0000000..fdda917
---- /dev/null
-+++ b/arch/powerpc/platforms/44x/amcc-sata.c
-@@ -0,0 +1,125 @@
-+/*
-+ * AMCC Canyonlands SATA wrapper
-+ *
-+ * Copyright 2008 DENX Software Engineering, Stefan Roese <sr@denx.de>
-+ *
-+ * Extract the resources (MEM & IRQ) from the dts file and put them
-+ * into the platform-device struct for usage in the platform-device
-+ * SATA driver.
-+ *
-+ */
-+
-+#include <linux/platform_device.h>
-+#include <linux/of_platform.h>
-+
-+/*
-+ * Resource template will be filled dynamically with the values
-+ * extracted from the dts file
-+ */
-+static struct resource sata_resources[] = {
-+	[0] = {
-+		/* 460EX SATA registers */
-+		.flags  = IORESOURCE_MEM,
-+	},
-+	[1] = {
-+		/* 460EX AHBDMA registers */
-+		.flags  = IORESOURCE_MEM,
-+	},
-+	[2] = {
-+		/* 460EX SATA IRQ */
-+		.flags  = IORESOURCE_IRQ,
-+	},
-+	[3] = {
-+		/* 460EX AHBDMA IRQ */
-+		.flags  = IORESOURCE_IRQ,
-+	},
-+};
-+
-+static u64 dma_mask = 0xffffffffULL;
-+
-+static struct platform_device sata_device = {
-+	.name = "sata-dwc",
-+	.id = 0,
-+	.num_resources = ARRAY_SIZE(sata_resources),
-+	.resource = sata_resources,
-+	.dev = {
-+		.dma_mask = &dma_mask,
-+		.coherent_dma_mask = 0xffffffffULL,
-+	}
-+};
-+
-+static struct platform_device *ppc460ex_devs[] __initdata = {
-+	&sata_device,
-+};
-+
-+static int __devinit ppc460ex_sata_probe(struct of_device *ofdev,
-+					 const struct of_device_id *match)
-+{
-+	struct device_node *np = ofdev->node;
-+	struct resource res;
-+	const char *val;
-+
-+	/*
-+	 * Check if device is enabled
-+	 */
-+	val = of_get_property(np, "status", NULL);
-+	if (val && !strcmp(val, "disabled")) {
-+		printk(KERN_INFO "SATA port disabled via device-tree\n");
-+		return 0;
-+	}
-+
-+	/*
-+	 * Extract register address reange from device tree and put it into
-+	 * the platform device structure
-+	 */
-+	if (of_address_to_resource(np, 0, &res)) {
-+		printk(KERN_ERR "%s: Can't get SATA register address\n",
-+				__func__);
-+		return -ENOMEM;
-+	}
-+	sata_resources[0].start = res.start;
-+	sata_resources[0].end = res.end;
-+
-+	if (of_address_to_resource(np, 1, &res)) {
-+		printk(KERN_ERR "%s: Can't get AHBDMA register address\n",
-+				__func__);
-+		return -ENOMEM;
-+	}
-+	sata_resources[1].start = res.start;
-+	sata_resources[1].end = res.end;
-+
-+	/*
-+	 * Extract IRQ number(s) from device tree and put them into
-+	 * the platform device structure
-+	 */
-+	sata_resources[2].start = sata_resources[2].end =
-+		irq_of_parse_and_map(np, 0);
-+	sata_resources[3].start = sata_resources[3].end =
-+		irq_of_parse_and_map(np, 1);
-+
-+	return platform_add_devices(ppc460ex_devs, ARRAY_SIZE(ppc460ex_devs));
-+}
-+
-+static int __devexit ppc460ex_sata_remove(struct of_device *ofdev)
-+{
-+	/* Nothing to do here */
-+	return 0;
-+}
-+
-+static const struct of_device_id ppc460ex_sata_match[] = {
-+	{ .compatible = "amcc,sata-460ex", },
-+	{}
-+};
-+
-+static struct of_platform_driver ppc460ex_sata_driver = {
-+	.name = "sata-460ex",
-+	.match_table = ppc460ex_sata_match,
-+	.probe = ppc460ex_sata_probe,
-+	.remove = ppc460ex_sata_remove,
-+};
-+
-+static int __init ppc460ex_sata_init(void)
-+{
-+	return of_register_platform_driver(&ppc460ex_sata_driver);
-+}
-+device_initcall(ppc460ex_sata_init);
--- 
-1.5.5
+ 		}
+@@ -493,12 +494,12 @@ static void mg_read(struct request *req)
+ 	u32 j;
+ 	struct mg_host *host = req->rq_disk->private_data;
+ 
+-	if (mg_out(host, req->sector, req->nr_sectors, MG_CMD_RD, NULL) !=
+-			MG_ERR_NONE)
++	if (mg_out(host, blk_rq_pos(req), blk_rq_sectors(req),
++		   MG_CMD_RD, NULL) != MG_ERR_NONE)
+ 		mg_bad_rw_intr(host);
+ 
+ 	MG_DBG("requested %d sects (from %ld), buffer=0x%p\n",
+-	       req->nr_sectors, req->sector, req->buffer);
++	       blk_rq_sectors(req), blk_rq_pos(req), req->buffer);
+ 
+ 	do {
+ 		u16 *buff = (u16 *)req->buffer;
+@@ -522,14 +523,14 @@ static void mg_write(struct request *req)
+ 	u32 j;
+ 	struct mg_host *host = req->rq_disk->private_data;
+ 
+-	if (mg_out(host, req->sector, req->nr_sectors, MG_CMD_WR, NULL) !=
+-			MG_ERR_NONE) {
++	if (mg_out(host, blk_rq_pos(req), blk_rq_sectors(req),
++		   MG_CMD_WR, NULL) != MG_ERR_NONE) {
+ 		mg_bad_rw_intr(host);
+ 		return;
+ 	}
+ 
+ 	MG_DBG("requested %d sects (from %ld), buffer=0x%p\n",
+-	       req->nr_sectors, req->sector, req->buffer);
++	       blk_rq_sectors(req), blk_rq_pos(req), req->buffer);
+ 
+ 	do {
+ 		u16 *buff = (u16 *)req->buffer;
+@@ -579,7 +580,7 @@ ok_to_read:
+ 			      (i << 1));
+ 
+ 	MG_DBG("sector %ld, remaining=%ld, buffer=0x%p\n",
+-			req->sector, req->nr_sectors - 1, req->buffer);
++	       blk_rq_pos(req), blk_rq_sectors(req) - 1, req->buffer);
+ 
+ 	/* send read confirm */
+ 	outb(MG_CMD_RD_CONF, (unsigned long)host->dev_base + MG_REG_COMMAND);
+@@ -609,7 +610,7 @@ static void mg_write_intr(struct mg_host *host)
+ 			break;
+ 		if (!MG_READY_OK(i))
+ 			break;
+-		if ((req->nr_sectors <= 1) || (i & ATA_DRQ))
++		if ((blk_rq_sectors(req) <= 1) || (i & ATA_DRQ))
+ 			goto ok_to_write;
+ 	} while (0);
+ 	mg_dump_status("mg_write_intr", i, host);
+@@ -627,7 +628,7 @@ ok_to_write:
+ 			buff++;
+ 		}
+ 		MG_DBG("sector %ld, remaining=%ld, buffer=0x%p\n",
+-				req->sector, req->nr_sectors, req->buffer);
++		       blk_rq_pos(req), blk_rq_sectors(req), req->buffer);
+ 		host->mg_do_intr = mg_write_intr;
+ 		mod_timer(&host->timer, jiffies + 3 * HZ);
+ 	}
+@@ -749,9 +750,9 @@ static void mg_request(struct request_queue *q)
+ 
+ 		del_timer(&host->timer);
+ 
+-		sect_num = req->sector;
++		sect_num = blk_rq_pos(req);
+ 		/* deal whole segments */
+-		sect_cnt = req->nr_sectors;
++		sect_cnt = blk_rq_sectors(req);
+ 
+ 		/* sanity check */
+ 		if (sect_num >= get_capacity(req->rq_disk) ||
+diff --git a/drivers/block/swim.c b/drivers/block/swim.c
+index 97ef426..fc6a1c3 100644
+--- a/drivers/block/swim.c
++++ b/drivers/block/swim.c
+@@ -531,7 +531,7 @@ static void redo_fd_request(struct request_queue *q)
+ 	while ((req = elv_next_request(q))) {
+ 
+ 		fs = req->rq_disk->private_data;
+-		if (req->sector < 0 || req->sector >= fs->total_secs) {
++		if (blk_rq_pos(req) >= fs->total_secs) {
+ 			__blk_end_request_cur(req, -EIO);
+ 			continue;
+ 		}
+@@ -551,8 +551,8 @@ static void redo_fd_request(struct request_queue *q)
+ 			__blk_end_request_cur(req, -EIO);
+ 			break;
+ 		case READ:
+-			if (floppy_read_sectors(fs, req->sector,
+-						req->current_nr_sectors,
++			if (floppy_read_sectors(fs, blk_rq_pos(req),
++						blk_rq_cur_sectors(req),
+ 						req->buffer)) {
+ 				__blk_end_request_cur(req, -EIO);
+ 				continue;
 
+-- 
+tejun
