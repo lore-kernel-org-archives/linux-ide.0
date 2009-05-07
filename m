@@ -1,37 +1,71 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: EP93xx PIO IDE driver proposal
-Date: Thu, 7 May 2009 14:53:15 +0100
-Message-ID: <20090507145315.3e85b2a8@lxorguk.ukuu.org.uk>
-References: <49CCD7C4.8000207@inov.pt>
-	<49CFDD8F.1030306@bluewatersys.com>
-	<BD79186B4FD85F4B8E60E381CAEE1909014E2E09@mi8nycmail19.Mi8.com>
-	<49D0CAE4.9090306@inov.pt>
-	<49D0E687.4040101@ru.mvista.com>
-	<49FED069.9080501@inov.pt>
-	<4A002B56.1000802@ru.mvista.com>
-	<4A019BE4.9020903@inov.pt>
-	<4A01C376.8000803@ru.mvista.com>
-	<4A02AB9C.4050107@inov.pt>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Dave Liu <daveliu@freescale.com>
+Subject: [PATCH] ata: Fix the command description of FSL SATA controller
+Date: Thu,  7 May 2009 21:53:17 +0800
+Message-ID: <1241704397-24043-1-git-send-email-daveliu@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56070 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760790AbZEGNxU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 May 2009 09:53:20 -0400
-In-Reply-To: <4A02AB9C.4050107@inov.pt>
+Received: from az33egw02.freescale.net ([192.88.158.103]:51536 "EHLO
+	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762199AbZEGN6M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 May 2009 09:58:12 -0400
+Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
+	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n47DvtCH017368
+	for <linux-ide@vger.kernel.org>; Thu, 7 May 2009 06:58:06 -0700 (MST)
+Received: from zch01exm21.fsl.freescale.net (zch01exm21.ap.freescale.net [10.192.129.205])
+	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id n47Dvrud026437
+	for <linux-ide@vger.kernel.org>; Thu, 7 May 2009 08:57:54 -0500 (CDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-14?B?Sm/jbw==?= Ramos <joao.ramos@inov.pt>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, H Hartley Sweeten <hartleys@visionengravers.com>, Ryan Mallon <ryan@bluewatersys.com>, linux-arm-kernel@lists.arm.linux.org.uk, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Dave Liu <daveliu@freescale.com>
 
-> So you're saying I should support all PIO modes? If so, I would have to 
-> make conditional code, checking perhaps a module param to sort which PIO 
-> mode to use.
+The bit 11 of command description is reserved bit in Freescale
+SATA controller, we should be set '1'.
 
-If you advertise PIO0-PIO4 as supported the core IDE code will do all the
-work on figuring which modes are supported by the attached devices. You
-just need to be able to set them.
+Signed-off-by: Dave Liu <daveliu@freescale.com>
+---
+ drivers/ata/sata_fsl.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Alan
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index c2e90e1..f158bd7 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -205,6 +205,7 @@ struct cmdhdr_tbl_entry {
+  * Description information bitdefs
+  */
+ enum {
++	CMD_DESC_RES = (1 << 11),
+ 	VENDOR_SPECIFIC_BIST = (1 << 10),
+ 	CMD_DESC_SNOOP_ENABLE = (1 << 9),
+ 	FPDMA_QUEUED_CMD = (1 << 8),
+@@ -387,7 +388,7 @@ static void sata_fsl_qc_prep(struct ata_queued_cmd *qc)
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+ 	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
+ 	struct command_desc *cd;
+-	u32 desc_info = CMD_DESC_SNOOP_ENABLE;
++	u32 desc_info = CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE;
+ 	u32 num_prde = 0;
+ 	u32 ttl_dwords = 0;
+ 	dma_addr_t cd_paddr;
+@@ -840,7 +841,7 @@ issue_srst:
+ 
+ 	/* device reset/SRST is a control register update FIS, uses tag0 */
+ 	sata_fsl_setup_cmd_hdr_entry(pp, 0,
+-				     SRST_CMD | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
++		SRST_CMD | CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
+ 
+ 	tf.ctl |= ATA_SRST;	/* setup SRST bit in taskfile control reg */
+ 	ata_tf_to_fis(&tf, pmp, 0, cfis);
+@@ -886,7 +887,8 @@ issue_srst:
+ 	 * using ATA signature D2H register FIS to the host controller.
+ 	 */
+ 
+-	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
++	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE,
++				      0, 0, 5);
+ 
+ 	tf.ctl &= ~ATA_SRST;	/* 2nd H2D Ctl. register FIS */
+ 	ata_tf_to_fis(&tf, pmp, 0, cfis);
+-- 
+1.5.4
+
