@@ -1,72 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 15/18] z2ram: dequeue in-flight request
-Date: Fri,  8 May 2009 11:54:13 +0900
-Message-ID: <1241751256-17435-16-git-send-email-tj@kernel.org>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36307 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762390AbZEHC5G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 May 2009 22:57:06 -0400
-In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Fri, 08 May 2009 18:13:12 +0900
+Message-ID: <4A03F7A8.9090204@kernel.org>
+References: <1233456951-992-1-git-send-email-tj@kernel.org>	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>	 <49FA0349.3090706@garzik.org>	 <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>	 <49FEA127.1000905@kernel.org>	 <e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>	 <49FFB275.7000507@kernel.org> <e9c3a7c20905050834t79a1c03dt83df288b2f38ed76@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <e9c3a7c20905050834t79a1c03dt83df288b2f38ed76@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.c
-Cc: Tejun Heo <tj@kernel.org>
 
-z2ram processes requests one-by-one synchronously and can be easily
-converted to dequeueing model.  Convert it.
+Dan Williams wrote:
+> On Mon, May 4, 2009 at 8:28 PM, Tejun Heo <tj@kernel.org> wrote:
+>> Pushing this in the kernel without updating dm-raid is kind of
+>> pointless.  Who should I be poking to get the userland part moving?
+> 
+> Dmraid is not the only potential user.  Mdadm will also care about
+> this as I have seen a report that points to a user having what looks
+> like an HPA issue with an Intel(R) Matrix array.  So, there are two
+> immediate users for this interface.  Heinz is the right person to poke
+> for dmraid updates.  I'll handle the mdadm update.
 
-[ Impact: dequeue in-flight request ]
+Alright, then.  With Jeff's reluctant ack and scheduled mdadm update,
+I guess this one can go upstream.  I'll refresh the patchset and
+repost.  Umm... BTW do I have Heinz's mail address right?
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/block/z2ram.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
+Thanks.
 
-diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
-index 6a13838..c909c1a 100644
---- a/drivers/block/z2ram.c
-+++ b/drivers/block/z2ram.c
-@@ -70,15 +70,21 @@ static struct gendisk *z2ram_gendisk;
- static void do_z2_request(struct request_queue *q)
- {
- 	struct request *req;
--	while ((req = elv_next_request(q)) != NULL) {
-+
-+	req = elv_next_request(q);
-+	if (req)
-+		blkdev_dequeue_request(req);
-+
-+	while (req) {
- 		unsigned long start = blk_rq_pos(req) << 9;
- 		unsigned long len  = blk_rq_cur_bytes(req);
-+		int err = 0;
- 
- 		if (start + len > z2ram_size) {
- 			printk( KERN_ERR DEVICE_NAME ": bad access: block=%lu, count=%u\n",
- 				blk_rq_pos(req), blk_rq_cur_sectors(req));
--			__blk_end_request_cur(req, -EIO);
--			continue;
-+			err = -EIO;
-+			goto done;
- 		}
- 		while (len) {
- 			unsigned long addr = start & Z2RAM_CHUNKMASK;
-@@ -93,7 +99,12 @@ static void do_z2_request(struct request_queue *q)
- 			start += size;
- 			len -= size;
- 		}
--		__blk_end_request_cur(req, 0);
-+	done:
-+		if (!__blk_end_request_cur(req, err)) {
-+			req = elv_next_request(q);
-+			if (req)
-+				blkdev_dequeue_request(req);
-+		}
- 	}
- }
- 
 -- 
-1.6.0.2
-
+tejun
