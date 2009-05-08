@@ -1,75 +1,168 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: EP93xx PIO IDE driver proposal
-Date: Fri, 08 May 2009 17:30:00 +0400
-Message-ID: <4A0433D8.1000400@ru.mvista.com>
-References: <49CCD7C4.8000207@inov.pt> <200905081404.29868.bzolnier@gmail.com> <4A0422B7.9010903@inov.pt> <200905081440.30147.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [RFC]hpt366/ide-probe  reset drive on probe error.
+Date: Fri, 8 May 2009 15:50:11 +0200
+Message-ID: <200905081550.11297.bzolnier@gmail.com>
+References: <4A0052EB.6040502@hiramoto.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:32803 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751695AbZEHN3d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 May 2009 09:29:33 -0400
-In-Reply-To: <200905081440.30147.bzolnier@gmail.com>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:61671 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751695AbZEHNqh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2009 09:46:37 -0400
+Received: by ewy24 with SMTP id 24so1831031ewy.37
+        for <linux-ide@vger.kernel.org>; Fri, 08 May 2009 06:46:36 -0700 (PDT)
+In-Reply-To: <4A0052EB.6040502@hiramoto.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>, Alan Cox <alan@lxorguk.ukuu.org.uk>, H Hartley Sweeten <hartleys@visionengravers.com>, Ryan Mallon <ryan@bluewatersys.com>, linux-arm-kernel@lists.arm.linux.org.uk, linux-ide@vger.kernel.org
+To: Karl Hiramoto <karl@hiramoto.org>
+Cc: linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Bartlomiej Zolnierkiewicz wrote:
 
->>>>>>So you're saying I should support all PIO modes? If so, I would have to 
->>>>>>make conditional code, checking perhaps a module param to sort which PIO 
->>>>>>mode to use.
+On Tuesday 05 May 2009 16:53:31 Karl Hiramoto wrote:
+> Hi,
+> 
+> Part of this patch (htp366.c) is commented in an #if 0   in older 
+> kernels.   2.6.11 for sure.
+> 
+> I have an ARM IXP4xx based board with CompactFlash slot that this patch 
+> fixes some issues for.    I think the case, is only with a warm boot, 
+> where the drive was busy before the board was reset.   There is  no 
+> BIOS, only the redboot loader which loads the kernel.
+> 
+> 
+> A few questions:
+> 
+> 1.  Would this be considerd to be brought into mainline?
 
->>>>>If you advertise PIO0-PIO4 as supported the core IDE code will do all the
->>>>>work on figuring which modes are supported by the attached devices. You
->>>>>just need to be able to set them.
+When it comes to ide-probe.c changes: yes given that you split them on
+smaller patches.  hpt366.c change also seems to be correct on the first
+glance but I think that Sergei's opinion would be more suited here.
 
->>>>>Alan
+> 2.  How would you port something like this to using the SATA layer?
+> 
+> Would it go to the ata_port_operations.prereset,  softreset or hardreset?
+> 
+> --
+> Karl
+> 
+> diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
+> index 3377766..ba4b802 100644
+> --- a/drivers/ide/hpt366.c
+> +++ b/drivers/ide/hpt366.c
+> @@ -1280,6 +1280,31 @@ static u8 hpt3xx_cable_detect(ide_hwif_t *hwif)
+>  	return (scr1 & ata66) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+>  }
+>  
+> +/** routine to reset disk
+> + *
+> + * Since SUN Cobalt is attempting to do this operation, I should disclose
+> + * this has been a long time ago Thu Jul 27 16:40:57 2000 was the patch date
+> + * HOTSWAP ATA Infrastructure.
+> + */
+> +
+> +static void hpt3xx_reset (ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	struct pci_dev *dev = to_pci_dev(hwif->dev);
+> +	unsigned long high_16;
+> +	u8 reset;
+> +	u8 reg59h = 0;
+> +
+> +	printk(KERN_INFO "%s reset drive channel %d\n", __func__, hwif->channel);
+> +	high_16 = pci_resource_start(dev, 4);
+> +
+> +	reset = hwif->channel ? 0x80 : 0x40;
+> +
+> +	pci_read_config_byte(dev, 0x59, &reg59h);
+> +	pci_write_config_byte(dev, 0x59, reg59h|reset);
+> +	pci_write_config_byte(dev, 0x59, reg59h);
+> +}
+> +
+>  static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
+>  {
+>  	struct hpt_info *info	= hpt3xx_get_info(hwif->dev);
+> @@ -1406,6 +1431,7 @@ static const struct ide_port_ops hpt3xx_port_ops = {
+>  	.set_pio_mode		= hpt3xx_set_pio_mode,
+>  	.set_dma_mode		= hpt3xx_set_mode,
+>  	.quirkproc		= hpt3xx_quirkproc,
+> +	.resetproc		= hpt3xx_reset,
+>  	.maskproc		= hpt3xx_maskproc,
+>  	.mdma_filter		= hpt3xx_mdma_filter,
+>  	.udma_filter		= hpt3xx_udma_filter,
+> diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+> index 7f264ed..09295b4 100644
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -367,6 +367,7 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
+>  {
+>  	ide_hwif_t *hwif = drive->hwif;
+>  	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+> +	const struct ide_port_ops *port_ops = hwif->port_ops;
+>  	u16 *id = drive->id;
+>  	int rc;
+>  	u8 present = !!(drive->dev_flags & IDE_DFLAG_PRESENT), stat;
+> @@ -427,9 +428,20 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
+>  		/* ensure drive IRQ is clear */
+>  		stat = tp_ops->read_status(hwif);
+>  
+> -		if (rc == 1)
+> +		if (rc == 1) {
+>  			printk(KERN_ERR "%s: no response (status = 0x%02x)\n",
+>  					drive->name, stat);
+> +
+> +			if (port_ops->resetproc) {
+> +				port_ops->resetproc(drive);
+> +				msleep(50);
+> +			}
+> +			tp_ops->dev_select(drive);
+> +			msleep(50);
+> +			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
+> +			(void)ide_busy_sleep(hwif, WAIT_WORSTCASE, 0);
+> +			rc = ide_dev_read_id(drive, cmd, id);
+> +		}
+>  	} else {
+>  		/* not present or maybe ATAPI */
+>  		rc = 3;
 
->>>>Ok, so I've been studying that (I was quite lost for a time, I confess, 
->>>>I'm not that much familiar with the IDE subsystem, so please bear with 
->>>>me ;-) ).
+Since the current code in ide-probe.c looks like this:
 
->>>>So I need to set up a hook for 'set_pio_mode()', so that when the IDE 
->>>>subsystem detects a device and figures the most suitable PIO mode for 
->>>>the device, it will call the 'set_pio_mode' routine provided by the 
->>>>driver in order to configure the host controller for that PIO mode.
+		stat = tp_ops->read_status(hwif);
 
->>>>This also means that my host controller driver should always default to 
->>>>PIO Mode 0, as the initial host controller setup that is carried out by 
->>>>the 'init_hwif' routine, allowing devices to be detected. Afterwards, 
->>>>the IDE subsystem detects the most suitable PIO mode and calls 
->>>>'set_pio_mode' to change that configuration.
+		if (stat == (ATA_BUSY | ATA_DRDY))
+			return 4;
 
->>>>Am I correct on this?
+		if (rc == 1 && cmd == ATA_CMD_ID_ATAPI) {
+			printk(KERN_ERR "%s: no response (status = 0x%02x), "
+					"resetting drive\n", drive->name, stat);
+			msleep(50);
+			tp_ops->dev_select(drive);
+			msleep(50);
+			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
+			(void)ide_busy_sleep(hwif, WAIT_WORSTCASE, 0);
+			rc = ide_dev_read_id(drive, cmd, id);
+		}
 
->>>Yes! :)
+		/* ensure drive IRQ is clear */
+		stat = tp_ops->read_status(hwif);
 
->>>There is still a room for improvement though -- it would be better to fix
->>>IDE core to set PIO0 before probing devices for all host controllers.
+		if (rc == 1)
+			printk(KERN_ERR "%s: no response (status = 0x%02x)\n",
+					drive->name, stat);
 
->>>Moreover it seems that doing it this way would allow us to remove ->init_hwif
->>>method from this driver and do all necessary setup in ep93xx_ide_probe()
->>>(this controller is a single port one so theoretically there shouldn't be
->>>a need for having per-port ->init_hwif implementation).
+I would really prefer fixing ATAPI case while we are at it
+(+ this would also get rid of code duplication).
 
->>So, I should remove the 'init_hwif' hook, and all the host controller 
->>setup would be made in the driver's probe method, correct?
+IOW:
 
-> Yes, that would be preferred (of course given that you fix IDE core to do
-> initial PIO0 setup first).
+- in patch #1 we would add ->resetproc call
 
-    Er, it's not that easy... Think about older CompactFlash cards (and 
-ancient drives of course) that don't support setting explicit PIO modes 
-(only the default one) since they don't support IORDY... and also 
-ide_config_drive_speed() expects drive->id to be already filled in... So I 
-guess you mean just calling set_pio_mode() prior to probing -- without 
-setting the drive's own mode?
+- in patch #2 we would remove 'cmd == ATA_CMD_ID_ATAPI' check
 
-> Thanks,
-> Bart
+Care to revise your patch?
 
-WBR, Sergei
+Thanks,
+Bart
