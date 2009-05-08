@@ -1,162 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [RFC]hpt366/ide-probe  reset drive on probe error.
-Date: Fri, 08 May 2009 19:29:24 +0400
-Message-ID: <4A044FD4.6050405@ru.mvista.com>
-References: <4A0052EB.6040502@hiramoto.org> <200905081550.11297.bzolnier@gmail.com> <200905081557.20733.bzolnier@gmail.com> <200905081607.17340.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Fri, 08 May 2009 12:21:45 -0400
+Message-ID: <4A045C19.4060801@garzik.org>
+References: <1233456951-992-1-git-send-email-tj@kernel.org>	
+	<49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>	
+	<49FA0349.3090706@garzik.org>	
+	<e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>	
+	<49FEA127.1000905@kernel.org>	
+	<e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>	
+	<49FFB275.7000507@kernel.org>
+	<e9c3a7c20905050834t79a1c03dt83df288b2f38ed76@mail.gmail.com>
+	<4A03F7A8.9090204@kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:35384 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751677AbZEHP26 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 May 2009 11:28:58 -0400
-In-Reply-To: <200905081607.17340.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <4A03F7A8.9090204@kernel.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-scsi@vger.kernel.org, Mauelshagen@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Karl Hiramoto <karl@hiramoto.org>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Tejun Heo wrote:
+> Dan Williams wrote:
+>> On Mon, May 4, 2009 at 8:28 PM, Tejun Heo <tj@kernel.org> wrote:
+>>> Pushing this in the kernel without updating dm-raid is kind of
+>>> pointless.  Who should I be poking to get the userland part moving?
+>> Dmraid is not the only potential user.  Mdadm will also care about
+>> this as I have seen a report that points to a user having what looks
+>> like an HPA issue with an Intel(R) Matrix array.  So, there are two
+>> immediate users for this interface.  Heinz is the right person to poke
+>> for dmraid updates.  I'll handle the mdadm update.
+> 
+> Alright, then.  With Jeff's reluctant ack and scheduled mdadm update,
+> I guess this one can go upstream.  I'll refresh the patchset and
+> repost.  Umm... BTW do I have Heinz's mail address right?
 
->>>>diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
->>>>index 3377766..ba4b802 100644
->>>>--- a/drivers/ide/hpt366.c
->>>>+++ b/drivers/ide/hpt366.c
->>>>@@ -1280,6 +1280,31 @@ static u8 hpt3xx_cable_detect(ide_hwif_t *hwif)
->>>> 	return (scr1 & ata66) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
->>>> }
->>>> 
->>>>+/** routine to reset disk
->>>>+ *
->>>>+ * Since SUN Cobalt is attempting to do this operation, I should disclose
->>>>+ * this has been a long time ago Thu Jul 27 16:40:57 2000 was the patch date
->>>>+ * HOTSWAP ATA Infrastructure.
->>>>+ */
->>>>+
->>>>+static void hpt3xx_reset (ide_drive_t *drive)
->>>>+{
->>>>+	ide_hwif_t *hwif = drive->hwif;
->>>>+	struct pci_dev *dev = to_pci_dev(hwif->dev);
->>>>+	unsigned long high_16;
->>>>+	u8 reset;
->>>>+	u8 reg59h = 0;
->>>>+
->>>>+	printk(KERN_INFO "%s reset drive channel %d\n", __func__, hwif->channel);
->>>>+	high_16 = pci_resource_start(dev, 4);
->>>>+
->>>>+	reset = hwif->channel ? 0x80 : 0x40;
->>>>+
->>>>+	pci_read_config_byte(dev, 0x59, &reg59h);
->>>>+	pci_write_config_byte(dev, 0x59, reg59h|reset);
->>>>+	pci_write_config_byte(dev, 0x59, reg59h);
->>>>+}
->>>>+
->>>> static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
->>>> {
->>>> 	struct hpt_info *info	= hpt3xx_get_info(hwif->dev);
->>>>@@ -1406,6 +1431,7 @@ static const struct ide_port_ops hpt3xx_port_ops = {
->>>> 	.set_pio_mode		= hpt3xx_set_pio_mode,
->>>> 	.set_dma_mode		= hpt3xx_set_mode,
->>>> 	.quirkproc		= hpt3xx_quirkproc,
->>>>+	.resetproc		= hpt3xx_reset,
->>>> 	.maskproc		= hpt3xx_maskproc,
->>>> 	.mdma_filter		= hpt3xx_mdma_filter,
->>>> 	.udma_filter		= hpt3xx_udma_filter,
->>>>diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
->>>>index 7f264ed..09295b4 100644
->>>>--- a/drivers/ide/ide-probe.c
->>>>+++ b/drivers/ide/ide-probe.c
->>>>@@ -367,6 +367,7 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
->>>> {
->>>> 	ide_hwif_t *hwif = drive->hwif;
->>>> 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
->>>>+	const struct ide_port_ops *port_ops = hwif->port_ops;
->>>> 	u16 *id = drive->id;
->>>> 	int rc;
->>>> 	u8 present = !!(drive->dev_flags & IDE_DFLAG_PRESENT), stat;
->>>>@@ -427,9 +428,20 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
->>>> 		/* ensure drive IRQ is clear */
->>>> 		stat = tp_ops->read_status(hwif);
->>>> 
->>>>-		if (rc == 1)
->>>>+		if (rc == 1) {
->>>> 			printk(KERN_ERR "%s: no response (status = 0x%02x)\n",
->>>> 					drive->name, stat);
->>>>+
->>>>+			if (port_ops->resetproc) {
->>>>+				port_ops->resetproc(drive);
->>>>+				msleep(50);
->>>>+			}
->>>>+			tp_ops->dev_select(drive);
->>>>+			msleep(50);
->>>>+			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
->>>>+			(void)ide_busy_sleep(hwif, WAIT_WORSTCASE, 0);
->>>>+			rc = ide_dev_read_id(drive, cmd, id);
->>>>+		}
->>>> 	} else {
->>>> 		/* not present or maybe ATAPI */
->>>> 		rc = 3;
->>>
->>>Since the current code in ide-probe.c looks like this:
->>>
->>>		stat = tp_ops->read_status(hwif);
->>>
->>>		if (stat == (ATA_BUSY | ATA_DRDY))
->>>			return 4;
->>>
->>>		if (rc == 1 && cmd == ATA_CMD_ID_ATAPI) {
->>>			printk(KERN_ERR "%s: no response (status = 0x%02x), "
->>>					"resetting drive\n", drive->name, stat);
->>>			msleep(50);
->>>			tp_ops->dev_select(drive);
->>>			msleep(50);
->>>			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
->>>			(void)ide_busy_sleep(hwif, WAIT_WORSTCASE, 0);
->>>			rc = ide_dev_read_id(drive, cmd, id);
->>>		}
->>>
->>>		/* ensure drive IRQ is clear */
->>>		stat = tp_ops->read_status(hwif);
->>>
->>>		if (rc == 1)
->>>			printk(KERN_ERR "%s: no response (status = 0x%02x)\n",
->>>					drive->name, stat);
->>>
->>>I would really prefer fixing ATAPI case while we are at it
->>>(+ this would also get rid of code duplication).
->>>
->>>IOW:
->>>
->>>- in patch #1 we would add ->resetproc call
->>>
->>>- in patch #2 we would remove 'cmd == ATA_CMD_ID_ATAPI' check
->>
->>[ looking a bit closer at the code in ide-probe.c ]
->>
->>- in patch #2 we would move the ATAPI check to cover device selection/reset
->>  inside 'if ()' block
+The email addr is correct according to dmraid-current.tar.bz2 (dated Sep 
+2008), at least.  I don't have any better info.
 
-> Sigh, this is even more complicated...
-
-> We should defer ->resetproc call until both drives are probed and do the
-> port reset after probing both drives given that:
-
-    We should just reset the port (and call resetproc() as a part of that). 
-The resetproc() change should not be needed.
-
-> - we didn't detect any devices
-
-> and 
-
-> - for one of devices do_probe() returned '1' (== "no response")
-
-> Also it would greatly help to clean/fix return values of do_probe()
-> and probe_for_drive() before doing the real changes.
-
-    Sounds like the plan. :-)
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+	Jeff
