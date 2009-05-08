@@ -1,52 +1,111 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
-Date: Fri, 8 May 2009 09:23:46 -0700
-Message-ID: <e9c3a7c20905080923u12c2eddaq92012e919d52e784@mail.gmail.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org>
-	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>
-	 <49FA0349.3090706@garzik.org>
-	 <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
-	 <49FEA127.1000905@kernel.org>
-	 <e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>
-	 <49FFB275.7000507@kernel.org>
-	 <e9c3a7c20905050834t79a1c03dt83df288b2f38ed76@mail.gmail.com>
-	 <4A03F7A8.9090204@kernel.org>
+From: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>
+Subject: Re: EP93xx PIO IDE driver proposal
+Date: Fri, 08 May 2009 18:28:22 +0100
+Message-ID: <4A046BB6.6060806@inov.pt>
+References: <49CCD7C4.8000207@inov.pt> <20090507145315.3e85b2a8@lxorguk.ukuu.org.uk> <4A02FF40.6090303@inov.pt> <200905081404.29868.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:10712 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753140AbZEHQXr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2009 12:23:47 -0400
-In-Reply-To: <4A03F7A8.9090204@kernel.org>
+Received: from lmv.inov.pt ([146.193.64.2]:59409 "EHLO lmv.inov.pt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754265AbZEHRbO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 May 2009 13:31:14 -0400
+In-Reply-To: <200905081404.29868.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, device-mapper development <dm-devel@redhat.com>, heinzm@redhat.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-[ added heinzm@redhat.com ]
 
-On Fri, May 8, 2009 at 2:13 AM, Tejun Heo <tj@kernel.org> wrote:
-> Dan Williams wrote:
->> On Mon, May 4, 2009 at 8:28 PM, Tejun Heo <tj@kernel.org> wrote:
->>> Pushing this in the kernel without updating dm-raid is kind of
->>> pointless. =A0Who should I be poking to get the userland part movin=
-g?
->>
->> Dmraid is not the only potential user. =A0Mdadm will also care about
->> this as I have seen a report that points to a user having what looks
->> like an HPA issue with an Intel(R) Matrix array. =A0So, there are tw=
-o
->> immediate users for this interface. =A0Heinz is the right person to =
-poke
->> for dmraid updates. =A0I'll handle the mdadm update.
 >
-> Alright, then. =A0With Jeff's reluctant ack and scheduled mdadm updat=
-e,
-> I guess this one can go upstream. =A0I'll refresh the patchset and
-> repost. =A0Umm... BTW do I have Heinz's mail address right?
+> Yes! :)
+>
+> There is still a room for improvement though -- it would be better to=
+ fix
+> IDE core to set PIO0 before probing devices for all host controllers.
+>
+> Moreover it seems that doing it this way would allow us to remove ->i=
+nit_hwif
+> method from this driver and do all necessary setup in ep93xx_ide_prob=
+e()
+> (this controller is a single port one so theoretically there shouldn'=
+t be
+> a need for having per-port ->init_hwif implementation).
+>  =20
 
-Heinz, here is the whole thread:
+So after all this discussion ;-) , my driver will have no 'init_hwif'=20
+method, and the setup code will be on 'ep93xx_ide_probe', which will=20
+configure entirely the IDE host controller.
+Moreover, this initial configuration will setup the controller to work=20
+at PIO Mode 0. Later on, the 'set_pio_mode' method will be called and=20
+the controller will configure itself according to the PIO mode reported=
+=20
+by the IDE core.
 
-http://marc.info/?t=3D123345711600004&r=3D1&w=3D2
+Can I proceed this way?
+
+>  =20
+>> There's just only one issue; normally, I would setup the specific=20
+>> timings (t0, t1, t2, t2i, etc) in the 'pio_set_mode' hook. However, =
+if=20
+>> you look further in the driver, those timings aren't defined through=
+ a=20
+>> memory controller but instead manually enforced by 'ndelay' calls (a=
+rghhh).
+>> This means that in my low-level procedures for reading and writing, =
+I=20
+>> need to have access to the timings (or the struct ide_timing)=20
+>> corresponding to the PIO mode selected, in order to use the correct =
+delays.
+>>
+>> My question is: which is the best way to accomplish this? Declaring =
+a=20
+>> global struct ide_timing variable pointer that always holds the corr=
+ect=20
+>> ide_timing struct to the selected PIO mode? Or should I always check=
+ (in=20
+>> some manner) what is the current PIO mode and then select the adequa=
+te=20
+>> delays?
+>>    =20
+>
+> I think that the setting variable pointer in ->set_pio_mode method wo=
+uld
+> work best.  Seems like the existing drive_data field of ide_drive_t i=
+s well
+> suited for this purpose (however it may be worth to convert it to 'vo=
+id *'
+> type while we are it).
+>  =20
+
+Did you mean 'drive_data' field, or 'driver_data' field?
+'drive_data' field is an unsigned int value; I guess you meant=20
+'driver_data' field as it is a (void *) field, so I can define it as a=20
+pointer to the correct 'struct ide_timing'.
+
+Regards,
+Jo=E3o
+
+
+--=20
+***********************************************************************=
+*
+
+    Jo=E3o Ramos        <joao.ramos@inov.pt>
+
+    INOV INESC Inova=E7=E3o - ESTG Leiria
+    Escola Superior de Tecnologia e Gest=E3o de Leiria
+    Ed=EDficio C1, Campus 2
+    Morro do Lena, Alto do Vieiro
+    Leiria
+    2411-901 Leiria
+    Portugal
+
+    Tel: +351244843424
+    Fax: +351244843424
+
+***********************************************************************=
+*
+
