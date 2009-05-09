@@ -1,69 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/3] block: add alt_size
-Date: Sat, 09 May 2009 23:04:12 +0900
-Message-ID: <4A058D5C.6030206@kernel.org>
-References: <1241828002-12742-1-git-send-email-tj@kernel.org>
-	<1241828002-12742-2-git-send-email-tj@kernel.org>
-	<ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] libata: fix suspend/resume for ATA SEMB devices
+Date: Sat, 9 May 2009 17:13:48 +0200
+Message-ID: <20090509151348.GA25760@liondog.tnic>
+References: <20090426143836.GA3643@liondog.tnic> <49F4DFA9.6040805@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:37141 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbZEIPNx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 May 2009 11:13:53 -0400
+Content-Disposition: inline
+In-Reply-To: <49F4DFA9.6040805@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
-
-Kay Sievers wrote:
-> What does "alt_" stand for? I think that should be more descriptive in
-> an exported interface.
-
-Alternative.
-
-> And can we please keep the "size_*" in front of the name, so that they
-> group together?
-
-Maybe, but size_alt?  Any better ideas?
-
-> Also, values with magic block counts, while there is no way to get the
-> blocksize with the same interface, are pretty weird. I think the
-> current "size" attribute is just a bug.
-
-Logical block size is fixed at 512 bytes.  Offset and size are always
-represented in multiples of 512 bytes and only get converted to
-hardware block size in the lld.
-
-> Not sure, how that should be solved, by adding a "blocksize" attribute
-> that is always in the same context as the current "size*" values, or
-> by just using bytes for new attributes here.
+On Mon, Apr 27, 2009 at 07:26:49AM +0900, Tejun Heo wrote:
+> Borislav Petkov wrote:
+> > due to a class mismatch in ata_dev_revalidate(). Fix it by adding the
+> > ATA_DEV_SEMB device class to the check.
+> > 
+> > CC: Tejun Heo <htejun@gmail.com>
+> > CC: Jeff Garzik <jeff@garzik.org>
+> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 > 
-> Almost all tools I've seen using these attributes, have hardcoded *
-> 512 in there, which may cause trouble pretty soon. And this is mostly
-> a failure of the interface and not of the users, I think.
+> Acked-by: Tejun Heo <tj@kernel.org>
 
-No, it will never break.  It will always be 512.  It's there to give
-nine bit shift to allow additional 9 bit of addressing without going
-to the next full blown bitwidth.  It's chosen to be the lowest common
-denominator which gives enough addressing boost to hold things
-together till the next bitwidth becomes popular.
+Hi Jeff,
 
-For userlevel exporting, it might have been better to use just bytes
-there as preformance isn't really an issue, but, well, it's already
-determined, so..
-
-Thanks.
+any chance this can make it into 2.6.30?
 
 -- 
-tejun
+Regards/Gruss,
+    Boris.
