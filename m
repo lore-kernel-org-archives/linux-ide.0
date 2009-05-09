@@ -1,41 +1,45 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_sil24 EH complete
-Date: Sat, 09 May 2009 10:41:06 +0900
-Message-ID: <4A04DF32.4050305@kernel.org>
-References: <alpine.DEB.2.00.0905060004100.15177@dirac.rather.puzzling.org> <4A00DA98.5060201@kernel.org> <alpine.DEB.2.00.0905061038340.14678@dirac.rather.puzzling.org> <alpine.DEB.2.00.0905090005560.24222@dirac.rather.puzzling.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Subject: [GIT PATCH] block,scsi,libata: implement alt_size, take#2
+Date: Sat,  9 May 2009 09:13:19 +0900
+Message-ID: <1241828002-12742-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37753 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:54569 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751207AbZEIBn2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 May 2009 21:43:28 -0400
-In-Reply-To: <alpine.DEB.2.00.0905090005560.24222@dirac.rather.puzzling.org>
+	id S1753115AbZEIBxg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 May 2009 21:53:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Connors <tconnors+linuxkml@astro.swin.edu.au>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Mauelshagen@RedHat.c
 
-Tim Connors wrote:
->>> Hmm... "ata1.00: configured for UDMA/100" means libata part of
->>> configuration went okay but it looks like SCSI probing didn't kick in
->>> for reason.  Is this always reproducible?
->> 100% of time if it is plugged in after boot.
-> 
-> Hah, I lied.  Not 100% of the time.
-> 
-> With *some* combination perhaps of
->> for host in 0 1 2 3 ; do ; echo "- - -" > /sys/class/scsi_host/host$host/scan ; done
-> and
->> scsiadd -s
-> when the drive is plugged in and when it isn't plugged in (or maybe even
-> just leaving it alone) and plugging and unplugging it repeadedly,
-> eventually (maybe 20% of the time?) it comes good:
+Hello,
 
-I can reliably reproduce it here.  Heh... interesting.  I'll dig in.
+Upon ack, please pull from the following git tree.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-alt_size
+
+This is the second take of implement-alt_size patchset.  Other than
+being refreshed to apply on the current block tree, there's no real
+change from the last take[L].
+
+Jeff reluctantly acked it and Dan Williams is gonna handle mdadm part
+of userland, so I guess it's about time to push this in.
+
+This patchset is on top of the current block#for-2.6.31(f68adec3) and
+can be automatically merged with block-peek-fetch branch by pulling.
+diffstat follows.
+
+ block/genhd.c              |   26 ++++++++++++++++++++++++++
+ drivers/ata/libata-core.c  |    2 ++
+ drivers/ata/libata-scsi.c  |    2 ++
+ drivers/scsi/sd.c          |    1 +
+ include/linux/genhd.h      |   13 ++++++++++++-
+ include/linux/libata.h     |    1 +
+ include/scsi/scsi_device.h |    1 +
+ 7 files changed, 45 insertions(+), 1 deletion(-)
 
 Thanks.
 
--- 
+--
 tejun
+
+[L] http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/7235
