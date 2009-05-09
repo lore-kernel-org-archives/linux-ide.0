@@ -1,12 +1,12 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 11/14] ide-tape/ide_tape_get_bsize_from_bdesc: use local buffer
-Date: Sat,  9 May 2009 09:45:31 +0200
-Message-ID: <1241855134-4984-12-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 06/14] ide-floppy/ide_floppy_get_flexible_disk_page: use local buffer
+Date: Sat,  9 May 2009 09:45:26 +0200
+Message-ID: <1241855134-4984-7-git-send-email-petkovbb@gmail.com>
 References: <1241855134-4984-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:62202 "EHLO
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:51936 "EHLO
 	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbZEIHpj (ORCPT
+	with ESMTP id S1751505AbZEIHpj (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 May 2009 03:45:39 -0400
 In-Reply-To: <1241855134-4984-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,40 +18,57 @@ There should be no functional change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/ide/ide-floppy.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index dc69c5d..7f70926 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -1451,9 +1451,10 @@ static void ide_tape_get_bsize_from_bdesc(ide_drive_t *drive)
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index be21cf2..060c893 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -311,33 +311,33 @@ static int ide_floppy_get_flexible_disk_page(ide_drive_t *drive,
  {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc pc;
-+	u8 buf[12];
+ 	struct ide_disk_obj *floppy = drive->driver_data;
+ 	struct gendisk *disk = floppy->disk;
+-	u8 *page;
++	u8 *page, buf[40];
+ 	int capacity, lba_capacity;
+ 	u16 transfer_rate, sector_size, cyls, rpm;
+ 	u8 heads, sectors;
  
- 	idetape_create_mode_sense_cmd(&pc, IDETAPE_BLOCK_DESCRIPTOR);
--	if (ide_queue_pc_tail(drive, tape->disk, &pc, pc.buf, pc.req_xfer)) {
-+	if (ide_queue_pc_tail(drive, tape->disk, &pc, buf, pc.req_xfer)) {
- 		printk(KERN_ERR "ide-tape: Can't get block descriptor\n");
- 		if (tape->blk_size == 0) {
- 			printk(KERN_WARNING "ide-tape: Cannot deal with zero "
-@@ -1462,10 +1463,10 @@ static void ide_tape_get_bsize_from_bdesc(ide_drive_t *drive)
- 		}
- 		return;
+ 	ide_floppy_create_mode_sense_cmd(pc, IDEFLOPPY_FLEXIBLE_DISK_PAGE);
+ 
+-	if (ide_queue_pc_tail(drive, disk, pc, pc->buf, pc->req_xfer)) {
++	if (ide_queue_pc_tail(drive, disk, pc, buf, pc->req_xfer)) {
+ 		printk(KERN_ERR PFX "Can't get flexible disk page params\n");
+ 		return 1;
  	}
--	tape->blk_size = (pc.buf[4 + 5] << 16) +
--				(pc.buf[4 + 6] << 8)  +
--				 pc.buf[4 + 7];
--	tape->drv_write_prot = (pc.buf[2] & 0x80) >> 7;
-+	tape->blk_size = (buf[4 + 5] << 16) +
-+				(buf[4 + 6] << 8)  +
-+				 buf[4 + 7];
-+	tape->drv_write_prot = (buf[2] & 0x80) >> 7;
- }
  
- static int idetape_chrdev_open(struct inode *inode, struct file *filp)
+-	if (pc->buf[3] & 0x80)
++	if (buf[3] & 0x80)
+ 		drive->dev_flags |= IDE_DFLAG_WP;
+ 	else
+ 		drive->dev_flags &= ~IDE_DFLAG_WP;
+ 
+ 	set_disk_ro(disk, !!(drive->dev_flags & IDE_DFLAG_WP));
+ 
+-	page = &pc->buf[8];
++	page = &buf[8];
+ 
+-	transfer_rate = be16_to_cpup((__be16 *)&pc->buf[8 + 2]);
+-	sector_size   = be16_to_cpup((__be16 *)&pc->buf[8 + 6]);
+-	cyls          = be16_to_cpup((__be16 *)&pc->buf[8 + 8]);
+-	rpm           = be16_to_cpup((__be16 *)&pc->buf[8 + 28]);
+-	heads         = pc->buf[8 + 4];
+-	sectors       = pc->buf[8 + 5];
++	transfer_rate = be16_to_cpup((__be16 *)&buf[8 + 2]);
++	sector_size   = be16_to_cpup((__be16 *)&buf[8 + 6]);
++	cyls          = be16_to_cpup((__be16 *)&buf[8 + 8]);
++	rpm           = be16_to_cpup((__be16 *)&buf[8 + 28]);
++	heads         = buf[8 + 4];
++	sectors       = buf[8 + 5];
+ 
+ 	capacity = cyls * heads * sectors * sector_size;
+ 
 -- 
 1.6.2.4
 
