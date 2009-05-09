@@ -1,55 +1,54 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/18] ide: dequeue in-flight request
-Date: Sat, 9 May 2009 17:58:39 +0200
-Message-ID: <200905091758.40306.bzolnier@gmail.com>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-2-git-send-email-tj@kernel.org>
+Subject: Re: [RFC]hpt366/ide-probe  reset drive on probe error.
+Date: Sat, 9 May 2009 18:07:43 +0200
+Message-ID: <200905091807.43605.bzolnier@gmail.com>
+References: <4A0052EB.6040502@hiramoto.org> <4A044C25.6010709@ru.mvista.com> <4A057261.3090404@hiramoto.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-15"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:23907 "EHLO
+Received: from mu-out-0910.google.com ([209.85.134.188]:23497 "EHLO
 	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbZEIQEL (ORCPT
+	with ESMTP id S1754789AbZEIQEL (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 May 2009 12:04:11 -0400
-In-Reply-To: <1241751256-17435-2-git-send-email-tj@kernel.org>
+Received: by mu-out-0910.google.com with SMTP id i2so745540mue.1
+        for <linux-ide@vger.kernel.org>; Sat, 09 May 2009 09:04:09 -0700 (PDT)
+In-Reply-To: <4A057261.3090404@hiramoto.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@hansenpartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+To: Karl Hiramoto <karl@hiramoto.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-On Friday 08 May 2009 04:53:59 Tejun Heo wrote:
-> ide generally has single request in flight and tracks it using
-> hwif->rq and all state handlers follow the following convention.
-> 
-> * ide_started is returned if the request is in flight.
-> 
-> * ide_stopped is returned if the queue needs to be restarted.  The
->   request might or might not have been processed fully or partially.
-> 
-> * hwif->rq is set to NULL, when an issued request completes.
-> 
-> So, dequeueing model can be implemented by dequeueing after fetch,
-> requeueing if hwif->rq isn't NULL on ide_stopped return and doing
-> about the same thing on completion / port unlock paths.  These changes
-> can be made in ide-io proper.
-> 
-> In addition to the above main changes, the following updates are
-> necessary.
-> 
-> * ide-cd shouldn't dequeue a request when issuing REQUEST SENSE for it
->   as the request is already dequeued.
-> 
-> * ide-atapi uses request queue as stack when issuing REQUEST SENSE to
->   put the REQUEST SENSE in front of the failed request.  This now
->   needs to be done using requeueing.
-> 
-> [ Impact: dequeue in-flight request ]
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Cc: Borislav Petkov <petkovbb@googlemail.com>
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+On Saturday 09 May 2009 14:09:05 Karl Hiramoto wrote:
+> Sergei Shtylyov wrote:
 
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+[...]
+
+> >>> Care to revise your patch?
+> >
+> >    I see no point in "revising" this hack now...
+> 
+> Why not reset the drive if it does not respond?  OK, you could blame 
+> this on a bugy board, or redboot that does not reset the drive on warm 
+> boot if it is busy.
+
+Please read the whole discussion between Sergei & me before getting
+discouraged by our occasional use of the vivid language. ;)
+
+Your idea is good but the current implementation needs to be reworked
+into a form which doesn't duplicate the code and which would work also
+for other hardware setups.
+
+The nice starting point is sanitizing return values of do_probe()
+and probe_for_drive(), and then making sure that they are propagated
+correctly to higher level.  Once this is done we can use those values
+in ide_probe_port() to reset and re-probe the port if necessary.
+
+[ I think that the port reset itself would be best realized by reusing
+  the existing code from do_reset1() (plese see the code for SRST near
+  the end of this function). ]
+
+Thanks,
+Bart
