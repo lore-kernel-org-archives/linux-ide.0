@@ -1,54 +1,51 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 01/18] ide: dequeue in-flight request
-Date: Sat, 9 May 2009 08:56:19 +0200
-Message-ID: <20090509065619.GA8966@liondog.tnic>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-2-git-send-email-tj@kernel.org>
-Reply-To: petkovbb@gmail.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: SATA disks resets in a md setup
+Date: Sat, 09 May 2009 03:35:05 -0400
+Message-ID: <4A053229.5010406@garzik.org>
+References: <200905081739.46206.v.virvilis@biovista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1241751256-17435-2-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:33801 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752848AbZEIHfH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 May 2009 03:35:07 -0400
+In-Reply-To: <200905081739.46206.v.virvilis@biovista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: v.virvilis@biovista.com
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Fri, May 08, 2009 at 11:53:59AM +0900, Tejun Heo wrote:
-> ide generally has single request in flight and tracks it using
-> hwif->rq and all state handlers follow the following convention.
+Vassilis Virvilis wrote:
+> [ 9351.377961] ata2: SError: { PHYRdyChg PHYInt 10B8B Dispar }
+> [ 9351.377983] ata2.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
+> [ 9351.377985]          res 50/00:00:b6:46:6a/00:00:13:00:00/e0 Emask 0x10 (ATA bus error)
+[...]
+> [10665.354196] ata2: SError: { UnrecovData Handshk }
+> [10665.354196] ata2.00: cmd 35/00:00:27:ae:7a/00:04:01:00:00/e0 tag 0 dma 524288 out
+> [10665.354196]          res 50/00:00:26:ae:7a/00:00:01:00:00/e0 Emask 0x10 (ATA bus error)
+[...]
+> and my filesystem is dead. /dev/sdb is deleted from /dev. I have to reboot and even then linux can't find the ata2 /dev/sdb.
+> I have to remove power for 1-2 min for the disk to become accessible again.
 > 
-> * ide_started is returned if the request is in flight.
-> 
-> * ide_stopped is returned if the queue needs to be restarted.  The
->   request might or might not have been processed fully or partially.
-> 
-> * hwif->rq is set to NULL, when an issued request completes.
-> 
-> So, dequeueing model can be implemented by dequeueing after fetch,
-> requeueing if hwif->rq isn't NULL on ide_stopped return and doing
-> about the same thing on completion / port unlock paths.  These changes
-> can be made in ide-io proper.
-> 
-> In addition to the above main changes, the following updates are
-> necessary.
-> 
-> * ide-cd shouldn't dequeue a request when issuing REQUEST SENSE for it
->   as the request is already dequeued.
-> 
-> * ide-atapi uses request queue as stack when issuing REQUEST SENSE to
->   put the REQUEST SENSE in front of the failed request.  This now
->   needs to be done using requeueing.
-> 
-> [ Impact: dequeue in-flight request ]
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Cc: Borislav Petkov <petkovbb@googlemail.com>
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Do you think the disk is bad or something?
 
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
--- 
-Regards/Gruss,
-    Boris.
+For hardware details, see 
+http://ata.wiki.kernel.org/index.php/Libata_error_messages
+
+The ATA bus is the cable connection, so an ATA bus error typically means
+
+- problem with your cable, or
+- your motherboard's SATA port, or
+- your drive's SATA port, or
+- "dirty power" supply, or
+- some other cause for cable interference
+
+Regards,
+
+	Jeff
+
+
+
