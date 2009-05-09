@@ -1,51 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA disks resets in a md setup
-Date: Sat, 09 May 2009 03:35:05 -0400
-Message-ID: <4A053229.5010406@garzik.org>
-References: <200905081739.46206.v.virvilis@biovista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [RFC PATCH 0/12] ide-atapi remove pc->buf
+Date: Sat,  9 May 2009 09:45:20 +0200
+Message-ID: <1241855134-4984-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33801 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752848AbZEIHfH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 May 2009 03:35:07 -0400
-In-Reply-To: <200905081739.46206.v.virvilis@biovista.com>
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:44376 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbZEIHpg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 May 2009 03:45:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: v.virvilis@biovista.com
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Vassilis Virvilis wrote:
-> [ 9351.377961] ata2: SError: { PHYRdyChg PHYInt 10B8B Dispar }
-> [ 9351.377983] ata2.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
-> [ 9351.377985]          res 50/00:00:b6:46:6a/00:00:13:00:00/e0 Emask 0x10 (ATA bus error)
-[...]
-> [10665.354196] ata2: SError: { UnrecovData Handshk }
-> [10665.354196] ata2.00: cmd 35/00:00:27:ae:7a/00:04:01:00:00/e0 tag 0 dma 524288 out
-> [10665.354196]          res 50/00:00:26:ae:7a/00:00:01:00:00/e0 Emask 0x10 (ATA bus error)
-[...]
-> and my filesystem is dead. /dev/sdb is deleted from /dev. I have to reboot and even then linux can't find the ata2 /dev/sdb.
-> I have to remove power for 1-2 min for the disk to become accessible again.
-> 
-> Do you think the disk is bad or something?
+Hi Bart,
 
+Here's an assortment :) of ide patches touching stuff here and there.
+I've been working on those for a while and initial testing shows no
+problems. Among the changes is a first attempt to remove the 64 byte
+buffer embedded in each packet command sent to an ide drive. Also, some
+ireason handling unification is there along with other minor stuff.
 
-For hardware details, see 
-http://ata.wiki.kernel.org/index.php/Libata_error_messages
+This is based ontop of
 
-The ATA bus is the cable connection, so an ATA bus error typically means
+git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
 
-- problem with your cable, or
-- your motherboard's SATA port, or
-- your drive's SATA port, or
-- "dirty power" supply, or
-- some other cause for cable interference
-
-Regards,
-
-	Jeff
+and I'm more than open to suggestions on the logistics of merging those
+(how/when/on top of whose branch/who picks them up/do we want to hit the
+.31 merge window or do more testing?/etc) after being reviewed.
 
 
+ drivers/ide/ide-atapi.c        |  145 +++++++++++++++++++++++------------
+ drivers/ide/ide-cd.c           |   69 +++--------------
+ drivers/ide/ide-floppy.c       |   53 ++++++-------
+ drivers/ide/ide-floppy_ioctl.c |   43 ++++++-----
+ drivers/ide/ide-tape.c         |  168 +++++++++++++++++++---------------------
+ include/linux/ide.h            |   18 +----
+ 6 files changed, 238 insertions(+), 258 deletions(-)
+
+--
+Thanks,
+Boris.
 
