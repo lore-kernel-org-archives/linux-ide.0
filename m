@@ -1,63 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/3] scsi: add scsi_device->alt_capacity
-Date: Fri, 08 May 2009 23:23:19 -0500
-Message-ID: <1241842999.6357.2.camel@mulgrave>
-References: <1241828002-12742-1-git-send-email-tj@kernel.org>
-	 <1241828002-12742-3-git-send-email-tj@kernel.org>
+From: s ticket <smticket@gmail.com>
+Subject: Re: How to assess PMP register
+Date: Sat, 9 May 2009 13:12:41 +0800
+Message-ID: <fa69d4570905082212y74242302o5bd8059ce358a4be@mail.gmail.com>
+References: <fa69d4570904291849p638b849fm856be97c81340624@mail.gmail.com>
+	 <49FA2763.9040409@rtr.ca>
+	 <fa69d4570905032204q726728a1qd4be4800b916439a@mail.gmail.com>
+	 <49FF7C2A.6030000@rtr.ca>
+	 <e7510f760905060003n60535405oaf8e431963b41ddf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1241828002-12742-3-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@RedHat.com, dm-devel@RedHat.com, dan.j.williams@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from yw-out-2324.google.com ([74.125.46.31]:28145 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbZEIFMl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 May 2009 01:12:41 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1083183ywb.1
+        for <linux-ide@vger.kernel.org>; Fri, 08 May 2009 22:12:41 -0700 (PDT)
+In-Reply-To: <e7510f760905060003n60535405oaf8e431963b41ddf@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, Mark Lord <liml@rtr.ca>
 
-On Sat, 2009-05-09 at 09:13 +0900, Tejun Heo wrote:
-> Add scsi_device->alt_capacity and let sd pass it over to genhd.  This
-> is to allow SCSI low level drivers to configure alt_capacity via
-> slave_configure().
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-> Cc: Dan Williams <dan.j.williams@gmail.com>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
->  drivers/scsi/sd.c          |    1 +
->  include/scsi/scsi_device.h |    1 +
->  2 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 3fcb64b..f3448bf 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1839,6 +1839,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	blk_queue_ordered(sdkp->disk->queue, ordered, sd_prepare_flush);
->  
->  	set_capacity(disk, sdkp->capacity);
-> +	set_alt_capacity(disk, sdp->alt_capacity);
->  	kfree(buffer);
->  
->   out:
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 3f566af..b24fdeb 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -92,6 +92,7 @@ struct scsi_device {
->  	unsigned int manufacturer;	/* Manufacturer of device, for using 
->  					 * vendor-specific cmd's */
->  	unsigned sector_size;	/* size in bytes */
-> +	size_t alt_capacity;	/* alternative capacity, used by sd */
->  
->  	void *hostdata;		/* available to low-level driver */
->  	char type;
+2009/5/6 Gwendal Grignou <gwendal@google.com>:
+> - you can not access a PMP device from user space directly because
+> there is no file descriptor for it.
+> - however, libata stores a dump of PMP registers taken after every
+> reset in gscr structure of the ata_device structure that represent the
+> PMP in the kernel. You can modify libata to print the registers you
+> need.
 
-This is done at slightly the wrong level.  Capacity is actually a
-property of struct scsi_disk not struct scsi_device ... shouldn't
-alt_capacity be at the same level?
+I add a  `pmp_attach' function ata_port_operation, and call
+`sata_pmp_read' in that
+function. It works fine. But when I call `sata_pmp_read' in process
+context while another
+process is writing to disks, the kernel hangs (deadlock?). Is there
+any suggestion?
+I found that `sata_pmp_read' finally calls `ata_exec_internal_sg' to
+do the real work and
+'ata_exec_internal_sg' takes ata_port->lock.
 
-James
+BTW, why `sata_pmp_read' and `sata_pmp_write' aren't exported?
 
 
+                                                jbin
