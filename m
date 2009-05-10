@@ -1,155 +1,70 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 09/14] ide-atapi: use local sense buffer
-Date: Sun, 10 May 2009 23:32:38 +0200
-Message-ID: <200905102332.39043.bzolnier@gmail.com>
-References: <1241855134-4984-1-git-send-email-petkovbb@gmail.com> <1241855134-4984-10-git-send-email-petkovbb@gmail.com>
+Subject: Re: [RFC PATCH 0/12] ide-atapi remove pc->buf
+Date: Sun, 10 May 2009 23:32:24 +0200
+Message-ID: <200905102332.24775.bzolnier@gmail.com>
+References: <1241855134-4984-1-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:60750 "EHLO
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:44286 "EHLO
 	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756272AbZEJVgC (ORCPT
+	with ESMTP id S1756530AbZEJVgC (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 May 2009 17:36:02 -0400
-In-Reply-To: <1241855134-4984-10-git-send-email-petkovbb@gmail.com>
+In-Reply-To: <1241855134-4984-1-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Saturday 09 May 2009 09:45:29 Borislav Petkov wrote:
-> Save a pointer to the sense buffer in rq->sense in order to access it
-> later in the ->pc_callback method. Also, remove remaining references to
-> pc->buf in ide-floppy code.
+
+Hi,
+
+On Saturday 09 May 2009 09:45:20 Borislav Petkov wrote:
+> Hi Bart,
 > 
-> There should be no functional change resulting from this patch.
+> Here's an assortment :) of ide patches touching stuff here and there.
+> I've been working on those for a while and initial testing shows no
+> problems. Among the changes is a first attempt to remove the 64 byte
+> buffer embedded in each packet command sent to an ide drive. Also, some
+> ireason handling unification is there along with other minor stuff.
+
+Generally looks good but needs some fixes (see my other mails).
+
+[ also: if you are re-posting any patches please always indicate whether
+  (and how) they were changed ]
+
+> This is based ontop of
 > 
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> ---
->  drivers/ide/ide-atapi.c        |   10 ++++++++--
->  drivers/ide/ide-floppy.c       |   12 ++++++------
->  drivers/ide/ide-floppy_ioctl.c |    4 ++--
->  drivers/ide/ide-tape.c         |    5 +++--
->  4 files changed, 19 insertions(+), 12 deletions(-)
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
 > 
-> diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-> index bd59fea..df3e3bb 100644
-> --- a/drivers/ide/ide-atapi.c
-> +++ b/drivers/ide/ide-atapi.c
-> @@ -93,6 +93,13 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
->  	rq->cmd_type = REQ_TYPE_SPECIAL;
->  	rq->special = (char *)pc;
->  
-> +	/*
-> +	 * FIXME: temporarily save a ptr to the sense buffer in rq->sense for
-> +	 * the ->do_callback sense massaging. Will remove later.
-> +	 */
-> +	if (pc->c[0] == REQUEST_SENSE)
-> +		rq->sense = buf;
-> +
->  	if (buf && bufflen) {
->  		error = blk_rq_map_kern(drive->queue, rq, buf, bufflen,
->  					GFP_NOIO);
-> @@ -252,8 +259,7 @@ void ide_retry_pc(ide_drive_t *drive)
->  	/* init pc from sense_rq */
->  	ide_init_pc(pc);
->  	memcpy(pc->c, sense_rq->cmd, 12);
-> -	pc->buf = bio_data(sense_rq->bio);	/* pointer to mapped address */
+> and I'm more than open to suggestions on the logistics of merging those
+> (how/when/on top of whose branch/who picks them up/do we want to hit the
+> .31 merge window or do more testing?/etc) after being reviewed.
+> 
+> 
+>  drivers/ide/ide-atapi.c        |  145 +++++++++++++++++++++++------------
+>  drivers/ide/ide-cd.c           |   69 +++--------------
+>  drivers/ide/ide-floppy.c       |   53 ++++++-------
+>  drivers/ide/ide-floppy_ioctl.c |   43 ++++++-----
+>  drivers/ide/ide-tape.c         |  168 +++++++++++++++++++---------------------
+>  include/linux/ide.h            |   18 +----
+>  6 files changed, 238 insertions(+), 258 deletions(-)
 
-Shouldn't this belong to patch #12?
+Good question, how's about:
 
-> -	pc->req_xfer = blk_rq_bytes(sense_rq);
+Once tj/block-unify-sector-and-data_len is in block/for-2.6.31 and your tree
+is ready I will pull it into the separate branch.  This branch can be then
+pulled into ide/for-next or into new ide/all branch (replacing ide/for-next
+in linux-next).
 
-I think that we can remove ->req_xfer now completely, patch #13.5? :)
+This means that I'll have to synchronize merge window merges with Jens but
+this is needed already and shouldn't be a problem.
 
-> +	sense_rq->sense = bio_data(sense_rq->bio);	/* pointer to mapped address */
+If somebody [ Tejun/Jens: I'm talking to you :) ] has a better idea how to
+handle this please stand-up.
 
-Can't we just use bio_data(rq->bio) in ->pc_callback?
-
-also:
-
-WARNING: line over 80 characters
-#42: FILE: drivers/ide/ide-atapi.c:262:
-+       sense_rq->sense = bio_data(sense_rq->bio);      /* pointer to mapped address */
-
->  	if (drive->media == ide_tape)
->  		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
-> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> index 060c893..cb6c6f8 100644
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -77,7 +77,12 @@ static int ide_floppy_callback(ide_drive_t *drive, int dsc)
->  	    (rq && blk_pc_request(rq)))
->  		uptodate = 1; /* FIXME */
->  	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
-> -		u8 *buf = pc->buf;
-> +
-> +		u8 *buf;
-> +
-> +		BUG_ON(!rq->sense);
-> +
-> +		buf = rq->sense;
-
-BUG_ON shouldn't be needed after testing this
-
->  		if (!pc->error) {
->  			floppy->sense_key = buf[2] & 0x0F;
-> @@ -209,8 +214,6 @@ static void idefloppy_create_rw_cmd(ide_drive_t *drive,
->  	pc->rq = rq;
->  	if (rq->cmd_flags & REQ_RW)
->  		pc->flags |= PC_FLAG_WRITING;
-> -	pc->buf = NULL;
-> -	pc->buf_size = blk_rq_bytes(rq);
-
-patch #12
-
->  	pc->flags |= PC_FLAG_DMA_OK;
->  }
->  
-> @@ -225,9 +228,6 @@ static void idefloppy_blockpc_cmd(struct ide_disk_obj *floppy,
->  		if (rq_data_dir(rq) == WRITE)
->  			pc->flags |= PC_FLAG_WRITING;
->  	}
-> -	/* pio will be performed by ide_pio_bytes() which handles sg fine */
-> -	pc->buf = NULL;
-> -	pc->buf_size = blk_rq_bytes(rq);
-
-ditto
-
->  }
->  
->  static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
-> diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
-> index 7a03d34..9c22882 100644
-> --- a/drivers/ide/ide-floppy_ioctl.c
-> +++ b/drivers/ide/ide-floppy_ioctl.c
-> @@ -47,7 +47,6 @@ static int ide_floppy_get_format_capacities(ide_drive_t *drive,
->  		return -EINVAL;
->  
->  	ide_floppy_create_read_capacity_cmd(pc);
-> -	pc->buf_size = sizeof(pc_buf);
-
-ditto
- 
->  	if (ide_queue_pc_tail(drive, floppy->disk, pc, pc_buf, pc->req_xfer)) {
->  		printk(KERN_ERR "ide-floppy: Can't get floppy parameters\n");
-> @@ -198,11 +197,12 @@ static int ide_floppy_get_format_progress(ide_drive_t *drive,
->  					  int __user *arg)
->  {
->  	struct ide_disk_obj *floppy = drive->driver_data;
-> +	u8 sense_buf[18];
->  	int progress_indication = 0x10000;
->  
->  	if (drive->atapi_flags & IDE_AFLAG_SRFP) {
->  		ide_create_request_sense_cmd(drive, pc);
-> -		if (ide_queue_pc_tail(drive, floppy->disk, pc, pc->buf,
-> +		if (ide_queue_pc_tail(drive, floppy->disk, pc, sense_buf,
->  				      pc->req_xfer))
->  			return -EIO;
-
-Separate patch?
-
-Please be consistent here and either do such changes in separate patches
-or integrate them all into patch #5.5.
+Thanks,
+Bart
