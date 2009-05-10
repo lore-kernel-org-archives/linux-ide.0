@@ -1,42 +1,65 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: 2.9.29.2: ide-tape: panic when probing device at boot
-Date: Sun, 10 May 2009 09:58:10 +0900
-Message-ID: <4A0626A2.4060202@kernel.org>
-References: <200905080700.n48704BR031273@turbo.physics.adelaide.edu.au> <200905091757.49697.bzolnier@gmail.com>
+Date: Sun, 10 May 2009 09:59:46 +0900
+Message-ID: <4A062702.8020404@kernel.org>
+References: <200905080700.n48704BR031273@turbo.physics.adelaide.edu.au> <200905091757.49697.bzolnier@gmail.com> <20090509161801.GB5749@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46286 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35079 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754555AbZEJA6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 May 2009 20:58:22 -0400
-In-Reply-To: <200905091757.49697.bzolnier@gmail.com>
+	id S1754002AbZEJA7x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 May 2009 20:59:53 -0400
+In-Reply-To: <20090509161801.GB5749@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun
 
-Bartlomiej Zolnierkiewicz wrote:
-> [ cc:ing linux-ide and knowledgeable people ]
-> 
-> Borislav/Tejun:
-> 
-> Is the 2.6.29 problem the same thing that was fixed recently?
-> 
-> Should I just push commit 1e75540ec5202cae63cd238c86bd880e3d496546
-> ("ide-tape: remove back-to-back REQUEST_SENSE detection") to Linus
-> or there is more needed to bring ide-tape to the world of living?
+Hello,
 
-The oops will probably fixed the above commit.  I don't have much idea
-about the DMA problem on 2.6.24 tho.  But even with the above commit
-fixed, I doubt it would work.  The buffer allocation code is broken
-and reliably triggered OOM on my test machine.  While trying to locate
-the bug, I realized the complex code didn't do much good to begin with
-and just stripped it down, so I didn't actually tracked down the
-actual bug && the patch to simplify buffer management is way too large
-for 2.6.29, so unless someone is willing to hunt down the bug just for
-2.6.29, we're kind of stuck.  :-(
+Borislav Petkov wrote:
+> Hi,
+> 
+> On Sat, May 09, 2009 at 05:57:49PM +0200, Bartlomiej Zolnierkiewicz wrote:
+>> [ cc:ing linux-ide and knowledgeable people ]
+>>
+>> Borislav/Tejun:
+>>
+>> Is the 2.6.29 problem the same thing that was fixed recently?
+> 
+> I'll let Tejun answer that one since I don't get an oops. However, now
+> that I have an ide-tape hardware here, I do get something DMA-related
+> failing during boot:
+> 
+> [    1.677012] hdb: Seagate STT8000A, ATAPI TAPE drive
+> 
+> ..
+> 
+> [    1.701097] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> [    1.708289] hdb: bad DMA info in identify block
+> [    1.712872] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> 
+> ..
+> 
+> [    3.450381] Uniform CD-ROM driver Revision: 3.20
+> [    5.467347] ide-tape: hdb <-> ht0: Seagate STT8000A rev 5.44
+> [    5.484852] ide-tape: hdb <-> ht0: 88KBps, 14*26kB buffer, 400ms tDS
+> 
+> and more specifically the bad DMA info in identify block thing above. I
+> haven't looked into it yet but its next on my TODO.
+
+Yeah, I've been seeing that too (before and after my changes).
+Haven't investigated it yet.  Good that it's on your todo list.  :-)
+
+>> Should I just push commit 1e75540ec5202cae63cd238c86bd880e3d496546
+>> ("ide-tape: remove back-to-back REQUEST_SENSE detection") to Linus
+>> or there is more needed to bring ide-tape to the world of living?
+> 
+> ... and I'm afraid we'll have to do some serious bugfixing since this
+> driver is behaving really funny :). Stay tuned, I'm on it.
+
+Cool.
 
 Thanks.
 
