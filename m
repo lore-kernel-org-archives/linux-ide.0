@@ -1,67 +1,82 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.9.29.2: ide-tape: panic when probing device at boot
-Date: Sun, 10 May 2009 09:59:46 +0900
-Message-ID: <4A062702.8020404@kernel.org>
-References: <200905080700.n48704BR031273@turbo.physics.adelaide.edu.au> <200905091757.49697.bzolnier@gmail.com> <20090509161801.GB5749@liondog.tnic>
+From: Tejun Heo <teheo@novell.com>
+Subject: Re: sata_inic162x for help
+Date: Sun, 10 May 2009 10:06:01 +0900
+Message-ID: <4A062879.7090301@novell.com>
+References: <4A04C04F.8030106@novell.com> <6529177.841681241588784941.JavaMail.coremail@bj163app14.163.com> <12087558.131021241843439832.JavaMail.coremail@bj163app14.163.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35079 "EHLO hera.kernel.org"
+Received: from cantor2.suse.de ([195.135.220.15]:39764 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754002AbZEJA7x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 May 2009 20:59:53 -0400
-In-Reply-To: <20090509161801.GB5749@liondog.tnic>
+	id S1753942AbZEJBGJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 May 2009 21:06:09 -0400
+In-Reply-To: <12087558.131021241843439832.JavaMail.coremail@bj163app14.163.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun
+To: ivorhuang_hjd <ivorhuang_hjd@163.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
 Hello,
 
-Borislav Petkov wrote:
-> Hi,
-> 
-> On Sat, May 09, 2009 at 05:57:49PM +0200, Bartlomiej Zolnierkiewicz wrote:
->> [ cc:ing linux-ide and knowledgeable people ]
->>
->> Borislav/Tejun:
->>
->> Is the 2.6.29 problem the same thing that was fixed recently?
-> 
-> I'll let Tejun answer that one since I don't get an oops. However, now
-> that I have an ide-tape hardware here, I do get something DMA-related
-> failing during boot:
-> 
-> [    1.677012] hdb: Seagate STT8000A, ATAPI TAPE drive
-> 
-> ..
-> 
-> [    1.701097] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> [    1.708289] hdb: bad DMA info in identify block
-> [    1.712872] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> 
-> ..
-> 
-> [    3.450381] Uniform CD-ROM driver Revision: 3.20
-> [    5.467347] ide-tape: hdb <-> ht0: Seagate STT8000A rev 5.44
-> [    5.484852] ide-tape: hdb <-> ht0: 88KBps, 14*26kB buffer, 400ms tDS
-> 
-> and more specifically the bad DMA info in identify block thing above. I
-> haven't looked into it yet but its next on my TODO.
+ivorhuang_hjd wrote:
+> hello Tejun,
+> I am sorry for that and thank you for your reply.I should give you more
+> information.
+> 1.the sata IC is INI-SATA-1622B
+> 2.the sata card can work at x86 (kernel linux 2.6.29.1 )
+> 4. the sata card can work at powerpc freescale mpc8313erdb(kernel linux
+> 2.6.23),I know it does not support LBA48.so I think this is not for the
+> u-boot.
+> 5.another sata card sis3512 can work at powerpc freescale mpc8313erdb
+> (kernel linux 2.6.29.1)
+> 6. the problem come out at powerpc freescale mpc8313erdb (kernel linux
+> 2.6.29.1)
 
-Yeah, I've been seeing that too (before and after my changes).
-Haven't investigated it yet.  Good that it's on your todo list.  :-)
+Hmm...
 
->> Should I just push commit 1e75540ec5202cae63cd238c86bd880e3d496546
->> ("ide-tape: remove back-to-back REQUEST_SENSE detection") to Linus
->> or there is more needed to bring ide-tape to the world of living?
-> 
-> ... and I'm afraid we'll have to do some serious bugfixing since this
-> driver is behaving really funny :). Stay tuned, I'm on it.
+> [  825.618798] ata1: SATA max UDMA/133 mmio m4096@0x90000000
+> <mailto:m4096@0x90000000> PORT 0x90000000 irq 17
+> [  825.626224] ata2: SATA max UDMA/133 mmio m4096@0x90000000
+> <mailto:m4096@0x90000000> PORT 0x90000040 irq 17
+> [  825.982369] ata1: SATA link down (SStatus 0 SControl 300)
+> [  826.494373] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  826.500610] err happen
+> [  826.503026] ata2.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
+> err_mask=0x80)
+> [  831.990383] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  831.996613] err happen
+> [  831.999040] ata2.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
+> err_mask=0x80)
+> [  832.006372] ata2: limiting SATA link speed to 1.5 Gbps
+> [  837.486394] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  837.492624] err happen
+> [  837.495051] ata2.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
+> err_mask=0x80)
+...
+> *************************************************
+> the "err happen" is what I printk at function
+> inic_qc_fill_rtf(sata_inc162x.c 578 line).
+> can you help me to fix this problem.
 
-Cool.
+What is the attached device?  Does it work if you skip
+INIT_DEV_PARAMS?  You can skip it by editing
+libata-core.c::ata_dev_read_id() such that the if condition
+enclosing... erggh... by applying the following patch.
 
-Thanks.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 17c5d48..2d51b32 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2210,7 +2210,7 @@ retry:
+ 			goto retry;
+ 	}
+ 
+-	if ((flags & ATA_READID_POSTRESET) && class == ATA_DEV_ATA) {
++	if (0 && (flags & ATA_READID_POSTRESET) && class == ATA_DEV_ATA) {
+ 		/*
+ 		 * The exact sequence expected by certain pre-ATA4 drives is:
+ 		 * SRST RESET
 
 -- 
 tejun
