@@ -1,45 +1,44 @@
-From: <v.virvilis@biovista.com>
-Subject: Re: SATA disks resets in a md setup
-Date: Sat, 09 May 2009 12:41:05 -0400
-Message-ID: <3794dbcf42f7f6b00e50070eeb203e8b@biovista.com>
-References: <200905081739.46206.v.virvilis@biovista.com> <4A053229.5010406@garzik.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.9.29.2: ide-tape: panic when probing device at boot
+Date: Sun, 10 May 2009 09:58:10 +0900
+Message-ID: <4A0626A2.4060202@kernel.org>
+References: <200905080700.n48704BR031273@turbo.physics.adelaide.edu.au> <200905091757.49697.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753219AbZEIQlU@vger.kernel.org>
-In-Reply-To: <4A053229.5010406@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:46286 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754555AbZEJA6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 May 2009 20:58:22 -0400
+In-Reply-To: <200905091757.49697.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Sat, 09 May 2009 03:35:05 -0400, Jeff Garzik <jeff@garzik.org> wrote:
-
+Bartlomiej Zolnierkiewicz wrote:
+> [ cc:ing linux-ide and knowledgeable people ]
 > 
-> For hardware details, see 
-> http://ata.wiki.kernel.org/index.php/Libata_error_messages
-
-Thanks for the link.
+> Borislav/Tejun:
 > 
-> The ATA bus is the cable connection, so an ATA bus error typically means
+> Is the 2.6.29 problem the same thing that was fixed recently?
 > 
-> - problem with your cable, or
-> - your motherboard's SATA port, or
-> - your drive's SATA port, or
-> - "dirty power" supply, or
-> - some other cause for cable interference
-> 
+> Should I just push commit 1e75540ec5202cae63cd238c86bd880e3d496546
+> ("ide-tape: remove back-to-back REQUEST_SENSE detection") to Linus
+> or there is more needed to bring ide-tape to the world of living?
 
-I have changed SATA cables twice and I added a better PSU. The problem
-persists.
+The oops will probably fixed the above commit.  I don't have much idea
+about the DMA problem on 2.6.24 tho.  But even with the above commit
+fixed, I doubt it would work.  The buffer allocation code is broken
+and reliably triggered OOM on my test machine.  While trying to locate
+the bug, I realized the complex code didn't do much good to begin with
+and just stripped it down, so I didn't actually tracked down the
+actual bug && the patch to simplify buffer management is way too large
+for 2.6.29, so unless someone is willing to hunt down the bug just for
+2.6.29, we're kind of stuck.  :-(
 
-Do you have any insight on the sectors count mismatch I mentioned in the
-first mail?
-The disk is 250GB but it looks it is searching for a 500GB disk (that is
-md0 = sda + sdb).
+Thanks.
 
-Is it possible the SATA reset thing to trigger an md bug. I am totally
-guessing here...
-
-Regards
-            .bill
+-- 
+tejun
