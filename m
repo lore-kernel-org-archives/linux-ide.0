@@ -1,52 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: fix attach error handling
-Date: Mon, 11 May 2009 14:33:13 -0400
-Message-ID: <4A086F69.3060607@garzik.org>
-References: <alpine.DEB.2.00.0905060004100.15177@dirac.rather.puzzling.org> <4A00DA98.5060201@kernel.org> <alpine.DEB.2.00.0905061038340.14678@dirac.rather.puzzling.org> <alpine.DEB.2.00.0905090005560.24222@dirac.rather.puzzling.org> <4A04DF32.4050305@kernel.org> <4A05AA1E.3070700@kernel.org>
+Subject: Re: [PATCH] sata_mv: use new sata phy register settings for new	devices
+Date: Mon, 11 May 2009 14:34:16 -0400
+Message-ID: <4A086FA8.4040102@garzik.org>
+References: <20090411160809.GA10922@deprecation.cyrius.com> <da824cf30904111502u50d8f55dj2d0414bb45a49a22@mail.gmail.com> <c70ff3ad0904130026r4aac1ef4le36175ecdfed581c@mail.gmail.com> <49E2EAEC.5030606@garzik.org> <c70ff3ad0904220344x2e2d9ffat2285c76e0ab437c5@mail.gmail.com> <20090504185850.GA11630@deprecation.cyrius.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51868 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:51871 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754962AbZEKSeT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 May 2009 14:34:19 -0400
-In-Reply-To: <4A05AA1E.3070700@kernel.org>
+	id S1756769AbZEKSeX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 May 2009 14:34:23 -0400
+In-Reply-To: <20090504185850.GA11630@deprecation.cyrius.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Tim Connors <tconnors+linuxkml@astro.swin.edu.au>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: Mark Lord <liml@rtr.ca>, Grant Grundler <grundler@google.com>, Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> New device attach path in ata_eh_revalidate_and_attach() is divided
-> into two separate loops because ATA requires IDENTIFY to be issued to
-> slave first while the user expects to see device probe messages from
-> the master device.  new_mask is used to track which devices are the
-> new ones between the first loop and the second.
+Martin Michlmayr wrote:
+> Mark, can this patch go in now?  It's needed to make SATA operational
+> on my Kirkwood-based QNAP TS-219 with a Maxtor drive.
 > 
-> This usually works well but if an error occurs during configuration
-> stage, ata_dev_revalidate_and_attach() returns with error code and
-> forgets new_mask.  On the retry run, dev->class is set and new_mask
-> for the device is clear, so the device just gets revalidated and thus
-> ends up skipping post-configuration procedure including scheduling of
-> SCSI_HOTPLUG for the device.  When this occurs, ATA part of probing
-> works fine but SCSI probing usually doesn't happen and makes the
-> device unreachable.
 > 
-> The behavior has been around for a very long time but it has been
-> uncovered with the recent addition of 1_5_GBPS horkage which uses
-> -EAGAIN return value from ata_dev_configure() to restart the probing
-> sequence after forcing cable speed.
+> Subject: [PATCH] sata_mv: use new sata phy register settings for new devices
+> From: Saeed Bishara <saeed@marvell.com>
 > 
-> This can be fixed by making sure dev->class is permanently set only
-> after all configurations are successfully complete.  Fix it.
+> Marvell's new SoC (65 nano) needs different settings for its SATA
+> PHY registers.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Tim Connors <tconnors+linuxkml@astro.swin.edu.au>
-> ---
->  drivers/ata/libata-eh.c |   21 +++++++++++++++++----
->  1 file changed, 17 insertions(+), 4 deletions(-)
+> Tested-by: Martin Michlmayr <tbm@cyrius.com>
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
 
-applied
+applied -- though I still await answers to maintainer Mark Lord's 
+questions:  was this tested with ATAPI and other features?
+
+(rhetorical question... if not... test it!)
 
 
