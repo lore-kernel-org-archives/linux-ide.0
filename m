@@ -1,60 +1,54 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Mon, 11 May 2009 14:49:09 +0900
-Message-ID: <20090511145024B.fujita.tomonori@lab.ntt.co.jp>
-References: <1241423927-11871-4-git-send-email-tj@kernel.org>
-	<4A06DFAB.40205@panasas.com>
-	<4A0767E5.5050205@kernel.org>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 03/14] ide-atapi: switch to rq->resid_len
+Date: Mon, 11 May 2009 09:23:49 +0200
+Message-ID: <20090511072349.GA21045@liondog.tnic>
+References: <1241855134-4984-1-git-send-email-petkovbb@gmail.com> <1241855134-4984-4-git-send-email-petkovbb@gmail.com> <200905102332.33022.bzolnier@gmail.com>
+Reply-To: bp@kernel.org
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4A0767E5.5050205@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: bharrosh@panasas.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, dgilbert@interlog.com, djwong@us.ibm.com
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:61727 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954AbZEKHXy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2009 03:23:54 -0400
+Content-Disposition: inline
+In-Reply-To: <200905102332.33022.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 11 May 2009 08:48:53 +0900
-Tejun Heo <tj@kernel.org> wrote:
+On Sun, May 10, 2009 at 11:32:32PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Saturday 09 May 2009 09:45:23 Borislav Petkov wrote:
+> > Now that we have rq->resid_len, use it to account partial completion
+> > amount during the lifetime of an rq, decrementing it on each successful
+> > transfer. As a result, get rid of now unused pc->xferred.
+> > 
+> > While at it, remove noisy debug call in ide_prep_sense.
+> > 
+> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> > ---
+> >  drivers/ide/ide-atapi.c |   17 ++++++++---------
+> >  drivers/ide/ide-tape.c  |   11 ++++-------
+> >  include/linux/ide.h     |    2 --
+> >  3 files changed, 12 insertions(+), 18 deletions(-)
+> 
+> WARNING: line over 80 characters
+> #118: FILE: drivers/ide/ide-tape.c:370:
+> +               int blocks = (blk_rq_bytes(rq) - rq->resid_len) / tape->blk_size;
 
-> Hello, Boaz.
-> 
-> Boaz Harrosh wrote:
-> 
-> > Hi Tejun, I've carefully reviewed these files which I know more
-> > about.  The drivers/block files I've skipped, since I'm not familiar
-> > with this code.
-> > 
-> > Except a small fallout, it looks very good. See some comments plus
-> > Ack/review below
-> 
-> Thanks a lot for reviewing it closely.  It's really nice to have
-> careful extra pair of eyes on the changes.  :-)
-> 
-> >> --- a/drivers/message/fusion/mptsas.c
-> >> +++ b/drivers/message/fusion/mptsas.c
-> >> @@ -1357,8 +1357,7 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
-> >>  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
-> >>  		memcpy(req->sense, smprep, sizeof(*smprep));
-> >>  		req->sense_len = sizeof(*smprep);
-> >> -		req->data_len = 0;
-> >> -		rsp->data_len -= smprep->ResponseDataLength;
-> >> +		rsp->resid_len = rsp->data_len - smprep->ResponseDataLength;
-> >>  	} else {
-> >>  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
-> >>  		    ioc->name, __func__);
-> > 
-> > I think original code was assuming full residual count on the else side
-> > (not MPT_IOCTL_STATUS_RF_VALID). So maybe add:
-> > 
-> > +		rsp->resid_len = rsp->data_len;
-> 
-> Does resid_len make any sense w/ failed requests?  I think we would be
-> better off with declaring residual count to be undefined on request
-> failure.  Is there any place which depends on it?
+No worries, I haven't forgotten the checkpatch thing but the line is
+81 chars and I just didn't want to split it because of _one_ char. The
+benefit of readability of having it on one line should be more important
+than one stupid static rule. I think we should relax it if enforcing it
+worsens readability...
 
-IIRC, I wrote the code. I think that this doesn't matter but it's
-better not to change the behavior unless Eric ack on this change
-(maybe LSI has some management binary that assume this behavior though
-it's unlikely).
+               int blocks = (blk_rq_bytes(rq) - rq->resid_len) /
+			     tape->blk_size;
+
+Now this looks awful, IMHO. I'd much rather not listen to checkpatch
+here.
+
+-- 
+Regards/Gruss,
+    Boris.
