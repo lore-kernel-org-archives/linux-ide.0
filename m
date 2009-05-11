@@ -1,136 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Mon, 11 May 2009 08:48:53 +0900
-Message-ID: <4A0767E5.5050205@kernel.org>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com>
+From: Tejun Heo <teheo@novell.com>
+Subject: Re: sata_inic162x for help
+Date: Mon, 11 May 2009 12:10:29 +0900
+Message-ID: <4A079725.1030509@novell.com>
+References: <4A062879.7090301@novell.com> <4A04C04F.8030106@novell.com> <6529177.841681241588784941.JavaMail.coremail@bj163app14.163.com> <12087558.131021241843439832.JavaMail.coremail@bj163app14.163.com> <31860758.69421242004829355.JavaMail.coremail@app152.163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=x-gbk
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54711 "EHLO hera.kernel.org"
+Received: from cantor.suse.de ([195.135.220.2]:57400 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751062AbZEJXur (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 May 2009 19:50:47 -0400
-In-Reply-To: <4A06DFAB.40205@panasas.com>
+	id S1751567AbZEKDJW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 10 May 2009 23:09:22 -0400
+In-Reply-To: <31860758.69421242004829355.JavaMail.coremail@app152.163.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: ivorhuang_hjd <ivorhuang_hjd@163.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
-Hello, Boaz.
+ivorhuang_hjd wrote:
+> Hello tejun,
+> I attach a hard disk to the sata port.I follow your suggestion to do
+> that and the hard disk can not be list
 
-Boaz Harrosh wrote:
+Okay, so, it's not a weird device which doesn't support
+INIT_DEV_PARAMS.
 
-> Hi Tejun, I've carefully reviewed these files which I know more
-> about.  The drivers/block files I've skipped, since I'm not familiar
-> with this code.
-> 
-> Except a small fallout, it looks very good. See some comments plus
-> Ack/review below
+> in the system.the log is :
+> [    0.980937] ata1: SATA max UDMA/133 mmio m4096@0x90000000
+> <mailto:m4096@0x90000000> PORT 0x90000000 irq 17
+> [    0.988362] ata2: SATA max UDMA/133 mmio m4096@0x90000000
+> <mailto:m4096@0x90000000> PORT 0x90000040 irq 17
+> [    1.344512] ata1: SATA link down (SStatus 0 SControl 300)
+> [    1.856516] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [    1.862752] err happen
+> [    1.865228] ata2.00: ATA-0: , , max PIO0
+> [    1.869177] ata2.00: 0 sectors, multi 0, CHS 0/0/0
+> [    1.874021] ata2.00: applying bridge limits
+> [    1.878293] err happen
+> [    1.880856] ata2.00: configured for PIO0
+> [    1.885377] scsi 1:0:0:0: Direct-Access     ATA                      
+> n/a  PQ: 0 ANSI: 5
+> [    1.894782] sd 1:0:0:0: [sda] Very big device. Trying to use READ
+> CAPACITY(16).
+> [    1.902302] sd 1:0:0:0: [sda] 0 512-byte hardware sectors: (0 B/0 B)
+> [    1.908861] sd 1:0:0:0: [sda] Write Protect is off
+> [    1.914060] sd 1:0:0:0: [sda] Write cache: disabled, read cache:
+> enabled, doesn't support DPO or FUA
+> [    1.924325] sd 1:0:0:0: [sda] Attached SCSI disk
+>  
+> I think the problem is that the dirver can not execute sata command
+> properly,for the program exit at this:
+>  sata_inic162x.c line 578 :
+> if (!(tf.command & ATA_ERR))
+>   return false;
+> Can you tell me what cause this?
 
-Thanks a lot for reviewing it closely.  It's really nice to have
-careful extra pair of eyes on the changes.  :-)
+There can be many different causes for such failures.  The interesting
+thing is that INIT_DEV_PARAMS is a NODATA command so it's more likely
+something is else wrong.  Looking at the above log, it seems like the
+IDENTIFY data is all zero which can explain ATA_ERR failure as
+INIT_DEV_PARAMS would have been issued with the wrong parameters.
 
->> --- a/drivers/message/fusion/mptsas.c
->> +++ b/drivers/message/fusion/mptsas.c
->> @@ -1357,8 +1357,7 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
->>  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
->>  		memcpy(req->sense, smprep, sizeof(*smprep));
->>  		req->sense_len = sizeof(*smprep);
->> -		req->data_len = 0;
->> -		rsp->data_len -= smprep->ResponseDataLength;
->> +		rsp->resid_len = rsp->data_len - smprep->ResponseDataLength;
->>  	} else {
->>  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
->>  		    ioc->name, __func__);
-> 
-> I think original code was assuming full residual count on the else side
-> (not MPT_IOCTL_STATUS_RF_VALID). So maybe add:
-> 
-> +		rsp->resid_len = rsp->data_len;
+The difference between the old version and the current version is that
+now sata_inic162x uses DMA transfer everything including PIO commands
+like IDENTIFY.  It looks like for whatever reason DMA transfer isn't
+working on your machine.
 
-Does resid_len make any sense w/ failed requests?  I think we would be
-better off with declaring residual count to be undefined on request
-failure.  Is there any place which depends on it?
-
-That said, the value is eventually exported to userland, so it might
-be better to not change it.  Eh... I don't know.
-
->> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
->> index 3da02e4..6605ec9 100644
->> --- a/drivers/scsi/libsas/sas_expander.c
->> +++ b/drivers/scsi/libsas/sas_expander.c
->> @@ -1936,12 +1936,8 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
->>  			       bio_data(rsp->bio), rsp->data_len);
->>  	if (ret > 0) {
->>  		/* positive number is the untransferred residual */
->> -		rsp->data_len = ret;
->> -		req->data_len = 0;
->> +		rsp->resid_len = ret;
->>  		ret = 0;
->> -	} else if (ret == 0) {
->> -		rsp->data_len = 0;
->> -		req->data_len = 0;
->>  	}
->>  
->>  	return ret;
-> 
-> This is actually a bug fix, as well as a strait conversion
-
-Can you elaborate a bit about the bug fix part?
-
->> @@ -549,7 +549,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
->>  		int leftover = (req->hard_nr_sectors << 9);
->>  
->>  		if (blk_pc_request(req))
->> -			leftover = req->data_len;
->> +			leftover = req->resid_len;
-> 
-> This is the fallout:
-> 
-> The above is just a case of:
-> 
-> -		int leftover = (req->hard_nr_sectors << 9);
-> -
-> -		if (blk_pc_request(req))
-> -			leftover = req->data_len;
-> +		int leftover = blk_rq_bytes();
-> 
-> Which you separated into to stages, much later right?
-
-Aieee.. yeah, that's one stupid misconversion.  That function should
-just use blk_end_request_all().  Will fix.  Thanks for spotting it.
-
->> @@ -778,7 +778,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->>  			scsi_end_bidi_request(cmd);
->>  			return;
->>  		}
->> -		req->data_len = scsi_get_resid(cmd);
->> +		req->resid_len = scsi_get_resid(cmd);
->>  	}
->>  
->>  	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
-> 
-> Except the fallout the rest of scsi_lib looks good, specifically the
-> bidi_parts.
-> 
-> I'll send a farther cleanup to scsi_lib based on this patchset later.
-
-Cool.
-
-> I've started farther cleanup based on your patchset. However I had a
-> merge conflict when merging your branch with Linus-2.6.30-rc5,
-> around the block areas, do you know what that might be? I've
-> continued to work based on your branch alone, but will wait and post
-> it later once things settle.
-
-I saw a conflict in blkdev.h but there could be other things.  I think
-it should be fine to just base things on my branch.  I or Jens should
-be able to handle merge conflicts later.
-
-I'll update the patchset and repost soonish.
-
-Thanks a lot.
+Thanks.
 
 -- 
 tejun
