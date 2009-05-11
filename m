@@ -1,49 +1,50 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
-Date: Mon, 11 May 2009 15:30:12 -0400
-Message-ID: <20090511193012.GD21463@csclub.uwaterloo.ca>
-References: <200905062009.28087.markos@codex.gr> <4A086A76.3090008@garzik.org>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] ide: remove driver_data direct access of struct device
+Date: Mon, 11 May 2009 22:05:54 +0200
+Message-ID: <4A088522.40202@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:53182 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758088AbZEKTaL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2009 15:30:11 -0400
-Content-Disposition: inline
-In-Reply-To: <4A086A76.3090008@garzik.org>
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:43692 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755492AbZEKUFx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2009 16:05:53 -0400
+Received: by ewy24 with SMTP id 24so3713758ewy.37
+        for <linux-ide@vger.kernel.org>; Mon, 11 May 2009 13:05:53 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, May 11, 2009 at 02:12:06PM -0400, Jeff Garzik wrote:
-> Konstantinos Margaritis wrote:
->> (not subscribed please CC me)
->>
->> I tried to compile sata_sil on a 2.6.27 kernel on powerpc32 and I found 
->> that it failed to compile -lots of dmi related errors. I found that I 
->> had to include the broken_systems handling code in #ifdef CONFIG_DMI 
->> (DMI is not supported on platforms other than i386/x86_64). 
->>
->> Lennert on #mklinux told me that this commit broke the non-dmi support, 
->> and that a similar patch to mine is used on ARM systems :
->>
->> commit e57db7bde7bff95ae812736ca00c73bd5271455b
->> SATA Sil: Blacklist system that spins off disks during ACPI power off
->>
->> With this patch, sata_sil compiles on ppc (and I guess on other 
->> platforms). I'm using it for a while with no problems with a Delock 
->> 4-port SATA PCI card.
->
-> (CC'ing various Lennerts)
+To avoid direct access to the driver_data pointer in struct device, the
+functions dev_get_drvdata() and dev_set_drvdata() should be used.
 
-I am not a Lennert, I am a Lennart. :)  I didn't do it.
-
-> What is the breakage?
->
-> Ideally the DMI subsystem should be provided wrappers for platforms  
-> without DMI, rendering patches like this unnecessary.
-
--- 
-Len Sorensen
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 7f264ed..fad5272 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -550,7 +550,7 @@ static int ide_register_port(ide_hwif_t *hwif)
+ 
+ 	/* register with global device tree */
+ 	dev_set_name(&hwif->gendev, hwif->name);
+-	hwif->gendev.driver_data = hwif;
++	dev_set_drvdata(&hwif->gendev, hwif);
+ 	if (hwif->gendev.parent == NULL)
+ 		hwif->gendev.parent = hwif->dev;
+ 	hwif->gendev.release = hwif_release_dev;
+diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
+index 051b4ab..028eda4 100644
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -113,7 +113,7 @@ out:
+ 
+ static int __devexit plat_ide_remove(struct platform_device *pdev)
+ {
+-	struct ide_host *host = pdev->dev.driver_data;
++	struct ide_host *host = dev_get_drvdata(&pdev->dev);
+ 
+ 	ide_host_remove(host);
+ 
