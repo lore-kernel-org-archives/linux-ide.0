@@ -1,64 +1,77 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [GIT PATCH] block: unify request processing model and
-	implement peek/fetch
-Date: Mon, 11 May 2009 09:52:53 +0200
-Message-ID: <20090511075253.GH4694@kernel.dk>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org>
+From: Vassilis Virvilis <v.virvilis@biovista.com>
+Subject: Re: SATA disks resets in a md setup
+Date: Mon, 11 May 2009 13:24:38 +0300
+Message-ID: <200905111324.38715.v.virvilis@biovista.com>
+References: <200905081739.46206.v.virvilis@biovista.com> <4A053229.5010406@garzik.org>
+Reply-To: v.virvilis@biovista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:51246 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753506AbZEKHwx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 May 2009 03:52:53 -0400
+Received: from a2s31.a2hosting.com ([69.39.67.40]:51331 "EHLO
+	a2s31.a2hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbZEKKYm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2009 06:24:42 -0400
+In-Reply-To: <4A053229.5010406@garzik.org>
 Content-Disposition: inline
-In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Fri, May 08 2009, Tejun Heo wrote:
-> Hello,
+On Saturday 09 May 2009, Jeff Garzik wrote:
 > 
-> Upon ack, please pull from the following git tree.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-peek-fetch
-> 
-> Block layer has allowed two different models of request processing.
-> elv_next_request() is used to peek at the top of the queue, after
-> peeking, a LLD could start processing it immediately or dequeue and
-> then start processing.
-> 
-> The non-dequeuing behavior is mostly useful for simpler device drivers
-> (usually PIO based) which process requests on segment basis.  By using
-> the block layer queue tip as the current request pointer, they don't
-> have to care about request boundaries and just process things
-> segment-by-segment.
-> 
-> However, this dual mode of operations complicates and ambiguates block
-> layer API.  Block layer can't tell whether a request has begun
-> processing or not in deterministic manner.  This makes accounting
-> inaccurate and implementing high level features in block layer
-> difficult.  For example, it isn't clear when a block layer timeout
-> timer should be started or how queue queiscing for EH should be
-> implemented.  Even when problems can be worked aroudn, it makes the
-> implementation fragile.
-> 
-> Although allowing llds ignore request boundaries makes things simpler
-> for certain drivers, the number of drivers benefit form it aren't too
-> many and driver stacks which are even mildly complex have to deal with
-> request boundaries anyway.  Also, the benefit itself isn't that
-> significant.  In most cases, it is just another way of doing things
-> rather than the definitively better way.  IOW, if there were no such
-> alternative, nobody would have missed it.
-> 
-> This patchset converts all block layer llds to dequeuing model and
-> then clean up API to simplify a bit and enforce dequeueing model.
-> This patchset contains the following patches.
+> For hardware details, see 
+> http://ata.wiki.kernel.org/index.php/Libata_error_messages
 
-Glad this finally got completed, thanks a lot Tejun! Applied.
+thanks for the link
 
--- 
-Jens Axboe
+> 
+> The ATA bus is the cable connection, so an ATA bus error typically means
+> 
+> - problem with your cable, or
+> - your motherboard's SATA port, or
+> - your drive's SATA port, or
+> - "dirty power" supply, or
+> - some other cause for cable interference
+> 
 
+Ok I changed
+	M/B,
+	PSU
+	and cables.
+
+Now the stress test passes only one SATA reset instead of 3 or 4 before the fatal one.
+
+
+[ 1804.915319] ata1.01: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0xe frozen
+[ 1804.915319] ata1.01: ST-ATA: DRQ=1 with device error, dev_stat 0x0
+[ 1804.915319] ata1: SError: { PHYRdyChg }
+[ 1804.915319] ata1.01: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/10 tag 0 pio 512 in
+[ 1804.915319]          res 00/00:01:09:4f:c2/00:00:00:00:00/10 Emask 0x212 (ATA bus error)
+[ 1804.915319] ata1: hard resetting link
+[ 1810.279540] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1810.305230] ata1.00: configured for UDMA/133
+[ 1810.314698] ata1.01: configured for UDMA/133
+[ 1810.314698] ata1: EH complete
+[ 1810.318713] sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
+[ 1810.318713] sd 0:0:0:0: [sda] Write Protect is off
+[ 1810.318713] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[ 1810.318713] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1810.322654] sd 0:0:1:0: [sdb] 488397168 512-byte hardware sectors (250059 MB)
+[ 1810.326655] sd 0:0:1:0: [sdb] Write Protect is off
+[ 1810.326655] sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1810.326655] sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1810.330758] sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
+[ 1810.330758] sd 0:0:0:0: [sda] Write Protect is off
+[ 1810.330758] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[ 1810.330758] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1810.334656] sd 0:0:1:0: [sdb] 488397168 512-byte hardware sectors (250059 MB)
+[ 1810.334656] sd 0:0:1:0: [sdb] Write Protect is off
+[ 1810.334656] sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1810.334656] sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+ Regards
+
+   .bill
