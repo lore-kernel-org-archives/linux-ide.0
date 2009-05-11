@@ -1,44 +1,46 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
-Date: Tue, 12 May 2009 08:31:44 +1000
-Message-ID: <1242081104.304.12.camel@pasglop>
-References: <200905062009.28087.markos@codex.gr> <4A086A76.3090008@garzik.org>
-	<20090511194410.46641214@lxorguk.ukuu.org.uk>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ata: libata depends on HAS_DMA
+Date: Mon, 11 May 2009 22:38:55 +0000
+Message-ID: <200905112238.55404.arnd@arndb.de>
+References: <20090511222702.352192505@arndb.de>>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
-In-Reply-To: <20090511194410.46641214@lxorguk.ukuu.org.uk>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org, Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, rmk@arm.linux.org.uk, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Lennert Buytenhek <buytenh@wantstofly.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.188]:59899 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758789AbZEKWi7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2009 18:38:59 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Mon, 2009-05-11 at 19:44 +0100, Alan Cox wrote:
-> > Ideally the DMI subsystem should be provided wrappers for platforms 
-> > without DMI, rendering patches like this unnecessary.
-> 
-> Interesting question - is the PPC OpenFirmware machine information
-> mappable onto the DMI space ? or the various static bits of name
-> information in the various ARM and the like machine descriptions.
-> 
-> If not which bits are similar enough we could replace dmi at the high
-> level with an abstract interface for system/vendor/... that was ?
+libata uses the DMA mapping API, so it cannot be built
+on architectures that don't have DMA support.
 
-The one thing we could try to map would be the device-tree "compatible"
-property which would contain vendor,system tuples from more specific to
-more generic with which the machine is compatible with.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/ata/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Of course I would argue the other way around and create a device-tree
-from the DMI data :-)
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 9120717..f076268 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -4,7 +4,7 @@
+ 
+ menuconfig ATA
+ 	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
+-	depends on HAS_IOMEM
++	depends on HAS_IOMEM && HAS_DMA
+ 	depends on BLOCK
+ 	depends on !(M32R || M68K) || BROKEN
+ 	select SCSI
+-- 
+1.6.0.4
 
-Cheers,
-Ben.
+-- 
+
+
