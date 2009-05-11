@@ -1,35 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/4] Series short description
-Date: Mon, 11 May 2009 18:58:20 +0100
-Message-ID: <20090511185820.093052ac@lxorguk.ukuu.org.uk>
-References: <20090506160612.24191.90737.stgit@t61.ukuu.org.uk>
-	<4A085EA7.4070104@garzik.org>
-	<20090511182513.5ed7ab9b@lxorguk.ukuu.org.uk>
-	<4A086176.8030007@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
+Date: Mon, 11 May 2009 14:12:06 -0400
+Message-ID: <4A086A76.3090008@garzik.org>
+References: <200905062009.28087.markos@codex.gr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44689 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756315AbZEKR6Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2009 13:58:25 -0400
-In-Reply-To: <4A086176.8030007@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:35933 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751318AbZEKSMI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 May 2009 14:12:08 -0400
+In-Reply-To: <200905062009.28087.markos@codex.gr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Konstantinos Margaritis <markos@codex.gr>
+Cc: linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 
-> I was referring to the patch numbering provided by you, in your 
-> submission, which is the reverse of the order listed above:
+Konstantinos Margaritis wrote:
+> (not subscribed please CC me)
 > 
-> patch #1: ICH7 MWDMA timings
-> patch #2: TZ90
-> patch #3: turn on hotplugging
-> patch #4: fix comment
+> I tried to compile sata_sil on a 2.6.27 kernel on powerpc32 and I found that 
+> it failed to compile -lots of dmi related errors. I found that I had to 
+> include the broken_systems handling code in #ifdef CONFIG_DMI (DMI is not 
+> supported on platforms other than i386/x86_64). 
 > 
-> patch #3 is a behavior change IMO very late in -rc cycle, and patch #4 
-> is not urgent.
+> Lennert on #mklinux told me that this commit broke the non-dmi support, and 
+> that a similar patch to mine is used on ARM systems :
+> 
+> commit e57db7bde7bff95ae812736ca00c73bd5271455b
+> SATA Sil: Blacklist system that spins off disks during ACPI power off
+> 
+> With this patch, sata_sil compiles on ppc (and I guess on other platforms). 
+> I'm using it for a while with no problems with a Delock 4-port SATA PCI card.
 
-Agreed - sorry I'd forgotten that stgit is quite creative with its
-ordering.
+(CC'ing various Lennerts)
+
+What is the breakage?
+
+Ideally the DMI subsystem should be provided wrappers for platforms 
+without DMI, rendering patches like this unnecessary.
+
+	Jeff
+
+
+
+
