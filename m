@@ -1,39 +1,32 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 09/14] ide-atapi: use local sense buffer
-Date: Tue, 12 May 2009 09:17:39 +0200
-Message-ID: <20090512071739.GA24565@liondog.tnic>
-References: <1241855134-4984-1-git-send-email-petkovbb@gmail.com> <1241855134-4984-10-git-send-email-petkovbb@gmail.com> <200905102332.39043.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata: libata depends on HAS_DMA
+Date: Tue, 12 May 2009 09:06:02 +0100
+Message-ID: <20090512090602.65722342@lxorguk.ukuu.org.uk>
+References: <20090511222702.352192505@arndb.de>
+	<200905112238.55404.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:33348 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758066AbZELHRn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 May 2009 03:17:43 -0400
-Content-Disposition: inline
-In-Reply-To: <200905102332.39043.bzolnier@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42668 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752934AbZELIFS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 May 2009 04:05:18 -0400
+In-Reply-To: <200905112238.55404.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hi,
+On Mon, 11 May 2009 22:38:55 +0000
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-On Sun, May 10, 2009 at 11:32:38PM +0200, Bartlomiej Zolnierkiewicz wrote:
-
-[..]
-
-all done, testing...
-
-> > -	pc->req_xfer = blk_rq_bytes(sense_rq);
+> libata uses the DMA mapping API, so it cannot be built
+> on architectures that don't have DMA support.
 > 
-> I think that we can remove ->req_xfer now completely, patch #13.5? :)
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Well, the trivial thing would be to replace the pc->req_xfer with the
-naked number representing the cmd length, which is ugly. I'll think of
-something more elegant when merging all those ide_create.*cmd into their
-users. As always, I'm open to suggestions, of course :).
+Nakked-by: Alan Cox <alan@linux.intel.com>
 
--- 
-Regards/Gruss,
-    Boris.
+Almost every PATA adapter can fall back to PIO, many are PIO only. We
+need a rather cleaner way to sort this.
