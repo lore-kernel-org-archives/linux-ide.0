@@ -1,189 +1,420 @@
-From: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: EP93xx PIO IDE driver proposal
-Date: Tue, 12 May 2009 17:45:54 +0100
-Message-ID: <4A09A7C2.8080906@inov.pt>
-References: <49CCD7C4.8000207@inov.pt> <4A046BB6.6060806@inov.pt> <4A099D71.5040703@inov.pt> <200905121830.07023.bzolnier@gmail.com>
+Date: Tue, 12 May 2009 20:49:37 +0400
+Message-ID: <4A09A8A1.5070002@ru.mvista.com>
+References: <49CCD7C4.8000207@inov.pt> <20090508212457.fxyzi9gk3cw4ksw0@webmail.inov.pt> <4A049D99.3050203@ru.mvista.com> <200905090007.10827.bzolnier@gmail.com> <4A08079A.9080803@inov.pt>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lmv.inov.pt ([146.193.64.2]:57760 "EHLO lmv.inov.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889AbZELQqv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 May 2009 12:46:51 -0400
-In-Reply-To: <200905121830.07023.bzolnier@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:11383 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753781AbZELQtG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 May 2009 12:49:06 -0400
+In-Reply-To: <4A08079A.9080803@inov.pt>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz escreveu:
-> On Tuesday 12 May 2009 18:01:53 Jo=E3o Ramos wrote:
->  =20
->> Jo=E3o Ramos escreveu:
->>    =20
->>>> Yes! :)
->>>>
->>>> There is still a room for improvement though -- it would be better=
- to=20
->>>> fix
->>>> IDE core to set PIO0 before probing devices for all host controlle=
-rs.
->>>>
->>>> Moreover it seems that doing it this way would allow us to remove=20
->>>> ->init_hwif
->>>> method from this driver and do all necessary setup in ep93xx_ide_p=
-robe()
->>>> (this controller is a single port one so theoretically there=20
->>>> shouldn't be
->>>> a need for having per-port ->init_hwif implementation).
->>>>  =20
->>>>        =20
->>> So after all this discussion ;-) , my driver will have no 'init_hwi=
-f'=20
->>> method, and the setup code will be on 'ep93xx_ide_probe', which wil=
-l=20
->>> configure entirely the IDE host controller.
->>> Moreover, this initial configuration will setup the controller to w=
-ork=20
->>> at PIO Mode 0. Later on, the 'set_pio_mode' method will be called a=
-nd=20
->>> the controller will configure itself according to the PIO mode=20
->>> reported by the IDE core.
->>>
->>> Can I proceed this way?
->>>
->>>      =20
->>>> =20
->>>>        =20
->>>>> There's just only one issue; normally, I would setup the specific=
+Hello.
+
+Jo=E3o Ramos wrote:
+
+>> I'm not sure what you're getting at with "such advices"... :)
+
+>> We need to cast somewhere anyway so we may as well cast from 'void *=
+' to
+>> 'unsigned int' where needed and not the other way around (or rather =
+from
+>> 'unsigned int' to 'struct ide_timing *') -- which would be an ugly h=
+ack
+>> and could cause maintainability/portability problems later.
+
+>> BTW it seems like a good occasion to add ide_{get,set}_drivedata()=20
+>> helpers
+>> (ala existing ide_{get,set}_hwifdata() ones) to <linux/ide.h> and th=
+us=20
+>> make
+>> internal IDE API more coherent.
+
+>> [ Yes, I know that we may get away with s/unsigned int/unsigned long=
+/
+>>   and casting it to 'struct ide_timing *' for now but it always bett=
+er
+>>   to at least consider more elegant solution first... ]
+
+    Changing a lot of drivers is more elegant than not? Doubt it.
+
+>> Thanks,
+>> Bart
+
+> Here is a proposed patch to fix 'drive_data' field to a 'void *' type=
+=2E
+> I've also added the 'ide_{get,set}_drivedata' helpers you hinted, and=
 =20
->>>>> timings (t0, t1, t2, t2i, etc) in the 'pio_set_mode' hook. Howeve=
-r,=20
->>>>> if you look further in the driver, those timings aren't defined=20
->>>>> through a memory controller but instead manually enforced by=20
->>>>> 'ndelay' calls (arghhh).
->>>>> This means that in my low-level procedures for reading and writin=
-g,=20
->>>>> I need to have access to the timings (or the struct ide_timing)=20
->>>>> corresponding to the PIO mode selected, in order to use the corre=
-ct=20
->>>>> delays.
->>>>>
->>>>> My question is: which is the best way to accomplish this? Declari=
-ng=20
->>>>> a global struct ide_timing variable pointer that always holds the=
+
+> I've fixed all the host drivers which used the 'drive_data' field,=20
+> making them use the new 'ide_{get,set}_drivedata' helpers and casting=
 =20
->>>>> correct ide_timing struct to the selected PIO mode? Or should I=20
->>>>> always check (in some manner) what is the current PIO mode and th=
-en=20
->>>>> select the adequate delays?
->>>>>    =20
->>>>>          =20
->>>> I think that the setting variable pointer in ->set_pio_mode method=
- would
->>>> work best.  Seems like the existing drive_data field of ide_drive_=
+> them accordingly to both the new 'drive_data' type and the type of va=
+lue=20
+> being stored.
+
+> I've attached the patch to avoid line-wrapping and deformed output.
+
+> If you can, please test the patch with the fixed drivers, I can't tes=
 t=20
->>>> is well
->>>> suited for this purpose (however it may be worth to convert it to=20
->>>> 'void *'
->>>> type while we are it).
->>>> =20
->>>>        =20
->> Are you sure I can do this safely?
->>
->> Using the patch i've sent earlier, I am using the 'drive_data' field=
- =20
->> (now converted to void * type) to store the struct ide_timing pointe=
-r=20
->> that holds the adequate timings for the selected PIO mode.
->> This is working, and the fix you suggested works, but sometimes I ge=
-t a=20
->> null pointer dereference I can't seem to figure why.
->> As I needed to define low-level read/write procedures, I've defined =
-the=20
->> entire ide_tp_ops structure with my own provided methods.
->> For the tf_load, tf_read, input_data and output_data methods, the fi=
-x is=20
->> easy since I have an ide_drive_t structure pointer as a parameter, s=
-o I=20
->> access the timing structure using:
->>
->> struct ide_timing *t =3D (struct ide_timing *) ide_get_drivedata(dri=
-ve);
->>
->> However, for the remaining methods (exec_command, read_status,=20
->> read_altstatus, write_devctl and dev_select), I only have access to =
-an=20
->> ide_hwif_t pointer, so in order to get access to the containing=20
->> ide_drive_t and then to the struct ide_timing pointer stored before,=
- I do:
->>
->> ide_drive_t *drive =3D (ide_drive_t *) container_of(&hwif, ide_drive=
-_t, hwif);
->>    =20
->
-> This doesn't look correct.
->
->  =20
->> struct ide_timing *t =3D (struct ide_timing *) ide_get_drivedata(dri=
-ve);
->>
->> And this seems to work, however at some point, after a while I get a=
-=20
->> kernel Oops pointing out a null pointer dereference.
->>
->> Can someone help me here?
->> Is there a better way to retrieve the ide_drive_t pointer from the=20
->> ide_hwif_t structure?
->>    =20
->
-> hwif->devices[0] / hwif->devices[1]
->  =20
+> those since I don't have hardware for it.
+> However, I will test for compilation.
 
-Well, it was a poorly attempt to make it work after trying with=20
-'hwif->cur_dev' :-) .
+> Please comment, and if there's any fix to be made, just let me know.
 
-I thought of using the way you recommended; I didn't use it because: 1 =
--=20
-didn't know which index to use; 2 - looked like an 'ugly' way to do it.=
-=2E.
+> Regards,
+> Jo=E3o Ramos
 
-> However, I see the problem -- we need timing data also for command PI=
-O.
->
-> Sergei, seems like we should just stuff pointer to command PIO timing=
-s
-> (which would be maximum PIO supported by both devices on the port) in=
-to
-> hwif->hwif_data and use it everywhere except ->*put_data methods?
->
-> Or maybe there is some better way to do it?
->
-> Thanks,
-> Bart
->
->  =20
+> ---------------------------------------------------------------------=
+---
+>=20
+> Change ide_drive_t 'drive_data' field from 'unsigned int' type to 'vo=
+id *' type,
+> allowing a wider range of values/types to be stored in this field.
+> Added 'ide_get_drivedata' and 'ide_set_drivedata' helpers to get and =
+set
+> the 'drive_data' field.
+> Fixed all host drivers to maintain coherency with the change in the '=
+drive_data'
+> field type.
+>=20
+> Signed-off-by: Joao Ramos <joao.ramos@inov.pt>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Sergei Shtylyov <sshtylyov@ru.montavista.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+>=20
+> ---
+>=20
+> diff --git a/drivers/ide/cmd64x.c b/drivers/ide/cmd64x.c
+> index 80b777e..c8df34c 100644
+> --- a/drivers/ide/cmd64x.c
+> +++ b/drivers/ide/cmd64x.c
+> @@ -140,10 +140,11 @@ static void cmd64x_tune_pio(ide_drive_t *drive,=
+ const u8 pio)
+>  	if (hwif->channel) {
+>  		ide_drive_t *pair =3D ide_get_pair_dev(drive);
+> =20
+> -		drive->drive_data =3D setup_count;
+> +		ide_set_drivedata(drive, (void *) setup_count);
+> =20
+>  		if (pair)
+> -			setup_count =3D max_t(u8, setup_count, pair->drive_data);
+> +			setup_count =3D max_t(u8, setup_count,
+> +							(u8) ide_get_drivedata(pair));
 
+    You've over-indented it and the (u8) cast is not needed with max_t(=
+)=20
+which performs the cast internally.
+    Personally, I prefer this style for the multi-line statement:
 
---=20
-***********************************************************************=
-*
+			setup_count =3D max_t(u8, setup_count,
+					    ide_get_drivedata(pair));
 
-    Jo=E3o Ramos        <joao.ramos@inov.pt>
+> diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
+> index 0332a95..f9e349e 100644
+> --- a/drivers/ide/cs5536.c
+> +++ b/drivers/ide/cs5536.c
+> @@ -143,6 +143,8 @@ static void cs5536_set_pio_mode(ide_drive_t *driv=
+e, const u8 pio)
+>  		0x99, 0x92, 0x90, 0x22, 0x20,
+>  	};
+> =20
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
 
-    INOV INESC Inova=E7=E3o - ESTG Leiria
-    Escola Superior de Tecnologia e Gest=E3o de Leiria
-    Ed=EDficio C1, Campus 2
-    Morro do Lena, Alto do Vieiro
-    Leiria
-    2411-901 Leiria
-    Portugal
+    Call it 'timings' please.
 
-    Tel: +351244843424
-    Fax: +351244843424
+> +
+>  	struct pci_dev *pdev =3D to_pci_dev(drive->hwif->dev);
+>  	ide_drive_t *pair =3D ide_get_pair_dev(drive);
+>  	int cshift =3D (drive->dn & 1) ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SH=
+IFT;
+[...]
+> @@ -184,6 +187,8 @@ static void cs5536_set_dma_mode(ide_drive_t *driv=
+e, const u8 mode)
+>  		0x67, 0x21, 0x20,
+>  	};
+> =20
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
 
-***********************************************************************=
-*
+    And 'timings' again...
 
+> +
+>  	struct pci_dev *pdev =3D to_pci_dev(drive->hwif->dev);
+>  	int dshift =3D (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+>  	u32 etc;
+[...]
+> @@ -204,9 +210,11 @@ static void cs5536_set_dma_mode(ide_drive_t *dri=
+ve, const u8 mode)
+> =20
+>  static void cs5536_dma_start(ide_drive_t *drive)
+>  {
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    And again...
+
+> +
+>  	if (drive->current_speed < XFER_UDMA_0 &&
+> -	    (drive->drive_data >> 8) !=3D (drive->drive_data & IDE_DRV_MASK=
+))
+> -		cs5536_program_dtc(drive, drive->drive_data >> 8);
+> +	    (drivedata >> 8) !=3D (drivedata & IDE_DRV_MASK))
+> +		cs5536_program_dtc(drive, drivedata >> 8);
+> =20
+>  	ide_dma_start(drive);
+>  }
+> @@ -214,10 +222,11 @@ static void cs5536_dma_start(ide_drive_t *drive=
+)
+>  static int cs5536_dma_end(ide_drive_t *drive)
+>  {
+>  	int ret =3D ide_dma_end(drive);
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Here too...
+
+> =20
+>  	if (drive->current_speed < XFER_UDMA_0 &&
+> -	    (drive->drive_data >> 8) !=3D (drive->drive_data & IDE_DRV_MASK=
+))
+> -		cs5536_program_dtc(drive, drive->drive_data & IDE_DRV_MASK);
+> +	    (drivedata >> 8) !=3D (drivedata & IDE_DRV_MASK))
+> +		cs5536_program_dtc(drive, drivedata & IDE_DRV_MASK);
+> =20
+>  	return ret;
+>  }
+> diff --git a/drivers/ide/ht6560b.c b/drivers/ide/ht6560b.c
+> index 2fb0f29..158aeae 100644
+> --- a/drivers/ide/ht6560b.c
+> +++ b/drivers/ide/ht6560b.c
+> @@ -44,7 +44,12 @@
+>   *    bit3 (0x08): "1" 3 cycle time, "0" 2 cycle time	      (?)
+>   */
+>  #define HT_CONFIG_PORT	  0x3e6
+> -#define HT_CONFIG(drivea) (u8)(((drivea)->drive_data & 0xff00) >> 8)
+> +
+> +static inline u8 HT_CONFIG(ide_drive_t *drive)
+> +{
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Call it 'config' (or maybe just 'data' or 'info') and insert an emp=
+ty=20
+line after declaration please.
+
+> +	return (drivedata & 0xff00) >> 8;
+> +}
+>  /*
+>   * FIFO + PREFETCH (both a/b-model)
+>   */
+> @@ -90,7 +95,12 @@
+>   * Active Time for each drive. Smaller value gives higher speed.
+>   * In case of failures you should probably fall back to a higher val=
+ue.
+>   */
+> -#define HT_TIMING(drivea) (u8)((drivea)->drive_data & 0x00ff)
+> +static inline u8 HT_TIMING(ide_drive_t *drive)
+> +{
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Same here.
+
+> +	return drivedata & 0x00ff;
+> +}
+> +
+>  #define HT_TIMING_DEFAULT 0xff
+> =20
+>  /*
+> @@ -244,6 +254,7 @@ static void ht_set_prefetch(ide_drive_t *drive, u=
+8 state)
+>  {
+>  	unsigned long flags;
+>  	int t =3D HT_PREFETCH_MODE << 8;
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Call 'config' (or maybe just 'data' or 'info') please.
+
+> @@ -270,6 +283,7 @@ static void ht6560b_set_pio_mode(ide_drive_t *dri=
+ve, const u8 pio)
+>  {
+>  	unsigned long flags;
+>  	u8 timing;
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Same here...
+
+[...]
+
+> @@ -299,7 +314,7 @@ static void __init ht6560b_init_dev(ide_drive_t *=
+drive)
+>  	if (hwif->channel)
+>  		t |=3D (HT_SECONDARY_IF << 8);
+> =20
+> -	drive->drive_data =3D t;
+> +	ide_set_drivedata(drive, (void *)t);
+
+    Oh, they call it just 't'! Nice name too. :-D
+
+> diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
+> index 4e16ce6..c96f87a 100644
+> --- a/drivers/ide/icside.c
+> +++ b/drivers/ide/icside.c
+> @@ -267,10 +267,11 @@ static void icside_set_dma_mode(ide_drive_t *dr=
+ive, const u8 xfer_mode)
+>  	if (use_dma_info && drive->id[ATA_ID_EIDE_DMA_TIME] > cycle_time)
+>  		cycle_time =3D drive->id[ATA_ID_EIDE_DMA_TIME];
+> =20
+> -	drive->drive_data =3D cycle_time;
+> +	ide_set_drivedata(drive, (void *)cycle_time);
+> =20
+>  	printk("%s: %s selected (peak %dMB/s)\n", drive->name,
+> -		ide_xfer_verbose(xfer_mode), 2000 / drive->drive_data);
+> +		ide_xfer_verbose(xfer_mode),
+> +		2000 / (int) ide_get_drivedata(drive));
+>  }
+
+    I see that you're not consistent about that space after the typeacs=
+t...=20
+either put it there or not, not both. :-)
+
+> diff --git a/drivers/ide/opti621.c b/drivers/ide/opti621.c
+> index 6048eda..d545f01 100644
+> --- a/drivers/ide/opti621.c
+> +++ b/drivers/ide/opti621.c
+> @@ -139,6 +139,8 @@ static void opti621_set_pio_mode(ide_drive_t *dri=
+ve, const u8 pio)
+>  	ide_drive_t *pair =3D ide_get_pair_dev(drive);
+>  	unsigned long flags;
+>  	u8 tim, misc, addr_pio =3D pio, clk;
+> +	int drivedata =3D XFER_PIO_0 + pio;
+
+    Please name it 'mode'...
+
+> +	int pair_drivedata;
+
+    ... and 'pair_mode'.
+
+> @@ -150,11 +152,12 @@ static void opti621_set_pio_mode(ide_drive_t *d=
+rive, const u8 pio)
+>  		{ 0x48, 0x34, 0x21, 0x10, 0x10 }	/* 25 MHz */
+>  	};
+> =20
+> -	drive->drive_data =3D XFER_PIO_0 + pio;
+> +	ide_set_drivedata(drive, (void *) drivedata);
+> =20
+>  	if (pair) {
+> -		if (pair->drive_data && pair->drive_data < drive->drive_data)
+> -			addr_pio =3D pair->drive_data - XFER_PIO_0;
+> +		pair_drivedata =3D (int) ide_get_drivedata(pair);
+> +		if (pair_drivedata && pair_drivedata < drivedata)
+> +			addr_pio =3D pair_drivedata - XFER_PIO_0;
+>  	}
+> =20
+>  	spin_lock_irqsave(&opti621_lock, flags);
+> diff --git a/drivers/ide/qd65xx.c b/drivers/ide/qd65xx.c
+> index c9a1349..2cd350c 100644
+> --- a/drivers/ide/qd65xx.c
+> +++ b/drivers/ide/qd65xx.c
+> @@ -180,8 +180,11 @@ static int qd_find_disk_type (ide_drive_t *drive=
+,
+> =20
+>  static void qd_set_timing (ide_drive_t *drive, u8 timing)
+>  {
+> -	drive->drive_data &=3D 0xff00;
+> -	drive->drive_data |=3D timing;
+> +	int drivedata =3D (int) ide_get_drivedata(drive);
+
+    Well, please call it just 'data' (or even 't') in this case.
+
+> +
+> +	drivedata &=3D 0xff00;
+> +	drivedata |=3D timing;
+> +	ide_set_drivedata(drive, (void *)drivedata);
+
+    Oh, inconsistent spacing again! :-)
+
+> diff --git a/drivers/ide/sl82c105.c b/drivers/ide/sl82c105.c
+> index b0a4606..5e42eaa 100644
+> --- a/drivers/ide/sl82c105.c
+> +++ b/drivers/ide/sl82c105.c
+> @@ -76,6 +76,7 @@ static void sl82c105_set_pio_mode(ide_drive_t *driv=
+e, const u8 pio)
+>  	struct pci_dev *dev	=3D to_pci_dev(drive->hwif->dev);
+>  	int reg			=3D 0x44 + drive->dn * 4;
+>  	u16 drv_ctrl;
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Please call it 'timings'.
+
+> @@ -101,6 +103,7 @@ static void sl82c105_set_dma_mode(ide_drive_t *dr=
+ive, const u8 speed)
+>  {
+>  	static u16 mwdma_timings[] =3D {0x0707, 0x0201, 0x0200};
+>  	u16 drv_ctrl;
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    Here too...
+
+> @@ -181,10 +185,11 @@ static void sl82c105_dma_start(ide_drive_t *dri=
+ve)
+>  	ide_hwif_t *hwif	=3D drive->hwif;
+>  	struct pci_dev *dev	=3D to_pci_dev(hwif->dev);
+>  	int reg 		=3D 0x44 + drive->dn * 4;
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    And here...
+
+> @@ -204,12 +209,13 @@ static int sl82c105_dma_end(ide_drive_t *drive)
+>  	struct pci_dev *dev	=3D to_pci_dev(drive->hwif->dev);
+>  	int reg 		=3D 0x44 + drive->dn * 4;
+>  	int ret;
+> +	unsigned int drivedata =3D (unsigned int) ide_get_drivedata(drive);
+
+    And here...
+
+> diff --git a/include/linux/ide.h b/include/linux/ide.h
+> index ff65fff..4ab9859 100644
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -565,7 +565,7 @@ struct ide_drive_s {
+> =20
+>  	unsigned int	bios_cyl;	/* BIOS/fdisk/LILO number of cyls */
+>  	unsigned int	cyl;		/* "real" number of cyls */
+> -	unsigned int	drive_data;	/* used by set_pio_mode/dev_select() */
+> +	void	*drive_data;		/* used by set_pio_mode/dev_select() */
+
+    Please don't break the alignment of the 2nd column.
+
+>  	unsigned int	failures;	/* current failure count */
+>  	unsigned int	max_failures;	/* maximum allowed failure count */
+>  	u64		probed_capacity;/* initial reported media capacity (ide-cd onl=
+y currently) */
+> @@ -1570,6 +1570,16 @@ static inline ide_drive_t *ide_get_pair_dev(id=
+e_drive_t *drive)
+>  	return (peer->dev_flags & IDE_DFLAG_PRESENT) ? peer : NULL;
+>  }
+> =20
+> +static inline void *ide_get_drivedata(ide_drive_t *drive)
+> +{
+> +	return drive->drive_data;
+> +}
+> +
+> +static inline void ide_set_drivedata(ide_drive_t *drive, void *data)
+> +{
+> +	drive->drive_data =3D data;
+> +}
+> +
+>  #define ide_port_for_each_dev(i, dev, port) \
+>  	for ((i) =3D 0; ((dev) =3D (port)->devices[i]) || (i) < MAX_DRIVES;=
+ (i)++)
+> =20
+
+    And don't tell me this patch is "elegant"... :-/
+
+MBR, Sergei
