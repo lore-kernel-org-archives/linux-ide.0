@@ -1,36 +1,67 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Tue, 12 May 2009 18:10:53 +0900
-Message-ID: <4A093D1D.5060408@gmail.com>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org> <4A080C9D.9000109@panasas.com> <4A08C26E.80801@kernel.org> <4A093782.80701@panasas.com> <4A093C54.2060706@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
+Date: Tue, 12 May 2009 05:26:17 -0400
+Message-ID: <4A0940B9.5080905@garzik.org>
+References: <200905062009.28087.markos@codex.gr>	<4A086A76.3090008@garzik.org> <18953.15575.632189.258813@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4A093C54.2060706@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:38182 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752605AbZELJ00 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 May 2009 05:26:26 -0400
+In-Reply-To: <18953.15575.632189.258813@pilspetsen.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 
-Tejun Heo wrote:
-...
-> Please consider write failing after successfully writing certain
-> number of bytes.  A failed write command MUST NOT cause any actual
-> write on the device.
+Mikael Pettersson wrote:
+> Jeff Garzik writes:
+>  > Konstantinos Margaritis wrote:
+>  > > (not subscribed please CC me)
+>  > > 
+>  > > I tried to compile sata_sil on a 2.6.27 kernel on powerpc32 and I found that 
+>  > > it failed to compile -lots of dmi related errors. I found that I had to 
+>  > > include the broken_systems handling code in #ifdef CONFIG_DMI (DMI is not 
+>  > > supported on platforms other than i386/x86_64). 
+>  > > 
+>  > > Lennert on #mklinux told me that this commit broke the non-dmi support, and 
+>  > > that a similar patch to mine is used on ARM systems :
+>  > > 
+>  > > commit e57db7bde7bff95ae812736ca00c73bd5271455b
+>  > > SATA Sil: Blacklist system that spins off disks during ACPI power off
+>  > > 
+>  > > With this patch, sata_sil compiles on ppc (and I guess on other platforms). 
+>  > > I'm using it for a while with no problems with a Delock 4-port SATA PCI card.
+>  > 
+>  > (CC'ing various Lennerts)
 > 
-> Residual count is not about how many bytes have been transferred.  The
-> number of transferred bytes itself doesn't mean a thing because it
-> changes depending on which transfer protocol is used regardless of
-> where the actual failure is.  Residual count is about how many bytes
-> have been actually produced or consumed and when a command fails none
-> should have been.
+> That would be Lennert Buytenhek.
+> 
+>  > What is the breakage?
+> 
+> Compile-time error because sata_sil is used on !x86 platforms and the
+> unconditional references to x86-only DMI stuff simply aren't valid.
+> 
+> I have an ARM + sata_sil NAS box that did have this problem a few
+> kernel releases back, but it got resolved before that kernel's -final.
+> (I can look up the details on Thursday when I'm back to my home network.)
 
-Please note that in the above 'command' and 'residual count' are not
-as defined in SCSI.  Those terms refer to how those concepts are used
-in the kernel and via SG_IO interface.
+Yes, I was asking for specific details of the breakage.
 
-Thanks.
+It is common practice to create no-op stubs for the !CONFIG_FEATURE 
+case, thereby saving individual drivers from being littered with 
+CONFIG_xxx ifdefs all over the place.
 
--- 
-tejun
+You can see this in the bottom half of include/linux/dmi.h, which is 
+clearly intended to support !CONFIG_DMI platforms.
+
+Therefore, it is an open question of what _specifically_ is the 
+breakage, because include/linux/dmi.h is not working as intended on 
+non-DMI platforms.
+
+	Jeff
+
+
