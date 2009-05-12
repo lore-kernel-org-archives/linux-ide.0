@@ -1,50 +1,101 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata: libata depends on HAS_DMA
-Date: Mon, 11 May 2009 20:58:40 -0400
-Message-ID: <4A08C9C0.6040202@pobox.com>
-References: <20090511222702.352192505@arndb.de>> <200905112238.55404.arnd@arndb.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH UPDATED #upstream] ahci: misc cleanups for EM stuff
+Date: Tue, 12 May 2009 10:57:41 +0900
+Message-ID: <4A08D795.70102@kernel.org>
+References: <49F642FC.1090602@kernel.org> <4A086AB9.3020002@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50366 "EHLO mail.dvmed.net"
+Received: from hera.kernel.org ([140.211.167.34]:52161 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756784AbZELA6n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 May 2009 20:58:43 -0400
-In-Reply-To: <200905112238.55404.arnd@arndb.de>
+	id S1753254AbZELB64 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 May 2009 21:58:56 -0400
+In-Reply-To: <4A086AB9.3020002@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
 
-Arnd Bergmann wrote:
-> libata uses the DMA mapping API, so it cannot be built
-> on architectures that don't have DMA support.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/ata/Kconfig |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 9120717..f076268 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -4,7 +4,7 @@
->  
->  menuconfig ATA
->  	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
-> -	depends on HAS_IOMEM
-> +	depends on HAS_IOMEM && HAS_DMA
->  	depends on BLOCK
->  	depends on !(M32R || M68K) || BROKEN
+Make the following EM related cleanups.
 
-What specifically is breaking?
+* Use msleep(1) instead of udelay(100) and reduce retry count to 5.
 
-Ideally we should be able to work with PIO-only...
+* s/MAX_SLOTS/EM_MAX_SLOTS/, s/MAX_RETRY/EM_MAX_RETRY/
 
-	JEff
+* Make EM constants enums as suggested by Jeff.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Acked-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/ahci.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3489085..2af686a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -77,8 +77,6 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ 			      size_t size);
+ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 					ssize_t size);
+-#define MAX_SLOTS 8
+-#define MAX_RETRY 15
+ 
+ enum {
+ 	AHCI_PCI_BAR		= 5,
+@@ -230,6 +228,10 @@ enum {
+ 
+ 	ICH_MAP				= 0x90, /* ICH MAP register */
+ 
++	/* em constants */
++	EM_MAX_SLOTS			= 8,
++	EM_MAX_RETRY			= 5,
++
+ 	/* em_ctl bits */
+ 	EM_CTL_RST			= (1 << 9), /* Reset */
+ 	EM_CTL_TM			= (1 << 8), /* Transmit Message */
+@@ -281,8 +283,8 @@ struct ahci_port_priv {
+ 	unsigned int		ncq_saw_dmas:1;
+ 	unsigned int		ncq_saw_sdb:1;
+ 	u32 			intr_mask;	/* interrupts to enable */
+-	struct ahci_em_priv	em_priv[MAX_SLOTS];/* enclosure management info
+-					 	 * per PM slot */
++	/* enclosure management info per PM slot */
++	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
+ };
+ 
+ static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+@@ -1139,12 +1141,12 @@ static void ahci_start_port(struct ata_port *ap)
+ 			emp = &pp->em_priv[link->pmp];
+ 
+ 			/* EM Transmit bit maybe busy during init */
+-			for (i = 0; i < MAX_RETRY; i++) {
++			for (i = 0; i < EM_MAX_RETRY; i++) {
+ 				rc = ahci_transmit_led_message(ap,
+ 							       emp->led_state,
+ 							       4);
+ 				if (rc == -EBUSY)
+-					udelay(100);
++					msleep(1);
+ 				else
+ 					break;
+ 			}
+@@ -1338,7 +1340,7 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+ 
+ 	/* get the slot number from the message */
+ 	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+-	if (pmp < MAX_SLOTS)
++	if (pmp < EM_MAX_SLOTS)
+ 		emp = &pp->em_priv[pmp];
+ 	else
+ 		return -EINVAL;
+@@ -1406,7 +1408,7 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ 
+ 	/* get the slot number from the message */
+ 	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+-	if (pmp < MAX_SLOTS)
++	if (pmp < EM_MAX_SLOTS)
+ 		emp = &pp->em_priv[pmp];
+ 	else
+ 		return -EINVAL;
