@@ -1,72 +1,90 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Tue, 12 May 2009 11:58:28 +0300
-Message-ID: <4A093A34.3020101@panasas.com>
-References: <4A06DFAB.40205@panasas.com>	<4A0767E5.5050205@kernel.org>	<4A080C9D.9000109@panasas.com> <20090511235852Z.fujita.tomonori@lab.ntt.co.jp>
+Date: Tue, 12 May 2009 18:07:32 +0900
+Message-ID: <4A093C54.2060706@kernel.org>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org> <4A080C9D.9000109@panasas.com> <4A08C26E.80801@kernel.org> <4A093782.80701@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:19396 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750943AbZELI7l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 May 2009 04:59:41 -0400
-In-Reply-To: <20090511235852Z.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4A093782.80701@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tj@kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, dgilbert@interlog.com, djwong@us.ibm.com
 
-On 05/11/2009 05:59 PM, FUJITA Tomonori wrote:
-> On Mon, 11 May 2009 14:31:41 +0300
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+Hello, Boaz.
+
+Boaz Harrosh wrote:
+>> When a request failed, the whole buffer is garbage.
 > 
->>>>> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
->>>>> index 3da02e4..6605ec9 100644
->>>>> --- a/drivers/scsi/libsas/sas_expander.c
->>>>> +++ b/drivers/scsi/libsas/sas_expander.c
->>>>> @@ -1936,12 +1936,8 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
->>>>>  			       bio_data(rsp->bio), rsp->data_len);
->>>>>  	if (ret > 0) {
->>>>>  		/* positive number is the untransferred residual */
->>>>> -		rsp->data_len = ret;
->>>>> -		req->data_len = 0;
->>>>> +		rsp->resid_len = ret;
->>>>>  		ret = 0;
->>>>> -	} else if (ret == 0) {
->>>>> -		rsp->data_len = 0;
->>>>> -		req->data_len = 0;
->>>>>  	}
->>>>>  
->>>>>  	return ret;
->>>> This is actually a bug fix, as well as a strait conversion
->>> Can you elaborate a bit about the bug fix part?
->>>
->> Nothing big really, just that before (according to the comment), the theoretical
->> negative case would be full-residual. and now it is zero (untouched).
+> ret is the transferred size, right? I don't see any check for  
+> success/failure in below code.
+> 
+>> There's no
+>> partial transfer.  There shouldn't be.  I don't think residual count
+>> on request failure means anything. 
+> 
+> That's not true, there are many cases when transfer failed eventually
+> but some bytes are valid. Even the simple read/write case. Imagine a 
+> very large transfer with last sector encounter a "bad sector". that can
+> be critical, (trying to rescue a disk). And many other examples.
+
+No, it doesn't work like that.  As I wrote before, those partial
+transfers are returned to the issuer as partial _SUCCESS_ not partial
+failure.  ie. it's successful request w/ positive residual count not
+the other way around.  The error is communicated to the issuer when
+the leftover is re-issued.  There's no such thing as partial failure.
+
+Please consider write failing after successfully writing certain
+number of bytes.  A failed write command MUST NOT cause any actual
+write on the device.
+
+Residual count is not about how many bytes have been transferred.  The
+number of transferred bytes itself doesn't mean a thing because it
+changes depending on which transfer protocol is used regardless of
+where the actual failure is.  Residual count is about how many bytes
+have been actually produced or consumed and when a command fails none
+should have been.
+
+>> Also, the 'whenever possible'
+>> doesn't mean much when the issuer can't determine whether the value is
+>> valid or not.  On success, we should guarantee resid count is valid,
+>> on failure, I don't see a way we can.
 >>
->> I know that in iscsi a negative residual is possible which means over-flow. That is:
->> the target had more data to give then the buffer had space for. (which is not an error at all)
 > 
-> Hmm, iSCSI? This code is for SAS management Protocol.
+> Code is as strong as it's weakest link, right? If lower
+> driver/firmware is brain-dead, what can we do? But why give up where
+> you can do better?
+>
+> The scsi standard is very clear about what every one should do with
+> the residual and what it means at every stage, everyone should do
+> his part. Here at the middle layer we need to correctly translate
+> what lower level returned and pass it up the chain.
 > 
+> Must stacks are amateuristic in regard to error handling but some
+> are not, what
+>
+> should we strive for, if we can? 
 
-I gave that as an example of what the scsi standard says about negative
-residual count return from the target. If SAS as sepecific and different
-meaning to negative residual, it should be noted and handled.
+No it's not about being good or bad.  It's about being plain
+undefined.  There is no value in setting an inherently undefined value
+to certain values in certain corner cases.
 
-> smp_execute_task returns a negative value for some errors (ENOMEM, the
-> hardware doesn't respond, etc). It's not related with 'transferred
-> buffer length' at all.
+>>> I know that in iscsi a negative residual is possible which means
+>>> over-flow. That is: the target had more data to give then the buffer
+>>> had space for. (which is not an error at all)
+>> Hmm... I've never seen negative residual in use.  Is it even defined?
+> 
+> It is defined, as I explained before. But yes no one uses it in Kernel.
+> The "good" low-level drivers fix it up by setting resid to zero, in that
+> case. (other wise the upper layers might crash)
 
-This is a serious problem, and a violation of the block/scsi stacks. If so, then
-in that case error/status should be set properly. And residual cleared.
+If the upper layer might crash if the value is negative, I think it's
+quite understandable to call negative values to be undefined.  Or
+should we call it unsupported?
 
-Failing to return an error might theoretically be catastrophic. If what
-you say is certain then previous behaviour is better then after this patch.
+Thanks.
 
-I'm not at all familiar with this code. Could you send a patch to
-fix these things?
-
-Thanks
-Boaz
+-- 
+tejun
