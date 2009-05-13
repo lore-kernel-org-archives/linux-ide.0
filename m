@@ -1,505 +1,696 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/7] ide: remove chipset field from hw_regs_t
-Date: Wed, 13 May 2009 22:52:15 +0200
-Message-ID: <20090513205215.28638.80164.sendpatchset@localhost.localdomain>
+Subject: [PATCH 7/7] ide: remove hw_regs_t typedef
+Date: Wed, 13 May 2009 22:52:31 +0200
+Message-ID: <20090513205231.28638.12447.sendpatchset@localhost.localdomain>
 References: <20090513205139.28638.87226.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:57965 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761463AbZEMUrn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 16:47:43 -0400
+Received: from mu-out-0910.google.com ([209.85.134.187]:38799 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761577AbZEMUsD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 16:48:03 -0400
 In-Reply-To: <20090513205139.28638.87226.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Convert host drivers that still use hw_regs_t's chipset field to use
-  the one in struct ide_port_info instead.
-
-* Move special handling of ide_pci chipset type from ide_hw_configure()
-  to ide_init_port().
-
-* Remove chipset field from hw_regs_t.
-
-While at it:
-- remove stale comment in delkin_cb.c
+Remove hw_regs_t typedef and rename struct hw_regs_s to struct ide_hw.
 
 There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
  drivers/ide/at91_ide.c     |    2 +-
- drivers/ide/au1xxx-ide.c   |    2 +-
- drivers/ide/buddha.c       |    3 +--
- drivers/ide/cmd640.c       |    2 --
+ drivers/ide/au1xxx-ide.c   |    4 ++--
+ drivers/ide/buddha.c       |    4 ++--
+ drivers/ide/cmd640.c       |    2 +-
+ drivers/ide/cs5520.c       |    2 +-
  drivers/ide/delkin_cb.c    |    2 +-
- drivers/ide/falconide.c    |    3 +--
- drivers/ide/gayle.c        |    3 +--
- drivers/ide/icside.c       |    3 ++-
+ drivers/ide/falconide.c    |    4 ++--
+ drivers/ide/gayle.c        |    4 ++--
+ drivers/ide/icside.c       |    6 +++---
  drivers/ide/ide-4drives.c  |    2 +-
  drivers/ide/ide-cs.c       |    2 +-
- drivers/ide/ide-generic.c  |    3 +--
- drivers/ide/ide-h8300.c    |    2 +-
- drivers/ide/ide-legacy.c   |    1 -
+ drivers/ide/ide-generic.c  |    2 +-
+ drivers/ide/ide-h8300.c    |    6 +++---
+ drivers/ide/ide-legacy.c   |    4 ++--
  drivers/ide/ide-pnp.c      |    2 +-
- drivers/ide/ide-probe.c    |    4 +---
- drivers/ide/ide_platform.c |    3 +--
- drivers/ide/macide.c       |    3 +--
+ drivers/ide/ide-probe.c    |   10 +++++-----
+ drivers/ide/ide_platform.c |    4 ++--
+ drivers/ide/macide.c       |    4 ++--
  drivers/ide/palm_bk3710.c  |    2 +-
- drivers/ide/q40ide.c       |    3 +--
- drivers/ide/rapide.c       |    2 +-
+ drivers/ide/pmac.c         |   11 ++++++-----
+ drivers/ide/q40ide.c       |    6 +++---
+ drivers/ide/rapide.c       |    4 ++--
  drivers/ide/scc_pata.c     |    2 +-
- drivers/ide/setup-pci.c    |    1 -
- drivers/ide/sgiioc4.c      |    1 -
- include/linux/ide.h        |    1 -
- 24 files changed, 20 insertions(+), 34 deletions(-)
+ drivers/ide/setup-pci.c    |   16 ++++++++--------
+ drivers/ide/sgiioc4.c      |    4 ++--
+ drivers/ide/tx4938ide.c    |    2 +-
+ drivers/ide/tx4939ide.c    |    2 +-
+ include/linux/ide.h        |   14 +++++++-------
+ 28 files changed, 65 insertions(+), 64 deletions(-)
 
 Index: b/drivers/ide/at91_ide.c
 ===================================================================
 --- a/drivers/ide/at91_ide.c
 +++ b/drivers/ide/at91_ide.c
-@@ -216,6 +216,7 @@ static const struct ide_port_info at91_i
- 	.host_flags 	= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA | IDE_HFLAG_SINGLE |
- 			  IDE_HFLAG_NO_IO_32BIT | IDE_HFLAG_UNMASK_IRQS,
- 	.pio_mask 	= ATA_PIO6,
-+	.chipset	= ide_generic,
- };
- 
- /*
-@@ -304,7 +305,6 @@ static int __init at91_ide_probe(struct 
- 		ide_std_init_ports(&hw, tf_base, ctl_base + 6);
- 
- 	hw.irq = board->irq_pin;
--	hw.chipset = ide_generic;
- 	hw.dev = &pdev->dev;
- 
- 	host = ide_host_alloc(&at91_ide_port_info, hws);
+@@ -247,7 +247,7 @@ irqreturn_t at91_irq_handler(int irq, vo
+ static int __init at91_ide_probe(struct platform_device *pdev)
+ {
+ 	int ret;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_host *host;
+ 	struct resource *res;
+ 	unsigned long tf_base = 0, ctl_base = 0;
 Index: b/drivers/ide/au1xxx-ide.c
 ===================================================================
 --- a/drivers/ide/au1xxx-ide.c
 +++ b/drivers/ide/au1xxx-ide.c
-@@ -499,6 +499,7 @@ static const struct ide_port_info au1xxx
- #ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
- 	.mwdma_mask		= ATA_MWDMA2,
+@@ -449,7 +449,7 @@ static int auide_ddma_init(ide_hwif_t *h
+ }
  #endif
-+	.chipset		= ide_au1xxx,
- };
  
- static int au_ide_probe(struct platform_device *dev)
-@@ -548,7 +549,6 @@ static int au_ide_probe(struct platform_
- 	auide_setup_ports(&hw, ahwif);
- 	hw.irq = ahwif->irq;
- 	hw.dev = &dev->dev;
--	hw.chipset = ide_au1xxx;
+-static void auide_setup_ports(hw_regs_t *hw, _auide_hwif *ahwif)
++static void auide_setup_ports(struct ide_hw *hw, _auide_hwif *ahwif)
+ {
+ 	int i;
+ 	unsigned long *ata_regs = hw->io_ports_array;
+@@ -508,7 +508,7 @@ static int au_ide_probe(struct platform_
+ 	struct resource *res;
+ 	struct ide_host *host;
+ 	int ret = 0;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
  
- 	ret = ide_host_add(&au1xxx_port_info, hws, &host);
- 	if (ret)
+ #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA)
+ 	char *mode = "MWDMA2";
 Index: b/drivers/ide/buddha.c
 ===================================================================
 --- a/drivers/ide/buddha.c
 +++ b/drivers/ide/buddha.c
-@@ -139,13 +139,12 @@ static void __init buddha_setup_ports(hw
- 
- 	hw->irq = IRQ_AMIGA_PORTS;
- 	hw->ack_intr = ack_intr;
--
--	hw->chipset = ide_generic;
+@@ -121,7 +121,7 @@ static int xsurf_ack_intr(ide_hwif_t *hw
+     return 1;
  }
  
- static const struct ide_port_info buddha_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-+	.chipset		= ide_generic,
- };
+-static void __init buddha_setup_ports(hw_regs_t *hw, unsigned long base,
++static void __init buddha_setup_ports(struct ide_hw *hw, unsigned long base,
+ 				      unsigned long ctl, unsigned long irq_port,
+ 				      ide_ack_intr_t *ack_intr)
+ {
+@@ -160,7 +160,7 @@ static int __init buddha_init(void)
  
-     /*
+ 	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
+ 		unsigned long board;
+-		hw_regs_t hw[MAX_NUM_HWIFS], *hws[] = { NULL, NULL, NULL };
++		struct ide_hw hw[MAX_NUM_HWIFS], *hws[] = { NULL, NULL, NULL };
+ 
+ 		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
+ 			buddha_num_hwifs = BUDDHA_NUM_HWIFS;
 Index: b/drivers/ide/cmd640.c
 ===================================================================
 --- a/drivers/ide/cmd640.c
 +++ b/drivers/ide/cmd640.c
-@@ -762,11 +762,9 @@ static int __init cmd640x_init(void)
+@@ -708,7 +708,7 @@ static int __init cmd640x_init(void)
+ 	int second_port_cmd640 = 0, rc;
+ 	const char *bus_type, *port2;
+ 	u8 b, cfr;
+-	hw_regs_t hw[2], *hws[] = { NULL, NULL };
++	struct ide_hw hw[2], *hws[] = { NULL, NULL };
  
- 	ide_std_init_ports(&hw[0], 0x1f0, 0x3f6);
- 	hw[0].irq = 14;
--	hw[0].chipset = ide_cmd640;
+ 	if (cmd640_vlb && probe_for_cmd640_vlb()) {
+ 		bus_type = "VLB";
+Index: b/drivers/ide/cs5520.c
+===================================================================
+--- a/drivers/ide/cs5520.c
++++ b/drivers/ide/cs5520.c
+@@ -110,7 +110,7 @@ static const struct ide_port_info cyrix_
+ static int __devinit cs5520_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+ 	const struct ide_port_info *d = &cyrix_chipset;
+-	hw_regs_t hw[2], *hws[] = { NULL, NULL };
++	struct ide_hw hw[2], *hws[] = { NULL, NULL };
  
- 	ide_std_init_ports(&hw[1], 0x170, 0x376);
- 	hw[1].irq = 15;
--	hw[1].chipset = ide_cmd640;
+ 	ide_setup_pci_noise(dev, d);
  
- 	printk(KERN_INFO "cmd640: buggy cmd640%c interface on %s, config=0x%02x"
- 			 "\n", 'a' + cmd640_chip_version - 1, bus_type, cfr);
 Index: b/drivers/ide/delkin_cb.c
 ===================================================================
 --- a/drivers/ide/delkin_cb.c
 +++ b/drivers/ide/delkin_cb.c
-@@ -68,6 +68,7 @@ static const struct ide_port_info delkin
- 				  IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
- 	.init_chipset		= delkin_cb_init_chipset,
-+	.chipset		= ide_pci,
- };
+@@ -77,7 +77,7 @@ delkin_cb_probe (struct pci_dev *dev, co
+ 	struct ide_host *host;
+ 	unsigned long base;
+ 	int rc;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
  
- static int __devinit
-@@ -97,7 +98,6 @@ delkin_cb_probe (struct pci_dev *dev, co
- 	ide_std_init_ports(&hw, base + 0x10, base + 0x1e);
- 	hw.irq = dev->irq;
- 	hw.dev = &dev->dev;
--	hw.chipset = ide_pci;		/* this enables IRQ sharing */
- 
- 	rc = ide_host_add(&delkin_cb_port_info, hws, &host);
- 	if (rc)
+ 	rc = pci_enable_device(dev);
+ 	if (rc) {
 Index: b/drivers/ide/falconide.c
 ===================================================================
 --- a/drivers/ide/falconide.c
 +++ b/drivers/ide/falconide.c
-@@ -111,6 +111,7 @@ static const struct ide_port_info falcon
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-+	.chipset		= ide_generic,
+@@ -114,7 +114,7 @@ static const struct ide_port_info falcon
+ 	.chipset		= ide_generic,
  };
  
- static void __init falconide_setup_ports(hw_regs_t *hw)
-@@ -128,8 +129,6 @@ static void __init falconide_setup_ports
+-static void __init falconide_setup_ports(hw_regs_t *hw)
++static void __init falconide_setup_ports(struct ide_hw *hw)
+ {
+ 	int i;
  
- 	hw->irq = IRQ_MFP_IDE;
- 	hw->ack_intr = NULL;
--
--	hw->chipset = ide_generic;
- }
+@@ -138,7 +138,7 @@ static void __init falconide_setup_ports
+ static int __init falconide_init(void)
+ {
+ 	struct ide_host *host;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	int rc;
  
-     /*
+ 	if (!MACH_IS_ATARI || !ATARIHW_PRESENT(IDE))
 Index: b/drivers/ide/gayle.c
 ===================================================================
 --- a/drivers/ide/gayle.c
 +++ b/drivers/ide/gayle.c
-@@ -106,14 +106,13 @@ static void __init gayle_setup_ports(hw_
- 
- 	hw->irq = IRQ_AMIGA_PORTS;
- 	hw->ack_intr = ack_intr;
--
--	hw->chipset = ide_generic;
+@@ -88,7 +88,7 @@ static int gayle_ack_intr_a1200(ide_hwif
+     return 1;
  }
  
- static const struct ide_port_info gayle_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-+	.chipset		= ide_generic,
- };
+-static void __init gayle_setup_ports(hw_regs_t *hw, unsigned long base,
++static void __init gayle_setup_ports(struct ide_hw *hw, unsigned long base,
+ 				     unsigned long ctl, unsigned long irq_port,
+ 				     ide_ack_intr_t *ack_intr)
+ {
+@@ -125,7 +125,7 @@ static int __init gayle_init(void)
+     unsigned long base, ctrlport, irqport;
+     ide_ack_intr_t *ack_intr;
+     int a4000, i, rc;
+-    hw_regs_t hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL };
++    struct ide_hw hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL };
  
-     /*
+     if (!MACH_IS_AMIGA)
+ 	return -ENODEV;
 Index: b/drivers/ide/icside.c
 ===================================================================
 --- a/drivers/ide/icside.c
 +++ b/drivers/ide/icside.c
-@@ -398,11 +398,11 @@ static void icside_setup_ports(hw_regs_t
- 
- 	hw->irq = ec->irq;
- 	hw->dev = &ec->dev;
--	hw->chipset = ide_acorn;
+@@ -381,7 +381,7 @@ static int icside_dma_off_init(ide_hwif_
+ 	return -EOPNOTSUPP;
  }
  
- static const struct ide_port_info icside_v5_port_info = {
- 	.host_flags		= IDE_HFLAG_NO_DMA,
-+	.chipset		= ide_acorn,
- };
+-static void icside_setup_ports(hw_regs_t *hw, void __iomem *base,
++static void icside_setup_ports(struct ide_hw *hw, void __iomem *base,
+ 			       struct cardinfo *info, struct expansion_card *ec)
+ {
+ 	unsigned long port = (unsigned long)base + info->dataoffset;
+@@ -410,7 +410,7 @@ icside_register_v5(struct icside_state *
+ {
+ 	void __iomem *base;
+ 	struct ide_host *host;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	int ret;
  
- static int __devinit
-@@ -457,6 +457,7 @@ static const struct ide_port_info icside
- 	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_MMIO,
- 	.mwdma_mask		= ATA_MWDMA2,
- 	.swdma_mask		= ATA_SWDMA2,
-+	.chipset		= ide_acorn,
- };
+ 	base = ecardm_iomap(ec, ECARD_RES_MEMC, 0, 0);
+@@ -467,7 +467,7 @@ icside_register_v6(struct icside_state *
+ 	struct ide_host *host;
+ 	unsigned int sel = 0;
+ 	int ret;
+-	hw_regs_t hw[2], *hws[] = { &hw[0], NULL };
++	struct ide_hw hw[2], *hws[] = { &hw[0], NULL };
+ 	struct ide_port_info d = icside_v6_port_info;
  
- static int __devinit
+ 	ioc_base = ecardm_iomap(ec, ECARD_RES_IOCFAST, 0, 0);
 Index: b/drivers/ide/ide-4drives.c
 ===================================================================
 --- a/drivers/ide/ide-4drives.c
 +++ b/drivers/ide/ide-4drives.c
-@@ -25,6 +25,7 @@ static const struct ide_port_info ide_4d
- 	.port_ops		= &ide_4drives_port_ops,
- 	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_NO_DMA |
- 				  IDE_HFLAG_4DRIVES,
-+	.chipset		= ide_4drives,
- };
- 
+@@ -31,7 +31,7 @@ static const struct ide_port_info ide_4d
  static int __init ide_4drives_init(void)
-@@ -52,7 +53,6 @@ static int __init ide_4drives_init(void)
+ {
+ 	unsigned long base = 0x1f0, ctl = 0x3f6;
+-	hw_regs_t hw, *hws[] = { &hw, &hw };
++	struct ide_hw hw, *hws[] = { &hw, &hw };
  
- 	ide_std_init_ports(&hw, base, ctl);
- 	hw.irq = 14;
--	hw.chipset = ide_4drives;
- 
- 	return ide_host_add(&ide_4drives_port_info, hws, NULL);
- }
+ 	if (probe_4drives == 0)
+ 		return -ENODEV;
 Index: b/drivers/ide/ide-cs.c
 ===================================================================
 --- a/drivers/ide/ide-cs.c
 +++ b/drivers/ide/ide-cs.c
-@@ -155,6 +155,7 @@ static const struct ide_port_info idecs_
- 	.port_ops		= &idecs_port_ops,
- 	.host_flags		= IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-+	.chipset		= ide_pci,
- };
+@@ -164,7 +164,7 @@ static struct ide_host *idecs_register(u
+     struct ide_host *host;
+     ide_hwif_t *hwif;
+     int i, rc;
+-    hw_regs_t hw, *hws[] = { &hw };
++    struct ide_hw hw, *hws[] = { &hw };
  
- static struct ide_host *idecs_register(unsigned long io, unsigned long ctl,
-@@ -181,7 +182,6 @@ static struct ide_host *idecs_register(u
-     memset(&hw, 0, sizeof(hw));
-     ide_std_init_ports(&hw, io, ctl);
-     hw.irq = irq;
--    hw.chipset = ide_pci;
-     hw.dev = &handle->dev;
- 
-     rc = ide_host_add(&idecs_port_info, hws, &host);
+     if (!request_region(io, 8, DRV_NAME)) {
+ 	printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
 Index: b/drivers/ide/ide-generic.c
 ===================================================================
 --- a/drivers/ide/ide-generic.c
 +++ b/drivers/ide/ide-generic.c
-@@ -29,6 +29,7 @@ MODULE_PARM_DESC(probe_mask, "probe mask
+@@ -86,7 +86,7 @@ static void ide_generic_check_pci_legacy
  
- static const struct ide_port_info ide_generic_port_info = {
- 	.host_flags		= IDE_HFLAG_NO_DMA,
-+	.chipset		= ide_generic,
- };
+ static int __init ide_generic_init(void)
+ {
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	unsigned long io_addr;
+ 	int i, rc = 0, primary = 0, secondary = 0;
  
- #ifdef CONFIG_ARM
-@@ -132,8 +133,6 @@ static int __init ide_generic_init(void)
- #else
- 			hw.irq = legacy_irqs[i];
- #endif
--			hw.chipset = ide_generic;
--
- 			rc = ide_host_add(&ide_generic_port_info, hws, NULL);
- 			if (rc) {
- 				release_region(io_addr + 0x206, 1);
 Index: b/drivers/ide/ide-h8300.c
 ===================================================================
 --- a/drivers/ide/ide-h8300.c
 +++ b/drivers/ide/ide-h8300.c
-@@ -73,12 +73,12 @@ static inline void hw_setup(hw_regs_t *h
+@@ -64,11 +64,11 @@ static const struct ide_tp_ops h8300_tp_
+ 
+ #define H8300_IDE_GAP (2)
+ 
+-static inline void hw_setup(hw_regs_t *hw)
++static inline void hw_setup(struct ide_hw *hw)
+ {
+ 	int i;
+ 
+-	memset(hw, 0, sizeof(hw_regs_t));
++	memset(hw, 0, sizeof(*hw));
+ 	for (i = 0; i <= 7; i++)
  		hw->io_ports_array[i] = CONFIG_H8300_IDE_BASE + H8300_IDE_GAP*i;
  	hw->io_ports.ctl_addr = CONFIG_H8300_IDE_ALT;
- 	hw->irq = EXT_IRQ0 + CONFIG_H8300_IDE_IRQ;
--	hw->chipset = ide_generic;
- }
- 
- static const struct ide_port_info h8300_port_info = {
- 	.tp_ops			= &h8300_tp_ops,
- 	.host_flags		= IDE_HFLAG_NO_IO_32BIT | IDE_HFLAG_NO_DMA,
-+	.chipset		= ide_generic,
- };
+@@ -83,7 +83,7 @@ static const struct ide_port_info h8300_
  
  static int __init h8300_ide_init(void)
+ {
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 
+ 	printk(KERN_INFO DRV_NAME ": H8/300 generic IDE interface\n");
+ 
 Index: b/drivers/ide/ide-legacy.c
 ===================================================================
 --- a/drivers/ide/ide-legacy.c
 +++ b/drivers/ide/ide-legacy.c
-@@ -33,7 +33,6 @@ static void ide_legacy_init_one(hw_regs_
+@@ -1,7 +1,7 @@
+ #include <linux/kernel.h>
+ #include <linux/ide.h>
  
- 	ide_std_init_ports(hw, base, ctl);
- 	hw->irq = irq;
--	hw->chipset = d->chipset;
- 	hw->config = config;
+-static void ide_legacy_init_one(hw_regs_t **hws, hw_regs_t *hw,
++static void ide_legacy_init_one(struct ide_hw **hws, struct ide_hw *hw,
+ 				u8 port_no, const struct ide_port_info *d,
+ 				unsigned long config)
+ {
+@@ -40,7 +40,7 @@ static void ide_legacy_init_one(hw_regs_
  
- 	hws[port_no] = hw;
+ int ide_legacy_device_add(const struct ide_port_info *d, unsigned long config)
+ {
+-	hw_regs_t hw[2], *hws[] = { NULL, NULL };
++	struct ide_hw hw[2], *hws[] = { NULL, NULL };
+ 
+ 	memset(&hw, 0, sizeof(hw));
+ 
 Index: b/drivers/ide/ide-pnp.c
 ===================================================================
 --- a/drivers/ide/ide-pnp.c
 +++ b/drivers/ide/ide-pnp.c
-@@ -29,6 +29,7 @@ static struct pnp_device_id idepnp_devic
+@@ -37,7 +37,7 @@ static int idepnp_probe(struct pnp_dev *
+ 	struct ide_host *host;
+ 	unsigned long base, ctl;
+ 	int rc;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
  
- static const struct ide_port_info ide_pnp_port_info = {
- 	.host_flags		= IDE_HFLAG_NO_DMA,
-+	.chipset		= ide_generic,
- };
+ 	printk(KERN_INFO DRV_NAME ": generic PnP IDE interface\n");
  
- static int idepnp_probe(struct pnp_dev *dev, const struct pnp_device_id *dev_id)
-@@ -62,7 +63,6 @@ static int idepnp_probe(struct pnp_dev *
- 	memset(&hw, 0, sizeof(hw));
- 	ide_std_init_ports(&hw, base, ctl);
- 	hw.irq = pnp_irq(dev, 0);
--	hw.chipset = ide_generic;
- 
- 	rc = ide_host_add(&ide_pnp_port_info, hws, &host);
- 	if (rc)
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -1039,8 +1039,7 @@ static void ide_init_port(ide_hwif_t *hw
- {
- 	hwif->channel = port;
+@@ -1164,7 +1164,7 @@ static void ide_init_port_data(ide_hwif_
+ 	ide_port_init_devices_data(hwif);
+ }
  
--	if (d->chipset)
--		hwif->chipset = d->chipset;
-+	hwif->chipset = d->chipset ? d->chipset : ide_pci;
- 
- 	if (d->init_iops)
- 		d->init_iops(hwif);
-@@ -1169,7 +1168,6 @@ static void ide_init_port_hw(ide_hwif_t 
+-static void ide_init_port_hw(ide_hwif_t *hwif, hw_regs_t *hw)
++static void ide_init_port_hw(ide_hwif_t *hwif, struct ide_hw *hw)
  {
  	memcpy(&hwif->io_ports, &hw->io_ports, sizeof(hwif->io_ports));
  	hwif->irq = hw->irq;
--	hwif->chipset = hw->chipset;
- 	hwif->dev = hw->dev;
- 	hwif->gendev.parent = hw->parent ? hw->parent : hw->dev;
- 	hwif->ack_intr = hw->ack_intr;
+@@ -1252,8 +1252,8 @@ out_nomem:
+ 	return -ENOMEM;
+ }
+ 
+-struct ide_host *ide_host_alloc(const struct ide_port_info *d, hw_regs_t **hws,
+-				unsigned int n_ports)
++struct ide_host *ide_host_alloc(const struct ide_port_info *d,
++				struct ide_hw **hws, unsigned int n_ports)
+ {
+ 	struct ide_host *host;
+ 	struct device *dev = hws[0] ? hws[0]->dev : NULL;
+@@ -1340,7 +1340,7 @@ static void ide_disable_port(ide_hwif_t 
+ }
+ 
+ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
+-		      hw_regs_t **hws)
++		      struct ide_hw **hws)
+ {
+ 	ide_hwif_t *hwif, *mate = NULL;
+ 	int i, j = 0;
+@@ -1434,7 +1434,7 @@ int ide_host_register(struct ide_host *h
+ }
+ EXPORT_SYMBOL_GPL(ide_host_register);
+ 
+-int ide_host_add(const struct ide_port_info *d, hw_regs_t **hws,
++int ide_host_add(const struct ide_port_info *d, struct ide_hw **hws,
+ 		 unsigned int n_ports, struct ide_host **hostp)
+ {
+ 	struct ide_host *host;
 Index: b/drivers/ide/ide_platform.c
 ===================================================================
 --- a/drivers/ide/ide_platform.c
 +++ b/drivers/ide/ide_platform.c
-@@ -40,12 +40,11 @@ static void __devinit plat_ide_setup_por
- 	hw->io_ports.ctl_addr = (unsigned long)ctrl;
+@@ -21,7 +21,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/io.h>
  
- 	hw->irq = irq;
--
--	hw->chipset = ide_generic;
- }
+-static void __devinit plat_ide_setup_ports(hw_regs_t *hw,
++static void __devinit plat_ide_setup_ports(struct ide_hw *hw,
+ 					   void __iomem *base,
+ 					   void __iomem *ctrl,
+ 					   struct pata_platform_info *pdata,
+@@ -54,7 +54,7 @@ static int __devinit plat_ide_probe(stru
+ 	struct pata_platform_info *pdata;
+ 	struct ide_host *host;
+ 	int ret = 0, mmio = 0;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_port_info d = platform_ide_port_info;
  
- static const struct ide_port_info platform_ide_port_info = {
- 	.host_flags		= IDE_HFLAG_NO_DMA,
-+	.chipset		= ide_generic,
- };
- 
- static int __devinit plat_ide_probe(struct platform_device *pdev)
+ 	pdata = pdev->dev.platform_data;
 Index: b/drivers/ide/macide.c
 ===================================================================
 --- a/drivers/ide/macide.c
 +++ b/drivers/ide/macide.c
-@@ -76,13 +76,12 @@ static void __init macide_setup_ports(hw
- 
- 	hw->irq = irq;
- 	hw->ack_intr = ack_intr;
--
--	hw->chipset = ide_generic;
+@@ -62,7 +62,7 @@ int macide_ack_intr(ide_hwif_t* hwif)
+ 	return 0;
  }
  
- static const struct ide_port_info macide_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-+	.chipset		= ide_generic,
- };
+-static void __init macide_setup_ports(hw_regs_t *hw, unsigned long base,
++static void __init macide_setup_ports(struct ide_hw *hw, unsigned long base,
+ 				      int irq, ide_ack_intr_t *ack_intr)
+ {
+ 	int i;
+@@ -96,7 +96,7 @@ static int __init macide_init(void)
+ 	ide_ack_intr_t *ack_intr;
+ 	unsigned long base;
+ 	int irq;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
  
- static const char *mac_ide_name[] =
+ 	if (!MACH_IS_MAC)
+ 		return -ENODEV;
 Index: b/drivers/ide/palm_bk3710.c
 ===================================================================
 --- a/drivers/ide/palm_bk3710.c
 +++ b/drivers/ide/palm_bk3710.c
-@@ -306,6 +306,7 @@ static struct ide_port_info __devinitdat
- 	.host_flags		= IDE_HFLAG_MMIO,
- 	.pio_mask		= ATA_PIO4,
- 	.mwdma_mask		= ATA_MWDMA2,
-+	.chipset		= ide_palm3710,
- };
+@@ -316,7 +316,7 @@ static int __init palm_bk3710_probe(stru
+ 	void __iomem *base;
+ 	unsigned long rate, mem_size;
+ 	int i, rc;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
  
- static int __init palm_bk3710_probe(struct platform_device *pdev)
-@@ -363,7 +364,6 @@ static int __init palm_bk3710_probe(stru
- 			(base + IDE_PALM_ATA_PRI_CTL_OFFSET);
- 	hw.irq = irq->start;
- 	hw.dev = &pdev->dev;
--	hw.chipset = ide_palm3710;
+ 	clk = clk_get(&pdev->dev, "IDECLK");
+ 	if (IS_ERR(clk))
+Index: b/drivers/ide/pmac.c
+===================================================================
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1023,13 +1023,14 @@ static const struct ide_port_info pmac_p
+  * Setup, register & probe an IDE channel driven by this driver, this is
+  * called by one of the 2 probe functions (macio or PCI).
+  */
+-static int __devinit pmac_ide_setup_device(pmac_ide_hwif_t *pmif, hw_regs_t *hw)
++static int __devinit pmac_ide_setup_device(pmac_ide_hwif_t *pmif,
++					   struct ide_hw *hw)
+ {
+ 	struct device_node *np = pmif->node;
+ 	const int *bidp;
+ 	struct ide_host *host;
+ 	ide_hwif_t *hwif;
+-	hw_regs_t *hws[] = { hw };
++	struct ide_hw *hws[] = { hw };
+ 	struct ide_port_info d = pmac_port_info;
+ 	int rc;
  
- 	palm_bk3710_port_info.udma_mask = rate < 100000000 ? ATA_UDMA4 :
- 							     ATA_UDMA5;
+@@ -1124,7 +1125,7 @@ static int __devinit pmac_ide_setup_devi
+ 	return 0;
+ }
+ 
+-static void __devinit pmac_ide_init_ports(hw_regs_t *hw, unsigned long base)
++static void __devinit pmac_ide_init_ports(struct ide_hw *hw, unsigned long base)
+ {
+ 	int i;
+ 
+@@ -1144,7 +1145,7 @@ pmac_ide_macio_attach(struct macio_dev *
+ 	unsigned long regbase;
+ 	pmac_ide_hwif_t *pmif;
+ 	int irq, rc;
+-	hw_regs_t hw;
++	struct ide_hw hw;
+ 
+ 	pmif = kzalloc(sizeof(*pmif), GFP_KERNEL);
+ 	if (pmif == NULL)
+@@ -1268,7 +1269,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
+ 	void __iomem *base;
+ 	unsigned long rbase, rlen;
+ 	int rc;
+-	hw_regs_t hw;
++	struct ide_hw hw;
+ 
+ 	np = pci_device_to_OF_node(pdev);
+ 	if (np == NULL) {
 Index: b/drivers/ide/q40ide.c
 ===================================================================
 --- a/drivers/ide/q40ide.c
 +++ b/drivers/ide/q40ide.c
-@@ -70,8 +70,6 @@ static void q40_ide_setup_ports(hw_regs_
+@@ -51,11 +51,11 @@ static int q40ide_default_irq(unsigned l
+ /*
+  * Addresses are pretranslated for Q40 ISA access.
+  */
+-static void q40_ide_setup_ports(hw_regs_t *hw, unsigned long base,
++static void q40_ide_setup_ports(struct ide_hw *hw, unsigned long base,
+ 			ide_ack_intr_t *ack_intr,
+ 			int irq)
+ {
+-	memset(hw, 0, sizeof(hw_regs_t));
++	memset(hw, 0, sizeof(*hw));
+ 	/* BIG FAT WARNING: 
+ 	   assumption: only DATA port is ever used in 16 bit mode */
+ 	hw->io_ports.data_addr = Q40_ISA_IO_W(base);
+@@ -135,7 +135,7 @@ static const char *q40_ide_names[Q40IDE_
+ static int __init q40ide_init(void)
+ {
+     int i;
+-    hw_regs_t hw[Q40IDE_NUM_HWIFS], *hws[] = { NULL, NULL };
++    struct ide_hw hw[Q40IDE_NUM_HWIFS], *hws[] = { NULL, NULL };
  
- 	hw->irq = irq;
- 	hw->ack_intr = ack_intr;
--
--	hw->chipset = ide_generic;
- }
- 
- static void q40ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
-@@ -119,6 +117,7 @@ static const struct ide_port_info q40ide
- 	.tp_ops			= &q40ide_tp_ops,
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-+	.chipset		= ide_generic,
- };
- 
- /* 
+     if (!MACH_IS_Q40)
+       return -ENODEV;
 Index: b/drivers/ide/rapide.c
 ===================================================================
 --- a/drivers/ide/rapide.c
 +++ b/drivers/ide/rapide.c
-@@ -13,6 +13,7 @@
- 
- static const struct ide_port_info rapide_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
-+	.chipset		= ide_generic,
+@@ -16,7 +16,7 @@ static const struct ide_port_info rapide
+ 	.chipset		= ide_generic,
  };
  
- static void rapide_setup_ports(hw_regs_t *hw, void __iomem *base,
-@@ -49,7 +50,6 @@ rapide_probe(struct expansion_card *ec, 
+-static void rapide_setup_ports(hw_regs_t *hw, void __iomem *base,
++static void rapide_setup_ports(struct ide_hw *hw, void __iomem *base,
+ 			       void __iomem *ctrl, unsigned int sz, int irq)
+ {
+ 	unsigned long port = (unsigned long)base;
+@@ -36,7 +36,7 @@ rapide_probe(struct expansion_card *ec, 
+ 	void __iomem *base;
+ 	struct ide_host *host;
+ 	int ret;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
  
- 	memset(&hw, 0, sizeof(hw));
- 	rapide_setup_ports(&hw, base, base + 0x818, 1 << 6, ec->irq);
--	hw.chipset = ide_generic;
- 	hw.dev = &ec->dev;
- 
- 	ret = ide_host_add(&rapide_port_info, hws, &host);
+ 	ret = ecard_request_resources(ec);
+ 	if (ret)
 Index: b/drivers/ide/scc_pata.c
 ===================================================================
 --- a/drivers/ide/scc_pata.c
 +++ b/drivers/ide/scc_pata.c
-@@ -567,7 +567,6 @@ static int scc_ide_setup_pci_device(stru
- 		hw.io_ports_array[i] = ports->dma + 0x20 + i * 4;
- 	hw.irq = dev->irq;
- 	hw.dev = &dev->dev;
--	hw.chipset = ide_pci;
+@@ -559,7 +559,7 @@ static int scc_ide_setup_pci_device(stru
+ {
+ 	struct scc_ports *ports = pci_get_drvdata(dev);
+ 	struct ide_host *host;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	int i, rc;
  
- 	rc = ide_host_add(d, hws, &host);
- 	if (rc)
-@@ -823,6 +822,7 @@ static const struct ide_port_info scc_ch
- 	.host_flags	= IDE_HFLAG_SINGLE,
- 	.irq_flags	= IRQF_SHARED,
- 	.pio_mask	= ATA_PIO4,
-+	.chipset	= ide_pci,
- };
- 
- /**
+ 	memset(&hw, 0, sizeof(hw));
 Index: b/drivers/ide/setup-pci.c
 ===================================================================
 --- a/drivers/ide/setup-pci.c
 +++ b/drivers/ide/setup-pci.c
-@@ -344,7 +344,6 @@ static int ide_hw_configure(struct pci_d
+@@ -301,11 +301,11 @@ static int ide_pci_check_iomem(struct pc
+ }
  
- 	memset(hw, 0, sizeof(*hw));
- 	hw->dev = &dev->dev;
--	hw->chipset = d->chipset ? d->chipset : ide_pci;
- 	ide_std_init_ports(hw, base, ctl | 2);
+ /**
+- *	ide_hw_configure	-	configure a hw_regs_t instance
++ *	ide_hw_configure	-	configure a struct ide_hw instance
+  *	@dev: PCI device holding interface
+  *	@d: IDE port info
+  *	@port: port number
+- *	@hw: hw_regs_t instance corresponding to this port
++ *	@hw: struct ide_hw instance corresponding to this port
+  *
+  *	Perform the initial set up for the hardware interface structure. This
+  *	is done per interface port rather than per PCI device. There may be
+@@ -315,7 +315,7 @@ static int ide_pci_check_iomem(struct pc
+  */
  
- 	return 0;
+ static int ide_hw_configure(struct pci_dev *dev, const struct ide_port_info *d,
+-			    unsigned int port, hw_regs_t *hw)
++			    unsigned int port, struct ide_hw *hw)
+ {
+ 	unsigned long ctl = 0, base = 0;
+ 
+@@ -445,8 +445,8 @@ out:
+  *	ide_pci_setup_ports	-	configure ports/devices on PCI IDE
+  *	@dev: PCI device
+  *	@d: IDE port info
+- *	@hw: hw_regs_t instances corresponding to this PCI IDE device
+- *	@hws: hw_regs_t pointers table to update
++ *	@hw: struct ide_hw instances corresponding to this PCI IDE device
++ *	@hws: struct ide_hw pointers table to update
+  *
+  *	Scan the interfaces attached to this device and do any
+  *	necessary per port setup. Attach the devices and ask the
+@@ -458,7 +458,7 @@ out:
+  */
+ 
+ void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d,
+-			 hw_regs_t *hw, hw_regs_t **hws)
++			 struct ide_hw *hw, struct ide_hw **hws)
+ {
+ 	int channels = (d->host_flags & IDE_HFLAG_SINGLE) ? 1 : 2, port;
+ 	u8 tmp;
+@@ -538,7 +538,7 @@ int ide_pci_init_one(struct pci_dev *dev
+ 		     void *priv)
+ {
+ 	struct ide_host *host;
+-	hw_regs_t hw[2], *hws[] = { NULL, NULL };
++	struct ide_hw hw[2], *hws[] = { NULL, NULL };
+ 	int ret;
+ 
+ 	ret = ide_setup_pci_controller(dev, d, 1);
+@@ -586,7 +586,7 @@ int ide_pci_init_two(struct pci_dev *dev
+ 	struct pci_dev *pdev[] = { dev1, dev2 };
+ 	struct ide_host *host;
+ 	int ret, i;
+-	hw_regs_t hw[4], *hws[] = { NULL, NULL, NULL, NULL };
++	struct ide_hw hw[4], *hws[] = { NULL, NULL, NULL, NULL };
+ 
+ 	for (i = 0; i < 2; i++) {
+ 		ret = ide_setup_pci_controller(pdev[i], d, !i);
 Index: b/drivers/ide/sgiioc4.c
 ===================================================================
 --- a/drivers/ide/sgiioc4.c
 +++ b/drivers/ide/sgiioc4.c
-@@ -575,7 +575,6 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	memset(&hw, 0, sizeof(hw));
- 	sgiioc4_init_hwif_ports(&hw, cmd_base, ctl, irqport);
- 	hw.irq = dev->irq;
--	hw.chipset = ide_pci;
- 	hw.dev = &dev->dev;
+@@ -91,7 +91,7 @@ typedef struct {
  
- 	/* Initializing chipset IRQ Registers */
+ 
+ static void
+-sgiioc4_init_hwif_ports(hw_regs_t * hw, unsigned long data_port,
++sgiioc4_init_hwif_ports(struct ide_hw *hw, unsigned long data_port,
+ 			unsigned long ctrl_port, unsigned long irq_port)
+ {
+ 	unsigned long reg = data_port;
+@@ -546,7 +546,7 @@ sgiioc4_ide_setup_pci_device(struct pci_
+ 	unsigned long cmd_base, irqport;
+ 	unsigned long bar0, cmd_phys_base, ctl;
+ 	void __iomem *virt_base;
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	int rc;
+ 
+ 	/*  Get the CmdBlk and CtrlBlk Base Registers */
+Index: b/drivers/ide/tx4938ide.c
+===================================================================
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -130,7 +130,7 @@ static const struct ide_port_info tx4938
+ 
+ static int __init tx4938ide_probe(struct platform_device *pdev)
+ {
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_host *host;
+ 	struct resource *res;
+ 	struct tx4938ide_platform_info *pdata = pdev->dev.platform_data;
+Index: b/drivers/ide/tx4939ide.c
+===================================================================
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -537,7 +537,7 @@ static const struct ide_port_info tx4939
+ 
+ static int __init tx4939ide_probe(struct platform_device *pdev)
+ {
+-	hw_regs_t hw, *hws[] = { &hw };
++	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_host *host;
+ 	struct resource *res;
+ 	int irq, ret;
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -186,7 +186,6 @@ typedef struct hw_regs_s {
- 
- 	int		irq;			/* our irq number */
+@@ -178,7 +178,7 @@ typedef u8 hwif_chipset_t;
+ /*
+  * Structure to hold all information about the location of this port
+  */
+-typedef struct hw_regs_s {
++struct ide_hw {
+ 	union {
+ 		struct ide_io_ports	io_ports;
+ 		unsigned long		io_ports_array[IDE_NR_PORTS];
+@@ -188,9 +188,9 @@ typedef struct hw_regs_s {
  	ide_ack_intr_t	*ack_intr;		/* acknowledge interrupt */
--	hwif_chipset_t  chipset;
  	struct device	*dev, *parent;
  	unsigned long	config;
- } hw_regs_t;
+-} hw_regs_t;
++};
+ 
+-static inline void ide_std_init_ports(hw_regs_t *hw,
++static inline void ide_std_init_ports(struct ide_hw *hw,
+ 				      unsigned long io_addr,
+ 				      unsigned long ctl_addr)
+ {
+@@ -1212,7 +1212,7 @@ static inline int ide_pci_is_in_compatib
+ }
+ 
+ void ide_pci_setup_ports(struct pci_dev *, const struct ide_port_info *,
+-			 hw_regs_t *, hw_regs_t **);
++			 struct ide_hw *, struct ide_hw **);
+ void ide_setup_pci_noise(struct pci_dev *, const struct ide_port_info *);
+ 
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+@@ -1456,12 +1456,12 @@ void ide_undecoded_slave(ide_drive_t *);
+ void ide_port_apply_params(ide_hwif_t *);
+ int ide_sysfs_register_port(ide_hwif_t *);
+ 
+-struct ide_host *ide_host_alloc(const struct ide_port_info *, hw_regs_t **,
++struct ide_host *ide_host_alloc(const struct ide_port_info *, struct ide_hw **,
+ 				unsigned int);
+ void ide_host_free(struct ide_host *);
+ int ide_host_register(struct ide_host *, const struct ide_port_info *,
+-		      hw_regs_t **);
+-int ide_host_add(const struct ide_port_info *, hw_regs_t **, unsigned int,
++		      struct ide_hw **);
++int ide_host_add(const struct ide_port_info *, struct ide_hw **, unsigned int,
+ 		 struct ide_host **);
+ void ide_host_remove(struct ide_host *);
+ int ide_legacy_device_add(const struct ide_port_info *, unsigned long);
