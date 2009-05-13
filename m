@@ -1,45 +1,49 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 3/7] ide: merge ide_disk_special() into do_special()
-Date: Wed, 13 May 2009 13:55:02 -0700
-Message-ID: <1242248102.4639.17.camel@Joe-AcerAspire>
-References: <20090513205139.28638.87226.sendpatchset@localhost.localdomain>
-	 <20090513205200.28638.90827.sendpatchset@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: [PATCH] sata_fsl: Fix compile warnings
+Date: Wed, 13 May 2009 16:12:11 -0500
+Message-ID: <1242249131-25014-1-git-send-email-galak@kernel.crashing.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:3073 "EHLO
-	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312AbZEMUzG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 16:55:06 -0400
-In-Reply-To: <20090513205200.28638.90827.sendpatchset@localhost.localdomain>
+Received: from gate.crashing.org ([63.228.1.57]:35107 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753234AbZEMVNN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 May 2009 17:13:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On Wed, 2009-05-13 at 22:52 +0200, Bartlomiej Zolnierkiewicz wrote:
-> While at it:
-> - change debug printk() level to KERN_DEBUG
-> - update documentation
-> 
-> There should be no functional changes caused by this patch.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-io.c |   44 ++++++++++++++++++--------------------------
->  1 file changed, 18 insertions(+), 26 deletions(-)
-> 
-> Index: b/drivers/ide/ide-io.c
-> ===================================================================
-> --- a/drivers/ide/ide-io.c
-> +++ b/drivers/ide/ide-io.c
-> @@ -184,11 +184,28 @@ static void ide_tf_set_setmult_cmd(ide_d
-[]
-> +#ifdef DEBUG
-> +	printk(KERN_DEBUG "%s: %s: 0x%02x\n", drive->name, s->all);
-> +#endif
+We we build with dma_addr_t as a 64-bit quantity we get:
 
-pr_debug?
+drivers/ata/sata_fsl.c: In function 'sata_fsl_fill_sg':
+drivers/ata/sata_fsl.c:340: warning: format '%x' expects type 'unsigned int', but argument 4 has type 'dma_addr_t'
 
+Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
+---
+ drivers/ata/sata_fsl.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index c2e90e1..c7ee52d 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -332,13 +332,14 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+ 		dma_addr_t sg_addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
+ 
+-		VPRINTK("SATA FSL : fill_sg, sg_addr = 0x%x, sg_len = %d\n",
+-			sg_addr, sg_len);
++		VPRINTK("SATA FSL : fill_sg, sg_addr = 0x%llx, sg_len = %d\n",
++			(unsigned long long)sg_addr, sg_len);
+ 
+ 		/* warn if each s/g element is not dword aligned */
+ 		if (sg_addr & 0x03)
+ 			ata_port_printk(qc->ap, KERN_ERR,
+-					"s/g addr unaligned : 0x%x\n", sg_addr);
++					"s/g addr unaligned : 0x%llxx\n", 
++					(unsigned long long)sg_addr);
+ 		if (sg_len & 0x03)
+ 			ata_port_printk(qc->ap, KERN_ERR,
+ 					"s/g len unaligned : 0x%x\n", sg_len);
+-- 
+1.6.0.6
 
