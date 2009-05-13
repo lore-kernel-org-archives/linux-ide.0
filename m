@@ -1,48 +1,34 @@
-From: Andy Isaacson <adi@hexapodia.org>
-Subject: Re: [2.6.30-rc2] CD-R: wodim intermittent failures: [sr0] Add. Sense: Logical block address out of range, sector 0
-Date: Tue, 12 May 2009 19:27:23 -0700
-Message-ID: <20090513022723.GU21505@hexapodia.org>
-References: <20090421015234.GA7014@hexapodia.org> <20090422144904.407df635.akpm@linux-foundation.org> <49F00EBB.7040504@gmail.com> <20090423070713.GF19113@hexapodia.org> <20090512215256.GA22095@hexapodia.org> <4A0A050D.4000804@gmail.com> <20090513010056.GT21505@hexapodia.org> <51f3faa70905121808x29c12a35n6905104f45883f17@mail.gmail.com>
+From: Brad Boyer <flar@allandria.com>
+Subject: Re: [PATCH] ata: libata depends on HAS_DMA
+Date: Tue, 12 May 2009 20:30:27 -0700
+Message-ID: <20090513033027.GA13193@cynthia.pants.nu>
+References: <20090511222702.352192505@arndb.de> <200905112238.55404.arnd@arndb.de> <20090512090602.65722342@lxorguk.ukuu.org.uk> <200905121123.21436.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from straum.hexapodia.org ([64.81.70.185]:38560 "EHLO
-	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382AbZEMC1X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 May 2009 22:27:23 -0400
+Return-path: <linux-m68k-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <51f3faa70905121808x29c12a35n6905104f45883f17@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <200905121123.21436.arnd@arndb.de>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@lists.linux-m68k.org, ysato@users.sourceforge.jp
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, May 12, 2009 at 07:08:54PM -0600, Robert Hancock wrote:
-> On Tue, May 12, 2009 at 7:00 PM, Andy Isaacson <adi@hexapodia.org> wrote:
-> > Perhaps, I haven't tracked down exactly what the difference in behavior
-> > between working 2.6.29 and broken 2.6.30-rc2 is. ?It seems like the disk
-> > spins up more often (in response to hal background probes presumably)
-> > with 30-rc2 than it did before, and running "udevadm monitor" I do see
-> > the following repeated "change" events happening, even on an idle
-> > system:
-> >
-> > KERNEL[1242175547.793029] change ? /devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0 (scsi)
-> > KERNEL[1242175547.794669] change ? /devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0/block/sr0 (block)
-[snip]
-> Those events seem rather suspicious. Hmm:
+On Tue, May 12, 2009 at 11:23:20AM +0200, Arnd Bergmann wrote:
+> Currently, the only architectures that don't set HAS_DMA are h8300, m32r
+> m68k (except SUN3 and Coldfire), microblaze and s390.
+> s390 will never get it, microblaze is currently implementing dma-mapping.h.
 > 
-> [    2.770959] ata2.00: ATAPI: TSSTcorp DVD+/-RW TS-U633A, D200, max
-> UDMA/100, ATAPI AN
+> The other three are still using drivers/ide instead of drivers/ata.
 > 
-> Did libata report it was using ATAPI AN in 2.6.29?
+> One way to fix this would be to implement dma-mapping.h in h8300, m32r and
+> m68k and leave !HAS_DMA as the obscure s390 case (this one already can't
+> use ATA because of !HAS_MMIO).
 
-Yes, AN is present in every log I have for that device (back to
-2.6.28.1).
+If I'm reading the m68k code correctly, SUN3 is the one that doesn't have
+DMA. It is implemented on any m68k with a standard Motorola MMU. It might
+be possible to get the DMA code working on a sun3, but I doubt they ever
+have IDE hardware.
 
-> You could try bisecting to see if you can find which patch started
-> triggering those spurious events..
+	Brad Boyer
+	flar@allandria.com
 
-Heh, I was dreading a bisect where each step burned a coaster, but just
-looking for events is easy.  I'll try that tomorrow.
-
--andy
