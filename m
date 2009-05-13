@@ -1,17 +1,17 @@
 From: David Milburn <dmilburn@redhat.com>
 Subject: Re: [PATCH #sx4] sata_sx4: fixup interrupt handling
-Date: Wed, 13 May 2009 18:39:38 -0500
-Message-ID: <4A0B5A3A.4050705@redhat.com>
-References: <20090513230221.GB5863@dhcp-210.hsv.redhat.com> <4A0B572B.7040302@garzik.org>
+Date: Wed, 13 May 2009 18:42:51 -0500
+Message-ID: <4A0B5AFB.1050705@redhat.com>
+References: <20090513230221.GB5863@dhcp-210.hsv.redhat.com> <4A0B5768.7000309@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42913 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:52111 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755258AbZEMXl1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 May 2009 19:41:27 -0400
-In-Reply-To: <4A0B572B.7040302@garzik.org>
+	id S1751113AbZEMXoi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 May 2009 19:44:38 -0400
+In-Reply-To: <4A0B5768.7000309@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
@@ -42,17 +42,22 @@ Jeff Garzik wrote:
 >>  drivers/ata/sata_sx4.c |   22 +++++++++-------------
 >>  1 files changed, 9 insertions(+), 13 deletions(-)
 > 
-> Good spotting...
-> 
-> Is this on top of #sx4 or upstream?
-> 
+> Oh, and:  does vanilla upstream sata_sx4 work at all?
 
-Jeff, this is on top of #sx4 branch.
+I know it was not working on 2.6.29.2, I will try a more recent
+kernel with and without the patch.
 
 Thanks,
 David
 
+> 
+> If not, that would justify fast-forwarding the #sx4 branch into 2.6.30 
+> (with your fixes, obviously)...
+> 
+> Thanks,
+> 
 >     Jeff
+> 
 > 
 > 
 > 
