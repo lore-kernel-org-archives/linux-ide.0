@@ -1,45 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Help with SATA driver/libata/SCSI subsystem
-Date: Wed, 13 May 2009 15:36:31 -0400
-Message-ID: <4A0B213F.2060900@garzik.org>
-References: <SNT104-W6340D4A4CFCC4D6DEF1140BB610@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 0/7] ide: minor improvements/cleanups
+Date: Wed, 13 May 2009 22:51:39 +0200
+Message-ID: <20090513205139.28638.87226.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57298 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751331AbZEMTgd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 May 2009 15:36:33 -0400
-In-Reply-To: <SNT104-W6340D4A4CFCC4D6DEF1140BB610@phx.gbl>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:57965 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbZEMUrJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 16:47:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: C Z <cziom2523@hotmail.com>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
-
-C Z wrote:
-> I am attempting to write a SATA driver under libata for a custom core on a Microblaze Xilinx FPGA. I can not get ata_device_add() in drivers/ata/libata-core.c to return successfully.
-> 
-> I have tracked the immediate problem to the function scsi_eh_flush_done_q() in drivers/scsi/scsi_error.c. The problem is this function calls "list_for_each_entry_safe(scmd, next, done_q, eh_entry)". Unfortunately, this returns the result scmd = 0xFFFFFFF0. This very strange address is the result of containerof() being called on a NULL pointer. The NULL pointer is the done_q list head. This is clearly wrong.
-> 
-> I have 2 questions. First, why is libata invoking the error handler after a probe in ata_device_add? This seems very counter intuitive to me. It isn't at all clear why libata needs to do this. Can someone explain the rationale behind this function?
-> 
-> Second, and more importantly, can someone who is experienced with this subsystem explain in simple terms the call flow that happens in the function ata_device_add? I am having trouble understanding which procedure should have issued a command and set up the done_q list head. Therefore I don't know how to track this problem further. Indeed, it doesn't appear to me that anyone actually issues a command during the probe. I'm guessing it was supposed to have been done somewhere, but where/in what function should I start looking? What was the command supposed to have been?
-> 
-> I am using an old kernel version 2.6.20, however I don't believe these subsystems have changed substantially since then.
-> 
-> Any assistance or advice from someone who has dealth with this area of the kernel before is appreciated.
-
-Please cc linux-ide@vger.kernel.org, and turn on word wrapping in your 
-email.
-
-Please also use an updated kernel, libata has changed substantially 
-since 2.6.20.
-
-Hardware drivers do not invoke ata_device_add() [which does not exist 
-anymore], so it sounds like you are doing something really wrong...
-
-	Jeff
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 
+On top of for-next branch of ide-2.6.git tree.
 
+* BUG() on impossible conditions
+* make ide_host_{alloc,add}() API less magic
+* remove 'chipset' field from hw_regs_t
+* remove few typedefs
+
+diffstat:
+ drivers/ide/at91_ide.c     |    7 +---
+ drivers/ide/au1xxx-ide.c   |    8 ++---
+ drivers/ide/buddha.c       |    9 ++---
+ drivers/ide/cmd640.c       |    7 +---
+ drivers/ide/cs5520.c       |    4 +-
+ drivers/ide/delkin_cb.c    |    6 +--
+ drivers/ide/falconide.c    |    9 ++---
+ drivers/ide/gayle.c        |    9 ++---
+ drivers/ide/icside.c       |   13 ++++----
+ drivers/ide/ide-4drives.c  |    6 +--
+ drivers/ide/ide-cd.c       |    8 +----
+ drivers/ide/ide-cs.c       |    6 +--
+ drivers/ide/ide-disk.c     |   13 +-------
+ drivers/ide/ide-eh.c       |    9 ++---
+ drivers/ide/ide-floppy.c   |    6 +--
+ drivers/ide/ide-generic.c  |    7 +---
+ drivers/ide/ide-h8300.c    |   10 +++---
+ drivers/ide/ide-io.c       |   69 ++++++++++++++++++---------------------------
+ drivers/ide/ide-legacy.c   |    7 +---
+ drivers/ide/ide-pnp.c      |    6 +--
+ drivers/ide/ide-probe.c    |   25 +++++++---------
+ drivers/ide/ide-tape.c     |   10 ------
+ drivers/ide/ide-taskfile.c |    2 -
+ drivers/ide/ide_platform.c |    9 ++---
+ drivers/ide/macide.c       |    9 ++---
+ drivers/ide/palm_bk3710.c  |    6 +--
+ drivers/ide/pmac.c         |   13 ++++----
+ drivers/ide/q40ide.c       |   11 +++----
+ drivers/ide/rapide.c       |    8 ++---
+ drivers/ide/scc_pata.c     |    6 +--
+ drivers/ide/setup-pci.c    |   21 ++++++-------
+ drivers/ide/sgiioc4.c      |    7 +---
+ drivers/ide/siimage.c      |    4 +-
+ drivers/ide/tx4938ide.c    |    5 +--
+ drivers/ide/tx4939ide.c    |    5 +--
+ include/linux/ide.h        |   37 +++++++++---------------
+ 36 files changed, 171 insertions(+), 226 deletions(-)
