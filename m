@@ -1,65 +1,110 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13286] dma_timer_expiry: DMA status (0x21)
-Date: Wed, 13 May 2009 13:28:55 GMT
-Message-ID: <200905131328.n4DDSt3T009249@demeter.kernel.org>
-References: <bug-13286-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: Use IGN_SIMPLEX for ALi
+Date: Wed, 13 May 2009 15:32:38 +0200
+Message-ID: <200905131532.38811.bzolnier@gmail.com>
+References: <20090513135855.11205.36917.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36705 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009AbZEMN2z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 09:28:55 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4DDStOC009250
-	for <linux-ide@vger.kernel.org>; Wed, 13 May 2009 13:28:55 GMT
-In-Reply-To: <bug-13286-11633@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:56007 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382AbZEMN2y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 09:28:54 -0400
+Received: by bwz22 with SMTP id 22so644855bwz.37
+        for <linux-ide@vger.kernel.org>; Wed, 13 May 2009 06:28:53 -0700 (PDT)
+In-Reply-To: <20090513135855.11205.36917.stgit@t61.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13286
+On Wednesday 13 May 2009 15:59:09 Alan Cox wrote:
+> From: Alan Cox <alan@linux.intel.com>
+> 
+> Some ALi devices report simplex if they have been disabled and re-enabled, and
+> restoring the byte does not work. Ignore it - the needed supporting logic is
+> already present for the SATA ULi ports.
+> 
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
+ACK, the original driver has always ignored simplex
 
+[ Sigh, this issue seems to go back to:
 
+  commit 669a5db411d85a14f86cd92bc16bf7ab5b8aa235
+  Author: Jeff Garzik <jeff@garzik.org>
+  Date:   Tue Aug 29 18:12:40 2006 -0400
 
+    [libata] Add a bunch of PATA drivers. ]
 
---- Comment #3 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-05-13 13:28:55 ---
-On Wednesday 13 May 2009 09:58:49 bugzilla-daemon@bugzilla.kernel.org wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=13286
+> ---
+> 
+>  drivers/ata/pata_ali.c |   17 +++++++++++------
+>  1 files changed, 11 insertions(+), 6 deletions(-)
 > 
 > 
-> 
-> 
-> 
-> --- Comment #2 from fibre_optic@go2.pl  2009-05-13 07:58:48 ---
-> "Does 2.6.27.21 use DMA?"
-> 
-> I will check it today evening.
-> 
-> "Is this system equipped with on-board IDE->CF adapter,
-> or is it an add-on one?"
-> 
-> It is an additional hardware. The hardwer is connected to mother board (IDE
-> ifc) and CF-CARD is inserted in a slot on the hardware.
-
-Ok.
-
-> "Does this adapter support DMA at the hardware level
-> (some adapters don't have DMA lines)?"
-> 
-> Take a look belllow, is it what you need?
-> 
-> # hdparm  -i /dev/hda
-
-We know that the device supports DMA but we don't know
-about the adapter.
-
-Unfortunately there is no software method to check it so
-you need to look at PCB and verify if there are any routes
-connected to pins 21 and 29 (DMARQ and -DMACK lines).
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+> diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+> index 751b7ea..fc9c5d6 100644
+> --- a/drivers/ata/pata_ali.c
+> +++ b/drivers/ata/pata_ali.c
+> @@ -497,14 +497,16 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	};
+>  	/* Revision 0x20 added DMA */
+>  	static const struct ata_port_info info_20 = {
+> -		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
+> +		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
+> +							ATA_FLAG_IGN_SIMPLEX,
+>  		.pio_mask = ATA_PIO4,
+>  		.mwdma_mask = ATA_MWDMA2,
+>  		.port_ops = &ali_20_port_ops
+>  	};
+>  	/* Revision 0x20 with support logic added UDMA */
+>  	static const struct ata_port_info info_20_udma = {
+> -		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
+> +		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
+> +							ATA_FLAG_IGN_SIMPLEX,
+>  		.pio_mask = ATA_PIO4,
+>  		.mwdma_mask = ATA_MWDMA2,
+>  		.udma_mask = ATA_UDMA2,
+> @@ -512,7 +514,8 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	};
+>  	/* Revision 0xC2 adds UDMA66 */
+>  	static const struct ata_port_info info_c2 = {
+> -		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
+> +		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
+> +							ATA_FLAG_IGN_SIMPLEX,
+>  		.pio_mask = ATA_PIO4,
+>  		.mwdma_mask = ATA_MWDMA2,
+>  		.udma_mask = ATA_UDMA4,
+> @@ -520,7 +523,8 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	};
+>  	/* Revision 0xC3 is UDMA66 for now */
+>  	static const struct ata_port_info info_c3 = {
+> -		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
+> +		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
+> +							ATA_FLAG_IGN_SIMPLEX,
+>  		.pio_mask = ATA_PIO4,
+>  		.mwdma_mask = ATA_MWDMA2,
+>  		.udma_mask = ATA_UDMA4,
+> @@ -528,7 +532,8 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	};
+>  	/* Revision 0xC4 is UDMA100 */
+>  	static const struct ata_port_info info_c4 = {
+> -		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
+> +		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
+> +							ATA_FLAG_IGN_SIMPLEX,
+>  		.pio_mask = ATA_PIO4,
+>  		.mwdma_mask = ATA_MWDMA2,
+>  		.udma_mask = ATA_UDMA5,
+> @@ -536,7 +541,7 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	};
+>  	/* Revision 0xC5 is UDMA133 with LBA48 DMA */
+>  	static const struct ata_port_info info_c5 = {
+> -		.flags = ATA_FLAG_SLAVE_POSS,
+> +		.flags = ATA_FLAG_SLAVE_POSS | 	ATA_FLAG_IGN_SIMPLEX,
+>  		.pio_mask = ATA_PIO4,
+>  		.mwdma_mask = ATA_MWDMA2,
+>  		.udma_mask = ATA_UDMA6,
