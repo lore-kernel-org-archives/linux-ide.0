@@ -1,94 +1,36 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH 1/2] libata: Use IGN_SIMPLEX for ALi
-Date: Wed, 13 May 2009 15:02:27 +0100
-Message-ID: <20090513140201.11247.76226.stgit@t61.ukuu.org.uk>
-References: <20090513135941.11247.13097.stgit@t61.ukuu.org.uk>
+Subject: [PATCH 0/2] Series short description
+Date: Wed, 13 May 2009 15:01:56 +0100
+Message-ID: <20090513135941.11247.13097.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38132 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38131 "EHLO
 	t61.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755787AbZEMNEQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 09:04:16 -0400
-In-Reply-To: <20090513135941.11247.13097.stgit@t61.ukuu.org.uk>
+	with ESMTP id S1759335AbZEMNDk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2009 09:03:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 
-From: Alan Cox <alan@linux.intel.com>
-
-Some ALi devices report simplex if they have been disabled and re-enabled, and
-restoring the byte does not work. Ignore it - the needed supporting logic is
-already present for the SATA ULi ports.
-
-Signed-off-by: Alan Cox <alan@linux.intel.com>
+Couple more little ATA patches. The ALi one would be good to get upstream
+ASAP, the other is a performance item.
 ---
 
+Alan Cox (1):
+      libata: Use IGN_SIMPLEX for ALi
+
+Arjan van de Ven (1):
+      ata_piix: Enable parallel scan
+
+
+ drivers/ata/ata_piix.c |   29 ++++++++++++++++++++---------
  drivers/ata/pata_ali.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+ 2 files changed, 31 insertions(+), 15 deletions(-)
 
-
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 751b7ea..fc9c5d6 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -497,14 +497,16 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	};
- 	/* Revision 0x20 added DMA */
- 	static const struct ata_port_info info_20 = {
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
-+							ATA_FLAG_IGN_SIMPLEX,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
- 		.port_ops = &ali_20_port_ops
- 	};
- 	/* Revision 0x20 with support logic added UDMA */
- 	static const struct ata_port_info info_20_udma = {
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
-+							ATA_FLAG_IGN_SIMPLEX,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
- 		.udma_mask = ATA_UDMA2,
-@@ -512,7 +514,8 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	};
- 	/* Revision 0xC2 adds UDMA66 */
- 	static const struct ata_port_info info_c2 = {
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
-+							ATA_FLAG_IGN_SIMPLEX,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
- 		.udma_mask = ATA_UDMA4,
-@@ -520,7 +523,8 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	};
- 	/* Revision 0xC3 is UDMA66 for now */
- 	static const struct ata_port_info info_c3 = {
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
-+							ATA_FLAG_IGN_SIMPLEX,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
- 		.udma_mask = ATA_UDMA4,
-@@ -528,7 +532,8 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	};
- 	/* Revision 0xC4 is UDMA100 */
- 	static const struct ata_port_info info_c4 = {
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_LBA48 |
-+							ATA_FLAG_IGN_SIMPLEX,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
- 		.udma_mask = ATA_UDMA5,
-@@ -536,7 +541,7 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	};
- 	/* Revision 0xC5 is UDMA133 with LBA48 DMA */
- 	static const struct ata_port_info info_c5 = {
--		.flags = ATA_FLAG_SLAVE_POSS,
-+		.flags = ATA_FLAG_SLAVE_POSS | 	ATA_FLAG_IGN_SIMPLEX,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
- 		.udma_mask = ATA_UDMA6,
-
+-- 
+ "And the nice thing is you don't need to be able to type, because every
+  possible keystroke does {something} for/to you. Anything from point out
+  off-by-one errors to perform a sex change on your gerbil."
+			-- Bill Davidsen describing emacs
