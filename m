@@ -1,16 +1,16 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH #sx4] sata_sx4: fixup interrupt handling
-Date: Wed, 13 May 2009 19:26:35 -0400
-Message-ID: <4A0B572B.7040302@garzik.org>
+Date: Wed, 13 May 2009 19:27:36 -0400
+Message-ID: <4A0B5768.7000309@garzik.org>
 References: <20090513230221.GB5863@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43971 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:43977 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754010AbZEMX1N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 May 2009 19:27:13 -0400
+	id S1754225AbZEMX2J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 May 2009 19:28:09 -0400
 In-Reply-To: <20090513230221.GB5863@dhcp-210.hsv.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -41,11 +41,15 @@ David Milburn wrote:
 >  drivers/ata/sata_sx4.c |   22 +++++++++-------------
 >  1 files changed, 9 insertions(+), 13 deletions(-)
 
-Good spotting...
+Oh, and:  does vanilla upstream sata_sx4 work at all?
 
-Is this on top of #sx4 or upstream?
+If not, that would justify fast-forwarding the #sx4 branch into 2.6.30 
+(with your fixes, obviously)...
+
+Thanks,
 
 	Jeff
+
 
 
 
