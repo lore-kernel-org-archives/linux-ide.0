@@ -1,75 +1,55 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: [PATCH] sata_fsl: Fix the command description of FSL SATA controller
-Date: Thu, 14 May 2009 09:47:07 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0905140945540.8378@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: EP93xx PIO IDE driver proposal
+Date: Thu, 14 May 2009 20:30:03 +0400
+Message-ID: <4A0C470B.8040609@ru.mvista.com>
+References: <49CCD7C4.8000207@inov.pt> <4A08079A.9080803@inov.pt> <4A09A8A1.5070002@ru.mvista.com> <200905121923.08159.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:53506 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751299AbZENOuT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 May 2009 10:50:19 -0400
+Received: from h155.mvista.com ([63.81.120.155]:8418 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751246AbZENQ3Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 May 2009 12:29:25 -0400
+In-Reply-To: <200905121923.08159.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, daveliu@freescale.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-From: Dave Liu <daveliu@freescale.com>
+Hello.
 
-The bit 11 of command description is reserved bit in Freescale
-SATA controller and needs to be set to '1'.  This is needed to
-make sure the last write from the controller to the buffer
-descriptor is seen before an interrupt is raised.
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Dave Liu <daveliu@freescale.com>
-Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
----
+>>>>I'm not sure what you're getting at with "such advices"... :)
 
-Jeff, please pick this up as a bug fix for 2.6.30
+>>>>We need to cast somewhere anyway so we may as well cast from 'void *' to
+>>>>'unsigned int' where needed and not the other way around (or rather from
+>>>>'unsigned int' to 'struct ide_timing *') -- which would be an ugly hack
+>>>>and could cause maintainability/portability problems later.
 
- drivers/ata/sata_fsl.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+>>>>BTW it seems like a good occasion to add ide_{get,set}_drivedata() 
+>>>>helpers
+>>>>(ala existing ide_{get,set}_hwifdata() ones) to <linux/ide.h> and thus 
+>>>>make
+>>>>internal IDE API more coherent.
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 5edd654..36b8629 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -205,6 +205,7 @@ struct cmdhdr_tbl_entry {
-  * Description information bitdefs
-  */
- enum {
-+	CMD_DESC_RES = (1 << 11),
- 	VENDOR_SPECIFIC_BIST = (1 << 10),
- 	CMD_DESC_SNOOP_ENABLE = (1 << 9),
- 	FPDMA_QUEUED_CMD = (1 << 8),
-@@ -388,7 +389,7 @@ static void sata_fsl_qc_prep(struct ata_queued_cmd *qc)
- 	void __iomem *hcr_base = host_priv->hcr_base;
- 	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
- 	struct command_desc *cd;
--	u32 desc_info = CMD_DESC_SNOOP_ENABLE;
-+	u32 desc_info = CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE;
- 	u32 num_prde = 0;
- 	u32 ttl_dwords = 0;
- 	dma_addr_t cd_paddr;
-@@ -841,7 +842,7 @@ issue_srst:
+>>>>[ Yes, I know that we may get away with s/unsigned int/unsigned long/
+>>>>  and casting it to 'struct ide_timing *' for now but it always better
+>>>>  to at least consider more elegant solution first... ]
 
- 	/* device reset/SRST is a control register update FIS, uses tag0 */
- 	sata_fsl_setup_cmd_hdr_entry(pp, 0,
--				     SRST_CMD | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
-+		SRST_CMD | CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
+>>    Changing a lot of drivers is more elegant than not? Doubt it.
 
- 	tf.ctl |= ATA_SRST;	/* setup SRST bit in taskfile control reg */
- 	ata_tf_to_fis(&tf, pmp, 0, cfis);
-@@ -887,7 +888,8 @@ issue_srst:
- 	 * using ATA signature D2H register FIS to the host controller.
- 	 */
+>>    And don't tell me this patch is "elegant"... :-/
 
--	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
-+	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE,
-+				      0, 0, 5);
+> Well, it is makes code more coherent and more maintainable...
 
- 	tf.ctl &= ~ATA_SRST;	/* 2nd H2D Ctl. register FIS */
- 	ata_tf_to_fis(&tf, pmp, 0, cfis);
--- 
-1.6.0.6
+> Moreover those inline helpers serve as a part of documentation (though
+> real DocBook documentation would also be nice) for host drivers authors.
 
+> Either this or we should remove ide_{get,set}_hwifdata() and allow
+> host drivers to poke directly also at hwif->hwif_data...
+
+    Seems like a good idea. I'm not sure why these fields should be special.
+
+MBR, Sergei
