@@ -1,113 +1,75 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH #sx4] sata_sx4: fixup interrupt handling
-Date: Thu, 14 May 2009 09:07:20 -0500
-Message-ID: <4A0C2598.9090503@redhat.com>
-References: <20090513230221.GB5863@dhcp-210.hsv.redhat.com> <4A0B5768.7000309@garzik.org>
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: [PATCH] sata_fsl: Fix the command description of FSL SATA controller
+Date: Thu, 14 May 2009 09:47:07 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0905140945540.8378@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:34374 "EHLO mx2.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:53506 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752517AbZENNxW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 May 2009 09:53:22 -0400
-In-Reply-To: <4A0B5768.7000309@garzik.org>
+	id S1751299AbZENOuT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 May 2009 10:50:19 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: mikpe@it.uu.se, tj@kernel.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, daveliu@freescale.com
 
-Jeff Garzik wrote:
-> David Milburn wrote:
-> 
->> Issuing ATA_CMD_SET_FEATURES (0xef) times out because 
->> pdc20621_interrupt ignores command completion since
->> ATA_TFLAG_POLLING flag is set.
->>
->> This has already been fixed for sata_promise:
->>
->> commit 51b94d2a5a90d4800e74d7348bcde098a28f4fb3
->> Author: Tejun Heo <htejun@gmail.com>
->> Date:   Fri Jun 8 13:46:55 2007 -0700
->>
->>     sata_promise: use TF interface for polling NODATA commands
->>
->> Also, this patch includes Mikael's original patches:
->>
->> http://marc.info/?l=linux-ide&m=121135828227724&w=2
->> http://marc.info/?l=linux-ide&m=121144512109826&w=2
->>
->> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
->> Signed-off-by: David Milburn <dmilburn@redhat.com>
->> ---
->>  drivers/ata/sata_sx4.c |   22 +++++++++-------------
->>  1 files changed, 9 insertions(+), 13 deletions(-)
-> 
-> 
-> Oh, and:  does vanilla upstream sata_sx4 work at all?
+From: Dave Liu <daveliu@freescale.com>
 
-Jeff,
+The bit 11 of command description is reserved bit in Freescale
+SATA controller and needs to be set to '1'.  This is needed to
+make sure the last write from the controller to the buffer
+descriptor is seen before an interrupt is raised.
 
-It does not work on 2.6.30-rc5
+Signed-off-by: Dave Liu <daveliu@freescale.com>
+Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
+---
 
-Linux version 2.6.30-rc5
-  .
-  .
-  .
-ata1.00: ATA-6: ST3160023AS, 3.05, max UDMA/133
-ata1.00: 312581808 sectors, multi 0: LBA48
-ata1.00: qc timeout (cmd 0xef)
-ata1.00: failed to set xfermode (err_mask=0x4)
-ata1.00: ATA-6: ST3160023AS, 3.05, max UDMA/133
-ata1.00: 312581808 sectors, multi 0: LBA48
-ata1.00: qc timeout (cmd 0xef)
-ata1.00: failed to set xfermode (err_mask=0x4)
-ata1.00: limiting speed to UDMA/133:PIO3
-ata1.00: ATA-6: ST3160023AS, 3.05, max UDMA/133
-ata1.00: 312581808 sectors, multi 0: LBA48
-ata1.00: qc timeout (cmd 0xef)
-ata1.00: failed to set xfermode (err_mask=0x4)
-ata1.00: disabled
+Jeff, please pick this up as a bug fix for 2.6.30
 
-Same thing if I drop in sata_sx4.c and libata-sff.c
-changes from libata-dev sx4 branch.
+ drivers/ata/sata_fsl.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-But, after applying this patch on top of that
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 5edd654..36b8629 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -205,6 +205,7 @@ struct cmdhdr_tbl_entry {
+  * Description information bitdefs
+  */
+ enum {
++	CMD_DESC_RES = (1 << 11),
+ 	VENDOR_SPECIFIC_BIST = (1 << 10),
+ 	CMD_DESC_SNOOP_ENABLE = (1 << 9),
+ 	FPDMA_QUEUED_CMD = (1 << 8),
+@@ -388,7 +389,7 @@ static void sata_fsl_qc_prep(struct ata_queued_cmd *qc)
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+ 	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
+ 	struct command_desc *cd;
+-	u32 desc_info = CMD_DESC_SNOOP_ENABLE;
++	u32 desc_info = CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE;
+ 	u32 num_prde = 0;
+ 	u32 ttl_dwords = 0;
+ 	dma_addr_t cd_paddr;
+@@ -841,7 +842,7 @@ issue_srst:
 
-ata1.00: ATA-6: ST3160023AS, 3.05, max UDMA/133
-ata1.00: 312581808 sectors, multi 0: LBA48
-ata1.00: configured for UDMA/133
-scsi 0:0:0:0: Direct-Access     ATA      ST3160023AS      3.05 PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors: (160 GB/149 GiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support
-  DPO or FUA
-  sda: sda1 sda2
-sd 0:0:0:0: [sda] Attached SCSI disk
-ata2.00: NODEV after polling detection
-ata3.00: NODEV after polling detection
-ata4.00: NODEV after polling detection
+ 	/* device reset/SRST is a control register update FIS, uses tag0 */
+ 	sata_fsl_setup_cmd_hdr_entry(pp, 0,
+-				     SRST_CMD | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
++		SRST_CMD | CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
 
+ 	tf.ctl |= ATA_SRST;	/* setup SRST bit in taskfile control reg */
+ 	ata_tf_to_fis(&tf, pmp, 0, cfis);
+@@ -887,7 +888,8 @@ issue_srst:
+ 	 * using ATA signature D2H register FIS to the host controller.
+ 	 */
 
-# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-   Vendor: ATA      Model: ST3160023AS      Rev: 3.05
-   Type:   Direct-Access                    ANSI  SCSI revision: 05
+-	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
++	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE,
++				      0, 0, 5);
 
-Thanks,
-David
-
-> 
-> If not, that would justify fast-forwarding the #sx4 branch into 2.6.30 
-> (with your fixes, obviously)...
-> 
-> Thanks,
-> 
->     Jeff
-> 
-> 
-> 
-> 
+ 	tf.ctl &= ~ATA_SRST;	/* 2nd H2D Ctl. register FIS */
+ 	ata_tf_to_fis(&tf, pmp, 0, cfis);
+-- 
+1.6.0.6
 
