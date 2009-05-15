@@ -1,34 +1,51 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: [PATCH block#for-2.6.31 1/3] ub: use __blk_end_request_all()
-Date: Fri, 15 May 2009 11:31:14 -0600
-Message-ID: <20090515113114.68ae93ae.zaitcev@redhat.com>
-References: <4A0D86DB.9000203@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
+Date: Fri, 15 May 2009 13:49:16 -0400
+Message-ID: <4A0DAB1C.6060404@garzik.org>
+References: <200905062009.28087.markos@codex.gr>	<4A086A76.3090008@garzik.org>	<18953.15575.632189.258813@pilspetsen.it.uu.se>	<4A0940B9.5080905@garzik.org> <18957.19954.594210.891282@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4A0D86DB.9000203@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:47341 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751349AbZEORtW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 May 2009 13:49:22 -0400
+In-Reply-To: <18957.19954.594210.891282@pilspetsen.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 
-On Sat, 16 May 2009 00:14:35 +0900, Tejun Heo <tj@kernel.org> wrote:
+Mikael Pettersson wrote:
+> Ok I've checked now, and the breakage is that the commit referenced
+> above added dmi stuff to sata_sil.c without an #include <linux/dmi.h>,
+> and that broke !x86 builds:
 
-> @@ -834,12 +829,7 @@ static void ub_end_rq(struct request *rq
->  		error = -EIO;
->  		rq->errors = scsi_status;
->  	}
-> -	rqlen = blk_rq_bytes(rq);    /* Oddly enough, this is the residue. */
-> -	if (__blk_end_request(rq, error, cmd_len)) {
-> -		printk(KERN_WARNING DRV_NAME
-> -		    ": __blk_end_request blew, %s-cmd total %u rqlen %ld\n",
-> -		    blk_pc_request(rq)? "pc": "fs", cmd_len, rqlen);
-> -	}
-> +	__blk_end_request_all(rq, error);
->  }
+Great!  Thanks for checking.
 
-I applaud this. We needed blk_end_this_mudafakin_request() for a long time.
-Why two underscores?
 
--- Pete
+> drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
+> drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
+> drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
+> 
+> x86 builds work because they drag in dmi.h indirectly via some other header.
+> 
+> The follow-up commit 1737ef7598d3515fdc11cb9ba7e054f334404e04
+> "sata_sil: Fix build breakage" added #include <linux/dmi.h> which
+> made !x86 builds work again. 2.6.29-rc3 was released in the window
+> between these two commits so it had this build breakage.
+> 
+> So the problem is not that <linux/dmi.h> doesn't work, but that
+> someone apparently backported e57db7bde7bff95ae812736ca00c73bd5271455b
+> to 2.6.27 but not 1737ef7598d3515fdc11cb9ba7e054f334404e04.
+
+OK, so it sounds like upstream is OK, and 2.6.27.x needs 
+1737ef7598d3515fdc11cb9ba7e054f334404e04
+
+Thanks,
+
+	Jeff
+
+
+
