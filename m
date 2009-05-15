@@ -1,57 +1,47 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
-Date: Sat, 16 May 2009 00:46:31 +0200
-Message-ID: <18957.61639.955028.36649@pilspetsen.it.uu.se>
-References: <200905062009.28087.markos@codex.gr>
-	<4A086A76.3090008@garzik.org>
-	<18953.15575.632189.258813@pilspetsen.it.uu.se>
-	<4A0940B9.5080905@garzik.org>
-	<18957.19954.594210.891282@pilspetsen.it.uu.se>
-	<4A0DAB1C.6060404@garzik.org>
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Re: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to
+ blk_rq_bytes() on issue
+Date: Fri, 15 May 2009 17:16:45 -0600
+Message-ID: <20090515171645.7a92d46c.zaitcev@redhat.com>
+References: <4A0D86DB.9000203@kernel.org>
+	<4A0D87D2.7090806@gmail.com>
+	<20090515112901.84d4dd97.zaitcev@redhat.com>
+	<4A0DE954.4020102@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:64972 "EHLO aun.it.uu.se"
+Received: from mx2.redhat.com ([66.187.237.31]:58646 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752136AbZEOWsF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 May 2009 18:48:05 -0400
-In-Reply-To: <4A0DAB1C.6060404@garzik.org>
+	id S1755198AbZEOXTH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 May 2009 19:19:07 -0400
+In-Reply-To: <4A0DE954.4020102@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>, zaitcev@redhat.com
 
-Jeff Garzik writes:
- > Mikael Pettersson wrote:
- > > Ok I've checked now, and the breakage is that the commit referenced
- > > above added dmi stuff to sata_sil.c without an #include <linux/dmi.h>,
- > > and that broke !x86 builds:
- > 
- > Great!  Thanks for checking.
- > 
- > 
- > > drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
- > > drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
- > > drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
- > > 
- > > x86 builds work because they drag in dmi.h indirectly via some other header.
- > > 
- > > The follow-up commit 1737ef7598d3515fdc11cb9ba7e054f334404e04
- > > "sata_sil: Fix build breakage" added #include <linux/dmi.h> which
- > > made !x86 builds work again. 2.6.29-rc3 was released in the window
- > > between these two commits so it had this build breakage.
- > > 
- > > So the problem is not that <linux/dmi.h> doesn't work, but that
- > > someone apparently backported e57db7bde7bff95ae812736ca00c73bd5271455b
- > > to 2.6.27 but not 1737ef7598d3515fdc11cb9ba7e054f334404e04.
- > 
- > OK, so it sounds like upstream is OK, and 2.6.27.x needs 
- > 1737ef7598d3515fdc11cb9ba7e054f334404e04
+On Sat, 16 May 2009 07:14:44 +0900, Tejun Heo <htejun@gmail.com> wrote:
 
-Upstream is ok, but so is 2.6.27.x. 2.6.27 vanilla sata_sil.c has no
-dmi stuff in it, and 2.6.27.23 (current latest -stable for 2.6.27)
-has no updates to sata_sil.c. I just compiled both those kernels for
-ARM with sata_sil enabled and there were no errors.
+> So, I could have written
+> 
+>  if (cmd->act_len >= rq->resid_len)
+> 	rq->resid_len = 0;
+>  else
+> 	rq->resid_len -= cmd->act_len
+> 
+> Instead I wrote
+> 
+>  rq->resid_len -= min(cmd->act_len, rq->resid_len);
+> 
+> It's just capping the amount to be subtracted so that resid_len
+> doesn't underflow.  What is so wrong or bad style about that?
 
-Looks like the original poster used a patched 2.6.27...
+Curse of the gifted, I guess. To use a subtraction instead of zero
+this way looks like a pointless, even mischievous obfuscation to me.
+
+Also, we probably want a stack_dump or a printk when actual length
+exceeds the requested length, don't we? If it ever happens, we
+might be overwriting some I/O buffer somewhere.
+
+-- Pete
