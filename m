@@ -1,46 +1,77 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13308] ide-tape boot kernel panic
-Date: Fri, 15 May 2009 10:05:00 GMT
-Message-ID: <200905151005.n4FA50Xw028189@demeter.kernel.org>
-References: <bug-13308-11633@http.bugzilla.kernel.org/>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
+Date: Fri, 15 May 2009 13:11:46 +0200
+Message-ID: <18957.19954.594210.891282@pilspetsen.it.uu.se>
+References: <200905062009.28087.markos@codex.gr>
+	<4A086A76.3090008@garzik.org>
+	<18953.15575.632189.258813@pilspetsen.it.uu.se>
+	<4A0940B9.5080905@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56612 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753870AbZEOKE7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2009 06:04:59 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4FA50xK028190
-	for <linux-ide@vger.kernel.org>; Fri, 15 May 2009 10:05:00 GMT
-In-Reply-To: <bug-13308-11633@http.bugzilla.kernel.org/>
+Received: from aun.it.uu.se ([130.238.12.36]:48680 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752495AbZEOLNQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 May 2009 07:13:16 -0400
+In-Reply-To: <4A0940B9.5080905@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13308
+Jeff Garzik writes:
+ > Mikael Pettersson wrote:
+ > > Jeff Garzik writes:
+ > >  > Konstantinos Margaritis wrote:
+ > >  > > (not subscribed please CC me)
+ > >  > > 
+ > >  > > I tried to compile sata_sil on a 2.6.27 kernel on powerpc32 and I found that 
+ > >  > > it failed to compile -lots of dmi related errors. I found that I had to 
+ > >  > > include the broken_systems handling code in #ifdef CONFIG_DMI (DMI is not 
+ > >  > > supported on platforms other than i386/x86_64). 
+ > >  > > 
+ > >  > > Lennert on #mklinux told me that this commit broke the non-dmi support, and 
+ > >  > > that a similar patch to mine is used on ARM systems :
+ > >  > > 
+ > >  > > commit e57db7bde7bff95ae812736ca00c73bd5271455b
+ > >  > > SATA Sil: Blacklist system that spins off disks during ACPI power off
+ > >  > > 
+ > >  > > With this patch, sata_sil compiles on ppc (and I guess on other platforms). 
+ > >  > > I'm using it for a while with no problems with a Delock 4-port SATA PCI card.
+ > >  > 
+ > >  > (CC'ing various Lennerts)
+ > > 
+ > > That would be Lennert Buytenhek.
+ > > 
+ > >  > What is the breakage?
+ > > 
+ > > Compile-time error because sata_sil is used on !x86 platforms and the
+ > > unconditional references to x86-only DMI stuff simply aren't valid.
+ > > 
+ > > I have an ARM + sata_sil NAS box that did have this problem a few
+ > > kernel releases back, but it got resolved before that kernel's -final.
+ > > (I can look up the details on Thursday when I'm back to my home network.)
+ > 
+ > Yes, I was asking for specific details of the breakage.
 
+Ok I've checked now, and the breakage is that the commit referenced
+above added dmi stuff to sata_sil.c without an #include <linux/dmi.h>,
+and that broke !x86 builds:
 
+drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
+drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
+drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
 
+x86 builds work because they drag in dmi.h indirectly via some other header.
 
+The follow-up commit 1737ef7598d3515fdc11cb9ba7e054f334404e04
+"sata_sil: Fix build breakage" added #include <linux/dmi.h> which
+made !x86 builds work again. 2.6.29-rc3 was released in the window
+between these two commits so it had this build breakage.
 
---- Comment #7 from Ortwin Gl=C3=BCck <odi@odi.ch>  2009-05-15 10:05:00=
- ---
-I did a
+So the problem is not that <linux/dmi.h> doesn't work, but that
+someone apparently backported e57db7bde7bff95ae812736ca00c73bd5271455b
+to 2.6.27 but not 1737ef7598d3515fdc11cb9ba7e054f334404e04.
 
-tar cf /dev/ht0 .
-mt -f /dev/ht0 rewind
-tar tf /dev/ht0
-mt -f /dev/ht0 eject
-
-and experienced no problems.
-
-Cheers,
-
-Ortwin
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+/Mikael
