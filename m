@@ -1,35 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v3] sata_fsl: Fix compile warnings
-Date: Fri, 15 May 2009 14:16:40 -0400
-Message-ID: <4A0DB188.9000708@garzik.org>
-References: <1242270650-27945-1-git-send-email-galak@kernel.crashing.org>
+Subject: Re: [PATCH] sata_fsl: Fix the command description of FSL SATA controller
+Date: Fri, 15 May 2009 14:16:54 -0400
+Message-ID: <4A0DB196.8010209@garzik.org>
+References: <Pine.LNX.4.64.0905140945540.8378@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39751 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39756 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757631AbZEOSQo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 May 2009 14:16:44 -0400
-In-Reply-To: <1242270650-27945-1-git-send-email-galak@kernel.crashing.org>
+	id S1760116AbZEOSQ4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 May 2009 14:16:56 -0400
+In-Reply-To: <Pine.LNX.4.64.0905140945540.8378@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Kumar Gala <galak@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, daveliu@freescale.com
 
 Kumar Gala wrote:
-> We we build with dma_addr_t as a 64-bit quantity we get:
+> From: Dave Liu <daveliu@freescale.com>
 > 
-> drivers/ata/sata_fsl.c: In function 'sata_fsl_fill_sg':
-> drivers/ata/sata_fsl.c:340: warning: format '%x' expects type 'unsigned int', but argument 4 has type 'dma_addr_t'
+> The bit 11 of command description is reserved bit in Freescale
+> SATA controller and needs to be set to '1'.  This is needed to
+> make sure the last write from the controller to the buffer
+> descriptor is seen before an interrupt is raised.
 > 
+> Signed-off-by: Dave Liu <daveliu@freescale.com>
 > Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
 > ---
-> * v2: fixed extra 'x'
-> * v3: fixed whitespace issue
 > 
->  drivers/ata/sata_fsl.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
+> Jeff, please pick this up as a bug fix for 2.6.30
+> 
+>  drivers/ata/sata_fsl.c |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
 
 applied
 
