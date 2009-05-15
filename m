@@ -1,47 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 6/7] ide: pass number of ports to ide_host_{alloc,add}()
-Date: Fri, 15 May 2009 00:19:23 +0400
-Message-ID: <4A0C7CCB.1040805@ru.mvista.com>
-References: <20090513205139.28638.87226.sendpatchset@localhost.localdomain> <20090513205222.28638.19386.sendpatchset@localhost.localdomain> <4A0C6A27.7010703@ru.mvista.com> <200905142151.15854.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:12556 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750957AbZENUT2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 May 2009 16:19:28 -0400
-In-Reply-To: <200905142151.15854.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: I/O Topology v3
+Date: Fri, 15 May 2009 00:40:22 -0400
+Message-ID: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
+Third take of the I/O topology patches.  This time against Jens' 2.6.31
+tree.
 
->>> @@ -467,7 +467,7 @@ icside_register_v6(struct icside_state *
->>>  	struct ide_host *host;
->>>  	unsigned int sel = 0;
->>>  	int ret;
->>> -	hw_regs_t hw[2], *hws[] = { &hw[0], NULL, NULL, NULL };
->>> +	hw_regs_t hw[2], *hws[] = { &hw[0], NULL };
->>>       
->>     I wonder if there's an old bug here since I'm not seeing when hws[1] is 
->> set to non-NULL -- despite there are apparently two ports?
->>
->>     Indeed, this bug seems to date back to the 'struct ide_host' 
->> introduction, see this:
->>  
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=48c3c1072651922ed153bcf0a33ea82cf20df390#patch1...
->>     
->
-> Care to send a fix?
->   
+Changes:
 
-   I will...
+ - Remove the notion of hardsect_size as it about to become a confusing
+   anachronism.  Use logical_block_size to refer to the block size used
+   when talking to the device via ATA/SCSI.
 
-MBR, Sergei
+ - Use the term physical_block_size to refer to the device physical
+   sector size.
+
+   (Logical and physical are the terms used in the T10/T13 standards).
+
+ - Move queue limits to an embedded struct so DM can get rid of its
+   internal I/O restriction housekeeping and use the same stacking
+   function as MD.
+
+ - Switch MD to new stacking API.  Once MD has been updated, the old
+   stacking function can be removed.
+
+Block layer topology enablement:
+
+        0001-block-Do-away-with-the-notion-of-hardsect_size.patch
+        0002-block-Use-accessor-functions-for-queue-limits.patch
+        0003-block-Move-queue-limits-to-an-embedded-struct.patch
+        0004-block-Expose-stacked-device-queues-in-sysfs.patch
+        0005-block-Export-I-O-topology-for-block-devices-and-par.patch
+
+Post merge:
+
+        0006-MD-Use-new-topology-calls-to-indicate-alignment-and.patch
+        0007-block-Deprecate-blk_queue_stack_limits.patch
+        0008-sd-Physical-block-size-and-alignment-support.patch
+        0009-sd-Detect-non-rotational-devices.patch
+        0010-sd-Block-limits-VPD-support.patch
+
+Independent:
+
+        0011-scsi_debug-Add-support-for-physical-block-exponent.patch
+        0012-libata-Report-disk-alignment-and-physical-block-siz.patch
+        0013-libata-Media-rotation-rate-and-form-factor-heuristi.patch
+
+--
+Martin K. Petersen      Oracle Linux Engineering
+
 
 
