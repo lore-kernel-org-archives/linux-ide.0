@@ -1,51 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
-Date: Fri, 15 May 2009 13:49:16 -0400
-Message-ID: <4A0DAB1C.6060404@garzik.org>
-References: <200905062009.28087.markos@codex.gr>	<4A086A76.3090008@garzik.org>	<18953.15575.632189.258813@pilspetsen.it.uu.se>	<4A0940B9.5080905@garzik.org> <18957.19954.594210.891282@pilspetsen.it.uu.se>
+Subject: Re: [PATCH #sx4] sata_sx4: fixup interrupt handling
+Date: Fri, 15 May 2009 14:08:48 -0400
+Message-ID: <4A0DAFB0.1040604@garzik.org>
+References: <20090513230221.GB5863@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47341 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55631 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751349AbZEORtW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 May 2009 13:49:22 -0400
-In-Reply-To: <18957.19954.594210.891282@pilspetsen.it.uu.se>
+	id S1755372AbZEOSJI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 May 2009 14:09:08 -0400
+In-Reply-To: <20090513230221.GB5863@dhcp-210.hsv.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+To: David Milburn <dmilburn@redhat.com>
+Cc: mikpe@it.uu.se, tj@kernel.org, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> Ok I've checked now, and the breakage is that the commit referenced
-> above added dmi stuff to sata_sil.c without an #include <linux/dmi.h>,
-> and that broke !x86 builds:
-
-Great!  Thanks for checking.
-
-
-> drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
-> drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
-> drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
+David Milburn wrote:
+> Issuing ATA_CMD_SET_FEATURES (0xef) times out because 
+> pdc20621_interrupt ignores command completion since
+> ATA_TFLAG_POLLING flag is set.
 > 
-> x86 builds work because they drag in dmi.h indirectly via some other header.
+> This has already been fixed for sata_promise:
 > 
-> The follow-up commit 1737ef7598d3515fdc11cb9ba7e054f334404e04
-> "sata_sil: Fix build breakage" added #include <linux/dmi.h> which
-> made !x86 builds work again. 2.6.29-rc3 was released in the window
-> between these two commits so it had this build breakage.
+> commit 51b94d2a5a90d4800e74d7348bcde098a28f4fb3
+> Author: Tejun Heo <htejun@gmail.com>
+> Date:   Fri Jun 8 13:46:55 2007 -0700
 > 
-> So the problem is not that <linux/dmi.h> doesn't work, but that
-> someone apparently backported e57db7bde7bff95ae812736ca00c73bd5271455b
-> to 2.6.27 but not 1737ef7598d3515fdc11cb9ba7e054f334404e04.
+>     sata_promise: use TF interface for polling NODATA commands
+> 
+> Also, this patch includes Mikael's original patches:
+> 
+> http://marc.info/?l=linux-ide&m=121135828227724&w=2
+> http://marc.info/?l=linux-ide&m=121144512109826&w=2
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> ---
+>  drivers/ata/sata_sx4.c |   22 +++++++++-------------
+>  1 files changed, 9 insertions(+), 13 deletions(-)
 
-OK, so it sounds like upstream is OK, and 2.6.27.x needs 
-1737ef7598d3515fdc11cb9ba7e054f334404e04
-
-Thanks,
-
-	Jeff
-
+applied, and forwarding upstream (w/ #sx4 branch) for 2.6.30, since 
+sata_sx4 is broken.
 
 
