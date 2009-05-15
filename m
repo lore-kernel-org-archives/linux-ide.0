@@ -1,43 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ata: libata depends on HAS_DMA
-Date: Fri, 15 May 2009 14:31:11 +0900
-Message-ID: <4A0CFE1F.5080409@gmail.com>
-References: <20090513043409.GA13577@cynthia.pants.nu>	<20090513095127.308b00e7@lxorguk.ukuu.org.uk>	<4A0B5E5A.4090906@gmail.com> <20090514091928R.fujita.tomonori@lab.ntt.co.jp>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13308] ide-tape boot kernel panic
+Date: Fri, 15 May 2009 06:25:13 GMT
+Message-ID: <200905150625.n4F6PDGG010875@demeter.kernel.org>
+References: <bug-13308-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:51795 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754073AbZEOFaE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2009 01:30:04 -0400
-In-Reply-To: <20090514091928R.fujita.tomonori@lab.ntt.co.jp>
+Received: from demeter.kernel.org ([140.211.167.39]:43189 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755305AbZEOGZO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2009 02:25:14 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4F6PDZ3010876
+	for <linux-ide@vger.kernel.org>; Fri, 15 May 2009 06:25:13 GMT
+In-Reply-To: <bug-13308-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hancockrwd@gmail.com, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, arnd@arndb.de, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
+To: linux-ide@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Wed, 13 May 2009 17:57:14 -0600
-> Robert Hancock <hancockrwd@gmail.com> wrote:
-> 
->> Alan Cox wrote:
->>>>> If it doesn't interfere with plain PIO mode, fine. 
->>>> I agree. There definitely needs to still be support for IDE ports that
->>>> don't have DMA capability.
->>> There is - it's just if the platform doesn't implement the dma_* APIs you
->>> get a problem.
->> Wouldn't the easiest solution be to just dummy out the DMA API calls on 
->> this platform to always fail? That would fix these compile problems..
-> 
-> Can libata call dma_supported() per device to decide DMA or PIO mode?
-> Then, we can solve this problem by add dummy DMA API (just calls BUG)
-> on such architectures, without Kconfig magic or adding ifdef (like the
-> old ide stack does), I think.
+http://bugzilla.kernel.org/show_bug.cgi?id=13308
 
-Sure it can.  Which specific drivers are we talking about?
 
-Thanks.
+
+
+
+--- Comment #3 from Borislav Petkov <bbpetkov@yahoo.de>  2009-05-15 06:25:12 ---
+Created an attachment (id=21364)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=21364)
+fix oops
+
+Note to self: This is going upstream for 2.6.31. We should backport it to .29
+and .30.
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
