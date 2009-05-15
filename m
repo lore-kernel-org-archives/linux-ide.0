@@ -1,33 +1,33 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 7/7] ide: remove hw_regs_t typedef
-Date: Fri, 15 May 2009 16:17:00 +0400
-Message-ID: <4A0D5D3C.4000805@ru.mvista.com>
-References: <20090513205139.28638.87226.sendpatchset@localhost.localdomain> <20090513205231.28638.12447.sendpatchset@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13308] ide-tape boot kernel panic
+Date: Fri, 15 May 2009 12:47:02 GMT
+Message-ID: <200905151247.n4FCl2Y6007857@demeter.kernel.org>
+References: <bug-13308-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:34378 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1762766AbZEOMQT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 May 2009 08:16:19 -0400
-In-Reply-To: <20090513205231.28638.12447.sendpatchset@localhost.localdomain>
+Received: from demeter.kernel.org ([140.211.167.39]:34084 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047AbZEOMrB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2009 08:47:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4FCl2s4007858
+	for <linux-ide@vger.kernel.org>; Fri, 15 May 2009 12:47:02 GMT
+In-Reply-To: <bug-13308-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+http://bugzilla.kernel.org/show_bug.cgi?id=13308
 
-Bartlomiej Zolnierkiewicz wrote:
 
-> Remove hw_regs_t typedef and rename struct hw_regs_s to struct ide_hw.
 
-> There should be no functional changes caused by this patch.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+--- Comment #8 from Borislav Petkov <bbpetkov@yahoo.de>  2009-05-15 12:47:02 ---
+Thanks, closing.
 
-MBR, Sergei
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
