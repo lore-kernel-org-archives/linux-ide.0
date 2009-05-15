@@ -1,77 +1,47 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] fix sata_sil compilation on non-DMI platforms
-Date: Fri, 15 May 2009 13:11:46 +0200
-Message-ID: <18957.19954.594210.891282@pilspetsen.it.uu.se>
-References: <200905062009.28087.markos@codex.gr>
-	<4A086A76.3090008@garzik.org>
-	<18953.15575.632189.258813@pilspetsen.it.uu.se>
-	<4A0940B9.5080905@garzik.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] ata: libata depends on HAS_DMA
+Date: Fri, 15 May 2009 13:16:30 +0200
+Message-ID: <200905151316.31521.arnd@arndb.de>
+References: <20090513043409.GA13577@cynthia.pants.nu> <20090514091928R.fujita.tomonori@lab.ntt.co.jp> <4A0CFE1F.5080409@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:48680 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752495AbZEOLNQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 May 2009 07:13:16 -0400
-In-Reply-To: <4A0940B9.5080905@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <4A0CFE1F.5080409@gmail.com>
+Content-Disposition: inline
+Sender: linux-m68k-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, hancockrwd@gmail.com, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Konstantinos Margaritis <markos@codex.gr>, linux-ide@vger.kernel.org, Lennert Buytenhek <buytenh@wantstofly.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 
-Jeff Garzik writes:
- > Mikael Pettersson wrote:
- > > Jeff Garzik writes:
- > >  > Konstantinos Margaritis wrote:
- > >  > > (not subscribed please CC me)
- > >  > > 
- > >  > > I tried to compile sata_sil on a 2.6.27 kernel on powerpc32 and I found that 
- > >  > > it failed to compile -lots of dmi related errors. I found that I had to 
- > >  > > include the broken_systems handling code in #ifdef CONFIG_DMI (DMI is not 
- > >  > > supported on platforms other than i386/x86_64). 
- > >  > > 
- > >  > > Lennert on #mklinux told me that this commit broke the non-dmi support, and 
- > >  > > that a similar patch to mine is used on ARM systems :
- > >  > > 
- > >  > > commit e57db7bde7bff95ae812736ca00c73bd5271455b
- > >  > > SATA Sil: Blacklist system that spins off disks during ACPI power off
- > >  > > 
- > >  > > With this patch, sata_sil compiles on ppc (and I guess on other platforms). 
- > >  > > I'm using it for a while with no problems with a Delock 4-port SATA PCI card.
- > >  > 
- > >  > (CC'ing various Lennerts)
- > > 
- > > That would be Lennert Buytenhek.
- > > 
- > >  > What is the breakage?
- > > 
- > > Compile-time error because sata_sil is used on !x86 platforms and the
- > > unconditional references to x86-only DMI stuff simply aren't valid.
- > > 
- > > I have an ARM + sata_sil NAS box that did have this problem a few
- > > kernel releases back, but it got resolved before that kernel's -final.
- > > (I can look up the details on Thursday when I'm back to my home network.)
- > 
- > Yes, I was asking for specific details of the breakage.
+On Friday 15 May 2009, Tejun Heo wrote:
+> FUJITA Tomonori wrote:
+> > Can libata call dma_supported() per device to decide DMA or PIO mod=
+e?
+> > Then, we can solve this problem by add dummy DMA API (just calls BU=
+G)
+> > on such architectures, without Kconfig magic or adding ifdef (like =
+the
+> > old ide stack does), I think.
 
-Ok I've checked now, and the breakage is that the commit referenced
-above added dmi stuff to sata_sil.c without an #include <linux/dmi.h>,
-and that broke !x86 builds:
+That would be the !CONFIG_PCI half of the old
+include/asm-generic/dma-mapping.h file that you just removed,
+right?
 
-drivers/ata/sata_sil.c: In function 'sil_broken_system_poweroff':
-drivers/ata/sata_sil.c:713: error: implicit declaration of function 'dmi_first_match'
-drivers/ata/sata_sil.c:713: warning: initialization makes pointer from integer without a cast
+In general, I'd prefer keeping the asm-generic/dma-mapping-broken.h
+implementation that gives us a compile-time error, but maybe there
+is an even better option based on the mn10300 implementation which
+basically pretends everything works with just page_to_phys() mappings.
 
-x86 builds work because they drag in dmi.h indirectly via some other header.
+> Sure it can. =A0Which specific drivers are we talking about?
 
-The follow-up commit 1737ef7598d3515fdc11cb9ba7e054f334404e04
-"sata_sil: Fix build breakage" added #include <linux/dmi.h> which
-made !x86 builds work again. 2.6.29-rc3 was released in the window
-between these two commits so it had this build breakage.
+The main problem is libata-core.c, which references DMA mapping
+API calls that are only implemented on architectures setting
+CONFIG_HAS_DMA.
 
-So the problem is not that <linux/dmi.h> doesn't work, but that
-someone apparently backported e57db7bde7bff95ae812736ca00c73bd5271455b
-to 2.6.27 but not 1737ef7598d3515fdc11cb9ba7e054f334404e04.
-
-/Mikael
+	Arnd <><
+--
+To unsubscribe from this list: send the line "unsubscribe linux-m68k" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
