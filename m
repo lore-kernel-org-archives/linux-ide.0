@@ -1,38 +1,33 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] Fix ide-tape compilation error.
-Date: Sat, 16 May 2009 17:08:02 +0200
-Message-ID: <20090516150802.GA8386@liondog.tnic>
-References: <9ea470500904200230k5f0ea050u7411b7c9d9be7098@mail.gmail.com> <20090505211259.GA2723@localhost> <20090505211939.GA6281@localhost> <20090506061048.GA3406@liondog.tnic>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_sx4: speed up ECC initialization
+Date: Sat, 16 May 2009 15:11:59 -0400
+Message-ID: <4A0F0FFF.9010809@garzik.org>
+References: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com> <49E47A45.60902@garzik.org> <20090414200054.GB17134@orion> <49E4F047.3030500@garzik.org> <a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com> <4A0E5D5F.1080708@garzik.org> <20090516132912.GA23272@orion>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:44482 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953AbZEPPIG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 11:08:06 -0400
-Received: by fxm2 with SMTP id 2so2433069fxm.37
-        for <linux-ide@vger.kernel.org>; Sat, 16 May 2009 08:08:06 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20090506061048.GA3406@liondog.tnic>
+Received: from srv5.dvmed.net ([207.36.208.214]:57514 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753456AbZEPTMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 16 May 2009 15:12:05 -0400
+In-Reply-To: <20090516132912.GA23272@orion>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: Mark de Wever <koraq@xs4all.nl>, sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org, TejunHeo <tj@kernel.org>
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, May 06, 2009 at 08:10:48AM +0200, Borislav Petkov wrote:
-> On Tue, May 05, 2009 at 11:19:39PM +0200, Mark de Wever wrote:
-> > This error only occurs when IDETAPE_DEBUG_LOG is enabled.
-> > 
-> > Signed-off-by: Mark de Wever <koraq@xs4all.nl>
+Alexander Beregalov wrote:
+> On Sat, May 16, 2009 at 02:29:51AM -0400, Jeff Garzik wrote:
+>> Check out 2.6.30-rc6, sata_sx4 received several major bug fixes...
 > 
-> Acked-by: Borislav Petkov <petkovbb@gmail.com>
+> Thanks, but it still does not work.
 
-Bart,
+oh well...   did behavior improve for you, at least?  Did the driver 
+make it farther than before?
 
-can you please pick that one up - it is 2.6.30 material.
+	Jeff
 
-Thanks.
 
--- 
-Regards/Gruss,
-    Boris.
+
+
