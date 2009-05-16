@@ -1,89 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_sx4: speed up ECC initialization
-Date: Sat, 16 May 2009 02:29:51 -0400
-Message-ID: <4A0E5D5F.1080708@garzik.org>
-References: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>	 <49E47A45.60902@garzik.org> <20090414200054.GB17134@orion>	 <49E4F047.3030500@garzik.org> <a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to
+	blk_rq_bytes() on issue
+Date: Sat, 16 May 2009 09:13:05 +0200
+Message-ID: <20090516071305.GA4921@liondog.tnic>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59247 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753326AbZEPG3w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 May 2009 02:29:52 -0400
-In-Reply-To: <a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:57902 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754844AbZEPHNL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 03:13:11 -0400
+Content-Disposition: inline
+In-Reply-To: <4A0D87D2.7090806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-Alexander Beregalov wrote:
-> 2009/4/15 Jeff Garzik <jeff@garzik.org>:
->> Alexander Beregalov wrote:
->>> On Tue, Apr 14, 2009 at 07:57:57AM -0400, Jeff Garzik wrote:
->>>> Alexander Beregalov wrote:
->>>>> ECC initialization takes too long. It writes zeroes by portions of 4
->>>>> byte, it takes more than 6 minutes to initialize 512Mb DIMM module.
->>>>> Change portion to 1Mb.
->>>>>
->>>>> before:
->>>>> [10857.207576] pdc20621_dimm_init: Start ECC initialization
->>>>> [11235.333118] pdc20621_dimm_init: Finish ECC initialization
->>>>>
->>>>> after:
->>>>> [ 1005.126437] pdc20621_dimm_init: Local DIMM Speed = 100
->>>>> [ 1005.128111] pdc20621_dimm_init: Local DIMM Size = 512MB
->>>>> [ 1005.133508] Local DIMM ECC Enabled
->>>>> [ 1005.236482] pdc20621_dimm_init: Start ECC initialization
->>>>> [ 1031.278098] pdc20621_dimm_init: Finish ECC initialization
->>>>>
->>>> Comments:
->>>>
->>>> 1) on an older machine, where these things might be found, 1MB might be a
->>>> lot -- particularly if there is a lot of VM fragmentation.  Please reduce
->>>> the size a bit -- I suppose 128k is not unbearably slow?
->>>>
->>>> 2) Rather than repeating 'page size * 32' calculation multiple times, put
->>>> it into a named constant somewhere.
->>>>
->>>> Other than that, looks ok!
->>>
->>>> From 00e980a4651ef12811fbe9a893a7e72510b955d1 Mon Sep 17 00:00:00 2001
->>> From: Alexander Beregalov <a.beregalov@gmail.com>
->>> Date: Tue, 14 Apr 2009 23:55:52 +0400
->>> Subject: [PATCH v2] sata_sx4: speed up ECC initialization
->>>
->>> ECC initialization takes too long. It writes zeroes by portions
->>> of 4 byte, it takes more than 6 minutes on my machine to initialize
->>> 512Mb ECC DIMM module. Change portion to 128Kb - it significantly
->>> reduces initialization time.
->>>
->>> Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
->>> ---
->>>  drivers/ata/sata_sx4.c |   11 +++++++----
->>>  1 files changed, 7 insertions(+), 4 deletions(-)
->>
->> Applied, to libata-dev.git#upstream
->>
->> Thanks!
->>
->> So...   the $64,000 question:  does sata_sx4 work for you?
+On Sat, May 16, 2009 at 12:18:42AM +0900, Tejun Heo wrote:
+> In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
+> rq->resid_len, the default value of residue count was changed from
+> full count to zero.  The conversion was done under the assumption that
+> when a request fails residue count wasn't defined.  However, Boaz and
+> James pointed out that this wasn't true and the residue count should
+> be preserved for failed requests too.
 > 
-> No, not yet! :)
-> It works without disks ;)
-> It has found disks, but got timeout from them.
-> Some specific functions should be added to ops structure.
+> This patchset restores the original behavior by setting rq->resid_len
+> to blk_rq_bytes(rq) on issue and restoring explicit clearing in
+> affected drivers.  While at it, take advantage of the fact that
+> rq->resid_len is set to full count where applicable.
 > 
-> At first I am trying to understand how to detect cable type.
-> I have two examples: from Promise partial source code and from FreeBSD.
+> * ide-cd: rq->resid_len cleared on pc success
 > 
-> But PGuide says the chip automatically detects cable type.
-> Does it mean the driver should not do anything with it? - I will try it.
+> * mptsas: req->resid_len cleared on success
+> 
+> * sas_expander: rsp/req->resid_len cleared on success
+> 
+> * mpt2sas_transport: req->resid_len cleared on success
+> 
+> * ide-cd, ide-tape, mptsas, sas_host_smp, mpt2sas_transport, ub: take
+>   advantage of initial full count to simplify code
 
-Check out 2.6.30-rc6, sata_sx4 received several major bug fixes...
+ACK the ide-{cd,tape} bits.
 
-	Jeff
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
+I've converted the ide-atapi part to rq->resid_len and from what I see,
+the changes are compatible with the latest semantics of rq->resid_len
+but it won't hurt if you could take a look too :) :
 
+http://git.kernel.org/?p=linux/kernel/git/bp/bp.git;a=commit;h=077e6dba20e74a455a0452379d2a965c7e1b01ad
 
+On a side note, ide_pc_intr() does some transfer padding but that
+doesn't affect rq->resid_len returning the remaining bytecount back up
+to block layer.
 
+[..]
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
