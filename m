@@ -1,190 +1,89 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH UPDATED block#for-2.6.31 2/3] block: set rq->resid_len to
- blk_rq_bytes() on issue
-Date: Sat, 16 May 2009 09:18:24 +0900
-Message-ID: <4A0E0650.1020500__12530.2695473239$1242433125$gmane$org@gmail.com>
-References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_sx4: speed up ECC initialization
+Date: Sat, 16 May 2009 02:29:51 -0400
+Message-ID: <4A0E5D5F.1080708@garzik.org>
+References: <1239675982-32584-1-git-send-email-a.beregalov@gmail.com>	 <49E47A45.60902@garzik.org> <20090414200054.GB17134@orion>	 <49E4F047.3030500@garzik.org> <a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f115.google.com ([209.85.222.115]:61107 "EHLO
-	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbZEPAS2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2009 20:18:28 -0400
-In-Reply-To: <4A0D87D2.7090806@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:59247 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753326AbZEPG3w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 16 May 2009 02:29:52 -0400
+In-Reply-To: <a4423d670904141351o72c4c0acka87a00360f1a53eb@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-s
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
-rq->resid_len, the default value of residue count was changed from
-full count to zero.  The conversion was done under the assumption that
-when a request fails residue count wasn't defined.  However, Boaz and
-James pointed out that this wasn't true and the residue count should
-be preserved for failed requests too.
+Alexander Beregalov wrote:
+> 2009/4/15 Jeff Garzik <jeff@garzik.org>:
+>> Alexander Beregalov wrote:
+>>> On Tue, Apr 14, 2009 at 07:57:57AM -0400, Jeff Garzik wrote:
+>>>> Alexander Beregalov wrote:
+>>>>> ECC initialization takes too long. It writes zeroes by portions of 4
+>>>>> byte, it takes more than 6 minutes to initialize 512Mb DIMM module.
+>>>>> Change portion to 1Mb.
+>>>>>
+>>>>> before:
+>>>>> [10857.207576] pdc20621_dimm_init: Start ECC initialization
+>>>>> [11235.333118] pdc20621_dimm_init: Finish ECC initialization
+>>>>>
+>>>>> after:
+>>>>> [ 1005.126437] pdc20621_dimm_init: Local DIMM Speed = 100
+>>>>> [ 1005.128111] pdc20621_dimm_init: Local DIMM Size = 512MB
+>>>>> [ 1005.133508] Local DIMM ECC Enabled
+>>>>> [ 1005.236482] pdc20621_dimm_init: Start ECC initialization
+>>>>> [ 1031.278098] pdc20621_dimm_init: Finish ECC initialization
+>>>>>
+>>>> Comments:
+>>>>
+>>>> 1) on an older machine, where these things might be found, 1MB might be a
+>>>> lot -- particularly if there is a lot of VM fragmentation.  Please reduce
+>>>> the size a bit -- I suppose 128k is not unbearably slow?
+>>>>
+>>>> 2) Rather than repeating 'page size * 32' calculation multiple times, put
+>>>> it into a named constant somewhere.
+>>>>
+>>>> Other than that, looks ok!
+>>>
+>>>> From 00e980a4651ef12811fbe9a893a7e72510b955d1 Mon Sep 17 00:00:00 2001
+>>> From: Alexander Beregalov <a.beregalov@gmail.com>
+>>> Date: Tue, 14 Apr 2009 23:55:52 +0400
+>>> Subject: [PATCH v2] sata_sx4: speed up ECC initialization
+>>>
+>>> ECC initialization takes too long. It writes zeroes by portions
+>>> of 4 byte, it takes more than 6 minutes on my machine to initialize
+>>> 512Mb ECC DIMM module. Change portion to 128Kb - it significantly
+>>> reduces initialization time.
+>>>
+>>> Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+>>> ---
+>>>  drivers/ata/sata_sx4.c |   11 +++++++----
+>>>  1 files changed, 7 insertions(+), 4 deletions(-)
+>>
+>> Applied, to libata-dev.git#upstream
+>>
+>> Thanks!
+>>
+>> So...   the $64,000 question:  does sata_sx4 work for you?
+> 
+> No, not yet! :)
+> It works without disks ;)
+> It has found disks, but got timeout from them.
+> Some specific functions should be added to ops structure.
+> 
+> At first I am trying to understand how to detect cable type.
+> I have two examples: from Promise partial source code and from FreeBSD.
+> 
+> But PGuide says the chip automatically detects cable type.
+> Does it mean the driver should not do anything with it? - I will try it.
 
-This patchset restores the original behavior by setting rq->resid_len
-to blk_rq_bytes(rq) on issue and restoring explicit clearing in
-affected drivers.  While at it, take advantage of the fact that
-rq->resid_len is set to full count where applicable.
+Check out 2.6.30-rc6, sata_sx4 received several major bug fixes...
 
-* ide-cd: rq->resid_len cleared on pc success
+	Jeff
 
-* mptsas: req->resid_len cleared on success
 
-* sas_expander: rsp/req->resid_len cleared on success
 
-* mpt2sas_transport: req->resid_len cleared on success
 
-* ide-cd, ide-tape, mptsas, sas_host_smp, mpt2sas_transport, ub: take
-  advantage of initial full count to simplify code
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Pete Zaitcev <zaitcev@redhat.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Borislav Petkov <petkovbb@googlemail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Eric Moore <Eric.Moore@lsi.com>
-Cc: Darrick J. Wong <djwong@us.ibm.com>
----
-ub updated per Pete's comment.
-
-Thanks.
-
- block/blk-core.c                         |    1 +
- drivers/block/ub.c                       |    6 ++++--
- drivers/ide/ide-cd.c                     |    4 ++--
- drivers/ide/ide-tape.c                   |    2 +-
- drivers/message/fusion/mptsas.c          |    3 ++-
- drivers/scsi/libsas/sas_expander.c       |    4 ++++
- drivers/scsi/libsas/sas_host_smp.c       |    3 ---
- drivers/scsi/mpt2sas/mpt2sas_transport.c |    4 ++--
- 8 files changed, 16 insertions(+), 11 deletions(-)
-
-Index: block/block/blk-core.c
-===================================================================
---- block.orig/block/blk-core.c
-+++ block/block/blk-core.c
-@@ -2198,6 +2198,7 @@ void blk_rq_bio_prep(struct request_queu
- 		rq->buffer = bio_data(bio);
- 	}
- 	rq->__data_len = bio->bi_size;
-+	rq->resid_len = bio->bi_size;
- 	rq->bio = rq->biotail = bio;
- 
- 	if (bio->bi_bdev)
-Index: block/drivers/ide/ide-cd.c
-===================================================================
---- block.orig/drivers/ide/ide-cd.c
-+++ block/drivers/ide/ide-cd.c
-@@ -699,6 +699,7 @@ static ide_startstop_t cdrom_newpc_intr(
- 
- out_end:
- 	if (blk_pc_request(rq) && rc == 0) {
-+		rq->resid_len = 0;
- 		blk_end_request_all(rq, 0);
- 		hwif->rq = NULL;
- 	} else {
-@@ -718,8 +719,7 @@ out_end:
- 
- 		/* make sure it's fully ended */
- 		if (blk_fs_request(rq) == 0) {
--			rq->resid_len = blk_rq_bytes(rq) -
--				(cmd->nbytes - cmd->nleft);
-+			rq->resid_len -= cmd->nbytes - cmd->nleft;
- 			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
- 				rq->resid_len += cmd->last_xfer_len;
- 		}
-Index: block/drivers/ide/ide-tape.c
-===================================================================
---- block.orig/drivers/ide/ide-tape.c
-+++ block/drivers/ide/ide-tape.c
-@@ -380,7 +380,7 @@ static int ide_tape_callback(ide_drive_t
- 		}
- 
- 		tape->first_frame += blocks;
--		rq->resid_len = blk_rq_bytes(rq) - blocks * tape->blk_size;
-+		rq->resid_len -= blocks * tape->blk_size;
- 
- 		if (pc->error) {
- 			uptodate = 0;
-Index: block/drivers/message/fusion/mptsas.c
-===================================================================
---- block.orig/drivers/message/fusion/mptsas.c
-+++ block/drivers/message/fusion/mptsas.c
-@@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
- 		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
- 		memcpy(req->sense, smprep, sizeof(*smprep));
- 		req->sense_len = sizeof(*smprep);
--		rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
-+		req->resid_len = 0;
-+		rsp->resid_len -= smprep->ResponseDataLength;
- 	} else {
- 		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
- 		    ioc->name, __func__);
-Index: block/drivers/scsi/libsas/sas_expander.c
-===================================================================
---- block.orig/drivers/scsi/libsas/sas_expander.c
-+++ block/drivers/scsi/libsas/sas_expander.c
-@@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
- 	if (ret > 0) {
- 		/* positive number is the untransferred residual */
- 		rsp->resid_len = ret;
-+		req->resid_len = 0;
- 		ret = 0;
-+	} else if (ret == 0) {
-+		rsp->resid_len = 0;
-+		req->resid_len = 0;
- 	}
- 
- 	return ret;
-Index: block/drivers/scsi/libsas/sas_host_smp.c
-===================================================================
---- block.orig/drivers/scsi/libsas/sas_host_smp.c
-+++ block/drivers/scsi/libsas/sas_host_smp.c
-@@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
- 	resp_data[1] = req_data[1];
- 	resp_data[2] = SMP_RESP_FUNC_UNK;
- 
--	req->resid_len = blk_rq_bytes(req);
--	rsp->resid_len = blk_rq_bytes(rsp);
--
- 	switch (req_data[1]) {
- 	case SMP_REPORT_GENERAL:
- 		req->resid_len -= 8;
-Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
-===================================================================
---- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
- 
- 		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
- 		req->sense_len = sizeof(*mpi_reply);
--		rsp->resid_len = blk_rq_bytes(rsp) -
--				 mpi_reply->ResponseDataLength;
-+		req->resid_len = 0;
-+		rsp->resid_len -= mpi_reply->ResponseDataLength;
- 	} else {
- 		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
- 		    "%s - no reply\n", ioc->name, __func__));
-Index: block/drivers/block/ub.c
-===================================================================
---- block.orig/drivers/block/ub.c
-+++ block/drivers/block/ub.c
-@@ -781,8 +781,10 @@ static void ub_rw_cmd_done(struct ub_dev
- 
- 	if (cmd->error == 0) {
- 		if (blk_pc_request(rq)) {
--			if (cmd->act_len < blk_rq_bytes(rq))
--				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
-+			if (cmd->act_len >= rq->resid_len)
-+				rq->resid_len = 0;
-+			else
-+				rq->resid_len -= cmd->act_len;
- 			scsi_status = 0;
- 		} else {
- 			if (cmd->act_len != cmd->len) {
