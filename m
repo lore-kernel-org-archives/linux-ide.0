@@ -1,31 +1,72 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] icside: register second channel of version 6 PCB
-Date: Sat, 16 May 2009 18:55:32 +0200
-Message-ID: <200905161855.32951.bzolnier@gmail.com>
-References: <200905152008.29452.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 0/15 v2] ide-atapi: remove pc->buf and misc cleanups
+Date: Sat, 16 May 2009 21:07:38 +0200
+Message-ID: <200905162107.38332.bzolnier@gmail.com>
+References: <1242364293-29223-1-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-ew0-f176.google.com ([209.85.219.176]:63422 "EHLO
 	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755577AbZEPTPh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 15:15:37 -0400
-Received: by ewy24 with SMTP id 24so3209970ewy.37
-        for <linux-ide@vger.kernel.org>; Sat, 16 May 2009 12:15:37 -0700 (PDT)
-In-Reply-To: <200905152008.29452.sshtylyov@ru.mvista.com>
+	with ESMTP id S1755756AbZEPTPl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 15:15:41 -0400
+In-Reply-To: <1242364293-29223-1-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Friday 15 May 2009 18:08:29 Sergei Shtylyov wrote:
-> The second IDE channel of version 6 PCB is not being registered anymore since
-> the commit 48c3c1072651922ed153bcf0a33ea82cf20df390 (ide: add struct ide_host
-> (take 3)).
+
+Hi,
+
+On Friday 15 May 2009 07:11:18 Borislav Petkov wrote:
+> Hi,
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> this is the newest respin of the current patchset with all issues from
+> the previous review round fixed:
+> 
+> - 0003: fixed checkpatch issues
+> 
+> - 0005: documented additional change in the commit message
+> 
+> - 0009: converted to using bio_data() helper; pushed pc->buf removal to #12;
+> 	moved unrelated changes to 0010
+> 
+> - 0014: updated/fixed checkpatch issues
 
-thanks, applied
+Thanks.
+
+> It also got rebased ontop of block/for-2.6.31 after Tejun's stuff got merged.
+
+I would love to merge it but I'm hitting merge conflicts...
+
+I can pull tj/block-peek-fetch into for-next but not block/for-2.6.31...
+
+tj's top commit:
+
+author	Tejun Heo <tj@kernel.org>
+	Fri, 8 May 2009 23:45:23 +0000 (08:45 +0900)
+committer	Tejun Heo <tj@kernel.org>
+	Fri, 8 May 2009 23:45:23 +0000 (08:45 +0900)
+commit	18c551bb4944dec0ce2c0a854b6694ed39ab58f6
+tree	a2a59fd27626e930809a20546c0c02e1df498056
+parent	88fd264e94d01b23339ce614be9141eb2db98e10
+
+corresponding blocks's commit:
+
+author	Tejun Heo <tj@kernel.org>
+	Fri, 8 May 2009 02:54:16 +0000 (11:54 +0900)
+committer	Jens Axboe <jens.axboe@oracle.com>
+	Mon, 11 May 2009 07:52:18 +0000 (09:52 +0200)
+commit	9934c8c04561413609d2bc38c6b9f268cba774a4
+tree	30dd8f7be54f9b2e03094de9cd03b6a9ee2909cd
+parent	2343046826a8ca426b07601d9593ee046c298b68
+
+Looking at creation dates I suspect that somewhere along the way
+something was rebased?
+
+One quick temporary solution would be to recreate bp/pc-remove-buf
+on top of tj/block-peek-fetch...
