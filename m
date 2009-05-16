@@ -1,34 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 11/18] swim: dequeue in-flight request
-Date: Sat, 16 May 2009 23:37:02 +0900
-Message-ID: <4A0ECF8E.6000209@kernel.org>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-12-git-send-email-tj@kernel.org> <4A0EC2AD.20704@ru.mvista.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] Fix ide-tape compilation error.
+Date: Sat, 16 May 2009 17:08:02 +0200
+Message-ID: <20090516150802.GA8386@liondog.tnic>
+References: <9ea470500904200230k5f0ea050u7411b7c9d9be7098@mail.gmail.com> <20090505211259.GA2723@localhost> <20090505211939.GA6281@localhost> <20090506061048.GA3406@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46361 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752610AbZEPOjT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 May 2009 10:39:19 -0400
-In-Reply-To: <4A0EC2AD.20704@ru.mvista.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:44482 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953AbZEPPIG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 11:08:06 -0400
+Received: by fxm2 with SMTP id 2so2433069fxm.37
+        for <linux-ide@vger.kernel.org>; Sat, 16 May 2009 08:08:06 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20090506061048.GA3406@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+To: bzolnier@gmail.com
+Cc: Mark de Wever <koraq@xs4all.nl>, sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org, TejunHeo <tj@kernel.org>
 
-Sergei Shtylyov wrote:
->   And without duplication:
+On Wed, May 06, 2009 at 08:10:48AM +0200, Borislav Petkov wrote:
+> On Tue, May 05, 2009 at 11:19:39PM +0200, Mark de Wever wrote:
+> > This error only occurs when IDETAPE_DEBUG_LOG is enabled.
+> > 
+> > Signed-off-by: Mark de Wever <koraq@xs4all.nl>
+> 
+> Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
-Similar response as the if/else one on the other thread.  Is it really
-any significantly better?  The 'duplication' here is basically one
-liner after the peek/fetch change and when the duplication is minimal,
-I usually find it clearer to put the loop condition at the while
-clause itself.  If you think it's significantly better, please go
-ahead and submit the patch but to me the change you're proposing is
-basically cosmetic and not even a clearly better one at that.
+Bart,
+
+can you please pick that one up - it is 2.6.30 material.
 
 Thanks.
 
 -- 
-tejun
+Regards/Gruss,
+    Boris.
