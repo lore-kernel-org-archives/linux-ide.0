@@ -1,87 +1,58 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git pull] IDE fixes
-Date: Sat, 16 May 2009 21:33:45 +0200
-Message-ID: <200905162133.46010.bzolnier@gmail.com>
-References: <200905162116.23690.bzolnier@gmail.com> <20090516192219.GA6202@liondog.tnic>
+Subject: Re: [PATCH 0/15 v2] ide-atapi: remove pc->buf and misc cleanups
+Date: Sat, 16 May 2009 21:35:52 +0200
+Message-ID: <200905162135.53084.bzolnier@gmail.com>
+References: <1242364293-29223-1-git-send-email-petkovbb@gmail.com> <200905162107.38332.bzolnier@gmail.com> <20090516192319.GB6202@liondog.tnic>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:5738 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611AbZEPT3c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 15:29:32 -0400
-In-Reply-To: <20090516192219.GA6202@liondog.tnic>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:37503 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752611AbZEPTbS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 May 2009 15:31:18 -0400
+In-Reply-To: <20090516192319.GB6202@liondog.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Saturday 16 May 2009 21:22:19 Borislav Petkov wrote:
+On Saturday 16 May 2009 21:23:19 Borislav Petkov wrote:
 > Hi,
 > 
-> On Sat, May 16, 2009 at 09:16:23PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Sat, May 16, 2009 at 09:07:38PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > I would love to merge it but I'm hitting merge conflicts...
 > > 
-> > ide-tape oops fix, icside regression fix and new piix cable quirk
+> > I can pull tj/block-peek-fetch into for-next but not block/for-2.6.31...
 > > 
-> > Linus, please pull from 'for-linus' branch of:
+> > tj's top commit:
 > > 
-> > master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git for-linus
+> > author	Tejun Heo <tj@kernel.org>
+> > 	Fri, 8 May 2009 23:45:23 +0000 (08:45 +0900)
+> > committer	Tejun Heo <tj@kernel.org>
+> > 	Fri, 8 May 2009 23:45:23 +0000 (08:45 +0900)
+> > commit	18c551bb4944dec0ce2c0a854b6694ed39ab58f6
+> > tree	a2a59fd27626e930809a20546c0c02e1df498056
+> > parent	88fd264e94d01b23339ce614be9141eb2db98e10
 > > 
-> > to receive the following updates:
+> > corresponding blocks's commit:
 > > 
-> >  drivers/ide/icside.c   |    2 +-
-> >  drivers/ide/ide-tape.c |    6 ------
-> >  drivers/ide/piix.c     |    1 +
-> >  3 files changed, 2 insertions(+), 7 deletions(-)
+> > author	Tejun Heo <tj@kernel.org>
+> > 	Fri, 8 May 2009 02:54:16 +0000 (11:54 +0900)
+> > committer	Jens Axboe <jens.axboe@oracle.com>
+> > 	Mon, 11 May 2009 07:52:18 +0000 (09:52 +0200)
+> > commit	9934c8c04561413609d2bc38c6b9f268cba774a4
+> > tree	30dd8f7be54f9b2e03094de9cd03b6a9ee2909cd
+> > parent	2343046826a8ca426b07601d9593ee046c298b68
 > > 
+> > Looking at creation dates I suspect that somewhere along the way
+> > something was rebased?
 > > 
-> > Alan Cox (1):
-> >       piix: The Sony TZ90 needs the cable type hardcoding
-> > 
-> > Sergei Shtylyov (1):
-> >       icside: register second channel of version 6 PCB
-> > 
-> > Tejun Heo (1):
-> >       ide-tape: remove back-to-back REQUEST_SENSE detection
+> > One quick temporary solution would be to recreate bp/pc-remove-buf
+> > on top of tj/block-peek-fetch...
 > 
-> I assume it is too late to add another ide-tape debug build fix I told
-> you about earlier today:
+> will do that first thing in the morning and push it for merging.
 
-No its too early -- this patch doesn't even apply to Linus' tree.
-
-[ It applies on top of all 2.6.31 block+ide changes... ]
-
-> --
-> From: Mark de Wever <koraq@xs4all.nl>
-> Date: Sat, 16 May 2009 18:17:30 +0200
-> Subject: [PATCH] ide-tape: fix debug call
-> 
-> This error only occurs when IDETAPE_DEBUG_LOG is enabled.
-> 
-> Signed-off-by: Mark de Wever <koraq@xs4all.nl>
-> ---
->  drivers/ide/ide-tape.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index 9ca2665..521a5f5 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -592,7 +592,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
->  	struct ide_cmd cmd;
->  	u8 stat;
->  
-> -	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %u\n"
-> +	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %u\n",
->  		  (unsigned long long)blk_rq_pos(rq), blk_rq_sectors(rq));
->  
->  	if (!(blk_special_request(rq) || blk_sense_request(rq))) {
-> -- 
-> 1.6.3
-> 
-> If so, you could still queue it for 30-rc7 if there would be one...
-> 
-> Thanks.
+Cool, please also merge ide-tape DEBUG build fix while at it...
