@@ -1,98 +1,71 @@
-From: Martin Lottermoser <Martin.Lottermoser@t-online.de>
+From: Borislav Petkov <petkovbb@googlemail.com>
 Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Sun, 17 May 2009 22:18:56 +0200
-Message-ID: <20090517201856.GA1496@wanza.invalid>
-References: <20090517091224.GA8280@wanza.invalid> <4A10509C.603@gmail.com> <200905172135.10136.bzolnier@gmail.com>
+Date: Sun, 17 May 2009 22:30:33 +0200
+Message-ID: <20090517203033.GB5142@liondog.tnic>
+References: <20090517091224.GA8280@wanza.invalid> <200905172145.45756.bzolnier@gmail.com> <20090517195051.GA5142@liondog.tnic> <200905172218.01606.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754870AbZEQUU0@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:65391 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752609AbZEQUag (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 16:30:36 -0400
 Content-Disposition: inline
-In-Reply-To: <200905172135.10136.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <200905172218.01606.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>, linux-ide@vger.kernel.org
 
-Hello,
+Hi,
 
-On Sun, May 17, 2009 at 21:35:09 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > The error message with 2.6.23.14 was:
+On Sun, May 17, 2009 at 10:18:01PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 17 May 2009 21:50:51 Borislav Petkov wrote:
+> > On Sun, May 17, 2009 at 09:45:45PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > On Sunday 17 May 2009 21:34:09 Borislav Petkov wrote:
+> > > > (adding Bart to CC)
+> > > > 
+> > > > Hi Bart,
+> > > > 
+> > > > please take a look at the OOPS below, seems like we BUG() in ide_intr() at
+> > > > BUG_ON(!hwif->handler) which shouldn't happen. Full message is at:
+> > > > 
+> > > > http://www.gossamer-threads.com/lists/linux/kernel/1077445.
+> > > > 
+> > > > It is 2.6.29.3 with both PIIX_IDE and ata_piix compiled and it could be
+> > > > that those two step on each other's toes, but this is only wild stab in
+> > > > the dark.
+> > > > 
+> > > > I'm sure you have more ideas.
 > > > 
-> > >   hdc: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-> > >   hdc: drive_cmd: error=0x04 { AbortedCommand }
-> > >   ide: failed opcode was: 0xec
+> > > Yes, see my other mail.
+> > 
+> > Saw it right after hitting send.
+> > 
+> > > [ After writing "I will cc: linux-ide on IDE/ATA problems" 100x times
+> > >   on the whiteboard... ;-) ]
+> > 
+> > And I CC'ed you instead, this has even bigger effect :)
 > 
-> This is more-or-less innocent -- some user-space utility wrongly uses
-> ATA IDENTIFY command on ATAPI devices and it gets logged as an error...
-
-thanks; that's a load off my mind :-).
-
-> > > This is correct: the drive is only capable of Ultra DMA mode 2 33.3 MB/s
-> > > (see manufacturer's documentation) and is attached with a standard 40-wire
-> > > ATA cable (black connectors for master and slave).
+> Actually no.
 > 
-> Martin, this is one of ATAPI drives which support UDMA66 but have broken
-> cable detection.
+> I'm following all IDE discussions on linux-ide anyway and whenever I see
+> that I can help immediately I do it (and if I can't the issue gets its
+> priority level according to which it will be looked at later).  CC:ing me
+> on not fully debugged problems is not helping anything.  More likely that
+> it disrupts the work-flow since people are waiting on me instead of just
+> pushing for the solution harder...
 
-Are you sure? Compare this:
+In this case, however, it made more sense to CC you - you know that code
+better than me, you have the bunch of experience while I have to read
+a ton of stuff before I get up to speed with the problem. You, on the
+other hand, have seen similar errors like that before and can at least
+have a hunch - and you did. Besides, it's not like I'm waiting for you
+- I have other things on my plate which I could tackle while you handle
+the case you're more knowledgeable at. It is simple as that.
 
-  http://downloadcenter.samsung.com/content/UM/200709/20070928095126750_SH-S202N_Eng.pdf
+But I'll start CCing linux-ide if that's your preference.
 
-> Please:
-> 
-> * send 'hdparm --Istdout /dev/hdc' output
-
-Here it is:
-
-  /dev/hdc:
-  85c0 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 2020 2020 2020 2020 2020 2020
-  2020 2020 2020 2020 0000 0000 0000 5342
-  3031 2020 2020 5453 5354 636f 7270 2043
-  4444 5644 5720 5348 2d53 3230 324e 2020
-  2020 2020 2020 2020 2020 2020 2020 0000
-  0000 0b00 0000 0200 0200 0006 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0007
-  0003 0078 0078 017f 0078 0000 0000 0000
-  0000 00f8 0210 0000 0000 0000 0000 0000
-  00f8 0210 0210 0000 0000 0000 0000 0000
-  041f 0000 8005 3200 005b 2000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 0000
-  0000 0000 0000 0000 0000 0000 0000 a3a5
-
-> * try 2.6.30-rc6 (maybe 2.6.29.3 oops has been fixed already and we just
->   need to backport it)
-
-That'll have to wait until tomorrow -- I have a low-bandwidth connection
-here.
-
-> also connecting the drive using 80-wires cable and getting another hdparm
-> output (+ seeing if it helps the other problems) would be very useful.
-
-I'll try that too, but that also will have to wait until tommorrow.
-
-Thanks for the help,
-Martin Lottermoser
 -- 
-Martin Lottermoser             Martin.Lottermoser at _REMOVE_t-online.de
-Greifswaldstrasse 28
-38124 Braunschweig             http://home.vrweb.de/martin.lottermoser
-Germany
+Regards/Gruss,
+    Boris.
