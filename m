@@ -1,88 +1,81 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Mon, 18 May 2009 00:48:36 +0200
-Message-ID: <200905180048.36483.bzolnier@gmail.com>
-References: <20090517091224.GA8280@wanza.invalid> <200905172218.01606.bzolnier@gmail.com> <20090517203033.GB5142@liondog.tnic>
+Subject: Re: s2disk hangs with kernel >=2.6.29, SATA, Gigabyte EG45M-DS2H (bisected)
+Date: Mon, 18 May 2009 01:17:27 +0200
+Message-ID: <200905180117.28413.bzolnier@gmail.com>
+References: <20090516225153.GA7883@arbonne.lan>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:46777 "EHLO
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:36803 "EHLO
 	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbZEQXN7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 19:13:59 -0400
-In-Reply-To: <20090517203033.GB5142@liondog.tnic>
+	with ESMTP id S1751704AbZEQXOA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 19:14:00 -0400
+In-Reply-To: <20090516225153.GA7883@arbonne.lan>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>, linux-ide@vger.kernel.org
+To: Richard Atterer <richard@2009.atterer.net>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org
 
-On Sunday 17 May 2009 22:30:33 Borislav Petkov wrote:
-> Hi,
-> 
-> On Sun, May 17, 2009 at 10:18:01PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 17 May 2009 21:50:51 Borislav Petkov wrote:
-> > > On Sun, May 17, 2009 at 09:45:45PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > > On Sunday 17 May 2009 21:34:09 Borislav Petkov wrote:
-> > > > > (adding Bart to CC)
-> > > > > 
-> > > > > Hi Bart,
-> > > > > 
-> > > > > please take a look at the OOPS below, seems like we BUG() in ide_intr() at
-> > > > > BUG_ON(!hwif->handler) which shouldn't happen. Full message is at:
-> > > > > 
-> > > > > http://www.gossamer-threads.com/lists/linux/kernel/1077445.
-> > > > > 
-> > > > > It is 2.6.29.3 with both PIIX_IDE and ata_piix compiled and it could be
-> > > > > that those two step on each other's toes, but this is only wild stab in
-> > > > > the dark.
-> > > > > 
-> > > > > I'm sure you have more ideas.
-> > > > 
-> > > > Yes, see my other mail.
-> > > 
-> > > Saw it right after hitting send.
-> > > 
-> > > > [ After writing "I will cc: linux-ide on IDE/ATA problems" 100x times
-> > > >   on the whiteboard... ;-) ]
-> > > 
-> > > And I CC'ed you instead, this has even bigger effect :)
-> > 
-> > Actually no.
-> > 
-> > I'm following all IDE discussions on linux-ide anyway and whenever I see
-> > that I can help immediately I do it (and if I can't the issue gets its
-> > priority level according to which it will be looked at later).  CC:ing me
-> > on not fully debugged problems is not helping anything.  More likely that
-> > it disrupts the work-flow since people are waiting on me instead of just
-> > pushing for the solution harder...
-> 
-> In this case, however, it made more sense to CC you - you know that code
-> better than me, you have the bunch of experience while I have to read
-> a ton of stuff before I get up to speed with the problem. You, on the
-> other hand, have seen similar errors like that before and can at least
 
-You seem to forget that I'm not reading LKML regularly but I do linux-ide
-(I know that the same is true for some other people) so I would have helped
-much earlier if I had noticed the *initial* mail instead of the most recent
-at the time...
+On Sunday 17 May 2009 00:51:53 Richard Atterer wrote:
+> Hello,
+>=20
+> I have had problems using s2disk starting sometime before 2.6.29 (and=
+=20
+> continuing up until now, 2.6.30-rc6), but only got around to bisectin=
+g the=20
+> issue now.
+>=20
+> The symptom is as follows: When I start s2disk (by running the hibern=
+ate=20
+> command), the system switches to the console and prints "s2disk:=20
+> Snapshotting system". The cursor freezes for a moment, I hear the noi=
+se=20
+> that my DVD writer makes when it is reset, the lights of my USB hub g=
+o off=20
+> and on again. Then the cursor continues to blink and nothing more hap=
+pens,=20
+> the system just hangs.
+>=20
+> I have a Gigabyte EG45M-DS2H motherboard with two disks attached: One=
+ SATA=20
+> disk containing Linux, and one older PATA disk with data. AHCI is ena=
+bled=20
+> in the BIOS.
+>=20
+> The patch that causes the hang is 295f00042aaf6b553b5f37348f89bab463d=
+4a469:
+> ide: don't execute the next queued command from the hard-IRQ context =
+(v2)
 
-> have a hunch - and you did. Besides, it's not like I'm waiting for you
-> - I have other things on my plate which I could tackle while you handle
-> the case you're more knowledgeable at. It is simple as that.
+Hmm, this should have been fixed by:
 
-That is missing the point -- we are not the only knowledgeable ones here
-and we definitely want to encourage other people to attack the problems.
+commit 2ea5521022ac8f4f528dcbae02668e02a3501a5a
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Wed Jan 14 19:19:04 2009 +0100
 
-[ Please read my mail again.  I explicitly said "people" not "you" there. ]
+    ide: fix suspend regression
 
-> But I'll start CCing linux-ide if that's your preference.
+    On Monday 12 January 2009, Simon Holm Th=F8gersen wrote:
+    > commit 295f000 ("ide: don't execute the next queued command from =
+the
+    > hard-IRQ context (v2)") breaks suspend to disk for me. On
+    > 'echo disk > /sys/power/state' the systems hangs, letting me swit=
+ch
+    > virtual consoles, but not responding to Alt+SysRq
 
-Thanks but my preferences are not the point here.  That is just the most
-efficient way for everybody: IDE/ATA problems should be handled at linux-ide
-mailing list.  You can still cc: me but cc:ing linux-ide takes priority.
+    Restart the request queue early for REQ_TYPE_PM_RESUME requests
+    (though there is only one resume request for the whole resume
+    sequence it stays in the queue until is fully completed and now
+    depends on kblockd for processing consequential resume states).
 
-Thanks.
+    Reported-and-bisected-by: Simon Holm Th=F8gersen <odie@cs.aau.dk>
+    Tested-by: Simon Holm Th=F8gersen <odie@cs.aau.dk>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+What was the last 'good' kernel that you've started bisection with?
+
+Thanks,
 Bart
