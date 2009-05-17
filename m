@@ -1,74 +1,45 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 0/15 v2] ide-atapi: remove pc->buf and misc cleanups
-Date: Sun, 17 May 2009 12:33:43 +0200
-Message-ID: <20090517103343.GB27838@liondog.tnic>
-References: <1242364293-29223-1-git-send-email-petkovbb@gmail.com> <200905162107.38332.bzolnier@gmail.com> <20090516192319.GB6202@liondog.tnic> <200905162135.53084.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH UPDATED block#for-2.6.31 2/3] block: set rq->resid_len
+ to blk_rq_bytes() on issue
+Date: Sun, 17 May 2009 20:32:58 +0900
+Message-ID: <4A0FF5EA.3020805@gmail.com>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0E0650.1020500@gmail.com> <4A0FCF52.7070406@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:51536 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750804AbZEQKdq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 06:33:46 -0400
-Content-Disposition: inline
-In-Reply-To: <200905162135.53084.bzolnier@gmail.com>
+Received: from rv-out-0506.google.com ([209.85.198.226]:6401 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753993AbZEQLdD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 07:33:03 -0400
+In-Reply-To: <4A0FCF52.7070406@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-Hi,
+Hello, Boaz.
 
-On Sat, May 16, 2009 at 09:35:52PM +0200, Bartlomiej Zolnierkiewicz wrote:
+Boaz Harrosh wrote:
+> Surly this is not enough. This is not the only place rq->__data_len
+> gets a value.  Specifically it can be added to in blk_rq_append_bio.
+> You must then update all places that set rq->__data_len to also set
+> rq->resid_len.
 
-[..]
+Right, nice spotting, but I think those are the only two places.  You
+now see why I don't like that append thing.  :-)
 
-> > > Looking at creation dates I suspect that somewhere along the way
-> > > something was rebased?
-> > > 
-> > > One quick temporary solution would be to recreate bp/pc-remove-buf
-> > > on top of tj/block-peek-fetch...
-> > 
-> > will do that first thing in the morning and push it for merging.
+> Alternatively you could do a single:
+> +	rq->resid_len = blk_rq_bytes(rq);
 > 
-> Cool, please also merge ide-tape DEBUG build fix while at it...
+> inside  blk_fetch_request(q) or before the call to prep_fn, or even at
+> __elv_add_request().
 
-I'd suggest we merge that one before 2.6.30 hits the stores :) since it
-is trivial enough and I won't have to backport it. Here's a rediffed
-version against your for-next branch:
+I think I'll just add resid_len adjustment there right after
+__data_len manipulation.  That code path should really go away
+eventually.
 
---
-
-From: Mark de Wever <koraq@xs4all.nl>
-Date: Sun, 17 May 2009 12:29:28 +0200
-Subject: [PATCH] ide-tape: fix debug call
-
-This error only occurs when IDETAPE_DEBUG_LOG is enabled.
-
-Signed-off-by: Mark de Wever <koraq@xs4all.nl>
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-tape.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 8dfc688..203bbea 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -617,7 +617,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	struct ide_cmd cmd;
- 	u8 stat;
- 
--	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu\n"
-+	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu\n",
- 		  (unsigned long long)rq->sector, rq->nr_sectors);
- 
- 	if (!(blk_special_request(rq) || blk_sense_request(rq))) {
--- 
-1.6.3
-
-
+Thanks.
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
