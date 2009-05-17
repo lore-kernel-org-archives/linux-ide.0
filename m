@@ -1,48 +1,45 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Sun, 17 May 2009 21:50:51 +0200
-Message-ID: <20090517195051.GA5142@liondog.tnic>
-References: <20090517091224.GA8280@wanza.invalid> <20090517121444.GA8733@wanza.invalid> <20090517193409.GC2976@liondog.tnic> <200905172145.45756.bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ata: libata depends on HAS_DMA
+Date: Sun, 17 May 2009 16:05:54 -0400
+Message-ID: <4A106E22.1010705@pobox.com>
+References: <20090513043409.GA13577@cynthia.pants.nu> <200905151355.09888.arnd@arndb.de> <4A0FD229.9010401@gmail.com> <200905172138.55145.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:62835 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378AbZEQTuy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 15:50:54 -0400
-Content-Disposition: inline
-In-Reply-To: <200905172145.45756.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:48539 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752250AbZEQUGT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 May 2009 16:06:19 -0400
+In-Reply-To: <200905172138.55145.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>, linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <htejun@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
 
-On Sun, May 17, 2009 at 09:45:45PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 17 May 2009 21:34:09 Borislav Petkov wrote:
-> > (adding Bart to CC)
-> > 
-> > Hi Bart,
-> > 
-> > please take a look at the OOPS below, seems like we BUG() in ide_intr() at
-> > BUG_ON(!hwif->handler) which shouldn't happen. Full message is at:
-> > 
-> > http://www.gossamer-threads.com/lists/linux/kernel/1077445.
-> > 
-> > It is 2.6.29.3 with both PIIX_IDE and ata_piix compiled and it could be
-> > that those two step on each other's toes, but this is only wild stab in
-> > the dark.
-> > 
-> > I'm sure you have more ideas.
+Arnd Bergmann wrote:
+> On Sunday 17 May 2009, Robert Hancock wrote:
+> Please reread my explanations above and your own reply from 
+> last thursday. The case is entirely theoretical, as all platforms
+> (except microblaze, which is getting fixed) either set HAS_DMA or
+> don't allow building ATA drivers anyway. Platforms that don't support
+> DMA can just define CONFIG_HAS_DMA and do what you suggested:
 > 
-> Yes, see my other mail.
+> On Thursday 14 May 2009, Robert Hancock wrote:
+>> Wouldn't the easiest solution be to just dummy out the DMA API calls on 
+>> this platform to always fail? That would fix these compile problems..
 
-Saw it right after hitting send.
 
-> [ After writing "I will cc: linux-ide on IDE/ATA problems" 100x times
->   on the whiteboard... ;-) ]
+That's what needs to happen.  We provide no-op functions for e.g. PCI 
+and x86 DMI, for platforms where this support does not exist.
 
-And I CC'ed you instead, this has even bigger effect :)
+Pretty much all architectures support some form of ATA.  m68k, m32r, 
+h8300 and microblaze all have IDE interface, which means that libata 
+needs to work on that platform.
 
--- 
-Regards/Gruss,
-    Boris.
+The only !ATA arch in the entire kernel is s390, AFAICT.
+
+	Jeff
+
+
+
