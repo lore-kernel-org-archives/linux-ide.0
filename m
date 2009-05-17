@@ -1,71 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 11/18] swim: dequeue in-flight request
-Date: Sun, 17 May 2009 07:18:18 +0900
-Message-ID: <4A0F3BAA.1050907@kernel.org>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-12-git-send-email-tj@kernel.org> <4A0EC2AD.20704@ru.mvista.com> <4A0ECF8E.6000209@kernel.org> <4A0F1A55.8080701@ru.mvista.com>
+From: Harald Welte <HaraldWelte@viatech.com>
+Subject: [PATCH] [IDE] Add VIA VX855 PCI Device ID
+Date: Sun, 17 May 2009 14:16:39 +0800
+Message-ID: <20090517061639.GG4909@prithivi.gnumonks.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46404 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758815AbZEPWS5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 May 2009 18:18:57 -0400
-In-Reply-To: <4A0F1A55.8080701@ru.mvista.com>
+Received: from ganesha.gnumonks.org ([213.95.27.120]:50229 "EHLO
+	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118AbZEQGhz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 02:37:55 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Joseph Chan <JosephChan@via.com.tw>, Bruce Chang <BruceChang@via.com.tw>
 
-Hello, Sergei.
+This patch adds the PCI Device ID 0xc409 to the PCI ID table of via82cxxx.c,
+as well as the 0x8409 south bridge ID.
 
-Sergei Shtylyov wrote:
->> Similar response as the if/else one on the other thread.  Is it really
->> any significantly better?  The 'duplication' here is basically one
->> liner
-> 
->   Not true, it's 3-liner. I wouldn't bother with one liner.
+This is required to make the IDE driver work on the VX855/VX875 integrated
+chipset.
 
-The final result is...
+Signed-off-by: Harald Welte <HaraldWelte@viatech.com>
+---
+ drivers/ide/via82cxxx.c |    2 ++
+ include/linux/pci_ids.h |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-	req = blk_fetch_request(q);
-	while (req) {
-		int err = -EIO;
-
-That looks like one liner to me.
-
->> after the peek/fetch change
-> 
->   The peek/fetch code itself is duplicated. :-/
-
-Do you mean by inlining?  Please note that blk_fetch_request() is not
-inlined anymore after Fujita's bidi end_request cleanup patches.
-
->> and when the duplication is minimal,
->> I usually find it clearer to put the loop condition at the while
->> clause itself.
-> 
->   No problem, we could just keep an old form of *while* loop.
-> 
->> If you think it's significantly better,
-> 
->   I do hink it avoids duplicating peek/fetch code.
-> 
->> please go ahead and submit the patch but to me the change you're
->> proposing is
->> basically cosmetic and not even a clearly better one at that.
-> 
-> Should probably look at the resulting assembly to see how much it's
-> differrent.
-
-Do you seriously think it's worthwhile to optimize the request loop
-according to assembly generation?  That sounds like a bad case of over
-(micro) optimization to me.  It's not gonna make any noticeable
-difference and the changes you make today can be irrelevant or even
-deterimental tomorrow depending on any number of parameters.  Please
-don't do it for performance reasons.
-
-Thanks.
-
+diff --git a/drivers/ide/via82cxxx.c b/drivers/ide/via82cxxx.c
+index 3ff7231..028de26 100644
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -67,6 +67,7 @@ static struct via_isa_bridge {
+ 	u8 udma_mask;
+ 	u8 flags;
+ } via_isa_bridges[] = {
++	{ "vx855",	PCI_DEVICE_ID_VIA_VX855,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+ 	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+ 	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+ 	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+@@ -474,6 +475,7 @@ static const struct pci_device_id via_pci_tbl[] = {
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C576_1),  0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C586_1),  0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_CX700_IDE), 0 },
++	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_VX855_IDE), 0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_6410),      1 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_SATA_EIDE), 1 },
+ 	{ 0, },
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 06ba90c..0f71812 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1406,7 +1406,7 @@
+ #define PCI_DEVICE_ID_VIA_82C598_1	0x8598
+ #define PCI_DEVICE_ID_VIA_838X_1	0xB188
+ #define PCI_DEVICE_ID_VIA_83_87XX_1	0xB198
+-#define PCI_DEVICE_ID_VIA_C409_IDE	0XC409
++#define PCI_DEVICE_ID_VIA_VX855_IDE	0xC409
+ #define PCI_DEVICE_ID_VIA_ANON		0xFFFF
+ 
+ #define PCI_VENDOR_ID_SIEMENS           0x110A
 -- 
-tejun
+1.6.2.4
