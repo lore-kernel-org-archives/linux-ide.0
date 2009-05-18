@@ -1,47 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/6] drivers/ide Convert printk(KERN_<foo> to pr_<foo>(
-Date: Mon, 18 May 2009 15:56:37 +0000
-Message-ID: <1242662198.6347.14.camel@mulgrave.int.hansenpartnership.com>
-References: <cover.1242609803.git.joe@perches.com>
-	 <200905181612.43632.bzolnier@gmail.com>
-	 <1242661288.1572.82.camel@Joe-Laptop.home>
+From: Martin Lottermoser <Martin.Lottermoser@t-online.de>
+Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
+Date: Mon, 18 May 2009 18:40:35 +0200
+Message-ID: <20090518164034.GA7789@wanza.invalid>
+References: <20090517091224.GA8280@wanza.invalid> <4A10509C.603@gmail.com> <200905172135.10136.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54670 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752092AbZERP4g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 11:56:36 -0400
-In-Reply-To: <1242661288.1572.82.camel@Joe-Laptop.home>
+Received: from mailout06.t-online.de ([194.25.134.19]:41398 "EHLO
+	mailout06.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752641AbZERQlQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 12:41:16 -0400
+Content-Disposition: inline
+In-Reply-To: <200905172135.10136.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 2009-05-18 at 08:41 -0700, Joe Perches wrote:
-> On Mon, 2009-05-18 at 16:12 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Monday 18 May 2009 04:21:08 Joe Perches wrote:
-> > > Mostly mechanical conversion of printk's
-> > Hmm.. less mechanical conversion using also dev_*() macros where suitable
-> > would be much better...
-> > How's about fixing pr_devel() which currently doesn't seem to be used
-> > by anything inside kernel to not depend on DEBUG in separate pre-patch
-> > and then using it instead of pr_debug()?
-> 
-> How about deferring the "printk(KERN_DEBUG" to something else
-> and doing the mechanical conversion to core as a first pass,
-> followed by core pr_<foo> to dev_<foo> where appropriate
-> as a second pass?
+Hello,
 
-What exactly is the point of a mechanical conversion from
-printk(KERN_ ...) to pr_...?
+On Sun, May 17, 2009 at 09:35:09PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> * try 2.6.30-rc6 (maybe 2.6.29.3 oops has been fixed already and we just
+>   need to backport it)
 
-I can see the value of the pr_ macros from new code in that the
-temptation to put a comma after KERN_.. for some people is irresistible
-so it's an interface that's very easy to misuse, but given that we have
-correct uses, why convert them?
+I've done that and put the resulting files again on the web at:
 
-James
+  http://home.vrweb.de/martin.lottermoser/linux/
 
+The files are named "2.6.30-rc6-*".
 
+The basic result is that the kernel still panics, still in
+drivers/ide/ide-io.c, the final output on the real console shows only
+a call stack (far deeper than with 2.6.29.3) but no terminating panic
+message, and the ouput sent through netconsole arrives truncated.
+
+Regards,
+Martin Lottermoser
+--
+Martin Lottermoser             Martin.Lottermoser at _REMOVE_t-online.de
+Greifswaldstrasse 28
+38124 Braunschweig             http://home.vrweb.de/martin.lottermoser
+Germany
