@@ -1,66 +1,62 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] asm-generic: add a dma-mapping.h file
-Date: Tue, 19 May 2009 07:44:08 +0900
-Message-ID: <20090519074355P.fujita.tomonori@lab.ntt.co.jp>
-References: <200905172245.23774.arnd@arndb.de>
-	<20090518194443R.fujita.tomonori@lab.ntt.co.jp>
-	<200905181645.26305.arnd@arndb.de>
+Date: Mon, 18 May 2009 18:54:49 -0400
+Message-ID: <4A11E739.6080106@pobox.com>
+References: <20090513043409.GA13577@cynthia.pants.nu> <200905172138.55145.arnd@arndb.de> <4A106E22.1010705@pobox.com> <200905172245.23774.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <200905181645.26305.arnd@arndb.de>
+In-Reply-To: <200905172245.23774.arnd@arndb.de>
 Sender: linux-m68k-owner@vger.kernel.org
-To: arnd@arndb.de
-Cc: fujita.tomonori@lab.ntt.co.jp, jgarzik@pobox.com, hancockrwd@gmail.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <htejun@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, 18 May 2009 16:45:24 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
-
-> On Monday 18 May 2009, FUJITA Tomonori wrote:
-> > 
-> > NACK'ed, sorry.
+Arnd Bergmann wrote:
+> h8300 and m32r currently do not provide a DMA mapping API
+> and therefore cannot use the ATA drivers. This adds a
+> generic version of dma-mapping.h for architectures that
+> have none or very minimal actual support for DMA in hardware
+> and makes the two architectures use it.
 > 
-> I had no idea how hard it would get to fix a simple
-> allyesconfig build error. This is the third time
-> that a new approach to getting ATA to build on all
-> platforms is gets a NAK...
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> On Sunday 17 May 2009 20:05:54 Jeff Garzik wrote:
 > 
-> > - these idndef tricks are really ugly and wrong.
-> > - these functions are not generic at all.
+>> That's what needs to happen.  We provide no-op functions for e.g. PCI 
+>> and x86 DMI, for platforms where this support does not exist.
+>>
+>> Pretty much all architectures support some form of ATA.  m68k, m32r, 
+>> h8300 and microblaze all have IDE interface, which means that libata 
+>> needs to work on that platform.
+>>
+>> The only !ATA arch in the entire kernel is s390, AFAICT.
 > 
-> I was trying to do two things at once:
+> m68k only defines NO_DMA for Sun3 and Dragonball. Sun3 does
+> not have ATA, Dragonball could probably just enable HAS_DMA.
 > 
-> - provide a default implementation for each function
->   that an architecture can override, therefore the
->   #ifdef magic.
+> ---
+>  arch/h8300/Kconfig                   |    2 +-
+>  arch/h8300/include/asm/dma-mapping.h |    1 +
+>  arch/m32r/Kconfig                    |    2 +-
+>  arch/m32r/include/asm/dma-mapping.h  |    1 +
+>  include/asm-generic/dma-mapping.h    |  399 ++++++++++++++++++++++++++++++++++
+>  5 files changed, 403 insertions(+), 2 deletions(-)
+>  create mode 100644 arch/h8300/include/asm/dma-mapping.h
+>  create mode 100644 arch/m32r/include/asm/dma-mapping.h
+>  create mode 100644 include/asm-generic/dma-mapping.h
 
-I know what you tried with #ifdef but having something like '#define
-dma_map_sg' in arch's dma-mapping.h is unacceptable.
+My main comment is a bit non-specific...   I tend to think that all 
+no-dma platforms should provide an API whose implementation always 
+returns errors, e.g. an inlined version of dma-mapping-broken.h.
 
+That sort of setup permits the compiler's dead code elimination to work 
+on these no-dma platforms, while not crapping up the libata code with a 
+bunch of ifdefs.
 
-> - Have a minimal working implementation of the API
->   that at least makes sense for architectures that
->   do not support DMA, but want to share some of the
->   code.
-
-Well, it might make sense but we don't call architectures that don't
-support DMA 'generic'.
-
-
-> Ten of the existing architectures simply try do a
-> linear mapping, and that should easily be possible
-> in a generic way not too different from what I posted.
-
-Your proposal doesn't work with arch/x86/kernel/pci-nommu.c, which
-is trying a linear mapping, what you are talking about.
+	Jeff
 
 
-> Would you agree to a patch that works with the same
-> code on e.g. arm, microblaze, mn10300 and sh and
-> uses only a few #ifdefs?
 
-Having such helper for a linear mapping might be helpful but your
-approach is wrong.
 
