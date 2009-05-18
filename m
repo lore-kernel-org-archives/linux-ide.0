@@ -1,292 +1,76 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/6] drivers/ide: Convert printk(KERN_DEBUG to pr_debug(
-Date: Mon, 18 May 2009 13:34:22 +0400
-Message-ID: <4A112B9E.4020405@ru.mvista.com>
-References: <cover.1242609803.git.joe@perches.com> <5405960caf8cf09e74b8ac42ca8056843f13c20c.1242609803.git.joe@perches.com>
+Subject: Re: [PATCH 6/6] drivers/ide: Convert printk(KERN_NOTICE to pr_notice(
+Date: Mon, 18 May 2009 14:11:08 +0400
+Message-ID: <4A11343C.5070809@ru.mvista.com>
+References: <cover.1242609803.git.joe@perches.com> <3ff9e9c7a8918f4d5f7bab5590f46073a196a4bf.1242609804.git.joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:43490 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757349AbZERJe3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 May 2009 05:34:29 -0400
-In-Reply-To: <5405960caf8cf09e74b8ac42ca8056843f13c20c.1242609803.git.joe@perches.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757288AbZERKLj@vger.kernel.org>
+In-Reply-To: <3ff9e9c7a8918f4d5f7bab5590f46073a196a4bf.1242609804.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Joe Perches <joe@perches.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
 Hello.
 
 Joe Perches wrote:
 
-> Signed-off-by: Joe Perches <joe@perches.com>  
-
-   NAK. This will effectively disable the debugging messages.
-
-> diff --git a/drivers/ide/ali14xx.c b/drivers/ide/ali14xx.c
-> index 90da1f9..5ac2174 100644
-> --- a/drivers/ide/ali14xx.c
-> +++ b/drivers/ide/ali14xx.c
-> @@ -127,8 +127,8 @@ static void ali14xx_set_pio_mode(ide_drive_t *drive, const u8 pio)
->  		param3 += 8;
->  		param4 += 8;
->  	}
-> -	printk(KERN_DEBUG "%s: PIO mode%d, t1=%dns, t2=%dns, cycles = %d+%d, %d+%d\n",
-> -		drive->name, pio, time1, time2, param1, param2, param3, param4);
-> +	pr_debug("%s: PIO mode%d, t1=%dns, t2=%dns, cycles = %d+%d, %d+%d\n",
-> +		 drive->name, pio, time1, time2, param1, param2, param3, param4);
+> Signed-off-by: Joe Perches <joe@perches.com>
 >   
 
-   This is not an equivalent conversion. If you look at how pr_debug() 
-is defined, you'll see that it only prints something if DEBUG is defined.
+  This patch creates lines > 80 chars long, co no ACK this time.
 
-> @@ -208,8 +208,8 @@ static const struct ide_port_info ali14xx_port_info = {
+> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+> index a6edb0d..d7c4f5c 100644
+> --- a/drivers/ide/ide-floppy.c
+> +++ b/drivers/ide/ide-floppy.c
+>   
+[...]
+> @@ -428,17 +428,15 @@ static int ide_floppy_get_capacity(ide_drive_t *drive)
+>  			memcpy(&floppy->cap_desc, cap_desc, 8);
 >  
->  static int __init ali14xx_probe(void)
->  {
-> -	printk(KERN_DEBUG "ali14xx: base=0x%03x, regOn=0x%02x.\n",
-> -			  basePort, regOn);
-> +	pr_debug("ali14xx: base=0x%03x, regOn=0x%02x.\n",
-> +		 basePort, regOn);
+>  			if (!length || length % 512) {
+> -				printk(KERN_NOTICE PFX "%s: %d bytes block size"
+> -				       " not supported\n", drive->name, length);
+> +				pr_notice(PFX "%s: %d bytes block size not supported\n",
 >   
 
-   Not equivalent.
+  Line longer than 80 characters...
 
-> diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
-> index 0feb66c..0debe3c 100644
-> --- a/drivers/ide/hpt366.c
-> +++ b/drivers/ide/hpt366.c
-> @@ -805,7 +805,7 @@ static void hpt370_irq_timeout(ide_drive_t *drive)
->  	u8  dma_cmd;
->  
->  	pci_read_config_word(dev, hwif->select_data + 2, &bfifo);
-> -	printk(KERN_DEBUG "%s: %d bytes in FIFO\n", drive->name, bfifo & 0x1ff);
-> +	pr_debug("%s: %d bytes in FIFO\n", drive->name, bfifo & 0x1ff);
+> +					  drive->name, length);
+>  			} else {
+>  				floppy->blocks = blocks;
+>  				floppy->block_size = length;
+>  				floppy->bs_factor = length / 512;
+>  				if (floppy->bs_factor != 1)
+> -					printk(KERN_NOTICE PFX "%s: Warning: "
+> -					       "non 512 bytes block size not "
+> -					       "fully supported\n",
+> -					       drive->name);
+> +					pr_notice(PFX "%s: Warning: non 512 bytes block size not fully supported\n",
 >   
 
-   Not equivalent.
+   Again.
 
-> diff --git a/drivers/ide/ide-acpi.c b/drivers/ide/ide-acpi.c
-> index 77f79d2..c2f7c2f 100644
-> --- a/drivers/ide/ide-acpi.c
-> +++ b/drivers/ide/ide-acpi.c
-> @@ -45,8 +45,8 @@ struct ide_acpi_hwif_link {
->  #undef DEBUGGING
->  /* note: adds function name and KERN_DEBUG */
->  #ifdef DEBUGGING
-> -#define DEBPRINT(fmt, args...)	\
-> -		printk(KERN_DEBUG "%s: " fmt, __func__, ## args)
-> +#define DEBPRINT(fmt, args...)			\
-> +	pr_debug("%s: " fmt, __func__, ## args)
->  #else
->  #define DEBPRINT(fmt, args...)	do {} while (0)
->  #endif	/* DEBUGGING */
+> +						  drive->name);
+>  				drive->capacity64 =
+>  					floppy->blocks * floppy->bs_factor;
+>  				rc = 0;
+> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> index 138c42d..bf3c128 100644
+> --- a/drivers/ide/ide-tape.c
+> +++ b/drivers/ide/ide-tape.c
+> @@ -756,8 +756,8 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+>  
+>  	if (!blk_special_request(rq)) {
+>  		/* We do not support buffer cache originated requests. */
+> -		printk(KERN_NOTICE "ide-tape: %s: Unsupported request in "
+> -			"request queue (%d)\n", drive->name, rq->cmd_type);
+> +		pr_notice("ide-tape: %s: Unsupported request in request queue (%d)\n",
 >   
 
-   Not equivalent.
-
-> @@ -236,9 +236,8 @@ static int do_drive_get_GTF(ide_drive_t *drive,
->  	status = acpi_evaluate_object(drive->acpidata->obj_handle, "_GTF",
->  				      NULL, &output);
->  	if (ACPI_FAILURE(status)) {
-> -		printk(KERN_DEBUG
-> -		       "%s: Run _GTF error: status = 0x%x\n",
-> -		       __func__, status);
-> +		pr_debug("%s: Run _GTF error: status = 0x%x\n",
-> +			 __func__, status);
->  		goto out;
->  	}
->  
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
-> index 9e47f35..10adf8e 100644
-> --- a/drivers/ide/ide-cs.c
-> +++ b/drivers/ide/ide-cs.c
-> @@ -64,7 +64,7 @@ MODULE_LICENSE("Dual MPL/GPL");
->  
->  #ifdef CONFIG_PCMCIA_DEBUG
->  INT_MODULE_PARM(pc_debug, 0);
-> -#define DEBUG(n, args...) if (pc_debug>(n)) printk(KERN_DEBUG args)
-> +#define DEBUG(n, args...) if (pc_debug>(n)) pr_debug(args)
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-> index c19a221..b245f39 100644
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -236,8 +236,7 @@ u8 eighty_ninty_three(ide_drive_t *drive)
->  		return 1;
->  
->  	if (ivb)
-> -		printk(KERN_DEBUG "%s: skipping word 93 validity check\n",
-> -				  drive->name);
-> +		pr_debug("%s: skipping word 93 validity check\n", drive->name);
->  
->  	if (ata_id_is_sata(id) && !ivb)
->  		return 1;
-> diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-> index 7f264ed..8849e55 100644
-> --- a/drivers/ide/ide-probe.c
-> +++ b/drivers/ide/ide-probe.c
-> @@ -604,7 +604,7 @@ static int ide_port_wait_ready(ide_hwif_t *hwif)
->  	ide_drive_t *drive;
->  	int i, rc;
->  
-> -	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
-> +	pr_debug("Probing IDE interface %s...\n", hwif->name);
->   
-
-   Not equivalent.
-
-> @@ -630,8 +630,8 @@ static int ide_port_wait_ready(ide_hwif_t *hwif)
->  			if (rc)
->  				goto out;
->  		} else
-> -			printk(KERN_DEBUG "%s: ide_wait_not_busy() skipped\n",
-> -					  drive->name);
-> +			pr_debug("%s: ide_wait_not_busy() skipped\n",
-> +				 drive->name);
->  	}
->  out:
->  	/* Exit function with master reselected (let's be sane) */
-> @@ -700,7 +700,8 @@ static int ide_probe_port(ide_hwif_t *hwif)
->  		disable_irq(hwif->irq);
->  
->  	if (ide_port_wait_ready(hwif) == -EBUSY)
-> -		printk(KERN_DEBUG "%s: Wait for ready failed before probe !\n", hwif->name);
-> +		pr_debug("%s: Wait for ready failed before probe !\n",
-> +			 hwif->name);
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/ide-xfer-mode.c b/drivers/ide/ide-xfer-mode.c
-> index af44be9..e9d75e7 100644
-> --- a/drivers/ide/ide-xfer-mode.c
-> +++ b/drivers/ide/ide-xfer-mode.c
-> @@ -183,9 +183,9 @@ void ide_set_pio(ide_drive_t *drive, u8 req_pio)
->  	 * - report device max PIO mode
->  	 * - check req_pio != 255 against device max PIO mode
->  	 */
-> -	printk(KERN_DEBUG "%s: host max PIO%d wanted PIO%d%s selected PIO%d\n",
-> -			  drive->name, host_pio, req_pio,
-> -			  req_pio == 255 ? "(auto-tune)" : "", pio);
-> +	pr_debug("%s: host max PIO%d wanted PIO%d%s selected PIO%d\n",
-> +		 drive->name, host_pio, req_pio,
-> +		 req_pio == 255 ? "(auto-tune)" : "", pio);
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
-> index 248a54b..3e07c0b 100644
-> --- a/drivers/ide/pdc202xx_old.c
-> +++ b/drivers/ide/pdc202xx_old.c
-> @@ -103,9 +103,9 @@ static void pdc202xx_set_mode(ide_drive_t *drive, const u8 speed)
->  	}
->  
->  #if PDC202XX_DEBUG_DRIVE_INFO
-> -	printk(KERN_DEBUG "%s: %s drive%d 0x%08x ",
-> -		drive->name, ide_xfer_verbose(speed),
-> -		drive->dn, drive_conf);
-> +	pr_debug("%s: %s drive%d 0x%08x ",
-> +		 drive->name, ide_xfer_verbose(speed),
-> +		 drive->dn, drive_conf);
->  	pci_read_config_dword(dev, drive_pci, &drive_conf);
->  	printk("0x%08x\n", drive_conf);
->  #endif
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/qd65xx.c b/drivers/ide/qd65xx.c
-> index c9a1349..550aa95 100644
-> --- a/drivers/ide/qd65xx.c
-> +++ b/drivers/ide/qd65xx.c
-> @@ -163,7 +163,7 @@ static int qd_find_disk_type (ide_drive_t *drive,
->  
->  	for (p = qd65xx_timing ; p->offset != -1 ; p++) {
->  		if (!strncmp(p->model, model+p->offset, 4)) {
-> -			printk(KERN_DEBUG "%s: listed !\n", drive->name);
-> +			pr_debug("%s: listed !\n", drive->name);
->  			*active_time = p->active;
->  			*recovery_time = p->recovery;
->  			return 1;
-> @@ -183,7 +183,7 @@ static void qd_set_timing (ide_drive_t *drive, u8 timing)
->  	drive->drive_data &= 0xff00;
->  	drive->drive_data |= timing;
->  
-> -	printk(KERN_DEBUG "%s: %#x\n", drive->name, timing);
-> +	pr_debug("%s: %#x\n", drive->name, timing);
->  }
->  
->  static void qd6500_set_pio_mode(ide_drive_t *drive, const u8 pio)
-> @@ -378,8 +378,7 @@ static int __init qd_probe(int base)
->  		}
->  
->  		printk(KERN_NOTICE "qd6500 at %#x\n", base);
-> -		printk(KERN_DEBUG "qd6500: config=%#x, ID3=%u\n",
-> -			config, QD_ID3);
-> +		pr_debug("qd6500: config=%#x, ID3=%u\n", config, QD_ID3);
->  
->  		d.port_ops = &qd6500_port_ops;
->  		d.host_flags |= IDE_HFLAG_SINGLE;
-> @@ -392,8 +391,8 @@ static int __init qd_probe(int base)
->  		control = inb(QD_CONTROL_PORT);
->  
->  		printk(KERN_NOTICE "qd6580 at %#x\n", base);
-> -		printk(KERN_DEBUG "qd6580: config=%#x, control=%#x, ID3=%u\n",
-> -			config, control, QD_ID3);
-> +		pr_debug("qd6580: config=%#x, control=%#x, ID3=%u\n",
-> +			 config, control, QD_ID3);
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/serverworks.c b/drivers/ide/serverworks.c
-> index b6554ef..28e6083 100644
-> --- a/drivers/ide/serverworks.c
-> +++ b/drivers/ide/serverworks.c
-> @@ -191,8 +191,8 @@ static int init_chipset_svwks(struct pci_dev *dev)
->  			pci_read_config_dword(isa_dev, 0x64, &reg);
->  			reg &= ~0x00002000; /* disable 600ns interrupt mask */
->  			if(!(reg & 0x00004000))
-> -				printk(KERN_DEBUG DRV_NAME " %s: UDMA not BIOS "
-> -					"enabled.\n", pci_name(dev));
-> +				pr_debug(DRV_NAME " %s: UDMA not BIOS enabled.\n",
-> +					 pci_name(dev));
->   
-
-   Not equivalent.
-
-> diff --git a/drivers/ide/sl82c105.c b/drivers/ide/sl82c105.c
-> index b0a4606..21df560 100644
-> --- a/drivers/ide/sl82c105.c
-> +++ b/drivers/ide/sl82c105.c
-> @@ -89,9 +89,9 @@ static void sl82c105_set_pio_mode(ide_drive_t *drive, const u8 pio)
->  	pci_write_config_word(dev, reg,  drv_ctrl);
->  	pci_read_config_word (dev, reg, &drv_ctrl);
->  
-> -	printk(KERN_DEBUG "%s: selected %s (%dns) (%04X)\n", drive->name,
-> -			  ide_xfer_verbose(pio + XFER_PIO_0),
-> -			  ide_pio_cycle_time(drive, pio), drv_ctrl);
-> +	pr_debug("%s: selected %s (%dns) (%04X)\n", drive->name,
-> +		 ide_xfer_verbose(pio + XFER_PIO_0),
-> +		 ide_pio_cycle_time(drive, pio), drv_ctrl);
->   
-
-   Not equivalent.
-
-   I have an impression that you've missed all the places that really 
-need to be converted and only converted those that don't. :-/
+    And again.
 
 MBR, Sergei
-
-
