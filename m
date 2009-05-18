@@ -1,71 +1,47 @@
-From: Martin Lottermoser <Martin.Lottermoser@t-online.de>
-Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Mon, 18 May 2009 21:12:07 +0200
-Message-ID: <20090518191207.GA7531@wanza.invalid>
-References: <20090517091224.GA8280@wanza.invalid> <4A10509C.603@gmail.com> <200905172135.10136.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Joe Perches <joe@perches.com>
+Subject: drivers/ide/ide-core: Convert printk's to pr_<foo> and dev_<foo>
+Date: Mon, 18 May 2009 13:11:26 -0700
+Message-ID: <cover.1242676752.git.joe@perches.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout02.t-online.de ([194.25.134.17]:34644 "EHLO
-	mailout02.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258AbZERTSl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 15:18:41 -0400
-Content-Disposition: inline
-In-Reply-To: <200905172135.10136.bzolnier@gmail.com>
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1932 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753AbZERULc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 16:11:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Krzysztof Halasa <khc@pm.waw.pl>, Borislav Petkov <petkovbb@gmail.com>
 
-Hi,
+Standardize printk's by mostly mechanical conversions of
+printk(KERN_<foo> to pr_<foo>(.  The KERN_DEBUG uses are
+not done, deferred until a more standard mechanism exists
 
-On Sun, May 17, 2009 at 09:35:09PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Martin, this is one of ATAPI drives which support UDMA66 but have broken
-> cable detection.  Since 2.6.26 we have a special quirk for it ide (commit
-> 3ced5c49bd2d1f2c7f769e3a54385883de63a652) and subsequent one in libata
-> (commit e9f3340673c1da32041f2a282b166c72cd78632e).
-> 
-> In your system's case the cable detection doesn't seem to work properly
-> which in turn results in all kind of later problems.
-> 
-> It could be that the quirk itself needs to be revised (I wonder if it was
-> originally tested with 40-wires cable) or maybe we need some other cable
-> detection fix...
-> 
-> Please:
-> 
-> * send 'hdparm --Istdout /dev/hdc' output
-> 
-> * try 2.6.30-rc6 (maybe 2.6.29.3 oops has been fixed already and we just
->   need to backport it)
-> 
-> also connecting the drive using 80-wires cable and getting another hdparm
-> output (+ seeing if it helps the other problems) would be very useful.
+Standardize pr_<foo> logging uses of drive->name and hwif->name
+to use dev_<foo>.
 
-I've done that now as well. Test runs with Debian's 2.6.26 and with 2.6.30-rc6
-show no problems: no disabling of DMA, no kernel panic.
+Signed-off-by: Joe Perches <joe@perches.com>
 
-The hdparm output ("hdparm --Istdout") is the same for a 40-wire cable and an
-80-wire cable (checked under 2.6.26).
+Joe Perches (2):
+  drivers/ide/ide-core: Convert printk(KERN_<foo> to pr_<foo>( without KERN_DEBUG
+  drivers/ide/ide-core: Convert pr_<foo> to dev_<foo>
 
-This indicates that your hypothesis above that it's a cable detection problem
-is correct.
+ drivers/ide/ide-acpi.c      |   17 +++----
+ drivers/ide/ide-atapi.c     |   67 +++++++++++++--------------
+ drivers/ide/ide-dma-sff.c   |    6 +-
+ drivers/ide/ide-dma.c       |   28 ++++++------
+ drivers/ide/ide-eh.c        |   25 +++++-----
+ drivers/ide/ide-io.c        |   16 +++----
+ drivers/ide/ide-ioctls.c    |    4 +-
+ drivers/ide/ide-iops.c      |    9 ++--
+ drivers/ide/ide-legacy.c    |    8 ++--
+ drivers/ide/ide-lib.c       |   68 +++++++++++++-------------
+ drivers/ide/ide-pm.c        |   11 ++--
+ drivers/ide/ide-probe.c     |  108 ++++++++++++++++++++++---------------------
+ drivers/ide/ide-proc.c      |   16 +++----
+ drivers/ide/ide-scan-pci.c  |    4 +-
+ drivers/ide/ide-taskfile.c  |   23 ++++-----
+ drivers/ide/ide-xfer-mode.c |    6 +-
+ drivers/ide/ide.c           |   25 ++++------
+ drivers/ide/setup-pci.c     |   87 +++++++++++++++++-----------------
+ 18 files changed, 258 insertions(+), 270 deletions(-)
 
-Just out of curiosity: is this a bug on the drive's side or in the kernel?
-Or in other words: if the output of "hdparm -I" shows the drive as attached
-to be able to support UDMA4, is this a statement passed through unmodified
-from the drive or is this a deduction made by the kernel? I ask because
-under 2.6.22.9 and 2.6.23.14 I got a message that "host side 80-wire cable
-detection failed".
-
-Should anyone find a fix to correct/circumvent this problem in the kernel,
-I'ld be willing to test it on my system; just send a patch file or tell me
-where to pick it up.
-
-Regards,
-Martin Lottermoser
--- 
-Martin Lottermoser             Martin.Lottermoser at _REMOVE_t-online.de
-Greifswaldstrasse 28
-38124 Braunschweig             http://home.vrweb.de/martin.lottermoser
-Germany
