@@ -1,83 +1,45 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/7] ide: merge ide_disk_special() into do_special()
-Date: Tue, 19 May 2009 01:40:28 +0400
-Message-ID: <4A11D5CC.5070909@ru.mvista.com>
-References: <20090513205139.28638.87226.sendpatchset@localhost.localdomain> <1242248102.4639.17.camel@Joe-AcerAspire> <4A0C0D44.9020308@ru.mvista.com> <200905171900.45661.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ville Syrjala <syrjala@sci.fi>
+Subject: [PATCH] ata_piix: Add HP Compaq nc6000 to the broken poweroff list
+Date: Tue, 19 May 2009 01:37:44 +0300
+Message-ID: <1242686264-23173-1-git-send-email-syrjala@sci.fi>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:62610 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753516AbZERVke (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 May 2009 17:40:34 -0400
-In-Reply-To: <200905171900.45661.bzolnier@gmail.com>
+Received: from smtp5.welho.com ([213.243.153.39]:40082 "EHLO smtp5.welho.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756001AbZERWhp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 May 2009 18:37:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, rjw@sisk.pl, Ville Syrjala <syrjala@sci.fi>
 
-Hello.
+HP Compaq nc6000 suffers from the double disk spindown issue.
+Add it to the broken poweroff DMI list.
 
-Bartlomiej Zolnierkiewicz wrote:
+Signed-off-by: Ville Syrjala <syrjala@sci.fi>
+---
+ drivers/ata/ata_piix.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
->>>> While at it:
->>>> - change debug printk() level to KERN_DEBUG
->>>> - update documentation
->>>>         
->>>> There should be no functional changes caused by this patch.
->>>>         
->>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>> ---
->>>> drivers/ide/ide-io.c |   44 ++++++++++++++++++--------------------------
->>>> 1 file changed, 18 insertions(+), 26 deletions(-)
->>>>         
->>>> Index: b/drivers/ide/ide-io.c
->>>> ===================================================================
->>>> --- a/drivers/ide/ide-io.c
->>>> +++ b/drivers/ide/ide-io.c
->>>> @@ -184,11 +184,28 @@ static void ide_tf_set_setmult_cmd(ide_d
->>>>         
->>> []
->>>       
->>>> +#ifdef DEBUG
->>>> +	printk(KERN_DEBUG "%s: %s: 0x%02x\n", drive->name, s->all);
->>>> +#endif
->>>>         
->>> pr_debug?
->>>       
->>     Yes, and the number of arguments doesn't correspond to the number of the 
->> format specifiers.
->>     
->
-> Ugh :)  Fixed in the revised version (interdiff below)...
->
-> When it comes to pr_debug() & co. I will warmly welcome patches converting
-> drivers/ide/*.[ch] to use them.
->
-> ...
-> v2:
-> - fix DEBUG build (noticed by Sergei)
-> ...
->
-> diff -u b/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> --- b/drivers/ide/ide-io.c
-> +++ b/drivers/ide/ide-io.c
-> @@ -198,7 +198,7 @@
->  	struct ide_cmd cmd;
->  
->  #ifdef DEBUG
-> -	printk(KERN_DEBUG "%s: %s: 0x%02x\n", drive->name, s->all);
-> +	printk(KERN_DEBUG "%s: %s: 0x%02x\n", drive->name, __func__, s->all);
->  #endif
->  	if (drive->media != ide_disk) {
->  		s->all = 0;
->   
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
-
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index d51a17c..1aeb708 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1455,6 +1455,15 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
+ 			/* PCI slot number of the controller */
+ 			.driver_data = (void *)0x1FUL,
+ 		},
++		{
++			.ident = "HP Compaq nc6000",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nc6000"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x1FUL,
++		},
+ 
+ 		{ }	/* terminate list */
+ 	};
+-- 
+1.6.0.6
 
