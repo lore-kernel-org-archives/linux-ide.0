@@ -1,49 +1,46 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Mon, 18 May 2009 08:32:58 +0200
-Message-ID: <20090518063258.GB7818@liondog.tnic>
-References: <20090517091224.GA8280@wanza.invalid> <200905172218.01606.bzolnier@gmail.com> <20090517203033.GB5142@liondog.tnic> <200905180048.36483.bzolnier@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] asm-generic: add a dma-mapping.h file
+Date: Mon, 18 May 2009 10:28:00 +0200
+Message-ID: <200905181028.01914.arnd@arndb.de>
+References: <20090513043409.GA13577@cynthia.pants.nu> <200905172245.23774.arnd@arndb.de> <10f740e80905172303n4ef3cfc2j9922e19c281d471b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:60379 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbZERGdF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 02:33:05 -0400
+Received: from moutng.kundenserver.de ([212.227.126.186]:61438 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbZERI32 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 04:29:28 -0400
+In-Reply-To: <10f740e80905172303n4ef3cfc2j9922e19c281d471b@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <200905180048.36483.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>, linux-ide@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <htejun@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
 
-Hi,
+On Monday 18 May 2009, Geert Uytterhoeven wrote:
 
-On Mon, May 18, 2009 at 12:48:36AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > +#ifndef dma_alloc_coherent
+> > +static inline void *
+> > +dma_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dm=
+a_handle,
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0gfp=
+_t flag)
+> > +{
+> > + =C2=A0 =C2=A0 =C2=A0 void *virt =3D kmalloc(size, flag);
+>=20
+> kmalloc() may fail.
+>=20
+> > + =C2=A0 =C2=A0 =C2=A0 *dma_handle =3D virt_to_phys(virt);
+>=20
+> Not all variants of virt_to_phys() may handle the NULL case very well=
+=2E
+> I took a statistically invalid sample: some just cast to unsigned
+> long, other subtract PAGE_OFFSET.
 
-[..]
+Right. It should not really hurt, because all users need to check virt
+before using dma_handle, but I can fix it just to be sure.
 
-> > have a hunch - and you did. Besides, it's not like I'm waiting for you
-> > - I have other things on my plate which I could tackle while you handle
-> > the case you're more knowledgeable at. It is simple as that.
-> 
-> That is missing the point -- we are not the only knowledgeable ones here
-> and we definitely want to encourage other people to attack the problems.
-> 
-> [ Please read my mail again.  I explicitly said "people" not "you" there. ]
+I'll wait for comments from Fujita Tomonori and others before I repost.
 
-I was being a realist - nobody but you, Sergei and me does attack
-problems. But there's always the hope :).
-
-> 
-> > But I'll start CCing linux-ide if that's your preference.
-> 
-> Thanks but my preferences are not the point here.  That is just the most
-> efficient way for everybody: IDE/ATA problems should be handled at linux-ide
-> mailing list.  You can still cc: me but cc:ing linux-ide takes priority.
-
-Yep, got it.
-
--- 
-Regards/Gruss,
-    Boris.
+	Arnd <><
