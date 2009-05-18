@@ -1,62 +1,68 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/6] drivers/ide Convert printk(KERN_<foo> to pr_<foo>(
-Date: Mon, 18 May 2009 16:12:43 +0200
-Message-ID: <200905181612.43632.bzolnier@gmail.com>
-References: <cover.1242609803.git.joe@perches.com>
+From: Richard Atterer <richard@2009.atterer.net>
+Subject: Re: s2disk hangs with kernel >=2.6.29, SATA, Gigabyte EG45M-DS2H
+	(bisected)
+Date: Mon, 18 May 2009 16:16:46 +0200
+Message-ID: <20090518141646.GA6460@arbonne.lan>
+References: <20090516225153.GA7883@arbonne.lan> <200905180117.28413.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:3740 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbZEROIl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 10:08:41 -0400
-In-Reply-To: <cover.1242609803.git.joe@perches.com>
+Received: from mail.gmx.net ([213.165.64.20]:56892 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752862AbZEROQs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 May 2009 10:16:48 -0400
 Content-Disposition: inline
+In-Reply-To: <200905180117.28413.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org
 
-On Monday 18 May 2009 04:21:08 Joe Perches wrote:
-> Mostly mechanical conversion of printk's
+On Mon, May 18, 2009 at 01:17:27AM +0200, Bartlomiej Zolnierkiewicz wro=
+te:
+> On Sunday 17 May 2009 00:51:53 Richard Atterer wrote:
+> > The patch that causes the hang is 295f00042aaf6b553b5f37348f89bab46=
+3d4a469:
+> > ide: don't execute the next queued command from the hard-IRQ contex=
+t (v2)
+>=20
+> Hmm, this should have been fixed by:
+>=20
+> commit 2ea5521022ac8f4f528dcbae02668e02a3501a5a
+> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date:   Wed Jan 14 19:19:04 2009 +0100
+>=20
+>     ide: fix suspend regression
 
-[...]
+I just tried that revision (with a small patch to get pcf50633-core to=20
+compile) and hibernating does not work. :-/
 
-Hmm.. less mechanical conversion using also dev_*() macros where suitable
-would be much better...
+> What was the last 'good' kernel that you've started bisection with?
 
-> Joe Perches (6):
->   drivers/ide: Convert printk(KERN_DEBUG to pr_debug(
+I started with the 2.6.28 release.
 
-How's about fixing pr_devel() which currently doesn't seem to be used
-by anything inside kernel to not depend on DEBUG in separate pre-patch
-and then using it instead of pr_debug()?
+In case it makes a difference: The swap partition that I'm hibernating =
+to=20
+is encrypted via luks and uses lvm. This is the standard way suggested =
+by=20
+the Debian installer when you choose encryption.
 
->   drivers/ide: Convert printk(KERN_INFO to pr_info(
->   drivers/ide: Convert printk(KERN_ERR to pr_err(
->   drivers/ide: Convert printk(KERN_WARNING to pr_warning(
->   drivers/ide: Convert printk(KERN_CONT to pr_cont(
->   drivers/ide: Convert printk(KERN_NOTICE to pr_notice(
+Cheers,
 
-Please re-do it so we have per-file patches instead of per-pr_.
+  Richard
 
-Preferably with some files grouped together so we have only three patches:
-
-* core code: ide-acpi.c, ide-atapi.c, ide.c, ide-devsets.c, ide-dma*.c,
-  ide-eh.c, ide-io*.c, ide-legacy.c, ide-lib.c, ide-park.c, ide-pio*.c,
-  ide-pm.c, ide-probe.c, ide-proc.c, ide-scan-pci.c, ide-sysfs.c,
-  ide-taskfile.c, ide-timings.c, ide-xfer-mode.c and setup-pci.c
-
-* device drivers: ide-cd*, ide-disk*, ide-gd*, ide-floppy* and ide-tape.c
-
-* host drivers: all the rest
-
-It would make patches easier to review and would greatly help when it
-comes to merging them (i.e. I could apply changes to host drivers right
-know but I don't want to interfere too much with the on-going work on
-device drivers).
-
-Thanks.
-Bart
+PS: This is my /etc/uswsusp.conf file:
+resume device =3D /dev/mapper/pc-swap
+splash =3D n
+compress =3D y
+early writeout =3D y
+image size =3D 1897884221
+RSA key file =3D /etc/uswsusp.key         <-- that file does not exist
+shutdown method =3D platform
+--=20
+  __   _
+  |_) /|  Richard Atterer     |  GnuPG key: 888354F7
+  | \/=AF|  http://atterer.net  |  08A9 7B7D 3D13 3EF2 3D25  D157 79E6 =
+=466DC 8883 54F7
+  =AF '` =AF
