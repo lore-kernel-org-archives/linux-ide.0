@@ -1,73 +1,48 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: 2.9.29.2: ide-tape: panic when probing device at boot
-Date: Mon, 18 May 2009 08:30:07 +0200
-Message-ID: <20090518063007.GA7818@liondog.tnic>
-References: <20090509161801.GB5749@liondog.tnic> <200905180532.n4I5Wxa1031243@turbo.physics.adelaide.edu.au>
+Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
+Date: Mon, 18 May 2009 08:32:58 +0200
+Message-ID: <20090518063258.GB7818@liondog.tnic>
+References: <20090517091224.GA8280@wanza.invalid> <200905172218.01606.bzolnier@gmail.com> <20090517203033.GB5142@liondog.tnic> <200905180048.36483.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:41981 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755011AbZERGaN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 02:30:13 -0400
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:60379 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752761AbZERGdF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 02:33:05 -0400
 Content-Disposition: inline
-In-Reply-To: <200905180532.n4I5Wxa1031243@turbo.physics.adelaide.edu.au>
+In-Reply-To: <200905180048.36483.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>, linux-ide@vger.kernel.org
 
 Hi,
 
-On Mon, May 18, 2009 at 03:02:59PM +0930, Jonathan Woithe wrote:
-> > On Sat, May 09, 2009 at 05:57:49PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > 
-> > > [ cc:ing linux-ide and knowledgeable people ]
-> > > 
-> > > Borislav/Tejun:
-> > > Is the 2.6.29 problem the same thing that was fixed recently?
-> > 
-> > I'll let Tejun answer that one since I don't get an oops. However, now
-> > that I have an ide-tape hardware here, I do get something DMA-related
-> > failing during boot ...
-> > :
-> > and more specifically the bad DMA info in identify block thing above. I
-> > haven't looked into it yet but its next on my TODO.
-> 
-> Cool.
-> 
-> > > Should I just push commit 1e75540ec5202cae63cd238c86bd880e3d496546
-> > > ("ide-tape: remove back-to-back REQUEST_SENSE detection") to Linus
-> > > or there is more needed to bring ide-tape to the world of living?
-> >
-> > The oops will probably fixed the above commit.  I don't have much idea
-> > about the DMA problem on 2.6.24 tho.  But even with the above commit
-> > fixed, I doubt it would work.  The buffer allocation code is broken
-> > and reliably triggered OOM on my test machine.  While trying to locate
-> > the bug, I realized the complex code didn't do much good to begin with
-> > and just stripped it down, so I didn't actually tracked down the
-> > actual bug && the patch to simplify buffer management is way too large
-> > for 2.6.29, so unless someone is willing to hunt down the bug just for
-> > 2.6.29, we're kind of stuck.  :-(
-> 
-> So I take it that 2.6.30 (or one of the RCs) is worth trying (at least in so
-> far as preventing the oops on boot)?
+On Mon, May 18, 2009 at 12:48:36AM +0200, Bartlomiej Zolnierkiewicz wrote:
 
-You could try 30-rc6 which runs pretty stable on my machines. It has the
-patch mentioned above in it. At least one user confirmed that it fixes
-ide-tape in his case. In case you still catch any OOPSes/warnings etc
-please send me the whole dmesg output along with how you trigger them.
+[..]
 
-> > ... and I'm afraid we'll have to do some serious bugfixing since this
-> > driver is behaving really funny :). Stay tuned, I'm on it.
+> > have a hunch - and you did. Besides, it's not like I'm waiting for you
+> > - I have other things on my plate which I could tackle while you handle
+> > the case you're more knowledgeable at. It is simple as that.
 > 
-> Ok, I'll keep an eye out for updates.  Presumedly we're talking 2.6.31 or
-> .32 here.
+> That is missing the point -- we are not the only knowledgeable ones here
+> and we definitely want to encourage other people to attack the problems.
+> 
+> [ Please read my mail again.  I explicitly said "people" not "you" there. ]
 
-Already in .31-rc1 there's will more patches cleaning up ide-tape so if you
-could try that and send us bug reports will be simply swell :).
+I was being a realist - nobody but you, Sergei and me does attack
+problems. But there's always the hope :).
 
-Thanks.
+> 
+> > But I'll start CCing linux-ide if that's your preference.
+> 
+> Thanks but my preferences are not the point here.  That is just the most
+> efficient way for everybody: IDE/ATA problems should be handled at linux-ide
+> mailing list.  You can still cc: me but cc:ing linux-ide takes priority.
+
+Yep, got it.
 
 -- 
 Regards/Gruss,
