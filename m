@@ -1,45 +1,66 @@
-From: Ville Syrjala <syrjala@sci.fi>
-Subject: [PATCH] ata_piix: Add HP Compaq nc6000 to the broken poweroff list
-Date: Tue, 19 May 2009 01:37:44 +0300
-Message-ID: <1242686264-23173-1-git-send-email-syrjala@sci.fi>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.welho.com ([213.243.153.39]:40082 "EHLO smtp5.welho.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756001AbZERWhp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 May 2009 18:37:45 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] asm-generic: add a dma-mapping.h file
+Date: Tue, 19 May 2009 07:44:08 +0900
+Message-ID: <20090519074355P.fujita.tomonori@lab.ntt.co.jp>
+References: <200905172245.23774.arnd@arndb.de>
+	<20090518194443R.fujita.tomonori@lab.ntt.co.jp>
+	<200905181645.26305.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <200905181645.26305.arnd@arndb.de>
+Sender: linux-m68k-owner@vger.kernel.org
+To: arnd@arndb.de
+Cc: fujita.tomonori@lab.ntt.co.jp, jgarzik@pobox.com, hancockrwd@gmail.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, rjw@sisk.pl, Ville Syrjala <syrjala@sci.fi>
 
-HP Compaq nc6000 suffers from the double disk spindown issue.
-Add it to the broken poweroff DMI list.
+On Mon, 18 May 2009 16:45:24 +0200
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-Signed-off-by: Ville Syrjala <syrjala@sci.fi>
----
- drivers/ata/ata_piix.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+> On Monday 18 May 2009, FUJITA Tomonori wrote:
+> > 
+> > NACK'ed, sorry.
+> 
+> I had no idea how hard it would get to fix a simple
+> allyesconfig build error. This is the third time
+> that a new approach to getting ATA to build on all
+> platforms is gets a NAK...
+> 
+> > - these idndef tricks are really ugly and wrong.
+> > - these functions are not generic at all.
+> 
+> I was trying to do two things at once:
+> 
+> - provide a default implementation for each function
+>   that an architecture can override, therefore the
+>   #ifdef magic.
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index d51a17c..1aeb708 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1455,6 +1455,15 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
- 			/* PCI slot number of the controller */
- 			.driver_data = (void *)0x1FUL,
- 		},
-+		{
-+			.ident = "HP Compaq nc6000",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nc6000"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x1FUL,
-+		},
- 
- 		{ }	/* terminate list */
- 	};
--- 
-1.6.0.6
+I know what you tried with #ifdef but having something like '#define
+dma_map_sg' in arch's dma-mapping.h is unacceptable.
+
+
+> - Have a minimal working implementation of the API
+>   that at least makes sense for architectures that
+>   do not support DMA, but want to share some of the
+>   code.
+
+Well, it might make sense but we don't call architectures that don't
+support DMA 'generic'.
+
+
+> Ten of the existing architectures simply try do a
+> linear mapping, and that should easily be possible
+> in a generic way not too different from what I posted.
+
+Your proposal doesn't work with arch/x86/kernel/pci-nommu.c, which
+is trying a linear mapping, what you are talking about.
+
+
+> Would you agree to a patch that works with the same
+> code on e.g. arm, microblaze, mn10300 and sh and
+> uses only a few #ifdefs?
+
+Having such helper for a linear mapping might be helpful but your
+approach is wrong.
 
