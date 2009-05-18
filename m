@@ -1,161 +1,45 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 6/6] drivers/ide: Convert printk(KERN_NOTICE to pr_notice(
-Date: Sun, 17 May 2009 19:21:15 -0700
-Message-ID: <3ff9e9c7a8918f4d5f7bab5590f46073a196a4bf.1242609804.git.joe@perches.com>
+Subject: Re: [PATCH 2/6] drivers/ide: Convert printk(KERN_INFO to pr_info(
+Date: Sun, 17 May 2009 19:31:33 -0700
+Message-ID: <1242613893.29902.2.camel@Joe-Laptop.home>
 References: <cover.1242609803.git.joe@perches.com>
+	 <3e6c44e2b4365598d80940c292bef91a835ab30d.1242609803.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:4766 "EHLO
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:4785 "EHLO
 	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756003AbZERCYi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 22:24:38 -0400
-In-Reply-To: <cover.1242609803.git.joe@perches.com>
-In-Reply-To: <cover.1242609803.git.joe@perches.com>
-References: <cover.1242609803.git.joe@perches.com>
+	with ESMTP id S1752782AbZERCbg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 May 2009 22:31:36 -0400
+In-Reply-To: <3e6c44e2b4365598d80940c292bef91a835ab30d.1242609803.git.joe@perches.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Joe Perches <joe@perches.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Borislav Petkov <petkovbb@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ide/ht6560b.c    |    5 ++---
- drivers/ide/ide-acpi.c   |    2 +-
- drivers/ide/ide-cs.c     |    2 +-
- drivers/ide/ide-floppy.c |   16 +++++++---------
- drivers/ide/ide-tape.c   |    6 +++---
- drivers/ide/qd65xx.c     |    4 ++--
- 6 files changed, 16 insertions(+), 19 deletions(-)
+On Sun, 2009-05-17 at 19:21 -0700, Joe Perches wrote:
+> diff --git a/drivers/ide/aec62xx.c b/drivers/ide/aec62xx.c
+> index 878f8ec..d2f9293 100644
+> --- a/drivers/ide/aec62xx.c
+> +++ b/drivers/ide/aec62xx.c
+> @@ -273,8 +273,8 @@ static int __devinit aec62xx_init_one(struct pci_dev *dev, const struct pci_devi
+>  		unsigned long dma_base = pci_resource_start(dev, 4);
+>  
+>  		if (inb(dma_base + 2) & 0x10) {
+> -			printk(KERN_INFO DRV_NAME " %s: AEC6880%s card detected"
+> -				"\n", pci_name(dev), (idx == 4) ? "R" : "");
+> +			pr_info(DRV_NAME " %s: AEC6880%s card detected\n"
+> +				pci_name(dev), (idx == 4) ? "R" : "");
+>  			d.udma_mask = ATA_UDMA6;
+>  		}
+>  	}
 
-diff --git a/drivers/ide/ht6560b.c b/drivers/ide/ht6560b.c
-index 2fb0f29..0d56920 100644
---- a/drivers/ide/ht6560b.c
-+++ b/drivers/ide/ht6560b.c
-@@ -343,13 +343,12 @@ static int __init ht6560b_init(void)
- 		return -ENODEV;
- 
- 	if (!request_region(HT_CONFIG_PORT, 1, DRV_NAME)) {
--		printk(KERN_NOTICE "%s: HT_CONFIG_PORT not found\n",
--			__func__);
-+		pr_notice("%s: HT_CONFIG_PORT not found\n", __func__);
- 		return -ENODEV;
- 	}
- 
- 	if (!try_to_init_ht6560b()) {
--		printk(KERN_NOTICE "%s: HBA not found\n", __func__);
-+		pr_notice("%s: HBA not found\n", __func__);
- 		goto release_region;
- 	}
- 
-diff --git a/drivers/ide/ide-acpi.c b/drivers/ide/ide-acpi.c
-index 757d9f2..f0b77a5 100644
---- a/drivers/ide/ide-acpi.c
-+++ b/drivers/ide/ide-acpi.c
-@@ -67,7 +67,7 @@ static bool ide_noacpi_psx;
- static int no_acpi_psx(const struct dmi_system_id *id)
- {
- 	ide_noacpi_psx = true;
--	printk(KERN_NOTICE"%s detected - disable ACPI _PSx.\n", id->ident);
-+	pr_notice("%s detected - disable ACPI _PSx.\n", id->ident);
- 	return 0;
- }
- 
-diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
-index 3a97e66..268b604 100644
---- a/drivers/ide/ide-cs.c
-+++ b/drivers/ide/ide-cs.c
-@@ -338,7 +338,7 @@ static int ide_config(struct pcmcia_device *link)
-     return 0;
- 
- err_mem:
--    printk(KERN_NOTICE "ide-cs: ide_config failed memory allocation\n");
-+    pr_notice("ide-cs: ide_config failed memory allocation\n");
-     goto failed;
- 
- cs_failed:
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index a6edb0d..d7c4f5c 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -349,9 +349,9 @@ static int ide_floppy_get_flexible_disk_page(ide_drive_t *drive,
- 	lba_capacity = floppy->blocks * floppy->block_size;
- 
- 	if (capacity < lba_capacity) {
--		printk(KERN_NOTICE PFX "%s: The disk reports a capacity of %d "
--			"bytes, but the drive only handles %d\n",
--			drive->name, lba_capacity, capacity);
-+		pr_notice(PFX "%s: The disk reports a capacity of %d "
-+			  "bytes, but the drive only handles %d\n",
-+			  drive->name, lba_capacity, capacity);
- 		floppy->blocks = floppy->block_size ?
- 			capacity / floppy->block_size : 0;
- 		drive->capacity64 = floppy->blocks * floppy->bs_factor;
-@@ -428,17 +428,15 @@ static int ide_floppy_get_capacity(ide_drive_t *drive)
- 			memcpy(&floppy->cap_desc, cap_desc, 8);
- 
- 			if (!length || length % 512) {
--				printk(KERN_NOTICE PFX "%s: %d bytes block size"
--				       " not supported\n", drive->name, length);
-+				pr_notice(PFX "%s: %d bytes block size not supported\n",
-+					  drive->name, length);
- 			} else {
- 				floppy->blocks = blocks;
- 				floppy->block_size = length;
- 				floppy->bs_factor = length / 512;
- 				if (floppy->bs_factor != 1)
--					printk(KERN_NOTICE PFX "%s: Warning: "
--					       "non 512 bytes block size not "
--					       "fully supported\n",
--					       drive->name);
-+					pr_notice(PFX "%s: Warning: non 512 bytes block size not fully supported\n",
-+						  drive->name);
- 				drive->capacity64 =
- 					floppy->blocks * floppy->bs_factor;
- 				rc = 0;
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 138c42d..bf3c128 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -756,8 +756,8 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 
- 	if (!blk_special_request(rq)) {
- 		/* We do not support buffer cache originated requests. */
--		printk(KERN_NOTICE "ide-tape: %s: Unsupported request in "
--			"request queue (%d)\n", drive->name, rq->cmd_type);
-+		pr_notice("ide-tape: %s: Unsupported request in request queue (%d)\n",
-+			  drive->name, rq->cmd_type);
- 		if (blk_fs_request(rq) == 0 && rq->errors == 0)
- 			rq->errors = -EIO;
- 		ide_complete_rq(drive, -EIO, ide_rq_bytes(rq));
-@@ -2176,7 +2176,7 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 	tape->user_bs_factor = 1;
- 	tape->buffer_size = *ctl * tape->blk_size;
- 	while (tape->buffer_size > 0xffff) {
--		printk(KERN_NOTICE "ide-tape: decreasing stage size\n");
-+		pr_notice("ide-tape: decreasing stage size\n");
- 		*ctl /= 2;
- 		tape->buffer_size = *ctl * tape->blk_size;
- 	}
-diff --git a/drivers/ide/qd65xx.c b/drivers/ide/qd65xx.c
-index 5d02171..a25d18f 100644
---- a/drivers/ide/qd65xx.c
-+++ b/drivers/ide/qd65xx.c
-@@ -378,7 +378,7 @@ static int __init qd_probe(int base)
- 			return -ENODEV;
- 		}
- 
--		printk(KERN_NOTICE "qd6500 at %#x\n", base);
-+		pr_notice("qd6500 at %#x\n", base);
- 		pr_debug("qd6500: config=%#x, ID3=%u\n", config, QD_ID3);
- 
- 		d.port_ops = &qd6500_port_ops;
-@@ -391,7 +391,7 @@ static int __init qd_probe(int base)
- 
- 		control = inb(QD_CONTROL_PORT);
- 
--		printk(KERN_NOTICE "qd6580 at %#x\n", base);
-+		pr_notice("qd6580 at %#x\n", base);
- 		pr_debug("qd6580: config=%#x, control=%#x, ID3=%u\n",
- 			 config, control, QD_ID3);
- 
--- 
-1.6.3.1.10.g659a0.dirty
+Sorry, this one is bad.  It's missing a comma between the
+end of the format string and pci_name.
+
+I edited it in-place and neglected to remove the backup file.
+git send-email sent the corrected patch and the backup file.
+
+The other [patch 2/6] is correct.
 
