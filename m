@@ -1,37 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 6/6] drivers/ide: Convert printk(KERN_NOTICE to
- pr_notice(
-Date: Mon, 18 May 2009 19:55:33 +0100
-Message-ID: <20090518195533.6ca4412d@lxorguk.ukuu.org.uk>
-References: <cover.1242609803.git.joe@perches.com>
-	<3ff9e9c7a8918f4d5f7bab5590f46073a196a4bf.1242609804.git.joe@perches.com>
-	<4A11343C.5070809@ru.mvista.com>
-	<m3skj2im12.fsf@intrepid.localdomain>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 03/13] block: Move queue limits to an embedded struct
+Date: Mon, 18 May 2009 14:50:08 -0400
+Message-ID: <20090518185007.GA839@redhat.com>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-4-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44263 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752468AbZERSzb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2009 14:55:31 -0400
-In-Reply-To: <m3skj2im12.fsf@intrepid.localdomain>
+Received: from mx2.redhat.com ([66.187.237.31]:49244 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751772AbZERS7H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 May 2009 14:59:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1242362435-11953-4-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Joe Perches <joe@perches.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, agk@redhat.com
 
-> Though I think most people would agree that the latter is much better,
-> no?
-> I think removal (rewording) of this rule has already been agreed upon,
-> though not exactly yet codified.
+On Fri, May 15 2009 at 12:40am -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-There are no rules - its a style guide ;)
+> From: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> To accommodate stacking drivers that do not have an associated request
+> queue we're moving the limits to a separate, embedded structure.
 
-And yes sticking to 80 columns is frequently totally bogus especially
-when it splits text strings
+Given DM motivated this change, any reason you held off including the
+associated DM changes (in a separate patch in the series)?  Your initial
+DM patch looked reasonable.
 
-Alan
---
-	"Policy is a poor man's substitute for common sense."
-			-- David Woodhouse
+On some level leaving that patch out of the series prevents reviewers
+the opportunity to really see why a separate 'queue_limits' structure is
+even needed.  The follow-up question being: is the topology
+infrastructure adequately equipped to support DM?  I think so
+but having others' review would be nice.
+
+Are you looking for such DM changes to be submitted through Alasdair's
+tree _after_ your changes go upstream through Jens' tree?
+
+Regards,
+Mike
