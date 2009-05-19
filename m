@@ -1,39 +1,52 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
- kernels
-Date: Tue, 19 May 2009 21:53:27 GMT
-Message-ID: <200905192153.n4JLrR5M031959@demeter.kernel.org>
-References: <bug-13345-11633@http.bugzilla.kernel.org/>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] ata_piix: Add HP Compaq nc6000 to the broken poweroff list
+Date: Wed, 20 May 2009 00:15:39 +0200
+Message-ID: <200905200015.39917.rjw@sisk.pl>
+References: <1242686264-23173-1-git-send-email-syrjala@sci.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:38248 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbZESVx0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 17:53:26 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4JLrRwH031960
-	for <linux-ide@vger.kernel.org>; Tue, 19 May 2009 21:53:27 GMT
-In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
+Received: from ogre.sisk.pl ([217.79.144.158]:37587 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753441AbZESWQH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 May 2009 18:16:07 -0400
+In-Reply-To: <1242686264-23173-1-git-send-email-syrjala@sci.fi>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Ville Syrjala <syrjala@sci.fi>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13345
+On Tuesday 19 May 2009, Ville Syrjala wrote:
+> HP Compaq nc6000 suffers from the double disk spindown issue.
+> Add it to the broken poweroff DMI list.
 
+Patch looks good to me FWIW.
 
-
-
-
---- Comment #2 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-05-19 21:53:26 ---
-On Tuesday 19 May 2009 23:44:32 bugzilla-daemon@bugzilla.kernel.org wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=13345
-
-Please test the patch from:
-
-    http://patchwork.kernel.org/patch/24790/
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+> Signed-off-by: Ville Syrjala <syrjala@sci.fi>
+> ---
+>  drivers/ata/ata_piix.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index d51a17c..1aeb708 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -1455,6 +1455,15 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
+>  			/* PCI slot number of the controller */
+>  			.driver_data = (void *)0x1FUL,
+>  		},
+> +		{
+> +			.ident = "HP Compaq nc6000",
+> +			.matches = {
+> +				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+> +				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nc6000"),
+> +			},
+> +			/* PCI slot number of the controller */
+> +			.driver_data = (void *)0x1FUL,
+> +		},
+>  
+>  		{ }	/* terminate list */
+>  	};
