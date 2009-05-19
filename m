@@ -1,59 +1,48 @@
-From: Dan Porat <dan.porat@gmail.com>
-Subject: NCQ sg_io
-Date: Tue, 19 May 2009 14:11:57 -0400
-Message-ID: <93b143da0905191111o4a0fad8djc1496989060c8b9@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and
+	partitions
+Date: Tue, 19 May 2009 20:15:30 +0200
+Message-ID: <20090519181530.GH4140@kernel.dk>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-6-git-send-email-martin.petersen@oracle.com> <20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com> <yq1fxf1gi3y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:63316 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952AbZESSL5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 14:11:57 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so920309fga.17
-        for <linux-ide@vger.kernel.org>; Tue, 19 May 2009 11:11:58 -0700 (PDT)
+Received: from brick.kernel.dk ([93.163.65.50]:38971 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753345AbZESSP3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 May 2009 14:15:29 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1fxf1gi3y.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-As I have seen sg_io does not support NCQ in ATA passthrough.
-will changing the mapping function libata-scsi.c (line 2745) , work?
+On Tue, May 19 2009, Martin K. Petersen wrote:
+> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+> 
+> >> I really hate the 'alignment' name, nobody will know wtf that is
+> >> without looking it up. The rest of the names are fairly self
+> >> explanatory.  offset? offset_size? misalignment? Not very good with
+> >> names, but perhaps we can find something more appropriate :-)
+> 
+> Yeah, it's a tricky thing to convey.  And despite all the other
+> convergence otherwise happening in the standards, T10 and T13 do not
+> agree how to describe the logical/physical alignment.
+> 
+> 
+> Mike> I agree that 'alignment' is too terse/confusing given that it is
+> Mike> an offset we're exposing.  How about 'alignment_offset'?
+> 
+> I thought I had already changed it to alignment_offset like we talked
+> about a while ago.  But I guess that change was only done mentally :)
+> 
+> Jens, are you ok with that name?
 
-If not , how else can I check the protocol (FPDMA) ?
-static u8
-2725ata_scsi_map_proto(u8 byte1)
-2726{
-2727        switch((byte1 & 0x1e) >> 1) {
-2728        case 3:         /* Non-data */
-2729                return ATA_PROT_NODATA;
-2730
-2731        case 6:         /* DMA */
-2732        case 10:        /* UDMA Data-in */
-2733        case 11:        /* UDMA Data-Out */
-2734                return ATA_PROT_DMA;
-2735
-2736        case 4:         /* PIO Data-in */
-2737        case 5:         /* PIO Data-out */
-2738                return ATA_PROT_PIO;
-2739
-2745        case 12:        /* FPDMA */
-                       return ATA_PROT_NCQ
-2740        case 0:         /* Hard Reset */
-2741        case 1:         /* SRST */
-2742        case 8:         /* Device Diagnostic */
-2743        case 9:         /* Device Reset */
-2744        case 7:         /* DMA Queued */
+I think so, I can't think of anything better :-)
 
-2746        case 15:        /* Return Response Info */
-2747        default:        /* Reserved */
-2748                break;
-2749        }
-2750
-2751        return ATA_PROT_UNKNOWN;
-2752}
+If you repost an updated 5/13 patch and I'll add it to the mix.
 
+-- 
+Jens Axboe
 
-
-Thanks
-
-Dan Porat
