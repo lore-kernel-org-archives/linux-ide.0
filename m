@@ -1,78 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Tue, 19 May 2009 21:30:59 +0200
-Message-ID: <200905192131.00168.bzolnier@gmail.com>
-References: <20090517091224.GA8280@wanza.invalid> <200905191719.35543.bzolnier@gmail.com> <20090519182928.GA8172@wanza.invalid>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: sata_via oops on copying files?
+Date: Tue, 19 May 2009 21:10:52 +0100
+Message-ID: <20090519211052.55d01236@lxorguk.ukuu.org.uk>
+References: <20090519091655.c0bed8b1fc13fcbc567bd8d4c339afd4.8d107e4704.wbe@email.secureserver.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:59854 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226AbZEST0X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 15:26:23 -0400
-In-Reply-To: <20090519182928.GA8172@wanza.invalid>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38171 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751979AbZESUKH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 16:10:07 -0400
+In-Reply-To: <20090519091655.c0bed8b1fc13fcbc567bd8d4c339afd4.8d107e4704.wbe@email.secureserver.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Lottermoser <Martin.Lottermoser@t-online.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Albert Astals Cid <albert@miraveo.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tuesday 19 May 2009 20:29:28 Martin Lottermoser wrote:
-> Hello,
+On Tue, 19 May 2009 09:16:55 -0700
+"Albert Astals Cid" <albert@miraveo.com> wrote:
+
 > 
-> On Tue, May 19, 2009 at 05:19:35PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > Subject: [PATCH] ide: fix 40-wire cable detection for TSST SH-S202* ATAPI devices
+> Please CC me, i'm not in the list.
 > 
-> I'm sorry, but that also generated a panic, looking identical to the
-> behaviour as for the unpatched 2.6.30-rc6.
-> 
-> After booting the patched kernel, the syslog file showed:
-> 
->   hdc: UDMA/66 mode selected
-> 
-> "hdparm -I" reported that the drive was set to "udma4". On accessing the DVD,
-> the kernel panicked. Here's the main output from netconsole:
-> 
->   hdc: cdrom_decode_status: error=0x40 <3>{ LastFailedSense=0x04 }
->   ide: failed opcode was: unknown
->   hdc: DMA disabled
->   ------------[ cut here ]------------
->   kernel BUG at drivers/ide/ide-io.c:872!
->   invalid opcode: 0000 [#1]
->   last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/ide1/1.0/block/hdc/size
-> 
-> After booting the kernel and before doing the test I had checked with
-> "uname -a" that this really was the newly compiled kernel. After reboot I
-> checked that ide-iops.o existed and had a modification time later than the
-> moment I applied your patch. Also, the new vmlinuz is 64 bytes shorter than
-> the unpatched one. Therefore I don't think I made some silly mistake which
-> led to the patch being ignored.
+> Not sure if this or bugzilla is preferred, so doing both, shout me if i
+> should wait on bugzilla.
 
-You didn't.  I did.
+None of this looks IDE related - the first looks like an IRQ routing
+problem which is usually but not always a buggy BIOS. The random crashes
+look like faulty hardware but its always hard to tell hardware and
+software bugs.
 
-Incremental patch fixing it:
+Does the system pass memtest86 for 24 hours ?
 
-diff -u b/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
---- b/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -255,7 +255,7 @@
- 	if (ivb) {
- 		const char *model = (char *)&id[ATA_ID_PROD];
- 
--		if (strcmp("TSSTcorp CDDVDW SH-S202", model) == 0) {
-+		if (strstr("TSSTcorp CDDVDW SH-S202", model)) {
- 			/*
- 			 * These ATAPI devices always report 80c cable
- 			 * so we have to depend on the host in this case.
-
-
-> The offer for testing patches remains open :-).
-
-We will get there. ;-)
-
-I've reproduced the problem and I'm testing the fix currently...
-
-Thanks,
-Bart
