@@ -1,69 +1,51 @@
-From: Martin Lottermoser <Martin.Lottermoser@t-online.de>
-Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Tue, 19 May 2009 23:12:21 +0200
-Message-ID: <20090519211221.GA6977@wanza.invalid>
-References: <20090517091224.GA8280@wanza.invalid> <200905191719.35543.bzolnier@gmail.com> <20090519182928.GA8172@wanza.invalid> <200905192131.00168.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: fix printk() levels in ide_dump_ata[pi]_error()
+Date: Tue, 19 May 2009 23:17:23 +0200
+Message-ID: <200905192317.24120.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout04.t-online.de ([194.25.134.18]:41567 "EHLO
-	mailout04.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528AbZESVMn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 17:12:43 -0400
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:48523 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266AbZESVOl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 17:14:41 -0400
 Content-Disposition: inline
-In-Reply-To: <200905192131.00168.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>
 
-Hi,
+Fixes "<3>" in error messages like this one:
 
-On Tue, May 19, 2009 at 09:30:59PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Incremental patch fixing it:
-> 
-> diff -u b/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-> --- b/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -255,7 +255,7 @@
->  	if (ivb) {
->  		const char *model = (char *)&id[ATA_ID_PROD];
->  
-> -		if (strcmp("TSSTcorp CDDVDW SH-S202", model) == 0) {
-> +		if (strstr("TSSTcorp CDDVDW SH-S202", model)) {
->  			/*
->  			 * These ATAPI devices always report 80c cable
->  			 * so we have to depend on the host in this case.
-> 
+hdc: cdrom_decode_status: error=0x40 <3>{ LastFailedSense=0x04 }
 
-I applied that, recompiled, installed, rebooted, and checked the syslog.
-The message was still
+Reported-by: Martin Lottermoser <Martin.Lottermoser@t-online.de>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-lib.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  hdc: UDMA/66 mode selected
-
-and hdparm also showed "udma4" as being selected. I therefore didn't test
-with a DVD.
-
-However, after twice reading the POSIX definition of strstr() I reversed
-the order of the arguments to
-
-                if (strstr(model, "TSSTcorp CDDVDW SH-S202")) {
-
-and that did it. Syslog now contained:
-
-  hdc: host side 80-wire cable detection failed, limiting max speed to UDMA33
-  hdc: UDMA/33 mode selected
-
-hdparm showed "udma2", and playing movie DVDs worked without DMA being
-disabled. :-)
-
-That seems to be it, then. Many thanks for your help, and in particular for
-the explanations.
-
-Regards,
-Martin Lottermoser
--- 
-Martin Lottermoser             Martin.Lottermoser at _REMOVE_t-online.de
-Greifswaldstrasse 28
-38124 Braunschweig             http://home.vrweb.de/martin.lottermoser
-Germany
+Index: b/drivers/ide/ide-lib.c
+===================================================================
+--- a/drivers/ide/ide-lib.c
++++ b/drivers/ide/ide-lib.c
+@@ -91,7 +91,7 @@ static void ide_dump_sector(ide_drive_t 
+ 
+ static void ide_dump_ata_error(ide_drive_t *drive, u8 err)
+ {
+-	printk(KERN_ERR "{ ");
++	printk(KERN_CONT "{ ");
+ 	if (err & ATA_ABORTED)
+ 		printk(KERN_CONT "DriveStatusError ");
+ 	if (err & ATA_ICRC)
+@@ -121,7 +121,7 @@ static void ide_dump_ata_error(ide_drive
+ 
+ static void ide_dump_atapi_error(ide_drive_t *drive, u8 err)
+ {
+-	printk(KERN_ERR "{ ");
++	printk(KERN_CONT "{ ");
+ 	if (err & ATAPI_ILI)
+ 		printk(KERN_CONT "IllegalLengthIndication ");
+ 	if (err & ATAPI_EOM)
