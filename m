@@ -1,59 +1,36 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: 2.6.30-rc4 kernel
-Date: Tue, 19 May 2009 09:44:57 +0200
-Message-ID: <20090519074457.GA26155@liondog.tnic>
-References: <20090518200558.D61FB567E@p4.dav.net> <20090519055706.GA23611@liondog.tnic>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH UPDATED2 block#for-2.6.31 2/3] block: set rq->resid_len
+ to  blk_rq_bytes() on issue
+Date: Tue, 19 May 2009 18:14:12 +0900
+Message-ID: <4A127864.8090701@gmail.com>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0E0650.1020500@gmail.com> <4A0FFD7E.8050607@gmail.com> <20090518124919.GK4140@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:45959 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752669AbZESHpB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 03:45:01 -0400
-Received: by bwz22 with SMTP id 22so3645622bwz.37
-        for <linux-ide@vger.kernel.org>; Tue, 19 May 2009 00:45:01 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20090519055706.GA23611@liondog.tnic>
+Received: from rv-out-0506.google.com ([209.85.198.239]:54571 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbZESJM4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 05:12:56 -0400
+In-Reply-To: <20090518124919.GK4140@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@housetosell.net
-Cc: rob@housetosell.net, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-Hi,
+Hello, Jens.
 
-On Tue, May 19, 2009 at 07:57:06AM +0200, Borislav Petkov wrote:
-> (adding linux-ide to CC)
-> 
-> On Mon, May 18, 2009 at 09:05:58PM +0100, rob@housetosell.net wrote:
-> > On Wed, May 13, 2009 at 07:17:17PM +0100, rob1@housetosell.net wrote:
-> > 
-> > Hi
-> > 
-> > I am not sure how much use this will be however if a break point is set to cdrom_newpc_intr and go is continuosly pressed then the kernel will actually boot (it will also boot if there is no media in the cdrom's) however the cdrom cannot be mounted. The dmesg output and the syslog may provide some useful information:-
-> > 
-> > from dmesg
-> > 
-> > ide-cd: hdc: ide_cd_check_ireason: bad interrupt reason 0x03
-> > hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> > ide: failed opcode was: unknown
-> > hdc: drive not ready for command
-> > 
-> > and from the syslog
-> > 
-> > May 18 19:30:37 jewel kernel: hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> > May 18 19:30:37 jewel kernel: ide: failed opcode was: unknown
-> > May 18 19:30:37 jewel kernel: hdc: drive not ready for command
-> > May 18 19:30:37 jewel kernel: attempt to access beyond end of device
-> > May 18 19:30:37 jewel kernel: hdc: rw=0, want=68, limit=4
-> > May 18 19:30:37 jewel kernel: isofs_fill_super: bread failed, dev=hdc, iso_blknum=16, block=16
-> > 
-> > Full versions of dmesg and the syslog are below.
+Jens Axboe wrote:
+> Tejun, you have to stop replying with updated patches in an existing
+> thread. It's virtually impossible to sort the resulting mess into
+> patches worth applying.
 
-by the way, can you send the dmesg of a kernel with which your hdc drive
-works fine?
+Heh.. yeah, I usually post minor updates as UPDATED patches for review
+then repost the whole series after accumulating some of them.  This
+patchset's size was on the borderline for proper patchset and I was
+feeling lazy.  Sorry about that.  Will repost.
 
 Thanks.
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
