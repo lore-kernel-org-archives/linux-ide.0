@@ -1,48 +1,58 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and
-	partitions
-Date: Tue, 19 May 2009 20:15:30 +0200
-Message-ID: <20090519181530.GH4140@kernel.dk>
-References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-6-git-send-email-martin.petersen@oracle.com> <20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com> <yq1fxf1gi3y.fsf@sermon.lab.mkp.net>
+From: Martin Lottermoser <Martin.Lottermoser@t-online.de>
+Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
+Date: Tue, 19 May 2009 20:29:28 +0200
+Message-ID: <20090519182928.GA8172@wanza.invalid>
+References: <20090517091224.GA8280@wanza.invalid> <200905172135.10136.bzolnier@gmail.com> <20090518191207.GA7531@wanza.invalid> <200905191719.35543.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:38971 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753345AbZESSP3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 May 2009 14:15:29 -0400
+Received: from mailout09.t-online.de ([194.25.134.84]:37626 "EHLO
+	mailout09.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbZESS35 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 14:29:57 -0400
 Content-Disposition: inline
-In-Reply-To: <yq1fxf1gi3y.fsf@sermon.lab.mkp.net>
+In-Reply-To: <200905191719.35543.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, May 19 2009, Martin K. Petersen wrote:
-> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
-> 
-> >> I really hate the 'alignment' name, nobody will know wtf that is
-> >> without looking it up. The rest of the names are fairly self
-> >> explanatory.  offset? offset_size? misalignment? Not very good with
-> >> names, but perhaps we can find something more appropriate :-)
-> 
-> Yeah, it's a tricky thing to convey.  And despite all the other
-> convergence otherwise happening in the standards, T10 and T13 do not
-> agree how to describe the logical/physical alignment.
-> 
-> 
-> Mike> I agree that 'alignment' is too terse/confusing given that it is
-> Mike> an offset we're exposing.  How about 'alignment_offset'?
-> 
-> I thought I had already changed it to alignment_offset like we talked
-> about a while ago.  But I guess that change was only done mentally :)
-> 
-> Jens, are you ok with that name?
+Hello,
 
-I think so, I can't think of anything better :-)
+On Tue, May 19, 2009 at 05:19:35PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> Subject: [PATCH] ide: fix 40-wire cable detection for TSST SH-S202* ATAPI devices
 
-If you repost an updated 5/13 patch and I'll add it to the mix.
+I'm sorry, but that also generated a panic, looking identical to the
+behaviour as for the unpatched 2.6.30-rc6.
 
--- 
-Jens Axboe
+After booting the patched kernel, the syslog file showed:
 
+  hdc: UDMA/66 mode selected
+
+"hdparm -I" reported that the drive was set to "udma4". On accessing the DVD,
+the kernel panicked. Here's the main output from netconsole:
+
+  hdc: cdrom_decode_status: error=0x40 <3>{ LastFailedSense=0x04 }
+  ide: failed opcode was: unknown
+  hdc: DMA disabled
+  ------------[ cut here ]------------
+  kernel BUG at drivers/ide/ide-io.c:872!
+  invalid opcode: 0000 [#1]
+  last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/ide1/1.0/block/hdc/size
+
+After booting the kernel and before doing the test I had checked with
+"uname -a" that this really was the newly compiled kernel. After reboot I
+checked that ide-iops.o existed and had a modification time later than the
+moment I applied your patch. Also, the new vmlinuz is 64 bytes shorter than
+the unpatched one. Therefore I don't think I made some silly mistake which
+led to the patch being ignored.
+
+The offer for testing patches remains open :-).
+
+Regards,
+Martin Lottermoser
+--
+Martin Lottermoser             Martin.Lottermoser at _REMOVE_t-online.de
+Greifswaldstrasse 28
+38124 Braunschweig             http://home.vrweb.de/martin.lottermoser
+Germany
