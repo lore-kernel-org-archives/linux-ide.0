@@ -1,58 +1,78 @@
-From: Martin Lottermoser <Martin.Lottermoser@t-online.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: PATA DMA problem leading to kernel panic on reading movie DVDs
-Date: Tue, 19 May 2009 20:29:28 +0200
-Message-ID: <20090519182928.GA8172@wanza.invalid>
-References: <20090517091224.GA8280@wanza.invalid> <200905172135.10136.bzolnier@gmail.com> <20090518191207.GA7531@wanza.invalid> <200905191719.35543.bzolnier@gmail.com>
+Date: Tue, 19 May 2009 21:30:59 +0200
+Message-ID: <200905192131.00168.bzolnier@gmail.com>
+References: <20090517091224.GA8280@wanza.invalid> <200905191719.35543.bzolnier@gmail.com> <20090519182928.GA8172@wanza.invalid>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout09.t-online.de ([194.25.134.84]:37626 "EHLO
-	mailout09.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753127AbZESS35 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 14:29:57 -0400
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:59854 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753226AbZEST0X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 15:26:23 -0400
+In-Reply-To: <20090519182928.GA8172@wanza.invalid>
 Content-Disposition: inline
-In-Reply-To: <200905191719.35543.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Martin Lottermoser <Martin.Lottermoser@t-online.de>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
+On Tuesday 19 May 2009 20:29:28 Martin Lottermoser wrote:
+> Hello,
+> 
+> On Tue, May 19, 2009 at 05:19:35PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > Subject: [PATCH] ide: fix 40-wire cable detection for TSST SH-S202* ATAPI devices
+> 
+> I'm sorry, but that also generated a panic, looking identical to the
+> behaviour as for the unpatched 2.6.30-rc6.
+> 
+> After booting the patched kernel, the syslog file showed:
+> 
+>   hdc: UDMA/66 mode selected
+> 
+> "hdparm -I" reported that the drive was set to "udma4". On accessing the DVD,
+> the kernel panicked. Here's the main output from netconsole:
+> 
+>   hdc: cdrom_decode_status: error=0x40 <3>{ LastFailedSense=0x04 }
+>   ide: failed opcode was: unknown
+>   hdc: DMA disabled
+>   ------------[ cut here ]------------
+>   kernel BUG at drivers/ide/ide-io.c:872!
+>   invalid opcode: 0000 [#1]
+>   last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/ide1/1.0/block/hdc/size
+> 
+> After booting the kernel and before doing the test I had checked with
+> "uname -a" that this really was the newly compiled kernel. After reboot I
+> checked that ide-iops.o existed and had a modification time later than the
+> moment I applied your patch. Also, the new vmlinuz is 64 bytes shorter than
+> the unpatched one. Therefore I don't think I made some silly mistake which
+> led to the patch being ignored.
 
-On Tue, May 19, 2009 at 05:19:35PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Subject: [PATCH] ide: fix 40-wire cable detection for TSST SH-S202* ATAPI devices
+You didn't.  I did.
 
-I'm sorry, but that also generated a panic, looking identical to the
-behaviour as for the unpatched 2.6.30-rc6.
+Incremental patch fixing it:
 
-After booting the patched kernel, the syslog file showed:
+diff -u b/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+--- b/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -255,7 +255,7 @@
+ 	if (ivb) {
+ 		const char *model = (char *)&id[ATA_ID_PROD];
+ 
+-		if (strcmp("TSSTcorp CDDVDW SH-S202", model) == 0) {
++		if (strstr("TSSTcorp CDDVDW SH-S202", model)) {
+ 			/*
+ 			 * These ATAPI devices always report 80c cable
+ 			 * so we have to depend on the host in this case.
 
-  hdc: UDMA/66 mode selected
 
-"hdparm -I" reported that the drive was set to "udma4". On accessing the DVD,
-the kernel panicked. Here's the main output from netconsole:
+> The offer for testing patches remains open :-).
 
-  hdc: cdrom_decode_status: error=0x40 <3>{ LastFailedSense=0x04 }
-  ide: failed opcode was: unknown
-  hdc: DMA disabled
-  ------------[ cut here ]------------
-  kernel BUG at drivers/ide/ide-io.c:872!
-  invalid opcode: 0000 [#1]
-  last sysfs file: /sys/devices/pci0000:00/0000:00:1f.1/ide1/1.0/block/hdc/size
+We will get there. ;-)
 
-After booting the kernel and before doing the test I had checked with
-"uname -a" that this really was the newly compiled kernel. After reboot I
-checked that ide-iops.o existed and had a modification time later than the
-moment I applied your patch. Also, the new vmlinuz is 64 bytes shorter than
-the unpatched one. Therefore I don't think I made some silly mistake which
-led to the patch being ignored.
+I've reproduced the problem and I'm testing the fix currently...
 
-The offer for testing patches remains open :-).
-
-Regards,
-Martin Lottermoser
---
-Martin Lottermoser             Martin.Lottermoser at _REMOVE_t-online.de
-Greifswaldstrasse 28
-38124 Braunschweig             http://home.vrweb.de/martin.lottermoser
-Germany
+Thanks,
+Bart
