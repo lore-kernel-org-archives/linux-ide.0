@@ -1,69 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: improve failed opcode reporting
-Date: Tue, 19 May 2009 23:18:43 +0200
-Message-ID: <200905192318.43760.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13345] New: panic when reading data from IDE CDROM with >=
+ 2.6.29 kernels
+Date: Tue, 19 May 2009 21:29:01 GMT
+Message-ID: <bug-13345-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:65010 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbZESVOm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 17:14:42 -0400
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:38619 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbZESV27 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 17:28:59 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4JLT1ri030087
+	for <linux-ide@vger.kernel.org>; Tue, 19 May 2009 21:29:01 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Martin Lottermoser <Martin.Lottermoser@t-online.de>
 
-Nowadays we (almost) always store the currently executing command
-in hwif->cmd so we can use it for the failed opcode reporting.
+http://bugzilla.kernel.org/show_bug.cgi?id=13345
 
-Cc: Martin Lottermoser <Martin.Lottermoser@t-online.de>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-lib.c |   23 ++++-------------------
- 1 file changed, 4 insertions(+), 19 deletions(-)
+           Summary: panic when reading data from IDE CDROM with >= 2.6.29
+                    kernels
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30-rc5
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: modestas@vainius.eu
+        Regression: Yes
 
-Index: b/drivers/ide/ide-lib.c
-===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -31,24 +31,6 @@ void ide_toggle_bounce(ide_drive_t *driv
- 		blk_queue_bounce_limit(drive->queue, addr);
- }
- 
--static void ide_dump_opcode(ide_drive_t *drive)
--{
--	struct request *rq = drive->hwif->rq;
--	struct ide_cmd *cmd = NULL;
--
--	if (!rq)
--		return;
--
--	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
--		cmd = rq->special;
--
--	printk(KERN_ERR "ide: failed opcode was: ");
--	if (cmd == NULL)
--		printk(KERN_CONT "unknown\n");
--	else
--		printk(KERN_CONT "0x%02x\n", cmd->tf.command);
--}
--
- u64 ide_get_lba_addr(struct ide_cmd *cmd, int lba48)
- {
- 	struct ide_taskfile *tf = &cmd->tf;
-@@ -179,7 +161,10 @@ u8 ide_dump_status(ide_drive_t *drive, c
- 		else
- 			ide_dump_atapi_error(drive, err);
- 	}
--	ide_dump_opcode(drive);
-+
-+	printk(KERN_ERR "%s: possibly failed opcode: 0x%02x\n",
-+		drive->name, drive->hwif->cmd.tf.command);
-+
- 	return err;
- }
- EXPORT_SYMBOL(ide_dump_status);
+
+Created an attachment (id=21439)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=21439)
+Backtrace of the OOPS with 2.6.30-rc5
+
+Hello,
+
+I get kernel panic when data is read from IDE CDROM with 2.6.29 or later
+kernels (testing 2.6.30-rc5 at the moment). I have never had the issue with
+2.6.28 and earlier kernels.
+
+I suspect the cause though. My CD/DVD drive is pretty old and might be a bit
+faulty (or this might kernel be misinterpreting my drive sometimes). <= 2.6.28
+kernels used to turn off DMA due to seek errors (if I recall correctly)
+sometimes. However, I used to be able to turn DMA back on with hdparm and I
+have never really had read() failures. Now with >= 2.6.29 I have never seen DMA
+being turn off on my CD/DVD drive but I guess kernel just panics instead. So I
+suspect there is a regression in the latest kernels which triggers
+unrecoverable panic instead of drive reset.
+
+I got the attached backtrace (sorry, I couldn't do better than this picture)
+with 2.6.30-rc5 on Debian unstable amd64 box while doing a simple:
+
+$ dd if=/dev/cdrom of=/dev/null bs=1M
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
