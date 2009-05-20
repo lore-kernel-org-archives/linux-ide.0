@@ -1,24 +1,22 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: ibata: get rid of ATA_MAX_QUEUE loop in ata_qc_complete_multiple()
  v2
-Date: Wed, 20 May 2009 16:46:27 +0900
-Message-ID: <4A13B553.6010209@gmail.com>
+Date: Wed, 20 May 2009 03:49:35 -0400
+Message-ID: <4A13B60F.8030603@garzik.org>
 References: <20090520074439.GJ11363@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f191.google.com ([209.85.216.191]:49779 "EHLO
-	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752793AbZETHqb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 03:46:31 -0400
-Received: by pxi29 with SMTP id 29so252043pxi.33
-        for <linux-ide@vger.kernel.org>; Wed, 20 May 2009 00:46:32 -0700 (PDT)
+Received: from srv5.dvmed.net ([207.36.208.214]:53263 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753518AbZETHuC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2009 03:50:02 -0400
 In-Reply-To: <20090520074439.GJ11363@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
 Jens Axboe wrote:
 > We very rarely (if ever) complete more than one command in the
@@ -31,10 +29,20 @@ Jens Axboe wrote:
 > Verified with a user space tester to produce the same results.
 > 
 > Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> ---
+>  drivers/ata/libata-core.c |   11 +++++------
+>  1 files changed, 5 insertions(+), 6 deletions(-)
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Much cleaner.  Queued...
 
-Thanks.
+Separately, I wonder if we shouldn't add code to report when the 
+hardware gives us an unknown tag.
 
--- 
-tejun
+The code always correctly handles invalid tags passed to us from 
+hardware "if (qc)", but we should probably squawk when that happens, I 
+suspect.
+
+	Jeff
+
+
+
