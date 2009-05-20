@@ -1,26 +1,23 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 1/2] libata: switch to using block layer tagging support
-Date: Wed, 20 May 2009 18:50:40 +0000
-Message-ID: <1242845440.2881.74.camel@localhost.localdomain>
-References: <20090520065942.GD11363@kernel.dk>
-	 <20090520070038.GE11363@kernel.dk>
-	 <da824cf30905201010h1424e414idc3b01ecf7682005@mail.gmail.com>
-	 <e7510f760905201108l4486ff6foc560c1271ebee7a7@mail.gmail.com>
+Date: Wed, 20 May 2009 14:51:37 -0400
+Message-ID: <4A145139.8000007@garzik.org>
+References: <20090520065942.GD11363@kernel.dk>	 <20090520070038.GE11363@kernel.dk>	 <da824cf30905201010h1424e414idc3b01ecf7682005@mail.gmail.com> <e7510f760905201108l4486ff6foc560c1271ebee7a7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51493 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757207AbZETSuh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 14:50:37 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:39965 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754760AbZETSvm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2009 14:51:42 -0400
 In-Reply-To: <e7510f760905201108l4486ff6foc560c1271ebee7a7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Gwendal Grignou <gwendal@google.com>
-Cc: Grant Grundler <grundler@google.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, jeff@garzik.org, htejun@gmail.com
+Cc: Grant Grundler <grundler@google.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, htejun@gmail.com
 
-On Wed, 2009-05-20 at 11:08 -0700, Gwendal Grignou wrote:
+Gwendal Grignou wrote:
 > Form the ATA and SATA spec, NCQ is per device. It is possible to
 > assign the same tag on different port, the disks and PMP will not
 > care.
@@ -44,15 +41,20 @@ On Wed, 2009-05-20 at 11:08 -0700, Gwendal Grignou wrote:
 > When done, the patch will require a great amount of testing, given we
 > will exercise the controllers in a brand new way. A white list might
 > be necessary.
-> 
-> Jens, using SCSI tagging for ata commands is a great idea, but it is
-> no small feat...
 
-So realistically, you want one block queue per PMP port rather than an
-artificial limits adjustment on the single queue per output phy ... this
-shouldn't be too hard: it is exactly the way the SAS transport class
-(and libsas) works today for expander connected SAS devices.
+Well, I think a few things are getting confused, here.
 
-James
+Assigning 32 tags to each port is the best we can do, given existing 
+hardware, which provides command slots on a per-port basis.
+
+can_queue is a largely a host-wide limit that does not really apply to 
+modern SATA, because we (and Jens patch) set queue depth properly. 
+can_queue is mainly used these days for master/slave arbitration, and we 
+mainly need to ensure that can_queue does not add additional, unneeded 
+limits on top of the more fine-grained limits being configured.
+
+	Jeff
+
+
 
 
