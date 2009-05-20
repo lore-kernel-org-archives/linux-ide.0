@@ -1,15 +1,15 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 1/2] libata: switch to using block layer tagging support
-Date: Wed, 20 May 2009 09:00:38 +0200
-Message-ID: <20090520070038.GE11363@kernel.dk>
+Subject: [PATCH 2/2] block: add function for waiting for a specific free tag
+Date: Wed, 20 May 2009 09:01:04 +0200
+Message-ID: <20090520070104.GF11363@kernel.dk>
 References: <20090520065942.GD11363@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:46513 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([93.163.65.50]:46519 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754505AbZETHAh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 May 2009 03:00:37 -0400
+	id S1751269AbZETHBE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2009 03:01:04 -0400
 Content-Disposition: inline
 In-Reply-To: <20090520065942.GD11363@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,228 +18,276 @@ To: linux-ide@vger.kernel.org
 Cc: jeff@garzik.org, htejun@gmail.com
 
 
-libata currently has a pretty dumb ATA_MAX_QUEUE loop for finding
-a free tag to use. Instead of fixing that up, convert libata to
-using block layer tagging - gets rid of code in libata, and is also
-much faster.
+We need this in libata to ensure that we don't race between internal
+tag usage and the block layer usage.
 
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ata/libata-core.c |   65 ++++----------------------------------------
- drivers/ata/libata-scsi.c |   23 ++++++++++++++-
- drivers/ata/libata.h      |   19 ++++++++++++-
- include/linux/libata.h    |    1 -
- 4 files changed, 44 insertions(+), 64 deletions(-)
+ block/blk-tag.c           |   99 ++++++++++++++++++++++++++++++++-------------
+ drivers/ata/libata-core.c |   29 +++++++++----
+ include/linux/blkdev.h    |    3 +
+ 3 files changed, 95 insertions(+), 36 deletions(-)
 
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index e9a7501..208468b 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -149,6 +149,7 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+ 		goto fail;
+ 
+ 	atomic_set(&tags->refcnt, 1);
++	init_waitqueue_head(&tags->waitq);
+ 	return tags;
+ fail:
+ 	kfree(tags);
+@@ -264,6 +265,65 @@ int blk_queue_resize_tags(struct request_queue *q, int new_depth)
+ }
+ EXPORT_SYMBOL(blk_queue_resize_tags);
+ 
++void blk_queue_acquire_tag(struct request_queue *q, int tag)
++{
++	struct blk_queue_tag *bqt;
++
++	if (!blk_queue_tagged(q) || !q->queue_tags)
++		return;
++
++	bqt = q->queue_tags;
++	do {
++		DEFINE_WAIT(wait);
++
++		if (!test_and_set_bit_lock(tag, bqt->tag_map))
++			break;
++
++		prepare_to_wait(&bqt->waitq, &wait, TASK_UNINTERRUPTIBLE);
++		if (test_and_set_bit_lock(tag, bqt->tag_map)) {
++			spin_unlock_irq(q->queue_lock);
++			schedule();
++			spin_lock_irq(q->queue_lock);
++		}
++		finish_wait(&bqt->waitq, &wait);
++	} while (1);
++}
++
++void blk_queue_release_tag(struct request_queue *q, int tag)
++{
++	struct blk_queue_tag *bqt = q->queue_tags;
++
++	if (!blk_queue_tagged(q))
++		return;
++
++	/*
++	 * Normally we store a request pointer in the tag index, but for
++	 * blk_queue_acquire_tag() usage, we may not have something specific
++	 * assigned to the tag slot. In any case, be safe and clear it.
++	 */
++	bqt->tag_index[tag] = NULL;
++
++	if (unlikely(!test_bit(tag, bqt->tag_map))) {
++		printk(KERN_ERR "%s: attempt to clear non-busy tag (%d)\n",
++		       __func__, tag);
++		return;
++	}
++	/*
++	 * The tag_map bit acts as a lock for tag_index[bit], so we need
++	 * unlock memory barrier semantics.
++	 */
++	clear_bit_unlock(tag, bqt->tag_map);
++
++	/*
++	 * We don't need a memory barrier here, since we have the bit lock
++	 * ordering above. Otherwise it would need an smp_mb();
++	 */
++	if (waitqueue_active(&bqt->waitq))
++		wake_up(&bqt->waitq);
++
++}
++EXPORT_SYMBOL(blk_queue_release_tag);
++
+ /**
+  * blk_queue_end_tag - end tag operations for a request
+  * @q:  the request queue for the device
+@@ -285,33 +345,17 @@ void blk_queue_end_tag(struct request_queue *q, struct request *rq)
+ 
+ 	BUG_ON(tag == -1);
+ 
+-	if (unlikely(tag >= bqt->real_max_depth))
+-		/*
+-		 * This can happen after tag depth has been reduced.
+-		 * FIXME: how about a warning or info message here?
+-		 */
+-		return;
+-
+-	list_del_init(&rq->queuelist);
+-	rq->cmd_flags &= ~REQ_QUEUED;
+-	rq->tag = -1;
+-
+-	if (unlikely(bqt->tag_index[tag] == NULL))
+-		printk(KERN_ERR "%s: tag %d is missing\n",
+-		       __func__, tag);
+-
+-	bqt->tag_index[tag] = NULL;
+-
+-	if (unlikely(!test_bit(tag, bqt->tag_map))) {
+-		printk(KERN_ERR "%s: attempt to clear non-busy tag (%d)\n",
+-		       __func__, tag);
+-		return;
+-	}
+ 	/*
+-	 * The tag_map bit acts as a lock for tag_index[bit], so we need
+-	 * unlock memory barrier semantics.
++	 * When the tag depth is being reduced, we don't wait for higher tags
++	 * to finish. So we could see this triggering without it being an error.
+ 	 */
+-	clear_bit_unlock(tag, bqt->tag_map);
++	if (tag < bqt->real_max_depth) {
++		list_del_init(&rq->queuelist);
++		rq->cmd_flags &= ~REQ_QUEUED;
++		rq->tag = -1;
++
++		blk_queue_release_tag(q, tag);
++	}
+ }
+ EXPORT_SYMBOL(blk_queue_end_tag);
+ 
+@@ -336,8 +380,7 @@ EXPORT_SYMBOL(blk_queue_end_tag);
+ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ {
+ 	struct blk_queue_tag *bqt = q->queue_tags;
+-	unsigned max_depth;
+-	int tag;
++	int max_depth, tag;
+ 
+ 	if (unlikely((rq->cmd_flags & REQ_QUEUED))) {
+ 		printk(KERN_ERR
+@@ -371,7 +414,7 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ 	} while (test_and_set_bit_lock(tag, bqt->tag_map));
+ 	/*
+ 	 * We need lock ordering semantics given by test_and_set_bit_lock.
+-	 * See blk_queue_end_tag for details.
++	 * See blk_queue_release_tag() for details.
+ 	 */
+ 
+ 	rq->cmd_flags |= REQ_QUEUED;
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8de0081..cc67307 100644
+index cc67307..c45dd12 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -1789,8 +1789,6 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+@@ -61,6 +61,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
+ #include <linux/libata.h>
+ #include <asm/byteorder.h>
+ #include <linux/cdrom.h>
+@@ -1765,15 +1766,14 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	u32 preempted_sactive, preempted_qc_active;
+ 	int preempted_nr_active_links;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+-	unsigned long flags;
+ 	unsigned int err_mask;
+ 	int rc;
+ 
+-	spin_lock_irqsave(ap->lock, flags);
++	spin_lock_irq(ap->lock);
+ 
+ 	/* no internal command while frozen */
+ 	if (ap->pflags & ATA_PFLAG_FROZEN) {
+-		spin_unlock_irqrestore(ap->lock, flags);
++		spin_unlock_irq(ap->lock);
+ 		return AC_ERR_SYSTEM;
+ 	}
+ 
+@@ -1789,6 +1789,16 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
  	else
  		tag = 0;
  
--	if (test_and_set_bit(tag, &ap->qc_allocated))
--		BUG();
++	/*
++	 * We could be racing with the tag freeing in the block layer, so
++	 * we need to ensure that our tag is free.
++	 */
++	if (dev->sdev && dev->sdev->request_queue)
++		blk_queue_acquire_tag(dev->sdev->request_queue, tag);
++
++	/*
++	 * The tag is now ours
++	 */
  	qc = __ata_qc_from_tag(ap, tag);
  
  	qc->tag = tag;
-@@ -4783,36 +4781,6 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- }
+@@ -1828,7 +1838,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
  
- /**
-- *	ata_qc_new - Request an available ATA command, for queueing
-- *	@ap: target port
-- *
-- *	LOCKING:
-- *	None.
-- */
--
--static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
--{
--	struct ata_queued_cmd *qc = NULL;
--	unsigned int i;
--
--	/* no command while frozen */
--	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
--		return NULL;
--
--	/* the last tag is reserved for internal command. */
--	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
--		if (!test_and_set_bit(i, &ap->qc_allocated)) {
--			qc = __ata_qc_from_tag(ap, i);
--			break;
--		}
--
--	if (qc)
--		qc->tag = i;
--
--	return qc;
--}
--
--/**
-  *	ata_qc_new_init - Request an available ATA command, and initialize it
-  *	@dev: Device from whom we request an available command structure
-  *
-@@ -4820,16 +4788,20 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
-  *	None.
+ 	ata_qc_issue(qc);
+ 
+-	spin_unlock_irqrestore(ap->lock, flags);
++	spin_unlock_irq(ap->lock);
+ 
+ 	if (!timeout) {
+ 		if (ata_probe_timeout)
+@@ -1844,7 +1854,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	ata_port_flush_task(ap);
+ 
+ 	if (!rc) {
+-		spin_lock_irqsave(ap->lock, flags);
++		spin_lock_irq(ap->lock);
+ 
+ 		/* We're racing with irq here.  If we lose, the
+ 		 * following test prevents us from completing the qc
+@@ -1864,7 +1874,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 					"qc timeout (cmd 0x%x)\n", command);
+ 		}
+ 
+-		spin_unlock_irqrestore(ap->lock, flags);
++		spin_unlock_irq(ap->lock);
+ 	}
+ 
+ 	/* do post_internal_cmd */
+@@ -1884,11 +1894,14 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	}
+ 
+ 	/* finish up */
+-	spin_lock_irqsave(ap->lock, flags);
++	spin_lock_irq(ap->lock);
+ 
+ 	*tf = qc->result_tf;
+ 	err_mask = qc->err_mask;
+ 
++	if (dev->sdev && dev->sdev->request_queue)
++		blk_queue_release_tag(dev->sdev->request_queue, tag);
++
+ 	ata_qc_free(qc);
+ 	link->active_tag = preempted_tag;
+ 	link->sactive = preempted_sactive;
+@@ -1911,7 +1924,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 		ata_port_probe(ap);
+ 	}
+ 
+-	spin_unlock_irqrestore(ap->lock, flags);
++	spin_unlock_irq(ap->lock);
+ 
+ 	if ((err_mask & AC_ERR_TIMEOUT) && auto_timeout)
+ 		ata_internal_cmd_timed_out(dev, command);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ca322da..f2b6b92 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -307,6 +307,7 @@ struct blk_queue_tag {
+ 	int max_depth;			/* what we will send to device */
+ 	int real_max_depth;		/* what the array can hold */
+ 	atomic_t refcnt;		/* map can be shared */
++	wait_queue_head_t waitq;	/* for waiting on tags */
+ };
+ 
+ #define BLK_SCSI_MAX_CMDS	(256)
+@@ -929,6 +930,8 @@ extern void blk_put_queue(struct request_queue *);
+  * tag stuff
   */
- 
--struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev)
-+struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	struct ata_queued_cmd *qc;
- 
--	qc = ata_qc_new(ap);
-+	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
-+		return NULL;
-+
-+	qc = __ata_qc_from_tag(ap, tag);
- 	if (qc) {
- 		qc->scsicmd = NULL;
- 		qc->ap = ap;
- 		qc->dev = dev;
-+		qc->tag = tag;
- 
- 		ata_qc_reinit(qc);
- 	}
-@@ -4837,31 +4809,6 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev)
- 	return qc;
- }
- 
--/**
-- *	ata_qc_free - free unused ata_queued_cmd
-- *	@qc: Command to complete
-- *
-- *	Designed to free unused ata_queued_cmd object
-- *	in case something prevents using it.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--void ata_qc_free(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	unsigned int tag;
--
--	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
--
--	qc->flags = 0;
--	tag = qc->tag;
--	if (likely(ata_tag_valid(tag))) {
--		qc->tag = ATA_TAG_POISON;
--		clear_bit(tag, &ap->qc_allocated);
--	}
--}
--
- void __ata_qc_complete(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2733b0c..04f7a8d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -742,7 +742,11 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- {
- 	struct ata_queued_cmd *qc;
- 
--	qc = ata_qc_new_init(dev);
-+	if (cmd->request->tag != -1)
-+		qc = ata_qc_new_init(dev, cmd->request->tag);
-+	else
-+		qc = ata_qc_new_init(dev, 0);
-+
- 	if (qc) {
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
-@@ -1137,7 +1141,17 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 
- 		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
- 		depth = min(ATA_MAX_QUEUE - 1, depth);
--		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
-+
-+		/*
-+		 * If this device is behind a port multiplier, we have
-+		 * to share the tag map between all devices on that PMP.
-+		 * Set up the shared tag map here and we get automatic.
-+		 */
-+		if (dev->link->ap->pmp_link)
-+			scsi_init_shared_tag_map(sdev->host, ATA_MAX_QUEUE - 1);
-+
-+		scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
-+		scsi_activate_tcq(sdev, depth);
- 	}
- 
- 	return 0;
-@@ -1990,6 +2004,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 		hdr[1] |= (1 << 7);
- 
- 	memcpy(rbuf, hdr, sizeof(hdr));
-+
-+	/* if ncq, set tags supported */
-+	if (ata_id_has_ncq(args->id))
-+		rbuf[7] |= (1 << 1);
-+
- 	memcpy(&rbuf[8], "ATA     ", 8);
- 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
- 	ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 89a1e00..bad444b 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -74,7 +74,7 @@ extern struct ata_link *ata_dev_phys_link(struct ata_device *dev);
- extern void ata_force_cbl(struct ata_port *ap);
- extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
- extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
--extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
-+extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
- 			   unsigned int tag);
-@@ -100,7 +100,6 @@ extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
- extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
--extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
- extern void __ata_qc_complete(struct ata_queued_cmd *qc);
- extern int atapi_check_dma(struct ata_queued_cmd *qc);
-@@ -116,6 +115,22 @@ extern struct ata_port *ata_port_alloc(struct ata_host *host);
- extern void ata_dev_enable_pm(struct ata_device *dev, enum link_pm policy);
- extern void ata_lpm_schedule(struct ata_port *ap, enum link_pm);
- 
-+/**
-+ *	ata_qc_free - free unused ata_queued_cmd
-+ *	@qc: Command to complete
-+ *
-+ *	Designed to free unused ata_queued_cmd object
-+ *	in case something prevents using it.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ */
-+static inline void ata_qc_free(struct ata_queued_cmd *qc)
-+{
-+	qc->flags = 0;
-+	qc->tag = ATA_TAG_POISON;
-+}
-+
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
- extern void ata_acpi_associate_sata_port(struct ata_port *ap);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3d501db..cf1e54e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -716,7 +716,6 @@ struct ata_port {
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
- 
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
--	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
- 	int			nr_active_links; /* #links with active qcs */
- 
+ #define blk_rq_tagged(rq)		((rq)->cmd_flags & REQ_QUEUED)
++extern void blk_queue_acquire_tag(struct request_queue *, int);
++extern void blk_queue_release_tag(struct request_queue *, int);
+ extern int blk_queue_start_tag(struct request_queue *, struct request *);
+ extern struct request *blk_queue_find_tag(struct request_queue *, int);
+ extern void blk_queue_end_tag(struct request_queue *, struct request *);
 -- 
 1.6.3.rc0.1.gf800
 
