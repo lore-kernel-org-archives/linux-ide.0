@@ -1,60 +1,55 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
- kernels
-Date: Wed, 20 May 2009 09:18:17 GMT
-Message-ID: <200905200918.n4K9IHa0015015@demeter.kernel.org>
-References: <bug-13345-11633@http.bugzilla.kernel.org/>
+From: "Albert Astals Cid" <albert@miraveo.com>
+Subject: RE: =?UTF-8?Q?sata=5Fvia=20oops=20on=20copying=20files=3F?=
+Date: Wed, 20 May 2009 03:00:45 -0700
+Message-ID: <20090520030045.c0bed8b1fc13fcbc567bd8d4c339afd4.81d58aec96.wbe@email.secureserver.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:43291 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756681AbZETJSQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 05:18:16 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4K9IHEl015016
-	for <linux-ide@vger.kernel.org>; Wed, 20 May 2009 09:18:17 GMT
-In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
+Received: from smtpoutwbe06.prod.mesa1.secureserver.net ([208.109.78.208]:58387
+	"HELO smtpoutwbe06.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753760AbZETKAp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2009 06:00:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13345
+> > If i don't use the Compact Flash attached to the miniPCI->IDE->CF adapter it 
+> > works like a charm, it's only when i start writting (reading seems to work 
+> > fine) from the CF card that the kernel oopses, that's why i thought it might 
+> > be IDE/sata_via related.
+> 
+> Not unreasonable as an assumption - and it may be. It doesn't look like a
+> typical ATA bug, but its often hard to tell some hardware and software
+> bugs apart. Do you have any other DMA using miniPCI devices you could try
+> with the board (eg network devices) to see if it stays stable, or other
+> cards you could test the CF with ?
+
+I have a miniPCI wireless card and it works ok, in the sense that i can
+run a looped wget someUrl -O /dev/null for hours and no crash happens.
+
+I've tested the CF card on a USB CF card reader and works too (other
+computer though as the crashing one doesn't have USB ports).
+
+Sadly i don't have more CF cards to test in the miniPCI->CF adapter.
 
 
-Borislav Petkov <bbpetkov@yahoo.de> changed:
+>  
+> > Is it possible to work around IRQ problems? If so I guess this is not the 
+> 
+> irqpoll is there for that reason
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bbpetkov@yahoo.de
+oh :-/
 
-
-
-
---- Comment #4 from Borislav Petkov <bbpetkov@yahoo.de>  2009-05-20 09:18:16 ---
-Hi,
-
-can you also send the bootlogs of a working kernel (<= 2.6.28) and of the
-borked one (30-rc5). For the last one, it would be very useful to see the whole
-of the initial OOPS which is cut off on the photo. Can you catch the output
-with a serial console (netconsole might do too if its not too early in the boot
-process and the machine doesn't die before some data can be transferred over
-the network)?
-
-Also, on the 30-rc5 do 
-
-objdump -d drivers/ide/ide-io.o > ide-io.dsm
-
-and
-
-make drivers/ide/ide-io.s
-
-and send me the .dsm and .s files.
+> 
+> > correct mailing list for that question anymore, so can you suggest a better 
+> > one? And if it's not possible i guess all i have left is bugging my hardware 
+> > manufacturer.
+ 
 
 Thanks,
-Boris.
+  Albert
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
