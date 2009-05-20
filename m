@@ -1,76 +1,55 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 1/2] libata: switch to using block layer tagging support
-Date: Wed, 20 May 2009 14:58:49 -0400
-Message-ID: <4A1452E9.7000204@garzik.org>
-References: <20090520065942.GD11363@kernel.dk>	 <20090520070038.GE11363@kernel.dk>	 <da824cf30905201010h1424e414idc3b01ecf7682005@mail.gmail.com>	 <e7510f760905201108l4486ff6foc560c1271ebee7a7@mail.gmail.com> <1242845440.2881.74.camel@localhost.localdomain>
+Date: Wed, 20 May 2009 15:04:56 -0400
+Message-ID: <4A145458.5080302@garzik.org>
+References: <20090520065942.GD11363@kernel.dk>	 <20090520070038.GE11363@kernel.dk>	 <da824cf30905201010h1424e414idc3b01ecf7682005@mail.gmail.com>	 <e7510f760905201108l4486ff6foc560c1271ebee7a7@mail.gmail.com> <1242845440.2881.74.camel@localhost.localdomain> <4A1452E9.7000204@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33840 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33356 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755671AbZETS6z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 May 2009 14:58:55 -0400
-In-Reply-To: <1242845440.2881.74.camel@localhost.localdomain>
+	id S1753579AbZETTFC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2009 15:05:02 -0400
+In-Reply-To: <4A1452E9.7000204@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Gwendal Grignou <gwendal@google.com>, Grant Grundler <grundler@google.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, htejun@gmail.com
 
-James Bottomley wrote:
-> On Wed, 2009-05-20 at 11:08 -0700, Gwendal Grignou wrote:
->> Form the ATA and SATA spec, NCQ is per device. It is possible to
->> assign the same tag on different port, the disks and PMP will not
->> care.
->> However, today, we assign tag on a port basis [see
->> __ata_qc_from_tag()], therefore only 32 commands can be inflight to
->> all devices behind a given port.
->>
->> Being able to a do a mapping qc <---> {pmp port, tag} instead of just
->> qc <---> {tag} will provide a performance boost when disks supporting
->> NCQ are connected behind a PMP. Maybe it can be done, by moving qcmd
->> from ata_port to ata_link.
->>
->> As Tejun said, the patch needs more work to be able to support same
->> tag used on 2 different links behind the same port.
->> Also, given we are changing the amount of commands we sent to the
->> controller, we would have to change can_queue from ATA_MAX_QUEUE to
->> ATA_MAX_QUEUE*n, where n is the number of ports supported by the
->> controller [max SATA_PMP_MAX_PORTS, but some controller, like SiI3132
->> only supports 5 devices, and other may only support n = 1]
->>
->> When done, the patch will require a great amount of testing, given we
->> will exercise the controllers in a brand new way. A white list might
->> be necessary.
->>
->> Jens, using SCSI tagging for ata commands is a great idea, but it is
->> no small feat...
+Jeff Garzik wrote:
+> Well...   The limiting factor is "ATA command slots per SATA phy", which 
+> defines $N active ATA commands per port.  If a SATA NCQ device is 
+> attached, you may have $N active ATA commands queued.  If two SATA NCQ 
+> devices are attached to a PMP, which is attached to the SATA controller, 
+> the two devices share the limit of $N active ATA commands queued.  If 32 
+> devices are attached to a PMP, all 32 devices share the $N command queue 
+> limit.
 > 
-> So realistically, you want one block queue per PMP port rather than an
-> artificial limits adjustment on the single queue per output phy ... this
-> shouldn't be too hard: it is exactly the way the SAS transport class
-> (and libsas) works today for expander connected SAS devices.
+> But additionally, as Tejun demonstrated, you might have a mix of NCQ and 
+> non-NCQ devices attached to the PMP.
+> 
+> Thus, it is a case of nested limits:
+> 
+> - $N maximum active commands per port; typically N==32
+> - $M maximum active commands per device; typically N==1 or N==32
 
-Well...   The limiting factor is "ATA command slots per SATA phy", which 
-defines $N active ATA commands per port.  If a SATA NCQ device is 
-attached, you may have $N active ATA commands queued.  If two SATA NCQ 
-devices are attached to a PMP, which is attached to the SATA controller, 
-the two devices share the limit of $N active ATA commands queued.  If 32 
-devices are attached to a PMP, all 32 devices share the $N command queue 
-limit.
 
-But additionally, as Tejun demonstrated, you might have a mix of NCQ and 
-non-NCQ devices attached to the PMP.
+Note that this applies /somewhat/ to mvsas as well:  mvsas has up to 16 
+"ATA register sets" that the OS driver may assign to various ATA devices 
+on a single phy.
 
-Thus, it is a case of nested limits:
+This simulates the "command slot" concept on dedicated SATA+PMP+NCQ 
+hardware like AHCI or sata_sil24.
 
-- $N maximum active commands per port; typically N==32
-- $M maximum active commands per device; typically N==1 or N==32
+If you attach more than 16 ATA devices to a PMP, which is theoretically 
+possible, then mvsas MUST fail discovery, because it cannot address that 
+many ATA devices.
 
-Regards,
+But mvsas's different architecture means that it does not have similar 
+"command slot" limits.
 
 	Jeff
-
 
 
 
