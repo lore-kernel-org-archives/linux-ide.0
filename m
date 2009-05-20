@@ -1,53 +1,60 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: ibata: get rid of ATA_MAX_QUEUE loop in
-	ata_qc_complete_multiple()  v2
-Date: Wed, 20 May 2009 09:58:52 +0200
-Message-ID: <20090520075852.GL11363@kernel.dk>
-References: <20090520074439.GJ11363@kernel.dk> <4A13B60F.8030603@garzik.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
+ kernels
+Date: Wed, 20 May 2009 09:18:17 GMT
+Message-ID: <200905200918.n4K9IHa0015015@demeter.kernel.org>
+References: <bug-13345-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:44687 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756100AbZETH6w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 May 2009 03:58:52 -0400
-Content-Disposition: inline
-In-Reply-To: <4A13B60F.8030603@garzik.org>
+Received: from demeter.kernel.org ([140.211.167.39]:43291 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756681AbZETJSQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 05:18:16 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4K9IHEl015016
+	for <linux-ide@vger.kernel.org>; Wed, 20 May 2009 09:18:17 GMT
+In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, htejun@gmail.com
+To: linux-ide@vger.kernel.org
 
-On Wed, May 20 2009, Jeff Garzik wrote:
-> Jens Axboe wrote:
->> We very rarely (if ever) complete more than one command in the
->> sactive mask at the time, even for extremely high IO rates. So
->> looping over the entire range of possible tags is pointless,
->> instead use __ffs() to just find the completed tags directly.
->>
->> Updated to clear the tag from the done_mask instead of shifting
->> done_mask down as suggested by From: Tejun Heo <htejun@gmail.com>
->> Verified with a user space tester to produce the same results.
->>
->> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
->> ---
->>  drivers/ata/libata-core.c |   11 +++++------
->>  1 files changed, 5 insertions(+), 6 deletions(-)
->
-> Much cleaner.  Queued...
+http://bugzilla.kernel.org/show_bug.cgi?id=13345
 
-Thanks!
 
-> Separately, I wonder if we shouldn't add code to report when the  
-> hardware gives us an unknown tag.
->
-> The code always correctly handles invalid tags passed to us from  
-> hardware "if (qc)", but we should probably squawk when that happens, I  
-> suspect.
+Borislav Petkov <bbpetkov@yahoo.de> changed:
 
-Probably a good idea, it is a sign of bigger problems if the hardware
-completes tags that we don't know about.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bbpetkov@yahoo.de
+
+
+
+
+--- Comment #4 from Borislav Petkov <bbpetkov@yahoo.de>  2009-05-20 09:18:16 ---
+Hi,
+
+can you also send the bootlogs of a working kernel (<= 2.6.28) and of the
+borked one (30-rc5). For the last one, it would be very useful to see the whole
+of the initial OOPS which is cut off on the photo. Can you catch the output
+with a serial console (netconsole might do too if its not too early in the boot
+process and the machine doesn't die before some data can be transferred over
+the network)?
+
+Also, on the 30-rc5 do 
+
+objdump -d drivers/ide/ide-io.o > ide-io.dsm
+
+and
+
+make drivers/ide/ide-io.s
+
+and send me the .dsm and .s files.
+
+Thanks,
+Boris.
 
 -- 
-Jens Axboe
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
