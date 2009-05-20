@@ -1,17 +1,18 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/2] libata: switch to block layer tagging
-Date: Wed, 20 May 2009 09:57:53 +0200
-Message-ID: <20090520075753.GK11363@kernel.dk>
-References: <20090520065942.GD11363@kernel.dk> <4A13B6F3.2000001@garzik.org>
+Subject: Re: ibata: get rid of ATA_MAX_QUEUE loop in
+	ata_qc_complete_multiple()  v2
+Date: Wed, 20 May 2009 09:58:52 +0200
+Message-ID: <20090520075852.GL11363@kernel.dk>
+References: <20090520074439.GJ11363@kernel.dk> <4A13B60F.8030603@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:44665 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([93.163.65.50]:44687 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753735AbZETH5w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 May 2009 03:57:52 -0400
+	id S1756100AbZETH6w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2009 03:58:52 -0400
 Content-Disposition: inline
-In-Reply-To: <4A13B6F3.2000001@garzik.org>
+In-Reply-To: <4A13B60F.8030603@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
@@ -19,34 +20,33 @@ Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
 On Wed, May 20 2009, Jeff Garzik wrote:
 > Jens Axboe wrote:
->> Hi,
+>> We very rarely (if ever) complete more than one command in the
+>> sactive mask at the time, even for extremely high IO rates. So
+>> looping over the entire range of possible tags is pointless,
+>> instead use __ffs() to just find the completed tags directly.
 >>
->> This patchset switches libata to block layer tagging. It gets rid of yet
->> another O(N) command loop.
+>> Updated to clear the tag from the done_mask instead of shifting
+>> done_mask down as suggested by From: Tejun Heo <htejun@gmail.com>
+>> Verified with a user space tester to produce the same results.
 >>
->>  block/blk-tag.c           |   99 +++++++++++++++++++++++++++-----------
->>  drivers/ata/libata-core.c |   94 ++++++++++--------------------------
->>  drivers/ata/libata-scsi.c |   23 ++++++++
->>  drivers/ata/libata.h      |   19 ++++++-
->>  include/linux/blkdev.h    |    3 +
->>  include/linux/libata.h    |    1  6 files changed, 139 insertions(+), 
->> 100 deletions(-)
+>> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+>> ---
+>>  drivers/ata/libata-core.c |   11 +++++------
+>>  1 files changed, 5 insertions(+), 6 deletions(-)
 >
-> Will take a look post-sleep...  mainly it's a question of possibly  
+> Much cleaner.  Queued...
 
-:-)
+Thanks!
 
-> interfering with SCSI's use of block layer tagging.  Though for the  
-> moment I will simply assume you verified that ;)
+> Separately, I wonder if we shouldn't add code to report when the  
+> hardware gives us an unknown tag.
+>
+> The code always correctly handles invalid tags passed to us from  
+> hardware "if (qc)", but we should probably squawk when that happens, I  
+> suspect.
 
-Certainly, the patch has been used and sitting in my ssd branch for
-months now. It essentially just tells SCSI to enable the block layer
-tagging for libata devices with ncq. Then libata gets block layer tagged
-requests automatically, and it can simply reuse the assigned tag
-internally as well.
-
-That part is trivial. The nasty bit is when libata makes up its own tag
-for internal issue, that is what patch #2 covers.
+Probably a good idea, it is a sign of bigger problems if the hardware
+completes tags that we don't know about.
 
 -- 
 Jens Axboe
