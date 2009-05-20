@@ -1,51 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: utku's sata freeze and hard reset problem
-Date: Wed, 20 May 2009 22:30:53 +0900
-Message-ID: <4A14060D.5020709@kernel.org>
-References: <4A10B2A2.3030003@zeitin.com> <4A126296.80006@kernel.org> <4A140409.6040108@zeitin.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
+ kernels
+Date: Wed, 20 May 2009 14:35:06 GMT
+Message-ID: <200905201435.n4KEZ6fv008141@demeter.kernel.org>
+References: <bug-13345-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53169 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752811AbZETNbG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 May 2009 09:31:06 -0400
-In-Reply-To: <4A140409.6040108@zeitin.com>
+Received: from demeter.kernel.org ([140.211.167.39]:58122 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083AbZETOfF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 10:35:05 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4KEZ6Od008142
+	for <linux-ide@vger.kernel.org>; Wed, 20 May 2009 14:35:06 GMT
+In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Utku Somer <utku@zeitin.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Utku Somer wrote:
-> Tejun Heo wrote:
->> Tiemouts without any link layer problem reported.  Hmmm.... Does it
->> help if you disable NCQ with the following command?
->>
->> # echo 1 > /sys/block/sdX/device/queue_depth
->>
->> Thanks
-> I had the same idea after I read around the mailing list. (But I was
-> ignorant
-> on the way, I actually tried to echo 0 into queue_depth first. Good
-> thing it doesn't
-> let me.) Anyway, it has been running without the errors for more than 12
-> hours
-> now. I also tried by increasing the disk load, which increases the
-> chances of the problem
-> occurring. It has not happened yet.
+http://bugzilla.kernel.org/show_bug.cgi?id=13345
+
+
+
+
+
+--- Comment #5 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-05-20 14:35:05 ---
+On Wednesday 20 May 2009 09:30:29 bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=13345
 > 
-> So yes, disabling NCQ stops the problem from occurring.
 > 
-> Any ideas?
+> 
+> 
+> 
+> --- Comment #3 from Modestas Vainius <modestas@vainius.eu>  2009-05-20 07:30:29 ---
+> Unfortunately, the patch applied on top of 2.6.30-rc5 does not fix the problem.
 
-Timeouts w/ NCQ seem to be one of the most subtle failure modes.  It
-can be caused by several different issues - firmware bug, power
-problem or link layer problem.  Is there a firmware update available
-for your drive?  If there's one, please save the output of "hdparm -I"
-before going forward with firmware update.
+Just to be sure:
 
-Thanks.
+Is the OOPS identical as previously or is it something new?
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
