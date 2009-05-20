@@ -1,38 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/2] block: add function for waiting for a specific free
- tag
-Date: Wed, 20 May 2009 20:55:40 +0900
-Message-ID: <4A13EFBC.4010005@gmail.com>
-References: <20090520065942.GD11363@kernel.dk> <20090520070104.GF11363@kernel.dk>
+From: Utku Somer <utku@zeitin.com>
+Subject: Re: utku's sata freeze and hard reset problem
+Date: Wed, 20 May 2009 16:22:17 +0300
+Message-ID: <4A140409.6040108@zeitin.com>
+References: <4A10B2A2.3030003@zeitin.com> <4A126296.80006@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f103.google.com ([209.85.216.103]:52582 "EHLO
-	mail-px0-f103.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753735AbZETLzn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 07:55:43 -0400
-Received: by pxi1 with SMTP id 1so85452pxi.33
-        for <linux-ide@vger.kernel.org>; Wed, 20 May 2009 04:55:44 -0700 (PDT)
-In-Reply-To: <20090520070104.GF11363@kernel.dk>
+Received: from host-212-154-27-247.parkyeri.net ([212.154.27.247]:50531 "EHLO
+	witten.zeitin.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281AbZETNW6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2009 09:22:58 -0400
+In-Reply-To: <4A126296.80006@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> We need this in libata to ensure that we don't race between internal
-> tag usage and the block layer usage.
+Tejun Heo wrote:
+> Tiemouts without any link layer problem reported.  Hmmm.... Does it
+> help if you disable NCQ with the following command?
+>
+> # echo 1 > /sys/block/sdX/device/queue_depth
+>
+> Thanks
+I had the same idea after I read around the mailing list. (But I was 
+ignorant
+on the way, I actually tried to echo 0 into queue_depth first. Good 
+thing it doesn't
+let me.) Anyway, it has been running without the errors for more than 12 
+hours
+now. I also tried by increasing the disk load, which increases the 
+chances of the problem
+occurring. It has not happened yet.
 
-Hmm... I can't think of a race condition.  Can you please elaborate
-what can cause such race condition and how it can get resolved by
-waiting for in-flight tag?  Currently, libata reserves a qc for EH so
-there won't be any race around it (the old-EH path is broken if
-invoked with commands in flight anyway, so doesn't matter).  Also, as
-all failed rq's are on hold till EH finishes, if there's a race
-condition around a tag, it will become a deadlock.
+So yes, disabling NCQ stops the problem from occurring.
 
-Thanks.
+Any ideas?
 
--- 
-tejun
+Thanks
