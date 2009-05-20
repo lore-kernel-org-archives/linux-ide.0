@@ -1,52 +1,40 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] ata_piix: Add HP Compaq nc6000 to the broken poweroff list
-Date: Wed, 20 May 2009 00:15:39 +0200
-Message-ID: <200905200015.39917.rjw@sisk.pl>
-References: <1242686264-23173-1-git-send-email-syrjala@sci.fi>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: sata_via oops on copying files?
+Date: Wed, 20 May 2009 01:04:44 +0100
+Message-ID: <20090520010444.4f6f378a@lxorguk.ukuu.org.uk>
+References: <20090519091655.c0bed8b1fc13fcbc567bd8d4c339afd4.8d107e4704.wbe@email.secureserver.net>
+	<20090519211052.55d01236@lxorguk.ukuu.org.uk>
+	<200905192235.56916.albert@miraveo.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37587 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441AbZESWQH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 May 2009 18:16:07 -0400
-In-Reply-To: <1242686264-23173-1-git-send-email-syrjala@sci.fi>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:54054 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754026AbZETADz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2009 20:03:55 -0400
+In-Reply-To: <200905192235.56916.albert@miraveo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ville Syrjala <syrjala@sci.fi>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Albert Astals Cid <albert@miraveo.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tuesday 19 May 2009, Ville Syrjala wrote:
-> HP Compaq nc6000 suffers from the double disk spindown issue.
-> Add it to the broken poweroff DMI list.
+> If i don't use the Compact Flash attached to the miniPCI->IDE->CF adapter it 
+> works like a charm, it's only when i start writting (reading seems to work 
+> fine) from the CF card that the kernel oopses, that's why i thought it might 
+> be IDE/sata_via related.
 
-Patch looks good to me FWIW.
+Not unreasonable as an assumption - and it may be. It doesn't look like a
+typical ATA bug, but its often hard to tell some hardware and software
+bugs apart. Do you have any other DMA using miniPCI devices you could try
+with the board (eg network devices) to see if it stays stable, or other
+cards you could test the CF with ?
+ 
+> Is it possible to work around IRQ problems? If so I guess this is not the 
 
-> Signed-off-by: Ville Syrjala <syrjala@sci.fi>
-> ---
->  drivers/ata/ata_piix.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index d51a17c..1aeb708 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -1455,6 +1455,15 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
->  			/* PCI slot number of the controller */
->  			.driver_data = (void *)0x1FUL,
->  		},
-> +		{
-> +			.ident = "HP Compaq nc6000",
-> +			.matches = {
-> +				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-> +				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nc6000"),
-> +			},
-> +			/* PCI slot number of the controller */
-> +			.driver_data = (void *)0x1FUL,
-> +		},
->  
->  		{ }	/* terminate list */
->  	};
+irqpoll is there for that reason
+
+> correct mailing list for that question anymore, so can you suggest a better 
+> one? And if it's not possible i guess all i have left is bugging my hardware 
+> manufacturer.
+
