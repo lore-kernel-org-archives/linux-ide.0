@@ -1,51 +1,35 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: old-EH and SAS (was Re: [PATCH 2/2] block: add function for waiting
- for a specific free tag)
-Date: Thu, 21 May 2009 11:34:04 -0500
-Message-ID: <4A15827C.6020705@linux.vnet.ibm.com>
-References: <20090520065942.GD11363@kernel.dk> <20090520070104.GF11363@kernel.dk> <4A13EFBC.4010005@gmail.com> <4A145B5D.8020607@garzik.org>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: PCI IRQ Pins
+Date: Thu, 21 May 2009 18:43:16 +0200
+Message-ID: <m3r5yi9zkr.fsf@intrepid.localdomain>
+References: <4A13EC76.3020206@hiramoto.org>
+	<m3r5ykgd97.fsf@intrepid.localdomain>
+	<20090520205151.GC4095@n2100.arm.linux.org.uk>
+	<m3zld7cuxk.fsf@intrepid.localdomain> <4A14F160.6080605@hiramoto.org>
+	<4A150B9A.7080700@hiramoto.org> <4A1568FB.20508@ru.mvista.com>
+	<4A156A21.2060108@hiramoto.org> <4A156E36.6080806@hiramoto.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4A145B5D.8020607@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from khc.piap.pl ([195.187.100.11]:59452 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752167AbZEUQnR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 May 2009 12:43:17 -0400
+In-Reply-To: <4A156E36.6080806@hiramoto.org> (Karl Hiramoto's message of "Thu\, 21 May 2009 17\:07\:34 +0200")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Karl Hiramoto <karl@hiramoto.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Russell King - ARM Linux <linux@arm.linux.org.uk>, "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>, linux-arm-kernel <linux-arm-kernel@lists.arm.linux.org.uk>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Brian King did a new-EH conversion for ipr, some time ago.  Maybe that
-> work could be picked up, extended to libsas, and permit removal of all
-> the old-EH code remaining in libata.
+Karl Hiramoto <karl@hiramoto.org> writes:
 
-There are a couple different ways to accomplish this, and they relate to
-how many scsi hosts we end up using for a single SAS HBA.
+> Sorry, think i misspoke,  after reading the IXP4xx dev manual it says 
+> 66Mhz PCI version 2.2.
 
-Single scsi_host solution
-This solution really requires libata to more or less stop using scsi core.
-At the very least the concept of it "owning" the scsi host must go away.
-Additionally, as far as EH goes, quiescing the entire scsi host each time
-we want to do some exception handling for a SATA device kills the performance
-of the SAS devices on the HBA, so we would need to have a better layered
-EH that only quiesced what needs to be quiesced and then called out to
-different pluggable EH handling routines.
-
-Multiple scsi_host solution
-This is what my patch to ipr did. It was the path of least resistance at
-the time and worked reasonably well for ipr, but may not have been the
-best solution for libsas without further enhancements. In this solution,
-there is a scsi_host for each ATA port found on the SAS fabric. This
-allows most of the existing libata code to simply work with minimal changes.
-The biggest issue with this approach is we lose adapter queue depth tracking.
-We really would need queue groups or some similar solution in order for this
-to work for libsas.
-
--Brian
-
+Typically the PCI clock on IXP4xx is 33 MHz but your board can use any
+value from 0 to 66.666 MHz. Most wifi cards don't work with 66 MHz,
+though. The only card working @ 66 MHz for me is CM9 (all cards I have
+fail to connect the M66EN line to ground, so they simply don't work
+instead of forcing 33 MHz clock). They are all based on ath5 chips.
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
-
+Krzysztof Halasa
