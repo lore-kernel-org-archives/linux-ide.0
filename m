@@ -1,47 +1,78 @@
-From: Karl Hiramoto <karl@hiramoto.org>
-Subject: Re: PCI IRQ Pins
-Date: Thu, 21 May 2009 21:12:21 +0200
-Message-ID: <4A15A795.4090100@hiramoto.org>
-References: <4A13EC76.3020206@hiramoto.org>	<m3r5ykgd97.fsf@intrepid.localdomain>	<20090520205151.GC4095@n2100.arm.linux.org.uk>	<m3zld7cuxk.fsf@intrepid.localdomain>
-	<4A14F160.6080605@hiramoto.org>	<4A150B9A.7080700@hiramoto.org>
-	<4A1568FB.20508@ru.mvista.com>	<4A156A21.2060108@hiramoto.org>
-	<4A156E36.6080806@hiramoto.org>
-	<m3r5yi9zkr.fsf@intrepid.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/4] ide: respect quirk_drives[] list on all controllers
+Date: Thu, 21 May 2009 23:13:33 +0400
+Message-ID: <4A15A7DD.1040300@ru.mvista.com>
+References: <200905201734.42093.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <ath9k-devel-bounces@lists.ath9k.org>
-In-Reply-To: <m3r5yi9zkr.fsf@intrepid.localdomain>
-List-Unsubscribe: <https://lists.ath9k.org/mailman/listinfo/ath9k-devel>,
-	<mailto:ath9k-devel-request@lists.ath9k.org?subject=unsubscribe>
-List-Archive: <http://lists.ath9k.org/pipermail/ath9k-devel>
-List-Post: <mailto:ath9k-devel@lists.ath9k.org>
-List-Help: <mailto:ath9k-devel-request@lists.ath9k.org?subject=help>
-List-Subscribe: <https://lists.ath9k.org/mailman/listinfo/ath9k-devel>,
-	<mailto:ath9k-devel-request@lists.ath9k.org?subject=subscribe>
-Sender: ath9k-devel-bounces@lists.ath9k.org
-Errors-To: ath9k-devel-bounces@lists.ath9k.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>, Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-arm-kernel <linux-arm-kernel@lists.arm.linux.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:58488 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754453AbZEUTMk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 May 2009 15:12:40 -0400
+In-Reply-To: <200905201734.42093.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Krzysztof Halasa wrote:
-> Karl Hiramoto <karl@hiramoto.org> writes:
->
->   
->> Sorry, think i misspoke,  after reading the IXP4xx dev manual it says 
->> 66Mhz PCI version 2.2.
->>     
->
-> Typically the PCI clock on IXP4xx is 33 MHz but your board can use any
-> value from 0 to 66.666 MHz. Most wifi cards don't work with 66 MHz,
-> though. The only card working @ 66 MHz for me is CM9 (all cards I have
-> fail to connect the M66EN line to ground, so they simply don't work
-> instead of forcing 33 MHz clock). They are all based on ath5 chips.
->   
-checking IXP4XX_EXP_CFG0  bit 4 is 0  so PCI_CLK  should be 33mhz
+Bartlomiej Zolnierkiewicz wrote:
 
-So i shouldn't have to tie the M66EN to ground.
+> * Add ide_check_nien_quirk_list() helper to the core code
+>   and then use it in ide_port_tune_devices().
 
---
-Karl
+> * Remove no longer needed ->quirkproc methods from hpt366.c
+>   and pdc202xx_{new,old}.c.
+
+    Haha, I remembered about that idea of yours and was thinking of 
+undertaking its implementation just yesterday. You've beten me to it. :-)
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Index: b/drivers/ide/ide-iops.c
+> ===================================================================
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -269,6 +269,31 @@ no_80w:
+>  	return 0;
+>  }
+>  
+> +static const char *nien_quirk_list[] = {
+> +	"QUANTUM FIREBALLlct08 08",
+> +	"QUANTUM FIREBALLP KA6.4",
+> +	"QUANTUM FIREBALLP KA9.1",
+> +	"QUANTUM FIREBALLP KX13.6",
+> +	"QUANTUM FIREBALLP KX20.5",
+> +	"QUANTUM FIREBALLP KX27.3",
+> +	"QUANTUM FIREBALLP LM20.4",
+> +	"QUANTUM FIREBALLP LM20.5",
+> +	NULL
+> +};
+> +
+> +void ide_check_nien_quirk_list(ide_drive_t *drive)
+
+    Why not reuse ide_in_drive_list()?
+
+> +{
+> +	const char **list, *m = (char *)&drive->id[ATA_ID_PROD];
+> +
+> +	for (list = nien_quirk_list; *list != NULL; list++)
+> +		if (strstr(m, *list) != NULL) {
+
+    Ah, strstr() vs strcmp()... I think strcmp() should work anyway...
+
+> +			drive->quirk_list = 2;
+> +			return;
+> +		}
+> +
+> +	drive->quirk_list = 0;
+> +}
+> +
+>  int ide_driveid_update(ide_drive_t *drive)
+>  {
+>  	u16 *id;
+
+MBR, Sergei
