@@ -1,83 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: PCI IRQ Pins
-Date: Thu, 21 May 2009 20:44:44 +0400
-Message-ID: <4A1584FC.1030709@ru.mvista.com>
-References: <4A13EC76.3020206@hiramoto.org>	<m3r5ykgd97.fsf@intrepid.localdomain>	<20090520205151.GC4095@n2100.arm.linux.org.uk>	<m3zld7cuxk.fsf@intrepid.localdomain> <4A14F160.6080605@hiramoto.org> <4A150B9A.7080700@hiramoto.org> <4A1568FB.20508@ru.mvista.com> <4A156A21.2060108@hiramoto.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] libata: switch to using block layer tagging support
+Date: Thu, 21 May 2009 13:27:41 -0400
+Message-ID: <4A158F0D.2090505@garzik.org>
+References: <20090520065942.GD11363@kernel.dk>	 <20090520070038.GE11363@kernel.dk>	 <da824cf30905201010h1424e414idc3b01ecf7682005@mail.gmail.com>	 <e7510f760905201108l4486ff6foc560c1271ebee7a7@mail.gmail.com>	 <1242845440.2881.74.camel@localhost.localdomain>	 <4A1452E9.7000204@garzik.org> <4A145458.5080302@garzik.org> <e7510f760905201242s3cb84154m6e9a5795fd2357c5@mail.gmail.com> <4A155AA5.3080704@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:53984 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753519AbZEUQnw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 May 2009 12:43:52 -0400
-In-Reply-To: <4A156A21.2060108@hiramoto.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:59415 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753545AbZEUR1s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 May 2009 13:27:48 -0400
+In-Reply-To: <4A155AA5.3080704@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Karl Hiramoto <karl@hiramoto.org>
-Cc: Krzysztof Halasa <khc@pm.waw.pl>, Russell King - ARM Linux <linux@arm.linux.org.uk>, "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>, linux-arm-kernel <linux-arm-kernel@lists.arm.linux.org.uk>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Gwendal Grignou <gwendal@google.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Grant Grundler <grundler@google.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Hello.
+Mark Lord wrote:
+> Gwendal Grignou wrote:
+>> Jeff, you're right, I made some mistakes:
+>> - Reading SiI3132 doc again, it only supports 32 command per port, so
+>> the tags must be share among all the drives behind the same port.
+>> But other chipset does support up to 128 commands per port.
+>> - Jens' patch is working when all disks support NCQ. Only when we have
+>> a mix of drives with or without NCQ we have a problem.
+> ..
+> 
+> Along those lines, the newer Marvell chipsets support up to 128 commands
+> per host port.
+> 
+> I seem to recall that the Pacific Digital Qstor chip
+> can manage an insane number of commands -- something like
+> 32 per device per PM port [eg. (15 * 32) in total per host port].
+> 
+> Seems to be a widespread kind of thing for non-legacy chipsets.
+> Someday we really ought to beef up libata to allow host-chipset queuing
+> of non-NCQ commands, too.
 
-Karl Hiramoto wrote:
+SAS+SATA chips do not necessarily have per-port limits at all, even.
 
->>>>>>Normally you get a backtrace when a "nobody cared" message is
->>>>>>issued -
->>>>>>this should tell you which driver is probably the cause.
+The limit may instead be a host-wide command queue size limit, rather 
+than a per-port limit.
 
->>>>>Right - or that the other device is the cause (stuck IRQ line). So,
->>>>>Karl, please just post the backtrace.
+	Jeff
 
->>>>Krzysztof, you mentioned clearing the IRQ in the platform code, is
->>>>there an example of this somewhere?
 
->>>>There is a Compact flash on hda connected the the HPT371N, looking
->>>>at the IDE code it looks like the drive my not be ready, or the
->>>>drive may raise the IRQ..
 
->>>>As soon as request_irq is called, the IRQ happens.
 
->>>>CCing linux-IDE now, as it may be an issue with this driver.
-
->>>>Backtrace below, sorry about some of the lines being wrapped.
-
->>>I think i see the problem:
-
->>>In the platform code, i should save the frequency of 33 Mhz in the
->>>correct register.
-
->>You mean the PCI frequency?
-
->>>>hpt366: HPT371N chipset detected
->>>>hpt366 0000:00:01.0: IDE controller (0x1103:0x0007 rev 0x02)
->>>>PCI: enabling device 0000:00:01.0 (0140 -> 0141)
->>>>hpt366 0000:00:01.0: IDE port disabled
->>>>hpt366 0000:00:01.0: no clock data saved by BIOS
->>>>hpt366 0000:00:01.0: DPLL base: 77 MHz, f_CNT: 120, assuming 50 MHz PCI
-
->>Hum, interesting... is your PCI indeed running at a frequency close to
->>50 MHz?
-
-    To be precise, the formula yields 48 MHz PCI clock for f_CNT of 120. It 
-then is clamped to 50 MHz (which I'm not quite sure is a good idea).
-
-> No, it's being miscalculated by the hpt366 driver.
-
-    Hum... it's hard to miscalculate something when you average f_CNT value 
-over 128 register reads. :-)
-
-> I think it should be 33 Mhz.
-
-    Probably. And there's a chance that your PCI is clocked incorrectly.
-
-> At least i have not yet seen this IRQ "nobody cared" message
-> when i set it to 33Mhz in the hpt366 driver.
-
-    Hum, interesting, interesting...
-
-> Still doing more tests to see if it comes up again, but it's hard to
-> reproduce.
-
-    Is it readily reproducible with unmodified driver?
-
-MBR, Sergei
