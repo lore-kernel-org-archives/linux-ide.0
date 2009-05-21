@@ -1,78 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/4] ide: respect quirk_drives[] list on all controllers
-Date: Thu, 21 May 2009 23:13:33 +0400
-Message-ID: <4A15A7DD.1040300@ru.mvista.com>
-References: <200905201734.42093.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
+ kernels
+Date: Thu, 21 May 2009 20:25:02 GMT
+Message-ID: <200905212025.n4LKP2kV007842@demeter.kernel.org>
+References: <bug-13345-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:58488 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754453AbZEUTMk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 May 2009 15:12:40 -0400
-In-Reply-To: <200905201734.42093.bzolnier@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:43511 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753475AbZEUUZB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 May 2009 16:25:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4LKP2OS007843
+	for <linux-ide@vger.kernel.org>; Thu, 21 May 2009 20:25:02 GMT
+In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=13345
 
-> * Add ide_check_nien_quirk_list() helper to the core code
->   and then use it in ide_port_tune_devices().
 
-> * Remove no longer needed ->quirkproc methods from hpt366.c
->   and pdc202xx_{new,old}.c.
 
-    Haha, I remembered about that idea of yours and was thinking of 
-undertaking its implementation just yesterday. You've beten me to it. :-)
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+--- Comment #8 from Modestas Vainius <modestas@vainius.eu>  2009-05-21 20:25:02 ---
+Created an attachment (id=21473)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=21473)
+dmesg of 2.6.30-rc6-git5 + patch with CDROM as hdc and hdd
 
-> Index: b/drivers/ide/ide-iops.c
-> ===================================================================
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -269,6 +269,31 @@ no_80w:
->  	return 0;
->  }
->  
-> +static const char *nien_quirk_list[] = {
-> +	"QUANTUM FIREBALLlct08 08",
-> +	"QUANTUM FIREBALLP KA6.4",
-> +	"QUANTUM FIREBALLP KA9.1",
-> +	"QUANTUM FIREBALLP KX13.6",
-> +	"QUANTUM FIREBALLP KX20.5",
-> +	"QUANTUM FIREBALLP KX27.3",
-> +	"QUANTUM FIREBALLP LM20.4",
-> +	"QUANTUM FIREBALLP LM20.5",
-> +	NULL
-> +};
-> +
-> +void ide_check_nien_quirk_list(ide_drive_t *drive)
+No errors with CDROM as hdc plugged to middle connector of the cable.
+DMA problems with CDROM as hdd plugged to end connector of the cable.
+I have not tested other combinations.
 
-    Why not reuse ide_in_drive_list()?
+My cable is 40-wire (all connectors are black, I counted the wires too).
 
-> +{
-> +	const char **list, *m = (char *)&drive->id[ATA_ID_PROD];
-> +
-> +	for (list = nien_quirk_list; *list != NULL; list++)
-> +		if (strstr(m, *list) != NULL) {
-
-    Ah, strstr() vs strcmp()... I think strcmp() should work anyway...
-
-> +			drive->quirk_list = 2;
-> +			return;
-> +		}
-> +
-> +	drive->quirk_list = 0;
-> +}
-> +
->  int ide_driveid_update(ide_drive_t *drive)
->  {
->  	u16 *id;
-
-MBR, Sergei
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
