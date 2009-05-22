@@ -1,104 +1,55 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: NCQ sg_io
-Date: Thu, 21 May 2009 16:53:35 -0700
-Message-ID: <e7510f760905211653t6ccdefdu88d1af8c048fe9bd@mail.gmail.com>
-References: <93b143da0905191111o4a0fad8djc1496989060c8b9@mail.gmail.com>
-	 <e7510f760905201253s64ff7baer9de28fc7ea77e9f2@mail.gmail.com>
-	 <93b143da0905201420l8ba4dd5me9a3df49dafa29e0@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and
+	partitions
+Date: Fri, 22 May 2009 09:30:51 +0200
+Message-ID: <20090522073050.GH11363@kernel.dk>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-6-git-send-email-martin.petersen@oracle.com> <20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com> <yq1fxf1gi3y.fsf@sermon.lab.mkp.net> <20090519181530.GH4140@kernel.dk> <yq1ws8bealr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:35237 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754097AbZEUXxh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 May 2009 19:53:37 -0400
-Received: from spaceape12.eur.corp.google.com (spaceape12.eur.corp.google.com [172.28.16.146])
-	by smtp-out.google.com with ESMTP id n4LNrbcN011545
-	for <linux-ide@vger.kernel.org>; Thu, 21 May 2009 16:53:38 -0700
-Received: from ewy28 (ewy28.prod.google.com [10.241.103.28])
-	by spaceape12.eur.corp.google.com with ESMTP id n4LNrZ2D024573
-	for <linux-ide@vger.kernel.org>; Thu, 21 May 2009 16:53:36 -0700
-Received: by ewy28 with SMTP id 28so1716396ewy.25
-        for <linux-ide@vger.kernel.org>; Thu, 21 May 2009 16:53:35 -0700 (PDT)
-In-Reply-To: <93b143da0905201420l8ba4dd5me9a3df49dafa29e0@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1ws8bealr.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Porat <dan.porat@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-On Wed, May 20, 2009 at 2:20 PM, Dan Porat <dan.porat@gmail.com> wrote:
-> Thank plenty for your answer.
->
-> So , what is the best way to send NCQ through user space ?
-> Is it possible to disable the tagging mechanism by the driver and only
-> rely on the tag given by the user space ?
-That's one solution, but that's quite risky, it can be difficult to
-guarantee nobody else access the disk. Another one is to alter
-ata_scsi_pass_thru() to use qc->tag in case of FPDMA command. It is
-already calculated before we enter the translation function.
-Let me know how it goes,
+On Wed, May 20 2009, Martin K. Petersen wrote:
+> >>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
+> 
+> Jens> If you repost an updated 5/13 patch and I'll add it to the mix.
+> 
+> block: Export I/O topology for block devices and partitions
+> 
+> To support devices with physical block sizes bigger than 512 bytes we
+> need to ensure proper alignment.  This patch adds support for exposing
+> I/O topology characteristics as devices are stacked.
+> 
+>   logical_block_size is the smallest unit the device can address.
+> 
+>   physical_block_size indicates the smallest I/O the device can write
+>   without incurring a read-modify-write penalty.
+> 
+>   The alignment_offset parameter indicates the number of bytes the start
+>   of the device/partition is offset from the device's natural alignment.
+>   Partition tools and MD/DM utilities can use this to pad their offsets
+>   so filesystems start on proper boundaries.
+> 
+>   The io_min parameter is the smallest preferred I/O size reported by
+>   the device.  In many cases this is the same as the physical block
+>   size.  However, the io_min parameter can be scaled up when stacking
+>   (RAID5 chunk size > physical block size).
+> 
+>   The io_opt characteristic indicates the optimal I/O size reported by
+>   the device.  This is usually the stripe width for arrays.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
 
-Gwendal.
+I replaced the original patch and went to apply this, but it fails even
+at the first patch. What is this against? If you want it queued for
+2.6.31, please post it against the for-2.6.31 branch of the block repo.
 
->
-> Thanks
->
->
-> On Wed, May 20, 2009 at 10:53 PM, Gwendal Grignou <gwendal@google.com> wrote:
->> Hi Dan,
->>
->> tf->nsect can not be calculated from user space: the tag must be
->> calculated by the driver.
->>
->> Gwendal.
->>
->> On Tue, May 19, 2009 at 11:11 AM, Dan Porat <dan.porat@gmail.com> wrote:
->>> As I have seen sg_io does not support NCQ in ATA passthrough.
->>> will changing the mapping function libata-scsi.c (line 2745) , work?
->>>
->>> If not , how else can I check the protocol (FPDMA) ?
->>> static u8
->>> 2725ata_scsi_map_proto(u8 byte1)
->>> 2726{
->>> 2727        switch((byte1 & 0x1e) >> 1) {
->>> 2728        case 3:         /* Non-data */
->>> 2729                return ATA_PROT_NODATA;
->>> 2730
->>> 2731        case 6:         /* DMA */
->>> 2732        case 10:        /* UDMA Data-in */
->>> 2733        case 11:        /* UDMA Data-Out */
->>> 2734                return ATA_PROT_DMA;
->>> 2735
->>> 2736        case 4:         /* PIO Data-in */
->>> 2737        case 5:         /* PIO Data-out */
->>> 2738                return ATA_PROT_PIO;
->>> 2739
->>> 2745        case 12:        /* FPDMA */
->>>                       return ATA_PROT_NCQ
->>> 2740        case 0:         /* Hard Reset */
->>> 2741        case 1:         /* SRST */
->>> 2742        case 8:         /* Device Diagnostic */
->>> 2743        case 9:         /* Device Reset */
->>> 2744        case 7:         /* DMA Queued */
->>>
->>> 2746        case 15:        /* Return Response Info */
->>> 2747        default:        /* Reserved */
->>> 2748                break;
->>> 2749        }
->>> 2750
->>> 2751        return ATA_PROT_UNKNOWN;
->>> 2752}
->>>
->>>
->>>
->>> Thanks
->>>
->>> Dan Porat
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->
+-- 
+Jens Axboe
+
