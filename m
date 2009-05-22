@@ -1,74 +1,59 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/4] ide: respect quirk_drives[] list on all controllers
-Date: Fri, 22 May 2009 23:05:51 +0400
-Message-ID: <4A16F78F.6060503@ru.mvista.com>
-References: <200905201734.42093.bzolnier@gmail.com> <4A15A7DD.1040300@ru.mvista.com> <200905222059.08161.bzolnier@gmail.com>
+Subject: Re: ->ack_intr in m68k IDE drivers  [was: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq()
+ -> ->clear_irq()]
+Date: Fri, 22 May 2009 23:19:12 +0400
+Message-ID: <4A16FAB0.5020301@ru.mvista.com>
+References: <200808192031.40288.bzolnier@gmail.com> <48CEDD89.5060107@ru.mvista.com> <4A15600A.40906@ru.mvista.com> <200905222044.42688.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:41693 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:41818 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751688AbZEVTE4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 May 2009 15:04:56 -0400
-In-Reply-To: <200905222059.08161.bzolnier@gmail.com>
+	id S1751463AbZEVTSS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 May 2009 15:18:18 -0400
+In-Reply-To: <200905222044.42688.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Hello.
+Cc: linux-m68k@lists.linux-m68k.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>>* Add ide_check_nien_quirk_list() helper to the core code
->>>  and then use it in ide_port_tune_devices().
+>>>>  It may also be worth considering turning this method into 
+>>>>test-and-clear, so that we can get the actual IDE interrupt state on 
+>>>>the chips that implement this...
 
->>>* Remove no longer needed ->quirkproc methods from hpt366.c
->>>  and pdc202xx_{new,old}.c.
+>>>  Probably might add the test_irq() method to be called on 
+>>>!hwif->waiting_for_dma. Cleraing the status at once seems impractical...
 
->>    Haha, I remembered about that idea of yours and was thinking of 
->>undertaking its implementation just yesterday. You've beten me to it. :-)
+>>    Yet this seems what ack_intr() method is doing already...
+>>    What it does is testing IRQ status and "acknowledging" it (the semantics 
+>>of "acknowledge" is not clear to me, yet it seems that it's clearing the 
+>>interrupt latch in the drivers where it's implemented). And the call site of 
+>>ack_intr() method corresponds to where test_irq() should have been called, 
+>>so it seems we don't need yet another method and probably didn't even need 
+>>clear_irq() method in the first place?..
 
-> Sigh, if I knew I would concentrate on other things...
+> They have different goals -- the main purpose of ack_intr() (despite its name)
+> seems to be testing whether the IRQ is ours,
 
-> I did it only because there is outstanding ide-pmac bugreport probably
-> related to one of these quirky drives...
+    It does clear some interrupt bit if it sees that IRQ is ours too, hence 
+the same.
 
-    Yes, I figured. :-)
+> OTOH in clear_irq() we know that
+> already and we just want to clear the pending IRQ status.
 
->>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+    There seems to be duplication of functionality b/w ack_intr() and 
+clear_irq() now...
 
->>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> So I'm not sure if unification is desirable... though some improvements are
+> definitely possibly there (less confusing naming at least)...
 
->>>Index: b/drivers/ide/ide-iops.c
->>>===================================================================
->>>--- a/drivers/ide/ide-iops.c
->>>+++ b/drivers/ide/ide-iops.c
->>>@@ -269,6 +269,31 @@ no_80w:
->>> 	return 0;
->>> }
->>> 
->>>+static const char *nien_quirk_list[] = {
->>>+	"QUANTUM FIREBALLlct08 08",
->>>+	"QUANTUM FIREBALLP KA6.4",
->>>+	"QUANTUM FIREBALLP KA9.1",
->>>+	"QUANTUM FIREBALLP KX13.6",
->>>+	"QUANTUM FIREBALLP KX20.5",
->>>+	"QUANTUM FIREBALLP KX27.3",
->>>+	"QUANTUM FIREBALLP LM20.4",
->>>+	"QUANTUM FIREBALLP LM20.5",
->>>+	NULL
->>>+};
->>>+
->>>+void ide_check_nien_quirk_list(ide_drive_t *drive)
+>>    Bart, could you clarify about how ack_intr() is supposed to work?
 
->>    Why not reuse ide_in_drive_list()?
+> Good question, m68k list would be the best place to look for an answer..
 
-> Should have been in patch #5/4 but I ran out of time, I will do it later
-> unless you would like to handle it...
-
-    I'm looking at the unification of ack_intr()/clear_irq() now and making 
-the former usable for the PCI drivers too...
+    Well, I seem to have been able to infer it from the code...
 
 MBR, Sergei
