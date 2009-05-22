@@ -1,22 +1,18 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: ->ack_intr in m68k IDE drivers  [was: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq()
  -> ->clear_irq()]
-Date: Fri, 22 May 2009 23:19:12 +0400
-Message-ID: <4A16FAB0.5020301@ru.mvista.com>
+Date: Fri, 22 May 2009 23:19:24 +0400
+Message-ID: <4A16FABC.3010906@ru.mvista.com>
 References: <200808192031.40288.bzolnier@gmail.com> <48CEDD89.5060107@ru.mvista.com> <4A15600A.40906@ru.mvista.com> <200905222044.42688.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:41818 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751463AbZEVTSS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 May 2009 15:18:18 -0400
+Return-path: <linux-m68k-owner@vger.kernel.org>
 In-Reply-To: <200905222044.42688.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-m68k-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-m68k@lists.linux-m68k.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
@@ -39,7 +35,7 @@ Bartlomiej Zolnierkiewicz wrote:
 > seems to be testing whether the IRQ is ours,
 
     It does clear some interrupt bit if it sees that IRQ is ours too, hence 
-the same.
+the name.
 
 > OTOH in clear_irq() we know that
 > already and we just want to clear the pending IRQ status.
