@@ -1,55 +1,74 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: drivers/ide/ide-core: Convert printk's to pr_<foo> and dev_<foo>
-Date: Fri, 22 May 2009 20:22:02 +0200
-Message-ID: <200905222022.03294.bzolnier@gmail.com>
-References: <cover.1242676752.git.joe@perches.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/4] ide: respect quirk_drives[] list on all controllers
+Date: Fri, 22 May 2009 23:05:51 +0400
+Message-ID: <4A16F78F.6060503@ru.mvista.com>
+References: <200905201734.42093.bzolnier@gmail.com> <4A15A7DD.1040300@ru.mvista.com> <200905222059.08161.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:46685 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756326AbZEVTCu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 May 2009 15:02:50 -0400
-In-Reply-To: <cover.1242676752.git.joe@perches.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:41693 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751688AbZEVTE4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 May 2009 15:04:56 -0400
+In-Reply-To: <200905222059.08161.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Krzysztof Halasa <khc@pm.waw.pl>, Borislav Petkov <petkovbb@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 18 May 2009 22:11:26 Joe Perches wrote:
-> Standardize printk's by mostly mechanical conversions of
-> printk(KERN_<foo> to pr_<foo>(.  The KERN_DEBUG uses are
-> not done, deferred until a more standard mechanism exists
-> 
-> Standardize pr_<foo> logging uses of drive->name and hwif->name
-> to use dev_<foo>.
+Hello.
 
-Looks fine but please:
+Bartlomiej Zolnierkiewicz wrote:
 
-* change the order of patches
+>>>* Add ide_check_nien_quirk_list() helper to the core code
+>>>  and then use it in ide_port_tune_devices().
 
-  Converting to pr_ in patch #1 just to convert to dev_ in patch #2 was
-  fine as an intermediate step but now that we have patch #2 you can:
-  - apply #1 + #2, revert (ignoring rejects) #1 and generate new #1
-  - on top of new #1 apply (ignoring rejects) old #1 to obtain new #2
+>>>* Remove no longer needed ->quirkproc methods from hpt366.c
+>>>  and pdc202xx_{new,old}.c.
 
-  It should be pretty simple/quick to do (especially using quilt)...
+>>    Haha, I remembered about that idea of yours and was thinking of 
+>>undertaking its implementation just yesterday. You've beten me to it. :-)
 
-* push ">80 chars lines" change to patch #3
+> Sigh, if I knew I would concentrate on other things...
 
-  TBH this change is "a can of worms" (breaks automatic checking with
-  checkpatch.pl, creates precedent, makes code more difficult to work
-  on for some people) so I would prefer that we together try to improve
-  code areas identified by such patch before considering applying it.
+> I did it only because there is outstanding ide-pmac bugreport probably
+> related to one of these quirky drives...
 
-* make sure that this patchset applies to ide-2.6.git/for-next
-  (or linux-next since it contains the above tree)
+    Yes, I figured. :-)
 
-PS (answering your question) patch #2 is correct in using hwif->gendev
-and not hwif->dev -- the latter points to host's device
+>>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Thanks.
-Bart
+>>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+>>>Index: b/drivers/ide/ide-iops.c
+>>>===================================================================
+>>>--- a/drivers/ide/ide-iops.c
+>>>+++ b/drivers/ide/ide-iops.c
+>>>@@ -269,6 +269,31 @@ no_80w:
+>>> 	return 0;
+>>> }
+>>> 
+>>>+static const char *nien_quirk_list[] = {
+>>>+	"QUANTUM FIREBALLlct08 08",
+>>>+	"QUANTUM FIREBALLP KA6.4",
+>>>+	"QUANTUM FIREBALLP KA9.1",
+>>>+	"QUANTUM FIREBALLP KX13.6",
+>>>+	"QUANTUM FIREBALLP KX20.5",
+>>>+	"QUANTUM FIREBALLP KX27.3",
+>>>+	"QUANTUM FIREBALLP LM20.4",
+>>>+	"QUANTUM FIREBALLP LM20.5",
+>>>+	NULL
+>>>+};
+>>>+
+>>>+void ide_check_nien_quirk_list(ide_drive_t *drive)
+
+>>    Why not reuse ide_in_drive_list()?
+
+> Should have been in patch #5/4 but I ran out of time, I will do it later
+> unless you would like to handle it...
+
+    I'm looking at the unification of ack_intr()/clear_irq() now and making 
+the former usable for the PCI drivers too...
+
+MBR, Sergei
