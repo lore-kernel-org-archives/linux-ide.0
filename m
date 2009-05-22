@@ -1,35 +1,57 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and partitions
-Date: Fri, 22 May 2009 09:34:12 -0400
-Message-ID: <yq1ljopdzxn.fsf@sermon.lab.mkp.net>
-References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
-	<1242362435-11953-6-git-send-email-martin.petersen@oracle.com>
-	<20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com>
-	<yq1fxf1gi3y.fsf@sermon.lab.mkp.net> <20090519181530.GH4140@kernel.dk>
-	<yq1ws8bealr.fsf@sermon.lab.mkp.net>
-	<20090522073050.GH11363@kernel.dk>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] asm-generic: add a dma-mapping.h file
+Date: Fri, 22 May 2009 16:07:32 +0200
+Message-ID: <200905221607.34025.arnd@arndb.de>
+References: <200905181645.26305.arnd@arndb.de> <200905191822.48420.arnd@arndb.de> <20090522211258Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090522073050.GH11363@kernel.dk> (Jens Axboe's message of "Fri,
-	22 May 2009 09:30:51 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20090522211258Q.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
+Sender: linux-m68k-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jgarzik@pobox.com, hancockrwd@gmail.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp, Grant Grundler <grundler@google.com>
 List-Id: linux-ide@vger.kernel.org
 
->>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
+On Friday 22 May 2009, FUJITA Tomonori wrote:
+> I don't think that this works for all architectures because a returned
+> buffer of alloc_pages_node might not be DMA-capable. Needs to use the
+> coherent_dma_mask here. See x86's dma_alloc_coherent and Alpha's
+> pci-noop.c (there might be other examples).
 
-Jens> I replaced the original patch and went to apply this, but it fails
-Jens> even at the first patch. What is this against? If you want it
-Jens> queued for 2.6.31, please post it against the for-2.6.31 branch of
-Jens> the block repo.
+Right, Grant also made the same comment.
 
-Weird.  It was cut against your for-2.6.31 branch as of a few days ago.
-I just updated to your latest and greatest and the patches still apply
-cleanly for me.
+> I think that having a generic header for simple mapping functions
+> (dma_map_single, dma_map_page, dma_map_sg, etc) would be useful but
+> I'm not sure if we can't have a generic version of
+> dma_alloc_coherent.
+>
+> There are lots of architectures that do 
+> architecture-specific things. For example, you replaced avr32
+> dma-mapping.h except for dma_alloc_coherent, which seems to be can't
+> be generic.
 
-Are you sure you got the patch order right?
+I agree that it won't be fully generic, because all architectures
+with non-coherent DMA will have to do architecture specific setup
+to get uncached mappings here. I believe that it can be generic
+enough to support all architectures that have a cache-coherent PCI
+bus, hence the #ifdef CONFIG_DMA_COHERENT around this function.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+E.g. cris could use a one-line redirect to
+asm-generic/dma-mapping-linear.h if it did not have the
+special dma_get_cache_alignment function. I still would
+like to find a better way to handle this one than to
+redefine the function.
+
+> BTW, it looks odd to add dma_debug to dma_map_single, etc but not
+> dma_alloc_coherent. ;)
+
+hehe, sure. I copied the dma_debug stuff from sh, the comments
+from avr32 and the dma_alloc_coherent implementation from powerpc,
+so I missed this one.
+
+Thanks for the review.
+
+	Arnd <><
