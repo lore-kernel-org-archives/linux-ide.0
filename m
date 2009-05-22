@@ -1,63 +1,80 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: ->ack_intr in m68k IDE drivers  [was: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq() -> ->clear_irq()]
-Date: Fri, 22 May 2009 20:44:42 +0200
-Message-ID: <200905222044.42688.bzolnier@gmail.com>
-References: <200808192031.40288.bzolnier@gmail.com> <48CEDD89.5060107@ru.mvista.com> <4A15600A.40906@ru.mvista.com>
+Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
+Date: Fri, 22 May 2009 20:32:54 +0200
+Message-ID: <200905222032.55869.bzolnier@gmail.com>
+References: <cover.1242855716.git.wuzhangjin@gmail.com> <a998340033c8f89ec028b354ebe2956239144049.1242855716.git.wuzhangjin@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:53451 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbZEVSzq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 May 2009 14:55:46 -0400
-In-Reply-To: <4A15600A.40906@ru.mvista.com>
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <a998340033c8f89ec028b354ebe2956239144049.1242855716.git.wuzhangjin@gmail.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: wuzhangjin@gmail.com
+Cc: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Yan hua <yanh@lemote.com>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-m68k@lists.linux-m68k.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 21 May 2009 16:07:06 Sergei Shtylyov wrote:
-> Hello, I wrote:
+On Thursday 21 May 2009 00:12:46 wuzhangjin@gmail.com wrote:
+> From: Wu Zhangjin <wuzhangjin@gmail.com>
 > 
-> >>> * Rename ->ide_dma_clear_irq method to ->clear_irq
-> >>>   and move it from ide_hwif_t to struct ide_port_ops.
-> 
-> >>> * Move ->waiting_for_dma check inside ->clear_irq method.
-> 
-> >>> * Move ->dma_base check inside ->clear_irq method.
-> 
-> >>> piix.c:
-> >>> * Add ich_port_ops and remove init_hwif_ich() wrapper.
-> 
-> >>> There should be no functional changes caused by this patch.
-> 
-> [...]
-> 
-> >>   It may also be worth considering turning this method into 
-> >> test-and-clear, so that we can get the actual IDE interrupt state on 
-> >> the chips that implement this...
-> 
-> >   Probably might add the test_irq() method to be called on 
-> > !hwif->waiting_for_dma. Cleraing the status at once seems impractical...
-> 
->     Yet this seems what ack_intr() method is doing already...
->     What it does is testing IRQ status and "acknowledging" it (the semantics 
-> of "acknowledge" is not clear to me, yet it seems that it's clearing the 
-> interrupt latch in the drivers where it's implemented). And the call site of 
-> ack_intr() method corresponds to where test_irq() should have been called, 
-> so it seems we don't need yet another method and probably didn't even need 
-> clear_irq() method in the first place?..
+> This is originally from the to-mips branch from
+> http://dev.lemote.com/code/linux_loongson
 
-They have different goals -- the main purpose of ack_intr() (despite its name)
-seems to be testing whether the IRQ is ours, OTOH in clear_irq() we know that
-already and we just want to clear the pending IRQ status.
+Sadly, the patch description lacks all the important information.
 
-So I'm not sure if unification is desirable... though some improvements are
-definitely possibly there (less confusing naming at least)...
+What is the original problem that this fixup tries to address?
 
->     Bart, could you clarify about how ack_intr() is supposed to work?
+Is it limited to amd74xx controllers?
 
-Good question, m68k list would be the best place to look for an answer..
+[ We are generalizing quirk_drives handling currently... ]
+
+> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+> ---
+>  drivers/ide/amd74xx.c |   19 +++++++++++++++++++
+>  1 files changed, 19 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ide/amd74xx.c b/drivers/ide/amd74xx.c
+> index 77267c8..8f488b8 100644
+> --- a/drivers/ide/amd74xx.c
+> +++ b/drivers/ide/amd74xx.c
+> @@ -23,6 +23,11 @@
+>  
+>  #define DRV_NAME "amd74xx"
+>  
+> +static const char *am74xx_quirk_drives[] = {
+> +	"FUJITSU MHZ2160BH G2",
+> +	NULL
+> +};
+> +
+>  enum {
+>  	AMD_IDE_CONFIG		= 0x41,
+>  	AMD_CABLE_DETECT	= 0x42,
+> @@ -112,6 +117,19 @@ static void amd_set_pio_mode(ide_drive_t *drive, const u8 pio)
+>  	amd_set_drive(drive, XFER_PIO_0 + pio);
+>  }
+>  
+> +static void amd_quirkproc(ide_drive_t *drive)
+> +{
+> +	const char **list, *m = (char *)&drive->id[ATA_ID_PROD];
+> +
+> +	for (list = am74xx_quirk_drives; *list != NULL; list++)
+> +			if (strstr(m, *list) != NULL) {
+> +				drive->quirk_list = 2;
+> +				return;
+> +			}
+> +
+> +	drive->quirk_list = 0;
+> +}
+> +
+>  static void amd7409_cable_detect(struct pci_dev *dev)
+>  {
+>  	/* no host side cable detection */
+> @@ -194,6 +212,7 @@ static void __devinit init_hwif_amd74xx(ide_hwif_t *hwif)
+>  static const struct ide_port_ops amd_port_ops = {
+>  	.set_pio_mode		= amd_set_pio_mode,
+>  	.set_dma_mode		= amd_set_drive,
+> +	.quirkproc		= amd_quirkproc,
+>  	.cable_detect		= amd_cable_detect,
+>  };
