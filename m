@@ -1,59 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: EP93xx PIO IDE driver proposal
-Date: Fri, 22 May 2009 21:52:15 +0400
-Message-ID: <4A16E64F.6070907@ru.mvista.com>
-References: <49CCD7C4.8000207@inov.pt> <200905121923.08159.bzolnier@gmail.com> <4A0AA880.8070209@inov.pt> <200905171720.28640.bzolnier@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and
+	partitions
+Date: Fri, 22 May 2009 20:16:48 +0200
+Message-ID: <20090522181648.GN11363@kernel.dk>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-6-git-send-email-martin.petersen@oracle.com> <20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com> <yq1fxf1gi3y.fsf@sermon.lab.mkp.net> <20090519181530.GH4140@kernel.dk> <yq1ws8bealr.fsf@sermon.lab.mkp.net> <20090522073050.GH11363@kernel.dk> <yq1ljopdzxn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:40782 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757188AbZEVRvU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 May 2009 13:51:20 -0400
-In-Reply-To: <200905171720.28640.bzolnier@gmail.com>
+Received: from brick.kernel.dk ([93.163.65.50]:53652 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752620AbZEVSQr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 May 2009 14:16:47 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1ljopdzxn.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: =?ISO-8859-15?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello.
+On Fri, May 22 2009, Martin K. Petersen wrote:
+> >>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
+> 
+> Jens> I replaced the original patch and went to apply this, but it fails
+> Jens> even at the first patch. What is this against? If you want it
+> Jens> queued for 2.6.31, please post it against the for-2.6.31 branch of
+> Jens> the block repo.
+> 
+> Weird.  It was cut against your for-2.6.31 branch as of a few days ago.
+> I just updated to your latest and greatest and the patches still apply
+> cleanly for me.
 
-Bartlomiej Zolnierkiewicz wrote:
+That is weird...
 
->>Here's the revised patches, according to the changes you suggested.
+> Are you sure you got the patch order right?
 
-> Thanks, I applied set_pio_mode.patch with the following minor fixup:
+Using git am, it seems to pick them up in the right order:
 
-> @@ -1035,7 +1035,7 @@
->  
->  	ide_port_for_each_dev(i, drive, hwif) {
->  		/*
-> -		 * default to PIO Mode 0 before we  figure out
-> +		 * default to PIO Mode 0 before we figure out
->  		 * the most suited mode for the attached device
->  		 */
->  		if (port_ops && port_ops->set_pio_mode)
+axboe@carl:~/git/linux-2.6-block$ git am -s mkp
+Applying: block: Do away with the notion of hardsect_size
+Applying: block: Use accessor functions for queue limits
+error: patch failed: block/blk-map.c:291
+error: block/blk-map.c: patch does not apply
+Patch failed at 0002 block: Use accessor functions for queue limits
+When you have resolved this problem run "git am --resolved".
+If you would prefer to skip this patch, instead run "git am --skip".
+To restore the original branch and stop patching run "git am --abort".
 
-> and will apply the following version of ide_drive_data.patch
-> (unless there are some major complains):
+My for-2.6.31 branch is at b9ed7252d219c1c663944bf03846eabb515dbe75
 
-> From: Joao Ramos <joao.ramos@inov.pt>
-> Subject: ide: do not access ide_drive_t 'drive_data' field directly
+-- 
+Jens Axboe
 
-> Change ide_drive_t 'drive_data' field from 'unsigned int' type to 'void *'
-> type, allowing a wider range of values/types to be stored in this field.
-
-> Added 'ide_get_drivedata' and 'ide_set_drivedata' helpers to get and set
-> the 'drive_data' field.
-
-> Fixed all host drivers to maintain coherency with the change in the
-> 'drive_data' field type.
-
-> Signed-off-by: Joao Ramos <joao.ramos@inov.pt>
-> [bart: fix qd65xx build, cast to 'unsigned long', minor Coding Style fixups]
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.montavista.com>
-
-MBR, Sergei
