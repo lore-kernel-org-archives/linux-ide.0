@@ -1,42 +1,85 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13365] 2.6.28+ cannot read a hard-drive properly through an
- "82801DB (ICH4) IDE Controller"
-Date: Sat, 23 May 2009 08:11:07 GMT
-Message-ID: <200905230811.n4N8B7JI007268@demeter.kernel.org>
-References: <bug-13365-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
+Date: Sat, 23 May 2009 13:47:34 +0200
+Message-ID: <200905231347.34717.bzolnier@gmail.com>
+References: <cover.1242855716.git.wuzhangjin@gmail.com> <200905222032.55869.bzolnier@gmail.com> <1243062702.8509.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41476 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbZEWILG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 May 2009 04:11:06 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4N8B7va007269
-	for <linux-ide@vger.kernel.org>; Sat, 23 May 2009 08:11:07 GMT
-In-Reply-To: <bug-13365-11633@http.bugzilla.kernel.org/>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:58188 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbZEWLnI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 May 2009 07:43:08 -0400
+In-Reply-To: <1243062702.8509.7.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: yanh@lemote.com
+Cc: wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13365
+On Saturday 23 May 2009 09:11:42 yanh wrote:
+> =E5=9C=A8 2009-05-22=E4=BA=94=E7=9A=84 20:32 +0200=EF=BC=8CBartlomiej=
+ Zolnierkiewicz=E5=86=99=E9=81=93=EF=BC=9A
+> > On Thursday 21 May 2009 00:12:46 wuzhangjin@gmail.com wrote:
+> > > From: Wu Zhangjin <wuzhangjin@gmail.com>
+> > >=20
+> > > This is originally from the to-mips branch from
+> > > http://dev.lemote.com/code/linux_loongson
+> >=20
+> > Sadly, the patch description lacks all the important information.
+> >=20
+> > What is the original problem that this fixup tries to address?
+> >=20
+> > Is it limited to amd74xx controllers?
+>=20
+> In loongson2f yeeloong machines, the ide controller is AMD cs5536, or
+> say  amd74xx, and the hard drives is Fujistu.=20
 
+Then it should use the new & shiny :) native cs5536 IDE host driver
+instead of legacy support in amd74xx...
 
+> While debuging the hard disk suspned and resume, the ide irq can not =
+be
+> cleared. I guess this is a fake interrupt, hence the clear irq action
+> can not be finished.=20
 
+AFAICS the only change that the fixup would cause for suspend/resume pa=
+ths
+is the one in ide_config_drive_speed() which is called during resume to=
+ set
+transfer mode on the drive:
 
+       tp_ops->write_devctl(hwif, ATA_NIEN | ATA_DEVCTL_OBS);
 
---- Comment #7 from Alan <alan@lxorguk.ukuu.org.uk>  2009-05-23 08:11:06 ---
-Christopher - please open a separate bug for what is almost certainly an
-unrelated issue.
+        memset(&tf, 0, sizeof(tf));
+        tf.feature =3D SETFEATURES_XFER;
+        tf.nsect   =3D speed;
 
-This actually looks like something is causing memory corruption. It's probably
-not the ATA or IDE drivers but something stomping on the cache which is why I
-asked for the dmesg, to see what else is going on. A dud board is certainly
-possible but if going back to the old kernel fixes it then, while running
-memtest86 overnight on it wouldn't be a bad idea it does suggest its probably
-software triggered
+        tp_ops->tf_load(drive, &tf, IDE_VALID_FEATURE | IDE_VALID_NSECT=
+);
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+        tp_ops->exec_command(hwif, ATA_CMD_SET_FEATURES);
+--->
+        if (drive->quirk_list =3D=3D 2)
+                tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
+--->
+        error =3D __ide_wait_stat(drive, drive->ready_stat,
+                                ATA_BUSY | ATA_DRQ | ATA_ERR,
+                                WAIT_CMD, &stat);
+
+Please tell me I if understand the issue correctly: if the above quirk =
+is
+not executed we end up with spurious IRQs, right?
+
+> This patch is to fix this issue. Maybe other controller and drives al=
+so
+> have this issue, but I am not sure.
+
+Probably moving it to a generic quirk_drives list later will be useful.=
+=2E.
+
+Anyway this fixup needs to be ported to / verified with cs5536 first.
+
+Thanks.
+Bart
