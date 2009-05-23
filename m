@@ -1,85 +1,45 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
-Date: Sat, 23 May 2009 13:47:34 +0200
-Message-ID: <200905231347.34717.bzolnier@gmail.com>
-References: <cover.1242855716.git.wuzhangjin@gmail.com> <200905222032.55869.bzolnier@gmail.com> <1243062702.8509.7.camel@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
+ kernels
+Date: Sat, 23 May 2009 11:48:02 GMT
+Message-ID: <200905231148.n4NBm2to021258@demeter.kernel.org>
+References: <bug-13345-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:58188 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbZEWLnI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 May 2009 07:43:08 -0400
-In-Reply-To: <1243062702.8509.7.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:59170 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbZEWLsB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 May 2009 07:48:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4NBm2pQ021259
+	for <linux-ide@vger.kernel.org>; Sat, 23 May 2009 11:48:02 GMT
+In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: yanh@lemote.com
-Cc: wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
+To: linux-ide@vger.kernel.org
 
-On Saturday 23 May 2009 09:11:42 yanh wrote:
-> =E5=9C=A8 2009-05-22=E4=BA=94=E7=9A=84 20:32 +0200=EF=BC=8CBartlomiej=
- Zolnierkiewicz=E5=86=99=E9=81=93=EF=BC=9A
-> > On Thursday 21 May 2009 00:12:46 wuzhangjin@gmail.com wrote:
-> > > From: Wu Zhangjin <wuzhangjin@gmail.com>
-> > >=20
-> > > This is originally from the to-mips branch from
-> > > http://dev.lemote.com/code/linux_loongson
-> >=20
-> > Sadly, the patch description lacks all the important information.
-> >=20
-> > What is the original problem that this fixup tries to address?
-> >=20
-> > Is it limited to amd74xx controllers?
->=20
-> In loongson2f yeeloong machines, the ide controller is AMD cs5536, or
-> say  amd74xx, and the hard drives is Fujistu.=20
+http://bugzilla.kernel.org/show_bug.cgi?id=13345
 
-Then it should use the new & shiny :) native cs5536 IDE host driver
-instead of legacy support in amd74xx...
 
-> While debuging the hard disk suspned and resume, the ide irq can not =
-be
-> cleared. I guess this is a fake interrupt, hence the clear irq action
-> can not be finished.=20
 
-AFAICS the only change that the fixup would cause for suspend/resume pa=
-ths
-is the one in ide_config_drive_speed() which is called during resume to=
- set
-transfer mode on the drive:
 
-       tp_ops->write_devctl(hwif, ATA_NIEN | ATA_DEVCTL_OBS);
 
-        memset(&tf, 0, sizeof(tf));
-        tf.feature =3D SETFEATURES_XFER;
-        tf.nsect   =3D speed;
+--- Comment #12 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-05-23 11:48:01 ---
+On Thursday 21 May 2009 23:04:19 bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=13345
+> 
+> 
+> 
+> 
+> 
+> --- Comment #11 from Modestas Vainius <modestas@vainius.eu>  2009-05-21 21:04:19 ---
+> In both cases? Or I'm just lucky that I have not seen problems with CD/DVD
+> drive as hdc yet?
 
-        tp_ops->tf_load(drive, &tf, IDE_VALID_FEATURE | IDE_VALID_NSECT=
-);
+In both cases -- the drive is always tuned to UDMA/66.
 
-        tp_ops->exec_command(hwif, ATA_CMD_SET_FEATURES);
---->
-        if (drive->quirk_list =3D=3D 2)
-                tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
---->
-        error =3D __ide_wait_stat(drive, drive->ready_stat,
-                                ATA_BUSY | ATA_DRQ | ATA_ERR,
-                                WAIT_CMD, &stat);
-
-Please tell me I if understand the issue correctly: if the above quirk =
-is
-not executed we end up with spurious IRQs, right?
-
-> This patch is to fix this issue. Maybe other controller and drives al=
-so
-> have this issue, but I am not sure.
-
-Probably moving it to a generic quirk_drives list later will be useful.=
-=2E.
-
-Anyway this fixup needs to be ported to / verified with cs5536 first.
-
-Thanks.
-Bart
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
