@@ -1,187 +1,289 @@
-From: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: next-20090522: kernel hungs at boot (async, libata/scsi)
-Date: Sun, 24 May 2009 15:43:32 +0400
-Message-ID: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/3] drivers/ide/ide-core: Unsplit constant strings for
+ pr_<level> and dev_<level>
+Date: Sun, 24 May 2009 16:12:11 +0400
+Message-ID: <4A19399B.8060207@ru.mvista.com>
+References: <cover.1243062772.git.joe@perches.com> <57f9dd5c33bcdd863793a3ee95ab050e8456bab4.1243062772.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-Sender: linux-next-owner@vger.kernel.org
-To: linux-next <linux-next@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:11203 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752375AbZEXMMT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 May 2009 08:12:19 -0400
+In-Reply-To: <57f9dd5c33bcdd863793a3ee95ab050e8456bab4.1243062772.git.joe@perches.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@gmail.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi
+Hello.
 
-Host has pata_amd (ata1,2) and pata_pdc2027x (ata3,4).
+Joe Perches wrote:
 
-It cannot add ata2 and ata4.
+> Signed-off-by: Joe Perches <joe@perches.com>
+>   
+[...]
+> diff --git a/drivers/ide/ide-acpi.c b/drivers/ide/ide-acpi.c
+> index f323a60..560b9c4 100644
+> --- a/drivers/ide/ide-acpi.c
+> +++ b/drivers/ide/ide-acpi.c
+> @@ -435,8 +435,8 @@ void ide_acpi_get_timing(ide_hwif_t *hwif)
+>  	if (!out_obj->buffer.length || !out_obj->buffer.pointer ||
+>  	    out_obj->buffer.length != sizeof(struct GTM_buffer)) {
+>  		kfree(output.pointer);
+> -		pr_err("%s: unexpected _GTM length (0x%x)[should be 0x%zx] or "
+> -		       "addr (0x%p)\n",
+> +		pr_err(
+> +	"%s: unexpected _GTM length (0x%x)[should be 0x%zx] or addr (0x%p)\n",
+>   
 
-bus: 'pci': driver_probe_device: matched device 0000:00:09.0 with
-driver pata_amd
-bus: 'pci': really_probe: probing driver pata_amd with device 0000:00:09.0
-pata_amd 0000:00:09.0: version 0.4.1
-pata_amd 0000:00:09.0: setting latency timer to 64
-scsi0 : pata_amd
-device: 'host0': device_add
-bus: 'scsi': add device host0
-device: 'host0': device_add
-scsi1 : pata_amd
-device: 'host1': device_add
-bus: 'scsi': add device host1
-device: 'host1': device_add
-ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
-ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
-driver: '0000:00:09.0': driver_bound: bound to device 'pata_amd'
-bus: 'pci': really_probe: bound device 0000:00:09.0 to driver pata_amd
-bus: 'pci': add driver pata_pdc2027x
-bus: 'pci': driver_probe_device: matched device 0000:01:08.0 with
-driver pata_pdc2027x
-bus: 'pci': really_probe: probing driver pata_pdc2027x with device 0000:01:08.0
-pata_pdc2027x 0000:01:08.0: version 1.0
-ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
-pata_pdc2027x 0000:01:08.0: PCI INT A -> Link[APC1] -> GSI 16 (level,
-high) -> IRQ 16
-pata_pdc2027x 0000:01:08.0: PLL input clock 16686 kHz
-scsi2 : pata_pdc2027x
-device: 'host2': device_add
-bus: 'scsi': add device host2
-device: 'host2': device_add
-ata1.00: ATA-7: ST3250823A, 3.02, max UDMA/100
-ata1.00: 488397168 sectors, multi 16: LBA48
-ata1: nv_mode_filter: 0x3f39f&0x3f01f->0x3f01f, BIOS=0x3f000
-(0xc600c600) ACPI=0x3f01f (20:600:0x13)
-scsi3 : pata_pdc2027x
-device: 'host3': device_add
-bus: 'scsi': add device host3
-device: 'host3': device_add
-ata3: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0417c0 irq 16
-ata4: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0415c0 irq 16
-driver: '0000:01:08.0': driver_bound: bound to device 'pata_pdc2027x'
-bus: 'pci': really_probe: bound device 0000:01:08.0 to driver pata_pdc2027x
-ata1.00: configured for UDMA/100
+   Oh no... do you really think somebody will search for this message 
+using strings like "should be"?
 
-ata3.00: ATA-7: ST3250823A, 3.03, max UDMA/100
-ata3.00: 488397168 sectors, multi 16: LBA48
-ata3.00: configured for UDMA/100
+>  		       __func__, out_obj->buffer.length,
+>  		       sizeof(struct GTM_buffer), out_obj->buffer.pointer);
+>  		return;
+> diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+> index 46cf46e..1e9e2d6 100644
+> --- a/drivers/ide/ide-atapi.c
+> +++ b/drivers/ide/ide-atapi.c
+> @@ -60,11 +60,13 @@ int ide_check_atapi_device(ide_drive_t *drive, const char *s)
+>  		dev_err(&drive->gendev, "%s: the removable flag is not set\n",
+>  			s);
+>  	else if (drive->media == ide_floppy && drq_type == 3)
+> -		dev_err(&drive->gendev, "%s: sorry, DRQ type (0x%02x) not "
+> -			"supported\n", s, drq_type);
+> +		dev_err(&drive->gendev,
+> +			"%s: sorry, DRQ type (0x%02x) not supported\n",
+>   
 
-INFO: task swapper:1 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-swapper       D c0586e00  5492     1      0 0x00000000
- f704ff3c 00000046 c014eca4 c0586e00 00000296 f7050000 f7050284 e41d1a0a
- 00000003 00000001 f7050284 f704ff3c c0144247 f704ff60 c0586e6c 00000000
- f704ff80 c014456d f7050000 f7050000 c044fb85 c06eb6e0 00000005 c014eca4
-Call Trace:
- [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
- [<c0144247>] ? lowest_in_progress+0x37/0x70
- [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
- [<c044fb85>] ? _spin_unlock_irqrestore+0x55/0x70
- [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
- [<c013e520>] ? autoremove_wake_function+0x0/0x40
- [<c014460d>] async_synchronize_cookie+0xd/0x10
- [<c0144628>] async_synchronize_full+0x18/0x40
- [<c033e318>] wait_for_device_probe+0x68/0x70
- [<c013e520>] ? autoremove_wake_function+0x0/0x40
- [<c0704e62>] prepare_namespace+0x18/0x17c
- [<c018b510>] ? sys_access+0x20/0x30
- [<c070450b>] kernel_init+0xd8/0xf1
- [<c0704433>] ? kernel_init+0x0/0xf1
- [<c0103677>] kernel_thread_helper+0x7/0x10
-no locks held by swapper/1.
-INFO: task async/0:500 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-async/0       D c0586e00  7380   500      2 0x00000000
- f7103ed4 00000046 c014eca4 c0586e00 00000292 f72a0000 f72a0284 5b573649
- 00000001 00000003 f72a0284 f7103ed4 c0144247 f7103ef8 c06ec3c0 00000000
- f7103f18 c014456d f7103f20 c034ca95 00000002 f70ed9cc 00000005 22222222
-Call Trace:
- [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
- [<c0144247>] ? lowest_in_progress+0x37/0x70
- [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
- [<c034ca95>] ? scsi_alloc_target+0x275/0x2c0
- [<c013e520>] ? autoremove_wake_function+0x0/0x40
- [<c0144665>] async_synchronize_full_domain+0x15/0x20
- [<c034d5f2>] __scsi_add_device+0xb2/0xe0
- [<c01444dd>] ? async_synchronize_cookie_domain+0x2d/0x150
- [<c03611d3>] ata_scsi_scan_host+0x103/0x180
- [<c035dac1>] async_port_probe+0x91/0xc0
- [<c0144350>] async_thread+0xd0/0x230
- [<c044d12d>] ? schedule+0x37d/0x4c0
- [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
- [<c0124ac0>] ? default_wake_function+0x0/0x10
- [<c0144280>] ? async_thread+0x0/0x230
- [<c013e2a3>] kthread+0x43/0x80
- [<c013e260>] ? kthread+0x0/0x80
- [<c0103677>] kernel_thread_helper+0x7/0x10
-1 lock held by async/0/500:
- #0:  (&shost->scan_mutex){+.+...}, at: [<c034d5ae>] __scsi_add_device+0x6e/0xe0
-INFO: task async/1:502 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-async/1       D c0586e00  7488   502      2 0x00000000
- f6aeff24 00000046 c014eca4 c0586e00 00000292 f72a2920 f72a2ba4 5b0bdd4d
- 00000001 00000001 f72a2ba4 f6aeff24 c0144247 f6aeff48 c0586e6c 00000000
- f6aeff68 c014456d f6aeff34 f72a2920 c0108981 00000000 00000002 f6aeff48
-Call Trace:
- [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
- [<c0144247>] ? lowest_in_progress+0x37/0x70
- [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
- [<c0108981>] ? sched_clock+0x21/0x70
- [<c014c23d>] ? put_lock_stats+0xd/0x30
- [<c013e520>] ? autoremove_wake_function+0x0/0x40
- [<c014460d>] async_synchronize_cookie+0xd/0x10
- [<c035dad1>] async_port_probe+0xa1/0xc0
- [<c0144350>] async_thread+0xd0/0x230
- [<c044d12d>] ? schedule+0x37d/0x4c0
- [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
- [<c0124ac0>] ? default_wake_function+0x0/0x10
- [<c0144280>] ? async_thread+0x0/0x230
- [<c013e2a3>] kthread+0x43/0x80
- [<c013e260>] ? kthread+0x0/0x80
- [<c0103677>] kernel_thread_helper+0x7/0x10
-no locks held by async/1/502.
-INFO: task async/2:509 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-async/2       D c0586e00  7604   509      2 0x00000000
- f72abf24 00000046 c014eca4 c0586e00 00000292 f71cd240 f71cd4c4 71cf4cd4
- 00000001 00000001 f71cd4c4 f72abf24 c0144247 f72abf48 c0586e6c 00000000
- f72abf68 c014456d 00000292 f72abf38 c014ed0b f72abf48 00000003 00000292
-Call Trace:
- [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
- [<c0144247>] ? lowest_in_progress+0x37/0x70
- [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
- [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
- [<c013e520>] ? autoremove_wake_function+0x0/0x40
- [<c014460d>] async_synchronize_cookie+0xd/0x10
- [<c035dab5>] async_port_probe+0x85/0xc0
- [<c0144350>] async_thread+0xd0/0x230
- [<c044d12d>] ? schedule+0x37d/0x4c0
- [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
- [<c0124ac0>] ? default_wake_function+0x0/0x10
- [<c0144280>] ? async_thread+0x0/0x230
- [<c013e2a3>] kthread+0x43/0x80
- [<c013e260>] ? kthread+0x0/0x80
- [<c0103677>] kernel_thread_helper+0x7/0x10
-no locks held by async/2/509.
-INFO: task async/3:511 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-async/3       D c0586e00  7604   511      2 0x00000000
- f7163f24 00000046 c014eca4 c0586e00 00000292 f70a9490 f70a9714 5b5d68ff
- 00000001 00000001 f70a9714 f7163f24 c0144247 f7163f48 c0586e6c 00000000
- f7163f68 c014456d f7163f34 f70a9490 c0108981 00000000 00000004 f7163f48
-Call Trace:
- [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
- [<c0144247>] ? lowest_in_progress+0x37/0x70
- [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
- [<c0108981>] ? sched_clock+0x21/0x70
- [<c014c23d>] ? put_lock_stats+0xd/0x30
- [<c013e520>] ? autoremove_wake_function+0x0/0x40
- [<c014460d>] async_synchronize_cookie+0xd/0x10
- [<c035dad1>] async_port_probe+0xa1/0xc0
- [<c0144350>] async_thread+0xd0/0x230
- [<c044d12d>] ? schedule+0x37d/0x4c0
- [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
- [<c0124ac0>] ? default_wake_function+0x0/0x10
- [<c0144280>] ? async_thread+0x0/0x230
- [<c013e2a3>] kthread+0x43/0x80
- [<c013e260>] ? kthread+0x0/0x80
- [<c0103677>] kernel_thread_helper+0x7/0x10
-no locks held by async/3/511.
+   Same question. I think the user will search for "sorry, DRQ type".
+
+> +			s, drq_type);
+>  	else if (packet_size != 0)
+> -		dev_err(&drive->gendev, "%s: packet size (0x%02x) is not 12 "
+> -			"bytes\n", s, packet_size);
+> +		dev_err(&drive->gendev,
+> +			"%s: packet size (0x%02x) is not 12 bytes\n",
+>   
+
+   When the message is broken by the format specifier, turning it into 
+one liner can hardly help seraching...
+
+> @@ -439,8 +440,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
+>  	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
+>  		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
+>  		dev_err(&drive->gendev,
+> -			"The device wants to issue more interrupts "
+> -			"in DMA mode\n");
+> +	"The device wants to issue more interrupts in DMA mode\n");
+>   
+
+   Oh noes, the indentation...
+
+> @@ -509,14 +509,12 @@ static u8 ide_wait_ireason(ide_drive_t *drive, u8 ireason)
+>  	while (retries-- && ((ireason & ATAPI_COD) == 0 ||
+>  			     (ireason & ATAPI_IO))) {
+>  		dev_err(&drive->gendev,
+> -			"(IO,CoD != (0,1) while issuing "
+> -			"a packet command, retrying\n");
+> +	"(IO,CoD != (0,1) while issuing a packet command, retrying\n");
+>   
+
+   Sigh...
+
+>  		udelay(100);
+>  		ireason = ide_read_ireason(drive);
+>  		if (retries == 0) {
+>  			dev_err(&drive->gendev,
+> -				"(IO,CoD != (0,1) while issuing "
+> -				"a packet command, ignoring\n");
+> +	"(IO,CoD != (0,1) while issuing a packet command, ignoring\n");
+>   
+
+   Sigh...
+
+> @@ -547,8 +545,7 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
+>  
+>  	if (ide_wait_stat(&startstop, drive, ATA_DRQ, ATA_BUSY, WAIT_READY)) {
+>  		dev_err(&drive->gendev,
+> -			"Strange, packet command initiated yet "
+> -			"DRQ isn't asserted\n");
+> +	"Strange, packet command initiated yet DRQ isn't asserted\n");
+>   
+
+   Sigh...
+
+> @@ -590,8 +587,7 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
+>  
+>  		if ((ireason & ATAPI_COD) == 0 || (ireason & ATAPI_IO)) {
+>  			dev_err(&drive->gendev,
+> -				"(IO,CoD) != (0,1) while issuing "
+> -				"a packet command\n");
+> +		"(IO,CoD) != (0,1) while issuing a packet command\n");
+>   
+
+   Sigh...
+
+> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> index 51c7cb4..07565c9 100644
+> --- a/drivers/ide/ide-io.c
+> +++ b/drivers/ide/ide-io.c
+> @@ -743,8 +743,9 @@ static void unexpected_intr(int irq, ide_hwif_t *hwif)
+>  
+>  		if (time_after(jiffies, last_msgtime + HZ)) {
+>  			last_msgtime = jiffies;
+> -			dev_err(&hwif->gendev, "unexpected interrupt, "
+> -				"status=0x%02x, count=%ld\n", stat, count);
+> +			dev_err(&hwif->gendev,
+> +		"unexpected interrupt, status=0x%02x, count=%ld\n",
+>   
+
+
+   Hardly won anything...
+
+> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+> index 6dbb96e..c5ab2ec 100644
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -259,8 +259,8 @@ no_80w:
+>  	if (drive->dev_flags & IDE_DFLAG_UDMA33_WARNED)
+>  		return 0;
+>  
+> -	dev_warn(&drive->gendev, "%s side 80-wire cable detection failed, "
+> -		 "limiting max speed to UDMA33\n",
+> +	dev_warn(&drive->gendev,
+> + "%s side 80-wire cable detection failed, limiting max speed to UDMA33\n",
+>   
+
+    Will you really use the full message to serch here?
+
+> diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+> index c4b44e2..a4120e2 100644
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -271,8 +271,9 @@ int ide_dev_read_id(ide_drive_t *drive, u8 cmd, u16 *id)
+>  		s = tp_ops->read_status(hwif);
+>  		if ((a ^ s) & ~ATA_IDX)
+>  			/* ancient Seagate drives, broken interfaces */
+> -			dev_info(&drive->gendev, "probing with STATUS(0x%02x) "
+> -				 "instead of ALTSTATUS(0x%02x)\n", s, a);
+> +			dev_info(&drive->gendev,
+> +		 "probing with STATUS(0x%02x) instead of ALTSTATUS(0x%02x)\n",
+>   
+
+   Same comment about the line broken by the format specifiers. This 
+wins absolutely nothing.
+
+> @@ -415,8 +416,8 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
+>  
+>  		if (rc == 1 && cmd == ATA_CMD_ID_ATAPI) {
+>  			dev_err(&drive->gendev,
+> -				"no response (status = 0x%02x), "
+> -				"resetting drive\n", stat);
+> +		"no response (status = 0x%02x), resetting drive\n",
+>   
+
+   And again...
+
+> diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+> index 23b9d6a..cd580b1 100644
+> --- a/drivers/ide/ide-proc.c
+> +++ b/drivers/ide/ide-proc.c
+> @@ -464,8 +464,7 @@ static int ide_replace_subdriver(ide_drive_t *drive, const char *driver)
+>  	strlcpy(drive->driver_req, driver, sizeof(drive->driver_req));
+>  	err = device_attach(dev);
+>  	if (err < 0)
+> -		pr_warning("IDE: %s: device_attach error: %d\n",
+> -			   __func__, err);
+> +		pr_warning("IDE: %s: device_attach error: %d\n", __func__, err);
+>   
+
+   I'm nt sure why this isn't a part of printk(KERN_*, ...); to 
+pr_*(...) conversion patch. You're not unsplitting the constant here.
+
+> diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+> index 8d741d1..687b3be 100644
+> --- a/drivers/ide/ide-taskfile.c
+> +++ b/drivers/ide/ide-taskfile.c
+> @@ -579,8 +579,9 @@ int ide_taskfile_ioctl(ide_drive_t *drive, unsigned long arg)
+>  		case TASKFILE_MULTI_OUT:
+>  			if (!drive->mult_count) {
+>  				/* (hs): give up if multcount is not set */
+> -				dev_err(&drive->gendev, "%s Multimode Write " \
+> -					"multcount is not set\n", __func__);
+> +				dev_err(&drive->gendev,
+> +			"%s Multimode Write multcount is not set\n",
+>   
+
+   Sigh...
+
+> @@ -599,8 +600,8 @@ int ide_taskfile_ioctl(ide_drive_t *drive, unsigned long arg)
+>  			if (!drive->mult_count) {
+>  				/* (hs): give up if multcount is not set */
+>  				dev_err(&drive->gendev,
+> -					"%s Multimode Read failure "
+> -					"multcount is not set\n", __func__);
+> +			"%s Multimode Read failure multcount is not set\n",
+> +					__func__);
+>   
+
+   Sigh...
+
+> diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+> index f139cf3..3aca89a 100644
+> --- a/drivers/ide/setup-pci.c
+> +++ b/drivers/ide/setup-pci.c
+> @@ -39,17 +39,18 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
+>  	if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
+>  			 (progif & 5) != 5) {
+>  		if ((progif & 0xa) != 0xa) {
+> -			pr_info("%s %s: device not capable of full "
+> -				"native PCI mode\n", name, pci_name(dev));
+> +			pr_info(
+> +		"%s %s: device not capable of full native PCI mode\n",
+>   
+
+   Sigh...
+
+>  		(void) pci_write_config_byte(dev, PCI_CLASS_PROG, progif|5);
+>  		if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
+>  		    (progif & 5) != 5) {
+> -			pr_err("%s %s: rewrite of PROGIF failed, "
+> -			       "wanted 0x%04x, got 0x%04x\n",
+> +			pr_err(
+> +		"%s %s: rewrite of PROGIF failed, wanted 0x%04x, got 0x%04x\n",
+>   
+
+   The same comment about the string broken by yhe format specifiers. 
+This wins nothing, well, almost...
+
+> @@ -322,8 +323,8 @@ static int ide_hw_configure(struct pci_dev *dev, const struct ide_port_info *d,
+>  	if ((d->host_flags & IDE_HFLAG_ISA_PORTS) == 0) {
+>  		if (ide_pci_check_iomem(dev, d, 2 * port) ||
+>  		    ide_pci_check_iomem(dev, d, 2 * port + 1)) {
+> -			pr_err("%s %s: I/O baseregs (BIOS) are "
+> -			       "reported as MEM for port %d!\n",
+> +			pr_err(
+> +		"%s %s: I/O baseregs (BIOS) are reported as MEM for port %d!\n",
+>   
+
+   Sigh...
+
+> @@ -519,8 +520,9 @@ static int do_ide_setup_pci_device(struct pci_dev *dev,
+>  
+>  	if (ide_pci_is_in_compatibility_mode(dev)) {
+>  		if (noisy)
+> -			pr_info("%s %s: not 100%% native mode: will "
+> -				"probe irqs later\n", d->name, pci_name(dev));
+> +			pr_info(
+> +		"%s %s: not 100%% native mode: will probe irqs later\n",
+>   
+
+   Sigh...
+
+MBR, Sergei
+
+
