@@ -1,251 +1,195 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [2.6.30-rc7 regression] kernel/async.c broke pata_legacy.c
-Date: Sun, 24 May 2009 13:20:56 -0600
-Message-ID: <4A199E18.70803@gmail.com>
-References: <18969.29245.610133.834819@pilspetsen.it.uu.se>
+Subject: Re: next-20090522: kernel hungs at boot (async, libata/scsi)
+Date: Sun, 24 May 2009 13:22:27 -0600
+Message-ID: <4A199E73.6080105@gmail.com>
+References: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:44148 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133AbZEXTU6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 May 2009 15:20:58 -0400
-In-Reply-To: <18969.29245.610133.834819@pilspetsen.it.uu.se>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: linux-next <linux-next@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, arjan@linux.intel.com
 
-Mikael Pettersson wrote:
-> I tried booting 2.6.30-rc7 on my old '486, but it fails miserably
-> during libata/pata_legacy's device scan:
+Alexander Beregalov wrote:
+> Hi
 > 
-> Linux version 2.6.30-rc7 (mikpe@brewer) (gcc version 4.3.4 20090517 (prerelease) (GCC) ) #1 Sun May 24 16:05:18 CEST 2009
-> KERNEL supported cpus:
->   Intel GenuineIntel
-> BIOS-provided physical RAM map:
->  BIOS-88: 0000000000000000 - 000000000009f000 (usable)
->  BIOS-88: 0000000000100000 - 0000000001c00000 (usable)
-> last_pfn = 0x1c00 max_arch_pfn = 0x100000
-> init_memory_mapping: 0000000000000000-0000000001c00000
-> RAMDISK: 01abb000 - 01bef86b
-> 28MB LOWMEM available.
->   mapped low ram: 0 - 01c00000
->   low ram: 0 - 01c00000
->   node 0 low ram: 00000000 - 01c00000
->   node 0 bootmap 00001000 - 00001380
-> (7 early reservations) ==> bootmem [0000000000 - 0001c00000]
->   #0 [0000000000 - 0000001000]   BIOS data page ==> [0000000000 - 0000001000]
->   #1 [0000100000 - 000031d1ec]    TEXT DATA BSS ==> [0000100000 - 000031d1ec]
->   #2 [0001abb000 - 0001bef86b]          RAMDISK ==> [0001abb000 - 0001bef86b]
->   #3 [000009f000 - 0000100000]    BIOS reserved ==> [000009f000 - 0000100000]
->   #4 [000031e000 - 0000320000]              BRK ==> [000031e000 - 0000320000]
->   #5 [0000007000 - 000000c000]          PGTABLE ==> [0000007000 - 000000c000]
->   #6 [0000001000 - 0000002000]          BOOTMAP ==> [0000001000 - 0000002000]
-> Zone PFN ranges:
->   DMA      0x00000000 -> 0x00001000
->   Normal   0x00001000 -> 0x00001c00
-> Movable zone start PFN for each node
-> early_node_map[2] active PFN ranges
->     0: 0x00000000 -> 0x0000009f
->     0: 0x00000100 -> 0x00001c00
-> Allocating PCI resources starting at 10000000 (gap: 1c00000:fe400000)
-> Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 7015
-> Kernel command line: ro root=LABEL=/ console=ttyS1,115200
-> Initializing CPU#0
-> NR_IRQS:16
-> PID hash table entries: 128 (order: 7, 512 bytes)
-> Console: colour VGA+ 80x25
-> console [ttyS1] enabled
-> Dentry cache hash table entries: 4096 (order: 2, 16384 bytes)
-> Inode-cache hash table entries: 2048 (order: 1, 8192 bytes)
-> Memory: 24592k/28672k available (1467k kernel code, 3688k reserved, 465k data, 132k init, 0k highmem)
-> virtual kernel memory layout:
->     fixmap  : 0xfffeb000 - 0xfffff000   (  80 kB)
->     vmalloc : 0xc2400000 - 0xfffe9000   ( 987 MB)
->     lowmem  : 0xc0000000 - 0xc1c00000   (  28 MB)
->       .init : 0xc02e6000 - 0xc0307000   ( 132 kB)
->       .data : 0xc026eef0 - 0xc02e34f8   ( 465 kB)
->       .text : 0xc0100000 - 0xc026eef0   (1467 kB)
-> Checking if this processor honours the WP bit even in supervisor mode...Ok.
-> Calibrating delay loop... 49.66 BogoMIPS (lpj=248320)
-> Mount-cache hash table entries: 512
+> Host has pata_amd (ata1,2) and pata_pdc2027x (ata3,4).
 > 
-> CPU: Intel 486 DX/4 stepping 00
-> Checking 'hlt' instruction... OK.
-> net_namespace: 296 bytes
-> NET: Registered protocol family 16
-> bio: create slab <bio-0> at 0
-> SCSI subsystem initialized
-> NET: Registered protocol family 2
-> IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
-> TCP established hash table entries: 1024 (order: 1, 8192 bytes)
-> TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
-> TCP: Hash tables configured (established 1024 bind 1024)
-> TCP reno registered
-> NET: Registered protocol family 1
-> Unpacking initramfs...
-> Freeing initrd memory: 1234k freed
-> platform rtc_cmos: registered platform RTC device (no PNP device found)
-> msgmni has been set to 50
-> io scheduler noop registered
-> io scheduler anticipatory registered (default)
-> io scheduler deadline registered
-> io scheduler cfq registered
-> Real Time Clock Driver v1.12b
-> Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-> serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-> serial8250: ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
-> Driver 'sd' needs updating - please use bus_type methods
-> scsi0 : pata_legacy
-> ata1: PATA max PIO4 cmd 0x1f0 ctl 0x3f6 irq 14
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/libata-core.c:6222 ata_host_detach+0x75/0x90()
-> Modules linked in:
-> Pid: 1, comm: swapper Not tainted 2.6.30-rc7 #1
+> It cannot add ata2 and ata4.
+> 
+> bus: 'pci': driver_probe_device: matched device 0000:00:09.0 with
+> driver pata_amd
+> bus: 'pci': really_probe: probing driver pata_amd with device 0000:00:09.0
+> pata_amd 0000:00:09.0: version 0.4.1
+> pata_amd 0000:00:09.0: setting latency timer to 64
+> scsi0 : pata_amd
+> device: 'host0': device_add
+> bus: 'scsi': add device host0
+> device: 'host0': device_add
+> scsi1 : pata_amd
+> device: 'host1': device_add
+> bus: 'scsi': add device host1
+> device: 'host1': device_add
+> ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
+> ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
+> driver: '0000:00:09.0': driver_bound: bound to device 'pata_amd'
+> bus: 'pci': really_probe: bound device 0000:00:09.0 to driver pata_amd
+> bus: 'pci': add driver pata_pdc2027x
+> bus: 'pci': driver_probe_device: matched device 0000:01:08.0 with
+> driver pata_pdc2027x
+> bus: 'pci': really_probe: probing driver pata_pdc2027x with device 0000:01:08.0
+> pata_pdc2027x 0000:01:08.0: version 1.0
+> ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
+> pata_pdc2027x 0000:01:08.0: PCI INT A -> Link[APC1] -> GSI 16 (level,
+> high) -> IRQ 16
+> pata_pdc2027x 0000:01:08.0: PLL input clock 16686 kHz
+> scsi2 : pata_pdc2027x
+> device: 'host2': device_add
+> bus: 'scsi': add device host2
+> device: 'host2': device_add
+> ata1.00: ATA-7: ST3250823A, 3.02, max UDMA/100
+> ata1.00: 488397168 sectors, multi 16: LBA48
+> ata1: nv_mode_filter: 0x3f39f&0x3f01f->0x3f01f, BIOS=0x3f000
+> (0xc600c600) ACPI=0x3f01f (20:600:0x13)
+> scsi3 : pata_pdc2027x
+> device: 'host3': device_add
+> bus: 'scsi': add device host3
+> device: 'host3': device_add
+> ata3: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0417c0 irq 16
+> ata4: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0415c0 irq 16
+> driver: '0000:01:08.0': driver_bound: bound to device 'pata_pdc2027x'
+> bus: 'pci': really_probe: bound device 0000:01:08.0 to driver pata_pdc2027x
+> ata1.00: configured for UDMA/100
+> 
+> ata3.00: ATA-7: ST3250823A, 3.03, max UDMA/100
+> ata3.00: 488397168 sectors, multi 16: LBA48
+> ata3.00: configured for UDMA/100
+> 
+> INFO: task swapper:1 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> swapper       D c0586e00  5492     1      0 0x00000000
+>  f704ff3c 00000046 c014eca4 c0586e00 00000296 f7050000 f7050284 e41d1a0a
+>  00000003 00000001 f7050284 f704ff3c c0144247 f704ff60 c0586e6c 00000000
+>  f704ff80 c014456d f7050000 f7050000 c044fb85 c06eb6e0 00000005 c014eca4
 > Call Trace:
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01139b5>] ? warn_slowpath_common+0x45/0x80
->  [<c01139fa>] ? warn_slowpath_null+0xa/0x10
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c02f40e0>] ? legacy_init+0x44e/0x87f
->  [<c02f3c92>] ? legacy_init+0x0/0x87f
->  [<c0101021>] ? _stext+0x21/0x140
->  [<c01890ff>] ? proc_register+0x2f/0x190
->  [<c018938c>] ? create_proc_entry+0x5c/0xc0
->  [<c0135ebe>] ? register_irq_proc+0x6e/0x90
->  [<c02e6484>] ? kernel_init+0x6e/0xbf
->  [<c02e6416>] ? kernel_init+0x0/0xbf
->  [<c01031d7>] ? kernel_thread_helper+0x7/0x10
-> ---[ end trace ef1ee36e873ae3a0 ]---
-> scsi1 : pata_legacy
-> ata2: PATA max PIO4 cmd 0x170 ctl 0x376 irq 15
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/libata-core.c:6222 ata_host_detach+0x75/0x90()
-> Modules linked in:
-> Pid: 1, comm: swapper Tainted: G        W  2.6.30-rc7 #1
+>  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+>  [<c0144247>] ? lowest_in_progress+0x37/0x70
+>  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+>  [<c044fb85>] ? _spin_unlock_irqrestore+0x55/0x70
+>  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+>  [<c013e520>] ? autoremove_wake_function+0x0/0x40
+>  [<c014460d>] async_synchronize_cookie+0xd/0x10
+>  [<c0144628>] async_synchronize_full+0x18/0x40
+>  [<c033e318>] wait_for_device_probe+0x68/0x70
+>  [<c013e520>] ? autoremove_wake_function+0x0/0x40
+>  [<c0704e62>] prepare_namespace+0x18/0x17c
+>  [<c018b510>] ? sys_access+0x20/0x30
+>  [<c070450b>] kernel_init+0xd8/0xf1
+>  [<c0704433>] ? kernel_init+0x0/0xf1
+>  [<c0103677>] kernel_thread_helper+0x7/0x10
+> no locks held by swapper/1.
+> INFO: task async/0:500 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> async/0       D c0586e00  7380   500      2 0x00000000
+>  f7103ed4 00000046 c014eca4 c0586e00 00000292 f72a0000 f72a0284 5b573649
+>  00000001 00000003 f72a0284 f7103ed4 c0144247 f7103ef8 c06ec3c0 00000000
+>  f7103f18 c014456d f7103f20 c034ca95 00000002 f70ed9cc 00000005 22222222
 > Call Trace:
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01139b5>] ? warn_slowpath_common+0x45/0x80
->  [<c01139fa>] ? warn_slowpath_null+0xa/0x10
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c02f40e0>] ? legacy_init+0x44e/0x87f
->  [<c02f3c92>] ? legacy_init+0x0/0x87f
->  [<c0101021>] ? _stext+0x21/0x140
->  [<c01890ff>] ? proc_register+0x2f/0x190
->  [<c018938c>] ? create_proc_entry+0x5c/0xc0
->  [<c0135ebe>] ? register_irq_proc+0x6e/0x90
->  [<c02e6484>] ? kernel_init+0x6e/0xbf
->  [<c02e6416>] ? kernel_init+0x0/0xbf
->  [<c01031d7>] ? kernel_thread_helper+0x7/0x10
-> ---[ end trace ef1ee36e873ae3a1 ]---
-> scsi2 : pata_legacy
-> ata3: PATA max PIO4 cmd 0x1e8 ctl 0x3ee irq 11
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/libata-core.c:6222 ata_host_detach+0x75/0x90()
-> Modules linked in:
-> Pid: 1, comm: swapper Tainted: G        W  2.6.30-rc7 #1
+>  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+>  [<c0144247>] ? lowest_in_progress+0x37/0x70
+>  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+>  [<c034ca95>] ? scsi_alloc_target+0x275/0x2c0
+>  [<c013e520>] ? autoremove_wake_function+0x0/0x40
+>  [<c0144665>] async_synchronize_full_domain+0x15/0x20
+>  [<c034d5f2>] __scsi_add_device+0xb2/0xe0
+>  [<c01444dd>] ? async_synchronize_cookie_domain+0x2d/0x150
+>  [<c03611d3>] ata_scsi_scan_host+0x103/0x180
+>  [<c035dac1>] async_port_probe+0x91/0xc0
+>  [<c0144350>] async_thread+0xd0/0x230
+>  [<c044d12d>] ? schedule+0x37d/0x4c0
+>  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+>  [<c0124ac0>] ? default_wake_function+0x0/0x10
+>  [<c0144280>] ? async_thread+0x0/0x230
+>  [<c013e2a3>] kthread+0x43/0x80
+>  [<c013e260>] ? kthread+0x0/0x80
+>  [<c0103677>] kernel_thread_helper+0x7/0x10
+> 1 lock held by async/0/500:
+>  #0:  (&shost->scan_mutex){+.+...}, at: [<c034d5ae>] __scsi_add_device+0x6e/0xe0
+> INFO: task async/1:502 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> async/1       D c0586e00  7488   502      2 0x00000000
+>  f6aeff24 00000046 c014eca4 c0586e00 00000292 f72a2920 f72a2ba4 5b0bdd4d
+>  00000001 00000001 f72a2ba4 f6aeff24 c0144247 f6aeff48 c0586e6c 00000000
+>  f6aeff68 c014456d f6aeff34 f72a2920 c0108981 00000000 00000002 f6aeff48
 > Call Trace:
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01139b5>] ? warn_slowpath_common+0x45/0x80
->  [<c01139fa>] ? warn_slowpath_null+0xa/0x10
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c02f40e0>] ? legacy_init+0x44e/0x87f
->  [<c02f3c92>] ? legacy_init+0x0/0x87f
->  [<c0101021>] ? _stext+0x21/0x140
->  [<c01890ff>] ? proc_register+0x2f/0x190
->  [<c018938c>] ? create_proc_entry+0x5c/0xc0
->  [<c0135ebe>] ? register_irq_proc+0x6e/0x90
->  [<c02e6484>] ? kernel_init+0x6e/0xbf
->  [<c02e6416>] ? kernel_init+0x0/0xbf
->  [<c01031d7>] ? kernel_thread_helper+0x7/0x10
-> ---[ end trace ef1ee36e873ae3a2 ]---
-> scsi3 : pata_legacy
-> ata4: PATA max PIO4 cmd 0x168 ctl 0x36e irq 10
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/libata-core.c:6222 ata_host_detach+0x75/0x90()
-> Modules linked in:
-> Pid: 1, comm: swapper Tainted: G        W  2.6.30-rc7 #1
+>  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+>  [<c0144247>] ? lowest_in_progress+0x37/0x70
+>  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+>  [<c0108981>] ? sched_clock+0x21/0x70
+>  [<c014c23d>] ? put_lock_stats+0xd/0x30
+>  [<c013e520>] ? autoremove_wake_function+0x0/0x40
+>  [<c014460d>] async_synchronize_cookie+0xd/0x10
+>  [<c035dad1>] async_port_probe+0xa1/0xc0
+>  [<c0144350>] async_thread+0xd0/0x230
+>  [<c044d12d>] ? schedule+0x37d/0x4c0
+>  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+>  [<c0124ac0>] ? default_wake_function+0x0/0x10
+>  [<c0144280>] ? async_thread+0x0/0x230
+>  [<c013e2a3>] kthread+0x43/0x80
+>  [<c013e260>] ? kthread+0x0/0x80
+>  [<c0103677>] kernel_thread_helper+0x7/0x10
+> no locks held by async/1/502.
+> INFO: task async/2:509 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> async/2       D c0586e00  7604   509      2 0x00000000
+>  f72abf24 00000046 c014eca4 c0586e00 00000292 f71cd240 f71cd4c4 71cf4cd4
+>  00000001 00000001 f71cd4c4 f72abf24 c0144247 f72abf48 c0586e6c 00000000
+>  f72abf68 c014456d 00000292 f72abf38 c014ed0b f72abf48 00000003 00000292
 > Call Trace:
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01139b5>] ? warn_slowpath_common+0x45/0x80
->  [<c01139fa>] ? warn_slowpath_null+0xa/0x10
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c02f40e0>] ? legacy_init+0x44e/0x87f
->  [<c02f3c92>] ? legacy_init+0x0/0x87f
->  [<c0101021>] ? _stext+0x21/0x140
->  [<c01890ff>] ? proc_register+0x2f/0x190
->  [<c018938c>] ? create_proc_entry+0x5c/0xc0
->  [<c0135ebe>] ? register_irq_proc+0x6e/0x90
->  [<c02e6484>] ? kernel_init+0x6e/0xbf
->  [<c02e6416>] ? kernel_init+0x0/0xbf
->  [<c01031d7>] ? kernel_thread_helper+0x7/0x10
-> ---[ end trace ef1ee36e873ae3a3 ]---
-> scsi4 : pata_legacy
-> ata5: PATA max PIO4 cmd 0x160 ctl 0x366 irq 12
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/libata-core.c:6222 ata_host_detach+0x75/0x90()
-> Modules linked in:
-> Pid: 1, comm: swapper Tainted: G        W  2.6.30-rc7 #1
+>  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+>  [<c0144247>] ? lowest_in_progress+0x37/0x70
+>  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+>  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+>  [<c013e520>] ? autoremove_wake_function+0x0/0x40
+>  [<c014460d>] async_synchronize_cookie+0xd/0x10
+>  [<c035dab5>] async_port_probe+0x85/0xc0
+>  [<c0144350>] async_thread+0xd0/0x230
+>  [<c044d12d>] ? schedule+0x37d/0x4c0
+>  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+>  [<c0124ac0>] ? default_wake_function+0x0/0x10
+>  [<c0144280>] ? async_thread+0x0/0x230
+>  [<c013e2a3>] kthread+0x43/0x80
+>  [<c013e260>] ? kthread+0x0/0x80
+>  [<c0103677>] kernel_thread_helper+0x7/0x10
+> no locks held by async/2/509.
+> INFO: task async/3:511 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> async/3       D c0586e00  7604   511      2 0x00000000
+>  f7163f24 00000046 c014eca4 c0586e00 00000292 f70a9490 f70a9714 5b5d68ff
+>  00000001 00000001 f70a9714 f7163f24 c0144247 f7163f48 c0586e6c 00000000
+>  f7163f68 c014456d f7163f34 f70a9490 c0108981 00000000 00000004 f7163f48
 > Call Trace:
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c01139b5>] ? warn_slowpath_common+0x45/0x80
->  [<c01139fa>] ? warn_slowpath_null+0xa/0x10
->  [<c01fbb05>] ? ata_host_detach+0x75/0x90
->  [<c02f40e0>] ? legacy_init+0x44e/0x87f
->  [<c02f3c92>] ? legacy_init+0x0/0x87f
->  [<c0101021>] ? _stext+0x21/0x140
->  [<c01890ff>] ? proc_register+0x2f/0x190
->  [<c018938c>] ? create_proc_entry+0x5c/0xc0
->  [<c0135ebe>] ? register_irq_proc+0x6e/0x90
->  [<c02e6484>] ? kernel_init+0x6e/0xbf
->  [<c02e6416>] ? kernel_init+0x0/0xbf
->  [<c01031d7>] ? kernel_thread_helper+0x7/0x10
-> ---[ end trace ef1ee36e873ae3a4 ]---
-> serio: i8042 KBD port at 0x60,0x64 irq 1
-> serio: i8042 AUX port at 0x60,0x64 irq 12
-> mice: PS/2 mouse device common for all mice
-> input: PC Speaker as /class/input/input0
-> TCP cubic registered
-> input: AT Translated Set 2 keyboard as /class/input/input1
-> 
-> At this point the kernel hangs until I flip the power switch.
-> This is 100% reproducible.
-> 
-> 2.6.29 worked Ok. A bug hunt showed that 2.6.29-git3 was the last kernel
-> to boot Ok on this machine, and every single one since 2.6.29-git4 hang.
-> 
-> 2.6.29-git4 was when Arjan removed the "async is off by default" code,
-> in commit 9710794383ee5008d67f1a6613a4717bf6de47bc. Reverting that
-> from 2.6.30-rc7 gives me a working kernel again.
-> 
-> I haven't had any async problems on my other machines, so presumably
-> the bug is in pata_legacy, or due to the machine being so insanely slow.
+>  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+>  [<c0144247>] ? lowest_in_progress+0x37/0x70
+>  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+>  [<c0108981>] ? sched_clock+0x21/0x70
+>  [<c014c23d>] ? put_lock_stats+0xd/0x30
+>  [<c013e520>] ? autoremove_wake_function+0x0/0x40
+>  [<c014460d>] async_synchronize_cookie+0xd/0x10
+>  [<c035dad1>] async_port_probe+0xa1/0xc0
+>  [<c0144350>] async_thread+0xd0/0x230
+>  [<c044d12d>] ? schedule+0x37d/0x4c0
+>  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+>  [<c0124ac0>] ? default_wake_function+0x0/0x10
+>  [<c0144280>] ? async_thread+0x0/0x230
+>  [<c013e2a3>] kthread+0x43/0x80
+>  [<c013e260>] ? kthread+0x0/0x80
+>  [<c0103677>] kernel_thread_helper+0x7/0x10
+> no locks held by async/3/511.
 
-Well, it looks like pata_legacy is doing some different things than 
-other drivers, in that it needs to attach to potential host addresses to 
-tell if there is a controller/device there and if it turns out not to 
-be, needs to detach the host entry it just created. This detach is 
-what's triggering the problem. It looks like somehow error handling 
-completes without setting the UNLOADED flag.
-
-I suspect the bug is not actually in pata_legacy though.
-
-> 
-> (I just saw James Bottomley's "[PATCH] async: make sure independent async
-> domains can't accidentally entangle". Unfortunately that patch makes no
-> difference to this machine's async-related boot failure.)
-> 
-> /Mikael
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Is Alt-SysRq-T functional at this point? It seems like the async threads 
+are stalled waiting for something to complete, but we can't see what 
+that is. Alt-SysRq-T might tell us.
