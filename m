@@ -1,195 +1,63 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: next-20090522: kernel hungs at boot (async, libata/scsi)
-Date: Sun, 24 May 2009 13:22:27 -0600
-Message-ID: <4A199E73.6080105@gmail.com>
-References: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13371] New: s2disk hangs with kernel 2.6.29 and later, SATA,
+ Gigabyte EG45M-DS2H
+Date: Sun, 24 May 2009 20:29:38 GMT
+Message-ID: <bug-13371-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: linux-next <linux-next@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:42554 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbZEXU3g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 May 2009 16:29:36 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4OKTc6L003301
+	for <linux-ide@vger.kernel.org>; Sun, 24 May 2009 20:29:38 GMT
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Alexander Beregalov wrote:
-> Hi
-> 
-> Host has pata_amd (ata1,2) and pata_pdc2027x (ata3,4).
-> 
-> It cannot add ata2 and ata4.
-> 
-> bus: 'pci': driver_probe_device: matched device 0000:00:09.0 with
-> driver pata_amd
-> bus: 'pci': really_probe: probing driver pata_amd with device 0000:00:09.0
-> pata_amd 0000:00:09.0: version 0.4.1
-> pata_amd 0000:00:09.0: setting latency timer to 64
-> scsi0 : pata_amd
-> device: 'host0': device_add
-> bus: 'scsi': add device host0
-> device: 'host0': device_add
-> scsi1 : pata_amd
-> device: 'host1': device_add
-> bus: 'scsi': add device host1
-> device: 'host1': device_add
-> ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
-> ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
-> driver: '0000:00:09.0': driver_bound: bound to device 'pata_amd'
-> bus: 'pci': really_probe: bound device 0000:00:09.0 to driver pata_amd
-> bus: 'pci': add driver pata_pdc2027x
-> bus: 'pci': driver_probe_device: matched device 0000:01:08.0 with
-> driver pata_pdc2027x
-> bus: 'pci': really_probe: probing driver pata_pdc2027x with device 0000:01:08.0
-> pata_pdc2027x 0000:01:08.0: version 1.0
-> ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
-> pata_pdc2027x 0000:01:08.0: PCI INT A -> Link[APC1] -> GSI 16 (level,
-> high) -> IRQ 16
-> pata_pdc2027x 0000:01:08.0: PLL input clock 16686 kHz
-> scsi2 : pata_pdc2027x
-> device: 'host2': device_add
-> bus: 'scsi': add device host2
-> device: 'host2': device_add
-> ata1.00: ATA-7: ST3250823A, 3.02, max UDMA/100
-> ata1.00: 488397168 sectors, multi 16: LBA48
-> ata1: nv_mode_filter: 0x3f39f&0x3f01f->0x3f01f, BIOS=0x3f000
-> (0xc600c600) ACPI=0x3f01f (20:600:0x13)
-> scsi3 : pata_pdc2027x
-> device: 'host3': device_add
-> bus: 'scsi': add device host3
-> device: 'host3': device_add
-> ata3: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0417c0 irq 16
-> ata4: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0415c0 irq 16
-> driver: '0000:01:08.0': driver_bound: bound to device 'pata_pdc2027x'
-> bus: 'pci': really_probe: bound device 0000:01:08.0 to driver pata_pdc2027x
-> ata1.00: configured for UDMA/100
-> 
-> ata3.00: ATA-7: ST3250823A, 3.03, max UDMA/100
-> ata3.00: 488397168 sectors, multi 16: LBA48
-> ata3.00: configured for UDMA/100
-> 
-> INFO: task swapper:1 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> swapper       D c0586e00  5492     1      0 0x00000000
->  f704ff3c 00000046 c014eca4 c0586e00 00000296 f7050000 f7050284 e41d1a0a
->  00000003 00000001 f7050284 f704ff3c c0144247 f704ff60 c0586e6c 00000000
->  f704ff80 c014456d f7050000 f7050000 c044fb85 c06eb6e0 00000005 c014eca4
-> Call Trace:
->  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
->  [<c0144247>] ? lowest_in_progress+0x37/0x70
->  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
->  [<c044fb85>] ? _spin_unlock_irqrestore+0x55/0x70
->  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
->  [<c013e520>] ? autoremove_wake_function+0x0/0x40
->  [<c014460d>] async_synchronize_cookie+0xd/0x10
->  [<c0144628>] async_synchronize_full+0x18/0x40
->  [<c033e318>] wait_for_device_probe+0x68/0x70
->  [<c013e520>] ? autoremove_wake_function+0x0/0x40
->  [<c0704e62>] prepare_namespace+0x18/0x17c
->  [<c018b510>] ? sys_access+0x20/0x30
->  [<c070450b>] kernel_init+0xd8/0xf1
->  [<c0704433>] ? kernel_init+0x0/0xf1
->  [<c0103677>] kernel_thread_helper+0x7/0x10
-> no locks held by swapper/1.
-> INFO: task async/0:500 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> async/0       D c0586e00  7380   500      2 0x00000000
->  f7103ed4 00000046 c014eca4 c0586e00 00000292 f72a0000 f72a0284 5b573649
->  00000001 00000003 f72a0284 f7103ed4 c0144247 f7103ef8 c06ec3c0 00000000
->  f7103f18 c014456d f7103f20 c034ca95 00000002 f70ed9cc 00000005 22222222
-> Call Trace:
->  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
->  [<c0144247>] ? lowest_in_progress+0x37/0x70
->  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
->  [<c034ca95>] ? scsi_alloc_target+0x275/0x2c0
->  [<c013e520>] ? autoremove_wake_function+0x0/0x40
->  [<c0144665>] async_synchronize_full_domain+0x15/0x20
->  [<c034d5f2>] __scsi_add_device+0xb2/0xe0
->  [<c01444dd>] ? async_synchronize_cookie_domain+0x2d/0x150
->  [<c03611d3>] ata_scsi_scan_host+0x103/0x180
->  [<c035dac1>] async_port_probe+0x91/0xc0
->  [<c0144350>] async_thread+0xd0/0x230
->  [<c044d12d>] ? schedule+0x37d/0x4c0
->  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
->  [<c0124ac0>] ? default_wake_function+0x0/0x10
->  [<c0144280>] ? async_thread+0x0/0x230
->  [<c013e2a3>] kthread+0x43/0x80
->  [<c013e260>] ? kthread+0x0/0x80
->  [<c0103677>] kernel_thread_helper+0x7/0x10
-> 1 lock held by async/0/500:
->  #0:  (&shost->scan_mutex){+.+...}, at: [<c034d5ae>] __scsi_add_device+0x6e/0xe0
-> INFO: task async/1:502 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> async/1       D c0586e00  7488   502      2 0x00000000
->  f6aeff24 00000046 c014eca4 c0586e00 00000292 f72a2920 f72a2ba4 5b0bdd4d
->  00000001 00000001 f72a2ba4 f6aeff24 c0144247 f6aeff48 c0586e6c 00000000
->  f6aeff68 c014456d f6aeff34 f72a2920 c0108981 00000000 00000002 f6aeff48
-> Call Trace:
->  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
->  [<c0144247>] ? lowest_in_progress+0x37/0x70
->  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
->  [<c0108981>] ? sched_clock+0x21/0x70
->  [<c014c23d>] ? put_lock_stats+0xd/0x30
->  [<c013e520>] ? autoremove_wake_function+0x0/0x40
->  [<c014460d>] async_synchronize_cookie+0xd/0x10
->  [<c035dad1>] async_port_probe+0xa1/0xc0
->  [<c0144350>] async_thread+0xd0/0x230
->  [<c044d12d>] ? schedule+0x37d/0x4c0
->  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
->  [<c0124ac0>] ? default_wake_function+0x0/0x10
->  [<c0144280>] ? async_thread+0x0/0x230
->  [<c013e2a3>] kthread+0x43/0x80
->  [<c013e260>] ? kthread+0x0/0x80
->  [<c0103677>] kernel_thread_helper+0x7/0x10
-> no locks held by async/1/502.
-> INFO: task async/2:509 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> async/2       D c0586e00  7604   509      2 0x00000000
->  f72abf24 00000046 c014eca4 c0586e00 00000292 f71cd240 f71cd4c4 71cf4cd4
->  00000001 00000001 f71cd4c4 f72abf24 c0144247 f72abf48 c0586e6c 00000000
->  f72abf68 c014456d 00000292 f72abf38 c014ed0b f72abf48 00000003 00000292
-> Call Trace:
->  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
->  [<c0144247>] ? lowest_in_progress+0x37/0x70
->  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
->  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
->  [<c013e520>] ? autoremove_wake_function+0x0/0x40
->  [<c014460d>] async_synchronize_cookie+0xd/0x10
->  [<c035dab5>] async_port_probe+0x85/0xc0
->  [<c0144350>] async_thread+0xd0/0x230
->  [<c044d12d>] ? schedule+0x37d/0x4c0
->  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
->  [<c0124ac0>] ? default_wake_function+0x0/0x10
->  [<c0144280>] ? async_thread+0x0/0x230
->  [<c013e2a3>] kthread+0x43/0x80
->  [<c013e260>] ? kthread+0x0/0x80
->  [<c0103677>] kernel_thread_helper+0x7/0x10
-> no locks held by async/2/509.
-> INFO: task async/3:511 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> async/3       D c0586e00  7604   511      2 0x00000000
->  f7163f24 00000046 c014eca4 c0586e00 00000292 f70a9490 f70a9714 5b5d68ff
->  00000001 00000001 f70a9714 f7163f24 c0144247 f7163f48 c0586e6c 00000000
->  f7163f68 c014456d f7163f34 f70a9490 c0108981 00000000 00000004 f7163f48
-> Call Trace:
->  [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
->  [<c0144247>] ? lowest_in_progress+0x37/0x70
->  [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
->  [<c0108981>] ? sched_clock+0x21/0x70
->  [<c014c23d>] ? put_lock_stats+0xd/0x30
->  [<c013e520>] ? autoremove_wake_function+0x0/0x40
->  [<c014460d>] async_synchronize_cookie+0xd/0x10
->  [<c035dad1>] async_port_probe+0xa1/0xc0
->  [<c0144350>] async_thread+0xd0/0x230
->  [<c044d12d>] ? schedule+0x37d/0x4c0
->  [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
->  [<c0124ac0>] ? default_wake_function+0x0/0x10
->  [<c0144280>] ? async_thread+0x0/0x230
->  [<c013e2a3>] kthread+0x43/0x80
->  [<c013e260>] ? kthread+0x0/0x80
->  [<c0103677>] kernel_thread_helper+0x7/0x10
-> no locks held by async/3/511.
+http://bugzilla.kernel.org/show_bug.cgi?id=13371
 
-Is Alt-SysRq-T functional at this point? It seems like the async threads 
-are stalled waiting for something to complete, but we can't see what 
-that is. Alt-SysRq-T might tell us.
+           Summary: s2disk hangs with kernel 2.6.29 and later, SATA,
+                    Gigabyte EG45M-DS2H
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.29
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: rjw@sisk.pl
+            Blocks: 7216,13070
+        Regression: Yes
+
+
+Subject    : s2disk hangs with kernel >=2.6.29, SATA, Gigabyte EG45M-DS2H
+(bisected)
+Submitter  : Richard Atterer <richard@2009.atterer.net>
+Date       : 2009-05-16 22:51
+References : http://marc.info/?l=linux-kernel&m=124251446428166&w=4
+Handled-By : Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Caused by:
+
+commit 295f00042aaf6b553b5f37348f89bab463d4a469
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Fri Jan 2 16:12:48 2009 +0100
+
+    ide: don't execute the next queued command from the hard-IRQ context (v2)
+
+First-Bad-Commit : 295f00042aaf6b553b5f37348f89bab463d4a469
+
+This entry is being used for tracking a regression from 2.6.28.  Please don't
+close it until the problem is fixed in the mainline.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
