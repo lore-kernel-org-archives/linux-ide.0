@@ -1,36 +1,28 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
-Date: Mon, 25 May 2009 23:17:16 +0400
-Message-ID: <4A1AEEBC.2080108@ru.mvista.com>
-References: <cover.1242855716.git.wuzhangjin@gmail.com>	<1243230339.9819.18.camel@localhost.localdomain>	<4A1A4A54.6090401@lemote.com> <200905251656.25357.bzolnier@gmail.com>	<4A1AEBF7.7040402@ru.mvista.com> <yq1tz39dmmn.fsf@sermon.lab.mkp.net>
+From: madsloldrup <madsloldrup@redder.dk>
+Subject: =?UTF-8?Q?Google Online Promo =C2=A9 2009?=
+Date: Mon, 25 May 2009 21:32:04 +0200
+Message-ID: <0dffa74fe137eb4d7873783bfd77a0a6__897.753719664429$1243280906$gmane$org@redder.dk>
+Reply-To: mrf.henson01@8u8.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49669 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752563AbZEYTQS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 May 2009 15:16:18 -0400
-In-Reply-To: <yq1tz39dmmn.fsf@sermon.lab.mkp.net>
+Received: from gn17.gullestrupnet.dk ([89.249.3.117]:4610 "EHLO
+	gn15.gullestrupnet.dk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752721AbZEYTrg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 15:47:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?UTF-8?B?6IOh5rSq5YW1?= <huhb@lemote.com>, yanh@lemote.com, wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
 
-Hello.
 
-Martin K. Petersen wrote:
+Dear google user,
+Your e-mail has emerged as a winner of =C2=A3500,000.00 GBP (Five Hundr=
+ed Thousand British Pounds) in our on-going promotion.Your Winning deta=
+ils are as follows: Computer Generated Profile Numbers (CGPN):7-22-71-0=
+0-66-12, Ticket number: 00869575733664, Serial
+Mr. Francis Henson,
+Email: giveaways.promoonline001@gmail.com
 
->>>Could you please explain the issue with platform specific code a bit
->>>more?
+Sincerely,
+Mrs Sarah Johnson.
 
->>>Is it related to a cable detection by any chance?
-
-> Sergei>    I guess it's rdmsr()/wrmsr()...
-
-> Those are only used when the driver is explicitly loaded with
-> use_msr=1.  The default is to use PCI config space/VSA.
-
-    But you need them defined for the driver to build...
-
-MBR, Sergei
