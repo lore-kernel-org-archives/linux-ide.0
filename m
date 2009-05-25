@@ -1,57 +1,94 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/3] ide: add warning about possible HPA compatibility issue
-Date: Mon, 25 May 2009 23:45:45 +0200
-Message-ID: <200905252345.45459.bzolnier@gmail.com>
+Subject: [PATCH] libata: add warning about possible HPA compatibility issue
+Date: Mon, 25 May 2009 23:48:08 +0200
+Message-ID: <200905252348.08970.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:60011 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbZEYVsJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 17:48:09 -0400
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:43125 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbZEYVsK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 17:48:10 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jacob <fun2program8@yahoo.com>, Christopher Hogan <chris.c.hogan@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Document "ignore_hpa" module parameter and add a warning about
+possible HPA compatibility issue.
+
+This should fix bug #13365:
+
+	http://bugzilla.kernel.org/show_bug.cgi?id=13365
+
+To: Jeff Garzik <jgarzik@pobox.com>
+Reported-by: Jacob <fun2program8@yahoo.com>
+Reported-by: Christopher Hogan <chris.c.hogan@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Robert Hancock <hancockrwd@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-disk.c |   14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+If people are fine with the patch I can push it together with
+ide fixes for 2.6.30-rc8.
 
-Index: b/drivers/ide/ide-disk.c
+ Documentation/kernel-parameters.txt |    6 ++++++
+ drivers/ata/libata-core.c           |   15 +++++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
+
+Index: b/Documentation/kernel-parameters.txt
 ===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -302,6 +302,16 @@ static const struct drive_list_entry hpa
- 	{ NULL,		NULL }
- };
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -1101,6 +1101,12 @@ and is between 256 and 4096 characters. 
+ 			If there are multiple matching configurations changing
+ 			the same attribute, the last one is used.
  
-+static inline void ide_disk_hpa_warn(unsigned long long first_sector,
-+				     unsigned long long last_sector)
++	libata.ignore_hpa=
++			[LIBATA] Ignore HPA limit
++			Format: { "0" | "1" }
++			0 -- keep BIOS limits (default)
++			1 -- ignore limits, using full disk
++
+ 	lmb=debug	[KNL] Enable lmb debug messages.
+ 
+ 	load_ramdisk=	[RAM] List of ramdisks to load from floppy
+Index: b/drivers/ata/libata-core.c
+===================================================================
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1472,6 +1472,16 @@ static int ata_set_max_sectors(struct at
+ 	return 0;
+ }
+ 
++static inline void ata_hpa_warn(unsigned long long first_sector,
++				unsigned long long last_sector)
 +{
-+	printk(KERN_WARNING "\t*** possible compatibility issue:\n"
-+		"\t*** sectors %llu-%llu may be inaccessible\n"
-+		"\t*** if Host Protected Area is used for filesystem data\n"
-+		"\t*** (please refer to \"ignore_hpa\" module parameter)\n",
++	printk(KERN_WARNING "*** possible compatibility issue:\n"
++		"*** sectors %llu-%llu may be inaccessible\n"
++		"*** if Host Protected Area is used for filesystem data\n"
++		"*** (please refer to \"ignore_hpa\" module parameter)\n",
 +		first_sector, last_sector);
 +}
 +
- static void idedisk_check_hpa(ide_drive_t *drive)
- {
- 	unsigned long long capacity, set_max;
-@@ -330,8 +340,10 @@ static void idedisk_check_hpa(ide_drive_
- 			 capacity, sectors_to_MB(capacity),
- 			 set_max, sectors_to_MB(set_max));
+ /**
+  *	ata_hpa_resize		-	Resize a device with an HPA set
+  *	@dev: Device to resize
+@@ -1521,12 +1531,13 @@ static int ata_hpa_resize(struct ata_dev
+ 		if (!print_info || native_sectors == sectors)
+ 			return 0;
  
--	if (ide_ignore_hpa == 0)
-+	if (ide_ignore_hpa == 0) {
-+		ide_disk_hpa_warn(capacity, set_max - 1);
- 		return;
-+	}
- 
- 	set_max = idedisk_set_max_address(drive, set_max, lba48);
- 
+-		if (native_sectors > sectors)
++		if (native_sectors > sectors) {
+ 			ata_dev_printk(dev, KERN_INFO,
+ 				"HPA detected: current %llu, native %llu\n",
+ 				(unsigned long long)sectors,
+ 				(unsigned long long)native_sectors);
+-		else if (native_sectors < sectors)
++			ata_hpa_warn(sectors, native_sectors - 1);
++		} else if (native_sectors < sectors)
+ 			ata_dev_printk(dev, KERN_WARNING,
+ 				"native sectors (%llu) is smaller than "
+ 				"sectors (%llu)\n",
