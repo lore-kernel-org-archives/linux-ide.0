@@ -1,153 +1,105 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes] libata: implement and use HORKAGE_NOSETXFER
-Date: Mon, 25 May 2009 12:10:19 +0900
-Message-ID: <4A1A0C1B.7020801@kernel.org>
-References: <1229894315.6931.17.camel@Thutmosis>	<494EDDBE.3010306@shaw.ca>	<494F65C1.80602@kernel.org>	<1229947998.6045.10.camel@Thutmosis>	<49505500.8080409@kernel.org>	<1230126055.6430.17.camel@Thutmosis>	<495886E7.7050204@kernel.org>	<1230586376.11130.46.camel@Thutmosis>	<1231282276.6376.13.camel@Thutmosis>	<49640CE1.6070808@kernel.org>	<20090107094043.580f5bf7@lxorguk.ukuu.org.uk>	<496483A5.6020105@kernel.org> <20090107105339.289f47a4@lxorguk.ukuu.org.uk> <49648C41.6030002@kernel.org>
+From: yanh <yanh@lemote.com>
+Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
+Date: Mon, 25 May 2009 13:45:39 +0800
+Message-ID: <1243230339.9819.18.camel@localhost.localdomain>
+References: <cover.1242855716.git.wuzhangjin@gmail.com>
+	 <200905222032.55869.bzolnier@gmail.com>
+	 <1243062702.8509.7.camel@localhost.localdomain>
+	 <200905231347.34717.bzolnier@gmail.com>
+Reply-To: yanh@lemote.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090909000900080209000205"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49800 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751335AbZEYDLc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 May 2009 23:11:32 -0400
-In-Reply-To: <49648C41.6030002@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200905231347.34717.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux--ide-momail.e4ward.com-linux--ide-vger.kernel.org-CDD-6w99-4@reply.e4ward.com, Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, peter.klotz@aon.at, linux-ide@vger.kernel.org, m.nov4k@gmail.com
 
-This is a multi-part message in MIME format.
---------------090909000900080209000205
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+=E5=9C=A8 2009-05-23=E5=85=AD=E7=9A=84 13:47 +0200=EF=BC=8CBartlomiej Z=
+olnierkiewicz=E5=86=99=E9=81=93=EF=BC=9A
+> On Saturday 23 May 2009 09:11:42 yanh wrote:
+> > =E5=9C=A8 2009-05-22=E4=BA=94=E7=9A=84 20:32 +0200=EF=BC=8CBartlomi=
+ej Zolnierkiewicz=E5=86=99=E9=81=93=EF=BC=9A
+> > > On Thursday 21 May 2009 00:12:46 wuzhangjin@gmail.com wrote:
+> > > > From: Wu Zhangjin <wuzhangjin@gmail.com>
+> > > >=20
+> > > > This is originally from the to-mips branch from
+> > > > http://dev.lemote.com/code/linux_loongson
+> > >=20
+> > > Sadly, the patch description lacks all the important information.
+> > >=20
+> > > What is the original problem that this fixup tries to address?
+> > >=20
+> > > Is it limited to amd74xx controllers?
+> >=20
+> > In loongson2f yeeloong machines, the ide controller is AMD cs5536, =
+or
+> > say  amd74xx, and the hard drives is Fujistu.=20
+>=20
+> Then it should use the new & shiny :) native cs5536 IDE host driver
+> instead of legacy support in amd74xx...
+>=20
+> > While debuging the hard disk suspned and resume, the ide irq can no=
+t be
+> > cleared. I guess this is a fake interrupt, hence the clear irq acti=
+on
+> > can not be finished.=20
+>=20
+> AFAICS the only change that the fixup would cause for suspend/resume =
+paths
+> is the one in ide_config_drive_speed() which is called during resume =
+to set
+> transfer mode on the drive:
+>=20
+>        tp_ops->write_devctl(hwif, ATA_NIEN | ATA_DEVCTL_OBS);
+>=20
+>         memset(&tf, 0, sizeof(tf));
+>         tf.feature =3D SETFEATURES_XFER;
+>         tf.nsect   =3D speed;
+>=20
+>         tp_ops->tf_load(drive, &tf, IDE_VALID_FEATURE | IDE_VALID_NSE=
+CT);
+>=20
+>         tp_ops->exec_command(hwif, ATA_CMD_SET_FEATURES);
+> --->
+>         if (drive->quirk_list =3D=3D 2)
+>                 tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
 
-Reviving an old thread and quoting whole body for new reporter.
+> --->
+>         error =3D __ide_wait_stat(drive, drive->ready_stat,
+>                                 ATA_BUSY | ATA_DRQ | ATA_ERR,
+>                                 WAIT_CMD, &stat);
+>=20
+> Please tell me I if understand the issue correctly: if the above quir=
+k is
+> not executed we end up with spurious IRQs, right?
+right.
+>=20
+> > This patch is to fix this issue. Maybe other controller and drives =
+also
+> > have this issue, but I am not sure.
+>=20
+> Probably moving it to a generic quirk_drives list later will be usefu=
+l...
+>=20
+> Anyway this fixup needs to be ported to / verified with cs5536 first.
+the cs5536 pata driver have some geode platform dependent codes. We can
+just ignore it, but the performance is poor(using hdparm to test it),
+which only get 22+ MB/s. we find it only use udma2. However if using
+amd74xx driver, it can set udma5, and the speed can reach to 50+ MB/s.=20
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->>>> Sorry you can't just blindly do this because some of the controllers snoop
->>>> the SETXFER command to set their timings and whether they expect DMA. Also
->>>> we've no idea if this is a bug in a specific firmware revision, a quirky
->>>> pata/sata bridge or a timing problem of some sort.
->>> I think it'll generally be okay for SATA unless it's bridged over to
->>> PATA controller.  Any other ideas?
->> We seem to have one report, from one user, with one configuration, on one
->> controller, using one firmware set.
-> 
-> There are two more reports linked from the thread.
-> 
->   http://ubuntuforums.org/showthread.php?t=986871
->   https://bugs.launchpad.net/ubuntu/+source/linux/+bug/299865
-> 
-> And all of them are showing the same problem.  This being a slim SATA
-> drive for a laptop, I don't really expect to see the drive in varied
-> configurations.  The problem might as well be limited to certain OEM
-> drive(s).
-> 
->> That to me isn't meaningful evidence of anything that needs a workaround,
->> beyond maybe doing what old IDE does and if a setxfer times out
->> continuing in hope.
-> 
-> So, as far as the validity of the report goes, I think it's at
-> reasonable level.  Add to that my general trigger happiness toward
-> quirks and the machine is a VAIO and to me quirking it doesn't seem
-> too careless.
-> 
->> (We should of course then re-read the identify pages and check the mode
->> in use)
-> 
-> Of course, whether the workaround is proper is a completely separate
-> issue but unless other devices with the same problem creep up and the
-> device is happy with the quirk, I don't really think we should modify
-> the default configuration sequence for devices like this.
-> 
-> That said, Moritz, can you please post the output of "hdparm -I" with
-> and without the quirk applied?  And can you please use a preoper mail
-> address?
+we will test whether this driver is working well without this patch.
 
-Martin Novak (cc'd) is reporting the same problem.  I really think
-doing nothing is the worst choice here.  Given the rarity of the
-issue, I don't think we need worry too much about long term impact of
-the quirk.
+Anyway, thanks your advice.
+>=20
+> Thanks.
+> Bart
+>=20
 
-Anyways, Martin, can you please post what I asked Moritz - the output
-of "hdparm -I" with and without the quirk applied?  Quirk patch is
-attached.
-
-Thanks.
-
--- 
-tejun
-
---------------090909000900080209000205
-Content-Type: text/x-patch;
- name="horkage-notsetxfer.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="horkage-notsetxfer.patch"
-
-libata: implement and use HORKAGE_NOSETXFER
-
-PIONEER DVD-RW DVRTD08 times out SETXFER if no media is present.  The
-device is SATA and simply skipping SETXFER works around the problem.
-Implement ATA_HORKAGE_NOSETXFER and apply it to the device.
-
-Reported by Moritz Rigler in the following thread.
-
-  http://thread.gmane.org/gmane.linux.ide/36790
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-core.c |   10 ++++++++--
- include/linux/libata.h    |    1 +
- 2 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c924230..5dcdcb4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3390,14 +3390,17 @@ static int ata_dev_set_mode(struct ata_device *dev)
- 	struct ata_eh_context *ehc = &dev->link->eh_context;
- 	const char *dev_err_whine = "";
- 	int ign_dev_err = 0;
--	unsigned int err_mask;
-+	unsigned int err_mask = 0;
- 	int rc;
- 
- 	dev->flags &= ~ATA_DFLAG_PIO;
- 	if (dev->xfer_shift == ATA_SHIFT_PIO)
- 		dev->flags |= ATA_DFLAG_PIO;
- 
--	err_mask = ata_dev_set_xfermode(dev);
-+	if (!(dev->horkage & ATA_HORKAGE_NOSETXFER))
-+		err_mask = ata_dev_set_xfermode(dev);
-+	else
-+		dev_err_whine = " (SET_XFERMODE skipped)";
- 
- 	if (err_mask & ~AC_ERR_DEV)
- 		goto fail;
-@@ -4292,6 +4295,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	/* Devices which aren't very happy with higher link speeds */
- 	{ "WD My Book",			NULL,	ATA_HORKAGE_1_5_GBPS, },
- 
-+	/* Devices which choke on SETXFER.  Presumably SATA only. */
-+	{ "PIONEER DVD-RW  DVRTD08",	"1.00",	ATA_HORKAGE_NOSETXFER },
-+
- 	/* End Marker */
- 	{ }
- };
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3d501db..2b641af 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -385,6 +385,7 @@ enum {
- 						    not multiple of 16 bytes */
- 	ATA_HORKAGE_FIRMWARE_WARN = (1 << 12),	/* firmware update warning */
- 	ATA_HORKAGE_1_5_GBPS	= (1 << 13),	/* force 1.5 Gbps */
-+	ATA_HORKAGE_NOSETXFER	= (1 << 14),
- 
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
-
---------------090909000900080209000205--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
