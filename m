@@ -1,40 +1,58 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: add warning about possible HPA compatibility
- issue
-Date: Mon, 25 May 2009 23:38:14 +0100
-Message-ID: <20090525233814.4cb8b1c2@lxorguk.ukuu.org.uk>
-References: <200905252348.08970.bzolnier@gmail.com>
-	<20090525232014.7b6dd7bd@lxorguk.ukuu.org.uk>
-	<200905260036.17718.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: add warning about possible HPA compatibility issue
+Date: Tue, 26 May 2009 01:15:00 +0200
+Message-ID: <200905260115.00794.bzolnier@gmail.com>
+References: <200905252348.08970.bzolnier@gmail.com> <200905260036.17718.bzolnier@gmail.com> <20090525233814.4cb8b1c2@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55188 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751715AbZEYWi2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 18:38:28 -0400
-In-Reply-To: <200905260036.17718.bzolnier@gmail.com>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:35323 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151AbZEYXKg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 19:10:36 -0400
+In-Reply-To: <20090525233814.4cb8b1c2@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Jacob <fun2program8@yahoo.com>, Christopher Hogan <chris.c.hogan@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Jacob <fun2program8@yahoo.com>, Christopher Hogan <chris.c.hogan@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-> > NAK - this is extremely misleading and will just randomly terrify users,
-> > who may then set the paramater and corrupt things like BIOS save areas.
+On Tuesday 26 May 2009 00:38:14 Alan Cox wrote:
+> > > NAK - this is extremely misleading and will just randomly terrify users,
+> > > who may then set the paramater and corrupt things like BIOS save areas.
+> > 
+> > Please propose better description.
 > 
-> Please propose better description.
+> As was discussed before
+> 
+> Tejun has a patch in the queue which exposes the HPA and real sizes to
+> the OS
 
-As was discussed before
+In queue for 2.6.30?
 
-Tejun has a patch in the queue which exposes the HPA and real sizes to
-the OS
+> Libata can support revalidating a disc
+> 
+> Once the HPA/Real size data is there the tools can be tuned for this and
+> a sysfs node added to switch hpa on/off per disc. At that point this can
+> be done by the user space intelligently.
 
-Libata can support revalidating a disc
+Unless you happen to have partition with tools in HPA area etc.
 
-Once the HPA/Real size data is there the tools can be tuned for this and
-a sysfs node added to switch hpa on/off per disc. At that point this can
-be done by the user space intelligently.
+Also care to post link to the existing user-space tools with added HPA
+support and documentation how to use them so I can start pointing people
+reporting problems in this direction?
 
-The fact this is a user parameter is itself a problem.
+> The fact this is a user parameter is itself a problem.
 
+Yes.  It is a problem but we can't reverse the history.
+
+I fully agree w.r.t to proper handling of HPA but we need "something" in
+the meantime because it is *real* issue resulting in *real* users filling
+*real* bug-reports (which unfortunately always get assigned to me first
+so I'm needlessly wasting my time on them).
+
+IOW Please stop downplaying bug #13365 which this patch tries to alleviate.
+
+I'm adding Andrew to cc:...
