@@ -1,68 +1,54 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [PATCH 2/3] ide: preserve HPA by default
-Date: Tue, 26 May 2009 01:10:08 +0200
-Message-ID: <200905260110.09496.elendil@planet.nl>
-References: <200905252344.57797.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: add warning about possible HPA compatibility
+ issue
+Date: Tue, 26 May 2009 00:16:12 +0100
+Message-ID: <20090526001612.52cd484e@lxorguk.ukuu.org.uk>
+References: <200905252348.08970.bzolnier@gmail.com>
+	<200905260036.17718.bzolnier@gmail.com>
+	<20090525233814.4cb8b1c2@lxorguk.ukuu.org.uk>
+	<200905260115.00794.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755153AbZEYXOL@vger.kernel.org>
-In-reply-To: <200905252344.57797.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33775 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755385AbZEYXPm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 19:15:42 -0400
+In-Reply-To: <200905260115.00794.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Jacob <fun2program8@yahoo.com>, Christopher Hogan <chris.c.hogan@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> --- a/drivers/ide/Kconfig
-> +++ b/drivers/ide/Kconfig
-> @@ -91,6 +91,28 @@ config BLK_DEV_IDE_SATA
-[...]
-> +config IDE_PRESERVE_HPA
-> +       bool "Preserve Host Protected Area (please read help)"
-> +       default y
-> +       help
-> +         From the majority of modern users perspectives ignoring the HPA
-> +         breaks vendor RAID formats, GPT partitions or risks corrupting
-> +         firmware.
+> > Tejun has a patch in the queue which exposes the HPA and real sizes to
+> > the OS
+> 
+> In queue for 2.6.30?
 
-First sentence would IMO read better as:
-"From the perspective of most users of recent systems, ignoring the
- HPA can break ..."
+2.6.30 merge window is closed, as you well kow
 
-Maybe add "risks overwriting vendor system recovery tools"?
+> I fully agree w.r.t to proper handling of HPA but we need "something" in
+> the meantime because it is *real* issue resulting in *real* users filling
+> *real* bug-reports (which unfortunately always get assigned to me first
+> so I'm needlessly wasting my time on them).
 
-> +         Unfortunately the original (kernel versions < 2.6.30) behavior
-> +         (ignoring HPA, using full disk capacity) was introduced at the
-> +         time when the main HPA use was with the jumper (or software)
-> +         to make the drive look small enough for the BIOS to allow boot
-> +         with big drives.
+The merge window is closed. This is a 2.6.31 discussion and randomly
+adding bogus printks to the kernel won't help because
 
-"... the main use of HPA was to make the drive look small enough for the
- BIOS to allow the system to boot with large capacity drives."
+- Users have no idea what they mean
+- Distros boot with "quiet" so users don't see them anyway
 
-I've dropped the "with the jumper (or software)" as it's confusing and
-IMHO does not really add anything for the user (but see suggestion below).
+It would be good to get Tejun's patch upstream and also runtime HPA
+switching.
 
-> +         To allow the maximum compatibility with the existing setups
-> +         (using HPA and partitioned with HPA disabled) the default HPA
-> +         behavior can be also later adjusted using "ignore_hpa" module
-> +         parameter (i.e. "ide_core.ignore_hpa=1").
+> IOW Please stop downplaying bug #13365 which this patch tries to alleviate.
 
-"... can also be adjusted later using the "ignore_hpa" ..."
+I'm still not convinced 13365 is an HPA problem entirely - but there are
+certainly other HPA confusions here and there.
 
-Maybe add a para here that explains what "Preserve Host Protected Area"
-actually does, something like:
-"If you say Y, the driver will respect the Host Protected Area if one is
- defined in the BIOS or (for older drives) through a jumper setting on
- the drive."
+> I'm adding Andrew to cc:...
 
-> +         Say Y unless you have such setup and for some reason cannot
-> +         use "ignore_hpa" module parameter.
+Hello Andrew ;)
 
-"... use the "ignore_hpa" module parameter."
-
-Cheers,
-FJP
+Alan
