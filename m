@@ -1,55 +1,50 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [PATCH 1/3] ide: add "ignore_hpa" module parameter
-Date: Tue, 26 May 2009 01:06:12 +0200
-Message-ID: <200905260106.13705.elendil@planet.nl>
-References: <200905252344.11826.bzolnier@gmail.com> <200905260027.39330.elendil@planet.nl> <20090525233643.0a47e950@lxorguk.ukuu.org.uk>
+From: yanh <yanh@lemote.com>
+Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
+Date: Tue, 26 May 2009 09:21:30 +0800
+Message-ID: <1243300890.9819.40.camel@localhost.localdomain>
+References: <cover.1242855716.git.wuzhangjin@gmail.com>
+	 <1243230339.9819.18.camel@localhost.localdomain>
+	 <4A1A4A54.6090401@lemote.com> <200905251656.25357.bzolnier@gmail.com>
+	 <4A1AEBF7.7040402@ru.mvista.com>  <yq1tz39dmmn.fsf@sermon.lab.mkp.net>
+Reply-To: yanh@lemote.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:58957 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752778AbZEYX5s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 May 2009 19:57:48 -0400
-In-Reply-To: <20090525233643.0a47e950@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <yq1tz39dmmn.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?gb2312?Q?=BA=FA=BA=E9=B1=F8?= <huhb@lemote.com>, wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 26 May 2009, Alan Cox wrote:
-> > It's also not obvious (at least not to a dumb user like me) that
-> > "ignore HPA limit" is equivalent to "preserving the Host Protected
-> > Area" as the commit commit says.
->
-> It isn't - its the exact reverse.
+=E5=9C=A8 2009-05-25=E4=B8=80=E7=9A=84 15:10 -0400=EF=BC=8CMartin K. Pe=
+tersen=E5=86=99=E9=81=93=EF=BC=9A
+> >>>>> "Sergei" =3D=3D Sergei Shtylyov <sshtylyov@ru.mvista.com> write=
+s:
+>=20
+> >> Could you please explain the issue with platform specific code a b=
+it
+> >> more?
+>=20
+> >> Is it related to a cable detection by any chance?
+>=20
+> Sergei>    I guess it's rdmsr()/wrmsr()...
+currently, we just commented out the rdmsr/wrmsr.
+and we use pci VSA to access it.=20
+>=20
+> Those are only used when the driver is explicitly loaded with
+> use_msr=3D1.  The default is to use PCI config space/VSA.
+>=20
+> In any case I have yet to see a CS5536 system whose BIOS sets the cab=
+le
+> detection bit.  If that's the problem I guess we could add a quirk fl=
+ag
+> to override the (lack of) BIOS setting.
+>=20
+This may be the cause that udma5 cannot be set.
 
-Right.
-
-> Ignoring the HPA limit tells the kernel to ignore the system BIOS and
-> firmware set defaults and to stomp the whole disk regardless. On a
-> modern system thats almost always a really bad idea. Unfortunately on
-> ancient boxes with disk jumpers set to lie about the disk size (32GB
-> clipping etc) its the right thing.
->
-> Having the same parameter in both stacks seems a good idea but really
-> we need Tejun's patch exposing the values and then to propogate the hpa
-> ignore into sysfs and trigger a revalidate of the disk if you change
-> it. Libata has all the framework for that ready just needing the final
-> bits. I don't see anything problematic in old IDE also having that
-> interface.
-
-That also sounds as if it would better protect (or at least inform) 
-existing users who have file systems on disks where the HPA is currently 
-being ignored.
-
-Seems to me this whole issue would also be worth an LWN (BCCed) article to 
-raise awareness, explain the issue, maybe give practical info how to test 
-whether you're affected, and maybe add some advice to distributions how 
-to handle it. Seems to me like it's something that should be mentioned in 
-distribution release notes.
-
-Cheers,
-FJP
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
