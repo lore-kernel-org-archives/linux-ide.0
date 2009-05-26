@@ -1,78 +1,34 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] asm-generic: add a dma-mapping.h file
-Date: Tue, 26 May 2009 13:36:37 +0900
-Message-ID: <20090526122423S.fujita.tomonori@lab.ntt.co.jp>
-References: <200905221607.34025.arnd@arndb.de>
-	<20090522233846I.fujita.tomonori@lab.ntt.co.jp>
-	<200905221705.54426.arnd@arndb.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
+Date: Tue, 26 May 2009 08:56:05 +0100
+Message-ID: <20090526085605.014d0087@lxorguk.ukuu.org.uk>
+References: <cover.1242855716.git.wuzhangjin@gmail.com>
+	<1243230339.9819.18.camel@localhost.localdomain>
+	<4A1A4A54.6090401@lemote.com>
+	<200905251656.25357.bzolnier@gmail.com>
+	<4A1AEBF7.7040402@ru.mvista.com>
+	<yq1tz39dmmn.fsf@sermon.lab.mkp.net>
+	<1243300890.9819.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <200905221705.54426.arnd@arndb.de>
-Sender: linux-m68k-owner@vger.kernel.org
-To: arnd@arndb.de
-Cc: fujita.tomonori@lab.ntt.co.jp, jgarzik@pobox.com, hancockrwd@gmail.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, flar@allandria.com, schmitz@biophys.uni-duesseldorf.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, takata@linux-m32r.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, ysato@users.sourceforge.jp, grundler@google.com
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1243300890.9819.40.camel@localhost.localdomain>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: yanh@lemote.com
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?UTF-8?B?6IOh5rSq5YW1?= <huhb@lemote.com>, wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, 22 May 2009 17:05:53 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
-
-> On Friday 22 May 2009, FUJITA Tomonori wrote:
-> > I'm not sure. And only mips internally uses CONFIG_DMA_COHERENT.
+> > In any case I have yet to see a CS5536 system whose BIOS sets the cable
+> > detection bit.  If that's the problem I guess we could add a quirk flag
+> > to override the (lack of) BIOS setting.
 > > 
-> > The reason why many architectures need architecture-specific
-> > alloc_coherent() is not about coherent or not.
-> > 
-> > I like a new helper header file having only generic functions without
-> > any ifdef.
-> 
-> Ok, fair enough. Fixing dma_alloc_coherent to handle
-> coherent_dma_mask and debug_dma correctly would also
-> make it even bigger, and it was already doing more than
-> you'd want from a commonly used inline function.
-> It may be useful to put it into kernel/dma-coherent.c
-> under an #ifdef, but I'll leave this one alone for now.
-
-Adding #ifdef into kernel/dma-coherent.c is ugly.
+> This may be the cause that udma5 cannot be set.
 
 
-> I'll leave dma_alloc_coherent and dma_free_coherent
-> as extern declarations then, and leave out the
-> simple dma_coherent_dev() and dma_cache_sync() that
-> all architectures would need to override.
+If the system doesn't have working BIOS cable detect as per the
+documentation for the chip then just return the "unknown" cable type and
+libata will do device side cable detect.
 
-Right, needs to leave the functions that architectures need to
-override.
-
-
-> dma_get_cache_alignment() is still less generic than
-> the other functions, as this is still architecture
-> specific. Should I leave that out as well then?
-
-Yes, I think that only adding generic functions is a better
-approach. Overriding with #ifdef is really ugly.
-
-
-> One more idea I had was to rename all the functions in
-> this file from dma_* to dma_linear_*. This would mean
-> that all architectures using it would still need to
-> do something like #define dma_map_sg dma_linear_map_sg
-> for each function they want to use but can easily chose
-> to provide their own ones for those they need different.
-> 
-> It might also help architectures that work with dma_ops,
-> which could then define their own
-> struct dma_ops dma_ops_linear = {
-> 	.map_single = dma_linear_map_single,
-> 	.map_sg = dma_linear_map_sg,
-> 	...
-> };
-
-To me, looks like this just makes things complicated needlessly. But
-I'm not in a position to ACK or NACK this. it's better to ask
-architecture maintainers.
-
-
-> Would you prefer me to do it this way, or just keep the
-> standard function names as in the current patch?
+Alan
