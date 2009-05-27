@@ -1,68 +1,42 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 2.6.29] ide-tape: remove back-to-back REQUEST_SENSE
-	detection
-Date: Wed, 27 May 2009 09:20:04 +0200
-Message-ID: <20090527072004.GA8127@liondog.tnic>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Restore SB600 SATA controller 64 bit DMA
+Date: Wed, 27 May 2009 16:22:20 +0900
+Message-ID: <4A1CEA2C.10508@kernel.org>
+References: <1243407883.3220.10.camel@brienza-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:56369 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761409AbZE0HUG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 May 2009 03:20:06 -0400
-Received: by fxm12 with SMTP id 12so2602985fxm.37
-        for <linux-ide@vger.kernel.org>; Wed, 27 May 2009 00:20:07 -0700 (PDT)
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:45248 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761961AbZE0HWr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 May 2009 03:22:47 -0400
+In-Reply-To: <1243407883.3220.10.camel@brienza-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stable@kernel.org
-Cc: tj@kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: shane.huang@amd.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi,
+Shane Huang wrote:
+> Community reported one SB600 SATA issue(BZ #9412), which led to 64 bit
+> DMA disablement for all SB600 revisions by driver maintainers with
+> commits c7a42156d99bcea7f8173ba7a6034bbaa2ecb77c and
+> 4cde32fc4b32e96a99063af3183acdfd54c563f0.
+> 
+> But the root cause is ASUS M2A-VM system BIOS bug in old revisions
+> like 0901, while forcing into 32bit DMA happens to work as workaround.
+> Now it's time to withdraw 4cde32fc4b32e96a99063af3183acdfd54c563f0
+> so as to restore the SB600 SATA 64bit DMA capability.
+> This patch is also adding the workaround for M2A-VM old BIOS revisions,
+> but users are suggested to upgrade their system BIOS to the latest one
+> if they meet this issue.
+> 
+> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> Cc: Tejun Heo <tj@kernel.org>
 
-please include, commit id upstream:
+It would be nicer to mention the export of dmi_get_year() but..
 
-1e75540ec5202cae63cd238c86bd880e3d496546
-
----
-From: Tejun Heo <tj@kernel.org>
-Date: Wed, 27 May 2009 09:12:05 +0200
-Subject: [PATCH] ide-tape: remove back-to-back REQUEST_SENSE detection
-
-Impact: fix an oops which always triggers
-
-ide_tape_issue_pc() assumed drive->pc isn't NULL on invocation when
-checking for back-to-back request sense issues but drive->pc can be
-NULL and even when it's not NULL, it's not safe to dereference it once
-the previous command is complete because pc could have been freed or
-was on stack.  Kill back-to-back REQUEST_SENSE detection.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-tape.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 4e6181c..af7860c 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -654,12 +654,6 @@ static ide_startstop_t idetape_issue_pc(ide_drive_t *drive,
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 
--	if (drive->pc->c[0] == REQUEST_SENSE &&
--	    pc->c[0] == REQUEST_SENSE) {
--		printk(KERN_ERR "ide-tape: possible ide-tape.c bug - "
--			"Two request sense in serial were issued\n");
--	}
--
- 	if (tape->failed_pc == NULL && pc->c[0] != REQUEST_SENSE)
- 		tape->failed_pc = pc;
- 
--- 
-1.6.3.1
+Acked-by: Tejun Heo <tj@kernel.org>
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
