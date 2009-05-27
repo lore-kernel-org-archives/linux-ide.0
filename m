@@ -1,40 +1,38 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 2.6.29] ide-tape: remove back-to-back REQUEST_SENSE
-	detection
-Date: Wed, 27 May 2009 10:03:45 +0200
-Message-ID: <20090527080345.GA9162@liondog.tnic>
-References: <20090527072004.GA8127@liondog.tnic> <200905270940.40610.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/3] ide: add "ignore_hpa" module parameter
+Date: Wed, 27 May 2009 10:49:13 +0100
+Message-ID: <20090527104913.644e6970@lxorguk.ukuu.org.uk>
+References: <200905252344.11826.bzolnier@gmail.com>
+	<200905260106.13705.elendil@planet.nl>
+	<200905261423.40117.bzolnier@gmail.com>
+	<200905261453.22428.elendil@planet.nl>
+	<20090526140132.19e8bc13@lxorguk.ukuu.org.uk>
+	<20090526180821.GB13276@ub>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:50146 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688AbZE0IDr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 May 2009 04:03:47 -0400
-Received: by bwz22 with SMTP id 22so4384824bwz.37
-        for <linux-ide@vger.kernel.org>; Wed, 27 May 2009 01:03:48 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200905270940.40610.bzolnier@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53272 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759153AbZE0JsU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 May 2009 05:48:20 -0400
+In-Reply-To: <20090526180821.GB13276@ub>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: stable@kernel.org, tj@kernel.org, linux-ide@vger.kernel.org
+To: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+Cc: Frans Pop <elendil@planet.nl>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, May 27, 2009 at 09:40:40AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 27 May 2009 09:20:04 Borislav Petkov wrote:
-> > Hi,
-> > 
-> > please include, commit id upstream:
-> > 
-> > 1e75540ec5202cae63cd238c86bd880e3d496546
-> 
-> This is for-next branch..
-> 
-> The right commit is 36999a5af1b6c5379e59f0ddf434db08d03c19e4 (because it
-> was later cherry picked into for-linus) and has my S-o-B line.
+> Probably I am missing some context, but the above seems to be
+> a false statement. The PC partition format does give you
+> start and size, and no filesystem knowledge is needed to
+> find out where a partition ends.
 
-Thanks, had the wrong commit id noted here.
+I am indeed in error. The PC DOS format is indeed fine. I was
+remembering from the magneto-opticals and the problem there was you
+couldn't tell the size because there were two conflicting standards for
+partition encoding.
 
--- 
-Regards/Gruss,
-    Boris.
+So that means a distro can detect some of the cases which is even better
+and makes a sysfs interface even more useful.
+
+Alan
