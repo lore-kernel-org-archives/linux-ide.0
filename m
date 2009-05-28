@@ -1,60 +1,48 @@
-From: =?utf-8?B?2LHYp9iq2Kgg2KfZiNmG2YTYp9mK2YY=?= <news@ratebonline.net>
-Subject: =?utf-8?B?2KfZg9iz2Kgg2K/YrtmEINmK2LXZhCDYpdmE2Ykg2KPZhNmBINiv2YjZhNin?=  =?utf-8?B?2LEg2LTZh9ix2YrYpw==?=
-Date: Thu, 28 May 2009 03:58:53 -0400
-Message-ID: <551171ef0217f13cb5409a9801dae580@www.ratebonline.net>
-Reply-To: =?utf-8?B?2LHYp9iq2Kgg2KfZiNmG2YTYp9mK2YY=?=
-	  <news@ratebonline.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] New: kernel crash SONY DVD-ROM with cd
+Date: Thu, 28 May 2009 16:54:38 GMT
+Message-ID: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host.jormartns11.com ([67.227.197.128]:46081 "EHLO
-	host.jormartns11.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755545AbZE1NEC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 May 2009 09:04:02 -0400
-Received: from nobody by host.jormartns11.com with local (Exim 4.69)
-	(envelope-from <news@ratebonline.net>)
-	id 1M9aVp-0006NW-AM
-	for linux-ide@vger.kernel.org; Thu, 28 May 2009 03:58:53 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:40987 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753421AbZE1Qyg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 May 2009 12:54:36 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4SGscuj001640
+	for <linux-ide@vger.kernel.org>; Thu, 28 May 2009 16:54:38 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQrZh9mEINiq2KjYrdirINi52YYg2YHYsdi12Kkg2LnZhdmEINit2YLZ
-itmC2YrYqdifCtmH2YQg2KrYqNit2Ksg2LnZhiDZhdi12K/YsSDYr9iu2YQg2YrYr9ixINi52YTZ
-itmDINin2YTYp9mBINin2YTYr9mI2YTYp9ix2KfYqtifCtmH2YQg2KrYsdmK2K8g2KfZhNi52YXZ
-hCDZiNin2YbYqiDYqNin2YTZhdmG2LLZhCDYnwrYp9iw2Kcg2YPZhtiqINmD2LDZhNmDINmB2LPY
-o9iv2YTZgyDYudmE2Ykg2YXZiNmC2Lkg2KfZhtinINi02K7YtdmK2Kcg2KfYrdmC2YIg2YXZhiDZ
-iNix2KfYodmHINi02YfYsdmK2Kcg2YTYpyDZitmC2YQg2LnZhiA1MDAkINiv2YjZhNin2LEuLi4u
-LgoKCtmF2YjZgti5INix2KfYqtioINin2YjZhtmE2KfZitmGINmH2Ygg2K/ZhNmK2YTZgyDYp9mE
-2LDZiiDZhNinINiq2K3Yqtin2Kwg2YTYutmK2LHZhyDZhNiq2K3ZgtmK2YIg2KfZhNir2LHZiNip
-INmF2YYg2K7ZhNin2YQg2KfZhNin2YbYqtix2YbYqiDZg9mECtmK2YjZhSDZhNiv2Ykg2YfYsNin
-INin2YTZhdmI2YLYuSDZhdmI2KfZgti5INis2K/Zitiv2Kkg2YjYt9ix2YIg2KzYr9mK2K/YqSDZ
-hNiq2K3ZgtmK2YIg2KfZhNix2KjYrSDZhdmGINiu2YTYp9mEINin2YTYp9mG2KrYsdmG2KogLCDY
-p9mGINmF2YjZgti5Ctix2KfYqtioINin2YjZhtmE2KfZitmGINmF2YjZgti5INmK2YfYqtmFINio
-2YXYtdiv2KfZgtmK2Kkg2KfZhNmF2YjYp9mC2Lkg2KfZhNiq2Yog2YrYt9ix2K3Zh9inINiv2KfY
-rtmEINin2YTZhdmI2YLYuSAsCgrZhdmI2YLYuSDYsdin2KrYqCDYp9mI2YbZhNin2YrZhiDZhdmI
-2YLYuSDZitiq2YrYrSDZhNmDINin2YTYqti52LHZgSDYudmE2Ykg2LfYsdmCINin2YTYsdio2K0g
-2YXZhiDYp9mE2KfZhtiq2LHZhtiqINmI2LfYsdmCINin2YTZg9iz2Kgg2YXZhtmHCtmI2KfZhtiq
-INiq2LnZhdmEINmF2YYg2KfZhNmF2YbYstmEICwg2YjZitmH2KrZhSDYp9mE2YXZiNmC2Lkg2KjY
-p9mE2LfYsdmCINin2YTZhdis2KfZhtmK2Kkg2YTZhNix2KjYrSDYp9mD2KvYsSDZhdmGINin2Yog
-2LTZitimIC4K2LXYr9mC2YjZhtmKINmK2Kcg2KfYrtmI2KfZhtmKINmE2Kcg2KrYrtmE2YjYpyDZ
-iNmC2KrZg9mFINi52YTZiSDYp9mE2KfZhtiq2LHZhtiqICDYqNio2YTYp9i0Li4uINmF2YYg2K7Z
-hNin2YQg2YfYsNinINin2YTZhdmI2YLYuSDZiNmC2KrZgyDYudmE2YkK2KfZhNmG2Kog2YXYr9mB
-2YjYuSDYp9mE2KfYrNixLgrZitmE2Kcg2YrYpyDYp9iu2YjYp9mGINiz2KfYsdi52Ygg2KjYp9mE
-2KrYs9is2YrZhCDYqNmH2LDYpyDYp9mE2YXZiNmC2Lkg2YjZhNinINiq2YbYs9mIINiq2K/YudmI
-2YTZii4uLgoK2YLZhSDYqNiy2YrYp9ix2Kkg2KfZhNix2KfYqNi3INij2K/Zhtin2Ycg2YTZhNiq
-2LPYrNmK2YQg2KjYp9mE2YXZiNmC2Lkg2LnZhiDYt9ix2YrZgiDZhtiz2K4g2KfZhNix2KfYqNi3
-INmB2Yog2YXYqti12YHYrSDYp9mE2KfZhtiq2LHZhtiqCgpodHRwOi8vd3d3LnJhdGVib25saW5l
-Lm5ldAoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tCiAKQ2hhbmdlIHlvdXIgc3Vic2NyaXB0aW9uICgKaHR0cDov
-L3d3dy5yYXRlYm9ubGluZS5uZXQvaW5kZXgucGhwP29wdGlvbj1jb21fYWNham9vbSZJdGVtaWQ9
-OTk5JmFjdD1jaGFuZ2Umc3Vic2NyaWJlcj0zNzkwNzEmY2xlPTU4OWM0NjI4ZDAwNTdmZGIwZmM2
-ZWY2YzkxMGE4ZGUzJmxpc3RpZD04OCApClVuc3Vic2NyaWJlICgKaHR0cDovL3d3dy5yYXRlYm9u
-bGluZS5uZXQvaW5kZXgucGhwP29wdGlvbj1jb21fYWNham9vbSZJdGVtaWQ9OTk5JmFjdD11bnN1
-YnNjcmliZSZzdWJzY3JpYmVyPTM3OTA3MSZjbGU9NTg5YzQ2MjhkMDA1N2ZkYjBmYzZlZjZjOTEw
-YThkZTMmbGlzdGlkPTg4ICkKCtmE2YLYryDYp9iz2KrZhNmF2Kog2YfYsNmHINin2YTYsdiz2KfZ
-hNipINmE2KPZhtmDINin2LTYqtix2YPYqiDYqNmF2YjZgti5INix2KfYqtioINin2YjZhtmE2KfZ
-itmGICggaHR0cDovL3d3dy5yYXRlYm9ubGluZS5uZXQgKSAK
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
+           Summary: kernel crash SONY DVD-ROM with cd
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30-rc1
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: bruinjm@xs4all.nl
+                CC: rjw@sisk.pl
+        Regression: Yes
+
+
+Created an attachment (id=21602)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=21602)
+dump of crash at boottime
+
+After placing a cd in the dvdplayer the kernel crashes. Both at boot as at
+runtime.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
