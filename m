@@ -1,33 +1,48 @@
-From: "Trevor Hemsley" <trevor.hemsley@ntlworld.com>
-Subject: Re: Netcell SyncRaid problem post 2.6.27
-Date: Fri, 29 May 2009 23:44:54 +0100 (BST)
-Message-ID: <20090529224636.RUHI22934.aamtaout04-winn.ispmail.ntl.com@trevor2.dsl.pipex.com>
-References: <200905292113.16487.bzolnier@gmail.com>
-Reply-To: "Trevor Hemsley" <trevor.hemsley@ntlworld.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH block#for-2.6.31] block: fix an oops on BLKPREP_KILL
+Date: Sat, 30 May 2009 06:41:37 +0200
+Message-ID: <20090530044137.GM11363@kernel.dk>
+References: <1243635503.2919.67.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:62648 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753297AbZE2Wqf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 May 2009 18:46:35 -0400
-In-Reply-To: <200905292113.16487.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1243635503.2919.67.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Fri, 29 May 2009 21:13:16 +0200, Bartlomiej Zolnierkiewicz wrote:
+On Fri, May 29 2009, James Bottomley wrote:
+> Doing a bit of torture testing, I ran across a BUG in the block
+> subsystem (at blk-core.c:2048): the test for if the request is queued.
+> 
+> It turns out the trigger was a BLKPREP_KILL coming out of the SCSI prep
+> function.  Currently for BLKPREP_KILL requests, we send them straight
+> into __blk_end_request_all() with an error, but they've never been
+> dequeued, so they trip the bug.  Fix this by starting requests before
+> killing them.
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+> ---
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 8b3b74e..9a0568c 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1789,6 +1789,7 @@ struct request *blk_peek_request(struct request_queue *q)
+>  			break;
+>  		} else if (ret == BLKPREP_KILL) {
+>  			rq->cmd_flags |= REQ_QUIET;
+> +			blk_start_request(rq);
+>  			__blk_end_request_all(rq, -EIO);
+>  		} else {
+>  			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
 
->Please try this patch (it is for 2.6.30-rc7 but also applies to 2.6.29):
-
-Applied, tested, works.
-
-Thanks.
-
+Given how illogical that now looks, I think it could do with a comment.
+I'll add that while applying.
 
 -- 
-Trevor Hemsley, Brighton, UK
-Trevor dot Hemsley at ntlworld dot com
+Jens Axboe
 
