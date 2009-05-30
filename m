@@ -1,69 +1,37 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git pull] IDE fix
-Date: Sat, 30 May 2009 20:24:05 +0200
-Message-ID: <200905302024.05719.bzolnier@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [Bug #13378] kernel/async.c broke pata_legacy.c
+Date: Sat, 30 May 2009 21:37:36 +0200 (CEST)
+Message-ID: <LEcEO2518_I.A.8UD.tIbIKB@chimera>
+References: <4to6E2myxvG.A.muC.aIbIKB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:33612 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529AbZE3STY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 May 2009 14:19:24 -0400
+Received: from ogre.sisk.pl ([217.79.144.158]:46534 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755607AbZE3Wge convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 May 2009 18:36:34 -0400
+In-Reply-To: <4to6E2myxvG.A.muC.aIbIKB@chimera>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, IDE <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mikael Pettersson <mikpe@it.uu.se>, Tejun Heo <tj@kernel.org>
+
+This message has been generated automatically as a part of a report
+of recent regressions.
+
+The following bug entry is on the current list of known regressions
+from 2.6.29.  Please verify if it still should be listed and let me know
+(either way).
 
 
-Fix LBA48 and CACHE FLUSH commands support on Netcell ATA RAID
-(2.6.28 regression).
-
-[ pata_netcell needs a similar change if anyone is interested ]
-
-
-Linus, please pull from 'for-linus' branch of:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git for-linus
-
-to receive the following updates:
-
- drivers/ide/ide-pci-generic.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13378
+Subject		: kernel/async.c broke pata_legacy.c
+Submitter	: Mikael Pettersson <mikpe@it.uu.se>
+Date		: 2009-05-24 16:13 (7 days old)
+References	: http://marc.info/?l=linux-kernel&m=124318186507210&w=4
+Handled-By	: James Bottomley <James.Bottomley@hansenpartnership.com>
+Patch		: http://patchwork.kernel.org/patch/25699/
 
 
-Bartlomiej Zolnierkiewicz (1):
-      ide_pci_generic: add quirk for Netcell ATA RAID
-
-
-diff --git a/drivers/ide/ide-pci-generic.c b/drivers/ide/ide-pci-generic.c
-index 61111fd..39d4e01 100644
---- a/drivers/ide/ide-pci-generic.c
-+++ b/drivers/ide/ide-pci-generic.c
-@@ -33,6 +33,16 @@ static int ide_generic_all;		/* Set to claim all devices */
- module_param_named(all_generic_ide, ide_generic_all, bool, 0444);
- MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE storage controllers.");
- 
-+static void netcell_quirkproc(ide_drive_t *drive)
-+{
-+	/* mark words 85-87 as valid */
-+	drive->id[ATA_ID_CSF_DEFAULT] |= 0x4000;
-+}
-+
-+static const struct ide_port_ops netcell_port_ops = {
-+	.quirkproc		= netcell_quirkproc,
-+};
-+
- #define DECLARE_GENERIC_PCI_DEV(extra_flags) \
- 	{ \
- 		.name		= DRV_NAME, \
-@@ -74,6 +84,7 @@ static const struct ide_port_info generic_chipsets[] __devinitdata = {
- 
- 	{	/* 6: Revolution */
- 		.name		= DRV_NAME,
-+		.port_ops	= &netcell_port_ops,
- 		.host_flags	= IDE_HFLAG_CLEAR_SIMPLEX |
- 				  IDE_HFLAG_TRUST_BIOS_FOR_DMA |
- 				  IDE_HFLAG_OFF_BOARD,
