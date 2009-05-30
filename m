@@ -1,42 +1,69 @@
-From: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: Re: next-20090522: kernel hungs at boot (async, libata/scsi)
-Date: Sat, 30 May 2009 19:24:27 +0400
-Message-ID: <a4423d670905300824qebe16d4r85c9276622b69677@mail.gmail.com>
-References: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
-	 <1243171419.2889.4.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git pull] IDE fix
+Date: Sat, 30 May 2009 20:24:05 +0200
+Message-ID: <200905302024.05719.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:58229 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758943AbZE3PY1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 May 2009 11:24:27 -0400
-In-Reply-To: <1243171419.2889.4.camel@localhost.localdomain>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:33612 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753529AbZE3STY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 May 2009 14:19:24 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-next <linux-next@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-2009/5/24 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> This one's a strange one. =C2=A0It's entangled in the SCSI async conv=
-ersion:
->
-> commit 2c6dd125bace93f54d53f3e908f50db21733cbc9
-> Author: Matthew Wilcox <matthew@wil.cx>
-> Date: =C2=A0 Tue Apr 28 13:35:58 2009 -0600
->
-> =C2=A0 =C2=A0[SCSI] Convert scsi_scan to use generic async mechanism
->
-> I already reverted it for other reasons, so I think reverting it will
-> make your problem go away. =C2=A0However, if your system only has ATA=
- ports
-> and no SCSI ones, it shouldn't have got caught here. =C2=A0The SCSI a=
-sync
-> scan uses a separate run queue, which should be empty and thus it
-> shouldn't be waiting here unless there's a problem inside the async
-> scanning code.
 
-Sorry, I was not able to respond.
+Fix LBA48 and CACHE FLUSH commands support on Netcell ATA RAID
+(2.6.28 regression).
 
-20090529 boots fine.
+[ pata_netcell needs a similar change if anyone is interested ]
+
+
+Linus, please pull from 'for-linus' branch of:
+
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git for-linus
+
+to receive the following updates:
+
+ drivers/ide/ide-pci-generic.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+
+Bartlomiej Zolnierkiewicz (1):
+      ide_pci_generic: add quirk for Netcell ATA RAID
+
+
+diff --git a/drivers/ide/ide-pci-generic.c b/drivers/ide/ide-pci-generic.c
+index 61111fd..39d4e01 100644
+--- a/drivers/ide/ide-pci-generic.c
++++ b/drivers/ide/ide-pci-generic.c
+@@ -33,6 +33,16 @@ static int ide_generic_all;		/* Set to claim all devices */
+ module_param_named(all_generic_ide, ide_generic_all, bool, 0444);
+ MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE storage controllers.");
+ 
++static void netcell_quirkproc(ide_drive_t *drive)
++{
++	/* mark words 85-87 as valid */
++	drive->id[ATA_ID_CSF_DEFAULT] |= 0x4000;
++}
++
++static const struct ide_port_ops netcell_port_ops = {
++	.quirkproc		= netcell_quirkproc,
++};
++
+ #define DECLARE_GENERIC_PCI_DEV(extra_flags) \
+ 	{ \
+ 		.name		= DRV_NAME, \
+@@ -74,6 +84,7 @@ static const struct ide_port_info generic_chipsets[] __devinitdata = {
+ 
+ 	{	/* 6: Revolution */
+ 		.name		= DRV_NAME,
++		.port_ops	= &netcell_port_ops,
+ 		.host_flags	= IDE_HFLAG_CLEAR_SIMPLEX |
+ 				  IDE_HFLAG_TRUST_BIOS_FOR_DMA |
+ 				  IDE_HFLAG_OFF_BOARD,
