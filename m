@@ -1,48 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Restore SB600 SATA controller 64 bit DMA
-Date: Sun, 31 May 2009 11:00:35 +0900
-Message-ID: <4A21E4C3.9050306@kernel.org>
-References: <1243407883.3220.10.camel@brienza-desktop> <4A1CEA2C.10508@kernel.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH block#for-2.6.31] block: fix an oops on BLKPREP_KILL
+Date: Sun, 31 May 2009 08:11:39 +0200
+Message-ID: <20090531061139.GS11363@kernel.dk>
+References: <1243635503.2919.67.camel@localhost.localdomain> <20090530044137.GM11363@kernel.dk> <1243693384.5223.7.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40337 "EHLO hera.kernel.org"
+Received: from brick.kernel.dk ([93.163.65.50]:50855 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751409AbZEaB7X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 May 2009 21:59:23 -0400
-In-Reply-To: <4A1CEA2C.10508@kernel.org>
+	id S1751190AbZEaGLi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 31 May 2009 02:11:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1243693384.5223.7.camel@mulgrave.int.hansenpartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: shane.huang@amd.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Shane Huang wrote:
->> Community reported one SB600 SATA issue(BZ #9412), which led to 64 bit
->> DMA disablement for all SB600 revisions by driver maintainers with
->> commits c7a42156d99bcea7f8173ba7a6034bbaa2ecb77c and
->> 4cde32fc4b32e96a99063af3183acdfd54c563f0.
->>
->> But the root cause is ASUS M2A-VM system BIOS bug in old revisions
->> like 0901, while forcing into 32bit DMA happens to work as workaround.
->> Now it's time to withdraw 4cde32fc4b32e96a99063af3183acdfd54c563f0
->> so as to restore the SB600 SATA 64bit DMA capability.
->> This patch is also adding the workaround for M2A-VM old BIOS revisions,
->> but users are suggested to upgrade their system BIOS to the latest one
->> if they meet this issue.
->>
->> Signed-off-by: Shane Huang <shane.huang@amd.com>
->> Cc: Tejun Heo <tj@kernel.org>
+On Sat, May 30 2009, James Bottomley wrote:
+> On Sat, 2009-05-30 at 06:41 +0200, Jens Axboe wrote:
+> > On Fri, May 29 2009, James Bottomley wrote:
+> > > Doing a bit of torture testing, I ran across a BUG in the block
+> > > subsystem (at blk-core.c:2048): the test for if the request is queued.
+> > > 
+> > > It turns out the trigger was a BLKPREP_KILL coming out of the SCSI prep
+> > > function.  Currently for BLKPREP_KILL requests, we send them straight
+> > > into __blk_end_request_all() with an error, but they've never been
+> > > dequeued, so they trip the bug.  Fix this by starting requests before
+> > > killing them.
+> > > 
+> > > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > 
+> > > ---
+> > > 
+> > > diff --git a/block/blk-core.c b/block/blk-core.c
+> > > index 8b3b74e..9a0568c 100644
+> > > --- a/block/blk-core.c
+> > > +++ b/block/blk-core.c
+> > > @@ -1789,6 +1789,7 @@ struct request *blk_peek_request(struct request_queue *q)
+> > >  			break;
+> > >  		} else if (ret == BLKPREP_KILL) {
+> > >  			rq->cmd_flags |= REQ_QUIET;
+> > > +			blk_start_request(rq);
+> > >  			__blk_end_request_all(rq, -EIO);
+> > >  		} else {
+> > >  			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
+> > 
+> > Given how illogical that now looks, I think it could do with a comment.
+> > I'll add that while applying.
 > 
-> It would be nicer to mention the export of dmi_get_year() but..
-> 
-> Acked-by: Tejun Heo <tj@kernel.org>
-> 
+> Um, if it looks illogical, then so is the new everything has to be
+> dequeued before completion requirement ...  I agree a comment reminding
+> people why it has to work this way doesn't hurt, but if it looks
+> illogical then there might be something wrong with the rules requiring
+> this to happen ...
 
-Jeff, ping.
-
-Thanks.
+It's not a bad idea to be a little extra paranoid with such an API
+change, we can always relax this restriction later.
 
 -- 
-tejun
+Jens Axboe
+
