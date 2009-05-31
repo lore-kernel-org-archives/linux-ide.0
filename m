@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/4] ide-gd: implement block device ->set_capacity method
-Date: Sun, 31 May 2009 16:39:31 +0200
-Message-ID: <20090531143931.7164.96956.sendpatchset@localhost.localdomain>
+Subject: [PATCH 2/4] partitions: add ->set_capacity block device method
+Date: Sun, 31 May 2009 16:39:24 +0200
+Message-ID: <20090531143924.7164.25770.sendpatchset@localhost.localdomain>
 References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-ew0-f176.google.com ([209.85.219.176]:49478 "EHLO
 	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756861AbZEaOeP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2009 10:34:15 -0400
+	with ESMTP id S1756572AbZEaOeH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2009 10:34:07 -0400
 In-Reply-To: <20090531143911.7164.26834.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,19 +15,18 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, Frans Pop <elendil@planet.nl>
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-gd: implement block device ->set_capacity method
+Subject: [PATCH] partitions: add ->set_capacity block device method
 
-* Use ->probed_capacity to store native device capacity for ATA disks.
+* Add ->set_capacity block device method and use it in rescan_partitions()
+  to attempt enabling native capacity of the device upon detecting the
+  partition which exceeds device capacity.
 
-* Add ->set_capacity method to struct ide_disk_ops.
+* Add GENHD_FL_NATIVE_CAPACITY flag to try limit attempts of enabling
+  native capacity during partition scan.
 
-* Implement disk device ->set_capacity method for ATA disks.
-
-* Implement block device ->set_capacity method.
-
-Together with the previous patch adding ->set_capacity block device
-method this allows automatic disabling of Host Protected Area (HPA)
-if any partitions overlapping HPA are detected.
+Together with the consecutive patch implementing ->set_capacity method in
+ide-gd device driver this allows automatic disabling of Host Protected Area
+(HPA) if any partitions overlapping HPA are detected.
 
 Cc: Robert Hancock <hancockrwd@gmail.com>
 Cc: Frans Pop <elendil@planet.nl>
@@ -35,120 +34,98 @@ Cc: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
 Cc: Al Viro <viro@zeniv.linux.org.uk>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-disk.c |   19 ++++++++++++++++++-
- drivers/ide/ide-gd.c   |   14 ++++++++++++++
- include/linux/ide.h    |    4 ++--
- 3 files changed, 34 insertions(+), 3 deletions(-)
+ fs/partitions/check.c  |   43 ++++++++++++++++++++++++++++++++-----------
+ include/linux/blkdev.h |    2 ++
+ include/linux/genhd.h  |    1 +
+ 3 files changed, 35 insertions(+), 11 deletions(-)
 
-Index: b/drivers/ide/ide-disk.c
+Index: b/fs/partitions/check.c
 ===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -323,6 +323,8 @@ static void idedisk_check_hpa(ide_drive_
- 	if (set_max <= capacity)
- 		return;
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -556,28 +556,49 @@ int rescan_partitions(struct gendisk *di
  
-+	drive->probed_capacity = set_max;
+ 	/* add partitions */
+ 	for (p = 1; p < state->limit; p++) {
+-		sector_t size = state->parts[p].size;
+-		sector_t from = state->parts[p].from;
++		sector_t size, from;
++try_scan:
++		size = state->parts[p].size;
+ 		if (!size)
+ 			continue;
 +
- 	printk(KERN_INFO "%s: Host Protected Area detected.\n"
- 			 "\tcurrent capacity is %llu sectors (%llu MB)\n"
- 			 "\tnative  capacity is %llu sectors (%llu MB)\n",
-@@ -358,6 +360,8 @@ static int ide_disk_get_capacity(ide_dri
- 		drive->capacity64 = drive->cyl * drive->head * drive->sect;
- 	}
- 
-+	drive->probed_capacity = drive->capacity64;
++		from = state->parts[p].from;
+ 		if (from >= get_capacity(disk)) {
+ 			printk(KERN_WARNING
+ 			       "%s: p%d ignored, start %llu is behind the end of the disk\n",
+ 			       disk->disk_name, p, (unsigned long long) from);
+ 			continue;
+ 		}
 +
- 	if (lba) {
- 		drive->dev_flags |= IDE_DFLAG_LBA;
- 
-@@ -376,7 +380,7 @@ static int ide_disk_get_capacity(ide_dri
- 		       "%llu sectors (%llu MB)\n",
- 		       drive->name, (unsigned long long)drive->capacity64,
- 		       sectors_to_MB(drive->capacity64));
--		drive->capacity64 = 1ULL << 28;
-+		drive->probed_capacity = drive->capacity64 = 1ULL << 28;
- 	}
- 
- 	if ((drive->hwif->host_flags & IDE_HFLAG_NO_LBA48_DMA) &&
-@@ -392,6 +396,18 @@ static int ide_disk_get_capacity(ide_dri
- 	return 0;
- }
- 
-+static u64 ide_disk_set_capacity(ide_drive_t *drive, u64 capacity)
-+{
-+	u64 set = min(capacity, drive->probed_capacity);
-+	int lba48 = ata_id_lba48_enabled(drive->id);
+ 		if (from + size > get_capacity(disk)) {
+-			/*
+-			 * we can not ignore partitions of broken tables
+-			 * created by for example camera firmware, but we
+-			 * limit them to the end of the disk to avoid
+-			 * creating invalid block devices
+-			 */
++			struct block_device_operations *bdops = disk->fops;
++			unsigned long long capacity;
 +
-+	capacity = idedisk_set_max_address(drive, set, lba48);
-+	if (capacity)
-+		drive->capacity64 = capacity;
+ 			printk(KERN_WARNING
+-			       "%s: p%d size %llu exceeds device capacity, "
+-			       "limited to end of disk\n",
++			       "%s: p%d size %llu exceeds device capacity, ",
+ 			       disk->disk_name, p, (unsigned long long) size);
+-			size = get_capacity(disk) - from;
 +
-+	return drive->capacity64;
-+}
-+
- static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
- {
- 	ide_drive_t *drive = q->queuedata;
-@@ -740,6 +756,7 @@ static int ide_disk_set_doorlock(ide_dri
- 
- const struct ide_disk_ops ide_ata_disk_ops = {
- 	.check		= ide_disk_check,
-+	.set_capacity	= ide_disk_set_capacity,
- 	.get_capacity	= ide_disk_get_capacity,
- 	.setup		= ide_disk_setup,
- 	.flush		= ide_disk_flush,
-Index: b/drivers/ide/ide-gd.c
++			if (bdops->set_capacity &&
++			    (disk->flags & GENHD_FL_NATIVE_CAPACITY) == 0) {
++				printk(KERN_CONT "enabling native capacity\n");
++				capacity = bdops->set_capacity(disk, ~0ULL);
++				disk->flags |= GENHD_FL_NATIVE_CAPACITY;
++				if (capacity > get_capacity(disk)) {
++					set_capacity(disk, capacity);
++					check_disk_size_change(disk, bdev);
++					bdev->bd_invalidated = 0;
++				}
++				goto try_scan;
++			} else {
++				/*
++				 * we can not ignore partitions of broken tables
++				 * created by for example camera firmware, but
++				 * we limit them to the end of the disk to avoid
++				 * creating invalid block devices
++				 */
++				printk(KERN_CONT "limited to end of disk\n");
++				size = get_capacity(disk) - from;
++			}
+ 		}
+ 		part = add_partition(disk, p, from, size,
+ 				     state->parts[p].flags);
+Index: b/include/linux/blkdev.h
 ===================================================================
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -287,6 +287,19 @@ static int ide_gd_media_changed(struct g
- 	return ret;
- }
- 
-+static unsigned long long ide_gd_set_capacity(struct gendisk *disk,
-+					      unsigned long long capacity)
-+{
-+	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
-+	ide_drive_t *drive = idkp->drive;
-+	const struct ide_disk_ops *disk_ops = drive->disk_ops;
-+
-+	if (disk_ops->set_capacity)
-+		return disk_ops->set_capacity(drive, capacity);
-+
-+	return drive->capacity64;
-+}
-+
- static int ide_gd_revalidate_disk(struct gendisk *disk)
- {
- 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
-@@ -315,6 +328,7 @@ static struct block_device_operations id
- 	.locked_ioctl		= ide_gd_ioctl,
- 	.getgeo			= ide_gd_getgeo,
- 	.media_changed		= ide_gd_media_changed,
-+	.set_capacity		= ide_gd_set_capacity,
- 	.revalidate_disk	= ide_gd_revalidate_disk
- };
- 
-Index: b/include/linux/ide.h
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1221,6 +1221,8 @@ struct block_device_operations {
+ 	int (*direct_access) (struct block_device *, sector_t,
+ 						void **, unsigned long *);
+ 	int (*media_changed) (struct gendisk *);
++	unsigned long long (*set_capacity) (struct gendisk *,
++						unsigned long long);
+ 	int (*revalidate_disk) (struct gendisk *);
+ 	int (*getgeo)(struct block_device *, struct hd_geometry *);
+ 	struct module *owner;
+Index: b/include/linux/genhd.h
 ===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -381,6 +381,7 @@ struct ide_drive_s;
- struct ide_disk_ops {
- 	int		(*check)(struct ide_drive_s *, const char *);
- 	int		(*get_capacity)(struct ide_drive_s *);
-+	u64		(*set_capacity)(struct ide_drive_s *, u64);
- 	void		(*setup)(struct ide_drive_s *);
- 	void		(*flush)(struct ide_drive_s *);
- 	int		(*init_media)(struct ide_drive_s *, struct gendisk *);
-@@ -552,8 +553,7 @@ struct ide_drive_s {
- 	unsigned int	drive_data;	/* used by set_pio_mode/dev_select() */
- 	unsigned int	failures;	/* current failure count */
- 	unsigned int	max_failures;	/* maximum allowed failure count */
--	u64		probed_capacity;/* initial reported media capacity (ide-cd only currently) */
--
-+	u64		probed_capacity;/* initial/native media capacity */
- 	u64		capacity64;	/* total number of sectors */
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -114,6 +114,7 @@ struct hd_struct {
+ #define GENHD_FL_UP				16
+ #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
+ #define GENHD_FL_EXT_DEVT			64 /* allow extended devt */
++#define GENHD_FL_NATIVE_CAPACITY		128
  
- 	int		lun;		/* logical unit */
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
