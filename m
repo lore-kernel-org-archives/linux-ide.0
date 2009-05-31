@@ -1,37 +1,48 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [Bug #13378] kernel/async.c broke pata_legacy.c
-Date: Sat, 30 May 2009 21:37:36 +0200 (CEST)
-Message-ID: <LEcEO2518_I.A.8UD.tIbIKB@chimera>
-References: <4to6E2myxvG.A.muC.aIbIKB@chimera>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Restore SB600 SATA controller 64 bit DMA
+Date: Sun, 31 May 2009 11:00:35 +0900
+Message-ID: <4A21E4C3.9050306@kernel.org>
+References: <1243407883.3220.10.camel@brienza-desktop> <4A1CEA2C.10508@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:46534 "EHLO ogre.sisk.pl"
+Received: from hera.kernel.org ([140.211.167.34]:40337 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755607AbZE3Wge convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 May 2009 18:36:34 -0400
-In-Reply-To: <4to6E2myxvG.A.muC.aIbIKB@chimera>
-Content-Disposition: inline
+	id S1751409AbZEaB7X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 May 2009 21:59:23 -0400
+In-Reply-To: <4A1CEA2C.10508@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, IDE <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mikael Pettersson <mikpe@it.uu.se>, Tejun Heo <tj@kernel.org>
+To: shane.huang@amd.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This message has been generated automatically as a part of a report
-of recent regressions.
+Tejun Heo wrote:
+> Shane Huang wrote:
+>> Community reported one SB600 SATA issue(BZ #9412), which led to 64 bit
+>> DMA disablement for all SB600 revisions by driver maintainers with
+>> commits c7a42156d99bcea7f8173ba7a6034bbaa2ecb77c and
+>> 4cde32fc4b32e96a99063af3183acdfd54c563f0.
+>>
+>> But the root cause is ASUS M2A-VM system BIOS bug in old revisions
+>> like 0901, while forcing into 32bit DMA happens to work as workaround.
+>> Now it's time to withdraw 4cde32fc4b32e96a99063af3183acdfd54c563f0
+>> so as to restore the SB600 SATA 64bit DMA capability.
+>> This patch is also adding the workaround for M2A-VM old BIOS revisions,
+>> but users are suggested to upgrade their system BIOS to the latest one
+>> if they meet this issue.
+>>
+>> Signed-off-by: Shane Huang <shane.huang@amd.com>
+>> Cc: Tejun Heo <tj@kernel.org>
+> 
+> It would be nicer to mention the export of dmi_get_year() but..
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
 
-The following bug entry is on the current list of known regressions
-from 2.6.29.  Please verify if it still should be listed and let me know
-(either way).
+Jeff, ping.
 
+Thanks.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13378
-Subject		: kernel/async.c broke pata_legacy.c
-Submitter	: Mikael Pettersson <mikpe@it.uu.se>
-Date		: 2009-05-24 16:13 (7 days old)
-References	: http://marc.info/?l=linux-kernel&m=124318186507210&w=4
-Handled-By	: James Bottomley <James.Bottomley@hansenpartnership.com>
-Patch		: http://patchwork.kernel.org/patch/25699/
-
-
+-- 
+tejun
