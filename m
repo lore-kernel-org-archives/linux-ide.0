@@ -1,63 +1,32 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH block#for-2.6.31] block: fix an oops on BLKPREP_KILL
-Date: Sun, 31 May 2009 08:11:39 +0200
-Message-ID: <20090531061139.GS11363@kernel.dk>
-References: <1243635503.2919.67.camel@localhost.localdomain> <20090530044137.GM11363@kernel.dk> <1243693384.5223.7.camel@mulgrave.int.hansenpartnership.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] (2.6.20) pata_oldpiix: fix PIO2 underclocking
+Date: Sun, 31 May 2009 17:25:14 +0400
+Message-ID: <4A22853A.2050600@ru.mvista.com>
+References: <200702051945.38972.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:50855 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbZEaGLi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 31 May 2009 02:11:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1243693384.5223.7.camel@mulgrave.int.hansenpartnership.com>
+Received: from h155.mvista.com ([63.81.120.155]:26866 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753900AbZEaNZR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 31 May 2009 09:25:17 -0400
+In-Reply-To: <200702051945.38972.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Sat, May 30 2009, James Bottomley wrote:
-> On Sat, 2009-05-30 at 06:41 +0200, Jens Axboe wrote:
-> > On Fri, May 29 2009, James Bottomley wrote:
-> > > Doing a bit of torture testing, I ran across a BUG in the block
-> > > subsystem (at blk-core.c:2048): the test for if the request is queued.
-> > > 
-> > > It turns out the trigger was a BLKPREP_KILL coming out of the SCSI prep
-> > > function.  Currently for BLKPREP_KILL requests, we send them straight
-> > > into __blk_end_request_all() with an error, but they've never been
-> > > dequeued, so they trip the bug.  Fix this by starting requests before
-> > > killing them.
-> > > 
-> > > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > 
-> > > ---
-> > > 
-> > > diff --git a/block/blk-core.c b/block/blk-core.c
-> > > index 8b3b74e..9a0568c 100644
-> > > --- a/block/blk-core.c
-> > > +++ b/block/blk-core.c
-> > > @@ -1789,6 +1789,7 @@ struct request *blk_peek_request(struct request_queue *q)
-> > >  			break;
-> > >  		} else if (ret == BLKPREP_KILL) {
-> > >  			rq->cmd_flags |= REQ_QUIET;
-> > > +			blk_start_request(rq);
-> > >  			__blk_end_request_all(rq, -EIO);
-> > >  		} else {
-> > >  			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
-> > 
-> > Given how illogical that now looks, I think it could do with a comment.
-> > I'll add that while applying.
-> 
-> Um, if it looks illogical, then so is the new everything has to be
-> dequeued before completion requirement ...  I agree a comment reminding
-> people why it has to work this way doesn't hurt, but if it looks
-> illogical then there might be something wrong with the rules requiring
-> this to happen ...
+Hello, I wrote:
 
-It's not a bad idea to be a little extra paranoid with such an API
-change, we can always relax this restriction later.
+> Fix the PIO mode 2 using mode 0 timings -- this driver should enable the
+> fast timing bank starting with PIO2, just like the ata_piix driver does.
+> Also, fix/rephrase some comments while at it.
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
--- 
-Jens Axboe
+   Hm, looks like pata_efar still needs the same fix...
+
+MBR, Sergei
+
 
