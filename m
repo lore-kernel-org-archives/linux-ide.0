@@ -1,33 +1,42 @@
-From: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
-Subject: Re: [PATCH 0/4] partitions/ide: improve Host Protected Area
-	handling
-Date: Mon, 1 Jun 2009 00:50:31 +0200
-Message-ID: <20090531225030.GB27422@ub>
-References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain> <200905312204.12549.elendil@planet.nl>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 02/13] block: Use accessor functions for queue limits
+Date: Mon, 01 Jun 2009 01:08:51 -0400
+Message-ID: <yq1ab4sa6cc.fsf@sermon.lab.mkp.net>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
+	<1242362435-11953-3-git-send-email-martin.petersen@oracle.com>
+	<200905311751.37898.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:39815 "EHLO hera.cwi.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752715AbZEaWur (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 31 May 2009 18:50:47 -0400
-Content-Disposition: inline
-In-Reply-To: <200905312204.12549.elendil@planet.nl>
+Received: from acsinet12.oracle.com ([141.146.126.234]:54362 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431AbZFAFLY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jun 2009 01:11:24 -0400
+In-Reply-To: <200905311751.37898.bzolnier@gmail.com> (Bartlomiej
+	Zolnierkiewicz's message of "Sun, 31 May 2009 17:51:37 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, May 31, 2009 at 10:04:11PM +0200, Frans Pop wrote:
+>>>>> "Bart" == Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> writes:
 
-> I conclude the following from reading the patches:
-> - a HPA is always at the end of a disk, correct?
+>> Convert all external users of queue limits to using wrapper functions
+>> instead of poking the request queue variables directly.
 
-I recall from the days of PARTIES and BEER the description
-of the Address Offset Mode. If that is enabled, LBA 0 points
-at the start of the Host Protected Area.
+Did bisect this?
 
-Andries
+The patch you mention didn't touch the bounce limits at all.  One of my
+other patches moved portions of the queue limits to an embedded struct.
+However, it was purely variable renaming.  I have not touched anything
+related to memory allocations.
 
+[...]
 
+Bart>  init_emergency_isa_pool+0x22/0x42 [<c0221e26>]
+Bart>  blk_queue_bounce_limit+0x2c/0x41 [<c0309813>]
 
+[...]
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
