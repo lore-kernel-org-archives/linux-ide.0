@@ -1,46 +1,81 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/3] ide: remove superfluous SELECT_MASK() call from do_rw_taskfile()
-Date: Mon, 1 Jun 2009 23:53:07 +0200
-Message-ID: <200906012353.07374.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/3] icside: remove superfluous ->maskproc method
+Date: Tue, 02 Jun 2009 02:48:49 +0400
+Message-ID: <4A245AD1.10108@ru.mvista.com>
+References: <200906012353.41504.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:51303 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759173AbZFAVz7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jun 2009 17:55:59 -0400
-Received: by mail-ew0-f176.google.com with SMTP id 24so8197834ewy.37
-        for <linux-ide@vger.kernel.org>; Mon, 01 Jun 2009 14:56:01 -0700 (PDT)
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:62239 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751211AbZFAWtC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Jun 2009 18:49:02 -0400
+In-Reply-To: <200906012353.41504.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-With ->write_devctl method call (which unmasks drive IRQ) preceding
-SELECT_MASK() call there is really no need for the latter.
+Hello.
 
-Moreover with the combination of HPT36x controller and the drive on
-the quirk_drives[] list this can result in superfluous enable_irq()
-call which in turn will trigger WARN() in __enable_irq().
+Bartlomiej Zolnierkiewicz wrote:
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-taskfile.c |    1 -
- 1 file changed, 1 deletion(-)
+> [inspired by pata_icside]
+>   
 
-Index: b/drivers/ide/ide-taskfile.c
-===================================================================
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -98,7 +98,6 @@ ide_startstop_t do_rw_taskfile(ide_drive
- 	if ((cmd->tf_flags & IDE_TFLAG_DMA_PIO_FALLBACK) == 0) {
- 		ide_tf_dump(drive->name, cmd);
- 		tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
--		SELECT_MASK(drive, 0);
- 
- 		if (cmd->ftf_flags & IDE_FTFLAG_OUT_DATA) {
- 			u8 data[2] = { cmd->tf.data, cmd->hob.data };
+   I'm not sure you've got it right... These comments about "routing" 
+are confusing...
+
+> Enabling/disabling of card IRQs is handled fine by IRQ and IDE
+> subsystems so there is no need for custom ->maskproc method.
+>
+> Moreover icside_maskproc() would enable IRQ only if it was already
+> enabled [because of 'if (state->enabled && !mask)' check].
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/icside.c |   64 +++------------------------------------------------
+>  1 file changed, 4 insertions(+), 60 deletions(-)
+>
+> Index: b/drivers/ide/icside.c
+> ===================================================================
+> --- a/drivers/ide/icside.c
+> +++ b/drivers/ide/icside.c
+> @@ -65,8 +65,6 @@ static struct cardinfo icside_cardinfo_v
+>  };
+>  
+>  struct icside_state {
+> -	unsigned int channel;
+> -	unsigned int enabled;
+>  	void __iomem *irq_port;
+>  	void __iomem *ioc_base;
+>  	unsigned int sel;
+> @@ -116,18 +114,11 @@ static void icside_irqenable_arcin_v6 (s
+>  	struct icside_state *state = ec->irq_data;
+>  	void __iomem *base = state->irq_port;
+>  
+> -	state->enabled = 1;
+> +	writeb(0, base + ICS_ARCIN_V6_INTROFFSET_1);
+> +	readb(base + ICS_ARCIN_V6_INTROFFSET_2);
+>   
+>  
+> -	switch (state->channel) {
+> -	case 0:
+> -		writeb(0, base + ICS_ARCIN_V6_INTROFFSET_1);
+> -		readb(base + ICS_ARCIN_V6_INTROFFSET_2);
+> -		break;
+> -	case 1:
+> -		writeb(0, base + ICS_ARCIN_V6_INTROFFSET_2);
+> -		readb(base + ICS_ARCIN_V6_INTROFFSET_1);
+> -		break;
+> -	}
+> +	writeb(0, base + ICS_ARCIN_V6_INTROFFSET_2);
+> +	readb(base + ICS_ARCIN_V6_INTROFFSET_1);
+>   
+
+   Aren't this read supposed to disable channel 1 interrupt again?
+
+MBR, Sergei
+
+
