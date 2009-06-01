@@ -1,37 +1,35 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/4] partitions/ide: improve Host Protected Area
- handling
-Date: Mon, 1 Jun 2009 14:06:51 +0100
-Message-ID: <20090601140651.5261ecbb@lxorguk.ukuu.org.uk>
-References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain>
-	<87f94c370906010559k4f2694cbv4023129c7b0cbc31@mail.gmail.com>
+Subject: Re: [PATCH] (2.6.20) pata_oldpiix: fix PIO2 underclocking
+Date: Mon, 1 Jun 2009 14:41:12 +0100
+Message-ID: <20090601144112.55538667@lxorguk.ukuu.org.uk>
+References: <200702051945.38972.sshtylyov@ru.mvista.com>
+	<4A22853A.2050600@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49416 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53644 "EHLO
 	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754851AbZFANFt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jun 2009 09:05:49 -0400
-In-Reply-To: <87f94c370906010559k4f2694cbv4023129c7b0cbc31@mail.gmail.com>
+	with ESMTP id S1753659AbZFANkU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jun 2009 09:40:20 -0400
+In-Reply-To: <4A22853A.2050600@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, Frans Pop <elendil@planet.nl>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Mon, 1 Jun 2009 08:59:29 -0400
-Greg Freemyer <greg.freemyer@gmail.com> wrote:
+On Sun, 31 May 2009 17:25:14 +0400
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
-> Alan, given your emphatic ack, is libata likely to follow the same
-> model.  Any chance we could have a single boot param that handled both
+> Hello, I wrote:
+> 
+> > Fix the PIO mode 2 using mode 0 timings -- this driver should enable the
+> > fast timing bank starting with PIO2, just like the ata_piix driver does.
+> > Also, fix/rephrase some comments while at it.
+> >
+> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+>    Hm, looks like pata_efar still needs the same fix...
 
-If the patches get in then it makes no sense not to implement them
-identically in libata.
-
-> drivers?  I mean instead of having 2 module params.
-
-No because the modules have different names so it will always be
-ide_core.something and libata.something
-
-Bartlomiej - thinking about this I question "nohpa=" because we get into
-unneccessary negatives ide_core.hpa= is one less inversion to figure out.
+I can't find the original email (not in my archive for 2008 or 2009) but
+the comment makes sense
