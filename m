@@ -1,81 +1,89 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/3] icside: remove superfluous ->maskproc method
-Date: Tue, 02 Jun 2009 02:48:49 +0400
-Message-ID: <4A245AD1.10108@ru.mvista.com>
-References: <200906012353.41504.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 1/2] ide-tape: change IDE_AFLAG_IGNORE_DSC non-atomically
+Date: Tue,  2 Jun 2009 09:05:07 +0200
+Message-ID: <1243926308-32385-2-git-send-email-petkovbb@gmail.com>
+References: <1243926308-32385-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:62239 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751211AbZFAWtC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Jun 2009 18:49:02 -0400
-In-Reply-To: <200906012353.41504.bzolnier@gmail.com>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:34067 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758016AbZFBHFL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jun 2009 03:05:11 -0400
+In-Reply-To: <1243926308-32385-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+There are two sites where the flag is being changed: ide_retry_pc
+and idetape_do_request. Both codepaths are protected by hwif->busy
+(ide_lock_port) and therefore we shouldn't need the atomic accesses. The
+only problem would be the compiler reordering the accesses, therefore the
+optimization barrier.
 
-Bartlomiej Zolnierkiewicz wrote:
+Spotted-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-atapi.c |    2 +-
+ drivers/ide/ide-tape.c  |   21 ++++++++++++++++-----
+ 2 files changed, 17 insertions(+), 6 deletions(-)
 
-> [inspired by pata_icside]
->   
-
-   I'm not sure you've got it right... These comments about "routing" 
-are confusing...
-
-> Enabling/disabling of card IRQs is handled fine by IRQ and IDE
-> subsystems so there is no need for custom ->maskproc method.
->
-> Moreover icside_maskproc() would enable IRQ only if it was already
-> enabled [because of 'if (state->enabled && !mask)' check].
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/icside.c |   64 +++------------------------------------------------
->  1 file changed, 4 insertions(+), 60 deletions(-)
->
-> Index: b/drivers/ide/icside.c
-> ===================================================================
-> --- a/drivers/ide/icside.c
-> +++ b/drivers/ide/icside.c
-> @@ -65,8 +65,6 @@ static struct cardinfo icside_cardinfo_v
->  };
->  
->  struct icside_state {
-> -	unsigned int channel;
-> -	unsigned int enabled;
->  	void __iomem *irq_port;
->  	void __iomem *ioc_base;
->  	unsigned int sel;
-> @@ -116,18 +114,11 @@ static void icside_irqenable_arcin_v6 (s
->  	struct icside_state *state = ec->irq_data;
->  	void __iomem *base = state->irq_port;
->  
-> -	state->enabled = 1;
-> +	writeb(0, base + ICS_ARCIN_V6_INTROFFSET_1);
-> +	readb(base + ICS_ARCIN_V6_INTROFFSET_2);
->   
->  
-> -	switch (state->channel) {
-> -	case 0:
-> -		writeb(0, base + ICS_ARCIN_V6_INTROFFSET_1);
-> -		readb(base + ICS_ARCIN_V6_INTROFFSET_2);
-> -		break;
-> -	case 1:
-> -		writeb(0, base + ICS_ARCIN_V6_INTROFFSET_2);
-> -		readb(base + ICS_ARCIN_V6_INTROFFSET_1);
-> -		break;
-> -	}
-> +	writeb(0, base + ICS_ARCIN_V6_INTROFFSET_2);
-> +	readb(base + ICS_ARCIN_V6_INTROFFSET_1);
->   
-
-   Aren't this read supposed to disable channel 1 interrupt again?
-
-MBR, Sergei
-
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index afe5a43..fbcb851 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -258,7 +258,7 @@ void ide_retry_pc(ide_drive_t *drive)
+ 	pc->req_xfer = sense_rq->data_len;
+ 
+ 	if (drive->media == ide_tape)
+-		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
++		drive->atapi_flags |= IDE_AFLAG_IGNORE_DSC;
+ 
+ 	if (ide_queue_sense_rq(drive, pc))
+ 		ide_complete_rq(drive, -EIO, blk_rq_bytes(drive->hwif->rq));
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 203bbea..4ff50cc 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -656,15 +656,24 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 
+ 	if ((drive->dev_flags & IDE_DFLAG_DSC_OVERLAP) == 0 &&
+ 	    (rq->cmd[13] & REQ_IDETAPE_PC2) == 0)
+-		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
++		drive->atapi_flags |= IDE_AFLAG_IGNORE_DSC;
+ 
+ 	if (drive->dev_flags & IDE_DFLAG_POST_RESET) {
+-		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
++		drive->atapi_flags |= IDE_AFLAG_IGNORE_DSC;
+ 		drive->dev_flags &= ~IDE_DFLAG_POST_RESET;
+ 	}
+ 
+-	if (!test_and_clear_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags) &&
+-	    (stat & ATA_DSC) == 0) {
++	/*
++	 * This is a precaution for IDE_AFLAG_IGNORE_DSC being conditionally set
++	 * above. We don't need a stronger enforcement of ordering because the
++	 * read below cannot precede the earlier write out-of-order since it is
++	 * to the same location. Also, since we have the ide port locked during
++	 * the ->do_request(), we only have to be aware of gcc reordering stuff.
++	 */
++	barrier();
++
++	if (!(drive->atapi_flags & IDE_AFLAG_IGNORE_DSC) &&
++	    !(stat & ATA_DSC)) {
+ 		if (postponed_rq == NULL) {
+ 			tape->dsc_polling_start = jiffies;
+ 			tape->dsc_poll_freq = tape->best_dsc_rw_freq;
+@@ -684,7 +693,9 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 			tape->dsc_poll_freq = IDETAPE_DSC_MA_SLOW;
+ 		idetape_postpone_request(drive);
+ 		return ide_stopped;
+-	}
++	} else
++		drive->atapi_flags &= ~IDE_AFLAG_IGNORE_DSC;
++
+ 	if (rq->cmd[13] & REQ_IDETAPE_READ) {
+ 		pc = &tape->queued_pc;
+ 		ide_tape_create_rw_cmd(tape, pc, rq, READ_6);
+-- 
+1.6.3.1
 
