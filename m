@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/4] ide-gd: implement block device ->set_capacity method
-Date: Tue, 02 Jun 2009 22:55:56 +0400
-Message-ID: <4A2575BC.9000805@ru.mvista.com>
-References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain> <20090531143931.7164.96956.sendpatchset@localhost.localdomain> <200906012332.31628.bzolnier@gmail.com>
+Subject: Re: [PATCH 4/4] ide: preserve Host Protected Area by default
+Date: Tue, 02 Jun 2009 23:12:15 +0400
+Message-ID: <4A25798F.3030700@ru.mvista.com>
+References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain> <20090531143939.7164.82399.sendpatchset@localhost.localdomain> <200906012333.29159.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:27556 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:27852 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750776AbZFBSyj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jun 2009 14:54:39 -0400
-In-Reply-To: <200906012332.31628.bzolnier@gmail.com>
+	id S1751131AbZFBTK5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Jun 2009 15:10:57 -0400
+In-Reply-To: <200906012333.29159.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -22,149 +22,58 @@ Hello.
 Bartlomiej Zolnierkiewicz wrote:
 
 >>From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>Subject: [PATCH] ide-gd: implement block device ->set_capacity method
+>>Subject: [PATCH] ide: preserve Host Protected Area by default
 
->>* Use ->probed_capacity to store native device capacity for ATA disks.
+>>From the perspective of most users of recent systems, disabling Host
+>>Protected Area (HPA) can break vendor RAID formats, GPT partitions and
+>>risks corrupting firmware or overwriting vendor system recovery tools.
 
->>* Add ->set_capacity method to struct ide_disk_ops.
+>>Unfortunately the original (kernels < 2.6.30) behavior (unconditionally
+>>disabling HPA and using full disk capacity) was introduced at the time
+>>when the main use of HPA was to make the drive look small enough for the
+>>BIOS to allow the system to boot with large capacity drives.
 
->>* Implement disk device ->set_capacity method for ATA disks.
+>>Thus to allow the maximum compatibility with the existing setups (using
+>>HPA and partitioned with HPA disabled) we automatically disable HPA if
+>>any partitions overlapping HPA are detected.  Additionally HPA can also
+>>be disabled using the "nohpa" module parameter (i.e. "ide_core.nohpa=0.0"
+>>to disable HPA on /dev/hda).
 
->>* Implement block device ->set_capacity method.
-
->>Together with the previous patch adding ->set_capacity block device
->>method this allows automatic disabling of Host Protected Area (HPA)
->>if any partitions overlapping HPA are detected.
+>>While at it:
+>>- remove stale "idebus=" entry from Documentation/kernel-parameters.txt
 
 >>Cc: Robert Hancock <hancockrwd@gmail.com>
 >>Cc: Frans Pop <elendil@planet.nl>
 >>Cc: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
 >>Cc: Al Viro <viro@zeniv.linux.org.uk>
+>>[patch description was based on input from Alan Cox and Frans Pop]
 >>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 > v2 interdiff
 
 > v2:
-> * Check if LBA and HPA are supported in ide_disk_set_capacity().
-
-> * According to the spec the SET MAX ADDRESS command shall be
->   immediately preceded by a READ NATIVE MAX ADDRESS command.
-
-> * Add ide_disk_hpa_{get_native,set}_capacity() helpers.
-
-    One of them seem to me pretty useless...
+> Fix ->resume HPA support.
 
 > diff -u b/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
 > --- b/drivers/ide/ide-disk.c
 > +++ b/drivers/ide/ide-disk.c
-> @@ -302,14 +302,12 @@
->  	{ NULL,		NULL }
->  };
+> @@ -433,8 +433,11 @@
+>  		goto out;
 >  
-> -static void idedisk_check_hpa(ide_drive_t *drive)
-> +static u64 ide_disk_hpa_get_native_capacity(ide_drive_t *drive, int lba48)
+>  	set = ide_disk_hpa_set_capacity(drive, set, lba48);
+> -	if (set)
+> +	if (set) {
 
-    Frankly speaking, I don't see what you've bought with factoring out this 
-function...
+    Well, this seems to be a useful check after all. :-)
 
->  {
-> -	unsigned long long capacity, set_max;
-> -	int lba48 = ata_id_lba48_enabled(drive->id);
-> +	u64 capacity, set_max;
->  
->  	capacity = drive->capacity64;
-> -
-> -	set_max = idedisk_read_native_max_address(drive, lba48);
-> +	set_max  = idedisk_read_native_max_address(drive, lba48);
->  
->  	if (ide_in_drive_list(drive->id, hpa_list)) {
->  		/*
-> @@ -320,6 +318,26 @@
->  			set_max--;
->  	}
->  
-> +	return set_max;
-> +}
-> +
-> +static u64 ide_disk_hpa_set_capacity(ide_drive_t *drive, u64 set_max, int lba48)
-> +{
-> +	set_max = idedisk_set_max_address(drive, set_max, lba48);
-> +	if (set_max)
-> +		drive->capacity64 = set_max;
-> +
-> +	return set_max;
-> +}
-> +
-> +static void idedisk_check_hpa(ide_drive_t *drive)
-> +{
-> +	u64 capacity, set_max;
-> +	int lba48 = ata_id_lba48_enabled(drive->id);
-> +
-> +	capacity = drive->capacity64;
-> +	set_max  = ide_disk_hpa_get_native_capacity(drive, lba48);
-> +
->  	if (set_max <= capacity)
->  		return;
->  
-> @@ -332,13 +350,10 @@
->  			 capacity, sectors_to_MB(capacity),
->  			 set_max, sectors_to_MB(set_max));
->  
-> -	set_max = idedisk_set_max_address(drive, set_max, lba48);
-> -
-> -	if (set_max) {
-> -		drive->capacity64 = set_max;
-> +	set_max = ide_disk_hpa_set_capacity(drive, set_max, lba48);
-> +	if (set_max)
->  		printk(KERN_INFO "%s: Host Protected Area disabled.\n",
->  				 drive->name);
-> -	}
->  }
->  
->  static int ide_disk_get_capacity(ide_drive_t *drive)
-> @@ -399,12 +414,25 @@
->  static u64 ide_disk_set_capacity(ide_drive_t *drive, u64 capacity)
->  {
->  	u64 set = min(capacity, drive->probed_capacity);
-> -	int lba48 = ata_id_lba48_enabled(drive->id);
-> -
-> -	capacity = idedisk_set_max_address(drive, set, lba48);
-> -	if (capacity)
-> -		drive->capacity64 = capacity;
-> +	u16 *id = drive->id;
-> +	int lba48 = ata_id_lba48_enabled(id);
->  
-> +	if ((drive->dev_flags & IDE_DFLAG_LBA) == 0 ||
-> +	    ata_id_hpa_enabled(id) == 0)
-> +		goto out;
-> +
-> +	/*
-> +	 * according to the spec the SET MAX ADDRESS command shall be
-> +	 * immediately preceded by a READ NATIVE MAX ADDRESS command
-> +	 */
-> +	capacity = ide_disk_hpa_get_native_capacity(drive, lba48);
-
-    Might as well just call idedisk_read_native_max_address() -- we don't 
-need to lookup hpa_list[] if we're only checking whether we can read native 
-max address or not afterwards:
-
-> +	if (capacity == 0)
-> +		goto out;
-> +
-> +	set = ide_disk_hpa_set_capacity(drive, set, lba48);
-> +	if (set)
-> +		return set;
-
-    Why bother doing that again if the function itself does such check and 
-sets drive->capacity64 to the returned value on success? It should be as 
-simple as:
-
-	ide_disk_hpa_set_capacity(drive, set, lba48);
-
-> +out:
+> +		/* needed for ->resume to disable HPA */
+> +		drive->dev_flags |= IDE_DFLAG_NOHPA;
+>  		return set;
+> +	}
+>  out:
 >  	return drive->capacity64;
 >  }
-
-    Label/gotos unnecessary in this case -- we have *return*...
 
 MBR, Sergei
