@@ -1,33 +1,61 @@
-From: Grozdan <neutrino8@gmail.com>
-Subject: Re: Kernel 2.6.30rc7 limits IDE to UDMA33
-Date: Wed, 3 Jun 2009 15:15:04 +0200
-Message-ID: <c5bd819b0906030615t67e20299q38e81992419637fa@mail.gmail.com>
-References: <c5bd819b0906021525l13ee9282j1fb270e141985f66@mail.gmail.com>
-	 <4A25F688.9000407@gmail.com>
-	 <c5bd819b0906030435w466368cbsd48be91a97597437@mail.gmail.com>
-	 <20090603131407.57c490ed@lxorguk.ukuu.org.uk>
-	 <c5bd819b0906030552w6f23185etb394f83c8b630e6@mail.gmail.com>
-	 <20090603140140.491a8ea8@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: [PATCH] libata: pata_bf54x: handle portmuxing of pins through GPIO PORTs
+Date: Wed,  3 Jun 2009 09:23:54 -0400
+Message-ID: <1244035434-1923-1-git-send-email-vapier@gentoo.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f162.google.com ([209.85.219.162]:63708 "EHLO
-	mail-ew0-f162.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbZFCNPE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jun 2009 09:15:04 -0400
-In-Reply-To: <20090603140140.491a8ea8@lxorguk.ukuu.org.uk>
+Received: from smtp.gentoo.org ([140.211.166.183]:60816 "EHLO smtp.gentoo.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753483AbZFCNX7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jun 2009 09:23:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: hancockrwd@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: uclinux-dist-devel@blackfin.uclinux.org, Sonic Zhang <sonic.zhang@analog.com>, Bryan Wu <cooloney@kernel.org>
 
-2009/6/3 Alan Cox <alan@lxorguk.ukuu.org.uk>:
-> What about 2.6.28 or 2.6.29 ?
->
+From: Sonic Zhang <sonic.zhang@analog.com>
 
-Hi,
+By default, the PATA pins are routed to the async address lines in which
+case, no peripheral muxing needs to be done.  However, if the pins get
+routed through the GPIO PORTs pins, we need to make sure to request them
+so that the muxing is properly set up.
 
-I did not try those and I don't think I can find them anymore in the
-build service. There's only a 2.6.29 realtime one. I will try it out
-and report back in a few...
+Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+Signed-off-by: Bryan Wu <cooloney@kernel.org>
+---
+ drivers/ata/pata_bf54x.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index c4b47a3..02c81f1 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1557,6 +1557,25 @@ static unsigned short atapi_io_port[] = {
+ 	P_ATAPI_DMARQ,
+ 	P_ATAPI_INTRQ,
+ 	P_ATAPI_IORDY,
++	P_ATAPI_D0A,
++	P_ATAPI_D1A,
++	P_ATAPI_D2A,
++	P_ATAPI_D3A,
++	P_ATAPI_D4A,
++	P_ATAPI_D5A,
++	P_ATAPI_D6A,
++	P_ATAPI_D7A,
++	P_ATAPI_D8A,
++	P_ATAPI_D9A,
++	P_ATAPI_D10A,
++	P_ATAPI_D11A,
++	P_ATAPI_D12A,
++	P_ATAPI_D13A,
++	P_ATAPI_D14A,
++	P_ATAPI_D15A,
++	P_ATAPI_A0A,
++	P_ATAPI_A1A,
++	P_ATAPI_A2A,
+ 	0
+ };
+ 
+-- 
+1.6.3.1
+
