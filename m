@@ -1,50 +1,85 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pdc202xx_old: fix 'pdc20246_dma_ops'
-Date: Wed, 3 Jun 2009 22:34:44 +0400
-Message-ID: <200906032234.45030.sshtylyov@ru.mvista.com>
+From: Grozdan <neutrino8@gmail.com>
+Subject: Re: Kernel 2.6.30rc7 limits IDE to UDMA33
+Date: Thu, 4 Jun 2009 16:50:52 +0200
+Message-ID: <c5bd819b0906040750w75e0389cod2a03b89ce838d1b@mail.gmail.com>
+References: <c5bd819b0906021525l13ee9282j1fb270e141985f66@mail.gmail.com>
+	 <4A25F688.9000407@gmail.com>
+	 <c5bd819b0906030435w466368cbsd48be91a97597437@mail.gmail.com>
+	 <20090603131407.57c490ed@lxorguk.ukuu.org.uk>
+	 <c5bd819b0906030552w6f23185etb394f83c8b630e6@mail.gmail.com>
+	 <20090603140140.491a8ea8@lxorguk.ukuu.org.uk>
+	 <c5bd819b0906030639o5f9c34ffg500e132d3a0b5117@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:60631 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751988AbZFCSdY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Jun 2009 14:33:24 -0400
-Content-Disposition: inline
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:53667 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674AbZFDOuw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jun 2009 10:50:52 -0400
+In-Reply-To: <c5bd819b0906030639o5f9c34ffg500e132d3a0b5117@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: hancockrwd@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Commit ac95beedf8bc97b24f9540d4da9952f07221c023 (ide: add struct ide_port_ops
-(take 2)) erroneously converted the driver's dma_timeout() and dma_lost_irq()
-methods to call the driver's resetproc() method regardless of whether it was
-defined for this specific controller while it hadn't been defined and hence
-called for PDC20246. So the dma_clear() method, the successor of dma_timeout(),
-shouldn't exist and the dma_lost_irq() method should be standard for PDC20246.
+2009/6/3 Grozdan <neutrino8@gmail.com>:
+> 2009/6/3 Alan Cox <alan@lxorguk.ukuu.org.uk>:
+>> What about 2.6.28 or 2.6.29 ?
+>>
+>
+> Hi,
+>
+> I just installed kernel 2.6.29.4-rt16-2-rt from the SUSE build servic=
+e
+> (there's no 2.6.28 one available nor a 'normal' 2.6.29 one) and my
+> UDMA is set correctly just as when using the default 2.6.27.21 kernel=
+=2E
+> Now I'm not sure if there really is a problem in 2.6.30-rc7-git4 or
+> did I somehow introduced it by configuring something incorrectly
+> (which I doubt because as I said, I didn't touch anything related to
+> IDE during configuration. I only tweaked a few options, most of them
+> in the General and Processor sections).
+>
+> ---------- dmesg IDE of 2.6.29.4-rt16-2-rt----------------
+>
+> pata_via 0000:00:0f.0: PCI INT A -> Link[ALKA] -> GSI 20 (level, low)=
+ -> IRQ 20
+> scsi0 : pata_via
+> scsi1 : pata_via
+> ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xdc00 irq 14
+> ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xdc08 irq 15
+> ata1.00: ATA-7: Maxtor 6Y080L0, YAR41BW0, max UDMA/133
+> ata1.00: 160086528 sectors, multi 16: LBA
+> ata1.01: ATA-5: ST340016A, 3.10, max UDMA/100
+> ata1.01: 78165360 sectors, multi 16: LBA
+> ata1.00: configured for UDMA/133
+> ata1.01: configured for UDMA/100
+> isa bounce pool size: 16 pages
+> scsi 0:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0Maxtor 6Y080L0 =A0=
+ YAR4 PQ: 0 ANSI: 5
+> scsi 0:0:1:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0ST340016A =A0 =A0 =
+=A0 =A03.10 PQ: 0 ANSI: 5
+> ata2.00: ATAPI: TSSTcorpCD/DVDW TS-H552U, US08, max UDMA/33
+> ata2.00: configured for UDMA/33
+> scsi 1:0:0:0: CD-ROM =A0 =A0 =A0 =A0 =A0 =A0TSSTcorp CD/DVDW TS-H552U=
+ US08 PQ: 0 ANSI: 5
+> BIOS EDD facility v0.16 2004-Jun-25, 2 devices found
+> udevd version 128 started
+> Driver 'sd' needs updating - please use bus_type methods
+> sd 0:0:0:0: [sda] 160086528 512-byte hardware sectors: (81.9 GB/76.3 =
+GiB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 0:0:0:0: [sda] 160086528 512-byte hardware sectors: (81.9 GB/76.3 =
+GiB)
+>
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Adding more information. A user on the openSUSE forum which is trying
+out openSUSE 11.2 milestone 2 (with kernel 2.6.30-rc6-git3) is having
+the same problems. His computer is using the pata_amd driver instead
+of pata_via like mine and he too gets limiting to UDMA33 during boot
 
----
-The patch is against the ide-2.6.git 'master' branch...
-
- drivers/ide/pdc202xx_old.c |    3 +--
- 1 files changed, 1 insertion(+), 2 deletions(-)
-
-Index: ide-2.6/drivers/ide/pdc202xx_old.c
-===================================================================
---- ide-2.6.orig/drivers/ide/pdc202xx_old.c
-+++ ide-2.6/drivers/ide/pdc202xx_old.c
-@@ -319,9 +319,8 @@ static const struct ide_dma_ops pdc20246
- 	.dma_start		= ide_dma_start,
- 	.dma_end		= ide_dma_end,
- 	.dma_test_irq		= pdc202xx_dma_test_irq,
--	.dma_lost_irq		= pdc202xx_dma_lost_irq,
-+	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_clear		= pdc202xx_reset,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
-
+Link: http://forums.opensuse.org/pre-release-beta/415373-hd-speed.html
