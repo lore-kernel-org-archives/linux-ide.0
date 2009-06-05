@@ -1,161 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/4] ide-gd: implement block device ->set_capacity method
-Date: Fri, 5 Jun 2009 20:38:02 +0200
-Message-ID: <200906052038.08080.bzolnier@gmail.com>
-References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain> <200906012332.31628.bzolnier@gmail.com> <4A2575BC.9000805@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] libata fixes
+Date: Fri, 5 Jun 2009 21:16:47 +0100
+Message-ID: <20090605211647.2f118a5c@lxorguk.ukuu.org.uk>
+References: <20090605184608.GA29250@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:38714 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702AbZFESxU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2009 14:53:20 -0400
-In-Reply-To: <4A2575BC.9000805@ru.mvista.com>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53324 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750876AbZFEUQh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2009 16:16:37 -0400
+In-Reply-To: <20090605184608.GA29250@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, Frans Pop <elendil@planet.nl>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tuesday 02 June 2009 20:55:56 Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >>Subject: [PATCH] ide-gd: implement block device ->set_capacity method
-> 
-> >>* Use ->probed_capacity to store native device capacity for ATA disks.
-> 
-> >>* Add ->set_capacity method to struct ide_disk_ops.
-> 
-> >>* Implement disk device ->set_capacity method for ATA disks.
-> 
-> >>* Implement block device ->set_capacity method.
-> 
-> >>Together with the previous patch adding ->set_capacity block device
-> >>method this allows automatic disabling of Host Protected Area (HPA)
-> >>if any partitions overlapping HPA are detected.
-> 
-> >>Cc: Robert Hancock <hancockrwd@gmail.com>
-> >>Cc: Frans Pop <elendil@planet.nl>
-> >>Cc: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
-> >>Cc: Al Viro <viro@zeniv.linux.org.uk>
-> >>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> > v2 interdiff
-> 
-> > v2:
-> > * Check if LBA and HPA are supported in ide_disk_set_capacity().
-> 
-> > * According to the spec the SET MAX ADDRESS command shall be
-> >   immediately preceded by a READ NATIVE MAX ADDRESS command.
-> 
-> > * Add ide_disk_hpa_{get_native,set}_capacity() helpers.
-> 
->     One of them seem to me pretty useless...
-> 
-> > diff -u b/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-> > --- b/drivers/ide/ide-disk.c
-> > +++ b/drivers/ide/ide-disk.c
-> > @@ -302,14 +302,12 @@
-> >  	{ NULL,		NULL }
-> >  };
-> >  
-> > -static void idedisk_check_hpa(ide_drive_t *drive)
-> > +static u64 ide_disk_hpa_get_native_capacity(ide_drive_t *drive, int lba48)
-> 
->     Frankly speaking, I don't see what you've bought with factoring out this 
-> function...
+On Fri, 5 Jun 2009 14:46:08 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-Saner abstractions and increased code clarity.
-
-[ Makes long-term maintenance easier. ]
-
-> >  {
-> > -	unsigned long long capacity, set_max;
-> > -	int lba48 = ata_id_lba48_enabled(drive->id);
-> > +	u64 capacity, set_max;
-> >  
-> >  	capacity = drive->capacity64;
-> > -
-> > -	set_max = idedisk_read_native_max_address(drive, lba48);
-> > +	set_max  = idedisk_read_native_max_address(drive, lba48);
-> >  
-> >  	if (ide_in_drive_list(drive->id, hpa_list)) {
-> >  		/*
-> > @@ -320,6 +318,26 @@
-> >  			set_max--;
-> >  	}
-> >  
-> > +	return set_max;
-> > +}
-> > +
-> > +static u64 ide_disk_hpa_set_capacity(ide_drive_t *drive, u64 set_max, int lba48)
-> > +{
-> > +	set_max = idedisk_set_max_address(drive, set_max, lba48);
-> > +	if (set_max)
-> > +		drive->capacity64 = set_max;
-> > +
-> > +	return set_max;
-> > +}
-> > +
-> > +static void idedisk_check_hpa(ide_drive_t *drive)
-> > +{
-> > +	u64 capacity, set_max;
-> > +	int lba48 = ata_id_lba48_enabled(drive->id);
-> > +
-> > +	capacity = drive->capacity64;
-> > +	set_max  = ide_disk_hpa_get_native_capacity(drive, lba48);
-> > +
-> >  	if (set_max <= capacity)
-> >  		return;
-> >  
-> > @@ -332,13 +350,10 @@
-> >  			 capacity, sectors_to_MB(capacity),
-> >  			 set_max, sectors_to_MB(set_max));
-> >  
-> > -	set_max = idedisk_set_max_address(drive, set_max, lba48);
-> > -
-> > -	if (set_max) {
-> > -		drive->capacity64 = set_max;
-> > +	set_max = ide_disk_hpa_set_capacity(drive, set_max, lba48);
-> > +	if (set_max)
-> >  		printk(KERN_INFO "%s: Host Protected Area disabled.\n",
-> >  				 drive->name);
-> > -	}
-> >  }
-> >  
-> >  static int ide_disk_get_capacity(ide_drive_t *drive)
-> > @@ -399,12 +414,25 @@
-> >  static u64 ide_disk_set_capacity(ide_drive_t *drive, u64 capacity)
-> >  {
-> >  	u64 set = min(capacity, drive->probed_capacity);
-> > -	int lba48 = ata_id_lba48_enabled(drive->id);
-> > -
-> > -	capacity = idedisk_set_max_address(drive, set, lba48);
-> > -	if (capacity)
-> > -		drive->capacity64 = capacity;
-> > +	u16 *id = drive->id;
-> > +	int lba48 = ata_id_lba48_enabled(id);
-> >  
-> > +	if ((drive->dev_flags & IDE_DFLAG_LBA) == 0 ||
-> > +	    ata_id_hpa_enabled(id) == 0)
-> > +		goto out;
-> > +
-> > +	/*
-> > +	 * according to the spec the SET MAX ADDRESS command shall be
-> > +	 * immediately preceded by a READ NATIVE MAX ADDRESS command
-> > +	 */
-> > +	capacity = ide_disk_hpa_get_native_capacity(drive, lba48);
 > 
->     Might as well just call idedisk_read_native_max_address() -- we don't 
-> need to lookup hpa_list[] if we're only checking whether we can read native 
-> max address or not afterwards:
+> Please pull from 'upstream-linus' branch of
+> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-ditto :)
+Missing
 
-None of this code is performance critical or adds significant footprint to
-the resulting binary size..
+    libata: Use IGN_SIMPLEX for ALi
+
+which you said you'd kick upstream and without which lots of ALi users
+now get no DMA on half their devices due to PM changes.
+
