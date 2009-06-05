@@ -1,18 +1,18 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Fri, 5 Jun 2009 13:54:57 GMT
-Message-ID: <200906051354.n55DsvAN019429@demeter.kernel.org>
+Date: Fri, 5 Jun 2009 13:55:38 GMT
+Message-ID: <200906051355.n55Dtc1s019539@demeter.kernel.org>
 References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53148 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:53164 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753420AbZFENyz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2009 09:54:55 -0400
+	with ESMTP id S1753686AbZFENzg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2009 09:55:36 -0400
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n55Dsvhd019430
-	for <linux-ide@vger.kernel.org>; Fri, 5 Jun 2009 13:54:57 GMT
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n55DtceR019541
+	for <linux-ide@vger.kernel.org>; Fri, 5 Jun 2009 13:55:38 GMT
 In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -25,7 +25,7 @@ Hans de Bruin <bruinjm@xs4all.nl> changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-  Attachment #21602|application/octet-stream    |text/plain
+  Attachment #21764|application/octet-stream    |text/plain
           mime type|                            |
 
 
