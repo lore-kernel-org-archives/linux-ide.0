@@ -1,44 +1,40 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Kernel 2.6.30rc7 limits IDE to UDMA33
-Date: Fri, 05 Jun 2009 19:07:47 -0600
-Message-ID: <4A29C163.3080706@gmail.com>
-References: <c5bd819b0906021525l13ee9282j1fb270e141985f66@mail.gmail.com>	<4A25F688.9000407@gmail.com>	<c5bd819b0906030435w466368cbsd48be91a97597437@mail.gmail.com>	<20090603131407.57c490ed@lxorguk.ukuu.org.uk>	<c5bd819b0906030552w6f23185etb394f83c8b630e6@mail.gmail.com>	<20090603140140.491a8ea8@lxorguk.ukuu.org.uk>	<c5bd819b0906030639o5f9c34ffg500e132d3a0b5117@mail.gmail.com>	<c5bd819b0906040750w75e0389cod2a03b89ce838d1b@mail.gmail.com>	<20090605100505.41b3b818@lxorguk.ukuu.org.uk>	<c5bd819b0906050335i4e813887sc8f4d901da86a1aa@mail.gmail.com> <20090605114245.175499e1@lxorguk.ukuu.org.uk>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 2/4] partitions: add ->set_capacity block device method
+Date: Sat, 6 Jun 2009 09:42:47 +0100
+Message-ID: <20090606084247.GA19924@ZenIV.linux.org.uk>
+References: <20090531143911.7164.26834.sendpatchset@localhost.localdomain> <20090531143924.7164.25770.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:8465 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752979AbZFFBHt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2009 21:07:49 -0400
-In-Reply-To: <20090605114245.175499e1@lxorguk.ukuu.org.uk>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:58740 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752644AbZFFImq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Jun 2009 04:42:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20090531143924.7164.25770.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Grozdan <neutrino8@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Frans Pop <elendil@planet.nl>
 
-Alan Cox wrote:
->> I've relayed your reply to the pata_amd user on the forum. As for my
->> case with pata_via, until this is fixed, is there any way to force it
->> to use a higher UDMA? Is there a flag that can be passed in, for
+On Sun, May 31, 2009 at 04:39:24PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] partitions: add ->set_capacity block device method
 > 
-> In your case given the BIOS appears to be informing us you have a 40wire
-> cable there isn't much that can be fixed
+> * Add ->set_capacity block device method and use it in rescan_partitions()
+>   to attempt enabling native capacity of the device upon detecting the
+>   partition which exceeds device capacity.
 > 
->> example, in /sys somewhere? hdparm fails to set a higher UDMA and I
->> looked at sdparm but don't see anything in it to increase UDMA...
+> * Add GENHD_FL_NATIVE_CAPACITY flag to try limit attempts of enabling
+>   native capacity during partition scan.
 > 
-> Tejun some time ago added stuff to override all of these things:
+> Together with the consecutive patch implementing ->set_capacity method in
+> ide-gd device driver this allows automatic disabling of Host Protected Area
+> (HPA) if any partitions overlapping HPA are detected.
 > 
-> See Documentation/kernel-parameters.txt
-> 
-> 	libata.force=
-> 
-> which will let you override all sorts of autodetection for quirky boards
+> Cc: Robert Hancock <hancockrwd@gmail.com>
+> Cc: Frans Pop <elendil@planet.nl>
+> Cc: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+> Cc: Al Viro <viro@zeniv.linux.org.uk>
 
-I wouldn't rule out the possibility of a bug. The code in pata_via looks 
-a bit fishy, it reports a 40-wire cable if either the GTM data wasn't 
-present or valid, or if it reports a mode of UDMA2 or less. In the 
-former case it seems like ATA_CABLE_PATA_UNK would be the safer choice 
-since we really don't know, and we should then use drive-side detection, 
-rather than assuming a 40-wire cable by default..
+Acked-by: Al Viro <viro@zeniv.linux.org.uk>
