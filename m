@@ -1,37 +1,42 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [Bug #13378] kernel/async.c broke pata_legacy.c
-Date: Sat, 06 Jun 2009 14:23:15 +0000
-Message-ID: <1244298195.14676.6.camel@mulgrave.site>
-References: <4to6E2myxvG.A.muC.aIbIKB@chimera>
-	 <LEcEO2518_I.A.8UD.tIbIKB@chimera>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Kernel 2.6.30rc7 limits IDE to UDMA33
+Date: Sat, 6 Jun 2009 15:56:36 +0100
+Message-ID: <20090606155636.18bc4f2e@lxorguk.ukuu.org.uk>
+References: <c5bd819b0906021525l13ee9282j1fb270e141985f66@mail.gmail.com>
+	<4A25F688.9000407@gmail.com>
+	<c5bd819b0906030435w466368cbsd48be91a97597437@mail.gmail.com>
+	<20090603131407.57c490ed@lxorguk.ukuu.org.uk>
+	<c5bd819b0906030552w6f23185etb394f83c8b630e6@mail.gmail.com>
+	<20090603140140.491a8ea8@lxorguk.ukuu.org.uk>
+	<c5bd819b0906030639o5f9c34ffg500e132d3a0b5117@mail.gmail.com>
+	<c5bd819b0906040750w75e0389cod2a03b89ce838d1b@mail.gmail.com>
+	<20090605100505.41b3b818@lxorguk.ukuu.org.uk>
+	<c5bd819b0906050335i4e813887sc8f4d901da86a1aa@mail.gmail.com>
+	<20090605114245.175499e1@lxorguk.ukuu.org.uk>
+	<4A29C163.3080706@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <LEcEO2518_I.A.8UD.tIbIKB@chimera>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, IDE <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mikael Pettersson <mikpe-1zs4UD6AkMk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755239AbZFFOz3@vger.kernel.org>
+In-Reply-To: <4A29C163.3080706@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Grozdan <neutrino8@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, 2009-05-30 at 21:37 +0200, Rafael J. Wysocki wrote:
-> This message has been generated automatically as a part of a report
-> of recent regressions.
-> 
-> The following bug entry is on the current list of known regressions
-> from 2.6.29.  Please verify if it still should be listed and let me know
-> (either way).
-> 
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13378
-> Subject		: kernel/async.c broke pata_legacy.c
-> Submitter	: Mikael Pettersson <mikpe-1zs4UD6AkMk@public.gmane.org>
-> Date		: 2009-05-24 16:13 (7 days old)
-> References	: http://marc.info/?l=linux-kernel&m=124318186507210&w=4
-> Handled-By	: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-> Patch		: http://patchwork.kernel.org/patch/25699/
+> I wouldn't rule out the possibility of a bug. The code in pata_via looks 
+> a bit fishy, it reports a 40-wire cable if either the GTM data wasn't 
+> present or valid, or if it reports a mode of UDMA2 or less. In the 
+> former case it seems like ATA_CABLE_PATA_UNK would be the safer choice 
+> since we really don't know, and we should then use drive-side detection, 
+> rather than assuming a 40-wire cable by default..
 
-Should now be fixed by upstream commit
-45bc955bb1324a46c9539550cc615994e6d0a43d
+Drive side detection doesn't work for many VIA boards, the neccessary
+components are not included.
 
-James
+About the only other check I can think to try is to see if the BIOS
+programmed modes > UDMA2 for either device. That has its own problems
+(suspend-resume/hotplug/non-bios devices) which is why we currently don't
+do it.
+
+Alan
