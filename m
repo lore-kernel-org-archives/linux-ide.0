@@ -1,32 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [git pull] IDE fixes
-Date: Sun, 7 Jun 2009 15:40:48 +0100
-Message-ID: <20090607154048.07a7fb65@lxorguk.ukuu.org.uk>
-References: <200906071444.33047.bzolnier@gmail.com>
-	<20090607152151.3cb01901@lxorguk.ukuu.org.uk>
-	<200906071632.30914.bzolnier@gmail.com>
+Date: Sun, 7 Jun 2009 16:57:49 +0200
+Message-ID: <200906071657.49513.bzolnier@gmail.com>
+References: <200906071444.33047.bzolnier@gmail.com> <20090607152151.3cb01901@lxorguk.ukuu.org.uk> <1244385536.8262.5.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38264 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752659AbZFGOjm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 10:39:42 -0400
-In-Reply-To: <200906071632.30914.bzolnier@gmail.com>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:63383 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753007AbZFGOwp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 10:52:45 -0400
+In-Reply-To: <1244385536.8262.5.camel@mulgrave.site>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> If you want to discuss any code that I push upstream then *please* quote
-> it in your mails so we all can see what parts you question and discuss it
-> based on technical merits.
+On Sunday 07 June 2009 16:38:56 James Bottomley wrote:
+> On Sun, 2009-06-07 at 15:21 +0100, Alan Cox wrote:
+> > > diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+> > > index 99e33ef..4bc2c43 100644
+> > > --- a/fs/partitions/check.c
+> > > +++ b/fs/partitions/check.c
+> > 
+> > 
+> > You seriously want to add code to the core partition handling logic
+> > moments before release when we know we have all sorts of devices with
+> > weird behaviours ?
+> > 
+> > This should be .31 stuff where we can take the time to see how it works
+> > on all sorts of weird real world devices (eg those with 2K sector size)
+> > and the like.
+> 
+> Absolutely seconded.
+> 
+> Plus this is only one of the proposals for dealing with IDE native sizes
+> moving through the process.  The other one is in libata with the gendisk
+> proposal for alt size instead of your set_capacity callback.   The last
 
-This isn't about technical merits - it is about *risk*. You don't submit
-patches to core code to add new features just before the final release.
+->set_capacity callback is needed for drivers/ide regardless of alt_size
+sysfs interface and it don't conflict with it in any way.
 
-And my email included enough meta-information (such as the patch header)
-to make the neccessary point.
+Those patches are a complimentary work to Tejun's alt_size patches. 
 
-Alan
+They don't export anything to user-space.
+
+> thing we want is two separate mechanisms for this, so trying to push
+> anything upstream before we have agreement on direction is premature ...
+> trying to send a feature as a bug fix is doubly so.
+
+James, please (re-)read commits, then bug #13365 at kernel.org and if you
+still find some code parts controversial I'll be happy to discuss them.
+
+Thanks.
+Bart
