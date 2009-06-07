@@ -1,26 +1,40 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Kernel 2.6.30rc7 limits IDE to UDMA33
-Date: Sun, 7 Jun 2009 20:54:01 +0100
-Message-ID: <20090607205401.73556585@lxorguk.ukuu.org.uk>
-References: <c5bd819b0906021525l13ee9282j1fb270e141985f66@mail.gmail.com>
-	<4A2BF785.3020402@gmail.com>
-	<c5bd819b0906071124j21270574h44db963bdc0b552d@mail.gmail.com>
-	<200906071346.28021.lkml@morethan.org>
+Subject: Re: [git pull] IDE fixes
+Date: Sun, 7 Jun 2009 21:07:01 +0100
+Message-ID: <20090607210701.78103188@lxorguk.ukuu.org.uk>
+References: <200906071444.33047.bzolnier@gmail.com>
+	<200906071744.23629.bzolnier@gmail.com>
+	<1244390889.8262.47.camel@mulgrave.site>
+	<200906071947.19723.bzolnier@gmail.com>
+	<1244401729.8262.102.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755845AbZFGTx6@vger.kernel.org>
-In-Reply-To: <200906071346.28021.lkml@morethan.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: lkml@morethan.org
-Cc: Grozdan <neutrino8@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51213 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754340AbZFGUG3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 16:06:29 -0400
+In-Reply-To: <1244401729.8262.102.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> The article presumes the simple case of a single commit being the
-> problem.  If the problem involves more than one. . .
+> > [ I also tried to encourage libata developers to look into making the needed
+> >   libata changes (see my initial posting of HPA patches) and I will still be
+> >   glad to help with libata patches if somebody would like to work on them
+> >   (Robert? Tejun?). ]
 > 
-> Think of doing a binary search in a list of values with duplicate
-> entries.  ;)
+> OK, so back off on the 2.6.30-rc7 release of this and I'll undertake to
+> get libata engaged for integrating this into both subsystems for
+> 2.6.31 ... does that sound fair?
 
-My first guess is its whatever starting putting devices in D3 rudely
-around 2.6.28/29. Someone needs to pin that down anyway and fix it.
+libata already is, and I've been following and reviewing the patches. The
+problem remaining is basically that this is not the time to merge
+it.
+
+It will probably also be worth looking at the way the CD driver plays
+fast and loose with capacity when handling CD-R devices as a follow on
+from this stuff.
+
