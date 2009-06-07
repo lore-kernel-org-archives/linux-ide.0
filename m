@@ -1,25 +1,24 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [git pull] IDE fixes
-Date: Sun, 7 Jun 2009 16:32:30 +0200
-Message-ID: <200906071632.30914.bzolnier@gmail.com>
-References: <200906071444.33047.bzolnier@gmail.com> <20090607152151.3cb01901@lxorguk.ukuu.org.uk>
+Date: Sun, 07 Jun 2009 09:38:56 -0500
+Message-ID: <1244385536.8262.5.camel@mulgrave.site>
+References: <200906071444.33047.bzolnier@gmail.com>
+	 <20090607152151.3cb01901@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:34504 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbZFGO1f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 10:27:35 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56566 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751993AbZFGOi7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 10:38:59 -0400
 In-Reply-To: <20090607152151.3cb01901@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 07 June 2009 16:21:51 Alan Cox wrote:
+On Sun, 2009-06-07 at 15:21 +0100, Alan Cox wrote:
 > > diff --git a/fs/partitions/check.c b/fs/partitions/check.c
 > > index 99e33ef..4bc2c43 100644
 > > --- a/fs/partitions/check.c
@@ -34,6 +33,15 @@ On Sunday 07 June 2009 16:21:51 Alan Cox wrote:
 > on all sorts of weird real world devices (eg those with 2K sector size)
 > and the like.
 
-If you want to discuss any code that I push upstream then *please* quote
-it in your mails so we all can see what parts you question and discuss it
-based on technical merits.
+Absolutely seconded.
+
+Plus this is only one of the proposals for dealing with IDE native sizes
+moving through the process.  The other one is in libata with the gendisk
+proposal for alt size instead of your set_capacity callback.   The last
+thing we want is two separate mechanisms for this, so trying to push
+anything upstream before we have agreement on direction is premature ...
+trying to send a feature as a bug fix is doubly so.
+
+James
+
+
