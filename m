@@ -1,21 +1,28 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [git pull] IDE fixes
-Date: Sun, 7 Jun 2009 22:42:37 +0200
-Message-ID: <200906072242.38021.bzolnier@gmail.com>
-References: <200906071444.33047.bzolnier@gmail.com> <1244401729.8262.102.camel@mulgrave.site> <20090607210701.78103188@lxorguk.ukuu.org.uk>
+Date: Sun, 07 Jun 2009 20:39:45 +0000
+Message-ID: <1244407185.8262.178.camel@mulgrave.site>
+References: <200906071444.33047.bzolnier@gmail.com>
+	 <200906071744.23629.bzolnier@gmail.com>
+	 <1244390889.8262.47.camel@mulgrave.site>
+	 <200906071947.19723.bzolnier@gmail.com>
+	 <1244401729.8262.102.camel@mulgrave.site>
+	 <20090607210701.78103188@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755284AbZFGUiA@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51246 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754554AbZFGUjq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 16:39:46 -0400
 In-Reply-To: <20090607210701.78103188@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 07 June 2009 22:07:01 Alan Cox wrote:
+On Sun, 2009-06-07 at 21:07 +0100, Alan Cox wrote:
 > > > [ I also tried to encourage libata developers to look into making the needed
 > > >   libata changes (see my initial posting of HPA patches) and I will still be
 > > >   glad to help with libata patches if somebody would like to work on them
@@ -29,29 +36,14 @@ On Sunday 07 June 2009 22:07:01 Alan Cox wrote:
 > problem remaining is basically that this is not the time to merge
 > it.
 
-In ide's case the situation is a bit different:
-
-This is a bug fix.  Not an obvious one but it will help anyone installing
-a new distribution/kernel using ide on machine with HPA, as it will allow
-this user for streamline transition to a distribution/kernel using libata
-later if needed (even though I don't recommend it :).
-
-I just want a fair treatment.  I'm not posting crap -rc pull request so
-I see no reason why I have to pay for other maintainers mistakes.
-
-This was better tested and reviewed that some other changes that got in
-after 2.6.30-rc8 (and is smaller than at least one other pull request
-that got in).
-
-I even admitted in the pull request that this may be too late but based on
-my technical judgment (strongly backed by on reviews from you and Sergei)
-I considered those changes to be on the edge...
-
-It is not a *must*have* for 2.6.30 but still 2.6.30 *shall*have* it.
+Actually, I was talking about the fallback to disabling heuristic which
+this patch set introduces, and which would fix bug 13365 if it were
+applied to libata, but which is the bit I think needs some testing.
 
 > It will probably also be worth looking at the way the CD driver plays
 > fast and loose with capacity when handling CD-R devices as a follow on
 > from this stuff.
 
-Sure and it would be easier to look into this (and libata changes) with
-partitions/ide changes in.
+James
+
+
