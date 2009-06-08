@@ -1,72 +1,116 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] sl82c105: add printk() logging facility
-Date: Mon, 8 Jun 2009 21:46:19 +0400
-Message-ID: <200906082146.19522.sshtylyov@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-tape: fix proc warning
+Date: Mon, 8 Jun 2009 21:56:50 +0200
+Message-ID: <200906082156.50923.bzolnier@gmail.com>
+References: <20090607092054.GA26408@liondog.tnic> <200906071528.05185.bzolnier@gmail.com> <20090607174533.GA15551@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:41691 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750853AbZFHRot (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jun 2009 13:44:49 -0400
-In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:56994 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751638AbZFHT61 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jun 2009 15:58:27 -0400
+In-Reply-To: <20090607174533.GA15551@liondog.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Add missing printk() logging facility in sl82c105_dma_lost_irq().
+On Sunday 07 June 2009 19:45:33 Borislav Petkov wrote:
+> Hi,
+> 
+> On Sun, Jun 07, 2009 at 03:28:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > because it tries to free its proc entry in drive_release_dev()
+> > > in the call chain resulting from ide_tape_put() but it chokes on
+> > > /proc/ide/ide[01]/hd?/name which is added during driver registration and
+> > > should go only at driver removal time.
+> > > 
+> > > Add/remove those proc entries everytime the device is accessed.
+> > 
+> > This looks more like broken ide-tape refcounting for chrdev interface
+> > than mismatch of /proc entries registration time (especially since other
+> > device drivers are not having the above problem)..
+> 
+> This sounds more like it, I was wondering why that
+> /proc/ide/ide[01]/hd?/name attribute was disappearing.
+> 
+> > Please see ide_tape_chrdev_get() -- it misses ide_device_get() call
+> > [present in ide_tape_get()] which can result in premature release of
+> > IDE device during ide_tape_put() call.
+> 
+> By the way, why are we using two devs for the reference counting:
+> drive->gendev over ide_device_get() and fall back to {tape,cd,idkp}->dev
+> in get_device(). Isn't one enough?
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+->gendev and ->dev have different lifetime rules.
 
----
-The patch is atop of the ide-2.6.git 'for-next' branch...
+> Anyways, here's the fixed version, tested with my Seagate STT8000A,
+> works fine.
+> 
+> --
+> From: Borislav Petkov <petkovbb@gmail.com>
+> Date: Sun, 7 Jun 2009 19:35:56 +0200
+> Subject: [PATCH] ide-tape: fix proc warning
+> 
+> ide_tape_chrdev_get() was missing an ide_device_get() refcount increment
+> which lead to the following warning:
+> 
+> [  278.147906] ------------[ cut here ]------------
+> [  278.152685] WARNING: at fs/proc/generic.c:847 remove_proc_entry+0x199/0x1b8()
+> [  278.160070] Hardware name: P4I45PE    1.00
+> [  278.160076] remove_proc_entry: removing non-empty directory 'ide0/hdb', leaking at least 'name'
+> [  278.160080] Modules linked in: rtc intel_agp pcspkr thermal processor thermal_sys parport_pc parport agpgart button
+> [  278.160100] Pid: 2312, comm: mt Not tainted 2.6.30-rc2 #3
+> [  278.160105] Call Trace:
+> [  278.160117]  [<c012141d>] warn_slowpath+0x71/0xa0
+> [  278.160126]  [<c035f219>] ? _spin_unlock_irqrestore+0x29/0x2c
+> [  278.160132]  [<c011c686>] ? try_to_wake_up+0x1b6/0x1c0
+> [  278.160141]  [<c011c69b>] ? default_wake_function+0xb/0xd
+> [  278.160149]  [<c0177ead>] ? pollwake+0x4a/0x55
+> [  278.160156]  [<c035f240>] ? _spin_unlock+0x24/0x26
+> [  278.160163]  [<c0165d38>] ? add_partial+0x44/0x49
+> [  278.160169]  [<c01669e8>] ? __slab_free+0xba/0x29c
+> [  278.160177]  [<c01a13d8>] ? sysfs_delete_inode+0x0/0x3c
+> [  278.160184]  [<c019ca92>] remove_proc_entry+0x199/0x1b8
+> [  278.160191]  [<c01a297e>] ? remove_dir+0x27/0x2e
+> [  278.160199]  [<c025f3ab>] ide_proc_unregister_device+0x40/0x4c
+> [  278.160207]  [<c02599cd>] drive_release_dev+0x14/0x47
+> [  278.160214]  [<c0250538>] device_release+0x35/0x5a
+> [  278.160221]  [<c01f8bed>] kobject_release+0x40/0x50
+> [  278.160226]  [<c01f8bad>] ? kobject_release+0x0/0x50
+> [  278.160232]  [<c01f96ac>] kref_put+0x3c/0x4a
+> [  278.160238]  [<c01f8b29>] kobject_put+0x37/0x3c
+> [  278.160243]  [<c025020c>] put_device+0xf/0x11
+> [  278.160249]  [<c025789f>] ide_device_put+0x2d/0x30
+> [  278.160255]  [<c02658da>] ide_tape_put+0x24/0x32
+> [  278.160261]  [<c0266e0c>] idetape_chrdev_release+0x17f/0x18e
+> [  278.160269]  [<c016c4f5>] __fput+0xca/0x175
+> [  278.160275]  [<c016c5b9>] fput+0x19/0x1b
+> [  278.160280]  [<c0169d19>] filp_close+0x51/0x5b
+> [  278.160286]  [<c0169d96>] sys_close+0x73/0xad
+> [  278.160293]  [<c0102a61>] syscall_call+0x7/0xb
+> [  278.160298] ---[ end trace f16d907ea1f89336 ]---
+> 
+> Instead of trivially fixing it by adding the missing call,
+> ide_tape_chrdev_get() and ide_tape_get() were merged into one function
+> since both were almost identical. The only difference was that
+> ide_tape_chrdev_get() was accessing the ide-tape reference through the
+> idetape_devs[] array of minors instead of through the gendisk.
+> 
+> Accomodate that by adding two additional parameters to ide_tape_get() to
+> annotate the call site and invoke the proper behavior.
+> 
+> As a result, remove ide_tape_chrdev_get().
+> 
+> There should be no functional change resulting from this patch.
 
- drivers/ide/sl82c105.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+Doesn't it fix the warning? :)
 
-Index: ide-2.6/drivers/ide/sl82c105.c
-===================================================================
---- ide-2.6.orig/drivers/ide/sl82c105.c
-+++ ide-2.6/drivers/ide/sl82c105.c
-@@ -10,7 +10,7 @@
-  * with the timing registers setup.
-  *  -- Benjamin Herrenschmidt (01/11/03) benh@kernel.crashing.org
-  *
-- * Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
-+ * Copyright (C) 2006-2007,2009 MontaVista Software, Inc. <source@mvista.com>
-  * Copyright (C)      2007 Bartlomiej Zolnierkiewicz
-  */
- 
-@@ -146,14 +146,15 @@ static void sl82c105_dma_lost_irq(ide_dr
- 	u32 val, mask		= hwif->channel ? CTRL_IDE_IRQB : CTRL_IDE_IRQA;
- 	u8 dma_cmd;
- 
--	printk("sl82c105: lost IRQ, resetting host\n");
-+	printk(KERN_WARNING "sl82c105: lost IRQ, resetting host\n");
- 
- 	/*
- 	 * Check the raw interrupt from the drive.
- 	 */
- 	pci_read_config_dword(dev, 0x40, &val);
- 	if (val & mask)
--		printk("sl82c105: drive was requesting IRQ, but host lost it\n");
-+		printk(KERN_INFO "sl82c105: drive was requesting IRQ, "
-+		       "but host lost it\n");
- 
- 	/*
- 	 * Was DMA enabled?  If so, disable it - we're resetting the
-@@ -162,7 +163,7 @@ static void sl82c105_dma_lost_irq(ide_dr
- 	dma_cmd = inb(hwif->dma_base + ATA_DMA_CMD);
- 	if (dma_cmd & 1) {
- 		outb(dma_cmd & ~1, hwif->dma_base + ATA_DMA_CMD);
--		printk("sl82c105: DMA was enabled\n");
-+		printk(KERN_INFO "sl82c105: DMA was enabled\n");
- 	}
- 
- 	sl82c105_reset_host(dev);
+[ I removed this line while merging the patch. ]
 
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+
+applied
