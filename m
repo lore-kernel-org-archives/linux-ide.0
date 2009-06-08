@@ -1,104 +1,123 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git pull] IDE fixes
-Date: Mon, 8 Jun 2009 02:54:14 +0200
-Message-ID: <200906080254.14427.bzolnier@gmail.com>
-References: <200906071444.33047.bzolnier@gmail.com> <200906080147.12274.bzolnier@gmail.com> <alpine.LFD.2.01.0906071651250.6847@localhost.localdomain>
+From: Leon Woestenberg <leon.woestenberg@gmail.com>
+Subject: 2.6.30-rc6: Problem with an SSD disk on Freescale PowerPC
+	mpc8315e-rdb, works fine on x86
+Date: Mon, 8 Jun 2009 16:59:14 +0200
+Message-ID: <c384c5ea0906080759n24a66d21ob9076518cec41755@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:42664 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752968AbZFHAwK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jun 2009 20:52:10 -0400
-In-Reply-To: <alpine.LFD.2.01.0906071651250.6847@localhost.localdomain>
-Content-Disposition: inline
+Received: from mail-qy0-f195.google.com ([209.85.221.195]:52721 "EHLO
+	mail-qy0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756442AbZFHPHE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jun 2009 11:07:04 -0400
+Received: by qyk33 with SMTP id 33so51879qyk.33
+        for <linux-ide@vger.kernel.org>; Mon, 08 Jun 2009 08:07:05 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Pekka Enberg <penberg@cs.helsinki.fi>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux PPC <linuxppc-dev@ozlabs.org>, Stuart Hughes <stuarth@freescale.com>, Kumar Gala <galak@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-On Monday 08 June 2009 01:57:19 Linus Torvalds wrote:
-> 
-> On Mon, 8 Jun 2009, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > This is not a new feature and basing your opinions on opinions of people
-> > who don't read the code before commenting is bad, really bad, m'kay?
-> 
-> The thing is, I had planned on doing a final release yesterday, even 
+Hello,
 
-I don't want IDE to possibly hold off the final release so...
+using 2.6.30-rc6, I get the following problems when I read from a SSD
+disk, connected to the
+3.0 Gb SATA controller of the MPC8315E SoC rev 1.0 running Linux 2.6.30-rc6.
 
+Below see the output from two dd read runs.
 
-Linus, please pull from 'for-linus' branch of:
+The disk behaves fine on a x86 box.
 
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git for-linus
+What I can do to (help) pin-point the problem?
 
-to receive the following updates:
+Regards,
 
- drivers/ide/pdc202xx_old.c |   22 ++++++----------------
- 1 files changed, 6 insertions(+), 16 deletions(-)
+Leon.
 
 
-Sergei Shtylyov (2):
-      pdc202xx_old: fix 'pdc20246_dma_ops'
-      pdc202xx_old: fix resetproc() method
+root@mpc8315e-rdb:~# dd if=/dev/sda of=/dev/null bs=4k
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.00: cmd c8/00:3e:1e:e0:01/00:00:00:00:00/e0 tag 0 dma 31744 in
+         res 50/00:3e:e0:df:01/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata2.00: status: { DRDY }
+ata2: hard resetting link
+ata2: Signature Update detected @ 3528 msecs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/133
+sd 1:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
+sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+        00 01 df e0
+sd 1:0:0:0: [sda] ASC=0x0 ASCQ=0x0
+end_request: I/O error, dev sda, sector 122910
+__ratelimit: 52 callbacks suppressed
+Buffer I/O error on device sda, logical block 122910
+Buffer I/O error on device sda, logical block 122911
+Buffer I/O error on device sda, logical block 122912
+Buffer I/O error on device sda, logical block 122913
+Buffer I/O error on device sda, logical block 122914
+Buffer I/O error on device sda, logical block 122915
+Buffer I/O error on device sda, logical block 122916
+Buffer I/O error on device sda, logical block 122917
+Buffer I/O error on device sda, logical block 122918
+Buffer I/O error on device sda, logical block 122919
+ata2: EH complete
+dd: /dev/sda: Input/output error
 
 
-diff --git a/drivers/ide/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
-index 248a54b..b3bc96f 100644
---- a/drivers/ide/pdc202xx_old.c
-+++ b/drivers/ide/pdc202xx_old.c
-@@ -1,6 +1,6 @@
- /*
-  *  Copyright (C) 1998-2002		Andre Hedrick <andre@linux-ide.org>
-- *  Copyright (C) 2006-2007		MontaVista Software, Inc.
-+ *  Copyright (C) 2006-2007, 2009	MontaVista Software, Inc.
-  *  Copyright (C) 2007			Bartlomiej Zolnierkiewicz
-  *
-  *  Portions Copyright (C) 1999 Promise Technology, Inc.
-@@ -227,28 +227,19 @@ somebody_else:
- 	return (dma_stat & 4) == 4;	/* return 1 if INTR asserted */
- }
- 
--static void pdc202xx_reset_host (ide_hwif_t *hwif)
-+static void pdc202xx_reset(ide_drive_t *drive)
- {
-+	ide_hwif_t *hwif	= drive->hwif;
- 	unsigned long high_16	= hwif->extra_base - 16;
- 	u8 udma_speed_flag	= inb(high_16 | 0x001f);
- 
-+	printk(KERN_WARNING "PDC202xx: software reset...\n");
-+
- 	outb(udma_speed_flag | 0x10, high_16 | 0x001f);
- 	mdelay(100);
- 	outb(udma_speed_flag & ~0x10, high_16 | 0x001f);
- 	mdelay(2000);	/* 2 seconds ?! */
- 
--	printk(KERN_WARNING "PDC202XX: %s channel reset.\n",
--		hwif->channel ? "Secondary" : "Primary");
--}
--
--static void pdc202xx_reset (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif	= drive->hwif;
--	ide_hwif_t *mate	= hwif->mate;
--
--	pdc202xx_reset_host(hwif);
--	pdc202xx_reset_host(mate);
--
- 	ide_set_max_pio(drive);
- }
- 
-@@ -328,9 +319,8 @@ static const struct ide_dma_ops pdc20246_dma_ops = {
- 	.dma_start		= ide_dma_start,
- 	.dma_end		= ide_dma_end,
- 	.dma_test_irq		= pdc202xx_dma_test_irq,
--	.dma_lost_irq		= pdc202xx_dma_lost_irq,
-+	.dma_lost_irq		= ide_dma_lost_irq,
- 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_clear		= pdc202xx_reset,
- 	.dma_sff_read_status	= ide_dma_sff_read_status,
- };
- 
+root@mpc8315e-rdb:~# dd if=/dev/sda of=/dev/null bs=4k
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.00: cmd c8/00:32:9a:6e:00/00:00:00:00:00/e0 tag 0 dma 25600 in
+         res 50/00:3e:5c:6e:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata2.00: status: { DRDY }
+ata2: hard resetting link
+ata2: Signature Update detected @ 3528 msecs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/133
+sd 1:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
+sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+        00 00 6e 5c
+sd 1:0:0:0: [sda] ASC=0x0 ASCQ=0x0
+end_request: I/O error, dev sda, sector 28314
+__ratelimit: 52 callbacks suppressed
+Buffer I/O error on device sda, logical block 28314
+Buffer I/O error on device sda, logical block 28315
+Buffer I/O error on device sda, logical block 28316
+Buffer I/O error on device sda, logical block 28317
+Buffer I/O error on device sda, logical block 28318
+Buffer I/O error on device sda, logical block 28319
+Buffer I/O error on device sda, logical block 28320
+Buffer I/O error on device sda, logical block 28321
+Buffer I/O error on device sda, logical block 28322
+Buffer I/O error on device sda, logical block 28323
+ata2: EH complete
+dd: /dev/sda: Input/output error
+
+
+root@mpc8315e-rdb:~# uname -a
+Linux mpc8315e-rdb 2.6.30-rc6 #1 Mon Jun 8 15:54:00 CEST 2009 ppc unknown
+
+root@mpc8315e-rdb:~# hdparm -i /dev/sda
+
+/dev/sda:
+
+ Model=Solidata X SSD                          , FwRev=0955    , SerialNo=<...>
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=0
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=128, MultSect=?1?
+ CurCHS=16383/16/63, CurSects=16514064, LBA=no
+ IORDY=no, tPIO={min:240,w/IORDY:120}
+ PIO modes:  pio0 pio3 pio4
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
+ AdvancedPM=yes: disabled (255) WriteCache=disabled
+ Drive conforms to: Unspecified:  ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6
+ATA/ATAPI-7
+
+ * signifies the current active mode
+
+
+
+-- 
+Leon
