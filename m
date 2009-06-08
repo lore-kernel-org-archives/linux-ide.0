@@ -1,123 +1,35 @@
-From: Leon Woestenberg <leon.woestenberg@gmail.com>
-Subject: 2.6.30-rc6: Problem with an SSD disk on Freescale PowerPC
-	mpc8315e-rdb, works fine on x86
-Date: Mon, 8 Jun 2009 16:59:14 +0200
-Message-ID: <c384c5ea0906080759n24a66d21ob9076518cec41755@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Mon, 8 Jun 2009 16:05:01 GMT
+Message-ID: <200906081605.n58G5155004552@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f195.google.com ([209.85.221.195]:52721 "EHLO
-	mail-qy0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756442AbZFHPHE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jun 2009 11:07:04 -0400
-Received: by qyk33 with SMTP id 33so51879qyk.33
-        for <linux-ide@vger.kernel.org>; Mon, 08 Jun 2009 08:07:05 -0700 (PDT)
+Received: from demeter.kernel.org ([140.211.167.39]:39761 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753301AbZFHQE7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jun 2009 12:04:59 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n58G51T0004554
+	for <linux-ide@vger.kernel.org>; Mon, 8 Jun 2009 16:05:01 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux PPC <linuxppc-dev@ozlabs.org>, Stuart Hughes <stuarth@freescale.com>, Kumar Gala <galak@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
-
-using 2.6.30-rc6, I get the following problems when I read from a SSD
-disk, connected to the
-3.0 Gb SATA controller of the MPC8315E SoC rev 1.0 running Linux 2.6.30-rc6.
-
-Below see the output from two dd read runs.
-
-The disk behaves fine on a x86 box.
-
-What I can do to (help) pin-point the problem?
-
-Regards,
-
-Leon.
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
 
-root@mpc8315e-rdb:~# dd if=/dev/sda of=/dev/null bs=4k
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd c8/00:3e:1e:e0:01/00:00:00:00:00/e0 tag 0 dma 31744 in
-         res 50/00:3e:e0:df:01/00:00:00:00:00/e0 Emask 0x1 (device error)
-ata2.00: status: { DRDY }
-ata2: hard resetting link
-ata2: Signature Update detected @ 3528 msecs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/133
-sd 1:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
-sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
-Descriptor sense data with sense descriptors (in hex):
-        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-        00 01 df e0
-sd 1:0:0:0: [sda] ASC=0x0 ASCQ=0x0
-end_request: I/O error, dev sda, sector 122910
-__ratelimit: 52 callbacks suppressed
-Buffer I/O error on device sda, logical block 122910
-Buffer I/O error on device sda, logical block 122911
-Buffer I/O error on device sda, logical block 122912
-Buffer I/O error on device sda, logical block 122913
-Buffer I/O error on device sda, logical block 122914
-Buffer I/O error on device sda, logical block 122915
-Buffer I/O error on device sda, logical block 122916
-Buffer I/O error on device sda, logical block 122917
-Buffer I/O error on device sda, logical block 122918
-Buffer I/O error on device sda, logical block 122919
-ata2: EH complete
-dd: /dev/sda: Input/output error
 
 
-root@mpc8315e-rdb:~# dd if=/dev/sda of=/dev/null bs=4k
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd c8/00:32:9a:6e:00/00:00:00:00:00/e0 tag 0 dma 25600 in
-         res 50/00:3e:5c:6e:00/00:00:00:00:00/e0 Emask 0x1 (device error)
-ata2.00: status: { DRDY }
-ata2: hard resetting link
-ata2: Signature Update detected @ 3528 msecs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/133
-sd 1:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
-sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
-Descriptor sense data with sense descriptors (in hex):
-        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-        00 00 6e 5c
-sd 1:0:0:0: [sda] ASC=0x0 ASCQ=0x0
-end_request: I/O error, dev sda, sector 28314
-__ratelimit: 52 callbacks suppressed
-Buffer I/O error on device sda, logical block 28314
-Buffer I/O error on device sda, logical block 28315
-Buffer I/O error on device sda, logical block 28316
-Buffer I/O error on device sda, logical block 28317
-Buffer I/O error on device sda, logical block 28318
-Buffer I/O error on device sda, logical block 28319
-Buffer I/O error on device sda, logical block 28320
-Buffer I/O error on device sda, logical block 28321
-Buffer I/O error on device sda, logical block 28322
-Buffer I/O error on device sda, logical block 28323
-ata2: EH complete
-dd: /dev/sda: Input/output error
 
-
-root@mpc8315e-rdb:~# uname -a
-Linux mpc8315e-rdb 2.6.30-rc6 #1 Mon Jun 8 15:54:00 CEST 2009 ppc unknown
-
-root@mpc8315e-rdb:~# hdparm -i /dev/sda
-
-/dev/sda:
-
- Model=Solidata X SSD                          , FwRev=0955    , SerialNo=<...>
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=0
- BuffType=unknown, BuffSize=0kB, MaxMultSect=128, MultSect=?1?
- CurCHS=16383/16/63, CurSects=16514064, LBA=no
- IORDY=no, tPIO={min:240,w/IORDY:120}
- PIO modes:  pio0 pio3 pio4
- UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
- AdvancedPM=yes: disabled (255) WriteCache=disabled
- Drive conforms to: Unspecified:  ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6
-ATA/ATAPI-7
-
- * signifies the current active mode
-
-
+--- Comment #10 from Hans de Bruin <bruinjm@xs4all.nl>  2009-06-08 16:05:01 ---
+Created an attachment (id=21811)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=21811)
+debug1 dmesg
 
 -- 
-Leon
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
