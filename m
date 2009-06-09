@@ -1,39 +1,142 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [PATCH 2.6.29] ide-tape: remove back-to-back
-	REQUEST_SENSE detection
-Date: Tue, 9 Jun 2009 01:26:54 -0700
-Message-ID: <20090609082654.GC8347@kroah.com>
-References: <20090527072004.GA8127@liondog.tnic> <200905270940.40610.bzolnier@gmail.com> <20090527080345.GA9162@liondog.tnic>
+From: Leon Woestenberg <leon.woestenberg@gmail.com>
+Subject: Re: 2.6.30-rc6: Problem with an SSD disk on Freescale PowerPC
+	mpc8315e-rdb, works fine on x86
+Date: Tue, 9 Jun 2009 11:26:22 +0200
+Message-ID: <c384c5ea0906090226t59a2b593neb6c42f3c0d189f7@mail.gmail.com>
+References: <c384c5ea0906080759n24a66d21ob9076518cec41755@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:36860 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754109AbZFIImr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Jun 2009 04:42:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20090527080345.GA9162@liondog.tnic>
+Received: from yw-out-2324.google.com ([74.125.46.30]:35582 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756638AbZFIJ0U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jun 2009 05:26:20 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so2499894ywb.1
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2009 02:26:22 -0700 (PDT)
+In-Reply-To: <c384c5ea0906080759n24a66d21ob9076518cec41755@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, tj@kernel.org, linux-ide@vger.kernel.org, stable@kernel.org
+To: Linux PPC <linuxppc-dev@ozlabs.org>, Kumar Gala <galak@kernel.crashing.org>, linux-ide@vger.kernel.org, Ashish Kalra <ashish.kalra@freescale.com>, Li Yang <leoli@freescale.com>
 
-On Wed, May 27, 2009 at 10:03:45AM +0200, Borislav Petkov wrote:
-> On Wed, May 27, 2009 at 09:40:40AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Wednesday 27 May 2009 09:20:04 Borislav Petkov wrote:
-> > > Hi,
-> > > 
-> > > please include, commit id upstream:
-> > > 
-> > > 1e75540ec5202cae63cd238c86bd880e3d496546
-> > 
-> > This is for-next branch..
-> > 
-> > The right commit is 36999a5af1b6c5379e59f0ddf434db08d03c19e4 (because it
-> > was later cherry picked into for-linus) and has my S-o-B line.
-> 
-> Thanks, had the wrong commit id noted here.
+Adding the sata_fsl.c developers to the recipients:
 
-Now queued up, thanks.
+On Mon, Jun 8, 2009 at 4:59 PM, Leon
+Woestenberg<leon.woestenberg@gmail.com> wrote:
+> Hello,
+>
+> using 2.6.30-rc6, I get the following problems when I read from a SSD
+> disk, connected to the
+> 3.0 Gb SATA controller of the MPC8315E SoC rev 1.0 running Linux 2.6.=
+30-rc6.
+>
+> Below see the output from two dd read runs.
+>
+> The disk behaves fine on a x86 box.
+>
+> What I can do to (help) pin-point the problem?
+>
+> Regards,
+>
+> Leon.
+>
+>
+> root@mpc8315e-rdb:~# dd if=3D/dev/sda of=3D/dev/null bs=3D4k
+> ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:3e:1e:e0:01/00:00:00:00:00/e0 tag 0 dma 31744 in
+> =A0 =A0 =A0 =A0 res 50/00:3e:e0:df:01/00:00:00:00:00/e0 Emask 0x1 (de=
+vice error)
+> ata2.00: status: { DRDY }
+> ata2: hard resetting link
+> ata2: Signature Update detected @ 3528 msecs
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata2.00: configured for UDMA/133
+> sd 1:0:0:0: [sda] Result: hostbyte=3D0x00 driverbyte=3D0x08
+> sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+> Descriptor sense data with sense descriptors (in hex):
+> =A0 =A0 =A0 =A072 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+> =A0 =A0 =A0 =A000 01 df e0
+> sd 1:0:0:0: [sda] ASC=3D0x0 ASCQ=3D0x0
+> end_request: I/O error, dev sda, sector 122910
+> __ratelimit: 52 callbacks suppressed
+> Buffer I/O error on device sda, logical block 122910
+> Buffer I/O error on device sda, logical block 122911
+> Buffer I/O error on device sda, logical block 122912
+> Buffer I/O error on device sda, logical block 122913
+> Buffer I/O error on device sda, logical block 122914
+> Buffer I/O error on device sda, logical block 122915
+> Buffer I/O error on device sda, logical block 122916
+> Buffer I/O error on device sda, logical block 122917
+> Buffer I/O error on device sda, logical block 122918
+> Buffer I/O error on device sda, logical block 122919
+> ata2: EH complete
+> dd: /dev/sda: Input/output error
+>
+>
+> root@mpc8315e-rdb:~# dd if=3D/dev/sda of=3D/dev/null bs=3D4k
+> ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:32:9a:6e:00/00:00:00:00:00/e0 tag 0 dma 25600 in
+> =A0 =A0 =A0 =A0 res 50/00:3e:5c:6e:00/00:00:00:00:00/e0 Emask 0x1 (de=
+vice error)
+> ata2.00: status: { DRDY }
+> ata2: hard resetting link
+> ata2: Signature Update detected @ 3528 msecs
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata2.00: configured for UDMA/133
+> sd 1:0:0:0: [sda] Result: hostbyte=3D0x00 driverbyte=3D0x08
+> sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+> Descriptor sense data with sense descriptors (in hex):
+> =A0 =A0 =A0 =A072 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+> =A0 =A0 =A0 =A000 00 6e 5c
+> sd 1:0:0:0: [sda] ASC=3D0x0 ASCQ=3D0x0
+> end_request: I/O error, dev sda, sector 28314
+> __ratelimit: 52 callbacks suppressed
+> Buffer I/O error on device sda, logical block 28314
+> Buffer I/O error on device sda, logical block 28315
+> Buffer I/O error on device sda, logical block 28316
+> Buffer I/O error on device sda, logical block 28317
+> Buffer I/O error on device sda, logical block 28318
+> Buffer I/O error on device sda, logical block 28319
+> Buffer I/O error on device sda, logical block 28320
+> Buffer I/O error on device sda, logical block 28321
+> Buffer I/O error on device sda, logical block 28322
+> Buffer I/O error on device sda, logical block 28323
+> ata2: EH complete
+> dd: /dev/sda: Input/output error
+>
+>
+> root@mpc8315e-rdb:~# uname -a
+> Linux mpc8315e-rdb 2.6.30-rc6 #1 Mon Jun 8 15:54:00 CEST 2009 ppc unk=
+nown
+>
+> root@mpc8315e-rdb:~# hdparm -i /dev/sda
+>
+> /dev/sda:
+>
+> =A0Model=3DSolidata X SSD =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0, FwRev=3D0955 =A0 =A0, SerialNo=3D<...>
+> =A0Config=3D{ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+> =A0RawCHS=3D16383/16/63, TrkSize=3D0, SectSize=3D0, ECCbytes=3D0
+> =A0BuffType=3Dunknown, BuffSize=3D0kB, MaxMultSect=3D128, MultSect=3D=
+?1?
+> =A0CurCHS=3D16383/16/63, CurSects=3D16514064, LBA=3Dno
+> =A0IORDY=3Dno, tPIO=3D{min:240,w/IORDY:120}
+> =A0PIO modes: =A0pio0 pio3 pio4
+> =A0UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
+> =A0AdvancedPM=3Dyes: disabled (255) WriteCache=3Ddisabled
+> =A0Drive conforms to: Unspecified: =A0ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATA=
+PI-6
+> ATA/ATAPI-7
+>
+> =A0* signifies the current active mode
+>
+>
+>
+> --
+> Leon
+>
 
-greg k-h
+
+
+--=20
+Leon
