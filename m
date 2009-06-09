@@ -1,44 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Tue, 9 Jun 2009 05:31:45 GMT
-Message-ID: <200906090531.n595VjYE031677@demeter.kernel.org>
-References: <bug-13399-11633@http.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH 2.6.29] ide-tape: remove back-to-back
+	REQUEST_SENSE detection
+Date: Tue, 9 Jun 2009 01:26:54 -0700
+Message-ID: <20090609082654.GC8347@kroah.com>
+References: <20090527072004.GA8127@liondog.tnic> <200905270940.40610.bzolnier@gmail.com> <20090527080345.GA9162@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58804 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044AbZFIFbn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jun 2009 01:31:43 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n595VjOD031678
-	for <linux-ide@vger.kernel.org>; Tue, 9 Jun 2009 05:31:45 GMT
-In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Received: from kroah.org ([198.145.64.141]:36860 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754109AbZFIImr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Jun 2009 04:42:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20090527080345.GA9162@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, tj@kernel.org, linux-ide@vger.kernel.org, stable@kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13399
+On Wed, May 27, 2009 at 10:03:45AM +0200, Borislav Petkov wrote:
+> On Wed, May 27, 2009 at 09:40:40AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > On Wednesday 27 May 2009 09:20:04 Borislav Petkov wrote:
+> > > Hi,
+> > > 
+> > > please include, commit id upstream:
+> > > 
+> > > 1e75540ec5202cae63cd238c86bd880e3d496546
+> > 
+> > This is for-next branch..
+> > 
+> > The right commit is 36999a5af1b6c5379e59f0ddf434db08d03c19e4 (because it
+> > was later cherry picked into for-linus) and has my S-o-B line.
+> 
+> Thanks, had the wrong commit id noted here.
 
+Now queued up, thanks.
 
-
-
-
---- Comment #15 from Borislav Petkov <bbpetkov@yahoo.de>  2009-06-09 05:31:44 ---
-Hi,
-
-thanks for testing. Looks like your debug1 dmesg is incomplete. Please
-try catching the the complete dmesg. For that, try enlarging the kernel
-printk buffer with the command line param 'log_buf_len=10M' in case the
-dmesg looks truncated. Although, it doesn't seem so - it's more a 'dmesg
--s<bufsize>' thing. Experiment with that in order to dump the whole
-buffer contents if the printk buffer is big enough but the dmesg tool
-itself is using a smaller one.
-
-Thanks,
-Boris.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+greg k-h
