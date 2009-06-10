@@ -1,61 +1,60 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 9/9] sl82c105: implement test_irq() method
-Date: Wed, 10 Jun 2009 23:06:31 +0400
-Message-ID: <200906102306.31545.sshtylyov@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: SATA: link online but device misclassified
+Date: Wed, 10 Jun 2009 14:34:21 -0600
+Message-ID: <20090610203421.GV3274@parisc-linux.org>
+References: <cfa4e840906101331q71532d72v5361a72e9b77ce63@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37751 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754895AbZFJTE4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Jun 2009 15:04:56 -0400
-In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <cfa4e840906101331q71532d72v5361a72e9b77ce63@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Marc Bowes <marcbowes@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Implement test_irq() method.
+On Wed, Jun 10, 2009 at 10:31:32PM +0200, Marc Bowes wrote:
+> Greetings,
+> 
+> Firstly, I hope that the SCSI list is the correct place to ask about SATA.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Not really, linux-ide is the preferred place.
 
----
-The patch is atop of ide-2.6.git 'for-next' branch.
+> I just got a new chipset (Gigabyte EP45-DQ6) courtesy of a
+> competition. This coincided with the death of a hard drive. I had to
+> reinstall my Gentoo system on the new hard drive, and hit this issue
+> when booting the newly configured Kernel (2.6.29-gentoo-r5):
+> 
+> ata1: link is slow to respond, please be patient (ready=0)
+> ata1: softreset failed (device not ready)
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1: link online but device misclassified, retrying
+> ata1: link is slow to respond, please be patient (ready=0)
+> ata1: softreset failed (device not ready)
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1: link online but device misclassified, retrying
+> ata1: link is slow to respond, please be patient (ready=0)
+> ata1: softreset failed (device not ready)
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1: link online but device misclassified, retrying
+> ata1: limiting SATA link speed to 1.5 Gbps
+> ata1: softreset failed (device not ready)
+> ata1: SATA link up to 1.5 Gbps (SStatus 113 SControl 310)
+> ata1: link online but device misclassified, device detection might fail
+> ata2: link is slow to respond, please be patient (ready=0)
+> ata2: softreset failed (device not ready)
+> ... (as with ata1)
+> 
+> This whole process takes a very long time (minutes) to finish. It
+> seems to be down-grading two of the four SATA-2 drives to SATA-1
+> speeds. The drives are actually SATA-2 drives, and appear to work (at
+> full speed) on my Windows 7 install.
 
- drivers/ide/sl82c105.c |   11 +++++++++++
- 1 files changed, 11 insertions(+)
+What drive model, what ATA controller, and have you checked you're really
+getting 250MB/s under Windows?
 
-Index: ide-2.6/drivers/ide/sl82c105.c
-===================================================================
---- ide-2.6.orig/drivers/ide/sl82c105.c
-+++ ide-2.6/drivers/ide/sl82c105.c
-@@ -115,6 +115,16 @@ static void sl82c105_set_dma_mode(ide_dr
- 	drive->drive_data |= (unsigned long)drv_ctrl << 16;
- }
- 
-+static int sl82c105_test_irq(ide_hwif_t *hwif)
-+{
-+	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-+	u32 val, mask		= hwif->channel ? CTRL_IDE_IRQB : CTRL_IDE_IRQA;
-+
-+	pci_read_config_dword(dev, 0x40, &val);
-+
-+	return (val & mask) ? 1 : 0;
-+}
-+
- /*
-  * The SL82C105 holds off all IDE interrupts while in DMA mode until
-  * all DMA activity is completed.  Sometimes this causes problems (eg,
-@@ -289,6 +299,7 @@ static const struct ide_port_ops sl82c10
- 	.set_pio_mode		= sl82c105_set_pio_mode,
- 	.set_dma_mode		= sl82c105_set_dma_mode,
- 	.resetproc		= sl82c105_resetproc,
-+	.test_irq		= sl82c105_test_irq,
- };
- 
- static const struct ide_dma_ops sl82c105_dma_ops = {
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
