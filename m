@@ -1,51 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH next] ide: fix PowerMac bootup oops
-Date: Wed, 10 Jun 2009 14:50:07 +0200
-Message-ID: <200906101450.08632.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0906082137120.22183@sister.anvils> <200906091436.19710.bzolnier@gmail.com> <Pine.LNX.4.64.0906091357490.21803@sister.anvils>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
+ kernels
+Date: Wed, 10 Jun 2009 14:34:07 GMT
+Message-ID: <200906101434.n5AEY7Kl006010@demeter.kernel.org>
+References: <bug-13345-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:35053 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755469AbZFJMpo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jun 2009 08:45:44 -0400
-In-Reply-To: <Pine.LNX.4.64.0906091357490.21803@sister.anvils>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:39519 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757587AbZFJOeF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jun 2009 10:34:05 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5AEY7YJ006011
+	for <linux-ide@vger.kernel.org>; Wed, 10 Jun 2009 14:34:07 GMT
+In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Cc: Joao Ramos <joao.ramos@inov.pt>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tuesday 09 June 2009 15:02:20 Hugh Dickins wrote:
-> On Tue, 9 Jun 2009, Bartlomiej Zolnierkiewicz wrote:
-> > On Tuesday 09 June 2009 13:44:25 Hugh Dickins wrote:
-> > > 
-> > > But memset id in probe_for_drive() when it might be being reused -
-> > > or would it be better to memset it wherever it used to be kfreed?
-> > 
-> > Please memset() it in ide_port_init_devices_data() -- this function
-> > is called before IDE device structure is going to be (re-)used.
-> 
-> That makes sense too, thanks, here we go...
-> 
-> 
-> [PATCH next] ide: fix PowerMac bootup oops
-> 
-> PowerMac bootup with CONFIG_IDE=y oopses in ide_pio_cycle_time():
-> because "ide: try to use PIO Mode 0 during probe if possible" causes
-> pmac_ide_set_pio_mode() to be called before drive->id has been set.
-> 
-> Bart points out other places which now need drive->id set earlier,
-> so follow his advice to allocate it in ide_port_alloc_devices()
-> (using kzalloc_node, without error message, as when allocating drive)
-> and memset it for reuse in ide_port_init_devices_data().
-> 
-> Fixed in passing: ide_host_alloc() was missing ide_port_free_devices()
-> from an error path.
-> 
-> Signed-off-by: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+http://bugzilla.kernel.org/show_bug.cgi?id=13345
 
-applied
+
+
+
+
+--- Comment #17 from Ethan Grammatikidis <eekee57@fastmail.fm>  2009-06-10 14:34:06 ---
+> Could it be bug #13399 instead of this one?
+> 
+> [ This one should really be already fixed. ]
+
+It could well be, by the symptoms. I can't tell the difference. It's not fixed
+for that old drive of mine though. :)
+
+A different problem with the dvd-rom drives was fixed between rc7 and rc8.
+Anything accessing my newer drive would freeze in an uninteruptable wait for IO
+under rc7, but works fine with rc8.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
