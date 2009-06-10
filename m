@@ -1,78 +1,70 @@
-From: Andrey Gusev <a.gusev1980@mail.ru>
-Subject: Re: Delay on intialization ide subsystem(most likely)
-Date: Thu, 11 Jun 2009 01:57:33 +0400
-Message-ID: <20090611015733.39bab13a@power-debian>
-References: <20090425170203.74603b9c@power-debian>
-	<200905201756.14769.bzolnier@gmail.com>
-	<20090530144643.76cb456e@power-debian>
-	<200906082220.41763.bzolnier@gmail.com>
-	<20090611003834.7bde5e95@power-debian>
-	<1244670377.3352.12.camel@pasglop>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: PATA timeouts on old thinkpad
+Date: Thu, 11 Jun 2009 00:36:34 +0100
+Message-ID: <20090610233634.GA691@flint.arm.linux.org.uk>
+References: <20081121002521.GA12626@flint.arm.linux.org.uk> <20081121003723.03bcef7e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx40.mail.ru ([94.100.176.54]:54794 "EHLO mx40.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752311AbZFJV5e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Jun 2009 17:57:34 -0400
-In-Reply-To: <1244670377.3352.12.camel@pasglop>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:38802 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753864AbZFJXgt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jun 2009 19:36:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20081121003723.03bcef7e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, petkovbb@gmail.com, linuxppc-dev@ozlabs.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 11 Jun 2009 07:46:17 +1000
-Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+On Fri, Nov 21, 2008 at 12:37:23AM +0000, Alan Cox wrote:
+> On Fri, 21 Nov 2008 00:25:21 +0000
+> Russell King <rmk@arm.linux.org.uk> wrote:
+> > Last weekend I upgraded my old Thinkpad from Fedora Core 2 to F9
+> > (a 2.6.9 kernel to a 2.6.25 kernel).  The old 2.6.9 kernel was
+> > using the IDE drivers, and there have been no issues with IDE on
+> > this hardware until this upgrade.
+> 
+> Can you double the timeouts for block I/O commands. The libata core uses
+> 30 second timeouts for a lot of stuff and some PATA drives really do want
+> 60.
+> 
+> Other than that there really isn't any difference in the settings the two
+> drivers use as they are all written up exactly in the Intel docs.
 
-> On Thu, 2009-06-11 at 00:38 +0400, Andrey Gusev wrote:
-> 
-> > I try this small fix, traces in disappeared, but lost interrupts on
-> > the place:) Some interesting thing from dmesg:
-> > 
-> > [    0.435806] irq: irq 251 on
-> > host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to
-> > virtual irq 251 [    0.435824] irq: irq 252 on
-> > host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to
-> > virtual irq 252 [    0.435840] irq: irq 253 on
-> > host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to
-> > virtual irq 253 [    0.435856] irq: irq 254 on
-> > host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to
-> > virtual irq 254 [    0.435867] CPU0: L2CR is 80080000
-> > [    0.435880] CPU0: L3CR is 8f0b0000 [478142827.057095] CPU1: L2CR
-> > was 80000 [478142827.057133] CPU1: L2CR set to 80080000
-> > [478142827.057139] CPU1: L3CR was 0 [478142827.057300] CPU1: L3CR
-> > set to 8f0b0000 [    0.437529] Processor 1 found. [    0.437588]
-> > clockevent: decrementer mult[886] shift[16] cpu[1]
-> > 
-> > This is don't look good.
-> 
-> What doesn't look good ? It's copying the L2CR and L3CR values over
-> from CPU 0 to CPU 1 when bringing the later up, I don't see anything
-> wrong.
-> 
-> Cheers,
-> Ben.
+I notice that the later F9 kernels seem to have doubled the timeout to
+60 secs - that makes the error recovery take longer.  I also notice that
+there's a higher chance of the disk spinning down while we wait for the
+DMA to happen - remember the status upon error recovery was:
 
-I wrote about time, why it have such values on second CPU? Sorry, if this 
-message is silly.
+ata1.00: status: { DRDY }
 
-I found configuration, where there isn't delay, but I need more time for
-testing.
+which seems to suggest that it's sitting there waiting for the data to
+be transferred... but for some reason it's just not happening.
 
-> 
-> > > 
-> > > 
-> > > > [   70.584122]  hdb:<3>ide-pmac lost interrupt, dma status: 8480
-> > > 
-> > > DMA status indicates that DMA transfer is still active according
-> > > to the controller.  This one is really a platform/hardware
-> > > specific issue.
-> > > 
-> > 
-> > Notes for Ben, I checked only 2.6.26, but may be somebody checked
-> > 2.6.24 or this is interpolation.
-> > 
-> > Thanks,
-> > Andrey 
-> 
+As a reminder, on the 2.6.9 kernel using the old IDE driver, everything
+was fine.  As soon as I upgraded the laptop to F9 which involved switching
+over to the ATA driver, it started behaving like this.
+
+Is it possible to tell F9 to use the old IDE driver instead of libata, or
+is it hard-wired to always use ATA now?
+
+The IDE interface on this is:
+
+00:06.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01) (prog-if 80 [Master])
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 32
+        Region 0: [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [disabled] [size=8]
+        Region 1: [virtual] Memory at 000003f0 (type 3, non-prefetchable) [disabled] [size=1]
+        Region 2: [virtual] Memory at 00000170 (32-bit, non-prefetchable) [disabled] [size=8]
+        Region 3: [virtual] Memory at 00000370 (type 3, non-prefetchable) [disabled] [size=1]
+        Region 4: I/O ports at fcf0 [size=16]
+        Kernel driver in use: ata_piix
+        Kernel modules: ata_piix
+
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
