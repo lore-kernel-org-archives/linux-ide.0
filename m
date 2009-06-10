@@ -1,42 +1,131 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] ahci: add warning messages for hp laptops
- with broken suspend
-Date: Wed, 10 Jun 2009 17:38:28 +0900
-Message-ID: <4A2F7104.2010602@gmail.com>
-References: <4A211D74.5070208@kernel.org> <4A2F630E.3080904@gmail.com> <4A2F6BEE.5050208@garzik.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Wed, 10 Jun 2009 11:14:03 GMT
+Message-ID: <200906101114.n5ABE3u2017818@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f200.google.com ([209.85.216.200]:43438 "EHLO
-	mail-px0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753192AbZFJIia (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jun 2009 04:38:30 -0400
-Received: by pxi38 with SMTP id 38so548518pxi.33
-        for <linux-ide@vger.kernel.org>; Wed, 10 Jun 2009 01:38:32 -0700 (PDT)
-In-Reply-To: <4A2F6BEE.5050208@garzik.org>
+Received: from demeter.kernel.org ([140.211.167.39]:51309 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754667AbZFJLOB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jun 2009 07:14:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5ABE3dw017819
+	for <linux-ide@vger.kernel.org>; Wed, 10 Jun 2009 11:14:03 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, kernel.org@epperson.homelinux.net, emisca@gmail.com, Gadi Cohen <dragon@wastelands.net>, Paul Swanson <paul@procursa.com>, s@ourada.org, Trevor Davenport <trevor.davenport@gmail.com>, corruptor1972 <steven_tierney@yahoo.co.uk>, Victoria Wilson <mail@vwilson.co.uk>, khiraly <khiraly.list@gmail.com>, Sean <wollombi@gmail.com>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Tejun Heo wrote:
->>> Harddisks on HP dv[4-6] and HDX18 fail to come online after resume on
->>> earlier BIOSen.  Fortunately, HP recently released BIOS updates for
->>> all machines to fix the issue.  Detect old BIOSen, warn the user to
->>> update BIOS on boot and suspend attempts and fail suspend.
->>
->> Ping.
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
+
+
+
+
+
+--- Comment #19 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-06-10 11:14:02 ---
+On Tuesday 09 June 2009 19:12:18 bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=13399
 > 
 > 
-> eh?  This is upstream as 9b10ae86d1616f46dabb67c663fe6a9c3a502663
+> 
+> 
+> 
+> --- Comment #18 from Hans de Bruin <bruinjm@xs4all.nl>  2009-06-09 17:12:18 ---
+> Created an attachment (id=21831)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=21831)
+>  --> (http://bugzilla.kernel.org/attachment.cgi?id=21831)
+> debug1 dmesg
 
-Sorry about that.  Didn't check git history.  Was waiting for the good
-old "applied" message.  :-)
+Hans, thanks for the debug data!
 
-Thanks.
+ide-cd: ide_cd_queue_pc: cmd[0]: 0x51, write: 0x0, timeout: 1750, cmd_flags:
+0x8000
+ide-cd: ide_cd_do_request: cmd: 0x51, block: 18446744073709551615
+ide_cd_do_request: dev hda: type=a, flags=108a640
+  sector 18446744073709551615, nr/cnr 0/0
+  bio (null), biotail (null), buffer (null), data ffff88011b849ba0, len 2
+ide-cd: cdrom_do_block_pc: rq->cmd[0]: 0x51, rq->cmd_type: 0xa
+ide-cd: cdrom_newpc_intr: cmd: 0x51, write: 0x0
+ide-cd: cdrom_newpc_intr: DRQ: stat: 0x58, thislen: 2
+ide-cd: ide_cd_check_ireason: ireason: 0x2, rw: 0x0
+ide-cd: cdrom_newpc_intr: data transfer, rq->cmd_type: 0xa, ireason: 0x2
+ide-cd: cdrom_newpc_intr: cmd: 0x51, write: 0x0
+ide-cd: cdrom_newpc_intr: DRQ: stat: 0x50, thislen: 0
+ide-cd: ide_cd_request_sense_fixup: rq->cmd[0]: 0x51
+#3
+ide-cd: ide_cd_queue_pc: cmd[0]: 0x51, write: 0x0, timeout: 1750, cmd_flags:
+0x8000
+ide-cd: ide_cd_do_request: cmd: 0x51, block: 18446744073709551615
+ide_cd_do_request: dev hda: type=a, flags=108a640
+  sector 18446744073709551615, nr/cnr 0/0
+  bio (null), biotail (null), buffer (null), data ffff88011b849ba0, len 32
+ide-cd: cdrom_do_block_pc: rq->cmd[0]: 0x51, rq->cmd_type: 0xa
+ide-cd: cdrom_newpc_intr: cmd: 0x51, write: 0x0
+ide-cd: cdrom_newpc_intr: DRQ: stat: 0x58, thislen: 30
+ide-cd: ide_cd_check_ireason: ireason: 0x2, rw: 0x0
+ide-cd: cdrom_newpc_intr: data transfer, rq->cmd_type: 0xa, ireason: 0x2
+ide-cd: cdrom_newpc_intr: cmd: 0x51, write: 0x0
+ide-cd: cdrom_newpc_intr: DRQ: stat: 0x50, thislen: 2
+ide-cd: ide_cd_request_sense_fixup: rq->cmd[0]: 0x51
+#3
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
+
+The above command sequence corresponds to requests generated by
+drivers/cdrom/cdrom.c::cdrom_get_disc_info()
+
+    /* set up command and get the disc info */
+    init_cdrom_command(&cgc, di, sizeof(*di), CGC_DATA_READ);
+    cgc.cmd[0] = GPCMD_READ_DISC_INFO;
+    cgc.cmd[8] = cgc.buflen = 2;
+    cgc.quiet = 1;
+
+    if ((ret = cdo->generic_packet(cdi, &cgc)))
+        return ret;
+
+    /* not all drives have the same disc_info length, so requeue
+     * packet with the length the drive tells us it can supply
+     */
+    buflen = be16_to_cpu(di->disc_information_length) +
+             sizeof(di->disc_information_length);
+
+    if (buflen > sizeof(disc_information))
+        buflen = sizeof(disc_information);
+
+    cgc.cmd[8] = cgc.buflen = buflen;
+    if ((ret = cdo->generic_packet(cdi, &cgc)))
+        return ret;
+
+and we are hitting BUG because of the limitation of block layer, only
+rq->bio requests can be partially completed:
+
+int __blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
+{
+    if (rq->bio && __end_that_request_first(rq, error, nr_bytes))
+        return 1;
+
+    add_disk_randomness(rq->rq_disk);
+
+    end_that_request_last(rq, error);
+
+    return 0;
+}
+
+so on error we complete the request fully instead of partially and later
+we try to complete the already freed request.
+
+Borislav, there are actually two issues here to investigate:
+
+* seems like we need to check for rq->bio before calling ide_cd_error_cmd()
+  to make the regression go away (IOW we shouldn't don't do partial "good"
+  completions for !rq->bio requests)
+
+* potentially revise our strategy of handling GPCMD_READ_DISC_INFO packet
+  command returning less data than requested (in this particular case we ask
+  for 32 bytes, device gives us only 30 bytes but returns good status)
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
