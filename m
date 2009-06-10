@@ -1,69 +1,56 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream] sata_nv: use hardreset only for post-boot probing
-Date: Wed, 10 Jun 2009 11:05:51 -0400
-Message-ID: <4A2FCBCF.7010308@garzik.org>
-References: <4A2F60C3.2070805@kernel.org>
+Subject: Re: [PATCH 2/2] ata_piix: Enable parallel scan
+Date: Wed, 10 Jun 2009 11:06:17 -0400
+Message-ID: <4A2FCBE9.9060505@garzik.org>
+References: <20090513135941.11247.13097.stgit@t61.ukuu.org.uk> <20090513140233.11247.66014.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54611 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54618 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752172AbZFJPGD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Jun 2009 11:06:03 -0400
-In-Reply-To: <4A2F60C3.2070805@kernel.org>
+	id S1754070AbZFJPGR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Jun 2009 11:06:17 -0400
+In-Reply-To: <20090513140233.11247.66014.stgit@t61.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, david@lang.hm, lament.email.si@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> When I thought it was finally defeated, it came back with vengeance.
-> The failure cases are ever more convoluted.  Now there is a single
-> combination which fails boot probing - MCP5x + Intel SSD and there are
-> two hotplug failure reports on different flavors where softreset fails
-> to bring up the device.
+Alan Cox wrote:
+> From: Arjan van de Ven <arjan@infradead.org>
 > 
-> Through the many bug reports after the switch to hardreset, the
-> following patterns emerged.
+> This patch turns on parallel scanning for the ata_piix driver.
+> This driver is used on most netbooks (no AHCI for cheap storage it seems).
+> The scan is the dominating time factor in the kernel boot for these
+> devices; with this flag it gets cut in half for the device I used
+> for testing (eeepc).
+> Alan took a look at the driver source and concluded that it ought to be safe
+> to do for this driver.  Alan has also checked with the hardware team.
 > 
-> - Softreset during boot always works.
-> 
-> - Hardreset during boot sometimes fails to bring up the link on
->   certain comibnations and device signature acquisition is unreliable.
-> 
-> - Hardreset is often necessary after hotplug.
-> 
-> It looks like the old behavior of preferring softreset was somehow
-> pretty close to the working reset protocol although it could have lost
-> a device during phy error handling by issuing hardreset.
-> 
-> This patch implements nv_hardreset() which kicks in only for post-boot
-> (!LOADING) device probing resets.  This should be able to work around
-> all known problem cases.  This isn't perfect but given the various
-> hardreset quirks on these controllers, I think this is as good as it
-> can get.
-> 
-> Tested on mcp5x (swncq), nf3 and ck804 for all both boot, warm and
-> hot probing cases.
-> 
-> Kudos to all the bug reporters and their painful hours with these damn
-> controllers.  ;-)
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Robert Hancock <hancockr@shaw.ca>
-> Reported-by: David Lang <david@lang.hm>
-> Reported-by: Samo Vodopivec <lament.email.si@gmail.com>
+> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 > ---
-> Jeff, please queue for 2.6.31.  I think this should be pretty safe but
-> well I've said that before several times for sata_nv already and was
-> wrong, so...
 > 
-> Thanks.
+>  drivers/ata/ata_piix.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
 > 
->  drivers/ata/sata_nv.c |  131 ++++++++++++++++++++++++++++++--------------------
->  1 file changed, 81 insertions(+), 50 deletions(-)
+> 
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 0fba112..4ea02a7 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -1580,6 +1580,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+>  		host->ports[1]->mwdma_mask = 0;
+>  		host->ports[1]->udma_mask = 0;
+>  	}
+> +	host->flags |= ATA_HOST_PARALLEL_SCAN;
+>  
+>  	pci_set_master(pdev);
+>  	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &piix_sht);
 
-applied
+applied...  let's see what explodes
+
+
 
 
