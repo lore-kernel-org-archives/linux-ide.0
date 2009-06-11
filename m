@@ -1,64 +1,86 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2 resend] libata-sff: avoid byte swapping in ata_sff_data_xfer()
-Date: Thu, 11 Jun 2009 22:28:06 +0400
-Message-ID: <4A314CB6.5090004@ru.mvista.com>
-References: <200902152230.38271.sshtylyov@ru.mvista.com> <49DB199C.3040305@ru.mvista.com> <4A242C81.3080309@ru.mvista.com> <4A314AC7.40300@pobox.com>
+Subject: [PATCH 7.5/9] siimage: use ide_dma_test_irq()
+Date: Thu, 11 Jun 2009 22:39:19 +0400
+Message-ID: <200906112239.20009.sshtylyov@ru.mvista.com>
+References: <200702140101.26639.sshtylyov@ru.mvista.com> <200906102305.36117.sshtylyov@ru.mvista.com> <4A301BD3.80307@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:3480 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:3608 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754820AbZFKS0c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Jun 2009 14:26:32 -0400
-In-Reply-To: <4A314AC7.40300@pobox.com>
+	id S1753784AbZFKSho (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Jun 2009 14:37:44 -0400
+In-Reply-To: <4A301BD3.80307@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Remove interrupt bit test (not trusted anyway) from siimage_io_dma_test_irq()
+and siimage_mmio_dma_test_irq() -- this allows to replace the former function
+with now identical ide_dma_test_irq()...
 
-Jeff Garzik wrote:
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
->> Hello, I wrote:
+---
+This has been split from the yesterday's patch implementing test_irq().
+The patch is atop of ide-2.6.git 'for-next' branch...
 
->>>> Handling of the trailing byte in ata_sff_data_xfer() is suboptimal 
->>>> bacause:
+ drivers/ide/siimage.c |   26 +-------------------------
+ 1 files changed, 1 insertion(+), 25 deletions(-)
 
->>>> - it always initializes the padding buffer to 0 which is not really 
->>>> needed in
->>>>   both the read and write cases;
+Index: ide-2.6/drivers/ide/siimage.c
+===================================================================
+--- ide-2.6.orig/drivers/ide/siimage.c
++++ ide-2.6/drivers/ide/siimage.c
+@@ -337,26 +337,6 @@ static void sil_set_dma_mode(ide_drive_t
+ 	sil_iowrite16(dev, ultra, ua);
+ }
+ 
+-/* returns 1 if dma irq issued, 0 otherwise */
+-static int siimage_io_dma_test_irq(ide_drive_t *drive)
+-{
+-	ide_hwif_t *hwif	= drive->hwif;
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	u8 dma_altstat		= 0;
+-	unsigned long addr	= siimage_selreg(hwif, 1);
+-
+-	/* return 1 if INTR asserted */
+-	if (inb(hwif->dma_base + ATA_DMA_STATUS) & 4)
+-		return 1;
+-
+-	/* return 1 if Device INTR asserted */
+-	pci_read_config_byte(dev, addr, &dma_altstat);
+-	if (dma_altstat & 8)
+-		return 0;	/* return 1; */
+-
+-	return 0;
+-}
+-
+ /**
+  *	siimage_mmio_dma_test_irq	-	check we caused an IRQ
+  *	@drive: drive we are testing
+@@ -397,10 +377,6 @@ static int siimage_mmio_dma_test_irq(ide
+ 	if (readb((void __iomem *)(hwif->dma_base + ATA_DMA_STATUS)) & 4)
+ 		return 1;
+ 
+-	/* return 1 if Device INTR asserted */
+-	if (readb((void __iomem *)addr) & 8)
+-		return 0;	/* return 1; */
+-
+ 	return 0;
+ }
+ 
+@@ -409,7 +385,7 @@ static int siimage_dma_test_irq(ide_driv
+ 	if (drive->hwif->host_flags & IDE_HFLAG_MMIO)
+ 		return siimage_mmio_dma_test_irq(drive);
+ 	else
+-		return siimage_io_dma_test_irq(drive);
++		return ide_dma_test_irq(drive);
+ }
+ 
+ /**
 
->>>> - it has to use memcpy() to transfer a single byte from/to the 
->>>> padding buffer;
-
->>>> - it uses io{read|write}16() accessors which swap bytes on the big 
->>>> endian CPUs
->>>>   and so have to additionally convert the data from/to the little 
->>>> endian format
->>>>   instead of using io{read|write}16_rep() accessors which are not 
->>>> supposed to
->>>>   change the byte ordering.
->>>>
->>>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
->>>   Jeff, have you forgotten about this one?
-
->>    PING.
-
-> This has been queued to libata-dev.git#upstream, i.e. linux-next queue, 
-
-    Ah, haven't looked there, so it appeared as forgotten since I know you 
-usually reply with 'applied'.
-
-> for a long time.  Apologies if I forgot the 'applied' reply.
-
-> Just sent this upstream, as linux-ide should show.
-
-    Thanks. I began to think of reworking it to avoid even io*_rep() as per 
-my followup mail and resending... well, it's good enogh as is. :-)
-
->     Jeff
-
-MBR, Sergei
