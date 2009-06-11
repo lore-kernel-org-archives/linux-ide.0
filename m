@@ -1,28 +1,32 @@
-From: Colin Williams <discord@u.washington.edu>
-Subject: no dma support dvd-rom toughbook cf-y5 ata_piix
-Date: Wed, 10 Jun 2009 23:08:08 -0700
-Message-ID: <1244700488.4142.3.camel@crystal>
-Reply-To: discord@u.washington.edu
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream] libata: don't set IORDY for reset
+Date: Thu, 11 Jun 2009 10:15:11 +0100
+Message-ID: <20090611101511.32c5034c@lxorguk.ukuu.org.uk>
+References: <4A30663D.9050008@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxout5.cac.washington.edu ([140.142.32.135]:46289 "EHLO
-	mxout5.cac.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbZFKHpM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jun 2009 03:45:12 -0400
-Received: from smtp.washington.edu (smtp.washington.edu [140.142.32.139])
-	by mxout5.cac.washington.edu (8.14.3+UW09.03/8.14.3+UW09.05) with ESMTP id n5B68ETv015435
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-ide@vger.kernel.org>; Wed, 10 Jun 2009 23:08:14 -0700
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58462 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753526AbZFKJQA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jun 2009 05:16:00 -0400
+In-Reply-To: <4A30663D.9050008@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, gnoutchd@union.edu, constantine.gavrilov@gmail.com
 
-I filed a bug on ubuntu launchpad
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/357531. 
+On Thu, 11 Jun 2009 11:04:45 +0900
+Tejun Heo <tj@kernel.org> wrote:
 
-Is it indeed a bug? Is their some kind of module flag or patch? Is their
-a way to enable dma on my dvd-rom? I'd love to watch dvd's on my laptop
-can one of module developers give me some insight?
+> Before issuing reset, libata configures xfermode to PIO0 which makes
+> some drivers turn on IORDY which may cause the controller to lock up
+> if the port is not occupied.  IORDY isn't necessary at this point
+> anyway.  Make ata_pio_need_iordy() return zero if it's being called
+> for reset.
+
+Ewww
+
+Acked-by: Alan Cox <alan.cox@linux.intel.com>
 
