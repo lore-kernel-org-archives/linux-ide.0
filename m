@@ -1,176 +1,60 @@
-From: Leon Woestenberg <leon.woestenberg@gmail.com>
-Subject: Re: 2.6.30-rc6: Problem with an SSD disk on Freescale PowerPC
-	mpc8315e-rdb, works fine on x86
-Date: Thu, 11 Jun 2009 20:41:36 +0200
-Message-ID: <c384c5ea0906111141g716cdda0oa918ac54f81b271@mail.gmail.com>
-References: <c384c5ea0906080759n24a66d21ob9076518cec41755@mail.gmail.com>
-	<c384c5ea0906090226t59a2b593neb6c42f3c0d189f7@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SATA: link online but device misclassified
+Date: Thu, 11 Jun 2009 19:01:12 +0000
+Message-ID: <1244746872.3998.88.camel@mulgrave.site>
+References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>
+	 <4A308798.6060803@gmail.com>
+	 <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <c384c5ea0906090226t59a2b593neb6c42f3c0d189f7@mail.gmail.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: Linux PPC <linuxppc-dev@ozlabs.org>, Kumar Gala <galak@kernel.crashing.org>, linux-ide@vger.kernel.org, Ashish Kalra <ashish.kalra@freescale.com>, Li Yang <leoli@freescale.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42108 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759461AbZFKTBP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jun 2009 15:01:15 -0400
+In-Reply-To: <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Marc Bowes <marcbowes@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+On Thu, 2009-06-11 at 11:31 +0200, Marc Bowes wrote:
+> I'm not sure if you can attach files, but here goes (attached as dmesg.txt)
 
-
-I found this is a regression compared with an older kernel. I have
-tested the same setup with the Freescale LTIB BSP 2008-06-27 BSP
-kernel*, keeping the user space and hardware setup exactly identical.
-Under that kernel, no errors occur.
-
-Also I found the error only occurs during *reading* the SSD disk under
-Linux 2.6.30-rc6, writing seems unaffected.
-
-As the same Freescale SATA controller IP is used in the new 8536E
-processor (and others), I would like to help to solve this issue
-before trying 8536E hardware.
-
-Regards,
-
-Leon.
-
-*
-http://www.freescale.com/webapp/sps/site/prod_summary.jsp?code=3DMPC8315E&n=
-odeId=3D0162468rH3bTdGJk191439&fpsp=3D1&tab=3DDesign_Tools_Tab#
-Split out patches available from http://www.bitshrine.org/gpp/
+Actually, this shows the problems are on two unoccupied ahci ports:
 
 
-On Tue, Jun 9, 2009 at 11:26 AM, Leon
-Woestenberg<leon.woestenberg@gmail.com> wrote:
-> Adding the sata_fsl.c developers to the recipients:
->
-> On Mon, Jun 8, 2009 at 4:59 PM, Leon
-> Woestenberg<leon.woestenberg@gmail.com> wrote:
->> Hello,
->>
->> using 2.6.30-rc6, I get the following problems when I read from a SSD
->> disk, connected to the
->> 3.0 Gb SATA controller of the MPC8315E SoC rev 1.0 running Linux 2.6.30-=
-rc6.
->>
->> Below see the output from two dd read runs.
->>
->> The disk behaves fine on a x86 box.
->>
->> What I can do to (help) pin-point the problem?
->>
->> Regards,
->>
->> Leon.
->>
->>
->> root@mpc8315e-rdb:~# dd if=3D/dev/sda of=3D/dev/null bs=3D4k
->> ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
->> ata2.00: cmd c8/00:3e:1e:e0:01/00:00:00:00:00/e0 tag 0 dma 31744 in
->> =A0 =A0 =A0 =A0 res 50/00:3e:e0:df:01/00:00:00:00:00/e0 Emask 0x1 (devic=
-e error)
->> ata2.00: status: { DRDY }
->> ata2: hard resetting link
->> ata2: Signature Update detected @ 3528 msecs
->> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> ata2.00: configured for UDMA/133
->> sd 1:0:0:0: [sda] Result: hostbyte=3D0x00 driverbyte=3D0x08
->> sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
->> Descriptor sense data with sense descriptors (in hex):
->> =A0 =A0 =A0 =A072 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
->> =A0 =A0 =A0 =A000 01 df e0
->> sd 1:0:0:0: [sda] ASC=3D0x0 ASCQ=3D0x0
->> end_request: I/O error, dev sda, sector 122910
->> __ratelimit: 52 callbacks suppressed
->> Buffer I/O error on device sda, logical block 122910
->> Buffer I/O error on device sda, logical block 122911
->> Buffer I/O error on device sda, logical block 122912
->> Buffer I/O error on device sda, logical block 122913
->> Buffer I/O error on device sda, logical block 122914
->> Buffer I/O error on device sda, logical block 122915
->> Buffer I/O error on device sda, logical block 122916
->> Buffer I/O error on device sda, logical block 122917
->> Buffer I/O error on device sda, logical block 122918
->> Buffer I/O error on device sda, logical block 122919
->> ata2: EH complete
->> dd: /dev/sda: Input/output error
->>
->>
->> root@mpc8315e-rdb:~# dd if=3D/dev/sda of=3D/dev/null bs=3D4k
->> ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
->> ata2.00: cmd c8/00:32:9a:6e:00/00:00:00:00:00/e0 tag 0 dma 25600 in
->> =A0 =A0 =A0 =A0 res 50/00:3e:5c:6e:00/00:00:00:00:00/e0 Emask 0x1 (devic=
-e error)
->> ata2.00: status: { DRDY }
->> ata2: hard resetting link
->> ata2: Signature Update detected @ 3528 msecs
->> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> ata2.00: configured for UDMA/133
->> sd 1:0:0:0: [sda] Result: hostbyte=3D0x00 driverbyte=3D0x08
->> sd 1:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
->> Descriptor sense data with sense descriptors (in hex):
->> =A0 =A0 =A0 =A072 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
->> =A0 =A0 =A0 =A000 00 6e 5c
->> sd 1:0:0:0: [sda] ASC=3D0x0 ASCQ=3D0x0
->> end_request: I/O error, dev sda, sector 28314
->> __ratelimit: 52 callbacks suppressed
->> Buffer I/O error on device sda, logical block 28314
->> Buffer I/O error on device sda, logical block 28315
->> Buffer I/O error on device sda, logical block 28316
->> Buffer I/O error on device sda, logical block 28317
->> Buffer I/O error on device sda, logical block 28318
->> Buffer I/O error on device sda, logical block 28319
->> Buffer I/O error on device sda, logical block 28320
->> Buffer I/O error on device sda, logical block 28321
->> Buffer I/O error on device sda, logical block 28322
->> Buffer I/O error on device sda, logical block 28323
->> ata2: EH complete
->> dd: /dev/sda: Input/output error
->>
->>
->> root@mpc8315e-rdb:~# uname -a
->> Linux mpc8315e-rdb 2.6.30-rc6 #1 Mon Jun 8 15:54:00 CEST 2009 ppc unknown
->>
->> root@mpc8315e-rdb:~# hdparm -i /dev/sda
->>
->> /dev/sda:
->>
->> =A0Model=3DSolidata X SSD =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0, FwRev=3D0955 =A0 =A0, SerialNo=3D<...>
->> =A0Config=3D{ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
->> =A0RawCHS=3D16383/16/63, TrkSize=3D0, SectSize=3D0, ECCbytes=3D0
->> =A0BuffType=3Dunknown, BuffSize=3D0kB, MaxMultSect=3D128, MultSect=3D?1?
->> =A0CurCHS=3D16383/16/63, CurSects=3D16514064, LBA=3Dno
->> =A0IORDY=3Dno, tPIO=3D{min:240,w/IORDY:120}
->> =A0PIO modes: =A0pio0 pio3 pio4
->> =A0UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
->> =A0AdvancedPM=3Dyes: disabled (255) WriteCache=3Ddisabled
->> =A0Drive conforms to: Unspecified: =A0ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6
->> ATA/ATAPI-7
->>
->> =A0* signifies the current active mode
->>
->>
->>
->> --
->> Leon
->>
->
->
->
-> --
-> Leon
->
+> [    0.685269] ahci 0000:0a:00.0: version 3.0
+> [    0.685279] ahci 0000:0a:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+> [    0.696040] ahci 0000:0a:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA mode
+> [    0.696283] ahci 0000:0a:00.0: flags: 64bit ncq pm led clo pmp pio slum part 
+> [    0.696453] ahci 0000:0a:00.0: setting latency timer to 64
+> [    0.696592] scsi0 : ahci
+> [    0.696907] scsi1 : ahci
+> [    0.697224] ata1: SATA max UDMA/133 abar m8192@0xec400000 port 0xec400100 irq 16
+> [    0.697461] ata2: SATA max UDMA/133 abar m8192@0xec400000 port 0xec400180 irq 16
+> [    6.969039] ata1: link is slow to respond, please be patient (ready=0)
+> [   10.743038] ata1: softreset failed (device not ready)
+> [   10.743191] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   10.743344] ata1: link online but device misclassified, retrying
+> [   17.015051] ata1: link is slow to respond, please be patient (ready=0)
+> [   20.789041] ata1: softreset failed (device not ready)
+...
+
+Could you confirm that there are actually no devices it's supposed to be
+detecting?
+
+It looks like the AHCI controller at 00:0a:00.0 might be some form of
+piix controller in the ICH10 bridge ... does lspci confirm this?  I
+remember you said you had:
+
+> The ATA controllers: Intel Corporation 82801JI (ICH10 Family) 2 port
+> SATA IDE Controller.
+
+Yet the log is finding six ports: four on the piix and two on the
+problem ahci  .. is that right?
+
+James
 
 
-
--- =
-
-Leon
