@@ -1,37 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13345] panic when reading data from IDE CDROM with >= 2.6.29
- kernels
-Date: Fri, 12 Jun 2009 00:49:18 GMT
-Message-ID: <200906120049.n5C0nItR010478@demeter.kernel.org>
-References: <bug-13345-11633@http.bugzilla.kernel.org/>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: no dma support dvd-rom toughbook cf-y5 ata_piix
+Date: Fri, 12 Jun 2009 00:54:39 -0600
+Message-ID: <4A31FBAF.8010605@gmail.com>
+References: <1244700488.4142.3.camel@crystal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:51111 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860AbZFLAtQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jun 2009 20:49:16 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5C0nIZw010479
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2009 00:49:18 GMT
-In-Reply-To: <bug-13345-11633@http.bugzilla.kernel.org/>
+Received: from yw-out-2324.google.com ([74.125.46.31]:42726 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753141AbZFLGyk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jun 2009 02:54:40 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1363521ywb.1
+        for <linux-ide@vger.kernel.org>; Thu, 11 Jun 2009 23:54:42 -0700 (PDT)
+In-Reply-To: <1244700488.4142.3.camel@crystal>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: discord@u.washington.edu
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13345
+On 06/11/2009 12:08 AM, Colin Williams wrote:
+> I filed a bug on ubuntu launchpad
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/357531.
+>
+> Is it indeed a bug? Is their some kind of module flag or patch? Is their
+> a way to enable dma on my dvd-rom? I'd love to watch dvd's on my laptop
+> can one of module developers give me some insight?
 
+Doesn't look like the DVD-ROM is connected via PATA or SATA, looks like 
+it's actually connected via a USB connection internally? That seems a 
+bit bizarre.. Can you do a lsusb to verify if that's the case?
 
-
-
-
---- Comment #18 from Ethan Grammatikidis <eekee57@fastmail.fm>  2009-06-12 00:49:17 ---
-Correction: newer drive does not work fine. With 2 days uptime processes
-accessing the drive freeze in an uninteruptable wait for IO. It's a buggy drive
-to be sure, but in 2.6.24/26 the worst it did was spam dmesg, & back in 2.6.15
-it would stop working but not cause processes to freeze in an unkillable state.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+If it is, then the kernel doesn't have any control over the DMA state of 
+the drive, as that's purely under control of the USB-to-ATA bridge chip 
+they're presumably using.
