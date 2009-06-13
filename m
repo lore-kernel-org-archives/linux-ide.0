@@ -1,11 +1,11 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 5/10] ide: move ack_intr() method into 'struct ide_port_ops' (take 2)
-Date: Sat, 13 Jun 2009 17:31:19 +0400
-Message-ID: <200906131731.19917.sshtylyov@ru.mvista.com>
+Subject: [PATCH 4/10] ide: move IRQ clearing from ack_intr() method to clear_irq() method (take 2)
+Date: Sat, 13 Jun 2009 17:31:00 +0400
+Message-ID: <200906131731.00976.sshtylyov@ru.mvista.com>
 References: <200702140101.26639.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-m68k-owner@vger.kernel.org>
 In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
@@ -15,8 +15,12 @@ To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Move the ack_intr() method into 'struct ide_port_ops', also renaming it to
-test_irq() while at it...
+There are now two methods that clear the port interrupt: ack_intr() method,
+implemented only on M680x0 machines, that is called at the start of ide_intr(),
+and clear_irq() method, that is called somewhat later in this function.  In
+order to stop this duplication, delegate the task of clearing the interrupt
+to clear_irq() method, only leaving to ack_intr() the task of testing for the
+port interrupt.
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
@@ -24,86 +28,101 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 The patch is atop of ide-2.6.git 'for-next' branch.
 
 Changes since previous take:
-- added the missed changes to ide-probe.c, falconide.c, and q40ide.c;
-- fixed up buddha.c atop of the updated preceding patch;
-- fixed error in gayle_init() by adding missed &...
+- undid the code reordering in ide_intr();
+- converted xsurf_ack_intr() into xsurf_clear_irq();
+- fixed error in gayle_init() by adding missed &;
+- fixed 2 warnings by making macide_clear_irq() void.
 
- drivers/ide/buddha.c    |   15 +++++++++------
- drivers/ide/falconide.c |    1 -
- drivers/ide/gayle.c     |   14 +++++++++-----
- drivers/ide/ide-io.c    |    3 ++-
- drivers/ide/ide-probe.c |    1 -
- drivers/ide/macide.c    |   12 ++++--------
- drivers/ide/q40ide.c    |    7 ++-----
- include/linux/ide.h     |   10 +---------
- 8 files changed, 27 insertions(+), 36 deletions(-)
+ drivers/ide/buddha.c |   27 +++++++++++++--------------
+ drivers/ide/gayle.c  |   23 +++++++++++------------
+ drivers/ide/ide-io.c |    2 --
+ drivers/ide/macide.c |   18 ++++++++++++++----
+ 4 files changed, 38 insertions(+), 32 deletions(-)
 
 Index: ide-2.6/drivers/ide/buddha.c
 ===================================================================
 --- ide-2.6.orig/drivers/ide/buddha.c
 +++ ide-2.6/drivers/ide/buddha.c
-@@ -99,7 +99,7 @@ static const char *buddha_board_name[] =
-      *  Check and acknowledge the interrupt status
-      */
+@@ -109,16 +109,12 @@ static int buddha_ack_intr(ide_hwif_t *h
+     return 1;
+ }
  
--static int buddha_ack_intr(ide_hwif_t *hwif)
-+static int buddha_test_irq(ide_hwif_t *hwif)
+-static int xsurf_ack_intr(ide_hwif_t *hwif)
++static void xsurf_clear_irq(ide_drive_t *drive)
  {
-     unsigned char ch;
- 
-@@ -118,8 +118,7 @@ static void xsurf_clear_irq(ide_drive_t 
+-    unsigned char ch;
+-
+-    ch = z_readb(hwif->io_ports.irq_addr);
+-    /* X-Surf needs a 0 written to IRQ register to ensure ISA bit A11 stays at 0 */
+-    z_writeb(0, hwif->io_ports.irq_addr);
+-    if (!(ch & 0x80))
+-	    return 0;
+-    return 1;
++    /*
++     * X-Surf needs 0 written to IRQ register to ensure ISA bit A11 stays at 0
++     */
++    z_writeb(0, drive->hwif->io_ports.irq_addr);
  }
  
  static void __init buddha_setup_ports(struct ide_hw *hw, unsigned long base,
--				      unsigned long ctl, unsigned long irq_port,
--				      ide_ack_intr_t *ack_intr)
-+				      unsigned long ctl, unsigned long irq_port)
- {
- 	int i;
- 
-@@ -134,14 +133,19 @@ static void __init buddha_setup_ports(st
- 	hw->io_ports.irq_addr = irq_port;
- 
- 	hw->irq = IRQ_AMIGA_PORTS;
--	hw->ack_intr = ack_intr;
+@@ -141,6 +137,10 @@ static void __init buddha_setup_ports(st
+ 	hw->ack_intr = ack_intr;
  }
  
-+static const struct ide_port_ops buddha_port_ops = {
-+	.test_irq		= buddha_test_irq,
++static const struct ide_port_ops xsurf_port_ops = {
++	.clear_irq		= xsurf_clear_irq,
 +};
 +
- static const struct ide_port_ops xsurf_port_ops = {
- 	.clear_irq		= xsurf_clear_irq,
-+	.test_irq		= buddha_test_irq,
- };
- 
  static const struct ide_port_info buddha_port_info = {
-+	.port_ops		= &buddha_port_ops,
  	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
  	.irq_flags		= IRQF_SHARED,
- 	.chipset		= ide_generic,
-@@ -217,8 +221,7 @@ fail_base2:
+@@ -161,6 +161,7 @@ static int __init buddha_init(void)
+ 	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
+ 		unsigned long board;
+ 		struct ide_hw hw[MAX_NUM_HWIFS], *hws[MAX_NUM_HWIFS];
++		struct ide_port_info d = buddha_port_info;
+ 
+ 		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
+ 			buddha_num_hwifs = BUDDHA_NUM_HWIFS;
+@@ -171,6 +172,7 @@ static int __init buddha_init(void)
+ 		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF) {
+ 			buddha_num_hwifs = XSURF_NUM_HWIFS;
+ 			type=BOARD_XSURF;
++			d.port_ops = &xsurf_port_ops;
+ 		} else 
+ 			continue;
+ 		
+@@ -203,28 +205,25 @@ fail_base2:
+ 
+ 		for (i = 0; i < buddha_num_hwifs; i++) {
+ 			unsigned long base, ctl, irq_port;
+-			ide_ack_intr_t *ack_intr;
+ 
+ 			if (type != BOARD_XSURF) {
+ 				base = buddha_board + buddha_bases[i];
+ 				ctl = base + BUDDHA_CONTROL;
+ 				irq_port = buddha_board + buddha_irqports[i];
+-				ack_intr = buddha_ack_intr;
+ 			} else {
+ 				base = buddha_board + xsurf_bases[i];
+ 				/* X-Surf has no CS1* (Control/AltStat) */
+ 				ctl = 0;
  				irq_port = buddha_board + xsurf_irqports[i];
+-				ack_intr = xsurf_ack_intr;
  			}
  
--			buddha_setup_ports(&hw[i], base, ctl, irq_port,
--					   buddha_ack_intr);
-+			buddha_setup_ports(&hw[i], base, ctl, irq_port);
+ 			buddha_setup_ports(&hw[i], base, ctl, irq_port,
+-					   ack_intr);
++					   buddha_ack_intr);
  
  			hws[i] = &hw[i];
  		}
-Index: ide-2.6/drivers/ide/falconide.c
-===================================================================
---- ide-2.6.orig/drivers/ide/falconide.c
-+++ ide-2.6/drivers/ide/falconide.c
-@@ -128,7 +128,6 @@ static void __init falconide_setup_ports
- 	hw->io_ports.ctl_addr = ATA_HD_BASE + ATA_HD_CONTROL;
  
- 	hw->irq = IRQ_MFP_IDE;
--	hw->ack_intr = NULL;
- }
+-		ide_host_add(&buddha_port_info, hws, i, NULL);
++		ide_host_add(&d, hws, i, NULL);
+ 	}
  
-     /*
+ 	return 0;
 Index: ide-2.6/drivers/ide/gayle.c
 ===================================================================
 --- ide-2.6.orig/drivers/ide/gayle.c
@@ -112,223 +131,153 @@ Index: ide-2.6/drivers/ide/gayle.c
       *  Check and acknowledge the interrupt status
       */
  
--static int gayle_ack_intr(ide_hwif_t *hwif)
-+static int gayle_test_irq(ide_hwif_t *hwif)
+-static int gayle_ack_intr_a4000(ide_hwif_t *hwif)
++static int gayle_ack_intr(ide_hwif_t *hwif)
  {
      unsigned char ch;
  
-@@ -85,8 +85,7 @@ static void gayle_a1200_clear_irq(ide_dr
+@@ -76,16 +76,12 @@ static int gayle_ack_intr_a4000(ide_hwif
+     return 1;
+ }
+ 
+-static int gayle_ack_intr_a1200(ide_hwif_t *hwif)
++static void gayle_a1200_clear_irq(ide_drive_t *drive)
+ {
+-    unsigned char ch;
++    ide_hwif_t *hwif = drive->hwif;
+ 
+-    ch = z_readb(hwif->io_ports.irq_addr);
+-    if (!(ch & GAYLE_IRQ_IDE))
+-	return 0;
+     (void)z_readb(hwif->io_ports.status_addr);
+     z_writeb(0x7c, hwif->io_ports.irq_addr);
+-    return 1;
  }
  
  static void __init gayle_setup_ports(struct ide_hw *hw, unsigned long base,
--				     unsigned long ctl, unsigned long irq_port,
--				     ide_ack_intr_t *ack_intr)
-+				     unsigned long ctl, unsigned long irq_port)
- {
- 	int i;
- 
-@@ -101,11 +100,15 @@ static void __init gayle_setup_ports(str
- 	hw->io_ports.irq_addr = irq_port;
- 
- 	hw->irq = IRQ_AMIGA_PORTS;
--	hw->ack_intr = ack_intr;
+@@ -108,6 +104,10 @@ static void __init gayle_setup_ports(str
+ 	hw->ack_intr = ack_intr;
  }
  
-+static const struct ide_port_ops gayle_a4000_port_ops = {
-+	.test_irq		= gayle_test_irq,
++static const struct ide_port_ops gayle_a1200_port_ops = {
++	.clear_irq		= gayle_a1200_clear_irq,
 +};
 +
- static const struct ide_port_ops gayle_a1200_port_ops = {
- 	.clear_irq		= gayle_a1200_clear_irq,
-+	.test_irq		= gayle_test_irq,
- };
- 
  static const struct ide_port_info gayle_port_info = {
-@@ -148,6 +151,7 @@ found:
+ 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
+ 				  IDE_HFLAG_NO_DMA,
+@@ -123,9 +123,9 @@ static int __init gayle_init(void)
+ {
+     unsigned long phys_base, res_start, res_n;
+     unsigned long base, ctrlport, irqport;
+-    ide_ack_intr_t *ack_intr;
+     int a4000, i, rc;
+     struct ide_hw hw[GAYLE_NUM_HWIFS], *hws[GAYLE_NUM_HWIFS];
++    struct ide_port_info d = gayle_port_info;
+ 
+     if (!MACH_IS_AMIGA)
+ 	return -ENODEV;
+@@ -148,11 +148,10 @@ found:
  	if (a4000) {
  	    phys_base = GAYLE_BASE_4000;
  	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_4000);
-+	    d.port_ops = &gayle_a4000_port_ops;
+-	    ack_intr = gayle_ack_intr_a4000;
  	} else {
  	    phys_base = GAYLE_BASE_1200;
  	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_1200);
-@@ -164,7 +168,7 @@ found:
+-	    ack_intr = gayle_ack_intr_a1200;
++	    d.port_ops = &gayle_a1200_port_ops;
+ 	}
+ 
+ 	res_start = ((unsigned long)phys_base) & ~(GAYLE_NEXT_PORT-1);
+@@ -165,12 +164,12 @@ found:
  	base = (unsigned long)ZTWO_VADDR(phys_base + i * GAYLE_NEXT_PORT);
  	ctrlport = GAYLE_HAS_CONTROL_REG ? (base + GAYLE_CONTROL) : 0;
  
--	gayle_setup_ports(&hw[i], base, ctrlport, irqport, gayle_ack_intr);
-+	gayle_setup_ports(&hw[i], base, ctrlport, irqport);
+-	gayle_setup_ports(&hw[i], base, ctrlport, irqport, ack_intr);
++	gayle_setup_ports(&hw[i], base, ctrlport, irqport, gayle_ack_intr);
  
  	hws[i] = &hw[i];
      }
+ 
+-    rc = ide_host_add(&gayle_port_info, hws, i, NULL);
++    rc = ide_host_add(&d, hws, i, NULL);
+     if (rc)
+ 	release_mem_region(res_start, res_n);
+ 
 Index: ide-2.6/drivers/ide/ide-io.c
 ===================================================================
 --- ide-2.6.orig/drivers/ide/ide-io.c
 +++ ide-2.6/drivers/ide/ide-io.c
-@@ -789,7 +789,8 @@ irqreturn_t ide_intr (int irq, void *dev
- 
- 	spin_lock_irqsave(&hwif->lock, flags);
- 
--	if (hwif->ack_intr && hwif->ack_intr(hwif) == 0)
-+	if (hwif->port_ops && hwif->port_ops->test_irq &&
-+	    hwif->port_ops->test_irq(hwif) == 0)
- 		goto out;
- 
- 	handler = hwif->handler;
-Index: ide-2.6/drivers/ide/ide-probe.c
-===================================================================
---- ide-2.6.orig/drivers/ide/ide-probe.c
-+++ ide-2.6/drivers/ide/ide-probe.c
-@@ -1170,7 +1170,6 @@ static void ide_init_port_hw(ide_hwif_t 
- 	hwif->irq = hw->irq;
- 	hwif->dev = hw->dev;
- 	hwif->gendev.parent = hw->parent ? hw->parent : hw->dev;
--	hwif->ack_intr = hw->ack_intr;
- 	hwif->config_data = hw->config;
- }
+@@ -671,8 +671,6 @@ void ide_timer_expiry (unsigned long dat
+ 		} else if (drive_is_ready(drive)) {
+ 			if (drive->waiting_for_dma)
+ 				hwif->dma_ops->dma_lost_irq(drive);
+-			if (hwif->ack_intr)
+-				hwif->ack_intr(hwif);
+ 			if (hwif->port_ops && hwif->port_ops->clear_irq)
+ 				hwif->port_ops->clear_irq(drive);
  
 Index: ide-2.6/drivers/ide/macide.c
 ===================================================================
 --- ide-2.6.orig/drivers/ide/macide.c
 +++ ide-2.6/drivers/ide/macide.c
-@@ -53,7 +53,7 @@
+@@ -55,13 +55,16 @@ volatile unsigned char *ide_ifr = (unsig
  
- volatile unsigned char *ide_ifr = (unsigned char *) (IDE_BASE + IDE_IFR);
- 
--int macide_ack_intr(ide_hwif_t* hwif)
-+int macide_test_irq(ide_hwif_t *hwif)
+ int macide_ack_intr(ide_hwif_t* hwif)
  {
- 	if (*ide_ifr & 0x20)
+-	if (*ide_ifr & 0x20) {
+-		*ide_ifr &= ~0x20;
++	if (*ide_ifr & 0x20)
  		return 1;
-@@ -66,7 +66,7 @@ static void macide_clear_irq(ide_drive_t
+-	}
+ 	return 0;
  }
  
++static void macide_clear_irq(ide_drive_t *drive)
++{
++	*ide_ifr &= ~0x20;
++}
++
  static void __init macide_setup_ports(struct ide_hw *hw, unsigned long base,
--				      int irq, ide_ack_intr_t *ack_intr)
-+				      int irq)
+ 				      int irq, ide_ack_intr_t *ack_intr)
  {
- 	int i;
- 
-@@ -78,11 +78,11 @@ static void __init macide_setup_ports(st
- 	hw->io_ports.ctl_addr = base + IDE_CONTROL;
- 
- 	hw->irq = irq;
--	hw->ack_intr = ack_intr;
+@@ -78,7 +81,12 @@ static void __init macide_setup_ports(st
+ 	hw->ack_intr = ack_intr;
  }
  
- static const struct ide_port_ops macide_port_ops = {
- 	.clear_irq		= macide_clear_irq,
-+	.test_irq		= macide_test_irq,
- };
- 
++static const struct ide_port_ops macide_port_ops = {
++	.clear_irq		= macide_clear_irq,
++};
++
  static const struct ide_port_info macide_port_info = {
-@@ -101,7 +101,6 @@ static const char *mac_ide_name[] =
- 
- static int __init macide_init(void)
- {
--	ide_ack_intr_t *ack_intr;
++	.port_ops		= &macide_port_ops,
+ 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
+ 	.irq_flags		= IRQF_SHARED,
+ 	.chipset		= ide_generic,
+@@ -97,6 +105,7 @@ static int __init macide_init(void)
  	unsigned long base;
  	int irq;
  	struct ide_hw hw, *hws[] = { &hw };
-@@ -113,17 +112,14 @@ static int __init macide_init(void)
- 	switch (macintosh_config->ide_type) {
- 	case MAC_IDE_QUADRA:
- 		base = IDE_BASE;
--		ack_intr = macide_ack_intr;
- 		irq = IRQ_NUBUS_F;
- 		break;
- 	case MAC_IDE_PB:
- 		base = IDE_BASE;
--		ack_intr = macide_ack_intr;
- 		irq = IRQ_NUBUS_C;
- 		break;
++	struct ide_port_info d = macide_port_info;
+ 
+ 	if (!MACH_IS_MAC)
+ 		return -ENODEV;
+@@ -115,6 +124,7 @@ static int __init macide_init(void)
  	case MAC_IDE_BABOON:
  		base = BABOON_BASE;
--		ack_intr = NULL;
- 		d.port_ops = NULL;
+ 		ack_intr = NULL;
++		d.port_ops = NULL;
  		irq = IRQ_BABOON_1;
  		break;
-@@ -134,7 +130,7 @@ static int __init macide_init(void)
- 	printk(KERN_INFO "ide: Macintosh %s IDE controller\n",
- 			 mac_ide_name[macintosh_config->ide_type - 1]);
+ 	default:
+@@ -126,7 +136,7 @@ static int __init macide_init(void)
  
--	macide_setup_ports(&hw, base, irq, ack_intr);
-+	macide_setup_ports(&hw, base, irq);
+ 	macide_setup_ports(&hw, base, irq, ack_intr);
  
- 	return ide_host_add(&d, hws, 1, NULL);
- }
-Index: ide-2.6/drivers/ide/q40ide.c
-===================================================================
---- ide-2.6.orig/drivers/ide/q40ide.c
-+++ ide-2.6/drivers/ide/q40ide.c
-@@ -51,9 +51,7 @@ static int q40ide_default_irq(unsigned l
- /*
-  * Addresses are pretranslated for Q40 ISA access.
-  */
--static void q40_ide_setup_ports(struct ide_hw *hw, unsigned long base,
--			ide_ack_intr_t *ack_intr,
--			int irq)
-+static void q40_ide_setup_ports(struct ide_hw *hw, unsigned long base, int irq)
- {
- 	memset(hw, 0, sizeof(*hw));
- 	/* BIG FAT WARNING: 
-@@ -69,7 +67,6 @@ static void q40_ide_setup_ports(struct i
- 	hw->io_ports.ctl_addr = Q40_ISA_IO_B(base + 0x206);
- 
- 	hw->irq = irq;
--	hw->ack_intr = ack_intr;
+-	return ide_host_add(&macide_port_info, hws, 1, NULL);
++	return ide_host_add(&d, hws, 1, NULL);
  }
  
- static void q40ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
-@@ -156,7 +153,7 @@ static int __init q40ide_init(void)
- 		release_region(pcide_bases[i], 8);
- 		continue;
- 	}
--	q40_ide_setup_ports(&hw[i], pcide_bases[i], NULL,
-+	q40_ide_setup_ports(&hw[i], pcide_bases[i],
- 			q40ide_default_irq(pcide_bases[i]));
- 
- 	hws[i] = &hw[i];
-Index: ide-2.6/include/linux/ide.h
-===================================================================
---- ide-2.6.orig/include/linux/ide.h
-+++ ide-2.6/include/linux/ide.h
-@@ -157,12 +157,6 @@ enum {
- #define REQ_UNPARK_HEADS	0x23
- 
- /*
-- * Check for an interrupt and acknowledge the interrupt status
-- */
--struct hwif_s;
--typedef int (ide_ack_intr_t)(struct hwif_s *);
--
--/*
-  * hwif_chipset_t is used to keep track of the specific hardware
-  * chipset used by each IDE interface, if known.
-  */
-@@ -185,7 +179,6 @@ struct ide_hw {
- 	};
- 
- 	int		irq;			/* our irq number */
--	ide_ack_intr_t	*ack_intr;		/* acknowledge interrupt */
- 	struct device	*dev, *parent;
- 	unsigned long	config;
- };
-@@ -649,6 +642,7 @@ struct ide_port_ops {
- 	void	(*maskproc)(ide_drive_t *, int);
- 	void	(*quirkproc)(ide_drive_t *);
- 	void	(*clear_irq)(ide_drive_t *);
-+	int	(*test_irq)(struct hwif_s *);
- 
- 	u8	(*mdma_filter)(ide_drive_t *);
- 	u8	(*udma_filter)(ide_drive_t *);
-@@ -708,8 +702,6 @@ typedef struct hwif_s {
- 
- 	struct device *dev;
- 
--	ide_ack_intr_t *ack_intr;
--
- 	void (*rw_disk)(ide_drive_t *, struct request *);
- 
- 	const struct ide_tp_ops		*tp_ops;
+ module_init(macide_init);
 
