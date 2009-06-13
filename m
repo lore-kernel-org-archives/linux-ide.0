@@ -1,58 +1,60 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] ata: add ata_id_pio_need_iordy() helper
-Date: Sun, 14 Jun 2009 00:49:26 +0400
-Message-ID: <4A3410D6.9060400@ru.mvista.com>
-References: <200906131821.07018.bzolnier@gmail.com>
+Subject: Re: [PATCH 3/3] ide: don't enable IORDY at a probe time
+Date: Sun, 14 Jun 2009 00:58:44 +0400
+Message-ID: <4A341304.4040304@ru.mvista.com>
+References: <200906131823.15906.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:57399 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:57576 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753017AbZFMUtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Jun 2009 16:49:32 -0400
-In-Reply-To: <200906131821.07018.bzolnier@gmail.com>
+	id S1756089AbZFMU6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Jun 2009 16:58:51 -0400
+In-Reply-To: <200906131823.15906.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
-
-Hello.
+Cc: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> Cc: Jeff Garzik <jgarzik@pobox.com>
+> * Add 'unsigned long port_flags' field to ide_hwif_t.
+>
+> * Add IDE_PFLAG_PROBING port flag and keep it set during probing.
+>
+> * Fix ide_pio_need_iordy() to not enable IORDY at a probe time
+>   (IORDY may lead to controller lock up on certain controllers
+>    if the port is not occupied).
+>
+> Loosely based on the recent libata's fix by Tejun, thanks to Alan
+> for the hint that IDE may also need it.
+>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
-> against Linus' tree
->
->  include/linux/ata.h |   11 +++++++++++
->  1 file changed, 11 insertions(+)
->
-> Index: b/include/linux/ata.h
+[...]
+
+> Index: b/drivers/ide/ide-xfer-mode.c
 > ===================================================================
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -800,6 +800,17 @@ static inline int ata_id_is_ssd(const u1
->  	return id[ATA_ID_ROT_SPEED] == 0x01;
->  }
+> --- a/drivers/ide/ide-xfer-mode.c
+> +++ b/drivers/ide/ide-xfer-mode.c
+> @@ -109,6 +109,12 @@ EXPORT_SYMBOL_GPL(ide_get_best_pio_mode)
 >  
-> +static inline int ata_id_pio_need_iordy(const u16 *id, const u8 pio)
-> +{
-> +	/* CF spec. r4.1 Table 22 says no IORDY on PIO5 and PIO6.  */
-> +	if (ata_id_is_cfa(id) && pio > 4)
+>  int ide_pio_need_iordy(ide_drive_t *drive, const u8 pio)
+>  {
+> +	/*
+> +	 * IORDY may lead to controller lock up on certain controllers
+> +	 * if the port is not occupied.
 >   
 
-   It actually makes sense to put the cheap 'pio' check first. We 
-shouldn't call ata_id_is_cfa() for all modes.
+   This is really strange -- shouldn't it be floating in this case, and 
+so most sampled as 1? Who can pull it down on an empty port?..
 
+> +	 */
+> +	if (pio == 0 && (drive->hwif->port_flags & IDE_PFLAG_PROBING))
 > +		return 0;
-> +	/* PIO3 and higher it is mandatory. */
-> +	if (pio > 2 || ata_id_has_iordy(id))
-> +		return 1;
-> +	return 0;
-> +}
-> +
+>   
+
+   Now I'm seeing why there was a need to introduce the wrapper. :-)
 
 MBR, Sergei
 
