@@ -1,26 +1,26 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 4/10] ide: move IRQ clearing from ack_intr() method to clear_irq() method (take 2)
-Date: Sat, 13 Jun 2009 17:31:00 +0400
-Message-ID: <200906131731.00976.sshtylyov@ru.mvista.com>
+Subject: [PATCH 2/10] cmd64x: implement clear_irq() method (take 2)
+Date: Sat, 13 Jun 2009 17:30:41 +0400
+Message-ID: <200906131730.41803.sshtylyov@ru.mvista.com>
 References: <200702140101.26639.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:52406 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932373AbZFMN3B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Jun 2009 09:29:01 -0400
 In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
-Sender: linux-m68k-owner@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-There are now two methods that clear the port interrupt: ack_intr() method,
-implemented only on M680x0 machines, that is called at the start of ide_intr(),
-and clear_irq() method, that is called somewhat later in this function.  In
-order to stop this duplication, delegate the task of clearing the interrupt
-to clear_irq() method, only leaving to ack_intr() the task of testing for the
-port interrupt.
+Convert the driver's two dma_end() methods into clear_irq() methods -- the
+driver will now use the standard dma_end() method implementation, ide_dma_end().
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
@@ -28,256 +28,132 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 The patch is atop of ide-2.6.git 'for-next' branch.
 
 Changes since previous take:
-- undid the code reordering in ide_intr();
-- converted xsurf_ack_intr() into xsurf_clear_irq();
-- fixed error in gayle_init() by adding missed &;
-- fixed 2 warnings by making macide_clear_irq() void.
+- fixed cmd648_clear_irq() to use pci_resource_start() ISO hwif->dma_base.
 
- drivers/ide/buddha.c |   27 +++++++++++++--------------
- drivers/ide/gayle.c  |   23 +++++++++++------------
- drivers/ide/ide-io.c |    2 --
- drivers/ide/macide.c |   18 ++++++++++++++----
- 4 files changed, 38 insertions(+), 32 deletions(-)
+ drivers/ide/cmd64x.c |   34 +++++++++++++++++++---------------
+ 1 files changed, 19 insertions(+), 15 deletions(-)
 
-Index: ide-2.6/drivers/ide/buddha.c
+Index: ide-2.6/drivers/ide/cmd64x.c
 ===================================================================
---- ide-2.6.orig/drivers/ide/buddha.c
-+++ ide-2.6/drivers/ide/buddha.c
-@@ -109,16 +109,12 @@ static int buddha_ack_intr(ide_hwif_t *h
-     return 1;
+--- ide-2.6.orig/drivers/ide/cmd64x.c
++++ ide-2.6/drivers/ide/cmd64x.c
+@@ -7,7 +7,7 @@
+  * Copyright (C) 1998		David S. Miller (davem@redhat.com)
+  *
+  * Copyright (C) 1999-2002	Andre Hedrick <andre@linux-ide.org>
+- * Copyright (C) 2007		MontaVista Software, Inc. <source@mvista.com>
++ * Copyright (C) 2007,2009	MontaVista Software, Inc. <source@mvista.com>
+  */
+ 
+ #include <linux/module.h>
+@@ -226,11 +226,11 @@ static void cmd64x_set_dma_mode(ide_driv
+ 		(void) pci_write_config_byte(dev, pciU, regU);
  }
  
--static int xsurf_ack_intr(ide_hwif_t *hwif)
-+static void xsurf_clear_irq(ide_drive_t *drive)
+-static int cmd648_dma_end(ide_drive_t *drive)
++static void cmd648_clear_irq(ide_drive_t *drive)
  {
--    unsigned char ch;
+ 	ide_hwif_t *hwif	= drive->hwif;
+-	unsigned long base	= hwif->dma_base - (hwif->channel * 8);
+-	int err			= ide_dma_end(drive);
++	struct pci_dev *dev	= to_pci_dev(hwif->dev);
++	unsigned long base	= pci_resource_start(dev, 4);
+ 	u8  irq_mask		= hwif->channel ? MRDMODE_INTR_CH1 :
+ 						  MRDMODE_INTR_CH0;
+ 	u8  mrdmode		= inb(base + 1);
+@@ -238,11 +238,9 @@ static int cmd648_dma_end(ide_drive_t *d
+ 	/* clear the interrupt bit */
+ 	outb((mrdmode & ~(MRDMODE_INTR_CH0 | MRDMODE_INTR_CH1)) | irq_mask,
+ 	     base + 1);
 -
--    ch = z_readb(hwif->io_ports.irq_addr);
--    /* X-Surf needs a 0 written to IRQ register to ensure ISA bit A11 stays at 0 */
--    z_writeb(0, hwif->io_ports.irq_addr);
--    if (!(ch & 0x80))
--	    return 0;
--    return 1;
-+    /*
-+     * X-Surf needs 0 written to IRQ register to ensure ISA bit A11 stays at 0
-+     */
-+    z_writeb(0, drive->hwif->io_ports.irq_addr);
+-	return err;
  }
  
- static void __init buddha_setup_ports(struct ide_hw *hw, unsigned long base,
-@@ -141,6 +137,10 @@ static void __init buddha_setup_ports(st
- 	hw->ack_intr = ack_intr;
+-static int cmd64x_dma_end(ide_drive_t *drive)
++static void cmd64x_clear_irq(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif	= drive->hwif;
+ 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+@@ -250,13 +248,10 @@ static int cmd64x_dma_end(ide_drive_t *d
+ 	u8  irq_mask		= hwif->channel ? ARTTIM23_INTR_CH1 :
+ 						  CFR_INTR_CH0;
+ 	u8  irq_stat		= 0;
+-	int err			= ide_dma_end(drive);
+ 
+ 	(void) pci_read_config_byte(dev, irq_reg, &irq_stat);
+ 	/* clear the interrupt bit */
+ 	(void) pci_write_config_byte(dev, irq_reg, irq_stat | irq_mask);
+-
+-	return err;
  }
  
-+static const struct ide_port_ops xsurf_port_ops = {
-+	.clear_irq		= xsurf_clear_irq,
+ static int cmd648_dma_test_irq(ide_drive_t *drive)
+@@ -370,6 +365,14 @@ static u8 cmd64x_cable_detect(ide_hwif_t
+ static const struct ide_port_ops cmd64x_port_ops = {
+ 	.set_pio_mode		= cmd64x_set_pio_mode,
+ 	.set_dma_mode		= cmd64x_set_dma_mode,
++	.clear_irq		= cmd64x_clear_irq,
++	.cable_detect		= cmd64x_cable_detect,
 +};
 +
- static const struct ide_port_info buddha_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
-@@ -161,6 +161,7 @@ static int __init buddha_init(void)
- 	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
- 		unsigned long board;
- 		struct ide_hw hw[MAX_NUM_HWIFS], *hws[MAX_NUM_HWIFS];
-+		struct ide_port_info d = buddha_port_info;
++static const struct ide_port_ops cmd648_port_ops = {
++	.set_pio_mode		= cmd64x_set_pio_mode,
++	.set_dma_mode		= cmd64x_set_dma_mode,
++	.clear_irq		= cmd648_clear_irq,
+ 	.cable_detect		= cmd64x_cable_detect,
+ };
  
- 		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
- 			buddha_num_hwifs = BUDDHA_NUM_HWIFS;
-@@ -171,6 +172,7 @@ static int __init buddha_init(void)
- 		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF) {
- 			buddha_num_hwifs = XSURF_NUM_HWIFS;
- 			type=BOARD_XSURF;
-+			d.port_ops = &xsurf_port_ops;
- 		} else 
- 			continue;
- 		
-@@ -203,28 +205,25 @@ fail_base2:
- 
- 		for (i = 0; i < buddha_num_hwifs; i++) {
- 			unsigned long base, ctl, irq_port;
--			ide_ack_intr_t *ack_intr;
- 
- 			if (type != BOARD_XSURF) {
- 				base = buddha_board + buddha_bases[i];
- 				ctl = base + BUDDHA_CONTROL;
- 				irq_port = buddha_board + buddha_irqports[i];
--				ack_intr = buddha_ack_intr;
- 			} else {
- 				base = buddha_board + xsurf_bases[i];
- 				/* X-Surf has no CS1* (Control/AltStat) */
- 				ctl = 0;
- 				irq_port = buddha_board + xsurf_irqports[i];
--				ack_intr = xsurf_ack_intr;
- 			}
- 
- 			buddha_setup_ports(&hw[i], base, ctl, irq_port,
--					   ack_intr);
-+					   buddha_ack_intr);
- 
- 			hws[i] = &hw[i];
- 		}
- 
--		ide_host_add(&buddha_port_info, hws, i, NULL);
-+		ide_host_add(&d, hws, i, NULL);
- 	}
- 
- 	return 0;
-Index: ide-2.6/drivers/ide/gayle.c
-===================================================================
---- ide-2.6.orig/drivers/ide/gayle.c
-+++ ide-2.6/drivers/ide/gayle.c
-@@ -66,7 +66,7 @@ MODULE_PARM_DESC(doubler, "enable suppor
-      *  Check and acknowledge the interrupt status
-      */
- 
--static int gayle_ack_intr_a4000(ide_hwif_t *hwif)
-+static int gayle_ack_intr(ide_hwif_t *hwif)
- {
-     unsigned char ch;
- 
-@@ -76,16 +76,12 @@ static int gayle_ack_intr_a4000(ide_hwif
-     return 1;
- }
- 
--static int gayle_ack_intr_a1200(ide_hwif_t *hwif)
-+static void gayle_a1200_clear_irq(ide_drive_t *drive)
- {
--    unsigned char ch;
-+    ide_hwif_t *hwif = drive->hwif;
- 
--    ch = z_readb(hwif->io_ports.irq_addr);
--    if (!(ch & GAYLE_IRQ_IDE))
--	return 0;
-     (void)z_readb(hwif->io_ports.status_addr);
-     z_writeb(0x7c, hwif->io_ports.irq_addr);
--    return 1;
- }
- 
- static void __init gayle_setup_ports(struct ide_hw *hw, unsigned long base,
-@@ -108,6 +104,10 @@ static void __init gayle_setup_ports(str
- 	hw->ack_intr = ack_intr;
- }
- 
-+static const struct ide_port_ops gayle_a1200_port_ops = {
-+	.clear_irq		= gayle_a1200_clear_irq,
-+};
-+
- static const struct ide_port_info gayle_port_info = {
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA,
-@@ -123,9 +123,9 @@ static int __init gayle_init(void)
- {
-     unsigned long phys_base, res_start, res_n;
-     unsigned long base, ctrlport, irqport;
--    ide_ack_intr_t *ack_intr;
-     int a4000, i, rc;
-     struct ide_hw hw[GAYLE_NUM_HWIFS], *hws[GAYLE_NUM_HWIFS];
-+    struct ide_port_info d = gayle_port_info;
- 
-     if (!MACH_IS_AMIGA)
- 	return -ENODEV;
-@@ -148,11 +148,10 @@ found:
- 	if (a4000) {
- 	    phys_base = GAYLE_BASE_4000;
- 	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_4000);
--	    ack_intr = gayle_ack_intr_a4000;
- 	} else {
- 	    phys_base = GAYLE_BASE_1200;
- 	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_1200);
--	    ack_intr = gayle_ack_intr_a1200;
-+	    d.port_ops = &gayle_a1200_port_ops;
- 	}
- 
- 	res_start = ((unsigned long)phys_base) & ~(GAYLE_NEXT_PORT-1);
-@@ -165,12 +164,12 @@ found:
- 	base = (unsigned long)ZTWO_VADDR(phys_base + i * GAYLE_NEXT_PORT);
- 	ctrlport = GAYLE_HAS_CONTROL_REG ? (base + GAYLE_CONTROL) : 0;
- 
--	gayle_setup_ports(&hw[i], base, ctrlport, irqport, ack_intr);
-+	gayle_setup_ports(&hw[i], base, ctrlport, irqport, gayle_ack_intr);
- 
- 	hws[i] = &hw[i];
-     }
- 
--    rc = ide_host_add(&gayle_port_info, hws, i, NULL);
-+    rc = ide_host_add(&d, hws, i, NULL);
-     if (rc)
- 	release_mem_region(res_start, res_n);
- 
-Index: ide-2.6/drivers/ide/ide-io.c
-===================================================================
---- ide-2.6.orig/drivers/ide/ide-io.c
-+++ ide-2.6/drivers/ide/ide-io.c
-@@ -671,8 +671,6 @@ void ide_timer_expiry (unsigned long dat
- 		} else if (drive_is_ready(drive)) {
- 			if (drive->waiting_for_dma)
- 				hwif->dma_ops->dma_lost_irq(drive);
--			if (hwif->ack_intr)
--				hwif->ack_intr(hwif);
- 			if (hwif->port_ops && hwif->port_ops->clear_irq)
- 				hwif->port_ops->clear_irq(drive);
- 
-Index: ide-2.6/drivers/ide/macide.c
-===================================================================
---- ide-2.6.orig/drivers/ide/macide.c
-+++ ide-2.6/drivers/ide/macide.c
-@@ -55,13 +55,16 @@ volatile unsigned char *ide_ifr = (unsig
- 
- int macide_ack_intr(ide_hwif_t* hwif)
- {
--	if (*ide_ifr & 0x20) {
--		*ide_ifr &= ~0x20;
-+	if (*ide_ifr & 0x20)
- 		return 1;
--	}
- 	return 0;
- }
- 
-+static void macide_clear_irq(ide_drive_t *drive)
-+{
-+	*ide_ifr &= ~0x20;
-+}
-+
- static void __init macide_setup_ports(struct ide_hw *hw, unsigned long base,
- 				      int irq, ide_ack_intr_t *ack_intr)
- {
-@@ -78,7 +81,12 @@ static void __init macide_setup_ports(st
- 	hw->ack_intr = ack_intr;
- }
- 
-+static const struct ide_port_ops macide_port_ops = {
-+	.clear_irq		= macide_clear_irq,
-+};
-+
- static const struct ide_port_info macide_port_info = {
-+	.port_ops		= &macide_port_ops,
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
- 	.irq_flags		= IRQF_SHARED,
- 	.chipset		= ide_generic,
-@@ -97,6 +105,7 @@ static int __init macide_init(void)
- 	unsigned long base;
- 	int irq;
- 	struct ide_hw hw, *hws[] = { &hw };
-+	struct ide_port_info d = macide_port_info;
- 
- 	if (!MACH_IS_MAC)
- 		return -ENODEV;
-@@ -115,6 +124,7 @@ static int __init macide_init(void)
- 	case MAC_IDE_BABOON:
- 		base = BABOON_BASE;
- 		ack_intr = NULL;
-+		d.port_ops = NULL;
- 		irq = IRQ_BABOON_1;
- 		break;
- 	default:
-@@ -126,7 +136,7 @@ static int __init macide_init(void)
- 
- 	macide_setup_ports(&hw, base, irq, ack_intr);
- 
--	return ide_host_add(&macide_port_info, hws, 1, NULL);
-+	return ide_host_add(&d, hws, 1, NULL);
- }
- 
- module_init(macide_init);
+@@ -377,7 +380,7 @@ static const struct ide_dma_ops cmd64x_d
+ 	.dma_host_set		= ide_dma_host_set,
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= cmd64x_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= cmd64x_dma_test_irq,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+ 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
+@@ -399,7 +402,7 @@ static const struct ide_dma_ops cmd648_d
+ 	.dma_host_set		= ide_dma_host_set,
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= cmd648_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= cmd648_dma_test_irq,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+ 	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
+@@ -423,7 +426,7 @@ static const struct ide_port_info cmd64x
+ 		.name		= DRV_NAME,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+-		.port_ops	= &cmd64x_port_ops,
++		.port_ops	= &cmd648_port_ops,
+ 		.dma_ops	= &cmd648_dma_ops,
+ 		.host_flags	= IDE_HFLAG_SERIALIZE |
+ 				  IDE_HFLAG_ABUSE_PREFETCH,
+@@ -435,7 +438,7 @@ static const struct ide_port_info cmd64x
+ 		.name		= DRV_NAME,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+-		.port_ops	= &cmd64x_port_ops,
++		.port_ops	= &cmd648_port_ops,
+ 		.dma_ops	= &cmd648_dma_ops,
+ 		.host_flags	= IDE_HFLAG_ABUSE_PREFETCH,
+ 		.pio_mask	= ATA_PIO5,
+@@ -446,7 +449,7 @@ static const struct ide_port_info cmd64x
+ 		.name		= DRV_NAME,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+-		.port_ops	= &cmd64x_port_ops,
++		.port_ops	= &cmd648_port_ops,
+ 		.dma_ops	= &cmd648_dma_ops,
+ 		.host_flags	= IDE_HFLAG_ABUSE_PREFETCH,
+ 		.pio_mask	= ATA_PIO5,
+@@ -484,6 +487,7 @@ static int __devinit cmd64x_init_one(str
+ 			 */
+ 			if (dev->revision < 3) {
+ 				d.enablebits[0].reg = 0;
++				d.port_ops = &cmd64x_port_ops;
+ 				if (dev->revision == 1)
+ 					d.dma_ops = &cmd646_rev1_dma_ops;
+ 				else
 
