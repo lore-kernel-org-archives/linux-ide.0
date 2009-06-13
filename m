@@ -1,87 +1,58 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] ide: IORDY handling fixes
-Date: Sun, 14 Jun 2009 00:47:25 +0400
-Message-ID: <4A34105D.70507@ru.mvista.com>
-References: <200906131822.22343.bzolnier@gmail.com>
+Subject: Re: [PATCH 1/3] ata: add ata_id_pio_need_iordy() helper
+Date: Sun, 14 Jun 2009 00:49:26 +0400
+Message-ID: <4A3410D6.9060400@ru.mvista.com>
+References: <200906131821.07018.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:57389 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:57399 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751941AbZFMUrb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Jun 2009 16:47:31 -0400
-In-Reply-To: <200906131822.22343.bzolnier@gmail.com>
+	id S1753017AbZFMUtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Jun 2009 16:49:32 -0400
+In-Reply-To: <200906131821.07018.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
 Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> Add ide_pio_need_iordy() helper and convert host drivers to use it.
->
-> This fixes it8172, it8213, pdc202xx_old, piix, slc90e66 and siimage
-> host drivers to handle IORDY correctly.
->
+> Cc: Jeff Garzik <jgarzik@pobox.com>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->   
-
-[...]
-
-> Index: b/drivers/ide/ide-xfer-mode.c
+> ---
+> against Linus' tree
+>
+>  include/linux/ata.h |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> Index: b/include/linux/ata.h
 > ===================================================================
-> --- a/drivers/ide/ide-xfer-mode.c
-> +++ b/drivers/ide/ide-xfer-mode.c
-> @@ -107,6 +107,12 @@ u8 ide_get_best_pio_mode(ide_drive_t *dr
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -800,6 +800,17 @@ static inline int ata_id_is_ssd(const u1
+>  	return id[ATA_ID_ROT_SPEED] == 0x01;
 >  }
->  EXPORT_SYMBOL_GPL(ide_get_best_pio_mode);
 >  
-> +int ide_pio_need_iordy(ide_drive_t *drive, const u8 pio)
+> +static inline int ata_id_pio_need_iordy(const u16 *id, const u8 pio)
 > +{
-> +	return ata_id_pio_need_iordy(drive->id, pio);
+> +	/* CF spec. r4.1 Table 22 says no IORDY on PIO5 and PIO6.  */
+> +	if (ata_id_is_cfa(id) && pio > 4)
+>   
+
+   It actually makes sense to put the cheap 'pio' check first. We 
+shouldn't call ata_id_is_cfa() for all modes.
+
+> +		return 0;
+> +	/* PIO3 and higher it is mandatory. */
+> +	if (pio > 2 || ata_id_has_iordy(id))
+> +		return 1;
+> +	return 0;
 > +}
-> +EXPORT_SYMBOL_GPL(ide_pio_need_iordy);
->   
-
-   Hm, why there was a need for such a wrapper? Why not just call it 
-directly?
-
-> Index: b/drivers/ide/it8213.c
-> ===================================================================
-> --- a/drivers/ide/it8213.c
-> +++ b/drivers/ide/it8213.c
-> @@ -50,7 +50,7 @@ static void it8213_set_pio_mode(ide_driv
->  		control |= 1;	/* Programmable timing on */
->  	if (drive->media != ide_disk)
->  		control |= 4;	/* ATAPI */
-> -	if (pio > 2)
-> +	if (ide_pio_need_iordy(drive, pio))
->  		control |= 2;	/* IORDY */
->  	if (is_slave) {
->  		master_data |=  0x4000;
-> Index: b/drivers/ide/pdc202xx_old.c
-> ===================================================================
-> --- a/drivers/ide/pdc202xx_old.c
-> +++ b/drivers/ide/pdc202xx_old.c
-> @@ -73,7 +73,7 @@ static void pdc202xx_set_mode(ide_drive_
->  		 * Prefetch_EN / IORDY_EN / PA[3:0] bits of register A
->  		 */
->  		AP &= ~0x3f;
-> -		if (ata_id_iordy_disable(drive->id))
->   
-
-   Hm, now that was surely wrong...
-
-> +		if (ide_pio_need_iordy(drive, speed - XFER_PIO_0))
->  			AP |= 0x20;	/* set IORDY_EN bit */
->  		if (drive->media == ide_disk)
->  			AP |= 0x10;	/* set Prefetch_EN bit */
->   
-
-[...]
+> +
 
 MBR, Sergei
 
