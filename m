@@ -1,26 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Sat, 13 Jun 2009 18:59:53 +0200
-Message-ID: <200906131859.54080.bzolnier@gmail.com>
-References: <bug-13399-11633@http.bugzilla.kernel.org/> <200906131629.n5DGT7LL020589@demeter.kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Sat, 13 Jun 2009 16:54:37 GMT
+Message-ID: <200906131654.n5DGsbg3022553@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f206.google.com ([209.85.220.206]:55405 "EHLO
-	mail-fx0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293AbZFMQyd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jun 2009 12:54:33 -0400
-Received: by fxm2 with SMTP id 2so40463fxm.37
-        for <linux-ide@vger.kernel.org>; Sat, 13 Jun 2009 09:54:34 -0700 (PDT)
-In-Reply-To: <200906131629.n5DGT7LL020589@demeter.kernel.org>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:53489 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754609AbZFMQyh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jun 2009 12:54:37 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5DGsbaG022554
+	for <linux-ide@vger.kernel.org>; Sat, 13 Jun 2009 16:54:37 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
+
+
+
+
+
+--- Comment #21 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-06-13 16:54:36 ---
 On Saturday 13 June 2009 18:29:07 bugzilla-daemon@bugzilla.kernel.org wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=13399
 > 
@@ -94,3 +98,8 @@ cmd->nleft is our concept, thislen reflects the hardware state.
 
 Yes.  Please stop reading this stupid ATAPI spec, it is near to worthless
 when it comes to the real hardware implementations/bugs..
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
