@@ -1,61 +1,55 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/3] ide: don't enable IORDY at a probe time
-Date: Sun, 14 Jun 2009 00:58:44 +0400
-Message-ID: <4A341304.4040304@ru.mvista.com>
-References: <200906131823.15906.bzolnier@gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 5/10] ide: move ack_intr() method into 'struct
+	ide_port_ops' (take 2)
+Date: Sun, 14 Jun 2009 13:37:35 +1000
+Message-ID: <20090614033735.GB374@telegraphics.com.au>
+References: <200702140101.26639.sshtylyov@ru.mvista.com> <200906131731.19917.sshtylyov@ru.mvista.com> <20090613161545.GB633@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:57576 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756089AbZFMU6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Jun 2009 16:58:51 -0400
-In-Reply-To: <200906131823.15906.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090613161545.GB633@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On 14/06/09 02:15, Finn Thain wrote:
+> 
+> > +++ ide-2.6/drivers/ide/ide-io.c
+> > @@ -789,7 +789,8 @@ irqreturn_t ide_intr (int irq, void *dev
+> >  
+> >  	spin_lock_irqsave(&hwif->lock, flags);
+> >  
+> > -	if (hwif->ack_intr && hwif->ack_intr(hwif) == 0)
+> > +	if (hwif->port_ops && hwif->port_ops->test_irq &&
+> > +	    hwif->port_ops->test_irq(hwif) == 0)
+> 
+> Wouldn't that be 
+> 
+> +     if (hwif->port_ops && hwif->port_ops->test_irq(hwif) &&
+> +         hwif->port_ops->clear_irq(hwif) == 0)
+> 
+> (this was never compiled?)
 
-> * Add 'unsigned long port_flags' field to ide_hwif_t.
->
-> * Add IDE_PFLAG_PROBING port flag and keep it set during probing.
->
-> * Fix ide_pio_need_iordy() to not enable IORDY at a probe time
->   (IORDY may lead to controller lock up on certain controllers
->    if the port is not occupied).
->
-> Loosely based on the recent libata's fix by Tejun, thanks to Alan
-> for the hint that IDE may also need it.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-[...]
+My bad.
+(Note to self: don't try to quickly understand patches at 2am.)
 
-> Index: b/drivers/ide/ide-xfer-mode.c
-> ===================================================================
-> --- a/drivers/ide/ide-xfer-mode.c
-> +++ b/drivers/ide/ide-xfer-mode.c
-> @@ -109,6 +109,12 @@ EXPORT_SYMBOL_GPL(ide_get_best_pio_mode)
->  
->  int ide_pio_need_iordy(ide_drive_t *drive, const u8 pio)
->  {
-> +	/*
-> +	 * IORDY may lead to controller lock up on certain controllers
-> +	 * if the port is not occupied.
->   
+> >  	case MAC_IDE_BABOON:
+> >  		base = BABOON_BASE;
+> > -		ack_intr = NULL;
+> 
+> I think you mean:
+> 
+> 	case MAC_IDE_BABOON:
+> 		base = BABOON_BASE;
+> -		ack_intr = NULL;
+> +		macide_port_ops.clear_irq = NULL;
+> 
+> Why is this broken into two patches? Bisecting in between doesn't work.
 
-   This is really strange -- shouldn't it be floating in this case, and 
-so most sampled as 1? Who can pull it down on an empty port?..
+Same here.
 
-> +	 */
-> +	if (pio == 0 && (drive->hwif->port_flags & IDE_PFLAG_PROBING))
-> +		return 0;
->   
+Sorry for the noise.
 
-   Now I'm seeing why there was a need to introduce the wrapper. :-)
-
-MBR, Sergei
-
-
+Finn
