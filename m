@@ -1,23 +1,32 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Sun, 14 Jun 2009 15:02:38 +0200
-Message-ID: <20090614130238.GA1892@liondog.tnic>
-References: <bug-13399-11633@http.bugzilla.kernel.org/> <200906131859.54080.bzolnier@gmail.com> <20090614100606.GA25379@liondog.tnic> <200906141432.11139.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Sun, 14 Jun 2009 13:02:46 GMT
+Message-ID: <200906141302.n5ED2kru002006@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f207.google.com ([209.85.220.207]:37476 "EHLO
-	mail-fx0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbZFNNCl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2009 09:02:41 -0400
-Received: by fxm3 with SMTP id 3so83682fxm.37
-        for <linux-ide@vger.kernel.org>; Sun, 14 Jun 2009 06:02:42 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200906141432.11139.bzolnier@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:35047 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbZFNNCo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2009 09:02:44 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5ED2kBx002007
+	for <linux-ide@vger.kernel.org>; Sun, 14 Jun 2009 13:02:46 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, bruinjm@xs4all.nl
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
+
+
+
+
+
+--- Comment #24 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-14 13:02:45 ---
+Reply-To: petkovbb@googlemail.com
 
 Hi,
 
@@ -97,14 +106,14 @@ index 6f728da..219c303 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
 @@ -764,7 +764,7 @@ out_end:
- 				rq->errors = -EIO;
- 		}
- 
--		if (uptodate == 0)
-+		if (uptodate == 0 && rq->bio)
- 			ide_cd_error_cmd(drive, cmd);
- 
- 		/* make sure it's fully ended */
+                 rq->errors = -EIO;
+         }
+
+-        if (uptodate == 0)
++        if (uptodate == 0 && rq->bio)
+             ide_cd_error_cmd(drive, cmd);
+
+         /* make sure it's fully ended */
 
 --
 
@@ -127,5 +136,6 @@ index 6f728da..219c303 100644
 Ok.
 
 -- 
-Regards/Gruss,
-    Boris.
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
