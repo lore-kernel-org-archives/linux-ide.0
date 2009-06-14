@@ -1,26 +1,31 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Sun, 14 Jun 2009 14:32:10 +0200
-Message-ID: <200906141432.11139.bzolnier@gmail.com>
-References: <bug-13399-11633@http.bugzilla.kernel.org/> <200906131859.54080.bzolnier@gmail.com> <20090614100606.GA25379@liondog.tnic>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Sun, 14 Jun 2009 12:27:20 GMT
+Message-ID: <200906141227.n5ECRKEo028782@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f207.google.com ([209.85.220.207]:58524 "EHLO
-	mail-fx0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbZFNM1Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2009 08:27:16 -0400
-Received: by fxm3 with SMTP id 3so74017fxm.37
-        for <linux-ide@vger.kernel.org>; Sun, 14 Jun 2009 05:27:17 -0700 (PDT)
-In-Reply-To: <20090614100606.GA25379@liondog.tnic>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:59026 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511AbZFNM1S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2009 08:27:18 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5ECRKt9028783
+	for <linux-ide@vger.kernel.org>; Sun, 14 Jun 2009 12:27:20 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
+
+
+
+
+
+--- Comment #23 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-06-14 12:27:19 ---
 On Sunday 14 June 2009 12:06:06 Borislav Petkov wrote:
 > Hi,
 > 
@@ -97,3 +102,8 @@ the final 2.6.30 release..
 I can't tell much without seeing the concept with more details.
 
 IOW please send patches, that is the best way to discuss things.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
