@@ -1,23 +1,31 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Sun, 14 Jun 2009 12:06:06 +0200
-Message-ID: <20090614100606.GA25379@liondog.tnic>
-References: <bug-13399-11633@http.bugzilla.kernel.org/> <200906131629.n5DGT7LL020589@demeter.kernel.org> <200906131859.54080.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Sun, 14 Jun 2009 10:06:14 GMT
+Message-ID: <200906141006.n5EA6EAm011851@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f207.google.com ([209.85.220.207]:47165 "EHLO
-	mail-fx0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbZFNKGK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2009 06:06:10 -0400
-Received: by fxm3 with SMTP id 3so35878fxm.37
-        for <linux-ide@vger.kernel.org>; Sun, 14 Jun 2009 03:06:11 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200906131859.54080.bzolnier@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:53919 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753208AbZFNKGM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2009 06:06:12 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5EA6ELP011852
+	for <linux-ide@vger.kernel.org>; Sun, 14 Jun 2009 10:06:14 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
+
+
+
+
+
+--- Comment #22 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-14 10:06:13 ---
+Reply-To: petkovbb@googlemail.com
 
 Hi,
 
@@ -67,7 +75,7 @@ slightly differently.
 I'm thinking something like
 
 if (uptodate == 0 && !(OK_STAT(stat, 0, BAD_STAT)))
-	ide_cd_error_cmd(drive, cmd);
+    ide_cd_error_cmd(drive, cmd);
 
 > * handling of non-fully completed requests with "good" status (cause:
 > stupid hardware)
@@ -82,5 +90,6 @@ So, how about an ide_cd_complete_rq() helper which hides such special
 cases and is called as an indirection at the end of the irq handler?
 
 -- 
-Regards/Gruss,
-    Boris.
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
