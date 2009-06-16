@@ -1,84 +1,95 @@
-From: Thomas Jackowski <aXe@hadiko.de>
-Subject: Re: Errors on ICH10R with Seagate HDDs
-Date: Tue, 16 Jun 2009 03:59:25 +0200
-Message-ID: <4A36FC7D.5050805@hadiko.de>
-References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de> <49F3C03C.1090803@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Greg Kroah-Hartman <gregkh@suse.de>
+Subject: [PATCH 39/64] ide: remove driver_data direct access of struct device
+Date: Mon, 15 Jun 2009 22:46:28 -0700
+Message-ID: <1245131213-24168-39-git-send-email-gregkh@suse.de>
+References: <20090616051351.GA23627@kroah.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.rz.uni-karlsruhe.de ([129.13.185.218]:44714 "EHLO
-	smtp2.rz.uni-karlsruhe.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbZFPC2J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jun 2009 22:28:09 -0400
-Received: from postamt.hadiko.de ([2001:638:204:10:21b:21ff:fe22:d9c2])
-	by jordan.hadiko.de with esmtps (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <aXe@hadiko.de>)
-	id 1MGNxO-0006P7-0x
-	for linux-ide@vger.kernel.org; Tue, 16 Jun 2009 03:59:26 +0200
-In-Reply-To: <49F3C03C.1090803@kernel.org>
+Received: from kroah.org ([198.145.64.141]:48406 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935753AbZFPFvZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Jun 2009 01:51:25 -0400
+In-Reply-To: <20090616051351.GA23627@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-Hi,
+In the near future, the driver core is going to not allow direct access
+to the driver_data pointer in struct device.  Instead, the functions
+dev_get_drvdata() and dev_set_drvdata() should be used.  These functions
+have been around since the beginning, so are backwards compatible with
+all older kernel versions.
 
-I'm using 2.6.29-2-amd64 now and the bug still exists (see previous
-mails) with AHCI and NCQ enabled.
+Cc: linux-ide@vger.kernel.org
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+---
+ drivers/ide/ide-pm.c       |    6 ++++--
+ drivers/ide/ide-probe.c    |    4 ++--
+ drivers/ide/ide_platform.c |    2 +-
+ 3 files changed, 7 insertions(+), 5 deletions(-)
 
-Maybe I should contact Seagate Support now?
-
-I wonder that nobody else reported this sort of problem?
-
-Tejun Heo wrote:
-> Hello,
->=20
-> Thomas Jackowski wrote:
->> some additional information (2.6.26-1) and ata_piix:
->> [653158.828848] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 actio=
-n
->> 0x6 frozen
->> [653158.828856] ata3.00: cmd e5/00:00:00:00:00/00:00:00:00:00/00 tag=
- 0
->> [653158.828857]          res 40/00:01:00:00:00/00:00:00:00:00/00 Ema=
-sk
->> 0x4 (timeout)
->=20
-> Hmmm... that's timeout on CHECK POWER.
->=20
->> [653158.828860] ata3.00: status: { DRDY }
->> [653158.828868] ata3: hard resetting link
->> [653159.331110] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 30=
-0)
->> [653159.355648] ata3.00: configured for UDMA/133
->> [653159.355666] ata3: EH complete
->> [653159.371885] sd 2:0:0:0: [sde] 1953523055 512-byte hardware secto=
-rs
->> (1000204 MB)
->> [653159.374081] sd 2:0:0:0: [sde] Write Protect is off
->> [653159.374081] sd 2:0:0:0: [sde] Mode Sense: 00 3a 00 00
->> [653159.390212] sd 2:0:0:0: [sde] Write cache: enabled, read cache:
->> enabled, doesn't support DPO or FUA
->>
->> I tried 2.6.29 and I had no outputs in kernel.log with AHCI and w/o =
-NCQ.
->> But my system still had hiccups (system hangs for a second) so I am =
-not
->> sure if there was just no output to kernel.log (due using debian
->> unstable kernel with eventually mysterious options).
->>
->> I will observe this and report if any error occurs again.
->=20
-> Thanks.
->=20
-
---=20
-Gru=DF,
-Thomas
-
-WWW: http://nice-pic.de
-Hadifon: ~2127
-E-Mail: aXe@hadiko.de
+diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
+index ba1488b..c14ca14 100644
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -3,7 +3,8 @@
+ 
+ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+ {
+-	ide_drive_t *drive = dev->driver_data, *pair = ide_get_pair_dev(drive);
++	ide_drive_t *drive = dev_get_drvdata(dev);
++	ide_drive_t *pair = ide_get_pair_dev(drive);
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq;
+ 	struct request_pm_state rqpm;
+@@ -34,7 +35,8 @@ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+ 
+ int generic_ide_resume(struct device *dev)
+ {
+-	ide_drive_t *drive = dev->driver_data, *pair = ide_get_pair_dev(drive);
++	ide_drive_t *drive = dev_get_drvdata(dev);
++	ide_drive_t *pair = ide_get_pair_dev(drive);
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq;
+ 	struct request_pm_state rqpm;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index f371b0d..79e0af3 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -535,7 +535,7 @@ static int ide_register_port(ide_hwif_t *hwif)
+ 
+ 	/* register with global device tree */
+ 	dev_set_name(&hwif->gendev, hwif->name);
+-	hwif->gendev.driver_data = hwif;
++	dev_set_drvdata(&hwif->gendev, hwif);
+ 	if (hwif->gendev.parent == NULL)
+ 		hwif->gendev.parent = hwif->dev;
+ 	hwif->gendev.release = hwif_release_dev;
+@@ -987,9 +987,9 @@ static void hwif_register_devices(ide_hwif_t *hwif)
+ 		int ret;
+ 
+ 		dev_set_name(dev, "%u.%u", hwif->index, i);
++		dev_set_drvdata(dev, drive);
+ 		dev->parent = &hwif->gendev;
+ 		dev->bus = &ide_bus_type;
+-		dev->driver_data = drive;
+ 		dev->release = drive_release_dev;
+ 
+ 		ret = device_register(dev);
+diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
+index ee9b55e..b579fbe 100644
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -112,7 +112,7 @@ out:
+ 
+ static int __devexit plat_ide_remove(struct platform_device *pdev)
+ {
+-	struct ide_host *host = pdev->dev.driver_data;
++	struct ide_host *host = dev_get_drvdata(&pdev->dev);
+ 
+ 	ide_host_remove(host);
+ 
+-- 
+1.6.3.2
 
