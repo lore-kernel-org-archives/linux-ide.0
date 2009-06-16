@@ -1,37 +1,188 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13520] WARNING: at lib/dma-debug.c:576
- check_for_illegal_area+0xd3/0xfd()
-Date: Tue, 16 Jun 2009 10:28:01 GMT
-Message-ID: <200906161028.n5GAS1f6030224@demeter.kernel.org>
-References: <bug-13520-11633@http.bugzilla.kernel.org/>
+From: Marc Bowes <marcbowes@gmail.com>
+Subject: Re: SATA: link online but device misclassified
+Date: Tue, 16 Jun 2009 17:03:58 +0200
+Message-ID: <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>
+References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>
+	 <4A308798.6060803@gmail.com>
+	 <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>
+	 <1244746872.3998.88.camel@mulgrave.site>
+	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>
+	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:55610 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbZFPK2B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 06:28:01 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5GAS1jl030225
-	for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 10:28:01 GMT
-In-Reply-To: <bug-13520-11633@http.bugzilla.kernel.org/>
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:33900 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759461AbZFPPD5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 11:03:57 -0400
+Received: by ewy6 with SMTP id 6so6087903ewy.37
+        for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 08:03:58 -0700 (PDT)
+In-Reply-To: <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13520
+Sorry to bother, but this is really bugging me! I can't seem to find an=
+ybody
+else with the same problem. What steps should I be taking to figure thi=
+s
+out? I'm thinking I should be trying other kernel versions and/or plugg=
+ing
+drives in different places. I don't think the motherboard is faulty, an=
+d I
+seem to be getting good speeds (~70mbs) to all four drives.
 
-
-
-
-
---- Comment #3 from Joerg Roedel <joro@8bytes.org>  2009-06-16 10:27:59 ---
-Ok, this was a dma-debug bug. The two warnings above are for memory areas which
-exactly ends at the beginning of the kernel text segment. I queued a fix in my
-tree and send it out when -rc1 is released. I also marked the patch for stable
-backporting.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+On Tue, Jun 16, 2009 at 4:59 PM, Marc Bowes <marcbowes@gmail.com> wrote=
+:
+>
+> Sorry to bother, but this is really bugging me! I can't seem to find =
+anybody else with the same problem. What steps should I be taking to fi=
+gure this out? I'm thinking I should be trying other kernel versions an=
+d/or plugging drives in different places. I don't think the motherboard=
+ is faulty, and I seem to be getting good speeds (~70mbs) to all four d=
+rives.
+>
+> On Thu, Jun 11, 2009 at 9:32 PM, Marc Bowes <marcbowes@gmail.com> wro=
+te:
+>>
+>> Hi and thanks for the reponse.
+>>
+>> There are 6 SATA slots on the board, 4 of which are being used (port=
+s
+>> 0 & 2 are not being used because they're hard to reach). AHCI is
+>> disabled, but enabling makes no visible difference.
+>>
+>> Here is lspci:
+>>
+>> @@@@
+>> 00:00.0 Host bridge: Intel Corporation 4 Series Chipset DRAM Control=
+ler (rev 02)
+>> 00:01.0 PCI bridge: Intel Corporation 4 Series Chipset PCI Express
+>> Root Port (rev 02)
+>> 00:1a.0 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB
+>> UHCI Controller #4
+>> 00:1a.1 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB
+>> UHCI Controller #5
+>> 00:1a.2 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB
+>> UHCI Controller #6
+>> 00:1a.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=
+2
+>> EHCI Controller #2
+>> 00:1b.0 Audio device: Intel Corporation 82801JI (ICH10 Family) HD
+>> Audio Controller
+>> 00:1c.0 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Exp=
+ress Port 1
+>> 00:1c.4 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Exp=
+ress Port 5
+>> 00:1d.0 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB
+>> UHCI Controller #1
+>> 00:1d.1 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB
+>> UHCI Controller #2
+>> 00:1d.2 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB
+>> UHCI Controller #3
+>> 00:1d.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=
+2
+>> EHCI Controller #1
+>> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
+>> 00:1f.0 ISA bridge: Intel Corporation 82801JIR (ICH10R) LPC Interfac=
+e Controller
+>> 00:1f.2 IDE interface: Intel Corporation 82801JI (ICH10 Family) 4 po=
+rt
+>> SATA IDE Controller
+>> 00:1f.3 SMBus: Intel Corporation 82801JI (ICH10 Family) SMBus Contro=
+ller
+>> 00:1f.5 IDE interface: Intel Corporation 82801JI (ICH10 Family) 2 po=
+rt
+>> SATA IDE Controller
+>> 01:00.0 VGA compatible controller: nVidia Corporation G80 [GeForce
+>> 8800 GTX] (rev a2)
+>> 02:00.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 03:01.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 03:02.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 03:03.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 03:04.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 03:05.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 03:06.0 PCI bridge: Integrated Device Technology, Inc. PES16T7 PCI
+>> Express Switch (rev 0d)
+>> 05:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+>> RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+>> 06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+>> RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+>> 07:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+>> RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+>> 08:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+>> RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+>> 0a:00.0 SATA controller: JMicron Technologies, Inc. JMicron
+>> 20360/20363 AHCI Controller (rev 02)
+>> 0a:00.1 IDE interface: JMicron Technologies, Inc. JMicron 20360/2036=
+3
+>> AHCI Controller (rev 02)
+>> 0b:06.0 FireWire (IEEE 1394): Texas Instruments TSB43AB23
+>> IEEE-1394a-2000 Controller (PHY/Link)
+>> @@@@
+>>
+>> On Thu, Jun 11, 2009 at 9:01 PM, James
+>> Bottomley<James.Bottomley@hansenpartnership.com> wrote:
+>> > On Thu, 2009-06-11 at 11:31 +0200, Marc Bowes wrote:
+>> >> I'm not sure if you can attach files, but here goes (attached as =
+dmesg.txt)
+>> >
+>> > Actually, this shows the problems are on two unoccupied ahci ports=
+:
+>> >
+>> >
+>> >> [ =A0 =A00.685269] ahci 0000:0a:00.0: version 3.0
+>> >> [ =A0 =A00.685279] ahci 0000:0a:00.0: PCI INT A -> GSI 16 (level,=
+ low) -> IRQ 16
+>> >> [ =A0 =A00.696040] ahci 0000:0a:00.0: AHCI 0001.0000 32 slots 2 p=
+orts 3 Gbps 0x3 impl SATA mode
+>> >> [ =A0 =A00.696283] ahci 0000:0a:00.0: flags: 64bit ncq pm led clo=
+ pmp pio slum part
+>> >> [ =A0 =A00.696453] ahci 0000:0a:00.0: setting latency timer to 64
+>> >> [ =A0 =A00.696592] scsi0 : ahci
+>> >> [ =A0 =A00.696907] scsi1 : ahci
+>> >> [ =A0 =A00.697224] ata1: SATA max UDMA/133 abar m8192@0xec400000 =
+port 0xec400100 irq 16
+>> >> [ =A0 =A00.697461] ata2: SATA max UDMA/133 abar m8192@0xec400000 =
+port 0xec400180 irq 16
+>> >> [ =A0 =A06.969039] ata1: link is slow to respond, please be patie=
+nt (ready=3D0)
+>> >> [ =A0 10.743038] ata1: softreset failed (device not ready)
+>> >> [ =A0 10.743191] ata1: SATA link up 3.0 Gbps (SStatus 123 SContro=
+l 300)
+>> >> [ =A0 10.743344] ata1: link online but device misclassified, retr=
+ying
+>> >> [ =A0 17.015051] ata1: link is slow to respond, please be patient=
+ (ready=3D0)
+>> >> [ =A0 20.789041] ata1: softreset failed (device not ready)
+>> > ...
+>> >
+>> > Could you confirm that there are actually no devices it's supposed=
+ to be
+>> > detecting?
+>> >
+>> > It looks like the AHCI controller at 00:0a:00.0 might be some form=
+ of
+>> > piix controller in the ICH10 bridge ... does lspci confirm this? =A0=
+I
+>> > remember you said you had:
+>> >
+>> >> The ATA controllers: Intel Corporation 82801JI (ICH10 Family) 2 p=
+ort
+>> >> SATA IDE Controller.
+>> >
+>> > Yet the log is finding six ports: four on the piix and two on the
+>> > problem ahci =A0.. is that right?
+>> >
+>> > James
+>> >
+>> >
+>> >
+>
