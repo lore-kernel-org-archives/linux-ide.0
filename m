@@ -1,40 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: SATA: link online but device misclassified
-Date: Tue, 16 Jun 2009 15:21:36 +0000
-Message-ID: <1245165697.3965.40.camel@mulgrave.site>
-References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>
-	 <4A308798.6060803@gmail.com>
-	 <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>
-	 <1244746872.3998.88.camel@mulgrave.site>
-	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>
-	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>
-	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Tue, 16 Jun 2009 15:45:59 GMT
+Message-ID: <200906161545.n5GFjxls019294@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35852 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753054AbZFPPVi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 11:21:38 -0400
-In-Reply-To: <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:57113 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbZFPPp5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 11:45:57 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5GFjxqJ019295
+	for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 15:45:59 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Bowes <marcbowes@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, 2009-06-16 at 17:03 +0200, Marc Bowes wrote:
-> Sorry to bother, but this is really bugging me! I can't seem to find anybody
-> else with the same problem. What steps should I be taking to figure this
-> out? I'm thinking I should be trying other kernel versions and/or plugging
-> drives in different places. I don't think the motherboard is faulty, and I
-> seem to be getting good speeds (~70mbs) to all four drives.
-
-Well, those are on the AHCI built in controller. The one with the slow
-response is the empty JMicron 20360/20363.  But why this should be so,
-I've no idea ... it looks like the AHCI driver can't tell the phys are
-empty for some reason, which could be due to many things.
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
 
+
+
+
+--- Comment #30 from Hans de Bruin <bruinjm@xs4all.nl>  2009-06-16 15:45:59 ---
+hda: media error (bad sector): status=0x51 { DriveReady SeekComplete Error }
+hda: media error (bad sector): error=0x30 { LastFailedSense=0x03 }
+hda: possibly failed opcode: 0xa0
+ATAPI device hda:
+  Error: Medium error -- (Sense key=0x03)
+  (reserved error code) -- (asc=0x02, ascq=0x00)
+  The failed "Read 10" packet command was: 
+  "28 00 00 00 76 78 00 00 40 00 00 00 00 00 00 00 "
+end_request: I/O error, dev hda, sector 121312
+Buffer I/O error on device hda, logical block 30328
+Buffer I/O error on device hda, logical block 30329
+Buffer I/O error on device hda, logical block 30330
+Buffer I/O error on device hda, logical block 30331
+Buffer I/O error on device hda, logical block 30332
+Buffer I/O error on device hda, logical block 30333
+Buffer I/O error on device hda, logical block 30334
+Buffer I/O error on device hda, logical block 30335
+Buffer I/O error on device hda, logical block 30336
+Buffer I/O error on device hda, logical block 30337
+
+Just kidding a CD and a whiteboard marker apparently don't mix :). I can boot
+whith a CD, create iso's from CD's and DVD's and copy at file level. Since this
+is my at work pc I dont have musical CD's at hand.
+
+Where did this problem start? I could still use cd's in 2.6.29 but in a
+slackware newsgroup I found this threat:
+http://groups.google.com/group/alt.os.linux.slackware/browse_thread/thread/1add287bea50b0bc#
+slack. Slack current uses 2.6.29.4
+
+-- 
+Hans
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
