@@ -1,48 +1,439 @@
-From: Marc Bowes <marcbowes@gmail.com>
-Subject: Re: SATA: link online but device misclassified
-Date: Tue, 16 Jun 2009 20:13:26 +0200
-Message-ID: <cfa4e840906161113w1430aedbq70dceac8105ee232@mail.gmail.com>
-References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>
-	 <4A308798.6060803@gmail.com>
-	 <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>
-	 <1244746872.3998.88.camel@mulgrave.site>
-	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>
-	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>
-	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>
-	 <1245165697.3965.40.camel@mulgrave.site>
-	 <cfa4e840906160946qc998331p308624ac10f15060@mail.gmail.com>
-	 <1245171448.3965.46.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: geomatsi@gmail.com
+Subject: [PATCH] PATA driver for CF interface on AT91SAM9260 SoC
+Date: Tue, 16 Jun 2009 23:39:11 +0400
+Message-ID: <1245181151-7040-1-git-send-email-geomatsi@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:55053 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbZFPSNZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 14:13:25 -0400
-Received: by ewy6 with SMTP id 6so6244064ewy.37
-        for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 11:13:26 -0700 (PDT)
-In-Reply-To: <1245171448.3965.46.camel@mulgrave.site>
+Received: from fg-out-1718.google.com ([72.14.220.154]:8398 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752468AbZFPTqm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 15:46:42 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so1426544fgg.17
+        for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 12:46:42 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: linux@maxim.org.za, slapin@ossfans.org, Sergey Matyukevich <geomatsi@gmail.com>
 
-Thanks for the responses, I filed a bug (#13551). I hope the category
-and whatnot is correct. Please let me know if there is anything else I
-should be doing to help resolve this.
+This patch provides PATA driver for CompactFlash interface in True IDE
+mode on AT91SAM9260 SoC.
 
-On Tue, Jun 16, 2009 at 6:57 PM, James
-Bottomley<James.Bottomley@hansenpartnership.com> wrote:
-> On Tue, 2009-06-16 at 18:46 +0200, Marc Bowes wrote:
->> Right, so I should be filing a bug report?
->
-> Probably: it would help us keep track of it. =A0The JMicron controlle=
-r
-> seems to be behaving for everyone else, though, so it does look like =
-a
-> local motherboard problem.
->
-> James
->
->
->
+Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
+---
+ drivers/ata/Kconfig     |    8 +
+ drivers/ata/Makefile    |    1 +
+ drivers/ata/pata_at91.c |  372 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 381 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/pata_at91.c
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 2aa1908..b17c57f 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -679,6 +679,14 @@ config PATA_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
++config PATA_AT91
++	tristate "PATA support for AT91SAM9260"
++	depends on ARM && ARCH_AT91
++	help
++	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
++
++	  If unsure, say N.
++
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+ 	depends on PATA_PLATFORM && PPC_OF
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 1558059..38906f9 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -72,6 +72,7 @@ obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
+ obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+ obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
+ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
++obj-$(CONFIG_PATA_AT91)	+= pata_at91.o
+ obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
+ obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
+ # Should be last but two libata driver
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+new file mode 100644
+index 0000000..fa3376d
+--- /dev/null
++++ b/drivers/ata/pata_at91.c
+@@ -0,0 +1,372 @@
++/*
++ * PATA driver for AT91SAM9260 Static Memory Controller with CompactFlash in True IDE mode
++ *
++ * Copyright (C) 2009 Matyukevich Sergey
++ *
++ * Based on:
++ *      * generic platform driver by Paul Mundt: drivers/ata/pata_platform.c
++ *      * pata_at32 driver by Kristoffer Nyborg Gregertsen
++ *      * at91_ide driver by Stanislaw Gruszka
++ *
++ * This program is free software; you can redistribute it and/or modify it 
++ * under the terms of the GNU General Public License version 2 
++ * as published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/blkdev.h>
++#include <scsi/scsi_host.h>
++#include <linux/ata.h>
++#include <linux/clk.h>
++#include <linux/libata.h>
++#include <linux/platform_device.h>
++#include <linux/ata_platform.h>
++
++#include <mach/at91sam9260_matrix.h>
++#include <mach/at91sam9_smc.h>
++#include <mach/at91sam9260.h>
++#include <mach/board.h>
++#include <mach/gpio.h>
++
++
++#define DRV_NAME "pata_at91"
++#define DRV_VERSION "0.1"
++
++#define CF_IDE_OFFSET	    0x00c00000
++#define CF_ALT_IDE_OFFSET   0x00e00000
++#define CF_IDE_RES_SIZE     0x08
++
++static int pio_mask = ATA_PIO4;
++module_param(pio_mask, int, 0);
++   
++struct at91_ide_info {
++    unsigned long mode;
++    unsigned int cs;
++ 	
++    void __iomem *ide_addr;
++	void __iomem *alt_addr;
++};
++
++const struct ata_timing initial_timing = 
++    {XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
++
++static unsigned int calc_mck_cycles(unsigned int ns, unsigned int mck_hz)
++{
++    unsigned long mul;
++    
++    /*
++     * cycles = x [nsec] * f [Hz] / 10^9 [ns in sec] =
++     *     x * (f / 1_000_000_000) =
++     *     x * ((f * 65536) / 1_000_000_000) / 65536 =
++     *     x * (((f / 10_000) * 65536) / 100_000) / 65536 =
++     */
++    
++    mul = (mck_hz /10000) << 16;
++    mul /= 100000;
++
++    return (ns * mul + 65536) >> 16;    /* rounding */
++}
++
++static void set_smc_mode(struct at91_ide_info *info)
++{
++    at91_sys_write(AT91_SMC_MODE(info->cs), info->mode);
++    return;
++}
++
++static void set_smc_timing(struct device *dev, 
++        struct at91_ide_info *info, const struct ata_timing *ata)
++{
++    int read_cycle, write_cycle, active, recover;
++    int nrd_setup, nrd_pulse, nrd_recover;
++    int nwe_setup, nwe_pulse;
++
++    int ncs_write_setup, ncs_write_pulse;
++    int ncs_read_setup, ncs_read_pulse;
++
++    unsigned int mck_hz;
++    struct clk *mck;
++
++	read_cycle  = ata->cyc8b;
++	nrd_setup   = ata->setup;
++	nrd_pulse   = ata->act8b;
++	nrd_recover = ata->rec8b;
++
++    mck = clk_get(NULL, "mck");
++    BUG_ON(IS_ERR(mck));
++    mck_hz = clk_get_rate(mck);
++    
++    read_cycle  = calc_mck_cycles(read_cycle, mck_hz);
++    nrd_setup   = calc_mck_cycles(nrd_setup, mck_hz);
++    nrd_pulse   = calc_mck_cycles(nrd_pulse, mck_hz);
++    nrd_recover = calc_mck_cycles(nrd_recover, mck_hz);
++     
++    clk_put(mck);
++
++	active  = nrd_setup + nrd_pulse;
++	recover = read_cycle - active;
++
++	/* Need at least two cycles recovery */
++	if (recover < 2)
++	  read_cycle = active + 2;
++
++	/* (CS0, CS1, DIR, OE) <= (CFCE1, CFCE2, CFRNW, NCSX) timings */
++	ncs_read_setup = 1;
++	ncs_read_pulse = read_cycle - 2;
++
++	/* Write timings same as read timings */
++	write_cycle = read_cycle;
++	nwe_setup = nrd_setup;
++	nwe_pulse = nrd_pulse;
++	ncs_write_setup = ncs_read_setup;
++	ncs_write_pulse = ncs_read_pulse;
++
++    dev_dbg(dev, "ATA timings: nrd_setup = %d nrd_pulse = %d nrd_cycle = %d\n", 
++            nrd_setup, nrd_pulse, read_cycle);
++    dev_dbg(dev,"ATA timings: nwe_setup = %d nwe_pulse = %d nwe_cycle = %d\n", 
++            nwe_setup, nwe_pulse, write_cycle);
++    dev_dbg(dev,"ATA timings: ncs_read_setup = %d ncs_read_pulse = %d\n", 
++            ncs_read_setup, ncs_read_pulse);
++    dev_dbg(dev,"ATA timings: ncs_write_setup = %d ncs_write_pulse = %d\n", 
++            ncs_write_setup, ncs_write_pulse);
++    
++    at91_sys_write(AT91_SMC_SETUP(info->cs), 
++            AT91_SMC_NWESETUP_(nwe_setup) | 
++            AT91_SMC_NRDSETUP_(nrd_setup) |
++            AT91_SMC_NCS_WRSETUP_(ncs_write_setup) | 
++            AT91_SMC_NCS_RDSETUP_(ncs_read_setup));
++
++    at91_sys_write(AT91_SMC_PULSE(info->cs), 
++            AT91_SMC_NWEPULSE_(nwe_pulse) | 
++            AT91_SMC_NRDPULSE_(nrd_pulse) |
++            AT91_SMC_NCS_WRPULSE_(ncs_write_pulse) | 
++            AT91_SMC_NCS_RDPULSE_(ncs_read_pulse));
++
++    at91_sys_write(AT91_SMC_CYCLE(info->cs), 
++            AT91_SMC_NWECYCLE_(write_cycle) | 
++            AT91_SMC_NRDCYCLE_(read_cycle));
++
++    return;
++}
++
++static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	struct at91_ide_info *info = ap->host->private_data;
++    struct ata_timing timing;
++    int ret;
++
++    /* Compute ATA timing and set it to SMC */
++    ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
++    if (ret) {
++        dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0 timing\n", ret);
++        set_smc_timing(ap->dev, info, &initial_timing);
++        return;
++    } else {
++        set_smc_timing(ap->dev, info, &timing);
++    }
++
++    /* Setup SMC mode */
++    set_smc_mode(info);
++
++    return;
++}
++
++static unsigned int pata_at91_data_xfer_noirq(struct ata_device *dev, 
++        unsigned char *buf, unsigned int buflen, int rw)
++{
++	struct at91_ide_info *info = dev->link->ap->host->private_data;
++
++    unsigned int consumed;
++    unsigned long flags;
++    unsigned int mode;
++    
++    local_irq_save(flags);
++    
++    mode = at91_sys_read(AT91_SMC_MODE(info->cs));
++
++    /* set 16bit mode before writing data */
++    at91_sys_write(AT91_SMC_MODE(info->cs), 
++            (mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16);
++    
++    consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
++    
++    /* restore 8bit mode after data is written */
++    at91_sys_write(AT91_SMC_MODE(info->cs), 
++            (mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8);
++    
++    local_irq_restore(flags);
++    
++    return consumed;
++}
++
++static struct scsi_host_template pata_at91_sht = {
++	ATA_PIO_SHT(DRV_NAME),
++};
++
++static struct ata_port_operations pata_at91_port_ops = {
++	.inherits		= &ata_sff_port_ops,
++
++	.sff_data_xfer	= pata_at91_data_xfer_noirq,
++	.set_piomode	= pata_at91_set_piomode,
++	.cable_detect	= ata_cable_40wire,
++	.port_start		= ATA_OP_NULL,
++};
++
++static int __devinit pata_at91_probe(struct platform_device *pdev)
++{
++	struct at91_cf_data *data = pdev->dev.platform_data;
++    struct device *dev = &pdev->dev;
++    struct at91_ide_info *info;
++
++	struct resource *mem_res;
++
++	struct ata_host *host;
++	struct ata_port *ap;
++	
++    int irq_flags = 0;
++	int irq = 0;
++    int ret;
++
++    /*  get platform resources: IO/CTL memories and irq pin */
++
++	if (pdev->num_resources != 1) {
++		dev_err(&pdev->dev, "invalid number of resources\n");
++		return -EINVAL;
++	}
++
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++
++	if (!mem_res) {
++		dev_err(dev, "failed to get mem resource\n");
++		return -EINVAL;
++    }
++
++	irq = data->irq_pin;
++
++    /* init ata host */
++
++	host = ata_host_alloc(dev, 1);
++	
++    if (!host)
++		return -ENOMEM;
++
++	ap = host->ports[0];
++
++	ap->ops = &pata_at91_port_ops;
++	ap->flags |= ATA_FLAG_SLAVE_POSS;
++    ap->pio_mask = pio_mask;
++
++	if (!irq) {
++		ap->flags |= ATA_FLAG_PIO_POLLING;
++		ata_port_desc(ap, "no IRQ, using PIO polling");
++	}
++
++    info = kzalloc(sizeof(*info), GFP_KERNEL);
++
++    if (!info) {
++		dev_err(dev, "failed to allocate memory for private data\n");
++        return -ENOMEM;
++    }
++
++    info->cs    = data->chipselect;
++    info->mode  = AT91_SMC_READMODE | AT91_SMC_WRITEMODE | 
++        AT91_SMC_EXNWMODE_READY | AT91_SMC_BAT_SELECT | 
++        AT91_SMC_DBW_8 | AT91_SMC_TDF_(0);
++
++    info->ide_addr = devm_ioremap(dev, 
++            mem_res->start + CF_IDE_OFFSET, CF_IDE_RES_SIZE);
++
++    if (!info->ide_addr) {
++		dev_err(dev, "failed to map IO base\n");
++		ret = -ENOMEM;
++        goto err_ide_ioremap;
++	}
++	
++    info->alt_addr = devm_ioremap(dev, 
++            mem_res->start + CF_ALT_IDE_OFFSET, CF_IDE_RES_SIZE);
++	
++    if (!info->alt_addr) {
++		dev_err(dev, "failed to map CTL base\n");
++		ret = -ENOMEM;
++        goto err_alt_ioremap;
++	}
++
++	ap->ioaddr.cmd_addr = info->ide_addr;
++    ap->ioaddr.ctl_addr = info->alt_addr + 0x06;
++	ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
++    
++    ata_sff_std_ports(&ap->ioaddr);
++
++	ata_port_desc(ap, "mmio cmd 0x%llx ctl 0x%llx",
++            (unsigned long long)mem_res->start + CF_IDE_OFFSET,
++            (unsigned long long)mem_res->start + CF_ALT_IDE_OFFSET);
++
++    set_smc_timing(dev, info, &initial_timing);
++    set_smc_mode(info);
++
++    host->private_data = info;
++
++	return ata_host_activate(host, irq ? gpio_to_irq(irq) : 0, 
++            irq ? ata_sff_interrupt : NULL, irq_flags, &pata_at91_sht);
++
++err_alt_ioremap:
++    devm_iounmap(dev, info->ide_addr);
++
++err_ide_ioremap:
++    kfree(info);
++
++    return ret;
++}
++
++static int __devexit pata_at91_remove(struct platform_device *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++    struct at91_ide_info *info = host->private_data;
++    struct device *dev = &pdev->dev;
++
++    if (!host)
++        return 0;
++
++	ata_host_detach(host);
++
++    if (!info)
++        return 0;
++
++    devm_iounmap(dev, info->ide_addr);
++    devm_iounmap(dev, info->alt_addr);
++    kfree(info);
++
++	return 0;
++}
++
++static struct platform_driver pata_at91_driver = {
++	.probe		= pata_at91_probe,
++	.remove		= __devexit_p(pata_at91_remove),
++	.driver = {
++		.name		= DRV_NAME,
++		.owner		= THIS_MODULE,
++	},
++};
++
++static int __init pata_at91_init(void)
++{
++	return platform_driver_register(&pata_at91_driver);
++}
++
++static void __exit pata_at91_exit(void)
++{
++	platform_driver_unregister(&pata_at91_driver);
++}
++
++
++module_init(pata_at91_init);
++module_exit(pata_at91_exit);
++
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Driver for CompactFlash in True IDE mode on AT91SAM9260 SoC");
++MODULE_AUTHOR("Matyukevich Sergey");
++MODULE_VERSION(DRV_VERSION);
++
+-- 
+1.6.2.5
+
