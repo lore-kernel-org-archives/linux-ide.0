@@ -1,63 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Tue, 16 Jun 2009 15:45:59 GMT
-Message-ID: <200906161545.n5GFjxls019294@demeter.kernel.org>
-References: <bug-13399-11633@http.bugzilla.kernel.org/>
+From: Marc Bowes <marcbowes@gmail.com>
+Subject: Re: SATA: link online but device misclassified
+Date: Tue, 16 Jun 2009 20:13:26 +0200
+Message-ID: <cfa4e840906161113w1430aedbq70dceac8105ee232@mail.gmail.com>
+References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>
+	 <4A308798.6060803@gmail.com>
+	 <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>
+	 <1244746872.3998.88.camel@mulgrave.site>
+	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>
+	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>
+	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>
+	 <1245165697.3965.40.camel@mulgrave.site>
+	 <cfa4e840906160946qc998331p308624ac10f15060@mail.gmail.com>
+	 <1245171448.3965.46.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:57113 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbZFPPp5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 11:45:57 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5GFjxqJ019295
-	for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 15:45:59 GMT
-In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:55053 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964AbZFPSNZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2009 14:13:25 -0400
+Received: by ewy6 with SMTP id 6so6244064ewy.37
+        for <linux-ide@vger.kernel.org>; Tue, 16 Jun 2009 11:13:26 -0700 (PDT)
+In-Reply-To: <1245171448.3965.46.camel@mulgrave.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13399
+Thanks for the responses, I filed a bug (#13551). I hope the category
+and whatnot is correct. Please let me know if there is anything else I
+should be doing to help resolve this.
 
-
-
-
-
---- Comment #30 from Hans de Bruin <bruinjm@xs4all.nl>  2009-06-16 15:45:59 ---
-hda: media error (bad sector): status=0x51 { DriveReady SeekComplete Error }
-hda: media error (bad sector): error=0x30 { LastFailedSense=0x03 }
-hda: possibly failed opcode: 0xa0
-ATAPI device hda:
-  Error: Medium error -- (Sense key=0x03)
-  (reserved error code) -- (asc=0x02, ascq=0x00)
-  The failed "Read 10" packet command was: 
-  "28 00 00 00 76 78 00 00 40 00 00 00 00 00 00 00 "
-end_request: I/O error, dev hda, sector 121312
-Buffer I/O error on device hda, logical block 30328
-Buffer I/O error on device hda, logical block 30329
-Buffer I/O error on device hda, logical block 30330
-Buffer I/O error on device hda, logical block 30331
-Buffer I/O error on device hda, logical block 30332
-Buffer I/O error on device hda, logical block 30333
-Buffer I/O error on device hda, logical block 30334
-Buffer I/O error on device hda, logical block 30335
-Buffer I/O error on device hda, logical block 30336
-Buffer I/O error on device hda, logical block 30337
-
-Just kidding a CD and a whiteboard marker apparently don't mix :). I can boot
-whith a CD, create iso's from CD's and DVD's and copy at file level. Since this
-is my at work pc I dont have musical CD's at hand.
-
-Where did this problem start? I could still use cd's in 2.6.29 but in a
-slackware newsgroup I found this threat:
-http://groups.google.com/group/alt.os.linux.slackware/browse_thread/thread/1add287bea50b0bc#
-slack. Slack current uses 2.6.29.4
-
--- 
-Hans
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+On Tue, Jun 16, 2009 at 6:57 PM, James
+Bottomley<James.Bottomley@hansenpartnership.com> wrote:
+> On Tue, 2009-06-16 at 18:46 +0200, Marc Bowes wrote:
+>> Right, so I should be filing a bug report?
+>
+> Probably: it would help us keep track of it. =A0The JMicron controlle=
+r
+> seems to be behaving for everyone else, though, so it does look like =
+a
+> local motherboard problem.
+>
+> James
+>
+>
+>
