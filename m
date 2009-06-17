@@ -1,37 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Errors on ICH10R with Seagate HDDs
-Date: Wed, 17 Jun 2009 15:33:03 +0900
-Message-ID: <4A388E1F.5070404@kernel.org>
-References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de> <49F3C03C.1090803@kernel.org> <4A36FC7D.5050805@hadiko.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [Bug 13520] WARNING: at lib/dma-debug.c:576 check_for_illegal_area+0xd3/0xfd()
+Date: Wed, 17 Jun 2009 15:51:53 +0200
+Message-ID: <200906171551.53400.bzolnier@gmail.com>
+References: <bug-13520-11633@http.bugzilla.kernel.org/> <200906161028.n5GAS1f6030224@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38195 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835AbZFQGdb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Jun 2009 02:33:31 -0400
-In-Reply-To: <4A36FC7D.5050805@hadiko.de>
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:56438 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466AbZFQNqL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jun 2009 09:46:11 -0400
+Received: by ewy6 with SMTP id 6so516332ewy.37
+        for <linux-ide@vger.kernel.org>; Wed, 17 Jun 2009 06:46:12 -0700 (PDT)
+In-Reply-To: <200906161028.n5GAS1f6030224@demeter.kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Jackowski <aXe@hadiko.de>
+To: bugzilla-daemon@bugzilla.kernel.org
 Cc: linux-ide@vger.kernel.org
 
-Hello,
-
-Thomas Jackowski wrote:
-> I'm using 2.6.29-2-amd64 now and the bug still exists (see previous
-> mails) with AHCI and NCQ enabled.
+On Tuesday 16 June 2009 12:28:01 bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=13520
 > 
-> Maybe I should contact Seagate Support now?
 > 
-> I wonder that nobody else reported this sort of problem?
+> 
+> 
+> 
+> --- Comment #3 from Joerg Roedel <joro@8bytes.org>  2009-06-16 10:27:59 ---
+> Ok, this was a dma-debug bug. The two warnings above are for memory areas which
+> exactly ends at the beginning of the kernel text segment. I queued a fix in my
+> tree and send it out when -rc1 is released. I also marked the patch for stable
+> backporting.
 
-There were several reports drives timing out some SMART commansd but
-on CPM I think yours is the only one.  BTW, where is that command
-coming from?  Are you using disk head parking?
-
-Thanks.
-
--- 
-tejun
+Could you please post a link to the fix and then close the bug?  Thanks.
