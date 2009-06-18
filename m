@@ -1,211 +1,490 @@
-From: Rainer Weikusat <rweikusat@mssgmbh.com>
-Subject: Re: [PATCH] ide-cd: prevent null pointer deref via cdrom_newpc_intr
-Date: Thu, 18 Jun 2009 20:25:44 +0200
-Message-ID: <87iqitiel3.fsf@fever.mssgmbh.com>
-References: <87zlc58xgd.fsf@fever.mssgmbh.com>
-	<9ea470500906180739qdabce04u7c7875acc05358f@mail.gmail.com>
-	<87vdmt8ugm.fsf@fever.mssgmbh.com>
-	<9ea470500906180843w73435e74sade8a78894f75be5@mail.gmail.com>
-	<87my858qhn.fsf@fever.mssgmbh.com>
-	<9ea470500906181007y4cff3e58n440a64c807fd14df@mail.gmail.com>
+From: Sergey Matyukevich <geomatsi@gmail.com>
+Subject: Re: [PATCH] PATA driver for CF interface on AT91SAM9260 SoC
+Date: Thu, 18 Jun 2009 22:24:01 +0400
+Message-ID: <20090618222401.462b2d44@realm>
+References: <1245181151-7040-1-git-send-email-geomatsi@gmail.com>
+	<20090618002004.54701b40@realm>
+	<20090617235351.1cb05c97@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mss-uk.mssgmbh.com ([217.174.251.109]:45313 "EHLO
-	mss-uk.mssgmbh.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbZFRSZu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2009 14:25:50 -0400
-In-Reply-To: <9ea470500906181007y4cff3e58n440a64c807fd14df@mail.gmail.com> (Borislav Petkov's message of "Thu\, 18 Jun 2009 19\:07\:29 +0200")
+Received: from mail-fx0-f212.google.com ([209.85.220.212]:55096 "EHLO
+	mail-fx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753190AbZFRSbc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2009 14:31:32 -0400
+Received: by fxm8 with SMTP id 8so1276512fxm.37
+        for <linux-ide@vger.kernel.org>; Thu, 18 Jun 2009 11:31:32 -0700 (PDT)
+In-Reply-To: <20090617235351.1cb05c97@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, Sergey Lapin <slapin@ossfans.org>, Andrew Victor <avictor.za@gmail.com>
 
-Borislav Petkov <petkovbb@googlemail.com> writes:
-> On Thu, Jun 18, 2009 at 6:18 PM, Rainer Weikusat<rweikusat@mssgmbh.com> wrote:
->> Borislav Petkov <petkovbb@googlemail.com> writes:
->>> On Thu, Jun 18, 2009 at 4:52 PM, Rainer Weikusat<rweikusat@mssgmbh.com> wrote:
->>>> Borislav Petkov <petkovbb@googlemail.com> writes:
->>
->> [...]
->>
->>>>> so this request is completed as a whole and the rq
->>>>> freed."
->>>>
->>>> Technically, this is not quite correct (assuming I haven't overlooked
->>>> something), because ide_cd_queue_pc still has a reference to the rq.
->>>
->>> That doesn't matter because the OOPS happens after the command has been
->>> issued and _before_ ide_cd_queue_pc() gets to access the rq ptr
->>> again.
->>
->> Yes. Because the pointer I already mentioned has been reset.
+On Wed, 17 Jun 2009 23:53:51 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-And this happens here (!!!, code from 2.6.30 vanilla):
+> > This patch provides PATA driver for CompactFlash interface in True
+> > IDE mode on AT91SAM9260 SoC.
+>=20
+> Couple of points
+>=20
+> > +static int pio_mask =3D ATA_PIO4;
+> > +module_param(pio_mask, int, 0);
+>=20
+> This doesn't appear to be used ? is it a left over that can go
+>=20
+> > +	set_smc_timing(dev, info, &initial_timing);
+> > +	set_smc_mode(info);
+>=20
+> The core libata code will call your speed setting methods for PIO_0
+> before probing the port. I don't think this is needed ?
+>=20
+> Alan
 
-int ide_complete_rq(ide_drive_t *drive, int error, unsigned int nr_bytes)
-{
-	ide_hwif_t *hwif = drive->hwif;
-	struct request *rq = hwif->rq;
-	int rc;
+Hello,
 
-	/*
-	 * if failfast is set on a request, override number of sectors
-	 * and complete the whole request right now
-	 */
-	if (blk_noretry_request(rq) && error <= 0)
-		nr_bytes = rq->hard_nr_sectors << 9;
+Concerning the first point, this module parameter is used in driver
+probing function:=20
+	ap->pio_mask =3D pio_mask;
 
-	rc = ide_end_rq(drive, rq, error, nr_bytes); 
-	if (rc == 0)
-		hwif->rq = NULL; /* !!! */
+I would suggest to keep pio_mask as a module parameter, since it might
+be useful to modify it in order to =D1=81ut down PIO speed, e.g. for te=
+sting
+purposes.=20
 
-	return rc;
-}
-[explanation below]
+Concerning the second point, I removed set_smc_timing/set_smc_mode from
+driver probing function.
 
-My first attempt at getting this to work again actually looked like
-this (as addition to cdrom_newpc_intr)
+Here is updated patch:
 
-                if (uptodate == 0) {
-                        ide_cd_error_cmd(drive, cmd);
-                        rq = drive->hwif->rq;
-                }
 
-                if (rq) {
-                	/* code up to the 2nd complete call */
-                }
 
-                if (sense && rc == 2)
-                        ide_error(drive, "request sense failure", stat);
+This patch provides PATA driver for CompactFlash interface in True IDE
+mode on AT91SAM9260 SoC.
 
-[...]
+Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
+---
+ drivers/ata/Kconfig     |    8 +
+ drivers/ata/Makefile    |    1 +
+ drivers/ata/pata_at91.c |  364 +++++++++++++++++++++++++++++++++++++++=
+++++++++
+ 3 files changed, 373 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/pata_at91.c
 
-That was before I had any idea why complete was being called twice and
-that what this is supposed to do won't be done for bio-less requests,
-anyway, and it worked fine. 
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 2aa1908..b17c57f 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -679,6 +679,14 @@ config PATA_PLATFORM
+=20
+ 	  If unsure, say N.
+=20
++config PATA_AT91
++	tristate "PATA support for AT91SAM9260"
++	depends on ARM && ARCH_AT91
++	help
++	  This option enables support for IDE devices on the Atmel AT91SAM926=
+0 SoC.
++
++	  If unsure, say N.
++
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+ 	depends on PATA_PLATFORM && PPC_OF
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 1558059..38906f9 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -72,6 +72,7 @@ obj-$(CONFIG_PATA_SCH)		+=3D pata_sch.o
+ obj-$(CONFIG_PATA_BF54X)	+=3D pata_bf54x.o
+ obj-$(CONFIG_PATA_OCTEON_CF)	+=3D pata_octeon_cf.o
+ obj-$(CONFIG_PATA_PLATFORM)	+=3D pata_platform.o
++obj-$(CONFIG_PATA_AT91)	+=3D pata_at91.o
+ obj-$(CONFIG_PATA_OF_PLATFORM)	+=3D pata_of_platform.o
+ obj-$(CONFIG_PATA_ICSIDE)	+=3D pata_icside.o
+ # Should be last but two libata driver
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+new file mode 100644
+index 0000000..170a80e
+--- /dev/null
++++ b/drivers/ata/pata_at91.c
+@@ -0,0 +1,364 @@
++/*
++ * PATA driver for AT91SAM9260 Static Memory Controller
++ * with CompactFlash interface in True IDE mode
++ *
++ * Copyright (C) 2009 Matyukevich Sergey
++ *
++ * Based on:
++ *      * generic platform driver by Paul Mundt: drivers/ata/pata_plat=
+form.c
++ *      * pata_at32 driver by Kristoffer Nyborg Gregertsen
++ *      * at91_ide driver by Stanislaw Gruszka
++ *
++ * This program is free software; you can redistribute it and/or modif=
+y it
++ * under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/blkdev.h>
++#include <scsi/scsi_host.h>
++#include <linux/ata.h>
++#include <linux/clk.h>
++#include <linux/libata.h>
++#include <linux/platform_device.h>
++#include <linux/ata_platform.h>
++
++#include <mach/at91sam9260_matrix.h>
++#include <mach/at91sam9_smc.h>
++#include <mach/at91sam9260.h>
++#include <mach/board.h>
++#include <mach/gpio.h>
++
++
++#define DRV_NAME "pata_at91"
++#define DRV_VERSION "0.1"
++
++#define CF_IDE_OFFSET	    0x00c00000
++#define CF_ALT_IDE_OFFSET   0x00e00000
++#define CF_IDE_RES_SIZE     0x08
++
++static int pio_mask =3D ATA_PIO4;
++module_param(pio_mask, int, 0);
++
++struct at91_ide_info {
++	unsigned long mode;
++	unsigned int cs;
++
++	void __iomem *ide_addr;
++	void __iomem *alt_addr;
++};
++
++const struct ata_timing initial_timing =3D
++	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
++
++static unsigned int calc_mck_cycles(unsigned int ns, unsigned int mck_=
+hz)
++{
++	unsigned long mul;
++
++    /*
++     * cycles =3D x [nsec] * f [Hz] / 10^9 [ns in sec] =3D
++     *     x * (f / 1_000_000_000) =3D
++     *     x * ((f * 65536) / 1_000_000_000) / 65536 =3D
++     *     x * (((f / 10_000) * 65536) / 100_000) / 65536 =3D
++     */
++
++    mul =3D (mck_hz / 10000) << 16;
++    mul /=3D 100000;
++
++    return (ns * mul + 65536) >> 16;    /* rounding */
++}
++
++static void set_smc_mode(struct at91_ide_info *info)
++{
++    at91_sys_write(AT91_SMC_MODE(info->cs), info->mode);
++    return;
++}
++
++static void set_smc_timing(struct device *dev,
++		struct at91_ide_info *info, const struct ata_timing *ata)
++{
++	int read_cycle, write_cycle, active, recover;
++	int nrd_setup, nrd_pulse, nrd_recover;
++	int nwe_setup, nwe_pulse;
++
++	int ncs_write_setup, ncs_write_pulse;
++	int ncs_read_setup, ncs_read_pulse;
++
++	unsigned int mck_hz;
++	struct clk *mck;
++
++	read_cycle  =3D ata->cyc8b;
++	nrd_setup   =3D ata->setup;
++	nrd_pulse   =3D ata->act8b;
++	nrd_recover =3D ata->rec8b;
++
++	mck =3D clk_get(NULL, "mck");
++	BUG_ON(IS_ERR(mck));
++	mck_hz =3D clk_get_rate(mck);
++
++	read_cycle  =3D calc_mck_cycles(read_cycle, mck_hz);
++	nrd_setup   =3D calc_mck_cycles(nrd_setup, mck_hz);
++	nrd_pulse   =3D calc_mck_cycles(nrd_pulse, mck_hz);
++	nrd_recover =3D calc_mck_cycles(nrd_recover, mck_hz);
++
++	clk_put(mck);
++
++	active  =3D nrd_setup + nrd_pulse;
++	recover =3D read_cycle - active;
++
++	/* Need at least two cycles recovery */
++	if (recover < 2)
++		read_cycle =3D active + 2;
++
++	/* (CS0, CS1, DIR, OE) <=3D (CFCE1, CFCE2, CFRNW, NCSX) timings */
++	ncs_read_setup =3D 1;
++	ncs_read_pulse =3D read_cycle - 2;
++
++	/* Write timings same as read timings */
++	write_cycle =3D read_cycle;
++	nwe_setup =3D nrd_setup;
++	nwe_pulse =3D nrd_pulse;
++	ncs_write_setup =3D ncs_read_setup;
++	ncs_write_pulse =3D ncs_read_pulse;
++
++	dev_dbg(dev, "ATA timings: nrd_setup =3D %d nrd_pulse =3D %d nrd_cycl=
+e =3D %d\n",
++			nrd_setup, nrd_pulse, read_cycle);
++	dev_dbg(dev, "ATA timings: nwe_setup =3D %d nwe_pulse =3D %d nwe_cycl=
+e =3D %d\n",
++			nwe_setup, nwe_pulse, write_cycle);
++	dev_dbg(dev, "ATA timings: ncs_read_setup =3D %d ncs_read_pulse =3D %=
+d\n",
++			ncs_read_setup, ncs_read_pulse);
++	dev_dbg(dev, "ATA timings: ncs_write_setup =3D %d ncs_write_pulse =3D=
+ %d\n",
++			ncs_write_setup, ncs_write_pulse);
++
++	at91_sys_write(AT91_SMC_SETUP(info->cs),
++			AT91_SMC_NWESETUP_(nwe_setup) |
++			AT91_SMC_NRDSETUP_(nrd_setup) |
++			AT91_SMC_NCS_WRSETUP_(ncs_write_setup) |
++			AT91_SMC_NCS_RDSETUP_(ncs_read_setup));
++
++	at91_sys_write(AT91_SMC_PULSE(info->cs),
++			AT91_SMC_NWEPULSE_(nwe_pulse) |
++			AT91_SMC_NRDPULSE_(nrd_pulse) |
++			AT91_SMC_NCS_WRPULSE_(ncs_write_pulse) |
++			AT91_SMC_NCS_RDPULSE_(ncs_read_pulse));
++
++	at91_sys_write(AT91_SMC_CYCLE(info->cs),
++			AT91_SMC_NWECYCLE_(write_cycle) |
++			AT91_SMC_NRDCYCLE_(read_cycle));
++
++	return;
++}
++
++static void pata_at91_set_piomode(struct ata_port *ap, struct ata_devi=
+ce *adev)
++{
++	struct at91_ide_info *info =3D ap->host->private_data;
++	struct ata_timing timing;
++	int ret;
++
++	/* Compute ATA timing and set it to SMC */
++	ret =3D ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
++	if (ret) {
++		dev_warn(ap->dev, "Failed to compute ATA timing %d, \
++				set PIO_0 timing\n", ret);
++		set_smc_timing(ap->dev, info, &initial_timing);
++	} else {
++		set_smc_timing(ap->dev, info, &timing);
++	}
++
++	/* Setup SMC mode */
++	set_smc_mode(info);
++
++	return;
++}
++
++static unsigned int pata_at91_data_xfer_noirq(struct ata_device *dev,
++		unsigned char *buf, unsigned int buflen, int rw)
++{
++	struct at91_ide_info *info =3D dev->link->ap->host->private_data;
++	unsigned int consumed;
++	unsigned long flags;
++	unsigned int mode;
++
++	local_irq_save(flags);
++	mode =3D at91_sys_read(AT91_SMC_MODE(info->cs));
++
++	/* set 16bit mode before writing data */
++	at91_sys_write(AT91_SMC_MODE(info->cs),
++			(mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16);
++
++	consumed =3D ata_sff_data_xfer(dev, buf, buflen, rw);
++
++	/* restore 8bit mode after data is written */
++	at91_sys_write(AT91_SMC_MODE(info->cs),
++			(mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8);
++
++	local_irq_restore(flags);
++	return consumed;
++}
++
++static struct scsi_host_template pata_at91_sht =3D {
++	ATA_PIO_SHT(DRV_NAME),
++};
++
++static struct ata_port_operations pata_at91_port_ops =3D {
++	.inherits	=3D &ata_sff_port_ops,
++
++	.sff_data_xfer	=3D pata_at91_data_xfer_noirq,
++	.set_piomode	=3D pata_at91_set_piomode,
++	.cable_detect	=3D ata_cable_40wire,
++	.port_start	=3D ATA_OP_NULL,
++};
++
++static int __devinit pata_at91_probe(struct platform_device *pdev)
++{
++	struct at91_cf_data *board =3D pdev->dev.platform_data;
++	struct device *dev =3D &pdev->dev;
++	struct at91_ide_info *info;
++	struct resource *mem_res;
++	struct ata_host *host;
++	struct ata_port *ap;
++	int irq_flags =3D 0;
++	int irq =3D 0;
++	int ret;
++
++	/*  get platform resources: IO/CTL memories and irq/rst pins */
++
++	if (pdev->num_resources !=3D 1) {
++		dev_err(&pdev->dev, "invalid number of resources\n");
++		return -EINVAL;
++	}
++
++	mem_res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
++
++	if (!mem_res) {
++		dev_err(dev, "failed to get mem resource\n");
++		return -EINVAL;
++	}
++
++	irq =3D board->irq_pin;
++
++	/* init ata host */
++
++	host =3D ata_host_alloc(dev, 1);
++
++	if (!host)
++		return -ENOMEM;
++
++	ap =3D host->ports[0];
++	ap->ops =3D &pata_at91_port_ops;
++	ap->flags |=3D ATA_FLAG_SLAVE_POSS;
++	ap->pio_mask =3D pio_mask;
++
++	if (!irq) {
++		ap->flags |=3D ATA_FLAG_PIO_POLLING;
++		ata_port_desc(ap, "no IRQ, using PIO polling");
++	}
++
++	info =3D kzalloc(sizeof(*info), GFP_KERNEL);
++
++	if (!info) {
++		dev_err(dev, "failed to allocate memory for private data\n");
++		return -ENOMEM;
++	}
++
++	info->cs    =3D board->chipselect;
++	info->mode  =3D AT91_SMC_READMODE | AT91_SMC_WRITEMODE |
++		AT91_SMC_EXNWMODE_READY | AT91_SMC_BAT_SELECT |
++		AT91_SMC_DBW_8 | AT91_SMC_TDF_(0);
++
++	info->ide_addr =3D devm_ioremap(dev,
++			mem_res->start + CF_IDE_OFFSET, CF_IDE_RES_SIZE);
++
++	if (!info->ide_addr) {
++		dev_err(dev, "failed to map IO base\n");
++		ret =3D -ENOMEM;
++		goto err_ide_ioremap;
++	}
++
++	info->alt_addr =3D devm_ioremap(dev,
++			mem_res->start + CF_ALT_IDE_OFFSET, CF_IDE_RES_SIZE);
++
++	if (!info->alt_addr) {
++		dev_err(dev, "failed to map CTL base\n");
++		ret =3D -ENOMEM;
++		goto err_alt_ioremap;
++	}
++
++	ap->ioaddr.cmd_addr =3D info->ide_addr;
++	ap->ioaddr.ctl_addr =3D info->alt_addr + 0x06;
++	ap->ioaddr.altstatus_addr =3D ap->ioaddr.ctl_addr;
++
++	ata_sff_std_ports(&ap->ioaddr);
++
++	ata_port_desc(ap, "mmio cmd 0x%llx ctl 0x%llx",
++			(unsigned long long)mem_res->start + CF_IDE_OFFSET,
++			(unsigned long long)mem_res->start + CF_ALT_IDE_OFFSET);
++
++	host->private_data =3D info;
++
++	return ata_host_activate(host, irq ? gpio_to_irq(irq) : 0,
++			irq ? ata_sff_interrupt : NULL,
++			irq_flags, &pata_at91_sht);
++
++err_alt_ioremap:
++	devm_iounmap(dev, info->ide_addr);
++
++err_ide_ioremap:
++	kfree(info);
++
++	return ret;
++}
++
++static int __devexit pata_at91_remove(struct platform_device *pdev)
++{
++	struct ata_host *host =3D dev_get_drvdata(&pdev->dev);
++	struct at91_ide_info *info =3D host->private_data;
++	struct device *dev =3D &pdev->dev;
++
++	if (!host)
++		return 0;
++
++	ata_host_detach(host);
++
++	if (!info)
++		return 0;
++
++	devm_iounmap(dev, info->ide_addr);
++	devm_iounmap(dev, info->alt_addr);
++
++	kfree(info);
++	return 0;
++}
++
++static struct platform_driver pata_at91_driver =3D {
++	.probe		=3D pata_at91_probe,
++	.remove		=3D __devexit_p(pata_at91_remove),
++	.driver 	=3D {
++		.name		=3D DRV_NAME,
++		.owner		=3D THIS_MODULE,
++	},
++};
++
++static int __init pata_at91_init(void)
++{
++	return platform_driver_register(&pata_at91_driver);
++}
++
++static void __exit pata_at91_exit(void)
++{
++	platform_driver_unregister(&pata_at91_driver);
++}
++
++
++module_init(pata_at91_init);
++module_exit(pata_at91_exit);
++
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Driver for CF in True IDE mode on AT91SAM9260 SoC"=
+);
++MODULE_AUTHOR("Matyukevich Sergey");
++MODULE_VERSION(DRV_VERSION);
++
+--=20
+1.6.2.5
 
-> and now here we do the second direct ide_complete_rq and here the rq is freed:
->
-> BUG: unable to handle kernel NULL pointer dereference at
-> 0000000000000048
 
-I have just restored the original file to generate another crash
-dump. [the relevant part of] What I get is EIP == c0251311, edx == 0.
-This corresponds with the following machine code:
 
-c02512fc <ide_complete_rq>:
-c02512fc:       55                      push   %ebp
-c02512fd:       89 e5                   mov    %esp,%ebp
-c02512ff:       56                      push   %esi
-c0251300:       53                      push   %ebx
-c0251301:       83 ec 04                sub    $0x4,%esp
-c0251304:       89 c3                   mov    %eax,%ebx
-c0251306:       89 d0                   mov    %edx,%eax
-
-/* ide_hwif_t *hwif = drive->hwif; */
-c0251308:       8b 73 28                mov    0x28(%ebx),%esi 
-
-/* struct request *rq = hwif->rq; */
-c025130b:       8b 96 c8 01 00 00       mov    0x1c8(%esi),%edx
-
-/* if (blk_noretry_request(rq) .... */
-c0251311:       f6 42 24 0e             testb  $0xe,0x24(%edx) /* !!! */
-c0251315:       74 04                   je     c025131b <ide_complete_rq+0x1f>
-
-blk_notretry_request is 
-
-#define blk_noretry_request(rq)	(blk_failfast_dev(rq) ||	\
-				 blk_failfast_transport(rq) ||	\
-				 blk_failfast_driver(rq))
-
-and
-                                 
-#define blk_failfast_dev(rq)	((rq)->cmd_flags & REQ_FAILFAST_DEV)
-#define blk_failfast_transport(rq) ((rq)->cmd_flags & REQ_FAILFAST_TRANSPORT)
-#define blk_failfast_driver(rq)	((rq)->cmd_flags & REQ_FAILFAST_DRIVER)
-
-and
-
-#define REQ_FAILFAST_DEV        (1 << __REQ_FAILFAST_DEV)
-#define REQ_FAILFAST_TRANSPORT  (1 << __REQ_FAILFAST_TRANSPORT)
-#define REQ_FAILFAST_DRIVER     (1 << __REQ_FAILFAST_DRIVER)
-
-and
-
-enum rq_flag_bits {
-        __REQ_RW,               /* not set, read. set, write */
-        __REQ_FAILFAST_DEV,     /* no driver retries of device errors */
-        __REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
-        __REQ_FAILFAST_DRIVER,  /* no driver retries of driver errors */
-        __REQ_DISCARD,          /* request to discard sectors */
-
-        [...]
-
-This means the values of the relevant __REQ_-constants are 1, 2, and
-3 and (1 << 1) | (1 << 2) | (1 << 3) == 2 + 4 + 8 == 14 (== 0xe),
-hence testb $0xe, 0x24(%edx) (optimized by compiler). edx is 0.
-0x24(%edx) is the field at offset 36 in a struct request, which is
-cmd_flags (on my computer).
-
-blk_end_io always returns zero for bio-less requests. More precisely,
-it calls end_that_request_data, which is
-
-static int end_that_request_data(struct request *rq, int error,
-                                 unsigned int nr_bytes, unsigned int bidi_bytes)
-{
-        if (rq->bio) {
-                if (__end_that_request_first(rq, error, nr_bytes))
-                        return 1;
-
-                /* Bidi request must be completed as a whole */
-                if (blk_bidi_rq(rq) &&
-                    __end_that_request_first(rq->next_rq, error, bidi_bytes))
-                        return 1;
-        }
-
-        return 0;
-}
-
-ie it returns 0 for a request w/o a bio, and looks itself like this:
-
-static int blk_end_io(struct request *rq, int error, unsigned int nr_bytes,
-                      unsigned int bidi_bytes,
-                      int (drv_callback)(struct request *))
-{
-        struct request_queue *q = rq->q;
-        unsigned long flags = 0UL;
-
-        if (end_that_request_data(rq, error, nr_bytes, bidi_bytes))
-                return 1;
-
-        /* Special feature for tricky drivers */
-        if (drv_callback && drv_callback(rq))
-                return 1;
-
-        add_disk_randomness(rq->rq_disk);
-
-        spin_lock_irqsave(q->queue_lock, flags);
-        end_that_request_last(rq, error);
-        spin_unlock_irqrestore(q->queue_lock, flags);
-
-        return 0;
-}
-
-drv_callback is NULL and the 'final return value' is ultimatively
-returned from the ide_end_rq-call mentioned at the beginning of this
-overly long e-mail.
-
-An easy way to verify that would be a
-
-	BUG_ON(!rq)
-
-inserted before the blkdev_noretry_request in ide_complete_rq (which I
-also did -- I have been doing this for long enough to never trust my
-own assumptions blindly ...).
-
-
-He who doesn't understand assembly will have a more difficult life
-because of that :-). While this is interesting, my boss [righfully]
-hates it and I will now have to do at least an hour of additional
-overtime.
