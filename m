@@ -1,73 +1,139 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
 Subject: Re: [PATCH] ide-cd: prevent null pointer deref via cdrom_newpc_intr
-Date: Thu, 18 Jun 2009 17:43:31 +0200
-Message-ID: <9ea470500906180843w73435e74sade8a78894f75be5@mail.gmail.com>
+Date: Thu, 18 Jun 2009 18:06:34 +0200
+Message-ID: <9ea470500906180906o2d558a90hbcba11874ff8917b@mail.gmail.com>
 References: <87zlc58xgd.fsf@fever.mssgmbh.com>
 	 <9ea470500906180739qdabce04u7c7875acc05358f@mail.gmail.com>
-	 <87vdmt8ugm.fsf@fever.mssgmbh.com>
+	 <87r5xh8ty7.fsf@fever.mssgmbh.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f212.google.com ([209.85.220.212]:49890 "EHLO
-	mail-fx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768AbZFRPna (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2009 11:43:30 -0400
-In-Reply-To: <87vdmt8ugm.fsf@fever.mssgmbh.com>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:34165 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753816AbZFRQGd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2009 12:06:33 -0400
+In-Reply-To: <87r5xh8ty7.fsf@fever.mssgmbh.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Rainer Weikusat <rweikusat@mssgmbh.com>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, bruinjm@xs4all.nl
 
 Hi,
 
-On Thu, Jun 18, 2009 at 4:52 PM, Rainer Weikusat<rweikusat@mssgmbh.com> wrote:
-> Borislav Petkov <petkovbb@googlemail.com> writes:
->> On Thu, Jun 18, 2009 at 3:48 PM, Rainer Weikusat<rweikusat@mssgmbh.com> wrote:
->>> From: Rainer Weikusat <rweikusat@mssgmbh.com>
->>>
->>> With 2.6.30, the error handling code in cdrom_newpc_intr was changed
->>> to deal with partial request failures by normally completing the 'good'
->>> parts of a request and only 'error' the last (and presumably,
->>> incompletely transferred) bio associated with a particular
->>> request. This doesn't work for requests which don't have bios
->>> associated with them ('GPCMD_READ_DISC_INFO'), because the first call
->>> to ide_end_rq, done via ide_complete_rq in order to do the
->>> partial completion part, returns with a code of zero for all non-bio
->>> requests, causing the drive->hwif->rq pointer to be set to NULL.
->>
->> This is a bit misleading, it should be more like: "ide_complete_rq is
->> called over ide_cd_error_cmd() to partially complete the rq but the rq
->> is without a bio and the block layer does partial completion only for
->> requests with bio's so this request is completed as a whole and the rq
->> freed."
+On Thu, Jun 18, 2009 at 5:04 PM, Rainer Weikusat<rweikusat@mssgmbh.com> wrote:
+> From: Rainer Weikusat <rweikusat@mssgmbh.com>
 >
-> Technically, this is not quite correct (assuming I haven't overlooked
-> something), because ide_cd_queue_pc still has a reference to the rq.
+> With 2.6.30, the error handling code in cdrom_newpc_intr was changed
+> to deal with partial request failures by normally completing the 'good'
+> parts of a request and only 'error' the last (and presumably,
+> incompletely transferred) bio associated with a particular
+> request. In order to do this, ide_complete_rq is called over
+> ide_cd_error_cmd() to partially complete the rq. The block layer
+> does partial completion only for requests with bio's and if the
+> rq doesn't have one (eg 'GPCMD_READ_DISC_INFO') the request is
+> completed as a whole and the drive->hwif->rq pointer set to NULL
+> afterwards. When calling ide_complete_rq again to report
+> the error, this null pointer is derefenced, resulting in a kernel
+> crash.
 
-That doesn't matter because the OOPS happens after the command has been
-issued and _before_ ide_cd_queue_pc() gets to access the rq ptr again.
+Sorry, but still not good enough. Instead, I rediffed the change against
+current linux-ide branch and rewrote the commit message properly keeping
+your S-O-B.
 
-ide_cd_queue_pc() does blk_execute_rq() which does wait for completion
-of the request so it doesn't access the rq pointer before the IRQ
-handler has completed. Even if it would reach the blk_put_request part,
-the OOPS would have already happened.
+@Bart: please apply.
 
-ide_complete_rq simply does
+--
+From: Rainer Weikusat <rweikusat@mssgmbh.com>
+Date: Thu, 18 Jun 2009 17:48:24 +0200
+Subject: [PATCH] ide-cd: don't do partial completions on bio-less rqs
 
-blk_end_request
-|->blk_end_bidi_request
-   |->blk_finish_request
+The block layer completes bio-less requests totally instead of partially
+and this breaks cdrom drives which fragment packet command data in
+several DRQ turns (eg GPCMD_READ_DISC_INFO).
 
-after checking the rq->bio pointer through blk_update_bidi_request() and
-if the prior is NULL it does __blk_put_request in blk_finish_request and
-this is where the thing vanishes.
+More specifically, ide_complete_rq() is called over ide_cd_error_cmd()
+to partially complete the rq on error. This bio-less request is
+completed as a whole and when calling ide_complete_rq again to complete
+the request wholly, the rq is already vanished resulting in the
+following OOPS:
 
-The second time ide_complete_rq() comes to run at the end of the IRQ
-handler the rq is already 0xdeadbeef :).
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
+IP: [<ffffffff804deb50>] ide_complete_rq+0x19/0x4d
+PGD 0
+Thread overran stack, or stack corrupted
+Oops: 0000 [#1] SMP
+last sysfs file:
+CPU 0
+Modules linked in:
+Pid: 0, comm: swapper Not tainted 2.6.30-rc8 #22 Precision WorkStation 380
+RIP: 0010:[<ffffffff804deb50>]  [<ffffffff804deb50>] ide_complete_rq+0x19/0x4d
+RSP: 0018:ffff880028022e18  EFLAGS: 00010096
+RAX: 0000000000000002 RBX: ffff88011a84e000 RCX: 0000000000000200
+RDX: 0000000000000200 RSI: 0000000000000000 RDI: ffff88011afc9000
+RBP: ffff880028022e28 R08: 00000000fffffffb R09: 0000000000000000
+R10: ffff8800280302e8 R11: ffff880028030310 R12: 0000000000000000
+R13: 0000000000000000 R14: ffff88011afc9000 R15: ffff88011aff7140
+FS:  0000000000000000(0000) GS:ffff88002801f000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 0000000000000048 CR3: 0000000000201000 CR4: 00000000000026e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process swapper (pid: 0, threadinfo ffffffff809c0000, task ffffffff808f1360)
+Stack:
+ ffff88011aecf840 ffff88011aff7140 ffff880028022eb8 ffffffff804ed0ef
+ ffffffff8025a811 00ff880028022e70 ffffffff00000050 ffff88011a84e000
+ ffff88011a84e108 000000008025ef72 0000000000000000 ffff88011a84e000
+Call Trace:
+ <IRQ> <0> [<ffffffff804ed0ef>] cdrom_newpc_intr+0x20e/0xac5
+ [<ffffffff8025a811>] ? irq_exit+0x47/0x7d
+ [<ffffffff804ecee1>] ? cdrom_newpc_intr+0x0/0xac5
+ [<ffffffff804de920>] ide_intr+0x1d2/0x220
+ [<ffffffff80284ee1>] handle_IRQ_event+0x3a/0xba
+ [<ffffffff80286c38>] handle_edge_irq+0xce/0x133
+ [<ffffffff8022c0cd>] handle_irq+0x1d/0x29
+ [<ffffffff8022b8c7>] do_IRQ+0x5a/0xd5
+ [<ffffffff8022a013>] ret_from_intr+0x0/0xa
+ <EOI> <0> [<ffffffff80230eee>] ? mwait_idle+0x60/0x6e
+ [<ffffffff802282c2>] ? enter_idle+0x20/0x22
+ [<ffffffff802286ef>] ? cpu_idle+0x4a/0x8d
+ [<ffffffff806ebb05>] ? rest_init+0x65/0x70
+ [<ffffffff809cdcef>] ? start_kernel+0x2da/0x3bb
+ [<ffffffff809cd271>] ? x86_64_start_reservations+0x81/0xbc
+ [<ffffffff809cd37b>] ? x86_64_start_kernel+0xcf/0xf1
+Code: c3 48 25 ff ff ff fe 48 89 47 50 e8 a7 86 00 00 eb d7 55 48 89
+e5 53 48 83 ec 08 41 89 f0 89 d1 48 8b 5f 40 48 8b b3 28 03 00 00 <f6>
+46 48 0e 74 05 45 85 c0 7e 1e 44 89 c2 e8 85 ff ff ff 85 c0
+RIP  [<ffffffff804deb50>] ide_complete_rq+0x19/0x4d
+ RSP <ffff880028022e18>
+CR2: 0000000000000048
+---[ end trace 6662ae44d700bf58 ]---
 
-(this is all latest git but the old code (without the bidi stuff) did
-the same thing wrt to rq->bio).
+This fixes http://bugzilla.kernel.org/show_bug.cgi?id=13399.
+
+Tested-by: Hans de Bruin <bruinjm@xs4all.nl>
+Signed-Off-By: Rainer Weikusat <rweikusat@mssgmbh.com>
+Signed-Off-By: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-cd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 0b7645b..4a19686 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -667,7 +667,7 @@ out_end:
+ 				rq->errors = -EIO;
+ 		}
+
+-		if (uptodate == 0)
++		if (uptodate == 0 && rq->bio)
+ 			ide_cd_error_cmd(drive, cmd);
+
+ 		/* make sure it's fully ended */
+-- 
+1.6.3.1
+
 
 
 -- 
