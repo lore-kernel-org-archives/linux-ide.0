@@ -1,45 +1,54 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] PATA driver for CF interface on AT91SAM9260 SoC
-Date: Thu, 18 Jun 2009 19:37:20 +0100
-Message-ID: <20090618193720.26830bc8@lxorguk.ukuu.org.uk>
-References: <1245181151-7040-1-git-send-email-geomatsi@gmail.com>
-	<20090618002004.54701b40@realm>
-	<20090617235351.1cb05c97@lxorguk.ukuu.org.uk>
-	<20090618222401.462b2d44@realm>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13575] New: After S3 resume IDE reports SRST failed (errno=-16)
+Date: Thu, 18 Jun 2009 18:39:29 GMT
+Message-ID: <bug-13575-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55558 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752143AbZFRSgY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2009 14:36:24 -0400
-In-Reply-To: <20090618222401.462b2d44@realm>
+Received: from demeter.kernel.org ([140.211.167.39]:54370 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbZFRSj0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2009 14:39:26 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5IIdTKF027180
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jun 2009 18:39:29 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Matyukevich <geomatsi@gmail.com>
-Cc: linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, Sergey Lapin <slapin@ossfans.org>, Andrew Victor <avictor.za@gmail.com>
+To: linux-ide@vger.kernel.org
 
-> Concerning the first point, this module parameter is used in driver
-> probing function:=20
-> 	ap->pio_mask =3D pio_mask;
->=20
-> I would suggest to keep pio_mask as a module parameter, since it migh=
-t
-> be useful to modify it in order to =D1=81ut down PIO speed, e.g. for =
-testing
-> purposes.=20
+http://bugzilla.kernel.org/show_bug.cgi?id=13575
 
-Libata already has general support for that. (Arguably we should take i=
-t
-out of the pata_legacy driver in the same way)
+           Summary: After S3 resume IDE reports SRST failed (errno=-16)
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: warpme@o2.pl
+        Regression: Yes
 
 
->=20
-> Concerning the second point, I removed set_smc_timing/set_smc_mode fr=
-om
-> driver probing function.
->=20
-> Here is updated patch:
+After resume from S3 IDE reports SRST failed (errno=-16) and HDD LED is always
+ON.
+Workaround is change jumper from CableSelect to Master, but in this case HDD
+LED is always OFF.
+All was OK with previous kernels (tested 2.6.28.10, 2.6.27.18 and 2.6.25.5)
 
-Thanks
+HW is:
+-MSI K9N2GM (Nvidia MCP77 IGP8200)
+-LIteON DVD-RW PATA
+LiteOn is single IDE device and alone mass-storage (no any HDD in system. Boot
+via PXE)
+
+br
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
