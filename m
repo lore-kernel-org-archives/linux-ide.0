@@ -1,66 +1,56 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Run-time PM idea (was: Re: [RFC][PATCH 0/2]   PM: Rearrange core
- suspend code)
-Date: Thu, 18 Jun 2009 19:50:15 -0600
-Message-ID: <4A3AEED7.90804@gmail.com>
-References: <200906072347.00580.rjw@sisk.pl> <20090608065419.GA13568@elte.hu>	<200906081330.50045.rjw@sisk.pl> <20090608130509.GA3272@elte.hu>	<20090608131159.GA15100@srcf.ucam.org>	<20090608132235.GC13214@elte.hu>	<20090608133215.GA15482@srcf.ucam.org>	<20090608134647.GA14234@elte.hu>	<20090608135431.GA16052@srcf.ucam.org>	<20090608142450.GE14234@elte.hu> <20090608143513.GB16752@srcf.ucam.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA: link online but device misclassified
+Date: Fri, 19 Jun 2009 13:00:09 +0900
+Message-ID: <4A3B0D49.8070802@gmail.com>
+References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>	 <4A308798.6060803@gmail.com>	 <cfa4e840906110231u4e90eb22wbeb2d4e748c5624a@mail.gmail.com>	 <1244746872.3998.88.camel@mulgrave.site>	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com> <1245165697.3965.40.camel@mulgrave.site> <4A3AEC08.4060507@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20090608143513.GB16752@srcf.ucam.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, pm list <linux-pm@lists.linux-foundation.org>, ide <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-px0-f189.google.com ([209.85.216.189]:44084 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbZFSEFW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jun 2009 00:05:22 -0400
+Received: by pxi27 with SMTP id 27so1508883pxi.33
+        for <linux-ide@vger.kernel.org>; Thu, 18 Jun 2009 21:05:24 -0700 (PDT)
+In-Reply-To: <4A3AEC08.4060507@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Marc Bowes <marcbowes@gmail.com>, linux-ide@vger.kernel.org
 
-On 06/08/2009 08:35 AM, Matthew Garrett wrote:
-> On Mon, Jun 08, 2009 at 04:24:50PM +0200, Ingo Molnar wrote:
->> * Matthew Garrett<mjg59@srcf.ucam.org>  wrote:
->>> eSATA is pretty common now.
->> [ And 99% of the CPUs have an IDT still 99.9% of the users dont know
->>    what it is :) ]
->
-> Users know that there's a socket on the front of their computer that
-> they can plug a hard drive into, and if that doesn't work then they're
-> going to be upset.
->
->>> The problem with this kind of default is that you get people who
->>> are confused that their hardware doesn't work.
->> If the hardware 'doesnt work' that is a kernel bug. Hardware that
->> _cannot be suspended_ safely (physically) should not be
->> auto-suspended, of course.
->
-> So, like I said, the kernel can't automatically suspend AHCI unless it's
-> received some information from elsewhere that tells it it's ok to. The
-> kernel can't know if there's an eSATA port or not.
->
->>> If the kernel doesn't have enough information to make a decision
->>> it should err on the side of functionality - we're talking about
->>> fairly low-level power savings, but potentially several years of
->>> aggregate confusion on the part of users.
->> the difference between a 10W and a 1W footprint is a long series of
->> 'low-level power savings'.
+Robert Hancock wrote:
+> On 06/16/2009 09:21 AM, James Bottomley wrote:
+>> On Tue, 2009-06-16 at 17:03 +0200, Marc Bowes wrote:
+>>> Sorry to bother, but this is really bugging me! I can't seem to find
+>>> anybody
+>>> else with the same problem. What steps should I be taking to figure this
+>>> out? I'm thinking I should be trying other kernel versions and/or
+>>> plugging
+>>> drives in different places. I don't think the motherboard is faulty,
+>>> and I
+>>> seem to be getting good speeds (~70mbs) to all four drives.
 >>
->> If users are getting confused and if hardware gets broken then tha's
->> a plain bug and the wrong path is being walked.
->
-> Yes. And powersaving is a tradeoff between functionality and power
-> consumption. The kernel doesn't know what level of functionality a given
-> user requires. It *can't* know that itself.
->
->>> Users are generally ok at realising correlation between a setting
->>> change and something no longer working, so as long as you provide
->>> that they'll be happy. I agree that this sucks. What we actually
->>> want is some means of reliably identifying whether a port is
->>> hotplug or not, but eSATA makes this very difficult.
->> Is it impossible?
->
-> To the best of my knowledge, yes.
+>> Well, those are on the AHCI built in controller. The one with the slow
+>> response is the empty JMicron 20360/20363.  But why this should be so,
+>> I've no idea ... it looks like the AHCI driver can't tell the phys are
+>> empty for some reason, which could be due to many things.
+> 
+> I would suspect it's a hardware problem that we can't do much about..
+> For some reason the controller is reporting the SATA link is online at
+> 3Gbps when there's actually nothing connected. We try to repeatedly
+> reset the "device" as it doesn't respond properly, until we finally give
+> up.
+> 
+> Can you disable that JMicron controller in the BIOS somehow?
 
-Well, in some cases we can get an idea - the current AHCI spec has bits 
-in the PxCMD register (External SATA Port and Hot Plug Capable Port) 
-which can indicate which ports are externally accessible and thus are 
-likely to receive hotplug events. Of course, these are supposed to be 
-programmed by the BIOS based on the particular motherboard/machine, and 
-we all know how accurate BIOS-reported information can be..
+It could be some storage controller hanging off there.  Some revisions
+of SIMG PMPs operating in raid mode keep the link online while failing
+to respond to reset if the downstream ports are empty.  Marc, which
+motherboard are you using?  Can you please post the output of
+dmidecode?
+
+Thanks.
+
+-- 
+tejun
