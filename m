@@ -1,51 +1,54 @@
-From: Marc Bowes <marcbowes@gmail.com>
-Subject: Re: SATA: link online but device misclassified
-Date: Sat, 20 Jun 2009 15:13:31 +0200
-Message-ID: <cfa4e840906200613mac35e8ei69e40f9bcddd37dc@mail.gmail.com>
-References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>
-	 <1244746872.3998.88.camel@mulgrave.site>
-	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>
-	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>
-	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>
-	 <1245165697.3965.40.camel@mulgrave.site> <4A3AEC08.4060507@gmail.com>
-	 <4A3B0D49.8070802@gmail.com>
-	 <cfa4e840906190238m4cca2c73pece279bb642bfd1f@mail.gmail.com>
-	 <4A3CD738.1080105@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] PATA driver for CF interface on AT91SAM9260 SoC
+Date: Sat, 20 Jun 2009 13:09:47 -0400
+Message-ID: <4A3D17DB.30001@garzik.org>
+References: <1245181151-7040-1-git-send-email-geomatsi@gmail.com>	<20090618002004.54701b40@realm>	<20090617235351.1cb05c97@lxorguk.ukuu.org.uk>	<20090618222401.462b2d44@realm>	<20090618193720.26830bc8@lxorguk.ukuu.org.uk>	<20090619082740.6986544a@realm> <20090620165439.6314f9ef@realm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:62244 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178AbZFTNNb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jun 2009 09:13:31 -0400
-Received: by ewy6 with SMTP id 6so3364614ewy.37
-        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2009 06:13:32 -0700 (PDT)
-In-Reply-To: <4A3CD738.1080105@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:46443 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753236AbZFTRJ2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 20 Jun 2009 13:09:28 -0400
+In-Reply-To: <20090620165439.6314f9ef@realm>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org
+To: Sergey Matyukevich <geomatsi@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Andrew Victor <linux@maxim.org.za>, Sergey Lapin <slapin@ossfans.org>, Andrew Victor <avictor.za@gmail.com>
 
-Ok. Just keep me informed :)
-
-On Sat, Jun 20, 2009 at 2:34 PM, Tejun Heo<htejun@gmail.com> wrote:
-> Marc Bowes wrote:
->> Hi,
+Sergey Matyukevich wrote:
+> On Fri, 19 Jun 2009 08:27:40 +0400
+> Sergey Matyukevich <geomatsi@gmail.com> wrote:
+>=20
+>> On Thu, 18 Jun 2009 19:37:20 +0100
+>> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 >>
->> Tejun, the motherboard is a Gigabyte EP45-DQ6. Attached are dmidecod=
-e
->> and a new dmesg.txt, as I have enabled AHCI mode.
->
-> Yeah, you have 2 sil5723's hanging off the jmicron controller. =A0If =
-you
-> have harddisks connected to those ports it will be okay. =A0If not,
-> they'll keep the link online but timeout on SRST. =A0Hmmm... not real=
-ly
-> sure what to do yet. =A0Maybe we can do some sort of blacklisting. =A0=
-I
-> wonder how windows copes with this. =A0Hmmm...
->
-> --
-> tejun
->
+>>>> Concerning the first point, this module parameter is used in
+>>>> driver probing function:=20
+>>>> 	ap->pio_mask =3D pio_mask;
+>>>>
+>>>> I would suggest to keep pio_mask as a module parameter, since it
+>>>> might be useful to modify it in order to =D1=81ut down PIO speed, =
+e.g.
+>>>> for testing purposes.=20
+>>> Libata already has general support for that. (Arguably we should
+>>> take it out of the pata_legacy driver in the same way)
+>>
+>> Patch update: module param for pio_mask removed.
+>>
+>>
+>=20
+> Hello,
+> Is there any chance for this driver to be accepted during current mer=
+ge
+> window ?
+
+Absolutely...  is this the last revision of the driver (for the moment)=
+?
+
+	Jeff
+
+
+
