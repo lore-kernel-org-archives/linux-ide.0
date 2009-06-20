@@ -1,21 +1,17 @@
 From: Frans Pop <elendil@planet.nl>
 Subject: cmd64x: irq 14: nobody cared - system is dreadfully slow
-Date: Sat, 20 Jun 2009 23:39:21 +0200
-Message-ID: <200906202339.22206.elendil@planet.nl>
+Date: Sat, 20 Jun 2009 23:52:33 +0200
+Message-ID: <200906202352.33894.elendil@planet.nl>
 Mime-Version: 1.0
 Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_KcVPKu6HIrEWHER"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:60195 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752313AbZFTVjW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jun 2009 17:39:22 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: linux-sparc@vger.kernel.org
+  boundary="Boundary-00=_hoVPKcEkoGSIQu8"
+Return-path: <sparclinux-owner@vger.kernel.org>
+Sender: sparclinux-owner@vger.kernel.org
+To: sparclinux@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
---Boundary-00=_KcVPKu6HIrEWHER
+--Boundary-00=_hoVPKcEkoGSIQu8
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -23,6 +19,14 @@ Content-Disposition: inline
 
 (previously sent to sparclinux@vger.k.o; not sure if that arrived: it 
 doesn't show on marc.info; adding linux-ide and Bart + possible cause)
+
+(Resending with sparclinux again instead of linux-sparc :-(
+Damn, it is confusing to have a list with one name on vger (sparclinux; 
+also inconsistent with most other kernel lists) and its only archive 
+using a different name (linux-sparc). Every time I mail to the sparc list 
+I find myself getting confused by this and wasting time on it. Any chance 
+of creating an alias linux-sparc on vger for the list or something?
+Sorry for the noise.)
 
 Hi,
 
@@ -123,7 +127,7 @@ Cheers,
 FJP
 
 
---Boundary-00=_KcVPKu6HIrEWHER
+--Boundary-00=_hoVPKcEkoGSIQu8
 Content-Type: text/x-diff;
   charset="utf-8";
   name="dmesg-U10.diff"
@@ -224,7 +228,7 @@ Content-Disposition: inline;
  kjournald starting.  Commit interval 5 seconds
  EXT3-fs: mounted filesystem with ordered data mode.
 
---Boundary-00=_KcVPKu6HIrEWHER
+--Boundary-00=_hoVPKcEkoGSIQu8
 Content-Type: text/plain;
   charset="utf-8";
   name="config-2.6.30-1-sparc64"
@@ -3106,4 +3110,4 @@ CONFIG_HAS_DMA=y
 CONFIG_HAVE_LMB=y
 CONFIG_NLATTR=y
 
---Boundary-00=_KcVPKu6HIrEWHER--
+--Boundary-00=_hoVPKcEkoGSIQu8--
