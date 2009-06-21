@@ -1,66 +1,43 @@
-From: Evgeni Golov <sargentd@die-welt.net>
-Subject: [PATCH] [libata] beautify module parameters
-Date: Sun, 21 Jun 2009 22:43:20 +0200
-Message-ID: <1245617000-23868-1-git-send-email-sargentd@die-welt.net>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vm1.die-welt.net ([84.246.122.34]:57774 "EHLO chi.die-welt.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750780AbZFUUua (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 Jun 2009 16:50:30 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: David Miller <davem@davemloft.net>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Sun, 21 Jun 2009 14:19:50 -0700 (PDT)
+Message-ID: <20090621.141950.160759111.davem@davemloft.net>
+References: <200906202352.33894.elendil@planet.nl>
+	<20090620.171945.140676687.davem@davemloft.net>
+	<200906211515.56804.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <200906211515.56804.bzolnier@gmail.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Evgeni Golov <sargentd@die-welt.net>
 
-1. add defaults to description where possible
-2. add value definition (off=0, on=1) where missing
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Sun, 21 Jun 2009 15:15:56 +0200
 
-Signed-off-by: Evgeni Golov <sargentd@die-welt.net>
----
- drivers/ata/libata-core.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+> On Sunday 21 June 2009 02:19:45 David Miller wrote:
+>> I wonder how much testing this commit received...
+> 
+> Too less, any help with improving testing coverage is welcomed
+> (this was just a tiny part of very large rework which has been tested
+> and has been sitting in linux-next for weeks before push to Linus).
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ca4d208..da27a3c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -125,11 +125,11 @@ MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link spe
- 
- static int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
--MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
-+MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices; on by default (0=off, 1=on)");
- 
- static int atapi_dmadir = 0;
- module_param(atapi_dmadir, int, 0444);
--MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
-+MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support; off by default (0=off, 1=on)");
- 
- int atapi_passthru16 = 1;
- module_param(atapi_passthru16, int, 0444);
-@@ -137,7 +137,7 @@ MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices; on
- 
- int libata_fua = 0;
- module_param_named(fua, libata_fua, int, 0444);
--MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
-+MODULE_PARM_DESC(fua, "FUA support; off by default (0=off, 1=on)");
- 
- static int ata_ignore_hpa;
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
-@@ -153,11 +153,11 @@ MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
- 
- int libata_noacpi = 0;
- module_param_named(noacpi, libata_noacpi, int, 0444);
--MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in probe/suspend/resume when set");
-+MODULE_PARM_DESC(noacpi, "Disable the use of ACPI in probe/suspend/resume; off by default (0=off, 1=on)");
- 
- int libata_allow_tpm = 0;
- module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
--MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands");
-+MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands; off by default (0=off, 1=on)");
- 
- MODULE_AUTHOR("Jeff Garzik");
- MODULE_DESCRIPTION("Library module for ATA devices");
--- 
-1.6.3.1
+Maybe you should leave the driver alone until you can get affirmative
+testing results from people who have the hardware?!?!? :-/
 
+And in leiu of that, simply leave it alone until such testing can
+actually be performed.
+
+That's why all the IDE drivers are constantly breaking on sparc.
+
+The IDE layer is more than legacy at this point, so if you aren't
+fixing bugs (those reported by users and the fix for which can
+be absolutely tested), just leave it be.
+
+So this totally eliminates any argument you may have about necessary
+"infrastructure" changes that might be blocked by not being able to
+make these kinds modifications to drivers for devices you can't even
+test.
