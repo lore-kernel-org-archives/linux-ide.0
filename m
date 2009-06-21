@@ -1,48 +1,83 @@
-From: Christian Engelmayer <christian.engelmayer@frequentis.com>
-Subject: [PATCH 1/1] ide: memory overrun in ide_get_identity_ioctl() on big
- endian machines using ioctl HDIO_OBSOLETE_IDENTITY
-Date: Sun, 21 Jun 2009 00:04:23 +0200
-Message-ID: <20090621000423.30c462d9@frequentis.com>
-References: <20090619084105.4cdf78be@frequentis.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Sat, 20 Jun 2009 17:19:45 -0700 (PDT)
+Message-ID: <20090620.171945.140676687.davem@davemloft.net>
+References: <200906202352.33894.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webmail.frequentis.com ([213.47.210.151]:30586 "EHLO
-	webmail.frequentis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754179AbZFTWEc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jun 2009 18:04:32 -0400
-In-Reply-To: <20090619084105.4cdf78be@frequentis.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <200906202352.33894.elendil@planet.nl>
+Sender: sparclinux-owner@vger.kernel.org
+To: elendil@planet.nl
+Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, hancockrwd@gmail.com
-Cc: christian.engelmayer@frequentis.com, linux-ide@vger.kernel.org
 
-From: Christian Engelmayer <christian.engelmayer@frequentis.com>
+From: Frans Pop <elendil@planet.nl>
+Date: Sat, 20 Jun 2009 23:52:33 +0200
 
-This patch fixes a memory overrun in function ide_get_identity_ioctl() which
-chooses the size of a memory buffer depending on the ioctl command that led
-to the function call, however, passes that buffer to a function which needs the
-buffer size to be always chosen unconditionally.
+> ide0 at 0x1fe02c00000-0x1fe02c00007,0x1fe02c0000a on irq 14 (serialized)
+> irq 14: nobody cared (try booting with the "irqpoll" option)
+> Call Trace:
 
-Due to conditional compilation the memory overrun can only happen on big endian
-machines. The error can be triggered using ioctl HDIO_OBSOLETE_IDENTITY. Usage
-of ioctl HDIO_GET_IDENTITY is safe.
+Try reverting this patch:
 
-Signed-off-by: Christian Engelmayer <christian.engelmayer@frequentis.com>
---
-Proposed patch after comment by Robert Hancock who shares the view that buffer
-'id' should be allocated unconditionally.
+commit 6b5cde3629701258004b94cde75dd1089b556b02
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Mon Dec 29 20:27:32 2008 +0100
 
---- drivers/ide/ide-ioctls.c.orig	2009-06-20 23:22:45.000000000 +0200
-+++ drivers/ide/ide-ioctls.c	2009-06-20 23:30:21.000000000 +0200
-@@ -64,7 +64,8 @@ static int ide_get_identity_ioctl(ide_dr
- 		goto out;
- 	}
- 
--	id = kmalloc(size, GFP_KERNEL);
-+	/* ata_id_to_hd_driveid() relies on 'id' to be fully allocated. */
-+	id = kmalloc(ATA_ID_WORDS * 2, GFP_KERNEL);
- 	if (id == NULL) {
- 		rc = -ENOMEM;
- 		goto out;
+    cmd64x: set IDE_HFLAG_SERIALIZE explictly for CMD646
+    
+    * Set IDE_HFLAG_SERIALIZE explictly for CMD646.
+    
+    * Remove no longer needed ide_cmd646 chipset type (which has
+      a nice side-effect of fixing handling of unexpected IRQs).
+    
+    Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Unlike the commit log message states, I suspect this change
+"introduces" incorrect handling of unexpected IRQs rather than
+"fixing".  I suspect the problem arises when the controller
+has a pending interrupt before the kernel boots, and after the
+reset the IDE layer now won't clear the thing properly due to
+the IDE_HFLAG_SERIALIZE now being set.
+
+I suspect the following logic in ide_intr() is being triggered:
+
+	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
+		if (hwif != host->cur_port)
+			goto out_early;
+	}
+
+so the interrupt isn't cleared and it just keeps trying to run the
+interrupt handler over and over until the generic IRQ layer gives up
+and shuts off the interrupt.
+
+This would make sense if the CMD64X chip reset code triggers the
+interrupt, because I see absolutely nothing the makes sure
+host->cur_port would be setup correctly to ensure that the interrupt
+got services in that case.
+
+I wonder how much testing this commit received...
+
+Actually... the patch doesn't revert cleanly.  Let me setup a
+patch to test by hand.  It just removes the IDE_HFLAG_SERIALIZE
+flag from the chipset array entry.
+
+Alternatively you can try using the pata_cmd64x.c driver instead :-)
+
+diff --git a/drivers/ide/cmd64x.c b/drivers/ide/cmd64x.c
+index 80b777e..f98ba24 100644
+--- a/drivers/ide/cmd64x.c
++++ b/drivers/ide/cmd64x.c
+@@ -425,8 +425,7 @@ static const struct ide_port_info cmd64x_chipsets[] __devinitdata = {
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+ 		.port_ops	= &cmd64x_port_ops,
+ 		.dma_ops	= &cmd648_dma_ops,
+-		.host_flags	= IDE_HFLAG_SERIALIZE |
+-				  IDE_HFLAG_ABUSE_PREFETCH,
++		.host_flags	= IDE_HFLAG_ABUSE_PREFETCH,
+ 		.pio_mask	= ATA_PIO5,
+ 		.mwdma_mask	= ATA_MWDMA2,
+ 		.udma_mask	= ATA_UDMA2,
