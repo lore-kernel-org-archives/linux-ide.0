@@ -1,96 +1,83 @@
-From: Kurt Roeckx <kurt@roeckx.be>
-Subject: Re: sata_promise: Keeps saying SATA link down (SStatus 0 SControl
-	0)
-Date: Mon, 22 Jun 2009 00:10:02 +0200
-Message-ID: <20090621221002.GA11170@roeckx.be>
-References: <20080113234320.GA6225@roeckx.be> <18315.7567.747367.84127@harpo.it.uu.se> <20080115000953.GA2799@roeckx.be> <18316.31910.973794.732242@harpo.it.uu.se> <20080115173557.GA3033@roeckx.be> <18317.54768.524651.128063@harpo.it.uu.se> <20090420182503.GA10768@roeckx.be> <18925.32310.909665.474085@pilspetsen.it.uu.se> <20090421162507.GA16798@roeckx.be>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Mon, 22 Jun 2009 00:34:22 +0200
+Message-ID: <200906220034.22430.bzolnier@gmail.com>
+References: <200906202352.33894.elendil@planet.nl> <200906211515.56804.bzolnier@gmail.com> <20090621.141950.160759111.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from georges.telenet-ops.be ([195.130.137.68]:35365 "EHLO
-	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777AbZFUWKG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Jun 2009 18:10:06 -0400
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20090621.141950.160759111.davem@davemloft.net>
 Content-Disposition: inline
-In-Reply-To: <20090421162507.GA16798@roeckx.be>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: sparclinux-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
 
-On Tue, Apr 21, 2009 at 06:25:07PM +0200, Kurt Roeckx wrote:
-> On Tue, Apr 21, 2009 at 10:05:10AM +0200, Mikael Pettersson wrote:
-> > Kurt Roeckx writes:
-> >  > On Wed, Jan 16, 2008 at 11:01:20AM +0100, Mikael Pettersson wrote:
-> >  > > Kurt Roeckx writes:
-> >  > >  > On Tue, Jan 15, 2008 at 10:28:06AM +0100, Mikael Pettersson wrote:
-> >  > >  > >  > 00:08.0 RAID bus controller: Promise Technology, Inc. PDC20376 (FastTrak 376) (rev 02)
-> >  > >  > > ...
-> >  > >  > >  > 00:08.0 0104: 105a:3376 (rev 02)
-> >  > >  > > 
-> >  > >  > > Let me guess, this is a Promise chip included on the mainboard
-> >  > >  > > as a RAID controller, and not an add-on PCI card?
-> >  > >  > 
-> >  > >  > Yes, it's a K8V motherboard which has that onboard.
-> >  > >  > 
-> >  > >  > > If it's a mainboard chip, please enter the BIOS and see if it
-> >  > >  > > can be configured for non-RAID mode. If it can, please reconfigure
-> >  > >  > > it and boot Linux. Does it still claim to be a 20376 or is it
-> >  > >  > > now a 20378?
-> >  > >  > 
-> >  > >  > I can't find an option to turn that off in the BIOS.  If it did, I'd
-> >  > >  > probably have turned it off already.  I've also opened the case and it
-> >  > >  > says PDC20376 on the chip.
-> >  > > 
-> >  > > Ok. I haven't yet found any information about the 20376 which
-> >  > > could explain why the 20376 fails while the 20378 works.
-> >  > > For now, you can disable hotplugging in the driver by applying
-> >  > > the patch below. This should at least bring back some stability
-> >  > > to your system.
-> >  > > 
-> >  > > Longer-term I guess I'll have to invent a blacklist mechanism
-> >  > > to automatically prevent 20376 chips from enabling hotplugging.
-> >  > > That is, unless someone can show me a system where a 20376
-> >  > > actually does work with hotplugging, in which case I'd need a
-> >  > > module parameter (yuck) or some form of dynamic detection of
-> >  > > this condition.
-> >  > 
-> >  > Hi,
-> >  > 
-> >  > I'm still having this problem with a 2.6.29 kernel.  I want to
-> >  > avoid always having to patch my kernel, so I would like to see
-> >  > some solution to this.  What do you think that the best way
-> >  > forward is?
-> > 
-> > Since the previous discussion I've seen the 20378s in two
-> > identical mainboards of a particular model also throw spurious
-> > hotplug events. It would be possible to blacklist hotplugging
-> > on all SATA1 models, but that would also affect SATA1-based
-> > PCI cards like the SATA150 TX2/TX4 which don't appear to
-> > have this problem.
-> > 
-> > Can you post the lspci -vvn output for your 20376?
+On Sunday 21 June 2009 23:19:50 David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Sun, 21 Jun 2009 15:15:56 +0200
 > 
-> 00:08.0 0104: 105a:3376 (rev 02)
->         Subsystem: 1043:809e
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 64 (1000ns min, 4500ns max), Cache Line Size: 256 bytes
->         Interrupt: pin A routed to IRQ 18
->         Region 0: I/O ports at ec00 [size=64]
->         Region 1: I/O ports at dc00 [size=16]
->         Region 2: I/O ports at cc00 [size=128]
->         Region 3: Memory at fdf00000 (32-bit, non-prefetchable) [size=4K]
->         Region 4: Memory at fdb00000 (32-bit, non-prefetchable) [size=128K]
->         Capabilities: [60] Power Management version 2
->                 Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
->                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->         Kernel driver in use: sata_promise
->         Kernel modules: sata_promise
+> > On Sunday 21 June 2009 02:19:45 David Miller wrote:
+> >> I wonder how much testing this commit received...
+> > 
+> > Too less, any help with improving testing coverage is welcomed
+> > (this was just a tiny part of very large rework which has been tested
+> > and has been sitting in linux-next for weeks before push to Linus).
 > 
+> Maybe you should leave the driver alone until you can get affirmative
+> testing results from people who have the hardware?!?!? :-/
+> 
+> And in leiu of that, simply leave it alone until such testing can
+> actually be performed.
 
-Any news about this?
+Can't wait forever...
 
+> That's why all the IDE drivers are constantly breaking on sparc.
 
-Kurt
+URLs to bug-reports please.. or it didn't happened..
 
+> The IDE layer is more than legacy at this point, so if you aren't
+> fixing bugs (those reported by users and the fix for which can
+> be absolutely tested), just leave it be.
+
+Interesting, we have been steadily adding new hardware support
+(there is another driver for embedded hardware pending inclusion)..
+
+If you wanted to run IDE-stale tree I would have been more than happy
+to help you with it by cc:ing you on bugfix patches.
+
+> So this totally eliminates any argument you may have about necessary
+> "infrastructure" changes that might be blocked by not being able to
+> make these kinds modifications to drivers for devices you can't even
+> test.
+
+I'm really tired of this kind of hostility towards IDE changes and I also
+don't have time for such unproductive discussions.  Lets get over this
+quickly, since you seem to have such a great insight into running IDE layer
+here is a little proposition..
+
+ACK?  [ If not than can we please get back with the program? ]
+
+---
+ MAINTAINERS |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+Index: b/MAINTAINERS
+===================================================================
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2783,10 +2783,9 @@ S:	Supported
+ F:	drivers/scsi/ips.*
+ 
+ IDE SUBSYSTEM
+-P:	Bartlomiej Zolnierkiewicz
+-M:	bzolnier@gmail.com
++P:	David S. Miller
++M:	davem@davemloft.net
+ L:	linux-ide@vger.kernel.org
+-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6.git
+ S:	Maintained
+ F:	Documentation/ide/
+ F:	drivers/ide/
