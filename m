@@ -1,57 +1,34 @@
-From: David Miller <davem@davemloft.net>
+From: Frans Pop <elendil@planet.nl>
 Subject: Re: [PATCH] cs5520: add missing IRQ setup for the second port
-Date: Mon, 22 Jun 2009 16:31:36 -0700 (PDT)
-Message-ID: <20090622.163136.246300819.davem@davemloft.net>
-References: <200906221348.02632.bzolnier@gmail.com>
+Date: Tue, 23 Jun 2009 01:58:11 +0200
+Message-ID: <200906230158.12805.elendil@planet.nl>
+References: <200906221348.02632.bzolnier@gmail.com> <200906221348.02632.bzolnier@gmail.com> <20090622.163136.246300819.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38459
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751444AbZFVXbc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 19:31:32 -0400
-In-Reply-To: <200906221348.02632.bzolnier@gmail.com>
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:53048 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752135AbZFVX6N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 19:58:13 -0400
+In-reply-To: <20090622.163136.246300819.davem@davemloft.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 22 Jun 2009 13:48:02 +0200
+David Miller wrote:
+> ide_pci_setup_ports() would loop over the available ports, one
+> by one, recording IRQ numbers increasingly from the one passed
+> in as "pciirq".
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] cs5520: add missing IRQ setup for the second port
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
-> This is obviously correct regression fix.  The only problem is that
-> it cannot be applied under the new rigid policy before somebody with
-> the hardware verifies it.  This will only result in a needless delay
-> in this case (IMHO a common sense works better than rigid policies).
+I looked at the commit and at the code and called functions several times 
+(just out of curiosity), but have been completely unable to find where 
+that increase of pciirq actually happened.
+AFAICT ide_pci_setup_ports() just passed it on to ide_hw_configure() and 
+all that did was 'hw->irq = irq', so AFAICT in the old case both ports 
+would get the *same* IRQ, and not consecutive ones.
 
-Such hard rules don't apply to regression fixes.  Patch
-applied, thanks.
-
-But I certainly would have required some positive testing for the
-commit which introduced this problem!
-
-I've added some verbosity to the commit message, so that people can
-track where the problem was introduced, and exactly how this problem
-arose, like so:
-
-cs5520: add missing IRQ setup for the second port
-
-This fixes a regression introduced by commit
-86ccf37c6acd74cf7e4b7751ee045de19943c5a0 ("ide: remove pciirq argument
-from ide_pci_setup_ports()")
-
-ide_pci_setup_ports() would loop over the available ports, one
-by one, recording IRQ numbers increasingly from the one passed
-in as "pciirq".  The conversion only assigned the initial port's
-IRQ, 14, but left the second one not setup.
-
-[ Make commit message more verbose -DaveM ]
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Am I missing something here?
