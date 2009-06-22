@@ -1,35 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Mon, 22 Jun 2009 08:04:09 GMT
-Message-ID: <200906220804.n5M849Gp014871@demeter.kernel.org>
-References: <bug-13399-11633@http.bugzilla.kernel.org/>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT]: IDE fixes
+Date: Mon, 22 Jun 2009 02:42:16 -0700 (PDT)
+Message-ID: <20090622.024216.03098051.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44155 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbZFVIEG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 04:04:06 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5M8491r014872
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2009 08:04:09 GMT
-In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46148
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755175AbZFVJmM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 05:42:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13399
-
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+1) Update MAINTAINERS
 
+2) Initial cmd64x regression fix, there are more funnies but
+   we'll track it down.
 
---- Comment #40 from Borislav Petkov <bbpetkov@yahoo.de>  2009-06-22 08:04:08 ---
-Created an attachment (id=22042)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=22042)
-ide-cd: prevent null pointer deref via cdrom_newpc_intr
+Please pull, thanks!
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+The following changes since commit f234012f52a37e48f2330e1ca2df69800e797c3b:
+  Linus Torvalds (1):
+        Merge branch 'for-linus' of git://git.kernel.org/.../drzeus/mmc
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+David S. Miller (2):
+      ide: Take over as maintainer.
+      ide cmd64x: Remove serialize setting.
+
+ MAINTAINERS          |    6 +++---
+ drivers/ide/cmd64x.c |    3 +--
+ 2 files changed, 4 insertions(+), 5 deletions(-)
