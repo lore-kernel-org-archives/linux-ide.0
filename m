@@ -1,49 +1,87 @@
-From: Thomas Jackowski <aXe@hadiko.de>
-Subject: Re: Errors on ICH10R with Seagate HDDs
-Date: Mon, 22 Jun 2009 20:40:21 +0200
-Message-ID: <4A3FD015.4090602@hadiko.de>
-References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de> <49F3C03C.1090803@kernel.org> <4A36FC7D.5050805@hadiko.de> <4A388E1F.5070404@kernel.org>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Mon, 22 Jun 2009 21:01:37 +0200
+Message-ID: <200906222101.38586.elendil@planet.nl>
+References: <200906211446.38598.elendil@planet.nl> <200906221716.05983.elendil@planet.nl> <200906221938.27574.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.rz.uni-karlsruhe.de ([129.13.185.217]:38934 "EHLO
-	smtp1.rz.uni-karlsruhe.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbZFVSkU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 14:40:20 -0400
-Received: from postamt.hadiko.de ([2001:638:204:10:21b:21ff:fe22:d9c2])
-	by jordan.hadiko.de with esmtps (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <aXe@hadiko.de>)
-	id 1MIoRK-0000ox-9I
-	for linux-ide@vger.kernel.org; Mon, 22 Jun 2009 20:40:22 +0200
-In-Reply-To: <4A388E1F.5070404@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <200906221938.27574.bzolnier@gmail.com>
+Content-Disposition: inline
+Sender: sparclinux-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi,
+On Monday 22 June 2009, Bartlomiej Zolnierkiewicz wrote:
+> On Monday 22 June 2009 17:16:04 Frans Pop wrote:
+> Thanks.  Please notice 0701 0701 words above -- it means that this
+> device reports both SWDMA0 and MWDMA0 enabled at once (which results
+> in IDE layer failing DMA tuning).
+>
+> The patch below should fix it
 
-I have no clue where this command comes from. How can I determine this?
+Yes, this gives back MWDMA2 for hdd.
 
-I'm not using disk head parking.
+> and it would be quite interesting to try 
+> it on vanilla kernel to see if it helps with unexpected IRQ problem.
 
-Tejun Heo wrote:
-> Hello,
-> 
-> Thomas Jackowski wrote:
->> I'm using 2.6.29-2-amd64 now and the bug still exists (see previous
->> mails) with AHCI and NCQ enabled.
->>
->> Maybe I should contact Seagate Support now?
->>
->> I wonder that nobody else reported this sort of problem?
-> 
-> There were several reports drives timing out some SMART commansd but
-> on CPM I think yours is the only one.  BTW, where is that command
-> coming from?  Are you using disk head parking?
-> 
-> Thanks.
-> 
+Will do later.
 
-Thanks Thomas
+> However this still doesn't explain the regression fully -- we had
+> ide_id_dma_bug() checks since Dec 2007 (and equivalent
+> ide_dma_verbose() ones since almost forever) while 2.6.26 (which works
+> fine) is much younger than that.  I suspect that there are some other
+> kernel changes coming into the picture (Power Management?).  Would it
+> be possible to try 2.6.2[78] and/or bisect this problem further?
+
+I suspect commit 8d64fcd9 "ide: identify data word 53 bit 1 doesn't cover 
+words 62 and 63 (take 3)":
+@@ -396,15 +393,14 @@ int ide_id_dma_bug(ide_drive_t *drive)
+ 
+ 	if (id[ATA_ID_FIELD_VALID] & 4) {
+ 		if ((id[ATA_ID_UDMA_MODES] >> 8) &&
+ 		    (id[ATA_ID_MWDMA_MODES] >> 8))
+ 			goto err_out;
+-	} else if (id[ATA_ID_FIELD_VALID] & 2) {
+-		if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
+-		    (id[ATA_ID_SWDMA_MODES] >> 8))
+-			goto err_out;
+-	}
++	} else if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
++		   (id[ATA_ID_SWDMA_MODES] >> 8))
++		goto err_out;
+
+
+The logs I posted were from 2.6.30. I also tried 2.6.29 and that did *not* 
+yet have the DMA problem. The commit above is from the 2.6.30 development 
+cycle, so that fits. I expect you can verify it from the identify data.
+
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: relax DMA info validity checking
+>
+> There are some broken devices that report multiple DMA xfer modes
+> enabled at once (ATA spec doesn't allow it) but otherwise work fine
+> with DMA so just delete ide_id_dma_bug().
+
+The question is maybe: are there other devices that currently have dma 
+disabled because of the (old) code and would stop working with 
+ide_id_dma_bug() completely removed? The conservative thing to do I guess 
+would be to reverse 8d64fcd9.
+
+
+There is one thing I should mention here. I have been seeing the following 
+error with this CD drive:
+ide-cd: hdd: weird block size 2352
+ide-cd: hdd: default to 2kb block size
+
+This was present with 2.6.26 and also now with 2.6.31; not sure about 
+older kernels. I initially saw it with a self-burned Debian installation 
+CD. I also now see it with an audio CD. It does not seem to affect 
+reading the disks: installations go fine and the audio CD plays without 
+any problems.
+
+Any risk this may be related to something we've been discussing so far, or 
+is this a separate issue?
