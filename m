@@ -1,87 +1,75 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
-Date: Mon, 22 Jun 2009 21:01:37 +0200
-Message-ID: <200906222101.38586.elendil@planet.nl>
-References: <200906211446.38598.elendil@planet.nl> <200906221716.05983.elendil@planet.nl> <200906221938.27574.bzolnier@gmail.com>
+From: Jean Delvare <khali@linux-fr.org>
+Subject: [PATCH] IDE: Silent compiler warning in ide_pio_bytes()
+Date: Mon, 22 Jun 2009 21:10:52 +0200
+Message-ID: <20090622211052.45b3cfc5@hyperion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <200906221938.27574.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: sparclinux-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zone0.gcu-squad.org ([212.85.147.21]:5991 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbZFVTLB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 15:11:01 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-On Monday 22 June 2009, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 22 June 2009 17:16:04 Frans Pop wrote:
-> Thanks.  Please notice 0701 0701 words above -- it means that this
-> device reports both SWDMA0 and MWDMA0 enabled at once (which results
-> in IDE layer failing DMA tuning).
->
-> The patch below should fix it
+PageHighMem() isn't cheap so avoid calling it several times on the
+same page. I had the hope that this would silent the following
+compilation warning:
 
-Yes, this gives back MWDMA2 for hdd.
+drivers/ide/ide-taskfile.c: In function 'ide_pio_bytes':
+drivers/ide/ide-taskfile.c:229: warning: 'flags' may be used uninitialized in this function
 
-> and it would be quite interesting to try 
-> it on vanilla kernel to see if it helps with unexpected IRQ problem.
+which is a false positive, but it did not. So let's just initialize the
+flags and be done with it, so that other developers don't waste their
+time looking at it.
 
-Will do later.
+Signed-off-by: Jean Delvare <khali@linux-fr.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-taskfile.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-> However this still doesn't explain the regression fully -- we had
-> ide_id_dma_bug() checks since Dec 2007 (and equivalent
-> ide_dma_verbose() ones since almost forever) while 2.6.26 (which works
-> fine) is much younger than that.  I suspect that there are some other
-> kernel changes coming into the picture (Power Management?).  Would it
-> be possible to try 2.6.2[78] and/or bisect this problem further?
-
-I suspect commit 8d64fcd9 "ide: identify data word 53 bit 1 doesn't cover 
-words 62 and 63 (take 3)":
-@@ -396,15 +393,14 @@ int ide_id_dma_bug(ide_drive_t *drive)
+--- linux-2.6.31-pre.orig/drivers/ide/ide-taskfile.c	2009-06-21 09:37:02.000000000 +0200
++++ linux-2.6.31-pre/drivers/ide/ide-taskfile.c	2009-06-21 12:18:47.000000000 +0200
+@@ -226,7 +226,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 	struct scatterlist *sg = hwif->sg_table;
+ 	struct scatterlist *cursg = cmd->cursg;
+ 	struct page *page;
+-	unsigned long flags;
++	unsigned long flags = 0;	/* Silent compiler warning */
+ 	unsigned int offset;
+ 	u8 *buf;
  
- 	if (id[ATA_ID_FIELD_VALID] & 4) {
- 		if ((id[ATA_ID_UDMA_MODES] >> 8) &&
- 		    (id[ATA_ID_MWDMA_MODES] >> 8))
- 			goto err_out;
--	} else if (id[ATA_ID_FIELD_VALID] & 2) {
--		if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
--		    (id[ATA_ID_SWDMA_MODES] >> 8))
--			goto err_out;
--	}
-+	} else if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
-+		   (id[ATA_ID_SWDMA_MODES] >> 8))
-+		goto err_out;
+@@ -236,6 +236,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 
+ 	while (len) {
+ 		unsigned nr_bytes = min(len, cursg->length - cmd->cursg_ofs);
++		int page_is_high;
+ 
+ 		if (nr_bytes > PAGE_SIZE)
+ 			nr_bytes = PAGE_SIZE;
+@@ -247,7 +248,8 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 		page = nth_page(page, (offset >> PAGE_SHIFT));
+ 		offset %= PAGE_SIZE;
+ 
+-		if (PageHighMem(page))
++		page_is_high = PageHighMem(page);
++		if (page_is_high)
+ 			local_irq_save(flags);
+ 
+ 		buf = kmap_atomic(page, KM_BIO_SRC_IRQ) + offset;
+@@ -268,7 +270,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 
+ 		kunmap_atomic(buf, KM_BIO_SRC_IRQ);
+ 
+-		if (PageHighMem(page))
++		if (page_is_high)
+ 			local_irq_restore(flags);
+ 
+ 		len -= nr_bytes;
 
 
-The logs I posted were from 2.6.30. I also tried 2.6.29 and that did *not* 
-yet have the DMA problem. The commit above is from the 2.6.30 development 
-cycle, so that fits. I expect you can verify it from the identify data.
-
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: relax DMA info validity checking
->
-> There are some broken devices that report multiple DMA xfer modes
-> enabled at once (ATA spec doesn't allow it) but otherwise work fine
-> with DMA so just delete ide_id_dma_bug().
-
-The question is maybe: are there other devices that currently have dma 
-disabled because of the (old) code and would stop working with 
-ide_id_dma_bug() completely removed? The conservative thing to do I guess 
-would be to reverse 8d64fcd9.
-
-
-There is one thing I should mention here. I have been seeing the following 
-error with this CD drive:
-ide-cd: hdd: weird block size 2352
-ide-cd: hdd: default to 2kb block size
-
-This was present with 2.6.26 and also now with 2.6.31; not sure about 
-older kernels. I initially saw it with a self-burned Debian installation 
-CD. I also now see it with an audio CD. It does not seem to affect 
-reading the disks: installations go fine and the audio CD plays without 
-any problems.
-
-Any risk this may be related to something we've been discussing so far, or 
-is this a separate issue?
+-- 
+Jean Delvare
