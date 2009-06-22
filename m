@@ -1,25 +1,49 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT]: IDE fixes
-Date: Mon, 22 Jun 2009 10:40:22 -0700 (PDT)
-Message-ID: <alpine.LFD.2.01.0906221039150.3240@localhost.localdomain>
-References: <20090622.024216.03098051.davem@davemloft.net>
+From: Thomas Jackowski <aXe@hadiko.de>
+Subject: Re: Errors on ICH10R with Seagate HDDs
+Date: Mon, 22 Jun 2009 20:40:21 +0200
+Message-ID: <4A3FD015.4090602@hadiko.de>
+References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de> <49F3C03C.1090803@kernel.org> <4A36FC7D.5050805@hadiko.de> <4A388E1F.5070404@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59711 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757782AbZFVRkX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 13:40:23 -0400
-In-Reply-To: <20090622.024216.03098051.davem@davemloft.net>
+Received: from smtp1.rz.uni-karlsruhe.de ([129.13.185.217]:38934 "EHLO
+	smtp1.rz.uni-karlsruhe.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbZFVSkU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 14:40:20 -0400
+Received: from postamt.hadiko.de ([2001:638:204:10:21b:21ff:fe22:d9c2])
+	by jordan.hadiko.de with esmtps (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <aXe@hadiko.de>)
+	id 1MIoRK-0000ox-9I
+	for linux-ide@vger.kernel.org; Mon, 22 Jun 2009 20:40:22 +0200
+In-Reply-To: <4A388E1F.5070404@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+Hi,
 
+I have no clue where this command comes from. How can I determine this?
 
-I really don't want to take this. I think you and Bartlomiej should spend 
-a _lot_ more time and effort trying to resolve this. Me taking it just 
-closes the doors for trying to be constructive about issues.
+I'm not using disk head parking.
 
-		Linus
+Tejun Heo wrote:
+> Hello,
+> 
+> Thomas Jackowski wrote:
+>> I'm using 2.6.29-2-amd64 now and the bug still exists (see previous
+>> mails) with AHCI and NCQ enabled.
+>>
+>> Maybe I should contact Seagate Support now?
+>>
+>> I wonder that nobody else reported this sort of problem?
+> 
+> There were several reports drives timing out some SMART commansd but
+> on CPM I think yours is the only one.  BTW, where is that command
+> coming from?  Are you using disk head parking?
+> 
+> Thanks.
+> 
+
+Thanks Thomas
