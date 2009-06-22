@@ -1,86 +1,54 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
-Date: Sun, 21 Jun 2009 18:56:21 -0700 (PDT)
-Message-ID: <20090621.185621.31766784.davem@davemloft.net>
-References: <200906202352.33894.elendil@planet.nl>
-	<20090620.171945.140676687.davem@davemloft.net>
-	<200906211446.38598.elendil@planet.nl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] [libata] beautify module parameters
+Date: Sun, 21 Jun 2009 23:08:35 -0400
+Message-ID: <4A3EF5B3.1040500@pobox.com>
+References: <1245617000-23868-1-git-send-email-sargentd@die-welt.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <200906211446.38598.elendil@planet.nl>
-Sender: sparclinux-owner@vger.kernel.org
-To: elendil@planet.nl
-Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:59692 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751403AbZFVDIJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 Jun 2009 23:08:09 -0400
+In-Reply-To: <1245617000-23868-1-git-send-email-sargentd@die-welt.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Evgeni Golov <sargentd@die-welt.net>
+Cc: linux-ide@vger.kernel.org
 
-From: Frans Pop <elendil@planet.nl>
-Date: Sun, 21 Jun 2009 14:46:37 +0200
-
-> I tried the following additional patch, but unfortunately that did not help:
-> --- a/drivers/ide/cmd64x.c
-> +++ b/drivers/ide/cmd64x.c
-> @@ -426,6 +426,7 @@ static const struct ide_port_info cmd64x_chipsets[]
->  		.port_ops	= &cmd64x_port_ops,
->  		.dma_ops	= &cmd648_dma_ops,
->  		.host_flags	= IDE_HFLAG_ABUSE_PREFETCH,
-> +		.irq_flags	= IRQF_SHARED,
->  		.pio_mask	= ATA_PIO5,
->  		.mwdma_mask	= ATA_MWDMA2,
->  		.udma_mask	= ATA_UDMA2,
+Evgeni Golov wrote:
+> 1. add defaults to description where possible
+> 2. add value definition (off=0, on=1) where missing
 > 
-> I got the idea for that from 255115fb and had hoped it would compensate
-> for this change from Bart's commit:
+> Signed-off-by: Evgeni Golov <sargentd@die-welt.net>
+> ---
+>  drivers/ata/libata-core.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ca4d208..da27a3c 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -125,11 +125,11 @@ MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link spe
+>  
+>  static int atapi_enabled = 1;
+>  module_param(atapi_enabled, int, 0444);
+> -MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+> +MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices; on by default (0=off, 1=on)");
+>  
+>  static int atapi_dmadir = 0;
+>  module_param(atapi_dmadir, int, 0444);
+> -MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
+> +MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support; off by default (0=off, 1=on)");
 
-That won't help.  All PCI IDE interfaces unconditionally set the
-irq_flags to IRQF_SHARED.  This occurs in drivers/ide/setup-pci.c
-via ide_pci_init_one(), which calls ide_pci_init_two(), which goes:
+I would prefer a more concise
 
-	host->irq_flags = IRQF_SHARED;
+	"Enable ATAPI DMADIR bridge support (0=off [default], 1=on)"
 
-The key to this bug seems to be the setting of host->cur_port when the
-interrupts arrive.  That's really the only major case where the IDE
-driver interrupt handler elides at least reading the status register
-to clear the interrupt.
+Regards,
 
-That's why clearing the IDE_HFLAG_SERIALIZE flag makes the initial
-bulk of unclearable interrupts go away.
+	Jeff
 
-I suspect that whatever is causing trouble due to IDE_HFLAG_SERIALIZE
-is also, down the road, causing the hdd problem you still see.
 
-Can you apply this debugging patch and print out the output?
 
-Thanks!
-
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 1059f80..8992fda 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -797,6 +797,25 @@ irqreturn_t ide_intr (int irq, void *dev_id)
- 	int plug_device = 0;
- 	struct request *uninitialized_var(rq_in_flight);
- 
-+#if 1
-+	{
-+		static int times = 0;
-+		
-+		if (++times <= 32)
-+			goto no_log;
-+
-+		printk(KERN_INFO "IDE-DEBUG: host->host_flags[0x%lx] "
-+		       "hwif(%p) host->cur_port(%p) "
-+		       "hwif->port_ops(%pS) hwif->handler(%pS) "
-+		       "hwif->polling(%d)\n",
-+		       host->host_flags, hwif, host->cur_port,
-+		       hwif->port_ops, hwif->handler, (int) hwif->polling);
-+
-+	no_log:
-+		;
-+	}
-+#endif
-+
- 	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
- 		if (hwif != host->cur_port)
- 			goto out_early;
