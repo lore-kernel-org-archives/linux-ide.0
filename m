@@ -1,48 +1,71 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared - system
-	is dreadfully slow)
-Date: Sun, 21 Jun 2009 23:39:04 -0400
-Message-ID: <87f94c370906212039sa23d49fh305d8f0d58a48d1f@mail.gmail.com>
-References: <20090621.141950.160759111.davem@davemloft.net>
-	 <200906220034.22430.bzolnier@gmail.com>
-	 <20090621.155756.100422570.davem@davemloft.net>
-	 <20090621.161343.181101055.davem@davemloft.net>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Mon, 22 Jun 2009 06:28:36 +0200
+Message-ID: <200906220628.37237.elendil@planet.nl>
+References: <200906202352.33894.elendil@planet.nl> <200906211446.38598.elendil@planet.nl> <20090621.185621.31766784.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:23691 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbZFVEAL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 00:00:11 -0400
-In-Reply-To: <20090621.161343.181101055.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20090621.185621.31766784.davem@davemloft.net>
+Content-Disposition: inline
+Sender: sparclinux-owner@vger.kernel.org
 To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+List-Id: linux-ide@vger.kernel.org
 
-> I'm going to treat IDE as pure legacy, rather than as competition
-> with the PATA drivers which is what people whould be moving over to.
+On Monday 22 June 2009, David Miller wrote:
+> Can you apply this debugging patch and print out the output?
 
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+I get completely flooded...
+I get the debug output 2 times (ide0 and ide1 maybe?): the first time it 
+stops after a few 100 lines and driver init continues a bit, but the 
+second time it just goes on and on and eventually I decided to reset the 
+box.
 
-What impact does that on Linux and its growing popularity in arm
-platforms?  I had assumed that most arm platforms were long term users
-of drivers/ide, but I have no facts to back that up.
+> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> index 1059f80..8992fda 100644
+> --- a/drivers/ide/ide-io.c
+> +++ b/drivers/ide/ide-io.c
+> @@ -797,6 +797,25 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+>  	int plug_device = 0;
+>  	struct request *uninitialized_var(rq_in_flight);
+>
+> +#if 1
+> +	{
+> +		static int times = 0;
+> +
+> +		if (++times <= 32)
 
-Greg
---=20
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-=46irst 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
-df
+Should this be >=32 maybe?
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+If you really do want the to skip the first 32 and capture the rest, I can 
+still get it, but I'd have to split the printk as it's too wide for my 
+serial console so part gets truncated.
+
+> +			goto no_log;
+> +
+> +		printk(KERN_INFO "IDE-DEBUG: host->host_flags[0x%lx] "
+> +		       "hwif(%p) host->cur_port(%p) "
+> +		       "hwif->port_ops(%pS) hwif->handler(%pS) "
+> +		       "hwif->polling(%d)\n",
+> +		       host->host_flags, hwif, host->cur_port,
+> +		       hwif->port_ops, hwif->handler, (int) hwif->polling);
+> +
+> +	no_log:
+> +		;
+> +	}
+> +#endif
+> +
+>  	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
+>  		if (hwif != host->cur_port)
+>  			goto out_early;
+
+This is what I could get from the *second* series:
+IDE-DEBUG: host->host_flags[0x10] hwif(fffff8003e326800) 
+host->cur_port((null)) 
+hwif->port_ops(cmd648_port_ops+0x0/0xfffffffffffffe54 [cmd64x]) 
+hwif->hand
+
+Rest is truncated. This first part seemed constant.
