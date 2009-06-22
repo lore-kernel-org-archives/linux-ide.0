@@ -1,58 +1,36 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
-Date: Sun, 21 Jun 2009 22:45:10 -0700 (PDT)
-Message-ID: <20090621.224510.96380426.davem@davemloft.net>
-References: <200906211446.38598.elendil@planet.nl>
-	<20090621.185621.31766784.davem@davemloft.net>
-	<200906220628.37237.elendil@planet.nl>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Mon, 22 Jun 2009 06:37:47 GMT
+Message-ID: <200906220637.n5M6blui004060@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <200906220628.37237.elendil@planet.nl>
-Sender: sparclinux-owner@vger.kernel.org
-To: elendil@planet.nl
-Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:44487 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624AbZFVGho (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 02:37:44 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5M6bllV004061
+	for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2009 06:37:47 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Frans Pop <elendil@planet.nl>
-Date: Mon, 22 Jun 2009 06:28:36 +0200
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
-> On Monday 22 June 2009, David Miller wrote:
->> +#if 1
->> +	{
->> +		static int times = 0;
->> +
->> +		if (++times <= 32)
-> 
-> Should this be >=32 maybe?
 
-Yes, it should be >= 32 :-)
 
-> If you really do want the to skip the first 32 and capture the rest, I can 
-> still get it, but I'd have to split the printk as it's too wide for my 
-> serial console so part gets truncated.
 
-Sure.
 
-> This is what I could get from the *second* series:
-> IDE-DEBUG: host->host_flags[0x10] hwif(fffff8003e326800) 
-> host->cur_port((null)) 
-> hwif->port_ops(cmd648_port_ops+0x0/0xfffffffffffffe54 [cmd64x]) 
-> hwif->hand
-> 
-> Rest is truncated. This first part seemed constant.
+--- Comment #38 from Borislav Petkov <bbpetkov@yahoo.de>  2009-06-22 06:37:43 ---
+(In reply to comment #34)
+> There are no problems with 2.6.29.5, for me that is.
 
-The basic gist of the problem seems to be that when the chip is
-brought up, the initial request_irq() forces a lingering interrupt
-status in the chip to have somewhere to go.
+Thanks for testing.
 
-But the IDE layer refuses to do something to clear it because it's
-not expecting any interrupts (this is the: cur_port != hwif).
-
-Some things other than the commit in question have changed in the area
-of interrupt and chip initialization and I'll try to go through
-the commits to get some clues.
-
-Thanks!
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
