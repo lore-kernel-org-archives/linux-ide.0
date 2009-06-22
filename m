@@ -1,65 +1,86 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared -
-	system is dreadfully slow)
-Date: Sun, 21 Jun 2009 18:53:26 -0600
-Message-ID: <20090622005326.GQ19977@parisc-linux.org>
-References: <20090621.141950.160759111.davem@davemloft.net> <20090621.155756.100422570.davem@davemloft.net> <20090621.161343.181101055.davem@davemloft.net> <200906220145.03923.bzolnier@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Sun, 21 Jun 2009 18:56:21 -0700 (PDT)
+Message-ID: <20090621.185621.31766784.davem@davemloft.net>
+References: <200906202352.33894.elendil@planet.nl>
+	<20090620.171945.140676687.davem@davemloft.net>
+	<200906211446.38598.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42744 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066AbZFVAxX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Jun 2009 20:53:23 -0400
-Content-Disposition: inline
-In-Reply-To: <200906220145.03923.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <200906211446.38598.elendil@planet.nl>
+Sender: sparclinux-owner@vger.kernel.org
+To: elendil@planet.nl
+Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 22, 2009 at 01:45:03AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 22 June 2009 01:13:43 David Miller wrote:
-> > From: David Miller <davem@davemloft.net>
-> > Date: Sun, 21 Jun 2009 15:57:56 -0700 (PDT)
-> > 
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Date: Mon, 22 Jun 2009 00:34:22 +0200
-> > > 
-> > >> Lets get over this quickly, since you seem to have such a great
-> > >> insight into running IDE layer here is a little proposition..
-> > >> 
-> > >> ACK?  [ If not than can we please get back with the program? ]
-> > > 
-> > > Acked-by: David S. Miller <davem@davemloft.net>
-> > 
-> > I'm going to treat IDE as pure legacy, rather than as competition
-> > with the PATA drivers which is what people whould be moving over to.
-> > 
-> > And more importantly I refuse to apply any driver patch that isn't
-> > actually tested on said hardware.
-> > 
-> > ide: Take over as maintainer.
+From: Frans Pop <elendil@planet.nl>
+Date: Sun, 21 Jun 2009 14:46:37 +0200
+
+> I tried the following additional patch, but unfortunately that did not help:
+> --- a/drivers/ide/cmd64x.c
+> +++ b/drivers/ide/cmd64x.c
+> @@ -426,6 +426,7 @@ static const struct ide_port_info cmd64x_chipsets[]
+>  		.port_ops	= &cmd64x_port_ops,
+>  		.dma_ops	= &cmd648_dma_ops,
+>  		.host_flags	= IDE_HFLAG_ABUSE_PREFETCH,
+> +		.irq_flags	= IRQF_SHARED,
+>  		.pio_mask	= ATA_PIO5,
+>  		.mwdma_mask	= ATA_MWDMA2,
+>  		.udma_mask	= ATA_UDMA2,
 > 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> You have my full support (don't hesitate to ping me if you need some
-> help) and I hope that the last few years of my of work would make your
-> job relatively easy and painless.
-> 
-> I would also like to use this occasion and thank all the people who
-> have been contributing to the project during my reign.  Thanks!!
+> I got the idea for that from 255115fb and had hoped it would compensate
+> for this change from Bart's commit:
 
-Thanks, Bart.
+That won't help.  All PCI IDE interfaces unconditionally set the
+irq_flags to IRQF_SHARED.  This occurs in drivers/ide/setup-pci.c
+via ide_pci_init_one(), which calls ide_pci_init_two(), which goes:
 
-It isn't easy to be maintainer of a subsystem that is being obsoleted
-by another.  It's even less easy to gracefully hand over maintenance,
-as you have done.  Personally, I'd love it if you could contribute to
-the ATA drivers in the future.  I think there are a number of ways they
-could stand to be improved.
+	host->irq_flags = IRQF_SHARED;
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+The key to this bug seems to be the setting of host->cur_port when the
+interrupts arrive.  That's really the only major case where the IDE
+driver interrupt handler elides at least reading the status register
+to clear the interrupt.
+
+That's why clearing the IDE_HFLAG_SERIALIZE flag makes the initial
+bulk of unclearable interrupts go away.
+
+I suspect that whatever is causing trouble due to IDE_HFLAG_SERIALIZE
+is also, down the road, causing the hdd problem you still see.
+
+Can you apply this debugging patch and print out the output?
+
+Thanks!
+
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 1059f80..8992fda 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -797,6 +797,25 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ 	int plug_device = 0;
+ 	struct request *uninitialized_var(rq_in_flight);
+ 
++#if 1
++	{
++		static int times = 0;
++		
++		if (++times <= 32)
++			goto no_log;
++
++		printk(KERN_INFO "IDE-DEBUG: host->host_flags[0x%lx] "
++		       "hwif(%p) host->cur_port(%p) "
++		       "hwif->port_ops(%pS) hwif->handler(%pS) "
++		       "hwif->polling(%d)\n",
++		       host->host_flags, hwif, host->cur_port,
++		       hwif->port_ops, hwif->handler, (int) hwif->polling);
++
++	no_log:
++		;
++	}
++#endif
++
+ 	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
+ 		if (hwif != host->cur_port)
+ 			goto out_early;
