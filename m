@@ -1,58 +1,42 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: [PATCH] IDE: Save a call to PageHighMem()
-Date: Tue, 23 Jun 2009 10:12:39 +0200
-Message-ID: <20090623101239.2f510604@hyperion.delvare>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: [PATCH] ide-cd: Improve "weird block size" error message
+Date: Tue, 23 Jun 2009 10:20:45 +0200
+Message-ID: <200906231020.47054.elendil@planet.nl>
+References: <200906211446.38598.elendil@planet.nl> <200906230951.24615.elendil@planet.nl> <20090623075733.GA14790@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zone0.gcu-squad.org ([212.85.147.21]:17794 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbZFWIMt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 04:12:49 -0400
+Received: from Cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:50669 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751107AbZFWIUp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 04:20:45 -0400
+In-Reply-To: <20090623075733.GA14790@liondog.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-PageHighMem() isn't cheap so avoid calling it twice on the same page.
+On Tuesday 23 June 2009, Borislav Petkov wrote:
+> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> > index 4a19686..7ec6996 100644
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -886,10 +886,9 @@ static int cdrom_read_capacity(ide_drive_t
+> > *drive, unsigned long *capacity, case 4096:
+> >  		break;
+> >  	default:
+> > -		printk(KERN_ERR PFX "%s: weird block size %u\n",
+> > +		printk_once(KERN_ERR PFX "%s: weird block size %u; "
+                                                          ^^^^^^^
+> > +				"setting default block size to 2048\n",
+> >  				drive->name, blocklen);
+> > -		printk(KERN_ERR PFX "%s: default to 2kb block size\n",
+> > -				drive->name);
+>
+> Please leave the weird block size in the printk since it sometimes
+> might give insights on what is going on.
 
-Signed-off-by: Jean Delvare <khali@linux-fr.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-taskfile.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
---- linux-2.6.31-pre.orig/drivers/ide/ide-taskfile.c	2009-06-23 09:01:10.000000000 +0200
-+++ linux-2.6.31-pre/drivers/ide/ide-taskfile.c	2009-06-23 09:50:33.000000000 +0200
-@@ -236,6 +236,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
- 
- 	while (len) {
- 		unsigned nr_bytes = min(len, cursg->length - cmd->cursg_ofs);
-+		int page_is_high;
- 
- 		if (nr_bytes > PAGE_SIZE)
- 			nr_bytes = PAGE_SIZE;
-@@ -247,7 +248,8 @@ void ide_pio_bytes(ide_drive_t *drive, s
- 		page = nth_page(page, (offset >> PAGE_SHIFT));
- 		offset %= PAGE_SIZE;
- 
--		if (PageHighMem(page))
-+		page_is_high = PageHighMem(page);
-+		if (page_is_high)
- 			local_irq_save(flags);
- 
- 		buf = kmap_atomic(page, KM_BIO_SRC_IRQ) + offset;
-@@ -268,7 +270,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
- 
- 		kunmap_atomic(buf, KM_BIO_SRC_IRQ);
- 
--		if (PageHighMem(page))
-+		if (page_is_high)
- 			local_irq_restore(flags);
- 
- 		len -= nr_bytes;
-
-
--- 
-Jean Delvare
+I did :-)
