@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [patch 1/6] ide: add QUANTUM FIREBALLct20 30 with firmware APL.090 to ivb_list[]
-Date: Tue, 23 Jun 2009 23:24:37 +0200
-Message-ID: <200906232324.37615.bzolnier@gmail.com>
+Subject: [patch 2/6] ide: fix ide_kill_rq() for special ide-{floppy,tape} driver requests
+Date: Tue, 23 Jun 2009 23:26:06 +0200
+Message-ID: <200906232326.06830.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:35567 "EHLO
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:38080 "EHLO
 	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbZFWVca (ORCPT
+	with ESMTP id S1753387AbZFWVca (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 17:32:30 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,27 +18,29 @@ To: David Miller <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add QUANTUM FIREBALLct20 30 with firmware APL.090 to ivb_list[]
+Subject: [PATCH] ide: fix ide_kill_rq() for special ide-{floppy,tape} driver requests
+
+Such requests should be failed with -EIO (like all other requests
+in this function) instead of being completed successfully.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-This disk supports UDMA modes > 2.  According to the old bugreport it needs
-forced cable detection when using 80-wire cable and id dump suggested that
-ivb quirk should be used to fix the problem.  Unfortunately I never received
-any feedback about the patch from the bugreporter.
+Untested, you may try pinging Borislav and/or Tejun about possible
+testing if you would like to verify the patch before applying.
 
- drivers/ide/ide-iops.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/ide/ide-io.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ide/ide-iops.c
+Index: b/drivers/ide/ide-io.c
 ===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -210,6 +210,7 @@ EXPORT_SYMBOL_GPL(ide_in_drive_list);
-  */
- static const struct drive_list_entry ivb_list[] = {
- 	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
-+	{ "QUANTUM FIREBALLlct20 30"	, "APL.0900"	},
- 	{ "TSSTcorp CDDVDW SH-S202J"	, "SB00"	},
- 	{ "TSSTcorp CDDVDW SH-S202J"	, "SB01"	},
- 	{ "TSSTcorp CDDVDW SH-S202N"	, "SB00"	},
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -152,7 +152,7 @@ void ide_kill_rq(ide_drive_t *drive, str
+ 
+ 	if ((media == ide_floppy || media == ide_tape) && drv_req) {
+ 		rq->errors = 0;
+-		ide_complete_rq(drive, 0, blk_rq_bytes(rq));
++		ide_complete_rq(drive, -EIO, blk_rq_bytes(rq));
+ 	} else {
+ 		if (media == ide_tape)
+ 			rq->errors = IDE_DRV_ERROR_GENERAL;
