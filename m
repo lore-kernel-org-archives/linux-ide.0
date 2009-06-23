@@ -1,59 +1,58 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] ide-cd: Improve "weird block size" error message
-Date: Tue, 23 Jun 2009 10:02:23 +0200
-Message-ID: <20090623080223.GA19253@liondog.tnic>
-References: <200906211446.38598.elendil@planet.nl> <200906222101.38586.elendil@planet.nl> <200906222335.06700.bzolnier@gmail.com> <200906230951.24615.elendil@planet.nl> <20090623075733.GA14790@liondog.tnic>
+From: Jean Delvare <khali@linux-fr.org>
+Subject: [PATCH] IDE: Save a call to PageHighMem()
+Date: Tue, 23 Jun 2009 10:12:39 +0200
+Message-ID: <20090623101239.2f510604@hyperion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:52927 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbZFWICZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 04:02:25 -0400
-Content-Disposition: inline
-In-Reply-To: <20090623075733.GA14790@liondog.tnic>
+Received: from zone0.gcu-squad.org ([212.85.147.21]:17794 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbZFWIMt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 04:12:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Jun 23, 2009 at 09:57:33AM +0200, Borislav Petkov wrote:
-> On Tue, Jun 23, 2009 at 09:51:23AM +0200, Frans Pop wrote:
-> 
-> [..]
-> 
-> > ---
-> > From: Frans Pop <elendil@planet.nl>
-> > Subject: ide-cd: Improve "weird block size" error message
-> > 
-> > Currently the error gets repeated too frequently, for example
-> > each time HAL polls the device when a disc is present. Avoid that
-> > by using printk_once instead of printk.
-> > Also join the error and corrective action messages into a single line.
-> > 
-> > Signed-off-by: Frans Pop <elendil@planet.nl>
-> > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > 
-> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> > index 4a19686..7ec6996 100644
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -886,10 +886,9 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
-> >  	case 4096:
-> >  		break;
-> >  	default:
-> > -		printk(KERN_ERR PFX "%s: weird block size %u\n",
-> > +		printk_once(KERN_ERR PFX "%s: weird block size %u; "
-> > +				"setting default block size to 2048\n",
-> >  				drive->name, blocklen);
-> > -		printk(KERN_ERR PFX "%s: default to 2kb block size\n",
-> > -				drive->name);
->
+PageHighMem() isn't cheap so avoid calling it twice on the same page.
 
-Ah, nevermind! Hadn't had a coffee yet, sorry :).
+Signed-off-by: Jean Delvare <khali@linux-fr.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-taskfile.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
+--- linux-2.6.31-pre.orig/drivers/ide/ide-taskfile.c	2009-06-23 09:01:10.000000000 +0200
++++ linux-2.6.31-pre/drivers/ide/ide-taskfile.c	2009-06-23 09:50:33.000000000 +0200
+@@ -236,6 +236,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 
+ 	while (len) {
+ 		unsigned nr_bytes = min(len, cursg->length - cmd->cursg_ofs);
++		int page_is_high;
+ 
+ 		if (nr_bytes > PAGE_SIZE)
+ 			nr_bytes = PAGE_SIZE;
+@@ -247,7 +248,8 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 		page = nth_page(page, (offset >> PAGE_SHIFT));
+ 		offset %= PAGE_SIZE;
+ 
+-		if (PageHighMem(page))
++		page_is_high = PageHighMem(page);
++		if (page_is_high)
+ 			local_irq_save(flags);
+ 
+ 		buf = kmap_atomic(page, KM_BIO_SRC_IRQ) + offset;
+@@ -268,7 +270,7 @@ void ide_pio_bytes(ide_drive_t *drive, s
+ 
+ 		kunmap_atomic(buf, KM_BIO_SRC_IRQ);
+ 
+-		if (PageHighMem(page))
++		if (page_is_high)
+ 			local_irq_restore(flags);
+ 
+ 		len -= nr_bytes;
+
 
 -- 
-Regards/Gruss,
-    Boris.
+Jean Delvare
