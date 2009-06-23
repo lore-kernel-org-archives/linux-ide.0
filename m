@@ -1,172 +1,48 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [patch 5/6] ide: fix races in handling of user-space SET XFER commands
-Date: Tue, 23 Jun 2009 23:35:51 +0200
-Message-ID: <200906232335.51621.bzolnier@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide-cd: Improve "weird block size" error message
+Date: Tue, 23 Jun 2009 16:01:23 -0700 (PDT)
+Message-ID: <20090623.160123.142620779.davem@davemloft.net>
+References: <200906230951.24615.elendil@planet.nl>
+	<20090623.035926.155211513.davem@davemloft.net>
+	<200906232330.20519.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:41020 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758019AbZFWVcf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 17:32:35 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760196AbZFWXBa@vger.kernel.org>
+In-Reply-To: <200906232330.20519.elendil@planet.nl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: elendil@planet.nl
+Cc: bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix races in handling of user-space SET XFER commands
+From: Frans Pop <elendil@planet.nl>
+Date: Tue, 23 Jun 2009 23:30:18 +0200
 
-* Make cmd->tf_flags field 'u16' and add IDE_TFLAG_SET_XFER taskfile flag.
+> On Tuesday 23 June 2009, David Miller wrote:
+>> ide-cd: Don't warn on bogus block size unless it actually matters.
+>>
+>> Frans Pop reported that his CDROM drive reports a blocksize of 2352,
+>> and this causes new warnings due to commit
+>> e8e7b9eb11c34ee18bde8b7011af41938d1ad667 ("ide-cd: fix oops when using
+>> growisofs").
+>>
+>> What we're trying to do is make sure that "blocklen >> SECTOR_BITS"
+>> is something the block layer won't choke on.
+>>
+>> And for Frans case "2352 >> SECTOR_BITS" is equal to
+>> "2048 >> SECTOR_BITS", and thats "4".
+> 
+> Pedantic correction: Frans' case
 
-* Update ide_finish_cmd() to set xfer / re-read id if the new flag is set.
+Corrected, thanks.
 
-* Convert set_xfer_rate() (write handler for /proc/ide/hd?/current_speed)
-  and ide_cmd_ioctl() (HDIO_DRIVE_CMD ioctl handler) to use the new flag.
+>> So warning in this case gives no real benefit.
+>>
+>> Reported-by: Frans Pop <elendil@planet.nl>
+>> Signed-off-by: David S. Miller <davem@davemloft.net>
+> 
+> As expected, it's gone. Nice.
+> 
+> Tested-by: Frans Pop <elendil@planet.nl>
 
-* Remove no longer needed disable_irq_nosync() + enable_irq() from
-  ide_config_drive_speed().
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-These races are easily triggable (i.e. 'hdparm -Xmode' results in the "bad
-status" error during ide_driveid_update() phase) and I was no longer able to
-reproduce them with this patch applied.
-
- drivers/ide/ide-ioctls.c   |    8 ++------
- drivers/ide/ide-iops.c     |   10 ----------
- drivers/ide/ide-proc.c     |   10 ++--------
- drivers/ide/ide-taskfile.c |    9 ++++++++-
- include/linux/ide.h        |    3 ++-
- 5 files changed, 14 insertions(+), 26 deletions(-)
-
-Index: b/drivers/ide/ide-ioctls.c
-===================================================================
---- a/drivers/ide/ide-ioctls.c
-+++ b/drivers/ide/ide-ioctls.c
-@@ -166,6 +166,8 @@ static int ide_cmd_ioctl(ide_drive_t *dr
- 			err = -EINVAL;
- 			goto abort;
- 		}
-+
-+		cmd.tf_flags |= IDE_TFLAG_SET_XFER;
- 	}
- 
- 	err = ide_raw_taskfile(drive, &cmd, buf, args[3]);
-@@ -173,12 +175,6 @@ static int ide_cmd_ioctl(ide_drive_t *dr
- 	args[0] = tf->status;
- 	args[1] = tf->error;
- 	args[2] = tf->nsect;
--
--	if (!err && xfer_rate) {
--		/* active-retuning-calls future */
--		ide_set_xfer_rate(drive, xfer_rate);
--		ide_driveid_update(drive);
--	}
- abort:
- 	if (copy_to_user((void __user *)arg, &args, 4))
- 		err = -EFAULT;
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -363,14 +363,6 @@ int ide_config_drive_speed(ide_drive_t *
- 	 * this point (lost interrupt).
- 	 */
- 
--	/*
--	 *	FIXME: we race against the running IRQ here if
--	 *	this is called from non IRQ context. If we use
--	 *	disable_irq() we hang on the error path. Work
--	 *	is needed.
--	 */
--	disable_irq_nosync(hwif->irq);
--
- 	udelay(1);
- 	tp_ops->dev_select(drive);
- 	SELECT_MASK(drive, 1);
-@@ -394,8 +386,6 @@ int ide_config_drive_speed(ide_drive_t *
- 
- 	SELECT_MASK(drive, 0);
- 
--	enable_irq(hwif->irq);
--
- 	if (error) {
- 		(void) ide_dump_status(drive, "set_drive_speed_status", stat);
- 		return error;
-Index: b/drivers/ide/ide-proc.c
-===================================================================
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -195,7 +195,6 @@ ide_devset_get(xfer_rate, current_speed)
- static int set_xfer_rate (ide_drive_t *drive, int arg)
- {
- 	struct ide_cmd cmd;
--	int err;
- 
- 	if (arg < XFER_PIO_0 || arg > XFER_UDMA_6)
- 		return -EINVAL;
-@@ -206,14 +205,9 @@ static int set_xfer_rate (ide_drive_t *d
- 	cmd.tf.nsect   = (u8)arg;
- 	cmd.valid.out.tf = IDE_VALID_FEATURE | IDE_VALID_NSECT;
- 	cmd.valid.in.tf  = IDE_VALID_NSECT;
-+	cmd.tf_flags   = IDE_TFLAG_SET_XFER;
- 
--	err = ide_no_data_taskfile(drive, &cmd);
--
--	if (!err) {
--		ide_set_xfer_rate(drive, (u8) arg);
--		ide_driveid_update(drive);
--	}
--	return err;
-+	return ide_no_data_taskfile(drive, &cmd);
- }
- 
- ide_devset_rw(current_speed, xfer_rate);
-Index: b/drivers/ide/ide-taskfile.c
-===================================================================
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -322,10 +322,17 @@ static void ide_error_cmd(ide_drive_t *d
- void ide_finish_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat)
- {
- 	struct request *rq = drive->hwif->rq;
--	u8 err = ide_read_error(drive);
-+	u8 err = ide_read_error(drive), nsect = cmd->tf.nsect;
-+	u8 set_xfer = !!(cmd->tf_flags & IDE_TFLAG_SET_XFER);
- 
- 	ide_complete_cmd(drive, cmd, stat, err);
- 	rq->errors = err;
-+
-+	if (err == 0 && set_xfer) {
-+		ide_set_xfer_rate(drive, nsect);
-+		ide_driveid_update(drive);
-+	}
-+
- 	ide_complete_rq(drive, err ? -EIO : 0, blk_rq_bytes(rq));
- }
- 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -258,6 +258,7 @@ enum {
- 	IDE_TFLAG_DYN			= (1 << 5),
- 	IDE_TFLAG_FS			= (1 << 6),
- 	IDE_TFLAG_MULTI_PIO		= (1 << 7),
-+	IDE_TFLAG_SET_XFER		= (1 << 8),
- };
- 
- enum {
-@@ -294,7 +295,7 @@ struct ide_cmd {
- 		} out, in;
- 	} valid;
- 
--	u8			tf_flags;
-+	u16			tf_flags;
- 	u8			ftf_flags;	/* for TASKFILE ioctl */
- 	int			protocol;
- 
+Applied, thanks for testing!
