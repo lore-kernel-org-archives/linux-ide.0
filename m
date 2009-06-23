@@ -1,39 +1,44 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [patch 0/6] ide: various bugfixes
-Date: Tue, 23 Jun 2009 23:23:30 +0200
-Message-ID: <200906232323.30762.bzolnier@gmail.com>
+Subject: [patch 1/6] ide: add QUANTUM FIREBALLct20 30 with firmware APL.090 to ivb_list[]
+Date: Tue, 23 Jun 2009 23:24:37 +0200
+Message-ID: <200906232324.37615.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:41020 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbZFWVc3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 17:32:29 -0400
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:35567 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbZFWVca (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 17:32:30 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: David Miller <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: add QUANTUM FIREBALLct20 30 with firmware APL.090 to ivb_list[]
 
-Hi Dave,
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+This disk supports UDMA modes > 2.  According to the old bugreport it needs
+forced cable detection when using 80-wire cable and id dump suggested that
+ivb quirk should be used to fix the problem.  Unfortunately I never received
+any feedback about the patch from the bugreporter.
 
-As discussed before, here is the rest of my private bugfix queue.
+ drivers/ide/ide-iops.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-All patches contain an extra info about the testing they have
-received to make your decisions w.r.t. handling of them easier.
-
-diffstat:
- drivers/ide/ide-devsets.c  |    2 -
- drivers/ide/ide-eh.c       |    2 -
- drivers/ide/ide-floppy.c   |    2 -
- drivers/ide/ide-io.c       |   70 ++++++++++++++++-----------------------------
- drivers/ide/ide-ioctls.c   |    8 +----
- drivers/ide/ide-iops.c     |   17 ++--------
- drivers/ide/ide-probe.c    |   31 +++++++++++++------
- drivers/ide/ide-proc.c     |   10 +-----
- drivers/ide/ide-taskfile.c |    9 +++++
- include/linux/ide.h        |    7 ++--
- 10 files changed, 69 insertions(+), 89 deletions(-)
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -210,6 +210,7 @@ EXPORT_SYMBOL_GPL(ide_in_drive_list);
+  */
+ static const struct drive_list_entry ivb_list[] = {
+ 	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
++	{ "QUANTUM FIREBALLlct20 30"	, "APL.0900"	},
+ 	{ "TSSTcorp CDDVDW SH-S202J"	, "SB00"	},
+ 	{ "TSSTcorp CDDVDW SH-S202J"	, "SB01"	},
+ 	{ "TSSTcorp CDDVDW SH-S202N"	, "SB00"	},
