@@ -1,16 +1,16 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [patch 6/6] ide: improve handling of Power Management requests
-Date: Tue, 23 Jun 2009 23:35:56 +0200
-Message-ID: <200906232335.57161.bzolnier@gmail.com>
+Subject: [patch 4/6] ide: allow ide_dev_read_id() to be called from the IRQ context
+Date: Tue, 23 Jun 2009 23:29:11 +0200
+Message-ID: <200906232329.11648.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:35567 "EHLO
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:48931 "EHLO
 	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758152AbZFWVcf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 17:32:35 -0400
+	with ESMTP id S1757936AbZFWVcc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 17:32:32 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,99 +18,151 @@ To: David Miller <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: improve handling of Power Management requests
+Subject: [PATCH] ide: allow ide_dev_read_id() to be called from the IRQ context
 
-Make hwif->rq point to PM request during PM sequence and do not allow
-any other types of requests to slip in (the old comment was never correct
-as there should be no such requests generated during PM sequence).
+* Un-static __ide_wait_stat().
+
+* Allow ide_dev_read_id() helper to be called from the IRQ context by
+  adding irq_ctx flag and using mdelay()/__ide_wait_stat() when needed.
+
+* Switch ide_driveid_update() to set irq_ctx flag.
+
+This change is needed for the consecutive patch which fixes races in
+handling of user-space SET XFER commands but for improved bisectability
+and clarity it is better to do it in a separate patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-This was tested in the past (with an additional testing from Borislav)
-however there were block layer changes in the meantime so you may want
-to give it some more testing time just to be sure.
+I'm not completely happy with this version of patch since I originally
+intended to unify ide_busy_sleep() with __ide_wait_stat() first..
 
- drivers/ide/ide-io.c |   54 ++++++++++++++++++++-------------------------------
- 1 file changed, 22 insertions(+), 32 deletions(-)
+ drivers/ide/ide-iops.c  |    6 +++---
+ drivers/ide/ide-probe.c |   31 +++++++++++++++++++++----------
+ include/linux/ide.h     |    3 ++-
+ 3 files changed, 26 insertions(+), 14 deletions(-)
 
-Index: b/drivers/ide/ide-io.c
+Index: b/drivers/ide/ide-iops.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -466,10 +466,14 @@ void do_ide_request(struct request_queue
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -102,8 +102,8 @@ EXPORT_SYMBOL(ide_fixstring);
+  * setting a timer to wake up at half second intervals thereafter,
+  * until timeout is achieved, before timing out.
+  */
+-static int __ide_wait_stat(ide_drive_t *drive, u8 good, u8 bad,
+-			   unsigned long timeout, u8 *rstat)
++int __ide_wait_stat(ide_drive_t *drive, u8 good, u8 bad,
++		    unsigned long timeout, u8 *rstat)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+@@ -316,7 +316,7 @@ int ide_driveid_update(ide_drive_t *driv
+ 		return 0;
  
- 	if (!ide_lock_port(hwif)) {
- 		ide_hwif_t *prev_port;
+ 	SELECT_MASK(drive, 1);
+-	rc = ide_dev_read_id(drive, ATA_CMD_ID_ATA, id);
++	rc = ide_dev_read_id(drive, ATA_CMD_ID_ATA, id, 1);
+ 	SELECT_MASK(drive, 0);
+ 
+ 	if (rc)
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -238,6 +238,7 @@ static void do_identify(ide_drive_t *dri
+  *	@drive: drive to identify
+  *	@cmd: command to use
+  *	@id: buffer for IDENTIFY data
++ *	@irq_ctx: flag set when called from the IRQ context
+  *
+  *	Sends an ATA(PI) IDENTIFY request to a drive and waits for a response.
+  *
+@@ -246,7 +247,7 @@ static void do_identify(ide_drive_t *dri
+  *			2  device aborted the command (refused to identify itself)
+  */
+ 
+-int ide_dev_read_id(ide_drive_t *drive, u8 cmd, u16 *id)
++int ide_dev_read_id(ide_drive_t *drive, u8 cmd, u16 *id, int irq_ctx)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+@@ -263,7 +264,10 @@ int ide_dev_read_id(ide_drive_t *drive, 
+ 		tp_ops->write_devctl(hwif, ATA_NIEN | ATA_DEVCTL_OBS);
+ 
+ 	/* take a deep breath */
+-	msleep(50);
++	if (irq_ctx)
++		mdelay(50);
++	else
++		msleep(50);
+ 
+ 	if (io_ports->ctl_addr &&
+ 	    (hwif->host_flags & IDE_HFLAG_BROKEN_ALTSTATUS) == 0) {
+@@ -295,12 +299,19 @@ int ide_dev_read_id(ide_drive_t *drive, 
+ 
+ 	timeout = ((cmd == ATA_CMD_ID_ATA) ? WAIT_WORSTCASE : WAIT_PIDENTIFY) / 2;
+ 
+-	if (ide_busy_sleep(drive, timeout, use_altstatus))
+-		return 1;
 -
--		WARN_ON_ONCE(hwif->rq);
- repeat:
- 		prev_port = hwif->host->cur_port;
+ 	/* wait for IRQ and ATA_DRQ */
+-	msleep(50);
+-	s = tp_ops->read_status(hwif);
++	if (irq_ctx) {
++		rc = __ide_wait_stat(drive, ATA_DRQ, BAD_R_STAT, timeout, &s);
++		if (rc)
++			return 1;
++	} else {
++		rc = ide_busy_sleep(drive, timeout, use_altstatus);
++		if (rc)
++			return 1;
 +
-+		if (drive->dev_flags & IDE_DFLAG_BLOCKED)
-+			rq = hwif->rq;
-+		else
-+			WARN_ON_ONCE(hwif->rq);
-+
- 		if (drive->dev_flags & IDE_DFLAG_SLEEPING &&
- 		    time_after(drive->sleep, jiffies)) {
- 			ide_unlock_port(hwif);
-@@ -496,43 +500,29 @@ repeat:
- 		hwif->cur_dev = drive;
- 		drive->dev_flags &= ~(IDE_DFLAG_SLEEPING | IDE_DFLAG_PARKED);
++		msleep(50);
++		s = tp_ops->read_status(hwif);
++	}
  
--		spin_unlock_irq(&hwif->lock);
--		spin_lock_irq(q->queue_lock);
--		/*
--		 * we know that the queue isn't empty, but this can happen
--		 * if the q->prep_rq_fn() decides to kill a request
--		 */
--		if (!rq)
-+		if (rq == NULL) {
-+			spin_unlock_irq(&hwif->lock);
-+			spin_lock_irq(q->queue_lock);
-+			/*
-+			 * we know that the queue isn't empty, but this can
-+			 * happen if ->prep_rq_fn() decides to kill a request
-+			 */
- 			rq = blk_fetch_request(drive->queue);
-+			spin_unlock_irq(q->queue_lock);
-+			spin_lock_irq(&hwif->lock);
+ 	if (OK_STAT(s, ATA_DRQ, BAD_R_STAT)) {
+ 		/* drive returned ID */
+@@ -406,10 +417,10 @@ static int do_probe (ide_drive_t *drive,
  
--		spin_unlock_irq(q->queue_lock);
--		spin_lock_irq(&hwif->lock);
--
--		if (!rq) {
--			ide_unlock_port(hwif);
--			goto out;
-+			if (rq == NULL) {
-+				ide_unlock_port(hwif);
-+				goto out;
-+			}
+ 	if (OK_STAT(stat, ATA_DRDY, ATA_BUSY) ||
+ 	    present || cmd == ATA_CMD_ID_ATAPI) {
+-		rc = ide_dev_read_id(drive, cmd, id);
++		rc = ide_dev_read_id(drive, cmd, id, 0);
+ 		if (rc)
+ 			/* failed: try again */
+-			rc = ide_dev_read_id(drive, cmd, id);
++			rc = ide_dev_read_id(drive, cmd, id, 0);
+ 
+ 		stat = tp_ops->read_status(hwif);
+ 
+@@ -424,7 +435,7 @@ static int do_probe (ide_drive_t *drive,
+ 			msleep(50);
+ 			tp_ops->exec_command(hwif, ATA_CMD_DEV_RESET);
+ 			(void)ide_busy_sleep(drive, WAIT_WORSTCASE, 0);
+-			rc = ide_dev_read_id(drive, cmd, id);
++			rc = ide_dev_read_id(drive, cmd, id, 0);
  		}
  
- 		/*
- 		 * Sanity: don't accept a request that isn't a PM request
--		 * if we are currently power managed. This is very important as
--		 * blk_stop_queue() doesn't prevent the blk_fetch_request()
--		 * above to return us whatever is in the queue. Since we call
--		 * ide_do_request() ourselves, we end up taking requests while
--		 * the queue is blocked...
--		 * 
--		 * We let requests forced at head of queue with ide-preempt
--		 * though. I hope that doesn't happen too much, hopefully not
--		 * unless the subdriver triggers such a thing in its own PM
--		 * state machine.
-+		 * if we are currently power managed.
- 		 */
--		if ((drive->dev_flags & IDE_DFLAG_BLOCKED) &&
--		    blk_pm_request(rq) == 0 &&
--		    (rq->cmd_flags & REQ_PREEMPT) == 0) {
--			/* there should be no pending command at this point */
--			ide_unlock_port(hwif);
--			goto plug_device;
--		}
-+		BUG_ON((drive->dev_flags & IDE_DFLAG_BLOCKED) &&
-+		       blk_pm_request(rq) == 0);
+ 		/* ensure drive IRQ is clear */
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1081,6 +1081,7 @@ extern void ide_fixstring(u8 *, const in
  
- 		hwif->rq = rq;
+ int ide_busy_sleep(ide_drive_t *, unsigned long, int);
  
++int __ide_wait_stat(ide_drive_t *, u8, u8, unsigned long, u8 *);
+ int ide_wait_stat(ide_startstop_t *, ide_drive_t *, u8, u8, unsigned long);
+ 
+ ide_startstop_t ide_do_park_unpark(ide_drive_t *, struct request *);
+@@ -1169,7 +1170,7 @@ int ide_no_data_taskfile(ide_drive_t *, 
+ 
+ int ide_taskfile_ioctl(ide_drive_t *, unsigned long);
+ 
+-int ide_dev_read_id(ide_drive_t *, u8, u16 *);
++int ide_dev_read_id(ide_drive_t *, u8, u16 *, int);
+ 
+ extern int ide_driveid_update(ide_drive_t *);
+ extern int ide_config_drive_speed(ide_drive_t *, u8);
