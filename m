@@ -1,38 +1,32 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] IDE: Silent compiler warning in ide_pio_bytes()
-Date: Tue, 23 Jun 2009 02:32:11 -0700 (PDT)
-Message-ID: <20090623.023211.06996077.davem@davemloft.net>
-References: <20090622211052.45b3cfc5@hyperion.delvare>
-	<20090622.161059.69648151.davem@davemloft.net>
-	<20090623085324.03b25bb9@hyperion.delvare>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] IDE: Save a call to PageHighMem()
+Date: Tue, 23 Jun 2009 11:48:31 +0200
+Message-ID: <200906231148.32675.bzolnier@gmail.com>
+References: <20090623101239.2f510604@hyperion.delvare>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37871
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751370AbZFWJcH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 05:32:07 -0400
-In-Reply-To: <20090623085324.03b25bb9@hyperion.delvare>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:60491 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752157AbZFWJnB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 05:43:01 -0400
+Received: by fxm9 with SMTP id 9so122248fxm.37
+        for <linux-ide@vger.kernel.org>; Tue, 23 Jun 2009 02:43:03 -0700 (PDT)
+In-Reply-To: <20090623101239.2f510604@hyperion.delvare>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: khali@linux-fr.org
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, petkovbb@googlemail.com
+To: Jean Delvare <khali@linux-fr.org>
+Cc: linux-ide@vger.kernel.org, David Miller <davem@davemloft.net>
 
-From: Jean Delvare <khali@linux-fr.org>
-Date: Tue, 23 Jun 2009 08:53:24 +0200
-
-> I fear somebody else will have to do that. I personally think
-> uninitialized_var() should not have been invented, I don't want to have
-> my name associated with any of its uses for it will inevitably lead to
-> bugs in the future.
+On Tuesday 23 June 2009 10:12:39 Jean Delvare wrote:
+> PageHighMem() isn't cheap so avoid calling it twice on the same page.
 > 
-> I'll resubmit a patch not fixing the warning (because the rest is still
-> useful I think) but that's about all I can offer.
+> Signed-off-by: Jean Delvare <khali@linux-fr.org>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-The alternative will be that someone will ask "when does the '0' case
-get used" and have to sort through that and potentially ask people
-here on the lists.
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-But you posted and update patch which solves the problem in an
-even nicer way :-)
+PS Please send IDE patches to Dave in the future, thanks.
