@@ -1,104 +1,31 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
-Date: Tue, 23 Jun 2009 16:58:54 +0200
-Message-ID: <200906231658.56489.elendil@planet.nl>
-References: <200906221938.27574.bzolnier@gmail.com> <200906222335.06700.bzolnier@gmail.com> <20090623.031506.214747802.davem@davemloft.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] cs5520: add missing IRQ setup for the second port
+Date: Tue, 23 Jun 2009 16:33:24 +0100
+Message-ID: <20090623163324.715421f5@lxorguk.ukuu.org.uk>
+References: <200906221348.02632.bzolnier@gmail.com>
+	<200906230158.12805.elendil@planet.nl>
+	<20090623094206.4d1f1b5b@lxorguk.ukuu.org.uk>
+	<200906231159.01295.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:58347 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754232AbZFWO6z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 10:58:55 -0400
-In-Reply-To: <20090623.031506.214747802.davem@davemloft.net>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56842 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760792AbZFWPcD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 11:32:03 -0400
+In-Reply-To: <200906231159.01295.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Frans Pop <elendil@planet.nl>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 23 June 2009, you wrote:
-> We might need to bisect this one.  But Frans, just for the record
-> could you simply test reverting just that hunk?  Thanks!
+> > The cs5520 isn't a standard IDE controller in the first place and doesn't
+> > have two channels anyway. It's special as it uses non standard bar
+> 
+> Please note that both cs5520.c / pata_cs5520.c assume that the controller
+> has two ports (please verify whether they need some fixing, thanks)..
 
-I'm way ahead of you :-)
+It can it turns out have two if the relevant external logic is present.
 
-Instead of a bisect [1] I decided to first see if some printks in both .26 
-and .31 would show anything useful.
-
-With 2.6.31 and code included below I get:
-hda: ST34342A, ATA DISK drive
-FJP: id_dma_bug 0x7: &4: 0x0-0x4 no error
-hda: MWDMA2 mode selected
-hdc: Maxtor 6E040L0, ATA DISK drive
-hdd: CD-ROM 56X/AKH, ATAPI CD/DVD-ROM drive
-hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-FJP: ID_FIELD_VALID: 0x7 (true)
-FJP: id_dma_bug 0x7: &4: 0x0-0x4 no error
-hdc: MWDMA2 mode selected
-hdd: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-FJP: ID_FIELD_VALID: 0x2 (true)
-FJP: id_dma_bug 0x2: &2: 0x1-0x1 bad modes		<-------------
-hdd: bad DMA info in identify block
-
-Note that this included a complete revert of 8d64fcd9 (with minor conflict 
-resolved).
-
-Here's the same output with 2.6.26.3 with equivalent debug statements:
-hda: ST34342A, ATA DISK drive
-FJP: id_dma_bug 0x7: &4: 0x0-0x0 no error
-hda: MWDMA2 mode selected
-hdc: Maxtor 6E040L0, ATA DISK drive
-hdd: CD-ROM 56X/AKH, ATAPI CD/DVD-ROM drive
-FJP: id_dma_bug 0x7: &4: 0x0-0x0 no error
-hdc: MWDMA2 mode selected
-FJP: id_dma_bug 0x2: &2: 0x0-0x0 no error		<-------------
-hdd: MWDMA2 mode selected
-
-So it seems to me that in 2.6.26 something was broken in the way these ID 
-fields were handled, at least in this check. This is now fixed (possibly 
-by the changes around 5b90e990..48fb2688) and *that* causes the 
-regression. Note that the hard disks are also affected.
-
-If I'm correct I guess that supports Bart's patch to just remove the whole 
-thing. But did this only affect the id_dma_bug check or also the use of 
-these fields elsewhere?
-
-Cheers,
-FJP
-
-[1] I don't have a crossbuild environment for sparc, so a bisect would be
-    painful with 300MHz; I at least have plenty memory luckily.
-
-int ide_id_dma_bug(ide_drive_t *drive)
-{
-        u16 *id = drive->id;
-
-	printk("FJP: id_dma_bug 0x%x:", id[ATA_ID_FIELD_VALID]);
-        if (id[ATA_ID_FIELD_VALID] & 4) {
-		printk(" &4: 0x%x-0x%x", (id[ATA_ID_UDMA_MODES] >> 8),
-					 (id[ATA_ID_MWDMA_MODES] >> 8));
-                if ((id[ATA_ID_UDMA_MODES] >> 8) &&
-                    (id[ATA_ID_MWDMA_MODES] >> 8)) {
-			printk(" bad modes");
-                        goto err_out;
-                }
-        } else if (id[ATA_ID_FIELD_VALID] & 2) {
-		printk(" &2: 0x%x-0x%x", (id[ATA_ID_MWDMA_MODES] >> 8),
-					 (id[ATA_ID_SWDMA_MODES] >> 8));
-                if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
-                    (id[ATA_ID_SWDMA_MODES] >> 8)) {
-			printk(" bad modes");
-                        goto err_out;
-                }
-        }
-	printk(" no error\n");
-        return 0;
-err_out:
-	printk("\n");
-        printk(KERN_ERR "%s: bad DMA info in identify block\n", 
-drive->name);
-        return 1;
-}
+Alan
