@@ -1,58 +1,39 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the
- IRQ context
-Date: Tue, 23 Jun 2009 16:22:56 -0700 (PDT)
-Message-ID: <20090623.162256.190152758.davem@davemloft.net>
-References: <200906232329.11648.bzolnier@gmail.com>
+Subject: Re: [patch 6/6] ide: improve handling of Power Management requests
+Date: Tue, 23 Jun 2009 16:24:02 -0700 (PDT)
+Message-ID: <20090623.162402.125952364.davem@davemloft.net>
+References: <200906232335.57161.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38625
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38628
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753836AbZFWXWv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 19:22:51 -0400
-In-Reply-To: <200906232329.11648.bzolnier@gmail.com>
+	by vger.kernel.org with ESMTP id S1757540AbZFWXX6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 19:23:58 -0400
+In-Reply-To: <200906232335.57161.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Tue, 23 Jun 2009 23:29:11 +0200
+Date: Tue, 23 Jun 2009 23:35:56 +0200
 
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: allow ide_dev_read_id() to be called from the IRQ context
+> Subject: [PATCH] ide: improve handling of Power Management requests
 > 
-> * Un-static __ide_wait_stat().
-> 
-> * Allow ide_dev_read_id() helper to be called from the IRQ context by
->   adding irq_ctx flag and using mdelay()/__ide_wait_stat() when needed.
-> 
-> * Switch ide_driveid_update() to set irq_ctx flag.
-> 
-> This change is needed for the consecutive patch which fixes races in
-> handling of user-space SET XFER commands but for improved bisectability
-> and clarity it is better to do it in a separate patch.
+> Make hwif->rq point to PM request during PM sequence and do not allow
+> any other types of requests to slip in (the old comment was never correct
+> as there should be no such requests generated during PM sequence).
 > 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
-> I'm not completely happy with this version of patch since I originally
-> intended to unify ide_busy_sleep() with __ide_wait_stat() first..
+> This was tested in the past (with an additional testing from Borislav)
+> however there were block layer changes in the meantime so you may want
+> to give it some more testing time just to be sure.
 
-This and patch #5 seems way overkill for the problem being solved.
+In looking at this change, it occurs to me that this queue blocking
+facility could also be used to solve the user SET_XFER race.
 
-All requests programmed into the device get synchronized through the
-block request queue, even these raw taskfile commands.
-
-It seems to me that it should be possible to use the block request
-layer facilities to plug the queue, wait all executing commands to
-complete and for the device to quiesce, then push this single RAW
-command from the user to the device, and finally unplug the queue.
-
-Alternatively, if the block request layer can't help, we can put a
-mutex around submissions, and have this user RAW command submission
-take that mutex.
-
-Anything other than moving code that does significant delays into
-interrupt context.
+Couldn't it?
