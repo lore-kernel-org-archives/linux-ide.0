@@ -1,90 +1,54 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: [PATCH] ide-cd: Improve "weird block size" error message
-Date: Tue, 23 Jun 2009 09:51:23 +0200
-Message-ID: <200906230951.24615.elendil@planet.nl>
-References: <200906211446.38598.elendil@planet.nl> <200906222101.38586.elendil@planet.nl> <200906222335.06700.bzolnier@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] ide-cd: Improve "weird block size" error message
+Date: Tue, 23 Jun 2009 09:57:33 +0200
+Message-ID: <20090623075733.GA14790@liondog.tnic>
+References: <200906211446.38598.elendil@planet.nl> <200906222101.38586.elendil@planet.nl> <200906222335.06700.bzolnier@gmail.com> <200906230951.24615.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <200906222335.06700.bzolnier@gmail.com>
 Content-Disposition: inline
+In-Reply-To: <200906230951.24615.elendil@planet.nl>
 Sender: sparclinux-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Monday 22 June 2009, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 22 June 2009 21:01:37 Frans Pop wrote:
-> > There is one thing I should mention here. I have been seeing the
-> > following error with this CD drive:
-> > ide-cd: hdd: weird block size 2352
-> > ide-cd: hdd: default to 2kb block size
->
-> This is just a harmless warning coming from enabling of the workaround
-> for weird ATAPI devices (the one you have in this sparc machine seems
-> to score really high on the weirdness scale ;) introduced by commit
-> e8e7b9e.
+On Tue, Jun 23, 2009 at 09:51:23AM +0200, Frans Pop wrote:
 
-In that case I'd like to propose the following patch. Currently the error
-can get printed much to frequently when there's a disc in the drive.
-Example:
+[..]
 
-Jun 13 18:06:28 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:06:28 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:06:32 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:06:42 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:07:02 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:07:02 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:07:05 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:07:05 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:07:09 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:07:09 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:07:14 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:07:14 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:07:35 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:07:35 gimli kernel: ide-cd: hdd: default to 2kb block size
-Jun 13 18:07:51 gimli kernel: ide-cd: hdd: weird block size 2352
-Jun 13 18:07:51 gimli kernel: ide-cd: hdd: default to 2kb block size
+> ---
+> From: Frans Pop <elendil@planet.nl>
+> Subject: ide-cd: Improve "weird block size" error message
+> 
+> Currently the error gets repeated too frequently, for example
+> each time HAL polls the device when a disc is present. Avoid that
+> by using printk_once instead of printk.
+> Also join the error and corrective action messages into a single line.
+> 
+> Signed-off-by: Frans Pop <elendil@planet.nl>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index 4a19686..7ec6996 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -886,10 +886,9 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+>  	case 4096:
+>  		break;
+>  	default:
+> -		printk(KERN_ERR PFX "%s: weird block size %u\n",
+> +		printk_once(KERN_ERR PFX "%s: weird block size %u; "
+> +				"setting default block size to 2048\n",
+>  				drive->name, blocklen);
+> -		printk(KERN_ERR PFX "%s: default to 2kb block size\n",
+> -				drive->name);
 
-I was not using the CD at all here. I suspect HAL's stupid polling to be
-the culprit as I first saw it after upgrading X.Org packages to a version
-which depends on HAL. I since disabled polling for the device, but I
-still feel that warning once should be sufficient as IIUC the value is
-device dependent and not medium dependent.
+Please leave the weird block size in the printk since it sometimes might
+give insights on what is going on.
 
-With the patch it only gets printed once, when the driver is initialized.
+Thanks.
 
-Cheers,
-FJP
-
----
-From: Frans Pop <elendil@planet.nl>
-Subject: ide-cd: Improve "weird block size" error message
-
-Currently the error gets repeated too frequently, for example
-each time HAL polls the device when a disc is present. Avoid that
-by using printk_once instead of printk.
-Also join the error and corrective action messages into a single line.
-
-Signed-off-by: Frans Pop <elendil@planet.nl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 4a19686..7ec6996 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -886,10 +886,9 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
- 	case 4096:
- 		break;
- 	default:
--		printk(KERN_ERR PFX "%s: weird block size %u\n",
-+		printk_once(KERN_ERR PFX "%s: weird block size %u; "
-+				"setting default block size to 2048\n",
- 				drive->name, blocklen);
--		printk(KERN_ERR PFX "%s: default to 2kb block size\n",
--				drive->name);
- 		blocklen = 2048;
- 		break;
- 	}
+-- 
+Regards/Gruss,
+    Boris.
