@@ -1,55 +1,90 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [PATCH] IDE: Silent compiler warning in ide_pio_bytes()
-Date: Tue, 23 Jun 2009 08:53:24 +0200
-Message-ID: <20090623085324.03b25bb9@hyperion.delvare>
-References: <20090622211052.45b3cfc5@hyperion.delvare>
-	<20090622.161059.69648151.davem@davemloft.net>
+From: Frans Pop <elendil@planet.nl>
+Subject: [PATCH] ide-cd: Improve "weird block size" error message
+Date: Tue, 23 Jun 2009 09:51:23 +0200
+Message-ID: <200906230951.24615.elendil@planet.nl>
+References: <200906211446.38598.elendil@planet.nl> <200906222101.38586.elendil@planet.nl> <200906222335.06700.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zone0.gcu-squad.org ([212.85.147.21]:20032 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755263AbZFWGxm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 02:53:42 -0400
-In-Reply-To: <20090622.161059.69648151.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <200906222335.06700.bzolnier@gmail.com>
+Content-Disposition: inline
+Sender: sparclinux-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@googlemail.com>
 
-Hi Dave, Borislav,
+On Monday 22 June 2009, Bartlomiej Zolnierkiewicz wrote:
+> On Monday 22 June 2009 21:01:37 Frans Pop wrote:
+> > There is one thing I should mention here. I have been seeing the
+> > following error with this CD drive:
+> > ide-cd: hdd: weird block size 2352
+> > ide-cd: hdd: default to 2kb block size
+>
+> This is just a harmless warning coming from enabling of the workaround
+> for weird ATAPI devices (the one you have in this sparc machine seems
+> to score really high on the weirdness scale ;) introduced by commit
+> e8e7b9e.
 
-On Mon, 22 Jun 2009 16:10:59 -0700 (PDT), David Miller wrote:
-> From: Jean Delvare <khali@linux-fr.org>
-> Date: Mon, 22 Jun 2009 21:10:52 +0200
-> 
-> > PageHighMem() isn't cheap so avoid calling it several times on the
-> > same page. I had the hope that this would silent the following
-> > compilation warning:
-> > 
-> > drivers/ide/ide-taskfile.c: In function 'ide_pio_bytes':
-> > drivers/ide/ide-taskfile.c:229: warning: 'flags' may be used uninitialized in this function
-> > 
-> > which is a false positive, but it did not. So let's just initialize the
-> > flags and be done with it, so that other developers don't waste their
-> > time looking at it.
-> > 
-> > Signed-off-by: Jean Delvare <khali@linux-fr.org>
-> > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Like Borislav, I think it's better to use uninitialized_var().
-> It describes the situation completely.
-> 
-> Please submit an updated patch, and thank you for this.
+In that case I'd like to propose the following patch. Currently the error
+can get printed much to frequently when there's a disc in the drive.
+Example:
 
-I fear somebody else will have to do that. I personally think
-uninitialized_var() should not have been invented, I don't want to have
-my name associated with any of its uses for it will inevitably lead to
-bugs in the future.
+Jun 13 18:06:28 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:06:28 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:06:32 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:06:42 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:07:02 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:07:02 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:07:05 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:07:05 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:07:09 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:07:09 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:07:14 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:07:14 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:07:35 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:07:35 gimli kernel: ide-cd: hdd: default to 2kb block size
+Jun 13 18:07:51 gimli kernel: ide-cd: hdd: weird block size 2352
+Jun 13 18:07:51 gimli kernel: ide-cd: hdd: default to 2kb block size
 
-I'll resubmit a patch not fixing the warning (because the rest is still
-useful I think) but that's about all I can offer.
+I was not using the CD at all here. I suspect HAL's stupid polling to be
+the culprit as I first saw it after upgrading X.Org packages to a version
+which depends on HAL. I since disabled polling for the device, but I
+still feel that warning once should be sufficient as IIUC the value is
+device dependent and not medium dependent.
 
--- 
-Jean Delvare
+With the patch it only gets printed once, when the driver is initialized.
+
+Cheers,
+FJP
+
+---
+From: Frans Pop <elendil@planet.nl>
+Subject: ide-cd: Improve "weird block size" error message
+
+Currently the error gets repeated too frequently, for example
+each time HAL polls the device when a disc is present. Avoid that
+by using printk_once instead of printk.
+Also join the error and corrective action messages into a single line.
+
+Signed-off-by: Frans Pop <elendil@planet.nl>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 4a19686..7ec6996 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -886,10 +886,9 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+ 	case 4096:
+ 		break;
+ 	default:
+-		printk(KERN_ERR PFX "%s: weird block size %u\n",
++		printk_once(KERN_ERR PFX "%s: weird block size %u; "
++				"setting default block size to 2048\n",
+ 				drive->name, blocklen);
+-		printk(KERN_ERR PFX "%s: default to 2kb block size\n",
+-				drive->name);
+ 		blocklen = 2048;
+ 		break;
+ 	}
