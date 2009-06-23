@@ -1,77 +1,73 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] cs5520: add missing IRQ setup for the second port
-Date: Tue, 23 Jun 2009 03:05:55 +0200
-Message-ID: <200906230305.55283.bzolnier@gmail.com>
-References: <200906221348.02632.bzolnier@gmail.com> <20090622.163136.246300819.davem@davemloft.net> <200906230230.14074.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Tue, 23 Jun 2009 04:07:36 GMT
+Message-ID: <200906230407.n5N47a1h005135@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f224.google.com ([209.85.220.224]:39966 "EHLO
-	mail-fx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbZFWBAG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2009 21:00:06 -0400
-In-Reply-To: <200906230230.14074.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:42310 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbZFWEHe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 00:07:34 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5N47aj1005136
+	for <linux-ide@vger.kernel.org>; Tue, 23 Jun 2009 04:07:36 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tuesday 23 June 2009 02:30:11 Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 23 June 2009 01:31:36 David Miller wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Date: Mon, 22 Jun 2009 13:48:02 +0200
-> > 
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Subject: [PATCH] cs5520: add missing IRQ setup for the second port
-> > > 
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > ---
-> > > This is obviously correct regression fix.  The only problem is that
-> > > it cannot be applied under the new rigid policy before somebody with
-> > > the hardware verifies it.  This will only result in a needless delay
-> > > in this case (IMHO a common sense works better than rigid policies).
-> > 
-> > Such hard rules don't apply to regression fixes.  Patch
-> > applied, thanks.
-> > 
-> > But I certainly would have required some positive testing for the
-> > commit which introduced this problem!
-> 
-> You can from now on.
-> 
-> > I've added some verbosity to the commit message, so that people can
-> > track where the problem was introduced, and exactly how this problem
-> > arose, like so:
-> > 
-> > cs5520: add missing IRQ setup for the second port
-> 
-> > This fixes a regression introduced by commit
-> > 86ccf37c6acd74cf7e4b7751ee045de19943c5a0 ("ide: remove pciirq argument
-> > from ide_pci_setup_ports()")
-> > 
-> > ide_pci_setup_ports() would loop over the available ports, one
-> > by one, recording IRQ numbers increasingly from the one passed
-> > in as "pciirq".  The conversion only assigned the initial port's
-> > IRQ, 14, but left the second one not setup.
-> > 
-> > [ Make commit message more verbose -DaveM ]
-> 
-> I didn't remember which commit was it so I didn't include it in the patch
-> description.  This is certainly not the commit above (if you're making such,
-> changes please make sure that you actually understand the code -- you have
-> it easy now as it is orders of magnitude simpler than it was few years ago).
-> 
-> Looking a bit more in depth it could be that it was never a regression
-> and I'm no longer sure that the change is correct (sorry for that, I was
-> blinded by code in pata_cs5520.c).
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Signed-off-by: David S. Miller <davem@davemloft.net>
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
-Please give people some time (few days) to review and comment patches before
-applying them.  I don't trust my own patches too much so I'm always looking
-for some peer review (usually all host driver patches go through Sergei, in
-this case Frans would have probably shot the patch down)..
+
+
+
+
+--- Comment #44 from Stan Senuta Jr. <ssenuta@dialup.cc>  2009-06-23 04:07:35 ---
+I am pleased to report that your kernel-2.6.30 patch
+(0001-ide-cd-prevent-null-pointer-deref-via-cdrom_newpc_in.patch) 
+fixed the crash problem when accessing my /dev/hdd dvd-rom drive. I was able to
+mount a dvd-rw disc & here is the proof:
+
+[root@localhost stan]# mount -t iso9660 /dev/hdd /mnt/misc
+mount: block device /dev/hdd is write-protected, mounting read-only
+[root@localhost stan]# df -T
+Filesystem    Type    Size  Used Avail Use% Mounted on
+/dev/sda2     ext4     60G  4.3G   52G   8% /
+/dev/sda1     ext3     54M   16M   36M  31% /boot
+/dev/sda6     ext4     60G  3.1G   53G   6% /usr
+/dev/hdd   iso9660    400K  400K     0 100% /mnt/misc
+
+[root@localhost stan]# mount -t iso9660 /dev/hdc /mnt/cddrive
+[root@localhost stan]# df -T
+Filesystem    Type    Size  Used Avail Use% Mounted on
+/dev/sda2     ext4     60G  4.3G   52G   8% /
+/dev/sda1     ext3     54M   16M   36M  31% /boot
+/dev/sda6     ext4     60G  3.1G   53G   6% /usr
+/dev/hdd   iso9660    400K  400K     0 100% /mnt/misc
+/dev/hdc   iso9660    350K  350K     0 100% /mnt/cddrive
+
+I edited the kernel-2.6.30 "ide-cd.c" file as instructed to apply the patch &
+then ran the following 
+commands to re-compile my kernel:
+
+      make mrproper
+      cp .config-save .config
+      make oldconfig
+      make
+      make modules_install
+
+My  "new"  /lib/modules/2.6.30/drivers/ide/ide-cd_mod.ko showed file size =
+35133 bytes.
+The "orig" /lib/modules/2.6.30/drivers/ide/ide-cd_mod.ko showed file size =
+35125 bytes.
+
+I also inserted a commercial video movie disc & a cd-rw disc in problem drive
+/dev/hdd.
+Everything seems too work fine. Thank you.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
