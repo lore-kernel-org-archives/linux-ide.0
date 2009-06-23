@@ -1,73 +1,104 @@
-From: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: Rootfs in eMMC: Kernel panic ...Attempted to kill init!
-Date: Tue, 23 Jun 2009 15:34:17 +0100
-Message-ID: <1245767657.16488.38.camel@pc1117.cambridge.arm.com>
-References: <20090622164604.GG29188@n2100.arm.linux.org.uk>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Tue, 23 Jun 2009 16:58:54 +0200
+Message-ID: <200906231658.56489.elendil@planet.nl>
+References: <200906221938.27574.bzolnier@gmail.com> <200906222335.06700.bzolnier@gmail.com> <20090623.031506.214747802.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759140AbZFWOfW@vger.kernel.org>
-In-Reply-To: <20090622164604.GG29188@n2100.arm.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Sudeep K N <sudeepholla.maillist@gmail.com>, linux-arm-kernel@lists.arm.linux.org.uk, drzeus-mmc@drzeus.cx, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from Cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:58347 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754232AbZFWO6z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 10:58:55 -0400
+In-Reply-To: <20090623.031506.214747802.davem@davemloft.net>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2009-06-22 at 17:46 +0100, Russell King - ARM Linux wrote:
-> On Mon, Jun 22, 2009 at 05:13:16PM +0100, Catalin Marinas wrote:
-> > In my case (ext2 over pata_platform), there is no flush_dcache_page()
-> > call after the page was written with data from the CompactFlash (neither
-> > the driver nor the VFS layer do this and we used hardware tracing to
-> > double-check). When the page is mapped into user space,
-> > update_mmu_cache() is called but the page hasn't been marked as dirty
-> > and no D-cache flushing occurs. Calling flush_dcache_page() in
-> > mpage_end_io_read() works around this issue.
-> 
-> As already covered, there's no chance of adding such a call to the
-> generic kernel.  It's the responsibility of the drivers to ensure that
-> data they read in hits the underlying page - in the same way that DMA
-> does.
+On Tuesday 23 June 2009, you wrote:
+> We might need to bisect this one.  But Frans, just for the record
+> could you simply test reverting just that hunk?  Thanks!
 
-The patch below appears to solve the problem with CompactFlash using
-pata_platform (I cc'ed linux-ide since the patch changes their code).
-The patch only handles the read case but similarly it may need to handle
-the write case if D-cache aliasing between user and kernel mappings
-exists.
+I'm way ahead of you :-)
 
-For the USB mass storage, I haven't yet figured out the best place to
-call flush_dcache_page().
+Instead of a bisect [1] I decided to first see if some printks in both .26 
+and .31 would show anything useful.
 
+With 2.6.31 and code included below I get:
+hda: ST34342A, ATA DISK drive
+FJP: id_dma_bug 0x7: &4: 0x0-0x4 no error
+hda: MWDMA2 mode selected
+hdc: Maxtor 6E040L0, ATA DISK drive
+hdd: CD-ROM 56X/AKH, ATAPI CD/DVD-ROM drive
+hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
+FJP: ID_FIELD_VALID: 0x7 (true)
+FJP: id_dma_bug 0x7: &4: 0x0-0x4 no error
+hdc: MWDMA2 mode selected
+hdd: host max PIO5 wanted PIO255(auto-tune) selected PIO4
+FJP: ID_FIELD_VALID: 0x2 (true)
+FJP: id_dma_bug 0x2: &2: 0x1-0x1 bad modes		<-------------
+hdd: bad DMA info in identify block
 
+Note that this included a complete revert of 8d64fcd9 (with minor conflict 
+resolved).
 
-Call flush_dcache_page after PIO data transfer in libata-aff.c
+Here's the same output with 2.6.26.3 with equivalent debug statements:
+hda: ST34342A, ATA DISK drive
+FJP: id_dma_bug 0x7: &4: 0x0-0x0 no error
+hda: MWDMA2 mode selected
+hdc: Maxtor 6E040L0, ATA DISK drive
+hdd: CD-ROM 56X/AKH, ATAPI CD/DVD-ROM drive
+FJP: id_dma_bug 0x7: &4: 0x0-0x0 no error
+hdc: MWDMA2 mode selected
+FJP: id_dma_bug 0x2: &2: 0x0-0x0 no error		<-------------
+hdd: MWDMA2 mode selected
 
-From: Catalin Marinas <catalin.marinas@arm.com>
+So it seems to me that in 2.6.26 something was broken in the way these ID 
+fields were handled, at least in this check. This is now fixed (possibly 
+by the changes around 5b90e990..48fb2688) and *that* causes the 
+regression. Note that the hard disks are also affected.
 
-When reading data from an ATA device using PIO, the kernel dirties the
-D-cache but there is no flush_dcache_page() call in ata_pio_sector().
-Since neither the VFS layer calls this function, a subsequent
-update_mmu_cache() is not aware of the dirty page which may lead to
-cache incoherency in user space.
+If I'm correct I guess that supports Bart's patch to just remove the whole 
+thing. But did this only affect the id_dma_bug check or also the use of 
+these fields elsewhere?
 
-Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
----
- drivers/ata/libata-sff.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Cheers,
+FJP
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index bbbb1fa..2ae15c3 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -893,6 +893,9 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
- 				       do_write);
- 	}
- 
-+	if (!do_write)
-+		flush_dcache_page(page);
-+
- 	qc->curbytes += qc->sect_size;
- 	qc->cursg_ofs += qc->sect_size;
- 
+[1] I don't have a crossbuild environment for sparc, so a bisect would be
+    painful with 300MHz; I at least have plenty memory luckily.
 
--- 
-Catalin
+int ide_id_dma_bug(ide_drive_t *drive)
+{
+        u16 *id = drive->id;
+
+	printk("FJP: id_dma_bug 0x%x:", id[ATA_ID_FIELD_VALID]);
+        if (id[ATA_ID_FIELD_VALID] & 4) {
+		printk(" &4: 0x%x-0x%x", (id[ATA_ID_UDMA_MODES] >> 8),
+					 (id[ATA_ID_MWDMA_MODES] >> 8));
+                if ((id[ATA_ID_UDMA_MODES] >> 8) &&
+                    (id[ATA_ID_MWDMA_MODES] >> 8)) {
+			printk(" bad modes");
+                        goto err_out;
+                }
+        } else if (id[ATA_ID_FIELD_VALID] & 2) {
+		printk(" &2: 0x%x-0x%x", (id[ATA_ID_MWDMA_MODES] >> 8),
+					 (id[ATA_ID_SWDMA_MODES] >> 8));
+                if ((id[ATA_ID_MWDMA_MODES] >> 8) &&
+                    (id[ATA_ID_SWDMA_MODES] >> 8)) {
+			printk(" bad modes");
+                        goto err_out;
+                }
+        }
+	printk(" no error\n");
+        return 0;
+err_out:
+	printk("\n");
+        printk(KERN_ERR "%s: bad DMA info in identify block\n", 
+drive->name);
+        return 1;
+}
