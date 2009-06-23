@@ -1,48 +1,44 @@
 From: David Miller <davem@davemloft.net>
 Subject: Re: [PATCH] ide-cd: Improve "weird block size" error message
-Date: Tue, 23 Jun 2009 16:01:23 -0700 (PDT)
-Message-ID: <20090623.160123.142620779.davem@davemloft.net>
+Date: Tue, 23 Jun 2009 16:03:11 -0700 (PDT)
+Message-ID: <20090623.160311.43292080.davem@davemloft.net>
 References: <200906230951.24615.elendil@planet.nl>
-	<20090623.035926.155211513.davem@davemloft.net>
-	<200906232330.20519.elendil@planet.nl>
+	<20090623075733.GA14790@liondog.tnic>
+	<20090623080223.GA19253@liondog.tnic>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760196AbZFWXBa@vger.kernel.org>
-In-Reply-To: <200906232330.20519.elendil@planet.nl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: elendil@planet.nl
-Cc: bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37341
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753625AbZFWXDH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 19:03:07 -0400
+In-Reply-To: <20090623080223.GA19253@liondog.tnic>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: petkovbb@googlemail.com
+Cc: elendil@planet.nl, bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Frans Pop <elendil@planet.nl>
-Date: Tue, 23 Jun 2009 23:30:18 +0200
+From: Borislav Petkov <petkovbb@googlemail.com>
+Date: Tue, 23 Jun 2009 10:02:23 +0200
 
-> On Tuesday 23 June 2009, David Miller wrote:
->> ide-cd: Don't warn on bogus block size unless it actually matters.
->>
->> Frans Pop reported that his CDROM drive reports a blocksize of 2352,
->> and this causes new warnings due to commit
->> e8e7b9eb11c34ee18bde8b7011af41938d1ad667 ("ide-cd: fix oops when using
->> growisofs").
->>
->> What we're trying to do is make sure that "blocklen >> SECTOR_BITS"
->> is something the block layer won't choke on.
->>
->> And for Frans case "2352 >> SECTOR_BITS" is equal to
->> "2048 >> SECTOR_BITS", and thats "4".
-> 
-> Pedantic correction: Frans' case
+> On Tue, Jun 23, 2009 at 09:57:33AM +0200, Borislav Petkov wrote:
+>> On Tue, Jun 23, 2009 at 09:51:23AM +0200, Frans Pop wrote:
+>> 
+>> [..]
+>> 
+>> > ---
+>> > From: Frans Pop <elendil@planet.nl>
+>> > Subject: ide-cd: Improve "weird block size" error message
+>> > 
+>> > Currently the error gets repeated too frequently, for example
+>> > each time HAL polls the device when a disc is present. Avoid that
+>> > by using printk_once instead of printk.
+>> > Also join the error and corrective action messages into a single line.
+>> > 
+>> > Signed-off-by: Frans Pop <elendil@planet.nl>
+>> > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ ...
+> Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
-Corrected, thanks.
-
->> So warning in this case gives no real benefit.
->>
->> Reported-by: Frans Pop <elendil@planet.nl>
->> Signed-off-by: David S. Miller <davem@davemloft.net>
-> 
-> As expected, it's gone. Nice.
-> 
-> Tested-by: Frans Pop <elendil@planet.nl>
-
-Applied, thanks for testing!
+Applied, thanks!
