@@ -1,43 +1,34 @@
-From: Frans Pop <elendil@planet.nl>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [PATCH] ide-cd: Improve "weird block size" error message
-Date: Tue, 23 Jun 2009 13:13:53 +0200
-Message-ID: <200906231313.55057.elendil@planet.nl>
-References: <200906222101.38586.elendil@planet.nl> <200906230951.24615.elendil@planet.nl> <20090623.035926.155211513.davem@davemloft.net>
+Date: Tue, 23 Jun 2009 04:18:48 -0700 (PDT)
+Message-ID: <20090623.041848.43828217.davem@davemloft.net>
+References: <200906230951.24615.elendil@planet.nl>
+	<20090623.035926.155211513.davem@davemloft.net>
+	<200906231313.55057.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20090623.035926.155211513.davem@davemloft.net>
-Content-Disposition: inline
-Sender: sparclinux-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36851
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752259AbZFWLSo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2009 07:18:44 -0400
+In-Reply-To: <200906231313.55057.elendil@planet.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: elendil@planet.nl
+Cc: bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 23 June 2009, David Miller wrote:
-> Therefore, any objections to something like this?
->
-> ide-cd: Don't warn on bogus block size unless it actually matters.
->
-> Frans Pop reported that his CDROM drive reports a blocksize of 2352,
-> and this causes new warnings due to commit
-> e8e7b9eb11c34ee18bde8b7011af41938d1ad667 ("ide-cd: fix oops when using
-> growisofs").
->
-> What we're trying to do is make sure that "blocklen >> SECTOR_BITS"
-> is something the block layer won't choke on.
->
-> And for Frans case "2352 >> SECTOR_BITS" is equal to
-> "2048 >> SECTOR_BITS", and thats "4".
+From: Frans Pop <elendil@planet.nl>
+Date: Tue, 23 Jun 2009 13:13:53 +0200
 
-So basically there's garbage in unused bits?
+> But I think my patch still makes sense for those cases where the original 
+> error _does_ exist. Unless your patch fixes those as well, but we can't 
+> know that for sure, can we?
 
-> So warning in this case gives no real benefit.
+That's a very good point, so yes it makes sense to add your
+change as well.
 
-Fine by me. I'll be glad to be rid of that error :-)
-I'll give your patch a try with my next build.
-
-But I think my patch still makes sense for those cases where the original 
-error _does_ exist. Unless your patch fixes those as well, but we can't 
-know that for sure, can we?
+I'm convinced there exists some case where my patch doesn't "fix"
+things.  Jens only would have submitted that patch if there were some
+OOPS that he had diagnosed to precisely this problem.
