@@ -1,55 +1,35 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [patch 3/6] ide: always kill the whole request on error
-Date: Tue, 23 Jun 2009 23:49:48 -0700 (PDT)
-Message-ID: <20090623.234948.121450964.davem@davemloft.net>
-References: <200906232327.27610.bzolnier@gmail.com>
-	<20090623.161904.177489795.davem@davemloft.net>
-	<200906240249.33505.bzolnier@gmail.com>
+Subject: Re: [patch 6/6] ide: improve handling of Power Management requests
+Date: Tue, 23 Jun 2009 23:52:32 -0700 (PDT)
+Message-ID: <20090623.235232.56133010.davem@davemloft.net>
+References: <200906232335.57161.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54486
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54489
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753147AbZFXGtn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 02:49:43 -0400
-In-Reply-To: <200906240249.33505.bzolnier@gmail.com>
+	by vger.kernel.org with ESMTP id S1752134AbZFXGw2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 02:52:28 -0400
+In-Reply-To: <200906232335.57161.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, petkovbb@gmail.com, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Wed, 24 Jun 2009 02:49:32 +0200
+Date: Tue, 23 Jun 2009 23:35:56 +0200
 
-> On Wednesday 24 June 2009 01:19:04 David Miller wrote:
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Date: Tue, 23 Jun 2009 23:27:27 +0200
->> 
->> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> > Subject: [PATCH] ide: always kill the whole request on error
->> > 
->> > * Use blk_rq_bytes() instead of obsolete ide_rq_bytes() in ide_kill_rq()
->> >   and ide_floppy_do_request() for failed requests.
->> >   [ bugfix part ]
->> > 
->> > * Use blk_rq_bytes() instead of obsolete ide_rq_bytes() in ide_do_devset()
->> >   and ide_complete_drive_reset().  Then remove ide_rq_bytes().
->> >   [ cleanup part ]
->> > 
->> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> > ---
->> > 'cleanup part' tested, limited testing with 'bugfix part'
->> > (using simulated failures of disk fs requests)
->> 
->> Considering this alongsize patch #2, it even more begs the
->> question as to why special requests on floppy and tape were
->> handled differently.  And that 'error <= 0' test, strange.
+> Make hwif->rq point to PM request during PM sequence and do not allow
+> any other types of requests to slip in (the old comment was never correct
+> as there should be no such requests generated during PM sequence).
 > 
-> TBH I fail to see how it relates to changes present in _this_ patch
-> as no change in _this_ patch affects special tape/floppy requests..
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> This was tested in the past (with an additional testing from Borislav)
+> however there were block layer changes in the meantime so you may want
+> to give it some more testing time just to be sure.
 
-The previous patch is a prerequesite for this one.  So we should
-discuss them as a whole.  Because if we can't remove the "ide/floppy
-RQ error 0 instead of -EIO" bit, then we don't make these further
-consolidations either.
+This patch looks great, applied!
+
+Thanks.
