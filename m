@@ -1,61 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the IRQ context
-Date: Wed, 24 Jun 2009 11:51:16 +0200
-Message-ID: <200906241151.16506.bzolnier@gmail.com>
-References: <200906232329.11648.bzolnier@gmail.com> <200906240336.25263.bzolnier@gmail.com> <20090623.213535.52208572.davem@davemloft.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the
+ IRQ context
+Date: Wed, 24 Jun 2009 02:55:18 -0700 (PDT)
+Message-ID: <20090624.025518.75726622.davem@davemloft.net>
+References: <200906240336.25263.bzolnier@gmail.com>
+	<20090623.213535.52208572.davem@davemloft.net>
+	<200906241151.16506.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:64636 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbZFXJpb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 05:45:31 -0400
-In-Reply-To: <20090623.213535.52208572.davem@davemloft.net>
-Content-Disposition: inline
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50803
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751666AbZFXJzO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 05:55:14 -0400
+In-Reply-To: <200906241151.16506.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
+To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 24 June 2009 06:35:35 David Miller wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Wed, 24 Jun 2009 03:36:24 +0200
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Wed, 24 Jun 2009 11:51:16 +0200
+
+> You've put less than 2h (because that was the time since my post till your
+> reply) into analysis of the bug, the related problems and the solution.
 > 
-> > IOW if there are really some technical issues left to be addressed with
-> > these patches I'll be happy to address them but I'm not doing any more
-> > new IDE stuff.
-> 
-> Discussing alternative approaches to fixing the problem is a technical
-> issue.
-> 
-> If you just want to dump your pending fixes and have no interest in
-> anything other than minor fixups and typo cures, then it's likely most
-> of these patches will be used only as guides for others rather than
-> being applied.
+> It could be that if you had put a bit more time into it and/or asked detailed
+> technical questions related to the solution (i.e. "Why x needs to be there
+> and we can't do y?") instead of keeping the technical discussion on the very
+> vague level (which sounded like "can't we use block layer to process block
+> requests because drive commands are block requests and raw commands are drive
+> commands so we should use block layer") you would come to very different
+> conclusions than you did initially.
 
-I'm perfectly happy with it.
+I'm investigating alternative ways to this problem, less because
+of the time I put into the investigation, but moreso because I'm
+able to put fresh eyes onto the problem.
 
-> Specifically in this case I really think this is a very unclean way to
-> solve this problem, which is why I suggested alternative
-> implementations in the first place.
-> 
-> Anything that requires a set of if() blocks checking "in interrupt
-> context" or not is a big red flag in my book.
+And also I don't know the IDE code as well as you do, which is
+an advantage insofar as not falling into "oh I know how this
+stuff works, therefore we can't..." kinds of mental traps.
 
-It is also a big red flag in my book.  However after long hours put into
-analysis of the issue I came to conclusions that they are needed/justified
-in this specific case unless we are going to do really major surgery there
-(which we shouldn't according to the new policy).
+Back to the technical side, ignoring the interrupt-or-not uglies,
+there are two other reasons why using synchronization is better
+here:
 
-You've put less than 2h (because that was the time since my post till your
-reply) into analysis of the bug, the related problems and the solution.
+1) You want the device to be quiescent anyways when you do this
+   SET_XFER command.  What better way than to plug the queue
+   and make sure all currently outstanding requests complete?
 
-It could be that if you had put a bit more time into it and/or asked detailed
-technical questions related to the solution (i.e. "Why x needs to be there
-and we can't do y?") instead of keeping the technical discussion on the very
-vague level (which sounded like "can't we use block layer to process block
-requests because drive commands are block requests and raw commands are drive
-commands so we should use block layer") you would come to very different
-conclusions than you did initially.
+   And as already discussed, we even already have logic to support
+   this kind of thing for the sake of power-management.
+
+2) All commands going into the device do so from a context from
+   which we could take a sleeping lock such as a mutex.  It's
+   therefore the most natural way to synchonize things.
+
+I know you're busy, so I'll try to draft something up myself.
+
+Thanks.
