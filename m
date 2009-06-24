@@ -1,49 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/3] sata_mv: increase PIO IORDY timeout
-Date: Wed, 24 Jun 2009 04:33:08 -0400
-Message-ID: <4A41E4C4.7050508@garzik.org>
-References: <1245771838-1332-1-git-send-email-saeed@marvell.com>
+From: Patrick Voegeli Olivera <patrick.voegeli@gmail.com>
+Subject: Re: Sata link_power_management_policy questions
+Date: Wed, 24 Jun 2009 10:39:49 +0200
+Message-ID: <4A41E655.1090401@gmail.com>
+References: <4A3FD261.7060903@gmail.com> <4A40643B.7090805@gmail.com> <4A40C3D9.7060602@gmail.com> <4A4178A4.5000505@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57984 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751936AbZFXIcf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Jun 2009 04:32:35 -0400
-In-Reply-To: <1245771838-1332-1-git-send-email-saeed@marvell.com>
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:63406 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbZFXIju (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 04:39:50 -0400
+In-Reply-To: <4A4178A4.5000505@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>
-Cc: linux-ide@vger.kernel.org, liml@rtr.ca, saeed.bishara@gmail.com
+To: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Saeed Bishara wrote:
-> The old value (0xbc) in cycles of the IORDY timeout is suitable for
-> devices with core clock of 166 MHz, but some SoC controllers have
-> faster core clocks. The new value will make the IORDY timeout large
-> enough also for all SoC devices.
-> 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
-> ---
->  drivers/ata/sata_mv.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 23714ae..644436e 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -3368,7 +3368,7 @@ static void mv_soc_reset_hc_port(struct mv_host_priv *hpriv,
->  	ZERO(0x024);		/* respq outp */
->  	ZERO(0x020);		/* respq inp */
->  	ZERO(0x02c);		/* test control */
-> -	writel(0xbc, port_mmio + EDMA_IORDY_TMOUT);
-> +	writel(0x800, port_mmio + EDMA_IORDY_TMOUT);
+Oh, that just sucks, but I suppose I can live without it.
 
-Do we really want to increase the timeout for older devices?  How does 
-this change behavior for existing devices?
+Thank you
 
-	Jeff
-
-
-
+En/na Robert Hancock ha escrit:
+> On 06/23/2009 06:00 AM, Patrick Voegeli Olivera wrote:
+>> Here they go,
+>>
+>> I attach them as log files, since dmesg is quite long.
+>>
+>
+> ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 3 ports 3 Gbps 0x7 impl 
+> SATA mode
+> ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pio slum part
+>
+> Looks like your chipset's AHCI controller doesn't support the ALPM 
+> link power management capability (it would show "pm" in this string if 
+> it did).
+>
 
