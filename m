@@ -1,72 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch 2/6] ide: fix ide_kill_rq() for special ide-{floppy,tape} driver requests
-Date: Wed, 24 Jun 2009 12:09:53 +0200
-Message-ID: <200906241209.53891.bzolnier@gmail.com>
-References: <200906232326.06830.bzolnier@gmail.com> <20090623.234929.32348223.davem@davemloft.net>
+From: Saeed Bishara <saeed@marvell.com>
+Subject: Re: [PATCH 1/3] sata_mv: increase PIO IORDY timeout
+Date: Wed, 24 Jun 2009 13:23:41 +0300 (IDT)
+Message-ID: <alpine.DEB.2.00.0906241135270.31324@ubuntu-saeed.il.marvell.com>
+References: <1245771838-1332-1-git-send-email-saeed@marvell.com> <4A41E4C4.7050508@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:46314 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbZFXKEF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 06:04:05 -0400
-In-Reply-To: <20090623.234929.32348223.davem@davemloft.net>
-Content-Disposition: inline
+Received: from host2.marvell.com ([65.219.4.2]:20638 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751460AbZFXKXk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Jun 2009 06:23:40 -0400
+In-Reply-To: <4A41E4C4.7050508@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, petkovbb@gmail.com, htejun@gmail.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "liml@rtr.ca" <liml@rtr.ca>, "saeed.bishara@gmail.com" <saeed.bishara@gmail.com>
 
-On Wednesday 24 June 2009 08:49:29 David Miller wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Tue, 23 Jun 2009 23:26:06 +0200
-> 
-> > @@ -152,7 +152,7 @@ void ide_kill_rq(ide_drive_t *drive, str
-> >  
-> >  	if ((media == ide_floppy || media == ide_tape) && drv_req) {
-> >  		rq->errors = 0;
-> > -		ide_complete_rq(drive, 0, blk_rq_bytes(rq));
-> > +		ide_complete_rq(drive, -EIO, blk_rq_bytes(rq));
-> >  	} else {
-> >  		if (media == ide_tape)
-> >  			rq->errors = IDE_DRV_ERROR_GENERAL;
-> 
-> I've done some research and this logic of returning "0" appears to be
-> intentional.
-> 
-> It keeps the block layer from printing the "I/O error" kernel log
-> message during completion of the request.
 
-It would be pretty illogical behavior for driver to intentionally not
-let user know about the failed requests..
 
-> IDE tape as one example, seems to have it's own system of passing
-> errors back up to the special command completion, via rq->errors
-> and IDE_DRV_ERROR_GENERAL.
+On Wed, 24 Jun 2009, Jeff Garzik wrote:
 
-Please look at the patch/code:
+> Saeed Bishara wrote:
+> > The old value (0xbc) in cycles of the IORDY timeout is suitable for
+> > devices with core clock of 166 MHz, but some SoC controllers have
+> > faster core clocks. The new value will make the IORDY timeout large
+> > enough also for all SoC devices.
+> >
+> > Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> > ---
+> >  drivers/ata/sata_mv.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> > index 23714ae..644436e 100644
+> > --- a/drivers/ata/sata_mv.c
+> > +++ b/drivers/ata/sata_mv.c
+> > @@ -3368,7 +3368,7 @@ static void mv_soc_reset_hc_port(struct mv_host_priv *hpriv,
+> >       ZERO(0x024);            /* respq outp */
+> >       ZERO(0x020);            /* respq inp */
+> >       ZERO(0x02c);            /* test control */
+> > -     writel(0xbc, port_mmio + EDMA_IORDY_TMOUT);
+> > +     writel(0x800, port_mmio + EDMA_IORDY_TMOUT);
+>
+> Do we really want to increase the timeout for older devices?  How does
+> this change behavior for existing devices?
+This patch affects only soc devices, the 0xbc value sets the IORDY timeout
+to 1.25 micro seconds when the core clock is 150MHz (not 166MHz as I
+mentioned in the commit's message). This timeout defines the maximum time
+the cpu will be held when reading the PIO data register and no data is
+available. Sata devices usually fine with timeout, this means that
+during PIO data fises, the device will send the data dword within 1.25
+micro seconds from the last one.
 
- 		rq->errors = 0;
--		ide_complete_rq(drive, 0, blk_rq_bytes(rq));
-+		ide_complete_rq(drive, -EIO, blk_rq_bytes(rq));
+Recent Marvell soc devices uses higher core clocks (e.g. 200MHz in
+kirkwood), so the IORDY timeout must be increased accordingly as it's
+defined in core clock cycle. I choose to use the value 0x800 so it will be
+good enough also for future devices, and, this large timeout will be good
+in case some sata device has big delays within its DATA fises.
 
-and notice rq->errors line.
-
-> See idetape_queue_rw_tail() and ide_tape_callback() for example.
-> 
-> IDE floppy has similar pieces of logic, and possibly similar desires
-> wrt. emission of the block layer I/O error log message during
-> special requests.
-> 
-> When something sticks out like an eyesore (as this -EIO thing does)
-> and seems to make no sense at all, there often is some obscure
-> reason.
-
-The obscure reasons is just the fact that both ide-floppy and ide-tape
-had a they own duplicated/buggy request completion routines.
-
-While they were being unified the whole bunch of similar class of bugs
-were fixed so I agree that there may still be more issues to deal with
-there.
+ >
+>         Jeff
+>
+>
+>
+>
+>
