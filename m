@@ -1,205 +1,66 @@
-From: Sergey Matyukevich <geomatsi@gmail.com>
-Subject: [PATCH] pata_at91: Updates for pata_at91 driver
-Date: Wed, 24 Jun 2009 21:51:25 +0400
-Message-ID: <20090624215125.1df08e3b@realm>
-References: <20090623060600.GA9603@havoc.gtf.org>
-	<20090622233157.fe0e0e2c.akpm@linux-foundation.org>
-	<20090623213743.2f1dfe5d@realm>
-	<4A411810.6070308@garzik.org>
-	<20090623234214.1b3018fd@realm>
-	<4A414983.3020604@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the
+ IRQ context
+Date: Wed, 24 Jun 2009 15:30:40 -0400
+Message-ID: <4A427EE0.8050901@garzik.org>
+References: <200906240336.25263.bzolnier@gmail.com> <20090624.025518.75726622.davem@davemloft.net> <200906241248.21173.bzolnier@gmail.com> <200906241304.14926.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:54921 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbZFXR6s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 13:58:48 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so392953fga.17
-        for <linux-ide@vger.kernel.org>; Wed, 24 Jun 2009 10:58:50 -0700 (PDT)
-In-Reply-To: <4A414983.3020604@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:42721 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751633AbZFXTaH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Jun 2009 15:30:07 -0400
+In-Reply-To: <200906241304.14926.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Sergey Lapin <slapin@ossfans.org>, Andrew Victor <avictor.za@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 23 Jun 2009 17:30:43 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> Once I (or someone else, in the case of another driver) merges a
-> driver, you will want to send a diff against that merged version.  In
-> this case, the driver is upstream as of an hour or two ago, so you'll
-> want to diff against that.
+Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday 24 June 2009 12:48:20 Bartlomiej Zolnierkiewicz wrote:
 > 
-> Note that little details like email subject line matter, because they 
-> are copied into the kernel changelog by default, when merging
-> patches. See Documentation/SubmittingPatches for a list of details.
+>>> 1) You want the device to be quiescent anyways when you do this
+>>>    SET_XFER command.  What better way than to plug the queue
+>>>    and make sure all currently outstanding requests complete?
+>>>
+>>>    And as already discussed, we even already have logic to support
+>>>    this kind of thing for the sake of power-management.
+>> Power management requests are kind of special and need block layer support.
+>>
+>> Please take a look at REQ_DEVSET_EXEC special requests from ide-devsets.c
+>> instead if you would like to investigate possibility of a cleaner (although
+>> more invasive) solution.
+>>
+>>> 2) All commands going into the device do so from a context from
+>>>    which we could take a sleeping lock such as a mutex.  It's
+>>>    therefore the most natural way to synchonize things.
+>> The fact is that we need to synchronize against all commands going into
+>> the device and they are synchronized using block queue (which is protected
+>> with spinlock by block layer). Adding an extra mutex (even if possible)
 > 
-> 	Jeff
+> We need to also take the synchronization between block queues of all devices
+> on the port and the serialized ports into account..  This is quite complex
+> and fragile code (vide cmd64x screaming IRQ issue ;)..
+> 
+> I would personally try going with 1) and avoid 2) at all costs..
+
+FWIW, on Promise chipsets, SETFEATURES_XFER requires synchronization 
+across all ports on the controller, otherwise SETFEATURES_XFER on port M 
+can potentially cause data corruption on unrelated port N.
+
+This has to do with the snooping of ATA commands performed by the 
+Promise PATA and SATA chips.  The chip sees SETFEATURES_XFER, and does a 
+bit of internal programming.
+
+Silicon Image (siimage or sata_sil) also snoops ATA commands such as 
+SETFEATURES_XFER; ditto a few other chipsets.
+
+SETFEATURES_XFER has always required very, very careful, often 
+chipset-specific handling.
+
+	Jeff
 
 
-Driver pata_at91 is updated according to A. Morton comments.
-
-* No harsh BUG_ON for get_clk in set_smc_timing function
-	get_clk is now performed in driver probing function,
-	probing fails if master clock is not available
-
-* Fixed uint/ulong mess in calc_mck_cycles function
-
-Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
----
- drivers/ata/pata_at91.c |   65 ++++++++++++++++++++++++++---------------------
- 1 files changed, 36 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 4b27617..c9996e5 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -44,65 +44,62 @@ struct at91_ide_info {
- 	unsigned long mode;
- 	unsigned int cs;
- 
-+	struct clk *mck;
-+
- 	void __iomem *ide_addr;
- 	void __iomem *alt_addr;
- };
- 
--const struct ata_timing initial_timing =
-+static const struct ata_timing initial_timing =
- 	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
- 
--static unsigned int calc_mck_cycles(unsigned int ns, unsigned int mck_hz)
-+static unsigned long calc_mck_cycles(unsigned long ns, unsigned long mck_hz)
- {
- 	unsigned long mul;
- 
--    /*
--     * cycles = x [nsec] * f [Hz] / 10^9 [ns in sec] =
--     *     x * (f / 1_000_000_000) =
--     *     x * ((f * 65536) / 1_000_000_000) / 65536 =
--     *     x * (((f / 10_000) * 65536) / 100_000) / 65536 =
--     */
-+	/*
-+	* cycles = x [nsec] * f [Hz] / 10^9 [ns in sec] =
-+	*     x * (f / 1_000_000_000) =
-+	*     x * ((f * 65536) / 1_000_000_000) / 65536 =
-+	*     x * (((f / 10_000) * 65536) / 100_000) / 65536 =
-+	*/
- 
--    mul = (mck_hz / 10000) << 16;
--    mul /= 100000;
-+	mul = (mck_hz / 10000) << 16;
-+	mul /= 100000;
- 
--    return (ns * mul + 65536) >> 16;    /* rounding */
-+	return (ns * mul + 65536) >> 16;    /* rounding */
- }
- 
- static void set_smc_mode(struct at91_ide_info *info)
- {
--    at91_sys_write(AT91_SMC_MODE(info->cs), info->mode);
--    return;
-+	at91_sys_write(AT91_SMC_MODE(info->cs), info->mode);
-+	return;
- }
- 
- static void set_smc_timing(struct device *dev,
- 		struct at91_ide_info *info, const struct ata_timing *ata)
- {
--	int read_cycle, write_cycle, active, recover;
--	int nrd_setup, nrd_pulse, nrd_recover;
--	int nwe_setup, nwe_pulse;
-+	unsigned long read_cycle, write_cycle, active, recover;
-+	unsigned long nrd_setup, nrd_pulse, nrd_recover;
-+	unsigned long nwe_setup, nwe_pulse;
- 
--	int ncs_write_setup, ncs_write_pulse;
--	int ncs_read_setup, ncs_read_pulse;
-+	unsigned long ncs_write_setup, ncs_write_pulse;
-+	unsigned long ncs_read_setup, ncs_read_pulse;
- 
--	unsigned int mck_hz;
--	struct clk *mck;
-+	unsigned long mck_hz;
- 
- 	read_cycle  = ata->cyc8b;
- 	nrd_setup   = ata->setup;
- 	nrd_pulse   = ata->act8b;
- 	nrd_recover = ata->rec8b;
- 
--	mck = clk_get(NULL, "mck");
--	BUG_ON(IS_ERR(mck));
--	mck_hz = clk_get_rate(mck);
-+	mck_hz = clk_get_rate(info->mck);
- 
- 	read_cycle  = calc_mck_cycles(read_cycle, mck_hz);
- 	nrd_setup   = calc_mck_cycles(nrd_setup, mck_hz);
- 	nrd_pulse   = calc_mck_cycles(nrd_pulse, mck_hz);
- 	nrd_recover = calc_mck_cycles(nrd_recover, mck_hz);
- 
--	clk_put(mck);
--
- 	active  = nrd_setup + nrd_pulse;
- 	recover = read_cycle - active;
- 
-@@ -121,13 +118,13 @@ static void set_smc_timing(struct device *dev,
- 	ncs_write_setup = ncs_read_setup;
- 	ncs_write_pulse = ncs_read_pulse;
- 
--	dev_dbg(dev, "ATA timings: nrd_setup = %d nrd_pulse = %d nrd_cycle = %d\n",
-+	dev_dbg(dev, "ATA timings: nrd_setup = %lu nrd_pulse = %lu nrd_cycle = %lu\n",
- 			nrd_setup, nrd_pulse, read_cycle);
--	dev_dbg(dev, "ATA timings: nwe_setup = %d nwe_pulse = %d nwe_cycle = %d\n",
-+	dev_dbg(dev, "ATA timings: nwe_setup = %lu nwe_pulse = %lu nwe_cycle = %lu\n",
- 			nwe_setup, nwe_pulse, write_cycle);
--	dev_dbg(dev, "ATA timings: ncs_read_setup = %d ncs_read_pulse = %d\n",
-+	dev_dbg(dev, "ATA timings: ncs_read_setup = %lu ncs_read_pulse = %lu\n",
- 			ncs_read_setup, ncs_read_pulse);
--	dev_dbg(dev, "ATA timings: ncs_write_setup = %d ncs_write_pulse = %d\n",
-+	dev_dbg(dev, "ATA timings: ncs_write_setup = %lu ncs_write_pulse = %lu\n",
- 			ncs_write_setup, ncs_write_pulse);
- 
- 	at91_sys_write(AT91_SMC_SETUP(info->cs),
-@@ -217,6 +214,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 	struct resource *mem_res;
- 	struct ata_host *host;
- 	struct ata_port *ap;
-+
- 	int irq_flags = 0;
- 	int irq = 0;
- 	int ret;
-@@ -261,6 +259,13 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	}
- 
-+	info->mck = clk_get(NULL, "mck");
-+
-+	if (IS_ERR(info->mck)) {
-+		dev_err(dev, "failed to get access to mck clock\n");
-+		return -ENODEV;
-+	}
-+
- 	info->cs    = board->chipselect;
- 	info->mode  = AT91_SMC_READMODE | AT91_SMC_WRITEMODE |
- 		AT91_SMC_EXNWMODE_READY | AT91_SMC_BAT_SELECT |
-@@ -304,6 +309,7 @@ err_alt_ioremap:
- 	devm_iounmap(dev, info->ide_addr);
- 
- err_ide_ioremap:
-+	clk_put(info->mck);
- 	kfree(info);
- 
- 	return ret;
-@@ -325,6 +331,7 @@ static int __devexit pata_at91_remove(struct platform_device *pdev)
- 
- 	devm_iounmap(dev, info->ide_addr);
- 	devm_iounmap(dev, info->alt_addr);
-+	clk_put(info->mck);
- 
- 	kfree(info);
- 	return 0;
--- 
-1.6.2.5
 
