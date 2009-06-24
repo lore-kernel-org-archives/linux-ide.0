@@ -1,60 +1,60 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the IRQ context
-Date: Wed, 24 Jun 2009 15:05:52 +0200
-Message-ID: <200906241505.52899.bzolnier@gmail.com>
-References: <200906240336.25263.bzolnier@gmail.com> <200906241248.21173.bzolnier@gmail.com> <200906241304.14926.bzolnier@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [patch 2/6] ide: fix ide_kill_rq() for special
+	ide-{floppy,tape} driver requests
+Date: Wed, 24 Jun 2009 19:44:11 +0200
+Message-ID: <20090624174411.GA5729@liondog.tnic>
+References: <200906232326.06830.bzolnier@gmail.com> <20090623.234929.32348223.davem@davemloft.net> <200906241209.53891.bzolnier@gmail.com> <20090624.033909.147195176.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759237AbZFXNAt@vger.kernel.org>
-In-Reply-To: <200906241304.14926.bzolnier@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:34230 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760863AbZFXRoP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 13:44:15 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20090624.033909.147195176.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 
-On Wednesday 24 June 2009 13:04:14 Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 24 June 2009 12:48:20 Bartlomiej Zolnierkiewicz wrote:
+On Wed, Jun 24, 2009 at 03:39:09AM -0700, David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Wed, 24 Jun 2009 12:09:53 +0200
 > 
-> > > 1) You want the device to be quiescent anyways when you do this
-> > >    SET_XFER command.  What better way than to plug the queue
-> > >    and make sure all currently outstanding requests complete?
-
-BTW this is the way we do it currently.
-
-We just back-ride on ide_finish_cmd() call for the special user-initiated
-REQ_TYPE_ATA_TASKFILE request.  Doing it the other way will only result in:
-
-* shorter IRQ latency for user-space requested xfer mode change request
-  (irrelevant as the whole interface is just a rarely used legacy)
-
-* much more invasive changes to the IDE core (I would be more than happy
-  to welcome them but this is against our newly established policy)
-
-Anyway I'll be happy with whatever solution that will end up in Linus tree
-and is OK from the correctness POV.
-
-> > >    And as already discussed, we even already have logic to support
-> > >    this kind of thing for the sake of power-management.
+> > The obscure reasons is just the fact that both ide-floppy and ide-tape
+> > had a they own duplicated/buggy request completion routines.
 > > 
-> > Power management requests are kind of special and need block layer support.
-> > 
-> > Please take a look at REQ_DEVSET_EXEC special requests from ide-devsets.c
-> > instead if you would like to investigate possibility of a cleaner (although
-> > more invasive) solution.
-> > 
-> > > 2) All commands going into the device do so from a context from
-> > >    which we could take a sleeping lock such as a mutex.  It's
-> > >    therefore the most natural way to synchonize things.
-> > 
-> > The fact is that we need to synchronize against all commands going into
-> > the device and they are synchronized using block queue (which is protected
-> > with spinlock by block layer). Adding an extra mutex (even if possible)
+> > While they were being unified the whole bunch of similar class of bugs
+> > were fixed so I agree that there may still be more issues to deal with
+> > there.
 > 
-> We need to also take the synchronization between block queues of all devices
-> on the port and the serialized ports into account..  This is quite complex
-> and fragile code (vide cmd64x screaming IRQ issue ;)..
+> I see, the ->pc_callback() of these things set rq->errors and then
+> ide_pc_intr() happily overrides whatever was set there, either on it's
+> own or via ide_complete_rq().
 > 
-> I would personally try going with 1) and avoid 2) at all costs..
+> I'll look over this some more while I wait for the testing results
+> from Borislav.
+
+Ok, let's see now, I did some testing but can't seem to hit that
+particular path because it is taken relatively rarely - it can be
+reached from start_request() and ide_atapi_error() via ide_error for
+ide-floppy and ide-tape.
+
+If my code staring doesn't mislead me, the start_request()-one has to
+happen during an IDE reset operation, while we're polling for reset
+completion _and_ when drive->failures has reached drive->max_failures
+since this is the only site the drive->failures counter is increased.
+
+The ide_atapi_error() cannot happen because (!blk_fs_request(rq))
+requests are being completed in ide_error() with the respective error
+status.
+
+It is possible that I've missed something so feel free to correct me
+and/or suggest a different testing approach.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
