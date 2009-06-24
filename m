@@ -1,32 +1,52 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [patch 3/6] ide: always kill the whole request on error
-Date: Tue, 23 Jun 2009 21:37:01 -0700 (PDT)
-Message-ID: <20090623.213701.217032417.davem@davemloft.net>
-References: <200906232327.27610.bzolnier@gmail.com>
-	<20090623.161904.177489795.davem@davemloft.net>
-	<200906240249.33505.bzolnier@gmail.com>
+Subject: Re: [patch 2/6] ide: fix ide_kill_rq() for special
+ ide-{floppy,tape} driver requests
+Date: Tue, 23 Jun 2009 23:49:29 -0700 (PDT)
+Message-ID: <20090623.234929.32348223.davem@davemloft.net>
+References: <200906232326.06830.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37120
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54483
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751172AbZFXEg5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 00:36:57 -0400
-In-Reply-To: <200906240249.33505.bzolnier@gmail.com>
+	by vger.kernel.org with ESMTP id S1753154AbZFXGtZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 02:49:25 -0400
+In-Reply-To: <200906232326.06830.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, petkovbb@gmail.com, htejun@gmail.com
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Wed, 24 Jun 2009 02:49:32 +0200
+Date: Tue, 23 Jun 2009 23:26:06 +0200
 
-> On Wednesday 24 June 2009 01:19:04 David Miller wrote:
->> I have a hard time believing all of these differences are there for no
->> reason at all. :-)
-> 
-> Lets keep personal believes aside in the technical discussions. ;)
+> @@ -152,7 +152,7 @@ void ide_kill_rq(ide_drive_t *drive, str
+>  
+>  	if ((media == ide_floppy || media == ide_tape) && drv_req) {
+>  		rq->errors = 0;
+> -		ide_complete_rq(drive, 0, blk_rq_bytes(rq));
+> +		ide_complete_rq(drive, -EIO, blk_rq_bytes(rq));
+>  	} else {
+>  		if (media == ide_tape)
+>  			rq->errors = IDE_DRV_ERROR_GENERAL;
 
-Sure, but every time I've ignored such possibility I've regretted
-it after a long debugging session later, that's all :-)
+I've done some research and this logic of returning "0" appears to be
+intentional.
+
+It keeps the block layer from printing the "I/O error" kernel log
+message during completion of the request.
+
+IDE tape as one example, seems to have it's own system of passing
+errors back up to the special command completion, via rq->errors
+and IDE_DRV_ERROR_GENERAL.
+
+See idetape_queue_rw_tail() and ide_tape_callback() for example.
+
+IDE floppy has similar pieces of logic, and possibly similar desires
+wrt. emission of the block layer I/O error log message during
+special requests.
+
+When something sticks out like an eyesore (as this -EIO thing does)
+and seems to make no sense at all, there often is some obscure
+reason.
