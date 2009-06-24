@@ -1,38 +1,33 @@
-From: Patrick Voegeli Olivera <patrick.voegeli@gmail.com>
-Subject: Re: Sata link_power_management_policy questions
-Date: Wed, 24 Jun 2009 10:39:49 +0200
-Message-ID: <4A41E655.1090401@gmail.com>
-References: <4A3FD261.7060903@gmail.com> <4A40643B.7090805@gmail.com> <4A40C3D9.7060602@gmail.com> <4A4178A4.5000505@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] cs5520: add missing IRQ setup for the second port
+Date: Wed, 24 Jun 2009 10:22:00 +0100
+Message-ID: <20090624102200.7debd041@lxorguk.ukuu.org.uk>
+References: <20090623094206.4d1f1b5b@lxorguk.ukuu.org.uk>
+	<200906231159.01295.bzolnier@gmail.com>
+	<20090623163324.715421f5@lxorguk.ukuu.org.uk>
+	<20090623.164429.179899088.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:63406 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbZFXIju (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 04:39:50 -0400
-In-Reply-To: <4A4178A4.5000505@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46095 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750957AbZFXJUh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 05:20:37 -0400
+In-Reply-To: <20090623.164429.179899088.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, elendil@planet.nl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Oh, that just sucks, but I suppose I can live without it.
+> What should we do?  I guess "do nothing and wait until we see a bug
+> report from an actual user" is a valid response...
 
-Thank you
 
-En/na Robert Hancock ha escrit:
-> On 06/23/2009 06:00 AM, Patrick Voegeli Olivera wrote:
->> Here they go,
->>
->> I attach them as log files, since dmesg is quite long.
->>
->
-> ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 3 ports 3 Gbps 0x7 impl 
-> SATA mode
-> ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pio slum part
->
-> Looks like your chipset's AHCI controller doesn't support the ALPM 
-> link power management capability (it would show "pm" in this string if 
-> it did).
->
+I doubt you ever will.
 
+The docs don't say so I'd assume its hard coded 14/15 as if it was ISA
+(its not an IDE storage class device so doesn't have the PCI config bits
+to switch between legacy and native modes).
+
+Alan
