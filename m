@@ -1,64 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the
- IRQ context
-Date: Wed, 24 Jun 2009 15:30:40 -0400
-Message-ID: <4A427EE0.8050901@garzik.org>
-References: <200906240336.25263.bzolnier@gmail.com> <20090624.025518.75726622.davem@davemloft.net> <200906241248.21173.bzolnier@gmail.com> <200906241304.14926.bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_rdc: driver for RDC ATA devices
+Date: Wed, 24 Jun 2009 15:35:41 -0400
+Message-ID: <4A42800D.6020202@garzik.org>
+References: <20090624172930.24354.80799.stgit@t61.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42721 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44656 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751633AbZFXTaH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Jun 2009 15:30:07 -0400
-In-Reply-To: <200906241304.14926.bzolnier@gmail.com>
+	id S1751633AbZFXTfH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Jun 2009 15:35:07 -0400
+In-Reply-To: <20090624172930.24354.80799.stgit@t61.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, kevin.huang@rdc.com.tw, greg@kroah.com, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 24 June 2009 12:48:20 Bartlomiej Zolnierkiewicz wrote:
+Alan Cox wrote:
+> Try this version instead - forgot to refresh the patch before sending
 > 
->>> 1) You want the device to be quiescent anyways when you do this
->>>    SET_XFER command.  What better way than to plug the queue
->>>    and make sure all currently outstanding requests complete?
->>>
->>>    And as already discussed, we even already have logic to support
->>>    this kind of thing for the sake of power-management.
->> Power management requests are kind of special and need block layer support.
->>
->> Please take a look at REQ_DEVSET_EXEC special requests from ide-devsets.c
->> instead if you would like to investigate possibility of a cleaner (although
->> more invasive) solution.
->>
->>> 2) All commands going into the device do so from a context from
->>>    which we could take a sleeping lock such as a mutex.  It's
->>>    therefore the most natural way to synchonize things.
->> The fact is that we need to synchronize against all commands going into
->> the device and they are synchronized using block queue (which is protected
->> with spinlock by block layer). Adding an extra mutex (even if possible)
+> From: Alan Cox <alan@linux.intel.com>
 > 
-> We need to also take the synchronization between block queues of all devices
-> on the port and the serialized ports into account..  This is quite complex
-> and fragile code (vide cmd64x screaming IRQ issue ;)..
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ---
 > 
-> I would personally try going with 1) and avoid 2) at all costs..
+>  drivers/ata/Kconfig    |   10 +
+>  drivers/ata/Makefile   |    1 
+>  drivers/ata/pata_rdc.c |  400 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 411 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/pata_rdc.c
 
-FWIW, on Promise chipsets, SETFEATURES_XFER requires synchronization 
-across all ports on the controller, otherwise SETFEATURES_XFER on port M 
-can potentially cause data corruption on unrelated port N.
+Requesting that linux-ide be CC'd in the future, for this driver...
 
-This has to do with the snooping of ATA commands performed by the 
-Promise PATA and SATA chips.  The chip sees SETFEATURES_XFER, and does a 
-bit of internal programming.
-
-Silicon Image (siimage or sata_sil) also snoops ATA commands such as 
-SETFEATURES_XFER; ditto a few other chipsets.
-
-SETFEATURES_XFER has always required very, very careful, often 
-chipset-specific handling.
+Seems fine and fairly straightforward to me.  My lone comment -- go 
+through and replace magic numbers with named constants, for e.g. the PCI 
+config registers that program timings...
 
 	Jeff
 
