@@ -1,80 +1,63 @@
 From: David Miller <davem@davemloft.net>
-Subject: [GIT]: IDE fixes
-Date: Thu, 25 Jun 2009 03:03:43 -0700 (PDT)
-Message-ID: <20090625.030343.140417558.davem@davemloft.net>
+Subject: Re: [patch 2/6] ide: fix ide_kill_rq() for special
+ ide-{floppy,tape} driver requests
+Date: Thu, 25 Jun 2009 03:09:38 -0700 (PDT)
+Message-ID: <20090625.030938.248206050.davem@davemloft.net>
+References: <200906241209.53891.bzolnier@gmail.com>
+	<20090624.033909.147195176.davem@davemloft.net>
+	<20090624174411.GA5729@liondog.tnic>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57892
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44283
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752218AbZFYKDj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 06:03:39 -0400
+	by vger.kernel.org with ESMTP id S1754319AbZFYKJe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 06:09:34 -0400
+In-Reply-To: <20090624174411.GA5729@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: petkovbb@googlemail.com
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 
+From: Borislav Petkov <petkovbb@googlemail.com>
+Date: Wed, 24 Jun 2009 19:44:11 +0200
 
-1) Fix regressions wrt. unexpected IRQs during early device
-   probe and startup.  From Bart.
+> On Wed, Jun 24, 2009 at 03:39:09AM -0700, David Miller wrote:
+>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Date: Wed, 24 Jun 2009 12:09:53 +0200
+>> 
+>> > The obscure reasons is just the fact that both ide-floppy and ide-tape
+>> > had a they own duplicated/buggy request completion routines.
+>> > 
+>> > While they were being unified the whole bunch of similar class of bugs
+>> > were fixed so I agree that there may still be more issues to deal with
+>> > there.
+>> 
+>> I see, the ->pc_callback() of these things set rq->errors and then
+>> ide_pc_intr() happily overrides whatever was set there, either on it's
+>> own or via ide_complete_rq().
+>> 
+>> I'll look over this some more while I wait for the testing results
+>> from Borislav.
+> 
+> Ok, let's see now, I did some testing but can't seem to hit that
+> particular path because it is taken relatively rarely - it can be
+> reached from start_request() and ide_atapi_error() via ide_error for
+> ide-floppy and ide-tape.
+> 
+> If my code staring doesn't mislead me, the start_request()-one has to
+> happen during an IDE reset operation, while we're polling for reset
+> completion _and_ when drive->failures has reached drive->max_failures
+> since this is the only site the drive->failures counter is increased.
+> 
+> The ide_atapi_error() cannot happen because (!blk_fs_request(rq))
+> requests are being completed in ide_error() with the respective error
+> status.
+> 
+> It is possible that I've missed something so feel free to correct me
+> and/or suggest a different testing approach.
 
-2) Because the ID block bits were busted at the time of the
-   call, until that was fixed the DMA info validity checker
-   was always checking garbage.  Usually zeros.
+Ok, thanks Borislav.
 
-   Now that it isn't checking garbage, it's triggering for
-   all kinds of devices.  Those devices always functioned
-   properly so the warning checks are just noise.
-
-   So we simply remove them.  Fix from Bart.
-
-3) cs5520's second port IRQ wasn't being setup properly.  With
-   help from Bart and Alan Cox.
-
-4) ide-cd had some warnings added when the CDROM advertises a
-   strange block size.  But this check is overzealous, and since
-   the code does correct the value it's only valuable to print
-   this warning once instead of spamming your kernel log file
-   every time your some daemon checks the CDROM for a present
-   disc.
-
-   From Frans Pop and your's truly.
-
-5) Quantum fireball with APL.090 firmware needs ivb_list[] cable
-   detection workaround.  From Bart.
-
-6) Power management handling of requests isn't air tight.  Fix
-   from Bart.
-
-Please pull, thanks!
-
-The following changes since commit 4e8a2372f9255a1464ef488ed925455f53fbdaa1:
-  Mikael Pettersson (1):
-        nvidiafb: fix boot-time printk string
-
-are available in the git repository at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
-
-Bartlomiej Zolnierkiewicz (4):
-      ide: fix handling of unexpected IRQs vs request_irq()
-      ide: relax DMA info validity checking
-      ide: add QUANTUM FIREBALLct20 30 with firmware APL.090 to ivb_list[]
-      ide: improve handling of Power Management requests
-
-David S. Miller (2):
-      ide-cd: Don't warn on bogus block size unless it actually matters.
-      ide cs5520: Initialize second port's interrupt number.
-
-Frans Pop (1):
-      ide-cd: Improve "weird block size" error message
-
- drivers/ide/cs5520.c    |    1 +
- drivers/ide/ide-cd.c    |   10 +++++---
- drivers/ide/ide-dma.c   |   21 ------------------
- drivers/ide/ide-io.c    |   54 +++++++++++++++++++---------------------------
- drivers/ide/ide-iops.c  |    4 +--
- drivers/ide/ide-probe.c |   23 +++++++++++++++++--
- include/linux/ide.h     |    2 -
- 7 files changed, 50 insertions(+), 65 deletions(-)
+My intention is to apply patches #2 and #3, thanks everyone!
