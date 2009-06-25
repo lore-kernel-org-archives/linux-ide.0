@@ -1,51 +1,80 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13619] Inserting a video DVD causes a kernel panic
-Date: Thu, 25 Jun 2009 10:02:48 GMT
-Message-ID: <200906251002.n5PA2mUo001568@demeter.kernel.org>
-References: <bug-13619-11633@http.bugzilla.kernel.org/>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT]: IDE fixes
+Date: Thu, 25 Jun 2009 03:03:43 -0700 (PDT)
+Message-ID: <20090625.030343.140417558.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36215 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbZFYKCp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 06:02:45 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5PA2mlk001569
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jun 2009 10:02:48 GMT
-In-Reply-To: <bug-13619-11633@http.bugzilla.kernel.org/>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57892
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752218AbZFYKDj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 06:03:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13619
-
-
-Kai Wasserb=C3=A4ch <debian@carbon-project.org> changed:
-
-           What    |Removed                     |Added
------------------------------------------------------------------------=
------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |DUPLICATE
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+1) Fix regressions wrt. unexpected IRQs during early device
+   probe and startup.  From Bart.
 
+2) Because the ID block bits were busted at the time of the
+   call, until that was fixed the DMA info validity checker
+   was always checking garbage.  Usually zeros.
 
---- Comment #3 from Kai Wasserb=C3=A4ch <debian@carbon-project.org>  20=
-09-06-25 10:02:47 ---
-Dear Borislav,
-thank you for your lightning-fast reply! Indeed this was the fix. Sorry=
- for the
-noise, should have probably searched the bug database more thoroughly.
+   Now that it isn't checking garbage, it's triggering for
+   all kinds of devices.  Those devices always functioned
+   properly so the warning checks are just noise.
 
-Kind regards,
-Kai Wasserb=C3=A4ch
+   So we simply remove them.  Fix from Bart.
 
-*** This bug has been marked as a duplicate of bug 13399 ***
+3) cs5520's second port IRQ wasn't being setup properly.  With
+   help from Bart and Alan Cox.
 
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+4) ide-cd had some warnings added when the CDROM advertises a
+   strange block size.  But this check is overzealous, and since
+   the code does correct the value it's only valuable to print
+   this warning once instead of spamming your kernel log file
+   every time your some daemon checks the CDROM for a present
+   disc.
+
+   From Frans Pop and your's truly.
+
+5) Quantum fireball with APL.090 firmware needs ivb_list[] cable
+   detection workaround.  From Bart.
+
+6) Power management handling of requests isn't air tight.  Fix
+   from Bart.
+
+Please pull, thanks!
+
+The following changes since commit 4e8a2372f9255a1464ef488ed925455f53fbdaa1:
+  Mikael Pettersson (1):
+        nvidiafb: fix boot-time printk string
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Bartlomiej Zolnierkiewicz (4):
+      ide: fix handling of unexpected IRQs vs request_irq()
+      ide: relax DMA info validity checking
+      ide: add QUANTUM FIREBALLct20 30 with firmware APL.090 to ivb_list[]
+      ide: improve handling of Power Management requests
+
+David S. Miller (2):
+      ide-cd: Don't warn on bogus block size unless it actually matters.
+      ide cs5520: Initialize second port's interrupt number.
+
+Frans Pop (1):
+      ide-cd: Improve "weird block size" error message
+
+ drivers/ide/cs5520.c    |    1 +
+ drivers/ide/ide-cd.c    |   10 +++++---
+ drivers/ide/ide-dma.c   |   21 ------------------
+ drivers/ide/ide-io.c    |   54 +++++++++++++++++++---------------------------
+ drivers/ide/ide-iops.c  |    4 +--
+ drivers/ide/ide-probe.c |   23 +++++++++++++++++--
+ include/linux/ide.h     |    2 -
+ 7 files changed, 50 insertions(+), 65 deletions(-)
