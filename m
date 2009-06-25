@@ -1,45 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_rdc: driver for RDC ATA devices
-Date: Wed, 24 Jun 2009 19:38:23 -0400
-Message-ID: <4A42B8EF.1010100@garzik.org>
-References: <20090624172930.24354.80799.stgit@t61.ukuu.org.uk>	 <4A42800D.6020202@garzik.org> <20090624235548.681b8992@lxorguk.ukuu.org.uk> <1245886425.29098.117.camel@Joe-Laptop.home>
+From: David Miller <davem@davemloft.net>
+Subject: merge window now closed
+Date: Wed, 24 Jun 2009 17:32:54 -0700 (PDT)
+Message-ID: <20090624.173254.153450975.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39878 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756755AbZFXXht (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Jun 2009 19:37:49 -0400
-In-Reply-To: <1245886425.29098.117.camel@Joe-Laptop.home>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57344
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752457AbZFYAcu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 20:32:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, kevin.huang@rdc.com.tw, greg@kroah.com, Linux IDE mailing list <linux-ide@vger.kernel.org>
-
-Joe Perches wrote:
-> On Wed, 2009-06-24 at 23:55 +0100, Alan Cox wrote:
->>> Seems fine and fairly straightforward to me.  My lone comment -- go 
->>> through and replace magic numbers with named constants, for e.g. the PCI 
->>> config registers that program timings...
->> Its based on your ata_piix driver. Feel free to update that and I'll pull
->> names and things across to match.
-> 
-> I sent a few patches to Jeff privately to do just that.
-> 
-> I'm waiting for Jeff to see if he wants me to post
-> them publicly or not.
-
-Always post patches publicly...  private mail is easily lost, left 
-undiscussed and unarchived, etc.
+To: netdev@vger.kernel.org
+Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-> Jeff, your email address in MAINTAINERS is jgarzik@pobox.com.
-> Should it be changed to redhat.com or garzik.org or left as is.
+Now that the 2.6.31 merge window is closed, you should be fixing
+regressions and testing things.
 
-MAINTAINERS is accurate :)
+Things will tighten, as usual.
 
-	Jeff
+As soon as Stephen Rothwell gives the OK, I'll open up new -next trees
+for networking/sparc/IDE.  In the mean time non-fixes (and after RC2
+or so, non-regression-fixes) will accumulate in patchwork until the
+-next tree(s) are cut.
 
+Please respect these rules so 2.6.31 can go out quickly and we can
+then merge all kinds of new fun stuff for 2.6.32.
 
-
+Thanks everyone for all of your hard work this merge window!
