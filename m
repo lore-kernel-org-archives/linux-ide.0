@@ -1,39 +1,30 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13619] Inserting a video DVD causes a kernel panic
-Date: Thu, 25 Jun 2009 08:14:29 GMT
-Message-ID: <200906250814.n5P8ETBF017880@demeter.kernel.org>
-References: <bug-13619-11633@http.bugzilla.kernel.org/>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: porting IDE patches to PATA driver
+Date: Thu, 25 Jun 2009 09:23:24 +0100
+Message-ID: <20090625092324.2dd4de5a@lxorguk.ukuu.org.uk>
+References: <323951117.20090625100956@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:51580 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757061AbZFYIO0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 04:14:26 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5P8ETEI017881
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jun 2009 08:14:29 GMT
-In-Reply-To: <bug-13619-11633@http.bugzilla.kernel.org/>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:54622 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755947AbZFYIVv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 04:21:51 -0400
+In-Reply-To: <323951117.20090625100956@web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrei Martynov <andrei.martynov@web.de>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13619
+On Thu, 25 Jun 2009 10:09:56 +0200
+Andrei Martynov <andrei.martynov@web.de> wrote:
 
+> Hi,
+> 
+> I'm porting Sigma IDE driver for EM85XX chipset from 2.4.17 to 2.6
+> kernel for an open-source project. Is there any upgrade guide
+> available? If not, what are the modern ATA equivalents for old
+> ide_dma_off, ide_dma_off_quietly and ide_dma_test_irq commands?
 
-
-
-
---- Comment #1 from Kai Wasserb=C3=A4ch <debian@carbon-project.org>  20=
-09-06-25 08:14:29 ---
-Just forgot to mention that: this might be a duplicate of #13345, but t=
-here the
-error seemed to have occurred also with 2.6.29.x and with a CD-ROM devi=
-ce, so I
-was not sure and thought it better to create a new bug report.
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Are you trying to port it to the legacy IDE code in 2.6 or to libata ?
