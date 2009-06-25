@@ -1,36 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: porting IDE patches to PATA driver
-Date: Thu, 25 Jun 2009 12:29:58 +0100
-Message-ID: <20090625122958.510c28ad@lxorguk.ukuu.org.uk>
-References: <323951117.20090625100956@web.de>
-	<20090625092324.2dd4de5a@lxorguk.ukuu.org.uk>
-	<14164712.20090625103834@web.de>
-	<20090625100542.525dba02@lxorguk.ukuu.org.uk>
-	<951976828.20090625123021@web.de>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out
+ of the 'queue' sysfs directory.
+Date: Thu, 25 Jun 2009 12:36:15 +0100
+Message-ID: <4A43612F.2000100@anonymous.org.uk>
+References: <19010.62951.886231.96622@notabene.brown>    <yq11vp8spxo.fsf@sermon.lab.mkp.net> <125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59386 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751311AbZFYL20 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jun 2009 07:28:26 -0400
-In-Reply-To: <951976828.20090625123021@web.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andrei Martynov <andrei.martynov@web.de>
-Cc: linux-ide@vger.kernel.org
 
-> ide_dma_off_quietly and ide_dma_on commands. The logic implemented in
-> the old code is "stop DMA transfer but do not disable DMA in case of errors".
+On 25/06/2009 12:07, NeilBrown wrote:
+[...]
+> stripe-width is only really needed on raid4/5/6 as it is aimed at
+> avoiding read-modify-write, so it would be the stripe size, which would
+> be minimum_io_size.
+[...]
+> stride-size is used for raid0 or raid4, or the "Asymmetric" raid5 layouts.
+> It allows ext3 to stagger which drive certain 'hot' data structures are
+> on.  The current metrics don't allow for that at all.
+> I'm not saying they should, and I'm not sure how they could.  But it
+> is sad.
 
-The two layers don't line up 1:1. In the event of a timeout then libata
-layer calls the ->lost_interrupt() which if you inherit from bmdma checks
-controller status in the taskfiles to see if the command finished fine by
-the IRQ was lost before deciding an error situation occurs
+Even sadder, when a raid 0/4/5/6 is reshaped over more discs (and 
+probably other scenarios outwith md), both stripe-width and stride-size 
+change. Is there any prospect this new stacking could give us the 
+opportunity to tell our client (LVM, filesystem, whatever) about the 
+change, or that they'll be able to take advantage of it?
 
-If we get an error we quiesce the channel entirely and then recover it.
+Cheers,
 
-It would be useful I think if you posted the current code, and also to
-know if you see the same problem (lost IRQ etc) with ATAPI as well as ATA
-
+John.
