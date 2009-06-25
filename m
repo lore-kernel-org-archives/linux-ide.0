@@ -1,32 +1,37 @@
-From: David Miller <davem@davemloft.net>
-Subject: merge window now closed
-Date: Wed, 24 Jun 2009 17:32:54 -0700 (PDT)
-Message-ID: <20090624.173254.153450975.davem@davemloft.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] libata: Delegate nonrot flag setting to SCSI
+Date: Wed, 24 Jun 2009 21:01:45 -0400
+Message-ID: <yq1eit9rurq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57344
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752457AbZFYAcu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 20:32:50 -0400
+Received: from rcsinet12.oracle.com ([148.87.113.124]:43937 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751270AbZFYBCo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2009 21:02:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: sparclinux@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, jens.axboe@oracle.com, linux-ide@vger.kernel.org
 
 
-Now that the 2.6.31 merge window is closed, you should be fixing
-regressions and testing things.
+Now that the SCSI disk driver correctly handles non-rotational devices
+we can move setting the queue flag to SCSI.
 
-Things will tighten, as usual.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-As soon as Stephen Rothwell gives the OK, I'll open up new -next trees
-for networking/sparc/IDE.  In the mean time non-fixes (and after RC2
-or so, non-regression-fixes) will accumulate in patchwork until the
--next tree(s) are cut.
+---
 
-Please respect these rules so 2.6.31 can go out quickly and we can
-then merge all kinds of new fun stuff for 2.6.32.
-
-Thanks everyone for all of your hard work this merge window!
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1119,10 +1119,6 @@ static int ata_scsi_dev_config(struct sc
+ 
+ 		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
+ 	} else {
+-		if (ata_id_is_ssd(dev->id))
+-			queue_flag_set_unlocked(QUEUE_FLAG_NONROT,
+-						sdev->request_queue);
+-
+ 		/* ATA devices must be sector aligned */
+ 		blk_queue_update_dma_alignment(sdev->request_queue,
+ 					       ATA_SECT_SIZE - 1);
