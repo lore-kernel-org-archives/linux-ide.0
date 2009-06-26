@@ -1,69 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: porting IDE patches to PATA driver
-Date: Fri, 26 Jun 2009 17:21:43 +0100
-Message-ID: <20090626172143.3fe6a59c@lxorguk.ukuu.org.uk>
-References: <323951117.20090625100956@web.de>
-	<20090625092324.2dd4de5a@lxorguk.ukuu.org.uk>
-	<14164712.20090625103834@web.de>
-	<20090625100542.525dba02@lxorguk.ukuu.org.uk>
-	<951976828.20090625123021@web.de>
-	<20090625122958.510c28ad@lxorguk.ukuu.org.uk>
-	<96179821.20090626152440@web.de>
-	<20090626144639.4bc822b8@lxorguk.ukuu.org.uk>
-	<792909512.20090626164052@web.de>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide-cd: handle fragmented packet commands gracefully
+Date: Fri, 26 Jun 2009 09:23:33 -0700 (PDT)
+Message-ID: <20090626.092333.104882157.davem@davemloft.net>
+References: <1245574527-2104-1-git-send-email-petkovbb@gmail.com>
+	<200906221150.22992.bzolnier@gmail.com>
+	<20090626081958.GA15449@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48800 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752114AbZFZQUU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jun 2009 12:20:20 -0400
-In-Reply-To: <792909512.20090626164052@web.de>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57662
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750698AbZFZQX3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jun 2009 12:23:29 -0400
+In-Reply-To: <20090626081958.GA15449@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrei Martynov <andrei.martynov@web.de>
-Cc: linux-ide@vger.kernel.org
+To: petkovbb@googlemail.com
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Correct, libata does call corresponding interface and the functions
-> are defined for the cpu. But this architecture is buggy. It is
-> necessary to clean (write back) complete cache before DMA write
-> operation even if the corresponding range is already cleaned,
-> otherwise few bytes in the written block are corrupted at random
-> offset. I've spent many days playing with dma interface and even
-> calculating md5sum of every written block before I had to accept this
-> fact.
+From: Borislav Petkov <petkovbb@googlemail.com>
+Date: Fri, 26 Jun 2009 10:19:58 +0200
 
-In which case you ultimately want to fix the architecture defintions for
-the DMA cohrency really but thats a side issue as it doesn't explain the
-MWDMA problem. The source you posted has MWDMA undefined which makes me
-wonder if it matches the binary your dmesg is from. It's also possible
-some of the other fixes in that code are relevant to MWDMA - certainly
-your driver looks sane.
-
-> controller switches to a specific DVD-LOADER mode as soon as kernel
-> sends any command to the slave device, so they had to patch sources
-> and add a strange looking command
+> Hi David,
 > 
-> OUT_BYTE((head|drive->select.all) & ~(1<<4), IDE_SELECT_REG);
+> On Mon, Jun 22, 2009 at 11:50:22AM +0200, Bartlomiej Zolnierkiewicz wrote:
+>> On Sunday 21 June 2009 10:55:27 Borislav Petkov wrote:
+>> > There are some devices in the wild that clear the DRQ bit during the
+>> > last word of a packet command and therefore could use a "second chance"
+>> > for that last word of data to be xferred instead of simply failing the
+>> > request. Do that by attempting to suck in those last bytes in PIO mode.
+>> > 
+>> > In addition, the ATA_ERR bit has to be cleared for we cannot be sure the
+>> > data is valid otherwise.
+>> > 
+>> > See http://bugzilla.kernel.org/show_bug.cgi?id=13399 for details.
+>> > 
+>> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+>> 
+>> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > 
-> everywhere the slave device is accessed to cheat the controller and
-> let it believe it talks to the master. Slave device remains active
-> because it was already selected but the controller assumes we are
-> talking to the master and does not switch to DVD-LOADER mode.
+> can you pick that one too, please. I can't seem to find it on patchwork.
 
-That can be done in a libata driver by providing your own exec_command
-functions but again could wait. Try something like
+Yep, I'll dig into the archives to get it, I had this on my TODO
+list.
 
-static void my_sff_exec_command(struct ata_port *ap, const struct
-	ata_taskfile *tf)
-{
-	iowrite8(tf->command, ap->ioaddr.command_addr);
-	if (tf->flags & ATA_TFLAG_DEVICE)
-		iowrite8(tf->device & ~ATA_DEV1, ap->ioaddr.device_addr);
-	ata_sff_pause(ap);
-}
-
-	.sff_exec_command = my_sff_exec_command,
-
-
+Thanks!
