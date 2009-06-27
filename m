@@ -1,48 +1,19 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-cd: handle fragmented packet commands gracefully
-Date: Fri, 26 Jun 2009 09:23:33 -0700 (PDT)
-Message-ID: <20090626.092333.104882157.davem@davemloft.net>
-References: <1245574527-2104-1-git-send-email-petkovbb@gmail.com>
-	<200906221150.22992.bzolnier@gmail.com>
-	<20090626081958.GA15449@liondog.tnic>
+From: "Humphrey Casey" <trilochan.bhatt@mapleleafmail.com>
+Subject: Huge sale only thi weekend
+Date: Sat, 27 Jun 2009 04:53:22 -0000
+Message-ID: <20090627045322.1010803@mapleleafmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57662
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750698AbZFZQX3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jun 2009 12:23:29 -0400
-In-Reply-To: <20090626081958.GA15449@liondog.tnic>
+Received: from 82-42-25-227.cable.ubr02.know.blueyonder.co.uk ([82.42.25.227]:1883
+	"HELO 82-42-25-227.cable.ubr02.know.blueyonder.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750746AbZF0EEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Jun 2009 00:04:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@googlemail.com
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Borislav Petkov <petkovbb@googlemail.com>
-Date: Fri, 26 Jun 2009 10:19:58 +0200
+5 ways to make your love more passionate. http://wkpde.wecsogih.cn/
 
-> Hi David,
-> 
-> On Mon, Jun 22, 2009 at 11:50:22AM +0200, Bartlomiej Zolnierkiewicz wrote:
->> On Sunday 21 June 2009 10:55:27 Borislav Petkov wrote:
->> > There are some devices in the wild that clear the DRQ bit during the
->> > last word of a packet command and therefore could use a "second chance"
->> > for that last word of data to be xferred instead of simply failing the
->> > request. Do that by attempting to suck in those last bytes in PIO mode.
->> > 
->> > In addition, the ATA_ERR bit has to be cleared for we cannot be sure the
->> > data is valid otherwise.
->> > 
->> > See http://bugzilla.kernel.org/show_bug.cgi?id=13399 for details.
->> > 
->> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
->> 
->> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> can you pick that one too, please. I can't seem to find it on patchwork.
-
-Yep, I'll dig into the archives to get it, I had this on my TODO
-list.
-
-Thanks!
