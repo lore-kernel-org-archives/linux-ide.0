@@ -1,54 +1,57 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 19/62] drivers/ide: Remove unnecessary semicolons
-Date: Sun, 28 Jun 2009 09:26:24 -0700
-Message-ID: <e5dd29302107ff49a0a34e24df1438966f4285f5.1246173681.git.joe@perches.com>
-References: <cover.1246173664.git.joe@perches.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: porting IDE patches to PATA driver
+Date: Mon, 29 Jun 2009 00:33:06 +0400
+Message-ID: <4A47D382.2080308@ru.mvista.com>
+References: <323951117.20090625100956@web.de>	<20090625092324.2dd4de5a@lxorguk.ukuu.org.uk>	<14164712.20090625103834@web.de>	<20090625100542.525dba02@lxorguk.ukuu.org.uk>	<951976828.20090625123021@web.de>	<20090625122958.510c28ad@lxorguk.ukuu.org.uk>	<96179821.20090626152440@web.de>	<20090626144639.4bc822b8@lxorguk.ukuu.org.uk>	<792909512.20090626164052@web.de> <20090626172143.3fe6a59c@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1106 "EHLO
-	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074AbZF1Q1c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jun 2009 12:27:32 -0400
-In-Reply-To: <cover.1246173664.git.joe@perches.com>
+Received: from h155.mvista.com ([63.81.120.155]:3489 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752873AbZF1UdI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Jun 2009 16:33:08 -0400
+In-Reply-To: <20090626172143.3fe6a59c@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: trivial@kernel.org, Andrew Morton <akpm@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Andrei Martynov <andrei.martynov@web.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ide/ide-probe.c |    2 +-
- drivers/ide/umc8672.c   |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Hello.
 
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 1bb106f..20120fd 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1201,7 +1201,7 @@ static int ide_find_port_slot(const struct ide_port_info *d)
- {
- 	int idx = -ENOENT;
- 	u8 bootable = (d && (d->host_flags & IDE_HFLAG_NON_BOOTABLE)) ? 0 : 1;
--	u8 i = (d && (d->host_flags & IDE_HFLAG_QD_2ND_PORT)) ? 1 : 0;;
-+	u8 i = (d && (d->host_flags & IDE_HFLAG_QD_2ND_PORT)) ? 1 : 0;
- 
- 	/*
- 	 * Claim an unassigned slot.
-diff --git a/drivers/ide/umc8672.c b/drivers/ide/umc8672.c
-index 0608d41..60f936e 100644
---- a/drivers/ide/umc8672.c
-+++ b/drivers/ide/umc8672.c
-@@ -170,9 +170,9 @@ static int __init umc8672_init(void)
- 		goto out;
- 
- 	if (umc8672_probe() == 0)
--		return 0;;
-+		return 0;
- out:
--	return -ENODEV;;
-+	return -ENODEV;
- }
- 
- module_init(umc8672_init);
--- 
-1.6.3.1.10.g659a0.dirty
+Alan Cox wrote:
+
+>> controller switches to a specific DVD-LOADER mode as soon as kernel
+>> sends any command to the slave device, so they had to patch sources
+>> and add a strange looking command
+>>
+>> OUT_BYTE((head|drive->select.all) & ~(1<<4), IDE_SELECT_REG);
+>>
+>> everywhere the slave device is accessed to cheat the controller and
+>> let it believe it talks to the master. Slave device remains active
+>> because it was already selected but the controller assumes we are
+>> talking to the master and does not switch to DVD-LOADER mode.
+>>     
+>
+> That can be done in a libata driver by providing your own exec_command
+> functions but again could wait. Try something like
+>
+> static void my_sff_exec_command(struct ata_port *ap, const struct
+> 	ata_taskfile *tf)
+> {
+> 	iowrite8(tf->command, ap->ioaddr.command_addr);
+> 	if (tf->flags & ATA_TFLAG_DEVICE)
+> 		iowrite8(tf->device & ~ATA_DEV1, ap->ioaddr.device_addr);
+>   
+
+  Note that this possibly violates ATA specs that forbid writing to any 
+register with BSY set -- which might well be after wroiting a command, 
+despite 400 ns couldn't have passed yet. IOW, I don't advice such 
+trickery -- your write may well  be ignored.
+
+> 	ata_sff_pause(ap);
+> }
+
+MBR, Sergei
+
 
