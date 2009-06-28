@@ -1,36 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sil3132 is resetting continuously
-Date: Sun, 28 Jun 2009 07:54:36 +0900
-Message-ID: <4A46A32C.8020306@gmail.com>
-References: <3fb94e50906270830q436e5aa4n8a40741cd0d738b8@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 12/62] drivers/ata: Remove unnecessary semicolons
+Date: Sun, 28 Jun 2009 09:26:17 -0700
+Message-ID: <1aed30c4ed1f1cb58c6101e943ca62900bc170ff.1246173680.git.joe@perches.com>
+References: <cover.1246173664.git.joe@perches.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:62017 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbZF0Wyi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Jun 2009 18:54:38 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so917765rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 27 Jun 2009 15:54:41 -0700 (PDT)
-In-Reply-To: <3fb94e50906270830q436e5aa4n8a40741cd0d738b8@mail.gmail.com>
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1091 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755752AbZF1Q1W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jun 2009 12:27:22 -0400
+In-Reply-To: <cover.1246173664.git.joe@perches.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sagar Borikar <sagar.borikar@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: trivial@kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Sagar Borikar wrote:
-> Hi list,
-> 
-> I am using sil3132 PCIe card on my ARM platform and I find that
-> whenever the system boots, the device gets hard reset. I am not able
-> see the device node as well. It always say that the controller is in
-> dubious state.  following is platform information:
-> 
-> CPU: cortex A8
-> kernel: 2.6.24
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/ata/pata_octeon_cf.c |    2 +-
+ drivers/ata/sata_inic162x.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Looks like it could be an IRQ routing problem.
-
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index 8d9343a..fc50dec 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -213,7 +213,7 @@ static void octeon_cf_set_dmamode(struct ata_port *ap, struct ata_device *dev)
+ 	 * This is tI, C.F. spec. says 0, but Sony CF card requires
+ 	 * more, we use 20 nS.
+ 	 */
+-	dma_tim.s.dmack_s = ns_to_tim_reg(tim_mult, 20);;
++	dma_tim.s.dmack_s = ns_to_tim_reg(tim_mult, 20);
+ 	dma_tim.s.dmack_h = ns_to_tim_reg(tim_mult, dma_ackh);
+ 
+ 	dma_tim.s.dmarq = dma_arq;
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index 8d890cc..4406902 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -405,7 +405,7 @@ static irqreturn_t inic_interrupt(int irq, void *dev_instance)
+ 	struct ata_host *host = dev_instance;
+ 	struct inic_host_priv *hpriv = host->private_data;
+ 	u16 host_irq_stat;
+-	int i, handled = 0;;
++	int i, handled = 0;
+ 
+ 	host_irq_stat = readw(hpriv->mmio_base + HOST_IRQ_STAT);
+ 
 -- 
-tejun
+1.6.3.1.10.g659a0.dirty
+
