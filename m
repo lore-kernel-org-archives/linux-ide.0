@@ -1,75 +1,271 @@
-From: ashish kalra <ashish.kalra@freescale.com>
-Subject: [PATCH][v2] sata_fsl: Add asynchronous notification support
-Date: Mon, 29 Jun 2009 20:46:34 +0530 (India Standard Time)
-Message-ID: <Pine.WNT.4.64.0906292044150.5480@B00888-02.fsl.freescale.net>
+From: david@lang.hm
+Subject: Re: [PATCH #upstream] sata_nv: use hardreset only for post-boot
+ probing
+Date: Mon, 29 Jun 2009 11:58:23 -0700 (PDT)
+Message-ID: <alpine.DEB.1.10.0906291148580.9159@asgard>
+References: <4A2F60C3.2070805@kernel.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:38842 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbZF2PQe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 11:16:34 -0400
-Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n5TFGbQc013014
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 08:16:38 -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id n5TFGZBP004908
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 10:16:36 -0500 (CDT)
+Received: from mail.lang.hm ([64.81.33.126]:51341 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990AbZF2TAh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jun 2009 15:00:37 -0400
+In-Reply-To: <4A2F60C3.2070805@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, lament.email.si@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Enable device hot-plug support on Port multiplier fan-out ports
+this does not apply to 2.6.30, is there a version of this patch that would 
+apply to 2.6.30?
 
-Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
----
-  drivers/ata/sata_fsl.c |   10 ++++++++--
-  1 files changed, 8 insertions(+), 2 deletions(-)
+also, what testing would need to be done on this before it is a candidate 
+for -stable?
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 94eaa43..5751145 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -34,7 +34,7 @@ enum {
+David Lang
 
-  	SATA_FSL_HOST_FLAGS	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-  				ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--				ATA_FLAG_PMP | ATA_FLAG_NCQ),
-+ 				ATA_FLAG_PMP | ATA_FLAG_NCQ | ATA_FLAG_AN),
+On Wed, 10 Jun 2009, Tejun Heo wrote:
 
-  	SATA_FSL_MAX_CMDS	= SATA_FSL_QUEUE_DEPTH,
-  	SATA_FSL_CMD_HDR_SIZE	= 16,	/* 4 DWORDS */
-@@ -132,7 +132,7 @@ enum {
-  	INT_ON_SINGL_DEVICE_ERR = (1 << 1),
-  	INT_ON_CMD_COMPLETE = 1,
-
--	INT_ON_ERROR = INT_ON_FATAL_ERR |
-+	INT_ON_ERROR = INT_ON_FATAL_ERR | INT_ON_SNOTIFY_UPDATE |
-  	    INT_ON_PHYRDY_CHG | INT_ON_SINGL_DEVICE_ERR,
-
-  	/*
-@@ -154,6 +154,7 @@ enum {
-
-  	DEFAULT_PORT_IRQ_ENABLE_MASK = IE_ON_FATAL_ERR | IE_ON_PHYRDY_CHG |
-  	    IE_ON_SIGNATURE_UPDATE |
-+	    IE_ON_SNOTIFY_UPDATE |
-  	    IE_ON_SINGL_DEVICE_ERR | IE_ON_CMD_COMPLETE,
-
-  	EXT_INDIRECT_SEG_PRD_FLAG = (1 << 31),
-@@ -1003,6 +1004,11 @@ static void sata_fsl_error_intr(struct ata_port *ap)
-  		freeze = 1;
-  	}
-
-+	/* Handle SDB FIS receive & notify update */
-+	if (hstatus & INT_ON_SNOTIFY_UPDATE) {
-+		sata_async_notification(ap);
-+	}
-+
-  	/* Handle PHYRDY change notification */
-  	if (hstatus & INT_ON_PHYRDY_CHG) {
-  		DPRINTK("SATA FSL: PHYRDY change indication\n");
--- 
-1.6.0
-
-
+> Date: Wed, 10 Jun 2009 16:29:07 +0900
+> From: Tejun Heo <tj@kernel.org>
+> To: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>,
+>     david@lang.hm, lament.email.si@gmail.com,
+>     IDE/ATA development list <linux-ide@vger.kernel.org>
+> Subject: [PATCH #upstream] sata_nv: use hardreset only for post-boot probing
+> 
+> When I thought it was finally defeated, it came back with vengeance.
+> The failure cases are ever more convoluted.  Now there is a single
+> combination which fails boot probing - MCP5x + Intel SSD and there are
+> two hotplug failure reports on different flavors where softreset fails
+> to bring up the device.
+>
+> Through the many bug reports after the switch to hardreset, the
+> following patterns emerged.
+>
+> - Softreset during boot always works.
+>
+> - Hardreset during boot sometimes fails to bring up the link on
+>  certain comibnations and device signature acquisition is unreliable.
+>
+> - Hardreset is often necessary after hotplug.
+>
+> It looks like the old behavior of preferring softreset was somehow
+> pretty close to the working reset protocol although it could have lost
+> a device during phy error handling by issuing hardreset.
+>
+> This patch implements nv_hardreset() which kicks in only for post-boot
+> (!LOADING) device probing resets.  This should be able to work around
+> all known problem cases.  This isn't perfect but given the various
+> hardreset quirks on these controllers, I think this is as good as it
+> can get.
+>
+> Tested on mcp5x (swncq), nf3 and ck804 for all both boot, warm and
+> hot probing cases.
+>
+> Kudos to all the bug reporters and their painful hours with these damn
+> controllers.  ;-)
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Robert Hancock <hancockr@shaw.ca>
+> Reported-by: David Lang <david@lang.hm>
+> Reported-by: Samo Vodopivec <lament.email.si@gmail.com>
+> ---
+> Jeff, please queue for 2.6.31.  I think this should be pretty safe but
+> well I've said that before several times for sata_nv already and was
+> wrong, so...
+>
+> Thanks.
+>
+> drivers/ata/sata_nv.c |  131 ++++++++++++++++++++++++++++++--------------------
+> 1 file changed, 81 insertions(+), 50 deletions(-)
+>
+> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> index 6cda12b..b2d11f3 100644
+> --- a/drivers/ata/sata_nv.c
+> +++ b/drivers/ata/sata_nv.c
+> @@ -305,8 +305,8 @@ static irqreturn_t nv_ck804_interrupt(int irq, void *dev_instance);
+> static int nv_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+> static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+>
+> -static int nv_noclassify_hardreset(struct ata_link *link, unsigned int *class,
+> -				   unsigned long deadline);
+> +static int nv_hardreset(struct ata_link *link, unsigned int *class,
+> +			unsigned long deadline);
+> static void nv_nf2_freeze(struct ata_port *ap);
+> static void nv_nf2_thaw(struct ata_port *ap);
+> static void nv_ck804_freeze(struct ata_port *ap);
+> @@ -406,49 +406,82 @@ static struct scsi_host_template nv_swncq_sht = {
+> 	.slave_configure	= nv_swncq_slave_config,
+> };
+>
+> -static struct ata_port_operations nv_common_ops = {
+> +/*
+> + * NV SATA controllers have various different problems with hardreset
+> + * protocol depending on the specific controller and device.
+> + *
+> + * GENERIC:
+> + *
+> + *  bko11195 reports that link doesn't come online after hardreset on
+> + *  generic nv's and there have been several other similar reports on
+> + *  linux-ide.
+> + *
+> + *  bko12351#c23 reports that warmplug on MCP61 doesn't work with
+> + *  softreset.
+> + *
+> + * NF2/3:
+> + *
+> + *  bko3352 reports nf2/3 controllers can't determine device signature
+> + *  reliably after hardreset.  The following thread reports detection
+> + *  failure on cold boot with the standard debouncing timing.
+> + *
+> + *  http://thread.gmane.org/gmane.linux.ide/34098
+> + *
+> + *  bko12176 reports that hardreset fails to bring up the link during
+> + *  boot on nf2.
+> + *
+> + * CK804:
+> + *
+> + *  For initial probing after boot and hot plugging, hardreset mostly
+> + *  works fine on CK804 but curiously, reprobing on the initial port
+> + *  by rescanning or rmmod/insmod fails to acquire the initial D2H Reg
+> + *  FIS in somewhat undeterministic way.
+> + *
+> + * SWNCQ:
+> + *
+> + *  bko12351 reports that when SWNCQ is enabled, for hotplug to work,
+> + *  hardreset should be used and hardreset can't report proper
+> + *  signature, which suggests that mcp5x is closer to nf2 as long as
+> + *  reset quirkiness is concerned.
+> + *
+> + *  bko12703 reports that boot probing fails for intel SSD with
+> + *  hardreset.  Link fails to come online.  Softreset works fine.
+> + *
+> + * The failures are varied but the following patterns seem true for
+> + * all flavors.
+> + *
+> + * - Softreset during boot always works.
+> + *
+> + * - Hardreset during boot sometimes fails to bring up the link on
+> + *   certain comibnations and device signature acquisition is
+> + *   unreliable.
+> + *
+> + * - Hardreset is often necessary after hotplug.
+> + *
+> + * So, preferring softreset for boot probing and error handling (as
+> + * hardreset might bring down the link) but using hardreset for
+> + * post-boot probing should work around the above issues in most
+> + * cases.  Define nv_hardreset() which only kicks in for post-boot
+> + * probing and use it for all variants.
+> + */
+> +static struct ata_port_operations nv_generic_ops = {
+> 	.inherits		= &ata_bmdma_port_ops,
+> 	.lost_interrupt		= ATA_OP_NULL,
+> 	.scr_read		= nv_scr_read,
+> 	.scr_write		= nv_scr_write,
+> +	.hardreset		= nv_hardreset,
+> };
+>
+> -/* OSDL bz11195 reports that link doesn't come online after hardreset
+> - * on generic nv's and there have been several other similar reports
+> - * on linux-ide.  Disable hardreset for generic nv's.
+> - */
+> -static struct ata_port_operations nv_generic_ops = {
+> -	.inherits		= &nv_common_ops,
+> -	.hardreset		= ATA_OP_NULL,
+> -};
+> -
+> -/* nf2 is ripe with hardreset related problems.
+> - *
+> - * kernel bz#3352 reports nf2/3 controllers can't determine device
+> - * signature reliably.  The following thread reports detection failure
+> - * on cold boot with the standard debouncing timing.
+> - *
+> - * http://thread.gmane.org/gmane.linux.ide/34098
+> - *
+> - * And bz#12176 reports that hardreset simply doesn't work on nf2.
+> - * Give up on it and just don't do hardreset.
+> - */
+> static struct ata_port_operations nv_nf2_ops = {
+> 	.inherits		= &nv_generic_ops,
+> 	.freeze			= nv_nf2_freeze,
+> 	.thaw			= nv_nf2_thaw,
+> };
+>
+> -/* For initial probing after boot and hot plugging, hardreset mostly
+> - * works fine on CK804 but curiously, reprobing on the initial port by
+> - * rescanning or rmmod/insmod fails to acquire the initial D2H Reg FIS
+> - * in somewhat undeterministic way.  Use noclassify hardreset.
+> - */
+> static struct ata_port_operations nv_ck804_ops = {
+> -	.inherits		= &nv_common_ops,
+> +	.inherits		= &nv_generic_ops,
+> 	.freeze			= nv_ck804_freeze,
+> 	.thaw			= nv_ck804_thaw,
+> -	.hardreset		= nv_noclassify_hardreset,
+> 	.host_stop		= nv_ck804_host_stop,
+> };
+>
+> @@ -476,19 +509,8 @@ static struct ata_port_operations nv_adma_ops = {
+> 	.host_stop		= nv_adma_host_stop,
+> };
+>
+> -/* Kernel bz#12351 reports that when SWNCQ is enabled, for hotplug to
+> - * work, hardreset should be used and hardreset can't report proper
+> - * signature, which suggests that mcp5x is closer to nf2 as long as
+> - * reset quirkiness is concerned.  Define separate ops for mcp5x with
+> - * nv_noclassify_hardreset().
+> - */
+> -static struct ata_port_operations nv_mcp5x_ops = {
+> -	.inherits		= &nv_common_ops,
+> -	.hardreset		= nv_noclassify_hardreset,
+> -};
+> -
+> static struct ata_port_operations nv_swncq_ops = {
+> -	.inherits		= &nv_mcp5x_ops,
+> +	.inherits		= &nv_generic_ops,
+>
+> 	.qc_defer		= ata_std_qc_defer,
+> 	.qc_prep		= nv_swncq_qc_prep,
+> @@ -557,7 +579,7 @@ static const struct ata_port_info nv_port_info[] = {
+> 		.pio_mask	= NV_PIO_MASK,
+> 		.mwdma_mask	= NV_MWDMA_MASK,
+> 		.udma_mask	= NV_UDMA_MASK,
+> -		.port_ops	= &nv_mcp5x_ops,
+> +		.port_ops	= &nv_generic_ops,
+> 		.private_data	= NV_PI_PRIV(nv_generic_interrupt, &nv_sht),
+> 	},
+> 	/* SWNCQ */
+> @@ -1559,15 +1581,24 @@ static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+> 	return 0;
+> }
+>
+> -static int nv_noclassify_hardreset(struct ata_link *link, unsigned int *class,
+> -				   unsigned long deadline)
+> +static int nv_hardreset(struct ata_link *link, unsigned int *class,
+> +			unsigned long deadline)
+> {
+> -	bool online;
+> -	int rc;
+> +	struct ata_eh_context *ehc = &link->eh_context;
+>
+> -	rc = sata_link_hardreset(link, sata_deb_timing_hotplug, deadline,
+> -				 &online, NULL);
+> -	return online ? -EAGAIN : rc;
+> +	/* Do hardreset iff it's post-boot probing, please read the
+> +	 * comment above port ops for details.
+> +	 */
+> +	if (!(link->ap->pflags & ATA_PFLAG_LOADING) &&
+> +	    !ata_dev_enabled(link->device))
+> +		sata_link_hardreset(link, sata_deb_timing_hotplug, deadline,
+> +				    NULL, NULL);
+> +	else if (!(ehc->i.flags & ATA_EHI_QUIET))
+> +		ata_link_printk(link, KERN_INFO,
+> +				"nv: skipping hardreset on occupied port\n");
+> +
+> +	/* device signature acquisition is unreliable */
+> +	return -EAGAIN;
+> }
+>
+> static void nv_nf2_freeze(struct ata_port *ap)
+>
