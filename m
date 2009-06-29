@@ -1,220 +1,77 @@
-From: ashish kalra <ashish.kalra@freescale.com>
-Subject: [RESEND][PATCH] sata_fsl: hard and soft reset split
-Date: Mon, 29 Jun 2009 18:56:50 +0530 (India Standard Time)
-Message-ID: <Pine.WNT.4.64.0906291854180.2640@B00888-02.fsl.freescale.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Errors on ICH10R with Seagate HDDs
+Date: Mon, 29 Jun 2009 23:09:20 +0900
+Message-ID: <4A48CB10.5020409@kernel.org>
+References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de> <49F3C03C.1090803@kernel.org> <4A36FC7D.5050805@hadiko.de> <4A388E1F.5070404@kernel.org> <4A3FD015.4090602@hadiko.de> <4A443366.4010807@kernel.org> <4A4878B3.9020206@hadiko.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/mixed;
+ boundary="------------010807070500020407010503"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:51454 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbZF2N0v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 09:26:51 -0400
-Received: from de01smr01.freescale.net (de01smr01.freescale.net [10.208.0.31])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n5TDQreW013272
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 06:26:54 -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by de01smr01.freescale.net (8.13.1/8.13.0) with ESMTP id n5TDQpI3023724
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 08:26:52 -0500 (CDT)
+Received: from hera.kernel.org ([140.211.167.34]:53721 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751433AbZF2OJ0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jun 2009 10:09:26 -0400
+In-Reply-To: <4A4878B3.9020206@hadiko.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org
+To: Thomas Jackowski <aXe@hadiko.de>
+Cc: linux-ide@vger.kernel.org
 
-Split sata_fsl_softreset() into hard and soft resets to make
-error-handling more efficient & device and PMP detection more reliable.
+This is a multi-part message in MIME format.
+--------------010807070500020407010503
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Also includes fix for PMP support, driver tested with Sil3726, Sil4726 &
-Exar PMP controllers.
+Thomas Jackowski wrote:
+> there is no relevant output in this loop (running about 6 hours).
 
-Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
----
-  drivers/ata/sata_fsl.c |   85 +++++++++++++++++++++++++-----------------------
-  1 files changed, 44 insertions(+), 41 deletions(-)
+Hmm... can you please try the attached patch?  It should show us who's
+issuing the CPM.
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 5751145..c8e2fad 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -708,34 +708,17 @@ static unsigned int sata_fsl_dev_classify(struct ata_port *ap)
-  	return ata_dev_classify(&tf);
-  }
+Thanks.
 
--static int sata_fsl_prereset(struct ata_link *link, unsigned long deadline)
--{
--	/* FIXME: Never skip softreset, sata_fsl_softreset() is
--	 * combination of soft and hard resets.  sata_fsl_softreset()
--	 * needs to be splitted into soft and hard resets.
--	 */
--	return 0;
--}
--
--static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
-+static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
-  					unsigned long deadline)
-  {
-  	struct ata_port *ap = link->ap;
--	struct sata_fsl_port_priv *pp = ap->private_data;
-  	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
-  	void __iomem *hcr_base = host_priv->hcr_base;
--	int pmp = sata_srst_pmp(link);
-  	u32 temp;
--	struct ata_taskfile tf;
--	u8 *cfis;
--	u32 Serror;
-  	int i = 0;
-  	unsigned long start_jiffies;
+-- 
+tejun
 
--	DPRINTK("in xx_softreset\n");
--
--	if (pmp != SATA_PMP_CTRL_PORT)
--		goto issue_srst;
-+	DPRINTK("in xx_hardreset\n");
+--------------010807070500020407010503
+Content-Type: text/x-patch;
+ name="whos-doing-cpm.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="whos-doing-cpm.patch"
 
-  try_offline_again:
-  	/*
-@@ -750,7 +733,7 @@ try_offline_again:
-
-  	if (temp & ONLINE) {
-  		ata_port_printk(ap, KERN_ERR,
--				"Softreset failed, not off-lined %d\n", i);
-+				"Hardreset failed, not off-lined %d\n", i);
-
-  		/*
-  		 * Try to offline controller atleast twice
-@@ -762,7 +745,7 @@ try_offline_again:
-  			goto try_offline_again;
-  	}
-
--	DPRINTK("softreset, controller off-lined\n");
-+	DPRINTK("hardreset, controller off-lined\n");
-  	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
-  	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
-
-@@ -787,11 +770,11 @@ try_offline_again:
-
-  	if (!(temp & ONLINE)) {
-  		ata_port_printk(ap, KERN_ERR,
--				"Softreset failed, not on-lined\n");
-+				"Hardreset failed, not on-lined\n");
-  		goto err;
-  	}
-
--	DPRINTK("softreset, controller off-lined & on-lined\n");
-+	DPRINTK("hardreset, controller off-lined & on-lined\n");
-  	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
-  	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
-
-@@ -807,7 +790,7 @@ try_offline_again:
-  				"No Device OR PHYRDY change,Hstatus = 0x%x\n",
-  				ioread32(hcr_base + HSTATUS));
-  		*class = ATA_DEV_NONE;
--		goto out;
-+		return 0;
-  	}
-
-  	/*
-@@ -820,11 +803,44 @@ try_offline_again:
-  	if ((temp & 0xFF) != 0x18) {
-  		ata_port_printk(ap, KERN_WARNING, "No Signature Update\n");
-  		*class = ATA_DEV_NONE;
--		goto out;
-+		goto do_followup_srst;
-  	} else {
-  		ata_port_printk(ap, KERN_INFO,
-  				"Signature Update detected @ %d msecs\n",
-  				jiffies_to_msecs(jiffies - start_jiffies));
-+		*class = sata_fsl_dev_classify(ap);
-+		return 0;
+diff --git a/block/elevator.c b/block/elevator.c
+index 7073a90..93e6575 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -618,6 +618,16 @@ void elv_insert(struct request_queue *q, struct request *rq, int where)
+ 	unsigned ordseq;
+ 	int unplug_it = 1;
+ 
++	if (rq->cmd[0] == 0xa1 || rq->cmd[0] == 0x85) {
++		u8 cmd = rq->cmd[0] == 0xa1 ? rq->cmd[9] : rq->cmd[14];
++
++		if (cmd == 0xe5) {
++			printk("XXX %s: elv_insert(ATA_CHK_POWER)\n",
++			       rq->rq_disk ? rq->rq_disk->disk_name : "?");
++			dump_stack();
++		}
 +	}
 +
-+do_followup_srst:
-+	/*
-+	 * request libATA to perform follow-up softreset
-+	 */
-+	return -EAGAIN;
-+
-+err:
-+	return -EIO;
-+}
-+
-+static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
-+					unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct sata_fsl_port_priv *pp = ap->private_data;
-+	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
-+	void __iomem *hcr_base = host_priv->hcr_base;
-+	int pmp = sata_srst_pmp(link);
-+	u32 temp;
-+	struct ata_taskfile tf;
-+	u8 *cfis;
-+	u32 Serror;
-+
-+	DPRINTK("in xx_softreset\n");
-+
-+	if (ata_link_offline(link)) {
-+		DPRINTK("PHY reports no device\n");
-+		*class = ATA_DEV_NONE;
-+		return 0;
-  	}
+ 	trace_block_rq_insert(q, rq);
+ 
+ 	rq->q = q;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 94919ad..a56c53d 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2722,6 +2722,7 @@ static void ata_eh_park_issue_cmd(struct ata_device *dev, int park)
+ 		tf.lbah = 0x55;
+ 	} else {
+ 		ehc->unloaded_mask &= ~(1 << dev->devno);
++		ata_dev_printk(dev, KERN_INFO, "XXX issuing CHK_POWER for unparking\n");
+ 		tf.command = ATA_CMD_CHK_POWER;
+ 	}
+ 
 
-  	/*
-@@ -835,7 +851,6 @@ try_offline_again:
-  	 * reached here, we can send a command to the target device
-  	 */
-
--issue_srst:
-  	DPRINTK("Sending SRST/device reset\n");
-
-  	ata_tf_init(link->device, &tf);
-@@ -861,6 +876,8 @@ issue_srst:
-  		ioread32(CA + hcr_base), ioread32(CC + hcr_base));
-
-  	iowrite32(0xFFFF, CC + hcr_base);
-+	if (pmp != SATA_PMP_CTRL_PORT)
-+		iowrite32(pmp, CQPMP + hcr_base);
-  	iowrite32(1, CQ + hcr_base);
-
-  	temp = ata_wait_register(CQ + hcr_base, 0x1, 0x1, 1, 5000);
-@@ -927,7 +944,6 @@ issue_srst:
-  		VPRINTK("cereg = 0x%x\n", ioread32(hcr_base + CE));
-  	}
-
--out:
-  	return 0;
-
-  err:
-@@ -988,19 +1004,6 @@ static void sata_fsl_error_intr(struct ata_port *ap)
-  	if (hstatus & FATAL_ERROR_DECODE) {
-  		ehi->err_mask |= AC_ERR_ATA_BUS;
-  		ehi->action |= ATA_EH_SOFTRESET;
--
--		/*
--		 * Ignore serror in case of fatal errors as we always want
--		 * to do a soft-reset of the FSL SATA controller. Analyzing
--		 * serror may cause libata to schedule a hard-reset action,
--		 * and hard-reset currently does not do controller
--		 * offline/online, causing command timeouts and leads to an
--		 * un-recoverable state, hence make libATA ignore
--		 * autopsy in case of fatal errors.
--		 */
--
--		ehi->flags |= ATA_EHI_NO_AUTOPSY;
--
-  		freeze = 1;
-  	}
-
-@@ -1272,8 +1275,8 @@ static struct ata_port_operations sata_fsl_ops = {
-
-  	.freeze = sata_fsl_freeze,
-  	.thaw = sata_fsl_thaw,
--	.prereset = sata_fsl_prereset,
-  	.softreset = sata_fsl_softreset,
-+	.hardreset = sata_fsl_hardreset,
-  	.pmp_softreset = sata_fsl_softreset,
-  	.error_handler = sata_fsl_error_handler,
-  	.post_internal_cmd = sata_fsl_post_internal_cmd,
--- 
-1.6.0
-
-
+--------------010807070500020407010503--
