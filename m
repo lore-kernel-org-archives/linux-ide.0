@@ -1,28 +1,24 @@
 From: ashish kalra <ashish.kalra@freescale.com>
-Subject: (unknown)
-Date: Mon, 29 Jun 2009 20:41:22 +0530 (India Standard Time)
-Message-ID: <Pine.WNT.4.64.0906292038560.4924@B00888-02.fsl.freescale.net>
+Subject: [PATCH][v2] sata_fsl: Add asynchronous notification support
+Date: Mon, 29 Jun 2009 20:46:34 +0530 (India Standard Time)
+Message-ID: <Pine.WNT.4.64.0906292044150.5480@B00888-02.fsl.freescale.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:37345 "EHLO
+Received: from az33egw02.freescale.net ([192.88.158.103]:38842 "EHLO
 	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbZF2PLu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 11:11:50 -0400
-Received: from de01smr02.am.mot.com (de01smr02.freescale.net [10.208.0.151])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n5TFBYHD010977
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 08:11:45 -0700 (MST)
+	with ESMTP id S1750860AbZF2PQe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 11:16:34 -0400
+Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
+	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n5TFGbQc013014
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 08:16:38 -0700 (MST)
 Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by de01smr02.am.mot.com (8.13.1/8.13.0) with ESMTP id n5TFBVlE022759
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 10:11:32 -0500 (CDT)
+	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id n5TFGZBP004908
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 10:16:36 -0500 (CDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linuxppc-dev@ozlabs.org
-
-From: Ashish Kalra <Ashish.Kalra@freescale.com>
-Date: Fri, 26 Jun 2009 15:46:02 +0530
-Subject: [PATCH][v2] sata_fsl: Add asynchronous notification support
 
 Enable device hot-plug support on Port multiplier fan-out ports
 
