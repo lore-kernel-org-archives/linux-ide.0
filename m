@@ -1,239 +1,64 @@
-From: "Kalra Ashish-B00888" <ashish.kalra@freescale.com>
-Subject: [PATCH] sata_fsl: hard and soft reset split
-Date: Mon, 29 Jun 2009 18:17:42 +0530
-Message-ID: <16444A0F3094A24C83EAB7836A12C63B24F994@zin33exm20.fsl.freescale.net>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out
+	of the 'queue' sysfs directory.
+Date: Mon, 29 Jun 2009 14:52:17 +0200
+Message-ID: <20090629125217.GI23611@kernel.dk>
+References: <20090625194015.GB31415@kernel.dk> <19012.49673.454853.975682@notabene.brown> <20090626125037.GO23611@kernel.dk> <f0d53a7338e1be4e7bdcbe09223c6f73.squirrel@neil.brown.name> <20090626132940.GR23611@kernel.dk> <19014.4447.248248.63960@notabene.brown> <20090629101841.GF23611@kernel.dk> <b0aa07ac85efd6040501e4ea875176a3.squirrel@neil.brown.name> <20090629114121.GH23611@kernel.dk> <4A48B75C.5080209@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:45882 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbZF2Mr5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 08:47:57 -0400
-Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n5TCljdW005251
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 05:47:47 -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id n5TClhBo009365
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 07:47:44 -0500 (CDT)
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4A48B75C.5080209@panasas.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: NeilBrown <neilb@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org
 
-Split sata_fsl_softreset() into hard and soft resets to make
-error-handling more efficient & device and PMP detection more reliable.
+On Mon, Jun 29 2009, Boaz Harrosh wrote:
+> On 06/29/2009 02:41 PM, Jens Axboe wrote:
+> > On Mon, Jun 29 2009, NeilBrown wrote:
+> >> On Mon, June 29, 2009 8:18 pm, Jens Axboe wrote:
+> >>> On Sat, Jun 27 2009, Neil Brown wrote:
+> >>>>> There's no such thing as first or second class block devices. The fact
+> >>>>> that drivers using ->make_request_fn directly do not utilize the full
+> >>>>> scope of the queue isn't a very interesting fact, imho.
+> >>>>  Your phrase "drivers using ->make_request_fn directly" seems to
+> >>>>  suggest you are looking at things very differently to me.
+> >>>>
+> >>>>  From my perspective, all drivers use ->make_request_fn equally.
+> >>>>  Some set it to "__make_request", some to "md_make_request", others to
+> >>>>  "dm_request" or "loop_make_request" etc.
+> >>> Neil, will you please stop these silly games. Stop trying to invent
+> >>> differences based on interpretations of what you read into my replies.
+> >>
+> >> We do seem to be having trouble communicating don't we :-(
+> >> Be assured that it is not my intention to play games, silly or otherwise.
+> >>
+> >> Maybe I should just try sending you patches.  Maybe that will
+> >> make my meaning clearer.
+> >>
+> >> For the moment, I'm much more interested in the other question,
+> >> that of whether I can avoid having a 'queue' directory introduced into
+> >> md/dm/etc device directories in sysfs.
+> > 
+> > We already talked about this, several times. My answer is that it seems
+> > pointless to begin with internally, and externally it just makes the API
+> > worse since tools then have to know which device type they are talking
+> > to.
+> > 
+> 
+> I do however see a problem with sysfs-files that mostly work for most
+> devices but for some "device type" they do nothing silently. At least
+> make these directory/files read-only for the un-used cases (eg.
+> dm/md). And return proper values to indicate their un-usefulness like
+> "-1" or "NA"
 
-Also includes fix for PMP support, driver tested with Sil3726, Sil4726 &
-Exar PMP controllers.
+I agree, but most of the files do have a meaning for the device types.
+It's all about making the interface sane, moving things around is not a
+sane interface. Making sure that the files propagate their proper
+meaning is, so if some file does not make sense for device type X, then
+by all means we should make sure that is apparent.
 
-Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
----
- drivers/ata/sata_fsl.c |   85
-+++++++++++++++++++++++++-----------------------
- 1 files changed, 44 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 5751145..c8e2fad 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -708,34 +708,17 @@ static unsigned int sata_fsl_dev_classify(struct
-ata_port *ap)
- 	return ata_dev_classify(&tf);
- }
- 
--static int sata_fsl_prereset(struct ata_link *link, unsigned long
-deadline)
--{
--	/* FIXME: Never skip softreset, sata_fsl_softreset() is
--	 * combination of soft and hard resets.  sata_fsl_softreset()
--	 * needs to be splitted into soft and hard resets.
--	 */
--	return 0;
--}
--
--static int sata_fsl_softreset(struct ata_link *link, unsigned int
-*class,
-+static int sata_fsl_hardreset(struct ata_link *link, unsigned int
-*class,
- 					unsigned long deadline)
- {
- 	struct ata_port *ap = link->ap;
--	struct sata_fsl_port_priv *pp = ap->private_data;
- 	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
- 	void __iomem *hcr_base = host_priv->hcr_base;
--	int pmp = sata_srst_pmp(link);
- 	u32 temp;
--	struct ata_taskfile tf;
--	u8 *cfis;
--	u32 Serror;
- 	int i = 0;
- 	unsigned long start_jiffies;
- 
--	DPRINTK("in xx_softreset\n");
--
--	if (pmp != SATA_PMP_CTRL_PORT)
--		goto issue_srst;
-+	DPRINTK("in xx_hardreset\n");
- 
- try_offline_again:
- 	/*
-@@ -750,7 +733,7 @@ try_offline_again:
- 
- 	if (temp & ONLINE) {
- 		ata_port_printk(ap, KERN_ERR,
--				"Softreset failed, not off-lined %d\n",
-i);
-+				"Hardreset failed, not off-lined %d\n",
-i);
- 
- 		/*
- 		 * Try to offline controller atleast twice
-@@ -762,7 +745,7 @@ try_offline_again:
- 			goto try_offline_again;
- 	}
- 
--	DPRINTK("softreset, controller off-lined\n");
-+	DPRINTK("hardreset, controller off-lined\n");
- 	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
- 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
- 
-@@ -787,11 +770,11 @@ try_offline_again:
- 
- 	if (!(temp & ONLINE)) {
- 		ata_port_printk(ap, KERN_ERR,
--				"Softreset failed, not on-lined\n");
-+				"Hardreset failed, not on-lined\n");
- 		goto err;
- 	}
- 
--	DPRINTK("softreset, controller off-lined & on-lined\n");
-+	DPRINTK("hardreset, controller off-lined & on-lined\n");
- 	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
- 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
- 
-@@ -807,7 +790,7 @@ try_offline_again:
- 				"No Device OR PHYRDY change,Hstatus =
-0x%x\n",
- 				ioread32(hcr_base + HSTATUS));
- 		*class = ATA_DEV_NONE;
--		goto out;
-+		return 0;
- 	}
- 
- 	/*
-@@ -820,11 +803,44 @@ try_offline_again:
- 	if ((temp & 0xFF) != 0x18) {
- 		ata_port_printk(ap, KERN_WARNING, "No Signature
-Update\n");
- 		*class = ATA_DEV_NONE;
--		goto out;
-+		goto do_followup_srst;
- 	} else {
- 		ata_port_printk(ap, KERN_INFO,
- 				"Signature Update detected @ %d
-msecs\n",
- 				jiffies_to_msecs(jiffies -
-start_jiffies));
-+		*class = sata_fsl_dev_classify(ap);
-+		return 0;
-+	}
-+
-+do_followup_srst:
-+	/*
-+	 * request libATA to perform follow-up softreset
-+	 */
-+	return -EAGAIN;
-+
-+err:
-+	return -EIO;
-+}
-+
-+static int sata_fsl_softreset(struct ata_link *link, unsigned int
-*class,
-+					unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct sata_fsl_port_priv *pp = ap->private_data;
-+	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
-+	void __iomem *hcr_base = host_priv->hcr_base;
-+	int pmp = sata_srst_pmp(link);
-+	u32 temp;
-+	struct ata_taskfile tf;
-+	u8 *cfis;
-+	u32 Serror;
-+
-+	DPRINTK("in xx_softreset\n");
-+
-+	if (ata_link_offline(link)) {
-+		DPRINTK("PHY reports no device\n");
-+		*class = ATA_DEV_NONE;
-+		return 0;
- 	}
- 
- 	/*
-@@ -835,7 +851,6 @@ try_offline_again:
- 	 * reached here, we can send a command to the target device
- 	 */
- 
--issue_srst:
- 	DPRINTK("Sending SRST/device reset\n");
- 
- 	ata_tf_init(link->device, &tf);
-@@ -861,6 +876,8 @@ issue_srst:
- 		ioread32(CA + hcr_base), ioread32(CC + hcr_base));
- 
- 	iowrite32(0xFFFF, CC + hcr_base);
-+	if (pmp != SATA_PMP_CTRL_PORT)
-+		iowrite32(pmp, CQPMP + hcr_base);
- 	iowrite32(1, CQ + hcr_base);
- 
- 	temp = ata_wait_register(CQ + hcr_base, 0x1, 0x1, 1, 5000);
-@@ -927,7 +944,6 @@ issue_srst:
- 		VPRINTK("cereg = 0x%x\n", ioread32(hcr_base + CE));
- 	}
- 
--out:
- 	return 0;
- 
- err:
-@@ -988,19 +1004,6 @@ static void sata_fsl_error_intr(struct ata_port
-*ap)
- 	if (hstatus & FATAL_ERROR_DECODE) {
- 		ehi->err_mask |= AC_ERR_ATA_BUS;
- 		ehi->action |= ATA_EH_SOFTRESET;
--
--		/*
--		 * Ignore serror in case of fatal errors as we always
-want
--		 * to do a soft-reset of the FSL SATA controller.
-Analyzing
--		 * serror may cause libata to schedule a hard-reset
-action,
--		 * and hard-reset currently does not do controller
--		 * offline/online, causing command timeouts and leads to
-an
--		 * un-recoverable state, hence make libATA ignore
--		 * autopsy in case of fatal errors.
--		 */
--
--		ehi->flags |= ATA_EHI_NO_AUTOPSY;
--
- 		freeze = 1;
- 	}
- 
-@@ -1272,8 +1275,8 @@ static struct ata_port_operations sata_fsl_ops = {
- 
- 	.freeze = sata_fsl_freeze,
- 	.thaw = sata_fsl_thaw,
--	.prereset = sata_fsl_prereset,
- 	.softreset = sata_fsl_softreset,
-+	.hardreset = sata_fsl_hardreset,
- 	.pmp_softreset = sata_fsl_softreset,
- 	.error_handler = sata_fsl_error_handler,
- 	.post_internal_cmd = sata_fsl_post_internal_cmd,
 -- 
-1.6.0
+Jens Axboe
 
