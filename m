@@ -1,77 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Errors on ICH10R with Seagate HDDs
-Date: Mon, 29 Jun 2009 23:09:20 +0900
-Message-ID: <4A48CB10.5020409@kernel.org>
-References: <49D4A232.3090504@hadiko.de> <49DE39E2.7070505@kernel.org> <49E847A3.9070100@hadiko.de> <49EAE746.4040303@kernel.org> <49F2E47C.5010803@hadiko.de> <49F3C03C.1090803@kernel.org> <4A36FC7D.5050805@hadiko.de> <4A388E1F.5070404@kernel.org> <4A3FD015.4090602@hadiko.de> <4A443366.4010807@kernel.org> <4A4878B3.9020206@hadiko.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: porting IDE patches to PATA driver
+Date: Mon, 29 Jun 2009 15:53:49 +0100
+Message-ID: <20090629155349.1574e492@lxorguk.ukuu.org.uk>
+References: <323951117.20090625100956@web.de>
+	<20090625092324.2dd4de5a@lxorguk.ukuu.org.uk>
+	<14164712.20090625103834@web.de>
+	<20090625100542.525dba02@lxorguk.ukuu.org.uk>
+	<951976828.20090625123021@web.de>
+	<20090625122958.510c28ad@lxorguk.ukuu.org.uk>
+	<96179821.20090626152440@web.de>
+	<20090626144639.4bc822b8@lxorguk.ukuu.org.uk>
+	<792909512.20090626164052@web.de>
+	<20090626172143.3fe6a59c@lxorguk.ukuu.org.uk>
+	<596875090.20090629140157@web.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010807070500020407010503"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53721 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751433AbZF2OJ0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jun 2009 10:09:26 -0400
-In-Reply-To: <4A4878B3.9020206@hadiko.de>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35398 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752688AbZF2OwM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 10:52:12 -0400
+In-Reply-To: <596875090.20090629140157@web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Jackowski <aXe@hadiko.de>
+To: Andrei Martynov <andrei.martynov@web.de>
 Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010807070500020407010503
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+> you are right. I'm working with multiple sources from different sites
+> and missed the fact the original driver ide-jasper.c published at
+> uclinux.org has BMDMA undefined. Dmegs output was produced using a
+> slightly modified version of the file that has BMDMA defined, but
+> there are no other changes in it that would explain unexpected DMA
+> interrupt mystery, it should be one of the patches done to ide and
+> cdrom subsystem.
 
-Thomas Jackowski wrote:
-> there is no relevant output in this loop (running about 6 hours).
+Still odd as it never sets the timings for anything but UDMA mode. I
+guess it could be that the hardware snoops for MWDMA and PIO modes
 
-Hmm... can you please try the attached patch?  It should show us who's
-issuing the CPM.
+> Here is an updated patch, could you please check it? I don't see
+> anything unusual except the "never disable DMA" logic in ide_dma.c.
 
-Thanks.
+Which itself appears to be ignored !
 
--- 
-tejun
+The only other thing I can see is the way it hangs around waiting a bit
+for the DMA to finish after the DMA completion event occurs - that might
+be your problem if they goofed and reported DMA complete too early.
 
---------------010807070500020407010503
-Content-Type: text/x-patch;
- name="whos-doing-cpm.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="whos-doing-cpm.patch"
-
-diff --git a/block/elevator.c b/block/elevator.c
-index 7073a90..93e6575 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -618,6 +618,16 @@ void elv_insert(struct request_queue *q, struct request *rq, int where)
- 	unsigned ordseq;
- 	int unplug_it = 1;
- 
-+	if (rq->cmd[0] == 0xa1 || rq->cmd[0] == 0x85) {
-+		u8 cmd = rq->cmd[0] == 0xa1 ? rq->cmd[9] : rq->cmd[14];
-+
-+		if (cmd == 0xe5) {
-+			printk("XXX %s: elv_insert(ATA_CHK_POWER)\n",
-+			       rq->rq_disk ? rq->rq_disk->disk_name : "?");
-+			dump_stack();
-+		}
-+	}
-+
- 	trace_block_rq_insert(q, rq);
- 
- 	rq->q = q;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 94919ad..a56c53d 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2722,6 +2722,7 @@ static void ata_eh_park_issue_cmd(struct ata_device *dev, int park)
- 		tf.lbah = 0x55;
- 	} else {
- 		ehc->unloaded_mask &= ~(1 << dev->devno);
-+		ata_dev_printk(dev, KERN_INFO, "XXX issuing CHK_POWER for unparking\n");
- 		tf.command = ATA_CMD_CHK_POWER;
- 	}
- 
-
---------------010807070500020407010503--
+Hard to tell as the original vendor driver is such a mess.
