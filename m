@@ -1,64 +1,73 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Mon, 29 Jun 2009 14:52:17 +0200
-Message-ID: <20090629125217.GI23611@kernel.dk>
-References: <20090625194015.GB31415@kernel.dk> <19012.49673.454853.975682@notabene.brown> <20090626125037.GO23611@kernel.dk> <f0d53a7338e1be4e7bdcbe09223c6f73.squirrel@neil.brown.name> <20090626132940.GR23611@kernel.dk> <19014.4447.248248.63960@notabene.brown> <20090629101841.GF23611@kernel.dk> <b0aa07ac85efd6040501e4ea875176a3.squirrel@neil.brown.name> <20090629114121.GH23611@kernel.dk> <4A48B75C.5080209@panasas.com>
+From: ashish kalra <ashish.kalra@freescale.com>
+Subject: [PATCH] sata_fsl: Add asynchronous notification support
+Date: Mon, 29 Jun 2009 18:52:36 +0530 (India Standard Time)
+Message-ID: <Pine.WNT.4.64.0906291846100.2640@B00888-02.fsl.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4A48B75C.5080209@panasas.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: NeilBrown <neilb@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from az33egw02.freescale.net ([192.88.158.103]:50765 "EHLO
+	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751680AbZF2NWv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 09:22:51 -0400
+Received: from de01smr02.am.mot.com (de01smr02.freescale.net [10.208.0.151])
+	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n5TDMs15012461
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 06:22:55 -0700 (MST)
+Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
+	by de01smr02.am.mot.com (8.13.1/8.13.0) with ESMTP id n5TDMpE4017133
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 08:22:53 -0500 (CDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org
 
-On Mon, Jun 29 2009, Boaz Harrosh wrote:
-> On 06/29/2009 02:41 PM, Jens Axboe wrote:
-> > On Mon, Jun 29 2009, NeilBrown wrote:
-> >> On Mon, June 29, 2009 8:18 pm, Jens Axboe wrote:
-> >>> On Sat, Jun 27 2009, Neil Brown wrote:
-> >>>>> There's no such thing as first or second class block devices. The fact
-> >>>>> that drivers using ->make_request_fn directly do not utilize the full
-> >>>>> scope of the queue isn't a very interesting fact, imho.
-> >>>>  Your phrase "drivers using ->make_request_fn directly" seems to
-> >>>>  suggest you are looking at things very differently to me.
-> >>>>
-> >>>>  From my perspective, all drivers use ->make_request_fn equally.
-> >>>>  Some set it to "__make_request", some to "md_make_request", others to
-> >>>>  "dm_request" or "loop_make_request" etc.
-> >>> Neil, will you please stop these silly games. Stop trying to invent
-> >>> differences based on interpretations of what you read into my replies.
-> >>
-> >> We do seem to be having trouble communicating don't we :-(
-> >> Be assured that it is not my intention to play games, silly or otherwise.
-> >>
-> >> Maybe I should just try sending you patches.  Maybe that will
-> >> make my meaning clearer.
-> >>
-> >> For the moment, I'm much more interested in the other question,
-> >> that of whether I can avoid having a 'queue' directory introduced into
-> >> md/dm/etc device directories in sysfs.
-> > 
-> > We already talked about this, several times. My answer is that it seems
-> > pointless to begin with internally, and externally it just makes the API
-> > worse since tools then have to know which device type they are talking
-> > to.
-> > 
-> 
-> I do however see a problem with sysfs-files that mostly work for most
-> devices but for some "device type" they do nothing silently. At least
-> make these directory/files read-only for the un-used cases (eg.
-> dm/md). And return proper values to indicate their un-usefulness like
-> "-1" or "NA"
+Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
+---
+  drivers/ata/sata_fsl.c |   10 ++++++++--
+  1 files changed, 8 insertions(+), 2 deletions(-)
 
-I agree, but most of the files do have a meaning for the device types.
-It's all about making the interface sane, moving things around is not a
-sane interface. Making sure that the files propagate their proper
-meaning is, so if some file does not make sense for device type X, then
-by all means we should make sure that is apparent.
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 94eaa43..5751145 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -34,7 +34,7 @@ enum {
 
+  	SATA_FSL_HOST_FLAGS	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+  				ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				ATA_FLAG_PMP | ATA_FLAG_NCQ),
++ 				ATA_FLAG_PMP | ATA_FLAG_NCQ | ATA_FLAG_AN),
+
+  	SATA_FSL_MAX_CMDS	= SATA_FSL_QUEUE_DEPTH,
+  	SATA_FSL_CMD_HDR_SIZE	= 16,	/* 4 DWORDS */
+@@ -132,7 +132,7 @@ enum {
+  	INT_ON_SINGL_DEVICE_ERR = (1 << 1),
+  	INT_ON_CMD_COMPLETE = 1,
+
+-	INT_ON_ERROR = INT_ON_FATAL_ERR |
++	INT_ON_ERROR = INT_ON_FATAL_ERR | INT_ON_SNOTIFY_UPDATE |
+  	    INT_ON_PHYRDY_CHG | INT_ON_SINGL_DEVICE_ERR,
+
+  	/*
+@@ -154,6 +154,7 @@ enum {
+
+  	DEFAULT_PORT_IRQ_ENABLE_MASK = IE_ON_FATAL_ERR | IE_ON_PHYRDY_CHG |
+  	    IE_ON_SIGNATURE_UPDATE |
++	    IE_ON_SNOTIFY_UPDATE |
+  	    IE_ON_SINGL_DEVICE_ERR | IE_ON_CMD_COMPLETE,
+
+  	EXT_INDIRECT_SEG_PRD_FLAG = (1 << 31),
+@@ -1003,6 +1004,11 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+  		freeze = 1;
+  	}
+
++	/* Handle SDB FIS receive & notify update */
++	if (hstatus & INT_ON_SNOTIFY_UPDATE) {
++		sata_async_notification(ap);
++	}
++
+  	/* Handle PHYRDY change notification */
+  	if (hstatus & INT_ON_PHYRDY_CHG) {
+  		DPRINTK("SATA FSL: PHYRDY change indication\n");
 -- 
-Jens Axboe
+1.6.0
+
 
