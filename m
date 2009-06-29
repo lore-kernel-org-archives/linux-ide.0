@@ -1,82 +1,161 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Mon, 29 Jun 2009 12:18:41 +0200
-Message-ID: <20090629101841.GF23611@kernel.dk>
-References: <19010.62951.886231.96622@notabene.brown> <yq11vp8spxo.fsf@sermon.lab.mkp.net> <125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name> <20090625194015.GB31415@kernel.dk> <19012.49673.454853.975682@notabene.brown> <20090626125037.GO23611@kernel.dk> <f0d53a7338e1be4e7bdcbe09223c6f73.squirrel@neil.brown.name> <20090626132940.GR23611@kernel.dk> <19014.4447.248248.63960@notabene.brown>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA: link online but device misclassified
+Date: Mon, 29 Jun 2009 19:20:18 +0900
+Message-ID: <4A489562.8080404@gmail.com>
+References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>	 <1244746872.3998.88.camel@mulgrave.site>	 <cfa4e840906111232i52decee3mf9ab2d0abcaa78d9@mail.gmail.com>	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>	 <1245165697.3965.40.camel@mulgrave.site> <4A3AEC08.4060507@gmail.com>	 <4A3B0D49.8070802@gmail.com>	 <cfa4e840906190238m4cca2c73pece279bb642bfd1f@mail.gmail.com>	 <4A3CD738.1080105@gmail.com> <cfa4e840906200613mac35e8ei69e40f9bcddd37dc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------030104060606010002030204"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:54028 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751434AbZF2KSi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jun 2009 06:18:38 -0400
-Content-Disposition: inline
-In-Reply-To: <19014.4447.248248.63960@notabene.brown>
+Received: from rv-out-0506.google.com ([209.85.198.226]:64641 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756879AbZF2KUW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 06:20:22 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so1239662rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 29 Jun 2009 03:20:24 -0700 (PDT)
+In-Reply-To: <cfa4e840906200613mac35e8ei69e40f9bcddd37dc@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+To: Marc Bowes <marcbowes@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org
 
-On Sat, Jun 27 2009, Neil Brown wrote:
-> > There's no such thing as first or second class block devices. The fact
-> > that drivers using ->make_request_fn directly do not utilize the full
-> > scope of the queue isn't a very interesting fact, imho.
-> 
->  Your phrase "drivers using ->make_request_fn directly" seems to
->  suggest you are looking at things very differently to me.
-> 
->  From my perspective, all drivers use ->make_request_fn equally.
->  Some set it to "__make_request", some to "md_make_request", others to
->  "dm_request" or "loop_make_request" etc.
+This is a multi-part message in MIME format.
+--------------030104060606010002030204
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Neil, will you please stop these silly games. Stop trying to invent
-differences based on interpretations of what you read into my replies.
+Marc Bowes wrote:
+> Ok. Just keep me informed :)
 
->  Each of these different drivers need some private storage.
->  __make_request uses struct request_queue
->  md_make_request uses struct mddev_s
->  dm_request uses struct mapped_device
->  loop_make_request uses struct loop_device
->   etc
-> 
->  These structures are all attached to gendisk one way or another.
-> 
->  Of these examples, the first three have an extra level.  They are
->  intermediaries or "midlayers" for multiple drivers and perform some
->  processing before passing the request down.
->  __make_request provides this for ide and scsi (etc) via ->request_fn and
->     ->queuedata in struct request_queue (and other fields).
->  md_make_request provides this for raid1 and raid5 (etc) via
->     ->pers->make_request and  ->private is struct mddev_s (and other
->     fields). 
->  dm_request provides this for crypt and multipath (etc) via
->     ->map->targets[]->type->map and ->map->targets[]->private (and
->     other fields).
+Please test the attached patch and report the resulting boot log.  Oh
+and please turn on CONFIG_PRINTK_TIME.
 
-Nothing - I repeat nothing - stops md/dm from removing that layer. It's
-a layer they imposed themselves based on the design they chose to
-implement internally. It has NOTHING to do with how the block layer is
-designed. If md raid1 assigned raid1_dev (or whatever raid1 uses a its
-device identifier structure) to ->queuedata, and had an mddev_s in its
-raid1 structure, that would be a perfectly viable design as well.
-
-Loop does that. md/dm have their own internal layering, if anything is a
-"midlayer" (to keep to the apparent theme of design patterns), it's the
-code md and dm bits.
-
->  Looked at from this perspective, the fact that some drivers 'do not
->  utilise the full scope of the queue' certainly isn't the interesting
->  point.  The interesting point is that they have to use parts of the
->  queue at all.
-> 
->  And from this perspective, __make_request is a class above everything
->  else.  __make_request gets a dedicate field in gendisk (->queue) and
->  every driver has to provide a queue.  Other (lower class) drivers get
->  to share gendisk->private_date and/or gendisk->queue->queuedata.
-
-That's just utter nonsense.
+Thanks.
 
 -- 
-Jens Axboe
+tejun
 
+--------------030104060606010002030204
+Content-Type: text/x-patch;
+ name="gigabyte-unreliable-online.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="gigabyte-unreliable-online.patch"
+
+ drivers/ata/ahci.c      |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-eh.c |   15 +++++++++++----
+ include/linux/libata.h  |    1 +
+ 3 files changed, 60 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 2141a31..58cf5f7 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2677,6 +2677,48 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 	return !ver || strcmp(ver, dmi->driver_data) < 0;
+ }
+ 
++static bool ahci_broken_online(struct pci_dev *pdev)
++{
++#define ENCODE_BUSDEVFN(bus, slot, func)			\
++	(void *)(unsigned long)(((bus) << 8) | PCI_DEVFN((slot), (func)))
++	static const struct dmi_system_id sysids[] = {
++		/*
++		 * There are several gigabyte boards which use
++		 * SIMG5723s configured as hardware RAID.  Certain
++		 * 5723 firmware revisions shipped there keep the link
++		 * online but fail to answer properly to SRST or
++		 * IDENTIFY when no device is attached downstream
++		 * causing libata to retry quite a few times leading
++		 * to excessive detection delay.
++		 *
++		 * As these firmwares respond to the second reset try
++		 * with invalid device signature, considering unknown
++		 * sig as offline works around the problem acceptably.
++		 */
++		{
++			.ident = "EP45-DQ6",
++			.matches = {
++				DMI_MATCH(DMI_BOARD_VENDOR,
++					  "Gigabyte Technology Co., Ltd."),
++				DMI_MATCH(DMI_BOARD_NAME,
++					  "EP45-DQ6"),
++			},
++			.driver_data = ENCODE_BUSDEVFN(0x0a, 0x00, 0),
++		},
++		{ }	/* terminate list */
++	};
++#undef ENCODE_BUSDEVFN
++	const struct dmi_system_id *dmi = dmi_first_match(sysids);
++	unsigned int val;
++
++	if (!dmi)
++		return false;
++
++	val = (unsigned long)dmi->driver_data;
++
++	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+@@ -2788,6 +2830,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			   "BIOS update required for suspend/resume\n");
+ 	}
+ 
++	if (ahci_broken_online(pdev)) {
++		pi.link_flags |= ATA_LFLAG_UNK_IS_OFFLINE;
++		dev_info(&pdev->dev,
++			 "online status unreliable, applying workaround\n");
++	}
++
+ 	/* CAP.NP sometimes indicate the index of the last enabled
+ 	 * port, at other times, that of the last possible port, so
+ 	 * determining the maximum port number requires looking at
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 94919ad..cfc98c3 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2595,16 +2595,23 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	}
+ 
+ 	if (classify && nr_unknown) {
+-		if (try < max_tries) {
++		bool unk_is_offline = link->flags & ATA_LFLAG_UNK_IS_OFFLINE;
++
++		if (!unk_is_offline && try < max_tries) {
+ 			ata_link_printk(link, KERN_WARNING, "link online but "
+ 				       "device misclassified, retrying\n");
+ 			failed_link = link;
+ 			rc = -EAGAIN;
+ 			goto fail;
+ 		}
+-		ata_link_printk(link, KERN_WARNING,
+-			       "link online but device misclassified, "
+-			       "device detection might fail\n");
++		if (unk_is_offline)
++			ata_link_printk(link, KERN_INFO,
++					"link online but device misclassified, "
++					"treating as offline\n");
++		else
++			ata_link_printk(link, KERN_WARNING,
++					"link online but device misclassified, "
++					"device detection might fail\n");
+ 	}
+ 
+ 	/* reset successful, schedule revalidation */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 3d501db..934e805 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -172,6 +172,7 @@ enum {
+ 	ATA_LFLAG_NO_RETRY	= (1 << 5), /* don't retry this link */
+ 	ATA_LFLAG_DISABLED	= (1 << 6), /* link is disabled */
+ 	ATA_LFLAG_SW_ACTIVITY	= (1 << 7), /* keep activity stats */
++	ATA_LFLAG_UNK_IS_OFFLINE = (1 << 8), /* treat unknown sig as offline */
+ 
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+
+--------------030104060606010002030204--
