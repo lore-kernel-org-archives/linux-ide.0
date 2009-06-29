@@ -1,40 +1,27 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] Allow ATA_ passthrough command through sg.
-Date: Mon, 29 Jun 2009 14:24:25 -0700
-Message-ID: <1246310665-31727-1-git-send-email-gwendal@google.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Allow ATA_ passthrough command through sg.
+Date: Mon, 29 Jun 2009 23:20:45 +0100
+Message-ID: <20090629232045.14a426b6@lxorguk.ukuu.org.uk>
+References: <1246310665-31727-1-git-send-email-gwendal@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <>
-References: <>
+In-Reply-To: <1246310665-31727-1-git-send-email-gwendal@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-We can already send ATA specific commands using /dev/sd device files.
-This patch allow to use /dev/sg device files as well.
+On Mon, 29 Jun 2009 14:24:25 -0700
+Gwendal Grignou <gwendal@google.com> wrote:
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
----
- block/scsi_ioctl.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+> We can already send ATA specific commands using /dev/sd device files.
+> This patch allow to use /dev/sg device files as well.
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 82a0ca2..93fa53e 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -186,6 +186,12 @@ void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- 	__set_bit(GPCMD_LOAD_UNLOAD, filter->write_ok);
- 	__set_bit(GPCMD_SET_STREAMING, filter->write_ok);
- 	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
-+
-+	/* ATA Passthrough */
-+	__set_bit(ATA_12, filter->read_ok);
-+	__set_bit(ATA_12, filter->write_ok);
-+	__set_bit(ATA_16, filter->read_ok);
-+	__set_bit(ATA_16, filter->write_ok);
- }
- EXPORT_SYMBOL_GPL(blk_set_cmd_filter_defaults);
- 
--- 
-1.5.4.3
+That seems a very very bad idea. The point of the filters is only to
+allow through commands that are safe for all users with read or write
+permission to use.
+
+Backdooring it with arbitary passthrough ATA12/ATA16 commands doesn't
+seem very wise.
 
