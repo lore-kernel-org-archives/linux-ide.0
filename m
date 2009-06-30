@@ -1,42 +1,66 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 1/1] ide: memory overrun in ide_get_identity_ioctl() on
- big endian machines using ioctl HDIO_OBSOLETE_IDENTITY
-Date: Mon, 29 Jun 2009 19:31:58 -0700 (PDT)
-Message-ID: <20090629.193158.199209522.davem@davemloft.net>
-References: <20090619084105.4cdf78be@frequentis.com>
-	<20090621000423.30c462d9@frequentis.com>
-	<200906221149.15575.bzolnier@gmail.com>
+Subject: [GIT]: IDE fixes
+Date: Mon, 29 Jun 2009 19:54:30 -0700 (PDT)
+Message-ID: <20090629.195430.05775132.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52583
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47510
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753184AbZF3Cbw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 22:31:52 -0400
-In-Reply-To: <200906221149.15575.bzolnier@gmail.com>
+	by vger.kernel.org with ESMTP id S1756327AbZF3CyZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jun 2009 22:54:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: christian.engelmayer@frequentis.com, hancockrwd@gmail.com, linux-ide@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 22 Jun 2009 11:49:14 +0200
 
-> On Sunday 21 June 2009 00:04:23 Christian Engelmayer wrote:
->> From: Christian Engelmayer <christian.engelmayer@frequentis.com>
->> 
->> This patch fixes a memory overrun in function ide_get_identity_ioctl() which
->> chooses the size of a memory buffer depending on the ioctl command that led
->> to the function call, however, passes that buffer to a function which needs the
->> buffer size to be always chosen unconditionally.
->> 
->> Due to conditional compilation the memory overrun can only happen on big endian
->> machines. The error can be triggered using ioctl HDIO_OBSOLETE_IDENTITY. Usage
->> of ioctl HDIO_GET_IDENTITY is safe.
->> 
->> Signed-off-by: Christian Engelmayer <christian.engelmayer@frequentis.com>
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+1) Sizing of temp ID buffer allocated is insufficient for
+   HDIO_OBSOLETE_IDENTITY ioctl.  Fix from Christian Engelmayer.
 
-Applied, thanks everyone.
+2) ide-floppy and ide-tape uses esoteric IDE custom command completion
+   routine which does horrible things such as partial command
+   completions on errors, and even forgets to signal error codes at all
+   in some cases.  Stop using this turd and use the generic block
+   layer requst completion interfaces to fix these bugs.  Fix from
+   Bart.
+
+3) With IDEACPI sometimes resume breaks, fix by adding helper function
+   to check all the necessary cases.  Fix from Bart.
+
+4) Handle properly devices which clear DRQ during the last word of
+   a packet (these actually exist).  This also pointed out an error
+   in ATA_ERR bit handling, also fixed here.  Fix from Borislav Petkov.
+
+Please pull, thanks a lot!
+
+The following changes since commit 52989765629e7d182b4f146050ebba0abf2cb0b7:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../davem/net-2.6
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Bartlomiej Zolnierkiewicz (3):
+      ide: fix ide_kill_rq() for special ide-{floppy,tape} driver requests
+      ide: always kill the whole request on error
+      ide: fix resume for CONFIG_BLK_DEV_IDEACPI=y
+
+Borislav Petkov (1):
+      ide-cd: handle fragmented packet commands gracefully
+
+Christian Engelmayer (1):
+      ide: memory overrun in ide_get_identity_ioctl() on big endian machines using ioctl HDIO_OBSOLETE_IDENTITY
+
+ drivers/ide/ide-acpi.c    |   37 +++++++------------------------------
+ drivers/ide/ide-cd.c      |   14 ++++++++++++--
+ drivers/ide/ide-devsets.c |    2 +-
+ drivers/ide/ide-eh.c      |    2 +-
+ drivers/ide/ide-floppy.c  |    2 +-
+ drivers/ide/ide-io.c      |   14 ++------------
+ drivers/ide/ide-ioctls.c  |    3 ++-
+ drivers/ide/ide-pm.c      |   30 ++++++++++++++++++------------
+ include/linux/ide.h       |    3 ++-
+ 9 files changed, 46 insertions(+), 61 deletions(-)
