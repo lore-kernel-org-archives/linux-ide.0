@@ -1,65 +1,86 @@
-From: Wu Zhangjin <wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
-Date: Wed, 01 Jul 2009 22:47:41 +0800
-Message-ID: <1246459661.9660.40.camel@falcon>
-References: <etTXaRqGgAC.A.SaE.6iASKB@chimera>
-	 <5Hhc7UkUKEO.A.RvE.BjASKB@chimera> <4A489775.6020102@numericable.fr>
-	 <20090629.033730.193709457.davem@davemloft.net>
-	 <4A48E307.2010208@numericable.fr>
-	 <b6a2187b0906290921w15afd443qccb943ccfd48688b@mail.gmail.com>
-	 <b6a2187b0907010731k510150b5u1c7fce8cbed7c33b@mail.gmail.com>
-Reply-To: wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+From: Wu Zhangjin <wuzhangjin@gmail.com>
+Subject: Re: [BUG] MIPS: Hibernation in the latest linux-mips:master branch
+ not work
+Date: Wed, 01 Jul 2009 22:55:12 +0800
+Message-ID: <1246460112.9660.45.camel@falcon>
+References: <1246372868.19049.17.camel@falcon>
+	 <20090630144540.GA18212@linux-mips.org>  <1246432570.9660.22.camel@falcon>
+Reply-To: wuzhangjin@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <b6a2187b0907010731k510150b5u1c7fce8cbed7c33b-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1246432570.9660.22.camel@falcon>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-mips@linux-mips.org, Pavel Machek <pavel@ucw.cz>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 2009-07-01 at 22:31 +0800, Jeff Chua wrote:
-> On Tue, Jun 30, 2009 at 12:21 AM, Jeff Chua<jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Wed, 2009-07-01 at 15:16 +0800, Wu Zhangjin wrote:
+> On Tue, 2009-06-30 at 15:45 +0100, Ralf Baechle wrote:
+> > On Tue, Jun 30, 2009 at 10:41:08PM +0800, Wu Zhangjin wrote:
+> > 
+> > > I just updated my git repository to the master branch of the latest
+> > > linux-mips git repository, and tested the STD/Hibernation support on
+> > > fuloong2e and yeeloong2f, it failed:
+> > > 
+> > > when using the no_console_suspend kernel command line to debug, it
+> > > stopped on:
+> > > 
+> > > PM: Shringking memory... done (1000 pages freed)
+> > > PM: Freed 160000 kbytes in 1.68 seconds (95.23 MB/s)
+> > > PM: Creating hibernation image:
+> > > PM: Need to copy 5053 pages
+> > > PM: Hibernation image created (4195 pages copied)
+> > > 
+> > > and then, the number indicator light of keyboard works well, but can not
+> > > type anything. 
+> > > 
+> > > anybody have tested it on another platform? does it work?
+> > 
+> > At the time of the merge I tested it on Malta and found it to be working.
+> > 
 > 
-> > I just tried, and it "seems" to work. Will try a few more cycles.
+> Just traced it, the executing path is something like this:
 > 
-> STD/STR survived quite a few cycles now. Patch seems to be doing the
-> right thing.
+> 	hibernate(kernel/power/hibernate.c)
+> 	--> hibernation_snapshot
+> 	--> dpm_resume_end
+> 	--> dpm_resume
+>         --> device_resume
+> 	--> dev->bus->resume(generic_ide_resume), dev_name(dev) = 0.0
+> 	--> blk_execute_rq
+>         {
+> 		DECLARE_COMPLETION_ONSTACK(wait);
+> 		...
+> 		wait_for_completion(&wait);	// stop here
+> 		...
+> 	}
 > 
-> On Mon, Jun 29, 2009 at 11:51 PM, Etienne
-> Basset<etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org> wrote:
-> 
-> > To have STR/resume work with current git, I have to :
-> 
-> > 1) apply Bart's patch
-> 
-> This is not yet in Linus's tree. And much needed to really fix the problem.
-> 
-> > 2) revert this commit : a1317f714af7aed60ddc182d0122477cbe36ee9b
+> I guess there is a possible bug in the latest ide patches, I'm trying to
+> find which one is 'bad'.
 > 
 
-Yes, This commit must be reverted, otherwise, STD/Hibernation will not
-work either. I have tested it on two different loongson-based machines:
-fuloong2e box and yeeloong2f netbook.(loongson is mips compatiable)
+There is really a bug in one of ide patches, here it is:
 
-Here is what i have traced:
+commit a1317f714af7aed60ddc182d0122477cbe36ee9b
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Tue Jun 23 23:52:17 2009 -0700
 
-        hibernate(kernel/power/hibernate.c)
-        --> hibernation_snapshot
-        --> dpm_resume_end
-        --> dpm_resume
-        --> device_resume
-        --> dev->bus->resume(generic_ide_resume), dev_name(dev) = 0.0
-        --> blk_execute_rq
-        {
-                DECLARE_COMPLETION_ONSTACK(wait);
-                ...
-                wait_for_completion(&wait);     // stop here
-                ...
-        }
+    ide: improve handling of Power Management requests
+    
+    Make hwif->rq point to PM request during PM sequence and do not
+allow
+    any other types of requests to slip in (the old comment was never
+correct
+    as there should be no such requests generated during PM sequence).
+    
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
 
-and I have tried to revert this part of the above patch:
+I have reverted this part of the above patch, seems works, need more
+tests:
 
 -
 -               WARN_ON_ONCE(hwif->rq);
@@ -72,7 +93,10 @@ and I have tried to revert this part of the above patch:
 +                       WARN_ON_ONCE(hwif->rq);
 +
 
-it works! need more time to test!
+please get more information from this bug report:
 
-thanks!
+[Bug #13663] suspend to ram regression (IDE related)
+http://lkml.org/lkml/2009/6/29/341
+
+Regards!
 Wu Zhangjin
