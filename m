@@ -1,102 +1,81 @@
-From: Wu Zhangjin <wuzhangjin@gmail.com>
-Subject: Re: [BUG] MIPS: Hibernation in the latest linux-mips:master branch
- not work
-Date: Wed, 01 Jul 2009 22:55:12 +0800
-Message-ID: <1246460112.9660.45.camel@falcon>
-References: <1246372868.19049.17.camel@falcon>
-	 <20090630144540.GA18212@linux-mips.org>  <1246432570.9660.22.camel@falcon>
-Reply-To: wuzhangjin@gmail.com
+From: ashish kalra <ashish.kalra@freescale.com>
+Subject: [PATCH][v3] Add asynchronous notification support
+Date: Wed, 1 Jul 2009 20:59:43 +0530 (India Standard Time)
+Message-ID: <Pine.WNT.4.64.0907012055100.868@B00888-02.fsl.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <1246432570.9660.22.camel@falcon>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-mips@linux-mips.org, Pavel Machek <pavel@ucw.cz>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "David S. Miller" <davem@davemloft.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from az33egw02.freescale.net ([192.88.158.103]:52145 "EHLO
+	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbZGAPaT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2009 11:30:19 -0400
+Received: from de01smr02.am.mot.com (de01smr02.freescale.net [10.208.0.151])
+	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n61FU4OE014032
+	for <linux-ide@vger.kernel.org>; Wed, 1 Jul 2009 08:30:15 -0700 (MST)
+Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
+	by de01smr02.am.mot.com (8.13.1/8.13.0) with ESMTP id n61FU2dK017099
+	for <linux-ide@vger.kernel.org>; Wed, 1 Jul 2009 10:30:03 -0500 (CDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org
 
-On Wed, 2009-07-01 at 15:16 +0800, Wu Zhangjin wrote:
-> On Tue, 2009-06-30 at 15:45 +0100, Ralf Baechle wrote:
-> > On Tue, Jun 30, 2009 at 10:41:08PM +0800, Wu Zhangjin wrote:
-> > 
-> > > I just updated my git repository to the master branch of the latest
-> > > linux-mips git repository, and tested the STD/Hibernation support on
-> > > fuloong2e and yeeloong2f, it failed:
-> > > 
-> > > when using the no_console_suspend kernel command line to debug, it
-> > > stopped on:
-> > > 
-> > > PM: Shringking memory... done (1000 pages freed)
-> > > PM: Freed 160000 kbytes in 1.68 seconds (95.23 MB/s)
-> > > PM: Creating hibernation image:
-> > > PM: Need to copy 5053 pages
-> > > PM: Hibernation image created (4195 pages copied)
-> > > 
-> > > and then, the number indicator light of keyboard works well, but can not
-> > > type anything. 
-> > > 
-> > > anybody have tested it on another platform? does it work?
-> > 
-> > At the time of the merge I tested it on Malta and found it to be working.
-> > 
-> 
-> Just traced it, the executing path is something like this:
-> 
-> 	hibernate(kernel/power/hibernate.c)
-> 	--> hibernation_snapshot
-> 	--> dpm_resume_end
-> 	--> dpm_resume
->         --> device_resume
-> 	--> dev->bus->resume(generic_ide_resume), dev_name(dev) = 0.0
-> 	--> blk_execute_rq
->         {
-> 		DECLARE_COMPLETION_ONSTACK(wait);
-> 		...
-> 		wait_for_completion(&wait);	// stop here
-> 		...
-> 	}
-> 
-> I guess there is a possible bug in the latest ide patches, I'm trying to
-> find which one is 'bad'.
-> 
+Enable device hot-plug support on Port multiplier fan-out ports
+v3 fixes whitespace/identation issues
 
-There is really a bug in one of ide patches, here it is:
+Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
+---
+  drivers/ata/sata_fsl.c |   15 ++++++++++-----
+  1 files changed, 10 insertions(+), 5 deletions(-)
 
-commit a1317f714af7aed60ddc182d0122477cbe36ee9b
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Tue Jun 23 23:52:17 2009 -0700
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 94eaa43..5a88b44 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -34,7 +34,7 @@ enum {
 
-    ide: improve handling of Power Management requests
-    
-    Make hwif->rq point to PM request during PM sequence and do not
-allow
-    any other types of requests to slip in (the old comment was never
-correct
-    as there should be no such requests generated during PM sequence).
-    
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+  	SATA_FSL_HOST_FLAGS	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+  				ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				ATA_FLAG_PMP | ATA_FLAG_NCQ),
++				ATA_FLAG_PMP | ATA_FLAG_NCQ | ATA_FLAG_AN),
 
-I have reverted this part of the above patch, seems works, need more
-tests:
+  	SATA_FSL_MAX_CMDS	= SATA_FSL_QUEUE_DEPTH,
+  	SATA_FSL_CMD_HDR_SIZE	= 16,	/* 4 DWORDS */
+@@ -132,8 +132,8 @@ enum {
+  	INT_ON_SINGL_DEVICE_ERR = (1 << 1),
+  	INT_ON_CMD_COMPLETE = 1,
 
--
--               WARN_ON_ONCE(hwif->rq);
- repeat:
-                prev_port = hwif->host->cur_port;
+-	INT_ON_ERROR = INT_ON_FATAL_ERR |
+-	    INT_ON_PHYRDY_CHG | INT_ON_SINGL_DEVICE_ERR,
++	INT_ON_ERROR = INT_ON_FATAL_ERR | INT_ON_SNOTIFY_UPDATE |
++		INT_ON_PHYRDY_CHG | INT_ON_SINGL_DEVICE_ERR,
+
+  	/*
+  	 * Host Control Register (HControl) bitdefs
+@@ -153,8 +153,8 @@ enum {
+  	IE_ON_CMD_COMPLETE = 1,
+
+  	DEFAULT_PORT_IRQ_ENABLE_MASK = IE_ON_FATAL_ERR | IE_ON_PHYRDY_CHG |
+-	    IE_ON_SIGNATURE_UPDATE |
+-	    IE_ON_SINGL_DEVICE_ERR | IE_ON_CMD_COMPLETE,
++		IE_ON_SIGNATURE_UPDATE | IE_ON_SNOTIFY_UPDATE |
++		IE_ON_SINGL_DEVICE_ERR | IE_ON_CMD_COMPLETE,
+
+  	EXT_INDIRECT_SEG_PRD_FLAG = (1 << 31),
+  	DATA_SNOOP_ENABLE = (1 << 22),
+@@ -1003,6 +1003,11 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+  		freeze = 1;
+  	}
+
++	/* Handle SDB FIS receive & notify update */
++	if (hstatus & INT_ON_SNOTIFY_UPDATE) {
++		sata_async_notification(ap);
++	}
 +
-+               if (drive->dev_flags & IDE_DFLAG_BLOCKED)
-+                       rq = hwif->rq;
-+               else
-+                       WARN_ON_ONCE(hwif->rq);
-+
+  	/* Handle PHYRDY change notification */
+  	if (hstatus & INT_ON_PHYRDY_CHG) {
+  		DPRINTK("SATA FSL: PHYRDY change indication\n");
+-- 
+1.6.0
 
-please get more information from this bug report:
 
-[Bug #13663] suspend to ram regression (IDE related)
-http://lkml.org/lkml/2009/6/29/341
-
-Regards!
-Wu Zhangjin
