@@ -1,31 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch 4/6] ide: allow ide_dev_read_id() to be called from the IRQ context
-Date: Wed, 1 Jul 2009 18:35:27 +0200
-Message-ID: <200907011835.27586.bzolnier@gmail.com>
-References: <200906240336.25263.bzolnier@gmail.com> <20090624.025518.75726622.davem@davemloft.net> <200906241248.21173.bzolnier@gmail.com>
+From: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
+Date: Thu, 2 Jul 2009 01:28:18 +0800
+Message-ID: <b6a2187b0907011028r27d35be4xc62c7ed4496dfb2f@mail.gmail.com>
+References: <etTXaRqGgAC.A.SaE.6iASKB@chimera>
+	 <1246459661.9660.40.camel@falcon>
+	 <200907011821.26091.bzolnier@gmail.com>
+	 <200907011829.16850.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:58746 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595AbZGAQ3H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2009 12:29:07 -0400
-In-Reply-To: <200906241248.21173.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: base64
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200907011829.16850.bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 24 June 2009 12:48:20 Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 24 June 2009 11:55:18 David Miller wrote:
-
-[...]
-
-> > I know you're busy, so I'll try to draft something up myself.
-> 
-> Ok, thanks.
-
-Any news about these fixes?
+T24gVGh1LCBKdWwgMiwgMjAwOSBhdCAxMjoyOSBBTSwgQmFydGxvbWllagpab2xuaWVya2lld2lj
+ejxiem9sbmllckBnbWFpbC5jb20+IHdyb3RlOgo+IEhlcmUgaXMgdGhlIG1vcmUgY29tcGxldGUg
+dmVyc2lvbiwgYWxzbyB0YWtpbmcgaW50byB0aGUgYWNjb3VudCBjaGFuZ2VzCj4gaW4gaWRlX2lu
+dHIoKSBhbmQgaWRlX3RpbWVyX2V4cGlyeSgpOgoKVGhpcyB3b3JrcyBncmVhdCBmb3IuIFN1cnZp
+dmVkIFNUUiwgU1RELiBJIGp1c3QgYXBwbGllZCBvbiB0b3AgdmFuaWxsYQpsYXRlc3QgTGludXMn
+cyBnaXQgcHVsbC4gTm90aGluZyBlbHNlIHRvIHJldmVydC4KClRoYW5rcywKSmVmZi4KCgo+IC0t
+LQo+IKBkcml2ZXJzL2lkZS9pZGUtaW8uYyB8IKAgMTUgKysrKysrKysrKy0tLS0tCj4goDEgZmls
+ZSBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQo+Cj4gSW5kZXg6IGIv
+ZHJpdmVycy9pZGUvaWRlLWlvLmMKPiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Cj4gLS0tIGEvZHJpdmVycy9pZGUvaWRl
+LWlvLmMKPiArKysgYi9kcml2ZXJzL2lkZS9pZGUtaW8uYwo+IEBAIC01MzIsNyArNTMyLDggQEAg
+cmVwZWF0Ogo+Cj4goCCgIKAgoCCgIKAgoCCgaWYgKHN0YXJ0c3RvcCA9PSBpZGVfc3RvcHBlZCkg
+ewo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgcnEgPSBod2lmLT5ycTsKPiAtIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCBod2lmLT5ycSA9IE5VTEw7Cj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgaWYg
+KChkcml2ZS0+ZGV2X2ZsYWdzICYgSURFX0RGTEFHX0JMT0NLRUQpID09IDApCj4gKyCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBod2lmLT5ycSA9IE5VTEw7Cj4goCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKBnb3RvIHJlcGVhdDsKPiCgIKAgoCCgIKAgoCCgIKB9Cj4goCCgIKAgoH0gZWxzZQo+
+IEBAIC02NzksOCArNjgwLDEwIEBAIHZvaWQgaWRlX3RpbWVyX2V4cGlyeSAodW5zaWduZWQgbG9u
+ZyBkYXQKPiCgIKAgoCCgIKAgoCCgIKBzcGluX2xvY2tfaXJxKCZod2lmLT5sb2NrKTsKPiCgIKAg
+oCCgIKAgoCCgIKBlbmFibGVfaXJxKGh3aWYtPmlycSk7Cj4goCCgIKAgoCCgIKAgoCCgaWYgKHN0
+YXJ0c3RvcCA9PSBpZGVfc3RvcHBlZCAmJiBod2lmLT5wb2xsaW5nID09IDApIHsKPiAtIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCBycV9pbl9mbGlnaHQgPSBod2lmLT5ycTsKPiAtIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCBod2lmLT5ycSA9IE5VTEw7Cj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgaWYg
+KChkcml2ZS0+ZGV2X2ZsYWdzICYgSURFX0RGTEFHX0JMT0NLRUQpID09IDApIHsKPiArIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHJxX2luX2ZsaWdodCA9IGh3aWYtPnJxOwo+ICsgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgaHdpZi0+cnEgPSBOVUxMOwo+ICsgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIH0KPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoGlkZV91bmxvY2tfcG9ydCho
+d2lmKTsKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoHBsdWdfZGV2aWNlID0gMTsKPiCgIKAgoCCg
+IKAgoCCgIKB9Cj4gQEAgLTg1Niw4ICs4NTksMTAgQEAgaXJxcmV0dXJuX3QgaWRlX2ludHIgKGlu
+dCBpcnEsIHZvaWQgKmRldgo+IKAgoCCgIKAgKi8KPiCgIKAgoCCgaWYgKHN0YXJ0c3RvcCA9PSBp
+ZGVfc3RvcHBlZCAmJiBod2lmLT5wb2xsaW5nID09IDApIHsKPiCgIKAgoCCgIKAgoCCgIKBCVUdf
+T04oaHdpZi0+aGFuZGxlcik7Cj4gLSCgIKAgoCCgIKAgoCCgIHJxX2luX2ZsaWdodCA9IGh3aWYt
+PnJxOwo+IC0goCCgIKAgoCCgIKAgoCBod2lmLT5ycSA9IE5VTEw7Cj4gKyCgIKAgoCCgIKAgoCCg
+IGlmICgoZHJpdmUtPmRldl9mbGFncyAmIElERV9ERkxBR19CTE9DS0VEKSA9PSAwKSB7Cj4gKyCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgcnFfaW5fZmxpZ2h0ID0gaHdpZi0+cnE7Cj4gKyCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgaHdpZi0+cnEgPSBOVUxMOwo+ICsgoCCgIKAgoCCgIKAgoCB9Cj4goCCg
+IKAgoCCgIKAgoCCgaWRlX3VubG9ja19wb3J0KGh3aWYpOwo+IKAgoCCgIKAgoCCgIKAgoHBsdWdf
+ZGV2aWNlID0gMTsKPiCgIKAgoCCgfQo+Cg==
