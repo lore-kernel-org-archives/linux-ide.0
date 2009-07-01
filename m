@@ -1,103 +1,78 @@
-From: "Kalra Ashish-B00888" <ashish.kalra@freescale.com>
-Subject: RE: [PATCH][v2] sata_fsl: Add asynchronous notification support
-Date: Wed, 1 Jul 2009 17:56:45 +0530
-Message-ID: <16444A0F3094A24C83EAB7836A12C63B24FB60@zin33exm20.fsl.freescale.net>
-References: <Pine.WNT.4.64.0906292044150.5480@B00888-02.fsl.freescale.net> <4A4B1D8F.9090609@ru.mvista.com>
+From: Wu Zhangjin <wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
+Date: Wed, 01 Jul 2009 22:47:41 +0800
+Message-ID: <1246459661.9660.40.camel@falcon>
+References: <etTXaRqGgAC.A.SaE.6iASKB@chimera>
+	 <5Hhc7UkUKEO.A.RvE.BjASKB@chimera> <4A489775.6020102@numericable.fr>
+	 <20090629.033730.193709457.davem@davemloft.net>
+	 <4A48E307.2010208@numericable.fr>
+	 <b6a2187b0906290921w15afd443qccb943ccfd48688b@mail.gmail.com>
+	 <b6a2187b0907010731k510150b5u1c7fce8cbed7c33b@mail.gmail.com>
+Reply-To: wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:64049 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbZGAM1A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2009 08:27:00 -0400
-Received: from az33smr01.freescale.net (az33smr01.freescale.net [10.64.34.199])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n61CQns1020622
-	for <linux-ide@vger.kernel.org>; Wed, 1 Jul 2009 05:26:52 -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by az33smr01.freescale.net (8.13.1/8.13.0) with ESMTP id n61CQm2x002680
-	for <linux-ide@vger.kernel.org>; Wed, 1 Jul 2009 07:26:49 -0500 (CDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <4A4B1D8F.9090609@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <b6a2187b0907010731k510150b5u1c7fce8cbed7c33b-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Hello Sergei,
+On Wed, 2009-07-01 at 22:31 +0800, Jeff Chua wrote:
+> On Tue, Jun 30, 2009 at 12:21 AM, Jeff Chua<jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> 
+> > I just tried, and it "seems" to work. Will try a few more cycles.
+> 
+> STD/STR survived quite a few cycles now. Patch seems to be doing the
+> right thing.
+> 
+> On Mon, Jun 29, 2009 at 11:51 PM, Etienne
+> Basset<etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org> wrote:
+> 
+> > To have STR/resume work with current git, I have to :
+> 
+> > 1) apply Bart's patch
+> 
+> This is not yet in Linus's tree. And much needed to really fix the problem.
+> 
+> > 2) revert this commit : a1317f714af7aed60ddc182d0122477cbe36ee9b
+> 
 
-It looks like that the email client has added these whitespaces and
-alignment mess-up,
-as the original patch file has none of these issues. 
+Yes, This commit must be reverted, otherwise, STD/Hibernation will not
+work either. I have tested it on two different loongson-based machines:
+fuloong2e box and yeeloong2f netbook.(loongson is mips compatiable)
 
-I will try using another email client and re-post the patch.
+Here is what i have traced:
 
-Thanks,
-Ashish
+        hibernate(kernel/power/hibernate.c)
+        --> hibernation_snapshot
+        --> dpm_resume_end
+        --> dpm_resume
+        --> device_resume
+        --> dev->bus->resume(generic_ide_resume), dev_name(dev) = 0.0
+        --> blk_execute_rq
+        {
+                DECLARE_COMPLETION_ONSTACK(wait);
+                ...
+                wait_for_completion(&wait);     // stop here
+                ...
+        }
 
------Original Message-----
-From: Sergei Shtylyov [mailto:sshtylyov@ru.mvista.com] 
-Sent: Wednesday, July 01, 2009 1:56 PM
-To: Kalra Ashish-B00888
-Cc: linux-ide@vger.kernel.org; linuxppc-dev@ozlabs.org
-Subject: Re: [PATCH][v2] sata_fsl: Add asynchronous notification support
+and I have tried to revert this part of the above patch:
 
-Hello.
+-
+-               WARN_ON_ONCE(hwif->rq);
+ repeat:
+                prev_port = hwif->host->cur_port;
++
++               if (drive->dev_flags & IDE_DFLAG_BLOCKED)
++                       rq = hwif->rq;
++               else
++                       WARN_ON_ONCE(hwif->rq);
++
 
-ashish kalra wrote:
+it works! need more time to test!
 
-> Enable device hot-plug support on Port multiplier fan-out ports
->
-> Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
-[...]
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c index 
-> 94eaa43..5751145 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -34,7 +34,7 @@ enum {
->
->      SATA_FSL_HOST_FLAGS    = (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->                  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
-> -                ATA_FLAG_PMP | ATA_FLAG_NCQ),
-> +                 ATA_FLAG_PMP | ATA_FLAG_NCQ | ATA_FLAG_AN),
-
-   Why are you breaking the alignment? There's alos trailing whitespace
-here...
-
-> @@ -132,7 +132,7 @@ enum {
->      INT_ON_SINGL_DEVICE_ERR = (1 << 1),
->      INT_ON_CMD_COMPLETE = 1,
->
-> -    INT_ON_ERROR = INT_ON_FATAL_ERR |
-> +    INT_ON_ERROR = INT_ON_FATAL_ERR | INT_ON_SNOTIFY_UPDATE |
-
-   Trailing whitespace.
-
-> @@ -154,6 +154,7 @@ enum {
->
->      DEFAULT_PORT_IRQ_ENABLE_MASK = IE_ON_FATAL_ERR | IE_ON_PHYRDY_CHG
-|
->          IE_ON_SIGNATURE_UPDATE |
-> +        IE_ON_SNOTIFY_UPDATE |
-
-   Again.
-
->          IE_ON_SINGL_DEVICE_ERR | IE_ON_CMD_COMPLETE,
->
->      EXT_INDIRECT_SEG_PRD_FLAG = (1 << 31), @@ -1003,6 +1004,11 @@ 
-> static void sata_fsl_error_intr(struct ata_port
-> *ap)
->          freeze = 1;
->      }
->
-> +    /* Handle SDB FIS receive & notify update */
-> +    if (hstatus & INT_ON_SNOTIFY_UPDATE) {
-> +        sata_async_notification(ap);
-> +    }
-
-   And again -- on every line.
-
-MBR, Sergei
-
-
+thanks!
+Wu Zhangjin
