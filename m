@@ -1,78 +1,33 @@
-From: Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>
-Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
-Date: Wed, 01 Jul 2009 23:30:31 +0200
-Message-ID: <4A4BD577.2080609@numericable.fr>
-References: <etTXaRqGgAC.A.SaE.6iASKB@chimera>	 <1246459661.9660.40.camel@falcon>	 <200907011821.26091.bzolnier@gmail.com>	 <200907011829.16850.bzolnier@gmail.com> <b6a2187b0907011028r27d35be4xc62c7ed4496dfb2f@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA: link online but device misclassified
+Date: Thu, 02 Jul 2009 08:31:13 +0900
+Message-ID: <4A4BF1C1.3040103@gmail.com>
+References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>	 <1245165697.3965.40.camel@mulgrave.site> <4A3AEC08.4060507@gmail.com>	 <4A3B0D49.8070802@gmail.com>	 <cfa4e840906190238m4cca2c73pece279bb642bfd1f@mail.gmail.com>	 <4A3CD738.1080105@gmail.com>	 <cfa4e840906200613mac35e8ei69e40f9bcddd37dc@mail.gmail.com>	 <4A489562.8080404@gmail.com> <cfa4e840907010107s4d47c877n990594e660759cc@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <b6a2187b0907011028r27d35be4xc62c7ed4496dfb2f-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.236]:8618 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbZGAXbQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2009 19:31:16 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1719578rvb.5
+        for <linux-ide@vger.kernel.org>; Wed, 01 Jul 2009 16:31:18 -0700 (PDT)
+In-Reply-To: <cfa4e840907010107s4d47c877n990594e660759cc@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Marc Bowes <marcbowes@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org
 
-Jeff Chua wrote:
-> On Thu, Jul 2, 2009 at 12:29 AM, Bartlomiej
-> Zolnierkiewicz<bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->> Here is the more complete version, also taking into the account changes
->> in ide_intr() and ide_timer_expiry():
+Marc Bowes wrote:
+> Hi Tejun,
 > 
-> This works great for. Survived STR, STD. I just applied on top vanilla
-> latest Linus's git pull. Nothing else to revert.
-> 
-> Thanks,
-> Jeff.
-> 
-> 
-i confirm, this  works for me too :)
-thanks,
-Etienne
+> The patch works as you intended it. There is still some timeout, but
+> it is not more than 2-3 seconds which is a vast improvement. Attached
+> is the new dmesg.
 
+Thanks for verifying.  It still takes twenty seconds.  Do you have
+async probing turned on?
 
->> ---
->>  drivers/ide/ide-io.c |   15 ++++++++++-----
->>  1 file changed, 10 insertions(+), 5 deletions(-)
->>
->> Index: b/drivers/ide/ide-io.c
->> ===================================================================
->> --- a/drivers/ide/ide-io.c
->> +++ b/drivers/ide/ide-io.c
->> @@ -532,7 +532,8 @@ repeat:
->>
->>                if (startstop == ide_stopped) {
->>                        rq = hwif->rq;
->> -                       hwif->rq = NULL;
->> +                       if ((drive->dev_flags & IDE_DFLAG_BLOCKED) == 0)
->> +                               hwif->rq = NULL;
->>                        goto repeat;
->>                }
->>        } else
->> @@ -679,8 +680,10 @@ void ide_timer_expiry (unsigned long dat
->>                spin_lock_irq(&hwif->lock);
->>                enable_irq(hwif->irq);
->>                if (startstop == ide_stopped && hwif->polling == 0) {
->> -                       rq_in_flight = hwif->rq;
->> -                       hwif->rq = NULL;
->> +                       if ((drive->dev_flags & IDE_DFLAG_BLOCKED) == 0) {
->> +                               rq_in_flight = hwif->rq;
->> +                               hwif->rq = NULL;
->> +                       }
->>                        ide_unlock_port(hwif);
->>                        plug_device = 1;
->>                }
->> @@ -856,8 +859,10 @@ irqreturn_t ide_intr (int irq, void *dev
->>         */
->>        if (startstop == ide_stopped && hwif->polling == 0) {
->>                BUG_ON(hwif->handler);
->> -               rq_in_flight = hwif->rq;
->> -               hwif->rq = NULL;
->> +               if ((drive->dev_flags & IDE_DFLAG_BLOCKED) == 0) {
->> +                       rq_in_flight = hwif->rq;
->> +                       hwif->rq = NULL;
->> +               }
->>                ide_unlock_port(hwif);
->>                plug_device = 1;
->>        }
->>
+-- 
+tejun
