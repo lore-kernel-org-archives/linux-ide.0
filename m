@@ -1,58 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13696] New: Reading a DVD crashes the kernel
-Date: Thu, 2 Jul 2009 16:46:48 GMT
-Message-ID: <bug-13696-11633@http.bugzilla.kernel.org/>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Question about LS120 floppies
+Date: Thu, 2 Jul 2009 18:12:40 +0100
+Message-ID: <20090702181240.747e4063@lxorguk.ukuu.org.uk>
+References: <4A4BC762.3090104@lwfinger.net>
+	<4A4C441B.6050808@gmail.com>
+	<4A4CBD9E.4070404@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44209 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbZGBQqo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jul 2009 12:46:44 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n62Gkmu8029855
-	for <linux-ide@vger.kernel.org>; Thu, 2 Jul 2009 16:46:48 GMT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44306 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751754AbZGBRLH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jul 2009 13:11:07 -0400
+In-Reply-To: <4A4CBD9E.4070404@lwfinger.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13696
+On Thu, 02 Jul 2009 09:01:02 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-           Summary: Reading a DVD crashes the kernel
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 2.6.30
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: dibbex@gmail.com
-        Regression: No
+> Robert Hancock wrote:
+> > On 07/01/2009 02:30 PM, Larry Finger wrote:
+> >> I have been trying to help someone on the openSUSE forums. He is
+> >> running a 2.6.27 kernel and finds that his "Super Floppy" drive works
+> > 
+> > Are they using the old IDE drivers, or libata? Do they have any kernel
+> > output, etc?
+> 
+> In 2.6.27, I think he has the old IDE driver, but I'm not sure. In any
+> case, the entire thread on the openSUSE forum is at
+> 
+> http://forums.opensuse.org/hardware/417147-ls-120-opensuse-11-a.html
+> 
+> Thanks for any help you can give.
 
+Basically four content free pages. Ignoring all the stuff about HAL the
+hardware is detected and the drive reports that the media type is not
+supported.
 
-Created an attachment (id=22177)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=22177)
-Kernel output
+That all appears to be working beautifully, although I've no idea why the
+media type is not supported - I wonder if something is trying to read the
+wrong block sizes or if the LS120 has some magic no standard bits.
 
-Whenever I insert a DVD in the DVD-ROM drive (/dev/hdc) and try to read it
-(e.g., mount, dd) the kernel crashes.  The DVD-RW drive works fine.
-Attached is the complete kernel output as captured by netconsole, with info
-about the hardware and the oops dump.
+Unfortunately they are very very obscure hardware.
 
-As I'm using Debian, I compiled the vanilla 2.6.30 source using the Debian
-configuration to make sure the bug doesn't depend on Debian patches.  Kernel
-2.6.29 apparently works fine.
-
-If you need any other information, please ask.
-
-Best regards,
-Bernardo
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Alan
