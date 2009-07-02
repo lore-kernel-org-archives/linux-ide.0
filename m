@@ -1,150 +1,42 @@
-From: Gene Heskett <gene.heskett@verizon.net>
-Subject: Re: Dump failures
-Date: Wed, 01 Jul 2009 21:56:28 -0400
-Message-ID: <200907012156.28940.gene.heskett@verizon.net>
-References: <200907011021.22540.gene.heskett@verizon.net>
+From: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
+Date: Thu, 2 Jul 2009 10:09:53 +0800
+Message-ID: <b6a2187b0907011909l41b513fen3252ce00f7e4c9c9@mail.gmail.com>
+References: <etTXaRqGgAC.A.SaE.6iASKB@chimera>
+	 <1246459661.9660.40.camel@falcon>
+	 <200907011821.26091.bzolnier@gmail.com>
+	 <200907011829.16850.bzolnier@gmail.com>
+	 <1246499203.9660.52.camel@falcon>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms173011pub.verizon.net ([206.46.173.11]:42581 "EHLO
-	vms173011pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532AbZGBB4a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2009 21:56:30 -0400
-Received: from coyote.coyote.den ([72.65.71.44]) by vms173011.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008; 32bit))
- with ESMTPA id <0KM400C7STE57N20@vms173011.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Wed, 01 Jul 2009 20:56:30 -0500 (CDT)
-In-reply-to: <200907011021.22540.gene.heskett@verizon.net>
-Content-disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1246499203.9660.52.camel@falcon>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: amanda-users@amanda.org
-Cc: linux-ide@vger.kernel.org
 
-On Wednesday 01 July 2009, Gene Heskett wrote:
->Greetings;
->
->I have been getting a failure from amcheckdump since the 28th of June,
->complaining according to a re-run, of the /usr/movies DLE.  du -h . says its
->11 GB, chunk size is set to 2GB, and the tapesize at 40GB.  Seems to me like
->it would fit, but:
->
->Validating image coyote:/usr/movies datestamp 20090701001504 level 0 part 1
-> on tape Dailys-9 file #2
->/bin/tar: Unexpected EOF in archive
->/bin/tar: Error is not recoverable: exiting now
->Dump was not successfully validated: Validation process returned 2 (full
->status 512)
->  using '/usr/local/libexec/amanda/application/amgtar validate > /dev/null
-> && cat > /dev/null'.
->
->I sic'ed a session of dd piped to tar after it, and it has read a lot more
->than amcheckdump does before it exits, or I used the wrong syntax, possible
->since its been ages since I last did that.
->
->This is 2.6.2, built from the 20090622 snapshot.  kernel 2.6.30, fedora 10
->install.
->
->Ideas anybody?
->
->Thanks.
+On Thu, Jul 2, 2009 at 9:46 AM, Wu Zhangjin<wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> it this too old? should i merge another git repository?
+> I have tried to apply it manually, but unfortunately, also not work. any
+> other patch needed?
 
-I know, its considered very poor form to reply to ones own posts, but I have 
-another head scratcher to relate.  I have been mounting this partition as a 
-plain, no frills ext4 filesystem per recommendations from the kernel folks, 
-and I don't believe that I couldn't remount it as ext3 since it was originally 
-formatted as ext3.
+You need to be undo those two patches below ...
 
-Consider that this is the virtual tape as written last night:
+> On Mon, Jun 29, 2009 at 11:51 PM, Etienne Basset<etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>
+> To have STR/resume work with current git, I have to :
+> 1) apply Bart's patch
+> 2) revert this commit : a1317f714af7aed60ddc182d0122477cbe36ee9b
 
-[root@coyote data]# pwd
-/amandatapes/Dailys/data
+or try to pull from Linus's tree and try again. Latest is now ...
 
-[root@coyote data]# du -h .
-329M    ./Loris-wedding
-172K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding017
-92K     ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding005
-152K    ./Nikis-Wedding/nicciswedding-qdvd/Nikkis-Wedding
-132K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding008
-156K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding009
-140K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding014
-140K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding019
-164K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding010
-124K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding004
-148K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding012
-164K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding016
-116K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding003
-132K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding007
-156K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding013
-60K     ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding018
-12K     ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding001
-184K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding002
-120K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding006
-140K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding015
-148K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding011
-3.0M    ./Nikis-Wedding/nicciswedding-qdvd
-12K     ./Nikis-Wedding/nikis-Wedding2
-768M    ./Nikis-Wedding/tmp/VIDEO_TS
-4.0K    ./Nikis-Wedding/tmp/AUDIO_TS
-768M    ./Nikis-Wedding/tmp
-6.8G    ./Nikis-Wedding
-2.3G    ./emc-at-work
-46G     .
+commit d960eea974f5e500c0dcb95a934239cc1f481cfd
+Author: Randy Dunlap <randy.dunlap-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Date:   Mon Jun 29 14:54:11 2009 -0700
 
-46G?  in data/* ?
+    kernel-doc: move ignoring kmemcheck
 
-Somebodies adding machine is broken.  Bug in du -h?  Bug in ext4?
 
-Hummmm, I just unmounted it and remounted it as ext3, and the du -h . results 
-are unchanged.  Still 46G.  But the src of that level 0 backup is 11G.
 
-[root@coyote data]# cd /usr/movies
-[root@coyote movies]# du -h .
-329M    ./Loris-wedding
-2.3G    ./emc-at-work
-72K     ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding018
-168K    ./Nikis-Wedding/nicciswedding-qdvd/Nikkis-Wedding
-200K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding002
-104K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding005
-152K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding014
-132K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding006
-184K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding017
-128K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding003
-176K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding016
-160K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding011
-152K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding015
-168K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding013
-144K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding008
-144K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding007
-176K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding010
-152K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding019
-160K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding012
-24K     ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding001
-136K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding004
-168K    ./Nikis-Wedding/nicciswedding-qdvd/nicci-wedding009
-3.3M    ./Nikis-Wedding/nicciswedding-qdvd
-20K     ./Nikis-Wedding/nikis-Wedding2
-8.0K    ./Nikis-Wedding/tmp/AUDIO_TS
-768M    ./Nikis-Wedding/tmp/VIDEO_TS
-768M    ./Nikis-Wedding/tmp
-6.8G    ./Nikis-Wedding
-11G     .
-
-Not 46G.
-
-FWIW, e2fsck 1.41.4 says the device filesystem is clean.
-
-Call me puzzled, but looking for clues.  If anyone has a spare clue I could 
-sure use it.
-
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-The NRA is offering FREE Associate memberships to anyone who wants them.
-<https://www.nrahq.org/nrabonus/accept-membership.asp>
-
-Excellent day for putting Slinkies on an escalator.
-
+Jeff.
