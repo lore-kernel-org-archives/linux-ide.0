@@ -1,33 +1,145 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA: link online but device misclassified
-Date: Thu, 02 Jul 2009 08:31:13 +0900
-Message-ID: <4A4BF1C1.3040103@gmail.com>
-References: <cfa4e840906101715r56b643f4tab58e1c859d119ba@mail.gmail.com>	 <cfa4e840906160759m31db333cr555104ca0e3c6255@mail.gmail.com>	 <cfa4e840906160803h3364ac8aqfd78405dbcc512df@mail.gmail.com>	 <1245165697.3965.40.camel@mulgrave.site> <4A3AEC08.4060507@gmail.com>	 <4A3B0D49.8070802@gmail.com>	 <cfa4e840906190238m4cca2c73pece279bb642bfd1f@mail.gmail.com>	 <4A3CD738.1080105@gmail.com>	 <cfa4e840906200613mac35e8ei69e40f9bcddd37dc@mail.gmail.com>	 <4A489562.8080404@gmail.com> <cfa4e840907010107s4d47c877n990594e660759cc@mail.gmail.com>
+From: Wu Zhangjin <wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
+Date: Thu, 02 Jul 2009 09:46:43 +0800
+Message-ID: <1246499203.9660.52.camel@falcon>
+References: <etTXaRqGgAC.A.SaE.6iASKB@chimera>
+	 <1246459661.9660.40.camel@falcon> <200907011821.26091.bzolnier@gmail.com>
+	 <200907011829.16850.bzolnier@gmail.com>
+Reply-To: wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:8618 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbZGAXbQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2009 19:31:16 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1719578rvb.5
-        for <linux-ide@vger.kernel.org>; Wed, 01 Jul 2009 16:31:18 -0700 (PDT)
-In-Reply-To: <cfa4e840907010107s4d47c877n990594e660759cc@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200907011829.16850.bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Bowes <marcbowes@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org
 
-Marc Bowes wrote:
-> Hi Tejun,
+On Wed, 2009-07-01 at 18:29 +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday 01 July 2009 18:21:25 Bartlomiej Zolnierkiewicz wrote:
+> > On Wednesday 01 July 2009 16:47:41 Wu Zhangjin wrote:
+> > > On Wed, 2009-07-01 at 22:31 +0800, Jeff Chua wrote:
+> > > > On Tue, Jun 30, 2009 at 12:21 AM, Jeff Chua<jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> > > > 
+> > > > > I just tried, and it "seems" to work. Will try a few more cycles.
+> > > > 
+> > > > STD/STR survived quite a few cycles now. Patch seems to be doing the
+> > > > right thing.
+> > > > 
+> > > > On Mon, Jun 29, 2009 at 11:51 PM, Etienne
+> > > > Basset<etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org> wrote:
+> > > > 
+> > > > > To have STR/resume work with current git, I have to :
+> > > > 
+> > > > > 1) apply Bart's patch
+> > > > 
+> > > > This is not yet in Linus's tree. And much needed to really fix the problem.
+> > > > 
+> > > > > 2) revert this commit : a1317f714af7aed60ddc182d0122477cbe36ee9b
+> > > > 
+> > > 
+> > > Yes, This commit must be reverted, otherwise, STD/Hibernation will not
+> > > work either. I have tested it on two different loongson-based machines:
+> > > fuloong2e box and yeeloong2f netbook.(loongson is mips compatiable)
+> > 
+> > Since it seems like Dave is taking his sweet time with doing the revert
+> > I stared at the code a bit more and I think that I finally found the bug
+> > (thanks to your debugging work for giving me the right hint!).
+> > 
+> > The patch needs to take into the account a new code introduced by the recent
+> > block layer changes (commit 8f6205cd572fece673da0255d74843680f67f879):
+> > 
+> > @@ -555,8 +560,11 @@ repeat:
+> >                 startstop = start_request(drive, rq);
+> >                 spin_lock_irq(&hwif->lock);
+> >  
+> > -               if (startstop == ide_stopped)
+> > +               if (startstop == ide_stopped) {
+> > +                       rq = hwif->rq;
+> > +                       hwif->rq = NULL;
+> >                         goto repeat;
+> > +               }
+> >         } else
+> >                 goto plug_device;
+> >  out:
+> > 
+> > and not zero hwif->rq if the device is blocked. 
+> > 
+> > Could you try the attached patch and see if it fixes the issue?
 > 
-> The patch works as you intended it. There is still some timeout, but
-> it is not more than 2-3 seconds which is a vast improvement. Attached
-> is the new dmesg.
+> Here is the more complete version, also taking into the account changes
+> in ide_intr() and ide_timer_expiry():
+> 
 
-Thanks for verifying.  It still takes twenty seconds.  Do you have
-async probing turned on?
+Sorry, I can not apply this patch directly, which original version did
+you use? I used the one in the master branch of linux-mips development
+git repository.
 
--- 
-tejun
+commit 5a4f13fad1ab5bd08dea78fc55321e429d83cddf
+Merge: ec9c45d e18ed14
+Author: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Date:   Mon Jun 29 20:07:43 2009 -0700
+
+    Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide-2.6
+    
+    * git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide-2.6:
+      ide: memory overrun in ide_get_identity_ioctl() on big endian
+machines using ioctl HDIO_OBSOLETE_IDENTITY
+      ide: fix resume for CONFIG_BLK_DEV_IDEACPI=y
+      ide-cd: handle fragmented packet commands gracefully
+      ide: always kill the whole request on error
+      ide: fix ide_kill_rq() for special ide-{floppy,tape} driver
+requests
+
+it this too old? should i merge another git repository?
+
+I have tried to apply it manually, but unfortunately, also not work. any
+other patch needed?
+
+Thanks!
+Wu Zhangjin
+> ---
+>  drivers/ide/ide-io.c |   15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> Index: b/drivers/ide/ide-io.c
+> ===================================================================
+> --- a/drivers/ide/ide-io.c
+> +++ b/drivers/ide/ide-io.c
+> @@ -532,7 +532,8 @@ repeat:
+>  
+>  		if (startstop == ide_stopped) {
+>  			rq = hwif->rq;
+> -			hwif->rq = NULL;
+> +			if ((drive->dev_flags & IDE_DFLAG_BLOCKED) == 0)
+> +				hwif->rq = NULL;
+>  			goto repeat;
+>  		}
+>  	} else
+> @@ -679,8 +680,10 @@ void ide_timer_expiry (unsigned long dat
+>  		spin_lock_irq(&hwif->lock);
+>  		enable_irq(hwif->irq);
+>  		if (startstop == ide_stopped && hwif->polling == 0) {
+> -			rq_in_flight = hwif->rq;
+> -			hwif->rq = NULL;
+> +			if ((drive->dev_flags & IDE_DFLAG_BLOCKED) == 0) {
+> +				rq_in_flight = hwif->rq;
+> +				hwif->rq = NULL;
+> +			}
+>  			ide_unlock_port(hwif);
+>  			plug_device = 1;
+>  		}
+> @@ -856,8 +859,10 @@ irqreturn_t ide_intr (int irq, void *dev
+>  	 */
+>  	if (startstop == ide_stopped && hwif->polling == 0) {
+>  		BUG_ON(hwif->handler);
+> -		rq_in_flight = hwif->rq;
+> -		hwif->rq = NULL;
+> +		if ((drive->dev_flags & IDE_DFLAG_BLOCKED) == 0) {
+> +			rq_in_flight = hwif->rq;
+> +			hwif->rq = NULL;
+> +		}
+>  		ide_unlock_port(hwif);
+>  		plug_device = 1;
+>  	}
