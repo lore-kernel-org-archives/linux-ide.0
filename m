@@ -1,24 +1,35 @@
-From: Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>
-Subject: Re: [Bug #13663] suspend to ram regression (IDE related)
-Date: Thu, 2 Jul 2009 11:46:49 +0100
-Message-ID: <20090702104649.GC14804@linux-mips.org>
-References: <etTXaRqGgAC.A.SaE.6iASKB@chimera> <1246459661.9660.40.camel@falcon> <200907011821.26091.bzolnier@gmail.com> <200907011829.16850.bzolnier@gmail.com> <1246499203.9660.52.camel@falcon>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Question about LS120 floppies
+Date: Thu, 02 Jul 2009 09:01:02 -0500
+Message-ID: <4A4CBD9E.4070404@lwfinger.net>
+References: <4A4BC762.3090104@lwfinger.net> <4A4C441B.6050808@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1246499203.9660.52.camel@falcon>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Wu Zhangjin <wuzhangjin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:37909 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbZGBOAw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jul 2009 10:00:52 -0400
+In-Reply-To: <4A4C441B.6050808@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Jul 02, 2009 at 09:46:43AM +0800, Wu Zhangjin wrote:
+Robert Hancock wrote:
+> On 07/01/2009 02:30 PM, Larry Finger wrote:
+>> I have been trying to help someone on the openSUSE forums. He is
+>> running a 2.6.27 kernel and finds that his "Super Floppy" drive works
+> 
+> Are they using the old IDE drivers, or libata? Do they have any kernel
+> output, etc?
 
-> Sorry, I can not apply this patch directly, which original version did
-> you use? I used the one in the master branch of linux-mips development
-> git repository.
+In 2.6.27, I think he has the old IDE driver, but I'm not sure. In any
+case, the entire thread on the openSUSE forum is at
 
-The master branch of linux-mips.org has no IDE changes over Linus' tree.
+http://forums.opensuse.org/hardware/417147-ls-120-opensuse-11-a.html
 
-  Ralf
+Thanks for any help you can give.
+
+Larry
