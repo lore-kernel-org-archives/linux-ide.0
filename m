@@ -1,70 +1,39 @@
-From: Andrei Martynov <andrei.martynov@web.de>
-Subject: Re[2]: porting IDE patches to PATA driver
-Date: Fri, 3 Jul 2009 11:50:22 +0200
-Message-ID: <149127909.20090703115022@web.de>
-References: <323951117.20090625100956@web.de>
- <20090625092324.2dd4de5a@lxorguk.ukuu.org.uk> <14164712.20090625103834@web.de>
- <20090625100542.525dba02@lxorguk.ukuu.org.uk> <951976828.20090625123021@web.de>
- <20090625122958.510c28ad@lxorguk.ukuu.org.uk> <96179821.20090626152440@web.de>
- <20090626144639.4bc822b8@lxorguk.ukuu.org.uk> <792909512.20090626164052@web.de>
- <20090626172143.3fe6a59c@lxorguk.ukuu.org.uk> <596875090.20090629140157@web.de>
- <20090629155349.1574e492@lxorguk.ukuu.org.uk>
-Reply-To: Andrei Martynov <andrei.martynov@web.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Fri, 3 Jul 2009 12:09:52 GMT
+Message-ID: <200907031209.n63C9qq8032734@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:38666 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbZGCJu0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jul 2009 05:50:26 -0400
-In-Reply-To: <20090629155349.1574e492@lxorguk.ukuu.org.uk>
+Received: from demeter.kernel.org ([140.211.167.39]:34539 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753287AbZGCMJt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jul 2009 08:09:49 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n63C9q2D032735
+	for <linux-ide@vger.kernel.org>; Fri, 3 Jul 2009 12:09:52 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Monday, June 29, 2009, 4:53:49 PM, Alan Cox wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
-> The only other thing I can see is the way it hangs around waiting a bit
-> for the DMA to finish after the DMA completion event occurs - that might
-> be your problem if they goofed and reported DMA complete too early.
 
-Thank you very much for your advices. Reading from disk works fine now
-but writing attempt results in a series of similar error messages.
-What is the meaning of this error? Is there any documentation that may
-be useful to understand libata error messages?
+Bernardo Dal Seno <dibbex@gmail.com> changed:
 
-~ # cp /hdd/c/Test/test.dat /hdd/d
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata1.00: BMDMA stat 0x6
-ata1.00: cmd 35/00:98:40:6f:fe/00:01:20:00:00/e0 tag 0 dma 208896 out
-         res 50/00:00:d7:70:fe/00:00:20:00:00/e0 Emask 0x20 (host bus error)
-ata1.00: status: { DRDY }
-jasper_set_piomode: devno = 0
-jasper_tune_chipset: slave = 0 speed = 0x0c
-jasper_set_dmamode: devno = 0
-jasper_tune_chipset: slave = 0 speed = 0x22
-ata1.00: configured for MWDMA2
-ata1: EH complete
-sd 0:0:0:0: [sda] 586070255 512-byte hardware sectors (300068 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata1.00: BMDMA stat 0x6
-ata1.00: cmd 35/00:a0:b0:72:fe/00:01:20:00:00/e0 tag 0 dma 212992 out
-         res 50/00:00:4f:74:fe/00:00:20:00:00/e0 Emask 0x20 (host bus error)
-ata1.00: status: { DRDY }
-jasper_set_piomode: devno = 0
-jasper_tune_chipset: slave = 0 speed = 0x0c
-jasper_set_dmamode: devno = 0
-jasper_tune_chipset: slave = 0 speed = 0x22
-ata1.00: configured for MWDMA2
-ata1: EH complete
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |dibbex@gmail.com
 
+
+
+
+--- Comment #47 from Bernardo Dal Seno <dibbex@gmail.com>  2009-07-03 12:09:49 ---
+*** Bug 13696 has been marked as a duplicate of this bug. ***
 
 -- 
-Best regards,
- Andrei                            mailto:andrei.martynov@web.de
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
