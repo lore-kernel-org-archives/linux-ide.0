@@ -1,199 +1,98 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: HPT370 fails in 2.6.30
-Date: Sat, 04 Jul 2009 16:42:37 +0400
-Message-ID: <4A4F4E3D.6020704@ru.mvista.com>
-References: <200906291328.25824.jan.mette@berlin.de>
+From: Zdenek Kaspar <zkaspar82@gmail.com>
+Subject: AHCI: connection status changed + hard resetting link with 2.6.30+
+Date: Sun, 05 Jul 2009 00:02:10 +0200
+Message-ID: <4A4FD162.30604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040808070201030400090506"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:31421 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751944AbZGDMmk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Jul 2009 08:42:40 -0400
-In-Reply-To: <200906291328.25824.jan.mette@berlin.de>
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:62750 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752465AbZGDWCN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Jul 2009 18:02:13 -0400
+Received: by bwz25 with SMTP id 25so57847bwz.37
+        for <linux-ide@vger.kernel.org>; Sat, 04 Jul 2009 15:02:15 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Mette <jan.mette@berlin.de>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+This is a multi-part message in MIME format.
+--------------040808070201030400090506
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 
-Jan Mette wrote:
+Hi, when booted latest -stable kernel (2.6.30.1) got this in dmesg:
 
-> After looking at git.kernel.org and reading a bit of "how to report
-> kernel bugs" i am now hoping that i have contacted the right person :)
->   
+[    1.521856] ata8: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xf t4
+[    1.521908] ata8: irq_stat 0x00400040, connection status changed
+[    1.521962] ata8: hard resetting link
 
-   I'm not quite right person -- I'm maintaining the "old" IDE hpt366 
-driver, not the libata driver. The best "person" to report IDE/libata 
-bugs is th linux-ide mailing list and/or http://bugzilla.kernel.org.
+Same result with 2.6.31-rc2, with 2.6.29.6 it works OK.
 
-> Since 2.6.30 my Highpoint HPT370 doesnt work anymore, it does
-> not detect my drives and tells me that there could be failures. There
-> are a lot of errors in dmesg, and a google search doesnt reveal any
-> useful information, at least for me. It seems that this bug was also in
-> earlier kernel versions, but it got fixed on the way. On 2.6.29 and earlier
-> kernels everything works fine for me.
->
-> I am running an almost vanilla 2.6.30 kernel:
-> http://repos.archlinux.org/viewvc.cgi/kernel26/repos/core-i686/
-> ftp://ftp.archlinux.org/other/kernel26/patch-2.6.30-5-ARCH.bz2
->
-> Here is the downstream bug:
-> http://bugs.archlinux.org/task/15230
->
-> As said, i hope i am contacting the right person. If you or someone else
-> needs any additional info, please tell me about it. I am also able to build
-> and/or patch a kernel, so you can use me for testing :)
->   
+Could this cause any trouble ?
 
-   First of all, will it fail if you apply only this patch:
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=265b7215aed36941620b65ecfff516200fb190c1
-
-to 2.6.29 -- it's the only pata_hpt37x driver change between 2.6.29 and 
-2.6.30.
-
-> pata_hpt3x2n 0000:01:00.0: PCI INT A -> GSI 21 (level, low) -> IRQ 21
-> pata_hpt3x2n 0000:01:00.0: PCI INT A disabled
-> Driver 'sd' needs updating - please use bus_type methods
-> sd 2:0:0:0: [sda] 625142448 512-byte hardware sectors: (320 GB/298 GiB)
-> sd 2:0:0:0: [sda] Write Protect is off
-> sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->  sda:<6>pata_hpt37x 0000:01:00.0: PCI INT A -> GSI 21 (level, low) -> IRQ 21
-> pata_hpt37x: HPT370A using 33MHz bus clock.
-> scsi8 : pata_hpt37x
-> scsi9 : pata_hpt37x
-> ata9: PATA max UDMA/100 cmd 0xbc00 ctl 0xb880 bmdma 0xb000 irq 21
-> ata10: PATA max UDMA/100 cmd 0xb800 ctl 0xb480 bmdma 0xb008 irq 21
->  sda1 sda2 sda3 < sda5 sda6 sda7 sda8 >
-> sd 2:0:0:0: [sda] Attached SCSI disk
-> ata9.00: HPA detected: current 488397168, native 31170441795952
-> ata9.00: ATA-7: SAMSUNG SP2514N, VF100-33, max UDMA/100
-> ata9.00: 488397168 sectors, multi 0: LBA48 
-> ata9.00: Drive reports diagnostics failure. This may indicate a drive
-> ata9.00: fault or invalid emulation. Contact drive vendor for information.
->   
-
-   Hm, this looks fishy... and you're saying that 2.6.29 doesn't show 
-this message?
-
-> ata9.01: HPA detected: current 488397168, native 31170441795952
-> ata9.01: ATA-7: SAMSUNG SP2514N, VF100-50, max UDMA/100
-> ata9.01: 488397168 sectors, multi 0: LBA48 
-> ata9.00: configured for UDMA/100
-> ata9.01: configured for UDMA/100
-> scsi 8:0:0:0: Direct-Access     ATA      SAMSUNG SP2514N  VF10 PQ: 0 ANSI: 5
-> sd 8:0:0:0: [sdb] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-> scsi 8:0:1:0: Direct-Access     ATA      SAMSUNG SP2514N  VF10 PQ: 0 ANSI: 5
-> sd 8:0:0:0: [sdb] Write Protect is off
-> sd 8:0:1:0: [sdc] 488397168 512-byte hardware sectors: (250 GB/232 GiB)
-> sd 8:0:1:0: [sdc] Write Protect is off
-> sd 8:0:1:0: [sdc] Mode Sense: 00 3a 00 00
-> sd 8:0:1:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->  sdc:<7>sd 8:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> ata9: lost interrupt (Status 0x7f)
->   
-
-   The status of 0x7f looks fishy/unnatural. Is this a PATA or SATA drive?
-
-> ata9: drained 2048 bytes to clear DRQ.
-> ata9.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> ata9.01: cmd c8/00:08:00:00:00/00:00:00:00:00/f0 tag 0 dma 4096 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata9.01: status: { DRDY }
->   
-
-  And things go downhill from there...
-
-> ata9: link is slow to respond, please be patient (ready=0)
-> ata9: device not ready (errno=-16), forcing hardreset
-> ata9: soft resetting link
-> ata9.01: qc timeout (cmd 0xec)
-> ata9.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata9.01: revalidation failed (errno=-5)
-> ata9: link is slow to respond, please be patient (ready=0)
-> ata9: device not ready (errno=-16), forcing hardreset
-> ata9: soft resetting link
-> ata9.01: qc timeout (cmd 0xec)
-> ata9.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata9.01: revalidation failed (errno=-5)
-> ata9: link is slow to respond, please be patient (ready=0)
-> ata9: device not ready (errno=-16), forcing hardreset
-> ata9: soft resetting link
-> ata9.01: qc timeout (cmd 0xec)
-> ata9.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata9.01: revalidation failed (errno=-5)
-> ata9.01: disabled
-> ata9.00: failed to IDENTIFY (I/O error, err_mask=0x40)
-> ata9.00: revalidation failed (errno=-5)
-> ata9: link is slow to respond, please be patient (ready=0)
-> ata9: device not ready (errno=-16), forcing hardreset
-> ata9: soft resetting link
-> ata9.00: failed to IDENTIFY (device reports invalid type, err_mask=0x0)
-> ata9.00: revalidation failed (errno=-22)
-> ata9: soft resetting link
-> ata9.00: failed to IDENTIFY (device reports invalid type, err_mask=0x0)
-> ata9.00: revalidation failed (errno=-22)
-> ata9.00: disabled
->   
-
-   Hm, failed soft resets seem like too much... After this point, 'sd' 
-vainly tries to talk to the disabled drive...
-
-> ata9: EH complete
-> sd 8:0:0:0: [sdb] Asking for cache data failed
-> sd 8:0:0:0: [sdb] Assuming drive cache: write through
-> sd 8:0:0:0: [sdb] READ CAPACITY(16) failed
-> sd 8:0:0:0: [sdb] Result: hostbyte=0x04 driverbyte=0x00
-> sd 8:0:0:0: [sdb] Sense not available.
-> sd 8:0:0:0: [sdb] READ CAPACITY failed
-> sd 8:0:0:0: [sdb] Result: hostbyte=0x04 driverbyte=0x00
-> sd 8:0:0:0: [sdb] Sense not available.
-> sd 8:0:0:0: [sdb] Asking for cache data failed
-> sd 8:0:0:0: [sdb] Assuming drive cache: write through
-> sdb: detected capacity change from 250059350016 to 0
-> sd 8:0:0:0: [sdb] Attached SCSI disk
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
-> ldm_validate_partition_table(): Disk read failed.
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
->  unable to read partition table
-> sd 8:0:1:0: [sdc] Attached SCSI disk
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-> Buffer I/O error on device sdc, logical block 0
-> Buffer I/O error on device sdc, logical block 1
-> Buffer I/O error on device sdc, logical block 2
-> Buffer I/O error on device sdc, logical block 3
-> sd 8:0:1:0: [sdc] Unhandled error code
-> sd 8:0:1:0: [sdc] Result: hostbyte=0x04 driverbyte=0x00
-> end_request: I/O error, dev sdc, sector 0
-
-MBR, Sergei
+TIA, Z.
 
 
+
+
+--------------040808070201030400090506
+Content-Type: text/plain;
+ name="dmesg-excerptions-2.6.31-rc2"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="dmesg-excerptions-2.6.31-rc2"
+
+[    1.004429] ahci 0000:00:1f.2: version 3.0
+[    1.004437]   alloc irq_desc for 19 on node 0
+[    1.004439]   alloc kstat_irqs on node 0
+[    1.004442] ahci 0000:00:1f.2: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+[    1.004513]   alloc irq_desc for 28 on node 0
+[    1.004515]   alloc kstat_irqs on node 0
+[    1.004522] ahci 0000:00:1f.2: irq 28 for MSI/MSI-X
+[    1.004573] ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0x33 impl SATA mode
+[    1.004641] ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pio slum part ems 
+[    1.004706] ahci 0000:00:1f.2: setting latency timer to 64
+[    1.060086] scsi2 : ahci
+[    1.060536] scsi3 : ahci
+[    1.060918] scsi4 : ahci
+[    1.061311] scsi5 : ahci
+[    1.061717] scsi6 : ahci
+[    1.062141] scsi7 : ahci
+[    1.062287] ata3: SATA max UDMA/133 abar m2048@0x90221000 port 0x90221100 irq 28
+[    1.062352] ata4: SATA max UDMA/133 abar m2048@0x90221000 port 0x90221180 irq 28
+[    1.062416] ata5: DUMMY
+[    1.062455] ata6: DUMMY
+[    1.062494] ata7: SATA max UDMA/133 abar m2048@0x90221000 port 0x90221300 irq 28
+[    1.062558] ata8: SATA max UDMA/133 abar m2048@0x90221000 port 0x90221380 irq 28
+
+...
+
+[    1.411284] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    1.411353] ata4: SATA link down (SStatus 0 SControl 300)
+[    1.412138] ata3.00: ATA-8: WDC WD2502ABYS-01B7A0, 02.03B02, max UDMA/133
+[    1.412192] ata3.00: 490350672 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[    1.413221] ata3.00: configured for UDMA/133
+[    1.413351] scsi 2:0:0:0: Direct-Access     ATA      WDC WD2502ABYS-0 02.0 PQ: 0 ANSI: 5
+[    1.421264] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    1.430076] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    1.463476] ata8.00: ATA-7: ST3400620NS, 3.AEG, max UDMA/133
+[    1.463527] ata8.00: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[    1.476751] ata7.00: ATA-7: ST3400620NS, 3.AEG, max UDMA/133
+[    1.476801] ata7.00: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[    1.521804] ata8.00: configured for UDMA/133
+[    1.521856] ata8: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xf t4
+[    1.521908] ata8: irq_stat 0x00400040, connection status changed
+[    1.521962] ata8: hard resetting link
+[    1.535080] ata7.00: configured for UDMA/133
+[    1.535132] ata7: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xf t4
+[    1.535183] ata7: irq_stat 0x00400040, connection status changed
+[    1.535237] ata7: hard resetting link
+[    2.270032] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.280074] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.363041] ata8.00: configured for UDMA/133
+[    2.363088] ata8: EH complete
+[    2.368005] ata7.00: configured for UDMA/133
+[    2.368051] ata7: EH complete
+
+--------------040808070201030400090506--
