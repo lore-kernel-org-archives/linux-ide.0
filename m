@@ -1,43 +1,96 @@
-From: Kevin Hilman <khilman@deeprootsystems.com>
-Subject: [PATCH] IDE: palm_bk3710: convert clock usage after clkdev conversion
-Date: Mon,  6 Jul 2009 15:26:16 -0700
-Message-ID: <1246919176-28683-1-git-send-email-khilman@deeprootsystems.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:5238 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752558AbZGFW0Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jul 2009 18:26:16 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1615549wfd.4
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jul 2009 15:26:18 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: Delay on intialization ide subsystem(most likely)
+Date: Tue, 07 Jul 2009 09:23:42 +1000
+Message-ID: <1246922623.22625.57.camel@pasglop>
+References: <20090425170203.74603b9c@power-debian>
+	<200906101344.30057.bzolnier@gmail.com>
+	<20090705151754.6034ffad@power-debian>
+	<200907061704.38539.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <200907061704.38539.bzolnier@gmail.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Andrey Gusev <a.gusev1980@mail.ru>, petkovbb@gmail.com, David Miller <davem@davemloft.net>, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: davinci-linux-open-source@linux.davincidsp.com
 
-DaVinci core code has converted to the new clkdev API so
-clock name strings are not needed.  Instead, just the a
-'struct device' pointer is needed.
+On Mon, 2009-07-06 at 17:04 +0200, Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
----
-Fix needed for 2.6.31
+> > Delay is fixed itself in 2.6.31-rc2. Most likely it was platform specific issue. But lost interrupt still exists.
+> > There is log of 2.6.31-rc2:
+> 
+> Thanks for letting us know.  When it comes to the lost interrupt issue
+> I still suspect that this is pmac specific problem (though Dave may have
+> some fresh idea about it).
 
- drivers/ide/palm_bk3710.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hard to tell. Those things generally work... maybe something is wrong
+with that disk vs. that timing. Does it work if you move it to the other
+controller (the one to which the CD drive is connected ?)
 
-diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
-index 3c1dc01..f8eddf0 100644
---- a/drivers/ide/palm_bk3710.c
-+++ b/drivers/ide/palm_bk3710.c
-@@ -318,7 +318,7 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
- 	int i, rc;
- 	struct ide_hw hw, *hws[] = { &hw };
- 
--	clk = clk_get(&pdev->dev, "IDECLK");
-+	clk = clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(clk))
- 		return -ENODEV;
- 
--- 
-1.6.3.3
+Cheers,
+Ben.
 
+> > [    1.595268] MacIO PCI driver attached to Keylargo chipset
+> > [    1.597024] irq: irq 32 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 32
+> > [    1.597988] irq: irq 19 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 19
+> > [    1.598024] irq: irq 11 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 16
+> > [    1.598365] irq: irq 20 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 20
+> > [    1.598401] irq: irq 12 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 17
+> > [    1.598762] irq: irq 5 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 18
+> > [    1.598797] irq: irq 6 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 21
+> > [    1.599264] irq: irq 7 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 24
+> > [    1.599300] irq: irq 8 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 29
+> > [    1.601336] Uniform Multi-Platform E-IDE driver
+> > [    1.602201] ide-pmac 0002:20:0d.0: enabling device (0000 -> 0002)
+> > [    2.630651] ide-pmac: Found Apple UniNorth ATA-6 controller (PCI), bus ID 3, irq 39
+> > [    2.630767] Probing IDE interface ide0...
+> > [    2.930834] hda: IBM-IC35L060AVVA07-0, ATA DISK drive
+> > [    3.290646] hdb: QUANTUM FIREBALLP LM20.5, ATA DISK drive
+> > [    3.291087] hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> > [    3.291264] hda: UDMA/100 mode selected
+> > [    3.291473] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> > [    3.291720] hdb: UDMA/66 mode selected
+> > [    3.292118] ide0 at 0xf10c2000-0xf10c2070,0xf10c2160 on irq 39
+> > [    4.320649] ide-pmac: Found Apple KeyLargo ATA-4 controller (macio), bus ID 2, irq 19
+> > [    4.320753] Probing IDE interface ide1...
+> > [    4.921004] ide1 at 0xf10ba000-0xf10ba070,0xf10ba160 on irq 19
+> > [    5.950647] ide-pmac: Found Apple KeyLargo ATA-3 controller (macio), bus ID 0, irq 20
+> > [    5.950743] Probing IDE interface ide2...
+> > [    6.370828] hde: PHILIPS CDD5101, ATAPI CD/DVD-ROM drive
+> > [    6.730948] hde: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> > [    6.731332] hde: MWDMA2 mode selected
+> > [    6.731832] ide2 at 0xf10be000-0xf10be070,0xf10be160 on irq 20
+> > [    6.732558] ide-gd driver 1.18
+> > [    6.732735] hda: max request size: 128KiB
+> > [    6.763392] hda: 120103200 sectors (61492 MB) w/1863KiB Cache, CHS=65535/16/63
+> > [    6.763741] hda: cache flushes supported
+> > [    6.764277]  hda: [mac] hda1 hda2 hda3 hda4
+> > [    6.770469] hdb: max request size: 128KiB
+> > [    6.803427] hdb: Host Protected Area detected.
+> > [    6.803431] 	current capacity is 40130390 sectors (20546 MB)
+> > [    6.803435] 	native  capacity is 40132503 sectors (20547 MB)
+> > [    6.803590] hdb: 40130390 sectors (20546 MB) w/1900KiB Cache, CHS=39811/16/63
+> > [    6.803684] hdb: cache flushes not supported
+> > [    6.803910]  hdb:
+> > [   26.800743] ide-pmac lost interrupt, dma status: 8480
+> > [   26.800809] hdb: lost interrupt
+> > [   26.800850] hdb: dma_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+> > [   26.800976] hdb: possibly failed opcode: 0xc8
+> > [   26.803449] hda: DMA disabled
+> > [   26.805664] hdb: DMA disabled
+> > [   26.900633] ide0: reset: success
+> > [   26.949147]  hdb1 hdb2 < hdb5 hdb6 hdb7 hdb8 >
+> > [   27.007890] ide-cd driver 5.00
+> > [   27.011728] ide-cd: hde: ATAPI 32X DVD-ROM CD-R/RW drive, 8192kB Cache
+> > [   27.014163] Uniform CD-ROM driver Revision: 3.20
+> > 
