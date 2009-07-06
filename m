@@ -1,38 +1,43 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT]: IDE
-Date: Mon, 06 Jul 2009 14:51:44 -0700 (PDT)
-Message-ID: <20090706.145144.173645961.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Kevin Hilman <khilman@deeprootsystems.com>
+Subject: [PATCH] IDE: palm_bk3710: convert clock usage after clkdev conversion
+Date: Mon,  6 Jul 2009 15:26:16 -0700
+Message-ID: <1246919176-28683-1-git-send-email-khilman@deeprootsystems.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39555
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753059AbZGFVvi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jul 2009 17:51:38 -0400
+Received: from wf-out-1314.google.com ([209.85.200.169]:5238 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752558AbZGFW0Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jul 2009 18:26:16 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1615549wfd.4
+        for <linux-ide@vger.kernel.org>; Mon, 06 Jul 2009 15:26:18 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: davinci-linux-open-source@linux.davincidsp.com
 
+DaVinci core code has converted to the new clkdev API so
+clock name strings are not needed.  Instead, just the a
+'struct device' pointer is needed.
 
-This reverts a power-management fix we tried a week ago.
+Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
+---
+Fix needed for 2.6.31
 
-It doesn't work and it looks like we'll need to attack this in 2.6.32
-instead.
+ drivers/ide/palm_bk3710.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Please pull, thanks a lot.
+diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
+index 3c1dc01..f8eddf0 100644
+--- a/drivers/ide/palm_bk3710.c
++++ b/drivers/ide/palm_bk3710.c
+@@ -318,7 +318,7 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
+ 	int i, rc;
+ 	struct ide_hw hw, *hws[] = { &hw };
+ 
+-	clk = clk_get(&pdev->dev, "IDECLK");
++	clk = clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(clk))
+ 		return -ENODEV;
+ 
+-- 
+1.6.3.3
 
-The following changes since commit 8e4a718ff38d8539938ec3421935904c27e00c39:
-  Linus Torvalds (1):
-        Linux 2.6.31-rc2
-
-are available in the git repository at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
-
-David S. Miller (1):
-      Revert "ide: improve handling of Power Management requests"
-
- drivers/ide/ide-io.c |   54 +++++++++++++++++++++++++++++--------------------
- 1 files changed, 32 insertions(+), 22 deletions(-)
