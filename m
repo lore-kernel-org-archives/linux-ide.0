@@ -1,96 +1,67 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Tue, 07 Jul 2009 18:06:53 -0400
-Message-ID: <4A53C6FD.3010603@tmr.com>
-References: <19010.62951.886231.96622@notabene.brown>	<yq11vp8spxo.fsf@sermon.lab.mkp.net>	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>	<yq1k530qkm7.fsf@sermon.lab.mkp.net>	<19012.47077.328965.919868@notabene.brown>	<yq1ws6znja4.fsf@sermon.lab.mkp.net>
-	<19026.43290.340555.774690@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: "EXT3-fs error" after resume from s2ram
+Date: Tue, 07 Jul 2009 17:30:16 -0600
+Message-ID: <4A53DA88.5080703@gmail.com>
+References: <4A4771FD.1020207@warlich.name> <4A480859.5010206@gmail.com> <4A48C799.2010102@warlich.name> <4A495C2D.1040706@gmail.com> <4A49A49C.10104@warlich.name> <4A4C42E2.6030305@gmail.com> <4A51C929.5010909@warlich.name> <4A52931D.5070109@gmail.com> <4A52F39A.1030704@warlich.name> <4A5311C7.1020507@warlich.name> <4A535973.9090206@gmail.com> <4A5388EA.7030503@warlich.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <19026.43290.340555.774690@notabene.brown>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.182]:1140 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757424AbZGGX26 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jul 2009 19:28:58 -0400
+In-Reply-To: <4A5388EA.7030503@warlich.name>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christof Warlich <christof@warlich.name>
+Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-Neil Brown wrote:
-> On Friday June 26, martin.petersen@oracle.com wrote:
->   
->> As far as making the application of these values more obvious I propose
->> the following:
+On 07/07/2009 11:42 AM, Christof Warlich wrote:
+> Robert Hancock schrieb:
+>> On 07/07/2009 03:13 AM, Christof Warlich wrote:
+>>> Christof Warlich schrieb:
+>>>> Do you think I can fix the issue and circumvent the BIOS by passing
+>>>> the real geomerty of the drive as kernel boot parameters? This may
+>>>> also have the nice side effect that I could utilize the full capacity
+>>>> of the drive. I'll definitly do some experiments in this direction and
+>>>> let you know immediately if I succeed. Please let me know if this may
+>>>> be a waste of time or if you know an appropriate fix.
+>>> I retried with the boot parameter hda=16383,16,63 according to the
+>>> values that I got from fdisk, but without success. Anyway, I would have
+>>> expected that the kernel may have had a way to set the LBA48 geometry
+>>> instead of CHS, but it looks like I'm on the wrong track here...
 >>
->> What:		/sys/block/<disk>/queue/minimum_io_size
->> Date:		April 2009
->> Contact:	Martin K. Petersen <martin.petersen@oracle.com>
->> Description:
->> 		Storage devices may report a granularity or minimum I/O
->> 		size which is the device's preferred unit of I/O.
->> 		Requests smaller than this may incur a significant
->> 		performance penalty.
->>
->> 		For disk drives this value corresponds to the physical
->> 		block size. For RAID devices it is usually the stripe
->> 		chunk size.
->>     
+>> That's an old IDE parameter, not a libata one, and 160GB is way too
+>> large to be settable using CHS. What you likely want to do is pass the
+>> ignore_hpa=1 option to libata when it's loaded - either
+>> libata.ignore_hpa=1 on kernel command line, or in /etc/modprobe.conf
+>> if it's a module (how exactly to do this depends on your
+>> distribution). That way the protected area on the disk will get
+>> disabled and you can use the full capacity.
+> Hmm - that doen't seem to fix it :-(:
 >
-> These two paragraphs are contradictory.  There is no sense in which a
-> RAID chunk size is a preferred minimum I/O size.
+> After the reboot, fdisk still reports 137.4GB, and dmesg now contains
+> the line:
 >
-> To some degree it is actually a 'maximum' preferred size for random
-> IO.  If you do random IO is blocks larger than the chunk size then you
-> risk causing more 'head contention' (at least with RAID0 - with RAID5
-> the tradeoff is more complex).
+> ata1.00: device aborted resize (268435456 -> 312581808), skipping HPA
+> handling
 >
->   
-Actually this is allocation unit, and the array can be assumed to be a 
-series of sets of contiguous bytes of this size. Given LBA addressing, 
-array members which are not simple whole devices, etc, this doesn't 
-(can't) promise much for the physical layout. And any read which resides 
-entirely within a chunk would not have a performance penalty, although 
-write might, if it were not a multiple of the sector size of the array 
-member(s) involved.
-
-> If you are talking about "alignment", then yes - the chunk size is an
-> appropriate size to align on.  But so are the block size and the
-> stripe size and none is, in general, any better than any other.
+> instead of
 >
->   
-I would assume that a chunk, aligned on a chunk boundary, would be 
-allocated in a contiguous series of bytes on the underlying array 
-member. And that any i/o not aligned on a chunk boundary would be more 
-likely to access multiple array members.
+> ata1.00: HPA detected: current 268435456, native 312581808
+>
+> that we have seen without the libata.ignore_hpa=1 kernel command line
+> option.
+>
+> After s2ram -f -p, I still see the EXT3-fs error on resume. Is it worth
+> to take another log from this suspend /resume cycle?
 
-Feel free to clarify my assumptions.
+Hmm, so we tried to disable the HPA and enable the entire disk capacity, 
+but the drive refused. But it somehow ends up in the HPA disabled state 
+upon resume. According to the ATA spec, the drive will refuse SET MAX 
+ADDRESS EXT commands after one has already been executed upon power-on 
+or reset. That suggests that the BIOS is applying the HPA on bootup, but 
+not on resume.
 
-> Also, you say "may" report.  If a device does not report, what happens
-> to this file.  Is it not present, or empty, or contain a special
-> "undefined" value?
-> I think the answer is that "512" is reported.  It might be good to
-> explicitly document that.
->   
-> I'd really like to see an example of how you expect filesystems to use
-> this.
-> I can well imagine the VM or elevator using this to assemble IO
-> requests in to properly aligned requests.  But I cannot imagine how
-> e.g mkfs would use it.
-> Or am I misunderstanding and this is for programs that use O_DIRECT on
-> the block device so they can optimise their request stream?
->   
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
-normal user and is setuid root, with the "vi" line edit mode selected,
-and the character set is "big5," an off-by-one error occurs during
-wildcard (glob) expansion.
+Is there a BIOS update available for this machine?
