@@ -1,96 +1,68 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Delay on intialization ide subsystem(most likely)
-Date: Tue, 07 Jul 2009 09:23:42 +1000
-Message-ID: <1246922623.22625.57.camel@pasglop>
-References: <20090425170203.74603b9c@power-debian>
-	<200906101344.30057.bzolnier@gmail.com>
-	<20090705151754.6034ffad@power-debian>
-	<200907061704.38539.bzolnier@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: "EXT3-fs error" after resume from s2ram
+Date: Mon, 06 Jul 2009 18:13:17 -0600
+Message-ID: <4A52931D.5070109@gmail.com>
+References: <4A4771FD.1020207@warlich.name> <4A480859.5010206@gmail.com> <4A48C799.2010102@warlich.name> <4A495C2D.1040706@gmail.com> <4A49A49C.10104@warlich.name> <4A4C42E2.6030305@gmail.com> <4A51C929.5010909@warlich.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <200907061704.38539.bzolnier@gmail.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Andrey Gusev <a.gusev1980@mail.ru>, petkovbb@gmail.com, David Miller <davem@davemloft.net>, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.238]:33585 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757997AbZGGALz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jul 2009 20:11:55 -0400
+In-Reply-To: <4A51C929.5010909@warlich.name>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christof Warlich <christof@warlich.name>
+Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-On Mon, 2009-07-06 at 17:04 +0200, Bartlomiej Zolnierkiewicz wrote:
+(ccing linux-ide)
 
-> > Delay is fixed itself in 2.6.31-rc2. Most likely it was platform specific issue. But lost interrupt still exists.
-> > There is log of 2.6.31-rc2:
-> 
-> Thanks for letting us know.  When it comes to the lost interrupt issue
-> I still suspect that this is pmac specific problem (though Dave may have
-> some fresh idea about it).
+On 07/06/2009 03:51 AM, Christof Warlich wrote:
+> Robert Hancock schrieb:
+>> There should definitely be some libata messages from the
+>> suspend/resume process, they might not end up in that file though. You
+>> might want to try changing the console loglevel before suspend so that
+>> all kernel messages get displayed..
+>
+> Ok, I got the suspend / resume process logged quite complete now, it
+> took me some time though to save the data due to the inaccessibility of
+> the root filesystem after resume. But (a modified version of) netcat
+> finally was my friend :-).
+>
+> So below you'll find all messages from "kern.*" between the point when
+> calling "s2ram -f -p" up to the point when the system is back. The
+> requested libata messages are included. Please let me know if any
+> additional data would help.
+> Jul 6 09:15:40 fossie kernel: [ 314.072707] WARNING: at
+> /home/kernel-ppa/mainline/build/kernel/smp.c:289
+> smp_call_function_single+0xa9/0x100()
+> Jul 6 09:15:40 fossie kernel: [ 314.072707] WARNING: at
+> /home/kernel-ppa/mainline/build/kernel/smp.c:289
+> smp_call_function_single+0xa9/0x100()
 
-Hard to tell. Those things generally work... maybe something is wrong
-with that disk vs. that timing. Does it work if you move it to the other
-controller (the one to which the CD drive is connected ?)
+This WARN should likely be looked at by someone, but it doesn't seem to 
+be the main culprit.
 
-Cheers,
-Ben.
+> Jul 6 09:15:41 fossie kernel: [ 316.648468] ata1.00: ACPI cmd
+> ef/03:0c:00:00:00:a0 filtered out
+> Jul 6 09:15:41 fossie kernel: [ 316.648468] ata1.00: ACPI cmd
+> ef/03:0c:00:00:00:a0 filtered out
+> Jul 6 09:15:41 fossie kernel: [ 316.648480] ata1.00: ACPI cmd
+> ef/03:45:00:00:00:a0 filtered out
+> Jul 6 09:15:41 fossie kernel: [ 316.648480] ata1.00: ACPI cmd
+> ef/03:45:00:00:00:a0 filtered out
+> Jul 6 09:15:41 fossie kernel: [ 316.659047] ata1.00: n_sectors mismatch
+> 268435456 != 312581808
+> Jul 6 09:15:41 fossie kernel: [ 316.659047] ata1.00: n_sectors mismatch
+> 268435456 != 312581808
+> Jul 6 09:15:41 fossie kernel: [ 316.659054] ata1.00: revalidation failed
+> (errno=-19)
 
-> > [    1.595268] MacIO PCI driver attached to Keylargo chipset
-> > [    1.597024] irq: irq 32 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 32
-> > [    1.597988] irq: irq 19 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 19
-> > [    1.598024] irq: irq 11 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 16
-> > [    1.598365] irq: irq 20 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 20
-> > [    1.598401] irq: irq 12 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 17
-> > [    1.598762] irq: irq 5 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 18
-> > [    1.598797] irq: irq 6 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 21
-> > [    1.599264] irq: irq 7 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 24
-> > [    1.599300] irq: irq 8 on host /pci@f2000000/mac-io@17/interrupt-controller@40000 mapped to virtual irq 29
-> > [    1.601336] Uniform Multi-Platform E-IDE driver
-> > [    1.602201] ide-pmac 0002:20:0d.0: enabling device (0000 -> 0002)
-> > [    2.630651] ide-pmac: Found Apple UniNorth ATA-6 controller (PCI), bus ID 3, irq 39
-> > [    2.630767] Probing IDE interface ide0...
-> > [    2.930834] hda: IBM-IC35L060AVVA07-0, ATA DISK drive
-> > [    3.290646] hdb: QUANTUM FIREBALLP LM20.5, ATA DISK drive
-> > [    3.291087] hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> > [    3.291264] hda: UDMA/100 mode selected
-> > [    3.291473] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> > [    3.291720] hdb: UDMA/66 mode selected
-> > [    3.292118] ide0 at 0xf10c2000-0xf10c2070,0xf10c2160 on irq 39
-> > [    4.320649] ide-pmac: Found Apple KeyLargo ATA-4 controller (macio), bus ID 2, irq 19
-> > [    4.320753] Probing IDE interface ide1...
-> > [    4.921004] ide1 at 0xf10ba000-0xf10ba070,0xf10ba160 on irq 19
-> > [    5.950647] ide-pmac: Found Apple KeyLargo ATA-3 controller (macio), bus ID 0, irq 20
-> > [    5.950743] Probing IDE interface ide2...
-> > [    6.370828] hde: PHILIPS CDD5101, ATAPI CD/DVD-ROM drive
-> > [    6.730948] hde: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> > [    6.731332] hde: MWDMA2 mode selected
-> > [    6.731832] ide2 at 0xf10be000-0xf10be070,0xf10be160 on irq 20
-> > [    6.732558] ide-gd driver 1.18
-> > [    6.732735] hda: max request size: 128KiB
-> > [    6.763392] hda: 120103200 sectors (61492 MB) w/1863KiB Cache, CHS=65535/16/63
-> > [    6.763741] hda: cache flushes supported
-> > [    6.764277]  hda: [mac] hda1 hda2 hda3 hda4
-> > [    6.770469] hdb: max request size: 128KiB
-> > [    6.803427] hdb: Host Protected Area detected.
-> > [    6.803431] 	current capacity is 40130390 sectors (20546 MB)
-> > [    6.803435] 	native  capacity is 40132503 sectors (20547 MB)
-> > [    6.803590] hdb: 40130390 sectors (20546 MB) w/1900KiB Cache, CHS=39811/16/63
-> > [    6.803684] hdb: cache flushes not supported
-> > [    6.803910]  hdb:
-> > [   26.800743] ide-pmac lost interrupt, dma status: 8480
-> > [   26.800809] hdb: lost interrupt
-> > [   26.800850] hdb: dma_intr: status=0x58 { DriveReady SeekComplete DataRequest }
-> > [   26.800976] hdb: possibly failed opcode: 0xc8
-> > [   26.803449] hda: DMA disabled
-> > [   26.805664] hdb: DMA disabled
-> > [   26.900633] ide0: reset: success
-> > [   26.949147]  hdb1 hdb2 < hdb5 hdb6 hdb7 hdb8 >
-> > [   27.007890] ide-cd driver 5.00
-> > [   27.011728] ide-cd: hde: ATAPI 32X DVD-ROM CD-R/RW drive, 8192kB Cache
-> > [   27.014163] Uniform CD-ROM driver Revision: 3.20
-> > 
+This is why the hard disk failed to resume, somehow the drive shows a 
+capacity of 149GB after resume but only 128GB before. What's the actual 
+capacity of the drive? I suspect the drive has a host protected area on 
+it, and somehow the HPA isn't showing up after we resume.
+
+Can you post the dmesg log from normal bootup?
