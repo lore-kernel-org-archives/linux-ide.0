@@ -1,152 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: "EXT3-fs error" after resume from s2ram
-Date: Wed, 08 Jul 2009 23:28:42 +0900
-Message-ID: <4A54AD1A.1040009@kernel.org>
-References: <4A4771FD.1020207@warlich.name> <4A480859.5010206@gmail.com> <4A48C799.2010102@warlich.name> <4A495C2D.1040706@gmail.com> <4A49A49C.10104@warlich.name> <4A4C42E2.6030305@gmail.com> <4A51C929.5010909@warlich.name> <4A52931D.5070109@gmail.com> <4A52F39A.1030704@warlich.name> <4A5311C7.1020507@warlich.name> <4A535973.9090206@gmail.com> <4A5388EA.7030503@warlich.name> <4A53DA88.5080703@gmail.com> <4A543FA5.1090608@warlich.name>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH #upstream-fixes] libata: implement and use HORKAGE_NOSETXFER
+Date: Wed, 08 Jul 2009 18:53:22 +0400
+Message-ID: <4A54B2E2.8030907@ru.mvista.com>
+References: <1229894315.6931.17.camel@Thutmosis>	<494EDDBE.3010306@shaw.ca>	<494F65C1.80602@kernel.org>	<1229947998.6045.10.camel@Thutmosis>	<49505500.8080409@kernel.org>	<1230126055.6430.17.camel@Thutmosis>	<495886E7.7050204@kernel.org>	<1230586376.11130.46.camel@Thutmosis>	<1231282276.6376.13.camel@Thutmosis>	<49640CE1.6070808@kernel.org>	<20090107094043.580f5bf7@lxorguk.ukuu.org.uk>	<496483A5.6020105@kernel.org>	<20090107105339.289f47a4@lxorguk.ukuu.org.uk>	<49648C41.6030002@kernel.org>	<4A1A0C1B.7020801@kernel.org>	<20090525091110.626da5f8@lxorguk.ukuu.org.uk>	<4A545236.6080808@kernel.org> <20090708111413.7bb25e1e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050408010800040109070601"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37637 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754310AbZGHO2r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Jul 2009 10:28:47 -0400
-In-Reply-To: <4A543FA5.1090608@warlich.name>
+Received: from h155.mvista.com ([63.81.120.155]:56508 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755089AbZGHOxQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Jul 2009 10:53:16 -0400
+In-Reply-To: <20090708111413.7bb25e1e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christof Warlich <christof@warlich.name>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <tj@kernel.org>, linux--ide-momail.e4ward.com-linux--ide-vger.kernel.org-CDD-6w99-4@reply.e4ward.com, Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, peter.klotz@aon.at, linux-ide@vger.kernel.org, m.nov4k@gmail.com, lars21ce@gmx.de
 
-This is a multi-part message in MIME format.
---------------050408010800040109070601
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Hello.
 
-Hello, Christof, Robert.
+Alan Cox wrote:
 
-Christof Warlich wrote:
-> Robert Hancock schrieb:
->> Hmm, so we tried to disable the HPA and enable the entire disk
->> capacity, but the drive refused. But it somehow ends up in the HPA
->> disabled state upon resume. According to the ATA spec, the drive will
->> refuse SET MAX ADDRESS EXT commands after one has already been
->> executed upon power-on or reset. That suggests that the BIOS is
->> applying the HPA on bootup, but not on resume.
+>>That isn't possible because the host machine state is unknown after a
+>>timeout.  The problem is not confined to TF based controllers and even
+>>on TF based controllers, it's far too dangerous to continue as nothing
+>>happened.  That can easily lead to complete system lock up on quite a
+>>few controllers due to fragile TF emulation layer.
 
-Arghhh... this is nasty.  Nasty.
+> It works fine on old style taskfile controllers, and the old IDE layer
+> has done it for years
 
-I can't find previous messages.  Can you please post full boot log and
-the output of "lspci -nn"?
+>>The drive is full SATA.  SETXFER doesn't mean anything to it.  Let's
+>>just skip it.
 
->> Is there a BIOS update available for this machine?
-> Updating the BIOS was the first thing I did when I got the machine,
-> maybe two month ago. And only after that update suspend to disk began to
-> work at least.
-> 
-> What about doing it the other way round: Forcing the kernel to apply the
-> HPA on resume? Whitout knowing if this is possible at all with
-> reasonable effort, it would bring us in sync having the HPA enabled for
-> both bootup and resume, right?
-> The only drawback would be that we stay having only the 128GiB available.
-> 
-> I'd assume that Windows XP may do it this way, as suspend to ram does
-> work there and it also only sees the 128GiB.
+> What if there is a bridge, what if the controller needs SETXFER for
+> internal use (HPT PATA with on card SATA bridges) ?
 
-AFAIK, wxp doesn't revalidate or doesn't consider device size while
-revalidating disk after resume.  The size check during revalidation is
-safety net which is there because ATA devices sometimes don't have
-meaning identifiers and there are vendor specific configuration
-options which may offset sectors differently and writing to devices in
-such cases can lead to data loss.
+    Do you mean HPT36x/37x here? If so, what internal use the controller has 
+for this command?
 
-If the bios configured HPA during boot, it should be restoring it on
-resume too.  Maybe those commands have been filtered out.  Eh... no,
-all filtered out commands are transfer mode related.  Dang.
+> I have a feeling this is one case where there isn't a generic solution
+> for all devices
 
-One thing we can do is to make libata remember the native size on
-initial probing and let revalidation consider it.  Yeap, that would
-work.  Can you please test the attached patch and post full log
-including boot and suspend/resume?
+> For PATA we need SETXFER to be issued
+> For SATA we can maybe avoid it sometimes but its getting into deeply
+> undefined territory and will break the early HPT at least.
 
-Thanks.
+    Hm...
 
--- 
-tejun
+> Alan
 
---------------050408010800040109070601
-Content-Type: text/x-patch;
- name="revalidate-consider-native.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="revalidate-consider-native.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 045a486..4dadef1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1515,6 +1515,7 @@ static int ata_hpa_resize(struct ata_device *dev)
- 
- 		return rc;
- 	}
-+	dev->n_native_sectors = native_sectors;
- 
- 	/* nothing to do? */
- 	if (native_sectors <= sectors || !ata_ignore_hpa) {
-@@ -4089,6 +4090,7 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 		       unsigned int readid_flags)
- {
- 	u64 n_sectors = dev->n_sectors;
-+	u64 n_native_sectors = dev->n_native_sectors;
- 	int rc;
- 
- 	if (!ata_dev_enabled(dev))
-@@ -4118,16 +4120,29 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 	/* verify n_sectors hasn't changed */
- 	if (dev->class == ATA_DEV_ATA && n_sectors &&
- 	    dev->n_sectors != n_sectors) {
--		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
-+		ata_dev_printk(dev, KERN_WARNING, "n_sectors mismatch "
- 			       "%llu != %llu\n",
- 			       (unsigned long long)n_sectors,
- 			       (unsigned long long)dev->n_sectors);
- 
--		/* restore original n_sectors */
--		dev->n_sectors = n_sectors;
--
--		rc = -ENODEV;
--		goto fail;
-+		/*
-+		 * Something could have caused HPA to be unlocked
-+		 * involuntarily.  If n_native_sectors hasn't changed
-+		 * and the new size matches it, keep the device.
-+		 */
-+		if (dev->n_native_sectors == n_native_sectors &&
-+		    dev->n_sectors > n_sectors &&
-+		    dev->n_sectors == n_native_sectors) {
-+			ata_dev_printk(dev, KERN_WARNING,
-+				       "new n_sectors matches native, probably "
-+				       "late HPA unlock, continuing\n");
-+			dev->n_sectors = n_sectors;
-+		} else {
-+			/* restore original n_sectors */
-+			dev->n_sectors = n_sectors;
-+			rc = -ENODEV;
-+			goto fail;
-+		}
- 	}
- 
- 	return 0;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3d501db..5fde0a9 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -588,6 +588,7 @@ struct ata_device {
- #endif
- 	/* n_sector is CLEAR_BEGIN, read comment above CLEAR_BEGIN */
- 	u64			n_sectors;	/* size of device, if ATA */
-+	u64			n_native_sectors; /* native size, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
- 	unsigned long		unpark_deadline;
- 
-
---------------050408010800040109070601--
+MBR, Sergei
