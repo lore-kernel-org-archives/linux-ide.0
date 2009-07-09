@@ -1,50 +1,55 @@
-From: Andrei Martynov <andrei.martynov@web.de>
-Subject: IN_BYTE and OUT_BYTE replacement
-Date: Thu, 9 Jul 2009 14:28:30 +0200
-Message-ID: <327262546.20090709142830@web.de>
-Reply-To: Andrei Martynov <andrei.martynov@web.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: IN_BYTE and OUT_BYTE replacement
+Date: Thu, 9 Jul 2009 13:46:36 +0100
+Message-ID: <20090709134636.24e7d226@lxorguk.ukuu.org.uk>
+References: <327262546.20090709142830@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:50315 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756240AbZGIM2i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jul 2009 08:28:38 -0400
-Received: from smtp07.web.de (fmsmtp07.dlan.cinetic.de [172.20.5.215])
-	by fmmailgate03.web.de (Postfix) with ESMTP id 3CAA0103D7199
-	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2009 14:28:37 +0200 (CEST)
-Received: from [80.66.20.180] (helo=PDBAMXP)
-	by smtp07.web.de with asmtp (WEB.DE 4.110 #277)
-	id 1MOsjt-000408-00
-	for linux-ide@vger.kernel.org; Thu, 09 Jul 2009 14:28:37 +0200
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53416 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756632AbZGIMpb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jul 2009 08:45:31 -0400
+In-Reply-To: <327262546.20090709142830@web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrei Martynov <andrei.martynov@web.de>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+> Is there any way to reproduce this behavior in libata other than
+> redefining ioread8/iowrite8?
 
-there were specific i/o macros IN_BYTE and OUT_BYTE in 2.4 kernel to
-access IDE registers, but seems they are gone in 2.6 kernel and
-replaced by ioread8 / iowrite8 that are used everywhere and not in
-libata only. In my case original code for 2.4 kernel wrote specific
-value to undocumented chipset register on *every* r/w access to *any*
-IDE register.
+For the cases where hardware so far has needed this there are higher
+level abstractions. It depends what cases the jasper h/w needs it for.
 
-#define OUT_BYTE(b,p) { outb(b,p); outb(255, JASPER_IDE_BASE + 0xe0); }
-static inline byte jasper_ide_in_byte(int p)
-{
-        byte b;
-        b = (byte)inb(p);
-        outb(255, JASPER_IDE_BASE + 0xe0);
-        return b;
-}
-#define IN_BYTE(p) jasper_ide_in_byte(p)
+If you are using the SFF taskfile style interface then
 
-Is there any way to reproduce this behavior in libata other than
-redefining ioread8/iowrite8?
+	->sff_dev_select
+	->sff_tf_load
+	->sff_tf_read
+	->sff_exec_command
+	->sff_check_status
+	->sff_check_altstatus
+	->sff_irq_clear
+	->sff_data_xfer
 
--- 
-Best regards,
- Andrei                          mailto:andrei.martynov@web.de
+And for DMA
 
+	->bmdma_setup
+	->bmdma_start
+	->bmdma_stop
+	->bmdma_status
+
+which are mostly just I/O operations.
+
+Abstracting at this higher level helps performance by avoiding huge
+numbers of indirect function calls through pointers.
+
+
+However the reset logic isn't cleanly separated so might need a bit of
+work if that is a problem.
+
+It's hard to tell without more info whether they do the write on every
+access because they can't just do it on the ones that need it or because
+they need to do it each time.
