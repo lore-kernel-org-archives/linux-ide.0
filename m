@@ -1,41 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: "EXT3-fs error" after resume from s2ram
-Date: Fri, 10 Jul 2009 22:21:13 +0900
-Message-ID: <4A574049.5090708@kernel.org>
-References: <4A4771FD.1020207@warlich.name> <4A52F39A.1030704@warlich.name>	 <4A5311C7.1020507@warlich.name> <4A535973.9090206@gmail.com>	 <4A5388EA.7030503@warlich.name> <4A53DA88.5080703@gmail.com>	 <4A543FA5.1090608@warlich.name> <4A54AD1A.1040009@kernel.org>	 <4A54B98B.50806@gmail.com> <4A56344C.3010500@warlich.name> <51f3faa70907091631s329255en5fc197091b9ae4f0@mail.gmail.com>
+From: pinchu <pinchu4u@gmail.com>
+Subject: External port Multiplier Support in linux
+Date: Fri, 10 Jul 2009 19:06:38 +0530
+Message-ID: <4A5743E6.9000302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56507 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751806AbZGJNVR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Jul 2009 09:21:17 -0400
-In-Reply-To: <51f3faa70907091631s329255en5fc197091b9ae4f0@mail.gmail.com>
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:56795 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbZGJNgo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jul 2009 09:36:44 -0400
+Received: by ewy26 with SMTP id 26so1069706ewy.37
+        for <linux-ide@vger.kernel.org>; Fri, 10 Jul 2009 06:36:43 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Christof Warlich <christof@warlich.name>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello,
+Hi Jeff,
 
-Robert Hancock wrote:
-> On Thu, Jul 9, 2009 at 12:17 PM, Christof Warlich<christof@warlich.name> wrote:
->> Just one clarification: From what I understood so far, it will be impossible
->> to ever utilize the full disk capacity as long as the BIOS applies the HPA
->> on boot, right?
-> 
-> I believe that's the case, yes.. if the BIOS is applying the HPA on
-> each boot, then we can't change the max address again without a
-> hardware reset..
+We have an external RAID Disk Array which is having a port multiplier 
+and four HDD behind the port multiplier. The RAID box is connected to 
+host via SATA interface. The port multiplier we are using is implemented 
+in FPGA. The linux kernel 2.6.28 is not detecting the port multiplier 
+and devices behind it.
 
-This is one of the reasons why libata was switched to prefer hardreset
-so that BIOS lock downs can be circumvented.  PATA drivers
-unfortunately usually don't implement hardreset.  :-(
+By any chance linux kernel 2.6.28 supports external port multiplier?
+Does linux automatically detect port multiplier during bootup?
+Di i need to write driver for detecting the port multiplier?
 
-I'll forward the patch upstream.
+Thanks in advance.
 
-Thanks.
-
--- 
-tejun
+Regards,
+Pinchu
