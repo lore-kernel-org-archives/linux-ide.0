@@ -1,55 +1,65 @@
-From: Andrey Gusev <a.gusev1980@mail.ru>
-Subject: Re: Delay on intialization ide subsystem(most likely)
-Date: Mon, 13 Jul 2009 23:27:21 +0400
-Message-ID: <20090713232721.04e3a80b@power-debian>
-References: <20090425170203.74603b9c@power-debian>
-	<200906101344.30057.bzolnier@gmail.com>
-	<20090705151754.6034ffad@power-debian>
-	<200907061704.38539.bzolnier@gmail.com>
-	<1246922623.22625.57.camel@pasglop>
-	<20090708011802.74a7c21b@power-debian>
-	<1247015562.6066.59.camel@pasglop>
+From: Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH] IDE: palm_bk3710: convert clock usage after clkdev conversion
+Date: Mon, 13 Jul 2009 14:01:55 -0700
+Message-ID: <87vdlwfgak.fsf@deeprootsystems.com>
+References: <1246919176-28683-1-git-send-email-khilman@deeprootsystems.com>
+	<4A5B7B29.7070400@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx75.mail.ru ([94.100.176.90]:62584 "EHLO mx75.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161AbZGMT1Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Jul 2009 15:27:24 -0400
-In-Reply-To: <1247015562.6066.59.camel@pasglop>
+Received: from wa-out-1112.google.com ([209.85.146.180]:15820 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754813AbZGMVB6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jul 2009 17:01:58 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so457228wah.21
+        for <linux-ide@vger.kernel.org>; Mon, 13 Jul 2009 14:01:57 -0700 (PDT)
+In-Reply-To: <4A5B7B29.7070400@ru.mvista.com> (Sergei Shtylyov's message of "Mon\, 13 Jul 2009 22\:21\:29 +0400")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, petkovbb@gmail.com, linuxppc-dev@ozlabs.org, David Miller <davem@davemloft.net>
+To: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On Wed, 08 Jul 2009 11:12:42 +1000
-Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+Sergei Shtylyov <sshtylyov@ru.mvista.com> writes:
 
-> On Wed, 2009-07-08 at 01:18 +0400, Andrey Gusev wrote:
-> 
-> > I tried this drive on ide1 and ide2, there are same issue. This
-> > drive worked on P-III before (as separate on channel, with another
-> > hard drive and with cdrom) and I didn't have any problem with it.
-> > There are chunks of dmesg.
-> 
-> Wow... It also fails with MWDMA2 ! That's just plain weird. It fails
-> as master as well as slave too. Hrm. I wonder if it could be your
-> cable... Do you have other machines (non-powermac) you can try that
-> drive again just in case it toast itself in some way too ?
+> Hello.
+>
+> Kevin Hilman wrote:
+>
+>> DaVinci core code has converted to the new clkdev API so
+>> clock name strings are not needed.  Instead, just the a
+>> 'struct device' pointer is needed.
+>>
+>> Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
+>
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>
+>> ---
+>> Fix needed for 2.6.31
 
-It couldn't be cable, because all tests were on different cables. Unfortunately,
-I don't have another machine. I try find one, but it wouldn't be fast. This drive
-used early and I didn't have any problems. It was unused some time and may be something 
-happened with it.
-Note, it was slave only with another hard disk, in other cases it was master (single on
-cable). 
+Can this fix be merged for the .31-rc series please?
 
-> 
-> Bart, I don't suppose we know of any problem with those drive models ?
-> (Q. FireballP LM20.5)
-> 
-> Cheers,
-> Ben.
-> 
-> 
+Thanks,
+
+Kevin
+
+>>  drivers/ide/palm_bk3710.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
+>> index 3c1dc01..f8eddf0 100644
+>> --- a/drivers/ide/palm_bk3710.c
+>> +++ b/drivers/ide/palm_bk3710.c
+>> @@ -318,7 +318,7 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
+>>  	int i, rc;
+>>  	struct ide_hw hw, *hws[] = { &hw };
+>>  -	clk = clk_get(&pdev->dev, "IDECLK");
+>> +	clk = clk_get(&pdev->dev, NULL);
+>>  	if (IS_ERR(clk))
+>>  		return -ENODEV;
+>>  
+>
+>    It doesn't seem strictly necessary for 2.6.31 -- only in the sense
+> that "IDECLK" isn't named so anymore, however, clk_get() should still
+> work.
+>
+> MBR, Sergei
