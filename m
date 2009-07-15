@@ -1,36 +1,41 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 0/4] ide-tape: misc stuff
-Date: Wed, 15 Jul 2009 17:18:16 +0200
-Message-ID: <1247671100-8173-1-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 1/4] ide-tape: fix debug call
+Date: Wed, 15 Jul 2009 17:18:17 +0200
+Message-ID: <1247671100-8173-2-git-send-email-petkovbb@gmail.com>
+References: <1247671100-8173-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:23289 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.153]:38534 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645AbZGOPSZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2009 11:18:25 -0400
+	with ESMTP id S1752675AbZGOPS0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2009 11:18:26 -0400
+In-Reply-To: <1247671100-8173-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: davem@davemloft.net
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark de Wever <koraq@xs4all.nl>
 
-Hi David,
+From: Mark de Wever <koraq@xs4all.nl>
 
-here is some ide-tape stuff.
+This error only occurs when IDETAPE_DEBUG_LOG is enabled.
 
-* 0001: somehow fell through the cracks, DEBUG build fix
+Signed-off-by: Mark de Wever <koraq@xs4all.nl>
+---
+ drivers/ide/ide-tape.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-* 0002: mostly code unification
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 013dc59..60d5c41 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -583,7 +583,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	struct ide_cmd cmd;
+ 	u8 stat;
+ 
+-	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %u\n"
++	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %u\n",
+ 		  (unsigned long long)blk_rq_pos(rq), blk_rq_sectors(rq));
+ 
+ 	BUG_ON(!(blk_special_request(rq) || blk_sense_request(rq)));
+-- 
+1.6.3.1
 
-* 0003: this one converts ide-tape to the debugging scheme we use with ide-cd
-  and ide-floppy. It adds some debug calls at important places and has proven
-  very helpful when working on bug reports with users. No functional change.
-
-* 0004: real bugfix
-
-The patches are also at
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/bp/bp.git ide-tape-postponed
-
-
---
-Thanks,
-Boris.
