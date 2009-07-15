@@ -1,107 +1,144 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: accept late unlocking of HPA
-Date: Wed, 15 Jul 2009 17:11:41 +0900
-Message-ID: <4A5D8F3D.3070709@kernel.org>
+Subject: Re: AHCI: connection status changed + hard resetting link with 2.6.30+
+Date: Wed, 15 Jul 2009 17:49:35 +0900
+Message-ID: <4A5D981F.9020404@kernel.org>
+References: <4A4FD162.30604@gmail.com> <4A552185.7090301@kernel.org> <4A5546AA.8000404@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------070600030709090000000603"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40659 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:33454 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751677AbZGOIMp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Jul 2009 04:12:45 -0400
+	id S1753304AbZGOIti (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Jul 2009 04:49:38 -0400
+In-Reply-To: <4A5546AA.8000404@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Robert Hancock <hancockr@shaw.ca>, Christof Warlich <christof@warlich.name>
+To: Zdenek Kaspar <zkaspar82@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On certain configurations, HPA isn't or can't be unlocked during
-probing but it somehow ends up unlocked afterwards.  In the following
-thread, the problem can be reliably reproduced after resuming from
-STR.  The BIOS turns on HPA during boot but forgets to do it during
-resume.
+This is a multi-part message in MIME format.
+--------------070600030709090000000603
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 
-  http://thread.gmane.org/gmane.linux.kernel/858310
+Zdenek Kaspar wrote:
+> Hello Tejun, thanks for your reply. Attaching logs from my testing machine..
+> 
+> I see this behavior on ICH7R with i3000 chipset too:
+> 00:1f.2 RAID bus controller [0104]: Intel Corporation 82801GR/GH (ICH7
+> Family) SATA RAID Controller [8086:27c3] (rev 01)
 
-This patch updates libata revalidation such that it considers native
-n_sectors.  If the device size has increased to match native
-n_sectors, it's assumed that HPA has been unlocked involuntarily and
-the device is recognized as the same one.  This should be fairly safe
-while nicely working around the problem.
+Can you please apply the attached patch and report the resulting boot
+log?  Thanks.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Christof Warlich <christof@warlich.name>
----
- drivers/ata/libata-core.c |   30 +++++++++++++++++++++++-------
- include/linux/libata.h    |    1 +
- 2 files changed, 24 insertions(+), 7 deletions(-)
+-- 
+tejun
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2c6aeda..8ac98ff 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1515,6 +1515,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+--------------070600030709090000000603
+Content-Type: text/x-patch;
+ name="ahci-debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ahci-debug.patch"
 
- 		return rc;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 336eb1e..54c9c6d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1667,6 +1667,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 	DPRINTK("ENTER\n");
+ 
+ 	/* prepare for SRST (AHCI-1.1 10.4.1) */
++	ata_link_printk(link, KERN_INFO, "XXX softresetting link, kicking engine\n");
+ 	rc = ahci_kick_engine(ap, 1);
+ 	if (rc && rc != -EOPNOTSUPP)
+ 		ata_link_printk(link, KERN_WARNING,
+@@ -1680,6 +1681,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 	if (time_after(now, deadline))
+ 		msecs = jiffies_to_msecs(deadline - now);
+ 
++	ata_link_printk(link, KERN_INFO, "XXX setting SRST\n");
+ 	tf.ctl |= ATA_SRST;
+ 	if (ahci_exec_polled_cmd(ap, pmp, &tf, 0,
+ 				 AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY, msecs)) {
+@@ -1692,10 +1694,12 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 	msleep(1);
+ 
+ 	/* issue the second D2H Register FIS */
++	ata_link_printk(link, KERN_INFO, "XXX clearing SRST\n");
+ 	tf.ctl &= ~ATA_SRST;
+ 	ahci_exec_polled_cmd(ap, pmp, &tf, 0, 0, 0);
+ 
+ 	/* wait for link to become ready */
++	ata_link_printk(link, KERN_INFO, "XXX waiting for DRDY\n");
+ 	rc = ata_wait_after_reset(link, deadline, check_ready);
+ 	/* link occupied, -ENODEV too is an error */
+ 	if (rc) {
+@@ -1704,6 +1708,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
  	}
-+	dev->n_native_sectors = native_sectors;
-
- 	/* nothing to do? */
- 	if (native_sectors <= sectors || !ata_ignore_hpa) {
-@@ -4099,6 +4100,7 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 		       unsigned int readid_flags)
- {
- 	u64 n_sectors = dev->n_sectors;
-+	u64 n_native_sectors = dev->n_native_sectors;
- 	int rc;
-
- 	if (!ata_dev_enabled(dev))
-@@ -4128,16 +4130,30 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 	/* verify n_sectors hasn't changed */
- 	if (dev->class == ATA_DEV_ATA && n_sectors &&
- 	    dev->n_sectors != n_sectors) {
--		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
-+		ata_dev_printk(dev, KERN_WARNING, "n_sectors mismatch "
- 			       "%llu != %llu\n",
- 			       (unsigned long long)n_sectors,
- 			       (unsigned long long)dev->n_sectors);
--
--		/* restore original n_sectors */
--		dev->n_sectors = n_sectors;
--
--		rc = -ENODEV;
--		goto fail;
-+		/*
-+		 * Something could have caused HPA to be unlocked
-+		 * involuntarily.  If n_native_sectors hasn't changed
-+		 * and the new size matches it, keep the device.
-+		 */
-+		if (dev->n_native_sectors == n_native_sectors &&
-+		    dev->n_sectors > n_sectors &&
-+		    dev->n_sectors == n_native_sectors) {
-+			ata_dev_printk(dev, KERN_WARNING,
-+				       "new n_sectors matches native, probably "
-+				       "late HPA unlock, continuing\n");
-+			/* keep using the old n_sectors */
-+			dev->n_sectors = n_sectors;
-+		} else {
-+			/* restore original n_[native]_sectors and fail */
-+			dev->n_native_sectors = n_native_sectors;
-+			dev->n_sectors = n_sectors;
-+			rc = -ENODEV;
-+			goto fail;
-+		}
- 	}
-
+ 	*class = ahci_dev_classify(ap);
+ 
++	ata_link_printk(link, KERN_INFO, "XXX rc=%d, class=%u\n", rc, *class);
+ 	DPRINTK("EXIT, class=%u\n", *class);
  	return 0;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 79b6d7f..e5b6e33 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -589,6 +589,7 @@ struct ata_device {
- #endif
- 	/* n_sector is CLEAR_BEGIN, read comment above CLEAR_BEGIN */
- 	u64			n_sectors;	/* size of device, if ATA */
-+	u64			n_native_sectors; /* native size, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
- 	unsigned long		unpark_deadline;
+ 
+@@ -1791,6 +1796,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 
+ 	DPRINTK("ENTER\n");
+ 
++	ata_link_printk(link, KERN_INFO, "XXX hardresetting link, stopping engine\n");
+ 	ahci_stop_engine(ap);
+ 
+ 	/* clear D2H reception area to properly wait for D2H FIS */
+@@ -1798,14 +1804,17 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	tf.command = 0x80;
+ 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+ 
++	ata_link_printk(link, KERN_INFO, "XXX flipping SControl\n");
+ 	rc = sata_link_hardreset(link, timing, deadline, &online,
+ 				 ahci_check_ready);
+ 
++	ata_link_printk(link, KERN_INFO, "XXX starting engine\n");
+ 	ahci_start_engine(ap);
+ 
+ 	if (online)
+ 		*class = ahci_dev_classify(ap);
+ 
++	ata_link_printk(link, KERN_INFO, "XXX rc=%d, class=%u\n", rc, *class);
+ 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+ 	return rc;
+ }
+@@ -2035,6 +2044,7 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ 	}
+ 
+ 	if (irq_stat & (PORT_IRQ_CONNECT | PORT_IRQ_PHYRDY)) {
++		ata_port_printk(ap, KERN_INFO, "XXX irq_stat=%x CONN|PHY\n", irq_stat);
+ 		ata_ehi_hotplugged(host_ehi);
+ 		ata_ehi_push_desc(host_ehi, "%s",
+ 			irq_stat & PORT_IRQ_CONNECT ?
+@@ -2217,6 +2227,7 @@ static void ahci_freeze(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 
++	ata_port_printk(ap, KERN_INFO, "XXX port freeze\n");
+ 	/* turn IRQ off */
+ 	writel(0, port_mmio + PORT_IRQ_MASK);
+ }
+@@ -2229,12 +2240,14 @@ static void ahci_thaw(struct ata_port *ap)
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 
+ 	/* clear IRQ */
++	ata_port_printk(ap, KERN_INFO, "XXX clearing IRQs for thawing\n");
+ 	tmp = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(tmp, port_mmio + PORT_IRQ_STAT);
+ 	writel(1 << ap->port_no, mmio + HOST_IRQ_STAT);
+ 
+ 	/* turn IRQ back on */
+ 	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
++	ata_port_printk(ap, KERN_INFO, "XXX port thawed\n");
+ }
+ 
+ static void ahci_error_handler(struct ata_port *ap)
 
+--------------070600030709090000000603--
