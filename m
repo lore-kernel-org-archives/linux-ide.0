@@ -1,46 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: implement and use HORKAGE_NOSETXFER,
- take#2
-Date: Tue, 14 Jul 2009 22:43:48 -0400
-Message-ID: <4A5D4264.6000205@garzik.org>
-References: <4A553986.7010206@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/5] drivers/ata: Move a dereference below a NULL test
+Date: Tue, 14 Jul 2009 22:43:58 -0400
+Message-ID: <4A5D426E.90308@pobox.com>
+References: <Pine.LNX.4.64.0907110949280.29592@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46578 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46584 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750763AbZGOCpl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Jul 2009 22:45:41 -0400
-In-Reply-To: <4A553986.7010206@kernel.org>
+	id S1751272AbZGOCpm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Jul 2009 22:45:42 -0400
+In-Reply-To: <Pine.LNX.4.64.0907110949280.29592@ask.diku.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, ide <linux-ide@vger.kernel.org>, lars21ce@gmx.de, linux-ide@momail.e4ward.com, Robert Hancock <hancockr@shaw.ca>, peter.klotz@aon.at, m.nov4k@gmail.com
+To: Julia Lawall <julia@diku.dk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Tejun Heo wrote:
-> PIONEER DVD-RW DVRTD08 times out SETXFER if no media is present.  The
-> device is SATA and simply skipping SETXFER works around the problem.
-> Implement ATA_HORKAGE_NOSETXFER and apply it to the device.
+Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
 > 
-> Reported by Moritz Rigler in the following thread.
+> If the NULL test is necessary, then the dereference should be moved below
+> the NULL test.
 > 
->   http://thread.gmane.org/gmane.linux.ide/36790
+> The semantic patch that makes this change is as follows:
+> (http://www.emn.fr/x-info/coccinelle/)
 > 
-> and by Lars in bko#9540.
+> // <smpl>
+> @@
+> type T;
+> expression E;
+> identifier i,fld;
+> statement S;
+> @@
 > 
-> Updated to whine and ignore NOSETXFER if PATA component is detected as
-> suggested by Alan Cox.
+> - T i = E->fld;
+> + T i;
+>   ... when != E
+>       when != i
+>   if (E == NULL) S
+> + i = E->fld;
+> // </smpl>
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Moritz Rigler <linux-ide@momail.e4ward.com>
-> Reported-by: Lars <lars21ce@gmx.de>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
 > ---
-> Comment also added.  Thanks.
+>  drivers/ata/pata_at91.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
->  drivers/ata/libata-core.c |   20 ++++++++++++++++++--
->  include/linux/libata.h    |    1 +
+> diff -u -p a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+> --- a/drivers/ata/pata_at91.c
+> +++ b/drivers/ata/pata_at91.c
+> @@ -312,11 +312,12 @@ err_ide_ioremap:
+>  static int __devexit pata_at91_remove(struct platform_device *pdev)
+>  {
+>  	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+> -	struct at91_ide_info *info = host->private_data;
+> +	struct at91_ide_info *info;
+>  	struct device *dev = &pdev->dev;
+>  
+>  	if (!host)
+>  		return 0;
+> +	info = host->private_data;
+>  
 
 applied
 
