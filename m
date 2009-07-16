@@ -1,117 +1,74 @@
-From: Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH 1/3] libata: Allow ports to be flagged as hotpluggable
-Date: Thu, 16 Jul 2009 20:58:08 +0100
-Message-ID: <1247774290-4194-2-git-send-email-mjg@redhat.com>
-References: <1247774290-4194-1-git-send-email-mjg@redhat.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933218AbZGPT6Y@vger.kernel.org>
-In-Reply-To: <1247774290-4194-1-git-send-email-mjg@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Matthew Garrett <mjg@redhat.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: hdaprm -Y /dev/sda /dev/sdb -> I/O error -> disk kicked out of RAID
+ - is it normal?
+Date: Fri, 17 Jul 2009 01:03:57 +0200
+Message-ID: <4A5FB1DD.3000904@wpkg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx03.syneticon.net ([78.111.66.105]:54264 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933531AbZGPXEQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 19:04:16 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Userspace may wish to make policy decisions based on whether a host
-supports native hotplug or not - for example, AHCI link power management
-disables hotplug, so may only be desirable on non-hotplug ports. Add
-support for marking hosts as hotpluggable in order to allow userspace to
-treat them appropriately.
+hdparm -Y /dev/sda /dev/sdb renders this:
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
----
- drivers/ata/ahci.c        |    1 +
- drivers/ata/libata-scsi.c |   23 +++++++++++++++++++++++
- include/linux/libata.h    |    6 +++++-
- 3 files changed, 29 insertions(+), 1 deletions(-)
+Jul 17 00:55:50 dom klogd: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+Jul 17 00:55:50 dom klogd: ata1.00: waking up from sleep
+Jul 17 00:55:50 dom klogd: ata1: hard resetting link
+Jul 17 00:55:50 dom klogd: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+Jul 17 00:55:50 dom klogd: ata2.00: waking up from sleep
+Jul 17 00:55:50 dom klogd: ata2: hard resetting link
+Jul 17 00:55:50 dom klogd: ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Jul 17 00:55:50 dom klogd: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Jul 17 00:55:50 dom klogd: ata2.00: configured for UDMA/133
+Jul 17 00:55:50 dom klogd: ata2: EH complete
+Jul 17 00:55:50 dom klogd: ata1.00: configured for UDMA/133
+Jul 17 00:55:50 dom klogd: ata1: EH complete
+Jul 17 00:55:55 dom klogd: end_request: I/O error, dev sda, sector 225263226
+Jul 17 00:55:55 dom klogd: md: super_written gets error=-5, uptodate=0
+Jul 17 00:55:55 dom klogd: raid1: Disk failure on sda2, disabling device.
+Jul 17 00:55:55 dom klogd: raid1: Operation continuing on 1 devices.
+Jul 17 00:55:55 dom klogd: end_request: I/O error, dev sdb, sector 225263226
+Jul 17 00:55:55 dom klogd: md: super_written gets error=-5, uptodate=0
+Jul 17 00:55:55 dom klogd: RAID1 conf printout:
+Jul 17 00:55:55 dom klogd:  --- wd:1 rd:2
+Jul 17 00:55:55 dom klogd:  disk 0, wo:1, o:0, dev:sda2
+Jul 17 00:55:55 dom klogd:  disk 1, wo:0, o:1, dev:sdb2
+Jul 17 00:55:55 dom klogd: RAID1 conf printout:
+Jul 17 00:55:55 dom klogd:  --- wd:1 rd:2
+Jul 17 00:55:55 dom klogd:  disk 1, wo:0, o:1, dev:sdb2
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 336eb1e..4863da9 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -331,6 +331,7 @@ static struct device_attribute *ahci_shost_attrs[] = {
- 	&dev_attr_link_power_management_policy,
- 	&dev_attr_em_message_type,
- 	&dev_attr_em_message,
-+	&dev_attr_sata_hotplug,
- 	NULL
- };
- 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d0dfeef..47b0cac 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -370,12 +370,35 @@ DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
- 			ata_scsi_activity_store);
- EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
- 
-+static ssize_t
-+ata_scsi_sata_hotplug_show(struct device *dev, struct device_attribute *attr,
-+			   char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+
-+	if (ap->flags & ATA_FLAG_SATA &&
-+	    !(ap->flags & ATA_FLAG_NO_SATA_HOTPLUG))
-+		return sprintf(buf, "1\n");
-+	else
-+		return sprintf(buf, "0\n");
-+}
-+DEVICE_ATTR(sata_hotplug, S_IRUGO,
-+		  ata_scsi_sata_hotplug_show, NULL);
-+EXPORT_SYMBOL_GPL(dev_attr_sata_hotplug);
-+
- struct device_attribute *ata_common_sdev_attrs[] = {
- 	&dev_attr_unload_heads,
- 	NULL
- };
- EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
- 
-+struct device_attribute *ata_common_shost_attrs[] = {
-+	&dev_attr_sata_hotplug,
-+	NULL
-+};
-+EXPORT_SYMBOL_GPL(ata_common_shost_attrs);
-+
- static void ata_scsi_invalid_field(struct scsi_cmnd *cmd,
- 				   void (*done)(struct scsi_cmnd *))
- {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 79b6d7f..e644227 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -190,6 +190,7 @@ enum {
- 	ATA_FLAG_NO_POWEROFF_SPINDOWN = (1 << 11), /* don't spindown before poweroff */
- 	ATA_FLAG_NO_HIBERNATE_SPINDOWN = (1 << 12), /* don't spindown before hibernation */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
-+	ATA_FLAG_NO_SATA_HOTPLUG = (1 << 14), /* port doesn't support hotplug */
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
-@@ -480,6 +481,7 @@ extern struct device_attribute dev_attr_unload_heads;
- extern struct device_attribute dev_attr_em_message_type;
- extern struct device_attribute dev_attr_em_message;
- extern struct device_attribute dev_attr_sw_activity;
-+extern struct device_attribute dev_attr_sata_hotplug;
- 
- enum sw_activity {
- 	OFF,
-@@ -1145,6 +1147,7 @@ extern void ata_std_error_handler(struct ata_port *ap);
- extern const struct ata_port_operations ata_base_port_ops;
- extern const struct ata_port_operations sata_port_ops;
- extern struct device_attribute *ata_common_sdev_attrs[];
-+extern struct device_attribute *ata_common_shost_attrs[];
- 
- #define ATA_BASE_SHT(drv_name)					\
- 	.module			= THIS_MODULE,			\
-@@ -1160,7 +1163,8 @@ extern struct device_attribute *ata_common_sdev_attrs[];
- 	.slave_configure	= ata_scsi_slave_config,	\
- 	.slave_destroy		= ata_scsi_slave_destroy,	\
- 	.bios_param		= ata_std_bios_param,		\
--	.sdev_attrs		= ata_common_sdev_attrs
-+	.sdev_attrs		= ata_common_sdev_attrs,	\
-+	.shost_attrs		= ata_common_shost_attrs
- 
- #define ATA_NCQ_SHT(drv_name)					\
- 	ATA_BASE_SHT(drv_name),					\
+
+And one of the disks is kicked out of RAID.
+
+Is it expected behaviour (although probably the error happens somewhere in the ata layer)?
+It is kernel 2.6.30.1 and AHCI driver.
+
+00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI Controller
+
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md2 : active raid1 sda5[1] sdb5[0]
+      511999424 blocks [2/2] [UU]
+
+md3 : active raid1 sda6[1] sdb6[0]
+      96256 blocks [2/2] [UU]
+
+md0 : active raid1 sdb1[0] sda1[1]
+      10233280 blocks [2/2] [UU]
+
+md1 : active raid1 sda2[2](F) sdb2[1]
+      102398208 blocks [2/1] [_U]
+
+unused devices: <none>
+
+
 -- 
-1.6.2.5
+Tomasz Chmielewski
+http://wpkg.org
