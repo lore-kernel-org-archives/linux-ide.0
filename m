@@ -1,78 +1,117 @@
 From: Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH 3/3] libata: Allow AHCI to flag ports as non-hotpluggable
-Date: Thu, 16 Jul 2009 20:58:10 +0100
-Message-ID: <1247774290-4194-4-git-send-email-mjg@redhat.com>
+Subject: [PATCH 1/3] libata: Allow ports to be flagged as hotpluggable
+Date: Thu, 16 Jul 2009 20:58:08 +0100
+Message-ID: <1247774290-4194-2-git-send-email-mjg@redhat.com>
 References: <1247774290-4194-1-git-send-email-mjg@redhat.com>
- <1247774290-4194-2-git-send-email-mjg@redhat.com>
- <1247774290-4194-3-git-send-email-mjg@redhat.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:34059 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933147AbZGPT6T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 15:58:19 -0400
-In-Reply-To: <1247774290-4194-3-git-send-email-mjg@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933218AbZGPT6Y@vger.kernel.org>
+In-Reply-To: <1247774290-4194-1-git-send-email-mjg@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, Matthew Garrett <mjg@redhat.com>
+List-Id: linux-ide@vger.kernel.org
 
-Some SATA ports are fully internal and unlikely to be hotplugged. The
-AHCI spec allows vendors to flag these ports differently, allowing
-hotplug bays and eSATA ports to be treated differently. Flag ports with
-this information so userspace policy decisions can be made.
+Userspace may wish to make policy decisions based on whether a host
+supports native hotplug or not - for example, AHCI link power management
+disables hotplug, so may only be desirable on non-hotplug ports. Add
+support for marking hosts as hotpluggable in order to allow userspace to
+treat them appropriately.
 
 Signed-off-by: Matthew Garrett <mjg@redhat.com>
 ---
- drivers/ata/ahci.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/ata/ahci.c        |    1 +
+ drivers/ata/libata-scsi.c |   23 +++++++++++++++++++++++
+ include/linux/libata.h    |    6 +++++-
+ 3 files changed, 29 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4863da9..eda8a11 100644
+index 336eb1e..4863da9 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -77,6 +77,7 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
- 			      size_t size);
- static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
- 					ssize_t size);
-+static int ahci_is_hotplug_capable(struct ata_port *ap);
+@@ -331,6 +331,7 @@ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+ 	&dev_attr_em_message_type,
+ 	&dev_attr_em_message,
++	&dev_attr_sata_hotplug,
+ 	NULL
+ };
  
- enum {
- 	AHCI_PCI_BAR		= 5,
-@@ -193,6 +194,8 @@ enum {
- 	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
- 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
- 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
-+	PORT_CMD_ESP		= (1 << 21), /* port is esata capable */
-+	PORT_CMD_HPCP           = (1 << 18), /* port is hot plug capable */
- 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
- 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
- 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
-@@ -877,6 +880,15 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
- 	return -EINVAL;
- }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d0dfeef..47b0cac 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -370,12 +370,35 @@ DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
+ 			ata_scsi_activity_store);
+ EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
  
-+static int ahci_is_hotplug_capable(struct ata_port *ap)
++static ssize_t
++ata_scsi_sata_hotplug_show(struct device *dev, struct device_attribute *attr,
++			   char *buf)
 +{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	u8 cmd;
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
 +
-+	cmd = readl(port_mmio + PORT_CMD);
-+	return cmd & (PORT_CMD_HPCP | PORT_CMD_ESP);
++	if (ap->flags & ATA_FLAG_SATA &&
++	    !(ap->flags & ATA_FLAG_NO_SATA_HOTPLUG))
++		return sprintf(buf, "1\n");
++	else
++		return sprintf(buf, "0\n");
 +}
++DEVICE_ATTR(sata_hotplug, S_IRUGO,
++		  ata_scsi_sata_hotplug_show, NULL);
++EXPORT_SYMBOL_GPL(dev_attr_sata_hotplug);
 +
- static void ahci_start_engine(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
-@@ -2378,6 +2390,9 @@ static int ahci_port_start(struct ata_port *ap)
- 	if (!pp)
- 		return -ENOMEM;
+ struct device_attribute *ata_common_sdev_attrs[] = {
+ 	&dev_attr_unload_heads,
+ 	NULL
+ };
+ EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
  
-+	if (!ahci_is_hotplug_capable(ap))
-+		ap->flags |= ATA_FLAG_NO_SATA_HOTPLUG;
++struct device_attribute *ata_common_shost_attrs[] = {
++	&dev_attr_sata_hotplug,
++	NULL
++};
++EXPORT_SYMBOL_GPL(ata_common_shost_attrs);
 +
- 	mem = dmam_alloc_coherent(dev, AHCI_PORT_PRIV_DMA_SZ, &mem_dma,
- 				  GFP_KERNEL);
- 	if (!mem)
+ static void ata_scsi_invalid_field(struct scsi_cmnd *cmd,
+ 				   void (*done)(struct scsi_cmnd *))
+ {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 79b6d7f..e644227 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -190,6 +190,7 @@ enum {
+ 	ATA_FLAG_NO_POWEROFF_SPINDOWN = (1 << 11), /* don't spindown before poweroff */
+ 	ATA_FLAG_NO_HIBERNATE_SPINDOWN = (1 << 12), /* don't spindown before hibernation */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
++	ATA_FLAG_NO_SATA_HOTPLUG = (1 << 14), /* port doesn't support hotplug */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+ 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+@@ -480,6 +481,7 @@ extern struct device_attribute dev_attr_unload_heads;
+ extern struct device_attribute dev_attr_em_message_type;
+ extern struct device_attribute dev_attr_em_message;
+ extern struct device_attribute dev_attr_sw_activity;
++extern struct device_attribute dev_attr_sata_hotplug;
+ 
+ enum sw_activity {
+ 	OFF,
+@@ -1145,6 +1147,7 @@ extern void ata_std_error_handler(struct ata_port *ap);
+ extern const struct ata_port_operations ata_base_port_ops;
+ extern const struct ata_port_operations sata_port_ops;
+ extern struct device_attribute *ata_common_sdev_attrs[];
++extern struct device_attribute *ata_common_shost_attrs[];
+ 
+ #define ATA_BASE_SHT(drv_name)					\
+ 	.module			= THIS_MODULE,			\
+@@ -1160,7 +1163,8 @@ extern struct device_attribute *ata_common_sdev_attrs[];
+ 	.slave_configure	= ata_scsi_slave_config,	\
+ 	.slave_destroy		= ata_scsi_slave_destroy,	\
+ 	.bios_param		= ata_std_bios_param,		\
+-	.sdev_attrs		= ata_common_sdev_attrs
++	.sdev_attrs		= ata_common_sdev_attrs,	\
++	.shost_attrs		= ata_common_shost_attrs
+ 
+ #define ATA_NCQ_SHT(drv_name)					\
+ 	ATA_BASE_SHT(drv_name),					\
 -- 
 1.6.2.5
-
