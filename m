@@ -1,75 +1,32 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH 1/4] scsi: Allow hosts to be flagged as hotpluggable
-Date: Thu, 16 Jul 2009 16:30:13 +0200
-Message-ID: <4A5F3975.70503@s5r6.in-berlin.de>
-References: <1247701438-18266-1-git-send-email-mjg@redhat.com>
+Date: Thu, 16 Jul 2009 16:36:14 +0200
+Message-ID: <4A5F3ADE.2040109@s5r6.in-berlin.de>
+References: <1247701438-18266-1-git-send-email-mjg@redhat.com> <4A5F3975.70503@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:52359 "EHLO
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:52367 "EHLO
 	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932091AbZGPOcH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 10:32:07 -0400
-In-Reply-To: <1247701438-18266-1-git-send-email-mjg@redhat.com>
+	with ESMTP id S932316AbZGPOiI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 10:38:08 -0400
+In-Reply-To: <4A5F3975.70503@s5r6.in-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Matthew Garrett <mjg@redhat.com>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Matthew Garrett wrote:
-> Userspace may wish to make policy decisions based on whether a host
-> supports device hotplug or not - for example, AHCI link power management
-> disables hotplug, so may only be desirable on hotplug ports. Add
-> support for marking hosts as hotpluggable in order to allow userspace to
-> treat them appropriately.
+Stefan Richter wrote:
+> The comment should specify what the actual effects of the flag are.
 [...]
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -421,6 +421,7 @@ struct scsi_host_template {
->  	 */
->  	unsigned unchecked_isa_dma:1;
->  
-> +
->  	/*
->  	 * True if this host adapter can make good use of clustering.
->  	 * I originally thought that if the tablesize was large that it
-> @@ -447,6 +448,11 @@ struct scsi_host_template {
->  	unsigned ordered_tag:1;
->  
->  	/*
-> +	 * True if host supports hotplugging
-> +	 */
-> +	unsigned hotpluggable:1;
-> +
+> (Is used by power management infrastructure to decide over runtime PM
+> policy?  I.e. don't enter power states which would prevent the port from
+> detecting/ reporting hotplug events?)
 
-The comment should specify what the actual effects of the flag are.
-
-(Provides the default for Scsi_Host.hotpluggable?)
-
-> +	/*
->  	 * Countdown for host blocking with no commands outstanding.
->  	 */
->  	unsigned int max_host_blocked;
-> @@ -622,6 +628,9 @@ struct Scsi_Host {
->  	/* Asynchronous scan in progress */
->  	unsigned async_scan:1;
->  
-> +	/* 1 if hotpluggable, 0 if not */
-> +	unsigned hotpluggable:1;
-> +
-
-Ditto here.
-
-(Is used by power management infrastructure to decide over runtime PM
-policy?  I.e. don't enter power states which would prevent the port from
-detecting/ reporting hotplug events?)
-
->  	/*
->  	 * Optional work queue to be utilized by the transport
->  	 */
-
-
+Perhaps the flag should be called differently (keep_ports_powered or
+whatever) --- unless you have additional future uses of the flag in mind
+which justify the more generic name.
 -- 
 Stefan Richter
 -=====-==--= -=== =----
