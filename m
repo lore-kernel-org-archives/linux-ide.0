@@ -1,39 +1,52 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH 1/4] scsi: Allow hosts to be flagged as hotpluggable
-Date: Thu, 16 Jul 2009 15:55:42 +0100
-Message-ID: <20090716145542.GA14691@srcf.ucam.org>
-References: <1247701438-18266-1-git-send-email-mjg@redhat.com> <4A5F3975.70503@s5r6.in-berlin.de> <20090716143828.GB13924@srcf.ucam.org> <1247755399.6606.4.camel@mulgrave.site> <20090716144536.GB14345@srcf.ucam.org> <1247756009.6606.9.camel@mulgrave.site>
+From: Maxime Bizon <mbizon@freebox.fr>
+Subject: [PATCH] ide: fix memory leak when flush command is issued
+Date: Thu, 16 Jul 2009 18:32:52 +0200
+Message-ID: <1247761972.8418.46.camel@sakura.staff.proxad.net>
+Reply-To: mbizon@freebox.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47864 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756205AbZGPOzq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 10:55:46 -0400
-Content-Disposition: inline
-In-Reply-To: <1247756009.6606.9.camel@mulgrave.site>
+Received: from smtp6-g21.free.fr ([212.27.42.6]:50998 "EHLO smtp6-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932719AbZGPQdC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Jul 2009 12:33:02 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: davem <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Thu, Jul 16, 2009 at 02:53:29PM +0000, James Bottomley wrote:
 
-> Well, a flag that says 'hotplug' and means both the controller and bus
-> support hotplugging might be SCSI specific.  However, the fact is that
-> most people make such a determination on the bus type, so it's a bit
-> redundant (in true SCSI there really is no controller on a hotplug bus
-> that doesn't support hotplug because they can't scan the bus without
-> it).  If you intend to use it to make link power management decisions,
-> that's completely different because SAS PM support still isn't
-> standardised and most of the rest of SCSI doesn't have it either.  So it
-> sounds to me you're looking for a flag that says "might have a problem
-> with SATA link power management" ... in which case this is currently
-> libata specific.  We might be able to expand it to libsas if (when) we
-> actually get link power management standardised, but a lot of the other
-> busses aren't even going to have a concept of link power management.
+Hi David, Bartlomiej
 
-Makes sense. I'll respin it as a libata feature.
+I'm using ide on 2.6.30.1 with xfs filesystem. I noticed a kernel memory
+leak after writing lots of data, the kmalloc-96 slab cache keeps
+growing. It seems the struct ide_cmd kmalloced by idedisk_prepare_flush
+is never kfreed.
+
+Commit a09485df9cda49fbde2766c86eb18a9cae585162 and
+f505d49ffd25ed062e76ffd17568d3937fcd338c cause this regression, cmd->rq
+must now be set for ide_complete_cmd to honor the IDE_TFLAG_DYN flag.
+
+Candidate for stable I think, thanks !
+
+Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
+
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 6951811..7f87801 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -455,6 +455,7 @@ static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+ 
+ 	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
+ 	rq->special = cmd;
++	cmd->rq = rq;
+ }
+ 
+ ide_devset_get(multcount, mult_count);
+
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Maxime
+
+
