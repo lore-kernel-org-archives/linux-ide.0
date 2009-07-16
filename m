@@ -1,172 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI: connection status changed + hard resetting link with 2.6.30+
-Date: Thu, 16 Jul 2009 12:47:41 +0900
-Message-ID: <4A5EA2DD.7000905@kernel.org>
-References: <4A4FD162.30604@gmail.com> <4A552185.7090301@kernel.org> <4A5546AA.8000404@gmail.com> <4A5D981F.9020404@kernel.org> <4A5DAD7E.8050309@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/4] ide-tape: misc stuff
+Date: Thu, 16 Jul 2009 08:52:33 +0200
+Message-ID: <20090716065233.GA7242@liondog.tnic>
+References: <1247671100-8173-1-git-send-email-petkovbb@gmail.com>
+ <20090715.111606.193724419.davem@davemloft.net>
+ <20090715184350.GA13708@liondog.tnic>
+ <20090715.124150.120992830.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090608020302020308050409"
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37718 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757345AbZGPDsP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Jul 2009 23:48:15 -0400
-In-Reply-To: <4A5DAD7E.8050309@gmail.com>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:34372 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750720AbZGPGxD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 02:53:03 -0400
+Content-Disposition: inline
+In-Reply-To: <20090715.124150.120992830.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zdenek Kaspar <zkaspar82@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090608020302020308050409
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
+On Wed, Jul 15, 2009 at 12:41:50PM -0700, David Miller wrote:
+> From: Borislav Petkov <petkovbb@googlemail.com>
+> Date: Wed, 15 Jul 2009 20:43:50 +0200
+> 
+> > Well, the downside to that is whenever there's a bug report and I want
+> > the user to do a debug build and send me the output, I'll have to rehash
+> > that debug patch and send it to her/him, maybe teach her/him how to
+> > patch a kernel, build it and catch the output and send it my way before
+> > we do some real work. Having the change upstream makes it _a_ _lot_
+> > _more_ easier to do that and this is experience talking, we had several
+> > scenarious like that already.
+> 
+> Your PFX patch has no effect at all, it's just cleanup noise.
 
-Zdenek Kaspar wrote:
-> Tejun Heo napsal(a):
->> Zdenek Kaspar wrote:
->>> Hello Tejun, thanks for your reply. Attaching logs from my testing machine..
->>>
->>> I see this behavior on ICH7R with i3000 chipset too:
->>> 00:1f.2 RAID bus controller [0104]: Intel Corporation 82801GR/GH (ICH7
->>> Family) SATA RAID Controller [8086:27c3] (rev 01)
->> Can you please apply the attached patch and report the resulting boot
->> log?  Thanks.
+Yes, that one I don't need, I can drop it.
 
-Can you please try the attached patch?
+> The other patch moves the debug mask from one place to another,
+> why can't the debug selections bet set properly as is?
+
+Where the debug_mask is set is all the same to me, its the additional
+information added to the debug calls that I care about. I don't mention
+that in the commit message which is my bad, sorry, will fix. With those
+you can actually follow what happens, for example:
+
+[   51.945800] ide-tape: ide_tape_get_bsize_from_bdesc: blk_size: 512, write_prot: 0
+[   51.945821] ide-tape: idetape_chrdev_ioctl: cmd: 0x40086d01
+[   51.945826] ide-tape: idetape_mtioctop: MTIOCTOP ioctl: mt_op: 13, mt_count: 1
+[   51.945830] ide-tape: idetape_rewind_tape: enter
+[   51.945843] ide-tape: idetape_do_request: cmd: 0x1, sector: 4294967295, nr_sectors: 0
+
+Those debug calls were simply not there/not complete wrt to the
+information they were dumping because nobody had an ide-tape to play
+with. After I got one and started debugging, I've added that missing
+information which made a dbg output more understandable (e.g. request
+cmd, args the ioctl is being called with, etc.)
+
+This is the only reason for that change and because it doesn't break
+anything but helps a whole lot when debugging, it's a win-win thing and
+that's why I advocate its inclusion so vehemently :).
 
 Thanks.
 
 -- 
-tejun
-
---------------090608020302020308050409
-Content-Type: text/x-patch;
- name="clear-ehi-on-reset-completion.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="clear-ehi-on-reset-completion.patch"
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 336eb1e..54c9c6d 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1667,6 +1667,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 	DPRINTK("ENTER\n");
- 
- 	/* prepare for SRST (AHCI-1.1 10.4.1) */
-+	ata_link_printk(link, KERN_INFO, "XXX softresetting link, kicking engine\n");
- 	rc = ahci_kick_engine(ap, 1);
- 	if (rc && rc != -EOPNOTSUPP)
- 		ata_link_printk(link, KERN_WARNING,
-@@ -1680,6 +1681,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 	if (time_after(now, deadline))
- 		msecs = jiffies_to_msecs(deadline - now);
- 
-+	ata_link_printk(link, KERN_INFO, "XXX setting SRST\n");
- 	tf.ctl |= ATA_SRST;
- 	if (ahci_exec_polled_cmd(ap, pmp, &tf, 0,
- 				 AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY, msecs)) {
-@@ -1692,10 +1694,12 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 	msleep(1);
- 
- 	/* issue the second D2H Register FIS */
-+	ata_link_printk(link, KERN_INFO, "XXX clearing SRST\n");
- 	tf.ctl &= ~ATA_SRST;
- 	ahci_exec_polled_cmd(ap, pmp, &tf, 0, 0, 0);
- 
- 	/* wait for link to become ready */
-+	ata_link_printk(link, KERN_INFO, "XXX waiting for DRDY\n");
- 	rc = ata_wait_after_reset(link, deadline, check_ready);
- 	/* link occupied, -ENODEV too is an error */
- 	if (rc) {
-@@ -1704,6 +1708,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 	}
- 	*class = ahci_dev_classify(ap);
- 
-+	ata_link_printk(link, KERN_INFO, "XXX rc=%d, class=%u\n", rc, *class);
- 	DPRINTK("EXIT, class=%u\n", *class);
- 	return 0;
- 
-@@ -1791,6 +1796,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 
- 	DPRINTK("ENTER\n");
- 
-+	ata_link_printk(link, KERN_INFO, "XXX hardresetting link, stopping engine\n");
- 	ahci_stop_engine(ap);
- 
- 	/* clear D2H reception area to properly wait for D2H FIS */
-@@ -1798,14 +1804,17 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 	tf.command = 0x80;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
-+	ata_link_printk(link, KERN_INFO, "XXX flipping SControl\n");
- 	rc = sata_link_hardreset(link, timing, deadline, &online,
- 				 ahci_check_ready);
- 
-+	ata_link_printk(link, KERN_INFO, "XXX starting engine\n");
- 	ahci_start_engine(ap);
- 
- 	if (online)
- 		*class = ahci_dev_classify(ap);
- 
-+	ata_link_printk(link, KERN_INFO, "XXX rc=%d, class=%u\n", rc, *class);
- 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
- 	return rc;
- }
-@@ -2035,6 +2044,7 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 	}
- 
- 	if (irq_stat & (PORT_IRQ_CONNECT | PORT_IRQ_PHYRDY)) {
-+		ata_port_printk(ap, KERN_INFO, "XXX irq_stat=%x CONN|PHY\n", irq_stat);
- 		ata_ehi_hotplugged(host_ehi);
- 		ata_ehi_push_desc(host_ehi, "%s",
- 			irq_stat & PORT_IRQ_CONNECT ?
-@@ -2217,6 +2227,7 @@ static void ahci_freeze(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 
-+	ata_port_printk(ap, KERN_INFO, "XXX port freeze\n");
- 	/* turn IRQ off */
- 	writel(0, port_mmio + PORT_IRQ_MASK);
- }
-@@ -2229,12 +2240,14 @@ static void ahci_thaw(struct ata_port *ap)
- 	struct ahci_port_priv *pp = ap->private_data;
- 
- 	/* clear IRQ */
-+	ata_port_printk(ap, KERN_INFO, "XXX clearing IRQs for thawing\n");
- 	tmp = readl(port_mmio + PORT_IRQ_STAT);
- 	writel(tmp, port_mmio + PORT_IRQ_STAT);
- 	writel(1 << ap->port_no, mmio + HOST_IRQ_STAT);
- 
- 	/* turn IRQ back on */
- 	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
-+	ata_port_printk(ap, KERN_INFO, "XXX port thawed\n");
- }
- 
- static void ahci_error_handler(struct ata_port *ap)
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 1a07c06..655442c 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2625,8 +2625,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	if (slave)
- 		sehc->i.flags &= ~ATA_EHI_HOTPLUGGED;
- 
-+	/*
-+	 * Reset complete.  Ignore all exceptions happened before and
-+	 * during reset and clear RESETTING flag.  There is a race
-+	 * window between the actual reset and here but such window is
-+	 * inevitable anyway as the window between reset and thawing
-+	 * always exists.  Following identification or revalidation is
-+	 * enough to protect against problems arising from this.
-+	 */
- 	spin_lock_irqsave(ap->lock, flags);
--	ap->pflags &= ~ATA_PFLAG_RESETTING;
-+	memset(&link->eh_info, 0, sizeof(link->eh_info));
-+	ap->pflags &= ~(ATA_PFLAG_RESETTING | ATA_PFLAG_EH_PENDING);
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	return rc;
-
---------------090608020302020308050409--
+Regards/Gruss,
+    Boris.
