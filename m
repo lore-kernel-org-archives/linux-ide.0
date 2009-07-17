@@ -1,46 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Storage fixup for WDC WD1600BEVT-22ZCT0 in an MSI Wind U100 netbook
-Date: Fri, 17 Jul 2009 15:27:18 +0900
-Message-ID: <4A6019C6.4070005@kernel.org>
-References: <20090713024418.GA11947@sage.bj.intel.com>
+From: Marvin Schmidt <marvin_schmidt@gmx.net>
+Subject: end_request: I/O error, dev hda, sector 0
+Date: Fri, 17 Jul 2009 15:31:53 +0200
+Message-ID: <1247837513.12567.16.camel@pythagoras.homenetwork>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53136 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933903AbZGQGZM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Jul 2009 02:25:12 -0400
-In-Reply-To: <20090713024418.GA11947@sage.bj.intel.com>
+Received: from mail.gmx.net ([213.165.64.20]:46575 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S934605AbZGQNac (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Jul 2009 09:30:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Li, Yan" <yan.i.li@intel.com>
-Cc: linux-ide@vger.kernel.org, yanli@infradead.org
+To: linux-ide@vger.kernel.org
 
-Li, Yan wrote:
-> Hello,
-> 
-> This is the storage fix up for a WDC WD1600BEVT-22ZCT0 hard drive in
-> an MSI Wind U100 Netbook.  This netbook I have been using has a
-> Power_On_Hours of 38h and Load_Cycle_Count of 6617 (174 cycle/h). And
-> the noisy clicking sound can be heard every a few seconds.  I found
-> that Power Management Level 254 is acceptable for it.
-> 
-> Please be noted that the "smartcrl -a" output was taken today, when
-> I'd used it for a long time with Power Management Level 254/255 so the
-> Load_Cycle_Count/Power_On_Hours in it doesn't reflect the status of
-> it's default setting (Power Management Level 128). The
-> Load_Cycle_Count/Power_On_Hours in above paragraph was recorded months
-> ago without changing its default Power Management Level, thus very
-> high.
+After updating from 2.6.30 to 2.6.31-rc1 i got a lot of
 
-Added.
+	end_request: I/O error, dev hda, sector 0
 
-> Thank you. Please call me if you need any more information.
+messages when working on my dm-crypt'ed ext4 partition and I'm still
+facing that issue with 2.6.31-rc3.
 
-Hehehe... this is so refreshing.  Yay, I can call!
+I'm able to reproduce it doing:
+# cryptsetup luksOpen /dev/hda4 crypt-home
+# mount /home
+login as user
+$ cp /path/to/some/file .
 
-Thanks.
+The relevant fstab-entry looks like:
+/dev/mapper/crypt-home  /home  ext4  defaults,noauto  0  0
 
--- 
-tejun
+I bisected it to the following commit:
+
+commit 647c7db14ef9cacc4ccb3683e206b61f0de6dc2b
+Author: Mikulas Patocka <mpatocka@redhat.com>
+Date:   Mon Jun 22 10:12:23 2009 +0100
+
+    dm crypt: support flush
+    
+    Flush support for dm-crypt target.
+    
+    Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+    Signed-off-by: Alasdair G Kergon <agk@redhat.com>
+
+
+--
+
+Do you need any more information/my config/etc.?
+
+Best regards,
+Marvin Schmidt
+
+	
+	
+
+
