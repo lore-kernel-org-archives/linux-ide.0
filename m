@@ -1,57 +1,56 @@
-From: Marvin Schmidt <marvin_schmidt@gmx.net>
-Subject: end_request: I/O error, dev hda, sector 0
-Date: Fri, 17 Jul 2009 15:31:53 +0200
-Message-ID: <1247837513.12567.16.camel@pythagoras.homenetwork>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: fix memory leak when flush command is issued
+Date: Fri, 17 Jul 2009 16:05:54 +0200
+Message-ID: <200907171605.55502.bzolnier@gmail.com>
+References: <1247761972.8418.46.camel@sakura.staff.proxad.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46575 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S934605AbZGQNac (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Jul 2009 09:30:32 -0400
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:53630 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934659AbZGQN7b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jul 2009 09:59:31 -0400
+Received: by fxm18 with SMTP id 18so754296fxm.37
+        for <linux-ide@vger.kernel.org>; Fri, 17 Jul 2009 06:59:30 -0700 (PDT)
+In-Reply-To: <1247761972.8418.46.camel@sakura.staff.proxad.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: mbizon@freebox.fr
+Cc: davem <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-After updating from 2.6.30 to 2.6.31-rc1 i got a lot of
+On Thursday 16 July 2009 18:32:52 Maxime Bizon wrote:
+> 
+> Hi David, Bartlomiej
+> 
+> I'm using ide on 2.6.30.1 with xfs filesystem. I noticed a kernel memory
+> leak after writing lots of data, the kmalloc-96 slab cache keeps
+> growing. It seems the struct ide_cmd kmalloced by idedisk_prepare_flush
+> is never kfreed.
+> 
+> Commit a09485df9cda49fbde2766c86eb18a9cae585162 and
+> f505d49ffd25ed062e76ffd17568d3937fcd338c cause this regression, cmd->rq
+> must now be set for ide_complete_cmd to honor the IDE_TFLAG_DYN flag.
+> 
+> Candidate for stable I think, thanks !
+> 
+> Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
 
-	end_request: I/O error, dev hda, sector 0
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-messages when working on my dm-crypt'ed ext4 partition and I'm still
-facing that issue with 2.6.31-rc3.
+Thanks for fixing this!
 
-I'm able to reproduce it doing:
-# cryptsetup luksOpen /dev/hda4 crypt-home
-# mount /home
-login as user
-$ cp /path/to/some/file .
-
-The relevant fstab-entry looks like:
-/dev/mapper/crypt-home  /home  ext4  defaults,noauto  0  0
-
-I bisected it to the following commit:
-
-commit 647c7db14ef9cacc4ccb3683e206b61f0de6dc2b
-Author: Mikulas Patocka <mpatocka@redhat.com>
-Date:   Mon Jun 22 10:12:23 2009 +0100
-
-    dm crypt: support flush
-    
-    Flush support for dm-crypt target.
-    
-    Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-    Signed-off-by: Alasdair G Kergon <agk@redhat.com>
-
-
---
-
-Do you need any more information/my config/etc.?
-
-Best regards,
-Marvin Schmidt
-
-	
-	
-
-
+> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+> index 6951811..7f87801 100644
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+> @@ -455,6 +455,7 @@ static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+>  
+>  	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
+>  	rq->special = cmd;
+> +	cmd->rq = rq;
+>  }
+>  
+>  ide_devset_get(multcount, mult_count);
