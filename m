@@ -1,74 +1,46 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: hdaprm -Y /dev/sda /dev/sdb -> I/O error -> disk kicked out of RAID
- - is it normal?
-Date: Fri, 17 Jul 2009 01:03:57 +0200
-Message-ID: <4A5FB1DD.3000904@wpkg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: AHCI: connection status changed + hard resetting link with 2.6.30+
+Date: Fri, 17 Jul 2009 11:30:42 +0900
+Message-ID: <4A5FE252.2050806@kernel.org>
+References: <4A4FD162.30604@gmail.com> <4A552185.7090301@kernel.org> <4A5546AA.8000404@gmail.com> <4A5D981F.9020404@kernel.org> <4A5DAD7E.8050309@gmail.com> <4A5EA2DD.7000905@kernel.org> <4A5F2F69.2050800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:54264 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933531AbZGPXEQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2009 19:04:16 -0400
+Received: from hera.kernel.org ([140.211.167.34]:40524 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933992AbZGQCa5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Jul 2009 22:30:57 -0400
+In-Reply-To: <4A5F2F69.2050800@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Zdenek Kaspar <zkaspar82@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-hdparm -Y /dev/sda /dev/sdb renders this:
+Zdenek Kaspar wrote:
+> Tejun Heo napsal(a):
+>> Zdenek Kaspar wrote:
+>>> Tejun Heo napsal(a):
+>>>> Zdenek Kaspar wrote:
+>>>>> Hello Tejun, thanks for your reply. Attaching logs from my testing machine..
+>>>>>
+>>>>> I see this behavior on ICH7R with i3000 chipset too:
+>>>>> 00:1f.2 RAID bus controller [0104]: Intel Corporation 82801GR/GH (ICH7
+>>>>> Family) SATA RAID Controller [8086:27c3] (rev 01)
+>>>> Can you please apply the attached patch and report the resulting boot
+>>>> log?  Thanks.
+>> Can you please try the attached patch?
+>>
+>> Thanks.
+> 
+> Now it's fine. Thanks & attaching dmesg..
+> 
 
-Jul 17 00:55:50 dom klogd: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
-Jul 17 00:55:50 dom klogd: ata1.00: waking up from sleep
-Jul 17 00:55:50 dom klogd: ata1: hard resetting link
-Jul 17 00:55:50 dom klogd: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
-Jul 17 00:55:50 dom klogd: ata2.00: waking up from sleep
-Jul 17 00:55:50 dom klogd: ata2: hard resetting link
-Jul 17 00:55:50 dom klogd: ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Jul 17 00:55:50 dom klogd: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Jul 17 00:55:50 dom klogd: ata2.00: configured for UDMA/133
-Jul 17 00:55:50 dom klogd: ata2: EH complete
-Jul 17 00:55:50 dom klogd: ata1.00: configured for UDMA/133
-Jul 17 00:55:50 dom klogd: ata1: EH complete
-Jul 17 00:55:55 dom klogd: end_request: I/O error, dev sda, sector 225263226
-Jul 17 00:55:55 dom klogd: md: super_written gets error=-5, uptodate=0
-Jul 17 00:55:55 dom klogd: raid1: Disk failure on sda2, disabling device.
-Jul 17 00:55:55 dom klogd: raid1: Operation continuing on 1 devices.
-Jul 17 00:55:55 dom klogd: end_request: I/O error, dev sdb, sector 225263226
-Jul 17 00:55:55 dom klogd: md: super_written gets error=-5, uptodate=0
-Jul 17 00:55:55 dom klogd: RAID1 conf printout:
-Jul 17 00:55:55 dom klogd:  --- wd:1 rd:2
-Jul 17 00:55:55 dom klogd:  disk 0, wo:1, o:0, dev:sda2
-Jul 17 00:55:55 dom klogd:  disk 1, wo:0, o:1, dev:sdb2
-Jul 17 00:55:55 dom klogd: RAID1 conf printout:
-Jul 17 00:55:55 dom klogd:  --- wd:1 rd:2
-Jul 17 00:55:55 dom klogd:  disk 1, wo:0, o:1, dev:sdb2
+Cool, I'll post the patch upstream.  As the problem isn't critical and
+that part of code is pretty intricate, I'll schedule it for the next
+merge window.
 
-
-And one of the disks is kicked out of RAID.
-
-Is it expected behaviour (although probably the error happens somewhere in the ata layer)?
-It is kernel 2.6.30.1 and AHCI driver.
-
-00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI Controller
-
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 sda5[1] sdb5[0]
-      511999424 blocks [2/2] [UU]
-
-md3 : active raid1 sda6[1] sdb6[0]
-      96256 blocks [2/2] [UU]
-
-md0 : active raid1 sdb1[0] sda1[1]
-      10233280 blocks [2/2] [UU]
-
-md1 : active raid1 sda2[2](F) sdb2[1]
-      102398208 blocks [2/1] [_U]
-
-unused devices: <none>
-
+Thanks.
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+tejun
