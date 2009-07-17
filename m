@@ -1,50 +1,46 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: hdaprm -Y /dev/sda /dev/sdb -> I/O error -> disk kicked out of
-      RAID - is it normal?
-Date: Fri, 17 Jul 2009 14:24:00 +0900
-Message-ID: <4A600AF0.2070102@kernel.org>
-References: <4A5FB1DD.3000904@wpkg.org> <4A5FFA46.1070203@kernel.org> <29d09dacb3dce47830a95bc6493d3b88.squirrel@neil.brown.name> <4A6002AC.9090807@kernel.org> <4A600A03.5040808@garzik.org>
+Subject: Re: Storage fixup for WDC WD1600BEVT-22ZCT0 in an MSI Wind U100 netbook
+Date: Fri, 17 Jul 2009 15:27:18 +0900
+Message-ID: <4A6019C6.4070005@kernel.org>
+References: <20090713024418.GA11947@sage.bj.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45439 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:53136 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753431AbZGQFZJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Jul 2009 01:25:09 -0400
-In-Reply-To: <4A600A03.5040808@garzik.org>
+	id S933903AbZGQGZM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Jul 2009 02:25:12 -0400
+In-Reply-To: <20090713024418.GA11947@sage.bj.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: NeilBrown <neilb@suse.de>, Tomasz Chmielewski <mangoo@wpkg.org>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Li, Yan" <yan.i.li@intel.com>
+Cc: linux-ide@vger.kernel.org, yanli@infradead.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> NeilBrown wrote:
->>> I tried that and easily found cases where it fails way too fast.
->>> FAILFAST seems to mean different things on different devices, making
->>> it useless in general (it is still useful in some specific cases
->>> such as multipath on devices which are expected to be used under
->>> multipath and so treat FAILFAST appropriately).
->>
->> Yeap, FAILFAST flags seem geared pretty much toward multipathing.
+Li, Yan wrote:
+> Hello,
 > 
-> Yes :/
+> This is the storage fix up for a WDC WD1600BEVT-22ZCT0 hard drive in
+> an MSI Wind U100 Netbook.  This netbook I have been using has a
+> Power_On_Hours of 38h and Load_Cycle_Count of 6617 (174 cycle/h). And
+> the noisy clicking sound can be heard every a few seconds.  I found
+> that Power Management Level 254 is acceptable for it.
 > 
-> I'm glad this area is getting some attention, because we ideally want to
-> do two things in parallel:
-> 
-> * send upper layer advisory message, when we first notice a failure
-> * begin EH recovery
-> 
-> Time passes, libata attempts recovery, and completes the command with
-> success or failure many seconds later.
-> 
-> Right now, failfast handling is inconsistent, and is not (I think...)
-> always signalled as soon as we begin EH.
+> Please be noted that the "smartcrl -a" output was taken today, when
+> I'd used it for a long time with Power Management Level 254/255 so the
+> Load_Cycle_Count/Power_On_Hours in it doesn't reflect the status of
+> it's default setting (Power Management Level 128). The
+> Load_Cycle_Count/Power_On_Hours in above paragraph was recorded months
+> ago without changing its default Power Management Level, thus very
+> high.
 
-Heh.. yeah, it's notified on completion of EH, which BTW is pretty
-dumb.  :-)
+Added.
+
+> Thank you. Please call me if you need any more information.
+
+Hehehe... this is so refreshing.  Yay, I can call!
+
+Thanks.
 
 -- 
 tejun
