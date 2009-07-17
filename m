@@ -1,46 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI: connection status changed + hard resetting link with 2.6.30+
-Date: Fri, 17 Jul 2009 11:30:42 +0900
-Message-ID: <4A5FE252.2050806@kernel.org>
-References: <4A4FD162.30604@gmail.com> <4A552185.7090301@kernel.org> <4A5546AA.8000404@gmail.com> <4A5D981F.9020404@kernel.org> <4A5DAD7E.8050309@gmail.com> <4A5EA2DD.7000905@kernel.org> <4A5F2F69.2050800@gmail.com>
+Subject: [PATCH #upstream] libata: clear eh_info on reset completion
+Date: Fri, 17 Jul 2009 11:58:33 +0900
+Message-ID: <4A5FE8D9.2040702@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40524 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:41223 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933992AbZGQCa5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Jul 2009 22:30:57 -0400
-In-Reply-To: <4A5F2F69.2050800@gmail.com>
+	id S934037AbZGQC7k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Jul 2009 22:59:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zdenek Kaspar <zkaspar82@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Zdenek Kaspar <zkaspar82@gmail.com>
 
-Zdenek Kaspar wrote:
-> Tejun Heo napsal(a):
->> Zdenek Kaspar wrote:
->>> Tejun Heo napsal(a):
->>>> Zdenek Kaspar wrote:
->>>>> Hello Tejun, thanks for your reply. Attaching logs from my testing machine..
->>>>>
->>>>> I see this behavior on ICH7R with i3000 chipset too:
->>>>> 00:1f.2 RAID bus controller [0104]: Intel Corporation 82801GR/GH (ICH7
->>>>> Family) SATA RAID Controller [8086:27c3] (rev 01)
->>>> Can you please apply the attached patch and report the resulting boot
->>>> log?  Thanks.
->> Can you please try the attached patch?
->>
->> Thanks.
-> 
-> Now it's fine. Thanks & attaching dmesg..
-> 
+Resets are done with port frozen but some controllers still issue
+interrupts during reset and they may end up recording error conditions
+in ehi leading to unnecessary EH retrials.
 
-Cool, I'll post the patch upstream.  As the problem isn't critical and
-that part of code is pretty intricate, I'll schedule it for the next
-merge window.
+This patch makes ata_eh_reset() clear ehi on reset completion.  As
+reset is the most severe recovery action, there's nothing to lose by
+clearing ehi on its completion.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Zdenek Kaspar <zkaspar82@gmail.com>
+---
+Zdenek, I moved the clearing above a bit.  It should work the same but
+can you please test this one too?
+
+Jeff, after Zdenek's verification, please commit this to #upstream.
 
 Thanks.
 
--- 
-tejun
+ drivers/ata/libata-eh.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index a3df9fe..924a8de 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2572,11 +2572,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 			postreset(slave, classes);
+ 	}
+
+-	/* clear cached SError */
++	/*
++	 * Some controllers can't be frozen very well and may set
++	 * spuruious error conditions during reset.  Clear accumulated
++	 * error information.  As reset is the final recovery action,
++	 * nothing is lost by doing this.
++	 */
+ 	spin_lock_irqsave(link->ap->lock, flags);
+-	link->eh_info.serror = 0;
++	memset(&link->eh_info, 0, sizeof(link->eh_info));
+ 	if (slave)
+-		slave->eh_info.serror = 0;
++		memset(&slave->eh_info, 0, sizeof(link->eh_info));
++	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+ 	spin_unlock_irqrestore(link->ap->lock, flags);
+
+ 	/* Make sure onlineness and classification result correspond.
