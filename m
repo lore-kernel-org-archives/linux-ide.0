@@ -1,73 +1,93 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-Subject: Re: [PATCH #upstream] libata: clear eh_info on reset completion
-Date: Fri, 17 Jul 2009 16:32:46 +0200
-Message-ID: <4A608B8E.4090306@gmail.com>
-References: <4A5FE8D9.2040702@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH] libata: Export AHCI capabilities
+Date: Fri, 17 Jul 2009 19:13:47 +0100
+Message-ID: <1247854427-3315-1-git-send-email-mjg@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:55452 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbZGQOcx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jul 2009 10:32:53 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so132195fga.17
-        for <linux-ide@vger.kernel.org>; Fri, 17 Jul 2009 07:32:52 -0700 (PDT)
-In-Reply-To: <4A5FE8D9.2040702@kernel.org>
+Received: from cavan.codon.org.uk ([93.93.128.6]:52095 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933583AbZGQSN5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jul 2009 14:13:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, Matthew Garrett <mjg@redhat.com>
 
-Tejun Heo napsal(a):
-> Resets are done with port frozen but some controllers still issue
-> interrupts during reset and they may end up recording error conditions
-> in ehi leading to unnecessary EH retrials.
-> 
-> This patch makes ata_eh_reset() clear ehi on reset completion.  As
-> reset is the most severe recovery action, there's nothing to lose by
-> clearing ehi on its completion.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Zdenek Kaspar <zkaspar82@gmail.com>
-> ---
-> Zdenek, I moved the clearing above a bit.  It should work the same but
-> can you please test this one too?
-> 
-> Jeff, after Zdenek's verification, please commit this to #upstream.
-> 
-> Thanks.
-> 
->  drivers/ata/libata-eh.c |   12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index a3df9fe..924a8de 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2572,11 +2572,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
->  			postreset(slave, classes);
->  	}
-> 
-> -	/* clear cached SError */
-> +	/*
-> +	 * Some controllers can't be frozen very well and may set
-> +	 * spuruious error conditions during reset.  Clear accumulated
-> +	 * error information.  As reset is the final recovery action,
-> +	 * nothing is lost by doing this.
-> +	 */
->  	spin_lock_irqsave(link->ap->lock, flags);
-> -	link->eh_info.serror = 0;
-> +	memset(&link->eh_info, 0, sizeof(link->eh_info));
->  	if (slave)
-> -		slave->eh_info.serror = 0;
-> +		memset(&slave->eh_info, 0, sizeof(link->eh_info));
-> +	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
->  	spin_unlock_irqrestore(link->ap->lock, flags);
-> 
->  	/* Make sure onlineness and classification result correspond.
+AHCI exports various capability bits that may be of interest to userspace
+such as whether the BIOS claims a port is hotpluggable or eSATA. Providing
+these via sysfs along with the version of the AHCI spec implemented by
+the host allows userspace to make policy decisions for things like ALPM.
 
-Successfully tested with ICH8 and ICH7R controllers on two different
-machines with 2.6.31-rc3.
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+---
+ drivers/ata/ahci.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 44 insertions(+), 0 deletions(-)
 
-Z.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 336eb1e..5a5c160 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -327,10 +327,24 @@ static ssize_t ahci_activity_store(struct ata_device *dev,
+ 				   enum sw_activity val);
+ static void ahci_init_sw_activity(struct ata_link *link);
+ 
++static ssize_t ahci_show_host_caps(struct device *dev,
++				   struct device_attribute *attr, char *buf);
++static ssize_t ahci_show_host_version(struct device *dev,
++				      struct device_attribute *attr, char *buf);
++static ssize_t ahci_show_port_cmd(struct device *dev,
++				  struct device_attribute *attr, char *buf);
++
++DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
++DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
++DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
++
+ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+ 	&dev_attr_em_message_type,
+ 	&dev_attr_em_message,
++	&dev_attr_ahci_host_caps,
++	&dev_attr_ahci_host_version,
++	&dev_attr_ahci_port_cmd,
+ 	NULL
+ };
+ 
+@@ -696,6 +710,36 @@ static void ahci_enable_ahci(void __iomem *mmio)
+ 	WARN_ON(1);
+ }
+ 
++static ssize_t ahci_show_host_caps(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	return sprintf(buf, "%x\n", hpriv->cap);
++}
++
++static ssize_t ahci_show_host_version(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	void __iomem *mmio = ap->host->iomap[AHCI_PCI_BAR];
++
++	return sprintf(buf, "%x\n", readl(mmio + HOST_VERSION));
++}
++
++static ssize_t ahci_show_port_cmd(struct device *dev,
++				  struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	void __iomem *port_mmio = ahci_port_base(ap);
++
++	return sprintf(buf, "%x\n", readl(port_mmio + PORT_CMD));
++}
++
+ /**
+  *	ahci_save_initial_config - Save and fixup initial config values
+  *	@pdev: target PCI device
+-- 
+1.6.2.5
+
