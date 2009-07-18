@@ -1,35 +1,34 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] libata: Export AHCI capabilities
-Date: Sat, 18 Jul 2009 06:02:33 +0100
-Message-ID: <20090718050233.GA18236@srcf.ucam.org>
-References: <1247854427-3315-1-git-send-email-mjg@redhat.com> <4A61544B.5030403@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 0/3] ide-tape: misc stuff
+Date: Sat, 18 Jul 2009 11:55:14 +0200
+Message-ID: <1247910917-5237-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:45576 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbZGRFCh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jul 2009 01:02:37 -0400
-Content-Disposition: inline
-In-Reply-To: <4A61544B.5030403@gmail.com>
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:55470 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808AbZGRJzX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jul 2009 05:55:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jul 17, 2009 at 10:49:15PM -0600, Robert Hancock wrote:
+Hi David,
 
-> Surely there's a better format for exporting this information to  
-> userspace than making it parse out the bits from the raw register  
-> contents.. how about separate sysfs files for ESP, HPCP, etc? Or  
-> something more abstracted at a higher level that other drivers (if they  
-> have access to similar information) could use?
+here's a re-spun version with patch 2 dropped.
 
-I could split out more of the information, but there's a balance between 
-exposing enough that we won't need to add more values in the near future 
-and ending up with one sysfs file for pretty much every capabilities 
-bit. I'm not aware of any cases where we can currently generalise this 
-to other controllers, but I'm happy to be proven wrong on that.
+* 0001: somehow fell through the cracks, DEBUG build fix
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+* 0002: this one converts ide-tape to the debugging scheme we use with ide-cd
+  and ide-floppy. It adds some debug calls at important places and has proven
+  very helpful when working on bug reports with users. No functional change.
+
+* 0003: real bugfix
+
+The patches are also at
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/bp/bp.git ide-tape-postponed
+
+
+--
+Thanks,
+Boris.
