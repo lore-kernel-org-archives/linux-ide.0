@@ -1,54 +1,41 @@
-From: =?iso-8859-1?Q?S=E9bastien_Major?= <willy_the_cat@yahoo.com>
-Subject: Re : Test only. [resolved]
-Date: Sat, 18 Jul 2009 10:32:59 +0000 (GMT)
-Message-ID: <420720.59849.qm@web26203.mail.ukl.yahoo.com>
-References: <1247910917-5237-1-git-send-email-petkovbb@gmail.com> <1247910917-5237-4-git-send-email-petkovbb@gmail.com> <761271.35460.qm@web26204.mail.ukl.yahoo.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: potential null deref in drivers/ide/ide-io.c start_request().
+Date: Sun, 19 Jul 2009 14:43:49 +0300 (EAT)
+Message-ID: <alpine.DEB.2.00.0907171322100.12306@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web26203.mail.ukl.yahoo.com ([217.12.10.240]:43803 "HELO
-	web26203.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757956AbZGRKdA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 18 Jul 2009 06:33:00 -0400
-In-Reply-To: <761271.35460.qm@web26204.mail.ukl.yahoo.com>
+Received: from mail-yx0-f184.google.com ([209.85.210.184]:47523 "EHLO
+	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417AbZGSMmQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Jul 2009 08:42:16 -0400
+Received: by yxe14 with SMTP id 14so2909002yxe.33
+        for <linux-ide@vger.kernel.org>; Sun, 19 Jul 2009 05:42:15 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
+Hello,
 
+I am testing a code checker (http://repo.or.cz/w/smatch.git) and it found 
+an issue in ide-io.c
 
-Re-Hi,
-Sorry to disturb : trouble resolved.
+The case where rq->rq_disk is null and blk_special_request(rq) returns 
+zero on line 356 would cause an oops on line 367.
 
-regards
+drivers/ide/ide-io.c
+   356                  } else if (!rq->rq_disk && blk_special_request(rq))
+   357                          /*
+   358                           * TODO: Once all ULDs have been modified to
+   359                           * check for specific op codes rather than
+   360                           * blindly accepting any special request, the
+   361                           * check for ->rq_disk above may be replaced
+   362                           * by a more suitable mechanism or even
+   363                           * dropped entirely.
+   364                           */
+   365                          return ide_special_rq(drive, rq);
+   366  
+   367                  drv = *(struct ide_driver **)rq->rq_disk->private_data;
 
-
-
------ Message d'origine ----
-De : S=E9bastien Major <willy_the_cat@yahoo.com>
-=C0 : linux-ide@vger.kernel.org
-Envoy=E9 le : Samedi, 18 Juillet 2009, 12h24mn 36s
-Objet : Test only.
-
-
-Hi,
-
-Thanks for all job : go on !
-
-Message test only ... Trouble with Internet Mail Provider (free.fr).
-
-See ya.
-Best regards.
-
-
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-     =20
+regards,
+dan carpenter
