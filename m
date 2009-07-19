@@ -1,33 +1,59 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12874] Seagate STT20000A no longer works
-Date: Sun, 19 Jul 2009 14:30:14 GMT
-Message-ID: <200907191430.n6JEUEnd013207@demeter.kernel.org>
-References: <bug-12874-11633@http.bugzilla.kernel.org/>
+From: Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] ide-tape: Don't leak kernel stack information
+Date: Sun, 19 Jul 2009 21:15:19 +0200
+Message-ID: <200907192115.19958.mb@bu3sch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:43795 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754442AbZGSOaO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Jul 2009 10:30:14 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6JEUEMG013208
-	for <linux-ide@vger.kernel.org>; Sun, 19 Jul 2009 14:30:14 GMT
-In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
+Received: from bu3sch.de ([62.75.166.246]:49975 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750729AbZGSTQd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Jul 2009 15:16:33 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12874
+Don't leak kernel stack information through uninitialized structure members.
 
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org
 
+---
 
+This patch is only compile tested.
 
+---
+ drivers/ide/ide-tape.c |    1 +
+ 1 file changed, 1 insertion(+)
 
---- Comment #32 from Borislav Petkov <bbpetkov@yahoo.de>  2009-07-19 14:30:14 ---
-Ah, too much in a hurry, as always. You've sent it already. Nevermind.
+--- linux-2.6.orig/drivers/ide/ide-tape.c
++++ linux-2.6/drivers/ide/ide-tape.c
+@@ -1057,20 +1057,21 @@ static int idetape_blkdev_ioctl(ide_driv
+ 
+ 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+ 
+ 	switch (cmd) {
+ 	case 0x0340:
+ 		if (copy_from_user(&config, argp, sizeof(config)))
+ 			return -EFAULT;
+ 		tape->best_dsc_rw_freq = config.dsc_rw_frequency;
+ 		break;
+ 	case 0x0350:
++		memset(&config, 0, sizeof(config));
+ 		config.dsc_rw_frequency = (int) tape->best_dsc_rw_freq;
+ 		config.nr_stages = 1;
+ 		if (copy_to_user(argp, &config, sizeof(config)))
+ 			return -EFAULT;
+ 		break;
+ 	default:
+ 		return -EIO;
+ 	}
+ 	return 0;
+ }
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Greetings, Michael.
