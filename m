@@ -1,38 +1,33 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13138] Legacy IDE SiS:CPU Stalls When Probing IDE Interfaces
-Date: Mon, 20 Jul 2009 14:39:44 GMT
-Message-ID: <200907201439.n6KEdiI3011321@demeter.kernel.org>
-References: <bug-13138-11633@http.bugzilla.kernel.org/>
+From: Learner Study <learner.study@gmail.com>
+Subject: SATA port multiplier support in 2.6.21
+Date: Mon, 20 Jul 2009 19:38:14 -0700 (PDT)
+Message-ID: <24580821.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47811 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbZGTOjo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jul 2009 10:39:44 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6KEdiC7011322
-	for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2009 14:39:44 GMT
-In-Reply-To: <bug-13138-11633@http.bugzilla.kernel.org/>
+Received: from kuber.nabble.com ([216.139.236.158]:57154 "EHLO
+	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470AbZGUCiO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jul 2009 22:38:14 -0400
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>)
+	id 1MT5F8-0006c0-Ik
+	for linux-ide@vger.kernel.org; Mon, 20 Jul 2009 19:38:14 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13138
 
+Hello:
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+I understand that SATA port multiplier support was added in 2.6.24.
+I would like to use 2.6.21 and still use port multilplier. Can someone point
+me to a patch I may use to do this? Any other ideas?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-            Summary|CPU Stalls When Probing IDE |Legacy IDE SiS:CPU Stalls
-                   |Interfaces                  |When Probing IDE Interfaces
-
-
-
-
+Thanks a lot!
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+View this message in context: http://www.nabble.com/SATA-port-multiplier-support-in-2.6.21-tp24580821p24580821.html
+Sent from the linux-ide mailing list archive at Nabble.com.
+
