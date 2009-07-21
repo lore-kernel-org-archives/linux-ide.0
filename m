@@ -1,49 +1,64 @@
-From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
-Subject: Seagate 1.5TB x Suspend
-Date: Tue, 21 Jul 2009 07:50:38 -0300
-Message-ID: <u4jgj6-qu5.ln1@tux.abusar.org.br>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes 1/2] libata: cosmetic updates
+Date: Wed, 22 Jul 2009 00:12:25 +0900
+Message-ID: <4A65DAD9.8050001@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:36095 "EHLO ciao.gmane.org"
+Received: from hera.kernel.org ([140.211.167.34]:40356 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754440AbZGUKzI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Jul 2009 06:55:08 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1MTCzu-0003Us-Ki
-	for linux-ide@vger.kernel.org; Tue, 21 Jul 2009 10:55:02 +0000
-Received: from c9345450.virtua.com.br ([201.52.84.80])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 21 Jul 2009 10:55:02 +0000
-Received: from fragabr by c9345450.virtua.com.br with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 21 Jul 2009 10:55:02 +0000
+	id S1755168AbZGUPNb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Jul 2009 11:13:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Marcus Meissner <meissner@novell.com>
 
-Linux 2.6.30
-Asus M2N-E motherboard (nVidia MCP55 SATA Controller (rev a2))
+We're about to add more SATA_* and ATA_ACPI_FILTER_* constants.
+Reformat them in preparation.
 
-	I bought a Seagate 1.5TB HD (ST31500341AS, CC1H) and I noticed
-that when I resume from suspend, it shows the following:
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/libata-acpi.c |   12 ++++++------
+ include/linux/ata.h       |    4 ++--
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Jul 20 20:07:46 tux kernel: ata1: link is slow to respond, please be patient (ready=-19)
-Jul 20 20:07:46 tux kernel: ata1: SRST failed (errno=-16)
-Jul 20 20:07:46 tux kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd ef/03:46:00:00:00:a0 filtered out
-Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-Jul 20 20:07:47 tux kernel: ata1.00: configured for UDMA/133
-Jul 20 20:07:47 tux kernel: Restarting tasks ... done.
+Index: ata/drivers/ata/libata-acpi.c
+===================================================================
+--- ata.orig/drivers/ata/libata-acpi.c
++++ ata/drivers/ata/libata-acpi.c
+@@ -21,13 +21,13 @@
+ #include <acpi/acpi_bus.h>
 
-	I think it's not harmful, since everything is working correclty, but I 
-want to ask you if I should be concerned about this.
+ enum {
+-	ATA_ACPI_FILTER_SETXFER	= 1 << 0,
+-	ATA_ACPI_FILTER_LOCK	= 1 << 1,
+-	ATA_ACPI_FILTER_DIPM	= 1 << 2,
++	ATA_ACPI_FILTER_SETXFER		= 1 << 0,
++	ATA_ACPI_FILTER_LOCK		= 1 << 1,
++	ATA_ACPI_FILTER_DIPM		= 1 << 2,
 
-	Thank you very much.
+-	ATA_ACPI_FILTER_DEFAULT	= ATA_ACPI_FILTER_SETXFER |
+-				  ATA_ACPI_FILTER_LOCK |
+-				  ATA_ACPI_FILTER_DIPM,
++	ATA_ACPI_FILTER_DEFAULT		= ATA_ACPI_FILTER_SETXFER |
++					  ATA_ACPI_FILTER_LOCK |
++					  ATA_ACPI_FILTER_DIPM,
+ };
 
--- 
-Linux 2.6.30: Man-Eating Seals of Antiquity
+ static unsigned int ata_acpi_gtf_filter = ATA_ACPI_FILTER_DEFAULT;
+Index: ata/include/linux/ata.h
+===================================================================
+--- ata.orig/include/linux/ata.h
++++ ata/include/linux/ata.h
+@@ -304,8 +304,8 @@ enum {
+ 	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
 
+ 	/* SETFEATURE Sector counts for SATA features */
+-	SATA_AN			= 0x05,  /* Asynchronous Notification */
+-	SATA_DIPM		= 0x03,  /* Device Initiated Power Management */
++	SATA_DIPM		= 0x03,	/* Device Initiated Power Management */
++	SATA_AN			= 0x05,	/* Asynchronous Notification */
 
+ 	/* feature values for SET_MAX */
+ 	ATA_SET_MAX_ADDR	= 0x00,
