@@ -1,35 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 1/2] libata: cosmetic updates
-Date: Tue, 21 Jul 2009 12:08:01 -0400
-Message-ID: <4A65E7E1.3010705@garzik.org>
-References: <4A65DAD9.8050001@kernel.org> <4A65DF92.5050305@novell.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH #upstream-fixes] ahci add device ID for Ibex Peak ahci controller
+Date: Tue, 21 Jul 2009 12:57:59 -0500
+Message-ID: <20090721175759.GA5929@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53521 "EHLO mail.dvmed.net"
+Received: from mx2.redhat.com ([66.187.237.31]:41506 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754675AbZGUQID (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Jul 2009 12:08:03 -0400
-In-Reply-To: <4A65DF92.5050305@novell.com>
+	id S1755548AbZGUTco (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Jul 2009 15:32:44 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <teheo@novell.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Marcus Meissner <meissner@novell.com>
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Tejun Heo wrote:
->> We're about to add more SATA_* and ATA_ACPI_FILTER_* constants.
->> Reformat them in preparation.
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
-> 
-> I was about to send the second patch which filters out the offending
-> commands by default but now that I think more about it I think it
-> would be better to specifically blacklist the machine.  So, please
-> don't commit the first patch.  I'll re-post later along with updated
-> patch.
+From: Jaroslav Kysela <jkysela@redhat.com>
 
-Will do...
+Add device ID for Ibex Peak 6 port SATA AHCI Controller
 
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/ahci.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 336eb1e..c342551 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -515,6 +515,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
+ 	{ PCI_VDEVICE(INTEL, 0x3a22), board_ahci }, /* ICH10 */
+ 	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
++	{ PCI_VDEVICE(INTEL, 0x3b22), board_ahci }, /* PCH AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
