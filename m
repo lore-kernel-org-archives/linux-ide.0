@@ -1,61 +1,49 @@
-From: Learner Study <learner.study@gmail.com>
-Subject: command queue errors with 2.6.27
-Date: Mon, 20 Jul 2009 20:08:40 -0700 (PDT)
-Message-ID: <24580999.post@talk.nabble.com>
+From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
+Subject: Seagate 1.5TB x Suspend
+Date: Tue, 21 Jul 2009 07:50:38 -0300
+Message-ID: <u4jgj6-qu5.ln1@tux.abusar.org.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:58641 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754590AbZGUDIk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jul 2009 23:08:40 -0400
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1MT5ia-0007jC-TO
-	for linux-ide@vger.kernel.org; Mon, 20 Jul 2009 20:08:40 -0700
+Received: from main.gmane.org ([80.91.229.2]:36095 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754440AbZGUKzI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Jul 2009 06:55:08 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1MTCzu-0003Us-Ki
+	for linux-ide@vger.kernel.org; Tue, 21 Jul 2009 10:55:02 +0000
+Received: from c9345450.virtua.com.br ([201.52.84.80])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 21 Jul 2009 10:55:02 +0000
+Received: from fragabr by c9345450.virtua.com.br with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 21 Jul 2009 10:55:02 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
+Linux 2.6.30
+Asus M2N-E motherboard (nVidia MCP55 SATA Controller (rev a2))
 
-I see the following command queue errors with kernel 2.6.27 and 2.6.31.
+	I bought a Seagate 1.5TB HD (ST31500341AS, CC1H) and I noticed
+that when I resume from suspend, it shows the following:
 
-My setup has RocketRaid SATA controller and a few HDDs connected. The disks
-are mapped to iSCSI initiator. When the initiator does Reads on the LUNs, I
-get the following errors. I have tried various HDDs/contollers but no luck
-;-( The same works well is 2.6.21.
+Jul 20 20:07:46 tux kernel: ata1: link is slow to respond, please be patient (ready=-19)
+Jul 20 20:07:46 tux kernel: ata1: SRST failed (errno=-16)
+Jul 20 20:07:46 tux kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd ef/03:46:00:00:00:a0 filtered out
+Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+Jul 20 20:07:47 tux kernel: ata1.00: configured for UDMA/133
+Jul 20 20:07:47 tux kernel: Restarting tasks ... done.
 
-Any ideas....Thanks!
+	I think it's not harmful, since everything is working correclty, but I 
+want to ask you if I should be concerned about this.
 
+	Thank you very much.
 
-ata1: mv_process_crpb_response: no qc for tag=10
-ata1.00: qc timeout (cmd 0x2f)
-ata1: failed to read log page 10h (errno=-5)
-ata1.00: exception Emask 0x1 SAct 0xffff SErr 0x0 action 0x6 frozen
-ata1.00: edma_err_cause=02000084 pp_flags=00000003, dev error, EDMA
-self-disable
-ata1.00: cmd 60/80:00:80:4f:00/00:00:00:00:00/40 tag 0 ncq 65536 in
-         res 41/54:00:00:58:00/54:04:00:00:00/40 Emask 0x89 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC IDNF ABRT }
-ata1.00: cmd 60/80:08:00:52:00/00:00:00:00:00/40 tag 1 ncq 65536 in
-         res 41/54:00:00:58:00/54:04:00:00:00/40 Emask 0x89 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC IDNF ABRT }
-ata1.00: cmd 60/80:10:00:47:00/00:00:00:00:00/40 tag 2 ncq 65536 in
-         res 41/54:00:00:58:00/54:04:00:00:00/40 Emask 0x89 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC IDNF ABRT }
-ata1.00: cmd 60/80:18:80:54:00/00:00:00:00:00/40 tag 3 ncq 65536 in
-         res 41/54:00:00:58:00/54:04:00:00:00/40 Emask 0x89 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC IDNF ABRT }
-ata1.00: cmd 60/00:20:00:58:00/04:00:00:00:00/40 tag 4 ncq 524288 in
-         res 41/54:00:00:58:00/54:04:00:00:00/40 Emask 0x89 (media error)
-ata1.00: status: { DRDY ERR }
 -- 
-View this message in context: http://www.nabble.com/command-queue-errors-with-2.6.27-tp24580999p24580999.html
-Sent from the linux-ide mailing list archive at Nabble.com.
+Linux 2.6.30: Man-Eating Seals of Antiquity
+
 
