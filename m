@@ -1,64 +1,43 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: Marvell 7042 has some problem on Marvell 6281(kirkwood) platform
- (Resent)
-Date: Tue, 21 Jul 2009 22:53:52 -0400
-Message-ID: <4A667F40.8060309@pobox.com>
-References: <788014650907211910j443d4d31y88001319acf8c1d4@mail.gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide: fix memory leak when flush command is issued
+Date: Tue, 21 Jul 2009 20:25:01 -0700 (PDT)
+Message-ID: <20090721.202501.228023805.davem@davemloft.net>
+References: <1247761972.8418.46.camel@sakura.staff.proxad.net>
+	<200907171605.55502.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.25]:49283 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbZGVCx5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jul 2009 22:53:57 -0400
-In-Reply-To: <788014650907211910j443d4d31y88001319acf8c1d4@mail.gmail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35522
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756294AbZGVDYz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jul 2009 23:24:55 -0400
+In-Reply-To: <200907171605.55502.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: khchen@synology.com
-Cc: Tejun Heo <htejun@gmail.com>, saeed@marvell.com, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: mbizon@freebox.fr, linux-ide@vger.kernel.org
 
-KueiHuan Chen wrote:
-> Dear Mark,
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Fri, 17 Jul 2009 16:05:54 +0200
+
+> On Thursday 16 July 2009 18:32:52 Maxime Bizon wrote:
+>> 
+>> Hi David, Bartlomiej
+>> 
+>> I'm using ide on 2.6.30.1 with xfs filesystem. I noticed a kernel memory
+>> leak after writing lots of data, the kmalloc-96 slab cache keeps
+>> growing. It seems the struct ide_cmd kmalloced by idedisk_prepare_flush
+>> is never kfreed.
+>> 
+>> Commit a09485df9cda49fbde2766c86eb18a9cae585162 and
+>> f505d49ffd25ed062e76ffd17568d3937fcd338c cause this regression, cmd->rq
+>> must now be set for ide_complete_cmd to honor the IDE_TFLAG_DYN flag.
+>> 
+>> Candidate for stable I think, thanks !
+>> 
+>> Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
 > 
->   Sorry for the incorrect mail format, so i resent it again.
-> 
->   Here has a problem when we put the 7042 on the kirkwood
-> platform(6281). When system starting to build software raid 5,
-> sometimes it would meet the unable to stop eDMA problem in all
-> channels.  And then whole system is being hang ...  All the phy mode
-> value are also not correctly if we read it out at that time.
-..
+> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Are you using a discrete 7042 chip on a PCIe bus
-along with a 6281 chip ??  
-
-Or are you simply using the built-in SATA controller inside the 6281 ?
-
-In either event, Marvell did not deem to share *any* technical info
-about the 6281 with me, so I really cannot help you.
-
-Saeed Bishara from Marvell did everything to do with that chip.
-
->   Could you please kindly have a look at the error messages and give
-> some advice for me to find out the root cause ? Thanks.
-> 
-> Thanks again.
-> -------------
-> ata4: Unable to stop eDMA
-> ata4.00: exception Emask 0x52 SAct 0x1f SErr 0xffffffff action 0xe frozen
-> ata4: SError: { RecovData RecovComm UnrecovData Persist Proto HostInt
-> PHYRdyChg PHYInt CommWake 10B8B Dispar BadCRC Handshk LinkSeq
-> TrStaTrns UnrecFIS DevExch }
-> ata4.00: cmd 61/e0:00:c7:26:4f/01:00:01:00:00/40 tag 0 ncq 245760 out
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x56 (ATA bus error)
-..
-
-I think the messages that happened before those above are the important ones,
-and you did not show those messages here.
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+Applied and queued up for -stable, thanks.
