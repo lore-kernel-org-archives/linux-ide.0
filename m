@@ -1,46 +1,44 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Question regarding FUA state
-Date: Wed, 22 Jul 2009 21:06:26 +0200
-Message-ID: <4A676332.6080205@ziu.info>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH #upstream-fixes v2] ahci: add device IDs for Ibex Peak ahci controllers
+Date: Wed, 22 Jul 2009 15:15:56 -0500
+Message-ID: <20090722201556.GB10049@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from drutsystem.com ([80.72.38.138]:4652 "EHLO drutsystem.com"
+Received: from mx2.redhat.com ([66.187.237.31]:59495 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751759AbZGVTGq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Jul 2009 15:06:46 -0400
-Received: from drutsystem.com (localhost.drutsystem.com [127.0.0.1])
-	by drutsystem.com (Postfix) with ESMTP id DF29F948070
-	for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 19:06:35 +0000 (GMT)
-Received: from [10.0.0.2] (apn-77-114-138-129.dynamic.gprs.plus.pl [77.114.138.129])
-	by drutsystem.com (Postfix) with ESMTP id 0C1B794806C
-	for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 21:06:34 +0200 (CEST)
+	id S1751625AbZGVURm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jul 2009 16:17:42 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org
 
-What is the current state of fua ?
+Add device IDS for Ibex Peak SATA AHCI Controllers
 
-While peeking over older (mainly 2007ish) threads, there was some 
-discussion about it - whenever it should or shouldn't be enabled by 
-default, automatic blacklisting for certain controllers (some SiI 3xxx, 
-others ...).
+Signed-off-by: Jaroslav Kysela <jkysela@redhat.com>
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/ahci.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-http://marc.info/?l=git-commits-head&m=114110310308542&w=2
-http://marc.info/?t=117125096400001&r=2&w=2
-http://marc.info/?t=117193493900004&r=1&w=2
-http://marc.info/?t=118243369000005&r=1&w=2
-
-Current state is "disabled by default", but simple libata module 
-parameter can enable it. How safe is that these days, and if enabled, 
-will problematic chipsets be blacklisted automtically ? (I didn't find 
-anything in the sources suggesting it happens, but I didn't look too 
-thoroughly either).
-
-How do the following chipsets handle it:
-
-- ICH8R and newer ones
-- ATI's SB700/SB800 ones
-- JMB36x
-- which (if any) SiI chipsets are ok
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 336eb1e..958c1fa 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -515,10 +515,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
+ 	{ PCI_VDEVICE(INTEL, 0x3a22), board_ahci }, /* ICH10 */
+ 	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
++	{ PCI_VDEVICE(INTEL, 0x3b22), board_ahci }, /* PCH AHCI */
++	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci }, /* PCH AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
