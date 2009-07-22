@@ -1,61 +1,50 @@
-From: KueiHuan Chen <kueihuan.chen@gmail.com>
-Subject: Re: Marvell 7042 has some problem on Marvell 6281(kirkwood) platform
-	(Resent)
-Date: Wed, 22 Jul 2009 15:04:32 +0800
-Message-ID: <788014650907220004l7367c2cfwc42f88282bfa02f6@mail.gmail.com>
-References: <788014650907211910j443d4d31y88001319acf8c1d4@mail.gmail.com>
-	 <4A667F40.8060309@pobox.com>
-Reply-To: khchen@synology.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Seagate 1.5TB x Suspend
+Date: Wed, 22 Jul 2009 16:56:35 +0900
+Message-ID: <4A66C633.6090202@kernel.org>
+References: <u4jgj6-qu5.ln1@tux.abusar.org.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:8510 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbZGVHEd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jul 2009 03:04:33 -0400
-Received: by an-out-0708.google.com with SMTP id d40so5481170and.1
-        for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 00:04:33 -0700 (PDT)
-In-Reply-To: <4A667F40.8060309@pobox.com>
+Received: from hera.kernel.org ([140.211.167.34]:41091 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754319AbZGVH4i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jul 2009 03:56:38 -0400
+In-Reply-To: <u4jgj6-qu5.ln1@tux.abusar.org.br>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, saeed@marvell.com, linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Dear Mark & Saeed,
+D=E2niel Fraga wrote:
+> Linux 2.6.30
+> Asus M2N-E motherboard (nVidia MCP55 SATA Controller (rev a2))
+>=20
+> 	I bought a Seagate 1.5TB HD (ST31500341AS, CC1H) and I noticed
+> that when I resume from suspend, it shows the following:
+>=20
+> Jul 20 20:07:46 tux kernel: ata1: link is slow to respond, please be =
+patient (ready=3D-19)
+> Jul 20 20:07:46 tux kernel: ata1: SRST failed (errno=3D-16)
+> Jul 20 20:07:46 tux kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 =
+SControl 300)
+> Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd ef/03:46:00:00:00:a0 fi=
+ltered out
+> Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 fi=
+ltered out
+> Jul 20 20:07:47 tux kernel: ata1.00: configured for UDMA/133
+> Jul 20 20:07:47 tux kernel: Restarting tasks ... done.
+>=20
+> 	I think it's not harmful, since everything is working correclty, but=
+ I=20
+> want to ask you if I should be concerned about this.
 
-2009/7/22 Mark Lord <mlord@pobox.com>:
->
-> Are you using a discrete 7042 chip on a PCIe bus
-> along with a 6281 chip ??
-> Or are you simply using the built-in SATA controller inside the 6281 ?
->
+The behavior is expected.  Some of those large drives take quite some
+time to spin up and libata times out the initial reset and retry.
+It's designed to work that way.
 
-   We use a standalone 7042 chip on a PCIe bus with 6281 platform. And
-we choose four channels from 7042 to build a software raid 5. We had
-experimented that even though we disable the sata channels of 6281
-soc, the problem is still remain.
+Thanks.
 
-> In either event, Marvell did not deem to share *any* technical info
-> about the 6281 with me, so I really cannot help you.
->
-> Saeed Bishara from Marvell did everything to do with that chip.
->
->
-> ..
->
-> I think the messages that happened before those above are the important
-> ones,
-> and you did not show those messages here.
-
-  There is no any messages before the "unable to disable eDMA".  It
-just freeze for a while and then output these messages. I had tried to
-use the sata driver from Marvell BSP driver 4.2.2. The problem is the
-same. The BSP are also cannot disable eDMA.  Then we unmount this chip
-from that board and remount it into the other platform(powerpc). It
-works fine without any problem ... So we suspicion the problem may due
-to 7042 work on 6281 platform.
-
-  If you have any ideas , please kindly tell us. We would try it !
-
-Thanks!
+--=20
+tejun
