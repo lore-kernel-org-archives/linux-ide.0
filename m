@@ -1,39 +1,46 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: SATA II NCQ and multi-port support for ICH7
-Date: Wed, 22 Jul 2009 12:04:02 -0600
-Message-ID: <4A675492.9060106@gmail.com>
-References: <0KN6003ZATOVGH70@vms173017.mailsrvcs.net>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Question regarding FUA state
+Date: Wed, 22 Jul 2009 21:06:26 +0200
+Message-ID: <4A676332.6080205@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:43045 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476AbZGVSB5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jul 2009 14:01:57 -0400
-Received: by ewy26 with SMTP id 26so418551ewy.37
-        for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 11:01:56 -0700 (PDT)
-In-Reply-To: <0KN6003ZATOVGH70@vms173017.mailsrvcs.net>
+Received: from drutsystem.com ([80.72.38.138]:4652 "EHLO drutsystem.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751759AbZGVTGq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jul 2009 15:06:46 -0400
+Received: from drutsystem.com (localhost.drutsystem.com [127.0.0.1])
+	by drutsystem.com (Postfix) with ESMTP id DF29F948070
+	for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 19:06:35 +0000 (GMT)
+Received: from [10.0.0.2] (apn-77-114-138-129.dynamic.gprs.plus.pl [77.114.138.129])
+	by drutsystem.com (Postfix) with ESMTP id 0C1B794806C
+	for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 21:06:34 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dhdurgee@verizon.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 07/22/2009 07:15 AM, dhdurgee@verizon.net wrote:
-> I have recently purchased an Areca ARC-5020 external eSATA II RAID to
-> connect to my system.  This unit supports ICH NCQ and multi-port for
-> multiple volumes.  I have connected it to my Intel DG41TY mainboard, which
-> has the Intel 82801GB I/O Controller Hub (ICH7), but I find I am only
-> seeing the first volume and the unit shows NCQ is inactive.
+What is the current state of fua ?
 
-...
+While peeking over older (mainly 2007ish) threads, there was some 
+discussion about it - whenever it should or shouldn't be enabled by 
+default, automatic blacklisting for certain controllers (some SiI 3xxx, 
+others ...).
 
-> So NCQ is detected on the RAID unit but is not enabled and only one of the
-> two volumes is being seen.  Am I missing something that needs to be
-> enabled for the driver to support the advanced features?  Is my
-> configuration loading the proper driver?  If not, how can I load it?
+http://marc.info/?l=git-commits-head&m=114110310308542&w=2
+http://marc.info/?t=117125096400001&r=2&w=2
+http://marc.info/?t=117193493900004&r=1&w=2
+http://marc.info/?t=118243369000005&r=1&w=2
 
-The SATA controller is in the legacy PIIX mode which doesn't support 
-most SATA-specific features. You need to switch it into AHCI mode 
-(should be a BIOS setting for it somewhere) and then the ahci driver 
-will get used instead of ata_piix.
+Current state is "disabled by default", but simple libata module 
+parameter can enable it. How safe is that these days, and if enabled, 
+will problematic chipsets be blacklisted automtically ? (I didn't find 
+anything in the sources suggesting it happens, but I didn't look too 
+thoroughly either).
+
+How do the following chipsets handle it:
+
+- ICH8R and newer ones
+- ATI's SB700/SB800 ones
+- JMB36x
+- which (if any) SiI chipsets are ok
