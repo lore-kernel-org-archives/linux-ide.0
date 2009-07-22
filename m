@@ -1,43 +1,39 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: fix memory leak when flush command is issued
-Date: Tue, 21 Jul 2009 20:25:01 -0700 (PDT)
-Message-ID: <20090721.202501.228023805.davem@davemloft.net>
-References: <1247761972.8418.46.camel@sakura.staff.proxad.net>
-	<200907171605.55502.bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-tape: Don't leak kernel stack information
+Date: Tue, 21 Jul 2009 20:36:59 -0700 (PDT)
+Message-ID: <20090721.203659.87191935.davem@davemloft.net>
+References: <9ea470500907200345y79911526m15106c755a15b697@mail.gmail.com>
+	<200907211410.11262.bzolnier@gmail.com>
+	<9ea470500907200549y24abd998p85440321e6c2f8a9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35522
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53008
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756294AbZGVDYz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jul 2009 23:24:55 -0400
-In-Reply-To: <200907171605.55502.bzolnier@gmail.com>
+	by vger.kernel.org with ESMTP id S1752455AbZGVDgz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jul 2009 23:36:55 -0400
+In-Reply-To: <9ea470500907200549y24abd998p85440321e6c2f8a9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: mbizon@freebox.fr, linux-ide@vger.kernel.org
+To: petkovbb@googlemail.com
+Cc: bzolnier@gmail.com, mb@bu3sch.de, linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Fri, 17 Jul 2009 16:05:54 +0200
+From: Borislav Petkov <petkovbb@googlemail.com>
+Date: Mon, 20 Jul 2009 14:49:12 +0200
 
-> On Thursday 16 July 2009 18:32:52 Maxime Bizon wrote:
->> 
->> Hi David, Bartlomiej
->> 
->> I'm using ide on 2.6.30.1 with xfs filesystem. I noticed a kernel memory
->> leak after writing lots of data, the kmalloc-96 slab cache keeps
->> growing. It seems the struct ide_cmd kmalloced by idedisk_prepare_flush
->> is never kfreed.
->> 
->> Commit a09485df9cda49fbde2766c86eb18a9cae585162 and
->> f505d49ffd25ed062e76ffd17568d3937fcd338c cause this regression, cmd->rq
->> must now be set for ide_complete_cmd to honor the IDE_TFLAG_DYN flag.
->> 
->> Candidate for stable I think, thanks !
->> 
->> Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
+> On Tue, Jul 21, 2009 at 2:10 PM, Bartlomiej
+> Zolnierkiewicz<bzolnier@gmail.com> wrote:
 > 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> [..]
+> 
+>> Either it stays the way it is or we may eventually remove it completely
+>> (if really nothing uses it, though I still don't see much point in it
+>> given "the deep maintenance" mode of IDE subsystem).
+> 
+> Ok, let's opt for the less intrusive/no breakage option. The deep
+> maintenance mode argument clearly prevails here.
+> 
+> Acked-by: Borislav Petkov <petkovbb@gmail.com>.
 
-Applied and queued up for -stable, thanks.
+Agreed, applied and queued to -stable, thanks.
