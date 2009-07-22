@@ -1,25 +1,61 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 3/3] ide-tape: fix handling of postponed rqs
-Date: Tue, 21 Jul 2009 23:08:51 -0700 (PDT)
-Message-ID: <20090721.230851.178052748.davem@davemloft.net>
-References: <1247910917-5237-4-git-send-email-petkovbb@gmail.com>
-	<20090721.204704.123531717.davem@davemloft.net>
-	<20090722055657.GA15465@liondog.tnic>
+From: KueiHuan Chen <kueihuan.chen@gmail.com>
+Subject: Re: Marvell 7042 has some problem on Marvell 6281(kirkwood) platform
+	(Resent)
+Date: Wed, 22 Jul 2009 15:04:32 +0800
+Message-ID: <788014650907220004l7367c2cfwc42f88282bfa02f6@mail.gmail.com>
+References: <788014650907211910j443d4d31y88001319acf8c1d4@mail.gmail.com>
+	 <4A667F40.8060309@pobox.com>
+Reply-To: khchen@synology.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756612AbZGVGIq@vger.kernel.org>
-In-Reply-To: <20090722055657.GA15465@liondog.tnic>
-Sender: linux-kernel-owner@vger.kernel.org
-To: petkovbb@googlemail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.242]:8510 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752286AbZGVHEd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jul 2009 03:04:33 -0400
+Received: by an-out-0708.google.com with SMTP id d40so5481170and.1
+        for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 00:04:33 -0700 (PDT)
+In-Reply-To: <4A667F40.8060309@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, saeed@marvell.com, linux-ide@vger.kernel.org
 
-RnJvbTogQm9yaXNsYXYgUGV0a292IDxwZXRrb3ZiYkBnb29nbGVtYWlsLmNvbT4NCkRhdGU6IFdl
-ZCwgMjIgSnVsIDIwMDkgMDc6NTY6NTcgKzAyMDANCg0KPiBPbiBUdWUsIEp1bCAyMSwgMjAwOSBh
-dCAwODo0NzowNFBNIC0wNzAwLCBEYXZpZCBNaWxsZXIgd3JvdGU6DQo+IA0KPj4gZHJpdmVycy9p
-ZGUvaWRlLXRhcGUuYzogSW4gZnVuY3Rpb24g4oCYaWRlX3RhcGVfc3RhbGxfcXVldWXigJk6DQo+
-PiBkcml2ZXJzL2lkZS9pZGUtdGFwZS5jOjM3OTogd2FybmluZzogdW51c2VkIHZhcmlhYmxlIOKA
-mHJx4oCZDQo+IA0KPiBTb3JyeSBhYm91dCB0aGF0LCBycSBpcyB1c2VkIG9ubHkgaW4gdGhlIGRl
-YnVnIHN0YXRlbWVudCBhbmQgSSBmb3Jnb3QgdG8NCj4gZG8gYSBub24tZGVidWcgYnVpbGQsIG15
-IGJhZC4NCg0KQXBwbGllZCwgdGhhbmtzLg0K
+Dear Mark & Saeed,
+
+2009/7/22 Mark Lord <mlord@pobox.com>:
+>
+> Are you using a discrete 7042 chip on a PCIe bus
+> along with a 6281 chip ??
+> Or are you simply using the built-in SATA controller inside the 6281 ?
+>
+
+   We use a standalone 7042 chip on a PCIe bus with 6281 platform. And
+we choose four channels from 7042 to build a software raid 5. We had
+experimented that even though we disable the sata channels of 6281
+soc, the problem is still remain.
+
+> In either event, Marvell did not deem to share *any* technical info
+> about the 6281 with me, so I really cannot help you.
+>
+> Saeed Bishara from Marvell did everything to do with that chip.
+>
+>
+> ..
+>
+> I think the messages that happened before those above are the important
+> ones,
+> and you did not show those messages here.
+
+  There is no any messages before the "unable to disable eDMA".  It
+just freeze for a while and then output these messages. I had tried to
+use the sata driver from Marvell BSP driver 4.2.2. The problem is the
+same. The BSP are also cannot disable eDMA.  Then we unmount this chip
+from that board and remount it into the other platform(powerpc). It
+works fine without any problem ... So we suspicion the problem may due
+to 7042 work on 6281 platform.
+
+  If you have any ideas , please kindly tell us. We would try it !
+
+Thanks!
