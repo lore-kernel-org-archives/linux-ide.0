@@ -1,76 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: SATA II NCQ and multi-port support for ICH7
-Date: Wed, 22 Jul 2009 12:49:10 -0400
-Message-ID: <4A674306.9040305@pobox.com>
+Date: Wed, 22 Jul 2009 12:04:02 -0600
+Message-ID: <4A675492.9060106@gmail.com>
 References: <0KN6003ZATOVGH70@vms173017.mailsrvcs.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56946 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbZGVQtN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Jul 2009 12:49:13 -0400
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:43045 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476AbZGVSB5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jul 2009 14:01:57 -0400
+Received: by ewy26 with SMTP id 26so418551ewy.37
+        for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 11:01:56 -0700 (PDT)
 In-Reply-To: <0KN6003ZATOVGH70@vms173017.mailsrvcs.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: dhdurgee@verizon.net
-Cc: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-dhdurgee@verizon.net wrote:
+On 07/22/2009 07:15 AM, dhdurgee@verizon.net wrote:
 > I have recently purchased an Areca ARC-5020 external eSATA II RAID to
 > connect to my system.  This unit supports ICH NCQ and multi-port for
 > multiple volumes.  I have connected it to my Intel DG41TY mainboard, which
 > has the Intel 82801GB I/O Controller Hub (ICH7), but I find I am only
 > seeing the first volume and the unit shows NCQ is inactive.
-> 
-> Looking at udev for the SATA-II port I see the following:
-> 
-> KERNEL[1247932822.419400] add      /devices/pci0000:00/0000:00:1f.2 (pci)
-> UDEV_LOG=3
-> ACTION=add
-> DEVPATH=/devices/pci0000:00/0000:00:1f.2
-> SUBSYSTEM=pci
-> DRIVER=ata_piix
-> PCI_CLASS=1018F
-> PCI_ID=8086:27C0
-> PCI_SUBSYS_ID=8086:D612
-> PCI_SLOT_NAME=0000:00:1f.2
-> MODALIAS=pci:v00008086d000027C0sv00008086sd0000D612bc01sc01i8f SEQNUM=1221
-> 
-> syslog shows the following:
-> 
-> ata_piix 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19 ata_piix
-> 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
-> ata_piix 0000:00:1f.2: setting latency timer to 64
-> scsi2 : ata_piix
-> scsi3 : ata_piix
-> ata3: SATA max UDMA/133 cmd 0xf0e0 ctl 0xf0d0 bmdma 0xf0a0 irq 19 ata4:
-> SATA max UDMA/133 cmd 0xf0c0 ctl 0xf0b0 bmdma 0xf0a8 irq 19 ata3.00:
-> ATA-6: Areca   ARC-5020-VOL#00, 0100 AX, max UDMA/133 ata3.00: 1052732928
-> sectors, multi 16: LBA48 NCQ (depth 0/32) ata3.00: configured for UDMA/133
-> scsi 2:0:0:0: Direct-Access     ATA      Areca   ARC-5020 0100 PQ: 0 ANSI:
-> 5 sd 2:0:0:0: [sda] 1052732928 512-byte hardware sectors: (538 GB/501 GiB)
-> sd 2:0:0:0: [sda] Write Protect is off
-> sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
-> 
+
+...
+
 > So NCQ is detected on the RAID unit but is not enabled and only one of the
 > two volumes is being seen.  Am I missing something that needs to be
 > enabled for the driver to support the advanced features?  Is my
 > configuration loading the proper driver?  If not, how can I load it?
 
-ata_piix is loaded for legacy IDE emulation, and is limited by IDE 
-interface in number of supported ports.  NCQ is not supported by this 
-interface.
-
-ahci driver supports "native mode", with full NCQ and all ports.
-
-ICH7 chip usually supports both legacy IDE and native AHCI modes.
-
-	Jeff
-
-
-
-
+The SATA controller is in the legacy PIIX mode which doesn't support 
+most SATA-specific features. You need to switch it into AHCI mode 
+(should be a BIOS setting for it somewhere) and then the ahci driver 
+will get used instead of ata_piix.
