@@ -1,50 +1,88 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Seagate 1.5TB x Suspend
-Date: Wed, 22 Jul 2009 16:56:35 +0900
-Message-ID: <4A66C633.6090202@kernel.org>
-References: <u4jgj6-qu5.ln1@tux.abusar.org.br>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: Marvell 7042 has some problem on Marvell 6281(kirkwood) platform
+	(Resent)
+Date: Wed, 22 Jul 2009 11:27:17 +0300
+Message-ID: <c70ff3ad0907220127o3891b886k88e8bf43e22f9e38@mail.gmail.com>
+References: <788014650907211910j443d4d31y88001319acf8c1d4@mail.gmail.com>
+	 <4A667F40.8060309@pobox.com>
+	 <788014650907220004l7367c2cfwc42f88282bfa02f6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41091 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754319AbZGVH4i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Jul 2009 03:56:38 -0400
-In-Reply-To: <u4jgj6-qu5.ln1@tux.abusar.org.br>
+Received: from fg-out-1718.google.com ([72.14.220.154]:29148 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbZGVI1S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jul 2009 04:27:18 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so854756fga.17
+        for <linux-ide@vger.kernel.org>; Wed, 22 Jul 2009 01:27:17 -0700 (PDT)
+In-Reply-To: <788014650907220004l7367c2cfwc42f88282bfa02f6@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: khchen@synology.com
+Cc: Mark Lord <mlord@pobox.com>, Tejun Heo <htejun@gmail.com>, saeed@marvell.com, linux-ide@vger.kernel.org
 
-D=E2niel Fraga wrote:
-> Linux 2.6.30
-> Asus M2N-E motherboard (nVidia MCP55 SATA Controller (rev a2))
->=20
-> 	I bought a Seagate 1.5TB HD (ST31500341AS, CC1H) and I noticed
-> that when I resume from suspend, it shows the following:
->=20
-> Jul 20 20:07:46 tux kernel: ata1: link is slow to respond, please be =
-patient (ready=3D-19)
-> Jul 20 20:07:46 tux kernel: ata1: SRST failed (errno=3D-16)
-> Jul 20 20:07:46 tux kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 =
-SControl 300)
-> Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd ef/03:46:00:00:00:a0 fi=
-ltered out
-> Jul 20 20:07:46 tux kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 fi=
-ltered out
-> Jul 20 20:07:47 tux kernel: ata1.00: configured for UDMA/133
-> Jul 20 20:07:47 tux kernel: Restarting tasks ... done.
->=20
-> 	I think it's not harmful, since everything is working correclty, but=
- I=20
-> want to ask you if I should be concerned about this.
+Hi,
+looks to me something wrong happened in PCIe link level, and any
+register read ends up with 0xFFFFFFFF. can you please use devmem2 tool
+and read any register (e.g. 0x22000) of the device?
 
-The behavior is expected.  Some of those large drives take quite some
-time to spin up and libata times out the initial reset and retry.
-It's designed to work that way.
+also, can you test any other PCIe device?
 
-Thanks.
+does this issue happens when using the Marvell BSP 4.2.2?
+saeed
 
---=20
-tejun
+On Wed, Jul 22, 2009 at 10:04 AM, KueiHuan Chen<kueihuan.chen@gmail.com=
+> wrote:
+> Dear Mark & Saeed,
+>
+> 2009/7/22 Mark Lord <mlord@pobox.com>:
+>>
+>> Are you using a discrete 7042 chip on a PCIe bus
+>> along with a 6281 chip ??
+>> Or are you simply using the built-in SATA controller inside the 6281=
+ ?
+>>
+>
+> =C2=A0 We use a standalone 7042 chip on a PCIe bus with 6281 platform=
+=2E And
+> we choose four channels from 7042 to build a software raid 5. We had
+> experimented that even though we disable the sata channels of 6281
+> soc, the problem is still remain.
+>
+>> In either event, Marvell did not deem to share *any* technical info
+>> about the 6281 with me, so I really cannot help you.
+>>
+>> Saeed Bishara from Marvell did everything to do with that chip.
+>>
+>>
+>> ..
+>>
+>> I think the messages that happened before those above are the import=
+ant
+>> ones,
+>> and you did not show those messages here.
+>
+> =C2=A0There is no any messages before the "unable to disable eDMA". =C2=
+=A0It
+> just freeze for a while and then output these messages. I had tried t=
+o
+> use the sata driver from Marvell BSP driver 4.2.2. The problem is the
+> same. The BSP are also cannot disable eDMA. =C2=A0Then we unmount thi=
+s chip
+> from that board and remount it into the other platform(powerpc). It
+> works fine without any problem ... So we suspicion the problem may du=
+e
+> to 7042 work on 6281 platform.
+>
+> =C2=A0If you have any ideas , please kindly tell us. We would try it =
+!
+>
+> Thanks!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
