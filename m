@@ -1,41 +1,82 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] add DMA setup FIS auto-activate feature
-Date: Sat, 25 Jul 2009 09:47:32 +0900
-Message-ID: <4A6A5624.7080005@kernel.org>
-References: <4A67E00F.40808@pobox.com> <20090723054007.GA7473@sli10-desk.sh.intel.com> <4A67F8ED.2070204@kernel.org> <4A67FE1A.1050408@pobox.com> <4A67FF56.5040708@kernel.org> <4A6807A8.30403@pobox.com> <20090723072518.GA3545@sli10-desk.sh.intel.com> <4A68A6D1.4090508@gmail.com> <4A68A7C1.2030302@pobox.com> <4A68CD90.5000404@kernel.org> <20090724091215.GA27802@sli10-desk.sh.intel.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] libata: remove superfluous NULL pointer checks
+Date: Sun, 26 Jul 2009 16:05:13 +0200
+Message-ID: <200907261605.14619.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48376 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754962AbZGYApj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Jul 2009 20:45:39 -0400
-In-Reply-To: <20090724091215.GA27802@sli10-desk.sh.intel.com>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:60599 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbZGYOKf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Jul 2009 10:10:35 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Robert Hancock <hancockrwd@gmail.com>, linux-ide <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
 
-Hello, Shaohua.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] libata: remove superfluous NULL pointer checks
 
-Shaohua Li wrote:
-> +	if (!(dev->horkage & ATA_HORKAGE_FPDMA_AA) &&
-> +		(ap->flags & ATA_FLAG_FPDMA_AA) &&
-> +		ata_id_has_fpdma_aa(dev->id)) {
-> +		err_mask = ata_dev_set_feature(dev, SETFEATURES_SATA_ENABLE,
-> +			SATA_FPDMA_AA);
-> +		if (err_mask) {
-> +			ata_dev_printk(dev, KERN_ERR, "failed to enable AA"
-> +				"(error_mask=0x%x)\n", err_mask);
-> +			if (err_mask != AC_ERR_DEV)
-> +				dev->horkage |= ATA_HORKAGE_FPDMA_AA;
-> +			return -EIO;
+host->ports[] always contain pointers to valid port structures since
+a "dummy port" structure is used in case if there is no physical port.
 
-You can continue if err_mask equals AC_ERR_DEV.  Also, the horkage
-should probably named like ATA_HORKAGE_BROKEN_FPDMA_AA.
+This patch takes care of two entries from Dan's list:
 
-Thanks.
+drivers/ata/sata_sil.c +535 sil_interrupt(13) warning: variable derefenced before check 'ap'
+drivers/ata/sata_mv.c +2517 mv_unexpected_intr(6) warning: variable derefenced before check 'ap'
 
--- 
-tejun
+and of another needless NULL pointer check in pata_octeon_cf.c.
+
+Reported-by: Dan Carpenter <error27@gmail.com>
+Cc: corbet@lwn.net
+Cc: eteo@redhat.com
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ata/pata_octeon_cf.c |    3 ++-
+ drivers/ata/sata_mv.c        |    2 +-
+ drivers/ata/sata_sil.c       |    2 +-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
+
+Index: b/drivers/ata/pata_octeon_cf.c
+===================================================================
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -653,7 +653,8 @@ static irqreturn_t octeon_cf_interrupt(i
+ 
+ 		ap = host->ports[i];
+ 		ocd = ap->dev->platform_data;
+-		if (!ap || (ap->flags & ATA_FLAG_DISABLED))
++
++		if (ap->flags & ATA_FLAG_DISABLED)
+ 			continue;
+ 
+ 		ocd = ap->dev->platform_data;
+Index: b/drivers/ata/sata_mv.c
+===================================================================
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2514,7 +2514,7 @@ static void mv_unexpected_intr(struct at
+ 	char *when = "idle";
+ 
+ 	ata_ehi_clear_desc(ehi);
+-	if (!ap || (ap->flags & ATA_FLAG_DISABLED)) {
++	if (ap->flags & ATA_FLAG_DISABLED) {
+ 		when = "disabled";
+ 	} else if (edma_was_enabled) {
+ 		when = "EDMA enabled";
+Index: b/drivers/ata/sata_sil.c
+===================================================================
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -532,7 +532,7 @@ static irqreturn_t sil_interrupt(int irq
+ 		struct ata_port *ap = host->ports[i];
+ 		u32 bmdma2 = readl(mmio_base + sil_port[ap->port_no].bmdma2);
+ 
+-		if (unlikely(!ap || ap->flags & ATA_FLAG_DISABLED))
++		if (unlikely(ap->flags & ATA_FLAG_DISABLED))
+ 			continue;
+ 
+ 		/* turn off SATA_IRQ if not supported */
