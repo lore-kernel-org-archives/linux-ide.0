@@ -1,55 +1,51 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: add missing NULL pointer check to ata_eh_reset()
-Date: Sun, 26 Jul 2009 16:21:01 +0200
-Message-ID: <200907261621.01893.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Wolfram Sang <w.sang@pengutronix.de>
+Subject: [PATCH] pcmcia: add CNF-CDROM-ID for ide/pata
+Date: Sun, 26 Jul 2009 18:27:29 +0200
+Message-ID: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:60242 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbZGYO0U convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Jul 2009 10:26:20 -0400
-Content-Disposition: inline
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:49374 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753738AbZGZQ1b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jul 2009 12:27:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
+To: linux-ide@vger.kernel.org
+Cc: linux-pcmcia@lists.infradead.org, Wolfram Sang <w.sang@pengutronix.de>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: add missing NULL pointer check to ata_eh_reset()
+Fixes this report:
+http://article.gmane.org/gmane.linux.kernel.pcmcia.devel/2228/
 
->From Dan's list:
-
-drivers/ata/libata-eh.c +2403 ata_eh_reset(80) warning: variable derefenced before check 'slave'
-
-Please note that this is _not_ a real bug at the moment since ata_eh_context
-structure is embedded into ata_list structure and the code alwas checks for
-'slave' before accessing 'sehc'.
-
-Anyway lets add missing check and always have a valid 'sehc' pointer (which
-makes code easier to understand and prevents introducing some possible bugs
-in the future).
-
-Reported-by: Dan Carpenter <error27@gmail.com>
-Cc: corbet@lwn.net
-Cc: eteo@redhat.com
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Reported-by: John McGrath <john@john-mcgrath.com>
+Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
 ---
- drivers/ata/libata-eh.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/pata_pcmcia.c |    1 +
+ drivers/ide/ide-cs.c      |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-Index: b/drivers/ata/libata-eh.c
-===================================================================
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2329,7 +2329,7 @@ int ata_eh_reset(struct ata_link *link, 
- 	struct ata_port *ap = link->ap;
- 	struct ata_link *slave = ap->slave_link;
- 	struct ata_eh_context *ehc = &link->eh_context;
--	struct ata_eh_context *sehc = &slave->eh_context;
-+	struct ata_eh_context *sehc = slave ? &slave->eh_context : NULL;
- 	unsigned int *classes = ehc->classes;
- 	unsigned int lflags = link->flags;
- 	int verbose = !(ehc->i.flags & ATA_EHI_QUIET);
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index f4d009e..dc99e26 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -411,6 +411,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+ 	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
+ 	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
++	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
+ 	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
+diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
+index 527908f..063b933 100644
+--- a/drivers/ide/ide-cs.c
++++ b/drivers/ide/ide-cs.c
+@@ -408,6 +408,7 @@ static struct pcmcia_device_id ide_ids[] = {
+ 	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
+ 	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
++	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
+ 	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
+-- 
+1.6.3.1
+
