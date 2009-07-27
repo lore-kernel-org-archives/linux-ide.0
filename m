@@ -1,79 +1,111 @@
-From: Jerome Vuarand <jerome.vuarand@gmail.com>
-Subject: Re: SiI3124 + SiI3726 pm
-Date: Mon, 27 Jul 2009 20:03:08 +0200
-Message-ID: <89d273ba0907271103s787b5f06t514c219d4a551d53@mail.gmail.com>
-References: <89d273ba0605242046x3d19dd06h74885048f229d519@mail.gmail.com>
-	<89d273ba0605242202l354ec106w22bccf649e5e1dfc@mail.gmail.com>
-	<44753B78.4090802@gmail.com> <c70ff3ad0605251329m34af33bfj3ace5d5f9b32af38@mail.gmail.com>
-	<44761994.2050303@gmail.com>
+From: Randy Broman <rbroman@bayarea.net>
+Subject: Software RAID Problem
+Date: Mon, 27 Jul 2009 13:27:04 -0700
+Message-ID: <4A6E0D98.7010301@bayarea.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:45835 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732AbZG0SD3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2009 14:03:29 -0400
-Received: by ewy26 with SMTP id 26so3374445ewy.37
-        for <linux-ide@vger.kernel.org>; Mon, 27 Jul 2009 11:03:28 -0700 (PDT)
-In-Reply-To: <44761994.2050303@gmail.com>
+Received: from shell4.bayarea.net ([209.128.82.1]:50747 "EHLO
+	shell4.bayarea.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbZG0UeZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2009 16:34:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: saeed bishara <saeed.bishara@gmail.com>, Tejun Heo <htejun@gmail.com>
 
-2006/5/25 Tejun Heo <htejun@gmail.com>:
-> saeed bishara wrote:
->>
->> Hi,
->>      I think the 6th port is for the SEMB(Sata Enclosure Management
->> Bridge) device, this device reportssignature with lbam=0x3c and lbah
->> 0xc3, but the linux classifies it as a disk:
->>
->>  if (((tf->lbam == 0) && (tf->lbah == 0)) ||
->>  ((tf->lbam == 0x3c) && (tf->lbah == 0xc3))) {
->> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->> DPRINTK("found ATA device by sig\n");
->> return ATA_DEV_ATA;
->>
->> Can you print the signature of the device on that port?
->> Anyway, the 0x3C, 0xC3 signature should be classifies as a SEMB device
->> and not a disk according to the SATA standard.
->
-> I haven't actually checked that signature but that's probably the same class
-> code mix up described for PM in the classification function.  For the time
-> being, libata is just ignoring the extra port.  It probably should be
-> exported as a SCSI device without HLD attached (/dev/sgX only).  I'll try
-> that once hotplug stuff settles.
+I have a Kubuntu Jaunty system with a custom 2.6.28 kernel. I recently 
+added a Sil3132/4726 based eSATA RAID box to use for backup. The box has 
+two drives set up as JBOD (pass-through) in the hardware. I broke each 
+disk into two partitions, and I used Linux software RAID to mirror the 
+partitions on the two disks, to create two RAID devices. This worked 
+fine for about a week.
 
-A few months ago I updated my kernel since it now supports port
-multipliers without patch, and the issue of a supplementary port on
-the SiI3727 port multiplier rose again. Since I completely forgot
-about that 3 year old issue, I started exploring the web again before
-remembering that thread.
+At that point I tried to upgrade the kernel to 2.6.31_rc3. The upgrade 
+didn't work, due to problems with my graphics card, and I noticed that 
+when I booted into recovery mode to try to fix the problems, the log 
+showed lots of errors with the disks in the RAID box. I then went back 
+to the 2.6.28 kernel, and now the mirrored partitions on the disks in 
+the RAID box show they're in degraded mode, and I can't recover the 
+mirrors. See below for example, the symptoms for the second of the two 
+RAID devices are essentially the same.
 
-I found something interesting in the SiI3726 datasheet
-(http://www.siliconimage.com/docs/SiI-DS-0121-C1.pdf). You can see on
-PDF page 14/41, in the description of the GSCR[2] register, that the 4
-least significant bits of the register are labelled "Number of Fan-out
-ports". In the description besides, it is explained that the initial
-value is 6, and it represents the 5 downstream device ports plus the
-upstream host port.
+If I hot-remove and hot-re-add the faulty spare the commands look like 
+they work, see below, but the array almost immediately goes back to the 
+degraded state with faulty spare. The re-add results in a ton of output 
+in /var/log/message, also see below, but I can't discern if this output 
+reflects a problem. I note that the faulty spare on the first of the two 
+RAID devices is on one of the disks (sdc), and the faulty spare on the 
+second of the two RAID devices is on the other of the disks (sdd).
 
-I don't have access to the SATA Port Multiplier specification, but it
-would be interesting to check it to verify whether that 4-bit field of
-the GSCR[2] register is supposed to contain the number of device ports
-(and in that case the problem comes from the SiI3726 firmware) or if
-that value is the total number of up+down ports of the multiplier. In
-the latter case another mechanism to detect the number of device ports
-would be needed (unless multipliers can have several host ports, for
-multipath or device sharing, a simple substraction of 1 could be
-enough).
+How can I fix this?
 
-In the meantime I'll re-apply the patch Tejun Heo proposed earlier in
-that thread. It seems I didn't notice Saeed Bishara request for tests
-last time. Tell me if you're still interested in that information, or
-if you need any other information to help improve the SiI3726 driver.
-I have 6 of these port multipliers (and I suspect some of these are
-damaged), and 15 to 20 SATA disks available, so there's plenty of room
-for tests.
+# mdadm --detail /dev/md2
+/dev/md2:
+Version : 00.90
+Creation Time : Fri Jul 24 13:27:32 2009
+Raid Level : raid1
+Array Size : 366281856 (349.31 GiB 375.07 GB)
+Used Dev Size : 366281856 (349.31 GiB 375.07 GB)
+Raid Devices : 2
+Total Devices : 2
+Preferred Minor : 2
+Persistence : Superblock is persistent
+
+Update Time : Mon Jul 27 11:43:56 2009
+State : clean, degraded
+Active Devices : 1
+Working Devices : 1
+Failed Devices : 1
+Spare Devices : 0
+
+UUID : 75653f14:a5d9312e:8ccdfa7d:0ed26058 (local to host jboat17)
+Events : 0.532
+
+Number Major Minor RaidDevice State
+0 0 0 0 removed
+1 8 49 1 active sync /dev/sdd1
+
+2 8 33 - faulty spare /dev/sdc1
+------------------------------------------------
+# mdadm --remove /dev/md2 /dev/sdc1
+mdadm: hot removed /dev/sdc1
+# mdadm --add /dev/md2 /dev/sdc1
+mdadm: re-added /dev/sdc1
+------------------------------------------------
+#tail -f /var/log/messages
+
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219363] sd 6:0:0:0: [sdc] Add. 
+Sense: No additional sense information
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219407] sd 6:0:0:0: [sdc] Result: 
+hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219413] sd 6:0:0:0: [sdc] Sense 
+Key : Hardware Error [current] [descriptor]
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219421] Descriptor sense data 
+with sense descriptors (in hex):
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219425] 72 04 00 00 00 00 00 0c 
+00 0a 80 00 00 00 36 e0
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219440] 00 00 00 00
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219446] sd 6:0:0:0: [sdc] Add. 
+Sense: No additional sense information
+Jul 27 12:04:18 jboat17 kernel: [ 2981.219490] ata7: EH complete
+Jul 27 12:04:18 jboat17 kernel: [ 2981.221837] sd 6:0:0:0: [sdc] 
+1465149168 512-byte hardware sectors: (750 GB/698 GiB)
+Jul 27 12:04:18 jboat17 kernel: [ 2981.221872] sd 6:0:0:0: [sdc] Write 
+Protect is off
+Jul 27 12:04:18 jboat17 kernel: [ 2981.221921] sd 6:0:0:0: [sdc] Write 
+cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jul 27 12:04:18 jboat17 kernel: [ 2981.221971] sd 6:2:0:0: [sdd] 
+1465149168 512-byte hardware sectors: (750 GB/698 GiB)
+Jul 27 12:04:18 jboat17 kernel: [ 2981.221995] sd 6:2:0:0: [sdd] Write 
+Protect is off
+Jul 27 12:04:18 jboat17 kernel: [ 2981.222044] sd 6:2:0:0: [sdd] Write 
+cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jul 27 12:04:18 jboat17 kernel: [ 2981.262163] md: md2: recovery done.
+Jul 27 12:04:18 jboat17 kernel: [ 2981.279523] RAID1 conf printout:
+Jul 27 12:04:18 jboat17 kernel: [ 2981.279531] --- wd:1 rd:2
+Jul 27 12:04:18 jboat17 kernel: [ 2981.279536] disk 0, wo:1, o:0, dev:sdc1
+Jul 27 12:04:18 jboat17 kernel: [ 2981.279541] disk 1, wo:0, o:1, dev:sdd1
+Jul 27 12:04:18 jboat17 kernel: [ 2981.285536] RAID1 conf printout:
+Jul 27 12:04:18 jboat17 kernel: [ 2981.285542] --- wd:1 rd:2
+Jul 27 12:04:18 jboat17 kernel: [ 2981.285550] disk 1, wo:0, o:1, dev:sdd1
