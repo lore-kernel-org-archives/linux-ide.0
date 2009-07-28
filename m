@@ -1,111 +1,37 @@
-From: Randy Broman <rbroman@bayarea.net>
-Subject: Software RAID Problem
-Date: Mon, 27 Jul 2009 13:27:04 -0700
-Message-ID: <4A6E0D98.7010301@bayarea.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SiI3124 + SiI3726 pm
+Date: Tue, 28 Jul 2009 11:38:26 +0900
+Message-ID: <4A6E64A2.3010902@gmail.com>
+References: <89d273ba0605242046x3d19dd06h74885048f229d519@mail.gmail.com> 	<89d273ba0605242202l354ec106w22bccf649e5e1dfc@mail.gmail.com> 	<44753B78.4090802@gmail.com> <c70ff3ad0605251329m34af33bfj3ace5d5f9b32af38@mail.gmail.com> 	<44761994.2050303@gmail.com> <89d273ba0907271103s787b5f06t514c219d4a551d53@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shell4.bayarea.net ([209.128.82.1]:50747 "EHLO
-	shell4.bayarea.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751596AbZG0UeZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2009 16:34:25 -0400
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:35434 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229AbZG1CgQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2009 22:36:16 -0400
+Received: by pzk42 with SMTP id 42so362175pzk.33
+        for <linux-ide@vger.kernel.org>; Mon, 27 Jul 2009 19:36:16 -0700 (PDT)
+In-Reply-To: <89d273ba0907271103s787b5f06t514c219d4a551d53@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jerome Vuarand <jerome.vuarand@gmail.com>
+Cc: linux-ide@vger.kernel.org, saeed bishara <saeed.bishara@gmail.com>
 
-I have a Kubuntu Jaunty system with a custom 2.6.28 kernel. I recently 
-added a Sil3132/4726 based eSATA RAID box to use for backup. The box has 
-two drives set up as JBOD (pass-through) in the hardware. I broke each 
-disk into two partitions, and I used Linux software RAID to mirror the 
-partitions on the two disks, to create two RAID devices. This worked 
-fine for about a week.
+Hello, Jerome.
 
-At that point I tried to upgrade the kernel to 2.6.31_rc3. The upgrade 
-didn't work, due to problems with my graphics card, and I noticed that 
-when I booted into recovery mode to try to fix the problems, the log 
-showed lots of errors with the disks in the RAID box. I then went back 
-to the 2.6.28 kernel, and now the mirrored partitions on the disks in 
-the RAID box show they're in degraded mode, and I can't recover the 
-mirrors. See below for example, the symptoms for the second of the two 
-RAID devices are essentially the same.
+Jerome Vuarand wrote:
+> A few months ago I updated my kernel since it now supports port
+> multipliers without patch, and the issue of a supplementary port on
+> the SiI3727 port multiplier rose again. Since I completely forgot
+> about that 3 year old issue, I started exploring the web again before
+> remembering that thread.
 
-If I hot-remove and hot-re-add the faulty spare the commands look like 
-they work, see below, but the array almost immediately goes back to the 
-degraded state with faulty spare. The re-add results in a ton of output 
-in /var/log/message, also see below, but I can't discern if this output 
-reflects a problem. I note that the faulty spare on the first of the two 
-RAID devices is on one of the disks (sdc), and the faulty spare on the 
-second of the two RAID devices is on the other of the disks (sdd).
+Hmm... this is supposed to be worked around by now.  Can you please
+post boot log w/o the patch using 2.6.30?
 
-How can I fix this?
+Thanks.
 
-# mdadm --detail /dev/md2
-/dev/md2:
-Version : 00.90
-Creation Time : Fri Jul 24 13:27:32 2009
-Raid Level : raid1
-Array Size : 366281856 (349.31 GiB 375.07 GB)
-Used Dev Size : 366281856 (349.31 GiB 375.07 GB)
-Raid Devices : 2
-Total Devices : 2
-Preferred Minor : 2
-Persistence : Superblock is persistent
-
-Update Time : Mon Jul 27 11:43:56 2009
-State : clean, degraded
-Active Devices : 1
-Working Devices : 1
-Failed Devices : 1
-Spare Devices : 0
-
-UUID : 75653f14:a5d9312e:8ccdfa7d:0ed26058 (local to host jboat17)
-Events : 0.532
-
-Number Major Minor RaidDevice State
-0 0 0 0 removed
-1 8 49 1 active sync /dev/sdd1
-
-2 8 33 - faulty spare /dev/sdc1
-------------------------------------------------
-# mdadm --remove /dev/md2 /dev/sdc1
-mdadm: hot removed /dev/sdc1
-# mdadm --add /dev/md2 /dev/sdc1
-mdadm: re-added /dev/sdc1
-------------------------------------------------
-#tail -f /var/log/messages
-
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219363] sd 6:0:0:0: [sdc] Add. 
-Sense: No additional sense information
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219407] sd 6:0:0:0: [sdc] Result: 
-hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219413] sd 6:0:0:0: [sdc] Sense 
-Key : Hardware Error [current] [descriptor]
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219421] Descriptor sense data 
-with sense descriptors (in hex):
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219425] 72 04 00 00 00 00 00 0c 
-00 0a 80 00 00 00 36 e0
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219440] 00 00 00 00
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219446] sd 6:0:0:0: [sdc] Add. 
-Sense: No additional sense information
-Jul 27 12:04:18 jboat17 kernel: [ 2981.219490] ata7: EH complete
-Jul 27 12:04:18 jboat17 kernel: [ 2981.221837] sd 6:0:0:0: [sdc] 
-1465149168 512-byte hardware sectors: (750 GB/698 GiB)
-Jul 27 12:04:18 jboat17 kernel: [ 2981.221872] sd 6:0:0:0: [sdc] Write 
-Protect is off
-Jul 27 12:04:18 jboat17 kernel: [ 2981.221921] sd 6:0:0:0: [sdc] Write 
-cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Jul 27 12:04:18 jboat17 kernel: [ 2981.221971] sd 6:2:0:0: [sdd] 
-1465149168 512-byte hardware sectors: (750 GB/698 GiB)
-Jul 27 12:04:18 jboat17 kernel: [ 2981.221995] sd 6:2:0:0: [sdd] Write 
-Protect is off
-Jul 27 12:04:18 jboat17 kernel: [ 2981.222044] sd 6:2:0:0: [sdd] Write 
-cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Jul 27 12:04:18 jboat17 kernel: [ 2981.262163] md: md2: recovery done.
-Jul 27 12:04:18 jboat17 kernel: [ 2981.279523] RAID1 conf printout:
-Jul 27 12:04:18 jboat17 kernel: [ 2981.279531] --- wd:1 rd:2
-Jul 27 12:04:18 jboat17 kernel: [ 2981.279536] disk 0, wo:1, o:0, dev:sdc1
-Jul 27 12:04:18 jboat17 kernel: [ 2981.279541] disk 1, wo:0, o:1, dev:sdd1
-Jul 27 12:04:18 jboat17 kernel: [ 2981.285536] RAID1 conf printout:
-Jul 27 12:04:18 jboat17 kernel: [ 2981.285542] --- wd:1 rd:2
-Jul 27 12:04:18 jboat17 kernel: [ 2981.285550] disk 1, wo:0, o:1, dev:sdd1
+-- 
+tejun
