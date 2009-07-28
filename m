@@ -1,143 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [RESEND][PATCH] sata_fsl: hard and soft reset split
-Date: Tue, 28 Jul 2009 17:23:57 +0400
-Message-ID: <4A6EFBED.2020204@ru.mvista.com>
-References: <Pine.WNT.4.64.0906291854180.2640@B00888-02.fsl.freescale.net>
+From: Jerome Vuarand <jerome.vuarand@gmail.com>
+Subject: Re: SiI3124 + SiI3726 pm
+Date: Tue, 28 Jul 2009 17:01:25 +0200
+Message-ID: <89d273ba0907280801g1a6ee884u4e14eb65ab90fa13@mail.gmail.com>
+References: <89d273ba0605242046x3d19dd06h74885048f229d519@mail.gmail.com>
+	<89d273ba0605242202l354ec106w22bccf649e5e1dfc@mail.gmail.com>
+	<44753B78.4090802@gmail.com> <c70ff3ad0605251329m34af33bfj3ace5d5f9b32af38@mail.gmail.com>
+	<44761994.2050303@gmail.com> <89d273ba0907271103s787b5f06t514c219d4a551d53@mail.gmail.com>
+	<4A6E64A2.3010902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:3685 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754123AbZG1NXP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 09:23:15 -0400
-In-Reply-To: <Pine.WNT.4.64.0906291854180.2640@B00888-02.fsl.freescale.net>
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:42194 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753322AbZG1PBr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jul 2009 11:01:47 -0400
+Received: by ewy26 with SMTP id 26so91147ewy.37
+        for <linux-ide@vger.kernel.org>; Tue, 28 Jul 2009 08:01:45 -0700 (PDT)
+In-Reply-To: <4A6E64A2.3010902@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ashish kalra <ashish.kalra@freescale.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, saeed bishara <saeed.bishara@gmail.com>
 
-Hello.
+2009/7/28 Tejun Heo <htejun@gmail.com>:
+> Jerome Vuarand wrote:
+>> A few months ago I updated my kernel since it now supports port
+>> multipliers without patch, and the issue of a supplementary port on
+>> the SiI3727 port multiplier rose again. Since I completely forgot
+>> about that 3 year old issue, I started exploring the web again befor=
+e
+>> remembering that thread.
+>
+> Hmm... this is supposed to be worked around by now.  Can you please
+> post boot log w/o the patch using 2.6.30?
 
-ashish kalra wrote:
+Yes, actually when about to apply the patch, I realized the 6th port
+is actually recognized as the PMP SEMB. I guess the datasheet is
+somewhat incorrect on that precise page, since it mentions the SEMB
+device in other sections. The wiki is somewhat terse about PMP support
+(for example it's not very clear what drivers and controller
+combination support PMPs), and afaict there is no mention of SEMB
+support status (I don't think my PMPs have something connected to the
+I=C2=B2C port of the SiI3726, but that may be helpful to other people).
 
-> Split sata_fsl_softreset() into hard and soft resets to make
-> error-handling more efficient & device and PMP detection more reliable.
+I moved all my disks to some spare PMP and all my disk detection
+problems are gone. I guess some of them are really damaged (also I had
+some power issue within my SATA enclosure).
 
-> Also includes fix for PMP support, driver tested with Sil3726, Sil4726 &
-> Exar PMP controllers.
-
-> Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
-
-[...]
-
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 5751145..c8e2fad 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -708,34 +708,17 @@ static unsigned int sata_fsl_dev_classify(struct 
-> ata_port *ap)
->      return ata_dev_classify(&tf);
->  }
-> 
-> -static int sata_fsl_prereset(struct ata_link *link, unsigned long 
-> deadline)
-> -{
-> -    /* FIXME: Never skip softreset, sata_fsl_softreset() is
-> -     * combination of soft and hard resets.  sata_fsl_softreset()
-> -     * needs to be splitted into soft and hard resets.
-> -     */
-> -    return 0;
-> -}
-> -
-> -static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
-> +static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
->                      unsigned long deadline)
->  {
->      struct ata_port *ap = link->ap;
-> -    struct sata_fsl_port_priv *pp = ap->private_data;
->      struct sata_fsl_host_priv *host_priv = ap->host->private_data;
->      void __iomem *hcr_base = host_priv->hcr_base;
-> -    int pmp = sata_srst_pmp(link);
->      u32 temp;
-> -    struct ata_taskfile tf;
-> -    u8 *cfis;
-> -    u32 Serror;
->      int i = 0;
->      unsigned long start_jiffies;
-> 
-> -    DPRINTK("in xx_softreset\n");
-> -
-> -    if (pmp != SATA_PMP_CTRL_PORT)
-> -        goto issue_srst;
-> +    DPRINTK("in xx_hardreset\n");
-> 
->  try_offline_again:
->      /*
-> @@ -750,7 +733,7 @@ try_offline_again:
-> 
->      if (temp & ONLINE) {
->          ata_port_printk(ap, KERN_ERR,
-> -                "Softreset failed, not off-lined %d\n", i);
-> +                "Hardreset failed, not off-lined %d\n", i);
-> 
->          /*
->           * Try to offline controller atleast twice
-> @@ -762,7 +745,7 @@ try_offline_again:
->              goto try_offline_again;
->      }
-> 
-> -    DPRINTK("softreset, controller off-lined\n");
-> +    DPRINTK("hardreset, controller off-lined\n");
->      VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
->      VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
-> 
-> @@ -787,11 +770,11 @@ try_offline_again:
-> 
->      if (!(temp & ONLINE)) {
->          ata_port_printk(ap, KERN_ERR,
-> -                "Softreset failed, not on-lined\n");
-> +                "Hardreset failed, not on-lined\n");
->          goto err;
->      }
-> 
-> -    DPRINTK("softreset, controller off-lined & on-lined\n");
-> +    DPRINTK("hardreset, controller off-lined & on-lined\n");
->      VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
->      VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
-> 
-> @@ -807,7 +790,7 @@ try_offline_again:
->                  "No Device OR PHYRDY change,Hstatus = 0x%x\n",
->                  ioread32(hcr_base + HSTATUS));
->          *class = ATA_DEV_NONE;
-> -        goto out;
-> +        return 0;
->      }
-> 
->      /*
-> @@ -820,11 +803,44 @@ try_offline_again:
->      if ((temp & 0xFF) != 0x18) {
->          ata_port_printk(ap, KERN_WARNING, "No Signature Update\n");
->          *class = ATA_DEV_NONE;
-> -        goto out;
-> +        goto do_followup_srst;
->      } else {
->          ata_port_printk(ap, KERN_INFO,
->                  "Signature Update detected @ %d msecs\n",
->                  jiffies_to_msecs(jiffies - start_jiffies));
-> +        *class = sata_fsl_dev_classify(ap);
-> +        return 0;
-> +    }
-> +
-> +do_followup_srst:
-> +    /*
-> +     * request libATA to perform follow-up softreset
-> +     */
-> +    return -EAGAIN;
-> +
-> +err:
-> +    return -EIO;
-
-    Why produce unneeded labels and goto's where you can just use return? :-O
-
-MBR, Sergei
+Sorry for the noise :-)
