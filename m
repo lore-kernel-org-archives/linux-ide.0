@@ -1,52 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes v2] ahci: add device IDs for Ibex Peak
- ahci controllers
-Date: Tue, 28 Jul 2009 21:10:11 -0400
-Message-ID: <4A6FA173.4030905@garzik.org>
-References: <20090722201556.GB10049@dhcp-210.hsv.redhat.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: remove superfluous NULL pointer checks
+Date: Tue, 28 Jul 2009 21:10:23 -0400
+Message-ID: <4A6FA17F.20507@pobox.com>
+References: <200907261605.14619.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59180 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59197 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752460AbZG2BKM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:10:12 -0400
-In-Reply-To: <20090722201556.GB10049@dhcp-210.hsv.redhat.com>
+	id S1752903AbZG2BK2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jul 2009 21:10:28 -0400
+In-Reply-To: <200907261605.14619.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
 
-David Milburn wrote:
-> Add device IDS for Ibex Peak SATA AHCI Controllers
+Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] libata: remove superfluous NULL pointer checks
 > 
-> Signed-off-by: Jaroslav Kysela <jkysela@redhat.com>
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> host->ports[] always contain pointers to valid port structures since
+> a "dummy port" structure is used in case if there is no physical port.
+> 
+> This patch takes care of two entries from Dan's list:
+> 
+> drivers/ata/sata_sil.c +535 sil_interrupt(13) warning: variable derefenced before check 'ap'
+> drivers/ata/sata_mv.c +2517 mv_unexpected_intr(6) warning: variable derefenced before check 'ap'
+> 
+> and of another needless NULL pointer check in pata_octeon_cf.c.
+> 
+> Reported-by: Dan Carpenter <error27@gmail.com>
+> Cc: corbet@lwn.net
+> Cc: eteo@redhat.com
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
->  drivers/ata/ahci.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 336eb1e..958c1fa 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -515,10 +515,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
->  	{ PCI_VDEVICE(INTEL, 0x3a22), board_ahci }, /* ICH10 */
->  	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
-> +	{ PCI_VDEVICE(INTEL, 0x3b22), board_ahci }, /* PCH AHCI */
-> +	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci }, /* PCH AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
->  	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
->  	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
->  
->  	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
->  	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>  drivers/ata/pata_octeon_cf.c |    3 ++-
+>  drivers/ata/sata_mv.c        |    2 +-
+>  drivers/ata/sata_sil.c       |    2 +-
+>  3 files changed, 4 insertions(+), 3 deletions(-)
 
-applied
+applied to #upstream-fixes
 
 
