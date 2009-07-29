@@ -1,45 +1,45 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: remove superfluous NULL pointer checks
-Date: Tue, 28 Jul 2009 21:10:23 -0400
-Message-ID: <4A6FA17F.20507@pobox.com>
-References: <200907261605.14619.bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: add missing NULL pointer check to ata_eh_reset()
+Date: Tue, 28 Jul 2009 21:10:37 -0400
+Message-ID: <4A6FA18D.1070808@pobox.com>
+References: <200907261621.01893.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59197 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59203 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752903AbZG2BK2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:10:28 -0400
-In-Reply-To: <200907261605.14619.bzolnier@gmail.com>
+	id S1754376AbZG2BKl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jul 2009 21:10:41 -0400
+In-Reply-To: <200907261621.01893.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
 
 Bartlomiej Zolnierkiewicz wrote:
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] libata: remove superfluous NULL pointer checks
+> Subject: [PATCH] libata: add missing NULL pointer check to ata_eh_reset()
 > 
-> host->ports[] always contain pointers to valid port structures since
-> a "dummy port" structure is used in case if there is no physical port.
+>>From Dan's list:
 > 
-> This patch takes care of two entries from Dan's list:
+> drivers/ata/libata-eh.c +2403 ata_eh_reset(80) warning: variable derefenced before check 'slave'
 > 
-> drivers/ata/sata_sil.c +535 sil_interrupt(13) warning: variable derefenced before check 'ap'
-> drivers/ata/sata_mv.c +2517 mv_unexpected_intr(6) warning: variable derefenced before check 'ap'
+> Please note that this is _not_ a real bug at the moment since ata_eh_context
+> structure is embedded into ata_list structure and the code alwas checks for
+> 'slave' before accessing 'sehc'.
 > 
-> and of another needless NULL pointer check in pata_octeon_cf.c.
+> Anyway lets add missing check and always have a valid 'sehc' pointer (which
+> makes code easier to understand and prevents introducing some possible bugs
+> in the future).
 > 
 > Reported-by: Dan Carpenter <error27@gmail.com>
 > Cc: corbet@lwn.net
 > Cc: eteo@redhat.com
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
->  drivers/ata/pata_octeon_cf.c |    3 ++-
->  drivers/ata/sata_mv.c        |    2 +-
->  drivers/ata/sata_sil.c       |    2 +-
->  3 files changed, 4 insertions(+), 3 deletions(-)
+>  drivers/ata/libata-eh.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
 applied to #upstream-fixes
 
