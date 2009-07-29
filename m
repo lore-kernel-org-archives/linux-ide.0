@@ -1,33 +1,45 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: LSISAS1068E + WDC WD2002FYPS: I/O error & Sense Key
-Date: Wed, 29 Jul 2009 17:04:27 -0600
-Message-ID: <4A70D57B.6030301@gmail.com>
-References: <20090727060322.GB27002@lifeintegrity.com> <4A70A64A.2070605@gmail.com> <20090729200714.GA20706@lifeintegrity.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: hdparm-9.17 released, with experimental trim/wiper scripts for SSDs
+Date: Wed, 29 Jul 2009 19:35:20 -0400
+Message-ID: <4A70DCB8.9000909@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090729200714.GA20706@lifeintegrity.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:44842 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753321AbZG2XfV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Jul 2009 19:35:21 -0400
+Received: from [10.0.0.6] (corey.localnet [10.0.0.6])
+	by mail.rtr.ca (Postfix) with ESMTP id A797A31DDA
+	for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2009 19:35:20 -0400 (EDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 07/29/2009 02:07 PM, Allan Wind wrote:
-> On 2009-07-29T13:43:06, Robert Hancock wrote:
->> On 07/27/2009 12:03 AM, Allan Wind wrote:
->>> I have a pair of Western Digital RE4-GP (WD2002FYPS) in RAID1 configuration
->>> using Linux 2.6.30.3 and seeing the following:
->>>
->>> [ 4907.485324] end_request: I/O error, dev sdb, sector 3907028974
->> Are there no error messages before this point? Can you post the full
->> dmesg output from bootup?
->
-> Thanks for looking into this, Robert.  I do not see any relevant error
-> message before this point, but made the entire 82k dmesg available here:
-> http://lifeintegrity.com/~allan/dmesg
+hdparm-9.17 is now available from sourceforge.net.
 
-It seems like some request failed but apparently that mptsas driver 
-isn't dumping out what happened for some reason. There are some of those 
-"recovered error" indications but they're not near the I/O error report, 
-so I'm not sure what's going on. CCing linux-scsi.
+New in this release:
+        - added wiper/ subdirectory with preliminary SSD-wiper (TRIM) scripts
+        - nuked kernel_patches/ subdirectory
+        - Capitalize first word of each line of help output
+        - added --fallocate flag
+        - added --trim-sector-ranges flag
+        - removed --trim-sectors flag
+        - removed --fibmap-sector flag
+        - embed VERSION string for easier digging out with strings(1)
+
+This release is mostly in support of enabling user-initiated DSM/TRIM operations
+for solid-state drives (SSDs).  The in-kernel support for automatic-TRIM seems
+a ways off yet, so I'm providing scripts to do it auto/manually instead.  :)
+
+These basically scan for free blocks in a filesystem, and batch them together
+into huge DSM/TRIM commands to the drive, letting it know about them all for
+garbage-collection and wear-leveling purposes.
+
+These scripts are similar (but being Linux, superior) to an existing wiper.exe
+utility that MS Win users have been enjoying for some brands of SSD.
+
+But they won't actually do anything until drives ship with TRIM-enabled firmware.
+
+Cheers 
