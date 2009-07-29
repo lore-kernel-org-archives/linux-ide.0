@@ -1,49 +1,46 @@
-From: ashish kalra <ashish.kalra@freescale.com>
-Subject: [PATCH][sata_fsl] Defer non-ncq commands when ncq commands active
-Date: Wed, 29 Jul 2009 21:33:27 +0530 (India Standard Time)
-Message-ID: <Pine.WNT.4.64.0907292129310.4440@B00888-02.fsl.freescale.net>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Software RAID Problem
+Date: Wed, 29 Jul 2009 13:40:17 -0600
+Message-ID: <4A70A5A1.1030600@gmail.com>
+References: <1248798289.4a6f26510c218@myaccount.bayarea.net> <4A6FAF54.1060902@kernel.org> <4A706D78.7000107@bayarea.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:57053 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbZG2QFt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jul 2009 12:05:49 -0400
-Received: from de01smr02.am.mot.com (de01smr02.freescale.net [10.208.0.151])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n6TG5Wm2018066
-	for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2009 09:05:43 -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by de01smr02.am.mot.com (8.13.1/8.13.0) with ESMTP id n6TG5jmn009098
-	for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2009 11:05:46 -0500 (CDT)
+Received: from mail-px0-f201.google.com ([209.85.216.201]:53663 "EHLO
+	mail-px0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754192AbZG2TkV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jul 2009 15:40:21 -0400
+Received: by pxi39 with SMTP id 39so638973pxi.4
+        for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2009 12:40:21 -0700 (PDT)
+In-Reply-To: <4A706D78.7000107@bayarea.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org
+To: Randy Broman <rbroman@bayarea.net>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-From: Ashish Kalra <Ashish.Kalra@freescale.com>
-Date: Wed, 29 Jul 2009 21:15:49 +0530
+On 07/29/2009 09:40 AM, Randy Broman wrote:
+> Per your instructions .... I tail -f'd /var/log/dmesg and
+> /var/l0g/messages,
+> and then executed the four mdadm commands below, for the faulty array.
+> After removing and re-adding the faulty disk partition to the array, the
+> array
+> returns to faulty state almost immediately. During the process, dmesg
+> didn't
+> show anything, but the information written to /var/log/messages is at the
+> bottom hereto.
+>
+> I suppose one answer is that there's a hardware issue with the array, or
+> one of the disks. But that would be surprising to me - both the hardware
+> array and the disks are new, and the setup (hardware/software/RAID) worked
+> fine until I tried to upgrade my kernel. Possibly RAID-related formats are
+> different between kernel 2.6.28 and 2.6.31????
+>
+> Anyway, would appreciate diagnosis/recommendations ...
 
-Fix for non-ncq & ncq commands causing timeouts when both are issued 
-simultaneously to the same device.
-
-Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
----
-  drivers/ata/sata_fsl.c |    1 +
-  1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 5a88b44..a33f130 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1262,6 +1262,7 @@ static struct scsi_host_template sata_fsl_sht = {
-  static struct ata_port_operations sata_fsl_ops = {
-  	.inherits		= &sata_pmp_port_ops,
-
-+	.qc_defer = ata_std_qc_defer;
-  	.qc_prep = sata_fsl_qc_prep,
-  	.qc_issue = sata_fsl_qc_issue,
-  	.qc_fill_rtf = sata_fsl_qc_fill_rtf,
--- 
-1.6.0
-
-
+The output looks a bit scrambled and seems to be missing certain lines 
+(we see hardresets but not any error that triggered it). Sometimes that 
+seems to happen if disk problems are occurring (kernel logger buffer 
+overflows or something). If the kernel messages are showing up in 
+/var/log/messages then they should be showing up in dmesg and would be 
+more complete. Can you check again?
