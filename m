@@ -1,63 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Software RAID Problem
-Date: Wed, 29 Jul 2009 11:09:24 +0900
-Message-ID: <4A6FAF54.1060902@kernel.org>
-References: <1248798289.4a6f26510c218@myaccount.bayarea.net>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH] Add AMD SB900 SATA/IDE controller device IDs
+Date: Wed, 29 Jul 2009 10:32:56 +0800
+Message-ID: <C8E4BD7D001E44499280E0884BD9DB30D7D2CE@sshaexmb1.amd.com>
+References: <1248762566.3437.7.camel@zm-desktop> <4A6F9E3E.30500@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53535 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752977AbZG2CHY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 22:07:24 -0400
-In-Reply-To: <1248798289.4a6f26510c218@myaccount.bayarea.net>
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:49311
+	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752891AbZG2CdL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jul 2009 22:33:11 -0400
+Content-Class: urn:content-classes:message
+In-Reply-To: <4A6F9E3E.30500@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rbroman@bayarea.net
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-Hello,
+Hi Jeff, 
 
-When you reply further, can you please do the followings?
 
-1. Don't drop cc list.
-
-2. Use an email client which properly specifies References: and
-   In-Reply-To:.
-
-rbroman@bayarea.net wrote:
->> Can you attach full output of 'dmesg' after raid degradation?
+> -----Original Message-----
+> From: Jeff Garzik [mailto:jgarzik@pobox.com] 
+> >  
+> > +	/* AMD */
+> > +	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD SB900 */
+> > +	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> > +	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci }, 
+> /* AMD RAID */
 > 
-> For context, there are four RAID devices on this system. md0 is
-> /boot, md1 is / and md2 and md3 are the problem devices. /proc/mdstat
-> is below followed by the output of dmesg.
-> 
-> /proc/mdstat
-> 
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4]
-> [raid10]
-> md_d3 : inactive sdd2[2](S)
->       366289920 blocks
-> 
-> md_d2 : inactive sdd1[2](S)
->       366281856 blocks
-> 
-> md1 : active raid0 sdb6[1] sda6[0]
->       781256704 blocks 64k chunks
-> 
-> md0 : active raid1 sda1[0] sdb1[1]
->       48829440 blocks [2/2] [UU]
-> 
-> unused devices: <none>
-> 
-> dmesg .....
+> Are you _absolutely_ certain that future AMD PCI_CLASS_STORAGE_RAID 
+> hardware will be compatible with AHCI?
 > 
 
-The dmesg doesn't contain ATA error messages and the actual
-degradation.  Can you please trigger that and then attach dmesg?
+Yes, we discussed this issue in our team and do not see the risk,
+so we decided to submit the generic RAID support.
 
-Thanks.
+I will update this patch with Tejun's request to add one comment.
 
--- 
-tejun
+
+Thanks
+Shane
+
