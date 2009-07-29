@@ -1,44 +1,35 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Delegate nonrot flag setting to SCSI
-Date: Tue, 28 Jul 2009 21:16:57 -0400
-Message-ID: <4A6FA309.3060106@garzik.org>
-References: <yq1eit9rurq.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH upstream] libata: remove spindown skipping and warning
+Date: Tue, 28 Jul 2009 21:17:15 -0400
+Message-ID: <4A6FA31B.9080905@garzik.org>
+References: <4A4D70F4.5010909@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60145 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60157 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755060AbZG2BQ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:16:58 -0400
-In-Reply-To: <yq1eit9rurq.fsf@sermon.lab.mkp.net>
+	id S1755225AbZG2BRT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jul 2009 21:17:19 -0400
+In-Reply-To: <4A4D70F4.5010909@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jens.axboe@oracle.com, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, jaswinder@kernel.org
 
-Martin K. Petersen wrote:
-> Now that the SCSI disk driver correctly handles non-rotational devices
-> we can move setting the queue flag to SCSI.
+Tejun Heo wrote:
+> This was a hack to give userland shutdown tools time to drop manual
+> spindown.  All popular distros updated quite some time ago and the due
+> is well passed.  Drop it.
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
 > ---
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1119,10 +1119,6 @@ static int ata_scsi_dev_config(struct sc
->  
->  		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
->  	} else {
-> -		if (ata_id_is_ssd(dev->id))
-> -			queue_flag_set_unlocked(QUEUE_FLAG_NONROT,
-> -						sdev->request_queue);
-> -
->  		/* ATA devices must be sector aligned */
->  		blk_queue_update_dma_alignment(sdev->request_queue,
+>  Documentation/feature-removal-schedule.txt |   18 ----------
+>  drivers/ata/libata-scsi.c                  |   51 -----------------------------
+>  include/linux/libata.h                     |    1 
+>  3 files changed, 70 deletions(-)
 
-applied
+applied - yay!
 
 
