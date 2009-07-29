@@ -1,35 +1,23 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH upstream] libata: remove spindown skipping and warning
-Date: Tue, 28 Jul 2009 21:17:15 -0400
-Message-ID: <4A6FA31B.9080905@garzik.org>
-References: <4A4D70F4.5010909@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 12/62] drivers/ata: Remove unnecessary semicolons
+Date: Tue, 28 Jul 2009 21:17:04 -0400
+Message-ID: <4A6FA310.9010600@pobox.com>
+References: <cover.1246173664.git.joe@perches.com> <1aed30c4ed1f1cb58c6101e943ca62900bc170ff.1246173680.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60157 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755225AbZG2BRT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:17:19 -0400
-In-Reply-To: <4A4D70F4.5010909@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755557AbZG2BRP@vger.kernel.org>
+In-Reply-To: <1aed30c4ed1f1cb58c6101e943ca62900bc170ff.1246173680.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, trivial@kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, jaswinder@kernel.org
 
-Tejun Heo wrote:
-> This was a hack to give userland shutdown tools time to drop manual
-> spindown.  All popular distros updated quite some time ago and the due
-> is well passed.  Drop it.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
 > ---
->  Documentation/feature-removal-schedule.txt |   18 ----------
->  drivers/ata/libata-scsi.c                  |   51 -----------------------------
->  include/linux/libata.h                     |    1 
->  3 files changed, 70 deletions(-)
+>  drivers/ata/pata_octeon_cf.c |    2 +-
+>  drivers/ata/sata_inic162x.c  |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 
-applied - yay!
-
-
+applied
