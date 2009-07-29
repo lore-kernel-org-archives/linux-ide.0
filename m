@@ -1,46 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add missing NULL pointer check to ata_eh_reset()
-Date: Tue, 28 Jul 2009 21:10:37 -0400
-Message-ID: <4A6FA18D.1070808@pobox.com>
-References: <200907261621.01893.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pcmcia: add CNF-CDROM-ID for ide/pata
+Date: Tue, 28 Jul 2009 21:10:57 -0400
+Message-ID: <4A6FA1A1.4070604@garzik.org>
+References: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59203 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59209 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754376AbZG2BKl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:10:41 -0400
-In-Reply-To: <200907261621.01893.bzolnier@gmail.com>
+	id S1753775AbZG2BLB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jul 2009 21:11:01 -0400
+In-Reply-To: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
+To: Wolfram Sang <w.sang@pengutronix.de>
+Cc: linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, David Miller <davem@davemloft.net>
 
-Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] libata: add missing NULL pointer check to ata_eh_reset()
+Wolfram Sang wrote:
+> Fixes this report:
+> http://article.gmane.org/gmane.linux.kernel.pcmcia.devel/2228/
 > 
->>From Dan's list:
-> 
-> drivers/ata/libata-eh.c +2403 ata_eh_reset(80) warning: variable derefenced before check 'slave'
-> 
-> Please note that this is _not_ a real bug at the moment since ata_eh_context
-> structure is embedded into ata_list structure and the code alwas checks for
-> 'slave' before accessing 'sehc'.
-> 
-> Anyway lets add missing check and always have a valid 'sehc' pointer (which
-> makes code easier to understand and prevents introducing some possible bugs
-> in the future).
-> 
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Cc: corbet@lwn.net
-> Cc: eteo@redhat.com
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Reported-by: John McGrath <john@john-mcgrath.com>
+> Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
 > ---
->  drivers/ata/libata-eh.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/ata/pata_pcmcia.c |    1 +
+>  drivers/ide/ide-cs.c      |    1 +
+>  2 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+> index f4d009e..dc99e26 100644
+> --- a/drivers/ata/pata_pcmcia.c
+> +++ b/drivers/ata/pata_pcmcia.c
+> @@ -411,6 +411,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+>  	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
+>  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
+>  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
+> +	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
+>  	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
+>  	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
+>  	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
 
-applied to #upstream-fixes
-
+applied the pata_pcmcia portion of this
 
