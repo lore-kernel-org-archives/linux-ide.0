@@ -1,45 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pcmcia: add CNF-CDROM-ID for ide/pata
-Date: Tue, 28 Jul 2009 21:10:57 -0400
-Message-ID: <4A6FA1A1.4070604@garzik.org>
-References: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
+Subject: Re: [PATCH] libata: Delegate nonrot flag setting to SCSI
+Date: Tue, 28 Jul 2009 21:16:57 -0400
+Message-ID: <4A6FA309.3060106@garzik.org>
+References: <yq1eit9rurq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59209 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60145 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753775AbZG2BLB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:11:01 -0400
-In-Reply-To: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
+	id S1755060AbZG2BQ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Jul 2009 21:16:58 -0400
+In-Reply-To: <yq1eit9rurq.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wolfram Sang <w.sang@pengutronix.de>
-Cc: linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, David Miller <davem@davemloft.net>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jens.axboe@oracle.com, linux-ide@vger.kernel.org
 
-Wolfram Sang wrote:
-> Fixes this report:
-> http://article.gmane.org/gmane.linux.kernel.pcmcia.devel/2228/
+Martin K. Petersen wrote:
+> Now that the SCSI disk driver correctly handles non-rotational devices
+> we can move setting the queue flag to SCSI.
 > 
-> Reported-by: John McGrath <john@john-mcgrath.com>
-> Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
 > ---
->  drivers/ata/pata_pcmcia.c |    1 +
->  drivers/ide/ide-cs.c      |    1 +
->  2 files changed, 2 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-> index f4d009e..dc99e26 100644
-> --- a/drivers/ata/pata_pcmcia.c
-> +++ b/drivers/ata/pata_pcmcia.c
-> @@ -411,6 +411,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
->  	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
->  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
-> +	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
->  	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1119,10 +1119,6 @@ static int ata_scsi_dev_config(struct sc
+>  
+>  		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
+>  	} else {
+> -		if (ata_id_is_ssd(dev->id))
+> -			queue_flag_set_unlocked(QUEUE_FLAG_NONROT,
+> -						sdev->request_queue);
+> -
+>  		/* ATA devices must be sector aligned */
+>  		blk_queue_update_dma_alignment(sdev->request_queue,
 
-applied the pata_pcmcia portion of this
+applied
+
 
