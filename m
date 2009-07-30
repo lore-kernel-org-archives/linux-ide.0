@@ -1,78 +1,124 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: hdparm-9.17 released, with experimental trim/wiper scripts for
-   SSDs
-Date: Thu, 30 Jul 2009 08:54:56 -0400
-Message-ID: <4A719820.20900@rtr.ca>
-References: <4A70DCB8.9000909@rtr.ca> <4A70DDC5.3000607@rtr.ca> <4A7149C6.4030508@gmail.com>
+From: "Kalra Ashish-B00888" <ashish.kalra@freescale.com>
+Subject: RE: [PATCH][sata_fsl] Defer non-ncq commands when ncq commands active
+Date: Thu, 30 Jul 2009 18:53:17 +0530
+Message-ID: <16444A0F3094A24C83EAB7836A12C63B032E5A@zin33exm20.fsl.freescale.net>
+References: <Pine.WNT.4.64.0907292129310.4440@B00888-02.fsl.freescale.net>
+	<4A70A78D.7070601@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:48840 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750759AbZG3My4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Jul 2009 08:54:56 -0400
-In-Reply-To: <4A7149C6.4030508@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============3366563727900859889=="
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+Content-class: urn:content-classes:message
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
 To: Robert Hancock <hancockrwd@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+List-Id: linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> On 07/29/2009 05:39 PM, Mark Lord wrote:
->> Mark Lord wrote:
->>> hdparm-9.17 is now available from sourceforge.net.
->>>
->>> New in this release:
->>> - added wiper/ subdirectory with preliminary SSD-wiper (TRIM)
->> ..
+This is a multi-part message in MIME format.
+
+--===============3366563727900859889==
+Content-class: urn:content-classes:message
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01CA1119.5E8FEC8E"
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01CA1119.5E8FEC8E
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,=20
+
+>> Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
+>> ---
+>> drivers/ata/sata_fsl.c | 1 +
+>> 1 files changed, 1 insertions(+), 0 deletions(-)
 >>
->> Tejun: on a related note, my Sil-3132 PCIe SATA controller doesn't
->> seem to like DSM/TRIM commands passing through it.
+>> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+>> index 5a88b44..a33f130 100644
+>> --- a/drivers/ata/sata_fsl.c
+>> +++ b/drivers/ata/sata_fsl.c
+>> @@ -1262,6 +1262,7 @@ static struct scsi_host_template sata_fsl_sht =
+=3D {
+>> static struct ata_port_operations sata_fsl_ops =3D {
+>> .inherits =3D &sata_pmp_port_ops,
 >>
->> [ 3479.010001] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
->> frozen
->> [ 3479.010008] ata4.00: irq_stat 0x00020002, protocol mismatch
->> [ 3479.010019] ata4.00: cmd 06/01:01:00:00:00/00:00:00:00:00/e0 tag 0
->> dma 512 out
->> [ 3479.010021] res dc/33:00:00:00:00/00:00:00:00:dc/00 Emask 0x2 (HSM
->> violation)
->> [ 3479.010025] ata4.00: status: { Busy }
->> [ 3479.010029] ata4.00: error: { IDNF }
->> [ 3479.010041] ata4: hard resetting link
->> [ 3481.193102] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
->> [ 3481.197043] ata4.00: configured for UDMA/100
->> [ 3481.197082] ata4: EH complete
->>
->> I haven't taken time to dig further yet, but perhaps somebody here
->> might know if they've hardcoded all of the ATA opcodes in silicon or
->> something, and now get confused by DSM/TRIM ?
->>
->> I'll dig further into that later this summer.
-> 
-> Yeah, according to the datasheet "The SiI3124 will decode the 8-bit ATA
-> command at PRB offset 0x0a and automatically execute the default 
-> protocol for the command. In certain cases it might be desirable to 
-> specify a non-default protocol to be used, such as with vendor specific 
-> device commands." The DSM command seems to be DMA data-out and the chip 
-> likely doesn't know that command. I have to wonder why they decided to 
-> use that design instead of just making the driver indicate the protocol 
-> explicitly. In any case, it looks like the driver needs code to override 
-> the protocol setting for this command. (Maybe we should just set the 
-> protocol override for what we know the command is supposed to be in all 
-> cases?)
-..
+>> + .qc_defer =3D ata_std_qc_defer;
+>> .qc_prep =3D sata_fsl_qc_prep,
+>> .qc_issue =3D sata_fsl_qc_issue,
+>> .qc_fill_rtf =3D sata_fsl_qc_fill_rtf,
 
-If you can puzzle out how to do that, and post a quick(?) patch,
-it would certainly make testing SSDs easier for me here.
+> This doesn't look like it should change anything. sata_fsl_ops =
+inherits
+> from sata_pmp_port_ops, which inherits from sata_port_ops, which =
+already
+> sets qc_defer to ata_std_qc_defer.
 
-I would like to use the Sil3124 ExpressCard controller with my notebook
-for this stuff, rather than having to power up one of the noisy
-full-size systems under the table.  ;)
+Oh, yes. Actually this patch was for older kernels where there =
+inheritence was not there. As you mentioned, this patch is not required =
+now.
 
-On a related note.. anyone else out there have access to a TRIM-capable
-SSD yet? If you do, you probably are under NDA, but that shouldn't stop
-you from at least trying out the scripts in the hdparm package and
-letting me know how things go.. in a very non vendor/model specific fashion. :)
+Thanks,
 
-Thanks
+Ashish
+
+
+
+
+------_=_NextPart_001_01CA1119.5E8FEC8E
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<HTML dir=3Dltr><HEAD><TITLE>Re: [PATCH][sata_fsl] Defer non-ncq =
+commands when ncq commands active</TITLE>=0A=
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Dunicode">=0A=
+<META content=3D"MSHTML 6.00.2900.3562" name=3DGENERATOR></HEAD>=0A=
+<BODY>=0A=
+<DIV id=3DidOWAReplyText21890 dir=3Dltr>=0A=
+<DIV dir=3Dltr><FONT face=3DArial color=3D#000000 size=3D2>Hello, =
+</FONT></DIV></DIV>=0A=
+<DIV dir=3Dltr><BR><FONT size=3D2>&gt;&gt; Signed-off-by: Ashish Kalra =
+&lt;Ashish.Kalra@freescale.com&gt;<BR>&gt;&gt; ---<BR>&gt;&gt; =
+drivers/ata/sata_fsl.c | 1 +<BR>&gt;&gt; 1 files changed, 1 =
+insertions(+), 0 deletions(-)<BR>&gt;&gt;<BR>&gt;&gt; diff --git =
+a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c<BR>&gt;&gt; index =
+5a88b44..a33f130 100644<BR>&gt;&gt; --- =
+a/drivers/ata/sata_fsl.c<BR>&gt;&gt; +++ =
+b/drivers/ata/sata_fsl.c<BR>&gt;&gt; @@ -1262,6 +1262,7 @@ static struct =
+scsi_host_template sata_fsl_sht =3D {<BR>&gt;&gt; static struct =
+ata_port_operations sata_fsl_ops =3D {<BR>&gt;&gt; .inherits =3D =
+&amp;sata_pmp_port_ops,<BR>&gt;&gt;<BR>&gt;&gt; + .qc_defer =3D =
+ata_std_qc_defer;<BR>&gt;&gt; .qc_prep =3D sata_fsl_qc_prep,<BR>&gt;&gt; =
+.qc_issue =3D sata_fsl_qc_issue,<BR>&gt;&gt; .qc_fill_rtf =3D =
+sata_fsl_qc_fill_rtf,<BR><BR>&gt; This doesn't look like it should =
+change anything. sata_fsl_ops inherits<BR>&gt; from sata_pmp_port_ops, =
+which inherits from sata_port_ops, which already<BR>&gt; sets qc_defer =
+to ata_std_qc_defer.</FONT></DIV>=0A=
+<P><FONT size=3D2>Oh, yes. Actually this patch was for older kernels =
+where there inheritence was&nbsp;not there. As you mentioned, this patch =
+is not required now.</FONT></P>=0A=
+<P><FONT size=3D2>Thanks,</FONT></P>=0A=
+<P><FONT size=3D2>Ashish</FONT></P>=0A=
+<DIV dir=3Dltr><FONT size=3D2><BR></FONT></DIV></BODY></HTML>
+------_=_NextPart_001_01CA1119.5E8FEC8E--
+
+--===============3366563727900859889==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Linuxppc-dev mailing list
+Linuxppc-dev@lists.ozlabs.org
+https://lists.ozlabs.org/listinfo/linuxppc-dev
+--===============3366563727900859889==--
