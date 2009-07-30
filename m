@@ -1,60 +1,148 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH #upstream] sata_sil24: always set protocol override for
- non-ATAPI data commands
-Date: Thu, 30 Jul 2009 16:18:00 -0400
-Message-ID: <4A71FFF8.30307@rtr.ca>
-References: <4A71FE71.7040002@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Drive tester
+Date: Thu, 30 Jul 2009 16:23:41 -0400
+Message-ID: <87f94c370907301323v476d65a6oeed1d8725731ae8@mail.gmail.com>
+References: <9b0a5b990907162309j2ff4f872v47b18be74c7eeab9@mail.gmail.com>
+	 <23E65EE4544D484CBE73B588E192C6D612D3108FF0@sc-vexch3.marvell.com>
+	 <87f94c370907231431p470874bax1155b88895cd97d5@mail.gmail.com>
+	 <23E65EE4544D484CBE73B588E192C6D612D301CCCD@sc-vexch3.marvell.com>
+	 <87f94c370907231531r291ccadaude79a848a4a09286@mail.gmail.com>
+	 <4A6947EF.1020103@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:35058 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751611AbZG3USD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Jul 2009 16:18:03 -0400
-In-Reply-To: <4A71FE71.7040002@gmail.com>
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:34480 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424AbZG3UXl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jul 2009 16:23:41 -0400
+Received: by yxe26 with SMTP id 26so2881514yxe.4
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jul 2009 13:23:41 -0700 (PDT)
+In-Reply-To: <4A6947EF.1020103@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Robert Hancock <hancockrwd@gmail.com>
-Cc: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
+Cc: Bill Weiler <weilerb@marvell.com>, Kernelnewbies <kernelnewbies@nl.linux.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Robert Hancock wrote:
-> The sil24 hardware has a built-in list of commands and associated protocols
-> that gets used by default to decide how to handle a given command. However,
-> if the command is not known to the controller then it presumably assumes it to
-> be a non-data command which then causes protocol mismatch errors if the device
-> ends up requesting data transfer. The new DATA SET MANAGEMENT - Trim command
-> causes this issue since it's a DMA data-out command.
-> 
-> Since we should always know best what protocol the command should be using,
-> let's just set the override flag to inform the controller what protocol to use
-> for all non-ATAPI commands with data transfer.
-> 
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
-> Tested-by: Mark Lord <liml@rtr.ca>
-> 
-> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-> index 77aa8d7..e6946fc 100644
-> --- a/drivers/ata/sata_sil24.c
-> +++ b/drivers/ata/sata_sil24.c
-> @@ -846,6 +846,17 @@ static void sil24_qc_prep(struct ata_queued_cmd *qc)
->  	if (!ata_is_atapi(qc->tf.protocol)) {
->  		prb = &cb->ata.prb;
->  		sge = cb->ata.sge;
-> +		if (ata_is_data(qc->tf.protocol)) {
-> +			u16 prot = 0;
-> +			ctrl = PRB_CTRL_PROTOCOL;
-> +			if (ata_is_ncq(qc->tf.protocol))
-> +				prot |= PRB_PROT_NCQ;
-> +			if (qc->tf.flags & ATA_TFLAG_WRITE)
-> +				prot |= PRB_PROT_WRITE;
-> +			else
-> +				prot |= PRB_PROT_READ;
-> +			prb->prot = cpu_to_le16(prot);
-> +		}
->  	} else {
->  		prb = &cb->atapi.prb;
->  		sge = cb->atapi.sge;
+On Fri, Jul 24, 2009 at 1:34 AM, Robert Hancock<hancockrwd@gmail.com> w=
+rote:
+> On 07/23/2009 04:31 PM, Greg Freemyer wrote:
+>>
+>> cc'ing: linux-ide@vger.kernel.org
+>>
+>> maybe they can help
+>>
+>> On Thu, Jul 23, 2009 at 6:12 PM, Bill Weiler<weilerb@marvell.com> =A0=
+wrote:
+>>>
+>>> ________________________________________
+>>> From: Greg Freemyer [greg.freemyer@gmail.com]
+>>> Sent: Thursday, July 23, 2009 2:31 PM
+>>> To: Bill Weiler
+>>> Cc: Kernelnewbies
+>>> Subject: Re: Drive tester
+>>>
+>>> On Wed, Jul 22, 2009 at 7:55 PM, Bill Weiler<weilerb@marvell.com> =A0=
+wrote:
+>>>>
+>>>> I wanted to make an Application that could send scripted SCSI and =
+SATA
+>>>> commands to my drives. I have found my Fedora Linux to be too comp=
+lex to
+>>>> control the drives in this way. I have looked at minimal Linux but=
+ I
+>>>> think
+>>>> this would have the same problem. Is there an easier Open Source O=
+S, or
+>>>> an
+>>>> embedded PC Linux that would be easier to modify?
+>>>
+>>> Bill,
+>>>
+>>> For sata drives, have you looked at the SG_IO interface?
+>>>
+>>> That is how hdparm interfaces with the kernel. =A0I know it sends a=
+ lot
+>>> of low level ATA commands to the drive from user space. =A0I think =
+most
+>>> use the SG_IO interface. =A0How much simpler can it get?
+>>>
+>>> strace hdparm may give you an education as to how simple it is.
+>
+> The best way to issue arbitrary ATA commands is likely to issue them =
+as ATA
+> pass-through SCSI commands using SG_IO, yes.
+>
+>>>
+>>> fyi: I believe the kernel looks for dangerous ata commands and bloc=
+ks
+>>> them. =A0But I think those are the types of commands that cause dat=
+a
+>>> loss. =A0Not sure what the criteria is.
+>
+> If you're running as unprivileged user I believe we block things like=
+ could
+> do things like brick the drive such as uploading firmware, etc. Howev=
+er, if
+> you have read-write access to the device node you can still read and =
+write
+> sectors anywhere on the disk. A few commands are blocked even for roo=
+t
+> users, like SET FEATURES - XFER MODE as it will screw up the mode
+> configuration, but it's mostly fair game.
+>
+>>>
+>>> I have studied hdparm and the SG_IO interface and delved into the s=
+csi
+>>> drivers and ata drivers.
+>>>
+>>> For example, I wanted to script a single NCQ and a single NCQ write=
+=2E A
+>>> normal read(fd,buf,4096) does 1 NCQ read but a write(fd,buf,4096) d=
+oes
+>>> dozens of NCQ reads before doing the 1 NCQ write. How do I get rid =
+of these
+>>> reads?
+>
+> Try opening the device node with O_DIRECT. That will prevent pagecach=
+e
+> effects from changing the IO pattern. However, you can't get less tha=
+n
+> page-size (4K granularity) on requests, for that you'll need to issue=
+ SCSI
+> or ATA commands directly.
+>
+>>>
+>>> Also, I need to do soft and hard resets and these are not exposed.
+>
+> Indeed, there's no way currently to trigger these other than as part =
+of
+> error handling (i.e. command errors, hotplug operations, etc.) There'=
+s
+> likely no reason it couldn't be added, but obviously nobody's needed =
+it
+> enough to bother so far..
+>
 
+Bill,
 
-Peachy!
+At this point are you only having issues with hard and soft resets?
+
+If so, maybe Mark Lord could be talked into extending hdparm and the
+kernel to support those.  Then you could leverage his work in your own
+user space code.
+
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+Preservation and Forensic processing of Exchange Repositories White Pap=
+er -
+<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html=
+>
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
