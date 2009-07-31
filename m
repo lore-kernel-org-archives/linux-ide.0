@@ -1,39 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
-Date: Fri, 31 Jul 2009 13:16:32 GMT
-Message-ID: <200907311316.n6VDGWGH032458@demeter.kernel.org>
-References: <bug-13882-11633@http.bugzilla.kernel.org/>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
+Date: Fri, 31 Jul 2009 16:08:59 +0200
+Message-ID: <200907311609.01387.elendil@planet.nl>
+References: <200906220843.14337.elendil@planet.nl> <200906221604.17915.elendil@planet.nl> <20090623.034316.149816033.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:50178 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551AbZGaNQc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jul 2009 09:16:32 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6VDGWKJ032459
-	for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2009 13:16:32 GMT
-In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:57223 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751540AbZGaOJD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jul 2009 10:09:03 -0400
+In-Reply-To: <20090623.034316.149816033.davem@davemloft.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: stable@kernel.org
+Cc: David Miller <davem@davemloft.net>, bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13882
+On Tuesday 23 June 2009, David Miller wrote:
+> From: Frans Pop <elendil@planet.nl> Date: Mon, 22 Jun 2009:
+> > On Monday 22 June 2009, you wrote:
+> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >> Subject: [PATCH] ide: fix handling of unexpected IRQs vs
+> >> request_irq()
+> >>
+> > Thanks Bart. This does solve the "nobody cared" problem.
+> > Tested-by: Frans Pop <elendil@planet.nl>
+>
+> I've applied this patch to my tree, thanks everyone!
 
+Please consider the following two patches for the next stable update:
 
+commit ffc36c7610731115c77700dcc53901920361c235
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ide: fix handling of unexpected IRQs vs request_irq()
 
+commit 346c17a6cf60375323adfaa4b8a9d841049f890e
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ide: relax DMA info validity checking
 
+The current 2.6.30 Debian kernel (based on .30.3) is still failing on my
+Sparc Ultra 10 because those patches are missing.
 
---- Comment #4 from checkit <python.dev.9@gmail.com>  2009-07-31 13:16:31 ---
-Created an attachment (id=22551)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=22551)
-dmesg 2.6.24.6
-
-Here is the dmesg output using 2.6.24.6.
-
-As you can see it detects the 40-wire cable properly.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+TIA,
+FJP
