@@ -1,37 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
-Date: Thu, 30 Jul 2009 22:53:44 GMT
-Message-ID: <200907302253.n6UMriee012375@demeter.kernel.org>
-References: <bug-13882-11633@http.bugzilla.kernel.org/>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH] Implement SATA AHCI FIS-based switching support
+Date: Fri, 31 Jul 2009 09:04:28 +0800
+Message-ID: <C8E4BD7D001E44499280E0884BD9DB30DEE2CB@sshaexmb1.amd.com>
+References: <1248947988.3341.5.camel@zm-desktop> <4A72072B.2090805@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53947 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbZG3Wxn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jul 2009 18:53:43 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6UMriXL012376
-	for <linux-ide@vger.kernel.org>; Thu, 30 Jul 2009 22:53:44 GMT
-In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
+Received: from sg2ehsobe002.messaging.microsoft.com ([207.46.51.76]:37996 "EHLO
+	SG2EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750870AbZGaBEp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Jul 2009 21:04:45 -0400
+Content-Class: urn:content-classes:message
+In-Reply-To: <4A72072B.2090805@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13882
+Hi Jeff, 
+
+> -----Original Message-----
+> From: Jeff Garzik [mailto:jgarzik@pobox.com] 
+> 
+> Shane Huang wrote:
+> > Implement SATA AHCI FIS-based switching support.
+> > 
+> > Signed-off-by: Shane Huang <shane.huang@amd.com>
+> 
+> Nice!  Glad someone worked on this.  Will review and push 
+> into upstream soonish...
+
+
+OK, please provide us your suggestions after your review.
+
+Many special thanks to Tejun, who provided me a lot of nice
+suggestions regarding the feature...
 
 
 
+Thanks
+Shane
 
-
---- Comment #1 from checkit <python.dev.9@gmail.com>  2009-07-30 22:53:43 ---
-Created an attachment (id=22547)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=22547)
-dmesg output
-
-Attaching dmesg output.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
