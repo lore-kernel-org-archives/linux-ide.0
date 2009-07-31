@@ -1,37 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
-Date: Fri, 31 Jul 2009 18:40:42 GMT
-Message-ID: <200907311840.n6VIegv5022390@demeter.kernel.org>
-References: <bug-13882-11633@http.bugzilla.kernel.org/>
+From: Allan Wind <allan_wind@lifeintegrity.com>
+Subject: Re: LSISAS1068E + WDC WD2002FYPS: I/O error & Sense Key
+Date: Fri, 31 Jul 2009 14:40:23 -0400
+Message-ID: <20090731184023.GT3211@lifeintegrity.com>
+References: <20090727060322.GB27002@lifeintegrity.com> <4A70A64A.2070605@gmail.com> <20090729200714.GA20706@lifeintegrity.com> <4A70D57B.6030301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37584 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbZGaSkm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jul 2009 14:40:42 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6VIegHY022391
-	for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2009 18:40:42 GMT
-In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
+Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:60059
+	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbZGaSkY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jul 2009 14:40:24 -0400
+Content-Disposition: inline
+In-Reply-To: <4A70D57B.6030301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13882
+On 2009-07-29T17:04:27, Robert Hancock wrote:
+> On 07/29/2009 02:07 PM, Allan Wind wrote:
+>> On 2009-07-29T13:43:06, Robert Hancock wrote:
+>>> On 07/27/2009 12:03 AM, Allan Wind wrote:
+>>>> I have a pair of Western Digital RE4-GP (WD2002FYPS) in RAID1 configuration
+>>>> using Linux 2.6.30.3 and seeing the following:
+>>>>
+>>>> [ 4907.485324] end_request: I/O error, dev sdb, sector 3907028974
+>>> Are there no error messages before this point? Can you post the full
+>>> dmesg output from bootup?
+>>
+>> Thanks for looking into this, Robert.  I do not see any relevant error
+>> message before this point, but made the entire 82k dmesg available here:
+>> http://lifeintegrity.com/~allan/dmesg
+>
+> It seems like some request failed but apparently that mptsas driver  
+> isn't dumping out what happened for some reason. There are some of those  
+> "recovered error" indications but they're not near the I/O error report,  
+> so I'm not sure what's going on. CCing linux-scsi.
+
+Is there any data I can help with to advance this issue?
 
 
-checkit <python.dev.9@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-  Attachment #22547|dmesg.txt                   |dmesg 2.6.30.03.txt
-           filename|                            |
-
-
-
-
+/Allan
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Allan Wind
+Life Integrity, LLC
+<http://lifeintegrity.com>
+
