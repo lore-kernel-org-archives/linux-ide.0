@@ -1,41 +1,35 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13886] Suspend to disk no longer works in 2.6.30.2 with an EIDE
- drive
-Date: Sat, 1 Aug 2009 15:13:33 GMT
-Message-ID: <200908011513.n71FDXAl032245@demeter.kernel.org>
-References: <bug-13886-11633@http.bugzilla.kernel.org/>
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
+Subject: Re: Bug report (suspend to disk is broken in 2.6.29+ with EIDE drive)
+Date: Sat, 01 Aug 2009 18:32:36 +0200
+Message-ID: <4A746E24.1050401@gmail.com>
+References: <937390.49428.qm@web111003.mail.gq1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41514 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbZHAPNd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2009 11:13:33 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n71FDXs3032246
-	for <linux-ide@vger.kernel.org>; Sat, 1 Aug 2009 15:13:33 GMT
-In-Reply-To: <bug-13886-11633@http.bugzilla.kernel.org/>
+Received: from ey-out-2122.google.com ([74.125.78.24]:8346 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751711AbZHAQcr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2009 12:32:47 -0400
+In-Reply-To: <937390.49428.qm@web111003.mail.gq1.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrew Watts <akwatts@ymail.com>
+Cc: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13886
+Andrew Watts wrote:
+> Description: s2disk worked in 2.6.28 and no longer works in 2.6.30.2
+> (s2disk here means: echo disk > /sys/power/state); screen blanks but
+> system hangs.
+> 
+> Bisection reveals that the problem commit has hash:
+> 295f00042aaf6b553b5f37348f89bab463d4a469.
+> 
+> ~Andy
+> 
+> PS I wrote some months ago about a thermal problem on my HW with
+> 2.6.28 (needed noapic, nolapic to have it not run hot @ idle).
+> This problem has disappeared in 2.6.30.2. Any devs have an idea what
+> commit fixed this?
 
-
-
-
-
---- Comment #4 from akwatts@ymail.com  2009-08-01 15:13:32 ---
-The fix mentioned above (commit 2ea5521022ac8f4f528dcbae02668e02a3501a5a) does
-not address the problem I am encountering (which is present in 2.6.30.2).
-
-There is no e100 hardware present here.
-
-I am more than willing to help with the debugging process from this end.
-
-Might we test by reverting his commit on 2.6.30.2?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Adding CCs
