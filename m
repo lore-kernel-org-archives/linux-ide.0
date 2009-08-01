@@ -1,40 +1,37 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Bug report (suspend to disk is broken in 2.6.29+ with EIDE drive)
-Date: Sat, 01 Aug 2009 12:36:23 -0600
-Message-ID: <4A748B27.3000902@gmail.com>
-References: <937390.49428.qm@web111003.mail.gq1.yahoo.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
+Date: Sat, 1 Aug 2009 18:40:25 GMT
+Message-ID: <200908011840.n71IePl6000617@demeter.kernel.org>
+References: <bug-13882-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f201.google.com ([209.85.216.201]:35558 "EHLO
-	mail-px0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbZHASgZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2009 14:36:25 -0400
-In-Reply-To: <937390.49428.qm@web111003.mail.gq1.yahoo.com>
+Received: from demeter.kernel.org ([140.211.167.39]:44914 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864AbZHASkZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2009 14:40:25 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n71IePIo000618
+	for <linux-ide@vger.kernel.org>; Sat, 1 Aug 2009 18:40:25 GMT
+In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Watts <akwatts@ymail.com>
-Cc: linux-kernel@vger.kernel.org, bzolnier@gmail.com, ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On 07/31/2009 12:22 AM, Andrew Watts wrote:
-> Description: s2disk worked in 2.6.28 and no longer works in 2.6.30.2
-> (s2disk here means: echo disk>  /sys/power/state); screen blanks but
-> system hangs.
->
-> Bisection reveals that the problem commit has hash:
-> 295f00042aaf6b553b5f37348f89bab463d4a469.
+http://bugzilla.kernel.org/show_bug.cgi?id=13882
 
-That would be:
 
-author	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-	Fri, 2 Jan 2009 15:12:48 +0000 (16:12 +0100)
-committer	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-	Fri, 2 Jan 2009 15:12:48 +0000 (16:12 +0100)
-commit	295f00042aaf6b553b5f37348f89bab463d4a469
-tree	cbd56955f148f0e175d5b6b779c2888bf2645382
-parent	ebdab07dad3d3a008e519b0a028e1e1ad5ecaef0
 
-ide: don't execute the next queued command from the hard-IRQ context (v2)
 
-CCing Bart and linux-ide.
+
+--- Comment #14 from Robert Hancock <hancockrwd@gmail.com>  2009-08-01 18:40:24 ---
+Alan, do you have access to any documentation that indicates what those bits
+are supposed to actually mean?
+
+For the original reporter, you can try just deleting those lines from
+drivers/ata/pata_via.c and see if the cable detection then reports 40-wire..
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
