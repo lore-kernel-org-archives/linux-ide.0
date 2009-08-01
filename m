@@ -1,46 +1,86 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: cmd64x: irq 14: nobody cared - system is dreadfully slow
-Date: Fri, 31 Jul 2009 22:46:17 -0700 (PDT)
-Message-ID: <20090731.224617.228354615.davem@davemloft.net>
-References: <200906221604.17915.elendil@planet.nl>
-	<20090623.034316.149816033.davem@davemloft.net>
-	<200907311609.01387.elendil@planet.nl>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 9/10] drivers/ata: introduce missing kfree
+Date: Sat, 1 Aug 2009 10:55:24 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0908011055050.23408@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <200907311609.01387.elendil@planet.nl>
-Sender: sparclinux-owner@vger.kernel.org
-To: elendil@planet.nl
-Cc: stable@kernel.org, bzolnier@gmail.com, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mgw1.diku.dk ([130.225.96.91]:50996 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752681AbZHAI56 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Aug 2009 04:57:58 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Frans Pop <elendil@planet.nl>
-Date: Fri, 31 Jul 2009 16:08:59 +0200
+From: Julia Lawall <julia@diku.dk>
 
-> On Tuesday 23 June 2009, David Miller wrote:
->> From: Frans Pop <elendil@planet.nl> Date: Mon, 22 Jun 2009:
->> > On Monday 22 June 2009, you wrote:
->> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> >> Subject: [PATCH] ide: fix handling of unexpected IRQs vs
->> >> request_irq()
->> >>
->> > Thanks Bart. This does solve the "nobody cared" problem.
->> > Tested-by: Frans Pop <elendil@planet.nl>
->>
->> I've applied this patch to my tree, thanks everyone!
-> 
-> Please consider the following two patches for the next stable update:
-> 
-> commit ffc36c7610731115c77700dcc53901920361c235
-> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ide: fix handling of unexpected IRQs vs request_irq()
-> 
-> commit 346c17a6cf60375323adfaa4b8a9d841049f890e
-> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ide: relax DMA info validity checking
-> 
-> The current 2.6.30 Debian kernel (based on .30.3) is still failing on my
-> Sparc Ultra 10 because those patches are missing.
+Error handling code following a kzalloc should free the allocated data.
 
-Agreed, these should be applied.
+The semantic match that finds the problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@r exists@
+local idexpression x;
+statement S;
+expression E;
+identifier f,f1,l;
+position p1,p2;
+expression *ptr != NULL;
+@@
+
+x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
+...
+if (x == NULL) S
+<... when != x
+     when != if (...) { <+...x...+> }
+(
+x->f1 = E
+|
+ (x->f1 == NULL || ...)
+|
+ f(...,x->f1,...)
+)
+...>
+(
+ return \(0\|<+...x...+>\|ptr\);
+|
+ return@p2 ...;
+)
+
+@script:python@
+p1 << r.p1;
+p2 << r.p2;
+@@
+
+print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+---
+ drivers/ata/pata_at91.c             |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 5702aff..46fb883 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -261,7 +261,8 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
+ 
+ 	if (IS_ERR(info->mck)) {
+ 		dev_err(dev, "failed to get access to mck clock\n");
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto err_clk_get;
+ 	}
+ 
+ 	info->cs    = board->chipselect;
+@@ -308,6 +309,7 @@ err_alt_ioremap:
+ 
+ err_ide_ioremap:
+ 	clk_put(info->mck);
++err_clk_get:
+ 	kfree(info);
+ 
+ 	return ret;
