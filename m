@@ -1,86 +1,52 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 9/10] drivers/ata: introduce missing kfree
-Date: Sat, 1 Aug 2009 10:55:24 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0908011055050.23408@ask.diku.dk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13886] New: Suspend to disk no longer works in 2.6.30.2 with an
+ EIDE drive
+Date: Sat, 1 Aug 2009 10:12:51 GMT
+Message-ID: <bug-13886-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:50996 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752681AbZHAI56 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Aug 2009 04:57:58 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:49841 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbZHAKMv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2009 06:12:51 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n71ACptG013053
+	for <linux-ide@vger.kernel.org>; Sat, 1 Aug 2009 10:12:51 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+http://bugzilla.kernel.org/show_bug.cgi?id=13886
 
-Error handling code following a kzalloc should free the allocated data.
+           Summary: Suspend to disk no longer works in 2.6.30.2 with an
+                    EIDE drive
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30.2
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: akwatts@ymail.com
+        Regression: No
 
-The semantic match that finds the problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
 
-// <smpl>
-@r exists@
-local idexpression x;
-statement S;
-expression E;
-identifier f,f1,l;
-position p1,p2;
-expression *ptr != NULL;
-@@
+s2disk worked in 2.6.28 and no longer works in 2.6.30.2
 
-x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-...
-if (x == NULL) S
-<... when != x
-     when != if (...) { <+...x...+> }
-(
-x->f1 = E
-|
- (x->f1 == NULL || ...)
-|
- f(...,x->f1,...)
-)
-...>
-(
- return \(0\|<+...x...+>\|ptr\);
-|
- return@p2 ...;
-)
+(s2disk here means: echo disk > /sys/power/state).
 
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
+Screen blanks and system hangs with no writes to disk. Hard restart
+required afterwards.
 
-print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-// </smpl>
+Bisection identifies problem commit has hash 
+295f00042aaf6b553b5f37348f89bab463d4a469.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
----
- drivers/ata/pata_at91.c             |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 5702aff..46fb883 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -261,7 +261,8 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 
- 	if (IS_ERR(info->mck)) {
- 		dev_err(dev, "failed to get access to mck clock\n");
--		return -ENODEV;
-+		ret = -ENODEV;
-+		goto err_clk_get;
- 	}
- 
- 	info->cs    = board->chipselect;
-@@ -308,6 +309,7 @@ err_alt_ioremap:
- 
- err_ide_ioremap:
- 	clk_put(info->mck);
-+err_clk_get:
- 	kfree(info);
- 
- 	return ret;
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
