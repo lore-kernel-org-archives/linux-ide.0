@@ -1,250 +1,245 @@
-From: "Benjamin S." <sbenni@gmx.de>
-Subject: Re: ahci sometimes fails to suspend controller
-Date: Sun, 2 Aug 2009 19:08:38 +0200
-Message-ID: <20090802190838.4a8bd3b8@pluto-lenny.milky.way>
-References: <20090719220423.54e8c75d@uranus>
-	<4A683755.60909@kernel.org>
-	<20090727140612.27d176ca@pluto-lenny.milky.way>
-	<4A6E6774.6030909@kernel.org>
-	<C8E4BD7D001E44499280E0884BD9DB30D7CFD4@sshaexmb1.amd.com>
-	<20090728061033.56394c6e@pluto-lenny.milky.way>
-	<C8E4BD7D001E44499280E0884BD9DB30D7D051@sshaexmb1.amd.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Extremely slow IO with a PCMCIA CompactFlash adapter
+Date: Sun, 2 Aug 2009 20:27:18 +0200
+Message-ID: <200908022027.18937.bzolnier@gmail.com>
+References: <h51hro$p6j$1@ger.gmane.org> <200908021538.45180.bzolnier@gmail.com> <cdb43e8a0908020830r3ef054cbs30ee6669115e8335@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:47970 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753129AbZHBRFw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Aug 2009 13:05:52 -0400
-In-Reply-To: <C8E4BD7D001E44499280E0884BD9DB30D7D051@sshaexmb1.amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753329AbZHBS2U@vger.kernel.org>
+In-Reply-To: <cdb43e8a0908020830r3ef054cbs30ee6669115e8335@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jack Byer <ojbyer@usa.net>
+Cc: linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andreas Mohr <andi@lisas.de>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-
-Hello Shane,
-
-On Tue, 28 Jul 2009 13:04:53 +0800
-"Huang, Shane" <Shane.Huang@amd.com> wrote:
+On Sunday 02 August 2009 17:30:56 Jack Byer wrote:
+> > Get 2.6.31-rc5 kernel.
+> >
+> > Set:
+> >
+> >        CONFIG_IDE=m
+> >        CONFIG_BLK_DEV_IDECS=m
+> >
+> > in the kernel config.
+> >
+> > Build, install, reboot.
+> >
+> > Load ide-cs module.
+> >
+> > Enjoy the speed increase using /dev/hda.
+> >
+> > You may try "hdparm -c1 /dev/hda" for an extra enjoyment.
 > 
-> > -----Original Message-----
-> > From: Benjamin S. [mailto:sbenni@gmx.de] 
-> > 
-> > On Tue, 28 Jul 2009 11:06:01 +0800
-> > "Huang, Shane" <Shane.Huang@amd.com> wrote:
-> > 
-> > > Can you send me the whole output of lspci?
-> > 
-> > Sure.
+> I still get the IRQ error, but reads are 73 kB/s without irqpoll, 580
+> kB/s with irqpoll.  When I try to use hdparm the mount command hangs
+> forever.
 > 
-> OK, I see. Your revision do need the SATA MSI quirk.
+> Is there any harm with using irqpoll all the time?
 
-Tejun wanted me to boot with pci=nomsi about 1.5 weeks ago. The system
-was running till yesterday with many suspends and resumes in between. 
-Yesterday the system showed the first error:
+Depends on the system and usage, in this particular case it should
+probably be fine but it would be better to fix the underlying problem
+or apply the workaround automatically..
 
+(hdparm fails since it turns out that 32-bit I/O cannot be used)
 
-[260353.116321] rtc rtc0: legacy class resume
-[260353.116362] usb usb1: type resume
-[260353.132043] r8169: eth0: link up
-[260353.196041] usb usb2: type resume
-[260353.220057] ata2: SATA link down (SStatus 0 SControl 300)
-[260353.220123] ata4: SATA link down (SStatus 0 SControl 300)
-[260353.220183] ata1: SATA link down (SStatus 0 SControl 300)
-[260353.248034] sd 2:0:0:0: legacy resume
-[260353.248038] sd 2:0:0:0: [sda] Starting disk
-[260358.264018] ata3: link is slow to respond, please be patient (ready=0)
-[260360.056034] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[260360.064939] ata3.00: configured for UDMA/133
-[260360.083650] usb 1-3: type resume
-[260360.086304] ide-cdrom 0.1: legacy resume
-[260360.089322] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-[260360.090134] hdb: UDMA/33 mode selected
-...............
-[260360.247321] PM: Finishing wakeup.
-[260360.247323] Restarting tasks ... <3>ata3.00: exception Emask 0x50 SAct 0xff SErr 0x400800 action 0x6 frozen
-[260360.267694] ata3.00: irq_stat 0x08000000, interface fatal error
-[260360.267734] ata3: SError: { HostInt Handshk }
-[260360.267776] ata3.00: cmd 61/08:00:03:b0:6c/00:00:03:00:00/40 tag 0 ncq 4096 out
-[260360.267777]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.267859] ata3.00: status: { DRDY }
-[260360.267899] ata3.00: cmd 61/08:08:4b:27:6c/00:00:03:00:00/40 tag 1 ncq 4096 out
-[260360.267901]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.267982] ata3.00: status: { DRDY }
-[260360.268054] ata3.00: cmd 61/10:10:2b:28:6c/00:00:03:00:00/40 tag 2 ncq 8192 out
-[260360.268055]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.268137] ata3.00: status: { DRDY }
-[260360.268176] ata3.00: cmd 61/08:18:83:29:6c/00:00:03:00:00/40 tag 3 ncq 4096 out
-[260360.268178]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.268259] ata3.00: status: { DRDY }
-[260360.268299] ata3.00: cmd 61/08:20:bb:39:6c/00:00:03:00:00/40 tag 4 ncq 4096 out
-[260360.268301]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.268430] ata3.00: status: { DRDY }
-[260360.268471] ata3.00: cmd 61/08:28:eb:3a:6c/00:00:03:00:00/40 tag 5 ncq 4096 out
-[260360.268472]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.268556] ata3.00: status: { DRDY }
-[260360.268597] ata3.00: cmd 61/10:30:b3:ae:6c/00:00:03:00:00/40 tag 6 ncq 8192 out
-[260360.268598]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.268678] ata3.00: status: { DRDY }
-[260360.268718] ata3.00: cmd 61/08:38:d3:af:6c/00:00:03:00:00/40 tag 7 ncq 4096 out
-[260360.268720]          res 40/00:3c:d3:af:6c/00:00:03:00:00/40 Emask 0x50 (ATA bus error)
-[260360.268800] ata3.00: status: { DRDY }
-[260360.268839] ata3: hard resetting link
-[260360.356302] done.
-[260360.584137] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[260360.587431] ata3.00: configured for UDMA/133
-[260360.587498] ata3: EH complete
+> ACPI: PCI Interrupt Link [LNKG] enabled at IRQ 3
+> PCI: setting IRQ 3 as level-triggered
+> serial 0000:00:08.0: PCI INT A -> Link[LNKG] -> GSI 3 (level, low) ->
+> IRQ 3
+> serial 0000:00:08.0: PCI INT A disabled
 
+There is an unsupported softmodem on the same IRQ that cardbus/pcmcia
+controller and it is probably the source of unexpected IRQs..
 
+> pata_ali 0000:00:10.0: can't derive routing for PCI INT A
+> scsi0 : pata_ali
+> scsi1 : pata_ali
+> ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x8080 irq 14
+> ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x8088 irq 15
+> yenta_cardbus 0000:00:0a.0: CardBus bridge found [103c:0024]
+> yenta_cardbus 0000:00:0a.0: O2: res at 0x94/0xD4: 00/ea
+> yenta_cardbus 0000:00:0a.0: O2: enabling read prefetch/write burst
+> ACPI: Lid Switch [LID]
+> ata1.00: ATA-6: ST9100823A, 3.00, max UDMA/100
+> ata1.00: 195371568 sectors, multi 16: LBA
+> ata1.00: configured for UDMA/100
+> scsi 0:0:0:0: Direct-Access     ATA      ST9100823A       3.00 PQ: 0
+> ANSI: 5
+> ata2.00: ATAPI: DW-224E, A.0H, max MWDMA2
+> ata2.00: WARNING: ATAPI DMA disabled for reliablity issues.  It can be
+> enabled
+> ata2.00: WARNING: via pata_ali.atapi_dma modparam or corresponding
+> sysfs node.
+> ata2.00: configured for MWDMA2
 
+BTW configured for MWDMA2 but DMA won't be used..
 
+per comment from pata_ali.c:
 
+static int ali_check_atapi_dma(struct ata_queued_cmd *qc)
+{
+        if (!ali_atapi_dma) {
+                /* FIXME: pata_ali can't do ATAPI DMA reliably but the
+                 * IDE alim15x3 driver can.  I tried lots of things
+                 * but couldn't find what the actual difference was.
+                 * If you got an idea, please write it to
+                 * linux-ide@vger.kernel.org and cc htejun@gmail.com.
+                 *
+                 * Disable ATAPI DMA for now.
+                 */
+                return -EOPNOTSUPP;
+        }
 
-Despite this error the system resumed and was able to suspend and resume 
-another three times. Then the system showed the same errors I have seen 
-without pci=nomsi:
+If you want to use DMA you need to use alim15x3..
 
+> Uniform Multi-Platform E-IDE driver
+> Probing IDE interface ide0...
+> hda: IBM-DMDM-10340, CFA DISK drive
+> hdb: IBM-DMDM-10340, CFA DISK drive
+> ide-probe: ignoring undecoded slave
+> irq 3: nobody cared (try booting with the "irqpoll" option)
+> Pid: 1144, comm: modprobe Not tainted 2.6.31-rc5 #3
+> Call Trace:
+>  [<c104e424>] ? __report_bad_irq+0x24/0x90
+>  [<c104e5e7>] ? note_interrupt+0x157/0x1a0
+>  [<c104edfb>] ? handle_level_irq+0xbb/0x100
+>  [<c1004ec7>] ? handle_irq+0x17/0x20
+>  [<c100490a>] ? do_IRQ+0x3a/0xb0
+>  [<c1003329>] ? common_interrupt+0x29/0x30
+>  [<c10284e5>] ? __do_softirq+0x35/0xf0
+>  [<c104d51d>] ? handle_IRQ_event+0x2d/0xc0
+>  [<c10285cd>] ? do_softirq+0x2d/0x40
+>  [<c102877d>] ? irq_exit+0x5d/0x80
+>  [<c1004913>] ? do_IRQ+0x43/0xb0
+>  [<c1003329>] ? common_interrupt+0x29/0x30
+>  [<c104dc3a>] ? __setup_irq+0x17a/0x2c0
+>  [<f8450df0>] ? ide_intr+0x0/0x250 [ide_core]
+>  [<c104de41>] ? request_threaded_irq+0xc1/0x100
+>  [<f84547da>] ? ide_host_register+0x3ea/0x650 [ide_core]
+>  [<f8454a6f>] ? ide_host_add+0x2f/0x70 [ide_core]
+>  [<f846a157>] ? idecs_register+0xb7/0x160 [ide_cs]
+>  [<f846a3a9>] ? ide_probe+0x1a9/0x2d0 [ide_cs]
+>  [<f834ba26>] ? pcmcia_device_probe+0xf6/0x1b0 [pcmcia]
+>  [<c10ca0f1>] ? sysfs_do_create_link+0xa1/0x140
+>  [<c1155cd4>] ? driver_probe_device+0x74/0x180
+>  [<c1155e61>] ? __driver_attach+0x81/0x904a0 [pcmcia]
+>  [<f834b7b0>] ? pcmcia_device_remove+0x0/0x140 [pcmcia]
+>  [<c1155624>] ? bus_for_each_dev+0x54/0x80
+>  [<f834b7b0>] ? pcmcia_device_remove+0x0/0x140 [pcmcia]
+>  [<c1155b76>] ? driver_attach+0x16/0x20
+>  [<c1155de0>] ? __driver_attach+0x0/0x90
+>  [<c1154eb6>] ? bus_add_driver+0xb6/0x250
+>  [<f834b7b0>] ? pcmcia_device_remove+0x0/0x140 [pcmcia]
+>  [<c11560d7>] ? driver_register+0x67/0x150
+>  [<f834cb51>] ? pcmcia_register_driver+0x91/0x110 [pcmcia]
+>  [<f846f000>] ? init_ide_cs+0x0/0xa [ide_cs]
+>  [<c100102a>] ? _stext+0x2a/0x160
+>  [<c104b3f3>] ? sys_init_module+0xb3/0x1f0
+>  [<c1081cf1>] ? sys_read+0x41/0x80
+>  [<c1002cf4>] ? sysenter_do_call+0x12/0x26
+> handlers:
+> [<f8450df0>] (ide_intr+0x0/0x250 [ide_core])
+> Disabling IRQ #3
+> ali_stimer_read: stimer is not ready.
 
+Seems like there is also a bug in ali5451 sound driver..
 
-[299202.632031] ohci_hcd 0000:00:12.1: suspend
-[299202.632038] ohci_hcd 0000:00:12.1: PCI INT A disabled
-[299202.632099] ohci_hcd 0000:00:12.0: suspend
-[299202.632106] ohci_hcd 0000:00:12.0: PCI INT A disabled
-[299202.632167] ahci 0000:00:11.0: suspend
-[299203.016052] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[299208.016032] ata3.00: qc timeout (cmd 0xec)
-[299208.016078] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[299208.016116] ata3.00: revalidation failed (errno=-5)
-[299208.336049] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[299218.336032] ata3.00: qc timeout (cmd 0xec)
-[299218.336076] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[299218.336114] ata3.00: revalidation failed (errno=-5)
-[299218.336153] ata3: limiting SATA link speed to 1.5 Gbps
-[299218.656050] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[299248.656030] ata3.00: qc timeout (cmd 0xec)
-[299248.656074] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[299248.656112] ata3.00: revalidation failed (errno=-5)
-[299248.656149] ata3.00: disabled
-[299248.656264] ahci 0000:00:11.0: PCI INT A disabled
-[299248.656302] pcieport-driver 0000:00:0a.0: suspend
-[299248.656306] pci 0000:00:01.0: suspend
-[299248.656309] pci 0000:00:00.0: suspend
-.....................
-[299248.657045] ehci_hcd 0000:00:12.2: LATE suspend
-[299248.657047] ohci_hcd 0000:00:12.1: LATE suspend
-[299248.657049] ohci_hcd 0000:00:12.0: LATE suspend
-[299248.657052] ahci 0000:00:11.0: LATE suspend
-[299248.657054] pcieport-driver 0000:00:0a.0: LATE suspend
-[299248.657080] pci 0000:00:01.0: LATE suspend
-[299248.657095] pci 0000:00:00.0: LATE suspend
-[299248.657226] ACPI: Preparing to enter system sleep state S3
-[299248.657654] Disabling non-boot CPUs ...
-[299248.660214] kvm: disabling virtualization on CPU1
-[299248.660269] CPU 1 is now offline
-[299248.660349] SMP alternatives: switching to UP code
-[299248.665159] CPU0 attaching NULL sched-domain.
-[299248.665162] CPU1 attaching NULL sched-domain.
-[299248.665244] CPU0 attaching NULL sched-domain.
-[299248.665463] CPU1 is down
-[299248.665508] Back to C!
-[299248.665508] PCI-DMA: Resuming GART IOMMU
-[299248.665508] PCI-DMA: Restoring GART aperture settings
-[299248.665508] Enabling non-boot CPUs ...
-[299248.666667] SMP alternatives: switching to SMP code
-[299248.671158] Booting processor 1 APIC 0x1 ip 0x6000
-[299248.664976] Initializing CPU#1
-[299248.664976] Calibrating delay using timer specific routine.. 5010.89 BogoMIPS (lpj=10021787)
-[299248.664976] CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-[299248.664976] CPU: L2 Cache: 512K (64 bytes/line)
-[299248.664976] CPU 1/0x1 -> Node 0
-[299248.664976] CPU: Physical Processor ID: 0
-[299248.664976] CPU: Processor Core ID: 1
-[299248.760137] CPU1: AMD Athlon(tm) Dual Core Processor 4850e stepping 02
-[299248.760482] kvm: enabling virtualization on CPU1
-[299248.760584] CPU0 attaching NULL sched-domain.
-[299248.764521] Switched to high resolution mode on CPU 1
-[299248.776103] CPU0 attaching sched-domain:
-[299248.776107]  domain 0: span 0-1 level CPU
-[299248.776110]   groups: 0 1
-[299248.776114] CPU1 attaching sched-domain:
-[299248.776117]  domain 0: span 0-1 level CPU
-[299248.776119]   groups: 1 0
-[299248.776516] CPU1 is up
-[299248.776554] ACPI: Waking up from system sleep state S3
-[299248.776843] pci 0000:00:00.0: EARLY resume
-[299248.776860] pci 0000:00:00.0: restoring config space at offset 0x3 (was 0x0, writing 0x2000)
-[299248.776871] pci 0000:00:01.0: EARLY resume
-.................................
-[299249.024313] rtc rtc0: legacy class resume
-[299249.024354] usb usb1: type resume
-[299249.040043] r8169: eth0: link up
-[299249.104043] usb usb2: type resume
-[299249.128051] ata2: SATA link down (SStatus 0 SControl 300)
-[299249.128117] ata4: SATA link down (SStatus 0 SControl 300)
-[299249.128183] ata1: SATA link down (SStatus 0 SControl 300)
-[299249.156033] sd 2:0:0:0: legacy resume
-[299249.156037] sd 2:0:0:0: [sda] Starting disk
-[299254.172018] ata3: link is slow to respond, please be patient (ready=0)
-[299255.964034] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[299255.980044] sd 2:0:0:0: [sda] START_STOP FAILED
-[299255.980081] sd 2:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[299255.980155] PM: Device 2:0:0:0 failed to resume: error 262144
-[299255.980198] usb 1-3: type resume
-[299255.983305] ide-cdrom 0.1: legacy resume
-[299255.986180] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-[299255.986992] hdb: UDMA/33 mode selected
-[299255.987469] usb usb3: type resume
-[299256.064043] usb usb4: type resume
-.........................
-[299256.143282] pci 0000:00:00.0: completing resume
-[299256.143316] PM: Finishing wakeup.
-[299256.143317] Restarting tasks ... <6>sd 2:0:0:0: [sda] Unhandled error code
-[299256.150609] sd 2:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[299256.150682] end_request: I/O error, dev sda, sector 57464531
-[299256.150720] Buffer I/O error on device sda7, logical block 202816
-[299256.150757] lost page write due to I/O error on sda7
-[299256.150795] Buffer I/O error on device sda7, logical block 202817
-[299256.150832] lost page write due to I/O error on sda7
-[299256.150882] sd 2:0:0:0: [sda] Unhandled error code
-[299256.150918] sd 2:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[299256.150988] end_request: I/O error, dev sda, sector 57464627
-[299256.151026] Buffer I/O error on device sda7, logical block 202828
-[299256.151062] lost page write due to I/O error on sda7
-[299256.151099] Buffer I/O error on device sda7, logical block 202829
-[299256.151136] lost page write due to I/O error on sda7
-[299256.151175] sd 2:0:0:0: [sda] Unhandled error code
-[299256.151211] sd 2:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[299256.151281] end_request: I/O error, dev sda, sector 57529531
-[299256.151318] Buffer I/O error on device sda7, logical block 210941
-[299256.151354] lost page write due to I/O error on sda7
-[299256.151392] Buffer I/O error on device sda7, logical block 210942
-[299256.151428] lost page write due to I/O error on sda7
-[299256.151467] sd 2:0:0:0: [sda] Unhandled error code
-[299256.151503] sd 2:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-[299256.151574] end_request: I/O error, dev sda, sector 57530859
-[299256.151610] Buffer I/O error on device sda7, logical block 211107
-[299256.151647] lost page write due to I/O error on sda7
+This should help:
 
+---
+ sound/pci/ali5451/ali5451.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
+Index: b/sound/pci/ali5451/ali5451.c
+===================================================================
+--- a/sound/pci/ali5451/ali5451.c
++++ b/sound/pci/ali5451/ali5451.c
+@@ -314,8 +314,11 @@ static int snd_ali_codec_ready(struct sn
+ 		res = snd_ali_5451_peek(codec,port);
+ 		if (!(res & 0x8000))
+ 			return 0;
++		if (time_after_eq(end_time, jiffies))
++			break;
+ 		schedule_timeout_uninterruptible(1);
+-	} while (time_after_eq(end_time, jiffies));
++	} while (1);
++
+ 	snd_ali_5451_poke(codec, port, res & ~0x8000);
+ 	snd_printdd("ali_codec_ready: codec is not ready.\n ");
+ 	return -EIO;
+@@ -327,15 +330,17 @@ static int snd_ali_stimer_ready(struct s
+ 	unsigned long dwChk1,dwChk2;
+ 	
+ 	dwChk1 = snd_ali_5451_peek(codec, ALI_STIMER);
+-	dwChk2 = snd_ali_5451_peek(codec, ALI_STIMER);
+ 
+ 	end_time = jiffies + msecs_to_jiffies(250);
+ 	do {
+ 		dwChk2 = snd_ali_5451_peek(codec, ALI_STIMER);
+ 		if (dwChk2 != dwChk1)
+ 			return 0;
++		if (time_after_eq(end_time, jiffies))
++			break;
+ 		schedule_timeout_uninterruptible(1);
+-	} while (time_after_eq(end_time, jiffies));
++	} while (1);
++
+ 	snd_printk(KERN_ERR "ali_stimer_read: stimer is not ready.\n");
+ 	return -EIO;
+ }
 
-Does that mean the SATA MSI quirk won't solve my problem?
+--
 
+> AC'97 1 does not respond - RESET
+> AC'97 1 access is not valid [0xffffffff], removing mixer.
+> ali mixer 1 creating error.
 
+This was also present in the previous log (before libata's setup) so
+there is some more general problem with the sound..
 
-Regards, Benjamin
+You may try this patch which keeps softmodem device alive instead of
+disabling it (since it shares some hardware with the sound codec)..
 
+---
+ drivers/serial/8250_pci.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+Index: b/drivers/serial/8250_pci.c
+===================================================================
+--- a/drivers/serial/8250_pci.c
++++ b/drivers/serial/8250_pci.c
+@@ -2222,7 +2222,7 @@ serial_pci_guess_board(struct pci_dev *d
+ 	     blacklist++) {
+ 		if (dev->vendor == blacklist->vendor &&
+ 		    dev->device == blacklist->device)
+-			return -ENODEV;
++			return -EOPNOTSUPP;
+ 	}
+ 
+ 	num_iomem = num_port = 0;
+@@ -2448,8 +2448,12 @@ pciserial_init_one(struct pci_dev *dev, 
+ 		 * determine the parameters of this board.
+ 		 */
+ 		rc = serial_pci_guess_board(dev, &tmp);
+-		if (rc)
+-			goto disable;
++		if (rc) {
++			if (rc == -EOPNOTSUPP)
++				goto out;
++			else
++				goto disable;
++		}
+ 	} else {
+ 		/*
+ 		 * We matched an explicit entry.  If we are able to
+@@ -2474,6 +2478,7 @@ pciserial_init_one(struct pci_dev *dev, 
+ 
+  disable:
+ 	pci_disable_device(dev);
++ out:
+ 	return rc;
+ }
+ 
