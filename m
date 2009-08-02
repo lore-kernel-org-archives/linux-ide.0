@@ -1,58 +1,37 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 15/15] drivers/ide/ide-cd.c: Use DIV_ROUND_CLOSEST
-Date: Sun, 2 Aug 2009 10:49:54 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0908021049350.15557@ask.diku.dk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
+Date: Sun, 2 Aug 2009 10:53:02 GMT
+Message-ID: <200908021053.n72Ar2NA023682@demeter.kernel.org>
+References: <bug-13882-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:53281 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752013AbZHBIvu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Aug 2009 04:51:50 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:54767 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752295AbZHBKxC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Aug 2009 06:53:02 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n72Ar2Cr023683
+	for <linux-ide@vger.kernel.org>; Sun, 2 Aug 2009 10:53:02 GMT
+In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+http://bugzilla.kernel.org/show_bug.cgi?id=13882
 
-The kernel.h macro DIV_ROUND_CLOSEST performs the computation (x + d/2)/d
-but is perhaps more readable.
 
-The semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
 
-// <smpl>
-@haskernel@
-@@
 
-#include <linux/kernel.h>
 
-@depends on haskernel@
-expression x,__divisor;
-@@
+--- Comment #17 from Alan <alan@lxorguk.ukuu.org.uk>  2009-08-02 10:53:01 ---
+Because someone didn't bother fitting a suitable capacitor I would imagine (ATA
+5 AnnexB). It may also be the boot process before Linux runs (eg ACPI) samples
+and confuses stuff. Neither the VIA nor the Nvidia reliabily support drive side
+detect and Nvidia in fact specify the use of ACPI for detection purposes should
+always be done.
 
-- (((x) + ((__divisor) / 2)) / (__divisor))
-+ DIV_ROUND_CLOSEST(x,__divisor)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/ide/ide-cd.c                |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 6a9a769..1483a8d 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1146,8 +1146,8 @@ void ide_cdrom_update_speed(ide_drive_t *drive, u8 *buf)
- 	ide_debug_log(IDE_DBG_PROBE, "curspeed: %u, maxspeed: %u",
- 				     curspeed, maxspeed);
- 
--	cd->current_speed = (curspeed + (176/2)) / 176;
--	cd->max_speed = (maxspeed + (176/2)) / 176;
-+	cd->current_speed = DIV_ROUND_CLOSEST(curspeed, 176);
-+	cd->max_speed = DIV_ROUND_CLOSEST(maxspeed, 176);
- }
- 
- #define IDE_CD_CAPABILITIES \
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
