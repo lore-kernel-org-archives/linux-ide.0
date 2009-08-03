@@ -1,54 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: LSISAS1068E + WDC WD2002FYPS: I/O error & Sense Key
-Date: Mon, 03 Aug 2009 11:15:58 -0500
-Message-ID: <1249316158.3943.54.camel@mulgrave.site>
-References: <20090727060322.GB27002@lifeintegrity.com>
-	 <4A70A64A.2070605@gmail.com> <20090729200714.GA20706@lifeintegrity.com>
-	 <4A70D57B.6030301@gmail.com> <20090731184023.GT3211@lifeintegrity.com>
-	 <20090803050853.GA26430@lifeintegrity.com>
-	 <1249310093.3943.11.camel@mulgrave.site>
-	 <20090803160629.GA2011@lifeintegrity.com>
+From: =?iso-8859-1?B?RGF27fA=?= Steinn Geirsson <david@dsg.to>
+Subject: HighPoint RocketRAID 2320
+Date: Mon, 3 Aug 2009 20:18:36 +0000
+Message-ID: <20090803201836.GD13863@dsg.to>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090803160629.GA2011@lifeintegrity.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Allan Wind <allan_wind@lifeintegrity.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="C94crkcyjafcjHxo"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gozer.dsg.to ([79.171.98.146]:43387 "EHLO gozer.dsg.to"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752208AbZHCU2b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Aug 2009 16:28:31 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On Mon, 2009-08-03 at 12:06 -0400, Allan Wind wrote:
-> On 2009-08-03T09:34:53, James Bottomley wrote:
-> > On Mon, 2009-08-03 at 01:08 -0400, Allan Wind wrote:
-> > >
-> > > The above complains about sector 3907028974 which is exactly 
-> > > 19566 sectors greater than the size of the raid array according 
-> > > to parted.  In other words it appears to be an access to the last 
-> > > sector of the array.
-> > 
-> > If it's a read beyond the end of a partition, then it's possible it got
-> > rejected in the partition checking logic before ever reaching the I/O
-> > controller (which would explain why no messages from the fusion in the
-> > log).
-> > 
-> > However, I don't think the analysis is correct.  Parted says
-> > 
-> > 
-> > > Number  Start   End          Size         File system  Name  Flags
-> > >  1      34s     19565s       19532s                          bios_grub
-> > >  2      19566s  3907029134s  3907009569s  ext3               raid
-> > 
-> > So the absolute sector number 3907028974 is within partition 2.
-> 
-> I was actually trying to make a different point.  Namely that it 
-> was curious that the error message complains about sector
-> 3907028974 which is exactly the size of the array + 19566, or in 
-> other words 1 sector past the end of array:
-
-That's where md stores its superblock ... but it's still within the
-partition.
-
-James
+To: linux-ide@vger.kernel.org
 
 
+--C94crkcyjafcjHxo
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi all,
+
+I'm throwing this out here in the hopes that someone smarter than me has
+a simple solution - never hurts to be optimistic. :)
+
+I have a HighPoint controller, RocketRAID 2320 (8-port PCIe SATA fakeraid).=
+ It is only supported by an ugly binary blob deceptively labeled as an "ope=
+n source driver" from HighPoint (rr232x). Looking at the wrapper around the=
+ blob, it seems this driver claims only the 2320 and 2322 controllers:
+
+static const struct pci_device_id hpt_pci_tbl[] =3D {
+        {PCI_DEVICE(0x1103, 0x2320), 0, 0, 0},
+        {PCI_DEVICE(0x1103, 0x2322), 0, 0, 0},
+        {}
+};
+
+I've found that this controller contains a marvell 88SX6081 chip, which
+should be supported by the sata_mv driver. That driver claims device IDs
+2300 and 2310:
+        { PCI_VDEVICE(TTI, 0x2300), chip_7042 },
+        { PCI_VDEVICE(TTI, 0x2310), chip_7042 },
+
+So, ever hopeful, I tried adding the 2320 into the table:
+        { PCI_VDEVICE(TTI, 0x2320), chip_608x },
+
+When I do this, the kernel successfully probes the attached disks and
+their capacity, but immediately errors out and starts resetting the
+ports repeatedly.
+
+I've attached a dmesg output. I can provide any further debugging info
+or try different things.
+
+I've tried defining the controller with chip_6042, chip_604x and
+chip_7042 with no success.
+
+PS: Please CC me on replies, as I'm not subscribed to linux-ide.
+
+Kind regards,
+
+--=20
+Dav=ED=F0 Steinn Geirsson
+david@dsg.to
+
+--C94crkcyjafcjHxo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFKd0Yc1zX4pjkhuygRAnwLAKCNQthz8gCI8tU8EqkzKxjiJQgL5gCfWIDK
+1kHVhZ/pqXTmp41ZVtaeDeY=
+=rpBP
+-----END PGP SIGNATURE-----
+
+--C94crkcyjafcjHxo--
