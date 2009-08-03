@@ -1,41 +1,61 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
-Date: Mon, 3 Aug 2009 21:49:32 GMT
-Message-ID: <200908032149.n73LnWjd010491@demeter.kernel.org>
-References: <bug-13882-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: HighPoint RocketRAID 2320
+Date: Mon, 03 Aug 2009 18:29:39 -0400
+Message-ID: <4A7764D3.1090702@rtr.ca>
+References: <20090803201836.GD13863@dsg.to>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35165 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932066AbZHCVtc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2009 17:49:32 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n73LnWRu010492
-	for <linux-ide@vger.kernel.org>; Mon, 3 Aug 2009 21:49:32 GMT
-In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
+Received: from rtr.ca ([76.10.145.34]:34038 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753052AbZHCW3k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Aug 2009 18:29:40 -0400
+In-Reply-To: <20090803201836.GD13863@dsg.to>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: =?UTF-8?B?RGF2w63DsCBTdGVpbm4gR2VpcnNzb24=?= <david@dsg.to>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13882
+Dav=C3=AD=C3=B0 Steinn Geirsson wrote:
+> Hi all,
+>=20
+> I'm throwing this out here in the hopes that someone smarter than me =
+has
+> a simple solution - never hurts to be optimistic. :)
+>=20
+> I have a HighPoint controller, RocketRAID 2320 (8-port PCIe SATA fake=
+raid). It is only supported by an ugly binary blob deceptively labeled =
+as an "open source driver" from HighPoint (rr232x). Looking at the wrap=
+per around the blob, it seems this driver claims only the 2320 and 2322=
+ controllers:
+>=20
+> static const struct pci_device_id hpt_pci_tbl[] =3D {
+>         {PCI_DEVICE(0x1103, 0x2320), 0, 0, 0},
+>         {PCI_DEVICE(0x1103, 0x2322), 0, 0, 0},
+>         {}
+> };
+>=20
+> I've found that this controller contains a marvell 88SX6081 chip, whi=
+ch
+> should be supported by the sata_mv driver. That driver claims device =
+IDs
+> 2300 and 2310:
+>         { PCI_VDEVICE(TTI, 0x2300), chip_7042 },
+>         { PCI_VDEVICE(TTI, 0x2310), chip_7042 },
+>=20
+> So, ever hopeful, I tried adding the 2320 into the table:
+>         { PCI_VDEVICE(TTI, 0x2320), chip_608x },
+>=20
+> When I do this, the kernel successfully probes the attached disks and
+> their capacity, but immediately errors out and starts resetting the
+> ports repeatedly.
+=2E.
 
+Send me a clear, in-focus detailed photograph of the board,
+showing the chip markings very clearly.
 
+Thanks
 
-
-
---- Comment #19 from Alan <alan@lxorguk.ukuu.org.uk>  2009-08-03 21:49:31 ---
-2.6.24 has various differences, without knowing exactly what path is taken it's
-hard to tell. Most likely the fact the old code erroneously also checked drvie
-detect on VIA (which broke lots of systems) happened by luck to make yours
-work.
-
-One way to test that would be to make the cases which return ATA_CBL_PATA80 in
-the pata_via driver return ATA_CBL_PATA_UNK and see if that helps you. If it
-does we are probably going to have to special case some boards by PCI svid/sdid
-8(
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+-ml
