@@ -1,25 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: HighPoint RocketRAID 2320
-Date: Tue, 04 Aug 2009 20:55:27 +0900
-Message-ID: <4A7821AF.9010609@kernel.org>
-References: <20090803201836.GD13863@dsg.to> <20090803203139.GE13863@dsg.to>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13886] Suspend to disk no longer works in 2.6.30.2 with an EIDE
+ drive
+Date: Tue, 4 Aug 2009 15:12:01 GMT
+Message-ID: <200908041512.n74FC1lH002205@demeter.kernel.org>
+References: <bug-13886-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49630 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753459AbZHDL4C (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Aug 2009 07:56:02 -0400
-In-Reply-To: <20090803203139.GE13863@dsg.to>
+Received: from demeter.kernel.org ([140.211.167.39]:58895 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932623AbZHDPMB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Aug 2009 11:12:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n74FC2Wb002206
+	for <linux-ide@vger.kernel.org>; Tue, 4 Aug 2009 15:12:02 GMT
+In-Reply-To: <bug-13886-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Dav=ED=F0_Steinn_Geirsson?= <david@dsg.to>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
+http://bugzilla.kernel.org/show_bug.cgi?id=13886
 
-What happens if you specify "libata.force=noncq"?
+
+Rafael J. Wysocki <rjw@sisk.pl> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|RESOLVED                    |CLOSED
+
+
+
+
+--- Comment #7 from Rafael J. Wysocki <rjw@sisk.pl>  2009-08-04 15:11:59 ---
+Thanks for the update, closing.
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
