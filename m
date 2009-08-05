@@ -1,44 +1,43 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH 2.6.32] MCP5x conditional MSI support for sata_nv
-Date: Wed, 05 Aug 2009 17:45:51 -0600
-Message-ID: <4A7A19AF.9040400@gmail.com>
-References: <20090804233234.7251110075@gold.linx.net> <20090804193508.4bb868f3@fido2.homeip.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13921] No CD-ROM ATAPI driver on kernels higher than 2.6.24.x
+Date: Wed, 5 Aug 2009 23:47:50 GMT
+Message-ID: <200908052347.n75NloUC006407@demeter.kernel.org>
+References: <bug-13921-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:43718 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbZHEXpy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2009 19:45:54 -0400
-Received: by gxk9 with SMTP id 9so628602gxk.13
-        for <linux-ide@vger.kernel.org>; Wed, 05 Aug 2009 16:45:54 -0700 (PDT)
-In-Reply-To: <20090804193508.4bb868f3@fido2.homeip.net>
+Received: from demeter.kernel.org ([140.211.167.39]:39611 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751338AbZHEXrt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2009 19:47:49 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n75Nlo9g006408
+	for <linux-ide@vger.kernel.org>; Wed, 5 Aug 2009 23:47:50 GMT
+In-Reply-To: <bug-13921-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Philip Langdale <philipl@overt.org>
-Cc: Tony Vroon <tony@linx.net>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 08/04/2009 08:35 PM, Philip Langdale wrote:
-> On Wed,  5 Aug 2009 00:32:34 +0100 (BST)
-> Tony Vroon<tony@linx.net>  wrote:
->
->> The nVidia MCP55 controller quite happily supports MSI.
->> This adds an option to use it. It is disabled by default and
->> will only be honoured on MCP5x series controllers.
->> This was suggested in 2007 back when the driver was less mature,
->> perhaps now is a better time for it.
->
-> I don't use an MCP55 motherboard anymore but I ran with MSI on for
-> multiple years to no ill effect. However, in this thread where I
-> reported my success, another person reported failure with MCP51.
->
-> http://www.nvnews.net/vbulletin/showthread.php?t=101144&highlight=sata_nv+msi
->
-> Assuming that's true, you can't use the 'MCP5x' test as that will
-> cover MCP51 as well.
+http://bugzilla.kernel.org/show_bug.cgi?id=13921
 
-I'd take that with a bit of a grain of salt as there have been a lot of 
-HT MSI fixups included since those posts (2007). Some motherboards 
-didn't enable HT MSI mapping capabilities by default, which would 
-prevent MSI from working.
+
+Robert Hancock <hancockrwd@gmail.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |hancockrwd@gmail.com
+
+
+
+
+--- Comment #3 from Robert Hancock <hancockrwd@gmail.com>  2009-08-05 23:47:48 ---
+Won't be an IDE issue as Fedora 11 (and likely others in that list) uses
+libata.
+
+Yes, bootup messages would be useful (or at least some kind of hardware
+description).
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
