@@ -1,71 +1,55 @@
-From: Tauseef Hussain <Tauseef.Hussain@gennum.com>
-Subject: RE: Adding new pci vendor id
-Date: Wed, 5 Aug 2009 10:24:03 -0400
-Message-ID: <E2EFBB65133B9448A32D870B45E3DBB30EEB434CF4@EXCHANGE.ad.gennum.com>
-References: <E2EFBB65133B9448A32D870B45E3DBB30EEB434CF0@EXCHANGE.ad.gennum.com>,<da824cf30908040955vb26e4b6mbad1f80d5230d282@mail.gmail.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: Adding new pci vendor id
+Date: Wed, 5 Aug 2009 10:22:33 -0700
+Message-ID: <da824cf30908051022w3bd70730uc5d5986f20e716fc@mail.gmail.com>
+References: <E2EFBB65133B9448A32D870B45E3DBB30EEB434CF0@EXCHANGE.ad.gennum.com>
+	 <da824cf30908040955vb26e4b6mbad1f80d5230d282@mail.gmail.com>
+	 <E2EFBB65133B9448A32D870B45E3DBB30EEB434CF4@EXCHANGE.ad.gennum.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.gennum.com ([66.207.109.237]:65051 "EHLO mx2.gennum.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934124AbZHEOZ3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2009 10:25:29 -0400
-In-Reply-To: <da824cf30908040955vb26e4b6mbad1f80d5230d282@mail.gmail.com>
-Content-Language: en-AU
+Received: from smtp-out.google.com ([216.239.33.17]:51734 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934704AbZHERWk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2009 13:22:40 -0400
+Received: from spaceape14.eur.corp.google.com (spaceape14.eur.corp.google.com [172.28.16.148])
+	by smtp-out.google.com with ESMTP id n75HMZEi030379
+	for <linux-ide@vger.kernel.org>; Wed, 5 Aug 2009 18:22:36 +0100
+Received: from yxe27 (yxe27.prod.google.com [10.190.2.27])
+	by spaceape14.eur.corp.google.com with ESMTP id n75HMMgN000625
+	for <linux-ide@vger.kernel.org>; Wed, 5 Aug 2009 10:22:33 -0700
+Received: by yxe27 with SMTP id 27so301692yxe.19
+        for <linux-ide@vger.kernel.org>; Wed, 05 Aug 2009 10:22:33 -0700 (PDT)
+In-Reply-To: <E2EFBB65133B9448A32D870B45E3DBB30EEB434CF4@EXCHANGE.ad.gennum.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
+To: Tauseef Hussain <Tauseef.Hussain@gennum.com>
 Cc: "jeff@garzik.org" <jeff@garzik.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi all
-Thanx for your response.
-I am using this flavor of linux distribution from red hat
-Linux 2.6.29.6-217.2.3.fc11.i686.PAE i686 GNU/Linux
-which i obtained on my console on doing a uname -o -s -p -r command.
-
-However i dont have the source code of AHCI driver ahci.c with this distribution.
-Can you tell me whom to contact to get the source code for ahci.c for the distribution i am using?
-
-
-Thanks and regards,
-Tauseef
-Junior design engineer,
-Gennum
-________________________________________
-From: Grant Grundler [grundler@google.com]
-Sent: Tuesday, 4 August 2009 10:25 PM
-To: Tauseef Hussain
-Cc: Rashmi Mohapatra; linux-ide@vger.kernel.org; Shefali Mishra
-Subject: Re: Adding new pci vendor id
-
-On Tue, Aug 4, 2009 at 8:32 AM, Tauseef
+On Wed, Aug 5, 2009 at 7:24 AM, Tauseef
 Hussain<Tauseef.Hussain@gennum.com> wrote:
-> Hi
-> I am using a kernel which uses a  precompiled kernel object of ahci.c  viz. ahci.ko
-> I would like to know how can i add new pci vendor device id in the ahci_pci_tbl[] structure
+> Hi all
+> Thanx for your response.
+> I am using this flavor of linux distribution from red hat
+> Linux 2.6.29.6-217.2.3.fc11.i686.PAE i686 GNU/Linux
 
-See Documentation/SubmittingPatches in your kernel source tree.
+Hi Tauseef,
+This is a kernel version and not a distro release version.
+Since I'm not involved with RH kernels, the kernel version doesn't
+mean anything to me.
 
-If the new HW is intended to work with a distro (e.g., Redhat, SuSe,
-Debian, Ubuntu, et al)
-you will need to contact each distro and submit a patch in a similar
-fashion to them.
+> which i obtained on my console on doing a uname -o -s -p -r command.
+>
+> However i dont have the source code of AHCI driver ahci.c with this distribution.
 
-> then how can i compile the modified ahci.c and use the .ko file for my use?
+I'm certain RH is complying with it's a legal requirement (See GPL) to
+make the kernel source available.
 
-The following simplified answer should work for most distro's but
-unlikely to work 100% of the time:
-    sudo make modules_install
-    sudo make install
-    sudo reboot
+> Can you tell me whom to contact to get the source code for ahci.c for the distribution i am using?
 
-Then interrupt the boot loader (likely grub) to select your kernel.
-
-And given the nature of your questions, I suggest you visit
-kttp://kernelnewbies.org .
+Same website that you got the install CD from. Search for
+"2.6.29.6-217.2.3.fc11 src.rpm" and you should find it.
 
 cheers,
 grant
-
-This communication contains confidential information intended only for the addressee(s). If you have received this communication in error, please notify us immediately and delete this communication from your mail box.
