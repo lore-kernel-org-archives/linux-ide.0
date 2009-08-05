@@ -1,39 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13921] No CD-ROM ATAPI driver on kernels higher than 2.6.24.x
-Date: Wed, 5 Aug 2009 19:48:19 GMT
-Message-ID: <200908051948.n75JmJaf001666@demeter.kernel.org>
-References: <bug-13921-11633@http.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] cmd64x: irq 14: nobody cared - system is dreadfully
+ slow
+Date: Wed, 5 Aug 2009 13:43:57 -0700
+Message-ID: <20090805204357.GB10788@kroah.com>
+References: <200906220843.14337.elendil@planet.nl>
+ <200906221604.17915.elendil@planet.nl>
+ <20090623.034316.149816033.davem@davemloft.net>
+ <200907311609.01387.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44050 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbZHETsS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2009 15:48:18 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n75JmJsi001667
-	for <linux-ide@vger.kernel.org>; Wed, 5 Aug 2009 19:48:19 GMT
-In-Reply-To: <bug-13921-11633@http.bugzilla.kernel.org/>
+Received: from kroah.org ([198.145.64.141]:51177 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752678AbZHEUpe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Aug 2009 16:45:34 -0400
+Content-Disposition: inline
+In-Reply-To: <200907311609.01387.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: stable@kernel.org, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, David Miller <davem@davemloft.net>, bzolnier@gmail.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13921
+On Fri, Jul 31, 2009 at 04:08:59PM +0200, Frans Pop wrote:
+> On Tuesday 23 June 2009, David Miller wrote:
+> > From: Frans Pop <elendil@planet.nl> Date: Mon, 22 Jun 2009:
+> > > On Monday 22 June 2009, you wrote:
+> > >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > >> Subject: [PATCH] ide: fix handling of unexpected IRQs vs
+> > >> request_irq()
+> > >>
+> > > Thanks Bart. This does solve the "nobody cared" problem.
+> > > Tested-by: Frans Pop <elendil@planet.nl>
+> >
+> > I've applied this patch to my tree, thanks everyone!
+> 
+> Please consider the following two patches for the next stable update:
+> 
+> commit ffc36c7610731115c77700dcc53901920361c235
+> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ide: fix handling of unexpected IRQs vs request_irq()
+> 
+> commit 346c17a6cf60375323adfaa4b8a9d841049f890e
+> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ide: relax DMA info validity checking
+> 
+> The current 2.6.30 Debian kernel (based on .30.3) is still failing on my
+> Sparc Ultra 10 because those patches are missing.
 
+I have queued both of these up now for the next .30-stable release.
 
-Borislav Petkov <bbpetkov@yahoo.de> changed:
+thanks,
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bbpetkov@yahoo.de
-
-
-
-
---- Comment #2 from Borislav Petkov <bbpetkov@yahoo.de>  2009-08-05 19:48:18 ---
-Can you send me the bootup messages of the working and failing kernels?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+greg k-h
