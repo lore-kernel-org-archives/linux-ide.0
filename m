@@ -1,38 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13921] No CD-ROM ATAPI driver on kernels higher than 2.6.24.x
-Date: Thu, 6 Aug 2009 04:29:38 GMT
-Message-ID: <200908060429.n764Tc3B008082@demeter.kernel.org>
-References: <bug-13921-11633@http.bugzilla.kernel.org/>
+From: =?UTF-8?B?SMOla29uIEzDuHZkYWw=?= <hlovdal@gmail.com>
+Subject: Re: [PATCH 2/3] libata: Bind the Linux device tree to the ACPI device
+	tree
+Date: Thu, 6 Aug 2009 08:54:31 +0200
+Message-ID: <a01a16b50908052354h28522bafja255c4fcac9a2ea8@mail.gmail.com>
+References: <1247518987-10818-1-git-send-email-mjg@redhat.com>
+	 <1247518987-10818-2-git-send-email-mjg@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:54617 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbZHFE3h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Aug 2009 00:29:37 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n764TcIL008083
-	for <linux-ide@vger.kernel.org>; Thu, 6 Aug 2009 04:29:38 GMT
-In-Reply-To: <bug-13921-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1247518987-10818-2-git-send-email-mjg@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, shaohua.li@intel.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13921
+2009/7/13 Matthew Garrett <mjg@redhat.com>:
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (!sata_pmp_atta=
+ched(ap))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 adr =3D SATA_ADR(ap->port_no, NO_PORT_MULT);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 else
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 adr =3D SATA_ADR(ap->port_no, dev->link->pmp);
 
+Maybe I am missing something, but wouldn't it be more natural to write =
+this as
 
+        if (sata_pmp_attached(ap))
+                adr =3D SATA_ADR(ap->port_no, dev->link->pmp);
+        else
+                adr =3D SATA_ADR(ap->port_no, NO_PORT_MULT);
 
-
-
---- Comment #6 from Robert Hancock <hancockrwd@gmail.com>  2009-08-06 04:29:36 ---
-Well, not too much exciting there, it's using the pata_atiixp driver, except
-that it's limiting the transfer speed to ATA/33 because of a 40-wire cable
-detection.
-
-Can you boot up with a newer distro install disc and get to a command shell
-somehow to get at the dmesg output?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+BR H=C3=A5kon L=C3=B8vdal
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
