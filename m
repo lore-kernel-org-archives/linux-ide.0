@@ -1,59 +1,44 @@
-From: Chetan.Loke@Emulex.Com
-Subject: RE: [PATCH 2.6.32 v2] MCP55 SATA2 conditional MSI support for
- sata_nv
-Date: Thu, 6 Aug 2009 09:28:02 -0700
-Message-ID: <412A05BA40734D4887DBC67661F433080D7322B1@EXMAIL.ad.emulex.com>
-References: <20090805192055.8F2DE1007C@gold.linx.net>
-	 <4A7A16C9.6030500@gmail.com>
-	 <412A05BA40734D4887DBC67661F433080D73228B@EXMAIL.ad.emulex.com>
- <1249574363.4530.23.camel@localhost>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] libata: OCZ Vertex can't do HPA
+Date: Fri, 07 Aug 2009 01:59:15 +0900
+Message-ID: <4A7B0BE3.9050707@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51540 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753187AbZHFQ2P convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Aug 2009 12:28:15 -0400
-In-Reply-To: <1249574363.4530.23.camel@localhost>
-Content-Language: en-US
+Received: from hera.kernel.org ([140.211.167.34]:39734 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755615AbZHFRAO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Aug 2009 13:00:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tony@linx.net
-Cc: hancockrwd@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, philipl@overt.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, probe@spray.se, stable@kernel.org
 
-> -----Original Message-----
-> From: Tony Vroon [mailto:tony@linx.net]
-> Sent: Thursday, August 06, 2009 11:59 AM
-> To: Loke,Chetan
-> Cc: hancockrwd@gmail.com; jgarzik@pobox.com; linux-ide@vger.kernel.org;
-> linux-kernel@vger.kernel.org; philipl@overt.org
-> Subject: RE: [PATCH 2.6.32 v2] MCP55 SATA2 conditional MSI support for
-> sata_nv
-> 
-> > disable_msi() is missing right?
-> 
-> I didn't add that as none of the other drivers have it:
+OCZ Vertex SSD can't do HPA and not in a usual way.  It reports HPA,
+allows unlocking but then fails all IOs which fall in the unlocked
+area.  Quirk it so that HPA unlocking is not used for the device.
 
-Then they would leak the MSI-vectors if request_irq fails.
+Reported by Daniel Perup in bnc#522414.
 
+ https://bugzilla.novell.com/show_bug.cgi?id=522414
 
-> chainsaw@amalthea /cvs/linux-2.6/drivers/ata $ grep _msi * | grep pci
-> ahci.c:		pci_enable_msi(pdev);
-> sata_mv.c:	if (msi && pci_enable_msi(pdev) == 0)
-> sata_vsc.c:	if (pci_enable_msi(pdev) == 0)
-> 
-> (This is a tree without the sata_nv change I submitted)
-> 
-> I do believe it is safe to shut the interrupt down and unload the
-> handler whilst it is still in MSI mode. At least, I don't see the libata
-> core special-casing it in any way.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Daniel Perup <probe@spray.se>
+---
+ drivers/ata/libata-core.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-If I'm not wrong then that's how it's supposed to be done. free_irq and then disable_msi. You can't reverse the order. Also the driver should know when to quiesce the ASIC. So quiesce first and then shutdown everything.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 8ac98ff..072ba5e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4302,6 +4302,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "WDC WD2500JD-00HBB0", "WD-WMAL71490727", ATA_HORKAGE_BROKEN_HPA },
+ 	{ "MAXTOR 6L080L4",	"A93.0500",	ATA_HORKAGE_BROKEN_HPA },
 
-
-> Regards,
-> Tony V.
-
-Regards
-Chetan
++	/* this one allows HPA unlocking but fails IOs on the area */
++	{ "OCZ-VERTEX",		    "1.30",	ATA_HORKAGE_BROKEN_HPA },
++
+ 	/* Devices which report 1 sector over size HPA */
+ 	{ "ST340823A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
+ 	{ "ST320413A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
