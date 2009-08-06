@@ -1,101 +1,89 @@
 From: akpm@linux-foundation.org
-Subject: [patch 1/2] drivers/ata: use resource_size
-Date: Thu, 06 Aug 2009 16:05:08 -0700
-Message-ID: <200908062305.n76N58EY004151@imap1.linux-foundation.org>
+Subject: [patch 2/2] drivers/ata: introduce missing kfree
+Date: Thu, 06 Aug 2009 16:05:09 -0700
+Message-ID: <200908062305.n76N59jW004244@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39092 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33728 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756853AbZHFXGm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Aug 2009 19:06:42 -0400
+	by vger.kernel.org with ESMTP id S1756878AbZHFXHk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Aug 2009 19:07:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, tj@kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
-Use the function resource_size, which reduces the chance of introducing
-off-by-one errors in calculating the resource size.
+Error handling code following a kzalloc should free the allocated data.
 
-The semantic patch that makes this change is as follows:
+The semantic match that finds the problem is as follows:
 (http://www.emn.fr/x-info/coccinelle/)
 
 // <smpl>
-@@
-struct resource *res;
+@r exists@
+local idexpression x;
+statement S;
+expression E;
+identifier f,f1,l;
+position p1,p2;
+expression *ptr != NULL;
 @@
 
-- (res->end - res->start) + 1
-+ resource_size(res)
+x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
+...
+if (x == NULL) S
+<... when != x
+     when != if (...) { <+...x...+> }
+(
+x->f1 = E
+|
+ (x->f1 == NULL || ...)
+|
+ f(...,x->f1,...)
+)
+...>
+(
+ return \(0\|<+...x...+>\|ptr\);
+|
+ return@p2 ...;
+)
+
+@script:python@
+p1 << r.p1;
+p2 << r.p2;
+@@
+
+print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
 // </smpl>
 
 Signed-off-by: Julia Lawall <julia@diku.dk>
 Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <tj@kernel.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/pata_octeon_cf.c |    2 +-
- drivers/ata/pata_platform.c  |    8 ++++----
- drivers/ata/pata_rb532_cf.c  |    2 +-
- drivers/ata/sata_mv.c        |    2 +-
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/ata/pata_at91.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/ata/pata_octeon_cf.c~drivers-ata-use-resource_size drivers/ata/pata_octeon_cf.c
---- a/drivers/ata/pata_octeon_cf.c~drivers-ata-use-resource_size
-+++ a/drivers/ata/pata_octeon_cf.c
-@@ -840,7 +840,7 @@ static int __devinit octeon_cf_probe(str
- 	ocd = pdev->dev.platform_data;
+diff -puN drivers/ata/pata_at91.c~drivers-ata-introduce-missing-kfree drivers/ata/pata_at91.c
+--- a/drivers/ata/pata_at91.c~drivers-ata-introduce-missing-kfree
++++ a/drivers/ata/pata_at91.c
+@@ -261,7 +261,8 @@ static int __devinit pata_at91_probe(str
  
- 	cs0 = devm_ioremap_nocache(&pdev->dev, res_cs0->start,
--				   res_cs0->end - res_cs0->start + 1);
-+				   resource_size(res_cs0));
- 
- 	if (!cs0)
- 		return -ENOMEM;
-diff -puN drivers/ata/pata_platform.c~drivers-ata-use-resource_size drivers/ata/pata_platform.c
---- a/drivers/ata/pata_platform.c~drivers-ata-use-resource_size
-+++ a/drivers/ata/pata_platform.c
-@@ -151,14 +151,14 @@ int __devinit __pata_platform_probe(stru
- 	 */
- 	if (mmio) {
- 		ap->ioaddr.cmd_addr = devm_ioremap(dev, io_res->start,
--				io_res->end - io_res->start + 1);
-+				resource_size(io_res));
- 		ap->ioaddr.ctl_addr = devm_ioremap(dev, ctl_res->start,
--				ctl_res->end - ctl_res->start + 1);
-+				resource_size(ctl_res));
- 	} else {
- 		ap->ioaddr.cmd_addr = devm_ioport_map(dev, io_res->start,
--				io_res->end - io_res->start + 1);
-+				resource_size(io_res));
- 		ap->ioaddr.ctl_addr = devm_ioport_map(dev, ctl_res->start,
--				ctl_res->end - ctl_res->start + 1);
-+				resource_size(ctl_res));
+ 	if (IS_ERR(info->mck)) {
+ 		dev_err(dev, "failed to get access to mck clock\n");
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto err_clk_get;
  	}
- 	if (!ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr) {
- 		dev_err(dev, "failed to map IO/CTL base\n");
-diff -puN drivers/ata/pata_rb532_cf.c~drivers-ata-use-resource_size drivers/ata/pata_rb532_cf.c
---- a/drivers/ata/pata_rb532_cf.c~drivers-ata-use-resource_size
-+++ a/drivers/ata/pata_rb532_cf.c
-@@ -151,7 +151,7 @@ static __devinit int rb532_pata_driver_p
- 	info->irq = irq;
  
- 	info->iobase = devm_ioremap_nocache(&pdev->dev, res->start,
--				res->end - res->start + 1);
-+				resource_size(res));
- 	if (!info->iobase)
- 		return -ENOMEM;
+ 	info->cs    = board->chipselect;
+@@ -308,6 +309,7 @@ err_alt_ioremap:
  
-diff -puN drivers/ata/sata_mv.c~drivers-ata-use-resource_size drivers/ata/sata_mv.c
---- a/drivers/ata/sata_mv.c~drivers-ata-use-resource_size
-+++ a/drivers/ata/sata_mv.c
-@@ -4013,7 +4013,7 @@ static int mv_platform_probe(struct plat
+ err_ide_ioremap:
+ 	clk_put(info->mck);
++err_clk_get:
+ 	kfree(info);
  
- 	host->iomap = NULL;
- 	hpriv->base = devm_ioremap(&pdev->dev, res->start,
--				   res->end - res->start + 1);
-+				   resource_size(res));
- 	hpriv->base -= SATAHC0_REG_BASE;
- 
- 	/*
+ 	return ret;
 _
