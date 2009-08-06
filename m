@@ -1,100 +1,35 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: Re: [PATCH] pcmcia: add CNF-CDROM-ID for ide/pata
-Date: Thu, 6 Aug 2009 15:16:42 +0200
-Message-ID: <20090806131642.GD3154@pengutronix.de>
-References: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
+From: Matthew Garrett <mjg@redhat.com>
+Subject: Re: [PATCH 2/3] libata: Bind the Linux device tree to the ACPI
+	device tree
+Date: Thu, 6 Aug 2009 15:51:25 +0100
+Message-ID: <20090806145125.GB3181@srcf.ucam.org>
+References: <1247518987-10818-1-git-send-email-mjg@redhat.com> <1247518987-10818-2-git-send-email-mjg@redhat.com> <a01a16b50908052354h28522bafja255c4fcac9a2ea8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="AbQceqfdZEv+FvjW"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42808 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbZHFNQs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Aug 2009 09:16:48 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1248625649-7193-1-git-send-email-w.sang@pengutronix.de>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <a01a16b50908052354h28522bafja255c4fcac9a2ea8@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: =?iso-8859-1?Q?H=E5kon_L=F8vdal?= <hlovdal@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, shaohua.li@intel.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-pcmcia@lists.infradead.org, jeff@garzik.org, David Miller <davem@davemloft.net>
 
-
---AbQceqfdZEv+FvjW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hello David,
-
-as Jeff already picked up the pata part of this patch, I wondered how to
-proceed with the ide-cs-part. Will you pick it up for .31 or .32 or should =
-it
-go via the pcmcia-tree (which will make its next pull-request for .32)?
-
-Kind regards,
-
-   Wolfram
-
-On Sun, Jul 26, 2009 at 06:27:29PM +0200, Wolfram Sang wrote:
-> Fixes this report:
-> http://article.gmane.org/gmane.linux.kernel.pcmcia.devel/2228/
+On Thu, Aug 06, 2009 at 08:54:31AM +0200, H=E5kon L=F8vdal wrote:
+> Maybe I am missing something, but wouldn't it be more natural to writ=
+e this as
 >=20
-> Reported-by: John McGrath <john@john-mcgrath.com>
-> Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
-> ---
->  drivers/ata/pata_pcmcia.c |    1 +
->  drivers/ide/ide-cs.c      |    1 +
->  2 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-> index f4d009e..dc99e26 100644
-> --- a/drivers/ata/pata_pcmcia.c
-> +++ b/drivers/ata/pata_pcmcia.c
-> @@ -411,6 +411,7 @@ static struct pcmcia_device_id pcmcia_devices[] =3D {
->  	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907=
-960c, 0xf7fde8b9),
->  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
-> +	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Inte=
-rface Card", 0xff8c8a45, 0xfe8020c4),
->  	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobi=
-le Media CD-ROM", 0x17692a66, 0xef1dcbde),
-> diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
-> index 527908f..063b933 100644
-> --- a/drivers/ide/ide-cs.c
-> +++ b/drivers/ide/ide-cs.c
-> @@ -408,6 +408,7 @@ static struct pcmcia_device_id ide_ids[] =3D {
->  	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907=
-960c, 0xf7fde8b9),
->  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
-> +	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
->  	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Inte=
-rface Card", 0xff8c8a45, 0xfe8020c4),
->  	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobi=
-le Media CD-ROM", 0x17692a66, 0xef1dcbde),
-> --=20
-> 1.6.3.1
->=20
+>         if (sata_pmp_attached(ap))
+>                 adr =3D SATA_ADR(ap->port_no, dev->link->pmp);
+>         else
+>                 adr =3D SATA_ADR(ap->port_no, NO_PORT_MULT);
+
+Heh, yes. That would also work.
 
 --=20
-Pengutronix e.K.                           | Wolfram Sang                |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
---AbQceqfdZEv+FvjW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkp617oACgkQD27XaX1/VRvlYQCfUdy7mMadBxm7Wq1/IeYIsOjw
-cnIAoJ07NcToq9izwhVavBBz7X+JMjXW
-=/fh0
------END PGP SIGNATURE-----
-
---AbQceqfdZEv+FvjW--
+Matthew Garrett | mjg59@srcf.ucam.org
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
