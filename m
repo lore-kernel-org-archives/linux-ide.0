@@ -1,54 +1,35 @@
-From: Tony Vroon <tony@linx.net>
-Subject: [PATCH 2.6.32 v3] Conditional MSI support for sata_nv
-Date: Thu,  6 Aug 2009 00:50:09 +0100 (BST)
-Message-ID: <20090805235009.88C091007F@gold.linx.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13921] No CD-ROM ATAPI driver on kernels higher than 2.6.24.x
+Date: Thu, 6 Aug 2009 00:54:13 GMT
+Message-ID: <200908060054.n760sDI2015390@demeter.kernel.org>
+References: <bug-13921-11633@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:44470 "EHLO gold.linx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751338AbZHEXuK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Aug 2009 19:50:10 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:37437 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814AbZHFAyN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2009 20:54:13 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n760sDH1015391
+	for <linux-ide@vger.kernel.org>; Thu, 6 Aug 2009 00:54:13 GMT
+In-Reply-To: <bug-13921-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Philip Langdale <philipl@overt.org>, Robert Hancock <hancockrwd@gmail.com>
+To: linux-ide@vger.kernel.org
 
-At least the nVidia MCP55 controller quite happily supports MSI.
-This adds an option to use it. It is disabled by default.
-As per feedback by Robert Hancock, it will honour the user 
-request as the kernel will not enable MSI where the controller 
-or the specific system configuration do not support it.
+http://bugzilla.kernel.org/show_bug.cgi?id=13921
 
-Signed-off-by: Tony Vroon <tony@linx.net>
-Cc: Robert Hancock <hancockrwd@gmail.com>
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index b2d11f3..4598f19 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -602,6 +602,7 @@ MODULE_VERSION(DRV_VERSION);
- 
- static int adma_enabled;
- static int swncq_enabled = 1;
-+static int msi_enabled;
- 
- static void nv_adma_register_mode(struct ata_port *ap)
- {
-@@ -2459,6 +2460,12 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	} else if (type == SWNCQ)
- 		nv_swncq_host_init(host);
- 
-+	if (msi_enabled) {
-+		dev_printk(KERN_NOTICE, &pdev->dev, "Using MSI\n");
-+		pci_enable_msi(pdev);
-+	}
-+
- 	pci_set_master(pdev);
- 	return ata_host_activate(host, pdev->irq, ipriv->irq_handler,
- 				 IRQF_SHARED, ipriv->sht);
-@@ -2558,4 +2565,6 @@ module_param_named(adma, adma_enabled, bool, 0444);
- MODULE_PARM_DESC(adma, "Enable use of ADMA (Default: false)");
- module_param_named(swncq, swncq_enabled, bool, 0444);
- MODULE_PARM_DESC(swncq, "Enable use of SWNCQ (Default: true)");
-+module_param_named(msi, msi_enabled, bool, 0444);
-+MODULE_PARM_DESC(msi, "Enable use of MSI (Default: false)");
- 
+
+
+
+--- Comment #4 from Krystian Juskowiak <jusko@tlen.pl>  2009-08-06 00:54:12 ---
+Created an attachment (id=22619)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=22619)
+dmesg.log
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
