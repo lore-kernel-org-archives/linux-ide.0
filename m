@@ -1,35 +1,108 @@
-From: Matthew Garrett <mjg@redhat.com>
-Subject: Re: [PATCH 2/3] libata: Bind the Linux device tree to the ACPI
-	device tree
-Date: Thu, 6 Aug 2009 15:51:25 +0100
-Message-ID: <20090806145125.GB3181@srcf.ucam.org>
-References: <1247518987-10818-1-git-send-email-mjg@redhat.com> <1247518987-10818-2-git-send-email-mjg@redhat.com> <a01a16b50908052354h28522bafja255c4fcac9a2ea8@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_atiixp: fix slave device support
+Date: Thu, 6 Aug 2009 17:40:15 +0200
+Message-ID: <200908061740.15902.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:44333 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509AbZHFPlb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Aug 2009 11:41:31 -0400
 Content-Disposition: inline
-In-Reply-To: <a01a16b50908052354h28522bafja255c4fcac9a2ea8@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: =?iso-8859-1?Q?H=E5kon_L=F8vdal?= <hlovdal@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, shaohua.li@intel.com, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Krystian Juskowiak <jusko@tlen.pl>, Andrew Morton <akpm@linux-foundation.org>, Borislav Petkov <bbpetkov@yahoo.de>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 06, 2009 at 08:54:31AM +0200, H=E5kon L=F8vdal wrote:
-> Maybe I am missing something, but wouldn't it be more natural to writ=
-e this as
->=20
->         if (sata_pmp_attached(ap))
->                 adr =3D SATA_ADR(ap->port_no, dev->link->pmp);
->         else
->                 adr =3D SATA_ADR(ap->port_no, NO_PORT_MULT);
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_atiixp: fix slave device support
 
-Heh, yes. That would also work.
+PIO and MWDMA timings are never programmed for the slave device
+because timing registers are treated as 16-bit long ones.
 
---=20
-Matthew Garrett | mjg59@srcf.ucam.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The bug is an attixp -> pata_atiixp regression and goes back to:
+
+	commit 669a5db411d85a14f86cd92bc16bf7ab5b8aa235
+	Author: Jeff Garzik <jeff@garzik.org>
+	Date:   Tue Aug 29 18:12:40 2006 -0400
+
+	    [libata] Add a bunch of PATA drivers.
+
+The patch should fix:
+
+	http://bugzilla.kernel.org/show_bug.cgi?id=13921
+
+Reported-by: Krystian Juskowiak <jusko@tlen.pl>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Borislav Petkov <bbpetkov@yahoo.de>
+Cc: Robert Hancock <hancockrwd@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+After this patch pata_atiixp still has two bugs (+ few superfluous oddities)
+not present in atiixp (although not as severe as this one)..
+
+ drivers/ata/pata_atiixp.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
+
+Index: b/drivers/ata/pata_atiixp.c
+===================================================================
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -1,6 +1,7 @@
+ /*
+  * pata_atiixp.c 	- ATI PATA for new ATA layer
+  *			  (C) 2005 Red Hat Inc
++ *			  (C) 2009 Bartlomiej Zolnierkiewicz
+  *
+  * Based on
+  *
+@@ -61,20 +62,19 @@ static void atiixp_set_pio_timing(struct
+ 
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int dn = 2 * ap->port_no + adev->devno;
+-
+-	/* Check this is correct - the order is odd in both drivers */
+ 	int timing_shift = (16 * ap->port_no) + 8 * (adev->devno ^ 1);
+-	u16 pio_mode_data, pio_timing_data;
++	u32 pio_timing_data;
++	u16 pio_mode_data;
+ 
+ 	pci_read_config_word(pdev, ATIIXP_IDE_PIO_MODE, &pio_mode_data);
+ 	pio_mode_data &= ~(0x7 << (4 * dn));
+ 	pio_mode_data |= pio << (4 * dn);
+ 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_MODE, pio_mode_data);
+ 
+-	pci_read_config_word(pdev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
++	pci_read_config_dword(pdev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
+ 	pio_timing_data &= ~(0xFF << timing_shift);
+ 	pio_timing_data |= (pio_timings[pio] << timing_shift);
+-	pci_write_config_word(pdev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
++	pci_write_config_dword(pdev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
+ }
+ 
+ /**
+@@ -119,16 +119,17 @@ static void atiixp_set_dmamode(struct at
+ 		udma_mode_data |= dma << (4 * dn);
+ 		pci_write_config_word(pdev, ATIIXP_IDE_UDMA_MODE, udma_mode_data);
+ 	} else {
+-		u16 mwdma_timing_data;
+-		/* Check this is correct - the order is odd in both drivers */
+ 		int timing_shift = (16 * ap->port_no) + 8 * (adev->devno ^ 1);
++		u32 mwdma_timing_data;
+ 
+ 		dma -= XFER_MW_DMA_0;
+ 
+-		pci_read_config_word(pdev, ATIIXP_IDE_MWDMA_TIMING, &mwdma_timing_data);
++		pci_read_config_dword(pdev, ATIIXP_IDE_MWDMA_TIMING,
++				      &mwdma_timing_data);
+ 		mwdma_timing_data &= ~(0xFF << timing_shift);
+ 		mwdma_timing_data |= (mwdma_timings[dma] << timing_shift);
+-		pci_write_config_word(pdev, ATIIXP_IDE_MWDMA_TIMING, mwdma_timing_data);
++		pci_write_config_dword(pdev, ATIIXP_IDE_MWDMA_TIMING,
++				       mwdma_timing_data);
+ 	}
+ 	/*
+ 	 *	We must now look at the PIO mode situation. We may need to
