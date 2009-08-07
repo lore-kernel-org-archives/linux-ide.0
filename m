@@ -1,49 +1,40 @@
-From: "Benjamin S." <sbenni@gmx.de>
-Subject: Re: ahci sometimes fails to suspend controller
-Date: Fri, 7 Aug 2009 10:50:07 +0200
-Message-ID: <20090807105007.693b700a@pluto-lenny.milky.way>
-References: <20090719220423.54e8c75d@uranus>
-	<20090803103016.4305e098@pluto-lenny.milky.way>
-	<4A77DD1C.9010505@kernel.org>
-	<200908041733.09707.rjw@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Wolfram Sang <w.sang@pengutronix.de>
+Subject: [PATCH] pcmcia: add CNF-CDROM-ID for ide
+Date: Fri,  7 Aug 2009 13:17:50 +0200
+Message-ID: <1249643870-13276-1-git-send-email-w.sang@pengutronix.de>
+References: <20090806.132413.156910755.davem@davemloft.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:60094 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757176AbZHGIrA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Aug 2009 04:47:00 -0400
-In-Reply-To: <200908041733.09707.rjw@suse.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33493 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755812AbZHGLRu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Aug 2009 07:17:50 -0400
+In-Reply-To: <20090806.132413.156910755.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, "Huang, Shane" <Shane.Huang@amd.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-pcmcia@lists.infradead.org, David Miller <davem@davemloft.net>, Wolfram Sang <w.sang@pengutronix.de>
 
+Fixes this report:
+http://article.gmane.org/gmane.linux.kernel.pcmcia.devel/2228/
 
+Reported-by: John McGrath <john@john-mcgrath.com>
+Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+---
+ drivers/ide/ide-cs.c      |    1 +
+ 1 file changed, 1 insertion(+), 0 deletions(-)
 
-On Tue, 4 Aug 2009 17:33:09 +0200
-"Rafael J. Wysocki" <rjw@suse.com> wrote:
+diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
+index 527908f..063b933 100644
+--- a/drivers/ide/ide-cs.c
++++ b/drivers/ide/ide-cs.c
+@@ -408,6 +408,7 @@ static struct pcmcia_device_id ide_ids[] = {
+ 	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
+ 	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
++	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
+ 	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
+-- 
+1.6.3.1
 
-> On Tuesday 04 August 2009, Tejun Heo wrote:
-> > 
-> > Does irqpoll help?
-
-You asked me to count how many suspends the system is able to do until 
-the error happens. With 2.6.30 (without irqpoll) the system was able to 
-suspend 200 times consecutively (tested with a script) without any error. 
-Therefore I was not able to reproduce the error this way. After 
-upgrading to 2.6.30.4 I let it suspend many times distributed over
-the last three days. After about 270 suspends it happened again. I am
-going to start trying it with irqpoll today. 
-
-
-
-> I'd recomment trying 2.6.30.y (from kernel org) to see if the issue is still
-> there.
-
-The kernel I was using before your comment was 2.6.30. After it I 
-have upgraded the kernel to 2.6.30.4 but the problem persists.
-
-
-Regards, Benjamin
