@@ -1,55 +1,95 @@
-From: Tony Vroon <tony@linx.net>
-Subject: Re: [PATCH 2.6.32 v2] MCP55 SATA2 conditional MSI support for
- sata_nv
-Date: Fri, 07 Aug 2009 00:57:05 +0100
-Message-ID: <1249603025.30124.1.camel@localhost>
-References: <20090805192055.8F2DE1007C@gold.linx.net>
-	 <4A7A16C9.6030500@gmail.com>
-	 <412A05BA40734D4887DBC67661F433080D73228B@EXMAIL.ad.emulex.com>
-	 <1249574363.4530.23.camel@localhost>
-	 <412A05BA40734D4887DBC67661F433080D7322B1@EXMAIL.ad.emulex.com>
-	 <4A7B633C.3040500@gmail.com>  <4A7B66C2.3060207@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] pata_at91: fix resource release
+Date: Fri, 07 Aug 2009 11:15:20 +0900
+Message-ID: <4A7B8E38.3010300@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ExIEFUPpzKGVIqbQcAdL"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756646AbZHFX4k@vger.kernel.org>
-In-Reply-To: <4A7B66C2.3060207@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Chetan.Loke@Emulex.Com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, philipl@overt.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:55140 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754239AbZHGCQe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Aug 2009 22:16:34 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Sergey Matyukevich <geomatsi@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, julia@diku.dk
 
+Julias Lawall discovered that pata_at91 wasn't freeing a memory region
+allocated with kzalloc() on init failure paths.  Upon review,
+pata_at91 also seems to be doing unnecessary explicit resource
+releases for managed resources too.  Convert memory allocation to
+managed one and drop unnecessary explicit resource releases.
 
---=-ExIEFUPpzKGVIqbQcAdL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Julia Lawall <julia@diku.dk>
+Cc: Sergey Matyukevich <geomatsi@gmail.com>
+---
+ drivers/ata/pata_at91.c |   17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
-On Fri, 2009-08-07 at 08:26 +0900, Tejun Heo wrote:
-> Yeah, if the device was enabled with pcim_enable_device(), devres will
-> take of all the cleanups.
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 5702aff..41c94b1 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -250,7 +250,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
+ 		ata_port_desc(ap, "no IRQ, using PIO polling");
+ 	}
 
-Confirmed Tejun, that pcim_enable_device call is made earlier on in
-nv_init_one. I was careful to call the MSI enable at exactly the same
-point between enabling master & returning control as sata_mv did.
+-	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
 
->   No need to worry about them.
+ 	if (!info) {
+ 		dev_err(dev, "failed to allocate memory for private data\n");
+@@ -275,7 +275,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
+ 	if (!info->ide_addr) {
+ 		dev_err(dev, "failed to map IO base\n");
+ 		ret = -ENOMEM;
+-		goto err_ide_ioremap;
++		goto err_put;
+ 	}
 
-Glad to hear.
+ 	info->alt_addr = devm_ioremap(dev,
+@@ -284,7 +284,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
+ 	if (!info->alt_addr) {
+ 		dev_err(dev, "failed to map CTL base\n");
+ 		ret = -ENOMEM;
+-		goto err_alt_ioremap;
++		goto err_put;
+ 	}
 
-> Thanks.
+ 	ap->ioaddr.cmd_addr = info->ide_addr;
+@@ -303,13 +303,8 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
+ 			irq ? ata_sff_interrupt : NULL,
+ 			irq_flags, &pata_at91_sht);
 
-Regards,
-Tony V.
+-err_alt_ioremap:
+-	devm_iounmap(dev, info->ide_addr);
+-
+-err_ide_ioremap:
++err_put:
+ 	clk_put(info->mck);
+-	kfree(info);
+-
+ 	return ret;
+ }
 
---=-ExIEFUPpzKGVIqbQcAdL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+@@ -317,7 +312,6 @@ static int __devexit pata_at91_remove(struct platform_device *pdev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	struct at91_ide_info *info;
+-	struct device *dev = &pdev->dev;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+ 	if (!host)
+ 		return 0;
+@@ -328,11 +322,8 @@ static int __devexit pata_at91_remove(struct platform_device *pdev)
+ 	if (!info)
+ 		return 0;
 
-iEYEABECAAYFAkp7bdEACgkQp5vW4rUFj5p8ZgCfYV5TJ1NlU1hGooJXQM2zhh5c
-0PgAn1tAtXUcck9K/+kHT8RI8qETYNuj
-=/jRS
------END PGP SIGNATURE-----
+-	devm_iounmap(dev, info->ide_addr);
+-	devm_iounmap(dev, info->alt_addr);
+ 	clk_put(info->mck);
 
---=-ExIEFUPpzKGVIqbQcAdL--
+-	kfree(info);
+ 	return 0;
+ }
+
