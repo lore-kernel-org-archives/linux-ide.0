@@ -1,36 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] When a disk needs to be waken up from sleep, ensure that
- 	the command is retried by SCSI EH.
-Date: Fri, 07 Aug 2009 17:34:11 +0900
-Message-ID: <4A7BE703.3000004@kernel.org>
-References: <1249579547-21091-1-git-send-email-gwendal@google.com> <e7510f760908061028o1b005c4wd2552c24fc619d9e@mail.gmail.com>
+From: "Benjamin S." <sbenni@gmx.de>
+Subject: Re: ahci sometimes fails to suspend controller
+Date: Fri, 7 Aug 2009 10:50:07 +0200
+Message-ID: <20090807105007.693b700a@pluto-lenny.milky.way>
+References: <20090719220423.54e8c75d@uranus>
+	<20090803103016.4305e098@pluto-lenny.milky.way>
+	<4A77DD1C.9010505@kernel.org>
+	<200908041733.09707.rjw@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59547 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757293AbZHGIcC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Aug 2009 04:32:02 -0400
-In-Reply-To: <e7510f760908061028o1b005c4wd2552c24fc619d9e@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:60094 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757176AbZHGIrA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Aug 2009 04:47:00 -0400
+In-Reply-To: <200908041733.09707.rjw@suse.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, "Huang, Shane" <Shane.Huang@amd.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Gwendal Grignou wrote:
-> The explanation did not go through git-send-email:
-> 
->  Without this fix, ATA passthrough commands are not resend to the
-> drive, and no error is
->  signalled to the caller because:
->  - allowed retry count is 1
->  - ata_eh_qc_complete fill the sense data, so result is valid
->  - sense data is filled with untouched ATA registers.
 
-Would setting ATA_QCFLAG_RETRY achieve the same result?
 
-Thanks.
+On Tue, 4 Aug 2009 17:33:09 +0200
+"Rafael J. Wysocki" <rjw@suse.com> wrote:
 
--- 
-tejun
+> On Tuesday 04 August 2009, Tejun Heo wrote:
+> > 
+> > Does irqpoll help?
+
+You asked me to count how many suspends the system is able to do until 
+the error happens. With 2.6.30 (without irqpoll) the system was able to 
+suspend 200 times consecutively (tested with a script) without any error. 
+Therefore I was not able to reproduce the error this way. After 
+upgrading to 2.6.30.4 I let it suspend many times distributed over
+the last three days. After about 270 suspends it happened again. I am
+going to start trying it with irqpoll today. 
+
+
+
+> I'd recomment trying 2.6.30.y (from kernel org) to see if the issue is still
+> there.
+
+The kernel I was using before your comment was 2.6.30. After it I 
+have upgraded the kernel to 2.6.30.4 but the problem persists.
+
+
+Regards, Benjamin
