@@ -1,95 +1,102 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] pata_at91: fix resource release
-Date: Fri, 07 Aug 2009 11:15:20 +0900
-Message-ID: <4A7B8E38.3010300@kernel.org>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH] kill @force_restart and refine CLO for ahci_kick_engine()
+Date: Fri, 7 Aug 2009 15:05:52 +0800
+Message-ID: <1249628752.3413.6.camel@zm-desktop>
+Reply-To: shane.huang@amd.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55140 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754239AbZHGCQe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Aug 2009 22:16:34 -0400
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:58322
+	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756622AbZHGHGO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Aug 2009 03:06:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Sergey Matyukevich <geomatsi@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, julia@diku.dk
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, tj@kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-Julias Lawall discovered that pata_at91 wasn't freeing a memory region
-allocated with kzalloc() on init failure paths.  Upon review,
-pata_at91 also seems to be doing unnecessary explicit resource
-releases for managed resources too.  Convert memory allocation to
-managed one and drop unnecessary explicit resource releases.
+This patch refines ahci_kick_engine() after discussion with Tejun about
+FBS(FIS-based switching) support preparation:
+a. Kill @force_restart and always kick the engine. The only case where
+   @force_restart is zero is when it's called from ahci_p5wdh_hardreset()
+   Actually at that point, BSY is pretty much guaranteed to be set.
+b. If PMP is attached, ignore busy and always do CLO. (AHCI-1.3 9.2)
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Julia Lawall <julia@diku.dk>
-Cc: Sergey Matyukevich <geomatsi@gmail.com>
----
- drivers/ata/pata_at91.c |   17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+Cc: Tejun Heo <tj@kernel.org>
 
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 5702aff..41c94b1 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -250,7 +250,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 		ata_port_desc(ap, "no IRQ, using PIO polling");
- 	}
-
--	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
-
- 	if (!info) {
- 		dev_err(dev, "failed to allocate memory for private data\n");
-@@ -275,7 +275,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 	if (!info->ide_addr) {
- 		dev_err(dev, "failed to map IO base\n");
- 		ret = -ENOMEM;
--		goto err_ide_ioremap;
-+		goto err_put;
- 	}
-
- 	info->alt_addr = devm_ioremap(dev,
-@@ -284,7 +284,7 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 	if (!info->alt_addr) {
- 		dev_err(dev, "failed to map CTL base\n");
- 		ret = -ENOMEM;
--		goto err_alt_ioremap;
-+		goto err_put;
- 	}
-
- 	ap->ioaddr.cmd_addr = info->ide_addr;
-@@ -303,13 +303,8 @@ static int __devinit pata_at91_probe(struct platform_device *pdev)
- 			irq ? ata_sff_interrupt : NULL,
- 			irq_flags, &pata_at91_sht);
-
--err_alt_ioremap:
--	devm_iounmap(dev, info->ide_addr);
--
--err_ide_ioremap:
-+err_put:
- 	clk_put(info->mck);
--	kfree(info);
--
- 	return ret;
+diff -ruN a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+--- a/drivers/ata/ahci.c	2009-07-29 14:38:39.000000000 +0800
++++ b/drivers/ata/ahci.c	2009-08-06 17:36:59.000000000 +0800
+@@ -1578,7 +1578,7 @@
+ 	pp->cmd_slot[tag].tbl_addr_hi = cpu_to_le32((cmd_tbl_dma >> 16) >> 16);
  }
-
-@@ -317,7 +312,6 @@ static int __devexit pata_at91_remove(struct platform_device *pdev)
+ 
+-static int ahci_kick_engine(struct ata_port *ap, int force_restart)
++static int ahci_kick_engine(struct ata_port *ap)
  {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
- 	struct at91_ide_info *info;
--	struct device *dev = &pdev->dev;
-
- 	if (!host)
- 		return 0;
-@@ -328,11 +322,8 @@ static int __devexit pata_at91_remove(struct platform_device *pdev)
- 	if (!info)
- 		return 0;
-
--	devm_iounmap(dev, info->ide_addr);
--	devm_iounmap(dev, info->alt_addr);
- 	clk_put(info->mck);
-
--	kfree(info);
- 	return 0;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+@@ -1586,18 +1586,16 @@
+ 	u32 tmp;
+ 	int busy, rc;
+ 
+-	/* do we need to kick the port? */
+-	busy = status & (ATA_BUSY | ATA_DRQ);
+-	if (!busy && !force_restart)
+-		return 0;
+-
+ 	/* stop engine */
+ 	rc = ahci_stop_engine(ap);
+ 	if (rc)
+ 		goto out_restart;
+ 
+-	/* need to do CLO? */
+-	if (!busy) {
++	/* need to do CLO?
++	 * always do CLO if PMP is attached (AHCI-1.3 9.2)
++	 */
++	busy = status & (ATA_BUSY | ATA_DRQ);
++	if (!busy && !sata_pmp_attached(ap)) {
+ 		rc = 0;
+ 		goto out_restart;
+ 	}
+@@ -1645,7 +1643,7 @@
+ 		tmp = ata_wait_register(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1,
+ 					1, timeout_msec);
+ 		if (tmp & 0x1) {
+-			ahci_kick_engine(ap, 1);
++			ahci_kick_engine(ap);
+ 			return -EBUSY;
+ 		}
+ 	} else
+@@ -1667,7 +1665,7 @@
+ 	DPRINTK("ENTER\n");
+ 
+ 	/* prepare for SRST (AHCI-1.1 10.4.1) */
+-	rc = ahci_kick_engine(ap, 1);
++	rc = ahci_kick_engine(ap);
+ 	if (rc && rc != -EOPNOTSUPP)
+ 		ata_link_printk(link, KERN_WARNING,
+ 				"failed to reset engine (errno=%d)\n", rc);
+@@ -1873,7 +1871,7 @@
+ 		rc = ata_wait_after_reset(link, jiffies + 2 * HZ,
+ 					  ahci_check_ready);
+ 		if (rc)
+-			ahci_kick_engine(ap, 0);
++			ahci_kick_engine(ap);
+ 	}
+ 	return rc;
  }
+@@ -2254,7 +2252,7 @@
+ 
+ 	/* make DMA engine forget about the failed command */
+ 	if (qc->flags & ATA_QCFLAG_FAILED)
+-		ahci_kick_engine(ap, 1);
++		ahci_kick_engine(ap);
+ }
+ 
+ static void ahci_pmp_attach(struct ata_port *ap)
+
 
