@@ -1,56 +1,34 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: IDE -next tree
-Date: Sun, 9 Aug 2009 01:57:50 +1000
-Message-ID: <20090809015750.36f309f0.sfr@canb.auug.org.au>
-References: <20090807.213713.259828836.davem@davemloft.net>
-	<20090808144140.10e4f2e9.sfr@canb.auug.org.au>
-	<20090808.054512.37246834.davem@davemloft.net>
+From: Mathieu GELI <mathieu.geli@gmail.com>
+Subject: Re: CF to SATA bridge support
+Date: Sat, 8 Aug 2009 20:35:46 +0200
+Message-ID: <43479bc90908081135i229d4061k9d461444d3600645@mail.gmail.com>
+References: <43479bc90908071059o2ce5ac94v1d9d959e3af44326@mail.gmail.com>
+	 <4A7CEF3B.9090506@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Sun__9_Aug_2009_01_57_50_+1000_mP.TG01FMkhO8Bow"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20090808.054512.37246834.davem@davemloft.net>
-Sender: linux-next-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-next@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from qw-out-2122.google.com ([74.125.92.26]:28093 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752789AbZHHSfp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Aug 2009 14:35:45 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so881115qwh.37
+        for <linux-ide@vger.kernel.org>; Sat, 08 Aug 2009 11:35:46 -0700 (PDT)
+In-Reply-To: <4A7CEF3B.9090506@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
---Signature=_Sun__9_Aug_2009_01_57_50_+1000_mP.TG01FMkhO8Bow
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Hmm.. err_mask 0x2 seems to be HSM violation, and edma_err_cause=00001000
+> seems to be.. IORDY timeout? Not sure what that is supposed to indicate on
+> this controller..
 
-Hi Dave,
+Not sure what to think about the HSM violation but about the IORDY
+timeout, does that [1] ring a bell ?
+I think the clock is 150Mhz though.
 
-On Sat, 08 Aug 2009 05:45:12 -0700 (PDT) David Miller <davem@davemloft.net>=
- wrote:
->
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Sat, 8 Aug 2009 14:41:40 +1000
->=20
-> >=20
-> > So does that mean that the current ide tree
-> > (master.kernel.org/pub/scm/linux/kernel/git/davem/ide-2.6.git) should
-> > become ide-current (i.e. it contains bug fixes for the current release)?
->=20
-> That's right.
+[1] http://patchwork.ozlabs.org/patch/29080/
 
-OK, it will be that way starting on Monday.
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Sun__9_Aug_2009_01_57_50_+1000_mP.TG01FMkhO8Bow
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkp9oH4ACgkQjjKRsyhoI8w4/ACfYIzmgDRW/Zl8wdyvP36TLkdd
-NR4AmwYlGXK4o4a1Qle/3P2oNIbUh4av
-=kueB
------END PGP SIGNATURE-----
-
---Signature=_Sun__9_Aug_2009_01_57_50_+1000_mP.TG01FMkhO8Bow--
+-- 
+Mathieu
