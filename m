@@ -1,44 +1,38 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 2.6.31-rc1 with ide-tape / STT2000A
-Date: Mon, 10 Aug 2009 00:27:01 +0200
-Message-ID: <200908100027.01469.bzolnier@gmail.com>
-References: <h5kn9c$51r$1@ger.gmane.org> <h5krje$ec7$1@ger.gmane.org> <20090809175840.0705f2d0@lxorguk.ukuu.org.uk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
+Date: Sun, 9 Aug 2009 22:41:15 GMT
+Message-ID: <200908092241.n79MfFiV029952@demeter.kernel.org>
+References: <bug-13882-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:50762 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbZHIW1h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Aug 2009 18:27:37 -0400
-Received: by bwz19 with SMTP id 19so2303472bwz.37
-        for <linux-ide@vger.kernel.org>; Sun, 09 Aug 2009 15:27:37 -0700 (PDT)
-In-Reply-To: <20090809175840.0705f2d0@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:42069 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbZHIWlP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Aug 2009 18:41:15 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n79MfFWk029953
+	for <linux-ide@vger.kernel.org>; Sun, 9 Aug 2009 22:41:15 GMT
+In-Reply-To: <bug-13882-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jim Duda <jim@duda.tzo.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sunday 09 August 2009 18:58:40 Alan Cox wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=13882
 
-> did before the old IDE people broke ide-scsi support.
 
-ide-scsi was an orphan without a single person willing to work on it
-or trying to fix outstanding problems (which didn't surprise me given
-that you had to be IDE+SCSI+ide-scsi+st+sr expert to do it).
 
-That was not the case with ide-tape (which is at least fixable because
-it is now mere 2000 LOC and contains no inter-subsystem dependencies).
 
-If you miss ide-scsi so much I don't quite understand what stops you
-from bringing it back to live and stepping in as its Maintainer? :-)
 
-The truth is that the change was ACK-ed by everybody except you and you
-refused to step in as ide-scsi Maintainer..  so please stop defaming
-hard working people (in this case Fujita and Borislav) and pushing some
-childish views on what other people should be doing (without putting
-absolutely no work into it yourself).
+--- Comment #20 from checkit <python.dev.9@gmail.com>  2009-08-09 22:41:14 ---
+I just replaced my 40-wire cable with an 80-wire cable, reran the md5sum test
+using 2.6.27.14, and it looks like my DVD drive is working fine now.
 
-Thanks.
+I don't have the inclination to spend any more time on the original bug. 
+Perhaps somebody else with more time and inclination will want to look into
+this further.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
