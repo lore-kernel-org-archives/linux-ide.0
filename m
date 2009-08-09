@@ -1,48 +1,37 @@
 From: Jim Duda <jim@duda.tzo.com>
 Subject: Re: 2.6.31-rc1 with ide-tape / STT2000A
-Date: Sun, 09 Aug 2009 18:51:56 -0400
-Message-ID: <4A7F530C.9090209@duda.tzo.com>
-References: <h5kn9c$51r$1@ger.gmane.org> <20090809072823.GA2130@liondog.tnic>
+Date: Sun, 09 Aug 2009 19:32:52 -0400
+Message-ID: <4A7F5CA4.2060905@duda.tzo.com>
+References: <h5kn9c$51r$1@ger.gmane.org> <20090809072823.GA2130@liondog.tnic> <4A7F530C.9090209@duda.tzo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms173001pub.verizon.net ([206.46.173.1]:50679 "EHLO
-	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbZHIWwH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Aug 2009 18:52:07 -0400
-Received: from linux.duda.tzo.com ([96.252.13.163]) by vms173001.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008; 32bit))
- with ESMTPA id <0KO400GX4SULON80@vms173001.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Sun, 09 Aug 2009 17:51:58 -0500 (CDT)
-In-reply-to: <20090809072823.GA2130@liondog.tnic>
+Received: from main.gmane.org ([80.91.229.2]:51731 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751576AbZHIXdJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Aug 2009 19:33:09 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MaHsv-0004KQ-1G
+	for linux-ide@vger.kernel.org; Sun, 09 Aug 2009 23:33:05 +0000
+Received: from pool-96-252-13-163.bstnma.fios.verizon.net ([96.252.13.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sun, 09 Aug 2009 23:33:05 +0000
+Received: from jim by pool-96-252-13-163.bstnma.fios.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sun, 09 Aug 2009 23:33:05 +0000
+In-Reply-To: <4A7F530C.9090209@duda.tzo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-ide@vger.kernel.org
 
-On 08/09/2009 03:28 AM, Borislav Petkov wrote:
 
->
-> If you'd like to test patches you can get Dave's linux-next git repo at
-> http://git.kernel.org/?p=linux/kernel/git/davem/ide-next-2.6.git;a=summary
->
+> The rc5 source uses DEBUG_LOG and not IDETAPE_DEBUG_LOG.
 
-I don't have any experience with installing patches from the git repo.
-I tried to figure it out, but didn't have much luck.
+Ignore this comment.
 
-If there is a FAQ or HOWTO on git patches, I'll read it.
-
-> apply the patch below and catch all boot output from your machine and
-> send it to me.
-
-I upgraded to rc5, and applied these patches.
-
-I'm not getting any additional information in my kernel logs.
-The rc5 source uses DEBUG_LOG and not IDETAPE_DEBUG_LOG.
-
-Will Dave's ide-next be part of rc6?
+I'm working on adding my own debug_log print statements in ide-tape to make sure I know I'm looking at the proper file, etc.
 
 Jim
-
 
