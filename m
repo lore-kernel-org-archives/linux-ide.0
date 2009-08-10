@@ -1,46 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jim Duda <jim@duda.tzo.com>
 Subject: Re: 2.6.31-rc1 with ide-tape / STT2000A
-Date: Mon, 10 Aug 2009 23:42:12 +0200
-Message-ID: <200908102342.15252.bzolnier@gmail.com>
-References: <h5kn9c$51r$1@ger.gmane.org> <200908102148.05751.bzolnier@gmail.com> <20090810222013.4b0abe96@lxorguk.ukuu.org.uk>
+Date: Mon, 10 Aug 2009 18:10:10 -0400
+Message-ID: <4A809AC2.70206@duda.tzo.com>
+References: <h5kn9c$51r$1@ger.gmane.org> <20090809072823.GA2130@liondog.tnic> <4A7F85DB.40604@duda.tzo.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:44490 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753778AbZHJVnQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Aug 2009 17:43:16 -0400
-Received: by bwz19 with SMTP id 19so2843737bwz.37
-        for <linux-ide@vger.kernel.org>; Mon, 10 Aug 2009 14:43:16 -0700 (PDT)
-In-Reply-To: <20090810222013.4b0abe96@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:40882 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754021AbZHJWKV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Aug 2009 18:10:21 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Mad4O-0007RM-Ns
+	for linux-ide@vger.kernel.org; Mon, 10 Aug 2009 22:10:21 +0000
+Received: from pool-96-252-13-163.bstnma.fios.verizon.net ([96.252.13.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 10 Aug 2009 22:10:20 +0000
+Received: from jim by pool-96-252-13-163.bstnma.fios.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 10 Aug 2009 22:10:20 +0000
+In-Reply-To: <4A7F85DB.40604@duda.tzo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
-On Monday 10 August 2009 23:20:13 Alan Cox wrote:
-> > That style of discussion is not the kind of professional attitude
-> > that we would like to encourage here.
-> 
-> "We". Would that be the royal we or have you suddenly become 'voice of
-> the community' ?
-> 
-> > The rest of your mail is also not worth discussing with as it is made
-> > of completely made up stuff 
+On 08/09/2009 10:28 PM, Jim Duda wrote:
+> On 08/09/2009 03:28 AM, Borislav Petkov wrote:
+>>
+>> If you'd like to test patches you can get Dave's linux-next git repo at
+>> http://git.kernel.org/?p=linux/kernel/git/davem/ide-next-2.6.git;a=summary
+>>
+>>
 
-Seems like the "inconvenient" part of my sentence became M.I.A... Hmmm...
+I attempted a tape back up last night with git/davem/ide-next-2.6.git.
 
-> Your professional attitude astounds me. If that is the professionalism
-> you wish to encourage take it elsewhere..
-> 
-> I fixed ide-scsi for 2.4 long ago. Back then it worked. Since then the
-> people responsible for IDE let it rot.
+The behavior is the same, the 20G byte Travan tape filled up before expected.
 
-Possibly, I don't know exactly what happened in 2.4, I took over in 2.5.7x.
+Jim
 
-However simply referring to "IDE people breaking things" in this era implies
-2.6.x happenings not some 2.4.x or 2.5.x pre-history so please just don't do
-it as it causes inconvenient misunderstandings..
