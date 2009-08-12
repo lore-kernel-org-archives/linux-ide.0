@@ -1,52 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_atiixp: fix slave device support
-Date: Wed, 12 Aug 2009 06:25:58 -0400
-Message-ID: <4A8298B6.4060608@garzik.org>
-References: <200908061740.15902.bzolnier@gmail.com> <200908061747.05944.bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH #upstream-fixes] ahci: add workaround for on-board 5723s
+ on some gigabyte boards
+Date: Wed, 12 Aug 2009 06:26:29 -0400
+Message-ID: <4A8298D5.9070100@pobox.com>
+References: <4A77C760.1010300@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932481AbZHLK0V@vger.kernel.org>
-In-Reply-To: <200908061747.05944.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Krystian Juskowiak <jusko@tlen.pl>, Andrew Morton <akpm@linux-foundation.org>, Borislav Petkov <bbpetkov@yahoo.de>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:52561 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932469AbZHLK0b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Aug 2009 06:26:31 -0400
+In-Reply-To: <4A77C760.1010300@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: ide <linux-ide@vger.kernel.org>, Nicolas.Mailhot@LaPoste.net, marcbowes@gmail.com, Andrew Morton <akpm@linux-foundation.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 06 August 2009 17:40:15 Bartlomiej Zolnierkiewicz wrote:
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Subject: [PATCH] pata_atiixp: fix slave device support
+Tejun Heo wrote:
+> Some gigabytes have on-board SIMG5723s connected to JMB ahcis.  These
+> are used to implement hardware raid.  Unfortunately some firmware
+> revisions on these 5723s don't bring the link down when all the
+> downstream ports are unoccupied while not responding to reset protocol
+> which makes libata think that there's device attached to the port but
+> is not responding and retry.  This results in painfully wrong boot
+> detection time for these ports when they're empty.
 > 
-> Argh, I pushed the "Send" button too quick..
+> This patch quirks those boards such that ahci gives up after the
+> initial timeout.  Combined with parallel probing, this gives quick
+> enough probing and also is safe because SIMG5723 will respond to the
+> first try if any of the downstream ports is occupied.
 > 
-> Below version with the correct patch description
-> (I doubt that this fix will help with bug #13921)..
-> 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH v2] pata_atiixp: fix second channel support
-> 
-> PIO and MWDMA timings are never programmed for the second channel
-> because timing registers are treated as 16-bit long ones.
-> 
-> The bug is an attixp -> pata_atiixp regression and goes back to:
-> 
-> 	commit 669a5db411d85a14f86cd92bc16bf7ab5b8aa235
-> 	Author: Jeff Garzik <jeff@garzik.org>
-> 	Date:   Tue Aug 29 18:12:40 2006 -0400
-> 
-> 	    [libata] Add a bunch of PATA drivers.
-> 
-> Cc: Krystian Juskowiak <jusko@tlen.pl>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Borislav Petkov <bbpetkov@yahoo.de>
-> Cc: Robert Hancock <hancockrwd@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: Marc Bowes <marcbowes@gmail.com>
+> Reported-by: Nicolas Mailhot <Nicolas.Mailhot@LaPoste.net>
 > ---
-> After this patch pata_atiixp still have two bugs (+ few superfluous oddities)
-> not present in atiixp (although not as severe as this one)..
-> 
->  drivers/ata/pata_atiixp.c |   19 ++++++++++---------
->  1 file changed, 10 insertions(+), 9 deletions(-)
+>  drivers/ata/ahci.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 72 insertions(+), 4 deletions(-)
 
 applied
+
+
