@@ -1,36 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: OCZ Vertex can't do HPA
-Date: Wed, 12 Aug 2009 06:25:49 -0400
-Message-ID: <4A8298AD.1040704@garzik.org>
-References: <4A7B0BE3.9050707@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.32 v3] Conditional MSI support for sata_nv
+Date: Wed, 12 Aug 2009 06:26:05 -0400
+Message-ID: <4A8298BD.8020500@pobox.com>
+References: <20090805235009.88C091007F@gold.linx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52528 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:52538 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932464AbZHLKZv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Aug 2009 06:25:51 -0400
-In-Reply-To: <4A7B0BE3.9050707@kernel.org>
+	id S932446AbZHLK0I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Aug 2009 06:26:08 -0400
+In-Reply-To: <20090805235009.88C091007F@gold.linx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, probe@spray.se, stable@kernel.org
+To: Tony Vroon <tony@linx.net>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Philip Langdale <philipl@overt.org>, Robert Hancock <hancockrwd@gmail.com>
 
-Tejun Heo wrote:
-> OCZ Vertex SSD can't do HPA and not in a usual way.  It reports HPA,
-> allows unlocking but then fails all IOs which fall in the unlocked
-> area.  Quirk it so that HPA unlocking is not used for the device.
+Tony Vroon wrote:
+> At least the nVidia MCP55 controller quite happily supports MSI.
+> This adds an option to use it. It is disabled by default.
+> As per feedback by Robert Hancock, it will honour the user 
+> request as the kernel will not enable MSI where the controller 
+> or the specific system configuration do not support it.
 > 
-> Reported by Daniel Perup in bnc#522414.
+> Signed-off-by: Tony Vroon <tony@linx.net>
+> Cc: Robert Hancock <hancockrwd@gmail.com>
 > 
->  https://bugzilla.novell.com/show_bug.cgi?id=522414
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Daniel Perup <probe@spray.se>
-> ---
->  drivers/ata/libata-core.c |    3 +++
->  1 file changed, 3 insertions(+)
+> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> index b2d11f3..4598f19 100644
+> --- a/drivers/ata/sata_nv.c
+> +++ b/drivers/ata/sata_nv.c
+> @@ -602,6 +602,7 @@ MODULE_VERSION(DRV_VERSION);
+>  
+>  static int adma_enabled;
+>  static int swncq_enabled = 1;
+> +static int msi_enabled;
+>  
+>  static void nv_adma_register_mode(struct ata_port *ap)
+>  {
+> @@ -2459,6 +2460,12 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	} else if (type == SWNCQ)
+>  		nv_swncq_host_init(host);
+>  
+> +	if (msi_enabled) {
+> +		dev_printk(KERN_NOTICE, &pdev->dev, "Using MSI\n");
+> +		pci_enable_msi(pdev);
+> +	}
+> +
+>  	pci_set_master(pdev);
+>  	return ata_host_activate(host, pdev->irq, ipriv->irq_handler,
+>  				 IRQF_SHARED, ipriv->sht);
+> @@ -2558,4 +2565,6 @@ module_param_named(adma, adma_enabled, bool, 0444);
+>  MODULE_PARM_DESC(adma, "Enable use of ADMA (Default: false)");
+>  module_param_named(swncq, swncq_enabled, bool, 0444);
+>  MODULE_PARM_DESC(swncq, "Enable use of SWNCQ (Default: true)");
 
 applied
 
