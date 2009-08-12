@@ -1,45 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Soften up the dmesg on SB600 PMP softreset failure recovery
-Date: Wed, 12 Aug 2009 06:26:20 -0400
-Message-ID: <4A8298CC.4040908@pobox.com>
-References: <1249438241.3583.5.camel@zm-desktop>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata_atiixp: fix slave device support
+Date: Wed, 12 Aug 2009 06:25:58 -0400
+Message-ID: <4A8298B6.4060608@garzik.org>
+References: <200908061740.15902.bzolnier@gmail.com> <200908061747.05944.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52549 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932496AbZHLK0V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Aug 2009 06:26:21 -0400
-In-Reply-To: <1249438241.3583.5.camel@zm-desktop>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932481AbZHLK0V@vger.kernel.org>
+In-Reply-To: <200908061747.05944.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Krystian Juskowiak <jusko@tlen.pl>, Andrew Morton <akpm@linux-foundation.org>, Borislav Petkov <bbpetkov@yahoo.de>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: shane.huang@amd.com
-Cc: linux-ide@vger.kernel.org, tj@kernel.org, pgnet.dev@gmail.com
 
-Shane Huang wrote:
-> Too strong words led to spurious bug reports: Novell bugzilla #527748,
-> RedHat bugzilla #468800. This patch is used to soften up the dmesg on
-> SB600 PMP softreset failure recovery, so as to remove the scariness and
-> concern from community.
+Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 06 August 2009 17:40:15 Bartlomiej Zolnierkiewicz wrote:
+>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Subject: [PATCH] pata_atiixp: fix slave device support
 > 
-> Reported-by: pgnet Dev <pgnet.dev@gmail.com>
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> Cc: Tejun Heo <tj@kernel.org>
+> Argh, I pushed the "Send" button too quick..
 > 
-> diff -ruN a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> --- a/drivers/ata/ahci.c	2009-07-29 14:38:39.000000000 +0800
-> +++ b/drivers/ata/ahci.c	2009-08-04 17:24:34.000000000 +0800
-> @@ -1769,7 +1769,8 @@
->  		irq_sts = readl(port_mmio + PORT_IRQ_STAT);
->  		if (irq_sts & PORT_IRQ_BAD_PMP) {
->  			ata_link_printk(link, KERN_WARNING,
-> -					"failed due to HW bug, retry pmp=0\n");
-> +					"applying SB600 PMP SRST workaround "
-> +					"and retrying\n");
->  			rc = ahci_do_softreset(link, class, 0, deadline,
->  					       ahci_check_ready);
+> Below version with the correct patch description
+> (I doubt that this fix will help with bug #13921)..
+> 
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH v2] pata_atiixp: fix second channel support
+> 
+> PIO and MWDMA timings are never programmed for the second channel
+> because timing registers are treated as 16-bit long ones.
+> 
+> The bug is an attixp -> pata_atiixp regression and goes back to:
+> 
+> 	commit 669a5db411d85a14f86cd92bc16bf7ab5b8aa235
+> 	Author: Jeff Garzik <jeff@garzik.org>
+> 	Date:   Tue Aug 29 18:12:40 2006 -0400
+> 
+> 	    [libata] Add a bunch of PATA drivers.
+> 
+> Cc: Krystian Juskowiak <jusko@tlen.pl>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Borislav Petkov <bbpetkov@yahoo.de>
+> Cc: Robert Hancock <hancockrwd@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> After this patch pata_atiixp still have two bugs (+ few superfluous oddities)
+> not present in atiixp (although not as severe as this one)..
+> 
+>  drivers/ata/pata_atiixp.c |   19 ++++++++++---------
+>  1 file changed, 10 insertions(+), 9 deletions(-)
 
 applied
-
-
