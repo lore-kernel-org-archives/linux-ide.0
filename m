@@ -1,31 +1,35 @@
-From: Sergey Matyukevich <geomatsi@gmail.com>
-Subject: Re: [PATCH 9/10] drivers/ata: introduce missing kfree
-Date: Sat, 15 Aug 2009 11:15:51 +0400
-Message-ID: <20090815111551.78852e61@realm>
-References: <Pine.LNX.4.64.0908011055050.23408@ask.diku.dk>
-	<4A77BDCC.1070502@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Sat, 15 Aug 2009 08:02:30 GMT
+Message-ID: <200908150802.n7F82U3H025675@demeter.kernel.org>
+References: <bug-12874-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:47363 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074AbZHOHaV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 03:30:21 -0400
-Received: by ewy10 with SMTP id 10so1964038ewy.37
-        for <linux-ide@vger.kernel.org>; Sat, 15 Aug 2009 00:30:22 -0700 (PDT)
-In-Reply-To: <4A77BDCC.1070502@kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:55361 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbZHOIC3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 04:02:29 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n7F82VMs025676
+	for <linux-ide@vger.kernel.org>; Sat, 15 Aug 2009 08:02:31 GMT
+In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Julia Lawall <julia@diku.dk>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
+http://bugzilla.kernel.org/show_bug.cgi?id=12874
 
-> cc'ing Matyukevich Sergey.  Matyukevich, is it possible to use
-> devm_kzalloc() instead?
 
-Many thanks for review and fixes. 
-Your final patch with devm_kzalloc is just fine.
 
-Sergey
+
+
+--- Comment #33 from Borislav Petkov <bbpetkov@yahoo.de>  2009-08-15 08:02:27 ---
+Created an attachment (id=22722)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=22722)
+disable DMA for RW commands
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
