@@ -1,38 +1,44 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12874] Seagate STT20000A no longer works
-Date: Sat, 15 Aug 2009 08:04:06 GMT
-Message-ID: <200908150804.n7F846S9025808@demeter.kernel.org>
-References: <bug-12874-11633@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Sergey Matyukevich <geomatsi@gmail.com>
+Subject: [PATCH] at91_ide: remove headers specific for at91sam9263
+Date: Sat, 15 Aug 2009 14:02:41 +0400
+Message-ID: <1250330561-10975-1-git-send-email-geomatsi@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:55371 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbZHOIEF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 04:04:05 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n7F84653025809
-	for <linux-ide@vger.kernel.org>; Sat, 15 Aug 2009 08:04:06 GMT
-In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
+Received: from ey-out-2122.google.com ([74.125.78.27]:49032 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbZHOKJg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 06:09:36 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so436297eye.37
+        for <linux-ide@vger.kernel.org>; Sat, 15 Aug 2009 03:09:36 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Stanislaw Gruszka <stf_xl@wp.pl>, linux-ide@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, Sergey Matyukevich <geomatsi@gmail.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12874
+This driver requires only static memory controller definitions and macroses
+contained in generic header at91sam9_smc.h.
 
+Those extra headers are misleading since this driver also works fine for
+at91sam9260 SoC: tests were performed on afeb9260 board.
 
+Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
+---
+ drivers/ide/at91_ide.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-
-
---- Comment #34 from Borislav Petkov <bbpetkov@yahoo.de>  2009-08-15 08:04:05 ---
-Hi Mark.
-
-please try this patch to see whether it fixes your reported problem:
-http://bugzilla.kernel.org/attachment.cgi?id=22722.
-
-Thanks.
-
+diff --git a/drivers/ide/at91_ide.c b/drivers/ide/at91_ide.c
+index dbfeda4..248219a 100644
+--- a/drivers/ide/at91_ide.c
++++ b/drivers/ide/at91_ide.c
+@@ -29,9 +29,7 @@
+ 
+ #include <mach/board.h>
+ #include <mach/gpio.h>
+-#include <mach/at91sam9263.h>
+ #include <mach/at91sam9_smc.h>
+-#include <mach/at91sam9263_matrix.h>
+ 
+ #define DRV_NAME "at91_ide"
+ 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.2.5
+
