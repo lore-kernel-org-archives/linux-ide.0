@@ -1,42 +1,77 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH, RFC] xfs: batched discard support
-Date: Sun, 16 Aug 2009 10:26:03 -0400
-Message-ID: <4A8816FB.8070408@rtr.ca>
-References: <20090816004705.GA7347@infradead.org> <4A876255.10606@rtr.ca> <4A876CA9.20906@rtr.ca> <20090816022500.GA12392@infradead.org> <4A8802F3.6010908@rtr.ca> <4A8810C4.3050800@rtr.ca> <20090816142331.GA4284@infradead.org>
+From: "Subbrathnam, Swaminathan" <swami.iyer-l0cyMroinI0@public.gmane.org>
+Subject: RE: sata AHCI controller over non-PCI bus
+Date: Sun, 16 Aug 2009 20:05:47 +0530
+Message-ID: <FCCFB4CDC6E5564B9182F639FC35608702F4E077E1@dbde02.ent.ti.com>
+References: <FCCFB4CDC6E5564B9182F639FC35608702F5989152@dbde02.ent.ti.com>
+	<4A7FE245.8020002@ru.mvista.com>
+	<FCCFB4CDC6E5564B9182F639FC35608702F59891CB@dbde02.ent.ti.com>,
+	<4A88014D.9060309@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:41554 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754220AbZHPO0E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Aug 2009 10:26:04 -0400
-In-Reply-To: <20090816142331.GA4284@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+In-Reply-To: <4A88014D.9060309-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
+Content-Language: en-US
+List-Unsubscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
+	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://linux.omap.com/pipermail/davinci-linux-open-source>
+List-Post: <mailto:davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+List-Help: <mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=help>
+List-Subscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
+	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=subscribe>
+Sender: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
+Errors-To: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
+To: Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
+Cc: "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org" <davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> On Sun, Aug 16, 2009 at 09:59:32AM -0400, Mark Lord wrote:
->> Okay, I got Matthews patches updated onto 2.6.31, and fixed the incompatibilities
->> between those and the XFS TRIM patch (from Christoph), plus a sector_t printk issue.
->>
->> My apologies for attachments, but I am attaching the updated Christoph patch,
->> as well as my hacked-up forward-port of Matthew's patches.
->>
->> Not pretty, but they work.  :)
->>
->> Now.. running Christoph's "xfs trim" on a 4.6GB mostly already-trimmed
->> XFS partition gave this for the first time around:
-> 
->> The problem is, it still issues TRIMs to the LLD one extent at a time.
->> Compare this with doing it all in a single TRIM command
->> with the wiper.sh script (filesystem unmounted):
-> 
-> I could do a variant which issues a single TRIM, but that would require
-> us to lock out all other allocations for the time the trim takes.  I'll
-> hack that up once I get some time.
-..
+Jeff,
 
-Matthew's stuff will have to change to support that, too.
+I can work on the seperation aspects as I need to get the OMAPL138 SATA sol=
+ution working.  I will try to provide a basic implementation by end of this=
+ week.  Pl. provide your feedback on the same if we need to further refine =
+it to address broad use cases.
+
+Thanks for your response.
+
+regards
+swami
+
+________________________________________
+From: Jeff Garzik [jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org]
+Sent: Sunday, August 16, 2009 6:23 PM
+To: Subbrathnam, Swaminathan
+Cc: Sergei Shtylyov; linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; LKML
+Subject: Re: sata AHCI controller over non-PCI bus
+
+Subbrathnam, Swaminathan wrote:
+> Jeff,
+>       From the below link (from Sergei) it seems that you have already re=
+-factored the AHCI implementation dependency on PCI.  I would like to add s=
+upport for the OMAPL138 SATA on top of your changes.  That would be the ide=
+al way forward for me.
+>
+>       Have the ahci re-factoring changes queued for mainline merge alread=
+y?  I just joined the list and hence do not know the status.
+>
+> Sergei,
+>       Appreciate the response.
+
+I store the refactoring in git, on the "libahci" branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+Unfortunately, I am having second thoughts about an element of the
+current design.  With current Linux distributions, they do not appear to
+deal well with the multi-module dependency libata -> libahci -> ahci.
+If I had to guess, I would say that mkinitrd creation tools only look at
+one tree level's worth of kernel module dependencies.
+
+Thus, ahci would wind up -not- in initrd, in a libahci solution.
+
+I am thinking that I will just add Marvell and ATP support to ahci.c,
+and let someone else deal with libahci separation -- which is still needed.
+
+At this point, I would rather get Marvell/ATP support into users' hands,
+rather than wait for distros to catch up to modern technology.
+
+        Jeff=
