@@ -1,77 +1,82 @@
-From: "Subbrathnam, Swaminathan" <swami.iyer-l0cyMroinI0@public.gmane.org>
-Subject: RE: sata AHCI controller over non-PCI bus
-Date: Sun, 16 Aug 2009 20:05:47 +0530
-Message-ID: <FCCFB4CDC6E5564B9182F639FC35608702F4E077E1@dbde02.ent.ti.com>
-References: <FCCFB4CDC6E5564B9182F639FC35608702F5989152@dbde02.ent.ti.com>
-	<4A7FE245.8020002@ru.mvista.com>
-	<FCCFB4CDC6E5564B9182F639FC35608702F59891CB@dbde02.ent.ti.com>,
-	<4A88014D.9060309@garzik.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+ slot is freed)
+Date: Sun, 16 Aug 2009 08:34:34 -0700
+Message-ID: <20090816083434.2ce69859@infradead.org>
+References: <200908122007.43522.ngupta@vflare.org>
+	<20090813151312.GA13559@linux.intel.com>
+	<20090813162621.GB1915@phenom2.trippelsdorf.de>
+	<alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	<87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	<alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	<3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
+	<4A85E0DC.9040101@rtr.ca>
+	<f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
+	<20090814234539.GE27148@parisc-linux.org>
+	<f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
+	<1250341176.4159.2.camel@mulgrave.site>
+	<4A86B69C.7090001@rtr.ca>
+	<1250344518.4159.4.camel@mulgrave.site>
+	<20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
-In-Reply-To: <4A88014D.9060309-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
-	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://linux.omap.com/pipermail/davinci-linux-open-source>
-List-Post: <mailto:davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
-List-Help: <mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=help>
-List-Subscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
-	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=subscribe>
-Sender: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
-Errors-To: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
-To: Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
-Cc: "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org" <davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>
+Sender: owner-linux-mm@kvack.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@suse.de>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Jeff,
+On Sun, 16 Aug 2009 15:05:30 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-I can work on the seperation aspects as I need to get the OMAPL138 SATA sol=
-ution working.  I will try to provide a basic implementation by end of this=
- week.  Pl. provide your feedback on the same if we need to further refine =
-it to address broad use cases.
+> On Sat, 15 Aug 2009 08:55:17 -0500
+> James Bottomley <James.Bottomley@suse.de> wrote:
+> 
+> > On Sat, 2009-08-15 at 09:22 -0400, Mark Lord wrote:
+> > > James Bottomley wrote:
+> > > >
+> > > > This means you have to drain the outstanding NCQ commands
+> > > > (stalling the device) before you can send a TRIM.   If we do
+> > > > this for every discard, the performance impact will be pretty
+> > > > devastating, hence the need to coalesce.  It's nothing really
+> > > > to do with device characteristics, it's an ATA protocol problem.
+> > > ..
+> > > 
+> > > I don't think that's really much of an issue -- we already have
+> > > to do that for cache-flushes whenever barriers are enabled.  Yes
+> > > it costs, but not too much.
+> > 
+> > That's not really what the enterprise is saying about flush
+> > barriers. True, not all the performance problems are NCQ queue
+> > drain, but for a steady workload they are significant.
+> 
+> Flush barriers are nightmare for more than enterprise. You drive
+> basically goes for a hike for a bit which trashes interactivity as
+> well. If the device can't do trim and the like without a drain I
+> don't see much point doing it at all, except maybe to wait for idle
+> devices and run a filesystem managed background 'strimmer' thread to
+> just weed out now idle blocks that have stayed idle - eg by adding an
+> inode of all the deleted untrimmed blocks and giving it an irregular
+> empty ?
+> 
 
-Thanks for your response.
+trim is mostly for ssd's though, and those tend to not have the "goes
+for a hike" behavior as much......
 
-regards
-swami
+I wonder if it's worse to batch stuff up, because then the trim itself
+gets bigger and might take longer.....
 
-________________________________________
-From: Jeff Garzik [jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org]
-Sent: Sunday, August 16, 2009 6:23 PM
-To: Subbrathnam, Swaminathan
-Cc: Sergei Shtylyov; linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; LKML
-Subject: Re: sata AHCI controller over non-PCI bus
 
-Subbrathnam, Swaminathan wrote:
-> Jeff,
->       From the below link (from Sergei) it seems that you have already re=
--factored the AHCI implementation dependency on PCI.  I would like to add s=
-upport for the OMAPL138 SATA on top of your changes.  That would be the ide=
-al way forward for me.
->
->       Have the ahci re-factoring changes queued for mainline merge alread=
-y?  I just joined the list and hence do not know the status.
->
-> Sergei,
->       Appreciate the response.
 
-I store the refactoring in git, on the "libahci" branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
 
-Unfortunately, I am having second thoughts about an element of the
-current design.  With current Linux distributions, they do not appear to
-deal well with the multi-module dependency libata -> libahci -> ahci.
-If I had to guess, I would say that mkinitrd creation tools only look at
-one tree level's worth of kernel module dependencies.
-
-Thus, ahci would wind up -not- in initrd, in a libahci solution.
-
-I am thinking that I will just add Marvell and ATP support to ahci.c,
-and let someone else deal with libahci separation -- which is still needed.
-
-At this point, I would rather get Marvell/ATP support into users' hands,
-rather than wait for distros to catch up to modern technology.
-
-        Jeff=
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
