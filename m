@@ -1,57 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: fix off-by-one error in ata_tf_read_block()
-Date: Sun, 16 Aug 2009 21:21:21 +0900
-Message-ID: <4A87F9C1.5090601@gmail.com>
-References: <20090815.224843.240484147.anemo@mba.ocn.ne.jp>	<4A876BC3.3020407@gmail.com> <20090816.183355.89035427.anemo@mba.ocn.ne.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: sata AHCI controller over non-PCI bus
+Date: Sun, 16 Aug 2009 08:53:33 -0400
+Message-ID: <4A88014D.9060309@garzik.org>
+References: <FCCFB4CDC6E5564B9182F639FC35608702F5989152@dbde02.ent.ti.com> <4A7FE245.8020002@ru.mvista.com> <FCCFB4CDC6E5564B9182F639FC35608702F59891CB@dbde02.ent.ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:57850 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754075AbZHPMVl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Aug 2009 08:21:41 -0400
-In-Reply-To: <20090816.183355.89035427.anemo@mba.ocn.ne.jp>
+Received: from srv5.dvmed.net ([207.36.208.214]:39973 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752497AbZHPMxg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Aug 2009 08:53:36 -0400
+In-Reply-To: <FCCFB4CDC6E5564B9182F639FC35608702F59891CB@dbde02.ent.ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: "Subbrathnam, Swaminathan" <swami.iyer@ti.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-ata_tf_read_block() has off-by-one error when converting CHS address
-to LBA.  The bug isn't very visible because ata_tf_read_block() is
-used only when generating sense data for a failed RW command and CHS
-addressing isn't used too often these days.
+Subbrathnam, Swaminathan wrote:
+> Jeff,
+> 	From the below link (from Sergei) it seems that you have already re-factored the AHCI implementation dependency on PCI.  I would like to add support for the OMAPL138 SATA on top of your changes.  That would be the ideal way forward for me.
+> 
+> 	Have the ahci re-factoring changes queued for mainline merge already?  I just joined the list and hence do not know the status.
+> 
+> Sergei,
+> 	Appreciate the response.
 
-This problem was spotted by Atsushi Nemoto.
+I store the refactoring in git, on the "libahci" branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
----
-> Well, I expect fix by you (or other libata hackers) since I think you
-> can write better warning message and changelog than me ;)
+Unfortunately, I am having second thoughts about an element of the 
+current design.  With current Linux distributions, they do not appear to 
+deal well with the multi-module dependency libata -> libahci -> ahci. 
+If I had to guess, I would say that mkinitrd creation tools only look at 
+one tree level's worth of kernel module dependencies.
 
-In that case, sure.  Thanks a lot for the nice spotting.  :-)
+Thus, ahci would wind up -not- in initrd, in a libahci solution.
 
- drivers/ata/libata-core.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+I am thinking that I will just add Marvell and ATP support to ahci.c, 
+and let someone else deal with libahci separation -- which is still needed.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 072ba5e..e71149b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -709,7 +709,13 @@ u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev)
- 		head = tf->device & 0xf;
- 		sect = tf->lbal;
- 
--		block = (cyl * dev->heads + head) * dev->sectors + sect;
-+		if (!sect) {
-+			ata_dev_printk(dev, KERN_WARNING, "device reported "
-+				       "invalid CHS sector 0\n");
-+			sect = 1; /* oh well */
-+		}
-+
-+		block = (cyl * dev->heads + head) * dev->sectors + sect - 1;
- 	}
- 
- 	return block;
+At this point, I would rather get Marvell/ATP support into users' hands, 
+rather than wait for distros to catch up to modern technology.
+
+	Jeff
+
+
+
 
