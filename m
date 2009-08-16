@@ -1,34 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: Export AHCI capabilities
-Date: Sat, 15 Aug 2009 17:07:18 -0400
-Message-ID: <4A872386.4080908@pobox.com>
-References: <1247854427-3315-1-git-send-email-mjg@redhat.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] at91_ide: remove headers specific for at91sam9263
+Date: Sat, 15 Aug 2009 18:55:25 -0700 (PDT)
+Message-ID: <20090815.185525.02497521.davem@davemloft.net>
+References: <1250330561-10975-1-git-send-email-geomatsi@gmail.com>
+	<200908151615.52689.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53141 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752462AbZHOVHV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Aug 2009 17:07:21 -0400
-In-Reply-To: <1247854427-3315-1-git-send-email-mjg@redhat.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53704
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752032AbZHPBzN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 21:55:13 -0400
+In-Reply-To: <200908151615.52689.stf_xl@wp.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: stf_xl@wp.pl
+Cc: geomatsi@gmail.com, linux-ide@vger.kernel.org
 
-Matthew Garrett wrote:
-> AHCI exports various capability bits that may be of interest to userspace
-> such as whether the BIOS claims a port is hotpluggable or eSATA. Providing
-> these via sysfs along with the version of the AHCI spec implemented by
-> the host allows userspace to make policy decisions for things like ALPM.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Date: Sat, 15 Aug 2009 16:15:52 -0400
+
+> On Saturday 15 August 2009 06:02, Sergey Matyukevich wrote:
+>> This driver requires only static memory controller definitions and macroses
+>> contained in generic header at91sam9_smc.h.
+>> 
+>> Those extra headers are misleading since this driver also works fine for
+>> at91sam9260 SoC: tests were performed on afeb9260 board.
+>> 
+>> Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
 > 
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-I would prefer a better-yet-more-general interface, but I don't think 
-one will appear anytime soon, so...
-
-applied
-
-
-
+Applied to ide-next-2.6, thanks!
