@@ -1,35 +1,52 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] at91_ide: remove headers specific for at91sam9263
-Date: Sat, 15 Aug 2009 18:55:25 -0700 (PDT)
-Message-ID: <20090815.185525.02497521.davem@davemloft.net>
-References: <1250330561-10975-1-git-send-email-geomatsi@gmail.com>
-	<200908151615.52689.stf_xl@wp.pl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata_tf_read_block() question
+Date: Sun, 16 Aug 2009 11:15:31 +0900
+Message-ID: <4A876BC3.3020407@gmail.com>
+References: <20090815.224843.240484147.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53704
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752032AbZHPBzN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 21:55:13 -0400
-In-Reply-To: <200908151615.52689.stf_xl@wp.pl>
+Received: from mail-px0-f196.google.com ([209.85.216.196]:59287 "EHLO
+	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753485AbZHPCPe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Aug 2009 22:15:34 -0400
+In-Reply-To: <20090815.224843.240484147.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stf_xl@wp.pl
-Cc: geomatsi@gmail.com, linux-ide@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Date: Sat, 15 Aug 2009 16:15:52 -0400
+Hello, Atsushi.
 
-> On Saturday 15 August 2009 06:02, Sergey Matyukevich wrote:
->> This driver requires only static memory controller definitions and macroses
->> contained in generic header at91sam9_smc.h.
->> 
->> Those extra headers are misleading since this driver also works fine for
->> at91sam9260 SoC: tests were performed on afeb9260 board.
->> 
->> Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
+Atsushi Nemoto wrote:
+> I have a question on CHS calculation in ata_tf_read_block().
 > 
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> The calculation in ata_tf_read_block() is:
+> 	block = (cyl * dev->heads + head) * dev->sectors + sect;
+> 
+> but ata_build_rw_tf() does:
+> 	track = (u32)block / dev->sectors;
+> 	cyl   = track / dev->heads;
+> 	head  = track % dev->heads;
+> 	sect  = (u32)block % dev->sectors + 1;
+> 
+> It seems inconsistent.  The correct calculation is:
+> 	block = (cyl * dev->heads + head) * dev->sectors + sect - 1;
+> isn't it?
 
-Applied to ide-next-2.6, thanks!
+Yes, indeed.
+
+> I don't have any real problem.  Just noticed by code reading.
+
+ata_tf_read_block() currently is used only when reporting failed block
+address to upper layer so off-by-one bug there wouldn't be too
+visible, especially for the venerable CHS addressing.
+
+Care to submit a patch w/ warning message and capping for sect == 0
+case?
+
+Thanks.
+
+-- 
+tejun
