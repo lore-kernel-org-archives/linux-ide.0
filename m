@@ -1,120 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.31-rc5 regression: hd don't show up
-Date: Sun, 16 Aug 2009 11:54:29 +0900
-Message-ID: <4A8774E5.4070609@kernel.org>
-References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: ata_tf_read_block() question
+Date: Sun, 16 Aug 2009 18:33:55 +0900 (JST)
+Message-ID: <20090816.183355.89035427.anemo@mba.ocn.ne.jp>
+References: <20090815.224843.240484147.anemo@mba.ocn.ne.jp>
+	<4A876BC3.3020407@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000607010708010202050502"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57607 "EHLO hera.kernel.org"
+Received: from mba.ocn.ne.jp ([122.28.14.163]:54917 "EHLO smtp.mba.ocn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753713AbZHPCyf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Aug 2009 22:54:35 -0400
-In-Reply-To: <4A8559D7.6090405@klingt.org>
+	id S1754094AbZHPJdz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Aug 2009 05:33:55 -0400
+In-Reply-To: <4A876BC3.3020407@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Blechmann <tim@klingt.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: htejun@gmail.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000607010708010202050502
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-Tim Blechmann wrote:
->>> running 2.6.31-rc5 (7cb7beb31aa3d941833b6a6e553687422c31e4b6 to be
->>> exact), sometimes some hard disks don't show up.
->>>
->>> after booting, my root hd (sda) is mounted to /, while two other hds
->>> (sdb/sdc) are mounted as a user. sda is always present, but the other
->>> two sometimes don't show up (i.e. they are not listed in /dev/disk/, nor
->>> to they have a /dev/sdX link). with 2.6.29 and 2.6.30, all three disks
->>> are reported correctly.
->> Can you please attach boot logs of a successful and a failed boot?
+On Sun, 16 Aug 2009 11:15:31 +0900, Tejun Heo <htejun@gmail.com> wrote:
+> > It seems inconsistent.  The correct calculation is:
+> > 	block = (cyl * dev->heads + head) * dev->sectors + sect - 1;
+> > isn't it?
 > 
-> i have two files attached:
-> - dmesg_good - all hds are available
-> - dmesg_bad - on hd is missing
+> Yes, indeed.
+> 
+> > I don't have any real problem.  Just noticed by code reading.
+> 
+> ata_tf_read_block() currently is used only when reporting failed block
+> address to upper layer so off-by-one bug there wouldn't be too
+> visible, especially for the venerable CHS addressing.
 
-Can you please apply the attached patch and post the bad boot log?
+Thank you for checking.
 
-Thanks.
+> Care to submit a patch w/ warning message and capping for sect == 0
+> case?
 
--- 
-tejun
+Well, I expect fix by you (or other libata hackers) since I think you
+can write better warning message and changelog than me ;)
 
---------------000607010708010202050502
-Content-Type: text/x-patch;
- name="nodev-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="nodev-debug.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 072ba5e..10af11d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6060,7 +6060,7 @@ static void async_port_probe(void *data, async_cookie_t cookie)
- 
- 		ehi->probe_mask |= ATA_ALL_DEVICES;
- 		ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
--		ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+		ehi->flags |= ATA_EHI_NO_AUTOPSY/* | ATA_EHI_QUIET*/;
- 
- 		ap->pflags &= ~ATA_PFLAG_INITIALIZING;
- 		ap->pflags |= ATA_PFLAG_LOADING;
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index bbbb1fa..c718d12 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1998,6 +1998,9 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 	if (r_err)
- 		*r_err = err;
- 
-+	ata_dev_printk(dev, KERN_INFO, "XXX CLASSIFY TF %02x/%02x:%02x:%02x:%02x\n",
-+		       tf.command, tf.feature, tf.lbal, tf.lbam, tf.lbah);
-+
- 	/* see if device passed diags: continue and warn later */
- 	if (err == 0)
- 		/* diagnostic fail : do nothing _YET_ */
-@@ -2006,11 +2009,14 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		/* do nothing */ ;
- 	else if ((dev->devno == 0) && (err == 0x81))
- 		/* do nothing */ ;
--	else
-+	else {
-+		ata_dev_printk(dev, KERN_INFO, "XXX diag nodev\n");
- 		return ATA_DEV_NONE;
-+	}
- 
- 	/* determine if device is ATA or ATAPI */
- 	class = ata_dev_classify(&tf);
-+	ata_dev_printk(dev, KERN_INFO, "XXX ata_dev_classify=%d\n", class);
- 
- 	if (class == ATA_DEV_UNKNOWN) {
- 		/* If the device failed diagnostic, it's likely to
-@@ -2019,13 +2025,18 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		 * device signature is invalid with diagnostic
- 		 * failure.
- 		 */
--		if (present && (dev->horkage & ATA_HORKAGE_DIAGNOSTIC))
-+		if (present && (dev->horkage & ATA_HORKAGE_DIAGNOSTIC)) {
-+			ata_dev_printk(dev, KERN_INFO, "XXX UNK && present -> ATA\n");
- 			class = ATA_DEV_ATA;
--		else
-+		} else {
- 			class = ATA_DEV_NONE;
-+			ata_dev_printk(dev, KERN_INFO, "XXX UNK && !present -> NONE\n");
-+		}
- 	} else if ((class == ATA_DEV_ATA) &&
--		   (ap->ops->sff_check_status(ap) == 0))
-+		   (ap->ops->sff_check_status(ap) == 0)) {
- 		class = ATA_DEV_NONE;
-+		ata_dev_printk(dev, KERN_INFO, "XXX stat==0 -> NONE\n");
-+	}
- 
- 	return class;
- }
-
---------------000607010708010202050502--
+---
+Atsushi Nemoto
