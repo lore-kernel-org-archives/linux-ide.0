@@ -1,52 +1,42 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: sata AHCI controller over non-PCI bus
-Date: Sun, 16 Aug 2009 10:55:54 -0600
-Message-ID: <4A883A1A.9040009@gmail.com>
-References: <FCCFB4CDC6E5564B9182F639FC35608702F5989152@dbde02.ent.ti.com> <4A7FE245.8020002@ru.mvista.com> <FCCFB4CDC6E5564B9182F639FC35608702F59891CB@dbde02.ent.ti.com> <4A88014D.9060309@garzik.org>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+   slot is freed)
+Date: Sun, 16 Aug 2009 11:08:49 -0600
+Message-ID: <4A883D21.5020209@gmail.com>
+References: <200908122007.43522.ngupta@vflare.org>	 <20090813151312.GA13559@linux.intel.com>	 <20090813162621.GB1915@phenom2.trippelsdorf.de>	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>	 <4A85E0DC.9040101@rtr.ca>	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>	 <20090814234539.GE27148@parisc-linux.org>	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>	 <1250341176.4159.2.camel@mulgrave.site>  <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <4A86F2E1.8080002@hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:53326 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751967AbZHPRCx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Aug 2009 13:02:53 -0400
-In-Reply-To: <4A88014D.9060309@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4A86F2E1.8080002@hp.com>
+Sender: owner-linux-mm@kvack.org
+To: jim owens <jowens@hp.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Subbrathnam, Swaminathan" <swami.iyer@ti.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 08/16/2009 06:53 AM, Jeff Garzik wrote:
-> Subbrathnam, Swaminathan wrote:
->> Jeff,
->> From the below link (from Sergei) it seems that you have already
->> re-factored the AHCI implementation dependency on PCI. I would like to
->> add support for the OMAPL138 SATA on top of your changes. That would
->> be the ideal way forward for me.
->>
->> Have the ahci re-factoring changes queued for mainline merge already?
->> I just joined the list and hence do not know the status.
->>
->> Sergei,
->> Appreciate the response.
+On 08/15/2009 11:39 AM, jim owens wrote:
+> ***begin rant***
 >
-> I store the refactoring in git, on the "libahci" branch of
-> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> I have not seen any analysis of the benefit and cost to the
+> end user of the TRIM or array UNMAP. We now see that TRIM
+> as implemented by some (all?) SSDs will come at high cost.
+> The cost is all born by the host. Do we get any benefit, or
+> is it all for the device vendor. And when we subtract the cost
+> from the benefit, does the user actually benefit and how?
 >
-> Unfortunately, I am having second thoughts about an element of the
-> current design. With current Linux distributions, they do not appear to
-> deal well with the multi-module dependency libata -> libahci -> ahci. If
-> I had to guess, I would say that mkinitrd creation tools only look at
-> one tree level's worth of kernel module dependencies.
->
-> Thus, ahci would wind up -not- in initrd, in a libahci solution.
->
-> I am thinking that I will just add Marvell and ATP support to ahci.c,
-> and let someone else deal with libahci separation -- which is still needed.
->
-> At this point, I would rather get Marvell/ATP support into users' hands,
-> rather than wait for distros to catch up to modern technology.
+> I'm tired of working around shit storage products and broken
+> device protocols from the "T" committees. I suggest we just
+> add a "white list" of devices that handle the discard fast
+> and without us needing NCQ queue drain. Then only send TRIM
+> to devices that are on the white list and throw the others
+> away in the block device layer.
 
-If that's the case it seems clearly a mkinitrd bug. What distribution 
-were you seeing this behavior on?
+They all will require NCQ queue drain. It's an inherent requirement of 
+the protocol that you can't overlap NCQ and non-NCQ commands, and the 
+trim command is not NCQ.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
