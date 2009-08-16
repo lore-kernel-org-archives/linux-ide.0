@@ -1,50 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata AHCI controller over non-PCI bus
-Date: Sun, 16 Aug 2009 16:18:43 -0400
-Message-ID: <4A8869A3.7020504@garzik.org>
-References: <FCCFB4CDC6E5564B9182F639FC35608702F5989152@dbde02.ent.ti.com>	 <4A7FE245.8020002@ru.mvista.com>	 <FCCFB4CDC6E5564B9182F639FC35608702F59891CB@dbde02.ent.ti.com>	 <4A88014D.9060309@garzik.org> <1250436892.3856.87.camel@mulgrave.site>
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: Discard support
+Date: Sun, 16 Aug 2009 14:50:40 -0700
+Message-ID: <adavdkn2ztb.fsf@cisco.com>
+References: <200908122007.43522.ngupta@vflare.org>
+	<20090813151312.GA13559@linux.intel.com>
+	<20090813162621.GB1915@phenom2.trippelsdorf.de>
+	<alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	<87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	<alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	<3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
+	<4A85E0DC.9040101@rtr.ca>
+	<f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
+	<20090814234539.GE27148@parisc-linux.org>
+	<f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
+	<1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca>
+	<1250344518.4159.4.camel@mulgrave.site>
+	<20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>
+	<20090816083434.2ce69859@infradead.org>
+	<1250437927.3856.119.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60566 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754753AbZHPUSt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Aug 2009 16:18:49 -0400
-In-Reply-To: <1250436892.3856.87.camel@mulgrave.site>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1250437927.3856.119.camel@mulgrave.site> (James Bottomley's
+	message of "Sun, 16 Aug 2009 10:52:07 -0500")
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Subbrathnam, Swaminathan" <swami.iyer@ti.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-
-On 08/16/2009 11:34 AM, James Bottomley wrote:
-> Can't you get the best of both worlds?  Do the separation but
-> artificially glue them together again as a module at link time.  This
-> solves the current distro problem and you can remove the linker hack as
-> soon as the distros get their act together.
->
-> James
->
-> ---
->
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-> index 9f7b500..10101d7 100644
-> --- a/drivers/ata/Makefile
-> +++ b/drivers/ata/Makefile
-> @@ -1,8 +1,10 @@
->
->   obj-$(CONFIG_ATA)		+= libata.o
->
-> -obj-$(CONFIG_SATA_AHCI)		+= libahci.o ahci.o
-> -obj-$(CONFIG_SATA_ACARD_AHCI)	+= libahci.o acard-ahci.o
-> +obj-$(CONFIG_SATA_AHCI)		+= ahci_mod.o
-> +obj-ahci_mod-y			+= libahci.o ahci.o
-> +obj-ahci_mod-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o
-> +obj-ahci_mod-$(CONFIG_SATA_MV_AHCI)	+= mv-ahci.o
 
 
-Yeah, that could definitely be an option...
+ > Well, yes and no ... a lot of SSDs don't actually implement NCQ, so the
+ > impact to them will be less ... although I think enterprise class SSDs
+ > do implement NCQ.
 
-	Jeff
+Really?  Which SSDs don't implement NCQ?
 
+It seems that one couldn't keep the flash busy doing only one command at time.
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
