@@ -1,19 +1,19 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: [PATCH 3/4 #upstream] ahci: make ahci_asus_m2a_vm_32bit_only() quirk
  more generic
-Date: Sun, 16 Aug 2009 21:03:57 +0900
-Message-ID: <4A87F5AD.7040508@gmail.com>
+Date: Sun, 16 Aug 2009 21:04:02 +0900
+Message-ID: <4A87F5B2.1080703@gmail.com>
 References: <4A87F512.3080802@kernel.org> <4A87F55C.3020103@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:62535 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754089AbZHPMES (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Aug 2009 08:04:18 -0400
-Received: by pxi34 with SMTP id 34so843232pxi.4
-        for <linux-ide@vger.kernel.org>; Sun, 16 Aug 2009 05:04:19 -0700 (PDT)
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:60402 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094AbZHPMEW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Aug 2009 08:04:22 -0400
+Received: by pzk34 with SMTP id 34so1573927pzk.4
+        for <linux-ide@vger.kernel.org>; Sun, 16 Aug 2009 05:04:23 -0700 (PDT)
 In-Reply-To: <4A87F55C.3020103@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
