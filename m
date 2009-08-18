@@ -1,177 +1,270 @@
-From: Chris K <kayex@rogers.com>
-Subject: Re: Ubuntu 9.04 (2.6.28-14) and eSATA Port Multiplier (PMP) Not
-	working
-Date: Tue, 18 Aug 2009 17:54:48 -0400
-Message-ID: <e3fccfde0908181454w3e45ef65ucf2b5173d97d10eb@mail.gmail.com>
-References: <e3fccfde0908101354y4e98a985nc119d8941e8b1665@mail.gmail.com>
-	 <4A8242C5.3060605@gmail.com>
-	 <e3fccfde0908121536wbacde3bt447c3b8e769f184d@mail.gmail.com>
-	 <da824cf30908171425i3ec9237bi1370e71d5096c174@mail.gmail.com>
-	 <e3fccfde0908171530w43f78711lea85ffa1ea26d2ea@mail.gmail.com>
-	 <da824cf30908171939o7110322bn993dc5d3217a4cfa@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 13988] New: Oops and NULL pointer with USB
+ disk
+Date: Tue, 18 Aug 2009 16:32:11 -0700
+Message-ID: <20090818163211.1a0d0ff4.akpm@linux-foundation.org>
+References: <bug-13988-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:36597 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbZHRVys convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Aug 2009 17:54:48 -0400
-Received: by bwz22 with SMTP id 22so3313567bwz.18
-        for <linux-ide@vger.kernel.org>; Tue, 18 Aug 2009 14:54:48 -0700 (PDT)
-In-Reply-To: <da824cf30908171939o7110322bn993dc5d3217a4cfa@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <bug-13988-10286@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: bugzilla-daemon@bugzilla.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, subcon@c2i.net
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Mon, Aug 17, 2009 at 10:39 PM, Grant Grundler<grundler@google.com> w=
-rote:
-> On Mon, Aug 17, 2009 at 3:30 PM, Chris K<kayex@rogers.com> wrote:
->>...
->>>>> > I have a Silicone Image 3132 chipset (PCI-E 2-port eSATA contro=
-ller
->>>>> > card) and a Sans Digital TRM4-B 4x hard drive enclosure
->>>
->>> Which PMP is in the TRM4-B HDD enclosure?
->>
->> After opening it up, it looks to be a Silicone Image 3726 chip.
->
-> Ok ...just some questions to pull a bit more info. Still no idea what=
- is wrong.
->
-> Can you confirm the OS is seeing as a 3726?
-> Add a printk to dump SATA_PMP_GSCR_PROD_ID to the console
-> similar to how it's done in sata_pmp_revalidate_quick(). =A0Or if dev=
-->gscr[]
-> is already valid, printk dev->gscr[SATA_PMP_GSCR_PROD_ID]. This
-> assumesyou know how to build/install a kernel from a source tree.
-> Tell me if that's a bad assumption. :)
 
-How about generous assumption ;-)  Could you elaborate on the steps
-for this? I should be able to figure it out with a bit more info on
-the process.
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
->
-> ISTR some very early 3726 devices reported themselves as 4726 or
-> something like that.
-> This can affect which sata_pmp_quirks() are applied.
+On Sat, 15 Aug 2009 10:44:40 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
 
-I noticed this line in the dmesg, does this confirm if it's reporting
-the right model properly?
-"ata7.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9=
-"
-
+> http://bugzilla.kernel.org/show_bug.cgi?id=13988
 >
-> BTW, the full dmesg output attached to the original mail never made i=
-t
-> to linux-ide mailing list...can you attach or post it someplace publi=
-c?
-
-Yes, you can find my dmesg @ http://pastebin.com/f50585886
-
-Not sure if you saw this part before too - This is the output I get on
-the screen during boot:
-
-[59719.989422] ata7: irq_stat 0x01100010, PHY RDY changed
-[59719.989477] ata7: SError: { 10B8B }
-[59722.781043] ata7: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe =
-frozen
-[59722.781112] ata7: irq_stat 0x00b40090, PHY RDY changed
-[59791.300259] ata7.15: failed to write PMP_FEAT_EN (Emask=3D0x40)
-[59791.300324] ata7: failed to recover PMP after 5 tries, giving up
-[59791.300323] ata7: exception Emask 0x3 SAct 0x0 SErr 0x0 action 0x6 f=
-rozen t4
-[59791.300483] ata7: irq_stat 0x00060002, device error via D2H FIS
-
->
->> There's a sticker on the circuit board with "BIOS 1.0114"
->
-> Should be good. 1.0114 firmware has one problem I can't talk about no=
-w
-> (NDAs, etc) and is unlikely to be related to this problem.
->
->
->
-> ..
->>> My guess is the LEDs going on and off are caused by the PMP getting=
- reset
->>> and not the Host OS "scanning". Are all the LEDs going on or off at
->>> the same time?
->>> Can you describe the on/off sequence of the LEDs?
->>>
->>
->> Sure. The Power and "HOST" LEDs both light up, followed by LED "1"
->> which is orange very briefly, green, orange briefly, green stays lit=
-,
->
-> How long between LED 1 and LED 2?
-> Is the sequence different if you power off the TRM4-B and power it
-> on again before rebooting the host machine?
+>            Summary: Oops and NULL pointer with USB disk
+>            Product: IO/Storage
+>            Version: 2.5
+>     Kernel Version: 2.6.30.4
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Serial ATA
+>         AssignedTo: jgarzik@pobox.com
+>         ReportedBy: subcon@c2i.net
+>         Regression: No
 >
 
-LED 1 takes about 2-3 seconds.. the other LEDs are lit very quickly
-one after another.
+Something for everyone here!
 
-> If CONFIG_PRINTK_TIME=3Dy, the dmesg output should let me figure this=
- out.
+> Connected an IDE disk to an USB adapter and got lots of the following messages:
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
 >
+> Eventually it times out and gives a call trace. (dmesg below)
+> When I unplugged the disk I got a NULL pointer dereference. (also in dmesg
+> below)
+>
+> I am running Arch Linux with stock kernel. Kernel config can be found here:
+> http://repos.archlinux.org/viewvc.cgi/kernel26/repos/core-x86_64/
+>
+> PS: This disk might be broken.
+>
+>
+> Initializing USB Mass Storage driver...
+> scsi8 : SCSI emulation for USB Mass Storage devices
+> usbcore: registered new interface driver usb-storage
+> USB Mass Storage support registered.
+> usb-storage: device found at 2
+> usb-storage: waiting for device to settle before scanning
+> scsi 8:0:0:0: Direct-Access     SAMSUNG  SP0411N          0-11 PQ: 0 ANSI: 2
+> CCS
+> sd 8:0:0:0: Attached scsi generic sg2 type 0
+> sd 8:0:0:0: [sdb] 78242976 512-byte hardware sectors: (40.0 GB/37.3 GiB)
+> sd 8:0:0:0: [sdb] Write Protect is off
+> sd 8:0:0:0: [sdb] Mode Sense: 00 38 00 00
+> sd 8:0:0:0: [sdb] Assuming drive cache: write through
+> sd 8:0:0:0: [sdb] Assuming drive cache: write through
+>  sdb:<6>sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> usb-storage: device scan complete
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> INFO: task async/0:3992 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> async/0       D ffff8801353bb8d0     0  3992      2
+>  ffff8801353bb8d0 0000000000000046 ffff880124f2cf00 0000000088d0e6cd
+>  ffff880124dfd000 ffff880137c0f7f0 ffff8801353bbb70 00000000000111c0
+>  000000000000cb68 ffff8801353bbb70 ffff8801282b2730 0000000088d0e6cd
+> Call Trace:
+>  [<ffffffff802bf790>] ? sync_page+0x0/0x80
+>  [<ffffffff8054e529>] ? schedule+0x29/0x70
+>  [<ffffffff8054e5dd>] ? io_schedule+0x6d/0xd0
+>  [<ffffffff802bf7dd>] ? sync_page+0x4d/0x80
+>  [<ffffffff8054ec3a>] ? __wait_on_bit_lock+0x5a/0xc0
+>  [<ffffffff80330a30>] ? blkdev_readpage+0x0/0x40
+>  [<ffffffff802bf72c>] ? __lock_page+0x6c/0x90
+>  [<ffffffff8026c880>] ? wake_bit_function+0x0/0x70
+>  [<ffffffff802bff5c>] ? read_cache_page_async+0x19c/0x1b0
+>  [<ffffffff803bd444>] ? string+0x64/0x130
+>  [<ffffffff802bff89>] ? read_cache_page+0x19/0x80
+>  [<ffffffff8036575a>] ? read_dev_sector+0x3a/0xc0
+>  [<ffffffff8036a037>] ? read_lba+0xa7/0xe0
+>  [<ffffffff8036a411>] ? efi_partition+0xe1/0x8b0
+>  [<ffffffff8054d50b>] ? printk+0x50/0x6d
+>  [<ffffffff8036679a>] ? rescan_partitions+0x1ca/0x3f0
+>  [<ffffffff803312c2>] ? __blkdev_get+0x1a2/0x3c0
+>  [<ffffffff80365955>] ? register_disk+0x175/0x1a0
+>  [<ffffffff803a6ac2>] ? blk_register_region+0x32/0x50
+>  [<ffffffff803a6d24>] ? add_disk+0x94/0x170
+>  [<ffffffffa0168021>] ? sd_probe_async+0x1b1/0x320 [sd_mod]
+>  [<ffffffff80275042>] ? async_thread+0x112/0x280
+>  [<ffffffff802495c0>] ? default_wake_function+0x0/0x40
+>  [<ffffffff80274f30>] ? async_thread+0x0/0x280
+>  [<ffffffff8026c204>] ? kthread+0x64/0xc0
+>  [<ffffffff8024af20>] ? schedule_tail+0x30/0x80
+>  [<ffffffff8020d4fa>] ? child_rip+0xa/0x20
+>  [<ffffffff8026c1a0>] ? kthread+0x0/0xc0
+>  [<ffffffff8020d4f0>] ? child_rip+0x0/0x20
 
-This seems to be enabled already with my current kernel.
+We seem to be spending vast amounts of time retrying reads agains a dud
+device.
 
-> I'm expecting some sort of "spin up delay" to take effect but offhand
-> don't know the code path or if it will matter for this problem.
+> ...
 >
->> LED "2" orange very briefly, green stays lit, LED "3" orange very
->> briefly, green stays lit, LED "4" orange very briefly, green stays l=
-it
->> - at this point all LEDs are on.
->
-> Ok - this does sound like ports behind the PMPs are being scanned.
->
->> Shortly after all LEDs turn off
->> together and the process repeats itself about 5 times.
->
-> Can you add debug code to dump how many ports the PMP claims to have?
-> I'm wondering if a "ghost port" (magic "port" which doesn't have a SA=
-TA link but
-> some magic registers instead) is discovered/reported.
->
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> sd 8:0:0:0: [sdb] Sense Key : 0x0 [current]
+> sd 8:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
+> usb 2-3: USB disconnect, address 2
+> sd 8:0:0:0: [sdb] Unhandled error code
+> sd 8:0:0:0: [sdb] Result: hostbyte=0x07 driverbyte=0x00
+> end_request: I/O error, dev sdb, sector 0
+> Buffer I/O error on device sdb, logical block 0
+> scsi 8:0:0:0: [sdb] Unhandled error code
+> scsi 8:0:0:0: [sdb] Result: hostbyte=0x07 driverbyte=0x00
+> end_request: I/O error, dev sdb, sector 0
+> Buffer I/O error on device sdb, logical block 0
+> ldm_validate_partition_table(): Disk read failed.
+>  unable to read partition table
 
-I can sure try! What should I do to enable this?
+Eventually we get the IO error.
 
-Thanks,
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000010
+> IP: [<ffffffff803a7158>] disk_part_iter_next+0x138/0x160
+> PGD bd713067 PUD bd6c2067 PMD 0
+> Oops: 0000 [#1] PREEMPT SMP
+> last sysfs file:
+> /sys/devices/pci0000:00/0000:00:1d.7/usb2/2-3/2-3:1.0/host8/target8:0:0/8:0:0:0/bsg/8:0:0:0/dev
+> CPU 1
+> Modules linked in: usb_storage usbhid hid usblp uvcvideo videodev v4l1_compat
+> v4l2_compat_ioctl32 snd_usb_audio snd_usb_lib snd_rawmidi
+> snd_hda_codec_intelhdmi snd_hda_codec_idt snd_seq_dummy fan snd_seq_oss
+> snd_seq_midi_event snd_seq snd_seq_device battery ac snd_hda_intel
+> snd_hda_codec snd_hwdep snd_pcm snd_timer uhci_hcd cpufreq_ondemand snd
+> soundcore snd_page_alloc ehci_hcd usbcore acpi_cpufreq sg e1000e heci(C)
+> psmouse thermal button iTCO_wdt iTCO_vendor_support serio_raw i2c_i801 evdev
+> freq_table processor coretemp rtc_cmos rtc_core rtc_lib dm_mod sd_mod sr_mod
+> cdrom pata_acpi ata_generic ata_piix ahci libata scsi_mod reiserfs i915
+> i2c_algo_bit video output drm i2c_core intel_agp
+> Pid: 3992, comm: async/0 Tainted: G         C 2.6.30-ARCH #1
+> RIP: 0010:[<ffffffff803a7158>]  [<ffffffff803a7158>]
+> disk_part_iter_next+0x138/0x160
+> RSP: 0000:ffff880124f19dc0  EFLAGS: 00010246
+> RAX: ffff880124dffc00 RBX: ffff880124f19df0 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: ffff880124dffc00 RDI: 0000000000000000
+> RBP: ffff88013b588a80 R08: 0000000000000000 R09: ffffffff805f9bf5
+> R10: 0000000000000000 R11: 0000000000000000 R12: ffff880124dffc58
+> R13: 0000000000000000 R14: ffff880124dfd120 R15: ffff88012345fc10
+> FS:  0000000000000000(0000) GS:ffff88002803b000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 0000000000000010 CR3: 00000000bd7a8000 CR4: 00000000000406e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process async/0 (pid: 3992, threadinfo ffff880124f18000, task ffff8801353bb8d0)
+> Stack:
+>  ffff88013b588a80 0000000088d0e6cd ffff880124dffc00 ffff88013b588a80
+>  ffff880124dffc58 ffffffff803658e3 ffff880124dffc00 0000000000000000
+>  0000000000000001 0000000088d0e6cd ffff880124dffc00 ffff880124dffc00
+> Call Trace:
+>  [<ffffffff803658e3>] ? register_disk+0x103/0x1a0
+>  [<ffffffff803a6d24>] ? add_disk+0x94/0x170
+>  [<ffffffffa0168021>] ? sd_probe_async+0x1b1/0x320 [sd_mod]
+>  [<ffffffff80275042>] ? async_thread+0x112/0x280
+>  [<ffffffff802495c0>] ? default_wake_function+0x0/0x40
+>  [<ffffffff80274f30>] ? async_thread+0x0/0x280
+>  [<ffffffff8026c204>] ? kthread+0x64/0xc0
+>  [<ffffffff8024af20>] ? schedule_tail+0x30/0x80
+>  [<ffffffff8020d4fa>] ? child_rip+0xa/0x20
+>  [<ffffffff8026c1a0>] ? kthread+0x0/0xc0
+>  [<ffffffff8020d4f0>] ? child_rip+0x0/0x20
+> Code: 38 48 83 c4 10 5b 5d 41 5c c3 66 0f 1f 84 00 00 00 00 00 48 8d 7d 10 e8
+> 17 82 0b 00 48 89 6b 08 44 01 63 10 eb a5 0f 1f 44 00 00 <8b> 77 10 41 bc 01 00
+> 00 00 e9 2b ff ff ff e8 45 7e ea ff e8 a0
+> RIP  [<ffffffff803a7158>] disk_part_iter_next+0x138/0x160
+>  RSP <ffff880124f19dc0>
+> CR2: 0000000000000010
 
-Chris.
-
->> After it
->> finishes it keeps Power, HOST and "1" lit up and then I receive the
->> error messages.
->
-> I suspect the PMP probe code sets up the link before exiting the erro=
-r
-> handling loop. This would leave the link 1 (port 0 on PMP) on.
->
-> thanks,
-> grant
->
->>
->>> I'm hoping the would tell us more about where in the discovery proc=
-ess
->>> it's failing.
->>> I don't even have a good guess what the problem might be.
->>>
->>> hth,
->>> grant
->>>
->>
->> Haha, I know the feeling. Ran out of ideas a long time ago :-). =A0L=
-et
->> me know if there's anything else you'd like me to try or any further
->> info you require.
->>
->> Thanks.
->>
->> Chris.
->>
->
+And disk_part_iter_next() goes splat.
