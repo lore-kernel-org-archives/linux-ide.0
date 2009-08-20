@@ -1,53 +1,37 @@
-From: Andrei Martynov <andrei.martynov@web.de>
-Subject: libata: waiting for the drives to settle
-Date: Thu, 20 Aug 2009 11:40:51 +0200
-Message-ID: <54773205.20090820114051@web.de>
-Reply-To: Andrei Martynov <andrei.martynov@web.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] libata: use single threaded work queue
+Date: Thu, 20 Aug 2009 13:39:13 +0200
+Message-ID: <4A8D35E1.2070707@s5r6.in-berlin.de>
+References: <20090819112554.GY12579@kernel.dk>	<4A8BE932.5090300@garzik.org>	<20090819120458.GZ12579@kernel.dk>	<4A8BECC2.2060607@rtr.ca>	<20090819122320.GA12579@kernel.dk>	<4A8BFC79.1000004@garzik.org>	<4A8BFDE2.1010904@garzik.org>	<4A8C0820.8060200@gmail.com> <20090819162147.16aeb2db@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:49388 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813AbZHTJk4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Aug 2009 05:40:56 -0400
-Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
-	by fmmailgate03.web.de (Postfix) with ESMTP id 2B8E610E727F6
-	for <linux-ide@vger.kernel.org>; Thu, 20 Aug 2009 11:40:57 +0200 (CEST)
-Received: from [80.66.20.180] (helo=[10.149.109.31])
-	by smtp08.web.de with asmtp (WEB.DE 4.110 #314)
-	id 1Me48f-0000hj-00
-	for linux-ide@vger.kernel.org; Thu, 20 Aug 2009 11:40:57 +0200
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:43638 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753491AbZHTLjT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Aug 2009 07:39:19 -0400
+In-Reply-To: <20090819162147.16aeb2db@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Hi,
+Alan Cox wrote:
+> Somewhat simpler for the general case would be to implement
+> 
+> create_workqueue(min_threads,max_threads, max_thread_idle_time);
+> queue_work_within();
+> 
+> at which point you can queue work to the workqueue but with a per
+> workqueue timing running so you know when you might need to create a new
+> thread if the current work hasn't finished. Idle threads would then sleep
+> and either expire or pick up new work
+[...]
 
-what would be the right place in modern pata driver to implement the
-following old code from function do_probe() in ide-probe.c ?
-
-/*
- *  ColdFire platforms boot up so quick that most hard drives
- *  have not completed there own self tests. Pause here for
- *  a couple of seconds if it looks like there is a drive
- *  present...
- */
-if (IN_BYTE(IDE_SELECT_REG) != drive->select.all) {
-  printk("IDE: waiting for drives to settle...\n");
-  for (rc = 0; (rc < 400); rc++) {
-    SELECT_DRIVE(hwif,drive);
-    ide_delay_50ms();
-    if (IN_BYTE(IDE_SELECT_REG) == drive->select.all)
-     break;
- }
-}
-
-It has to be executed once, so placing it into command handler is
-probably not the right solution.
-  
-
+Sounds a lot like kernel/slow-work.c / include/linux/slow-work.h to me
+(as Ben already pointed out).
 -- 
-Best regards,
- Andrei                          mailto:andrei.martynov@web.de
-
+Stefan Richter
+-=====-==--= =--- =-=--
+http://arcgraph.de/sr/
