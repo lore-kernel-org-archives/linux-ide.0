@@ -1,74 +1,63 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: [PATCH, RFC] xfs: batched discard support
-Date: Thu, 20 Aug 2009 13:19:20 -0400
-Message-ID: <87f94c370908201019i406e74a0s59c67f56ec2c9c16@mail.gmail.com>
-References: <20090816004705.GA7347@infradead.org>
-	 <20090819203916.GA25296@elte.hu> <4A8CA956.2060406@rtr.ca>
-	 <4A8D5442.1000302@redhat.com> <4A8D5FDB.7080505@rtr.ca>
-	 <4A8D60C1.6000809@redhat.com>
+From: Andrei Martynov <andrei.martynov@web.de>
+Subject: Re[2]: libata: waiting for the drives to settle
+Date: Fri, 21 Aug 2009 09:56:33 +0200
+Message-ID: <969415927.20090821095633@web.de>
+References: <54773205.20090820114051@web.de> <4A8D7203.50006@garzik.org>
+Reply-To: Andrei Martynov <andrei.martynov@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:59668 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbZHTRTT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Aug 2009 13:19:19 -0400
-In-Reply-To: <4A8D60C1.6000809@redhat.com>
+Received: from fmmailgate02.web.de ([217.72.192.227]:53117 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590AbZHUH4w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Aug 2009 03:56:52 -0400
+In-Reply-To: <4A8D7203.50006@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Mark Lord <liml@rtr.ca>, Ingo Molnar <mingo@elte.hu>, Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Aug 20, 2009 at 10:42 AM, Ric Wheeler<rwheeler@redhat.com> wrote:
-> On 08/20/2009 10:38 AM, Mark Lord wrote:
->>
->> Ric Wheeler wrote:
->>>
->>> Note that returning consistent data is critical for devices that are
->>> used in a RAID group since you will need each RAID block that is used
->>> to compute the parity to continue to return the same data until you
->>> overwrite it with new data :-)
->>>
->>> If we have a device that does not support this (or is misconfigured
->>> not to do this), we should not use those devices in an MD group & do
->>> discard against it...
->>
->> ..
->>
->> Well, that's a bit drastic. But the RAID software should at least
->> not issue TRIM commands in ignorance of such.
->
-> If the storage can return different data in a sequence of READ requests of
-> the same sector (with no writes), there is nothing RAID could do. It would
-> see total garbage...
->
->> Would it still be okay to do the TRIMs when the entire parity stripe
->> (across all members) is being discarded? (As opposed to just partial
->> data there being dropped)
->
-> This should be safe if the MD bitmaps would prevent us from trying to
-> READ/regenerate parity for that stripe...
->
-> ric
+Thursday, August 20, 2009, 5:55:47 PM, Jeff Garzik wrote:
 
-The harder thing for mdraid is putting a stripe back in service.  If
-even a single sector is written to a "discarded" stripe, the entire
-stripe has to be written with determinate data that has the right
-parity.
+> Have you verified this is needed, under libata?  We already have several
+> waits...
 
-ie. Only full stripes can be discarded and only full-stripes can be
-put back in service.
+Unfortunately it is needed. It is embedded system, where bootloader
+always tries to boot from the first device (dvd-rom). Second device
+(hard disk) is not yet ready when kernel is loaded from flash and does
+probe.
 
-Greg
+I placed the code into dev_select callback
+
+void jasper_dev_select(struct ata_port *ap, unsigned int device)
+{
+        u8 tmp;
+        if (device == 0)
+                tmp = ATA_DEVICE_OBS;
+        else
+                tmp = ATA_DEVICE_OBS | ATA_DEV1;
+        iowrite8(tmp, ap->ioaddr.device_addr);
+        ata_pause(ap);          /* needed; also flushes, for mmio */
+        if (device && firstSlaveAccess) {
+                firstSlaveAccess = 0;
+                printk("waiting for drive to settle...\n");
+                if (ioread8(ap->ioaddr.device_addr) != tmp) {
+                        int rc;
+                        for (rc = 0; rc < 150; rc++) {
+                                iowrite8(tmp, ap->ioaddr.device_addr);
+                                mdelay(50); //ata_pause(ap);
+                                if (ioread8(ap->ioaddr.device_addr) == tmp)
+                                        break;
+                        }
+                }
+        }
+}
+
+It takes about 30 cycles (1.5s) to select slave for the first time.
+
+
 -- 
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-Preservation and Forensic processing of Exchange Repositories White Paper -
-<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html>
+Best regards,
+ Andrei                            mailto:andrei.martynov@web.de
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
