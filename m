@@ -1,63 +1,101 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH #upstream] sata_sil24: always set protocol override for
- non-ATAPI data commands
-Date: Fri, 21 Aug 2009 23:57:32 -0600
-Message-ID: <4A8F88CC.1000406@gmail.com>
-References: <4A71FE71.7040002@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream] libata: enhance command parsing
+Date: Sat, 22 Aug 2009 10:02:03 -0400
+Message-ID: <4A8FFA5B.30209@rtr.ca>
+References: <4A72105F.40704@gmail.com> <4A8F88B2.6050900@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:33205 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932560AbZHVF5e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Aug 2009 01:57:34 -0400
-Received: by gxk1 with SMTP id 1so1530598gxk.17
-        for <linux-ide@vger.kernel.org>; Fri, 21 Aug 2009 22:57:35 -0700 (PDT)
-In-Reply-To: <4A71FE71.7040002@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:57811 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932104AbZHVOCA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Aug 2009 10:02:00 -0400
+In-Reply-To: <4A8F88B2.6050900@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>, Mark Lord <liml@rtr.ca>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
 
-On 07/30/2009 02:11 PM, Robert Hancock wrote:
-> The sil24 hardware has a built-in list of commands and associated protocols
-> that gets used by default to decide how to handle a given command. However,
-> if the command is not known to the controller then it presumably assumes it to
-> be a non-data command which then causes protocol mismatch errors if the device
-> ends up requesting data transfer. The new DATA SET MANAGEMENT - Trim command
-> causes this issue since it's a DMA data-out command.
+Robert Hancock wrote:
+> On 07/30/2009 03:27 PM, Robert Hancock wrote:
+>> This patch enhances libata's command name output (used for error
+>> handling and
+>> ACPI command execution status) to include more commands from the latest
+>> ACS-2 spec draft, and to support parsing sub-commands based on the feature
+>> and nsect registers instead of just the command code. To support this, the
+>> ata_get_cmd_descript function now takes the entire taskfile as input.
+>> The function has been changed to use a switch statement instead of a data
+>> array for more efficiency and compile-time checking for duplicate entries.
+>>
+>> Also, the ATA_CMD_PMP_READ and ATA_CMD_PMP_WRITE constants have been
+>> renamed
+>> to ATA_CMD_READ_BUFFER and ATA_CMD_WRITE_BUFFER to reflect the actual
+>> name of
+>> the corresponding ATA command.
+>>
+>> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 >
-> Since we should always know best what protocol the command should be using,
-> let's just set the override flag to inform the controller what protocol to use
-> for all non-ATAPI commands with data transfer.
+> Any comment on this one, guys?
 >
-> Signed-off-by: Robert Hancock<hancockrwd@gmail.com>
-> Tested-by: Mark Lord<liml@rtr.ca>
+>>
+>> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+>> index 01964b6..dd89f0b 100644
+>> --- a/drivers/ata/libata-acpi.c
+>> +++ b/drivers/ata/libata-acpi.c
+>> @@ -737,7 +737,7 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+>> snprintf(msg, sizeof(msg), "filtered out");
+>> rc = 0;
+>> }
+>> - descr = ata_get_cmd_descript(tf.command);
+>> + descr = ata_get_cmd_descript(&tf);
+>>
+>> ata_dev_printk(dev, level,
+>> "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x (%s) %s\n",
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index a04488f..06c62f1 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -2114,109 +2114,200 @@ void ata_eh_autopsy(struct ata_port *ap)
+>>
+>> /**
+>> * ata_get_cmd_descript - get description for ATA command
+>> - * @command: ATA command code to get description for
+>> + * @tf: ATA taskfile to get description for
+>> *
+>> - * Return a textual description of the given command, or NULL if the
+>> + * Return a textual description of the given taskfile, or NULL if the
+>> * command is not known.
+>> *
+>> * LOCKING:
+>> * None
+>> */
+>> -const char *ata_get_cmd_descript(u8 command)
+>> +const char *ata_get_cmd_descript(const struct ata_taskfile* tf)
+>> {
+>> #ifdef CONFIG_ATA_VERBOSE_ERROR
+>> - static const struct
+>> - {
+>> - u8 command;
+>> - const char *text;
+>> - } cmd_descr[] = {
+>> - { ATA_CMD_DEV_RESET, "DEVICE RESET" },
+>> - { ATA_CMD_CHK_POWER, "CHECK POWER MODE" },
+...
+>> + switch (tf->command) {
+>> + case ATA_CMD_CONF_OVERLAY:
+>> + switch (tf->feature) {
+>> + case ATA_DCO_RESTORE:
+>> + return "DEVICE CONFIGURATION RESTORE";
+>> + case ATA_DCO_FREEZE_LOCK:
+...
+>> + case ATA_SET_MAX_ADDR:
+>> + return "SET MAX ADDRESS";
 
-Any more comments on this one? Thought I heard an ack from Tejun on it..
+I really think that this is begging for a smarter
+data structure, with a lot less code as a result.
+One should be able to get the overall compiled
+size of this down to about half of the current
+implementation.
 
->
-> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-> index 77aa8d7..e6946fc 100644
-> --- a/drivers/ata/sata_sil24.c
-> +++ b/drivers/ata/sata_sil24.c
-> @@ -846,6 +846,17 @@ static void sil24_qc_prep(struct ata_queued_cmd *qc)
->   	if (!ata_is_atapi(qc->tf.protocol)) {
->   		prb =&cb->ata.prb;
->   		sge = cb->ata.sge;
-> +		if (ata_is_data(qc->tf.protocol)) {
-> +			u16 prot = 0;
-> +			ctrl = PRB_CTRL_PROTOCOL;
-> +			if (ata_is_ncq(qc->tf.protocol))
-> +				prot |= PRB_PROT_NCQ;
-> +			if (qc->tf.flags&  ATA_TFLAG_WRITE)
-> +				prot |= PRB_PROT_WRITE;
-> +			else
-> +				prot |= PRB_PROT_READ;
-> +			prb->prot = cpu_to_le16(prot);
-> +		}
->   	} else {
->   		prb =&cb->atapi.prb;
->   		sge = cb->atapi.sge;
 
