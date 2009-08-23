@@ -1,41 +1,38 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: 2.6.31-rc6: ACPI handle has no context apparenty from libata during suspend to RAM
-Date: Sun, 23 Aug 2009 14:07:37 +0200
-Message-ID: <200908231407.38543.elendil@planet.nl>
-References: <200908231424.07900.arvidjaar@mail.ru>
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
+Subject: [PATCH resend] ata: use printk_once
+Date: Sun, 23 Aug 2009 20:23:34 +0200
+Message-ID: <4A918926.8020801@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml107.kpnxchange.com ([195.121.3.11]:54120 "EHLO
-	CPSMTPM-EML107.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933522AbZHWMHk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Aug 2009 08:07:40 -0400
-In-reply-To: <200908231424.07900.arvidjaar@mail.ru>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933657AbZHWSXk@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Andrey Borzenkov wrote:
-> sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> sd 0:0:0:0: [sda] Stopping disk
-> ACPI handle has no context!
-> sdhci-pci 0000:03:01.1: PME# disabled
-> sdhci-pci 0000:03:01.1: PCI INT B disabled
-> ACPI handle has no context!
-> ata5: port disabled. ignoring.
-
-I have a few of those too. I've been intending to try to investigate them, 
-but haven't gotten around to it yet. One problem is that there is no 
-context information in the error message itself (what 
-driver/function/whatever).
-
-Are they new for you in .31 or have they always been there? I suspect the 
-latter, in which case I wouldn't worry about them too much. I at least 
-have never noticed any actual negative impact from them.
-
-Cheers,
-FJP
+Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
+index 0c574c0..a5e4dfe 100644
+--- a/drivers/ata/pata_rz1000.c
++++ b/drivers/ata/pata_rz1000.c
+@@ -85,7 +85,6 @@ static int rz1000_fifo_disable(struct pci_dev *pdev)
+ 
+ static int rz1000_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+-	static int printed_version;
+ 	static const struct ata_port_info info = {
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = ATA_PIO4,
+@@ -93,8 +92,7 @@ static int rz1000_init_one (struct pci_dev *pdev, const struct pci_device_id *en
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+ 
+-	if (!printed_version++)
+-		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
++	printk_once(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
+ 
+ 	if (rz1000_fifo_disable(pdev) == 0)
+ 		return ata_pci_sff_init_one(pdev, ppi, &rz1000_sht, NULL);
