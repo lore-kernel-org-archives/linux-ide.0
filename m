@@ -1,38 +1,44 @@
 From: Marcin Slusarz <marcin.slusarz@gmail.com>
-Subject: [PATCH resend] ata: use printk_once
-Date: Sun, 23 Aug 2009 20:23:34 +0200
-Message-ID: <4A918926.8020801@gmail.com>
+Subject: [PATCH resend] ide: use printk_once
+Date: Sun, 23 Aug 2009 20:26:11 +0200
+Message-ID: <4A9189C3.2020706@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933657AbZHWSXk@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:62122 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933448AbZHWS0M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Aug 2009 14:26:12 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
+Subject: ide: use printk_once
 
 Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>
+Acked-by: David S. Miller <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org
-diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
-index 0c574c0..a5e4dfe 100644
---- a/drivers/ata/pata_rz1000.c
-+++ b/drivers/ata/pata_rz1000.c
-@@ -85,7 +85,6 @@ static int rz1000_fifo_disable(struct pci_dev *pdev)
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+index 3242698..6e58e7e 100644
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -236,14 +236,8 @@ static const struct ide_proc_devset ide_generic_settings[] = {
  
- static int rz1000_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ static void proc_ide_settings_warn(void)
  {
--	static int printed_version;
- 	static const struct ata_port_info info = {
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = ATA_PIO4,
-@@ -93,8 +92,7 @@ static int rz1000_init_one (struct pci_dev *pdev, const struct pci_device_id *en
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
+-	static int warned;
+-
+-	if (warned)
+-		return;
+-
+-	printk(KERN_WARNING "Warning: /proc/ide/hd?/settings interface is "
++	printk_once(KERN_WARNING "Warning: /proc/ide/hd?/settings interface is "
+ 			    "obsolete, and will be removed soon!\n");
+-	warned = 1;
+ }
  
--	if (!printed_version++)
--		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
-+	printk_once(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
- 
- 	if (rz1000_fifo_disable(pdev) == 0)
- 		return ata_pci_sff_init_one(pdev, ppi, &rz1000_sht, NULL);
+ static int proc_ide_read_settings
