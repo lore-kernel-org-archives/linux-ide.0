@@ -1,36 +1,78 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH #upstream] sata_sil24: always set protocol override for
-	non-ATAPI data commands
-Date: Sat, 22 Aug 2009 10:30:23 -0600
-Message-ID: <51f3faa70908220930r44bf43dciba28f9890917875b@mail.gmail.com>
-References: <4A71FE71.7040002@gmail.com> <4A8F88CC.1000406@gmail.com>
-	 <4A8FFA9A.2020904@rtr.ca> <4A8FFC8A.1000500@garzik.org>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: 2.6.31-rc6: ACPI handle has no context apparenty from libata during suspend to RAM
+Date: Sun, 23 Aug 2009 14:24:03 +0400
+Message-ID: <200908231424.07900.arvidjaar@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:45133 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932924AbZHVQaW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Aug 2009 12:30:22 -0400
-Received: by pzk32 with SMTP id 32so324410pzk.33
-        for <linux-ide@vger.kernel.org>; Sat, 22 Aug 2009 09:30:24 -0700 (PDT)
-In-Reply-To: <4A8FFC8A.1000500@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart3197210.qu4hLDVgC1";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On Sat, Aug 22, 2009 at 8:11 AM, Jeff Garzik<jeff@garzik.org> wrote:
->> Hasn't this gone upstream yet??
->> Heck, it should even go out for -stable, too.
->
-> It's queued for 2.6.32... =A0I'd rather be more conservative and get =
-wider
-> testing before pushing such a fundamental change to sata_sil24 data x=
-fer
-> path upon everyone.
+--nextPart3197210.qu4hLDVgC1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I think .32 is fair, it's not impossible it could break something..
-just making sure it didn't get dropped on the floor. If it works out
-well it likely could be pushed to stable later though.
+Even if messages is DEBUG, I assume condition is unusual (otherwise we=20
+would not need any message in the first place).
+
+This is Dell XPS M1330 with ICH8M:
+
+00:1f.1 IDE interface: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E)=20
+IDE Controller (rev 02)                                                    =
+            =20
+        Subsystem: Dell Device 0209                                        =
+   =20
+        Kernel driver in use: ata_piix                                     =
+   =20
+        Kernel modules: ata_piix, pata_acpi, ata_generic, piix, ide-pci-
+generic
+00:1f.2 SATA controller: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E)=20
+SATA AHCI Controller (rev 02)                                              =
+          =20
+        Subsystem: Dell Device 0209                                        =
+   =20
+        Kernel driver in use: ahci                                         =
+   =20
+        Kernel modules: ahci                                               =
+   =20
+
+Every time I do to sleep I get:
+
+PM: Entering mem sleep
+Suspending console(s) (use no_console_suspend to debug)
+btusb_bulk_complete: hci0 urb ffff88005485d180 failed to resubmit (1)
+btusb_bulk_complete: hci0 urb ffff880039086c00 failed to resubmit (1)
+btusb_intr_complete: hci0 urb ffff880078556780 failed to resubmit (1)
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda] Stopping disk
+ACPI handle has no context!
+sdhci-pci 0000:03:01.1: PME# disabled
+sdhci-pci 0000:03:01.1: PCI INT B disabled
+ACPI handle has no context!
+ata5: port disabled. ignoring.
+ata_piix 0000:00:1f.1: PCI INT A disabled
+ehci_hcd 0000:00:1d.7: PCI INT A disabled
+=2E..
+
+Otherwise there are no negative effects as far as I can tell.
+
+--nextPart3197210.qu4hLDVgC1
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkqRGMMACgkQR6LMutpd94zqkQCgtfdwnBu7Gc9ycFLqkoaRpaXA
+WE4AnRaQV9ATG1//aO8DXZf6N1YiiexF
+=rs/A
+-----END PGP SIGNATURE-----
+
+--nextPart3197210.qu4hLDVgC1--
