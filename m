@@ -1,46 +1,54 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.31-rc6: ACPI handle has no context apparenty from libata during suspend to RAM
-Date: Sun, 23 Aug 2009 20:58:32 +0200
-Message-ID: <200908232058.32917.rjw@sisk.pl>
-References: <200908231424.07900.arvidjaar@mail.ru> <200908231407.38543.elendil@planet.nl>
+From: Josip Rodin <joy@entuzijast.net>
+Subject: Re: Sun Blade 100 - boot issue
+Date: Mon, 24 Aug 2009 12:36:07 +0200
+Message-ID: <20090824103607.GA14812@orion.carnet.hr>
+References: <9a65e4710908220341j75457e31m475da871cbb266fd@mail.gmail.com> <4A924AAB.8070408@ed.ac.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48271 "EHLO ogre.sisk.pl"
+Received: from orion.CARNet.hr ([161.53.160.90]:60926 "EHLO orion.carnet.hr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933689AbZHWS5q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 23 Aug 2009 14:57:46 -0400
-In-Reply-To: <200908231407.38543.elendil@planet.nl>
+	id S1752094AbZHXLGx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Aug 2009 07:06:53 -0400
+Content-Disposition: inline
+In-Reply-To: <4A924AAB.8070408@ed.ac.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: debian-sparc@lists.debian.org, Nataraj M Basappa <nataraj.m.basappa@gmail.com>, Hugh Pumphrey <H.C.Pumphrey@ed.ac.uk>
 
-On Sunday 23 August 2009, Frans Pop wrote:
-> Andrey Borzenkov wrote:
-> > sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> > sd 0:0:0:0: [sda] Stopping disk
-> > ACPI handle has no context!
-> > sdhci-pci 0000:03:01.1: PME# disabled
-> > sdhci-pci 0000:03:01.1: PCI INT B disabled
-> > ACPI handle has no context!
-> > ata5: port disabled. ignoring.
-> 
-> I have a few of those too. I've been intending to try to investigate them, 
-> but haven't gotten around to it yet. One problem is that there is no 
-> context information in the error message itself (what 
-> driver/function/whatever).
-> 
-> Are they new for you in .31 or have they always been there? I suspect the 
-> latter, in which case I wouldn't worry about them too much. I at least 
-> have never noticed any actual negative impact from them.
+On Sat, Aug 22, 2009 at 11:41:41AM +0100, Nataraj M Basappa wrote:
+>  i am new to sparc hardware, just found this isse after setting up
+> lenny using netboot install.
+> default kernal options on the stock kernel fails (see attached txt -
+> withoutdma.txt), if i add ide=nodma boots correctly. is this a known
+> issue? (as i found on some ubuntu forums)
 
-Most likely, the messages are from acpi_pm_device_sleep_state(), which on some
-buses (PCI for one example) is called for all devices regardless of whether or
-not they have the corresponding ACPI devices.  If they don't, this message is
-printed and it's a KERN_DEBUG message.  It's totally harmless.
+On Mon, Aug 24, 2009 at 09:09:15AM +0100, Hugh Pumphrey wrote:
+> I'm not an expert, but I have had Debian on a SunBlade 100 for a while.  
+> I have always needed to use the ide=nodma option to get it to boot,  
+> although the symptoms of allowing it to try DMA have varied from kernel  
+> to kernel. Usually the boot process just hangs rather than doing the  
+> kernel panic that you observe.
 
-Thanks,
-Rafael
+I googled a bit and it looks like the ALi 15x3 IDE controller/driver has
+had various issues with Sun Blades over the years:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=7294
+https://lists.linux-foundation.org/pipermail/bugme-new/2005-April/012164.html
+http://www.cs.helsinki.fi/linux/linux-kernel/2002-25/0049.html
+
+The latest incarnation of the driver even says:
+
+ * pata_ali.c   - ALI 15x3 PATA for new ATA layer
+ * based in part upon
+ * linux/drivers/ide/pci/alim15x3.c             Version 0.17    2003/01/02
+
+ *  TODO/CHECK
+ *      Review Sunblade workaround.
+
+I'm sending this to the IDE list - what is the status of this driver,
+and what can the users do to help?
+
+-- 
+     2. That which causes joy or happiness.
