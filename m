@@ -1,57 +1,40 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Kurt Newman <knewman@globaldataguard.com>
 Subject: Re: aic94xx and the adaptec sata raid controller (aic-9410)
-Date: Wed, 26 Aug 2009 15:12:41 -0400
-Message-ID: <1251313961.14771.5.camel@mulgrave.site>
-References: <4A956C59.2010709@globaldataguard.com>
+Date: Wed, 26 Aug 2009 15:57:08 -0500
+Message-ID: <4A95A1A4.2040609@globaldataguard.com>
+References: <4A956C59.2010709@globaldataguard.com> <1251313961.14771.5.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45320 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750761AbZHZTMq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Aug 2009 15:12:46 -0400
-In-Reply-To: <4A956C59.2010709@globaldataguard.com>
+Received: from mail.globaldataguard.com ([67.210.231.115]:40926 "EHLO
+	mail2.globaldataguard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430AbZHZU4v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Aug 2009 16:56:51 -0400
+In-Reply-To: <1251313961.14771.5.camel@mulgrave.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kurt Newman <knewman@globaldataguard.com>
+To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-ide@vger.kernel.org
 
-On Wed, 2009-08-26 at 12:09 -0500, Kurt Newman wrote:
-> Since the e-mail for Luben Tuikov, the original writer of the aic94xx
-> driver, no longer works, I was hoping to ask someone a couple simple
-> questions since it relates to the SATA subsystem.
+James Bottomley wrote:
+>> My question is:
+>> Does the aic94xx driver enable the use of the Adaptec SATA Raid
+>> functionality, such that, I'm able to see a single "raided" drive,
+>> instead of multiple, individual ones.
 > 
-> If this is the incorrect mailing list, I'm very sorry.  Could you refer
-> me to the proper one?  I'm at a dead end and hoping someone can point me
-> in a better direction.
-> 
-> My question is:
-> Does the aic94xx driver enable the use of the Adaptec SATA Raid
-> functionality, such that, I'm able to see a single "raided" drive,
-> instead of multiple, individual ones.
+> no ... the raid add on for the 94xx was Aic proprietary.   To get RAID
+> to work you need to use the linux md software RAID.
 
-no ... the raid add on for the 94xx was Aic proprietary.   To get RAID
-to work you need to use the linux md software RAID.
+After further research into learning what HostRAID (read: software raid)
+really is, you're definitely correct.  As far as I can tell, there
+wouldn't be much of a gain from using that driver anyways.
 
-> Background information:
-> Thus far, loading the aic94xx module simply says:
-> "aic94xx: Adaptec aic94xx SAS/SATA driver version 1.0.2-2 loaded".
-> 
-> However, beyond that message and several /sys entries added, I'm unable
-> to access the raid-1 "drive" created by the adaptec utility.  With or
-> without that driver loaded, I still only have access to each individual
-> drive (/dev/sda and /dev/sdb) using ata_piix.
-> 
-> I'm currently attempting to use kernel 2.6.18 (which is patched by
-> RedHat to create kernel-2.6.18-128.7.1.el5).
+Since I've already been using linux md to begin, I might as well
+continue to do so.
 
-Adaptec is supposed to use an industry standard RAID format, so it's
-theoretically possible that MD might understand it, but I'd really
-advise initiallising the volume from linux using mdadm and simply
-dumping the adaptec tool ... that way you won't get any nasty
-compatibility surprises.
+Was just a fruitless hope that it would simplify the development process.
 
-James
-
+Thanks for the response.
+Kurt
 
