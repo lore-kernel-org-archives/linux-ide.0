@@ -1,31 +1,56 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Ubuntu 9.04 (2.6.28-14) and eSATA Port Multiplier (PMP) Not
- working
-Date: Tue, 25 Aug 2009 19:09:16 -0400
-Message-ID: <4A946F1C.60508@rtr.ca>
-References: <e3fccfde0908101354y4e98a985nc119d8941e8b1665@mail.gmail.com>	 <4A8242C5.3060605@gmail.com>	 <e3fccfde0908121536wbacde3bt447c3b8e769f184d@mail.gmail.com>	 <da824cf30908171425i3ec9237bi1370e71d5096c174@mail.gmail.com>	 <e3fccfde0908171530w43f78711lea85ffa1ea26d2ea@mail.gmail.com>	 <da824cf30908171939o7110322bn993dc5d3217a4cfa@mail.gmail.com>	 <e3fccfde0908181454w3e45ef65ucf2b5173d97d10eb@mail.gmail.com> <da824cf30908251528h25c2dffcp9943abd4af85cb52@mail.gmail.com>
+From: Kurt Roeckx <kurt@roeckx.be>
+Subject: Re: sata_promise: Keeps saying SATA link down (SStatus 0 SControl
+ 0)
+Date: Wed, 26 Aug 2009 14:36:16 +0200
+Message-ID: <20090826123616.GA9560@roeckx.be>
+References: <18316.31910.973794.732242@harpo.it.uu.se>
+ <20080115173557.GA3033@roeckx.be>
+ <18317.54768.524651.128063@harpo.it.uu.se>
+ <20090420182503.GA10768@roeckx.be>
+ <18925.32310.909665.474085@pilspetsen.it.uu.se>
+ <20090421162507.GA16798@roeckx.be>
+ <20090621221002.GA11170@roeckx.be>
+ <19008.49605.448797.606574@pilspetsen.it.uu.se>
+ <19011.30301.825635.763918@pilspetsen.it.uu.se>
+ <20090715174602.GA3684@roeckx.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:47780 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932160AbZHYXJK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Aug 2009 19:09:10 -0400
-In-Reply-To: <da824cf30908251528h25c2dffcp9943abd4af85cb52@mail.gmail.com>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:48132 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932956AbZHZMlS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Aug 2009 08:41:18 -0400
+Content-Disposition: inline
+In-Reply-To: <20090715174602.GA3684@roeckx.be>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Chris K <kayex@rogers.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-Grant Grundler wrote:
->
-> I don't believe port ata7.05 exists. AFAIK,  sil3736 only has 5 ports (0 to 4).
-> One of the quirks isn't applying or needs to be added to the kernel.
-> I don't recall what the psuedo port is for but Tejun or "Sans Digital
-> TRM4-B" vendor might know.
-..
+On Wed, Jul 15, 2009 at 07:46:02PM +0200, Kurt Roeckx wrote:
+> On Thu, Jun 25, 2009 at 03:06:37PM +0200, Mikael Pettersson wrote:
+> >  > 
+> >  > Sorry, I dropped the ball on that one. (Too many projects requiring
+> >  > my attention.) I think the safest solution is to just disable hotplug
+> >  > interrupts on SATA1 chips. I'll give that a try in 2-3 days (busy with
+> >  > other stuff).
+> > 
+> > Some 1st generation Promise SATA chips generate spurious hotplug events
+> > which can disrupt normal operation. This has been observed on 20376 and
+> > 20378 chips. This patch thus disables hotplug support on 1st gen chips
+> > while leaving it enabled for 2nd gen chips.
+> > 
+> > Tested on a 2nd gen SATA300 PCI card and a 1st gen 20378 mainboard chip.
+> > 
+> > Kurt, does this work for your 20376?
+> 
+> Yes, works perfectly.
 
-The "extra" phantom port is usually for SEMB (enclosure management).
+Hi,
 
-Cheers
+Is there some problem with the patch, or any other reason it
+hasn't been applied in Linus's tree?
+
+
+Kurt
+
