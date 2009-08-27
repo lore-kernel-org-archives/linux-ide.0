@@ -1,57 +1,35 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: aic94xx and the adaptec sata raid controller (aic-9410)
-Date: Wed, 26 Aug 2009 20:46:39 -0600
-Message-ID: <4A95F38F.9060509@gmail.com>
-References: <4A956C59.2010709@globaldataguard.com>
+Subject: Re: ATA device reset, shoud I be concerned?
+Date: Wed, 26 Aug 2009 20:40:18 -0600
+Message-ID: <4A95F212.5060008@gmail.com>
+References: <200801140019.20668.g.chulkov@jacobs-university.de>	<20080115025435.1e21b703.akpm@linux-foundation.org>	<20080115113552.75731bf8@lxorguk.ukuu.org.uk>	<4794501E.90306@gmail.com>	<20080121130256.2443d7c1@lxorguk.ukuu.org.uk>	<47949AA4.9090601@gmail.com> <20080121141425.45aa9c61@lxorguk.ukuu.org.uk> <4794ACAF.70505@gmail.com> <4794AD3F.40309@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:38006 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754829AbZH0Cql (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Aug 2009 22:46:41 -0400
-Received: by gxk1 with SMTP id 1so825029gxk.17
-        for <linux-ide@vger.kernel.org>; Wed, 26 Aug 2009 19:46:42 -0700 (PDT)
-In-Reply-To: <4A956C59.2010709@globaldataguard.com>
+Received: from mail-yw0-f184.google.com ([209.85.211.184]:64919 "EHLO
+	mail-yw0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754858AbZH0Cqo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Aug 2009 22:46:44 -0400
+In-Reply-To: <4794AD3F.40309@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kurt Newman <knewman@globaldataguard.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-On 08/26/2009 11:09 AM, Kurt Newman wrote:
-> Since the e-mail for Luben Tuikov, the original writer of the aic94xx
-> driver, no longer works, I was hoping to ask someone a couple simple
-> questions since it relates to the SATA subsystem.
+On 01/21/2008 08:33 AM, Tejun Heo wrote:
+> Tejun Heo wrote:
+>> IMHO, losing media error information is much better than locking up a
+>> machine hard.  We can start white listing known good controllers but I'm
+>> skeptical how much benefit it will bring.
 >
-> If this is the incorrect mailing list, I'm very sorry.  Could you refer
-> me to the proper one?  I'm at a dead end and hoping someone can point me
-> in a better direction.
->
-> My question is:
-> Does the aic94xx driver enable the use of the Adaptec SATA Raid
-> functionality, such that, I'm able to see a single "raided" drive,
-> instead of multiple, individual ones.
->
-> Background information:
-> Thus far, loading the aic94xx module simply says:
-> "aic94xx: Adaptec aic94xx SAS/SATA driver version 1.0.2-2 loaded".
->
-> However, beyond that message and several /sys entries added, I'm unable
-> to access the raid-1 "drive" created by the adaptec utility.  With or
-> without that driver loaded, I still only have access to each individual
-> drive (/dev/sda and /dev/sdb) using ata_piix.
+> Just a data point, even ICHs lock up after PHY event if the wrong TF
+> register is accessed.  I just don't think tempting with TF regs after
+> timeout is worth the cost.
 
-ata_piix will be for an Intel integrated chipset SATA controller, not an 
-aic94xx. Are you sure the drives are actually hooked up through the 
-Adaptec controller?
-
->
-> I'm currently attempting to use kernel 2.6.18 (which is patched by
-> RedHat to create kernel-2.6.18-128.7.1.el5).
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+Nvidia CK804 SATA controllers appear to also explode on reading TF 
+registers after media errors in certain cases. (They tend to either 
+lockup the machine or throw HyperTransport timeout machine check 
+exceptions). I suspect those error paths aren't well tested (except that 
+it even explodes in Windows with the default Microsoft IDE driver, when 
+reading a scratched DVD on a SATA drive, for example.)
