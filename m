@@ -1,60 +1,65 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/3] Convert libata pio task to slow-work
-Date: Thu, 27 Aug 2009 20:49:39 +0200
-Message-ID: <20090827184939.GK12579@kernel.dk>
-References: <1251364122-9592-1-git-send-email-jens.axboe@oracle.com> <4A967DD7.20603@kernel.org> <20090827124927.GJ12579@kernel.dk> <4A96830F.9040805@kernel.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Thu, 27 Aug 2009 17:57:40 -0400
+Message-ID: <4A970154.2020507@redhat.com>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca>    <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name>    <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:35400 "EHLO kernel.dk"
+Received: from mx1.redhat.com ([209.132.183.28]:63851 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751507AbZH0Sti (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Aug 2009 14:49:38 -0400
-Content-Disposition: inline
-In-Reply-To: <4A96830F.9040805@kernel.org>
+	id S1751058AbZH0WA4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Aug 2009 18:00:56 -0400
+In-Reply-To: <d086b110526f8bac2f562850dfc70b03@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, jeff@garzik.org, dhowells@redhat.com
+To: Andrei Tanas <andrei@tanas.ca>
+Cc: NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
-On Thu, Aug 27 2009, Tejun Heo wrote:
-> Hello, Jens.
-> 
-> Jens Axboe wrote:
-> >> It would be nice if merging of this series and the lazy work can be
-> >> held a bit but there's no harm in merging either.  If the concurrency
-> >> managed workqueue turns out to be a good idea, we can replace it then.
-> > 
-> > It can wait, what you describe above sounds really cool and would
-> > hopefully allow us to get rid of all workqueues (provided it scales well
-> > and doesn't fall down on cache line contention with many different
-> > instances pounding on it).
-> 
-> Almost all operations are per-cpu so cache lines shouldn't bounce too
-> much.  The only part I worry about is the part which checks whether a
-> work is currently executing on the current cpu which currently is
-> implemeted as a hash table.  The hash table is only 16 pointers long
-> and will be mostly empty so hopefully it doesn't add any significant
-> overhead.
+On 08/27/2009 05:22 PM, Andrei Tanas wrote:
+> Hello,
+>
+> This is about the same problem that I wrote two days ago (md gets an error
+> while writing superblock and fails a hard drive).
+>
+> I've tried to figure out what's really going on, and as far as I can tell,
+> the disk doesn't really fail (as confirmed by multiple tests), it times out
+> trying to execute ATA_CMD_FLUSH_EXT ("at2.00 cmd ea..." in the log)
+> command. The reason for this I believe is that md_super_write queues the
+> write comand with BIO_RW_SYNCIO flag.
+> As I wrote before, with 32MB cache it is conceivable that it will take the
+> drive longer than 30 seconds (defined by SD_TIMEOUT in scsi/sd.h) to flush
+> its buffers.
+>
+> Changing safe_mode_delay to more conservative 2 seconds should definitely
+> help, but is it really necessary to write the superblock synchronously when
+> array changes status from active to active-idle?
+>
+> [90307.328266] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+> frozen
+> [90307.328275] ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+> [90307.328277]          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4
+> (timeout)
+> [90307.328280] ata2.00: status: { DRDY }
+> [90307.328288] ata2: hard resetting link
+> [90313.218511] ata2: link is slow to respond, please be patient (ready=0)
+> [90317.377711] ata2: SRST failed (errno=-16)
+> [90317.377720] ata2: hard resetting link
+> [90318.251720] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [90318.338026] ata2.00: configured for UDMA/133
+> [90318.338062] ata2: EH complete
+> [90318.370625] end_request: I/O error, dev sdb, sector 1953519935
+> [90318.370632] md: super_written gets error=-5, uptodate=0
+>
+>    
 
-OK, we'll let time and experimentation be the judge.
+30 seconds is a very long time for a drive to respond, but I think that 
+your explanation fits the facts pretty well...
 
-> > Care to post it? I know you don't think it's perfect yet, but it would
-> > make a lot more sense to throw effort into this rather than waste time
-> > on partial solutions.
-> 
-> I have this printed out code with full of red markings from proof
-> reading and flush implementation is mostly broken.  Please give me a
-> couple of days.  I'll post a rough unsplit version which at least
-> compiles with the planned changes applied by the end of the week.  :-)
+The drive might take a longer time like this when doing error handling 
+(sector remapping, etc), but then I would expect to see your remapped 
+sector count grow.
 
-Alright, fair enough.
-
-One question - do the 'exposed' workqueues (the ones that drivers
-allocate/create) sitting in front of the global cpu queue allow more
-than one thread per cpu, or is that property retained for the global cpu
-queue (where it is a necessity)?
-
--- 
-Jens Axboe
+ric
 
