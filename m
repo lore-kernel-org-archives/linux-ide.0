@@ -1,167 +1,82 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.31-rc5 regression: hd don't show up
-Date: Thu, 27 Aug 2009 20:35:25 +0900
-Message-ID: <4A966F7D.60707@kernel.org>
-References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org>
+Subject: Re: [PATCH 0/3] Convert libata pio task to slow-work
+Date: Thu, 27 Aug 2009 21:36:39 +0900
+Message-ID: <4A967DD7.20603@kernel.org>
+References: <1251364122-9592-1-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020802050005030801070003"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54009 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:42206 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750994AbZH0Lfa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Aug 2009 07:35:30 -0400
-In-Reply-To: <4A965E3B.3000808@klingt.org>
+	id S1752230AbZH0Mh7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Aug 2009 08:37:59 -0400
+In-Reply-To: <1251364122-9592-1-git-send-email-jens.axboe@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Blechmann <tim@klingt.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, jeff@garzik.org, dhowells@redhat.com
 
-This is a multi-part message in MIME format.
---------------020802050005030801070003
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Hello, Jens.
 
-Tim Blechmann wrote:
-> On 08/27/2009 10:38 AM, Tejun Heo wrote:
->> Tim Blechmann wrote:
->>>>>>> running 2.6.31-rc5 (7cb7beb31aa3d941833b6a6e553687422c31e4b6 to be
->>>>>>> exact), sometimes some hard disks don't show up.
->>>>>>>
->>>>>>> after booting, my root hd (sda) is mounted to /, while two other hds
->>>>>>> (sdb/sdc) are mounted as a user. sda is always present, but the other
->>>>>>> two sometimes don't show up (i.e. they are not listed in /dev/disk/, nor
->>>>>>> to they have a /dev/sdX link). with 2.6.29 and 2.6.30, all three disks
->>>>>>> are reported correctly.
->>>>>> Can you please attach boot logs of a successful and a failed boot?
->>>>> i have two files attached:
->>>>> - dmesg_good - all hds are available
->>>>> - dmesg_bad - on hd is missing
->>>> Can you please apply the attached patch and post the bad boot log?
->>> attached you find boot logs for both a good ad a bad boot
->> Sorry about the long delay.  I somehow marked the message read without
->> actually reading it.
->>
->> I suspected the problem was with getting the wrong classification code
->> or phantom device detection kicking in spuriously.  Looks like the
->> problem happens way before that.  Can you please apply the attached
->> patch and report the result?
+Jens Axboe wrote:
+> Hi,
 > 
-> i applied your patch onto of the current linus/master branch and
-> currently (after rebooting 5 or 6 times) i cannot reproduce the problem
-> any more ...
-> however, there is a warning stack trace in the boot log from libata code
-> (bootlog attached)
+> This patchset adds support for slow-work for delayed slow work and
+> for cancelling slow work. Note that these patches are totally
+> untested!
 
-Oops, that was my bad.  This should remove the useless warning.
+As what I'm currently working on is likely to collide with these
+changes, here is a short summary of what's been going on.
 
-Thanks.
+/* excerpted from internal weekly work report and edited */
+
+The principle is the same as I described before.  It hooks into the
+scheduler using an alias scheduler class of sched_fair and gets
+notifications of workqueue threads going into sleep, waking up and
+getting preempted from which worker pool is managed automatically for
+full concurrency with the least number of concurrent threads.
+
+There's a global workqueue per-cpu and each actual workqueue is front
+to the global one adding necessary attributes and/or defining a
+flushing domain.  Each global workqueue can have multiple workers
+(upto 128 in the current incarnation) and creates and kicks new ones
+as necessary to keep the cpu occupied.
+
+The diffcult part was teaching workqueue how to handle multiple
+workers yet maintaining its exclusion properties, flushing rules and
+forward progress guarantees - a single work can't be running
+concurrently on the same cpu but can across different cpus,
+flush_work() deals with single cpu flushing but others deal with all
+the cpus and so on.  Because each work struct can't be accessed once
+the work actually begins running, keeping track of things become
+somewhat difficult as multiple workers now process works from a single
+queue.  Anyways, after much head scratching, I think most problems
+have been nailed down although I wouldn't know for sure till I get it
+actually working.
+
+There's slight more book keeping to do on each work-processing
+iteration but overall I think it will be a win considering that it can
+remove unnecessary task switchings, usage of different stacks (cache
+foot-print) and cross-cpu work bouncing (for currently single threaded
+workqueues).  If it really works as expected, it should be able to
+replace async, [very]_slow_work and remove most of private workqueues
+while losing no concurrency or forward-progress guarantees, which
+would be pretty decent.
+
+/**/
+
+I finished first draft implementation and review pass yesterday and it
+seems like there shouldn't be any major problem now but I haven't even
+tried to compile it yet, so I'm not yet entirely sure how it would
+eventually turn out and if I hit some major roadblock I might just
+drop it.
+
+It would be nice if merging of this series and the lazy work can be
+held a bit but there's no harm in merging either.  If the concurrency
+managed workqueue turns out to be a good idea, we can replace it then.
+
+Thanks a lot.
 
 -- 
 tejun
-
---------------020802050005030801070003
-Content-Type: text/x-patch;
- name="nodev-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="nodev-debug.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 072ba5e..876ede2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3770,6 +3770,7 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 
- 	scontrol = (scontrol & 0x0f0) | 0x300;
- 
-+	ata_link_printk(link, KERN_INFO, "XXX bringing up link\n");
- 	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
- 		return rc;
- 
-@@ -3778,7 +3779,9 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 	 */
- 	msleep(200);
- 
--	if ((rc = sata_link_debounce(link, params, deadline)))
-+	rc = sata_link_debounce(link, params, deadline);
-+	ata_link_printk(link, KERN_INFO, "XXX debounced rc=%d\n", rc);
-+	if (rc)
- 		return rc;
- 
- 	/* clear SError, some PHYs require this even for SRST to work */
-@@ -3904,8 +3907,10 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 	if (rc)
- 		goto out;
- 	/* if link is offline nothing more to do */
--	if (ata_phys_link_offline(link))
-+	if (ata_phys_link_offline(link)) {
-+		ata_link_printk(link, KERN_INFO, "XXX phys link offline\n");
- 		goto out;
-+	}
- 
- 	/* Link is online.  From this point, -ENODEV too is an error. */
- 	if (online)
-@@ -6060,7 +6065,7 @@ static void async_port_probe(void *data, async_cookie_t cookie)
- 
- 		ehi->probe_mask |= ATA_ALL_DEVICES;
- 		ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
--		ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+		ehi->flags |= ATA_EHI_NO_AUTOPSY/* | ATA_EHI_QUIET*/;
- 
- 		ap->pflags &= ~ATA_PFLAG_INITIALIZING;
- 		ap->pflags |= ATA_PFLAG_LOADING;
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index bbbb1fa..c718d12 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1998,6 +1998,9 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 	if (r_err)
- 		*r_err = err;
- 
-+	ata_dev_printk(dev, KERN_INFO, "XXX CLASSIFY TF %02x/%02x:%02x:%02x:%02x\n",
-+		       tf.command, tf.feature, tf.lbal, tf.lbam, tf.lbah);
-+
- 	/* see if device passed diags: continue and warn later */
- 	if (err == 0)
- 		/* diagnostic fail : do nothing _YET_ */
-@@ -2006,11 +2009,14 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		/* do nothing */ ;
- 	else if ((dev->devno == 0) && (err == 0x81))
- 		/* do nothing */ ;
--	else
-+	else {
-+		ata_dev_printk(dev, KERN_INFO, "XXX diag nodev\n");
- 		return ATA_DEV_NONE;
-+	}
- 
- 	/* determine if device is ATA or ATAPI */
- 	class = ata_dev_classify(&tf);
-+	ata_dev_printk(dev, KERN_INFO, "XXX ata_dev_classify=%d\n", class);
- 
- 	if (class == ATA_DEV_UNKNOWN) {
- 		/* If the device failed diagnostic, it's likely to
-@@ -2019,13 +2025,18 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		 * device signature is invalid with diagnostic
- 		 * failure.
- 		 */
--		if (present && (dev->horkage & ATA_HORKAGE_DIAGNOSTIC))
-+		if (present && (dev->horkage & ATA_HORKAGE_DIAGNOSTIC)) {
-+			ata_dev_printk(dev, KERN_INFO, "XXX UNK && present -> ATA\n");
- 			class = ATA_DEV_ATA;
--		else
-+		} else {
- 			class = ATA_DEV_NONE;
-+			ata_dev_printk(dev, KERN_INFO, "XXX UNK && !present -> NONE\n");
-+		}
- 	} else if ((class == ATA_DEV_ATA) &&
--		   (ap->ops->sff_check_status(ap) == 0))
-+		   (ap->ops->sff_check_status(ap) == 0)) {
- 		class = ATA_DEV_NONE;
-+		ata_dev_printk(dev, KERN_INFO, "XXX stat==0 -> NONE\n");
-+	}
- 
- 	return class;
- }
-
---------------020802050005030801070003--
