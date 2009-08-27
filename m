@@ -1,162 +1,133 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.31-rc5 regression: hd don't show up
-Date: Thu, 27 Aug 2009 17:38:39 +0900
-Message-ID: <4A96460F.3020600@kernel.org>
-References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070105020307080205070708"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49615 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832AbZH0Iin (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Aug 2009 04:38:43 -0400
-In-Reply-To: <4A87D9FC.9070408@klingt.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: [PATCH 1/3] slow-work: add delayed_slow_work support
+Date: Thu, 27 Aug 2009 11:08:40 +0200
+Message-ID: <1251364122-9592-2-git-send-email-jens.axboe@oracle.com>
+References: <1251364122-9592-1-git-send-email-jens.axboe@oracle.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752014AbZH0JJU@vger.kernel.org>
+In-Reply-To: <1251364122-9592-1-git-send-email-jens.axboe@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: tj@kernel.org, alan@lxorguk.ukuu.org.uk, jeff@garzik.org, dhowells@redhat.com, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tim Blechmann <tim@klingt.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070105020307080205070708
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+This adds support for starting slow work with a delay, similar
+to the functionality we have for workqueues.
 
-Tim Blechmann wrote:
->>>>> running 2.6.31-rc5 (7cb7beb31aa3d941833b6a6e553687422c31e4b6 to be
->>>>> exact), sometimes some hard disks don't show up.
->>>>>
->>>>> after booting, my root hd (sda) is mounted to /, while two other hds
->>>>> (sdb/sdc) are mounted as a user. sda is always present, but the other
->>>>> two sometimes don't show up (i.e. they are not listed in /dev/disk/, nor
->>>>> to they have a /dev/sdX link). with 2.6.29 and 2.6.30, all three disks
->>>>> are reported correctly.
->>>> Can you please attach boot logs of a successful and a failed boot?
->>> i have two files attached:
->>> - dmesg_good - all hds are available
->>> - dmesg_bad - on hd is missing
->> Can you please apply the attached patch and post the bad boot log?
-> 
-> attached you find boot logs for both a good ad a bad boot
+Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+---
+ include/linux/slow-work.h |   15 +++++++++++
+ kernel/slow-work.c        |   59 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 74 insertions(+), 0 deletions(-)
 
-Sorry about the long delay.  I somehow marked the message read without
-actually reading it.
-
-I suspected the problem was with getting the wrong classification code
-or phantom device detection kicking in spuriously.  Looks like the
-problem happens way before that.  Can you please apply the attached
-patch and report the result?
-
-Thanks.
-
--- 
-tejun
-
---------------070105020307080205070708
-Content-Type: text/x-patch;
- name="nodev-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="nodev-debug.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 072ba5e..df099b7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3770,6 +3770,7 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
+diff --git a/include/linux/slow-work.h b/include/linux/slow-work.h
+index b65c888..12827a8 100644
+--- a/include/linux/slow-work.h
++++ b/include/linux/slow-work.h
+@@ -51,6 +51,11 @@ struct slow_work {
+ 	struct list_head	link;	/* link in queue */
+ };
  
- 	scontrol = (scontrol & 0x0f0) | 0x300;
- 
-+	ata_link_printk(link, KERN_INFO, "XXX bringing up link\n");
- 	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
- 		return rc;
- 
-@@ -3778,7 +3779,9 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 	 */
- 	msleep(200);
- 
--	if ((rc = sata_link_debounce(link, params, deadline)))
-+	rc = sata_link_debounce(link, params, deadline);
-+	ata_link_printk(link, KERN_INFO, "XXX debounced rc=%d\n", rc);
-+	if (rc)
- 		return rc;
- 
- 	/* clear SError, some PHYs require this even for SRST to work */
-@@ -3904,8 +3907,13 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 	if (rc)
- 		goto out;
- 	/* if link is offline nothing more to do */
--	if (ata_phys_link_offline(link))
-+	if (ata_phys_link_offline(link)) {
-+		ata_link_printk(link, KERN_INFO,
-+				"XXX phys link offline, l=%d p=%d\n",
-+				ata_link_offline(link),
-+				ata_phys_link_offline(link));
- 		goto out;
-+	}
- 
- 	/* Link is online.  From this point, -ENODEV too is an error. */
- 	if (online)
-@@ -6060,7 +6068,7 @@ static void async_port_probe(void *data, async_cookie_t cookie)
- 
- 		ehi->probe_mask |= ATA_ALL_DEVICES;
- 		ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
--		ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+		ehi->flags |= ATA_EHI_NO_AUTOPSY/* | ATA_EHI_QUIET*/;
- 
- 		ap->pflags &= ~ATA_PFLAG_INITIALIZING;
- 		ap->pflags |= ATA_PFLAG_LOADING;
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index bbbb1fa..c718d12 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1998,6 +1998,9 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 	if (r_err)
- 		*r_err = err;
- 
-+	ata_dev_printk(dev, KERN_INFO, "XXX CLASSIFY TF %02x/%02x:%02x:%02x:%02x\n",
-+		       tf.command, tf.feature, tf.lbal, tf.lbam, tf.lbah);
++struct delayed_slow_work {
++	struct timer_list timer;
++	struct slow_work work;
++};
 +
- 	/* see if device passed diags: continue and warn later */
- 	if (err == 0)
- 		/* diagnostic fail : do nothing _YET_ */
-@@ -2006,11 +2009,14 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		/* do nothing */ ;
- 	else if ((dev->devno == 0) && (err == 0x81))
- 		/* do nothing */ ;
--	else
-+	else {
-+		ata_dev_printk(dev, KERN_INFO, "XXX diag nodev\n");
- 		return ATA_DEV_NONE;
-+	}
- 
- 	/* determine if device is ATA or ATAPI */
- 	class = ata_dev_classify(&tf);
-+	ata_dev_printk(dev, KERN_INFO, "XXX ata_dev_classify=%d\n", class);
- 
- 	if (class == ATA_DEV_UNKNOWN) {
- 		/* If the device failed diagnostic, it's likely to
-@@ -2019,13 +2025,18 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		 * device signature is invalid with diagnostic
- 		 * failure.
- 		 */
--		if (present && (dev->horkage & ATA_HORKAGE_DIAGNOSTIC))
-+		if (present && (dev->horkage & ATA_HORKAGE_DIAGNOSTIC)) {
-+			ata_dev_printk(dev, KERN_INFO, "XXX UNK && present -> ATA\n");
- 			class = ATA_DEV_ATA;
--		else
-+		} else {
- 			class = ATA_DEV_NONE;
-+			ata_dev_printk(dev, KERN_INFO, "XXX UNK && !present -> NONE\n");
-+		}
- 	} else if ((class == ATA_DEV_ATA) &&
--		   (ap->ops->sff_check_status(ap) == 0))
-+		   (ap->ops->sff_check_status(ap) == 0)) {
- 		class = ATA_DEV_NONE;
-+		ata_dev_printk(dev, KERN_INFO, "XXX stat==0 -> NONE\n");
-+	}
- 
- 	return class;
+ /**
+  * slow_work_init - Initialise a slow work item
+  * @work: The work item to initialise
+@@ -66,6 +71,13 @@ static inline void slow_work_init(struct slow_work *work,
+ 	INIT_LIST_HEAD(&work->link);
  }
-
---------------070105020307080205070708--
+ 
++static inline void delayed_slow_work_init(struct delayed_slow_work *dwork,
++					  const struct slow_work_ops *ops)
++{
++	init_timer(&dwork->timer);
++	slow_work_init(&dwork->work, ops);
++}
++
+ /**
+  * vslow_work_init - Initialise a very slow work item
+  * @work: The work item to initialise
+@@ -87,6 +99,9 @@ extern int slow_work_enqueue(struct slow_work *work);
+ extern int slow_work_register_user(void);
+ extern void slow_work_unregister_user(void);
+ 
++extern int delayed_slow_work_enqueue(struct delayed_slow_work *dwork,
++					unsigned long delay);
++
+ #ifdef CONFIG_SYSCTL
+ extern ctl_table slow_work_sysctls[];
+ #endif
+diff --git a/kernel/slow-work.c b/kernel/slow-work.c
+index 09d7519..1eeda59 100644
+--- a/kernel/slow-work.c
++++ b/kernel/slow-work.c
+@@ -318,6 +318,65 @@ cant_get_ref:
+ }
+ EXPORT_SYMBOL(slow_work_enqueue);
+ 
++static void delayed_slow_work_timer(unsigned long data)
++{
++	struct slow_work *work = (struct slow_work *) data;
++	unsigned long flags;
++
++	spin_lock_irqsave(&slow_work_queue_lock, flags);
++	if (test_bit(SLOW_WORK_VERY_SLOW, &work->flags))
++		list_add_tail(&work->link, &vslow_work_queue);
++	else
++		list_add_tail(&work->link, &slow_work_queue);
++	spin_unlock_irqrestore(&slow_work_queue_lock, flags);
++
++	wake_up(&slow_work_thread_wq);
++}
++
++/**
++ * delayed_slow_work_enqueue - Schedule a delayed slow work item for processing
++ * @dwork: The delayed work item to queue
++ * @delay: When to start executing the work
++ *
++ * See slow_work_enqueue(), this functions adds a delay before the work
++ * is actually started. The act of queuing the work is not delayed.
++ */
++int delayed_slow_work_enqueue(struct delayed_slow_work *dwork,
++			      unsigned long delay)
++{
++	struct slow_work *work = &dwork->work;
++	unsigned long flags;
++
++	BUG_ON(slow_work_user_count <= 0);
++	BUG_ON(!work);
++	BUG_ON(!work->ops);
++	BUG_ON(!work->ops->get_ref);
++
++	if (!test_and_set_bit_lock(SLOW_WORK_PENDING, &work->flags)) {
++		spin_lock_irqsave(&slow_work_queue_lock, flags);
++
++		if (test_bit(SLOW_WORK_EXECUTING, &work->flags)) {
++			set_bit(SLOW_WORK_ENQ_DEFERRED, &work->flags);
++		} else {
++			if (work->ops->get_ref(work) < 0)
++				goto cant_get_ref;
++		}
++
++		spin_unlock_irqrestore(&slow_work_queue_lock, flags);
++		dwork->timer.expires = jiffies + delay;
++		dwork->timer.data = (unsigned long) work;
++		dwork->timer.function = delayed_slow_work_timer;
++		add_timer(&dwork->timer);
++	}
++
++	return 0;
++
++cant_get_ref:
++	spin_unlock_irqrestore(&slow_work_queue_lock, flags);
++	return -EAGAIN;
++}
++EXPORT_SYMBOL(delayed_slow_work_enqueue);
++
+ /*
+  * Schedule a cull of the thread pool at some time in the near future
+  */
+-- 
+1.6.4.1.207.g68ea
