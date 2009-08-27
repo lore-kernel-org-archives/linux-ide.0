@@ -1,27 +1,47 @@
-From: Allan Wind <allan_wind@lifeintegrity.com>
-Subject: Re: LSISAS1068E + WDC WD2002FYPS: I/O error & Sense Key
-Date: Wed, 26 Aug 2009 17:17:36 -0400
-Message-ID: <20090826211736.GE9339@lifeintegrity.com>
-References: <20090727060322.GB27002@lifeintegrity.com> <4A70A64A.2070605@gmail.com> <20090729200714.GA20706@lifeintegrity.com> <4A70D57B.6030301@gmail.com> <20090731184023.GT3211@lifeintegrity.com> <20090803050853.GA26430@lifeintegrity.com> <1249310093.3943.11.camel@mulgrave.site> <20090803160629.GA2011@lifeintegrity.com> <1249316158.3943.54.camel@mulgrave.site>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: MD/RAID: what's wrong with sector 1953519935?
+Date: Wed, 26 Aug 2009 20:07:13 -0400
+Message-ID: <4A95CE31.80404@rtr.ca>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca>    <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name>    <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:58046
-	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766AbZHZVRf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Aug 2009 17:17:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1249316158.3943.54.camel@mulgrave.site>
+Received: from rtr.ca ([76.10.145.34]:53156 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753508AbZH0AHF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Aug 2009 20:07:05 -0400
+In-Reply-To: <1571f45804875514762f60c0097171e6@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrei Tanas <andrei@tanas.ca>
+Cc: Ric Wheeler <rwheeler@redhat.com>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I have not seen any problems since upgrading to 2.6.30.4.
+Andrei Tanas wrote:
+> On Wed, 26 Aug 2009 11:39:38 -0400, Ric Wheeler <rwheeler@redhat.com>
+> wrote:
+>> On 08/26/2009 10:46 AM, Andrei Tanas wrote:
+>>> On Wed, 26 Aug 2009 06:34:14 -0400, Ric Wheeler<rwheeler@redhat.com>
+>>> wrote:
+>>>> On 08/25/2009 11:45 PM, Andrei Tanas wrote:
+>>>>>>>> I would suggest that Andrei might try to write and clear the IO
+>>>>>> error
+>>>>>>>> at that
+>>>>>>>> offset. You can use Mark Lord's hdparm to clear a specific sector
+..
+> [90318.370625] end_request: I/O error, dev sdb, sector 1953519935
+..
 
+I suggest you try this:
 
-/Allan
--- 
-Allan Wind
-Life Integrity, LLC
-<http://lifeintegrity.com>
+    hdparm --read-sector 1953519935 /dev/sdb
 
+If that succeeds, then the sector is good at the drive.
+But *If* it fails, then you could check the syslog to ensure
+that it didn't fail for some weird reason, and then *fix* it:
+
+    hdparm --write-sector 1953519935 /dev/sdb
+
+This is very different from how 'dd' does writes.
+
+Cheers
