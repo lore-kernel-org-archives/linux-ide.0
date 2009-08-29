@@ -1,41 +1,47 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH #upstream] libata: enhance command parsing
-Date: Fri, 28 Aug 2009 17:55:35 -0600
-Message-ID: <4A986E77.9040000@gmail.com>
-References: <4A72105F.40704@gmail.com> <4A8F88B2.6050900@gmail.com>	 <4A8FFA44.30604@rtr.ca> <51f3faa70908220936w309d9754p4f96cee44d58ea63@mail.gmail.com> <4A905A4E.5000309@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: CF to SATA bridge support
+Date: Sat, 29 Aug 2009 09:48:34 -0400
+Message-ID: <4A9931B2.2020003@rtr.ca>
+References: <43479bc90908071059o2ce5ac94v1d9d959e3af44326@mail.gmail.com>	 <4A7CEF3B.9090506@gmail.com>	 <43479bc90908081135i229d4061k9d461444d3600645@mail.gmail.com> <43479bc90908090923h40305e14mf726d30fbed0733f@mail.gmail.com> <4A80219D.7070708@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f200.google.com ([209.85.211.200]:38139 "EHLO
-	mail-yw0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbZH2AAk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Aug 2009 20:00:40 -0400
-Received: by ywh38 with SMTP id 38so3244781ywh.20
-        for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2009 17:00:42 -0700 (PDT)
-In-Reply-To: <4A905A4E.5000309@rtr.ca>
+Received: from rtr.ca ([76.10.145.34]:57490 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751213AbZH2Nsd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Aug 2009 09:48:33 -0400
+In-Reply-To: <4A80219D.7070708@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
+To: Mathieu GELI <mathieu.geli@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-On 08/22/2009 02:51 PM, Mark Lord wrote:
->> Actually, I think the code+data size of this version is not much
->> different from the previous version. One might be able to come up with
->> a structure that you could encapsulate all the strings into and that
->> you could search through to find the right one, but it'd be tricky to
->> do that without making the structure end up containing a bunch of
->> padding and other wasted space that would add as much data size as you
->> saved in code size. Unless you have a great idea on the subject that
->> I'm not thinking of right after waking up :-)
-> ..
->
-> I've done lots of this type of thing in the past,
-> putting the parsing knowledge into the data structure
-> and reducing the code to nearly nothing (at the expense
-> of more data than before).
->
-> But right now I'm not offering to do it, so no objection
-> from me to the current state. :)
+Mark Lord wrote:
+..
+> Those errors are on WRITEs, not READs, so no surprise that "hdparm -t" works.
+> This could be an IORDY issue, or just due to how the the Marvell chips
+> are buggy when doing PIO of more than a single sector.  That was the only
+> errata we didn't do a complete workaround for, because it's so ugly.  :)
+> 
+> I have a CF-to-SATA adapter due to arrive here from DealExtreme.com in the
+> next week or so.  Remind me, and I'll try it out on some of the Marvell 
+> cards here and see what happens.
+..
 
-Any other thoughts on this one? Jeff?
+Okay.  I don't actually have any of the system-on-chip (SoC) Marvell devices
+like the one you are using there.  But they say that the SATA core on
+the SoC is a Gen-IIe core, same as on the 7042 PCIe chipset.
+
+So, I've plugged my UDMA-capable CF card into the CF-to-SATA adapter
+and hotplugged that into a port on the 7042.
+
+It works fine, reading/writing in UDMA mode 5.
+Things also appear to be good with a Hitachi microdrive in PIO mode 3.
+
+The CF-to-SATA adaptor I am using is this one:
+   http://www.dealextreme.com/details.dx/sku.20317
+
+Nice little device, compact, notebook compatible, and Fast!
+
+Cheers
