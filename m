@@ -1,78 +1,149 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/7] sd: add support for WRITE SAME (16) with unmap bit
-Date: Sun, 30 Aug 2009 15:12:09 +0400
-Message-ID: <4A9A5E89.7070204@ru.mvista.com>
-References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.713422216@bombadil.infradead.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ata_piix: parallel scanning on PATA needs an extra locking
+Date: Sun, 30 Aug 2009 14:56:30 +0200
+Message-ID: <200908301456.30132.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753322AbZH3LMT@vger.kernel.org>
-In-Reply-To: <20090829231121.713422216@bombadil.infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:62832 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753448AbZH3M6a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Aug 2009 08:58:30 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Arjan van de Ven <arjan@linux.intel.com>, Alan Cox <alan@linux.intel.com>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
 
-Christoph Hellwig wrote:
+Hi,
 
-> Add a prepare_discard function to sd that sends a WRITE SAME request with
-> the unmap bit set to the device if it advertises thin provisioning support.
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> Index: linux-2.6/drivers/scsi/sd.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/sd.c	2009-08-29 19:19:36.067371669 -0300
-> +++ linux-2.6/drivers/scsi/sd.c	2009-08-29 19:26:20.723754241 -0300
-> @@ -911,6 +911,50 @@ static void sd_prepare_flush(struct requ
->  	rq->cmd_len = 10;
->  }
->  
-> +static int sd_prepare_discard(struct request_queue *q, struct request *rq,
-> +		struct bio *bio)
-> +{
-> +	struct scsi_device *sdp = q->queuedata;
-> +	struct page *page = alloc_page(GFP_KERNEL);
-> +
-> +	if (!page)
-> +		return -ENOMEM;
-> +
-> +	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-> +	rq->timeout = SD_TIMEOUT;
-> +	rq->cmd[0] = WRITE_SAME_16;
-> +	rq->cmd[1] = 0x8; /* UNMAP bit */
-> +	rq->cmd[2] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 56) & 0xff : 0;
-> +	rq->cmd[3] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 48) & 0xff : 0;
-> +	rq->cmd[4] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 40) & 0xff : 0;
-> +	rq->cmd[5] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 32) & 0xff : 0;
-> +	rq->cmd[6] = (unsigned char) (bio->bi_sector >> 24) & 0xff;
-> +	rq->cmd[7] = (unsigned char) (bio->bi_sector >> 16) & 0xff;
-> +	rq->cmd[8] = (unsigned char) (bio->bi_sector >> 8) & 0xff;
-> +	rq->cmd[9] = (unsigned char) bio->bi_sector & 0xff;
-> +	rq->cmd[10] = (unsigned char) (bio_sectors(bio) >> 24) & 0xff;
-> +	rq->cmd[11] = (unsigned char) (bio_sectors(bio) >> 16) & 0xff;
-> +	rq->cmd[12] = (unsigned char) (bio_sectors(bio) >> 8) & 0xff;
-> +	rq->cmd[13] = (unsigned char) bio_sectors(bio) & 0xff;
-> +	rq->cmd[14] = 0;
-> +	rq->cmd[15] = 0;
-> +	rq->cmd_len = 16;
-> +
-> +	printk(KERN_INFO "umap, lba = 0x%lld, len = %d\n",
->   
+This one is quite late but it fixes rather nasty 2.6.31 regression..
 
-   So, is it hex or decimal? :-)
 
-> +	       bio->bi_sector, bio_sectors(bio));
->   
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ata_piix: parallel scanning on PATA needs an extra locking
 
-   Since bio->bi_sector can either be 4 or 8 bytes, you need a cast to 
-unsigned long long here.
+Commit log for commit 517d3cc15b36392e518abab6bacbb72089658313
+("[libata] ata_piix: Enable parallel scan") says:
 
-MBR, Sergei
+    This patch turns on parallel scanning for the ata_piix driver.
+    This driver is used on most netbooks (no AHCI for cheap storage it seems).
+    The scan is the dominating time factor in the kernel boot for these
+    devices; with this flag it gets cut in half for the device I used
+    for testing (eeepc).
+    Alan took a look at the driver source and concluded that it ought to be safe
+    to do for this driver.  Alan has also checked with the hardware team.
+
+and it is all true but once we put all things together additional
+constraints for PATA controllers show up (some hardware registers
+have per-host not per-port atomicity) and we risk misprogramming
+the controller.
+
+I used the following test to check whether the issue is real:
+
+@@ -736,8 +736,20 @@ static void piix_set_piomode(struct ata_
+ 			(timings[pio][1] << 8);
+ 	}
+ 	pci_write_config_word(dev, master_port, master_data);
+-	if (is_slave)
++	if (is_slave) {
++		if (ap->port_no == 0) {
++			u8 tmp = slave_data;
++
++			while (slave_data == tmp) {
++				pci_read_config_byte(dev, slave_port, &tmp);
++				msleep(50);
++			}
++
++			dev_printk(KERN_ERR, &dev->dev, "PATA parallel scan "
++				   "race detected\n");
++		}
+ 		pci_write_config_byte(dev, slave_port, slave_data);
++	}
+ 
+ 	/* Ensure the UDMA bit is off - it will be turned back on if
+ 	   UDMA is selected */
+
+and it indeed triggered the error message.
+
+Lets fix all such races by adding an extra locking to ->set_piomode
+and ->set_dmamode methods for PATA controllers.
+
+Cc: Arjan van de Ven <arjan@linux.intel.com>
+Cc: Alan Cox <alan@linux.intel.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ata/ata_piix.c |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+Index: b/drivers/ata/ata_piix.c
+===================================================================
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -664,6 +664,8 @@ static int piix_pata_prereset(struct ata
+ 	return ata_sff_prereset(link, deadline);
+ }
+ 
++static DEFINE_SPINLOCK(piix_lock);
++
+ /**
+  *	piix_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+@@ -677,8 +679,9 @@ static int piix_pata_prereset(struct ata
+ 
+ static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+-	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	unsigned long flags;
++	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	unsigned int is_slave	= (adev->devno != 0);
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+@@ -708,6 +711,8 @@ static void piix_set_piomode(struct ata_
+ 	if (adev->class == ATA_DEV_ATA)
+ 		control |= 4;	/* PPE enable */
+ 
++	spin_lock_irqsave(&piix_lock, flags);
++
+ 	/* PIO configuration clears DTE unconditionally.  It will be
+ 	 * programmed in set_dmamode which is guaranteed to be called
+ 	 * after set_piomode if any DMA mode is available.
+@@ -747,6 +752,8 @@ static void piix_set_piomode(struct ata_
+ 		udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
+ 		pci_write_config_byte(dev, 0x48, udma_enable);
+ 	}
++
++	spin_unlock_irqrestore(&piix_lock, flags);
+ }
+ 
+ /**
+@@ -764,6 +771,7 @@ static void piix_set_piomode(struct ata_
+ static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev, int isich)
+ {
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	unsigned long flags;
+ 	u8 master_port		= ap->port_no ? 0x42 : 0x40;
+ 	u16 master_data;
+ 	u8 speed		= adev->dma_mode;
+@@ -777,6 +785,8 @@ static void do_pata_set_dmamode(struct a
+ 			    { 2, 1 },
+ 			    { 2, 3 }, };
+ 
++	spin_lock_irqsave(&piix_lock, flags);
++
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 	if (ap->udma_mask)
+ 		pci_read_config_byte(dev, 0x48, &udma_enable);
+@@ -867,6 +877,8 @@ static void do_pata_set_dmamode(struct a
+ 	/* Don't scribble on 0x48 if the controller does not support UDMA */
+ 	if (ap->udma_mask)
+ 		pci_write_config_byte(dev, 0x48, udma_enable);
++
++	spin_unlock_irqrestore(&piix_lock, flags);
+ }
+ 
+ /**
