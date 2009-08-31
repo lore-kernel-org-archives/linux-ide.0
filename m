@@ -1,80 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Long delay when booting with SATA DVD on Marvell 88SE6121
-Date: Mon, 31 Aug 2009 23:02:07 +0900
-Message-ID: <4A9BD7DF.8030606@kernel.org>
-References: <20090817002918.GA2805@gozer.dminteractive.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14044] WARNING: at kernel/irq/manage.c:259
+Date: Mon, 31 Aug 2009 16:33:31 GMT
+Message-ID: <200908311633.n7VGXV66001191@demeter.kernel.org>
+References: <bug-14044-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57626 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbZHaOCM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Aug 2009 10:02:12 -0400
-In-Reply-To: <20090817002918.GA2805@gozer.dminteractive.com>
+Received: from demeter.kernel.org ([140.211.167.39]:58860 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbZHaQd3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Aug 2009 12:33:29 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n7VGXV5P001192
+	for <linux-ide@vger.kernel.org>; Mon, 31 Aug 2009 16:33:31 GMT
+In-Reply-To: <bug-14044-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Hokenson <logan+kernel@gozer.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Mike Hokenson wrote:
-> Hi list,
-> 
-> I've got a MSI P35 Platinum with a Marvell 88SE6121 (one PATA, one SATA)
-> controller and when I have a SATA DVD drive connected to the port, my
-> system takes a good 30+ seconds longer to boot. The HDD activity LED is
-> solid the whole time and I see a series of messages like this:
-> 
-> [    6.312129] ata2.00: qc timeout (cmd 0xa1)
-> [    6.312135] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [   11.352006] ata2: link is slow to respond, please be patient (ready=0)
-> [   16.336009] ata2: device not ready (errno=-16), forcing hardreset
-> [   21.532007] ata2: link is slow to respond, please be patient (ready=0)
-> [   26.348009] ata2: SRST failed (errno=-16)
-> [   31.544008] ata2: link is slow to respond, please be patient (ready=0)
-> [   36.360014] ata2: SRST failed (errno=-16)
-> [   36.544307] ata2.00: ATAPI: ASUS    DRW-2014L1T, 1.02, max UDMA/66
-> [   36.560317] ata2.00: configured for UDMA/66
-> [   36.576547] scsi 1:0:0:0: CD-ROM            ASUS     DRW-2014L1T     
-> 1.02 PQ: 0 ANSI: 5
-> 
-> And then the system boots normally. I don't have any problems reading or
-> writing and I've seen the same issues with another DVD drive. However,
-> there are some messages that appear when writing a disc (from an older
-> /var/log/messages):
-> 
-> [2136249.058984] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [2136249.058987] sr 1:0:0:0: [sr0] Sense Key : Illegal Request [current]
-> [2136249.058990] sr 1:0:0:0: [sr0] Add. Sense: Logical block address out
-> of range
-> [2136249.059891] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [2136249.059893] sr 1:0:0:0: [sr0] Sense Key : Illegal Request [current]
-> [2136249.059896] sr 1:0:0:0: [sr0] Add. Sense: Logical block address out
-> of range
-> 
-> These messages don't really concern me, because the discs always test
-> fine. The only reason I mention it is in case there's some relation to
-> the first issue.
-> 
-> The slow boot issue doesn't occur when I'm using my Intel ICH9R
-> controller (not sure anymore about the errors while writing), but all 4
-> ports are now in use by hard drives and I'd like to keep them on the
-> ICH9R since the controller has been rock solid. This has been happening
-> for as long as I've had this motherboard - January of 2008. It's more of
-> a nuisance than anything else..
-> 
-> I'm not sure if there's an option I could pass to the libata module to
-> help with issues on this port, forcing a specific mode or speed or
-> something, but I thought I'd ask.
+http://bugzilla.kernel.org/show_bug.cgi?id=14044
 
-"libata.force=2:udma33" would force it to udma/33 but I don't think
-that would be the problem here.  IDENTIFY doesn't use udma anyway.
-Does the problem go away if you do "libata.force=2:pio0"?
 
-Thanks.
+Sergei Shtylyov <sshtylyov@ru.mvista.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+  Attachment #22898|application/x-gzip          |text/plain
+          mime type|                            |
+
+
+
 
 -- 
-tejun
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
