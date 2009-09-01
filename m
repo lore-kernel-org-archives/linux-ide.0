@@ -1,281 +1,311 @@
-From: Steven Whitehouse <swhiteho@redhat.com>
-Subject: Re: [PATCH 2/7] block: use blkdev_issue_discard in
- blk_ioctl_discard
-Date: Tue, 01 Sep 2009 10:06:25 +0100
-Message-ID: <1251795985.6052.86.camel@localhost.localdomain>
-References: <20090829230332.017137693@bombadil.infradead.org>
-	 <20090829231121.385741993@bombadil.infradead.org>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH #upstream, v2] ahci: Implement SATA AHCI FIS-based switching support
+Date: Tue, 1 Sep 2009 20:22:01 +0800
+Message-ID: <C8E4BD7D001E44499280E0884BD9DB30FC9776@sshaexmb1.amd.com>
+References: <1250570756.5207.15.camel@zm-desktop> <4A9B8368.1080807@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090829231121.385741993@bombadil.infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:50051 "EHLO
+	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753837AbZIAMWP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Sep 2009 08:22:15 -0400
+Content-Class: urn:content-classes:message
+In-Reply-To: <4A9B8368.1080807@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-Hi,
+Hi Tejun, 
 
-For the GFS2 bits:
 
-Acked-by: Steven Whitehouse <swhiteho@redhat.com>
-
-Steve.
-
-On Sat, 2009-08-29 at 19:03 -0400, Christoph Hellwig wrote:
-> plain text document attachment (discard-unify-code)
-> blk_ioctl_discard duplicates large amounts of code from blkdev_issue_discard,
-> the only difference between the two is that blkdev_issue_discard needs to
-> send a barrier discard request and blk_ioctl_discard a non-barrier one,
-> and blk_ioctl_discard needs to wait on the request.  To facilitates this
-> add a flags argument to blkdev_issue_discard to control both aspects of the
-> behaviour.  This will be very useful later on for using the waiting
-> funcitonality for other callers.
-> 
-> Based on an earlier patch from Matthew Wilcox <matthew@wil.cx>.
+> -----Original Message-----
+> From: Tejun Heo [mailto:tj@kernel.org] 
 > 
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Why does fbs_need_dec need to be in ahci_port_priv?  Can't it be a
+> local variable of error_intr()?
+
+Yes, it should be replaced by one local variable.
+
+
+> > +static void ahci_fbs_dec_intr(struct ata_port *ap)
+> > +{
+> > +	struct ahci_port_priv *pp = ap->private_data;
+> > +	DPRINTK("ENTER\n");
+> > +
+> > +	if (pp->fbs_enabled) {
 > 
-> Index: linux-2.6/block/blk-barrier.c
-> ===================================================================
-> --- linux-2.6.orig/block/blk-barrier.c	2009-08-29 16:49:43.067370900 -0300
-> +++ linux-2.6/block/blk-barrier.c	2009-08-29 17:43:30.407344330 -0300
-> @@ -348,6 +348,9 @@ static void blkdev_discard_end_io(struct
->  		clear_bit(BIO_UPTODATE, &bio->bi_flags);
->  	}
->  
-> +	if (bio->bi_private)
-> +		complete(bio->bi_private);
-> +
->  	bio_put(bio);
->  }
->  
-> @@ -357,21 +360,20 @@ static void blkdev_discard_end_io(struct
->   * @sector:	start sector
->   * @nr_sects:	number of sectors to discard
->   * @gfp_mask:	memory allocation flags (for bio_alloc)
-> + * @flags:	DISCARD_FL_* flags to control behaviour
->   *
->   * Description:
-> - *    Issue a discard request for the sectors in question. Does not wait.
-> + *    Issue a discard request for the sectors in question.
->   */
-> -int blkdev_issue_discard(struct block_device *bdev,
-> -			 sector_t sector, sector_t nr_sects, gfp_t gfp_mask)
-> +int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
-> +		sector_t nr_sects, gfp_t gfp_mask, int flags)
->  {
-> -	struct request_queue *q;
-> -	struct bio *bio;
-> +	DECLARE_COMPLETION_ONSTACK(wait);
-> +	struct request_queue *q = bdev_get_queue(bdev);
-> +	int type = flags & DISCARD_FL_BARRIER ?
-> +		DISCARD_BARRIER : DISCARD_NOBARRIER;
->  	int ret = 0;
->  
-> -	if (bdev->bd_disk == NULL)
-> -		return -ENXIO;
-> -
-> -	q = bdev_get_queue(bdev);
->  	if (!q)
->  		return -ENXIO;
->  
-> @@ -379,12 +381,14 @@ int blkdev_issue_discard(struct block_de
->  		return -EOPNOTSUPP;
->  
->  	while (nr_sects && !ret) {
-> -		bio = bio_alloc(gfp_mask, 0);
-> +		struct bio *bio = bio_alloc(gfp_mask, 0);
->  		if (!bio)
->  			return -ENOMEM;
->  
->  		bio->bi_end_io = blkdev_discard_end_io;
->  		bio->bi_bdev = bdev;
-> +		if (flags & DISCARD_FL_WAIT)
-> +			bio->bi_private = &wait;
->  
->  		bio->bi_sector = sector;
->  
-> @@ -396,10 +400,13 @@ int blkdev_issue_discard(struct block_de
->  			bio->bi_size = nr_sects << 9;
->  			nr_sects = 0;
->  		}
-> +
->  		bio_get(bio);
-> -		submit_bio(DISCARD_BARRIER, bio);
-> +		submit_bio(type, bio);
-> +
-> +		if (flags & DISCARD_FL_WAIT)
-> +			wait_for_completion(&wait);
->  
-> -		/* Check if it failed immediately */
->  		if (bio_flagged(bio, BIO_EOPNOTSUPP))
->  			ret = -EOPNOTSUPP;
->  		else if (!bio_flagged(bio, BIO_UPTODATE))
-> Index: linux-2.6/block/ioctl.c
-> ===================================================================
-> --- linux-2.6.orig/block/ioctl.c	2009-08-29 16:49:43.075370172 -0300
-> +++ linux-2.6/block/ioctl.c	2009-08-29 16:49:52.743341374 -0300
-> @@ -112,22 +112,9 @@ static int blkdev_reread_part(struct blo
->  	return res;
->  }
->  
-> -static void blk_ioc_discard_endio(struct bio *bio, int err)
-> -{
-> -	if (err) {
-> -		if (err == -EOPNOTSUPP)
-> -			set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
-> -		clear_bit(BIO_UPTODATE, &bio->bi_flags);
-> -	}
-> -	complete(bio->bi_private);
-> -}
-> -
->  static int blk_ioctl_discard(struct block_device *bdev, uint64_t start,
->  			     uint64_t len)
->  {
-> -	struct request_queue *q = bdev_get_queue(bdev);
-> -	int ret = 0;
-> -
->  	if (start & 511)
->  		return -EINVAL;
->  	if (len & 511)
-> @@ -137,40 +124,8 @@ static int blk_ioctl_discard(struct bloc
->  
->  	if (start + len > (bdev->bd_inode->i_size >> 9))
->  		return -EINVAL;
-> -
-> -	if (!q->prepare_discard_fn)
-> -		return -EOPNOTSUPP;
-> -
-> -	while (len && !ret) {
-> -		DECLARE_COMPLETION_ONSTACK(wait);
-> -		struct bio *bio;
-> -
-> -		bio = bio_alloc(GFP_KERNEL, 0);
-> -
-> -		bio->bi_end_io = blk_ioc_discard_endio;
-> -		bio->bi_bdev = bdev;
-> -		bio->bi_private = &wait;
-> -		bio->bi_sector = start;
-> -
-> -		if (len > queue_max_hw_sectors(q)) {
-> -			bio->bi_size = queue_max_hw_sectors(q) << 9;
-> -			len -= queue_max_hw_sectors(q);
-> -			start += queue_max_hw_sectors(q);
-> -		} else {
-> -			bio->bi_size = len << 9;
-> -			len = 0;
-> -		}
-> -		submit_bio(DISCARD_NOBARRIER, bio);
-> -
-> -		wait_for_completion(&wait);
-> -
-> -		if (bio_flagged(bio, BIO_EOPNOTSUPP))
-> -			ret = -EOPNOTSUPP;
-> -		else if (!bio_flagged(bio, BIO_UPTODATE))
-> -			ret = -EIO;
-> -		bio_put(bio);
-> -	}
-> -	return ret;
-> +	return blkdev_issue_discard(bdev, start, len, GFP_KERNEL,
-> +				    DISCARD_FL_WAIT);
->  }
->  
->  static int put_ushort(unsigned long arg, unsigned short val)
-> Index: linux-2.6/fs/btrfs/extent-tree.c
-> ===================================================================
-> --- linux-2.6.orig/fs/btrfs/extent-tree.c	2009-08-29 16:49:43.079341766 -0300
-> +++ linux-2.6/fs/btrfs/extent-tree.c	2009-08-29 16:49:52.743341374 -0300
-> @@ -1511,7 +1511,8 @@ static int remove_extent_backref(struct 
->  static void btrfs_issue_discard(struct block_device *bdev,
->  				u64 start, u64 len)
->  {
-> -	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL);
-> +	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL,
-> +			     DISCARD_FL_BARRIER);
->  }
->  #endif
->  
-> Index: linux-2.6/fs/gfs2/rgrp.c
-> ===================================================================
-> --- linux-2.6.orig/fs/gfs2/rgrp.c	2009-08-29 16:49:43.139342340 -0300
-> +++ linux-2.6/fs/gfs2/rgrp.c	2009-08-29 16:49:52.747373241 -0300
-> @@ -857,7 +857,8 @@ static void gfs2_rgrp_send_discards(stru
->  					goto start_new_extent;
->  				if ((start + nr_sects) != blk) {
->  					rv = blkdev_issue_discard(bdev, start,
-> -							    nr_sects, GFP_NOFS);
-> +							    nr_sects, GFP_NOFS,
-> +							    DISCARD_FL_BARRIER);
->  					if (rv)
->  						goto fail;
->  					nr_sects = 0;
-> @@ -871,7 +872,8 @@ start_new_extent:
->  		}
->  	}
->  	if (nr_sects) {
-> -		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS);
-> +		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS,
-> +					 DISCARD_FL_BARRIER);
->  		if (rv)
->  			goto fail;
->  	}
-> Index: linux-2.6/include/linux/blkdev.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/blkdev.h	2009-08-29 16:49:43.147343148 -0300
-> +++ linux-2.6/include/linux/blkdev.h	2009-08-29 17:43:19.767342397 -0300
-> @@ -977,15 +977,18 @@ static inline struct request *blk_map_qu
->  }
->  
->  extern int blkdev_issue_flush(struct block_device *, sector_t *);
-> -extern int blkdev_issue_discard(struct block_device *,
-> -				sector_t sector, sector_t nr_sects, gfp_t);
-> +#define DISCARD_FL_WAIT		0x01	/* wait for completion */
-> +#define DISCARD_FL_BARRIER	0x02	/* issue DISCARD_BARRIER request */
-> +extern int blkdev_issue_discard(struct block_device *, sector_t sector,
-> +		sector_t nr_sects, gfp_t, int flags);
->  
->  static inline int sb_issue_discard(struct super_block *sb,
->  				   sector_t block, sector_t nr_blocks)
->  {
->  	block <<= (sb->s_blocksize_bits - 9);
->  	nr_blocks <<= (sb->s_blocksize_bits - 9);
-> -	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_KERNEL);
-> +	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_KERNEL,
-> +				    DISCARD_FL_BARRIER);
->  }
->  
->  extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
-> Index: linux-2.6/mm/swapfile.c
-> ===================================================================
-> --- linux-2.6.orig/mm/swapfile.c	2009-08-29 16:49:43.151342120 -0300
-> +++ linux-2.6/mm/swapfile.c	2009-08-29 16:49:52.755377749 -0300
-> @@ -161,7 +161,8 @@ static int discard_swap(struct swap_info
->  		}
->  
->  		err = blkdev_issue_discard(si->bdev, start_block,
-> -						nr_blocks, GFP_KERNEL);
-> +						nr_blocks, GFP_KERNEL,
-> +						DISCARD_FL_BARRIER);
->  		if (err)
->  			break;
->  
-> @@ -200,7 +201,8 @@ static void discard_swap_cluster(struct 
->  			start_block <<= PAGE_SHIFT - 9;
->  			nr_blocks <<= PAGE_SHIFT - 9;
->  			if (blkdev_issue_discard(si->bdev, start_block,
-> -							nr_blocks, GFP_NOIO))
-> +							nr_blocks, GFP_NOIO,
-> +							DISCARD_FL_BARRIER))
->  				break;
->  		}
->  
+> Just do BUG_ON(!pp->fbs_enabled);
+
+OK.
+
+ 
+> > +		void __iomem *port_mmio = ahci_port_base(ap);
+> > +		u32 fbs = readl(port_mmio + PORT_FBS);
+> > +		int retries = 3;
+> > +
+> > +		/* time to wait for DEC is not specified by AHCI spec,
+> > +		 * add a retry loop for safety */
+> > +		do {
+> > +			writel(fbs | PORT_FBS_DEC, port_mmio + 
+> PORT_FBS);
+> > +			fbs = readl(port_mmio + PORT_FBS);
+> > +			retries--;
+> > +		} while ((fbs & PORT_FBS_DEC) && retries);
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux
+> Hmmm... shouldn't it be more like the following?
+> 
+> 	writel(fbs | PORT_FBS_DEC, port_mmio + PORT_FBS);
+> 	fbs = readl(port_mmio + PORT_FBS);
+> 	while ((fbs & PORT_FBS_DEC) && retries--) {
+> 		udelay(1);
+> 		fbs = readl(port_mmio + PORT_FBS);
+> 	}
+
+OK.
+
+
+> > @@ -1984,10 +2042,22 @@ static void ahci_error_intr(struct 
+> ata_port *ap, u32 irq_stat)
+> >  	struct ata_eh_info *active_ehi;
+> >  	u32 serror;
+> >  
+> > -	/* determine active link */
+> > -	ata_for_each_link(link, ap, EDGE)
+> > -		if (ata_link_active(link))
+> > -			break;
+> > +	/* determine active link with error */
+> > +	if (pp->fbs_enabled) {
+> > +		void __iomem *port_mmio = ahci_port_base(ap);
+> > +		u32 fbs = readl(port_mmio + PORT_FBS);
+> > +
+> > +		ata_for_each_link(link, ap, EDGE)
+> > +			if (ata_link_active(link) && (fbs & 
+> PORT_FBS_SDE) &&
+> > +			    (link->pmp == (fbs >> 
+> PORT_FBS_DWE_OFFSET))) {
+> > +				pp->fbs_need_dec = true;
+> > +				break;
+> > +			}
+> 
+> You can do
+> 
+> 	pmp = fbs >> PORT_FBS_DWE_OFFSET;
+> 	if (pmp < ap->nr_pmp_links && 
+> ata_link_online(&ap->pmp_link[pmp])) {
+> 		link = &ap->pmp_link[pmp];
+> 		pp->fbs_need_dec = true;
+> 	}
+
+PORT_FBS_SDE also need check, because(ahci v1.2  3.3.16):
+Device With Error (DWE): Set by hardware to the value of the
+Port Multiplier port number of the device that experienced a fatal
+error condition. This field is only valid when PxFBS.SDE = '1'.
+
+So I'll update the code into:
+	u32 fbs = readl(port_mmio + PORT_FBS);
+	int pmp = fbs >> PORT_FBS_DWE_OFFSET;
+
+	if ((fbs & PORT_FBS_SDE) && (pmp < ap->nr_pmp_links) &&
+	    ata_link_online(&ap->pmp_link[pmp])) {
+		link = &ap->pmp_link[pmp];
+		fbs_need_dec = true;
+	}
+
+ 
+> >  	if (irq_stat & PORT_IRQ_IF_ERR) {
+> > -		host_ehi->err_mask |= AC_ERR_ATA_BUS;
+> > -		host_ehi->action |= ATA_EH_RESET;
+> > +		if (pp->fbs_need_dec)
+> > +			active_ehi->err_mask |= AC_ERR_DEV;
+> > +		else {
+> > +			host_ehi->err_mask |= AC_ERR_ATA_BUS;
+> > +			host_ehi->action |= ATA_EH_RESET;
+> > +		}
+> > +
+> 
+> Are you sure IF_ERR is device specific and doesn't require host link
+> reset?
+
+Because I referred to the AHCI spec v1.2  9.3.6:
+An interface fatal error may be localized to a particular device or may
+be fatal to the entire port.....If the error is fatal to the entire
+port, then
+PxFBS.SDE shall be cleared to '0' by the hardware. Software should
+follow either the device specific or non-device specific error procedure
+depending on whether PxFBS.SDE is set to '1'.
+
+
+> > @@ -2061,7 +2136,12 @@ static void ahci_error_intr(struct 
+> ata_port *ap, u32 irq_stat)
+> >  	if (irq_stat & PORT_IRQ_FREEZE)
+> >  		ata_port_freeze(ap);
+> >  	else
+> > -		ata_port_abort(ap);
+> > +		if (pp->fbs_enabled && pp->fbs_need_dec &&
+> 
+> 	else if (pp->fbs_need_dec) {
+> 
+> should be enough, right?
+
+Yes, I'll update that.
+
+
+> > +	} else {
+> > +		dev_printk(KERN_ERR, ap->host->dev,
+> > +			   "FBS is not supported or already enabled\n");
+> > +		return -EINVAL;
+> 
+> The above message will be printed on every !FBS ahcis, right?  It
+> would be better to do the following at the top of the function.
+> 
+> 	if (!pp->fbs_supported)
+> 		return;
+> 	WARN_ON(pp->fbs_enabled);
+> 
+> and drop the if/else.
+
+OK, updated as below, and returns "void" instead of "int":
+static void ahci_enable_fbs(struct ata_port *ap)
+{
+	struct ahci_port_priv *pp = ap->private_data;
+	void __iomem *port_mmio = ahci_port_base(ap);
+	u32 fbs;
+	int rc;
+
+	if (!pp->fbs_supported)
+		return;
+
+	WARN_ON(pp->fbs_enabled);
+
+	rc = ahci_stop_engine(ap);
+	if (rc)
+		return;
+
+	fbs = readl(port_mmio + PORT_FBS);
+	writel(fbs | PORT_FBS_EN, port_mmio + PORT_FBS);
+	fbs = readl(port_mmio + PORT_FBS);
+	if (fbs & PORT_FBS_EN) {
+		dev_printk(KERN_INFO, ap->host->dev, "FBS is
+enabled.\n");
+		pp->fbs_enabled = true;
+		pp->fbs_last_dev = -1; /* initialization */
+	} else
+		dev_printk(KERN_ERR, ap->host->dev, "Failed to enable
+FBS\n");
+
+	ahci_start_engine(ap);
+}
+
+
+> > +static int ahci_disable_fbs(struct ata_port *ap)
+> > +{
+> > +	struct ahci_port_priv *pp = ap->private_data;
+> > +
+> > +	if (pp->fbs_enabled) {
+> > +		void __iomem *port_mmio = ahci_port_base(ap);
+> > +		u32 fbs;
+> > +		int rc = ahci_stop_engine(ap);
+> > +		if (rc)
+> > +			return rc;
+> > +
+> > +		fbs = readl(port_mmio + PORT_FBS);
+> > +		writel(fbs & ~PORT_FBS_EN, port_mmio + PORT_FBS);
+> > +		fbs = readl(port_mmio + PORT_FBS);
+> > +		if (fbs & PORT_FBS_EN) {
+> > +			dev_printk(KERN_ERR, ap->host->dev,
+> > +				   "Failed to disable FBS\n");
+> > +			ahci_start_engine(ap);
+> > +			return -EIO;
+> > +		} else {
+> > +			dev_printk(KERN_INFO, ap->host->dev,
+> > +				   "FBS is disabled.\n");
+> > +			pp->fbs_enabled = false;
+> > +		}
+> > +
+> > +		ahci_start_engine(ap);
+> > +	} else if (sata_pmp_attached(ap)) {
+> > +		dev_printk(KERN_ERR, ap->host->dev,
+> > +			   "FBS is not supported or already 
+> disabled\n");
+> > +		return -EINVAL;
+> > +	}
+> 
+> Ditto.  Just drop sanity checks.  Upper layer should take 
+> care of them.
+> No need to check that this deep in the stack.
+
+static void ahci_disable_fbs(struct ata_port *ap)
+{
+	struct ahci_port_priv *pp = ap->private_data;
+	void __iomem *port_mmio = ahci_port_base(ap);
+	u32 fbs;
+	int rc;
+
+	if (!pp->fbs_supported)
+		return;
+
+	WARN_ON(!pp->fbs_enabled);
+
+	rc = ahci_stop_engine(ap);
+	if (rc)
+		return;
+
+	fbs = readl(port_mmio + PORT_FBS);
+	writel(fbs & ~PORT_FBS_EN, port_mmio + PORT_FBS);
+	fbs = readl(port_mmio + PORT_FBS);
+	if (fbs & PORT_FBS_EN)
+		dev_printk(KERN_ERR, ap->host->dev, "Failed to disable
+FBS\n");
+	else {
+		dev_printk(KERN_INFO, ap->host->dev, "FBS is
+disabled.\n");
+		pp->fbs_enabled = false;
+	}
+
+	ahci_start_engine(ap);
+}
+
+
+> >  static int ahci_port_start(struct ata_port *ap)
+> >  {
+> > +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> >  	struct device *dev = ap->host->dev;
+> >  	struct ahci_port_priv *pp;
+> >  	void *mem;
+> >  	dma_addr_t mem_dma;
+> > +	size_t dma_sz, rx_fis_sz;
+> >  
+> >  	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+> >  	if (!pp)
+> >  		return -ENOMEM;
+> >  
+> > -	mem = dmam_alloc_coherent(dev, AHCI_PORT_PRIV_DMA_SZ, &mem_dma,
+> > -				  GFP_KERNEL);
+> > +	/* check FBS capability */
+> > +	if ((hpriv->cap & HOST_CAP_FBS) && sata_pmp_supported(ap)) {
+> > +		void __iomem *port_mmio = ahci_port_base(ap);
+> > +		u32 cmd = readl(port_mmio + PORT_CMD);
+> > +		if (cmd & PORT_CMD_FBSCP)
+> > +			pp->fbs_supported = true;
+> 
+> Maybe whine a bit if CAP indicates FBS but PORT_CMD doesn't?
+
+Sure, updated as below:
+	if (cmd & PORT_CMD_FBSCP)
+		pp->fbs_supported = true;
+	else
+		WARN_ON(1);
+
+
+> Other than the above, looks great to me.
+
+OK, thanks for your nice suggestions, I'll have to submit v3 later...
+
+
+Best Regards,
+Shane
 
