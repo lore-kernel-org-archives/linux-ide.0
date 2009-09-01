@@ -1,98 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream, v2] ahci: Implement SATA AHCI FIS-based switching
- support
-Date: Tue, 01 Sep 2009 21:28:55 +0900
-Message-ID: <4A9D1387.6040709@kernel.org>
-References: <1250570756.5207.15.camel@zm-desktop> <4A9B8368.1080807@kernel.org> <C8E4BD7D001E44499280E0884BD9DB30FC9776@sshaexmb1.amd.com>
+From: Andrei Tanas <andrei@tanas.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Tue, 01 Sep 2009 09:07:11 -0400
+Message-ID: <640f6103c45b6cba6f84f887bde227e4@localhost>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca> <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name> <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60754 "EHLO hera.kernel.org"
+Received: from tanas.ca ([206.248.136.31]:39537 "EHLO tanas.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448AbZIAMaM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Sep 2009 08:30:12 -0400
-In-Reply-To: <C8E4BD7D001E44499280E0884BD9DB30FC9776@sshaexmb1.amd.com>
+	id S1754430AbZIANHN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Sep 2009 09:07:13 -0400
+In-Reply-To: <4A9C60A1.50303@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Mark Lord <mlord@pobox.com>, Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
 
-Hello, Shane.
-
-Huang, Shane wrote:
->> You can do
->>
->> 	pmp = fbs >> PORT_FBS_DWE_OFFSET;
->> 	if (pmp < ap->nr_pmp_links && 
->> ata_link_online(&ap->pmp_link[pmp])) {
->> 		link = &ap->pmp_link[pmp];
->> 		pp->fbs_need_dec = true;
->> 	}
+>>>> The drive might take a longer time like this when doing error handling
+>>>> (sector remapping, etc), but then I would expect to see your remapped
+>>>> sector count grow.
+>>>
+>>> Yes, this is a possibility and according to the spec, libata EH should
+>>> be retrying flushes a few times before giving up but I'm not sure
+>>> whether keeping retrying for several minutes is a good idea either.
+>>> Is it?
+>> ..
+>> 
+>> Libata will retry only when the FLUSH returns an error,
+>> and the next FLUSH will continue after the point where
+>> the first attempt failed.
+>> 
+>> But if the drive can still auto-relocate sectors, then the
+>> first FLUSH won't actually fail.. it will simply take longer
+>> than normal.
+>> 
+>> A couple of those, and we're into the tens of seconds range
+>> for time.
+>> 
+>> Still, it would be good to actually produce an error like that
+>> to examine under controlled circumstances.
+>> 
+>> Hmm.. I had a drive here that gave symptoms like that.
+>> Eventually, I discovered that drive had run out of relocatable
+>> sectors, too.  Mmm.. I'll see if I can get it back (loaned it out)
+>> and perhaps we can recreate this specific scenario on it..
+> ..
 > 
-> PORT_FBS_SDE also need check, because(ahci v1.2  3.3.16):
-> Device With Error (DWE): Set by hardware to the value of the
-> Port Multiplier port number of the device that experienced a fatal
-> error condition. This field is only valid when PxFBS.SDE = '1'.
-> 
-> So I'll update the code into:
-> 	u32 fbs = readl(port_mmio + PORT_FBS);
-> 	int pmp = fbs >> PORT_FBS_DWE_OFFSET;
-> 
-> 	if ((fbs & PORT_FBS_SDE) && (pmp < ap->nr_pmp_links) &&
-> 	    ata_link_online(&ap->pmp_link[pmp])) {
-> 		link = &ap->pmp_link[pmp];
-> 		fbs_need_dec = true;
-> 	}
+> I checked today, and that drive is no longer available.
 
-Yeap, I missed the condition while trying to point out that the loop
-wasn't necessary there.  Sorry.  :-P
-
->>>  	if (irq_stat & PORT_IRQ_IF_ERR) {
->>> -		host_ehi->err_mask |= AC_ERR_ATA_BUS;
->>> -		host_ehi->action |= ATA_EH_RESET;
->>> +		if (pp->fbs_need_dec)
->>> +			active_ehi->err_mask |= AC_ERR_DEV;
->>> +		else {
->>> +			host_ehi->err_mask |= AC_ERR_ATA_BUS;
->>> +			host_ehi->action |= ATA_EH_RESET;
->>> +		}
->>> +
->> Are you sure IF_ERR is device specific and doesn't require host link
->> reset?
-> 
-> Because I referred to the AHCI spec v1.2  9.3.6:
-> An interface fatal error may be localized to a particular device or may
-> be fatal to the entire port.....If the error is fatal to the entire
-> port, then
-> PxFBS.SDE shall be cleared to '0' by the hardware. Software should
-> follow either the device specific or non-device specific error procedure
-> depending on whether PxFBS.SDE is set to '1'.
-
-Ah hah... thanks for the explanation.
-
->>> -	mem = dmam_alloc_coherent(dev, AHCI_PORT_PRIV_DMA_SZ, &mem_dma,
->>> -				  GFP_KERNEL);
->>> +	/* check FBS capability */
->>> +	if ((hpriv->cap & HOST_CAP_FBS) && sata_pmp_supported(ap)) {
->>> +		void __iomem *port_mmio = ahci_port_base(ap);
->>> +		u32 cmd = readl(port_mmio + PORT_CMD);
->>> +		if (cmd & PORT_CMD_FBSCP)
->>> +			pp->fbs_supported = true;
->> Maybe whine a bit if CAP indicates FBS but PORT_CMD doesn't?
-> 
-> Sure, updated as below:
-> 	if (cmd & PORT_CMD_FBSCP)
-> 		pp->fbs_supported = true;
-> 	else
-> 		WARN_ON(1);
-
-WARN_ON() would be a tad bit too scary.  Given that on certain
-hardwares it would always trigger.  A dev_printk() would be better.
-
-> OK, thanks for your nice suggestions, I'll have to submit v3 later...
-
-Nice work!  Thanks a lot for doing it.
-
--- 
-tejun
+Mine errored out again with exactly the same symptoms, this time after only
+few days and with the "tunable" set to 2 sec. I got a warranty replacement
+but haven't shipped this one yet. Let me know if you want it.
