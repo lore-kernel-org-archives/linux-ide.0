@@ -1,92 +1,281 @@
-From: Mike Hokenson <logan@gozer.org>
-Subject: Fwd: Long delay when booting with SATA DVD on Marvell 88SE6121
-Date: Mon, 31 Aug 2009 21:00:26 -0500
-Message-ID: <5ffd7e260908311900u3a4a02b9kd36156cfdce902c0@mail.gmail.com>
-References: <20090817002918.GA2805@gozer.dminteractive.com>
-	 <4A9BD7DF.8030606@kernel.org>
-	 <5ffd7e260908311856j1fd42765rbdc5245bf4e7bd71@mail.gmail.com>
+From: Steven Whitehouse <swhiteho@redhat.com>
+Subject: Re: [PATCH 2/7] block: use blkdev_issue_discard in
+ blk_ioctl_discard
+Date: Tue, 01 Sep 2009 10:06:25 +0100
+Message-ID: <1251795985.6052.86.camel@localhost.localdomain>
+References: <20090829230332.017137693@bombadil.infradead.org>
+	 <20090829231121.385741993@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:63200 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbZIACAZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Aug 2009 22:00:25 -0400
-Received: by bwz19 with SMTP id 19so3201266bwz.37
-        for <linux-ide@vger.kernel.org>; Mon, 31 Aug 2009 19:00:26 -0700 (PDT)
-In-Reply-To: <5ffd7e260908311856j1fd42765rbdc5245bf4e7bd71@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20090829231121.385741993@bombadil.infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-(sorry, resent to linux-ide without the html)
+Hi,
 
-On Mon, Aug 31, 2009 at 9:02 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> > [ =A0 =A06.312129] ata2.00: qc timeout (cmd 0xa1)
-> > [ =A0 =A06.312135] ata2.00: failed to IDENTIFY (I/O error, err_mask=
-=3D0x4)
-> > [ =A0 11.352006] ata2: link is slow to respond, please be patient (=
-ready=3D0)
-> > [ =A0 16.336009] ata2: device not ready (errno=3D-16), forcing hard=
-reset
-> > [ =A0 21.532007] ata2: link is slow to respond, please be patient (=
-ready=3D0)
-> > [ =A0 26.348009] ata2: SRST failed (errno=3D-16)
-> > [ =A0 31.544008] ata2: link is slow to respond, please be patient (=
-ready=3D0)
-> > [ =A0 36.360014] ata2: SRST failed (errno=3D-16)
-> > [ =A0 36.544307] ata2.00: ATAPI: ASUS =A0 =A0DRW-2014L1T, 1.02, max=
- UDMA/66
-> > [ =A0 36.560317] ata2.00: configured for UDMA/66
-> > [ =A0 36.576547] scsi 1:0:0:0: CD-ROM =A0 =A0 =A0 =A0 =A0 =A0ASUS =A0=
- =A0 DRW-2014L1T
-> > 1.02 PQ: 0 ANSI: 5
->
-> "libata.force=3D2:udma33" would force it to udma/33 but I don't think
-> that would be the problem here. =A0IDENTIFY doesn't use udma anyway.
-> Does the problem go away if you do "libata.force=3D2:pio0"?
+For the GFS2 bits:
 
-Thanks for the suggestion, but it didn't help. libata is setup as a
-module in Debian's kernel, so I created a /etc/modprobe.d/libata.conf
-with "options libata force=3D2:pio0" and rebuilt initrd. This appears t=
-o
-have properly registered the force flag, but it seems to have only
-been applied once the kernel worked through the issue with the
-controller/port:
+Acked-by: Steven Whitehouse <swhiteho@redhat.com>
 
-[=A0=A0=A0 3.985969] usbhid: v2.6:USB HID core driver
-[=A0=A0=A0 6.316130] ata2.00: qc timeout (cmd 0xa1)
-[=A0=A0=A0 6.316135] ata2.00: failed to IDENTIFY (I/O error, err_mask=3D=
-0x4)
-[=A0=A0 11.356004] ata2: link is slow to respond, please be patient (re=
-ady=3D0)
-[=A0=A0 16.340004] ata2: device not ready (errno=3D-16), forcing hardre=
-set
-[=A0=A0 21.536004] ata2: link is slow to respond, please be patient (re=
-ady=3D0)
-[=A0=A0 26.352504] ata2: SRST failed (errno=3D-16)
-[=A0=A0 31.548004] ata2: link is slow to respond, please be patient (re=
-ady=3D0)
-[=A0=A0 36.364514] ata2: SRST failed (errno=3D-16)
-[=A0=A0 36.548307] ata2.00: ATAPI: ASUS=A0=A0=A0 DRW-2014L1T, 1.02, max=
- UDMA/66
-[=A0=A0 36.548323] ata2.00: FORCE: xfer_mask set to pio0
-[=A0=A0 36.564827] ata2.00: configured for PIO0
-[=A0=A0 36.565669] scsi 1:0:0:0: CD-ROM=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
- ASUS=A0=A0=A0=A0 DRW-2014L1T
-=A0 1.02 PQ: 0 ANSI: 5
+Steve.
 
-I'm not sure if this is due to a modular libata or if that's just the
-way it is with this particular problem..
-
-> Thanks.
->
+On Sat, 2009-08-29 at 19:03 -0400, Christoph Hellwig wrote:
+> plain text document attachment (discard-unify-code)
+> blk_ioctl_discard duplicates large amounts of code from blkdev_issue_discard,
+> the only difference between the two is that blkdev_issue_discard needs to
+> send a barrier discard request and blk_ioctl_discard a non-barrier one,
+> and blk_ioctl_discard needs to wait on the request.  To facilitates this
+> add a flags argument to blkdev_issue_discard to control both aspects of the
+> behaviour.  This will be very useful later on for using the waiting
+> funcitonality for other callers.
+> 
+> Based on an earlier patch from Matthew Wilcox <matthew@wil.cx>.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/block/blk-barrier.c
+> ===================================================================
+> --- linux-2.6.orig/block/blk-barrier.c	2009-08-29 16:49:43.067370900 -0300
+> +++ linux-2.6/block/blk-barrier.c	2009-08-29 17:43:30.407344330 -0300
+> @@ -348,6 +348,9 @@ static void blkdev_discard_end_io(struct
+>  		clear_bit(BIO_UPTODATE, &bio->bi_flags);
+>  	}
+>  
+> +	if (bio->bi_private)
+> +		complete(bio->bi_private);
+> +
+>  	bio_put(bio);
+>  }
+>  
+> @@ -357,21 +360,20 @@ static void blkdev_discard_end_io(struct
+>   * @sector:	start sector
+>   * @nr_sects:	number of sectors to discard
+>   * @gfp_mask:	memory allocation flags (for bio_alloc)
+> + * @flags:	DISCARD_FL_* flags to control behaviour
+>   *
+>   * Description:
+> - *    Issue a discard request for the sectors in question. Does not wait.
+> + *    Issue a discard request for the sectors in question.
+>   */
+> -int blkdev_issue_discard(struct block_device *bdev,
+> -			 sector_t sector, sector_t nr_sects, gfp_t gfp_mask)
+> +int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask, int flags)
+>  {
+> -	struct request_queue *q;
+> -	struct bio *bio;
+> +	DECLARE_COMPLETION_ONSTACK(wait);
+> +	struct request_queue *q = bdev_get_queue(bdev);
+> +	int type = flags & DISCARD_FL_BARRIER ?
+> +		DISCARD_BARRIER : DISCARD_NOBARRIER;
+>  	int ret = 0;
+>  
+> -	if (bdev->bd_disk == NULL)
+> -		return -ENXIO;
+> -
+> -	q = bdev_get_queue(bdev);
+>  	if (!q)
+>  		return -ENXIO;
+>  
+> @@ -379,12 +381,14 @@ int blkdev_issue_discard(struct block_de
+>  		return -EOPNOTSUPP;
+>  
+>  	while (nr_sects && !ret) {
+> -		bio = bio_alloc(gfp_mask, 0);
+> +		struct bio *bio = bio_alloc(gfp_mask, 0);
+>  		if (!bio)
+>  			return -ENOMEM;
+>  
+>  		bio->bi_end_io = blkdev_discard_end_io;
+>  		bio->bi_bdev = bdev;
+> +		if (flags & DISCARD_FL_WAIT)
+> +			bio->bi_private = &wait;
+>  
+>  		bio->bi_sector = sector;
+>  
+> @@ -396,10 +400,13 @@ int blkdev_issue_discard(struct block_de
+>  			bio->bi_size = nr_sects << 9;
+>  			nr_sects = 0;
+>  		}
+> +
+>  		bio_get(bio);
+> -		submit_bio(DISCARD_BARRIER, bio);
+> +		submit_bio(type, bio);
+> +
+> +		if (flags & DISCARD_FL_WAIT)
+> +			wait_for_completion(&wait);
+>  
+> -		/* Check if it failed immediately */
+>  		if (bio_flagged(bio, BIO_EOPNOTSUPP))
+>  			ret = -EOPNOTSUPP;
+>  		else if (!bio_flagged(bio, BIO_UPTODATE))
+> Index: linux-2.6/block/ioctl.c
+> ===================================================================
+> --- linux-2.6.orig/block/ioctl.c	2009-08-29 16:49:43.075370172 -0300
+> +++ linux-2.6/block/ioctl.c	2009-08-29 16:49:52.743341374 -0300
+> @@ -112,22 +112,9 @@ static int blkdev_reread_part(struct blo
+>  	return res;
+>  }
+>  
+> -static void blk_ioc_discard_endio(struct bio *bio, int err)
+> -{
+> -	if (err) {
+> -		if (err == -EOPNOTSUPP)
+> -			set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
+> -		clear_bit(BIO_UPTODATE, &bio->bi_flags);
+> -	}
+> -	complete(bio->bi_private);
+> -}
+> -
+>  static int blk_ioctl_discard(struct block_device *bdev, uint64_t start,
+>  			     uint64_t len)
+>  {
+> -	struct request_queue *q = bdev_get_queue(bdev);
+> -	int ret = 0;
+> -
+>  	if (start & 511)
+>  		return -EINVAL;
+>  	if (len & 511)
+> @@ -137,40 +124,8 @@ static int blk_ioctl_discard(struct bloc
+>  
+>  	if (start + len > (bdev->bd_inode->i_size >> 9))
+>  		return -EINVAL;
+> -
+> -	if (!q->prepare_discard_fn)
+> -		return -EOPNOTSUPP;
+> -
+> -	while (len && !ret) {
+> -		DECLARE_COMPLETION_ONSTACK(wait);
+> -		struct bio *bio;
+> -
+> -		bio = bio_alloc(GFP_KERNEL, 0);
+> -
+> -		bio->bi_end_io = blk_ioc_discard_endio;
+> -		bio->bi_bdev = bdev;
+> -		bio->bi_private = &wait;
+> -		bio->bi_sector = start;
+> -
+> -		if (len > queue_max_hw_sectors(q)) {
+> -			bio->bi_size = queue_max_hw_sectors(q) << 9;
+> -			len -= queue_max_hw_sectors(q);
+> -			start += queue_max_hw_sectors(q);
+> -		} else {
+> -			bio->bi_size = len << 9;
+> -			len = 0;
+> -		}
+> -		submit_bio(DISCARD_NOBARRIER, bio);
+> -
+> -		wait_for_completion(&wait);
+> -
+> -		if (bio_flagged(bio, BIO_EOPNOTSUPP))
+> -			ret = -EOPNOTSUPP;
+> -		else if (!bio_flagged(bio, BIO_UPTODATE))
+> -			ret = -EIO;
+> -		bio_put(bio);
+> -	}
+> -	return ret;
+> +	return blkdev_issue_discard(bdev, start, len, GFP_KERNEL,
+> +				    DISCARD_FL_WAIT);
+>  }
+>  
+>  static int put_ushort(unsigned long arg, unsigned short val)
+> Index: linux-2.6/fs/btrfs/extent-tree.c
+> ===================================================================
+> --- linux-2.6.orig/fs/btrfs/extent-tree.c	2009-08-29 16:49:43.079341766 -0300
+> +++ linux-2.6/fs/btrfs/extent-tree.c	2009-08-29 16:49:52.743341374 -0300
+> @@ -1511,7 +1511,8 @@ static int remove_extent_backref(struct 
+>  static void btrfs_issue_discard(struct block_device *bdev,
+>  				u64 start, u64 len)
+>  {
+> -	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL);
+> +	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL,
+> +			     DISCARD_FL_BARRIER);
+>  }
+>  #endif
+>  
+> Index: linux-2.6/fs/gfs2/rgrp.c
+> ===================================================================
+> --- linux-2.6.orig/fs/gfs2/rgrp.c	2009-08-29 16:49:43.139342340 -0300
+> +++ linux-2.6/fs/gfs2/rgrp.c	2009-08-29 16:49:52.747373241 -0300
+> @@ -857,7 +857,8 @@ static void gfs2_rgrp_send_discards(stru
+>  					goto start_new_extent;
+>  				if ((start + nr_sects) != blk) {
+>  					rv = blkdev_issue_discard(bdev, start,
+> -							    nr_sects, GFP_NOFS);
+> +							    nr_sects, GFP_NOFS,
+> +							    DISCARD_FL_BARRIER);
+>  					if (rv)
+>  						goto fail;
+>  					nr_sects = 0;
+> @@ -871,7 +872,8 @@ start_new_extent:
+>  		}
+>  	}
+>  	if (nr_sects) {
+> -		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS);
+> +		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS,
+> +					 DISCARD_FL_BARRIER);
+>  		if (rv)
+>  			goto fail;
+>  	}
+> Index: linux-2.6/include/linux/blkdev.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/blkdev.h	2009-08-29 16:49:43.147343148 -0300
+> +++ linux-2.6/include/linux/blkdev.h	2009-08-29 17:43:19.767342397 -0300
+> @@ -977,15 +977,18 @@ static inline struct request *blk_map_qu
+>  }
+>  
+>  extern int blkdev_issue_flush(struct block_device *, sector_t *);
+> -extern int blkdev_issue_discard(struct block_device *,
+> -				sector_t sector, sector_t nr_sects, gfp_t);
+> +#define DISCARD_FL_WAIT		0x01	/* wait for completion */
+> +#define DISCARD_FL_BARRIER	0x02	/* issue DISCARD_BARRIER request */
+> +extern int blkdev_issue_discard(struct block_device *, sector_t sector,
+> +		sector_t nr_sects, gfp_t, int flags);
+>  
+>  static inline int sb_issue_discard(struct super_block *sb,
+>  				   sector_t block, sector_t nr_blocks)
+>  {
+>  	block <<= (sb->s_blocksize_bits - 9);
+>  	nr_blocks <<= (sb->s_blocksize_bits - 9);
+> -	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_KERNEL);
+> +	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_KERNEL,
+> +				    DISCARD_FL_BARRIER);
+>  }
+>  
+>  extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
+> Index: linux-2.6/mm/swapfile.c
+> ===================================================================
+> --- linux-2.6.orig/mm/swapfile.c	2009-08-29 16:49:43.151342120 -0300
+> +++ linux-2.6/mm/swapfile.c	2009-08-29 16:49:52.755377749 -0300
+> @@ -161,7 +161,8 @@ static int discard_swap(struct swap_info
+>  		}
+>  
+>  		err = blkdev_issue_discard(si->bdev, start_block,
+> -						nr_blocks, GFP_KERNEL);
+> +						nr_blocks, GFP_KERNEL,
+> +						DISCARD_FL_BARRIER);
+>  		if (err)
+>  			break;
+>  
+> @@ -200,7 +201,8 @@ static void discard_swap_cluster(struct 
+>  			start_block <<= PAGE_SHIFT - 9;
+>  			nr_blocks <<= PAGE_SHIFT - 9;
+>  			if (blkdev_issue_discard(si->bdev, start_block,
+> -							nr_blocks, GFP_NOIO))
+> +							nr_blocks, GFP_NOIO,
+> +							DISCARD_FL_BARRIER))
+>  				break;
+>  		}
+>  
+> 
 > --
-> tejun
->
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux
 
-Thanks,
-
-Mike
