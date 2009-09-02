@@ -1,37 +1,46 @@
-From: Allan Wind <allan_wind@lifeintegrity.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Wed, 2 Sep 2009 17:58:41 -0400
-Message-ID: <20090902215841.GA12441@lifeintegrity.com>
-References: <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca> <640f6103c45b6cba6f84f887bde227e4@localhost>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Do not send RW commands to locked disks.
+Date: Thu, 03 Sep 2009 08:03:02 +0900
+Message-ID: <4A9EF9A6.7030404@kernel.org>
+References: <1251851285-9159-1-git-send-email-gwendal@google.com>	 <4A9DCCC6.6040102@kernel.org> <e7510f760909021443m26bee6b9y660f0c5fad89c705@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:49171
-	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbZIBV6k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Sep 2009 17:58:40 -0400
-Content-Disposition: inline
-In-Reply-To: <640f6103c45b6cba6f84f887bde227e4@localhost>
+Received: from hera.kernel.org ([140.211.167.34]:39612 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753684AbZIBXDF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Sep 2009 19:03:05 -0400
+In-Reply-To: <e7510f760909021443m26bee6b9y660f0c5fad89c705@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: linux-ide@vger.kernel.org
 
-On 2009-09-01T09:07:11, Andrei Tanas wrote:
-> Mine errored out again with exactly the same symptoms, this time after only
-> few days and with the "tunable" set to 2 sec. I got a warranty replacement
-> but haven't shipped this one yet. Let me know if you want it.
+Hello, Gwendal.
 
-How do you set it to 2 sec?  I have a raid 1 array of two new WDC 
-2 TB drives that fail on the 2nd drive all the time.  Disabling 
-NCQ might have helped but it is hard to tell.  It was stable for 
-a week, but probably failed 10 times over the weekend.  I either 
-need to add a 3rd drive to get any protection from hardware 
-failure, or use lvm to mirror the two drives instead of md :-(
+Gwendal Grignou wrote:
+> You have a point, but setting the flag LOCKED when an error happen
+> will mean that a braindead device [which always trigger
+> ata_id_locked()] will work until an internal disk error happens; that
+> will make debugging difficult.
 
+Yeah, right, unrelated error can set the LOCKED bit.  Maybe we can
+devise something intelligent there.  A simple state machine to detect
+those conditions?
 
-/Allan
+> Instead, I am working on adding the provision for a blacklist to allow
+> bad devices to bypass the test.
+
+Blacklist wouldn't be too bad too but I really think we shouldn't be
+believing the identify data at the face value.  What if the device
+sets the bit after security_lock but fails to fail commands which
+wouldn't be all that surprising given the general quality of ATA
+devices which has been diving rapidly with all those new vendors
+jumping onto the SDD wagon?  So, I think it should still be something
+recognized and verified by EH before applying.
+
+Thanks.
+
 -- 
-Allan Wind
-Life Integrity, LLC
-<http://lifeintegrity.com>
-
+tejun
