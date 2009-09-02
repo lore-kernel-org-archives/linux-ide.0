@@ -1,80 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Do not send RW commands to locked disks.
-Date: Wed, 02 Sep 2009 10:39:18 +0900
-Message-ID: <4A9DCCC6.6040102@kernel.org>
-References: <> <1251851285-9159-1-git-send-email-gwendal@google.com>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH #upstream, v2] ahci: Implement SATA AHCI FIS-based switching support
+Date: Wed, 2 Sep 2009 09:55:09 +0800
+Message-ID: <C8E4BD7D001E44499280E0884BD9DB30FC984D@sshaexmb1.amd.com>
+References: <1250570756.5207.15.camel@zm-desktop> <4A9B8368.1080807@kernel.org> <C8E4BD7D001E44499280E0884BD9DB30FC9776@sshaexmb1.amd.com> <4A9D1387.6040709@kernel.org> <C8E4BD7D001E44499280E0884BD9DB30FC9789@sshaexmb1.amd.com> <4A9D1E2A.9000209@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48601 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752705AbZIBBjW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Sep 2009 21:39:22 -0400
-In-Reply-To: <1251851285-9159-1-git-send-email-gwendal@google.com>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.15]:56708
+	"EHLO VA3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755518AbZIBBzV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Sep 2009 21:55:21 -0400
+Content-Class: urn:content-classes:message
+In-Reply-To: <4A9D1E2A.9000209@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-Gwendal Grignou wrote:
-> Send a Read/Write command to a locked disk triggers the error handler.
-> Given the disk returns a generic device error code, the error handler can come
-> to the conclusion of reducing the link speed, which is bad.
-> Also, if drives are still locked at boot, this fix speeds up the boot process
-> by returning errors without invoquing the error handler thread.
+Hi Tejun,
+
+
+> -----Original Message-----
+> From: Tejun Heo [mailto:tj@kernel.org] 
+> > 
+> > I find that ahci_pmp_detach() will be called for each SATA port
+> > during the initialization, right after print:
+> >> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp fbs...
+> > 
+> > so will ahci_disable_fbs() be called, which leads to the trigger
+> > of WARN_ON().
 > 
-> Signed-off-by: Gwendal Grignou <gwendal@google.com>
-> ---
->  drivers/ata/libata-core.c |    2 ++
->  drivers/ata/libata-scsi.c |    6 ++++++
->  include/linux/ata.h       |    3 +++
->  3 files changed, 11 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 072ba5e..3f80570 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5023,6 +5023,8 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->  			    qc->tf.feature != SETFEATURES_WC_OFF)
->  				break;
->  			/* fall through */
-> +		case ATA_CMD_SEC_UNLOCK: /* Read/Write access now work */
-> +		case ATA_CMD_SEC_ERASE_UNIT: /* Read/Write access now work */
->  		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
->  		case ATA_CMD_SET_MULTI: /* multi_count changed */
->  			/* revalidate device */
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d0dfeef..8a41767 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1658,6 +1658,12 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
->  	u32 n_block;
->  	int rc;
->  
-> +	if (unlikely(ata_id_locked(qc->dev->id))) {
-> +		/* Terminate RW commands early when the disk is locked */
-> +		ata_scsi_set_sense(scmd, ABORTED_COMMAND, 0, 0);
-> +		return 1;
-> +	}
-> +
->  	if (cdb[0] == WRITE_10 || cdb[0] == WRITE_6 || cdb[0] == WRITE_16)
->  		tf_flags |= ATA_TFLAG_WRITE;
+> Ah.. right.  ahci_port_resume() does that to make sure that all PMP
+> bits are cleared on init.  Hmmm... probably it would be better to make
+> ahci_disable_fbs() to just do it regardless of libata thinks whether
+> PMP is attached or not.  After resume from STR, we shouldn't be
+> assuming anything about the controller state.
 
-Hmmm... how sure are we that there aren't some braindead devices which
-incorrectly would trigger the ata_id_locked() condition?  I think it
-would be safer to have an extra DFLAG, say ATA_DFLAG_LOCKED which gets
-set when EH detects unknown device error && ata_id_locked(); then, in
-the issue path, we can do
 
-	if (ATA_DFLAG_LOCKED is set) {
-		if (ata_id_locked())
-			Terminate early;
-		else
-			Clear ATA_DFLAG_LOCKED;
-	}
+I have added sata_pmp_attached() check for both ahci_enable_fbs()
+and ahci_disable_fbs(), because I believe it's necessary.
 
-Thanks.
+	if (!pp->fbs_supported || !sata_pmp_attached(ap))
+		return;
 
--- 
-tejun
+What do you mean to make it better? How to? I do not catch your
+above words very much...
+
+
+Thanks,
+Shane
+
