@@ -1,32 +1,80 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: convert to ->proc_fops
-Date: Tue, 01 Sep 2009 17:53:05 -0700 (PDT)
-Message-ID: <20090901.175305.175212369.davem@davemloft.net>
-References: <20090831222713.GA9834@x200.localdomain>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Do not send RW commands to locked disks.
+Date: Wed, 02 Sep 2009 10:39:18 +0900
+Message-ID: <4A9DCCC6.6040102@kernel.org>
+References: <> <1251851285-9159-1-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36002
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755472AbZIBAwu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Sep 2009 20:52:50 -0400
-In-Reply-To: <20090831222713.GA9834@x200.localdomain>
+Received: from hera.kernel.org ([140.211.167.34]:48601 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752705AbZIBBjW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Sep 2009 21:39:22 -0400
+In-Reply-To: <1251851285-9159-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: adobriyan@gmail.com
+To: Gwendal Grignou <gwendal@google.com>
 Cc: linux-ide@vger.kernel.org
 
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Date: Tue, 1 Sep 2009 02:27:13 +0400
-
-> ->read_proc, ->write_proc are going away, ->proc_fops should be used instead.
+Gwendal Grignou wrote:
+> Send a Read/Write command to a locked disk triggers the error handler.
+> Given the disk returns a generic device error code, the error handler can come
+> to the conclusion of reducing the link speed, which is bad.
+> Also, if drives are still locked at boot, this fix speeds up the boot process
+> by returning errors without invoquing the error handler thread.
 > 
-> The only tricky place is IDENTIFY handling: if for some reason
-> taskfile_lib_get_identify() fails, buffer _is_ changed and at least
-> first byte is overwritten. Emulate old behaviour with returning
-> that first byte to userspace and reporting length=1 despite overall -E.
+> Signed-off-by: Gwendal Grignou <gwendal@google.com>
+> ---
+>  drivers/ata/libata-core.c |    2 ++
+>  drivers/ata/libata-scsi.c |    6 ++++++
+>  include/linux/ata.h       |    3 +++
+>  3 files changed, 11 insertions(+), 0 deletions(-)
 > 
-> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 072ba5e..3f80570 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5023,6 +5023,8 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+>  			    qc->tf.feature != SETFEATURES_WC_OFF)
+>  				break;
+>  			/* fall through */
+> +		case ATA_CMD_SEC_UNLOCK: /* Read/Write access now work */
+> +		case ATA_CMD_SEC_ERASE_UNIT: /* Read/Write access now work */
+>  		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
+>  		case ATA_CMD_SET_MULTI: /* multi_count changed */
+>  			/* revalidate device */
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index d0dfeef..8a41767 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1658,6 +1658,12 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+>  	u32 n_block;
+>  	int rc;
+>  
+> +	if (unlikely(ata_id_locked(qc->dev->id))) {
+> +		/* Terminate RW commands early when the disk is locked */
+> +		ata_scsi_set_sense(scmd, ABORTED_COMMAND, 0, 0);
+> +		return 1;
+> +	}
+> +
+>  	if (cdb[0] == WRITE_10 || cdb[0] == WRITE_6 || cdb[0] == WRITE_16)
+>  		tf_flags |= ATA_TFLAG_WRITE;
 
-Applied, thanks.
+Hmmm... how sure are we that there aren't some braindead devices which
+incorrectly would trigger the ata_id_locked() condition?  I think it
+would be safer to have an extra DFLAG, say ATA_DFLAG_LOCKED which gets
+set when EH detects unknown device error && ata_id_locked(); then, in
+the issue path, we can do
+
+	if (ATA_DFLAG_LOCKED is set) {
+		if (ata_id_locked())
+			Terminate early;
+		else
+			Clear ATA_DFLAG_LOCKED;
+	}
+
+Thanks.
+
+-- 
+tejun
