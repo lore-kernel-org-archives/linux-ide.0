@@ -1,43 +1,37 @@
-From: Raphael Manfredi <Raphael_Manfredi@pobox.com>
-Subject: Re: [2.6.30.5] Diagnosing an IDE lockup with SMART long tests
-Date: Fri, 4 Sep 2009 07:35:33 +0200
-Message-ID: <20090904053532.GA26812@chram.org>
-References: <6661.1251822466@nice.ram.loc> <4A9DF3E9.9090309@gmail.com> <20090902111927.GA4590@chram.org> <51f3faa70909020742g19007084j19a0ed071aaeffdf@mail.gmail.com> <20090902145225.GA16359@chram.org> <51f3faa70909021724v45d2902ewdb10d5f4a188f2be@mail.gmail.com>
+From: Andrei Tanas <andrei@tanas.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Fri, 04 Sep 2009 15:39:07 -0400
+Message-ID: <a336bb4e539047cf95294507a3c81ba2@localhost>
+References: <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca> <640f6103c45b6cba6f84f887bde227e4@localhost> <20090902215841.GA12441@lifeintegrity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6-g21.free.fr ([212.27.42.6]:34141 "EHLO smtp6-g21.free.fr"
+Received: from tanas.ca ([206.248.136.31]:40186 "EHLO tanas.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750890AbZIDFfp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Sep 2009 01:35:45 -0400
-Content-Disposition: inline
-In-Reply-To: <51f3faa70909021724v45d2902ewdb10d5f4a188f2be@mail.gmail.com>
+	id S1757248AbZIDTjH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Sep 2009 15:39:07 -0400
+In-Reply-To: <20090902215841.GA12441@lifeintegrity.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Allan Wind <allan_wind@lifeintegrity.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Quoting Robert Hancock:
-: Is it always this drive that's failing? I see there's a second of the
-: same model, does it show the same behavior?
-: 
-: > ata1.00: ATA-6: HDS722512VLAT80, V33OA60A, max UDMA/100
-: > ata1.00: 241254720 sectors, multi 16: LBA48
-: 
-: If only that particular drive shows this problem, then I would start
-: to suspect a hardware fault with that drive. The fact that it fails
-: with both IDE and libata (and with ata_piix, which is a really
-: commonly used and tested libata driver) rather points in that
-: direction.
+On Wed, 2 Sep 2009 17:58:41 -0400, Allan Wind
+<allan_wind@lifeintegrity.com>
+wrote:
+> On 2009-09-01T09:07:11, Andrei Tanas wrote:
+>> Mine errored out again with exactly the same symptoms, this time after
+>> only
+>> few days and with the "tunable" set to 2 sec. I got a warranty
+>> replacement
+>> but haven't shipped this one yet. Let me know if you want it.
+> 
+> How do you set it to 2 sec?  I have a raid 1 array of two new WDC 
+> 2 TB drives that fail on the 2nd drive all the time.  Disabling 
+> NCQ might have helped but it is hard to tell.  It was stable for 
+> a week, but probably failed 10 times over the weekend.  I either 
+> need to add a 3rd drive to get any protection from hardware 
+> failure, or use lvm to mirror the two drives instead of md :-(
 
-That was a very good diagnosis.
-
-I switched my two Hitachi drives for Maxtors, and the problem
-went away.  I was able to do a SMART long test on all my drives
-without lockups and without any kernel complaints on the console.
-
-Thanks a lot, I had no idea these Hitachi drives had a bad firmware.
-Looking at the tags on the drives, they were manufactured late 2003
-and early 2004.
-
-Raphael
+echo 2.0 > /sys/block/md0/md/safe_mode_delay
