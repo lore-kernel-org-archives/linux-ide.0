@@ -1,61 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] sr: consider the last written sector when determining media
- size
-Date: Fri, 04 Sep 2009 11:38:02 +0900
-Message-ID: <4AA07D8A.6090004@kernel.org>
+Subject: Re: Fwd: Long delay when booting with SATA DVD on Marvell 88SE6121
+Date: Fri, 04 Sep 2009 11:41:41 +0900
+Message-ID: <4AA07E65.6040404@kernel.org>
+References: <20090817002918.GA2805@gozer.dminteractive.com>	 <4A9BD7DF.8030606@kernel.org>	 <5ffd7e260908311856j1fd42765rbdc5245bf4e7bd71@mail.gmail.com> <5ffd7e260908311900u3a4a02b9kd36156cfdce902c0@mail.gmail.com> <4A9FC81B.7020702@kernel.org> <4AA02F95.4050508@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Milan Kocian <milan.kocian@wq.c>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:41548 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932110AbZIDClq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Sep 2009 22:41:46 -0400
+In-Reply-To: <4AA02F95.4050508@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Mike Hokenson <logan@gozer.org>, linux-ide@vger.kernel.org
 
-On certain cases, UDF disc doesn't report capacity correctly via
-READ_CAPACITY but TOC or trackinfo contains valid information which
-can be obtained using cdrom_get_last_written().  ide-cd considers both
-values and uses the larger one.  Do the same in sr.  This fixes
-bko#9668.
+Mark Lord wrote:
+> I haven't really been following along.  But.. I have zero information
+> here about the Marvell 6121 --> it's supposedly an AHCI chip, isn't it?
 
- http://bugzilla.kernel.org/show_bug.cgi?id=9668
+Here's the full thread.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Milan Kocian <milan.kocian@wq.cz>
-Cc: Jan Kara <jack@suse.cz>
----
- drivers/scsi/sr.c |   22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ http://thread.gmane.org/gmane.linux.ide/42397
+ http://thread.gmane.org/gmane.linux.ide/42568
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index cce0fe4..76bdcfc 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -684,14 +684,20 @@ static void get_sectorsize(struct scsi_cd *cd)
- 		cd->capacity = 0x1fffff;
- 		sector_size = 2048;	/* A guess, just in case */
- 	} else {
--#if 0
--		if (cdrom_get_last_written(&cd->cdi,
--					   &cd->capacity))
--#endif
--			cd->capacity = 1 + ((buffer[0] << 24) |
--						    (buffer[1] << 16) |
--						    (buffer[2] << 8) |
--						    buffer[3]);
-+		long last_written;
-+
-+		cd->capacity = 1 + ((buffer[0] << 24) | (buffer[1] << 16) |
-+				    (buffer[2] << 8) | buffer[3]);
-+		/*
-+		 * READ_CAPACITY doesn't return the correct size on
-+		 * certain UDF media.  If last_written is larger, use
-+		 * it instead.
-+		 *
-+		 * http://bugzilla.kernel.org/show_bug.cgi?id=9668
-+		 */
-+		if (!cdrom_get_last_written(&cd->cdi, &last_written))
-+			cd->capacity = max_t(long, cd->capacity, last_written);
-+
- 		sector_size = (buffer[4] << 24) |
- 		    (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
- 		switch (sector_size) {
+> The device that's failing is an optical drive.  These often won't
+> respond to many commands until the onboard firmware finishes
+> examining whatever disc happens to be inserted, which can take
+> longer than the time we normally allow.  I wonder if it has anything
+> to do with that ?
+
+I have no idea but Mike reports that it works just fine on ich9,
+so....
+
+Thanks.
+
+-- 
+tejun
