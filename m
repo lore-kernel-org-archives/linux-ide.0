@@ -1,39 +1,61 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: [PATCH #upstream, v2] ahci: Implement SATA AHCI FIS-based switching support
-Date: Fri, 4 Sep 2009 10:25:15 +0800
-Message-ID: <C8E4BD7D001E44499280E0884BD9DB30FC9F41@sshaexmb1.amd.com>
-References: <1250570756.5207.15.camel@zm-desktop> <4A9B8368.1080807@kernel.org> <C8E4BD7D001E44499280E0884BD9DB30FC9776@sshaexmb1.amd.com> <C8E4BD7D001E44499280E0884BD9DB30FC9C7F@sshaexmb1.amd.com> <4A9F5C56.5010605@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] sr: consider the last written sector when determining media
+ size
+Date: Fri, 04 Sep 2009 11:38:02 +0900
+Message-ID: <4AA07D8A.6090004@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:51007 "EHLO
-	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932077AbZIDCZZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Sep 2009 22:25:25 -0400
-Content-Class: urn:content-classes:message
-In-Reply-To: <4A9F5C56.5010605@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Milan Kocian <milan.kocian@wq.c>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-Tejun, 
+On certain cases, UDF disc doesn't report capacity correctly via
+READ_CAPACITY but TOC or trackinfo contains valid information which
+can be obtained using cdrom_get_last_written().  ide-cd considers both
+values and uses the larger one.  Do the same in sr.  This fixes
+bko#9668.
 
-> -----Original Message-----
-> From: Tejun Heo [mailto:tj@kernel.org] 
-> > 
-> > At the 2nd thought, if (!pp->fbs_enabled) appears unfortunately
-> > (although it should not), replacement of if (pp->fbs_enabled) with
-> > BUG_ON() will lead to the execution of the followed DEC,
-> 
-> Nope, it will result in the executing task being stopped with a scary
-> stackdump.
+ http://bugzilla.kernel.org/show_bug.cgi?id=9668
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Milan Kocian <milan.kocian@wq.cz>
+Cc: Jan Kara <jack@suse.cz>
+---
+ drivers/scsi/sr.c |   22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-Yes, you are right, I will adopt your suggestion.
-
-
-Thanks
-Shane
-
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index cce0fe4..76bdcfc 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -684,14 +684,20 @@ static void get_sectorsize(struct scsi_cd *cd)
+ 		cd->capacity = 0x1fffff;
+ 		sector_size = 2048;	/* A guess, just in case */
+ 	} else {
+-#if 0
+-		if (cdrom_get_last_written(&cd->cdi,
+-					   &cd->capacity))
+-#endif
+-			cd->capacity = 1 + ((buffer[0] << 24) |
+-						    (buffer[1] << 16) |
+-						    (buffer[2] << 8) |
+-						    buffer[3]);
++		long last_written;
++
++		cd->capacity = 1 + ((buffer[0] << 24) | (buffer[1] << 16) |
++				    (buffer[2] << 8) | buffer[3]);
++		/*
++		 * READ_CAPACITY doesn't return the correct size on
++		 * certain UDF media.  If last_written is larger, use
++		 * it instead.
++		 *
++		 * http://bugzilla.kernel.org/show_bug.cgi?id=9668
++		 */
++		if (!cdrom_get_last_written(&cd->cdi, &last_written))
++			cd->capacity = max_t(long, cd->capacity, last_written);
++
+ 		sector_size = (buffer[4] << 24) |
+ 		    (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
+ 		switch (sector_size) {
