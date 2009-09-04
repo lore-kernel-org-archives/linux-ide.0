@@ -1,41 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Fwd: Long delay when booting with SATA DVD on Marvell 88SE6121
-Date: Fri, 04 Sep 2009 11:41:41 +0900
-Message-ID: <4AA07E65.6040404@kernel.org>
-References: <20090817002918.GA2805@gozer.dminteractive.com>	 <4A9BD7DF.8030606@kernel.org>	 <5ffd7e260908311856j1fd42765rbdc5245bf4e7bd71@mail.gmail.com> <5ffd7e260908311900u3a4a02b9kd36156cfdce902c0@mail.gmail.com> <4A9FC81B.7020702@kernel.org> <4AA02F95.4050508@rtr.ca>
+From: Raphael Manfredi <Raphael_Manfredi@pobox.com>
+Subject: Re: [2.6.30.5] Diagnosing an IDE lockup with SMART long tests
+Date: Fri, 4 Sep 2009 07:35:33 +0200
+Message-ID: <20090904053532.GA26812@chram.org>
+References: <6661.1251822466@nice.ram.loc> <4A9DF3E9.9090309@gmail.com> <20090902111927.GA4590@chram.org> <51f3faa70909020742g19007084j19a0ed071aaeffdf@mail.gmail.com> <20090902145225.GA16359@chram.org> <51f3faa70909021724v45d2902ewdb10d5f4a188f2be@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41548 "EHLO hera.kernel.org"
+Received: from smtp6-g21.free.fr ([212.27.42.6]:34141 "EHLO smtp6-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932110AbZIDClq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Sep 2009 22:41:46 -0400
-In-Reply-To: <4AA02F95.4050508@rtr.ca>
+	id S1750890AbZIDFfp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Sep 2009 01:35:45 -0400
+Content-Disposition: inline
+In-Reply-To: <51f3faa70909021724v45d2902ewdb10d5f4a188f2be@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Mike Hokenson <logan@gozer.org>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> I haven't really been following along.  But.. I have zero information
-> here about the Marvell 6121 --> it's supposedly an AHCI chip, isn't it?
+Quoting Robert Hancock:
+: Is it always this drive that's failing? I see there's a second of the
+: same model, does it show the same behavior?
+: 
+: > ata1.00: ATA-6: HDS722512VLAT80, V33OA60A, max UDMA/100
+: > ata1.00: 241254720 sectors, multi 16: LBA48
+: 
+: If only that particular drive shows this problem, then I would start
+: to suspect a hardware fault with that drive. The fact that it fails
+: with both IDE and libata (and with ata_piix, which is a really
+: commonly used and tested libata driver) rather points in that
+: direction.
 
-Here's the full thread.
+That was a very good diagnosis.
 
- http://thread.gmane.org/gmane.linux.ide/42397
- http://thread.gmane.org/gmane.linux.ide/42568
+I switched my two Hitachi drives for Maxtors, and the problem
+went away.  I was able to do a SMART long test on all my drives
+without lockups and without any kernel complaints on the console.
 
-> The device that's failing is an optical drive.  These often won't
-> respond to many commands until the onboard firmware finishes
-> examining whatever disc happens to be inserted, which can take
-> longer than the time we normally allow.  I wonder if it has anything
-> to do with that ?
+Thanks a lot, I had no idea these Hitachi drives had a bad firmware.
+Looking at the tags on the drives, they were manufactured late 2003
+and early 2004.
 
-I have no idea but Mike reports that it works just fine on ich9,
-so....
-
-Thanks.
-
--- 
-tejun
+Raphael
