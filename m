@@ -1,41 +1,31 @@
-From: Shane Huang <shane.huang@amd.com>
-Subject: [PATCH #upstream] libata: add SATA PMP revision information for
- spec 1.2
-Date: Tue, 8 Sep 2009 17:37:01 +0800
-Message-ID: <1252402621.3514.12.camel@zm-desktop>
-Reply-To: shane.huang@amd.com
+From: Fredrik Tuomas <fredrik.tuomas@gmail.com>
+Subject: Re: Some of mine ST31000520AS drives unloads head very frequent and I
+	cannot set APM on them
+Date: Tue, 8 Sep 2009 11:52:37 +0200
+Message-ID: <e44195c70909080252q18e26886p8adbf6183b70ebc2@mail.gmail.com>
+References: <e44195c70909080124s62cc6841t617c2ce662222687@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:49802
-	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754072AbZIHJhl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2009 05:37:41 -0400
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:47554 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932AbZIHJwg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2009 05:52:36 -0400
+Received: by bwz19 with SMTP id 19so2063641bwz.37
+        for <linux-ide@vger.kernel.org>; Tue, 08 Sep 2009 02:52:37 -0700 (PDT)
+In-Reply-To: <e44195c70909080124s62cc6841t617c2ce662222687@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
+To: linux-ide@vger.kernel.org
 
-This small patch is just adding the information for PMP spec 1.2
+In the pdf on
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
----
- drivers/ata/libata-pmp.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+http://www.seagate.com/staticfiles/support/disc/manuals/desktop/Barracuda%20LP/100564361a.pdf
 
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 619f2c3..51f0ffb 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -221,6 +221,8 @@ static const char *sata_pmp_spec_rev_str(const u32 *gscr)
- {
- 	u32 rev = gscr[SATA_PMP_GSCR_REV];
- 
-+	if (rev & (1 << 3))
-+		return "1.2";
- 	if (rev & (1 << 2))
- 		return "1.1";
- 	if (rev & (1 << 1))
+you can read that APM is not supported on the disk. Now I'm confused.
+I can set APM on at least one of my drives. How can I prohibit the
+excessive loading/unloading of the heads if APM not is supported?
 
+I have set the spindown time do 1h with hdparm -S242 on all these drives.
 
+/ Fredrik Tuomas
