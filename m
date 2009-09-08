@@ -1,31 +1,33 @@
-From: Fredrik Tuomas <fredrik.tuomas@gmail.com>
-Subject: Re: Some of mine ST31000520AS drives unloads head very frequent and I
-	cannot set APM on them
-Date: Tue, 8 Sep 2009 11:52:37 +0200
-Message-ID: <e44195c70909080252q18e26886p8adbf6183b70ebc2@mail.gmail.com>
-References: <e44195c70909080124s62cc6841t617c2ce662222687@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Limiting DMA speeds for individual IDE drives
+Date: Tue, 8 Sep 2009 12:03:48 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0909081157520.2653-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:47554 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753932AbZIHJwg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2009 05:52:36 -0400
-Received: by bwz19 with SMTP id 19so2063641bwz.37
-        for <linux-ide@vger.kernel.org>; Tue, 08 Sep 2009 02:52:37 -0700 (PDT)
-In-Reply-To: <e44195c70909080124s62cc6841t617c2ce662222687@mail.gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36581 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750750AbZIHQDq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2009 12:03:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
 
-In the pdf on
+Is there any simple way to force the old IDE driver to limit the DMA
+speed for a particular device?
 
-http://www.seagate.com/staticfiles/support/disc/manuals/desktop/Barracuda%20LP/100564361a.pdf
+I've got a situation where a drive claims to be capable of supporting
+UDMA/100, but it's in a noisy environment and gets lots of errors at
+that speed.  I'd like to limit it to UDMA/66 or even UDMA/33.
 
-you can read that APM is not supported on the disk. Now I'm confused.
-I can set APM on at least one of my drives. How can I prohibit the
-excessive loading/unloading of the heads if APM not is supported?
+The hdparm command should be able to do this but I can't run it until 
+the system has booted, by which time a bunch of CRC and possibly other 
+errors have already occurred.  Ideally it should be possible to limit 
+the speed starting as early as device detection, but I can't find any 
+way to do it.  Is there support for such a thing or will I have to hack 
+it in?
 
-I have set the spindown time do 1h with hdparm -S242 on all these drives.
+Thanks,
 
-/ Fredrik Tuomas
+Alan Stern
+
