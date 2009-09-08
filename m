@@ -1,43 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: Limiting DMA speeds for individual IDE drives
-Date: Tue, 8 Sep 2009 18:53:06 +0100
-Message-ID: <20090908185306.0f30c07b@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.44L0.0909081157520.2653-100000@iolanthe.rowland.org>
+Date: Tue, 08 Sep 2009 22:04:22 +0400
+Message-ID: <4AA69CA6.9050909@ru.mvista.com>
+References: <Pine.LNX.4.44L0.0909081157520.2653-100000@iolanthe.rowland.org> <20090908161204.GA3113@gambetta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53508 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751750AbZIHRvt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2009 13:51:49 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0909081157520.2653-100000@iolanthe.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752048AbZIHSCR@vger.kernel.org>
+In-Reply-To: <20090908161204.GA3113@gambetta>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-ide@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
+Cc: Frederik Deweerdt <frederik.deweerdt@xprog.eu>, linux-ide@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-> I've got a situation where a drive claims to be capable of supporting
-> UDMA/100, but it's in a noisy environment and gets lots of errors at
-> that speed.  I'd like to limit it to UDMA/66 or even UDMA/33.
+Hello.
 
-That should never occur with a proper cable and I would be concerned the
-fault might be something more problematic such as speed misconfiguration
-or an incompatibility. Which driver is in use ?
+Frederik Deweerdt wrote:
 
-> The hdparm command should be able to do this but I can't run it until 
-> the system has booted, by which time a bunch of CRC and possibly other 
-> errors have already occurred.  Ideally it should be possible to limit 
+>>Is there any simple way to force the old IDE driver to limit the DMA
+>>speed for a particular device?
 
-Only the data transfers are CRC protected and at high speed, but noise at
-low speed would be a real concern as the commands are sent low speed but
-without protection on PATA devices - so a bit flip can send a DMA to the
-wrong sector.
+    No, you can only disable DMA totally, and then set the needed speed via 
+hdparm.
 
-> the speed starting as early as device detection, but I can't find any 
-> way to do it.  Is there support for such a thing or will I have to hack 
-> it in?
+>>I've got a situation where a drive claims to be capable of supporting
+>>UDMA/100, but it's in a noisy environment and gets lots of errors at
+>>that speed.  I'd like to limit it to UDMA/66 or even UDMA/33.
 
-You can disallow DMA but not clip DMA to UDMA33 with the old driver. You
-could disallow DMA at boot and reallow it with a speed set by hdparm in
-your boot scripts...
+    Are you sure that it's all because of the noise and not a cable type 
+misdetection?
+
+>>The hdparm command should be able to do this but I can't run it until 
+>>the system has booted, by which time a bunch of CRC and possibly other 
+>>errors have already occurred.  Ideally it should be possible to limit 
+>>the speed starting as early as device detection, but I can't find any 
+>>way to do it.  Is there support for such a thing or will I have to hack 
+>>it in?
+
+> Does passing ide=nodma at bootime, and then having init set the DMA at
+> the right speed, would work?
+
+    ide=nodma is now obsolete -- use ide_core.nodma=<interface>,<device> 
+instead. Read Documentation/ide/ide.txt before advising. ;-)
+
+> Regards,
+> Frederik
+
+WBR, Sergei
