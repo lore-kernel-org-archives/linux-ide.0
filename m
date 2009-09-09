@@ -1,75 +1,40 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Wed, 9 Sep 2009 13:02:18 +0100
-Message-ID: <20090909120218.GB21829@arachsys.com>
-References: <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com>
+From: Cyber Source <peter@cybersource.us>
+Subject: patch file for ahci.c
+Date: Wed, 09 Sep 2009 12:15:38 -0400
+Message-ID: <4AA7D4AA.8050903@cybersource.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090907115927.GU8710@arachsys.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns1.thecybersource.com ([64.65.249.35]:37062 "EHLO
+	email.thecybersource.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753349AbZIIQ3M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Sep 2009 12:29:12 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Chris Webb <chris@arachsys.com> writes:
-
-> I've also noticed that during this recovery, I'm seeing lots of timeouts but
-> they don't seem to interrupt the resync:
-> 
->   05:47:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->   05:47:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
->   05:47:39         res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
->   05:47:39 ata5.00: status: { DRDY }
->   05:47:39 ata5: hard resetting link
->   05:47:49 ata5: softreset failed (device not ready)
->   05:47:49 ata5: hard resetting link
->   05:47:49 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->   05:47:49 ata5.00: configured for UDMA/133
->   05:47:49 ata5: EH complete
->   
->   08:17:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->   08:17:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
->   08:17:39         res 40/00:00:35:83:f8/00:00:4d:00:00/40 Emask 0x4 (timeout)
->   08:17:39 ata5.00: status: { DRDY }
->   08:17:39 ata5: hard resetting link
->   08:17:49 ata5: softreset failed (device not ready)
->   08:17:49 ata5: hard resetting link
->   08:17:49 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->   08:17:49 ata5.00: configured for UDMA/133
->   08:17:49 ata5: EH complete
->   
->   10:22:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->   10:22:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
->   10:22:39         res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
->   10:22:39 ata5.00: status: { DRDY }
->   10:22:39 ata5: hard resetting link
->   10:22:49 ata5: softreset failed (device not ready)
->   10:22:49 ata5: hard resetting link
->   10:22:50 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->   10:22:51 ata5.00: configured for UDMA/133
->   10:22:51 ata5: EH complete
-
-... the difference being that a timeout which causes a super_written failure
-seems to return an I/O error whereas the others don't:
-
-  ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-  ata5.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-          res 40/00:00:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-  ata5.00: status: { DRDY }
-  ata5: hard resetting link
-  ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  ata5.00: configured for UDMA/133
-  ata5: EH complete
-  end_request: I/O error, dev sde, sector 1465147272
-  md: super_written gets error=-5, uptodate=0
-  raid10: Disk failure on sde3, disabling device.
-
-I wonder what's different about these two timeouts such that one causes an I/O
-error and the other just causes a retry after reset? Presumably if the latter
-was also just a retry, everything would be (closer to being) fine.
-
-Cheers,
-
-Chris.
+Hello Jeff,
+  I was hoping you could help me with a patch that I need for the ahci.c 
+file. I am specifically referring to this, it appears to be the fix that 
+I need. 
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=bd17243a84632465f5403bc9eb8b4831bd67e582
+I am having a hard time implementing this change. I don't see where this 
+patch can be download and or what kernel it's been patched against. I 
+see the diffs but again, don't know what the original file is from. I 
+have downloaded the full 2.6.30 kernel and then applied the full kernel 
+patch 2.6.31-rc9 in hopes that the patch/change would have been 
+included, but it wasn't, still had the soft-reset error. I then tried to 
+download the b/drivers/ata/ahci.c file from the git.kernel link above 
+and did a diff against the one from the above kernel and patch and then 
+it failed upon compile when it hit that file saying error on lines 1604 
+and 1605 expecting a ";'" before "if". Could you please help me with 
+this. This is for a laptop and I cannot change out the controller. 
+Thanks for any help, Peter*
+*
+-- 
+cybersource.us
+115 Richfield Road
+Williamsville, New York 14221
+716-553-8525
