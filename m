@@ -1,39 +1,49 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: unbreak TPM filtering by reorganizing
- ata_scsi_pass_thru()
-Date: Tue, 08 Sep 2009 21:19:13 -0400
-Message-ID: <4AA70291.1000306@garzik.org>
-References: <4A9F6B5B.80701@kernel.org>
+Subject: Re: [PATCH #upstream] sata_sis: convert to slave_link
+Date: Tue, 08 Sep 2009 21:19:25 -0400
+Message-ID: <4AA7029D.1000804@garzik.org>
+References: <4A9D2D5E.90209@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51554 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:51559 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192AbZIIBTO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Sep 2009 21:19:14 -0400
-In-Reply-To: <4A9F6B5B.80701@kernel.org>
+	id S1751651AbZIIBTZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Sep 2009 21:19:25 -0400
+In-Reply-To: <4A9D2D5E.90209@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Thilo-Alexander Ginkel <thilo@ginkel.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Uwe Koziolek <uwe.koziolek@gmx.net>
 
-On 09/03/2009 03:08 AM, Tejun Heo wrote:
-> ata_scsi_pass_thru() was checking for input sanity and disallowed
-> commands while initializaing qc from scmd.  TPM filtering was added
-> right after protocol check at which point tf wasn't initialized
-> properly.  This means that TPM filtering has never really worked.
+On 09/01/2009 10:19 AM, Tejun Heo wrote:
+> During introduction of slave_link, sata_sis slipped through the crack
+> and left with ad-hoc merged SCR access.  As SCR status was shared for
+> both the master and slave devices, when only one of the device is
+> online, libata EH would think both are online but would only get valid
+> device signature for the actually present one, which in turn trigger
+> the probing safety net mechanism and make EH retry causing large delay
+> during boot.  This patch converts sata_sis to slave_link mechanism.
 >
-> This patch fixes the bug by reorganizing ata_scsi_pass_thru() such
-> that qc is fully initialized before checking for invalid conditions
-> which is way less error prone.
+> This bug was reported by TAXI in bko#14075.
 >
-> Discovered while Thilo-Alexander Ginkel was trying debug patches for
-> bko#13416.
+>   http://bugzilla.kernel.org/show_bug.cgi?id=14075
 >
 > Signed-off-by: Tejun Heo<tj@kernel.org>
-> Cc: Thilo-Alexander Ginkel<thilo@ginkel.com>
+> Reported-by: TAXI<taxi@a-city.de>
+> Cc: Uwe Koziolek<uwe.koziolek@gmx.net>
+> ---
+> This is fairly straight-forward fix but I couldn't test it extensively
+> and it's way too late in the rc cycle.  I think it would be best to
+> put it in #upstream and let it see some testing in linux-next and then
+> backport them through -stable.
+>
+> Thanks.
+>
+>   drivers/ata/sata_sis.c |   75 ++++++++++++++++---------------------------------
+>   1 file changed, 25 insertions(+), 50 deletions(-)
 
-applied #upstream
+applied
 
 
