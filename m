@@ -1,48 +1,75 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH][sata_fsl] Defer non-ncq commands when ncq commands active
-Date: Tue, 08 Sep 2009 21:25:35 -0400
-Message-ID: <4AA7040F.1050707@garzik.org>
-References: <Pine.WNT.4.64.0907292129310.4440@B00888-02.fsl.freescale.net>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Wed, 9 Sep 2009 13:02:18 +0100
+Message-ID: <20090909120218.GB21829@arachsys.com>
+References: <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58443 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192AbZIIBZg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Sep 2009 21:25:36 -0400
-In-Reply-To: <Pine.WNT.4.64.0907292129310.4440@B00888-02.fsl.freescale.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090907115927.GU8710@arachsys.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: ashish kalra <ashish.kalra@freescale.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On 07/29/2009 12:03 PM, ashish kalra wrote:
-> From: Ashish Kalra <Ashish.Kalra@freescale.com>
-> Date: Wed, 29 Jul 2009 21:15:49 +0530
->
-> Fix for non-ncq & ncq commands causing timeouts when both are issued
-> simultaneously to the same device.
->
-> Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
-> ---
-> drivers/ata/sata_fsl.c | 1 +
-> 1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 5a88b44..a33f130 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -1262,6 +1262,7 @@ static struct scsi_host_template sata_fsl_sht = {
-> static struct ata_port_operations sata_fsl_ops = {
-> .inherits = &sata_pmp_port_ops,
->
-> + .qc_defer = ata_std_qc_defer;
+Chris Webb <chris@arachsys.com> writes:
 
-Applied version with obvious s/;/,/ fix...
+> I've also noticed that during this recovery, I'm seeing lots of timeouts but
+> they don't seem to interrupt the resync:
+> 
+>   05:47:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>   05:47:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
+>   05:47:39         res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+>   05:47:39 ata5.00: status: { DRDY }
+>   05:47:39 ata5: hard resetting link
+>   05:47:49 ata5: softreset failed (device not ready)
+>   05:47:49 ata5: hard resetting link
+>   05:47:49 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>   05:47:49 ata5.00: configured for UDMA/133
+>   05:47:49 ata5: EH complete
+>   
+>   08:17:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>   08:17:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
+>   08:17:39         res 40/00:00:35:83:f8/00:00:4d:00:00/40 Emask 0x4 (timeout)
+>   08:17:39 ata5.00: status: { DRDY }
+>   08:17:39 ata5: hard resetting link
+>   08:17:49 ata5: softreset failed (device not ready)
+>   08:17:49 ata5: hard resetting link
+>   08:17:49 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>   08:17:49 ata5.00: configured for UDMA/133
+>   08:17:49 ata5: EH complete
+>   
+>   10:22:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>   10:22:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
+>   10:22:39         res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+>   10:22:39 ata5.00: status: { DRDY }
+>   10:22:39 ata5: hard resetting link
+>   10:22:49 ata5: softreset failed (device not ready)
+>   10:22:49 ata5: hard resetting link
+>   10:22:50 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>   10:22:51 ata5.00: configured for UDMA/133
+>   10:22:51 ata5: EH complete
 
-	Jeff
+... the difference being that a timeout which causes a super_written failure
+seems to return an I/O error whereas the others don't:
 
+  ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+  ata5.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+          res 40/00:00:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+  ata5.00: status: { DRDY }
+  ata5: hard resetting link
+  ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+  ata5.00: configured for UDMA/133
+  ata5: EH complete
+  end_request: I/O error, dev sde, sector 1465147272
+  md: super_written gets error=-5, uptodate=0
+  raid10: Disk failure on sde3, disabling device.
 
+I wonder what's different about these two timeouts such that one causes an I/O
+error and the other just causes a retry after reset? Presumably if the latter
+was also just a retry, everything would be (closer to being) fine.
 
+Cheers,
 
+Chris.
