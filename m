@@ -1,29 +1,38 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Nvidia IDE MCP78S not syncing: Fatal exception in interrupt
-Date: Thu, 10 Sep 2009 11:25:27 +0200
-Message-ID: <200909101125.27653.bzolnier@gmail.com>
-References: <d6592cfc0909061317k2dd1989did35ec4d1d68e80f9@mail.gmail.com> <20090909221234.daea7525.akpm@linux-foundation.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
+Date: Thu, 10 Sep 2009 13:23:20 GMT
+Message-ID: <200909101323.n8ADNKTa018498@demeter.kernel.org>
+References: <bug-13399-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755321AbZIJJYs@vger.kernel.org>
-In-Reply-To: <20090909221234.daea7525.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stevan Silva <tevost@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:59580 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752913AbZIJWEW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Sep 2009 18:04:22 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8AM468S021183
+	for <linux-ide@vger.kernel.org>; Thu, 10 Sep 2009 22:04:26 GMT
+In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thursday 10 September 2009 07:12:34 Andrew Morton wrote:
-> (cc linux-ide)
-> 
-> null-pointer deref in ide_complete_rq().
-> 
-> On Sun, 6 Sep 2009 17:17:08 -0300 Stevan Silva <tevost@gmail.com> wrote:
-> 
-> > I recently bought an ASUS M4N78 PRO motherboard, that is based in the
-> > nvidia's geforce 8300 chipset and updated my system kernel to 2.6.30
-> > version.
+http://bugzilla.kernel.org/show_bug.cgi?id=13399
 
-We're at 2.6.30.6 / 2.6.31 now so it would be worth to try them first
-(I remember similar problem being fixed some time ago).
+
+David Woodhouse <dwmw2@infradead.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|CLOSED                      |REOPENED
+     Kernel Version|2.6.30-rc1                  |2.6.31
+         Resolution|CODE_FIX                    |
+
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
