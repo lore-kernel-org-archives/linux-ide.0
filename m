@@ -1,39 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Fri, 11 Sep 2009 15:04:26 GMT
-Message-ID: <200909111504.n8BF4QXM030488@demeter.kernel.org>
-References: <bug-13399-11633@http.bugzilla.kernel.org/>
+From: Chaitanya Lala <clala@riverbed.com>
+Subject: [libata PATCH 1/1] libata: thaw port after maximum reset retries
+Date: Fri, 11 Sep 2009 08:27:04 -0700
+Message-ID: <20090911152703.GA5222@clala-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45247 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752605AbZIKPEX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2009 11:04:23 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8BF4Q8P030489
-	for <linux-ide@vger.kernel.org>; Fri, 11 Sep 2009 15:04:26 GMT
-In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Received: from autosupport.riverbed.com ([208.70.196.44]:61399 "EHLO
+	smtp2.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752089AbZIKPfx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2009 11:35:53 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, ajones@riverbed.com, rbecker@riverbed.com, clala@riverbed.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13399
+The libata error recovery tries to reset a port a number
+of times and if unsuccessful, gives up. The code does not
+thaw the port before it exits. If the bad disk i.e. the disk
+that could not be reset is removed and a healthy disk is
+inserted, the new disk does not register, since the port is
+frozen. This patch fixes the same.
 
+Signed-off-by: Chaitanya Lala <clala@riverbed.com>
+---
+ drivers/ata/libata-eh.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-
-
-
---- Comment #53 from David Woodhouse <dwmw2@infradead.org>  2009-09-11 15:04:21 ---
-Created an attachment (id=23073)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=23073)
-dmesg
-
-That patch still lets drive->debug_mask get overridden from the module
-parameter, shortly after you manually set it to 0xffffffff. With that fixed,
-here's the output.
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 79711b6..724f86f 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2637,8 +2637,12 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	    sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		rc = -ERESTART;
+ 
+-	if (rc == -ERESTART || try >= max_tries)
++	if (rc == -ERESTART || try >= max_tries) {
++		/* thaw the port */
++		if (ata_is_host_link(link))
++			ata_eh_thaw_port(ap);
+ 		goto out;
++	}
+ 
+ 	now = jiffies;
+ 	if (time_before(now, deadline)) {
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.0.4
+
