@@ -1,3066 +1,2141 @@
-From: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Subject: Can't burn CDs/DVDs
-Date: Fri, 11 Sep 2009 19:30:17 +0200
-Message-ID: <20090911193017.d47e167e.cjsthompson@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata updates for .32
+Date: Fri, 11 Sep 2009 14:54:01 -0400
+Message-ID: <20090911185401.GA31416@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:42310 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbZIKR3h convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2009 13:29:37 -0400
-Received: by ewy2 with SMTP id 2so1292704ewy.17
-        for <linux-ide@vger.kernel.org>; Fri, 11 Sep 2009 10:29:38 -0700 (PDT)
+Received: from havoc.gtf.org ([69.61.125.42]:45810 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754699AbZIKSx7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Sep 2009 14:53:59 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-This is an issue I've had for a while, but since I rarely burn CDs or D=
-VDs I forget about it. But still I'd like to be able not to have to reb=
-oot to Windows XP to burn that occasional CD/DVD. So as you can gather =
-both drives work with Nero/Windows XP so *something* is fishy with Linu=
-x. It used to work on Linux up until some point which I don't really re=
-member.
-
-I did not switch to libata/pata_via because it's still marked as experi=
-mental (should I?). I don't have any SATA drives.
-
-This message seems to be interresting:
-
-cdrecord: Warning: The DMA speed test has been skipped.
-
-As on my system cdparanoia barfs if I don't disable DMA on the drive I'=
-m trying to rip from.
-
-Any help to fix this would be really welcome.
-
----
-
-# cdrecord -vvv dev=3D/dev/hdc haiku-alpha.iso=20
-cdrecord: No write mode specified.
-cdrecord: Asuming -sao mode.
-cdrecord: If your drive does not accept -sao, try -tao.
-cdrecord: Future versions of cdrecord may have different drive dependen=
-t defaults.
-Cdrecord-ProDVD-ProBD-Clone 2.01.01a57 (i686-pc-linux-gnu) Copyright (C=
-) 1995-2009 J=F6rg Schilling
-TOC Type: 1 =3D CD-ROM
-scsidev: '/dev/hdc'
-devname: '/dev/hdc'
-scsibus: -2 target: -2 lun: -2
-Warning: Open by 'devname' is unintentional and not supported.
-Linux sg driver version: 3.5.27
-Using libscg version 'schily-0.9'.
-Using libscg transport code version 'schily-scsi-linux-sg.c-1.92'
-SCSI buffer size: 64512
-atapi: 1
-Device type    : Removable CD-ROM
-Version        : 0
-Response Format: 2
-Capabilities   :=20
-Vendor_info    : 'PHILIPS '
-Identifikation : 'PCRW5232P       '
-Revision       : 'P2.2'
-Device seems to be: Generic mmc CD-RW.
-Current: none
-Profile: CD-RW=20
-Profile: CD-R=20
-Profile: CD-ROM=20
-=46eature: 'Profile List' (current) (persistent)
-=46eature: 'Core' (current) (persistent)
-=46eature: 'Morphing' (current) (persistent)
-=46eature: 'Removable Medium' (current) (persistent)
-=46eature: 'Random Readable' =20
-=46eature: 'Multi Read' (current) (persistent)
-=46eature: 'CD Read' =20
-=46eature: 'Random Writable' =20
-=46eature: 'Incremental Streaming Writable' =20
-=46eature: 'Formattable' =20
-=46eature: 'Restricted Overwrite' =20
-=46eature: 'CD Track at Once' =20
-=46eature: 'CD Mastering' =20
-=46eature: 'Power Management' (current) (persistent)
-=46eature: 'S.M.A.R.T.' =20
-=46eature: 'CD Audio analog play' (current)=20
-=46eature: 'Time-out' (current) (persistent)
-Drive current speed: 48
-Drive default speed: 52
-Drive max speed    : 52
-Selected speed     : 52
-Using generic SCSI-3/mmc   CD-R/CD-RW driver (mmc_cdr).
-Driver flags   : MMC-3 SWABAUDIO BURNFREE FORCESPEED=20
-Supported modes: TAO PACKET SAO SAO/R96P SAO/R96R RAW/R16 RAW/R96P RAW/=
-R96R
-cdrecord: Warning: The DMA speed test has been skipped.
-=46IFO size      : 4194304 =3D 4096 KB
-Track 01: data   379 MB       =20
-track: 1 start: 0 pregap: 150
-Total size:      436 MB (43:13.44) =3D 194508 sectors
-Lout start:      436 MB (43:15/33) =3D 194508 sectors
- 41 00 00 14 00 00 00 00
- 41 01 00 10 00 00 00 00
- 41 01 01 10 00 00 02 00
- 41 AA 01 14 00 2B 0F 21
-Track 1 start 0
-Track 2 start 194508
- 41 00 A0 00 00 00 00 01 00 00 00 00
- 41 00 A1 00 00 00 00 01 00 00 00 00
- 41 00 A2 00 00 00 00 43 15 33 00 00
- 41 00 01 00 00 00 00 00 02 00 00 00
-cdrecord: Success. test unit ready: scsi sendcmd: no error
-CDB:  00 00 00 00 00 00
-status: 0x2 (CHECK CONDITION)
-Sense Bytes: 70 00 02 00 00 00 00 0A 00 00 00 00 3A 00 00 00
-Sense Key: 0x2 Not Ready, Segment 0
-Sense Code: 0x3A Qual 0x00 (medium not present) Fru 0x0
-Sense flags: Blk 0 (not valid)=20
-cmd finished after 0.001s timeout 200s
-cdrecord: No disk / Wrong disk!
-
-# uname -a
-Linux wotan 2.6.31-wotan-10 #1 Thu Sep 10 21:03:09 CEST 2009 i686 AMD S=
-empron(tm) 2400+ AuthenticAMD GNU/Linux
-
-# lsscsi -vvv
- sysfsroot: /sys
-[0:0:0:0]    disk    Maxtor   Basics Portable  0122  /dev/sda=20
-  dir: /sys/bus/scsi/devices/0:0:0:0  [/sys/devices/pci0000:00/0000:00:=
-10.4/usb1/1-3/1-3:1.0/host0/target0:0:0/0:0:0:0]
-
-# lspci -vvv
-00:00.0 Host bridge: VIA Technologies, Inc. VT8377 [KT400/KT600 AGP] Ho=
-st Bridge (rev 80)
-	Subsystem: ASRock Incorporation K7VT6 motherboard
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort+ >SERR- <PERR- INTx-
-	Latency: 8
-	Region 0: Memory at e0000000 (32-bit, prefetchable) [size=3D64M]
-	Capabilities: [80] AGP version 3.5
-		Status: RQ=3D32 Iso- ArqSz=3D0 Cal=3D2 SBA+ ITACoh- GART64- HTrans- 6=
-4bit- FW- AGP3+ Rate=3Dx4,x8
-		Command: RQ=3D1 ArqSz=3D0 Cal=3D0 SBA+ AGP+ GART64- 64bit- FW- Rate=3D=
-x8
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: agpgart-via
-	Kernel modules: via-agp
-
-00:01.0 PCI bridge: VIA Technologies, Inc. VT8237/VX700 PCI Bridge (pro=
-g-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort+ >SERR- <PERR- INTx-
-	Latency: 0
-	Bus: primary=3D00, secondary=3D01, subordinate=3D01, sec-latency=3D0
-	I/O behind bridge: 0000a000-0000afff
-	Memory behind bridge: dfe00000-dfefffff
-	Prefetchable memory behind bridge: bfd00000-dfcfffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <TAbo=
-rt- <MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA+ VGA+ MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [80] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-
-00:0a.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8139/8=
-139C/8139C+ (rev 10)
-	Subsystem: Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32 (8000ns min, 16000ns max)
-	Interrupt: pin A routed to IRQ 18
-	Region 0: I/O ports at d400 [size=3D256]
-	Region 1: Memory at dfffbf00 (32-bit, non-prefetchable) [size=3D256]
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0-,D1+,D2+,D3hot+,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: 8139too
-	Kernel modules: 8139too
-
-00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAI=
-D Controller (rev 80)
-	Subsystem: ASRock Incorporation K7VT6 motherboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32
-	Interrupt: pin B routed to IRQ 10
-	Region 0: I/O ports at ec00 [size=3D8]
-	Region 1: I/O ports at e800 [size=3D4]
-	Region 2: I/O ports at e400 [size=3D8]
-	Region 3: I/O ports at e000 [size=3D4]
-	Region 4: I/O ports at dc00 [size=3D16]
-	Region 5: I/O ports at d800 [size=3D256]
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel modules: sata_via
-
-00:0f.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/=
-VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-if 8a [Master SecP PriP])
-	Subsystem: ASRock Incorporation K7VT2/K7VT6 motherboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32
-	Interrupt: pin A routed to IRQ 20
-	Region 0: [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [siz=
-e=3D8]
-	Region 1: [virtual] Memory at 000003f0 (type 3, non-prefetchable) [siz=
-e=3D1]
-	Region 2: [virtual] Memory at 00000170 (32-bit, non-prefetchable) [siz=
-e=3D8]
-	Region 3: [virtual] Memory at 00000370 (type 3, non-prefetchable) [siz=
-e=3D1]
-	Region 4: I/O ports at fc00 [size=3D16]
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: VIA_IDE
-	Kernel modules: pata_via
-
-00:10.0 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 C=
-ontroller (rev 81) (prog-if 00 [UHCI])
-	Subsystem: ASRock Incorporation K7VT6
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 21
-	Region 4: I/O ports at c400 [size=3D32]
-	Capabilities: [80] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D375mA PME(D0+,D1+,D2+,D3hot+=
-,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: uhci_hcd
-	Kernel modules: uhci-hcd
-
-00:10.1 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 C=
-ontroller (rev 81) (prog-if 00 [UHCI])
-	Subsystem: ASRock Incorporation K7VT6
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 21
-	Region 4: I/O ports at c800 [size=3D32]
-	Capabilities: [80] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D375mA PME(D0+,D1+,D2+,D3hot+=
-,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: uhci_hcd
-	Kernel modules: uhci-hcd
-
-00:10.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 C=
-ontroller (rev 81) (prog-if 00 [UHCI])
-	Subsystem: ASRock Incorporation K7VT6
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32, Cache Line Size: 32 bytes
-	Interrupt: pin B routed to IRQ 21
-	Region 4: I/O ports at cc00 [size=3D32]
-	Capabilities: [80] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D375mA PME(D0+,D1+,D2+,D3hot+=
-,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: uhci_hcd
-	Kernel modules: uhci-hcd
-
-00:10.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 C=
-ontroller (rev 81) (prog-if 00 [UHCI])
-	Subsystem: ASRock Incorporation K7VT6
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32, Cache Line Size: 32 bytes
-	Interrupt: pin B routed to IRQ 21
-	Region 4: I/O ports at d000 [size=3D32]
-	Capabilities: [80] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D375mA PME(D0+,D1+,D2+,D3hot+=
-,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: uhci_hcd
-	Kernel modules: uhci-hcd
-
-00:10.4 USB Controller: VIA Technologies, Inc. USB 2.0 (rev 86) (prog-i=
-f 20 [EHCI])
-	Subsystem: ASRock Incorporation K7VT6 motherboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin C routed to IRQ 21
-	Region 0: Memory at dfffbd00 (32-bit, non-prefetchable) [size=3D256]
-	Capabilities: [80] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D375mA PME(D0+,D1+,D2+,D3hot+=
-,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: ehci_hcd
-	Kernel modules: ehci-hcd
-
-00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge [KT600/K8T=
-800/K8T890 South]
-	Subsystem: ASRock Incorporation K7VT4 motherboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping+ SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel modules: i2c-viapro
-
-00:11.5 Multimedia audio controller: VIA Technologies, Inc. VT8233/A/82=
-35/8237 AC97 Audio Controller (rev 60)
-	Subsystem: ASRock Incorporation K7VT6 motherboard
-	Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Interrupt: pin C routed to IRQ 22
-	Region 0: I/O ports at c000 [size=3D256]
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: VIA 82xx Audio
-	Kernel modules: snd-via82xx
-
-00:12.0 Ethernet controller: VIA Technologies, Inc. VT6102 [Rhine-II] (=
-rev 78)
-	Subsystem: ASRock Incorporation K7VT6 motherboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32 (750ns min, 2000ns max), Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 23
-	Region 0: I/O ports at bc00 [size=3D256]
-	Region 1: Memory at dfffbc00 (32-bit, non-prefetchable) [size=3D256]
-	Capabilities: [40] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0+,D1+,D2+,D3hot+,D=
-3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: via-rhine
-	Kernel modules: via-rhine
-
-01:00.0 VGA compatible controller: ATI Technologies Inc RV280 [Radeon 9=
-200 PRO] (rev 01) (prog-if 00 [VGA controller])
-	Subsystem: ATI Technologies Inc RV280 [Radeon 9200 PRO]
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32 (2000ns min), Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 16
-	Region 0: Memory at d0000000 (32-bit, prefetchable) [size=3D128M]
-	Region 1: I/O ports at a800 [size=3D256]
-	Region 2: Memory at dfef0000 (32-bit, non-prefetchable) [size=3D64K]
-	Expansion ROM at dfec0000 [disabled] [size=3D128K]
-	Capabilities: [58] AGP version 3.0
-		Status: RQ=3D256 Iso- ArqSz=3D0 Cal=3D0 SBA+ ITACoh- GART64- HTrans- =
-64bit- FW+ AGP3+ Rate=3Dx4,x8
-		Command: RQ=3D32 ArqSz=3D0 Cal=3D0 SBA+ AGP+ GART64- 64bit- FW- Rate=3D=
-x8
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: radeonfb
-
-01:00.1 Display controller: ATI Technologies Inc RV280 [Radeon 9200 PRO=
-] (Secondary) (rev 01)
-	Subsystem: ATI Technologies Inc Device 5961
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- St=
-epping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAbort- <TA=
-bort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 32 (2000ns min), Cache Line Size: 32 bytes
-	Region 0: Memory at c8000000 (32-bit, prefetchable) [size=3D128M]
-	Region 1: Memory at dfee0000 (32-bit, non-prefetchable) [size=3D64K]
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
-3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-
-# lsmod
-Module                  Size  Used by
-ipv6                  197524  8=20
-radeon                330896  2=20
-drm                   119248  3 radeon
-af_packet              17104  0=20
-ext3                   99512  2=20
-jbd                    33536  1 ext3
-sg                     16932  0=20
-sd_mod                 22240  2=20
-fuse                   49204  3=20
-gspca_zc3xx            44160  0=20
-gspca_main             18540  1 gspca_zc3xx
-videodev               28860  1 gspca_main
-v4l1_compat            11160  1 videodev
-joydev                  8320  0=20
-usbhid                 22804  0=20
-hid                    32708  1 usbhid
-usb_storage            30812  1=20
-scsi_mod               76560  3 sg,sd_mod,usb_storage
-usb_libusual           18956  1 usb_storage
-evdev                   7824  8=20
-uhci_hcd               18096  0=20
-snd_via82xx            20248  3=20
-snd_ac97_codec         89360  1 snd_via82xx
-ac97_bus                1268  1 snd_ac97_codec
-snd_pcsp                7864  1=20
-snd_mpu401_uart         5252  1 snd_via82xx
-snd_rawmidi            14988  1 snd_mpu401_uart
-processor              23596  0=20
-ehci_hcd               27832  0=20
-snd_pcm                49012  4 snd_via82xx,snd_ac97_codec,snd_pcsp
-via_rhine              18268  0=20
-8139too                18524  0=20
-rtc_cmos                7772  0=20
-mii                     3900  2 via_rhine,8139too
-snd_timer              15148  1 snd_pcm
-snd_page_alloc          7080  2 snd_via82xx,snd_pcm
-ide_cd_mod             23464  0=20
-thermal                12688  0=20
-via_agp                 7472  1=20
-usbcore               110336  7 gspca_zc3xx,gspca_main,usbhid,usb_stora=
-ge,usb_libusual,uhci_hcd,ehci_hcd
-snd_seq_device          5400  1 snd_rawmidi
-rtc_core               13320  1 rtc_cmos
-8250_pnp               13972  0=20
-nls_base                5696  1 usbcore
-thermal_sys            12260  2 processor,thermal
-8250                   22952  1 8250_pnp
-snd                    36968  15 snd_via82xx,snd_ac97_codec,snd_pcsp,sn=
-d_mpu401_uart,snd_rawmidi,snd_pcm,snd_timer,snd_seq_device
-agpgart                25264  2 drm,via_agp
-ns558                   3944  0=20
-psmouse                36760  0=20
-rtc_lib                 2048  1 rtc_core
-cdrom                  29076  1 ide_cd_mod
-soundcore               1280  1 snd
-i2c_viapro              6516  0=20
-serial_core            14756  1 8250
-floppy                 45708  0=20
-button                  4860  0=20
-hwmon                   2132  1 thermal_sys
-gameport                8508  3 snd_via82xx,ns558
-unix                   20016  334
-
-# lshal -l
-
-Dumping 84 device(s) from the Global Device List:
--------------------------------------------------
-udi =3D '/org/freedesktop/Hal/devices/computer'
-  info.addons =3D {'hald-addon-cpufreq', 'hald-addon-acpi'} (string lis=
-t)
-  info.callouts.add =3D {'hal-storage-cleanup-all-mountpoints'} (string=
- list)
-  info.interfaces =3D {'org.freedesktop.Hal.Device.SystemPowerManagemen=
-t'} (string list)
-  info.product =3D 'Computer'  (string)
-  info.subsystem =3D 'unknown'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  org.freedesktop.Hal.Device.SystemPowerManagement.method_argnames =3D =
-{'num_seconds_to_sleep', 'num_seconds_to_sleep', '', '', '', 'enable_po=
-wer_save'} (string list)
-  org.freedesktop.Hal.Device.SystemPowerManagement.method_execpaths =3D=
- {'hal-system-power-suspend', 'hal-system-power-suspend-hybrid', 'hal-s=
-ystem-power-hibernate', 'hal-system-power-shutdown', 'hal-system-power-=
-reboot', 'hal-system-power-set-power-save'} (string list)
-  org.freedesktop.Hal.Device.SystemPowerManagement.method_names =3D {'S=
-uspend', 'SuspendHybrid', 'Hibernate', 'Shutdown', 'Reboot', 'SetPowerS=
-ave'} (string list)
-  org.freedesktop.Hal.Device.SystemPowerManagement.method_signatures =3D=
- {'i', 'i', '', '', '', 'b'} (string list)
-  power_management.acpi.linux.version =3D '20090521'  (string)
-  power_management.can_hibernate =3D true  (bool)
-  power_management.can_suspend =3D false  (bool)
-  power_management.can_suspend_hybrid =3D false  (bool)
-  power_management.is_powersave_set =3D false  (bool)
-  power_management.quirk.dpms_on =3D true  (bool)
-  power_management.quirk.dpms_suspend =3D true  (bool)
-  power_management.quirk.vbe_post =3D true  (bool)
-  power_management.quirk.vbemode_restore =3D true  (bool)
-  power_management.quirk.vbestate_restore =3D true  (bool)
-  power_management.quirk.vga_mode_3 =3D true  (bool)
-  power_management.type =3D 'acpi'  (string)
-  system.chassis.manufacturer =3D ''  (string)
-  system.chassis.type =3D 'Desktop'  (string)
-  system.firmware.release_date =3D '12/08/2004'  (string)
-  system.firmware.vendor =3D 'American Megatrends Inc.'  (string)
-  system.firmware.version =3D 'P1.10'  (string)
-  system.formfactor =3D 'desktop'  (string)
-  system.hardware.primary_video.product =3D 22880  (0x5960)  (int)
-  system.hardware.primary_video.vendor =3D 4098  (0x1002)  (int)
-  system.hardware.product =3D 'K7VT4APro'  (string)
-  system.hardware.serial =3D '00000000'  (string)
-  system.hardware.uuid =3D ''  (string)
-  system.hardware.vendor =3D ''  (string)
-  system.hardware.version =3D '1.0x'  (string)
-  system.kernel.machine =3D 'i686'  (string)
-  system.kernel.name =3D 'Linux'  (string)
-  system.kernel.version =3D '2.6.31-wotan-10'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/acpi_CPU0'
-  info.capabilities =3D {'processor'} (string list)
-  info.category =3D 'processor'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'AMD Sempron(tm) 2400+'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/acpi_CPU0'  (string)
-  linux.acpi_path =3D '/proc/acpi/processor/CPU0'  (string)
-  linux.acpi_type =3D 1  (0x1)  (int)
-  linux.hotplug_type =3D 4  (0x4)  (int)
-  processor.can_throttle =3D false  (bool)
-  processor.number =3D 0  (0x0)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/computer_alsa_timer'
-  alsa.device_file =3D '/dev/snd/timer'  (string)
-  alsa.type =3D 'timer'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'ALSA Timer Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/computer_alsa_timer'  (str=
-ing)
-  linux.device_file =3D '/dev/snd/timer'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/virtual/sound/timer'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
-  button.has_state =3D false  (bool)
-  button.type =3D 'sleep'  (string)
-  info.addons.singleton =3D {'hald-addon-input'} (string list)
-  info.capabilities =3D {'input', 'button'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Sleep Button'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/computer_logicaldev_input_=
-1'  (string)
-  input.device =3D '/dev/input/event2'  (string)
-  input.product =3D 'Sleep Button'  (string)
-  linux.device_file =3D '/dev/input/event2'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/LNXSYSTM:00/device:00/PNP0C0E:00/i=
-nput/input2/event2'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/computer_logicaldev_input_0'
-  button.has_state =3D false  (bool)
-  button.type =3D 'power'  (string)
-  info.addons.singleton =3D {'hald-addon-input'} (string list)
-  info.capabilities =3D {'input', 'button'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Power Button'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/computer_logicaldev_input_=
-0'  (string)
-  input.device =3D '/dev/input/event1'  (string)
-  input.product =3D 'Power Button'  (string)
-  linux.device_file =3D '/dev/input/event1'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/LNXSYSTM:00/device:00/PNP0C0C:00/i=
-nput/input1/event1'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/computer_logicaldev_input'
-  button.has_state =3D false  (bool)
-  button.type =3D 'power'  (string)
-  info.addons.singleton =3D {'hald-addon-input'} (string list)
-  info.capabilities =3D {'input', 'button'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Power Button'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/computer_logicaldev_input'=
-  (string)
-  input.device =3D '/dev/input/event0'  (string)
-  input.product =3D 'Power Button'  (string)
-  linux.device_file =3D '/dev/input/event0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/LNXSYSTM:00/LNXPWRBN:00/input/inpu=
-t0/event0'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0f13'
-  info.linux.driver =3D 'i8042 aux'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'PS/2 Port for PS/2-style Mice'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0f13'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:0a'  (string)
-  pnp.description =3D 'PS/2 Port for PS/2-style Mice'  (string)
-  pnp.id =3D 'PNP0f13'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0c04'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Math Coprocessor'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0c04'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:09'  (string)
-  pnp.description =3D 'Math Coprocessor'  (string)
-  pnp.id =3D 'PNP0c04'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0800'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'AT-style speaker sound'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0800'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:08'  (string)
-  pnp.description =3D 'AT-style speaker sound'  (string)
-  pnp.id =3D 'PNP0800'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0b00'
-  info.linux.driver =3D 'rtc_cmos'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'AT Real-Time Clock'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0b00'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:07'  (string)
-  pnp.description =3D 'AT Real-Time Clock'  (string)
-  pnp.id =3D 'PNP0b00'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0200'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'AT DMA Controller'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0200'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:06'  (string)
-  pnp.description =3D 'AT DMA Controller'  (string)
-  pnp.id =3D 'PNP0200'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0c02'
-  info.linux.driver =3D 'system'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'General ID for reserving resources required by PnP =
-motherboard registers. (Not device specific.)'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0c02'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:05'  (string)
-  pnp.description =3D 'General ID for reserving resources required by P=
-nP motherboard registers. (Not device specific.)'  (string)
-  pnp.id =3D 'PNP0c02'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNPb02f'
-  info.linux.driver =3D 'ns558'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Joystick/Game port'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNPb02f'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:04'  (string)
-  pnp.description =3D 'Joystick/Game port'  (string)
-  pnp.id =3D 'PNPb02f'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0401'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'ECP printer port'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0401'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:03'  (string)
-  pnp.description =3D 'ECP printer port'  (string)
-  pnp.id =3D 'PNP0401'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0501'
-  info.linux.driver =3D 'serial'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D '16550A-compatible COM port'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0501'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:02'  (string)
-  pnp.description =3D '16550A-compatible COM port'  (string)
-  pnp.id =3D 'PNP0501'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0501_serial_platform_0'
-  info.capabilities =3D {'serial'} (string list)
-  info.category =3D 'serial'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pnp_PNP0501'  (string)
-  info.product =3D '16550A-compatible COM port'  (string)
-  info.subsystem =3D 'tty'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0501_serial_platfor=
-m_0'  (string)
-  linux.device_file =3D '/dev/ttyS0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'tty'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:02/tty/ttyS0'  (string)
-  serial.device =3D '/dev/ttyS0'  (string)
-  serial.originating_device =3D '/org/freedesktop/Hal/devices/pnp_PNP05=
-01'  (string)
-  serial.port =3D 0  (0x0)  (int)
-  serial.type =3D 'platform'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0700'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'PC standard floppy disk controller'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0700'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:01'  (string)
-  pnp.description =3D 'PC standard floppy disk controller'  (string)
-  pnp.id =3D 'PNP0700'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0a03'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'PCI Bus'  (string)
-  info.subsystem =3D 'pnp'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pnp_PNP0a03'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pnp'  (string)
-  linux.sysfs_path =3D '/sys/devices/pnp0/00:00'  (string)
-  pnp.description =3D 'PCI Bus'  (string)
-  pnp.id =3D 'PNP0a03'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_serial8250'
-  info.linux.driver =3D 'serial8250'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Platform Device (serial8250)'  (string)
-  info.subsystem =3D 'platform'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_serial8250'  (str=
-ing)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'platform'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/serial8250'  (string)
-  platform.id =3D 'serial8250'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr'
-  info.linux.driver =3D 'pcspkr'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Platform Device (pcspkr)'  (string)
-  info.subsystem =3D 'platform'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'platform'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/pcspkr'  (string)
-  platform.id =3D 'pcspkr'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_card_0'
-  info.capabilities =3D {'sound'} (string list)
-  info.category =3D 'sound'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_pcspkr'  (stri=
-ng)
-  info.product =3D 'Internal PC-Speaker Sound Card'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_card=
-_0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/pcspkr/sound/card2'  (str=
-ing)
-  sound.card =3D 2  (0x2)  (int)
-  sound.card_id =3D 'Internal PC-Speaker'  (string)
-  sound.originating_device =3D '/org/freedesktop/Hal/devices/platform_p=
-cspkr'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_card_0_alsa=
-_playback_0'
-  alsa.card =3D 2  (0x2)  (int)
-  alsa.card_id =3D 'Internal PC-Speaker'  (string)
-  alsa.device =3D 0  (0x0)  (int)
-  alsa.device_file =3D '/dev/snd/pcmC2D0p'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/platform_pc=
-spkr_sound_card_0'  (string)
-  alsa.pcm_class =3D 'generic'  (string)
-  alsa.type =3D 'playback'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_c=
-ard_0'  (string)
-  info.product =3D 'ALSA Playback Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_card=
-_0_alsa_playback_0'  (string)
-  linux.device_file =3D '/dev/snd/pcmC2D0p'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/pcspkr/sound/card2/pcmC2D=
-0p'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_card_0_alsa=
-_control__1'
-  alsa.card =3D 2  (0x2)  (int)
-  alsa.card_id =3D 'Internal PC-Speaker'  (string)
-  alsa.device_file =3D '/dev/snd/controlC2'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/platform_pc=
-spkr_sound_card_0'  (string)
-  alsa.type =3D 'control'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_c=
-ard_0'  (string)
-  info.product =3D 'Internal PC-Speaker ALSA Control Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_sound_card=
-_0_alsa_control__1'  (string)
-  linux.device_file =3D '/dev/snd/controlC2'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/pcspkr/sound/card2/contro=
-lC2'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_logicaldev_input'
-  info.capabilities =3D {'input'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_pcspkr'  (stri=
-ng)
-  info.product =3D 'PC Speaker'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_pcspkr_logicaldev=
-_input'  (string)
-  input.device =3D '/dev/input/event3'  (string)
-  input.originating_device =3D '/org/freedesktop/Hal/devices/platform_p=
-cspkr'  (string)
-  input.product =3D 'PC Speaker'  (string)
-  linux.device_file =3D '/dev/input/event3'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/pcspkr/input/input3/event=
-3'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_i8042'
-  info.linux.driver =3D 'i8042'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Platform Device (i8042)'  (string)
-  info.subsystem =3D 'platform'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_i8042'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'platform'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/i8042'  (string)
-  platform.id =3D 'i8042'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_AUX_port'
-  info.linux.driver =3D 'psmouse'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_i8042'  (strin=
-g)
-  info.product =3D 'i8042 AUX port'  (string)
-  info.subsystem =3D 'serio'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_AUX_p=
-ort'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'serio'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/i8042/serio1'  (string)
-  serio.description =3D 'i8042 AUX port'  (string)
-  serio.id =3D 'serio1'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_AUX_port_log=
-icaldev_input'
-  info.capabilities =3D {'input', 'input.mouse'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_AU=
-X_port'  (string)
-  info.product =3D 'ImExPS/2 Generic Explorer Mouse'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_AUX_p=
-ort_logicaldev_input'  (string)
-  input.device =3D '/dev/input/event4'  (string)
-  input.originating_device =3D '/org/freedesktop/Hal/devices/platform_i=
-8042_i8042_AUX_port'  (string)
-  input.product =3D 'ImExPS/2 Generic Explorer Mouse'  (string)
-  input.x11_driver =3D 'evdev'  (string)
-  linux.device_file =3D '/dev/input/event4'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/i8042/serio1/input/input4=
-/event4'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_KBD_port'
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_i8042'  (strin=
-g)
-  info.product =3D 'i8042 KBD port'  (string)
-  info.subsystem =3D 'serio'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_i8042_i8042_KBD_p=
-ort'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'serio'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/i8042/serio0'  (string)
-  serio.description =3D 'i8042 KBD port'  (string)
-  serio.id =3D 'serio0'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_floppy_0'
-  info.linux.driver =3D 'floppy'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'Platform Device (floppy.0)'  (string)
-  info.subsystem =3D 'platform'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_floppy_0'  (strin=
-g)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'platform'  (string)
-  linux.sysfs_path =3D '/sys/devices/platform/floppy.0'  (string)
-  platform.id =3D 'floppy.0'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/platform_floppy_0_storage_platfor=
-m_floppy'
-  block.device =3D '/dev/fd0'  (string)
-  block.is_volume =3D false  (bool)
-  block.major =3D 2  (0x2)  (int)
-  block.minor =3D 0  (0x0)  (int)
-  block.storage_device =3D '/org/freedesktop/Hal/devices/platform_flopp=
-y_0_storage_platform_floppy'  (string)
-  info.addons =3D {'hald-addon-storage'} (string list)
-  info.capabilities =3D {'storage', 'block'} (string list)
-  info.category =3D 'storage'  (string)
-  info.interfaces =3D {'org.freedesktop.Hal.Device.Volume', 'org.freede=
-sktop.Hal.Device.Storage.Removable'} (string list)
-  info.parent =3D '/org/freedesktop/Hal/devices/platform_floppy_0'  (st=
-ring)
-  info.product =3D 'PC Floppy Drive'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/platform_floppy_0_storage_=
-platform_floppy'  (string)
-  info.vendor =3D ''  (string)
-  linux.hotplug_type =3D 3  (0x3)  (int)
-  linux.sysfs_path =3D '/sys/devices/platform/floppy.0/block/fd0'  (str=
-ing)
-  org.freedesktop.Hal.Device.Volume.method_argnames =3D {'mount_point f=
-stype extra_options', 'extra_options', 'extra_options'} (string list)
-  org.freedesktop.Hal.Device.Volume.method_execpaths =3D {'hal-storage-=
-mount', 'hal-storage-unmount', 'hal-storage-eject'} (string list)
-  org.freedesktop.Hal.Device.Volume.method_names =3D {'Mount', 'Unmount=
-', 'Eject'} (string list)
-  org.freedesktop.Hal.Device.Volume.method_signatures =3D {'ssas', 'as'=
-, 'as'} (string list)
-  storage.automount_enabled_hint =3D true  (bool)
-  storage.bus =3D 'platform'  (string)
-  storage.drive_type =3D 'floppy'  (string)
-  storage.hotpluggable =3D false  (bool)
-  storage.media_check_enabled =3D false  (bool)
-  storage.model =3D ''  (string)
-  storage.no_partitions_hint =3D true  (bool)
-  storage.originating_device =3D '/org/freedesktop/Hal/devices/platform=
-_floppy_0'  (string)
-  storage.removable =3D true  (bool)
-  storage.removable.media_available =3D false  (bool)
-  storage.requires_eject =3D false  (bool)
-  storage.size =3D 0  (0x0)  (uint64)
-  storage.vendor =3D 'PC Floppy Drive'  (string)
-  volume.mount.valid_options =3D {'ro', 'sync', 'dirsync', 'noatime', '=
-nodiratime', 'noexec', 'quiet', 'remount', 'exec', 'utf8', 'shortname=3D=
-', 'codepage=3D', 'iocharset=3D', 'umask=3D', 'uid=3D'} (string list)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3065'
-  info.linux.driver =3D 'via-rhine'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT6102 [Rhine-II]'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3065'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:12.0'  (string)
-  pci.device_class =3D 2  (0x2)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 0  (0x0)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:12.0'  (str=
-ing)
-  pci.product =3D 'VT6102 [Rhine-II]'  (string)
-  pci.product_id =3D 12389  (0x3065)  (int)
-  pci.subsys_product =3D 'K7VT6 motherboard'  (string)
-  pci.subsys_product_id =3D 12389  (0x3065)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/net_00_0b_6a_c0_a1_d7'
-  info.capabilities =3D {'net', 'net.80203', 'wake_on_lan'} (string lis=
-t)
-  info.category =3D 'net.80203'  (string)
-  info.interfaces =3D {'org.freedesktop.Hal.Device.WakeOnLan'} (string =
-list)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3065'  (string=
-)
-  info.product =3D 'Networking Interface'  (string)
-  info.subsystem =3D 'net'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/net_00_0b_6a_c0_a1_d7'  (s=
-tring)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'net'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:12.0/net/eth0' =
- (string)
-  net.80203.mac_address =3D 49035649495  (0xb6ac0a1d7)  (uint64)
-  net.address =3D '00:0b:6a:c0:a1:d7'  (string)
-  net.arp_proto_hw_id =3D 1  (0x1)  (int)
-  net.interface =3D 'eth0'  (string)
-  net.linux.ifindex =3D 2  (0x2)  (int)
-  net.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_306=
-5'  (string)
-  org.freedesktop.Hal.Device.WakeOnLan.method_argnames =3D {'', '', 'en=
-able'} (string list)
-  org.freedesktop.Hal.Device.WakeOnLan.method_execpaths =3D {'hal-syste=
-m-wol-supported', 'hal-system-wol-enabled', 'hal-system-wol-enable'} (s=
-tring list)
-  org.freedesktop.Hal.Device.WakeOnLan.method_names =3D {'GetSupported'=
-, 'GetEnabled', 'SetEnabled'} (string list)
-  org.freedesktop.Hal.Device.WakeOnLan.method_signatures =3D {'', '', '=
-b'} (string list)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059'
-  info.linux.driver =3D 'VIA 82xx Audio'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT8233/A/8235/8237 AC97 Audio Controller'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5'  (string)
-  pci.device_class =3D 4  (0x4)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 1  (0x1)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5'  (str=
-ing)
-  pci.product =3D 'VT8233/A/8235/8237 AC97 Audio Controller'  (string)
-  pci.product_id =3D 12377  (0x3059)  (int)
-  pci.subsys_product =3D 'K7VT6 motherboard'  (string)
-  pci.subsys_product_id =3D 38753  (0x9761)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0'
-  info.capabilities =3D {'sound'} (string list)
-  info.category =3D 'sound'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3059'  (string=
-)
-  info.product =3D 'VIA 8237 with CMI9761A+ Sound Card'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0=
-'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5/sound/card=
-0'  (string)
-  sound.card =3D 0  (0x0)  (int)
-  sound.card_id =3D 'VIA 8237 with CMI9761A+'  (string)
-  sound.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_3=
-059'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0_alsa_p=
-layback_1'
-  alsa.card =3D 0  (0x0)  (int)
-  alsa.card_id =3D 'VIA 8237 with CMI9761A+'  (string)
-  alsa.device =3D 1  (0x1)  (int)
-  alsa.device_file =3D '/dev/snd/pcmC0D1p'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_30=
-59_sound_card_0'  (string)
-  alsa.pcm_class =3D 'generic'  (string)
-  alsa.type =3D 'playback'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_car=
-d_0'  (string)
-  info.product =3D 'ALSA Playback Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0=
-_alsa_playback_1'  (string)
-  linux.device_file =3D '/dev/snd/pcmC0D1p'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5/sound/card=
-0/pcmC0D1p'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0_alsa_c=
-apture_1'
-  alsa.card =3D 0  (0x0)  (int)
-  alsa.card_id =3D 'VIA 8237 with CMI9761A+'  (string)
-  alsa.device =3D 1  (0x1)  (int)
-  alsa.device_file =3D '/dev/snd/pcmC0D1c'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_30=
-59_sound_card_0'  (string)
-  alsa.pcm_class =3D 'generic'  (string)
-  alsa.type =3D 'capture'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_car=
-d_0'  (string)
-  info.product =3D 'ALSA Capture Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0=
-_alsa_capture_1'  (string)
-  linux.device_file =3D '/dev/snd/pcmC0D1c'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5/sound/card=
-0/pcmC0D1c'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0_alsa_p=
-layback_0'
-  alsa.card =3D 0  (0x0)  (int)
-  alsa.card_id =3D 'VIA 8237 with CMI9761A+'  (string)
-  alsa.device =3D 0  (0x0)  (int)
-  alsa.device_file =3D '/dev/snd/pcmC0D0p'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_30=
-59_sound_card_0'  (string)
-  alsa.pcm_class =3D 'generic'  (string)
-  alsa.type =3D 'playback'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_car=
-d_0'  (string)
-  info.product =3D 'ALSA Playback Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0=
-_alsa_playback_0'  (string)
-  linux.device_file =3D '/dev/snd/pcmC0D0p'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5/sound/card=
-0/pcmC0D0p'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0_alsa_c=
-apture_0'
-  alsa.card =3D 0  (0x0)  (int)
-  alsa.card_id =3D 'VIA 8237 with CMI9761A+'  (string)
-  alsa.device =3D 0  (0x0)  (int)
-  alsa.device_file =3D '/dev/snd/pcmC0D0c'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_30=
-59_sound_card_0'  (string)
-  alsa.pcm_class =3D 'generic'  (string)
-  alsa.type =3D 'capture'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_car=
-d_0'  (string)
-  info.product =3D 'ALSA Capture Device'  (string)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0=
-_alsa_capture_0'  (string)
-  linux.device_file =3D '/dev/snd/pcmC0D0c'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5/sound/card=
-0/pcmC0D0c'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0_alsa_c=
-ontrol__1'
-  alsa.card =3D 0  (0x0)  (int)
-  alsa.card_id =3D 'VIA 8237 with CMI9761A+'  (string)
-  alsa.device_file =3D '/dev/snd/controlC0'  (string)
-  alsa.originating_device =3D '/org/freedesktop/Hal/devices/pci_1106_30=
-59_sound_card_0'  (string)
-  alsa.type =3D 'control'  (string)
-  info.capabilities =3D {'alsa'} (string list)
-  info.category =3D 'alsa'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_car=
-d_0'  (string)
-  info.product =3D 'VIA 8237 with CMI9761A+ ALSA Control Device'  (stri=
-ng)
-  info.subsystem =3D 'sound'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3059_sound_card_0=
-_alsa_control__1'  (string)
-  linux.device_file =3D '/dev/snd/controlC0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'sound'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.5/sound/card=
-0/controlC0'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3227'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT8237 ISA bridge [KT600/K8T800/K8T890 South]'  (st=
-ring)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3227'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.0'  (string)
-  pci.device_class =3D 6  (0x6)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 1  (0x1)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:11.0'  (str=
-ing)
-  pci.product =3D 'VT8237 ISA bridge [KT600/K8T800/K8T890 South]'  (str=
-ing)
-  pci.product_id =3D 12839  (0x3227)  (int)
-  pci.subsys_product =3D 'K7VT4 motherboard'  (string)
-  pci.subsys_product_id =3D 12839  (0x3227)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3104'
-  info.linux.driver =3D 'ehci_hcd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'USB 2.0'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3104'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4'  (string)
-  pci.device_class =3D 12  (0xc)  (int)
-  pci.device_protocol =3D 32  (0x20)  (int)
-  pci.device_subclass =3D 3  (0x3)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4'  (str=
-ing)
-  pci.product =3D 'USB 2.0'  (string)
-  pci.product_id =3D 12548  (0x3104)  (int)
-  pci.subsys_product =3D 'K7VT6 motherboard'  (string)
-  pci.subsys_product_id =3D 12548  (0x3104)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_00_10_4'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3104'  (string=
-)
-  info.product =3D '2.0 root hub'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_00_=
-10_4'  (string)
-  info.vendor =3D 'Linux Foundation'  (string)
-  linux.device_file =3D '/dev/bus/usb/001/001'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1'  (st=
-ring)
-  usb_device.bus_number =3D 1  (0x1)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 9  (0x9)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 518  (0x206)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D true  (bool)
-  usb_device.linux.device_number =3D 1  (0x1)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4=
-/usb1'  (string)
-  usb_device.max_power =3D 0  (0x0)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 8  (0x8)  (int)
-  usb_device.product =3D '2.0 root hub'  (string)
-  usb_device.product_id =3D 2  (0x2)  (int)
-  usb_device.serial =3D '0000:00:10.4'  (string)
-  usb_device.speed =3D 480.0 (480) (double)
-  usb_device.vendor =3D 'Linux Foundation'  (string)
-  usb_device.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb_device.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1APLX'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_=
-00_10_4'  (string)
-  info.product =3D 'Basics Portable'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1AP=
-LX'  (string)
-  info.vendor =3D 'Maxtor'  (string)
-  linux.device_file =3D '/dev/bus/usb/001/003'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-3' =
- (string)
-  usb_device.bus_number =3D 1  (0x1)  (int)
-  usb_device.can_wake_up =3D false  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 0  (0x0)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 290  (0x122)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D false  (bool)
-  usb_device.linux.device_number =3D 3  (0x3)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4=
-/usb1/1-3'  (string)
-  usb_device.max_power =3D 100  (0x64)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 0  (0x0)  (int)
-  usb_device.product =3D 'Basics Portable'  (string)
-  usb_device.product_id =3D 29776  (0x7450)  (int)
-  usb_device.serial =3D '2HB1APLX'  (string)
-  usb_device.speed =3D 480.0 (480) (double)
-  usb_device.vendor =3D 'Maxtor'  (string)
-  usb_device.vendor_id =3D 3401  (0xd49)  (int)
-  usb_device.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1APLX_if0'
-  info.linux.driver =3D 'usb-storage'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB=
-1APLX'  (string)
-  info.product =3D 'USB Mass Storage Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1AP=
-LX_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-3/1=
--3:1.0'  (string)
-  usb.bus_number =3D 1  (0x1)  (int)
-  usb.can_wake_up =3D false  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 0  (0x0)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 290  (0x122)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 8  (0x8)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 80  (0x50)  (int)
-  usb.interface.subclass =3D 6  (0x6)  (int)
-  usb.is_self_powered =3D false  (bool)
-  usb.linux.device_number =3D 3  (0x3)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1=
--3/1-3:1.0'  (string)
-  usb.max_power =3D 100  (0x64)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 0  (0x0)  (int)
-  usb.product =3D 'USB Mass Storage Interface'  (string)
-  usb.product_id =3D 29776  (0x7450)  (int)
-  usb.serial =3D '2HB1APLX'  (string)
-  usb.speed =3D 480.0 (480) (double)
-  usb.vendor =3D 'Maxtor'  (string)
-  usb.vendor_id =3D 3401  (0xd49)  (int)
-  usb.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1APLX_if0_=
-scsi_host'
-  info.capabilities =3D {'scsi_host'} (string list)
-  info.category =3D 'scsi_host'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB=
-1APLX_if0'  (string)
-  info.product =3D 'SCSI Host Adapter'  (string)
-  info.subsystem =3D 'scsi_host'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1AP=
-LX_if0_scsi_host'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'scsi_host'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-3/1=
--3:1.0/host0'  (string)
-  scsi_host.host =3D 0  (0x0)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1APLX_if0_=
-scsi_host_scsi_host'
-  info.capabilities =3D {'scsi_host'} (string list)
-  info.category =3D 'scsi_host'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB=
-1APLX_if0_scsi_host'  (string)
-  info.product =3D 'SCSI Host Adapter'  (string)
-  info.subsystem =3D 'scsi_host'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1AP=
-LX_if0_scsi_host_scsi_host'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'scsi_host'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-3/1=
--3:1.0/host0/scsi_host/host0'  (string)
-  scsi_host.host =3D 0  (0x0)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1APLX_if0_=
-scsi_host_scsi_device_lun0'
-  info.linux.driver =3D 'sd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB=
-1APLX_if0_scsi_host'  (string)
-  info.product =3D 'SCSI Device'  (string)
-  info.subsystem =3D 'scsi'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1AP=
-LX_if0_scsi_host_scsi_device_lun0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'scsi'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-3/1=
--3:1.0/host0/target0:0:0/0:0:0:0'  (string)
-  scsi.bus =3D 0  (0x0)  (int)
-  scsi.host =3D 0  (0x0)  (int)
-  scsi.lun =3D 0  (0x0)  (int)
-  scsi.model =3D 'Basics Portable'  (string)
-  scsi.target =3D 0  (0x0)  (int)
-  scsi.type =3D 'disk'  (string)
-  scsi.vendor =3D 'Maxtor'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1APLX_if0_=
-scsi_host_scsi_device_lun0_scsi_generic'
-  info.capabilities =3D {'scsi_generic'} (string list)
-  info.category =3D 'scsi_generic'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB=
-1APLX_if0_scsi_host_scsi_device_lun0'  (string)
-  info.product =3D 'SCSI Generic Interface'  (string)
-  info.subsystem =3D 'scsi_generic'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_d49_7450_2HB1AP=
-LX_if0_scsi_host_scsi_device_lun0_scsi_generic'  (string)
-  linux.device_file =3D '/dev/sg0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'scsi_generic'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-3/1=
--3:1.0/host0/target0:0:0/0:0:0:0/scsi_generic/sg0'  (string)
-  scsi_generic.device =3D '/dev/sg0'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_5e3_608_noserial'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_=
-00_10_4'  (string)
-  info.product =3D 'USB-2.0 4-Port HUB'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_5e3_608_noseria=
-l'  (string)
-  info.vendor =3D 'Genesys Logic, Inc.'  (string)
-  linux.device_file =3D '/dev/bus/usb/001/002'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-1' =
- (string)
-  usb_device.bus_number =3D 1  (0x1)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 9  (0x9)  (int)
-  usb_device.device_protocol =3D 1  (0x1)  (int)
-  usb_device.device_revision_bcd =3D 1794  (0x702)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D true  (bool)
-  usb_device.linux.device_number =3D 2  (0x2)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4=
-/usb1/1-1'  (string)
-  usb_device.max_power =3D 100  (0x64)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 4  (0x4)  (int)
-  usb_device.product =3D 'USB-2.0 4-Port HUB'  (string)
-  usb_device.product_id =3D 1544  (0x608)  (int)
-  usb_device.speed =3D 480.0 (480) (double)
-  usb_device.vendor =3D 'Genesys Logic, Inc.'  (string)
-  usb_device.vendor_id =3D 1507  (0x5e3)  (int)
-  usb_device.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_5e3_608_noserial_if0'
-  info.linux.driver =3D 'hub'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_5e3_608_nose=
-rial'  (string)
-  info.product =3D 'USB Hub Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_5e3_608_noseria=
-l_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-1/1=
--1:1.0'  (string)
-  usb.bus_number =3D 1  (0x1)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 9  (0x9)  (int)
-  usb.device_protocol =3D 1  (0x1)  (int)
-  usb.device_revision_bcd =3D 1794  (0x702)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 9  (0x9)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D true  (bool)
-  usb.linux.device_number =3D 2  (0x2)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1=
--1/1-1:1.0'  (string)
-  usb.max_power =3D 100  (0x64)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 4  (0x4)  (int)
-  usb.product =3D 'USB Hub Interface'  (string)
-  usb.product_id =3D 1544  (0x608)  (int)
-  usb.speed =3D 480.0 (480) (double)
-  usb.vendor =3D 'Genesys Logic, Inc.'  (string)
-  usb.vendor_id =3D 1507  (0x5e3)  (int)
-  usb.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_00_10_4_if=
-0'
-  info.linux.driver =3D 'hub'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_=
-00_10_4'  (string)
-  info.product =3D 'USB Hub Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_2_0000_00_=
-10_4_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1-0:1=
-=2E0'  (string)
-  usb.bus_number =3D 1  (0x1)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 9  (0x9)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 518  (0x206)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 9  (0x9)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D true  (bool)
-  usb.linux.device_number =3D 1  (0x1)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.4/usb1/1=
--0:1.0'  (string)
-  usb.max_power =3D 0  (0x0)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 8  (0x8)  (int)
-  usb.product =3D 'USB Hub Interface'  (string)
-  usb.product_id =3D 2  (0x2)  (int)
-  usb.serial =3D '0000:00:10.4'  (string)
-  usb.speed =3D 480.0 (480) (double)
-  usb.vendor =3D 'Linux Foundation'  (string)
-  usb.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038_2'
-  info.linux.driver =3D 'uhci_hcd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038_2'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.3'  (string)
-  pci.device_class =3D 12  (0xc)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 3  (0x3)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.3'  (str=
-ing)
-  pci.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  pci.product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_product =3D 'K7VT6'  (string)
-  pci.subsys_product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_3'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3038_2'  (stri=
-ng)
-  info.product =3D '1.1 root hub'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_3'  (string)
-  info.vendor =3D 'Linux Foundation'  (string)
-  linux.device_file =3D '/dev/bus/usb/005/001'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.3/usb5'  (st=
-ring)
-  usb_device.bus_number =3D 5  (0x5)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 9  (0x9)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 518  (0x206)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D true  (bool)
-  usb_device.linux.device_number =3D 1  (0x1)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.3=
-/usb5'  (string)
-  usb_device.max_power =3D 0  (0x0)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 2  (0x2)  (int)
-  usb_device.product =3D '1.1 root hub'  (string)
-  usb_device.product_id =3D 1  (0x1)  (int)
-  usb_device.serial =3D '0000:00:10.3'  (string)
-  usb_device.speed =3D 12.0 (12) (double)
-  usb_device.vendor =3D 'Linux Foundation'  (string)
-  usb_device.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb_device.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_3_if=
-0'
-  info.linux.driver =3D 'hub'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_=
-00_10_3'  (string)
-  info.product =3D 'USB Hub Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_3_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.3/usb5/5-0:1=
-=2E0'  (string)
-  usb.bus_number =3D 5  (0x5)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 9  (0x9)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 518  (0x206)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 9  (0x9)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D true  (bool)
-  usb.linux.device_number =3D 1  (0x1)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.3/usb5/5=
--0:1.0'  (string)
-  usb.max_power =3D 0  (0x0)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 2  (0x2)  (int)
-  usb.product =3D 'USB Hub Interface'  (string)
-  usb.product_id =3D 1  (0x1)  (int)
-  usb.serial =3D '0000:00:10.3'  (string)
-  usb.speed =3D 12.0 (12) (double)
-  usb.vendor =3D 'Linux Foundation'  (string)
-  usb.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038_1'
-  info.linux.driver =3D 'uhci_hcd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038_1'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2'  (string)
-  pci.device_class =3D 12  (0xc)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 3  (0x3)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2'  (str=
-ing)
-  pci.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  pci.product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_product =3D 'K7VT6'  (string)
-  pci.subsys_product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_2'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3038_1'  (stri=
-ng)
-  info.product =3D '1.1 root hub'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_2'  (string)
-  info.vendor =3D 'Linux Foundation'  (string)
-  linux.device_file =3D '/dev/bus/usb/004/001'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4'  (st=
-ring)
-  usb_device.bus_number =3D 4  (0x4)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 9  (0x9)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 518  (0x206)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D true  (bool)
-  usb_device.linux.device_number =3D 1  (0x1)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2=
-/usb4'  (string)
-  usb_device.max_power =3D 0  (0x0)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 2  (0x2)  (int)
-  usb_device.product =3D '1.1 root hub'  (string)
-  usb_device.product_id =3D 1  (0x1)  (int)
-  usb_device.serial =3D '0000:00:10.2'  (string)
-  usb_device.speed =3D 12.0 (12) (double)
-  usb_device.vendor =3D 'Linux Foundation'  (string)
-  usb_device.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb_device.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_noserial'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_=
-00_10_2'  (string)
-  info.product =3D 'Webcam NX [PD1110]'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_noseri=
-al'  (string)
-  info.vendor =3D 'Creative Technology, Ltd'  (string)
-  linux.device_file =3D '/dev/bus/usb/004/003'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-2' =
- (string)
-  usb_device.bus_number =3D 4  (0x4)  (int)
-  usb_device.can_wake_up =3D false  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 255  (0xff)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 256  (0x100)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D false  (bool)
-  usb_device.linux.device_number =3D 3  (0x3)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2=
-/usb4/4-2'  (string)
-  usb_device.max_power =3D 80  (0x50)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 0  (0x0)  (int)
-  usb_device.product =3D 'Webcam NX [PD1110]'  (string)
-  usb_device.product_id =3D 16412  (0x401c)  (int)
-  usb_device.speed =3D 12.0 (12) (double)
-  usb_device.vendor =3D 'Creative Technology, Ltd'  (string)
-  usb_device.vendor_id =3D 1054  (0x41e)  (int)
-  usb_device.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_noserial_if0'
-  info.linux.driver =3D 'zc3xx'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_nos=
-erial'  (string)
-  info.product =3D 'USB Vendor Specific Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_noseri=
-al_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-2/4=
--2:1.0'  (string)
-  usb.bus_number =3D 4  (0x4)  (int)
-  usb.can_wake_up =3D false  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 255  (0xff)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 256  (0x100)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 255  (0xff)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 255  (0xff)  (int)
-  usb.interface.subclass =3D 255  (0xff)  (int)
-  usb.is_self_powered =3D false  (bool)
-  usb.linux.device_number =3D 3  (0x3)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4=
--2/4-2:1.0'  (string)
-  usb.max_power =3D 80  (0x50)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 0  (0x0)  (int)
-  usb.product =3D 'USB Vendor Specific Interface'  (string)
-  usb.product_id =3D 16412  (0x401c)  (int)
-  usb.speed =3D 12.0 (12) (double)
-  usb.vendor =3D 'Creative Technology, Ltd'  (string)
-  usb.vendor_id =3D 1054  (0x41e)  (int)
-  usb.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_noserial_if0_=
-video4linux'
-  info.capabilities =3D {'video4linux', 'video4linux.video_capture'} (s=
-tring list)
-  info.category =3D 'video4linux'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_nos=
-erial_if0'  (string)
-  info.product =3D 'USB Camera (041e:401c)'  (string)
-  info.subsystem =3D 'video4linux'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_41e_401c_noseri=
-al_if0_video4linux'  (string)
-  linux.device_file =3D '/dev/video0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'video4linux'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-2/4=
--2:1.0/video4linux/video0'  (string)
-  video4linux.device =3D '/dev/video0'  (string)
-  video4linux.version =3D '1'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_=
-00_10_2'  (string)
-  info.product =3D 'Comfort Curve Keyboard 2000'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial=
-'  (string)
-  info.vendor =3D 'Microsoft Corp.'  (string)
-  linux.device_file =3D '/dev/bus/usb/004/002'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-1' =
- (string)
-  usb_device.bus_number =3D 4  (0x4)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 0  (0x0)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 371  (0x173)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D false  (bool)
-  usb_device.linux.device_number =3D 2  (0x2)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2=
-/usb4/4-1'  (string)
-  usb_device.max_power =3D 100  (0x64)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 2  (0x2)  (int)
-  usb_device.num_ports =3D 0  (0x0)  (int)
-  usb_device.product =3D 'Comfort Curve Keyboard 2000'  (string)
-  usb_device.product_id =3D 221  (0xdd)  (int)
-  usb_device.speed =3D 1.5 (1.5) (double)
-  usb_device.vendor =3D 'Microsoft Corp.'  (string)
-  usb_device.vendor_id =3D 1118  (0x45e)  (int)
-  usb_device.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial_if1'
-  info.linux.driver =3D 'usbhid'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noser=
-ial'  (string)
-  info.product =3D 'USB HID Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial=
-_if1'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-1/4=
--1:1.1'  (string)
-  usb.bus_number =3D 4  (0x4)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 0  (0x0)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 371  (0x173)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 3  (0x3)  (int)
-  usb.interface.number =3D 1  (0x1)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D false  (bool)
-  usb.linux.device_number =3D 2  (0x2)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4=
--1/4-1:1.1'  (string)
-  usb.max_power =3D 100  (0x64)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 2  (0x2)  (int)
-  usb.num_ports =3D 0  (0x0)  (int)
-  usb.product =3D 'USB HID Interface'  (string)
-  usb.product_id =3D 221  (0xdd)  (int)
-  usb.speed =3D 1.5 (1.5) (double)
-  usb.vendor =3D 'Microsoft Corp.'  (string)
-  usb.vendor_id =3D 1118  (0x45e)  (int)
-  usb.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial_if1_lo=
-gicaldev_input'
-  info.addons.singleton =3D {'hald-addon-input'} (string list)
-  info.capabilities =3D {'input', 'input.keyboard', 'input.keypad', 'in=
-put.keys', 'button'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noser=
-ial_if1'  (string)
-  info.product =3D 'Microsoft Comfort Curve Keyboard 2000'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial=
-_if1_logicaldev_input'  (string)
-  input.device =3D '/dev/input/event6'  (string)
-  input.originating_device =3D '/org/freedesktop/Hal/devices/usb_device=
-_45e_dd_noserial_if1'  (string)
-  input.product =3D 'Microsoft Comfort Curve Keyboard 2000'  (string)
-  input.x11_driver =3D 'evdev'  (string)
-  input.xkb.layout =3D 'us'  (string)
-  input.xkb.model =3D 'evdev'  (string)
-  input.xkb.options =3D 'compose:rwin'  (string)
-  input.xkb.rules =3D 'xorg'  (string)
-  input.xkb.variant =3D ''  (string)
-  linux.device_file =3D '/dev/input/event6'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-1/4=
--1:1.1/input/input6/event6'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial_if0'
-  info.linux.driver =3D 'usbhid'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noser=
-ial'  (string)
-  info.product =3D 'USB HID Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial=
-_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-1/4=
--1:1.0'  (string)
-  usb.bus_number =3D 4  (0x4)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 0  (0x0)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 371  (0x173)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 3  (0x3)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 1  (0x1)  (int)
-  usb.interface.subclass =3D 1  (0x1)  (int)
-  usb.is_self_powered =3D false  (bool)
-  usb.linux.device_number =3D 2  (0x2)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4=
--1/4-1:1.0'  (string)
-  usb.max_power =3D 100  (0x64)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 2  (0x2)  (int)
-  usb.num_ports =3D 0  (0x0)  (int)
-  usb.product =3D 'USB HID Interface'  (string)
-  usb.product_id =3D 221  (0xdd)  (int)
-  usb.speed =3D 1.5 (1.5) (double)
-  usb.vendor =3D 'Microsoft Corp.'  (string)
-  usb.vendor_id =3D 1118  (0x45e)  (int)
-  usb.version =3D 2.0 (2) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial_if0_lo=
-gicaldev_input'
-  info.addons.singleton =3D {'hald-addon-input'} (string list)
-  info.capabilities =3D {'input', 'input.keyboard', 'input.keypad', 'in=
-put.keys', 'button'} (string list)
-  info.category =3D 'input'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noser=
-ial_if0'  (string)
-  info.product =3D 'Microsoft Comfort Curve Keyboard 2000'  (string)
-  info.subsystem =3D 'input'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_45e_dd_noserial=
-_if0_logicaldev_input'  (string)
-  input.device =3D '/dev/input/event5'  (string)
-  input.originating_device =3D '/org/freedesktop/Hal/devices/usb_device=
-_45e_dd_noserial_if0'  (string)
-  input.product =3D 'Microsoft Comfort Curve Keyboard 2000'  (string)
-  input.x11_driver =3D 'evdev'  (string)
-  input.xkb.layout =3D 'us'  (string)
-  input.xkb.model =3D 'evdev'  (string)
-  input.xkb.options =3D 'compose:rwin'  (string)
-  input.xkb.rules =3D 'xorg'  (string)
-  input.xkb.variant =3D ''  (string)
-  linux.device_file =3D '/dev/input/event5'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'input'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-1/4=
--1:1.0/input/input5/event5'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_2_if=
-0'
-  info.linux.driver =3D 'hub'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_=
-00_10_2'  (string)
-  info.product =3D 'USB Hub Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_2_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4-0:1=
-=2E0'  (string)
-  usb.bus_number =3D 4  (0x4)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 9  (0x9)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 518  (0x206)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 9  (0x9)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D true  (bool)
-  usb.linux.device_number =3D 1  (0x1)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.2/usb4/4=
--0:1.0'  (string)
-  usb.max_power =3D 0  (0x0)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 2  (0x2)  (int)
-  usb.product =3D 'USB Hub Interface'  (string)
-  usb.product_id =3D 1  (0x1)  (int)
-  usb.serial =3D '0000:00:10.2'  (string)
-  usb.speed =3D 12.0 (12) (double)
-  usb.vendor =3D 'Linux Foundation'  (string)
-  usb.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038_0'
-  info.linux.driver =3D 'uhci_hcd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038_0'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.1'  (string)
-  pci.device_class =3D 12  (0xc)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 3  (0x3)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.1'  (str=
-ing)
-  pci.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  pci.product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_product =3D 'K7VT6'  (string)
-  pci.subsys_product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_1'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3038_0'  (stri=
-ng)
-  info.product =3D '1.1 root hub'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_1'  (string)
-  info.vendor =3D 'Linux Foundation'  (string)
-  linux.device_file =3D '/dev/bus/usb/003/001'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.1/usb3'  (st=
-ring)
-  usb_device.bus_number =3D 3  (0x3)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 9  (0x9)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 518  (0x206)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D true  (bool)
-  usb_device.linux.device_number =3D 1  (0x1)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.1=
-/usb3'  (string)
-  usb_device.max_power =3D 0  (0x0)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 2  (0x2)  (int)
-  usb_device.product =3D '1.1 root hub'  (string)
-  usb_device.product_id =3D 1  (0x1)  (int)
-  usb_device.serial =3D '0000:00:10.1'  (string)
-  usb_device.speed =3D 12.0 (12) (double)
-  usb_device.vendor =3D 'Linux Foundation'  (string)
-  usb_device.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb_device.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_1_if=
-0'
-  info.linux.driver =3D 'hub'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_=
-00_10_1'  (string)
-  info.product =3D 'USB Hub Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_1_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.1/usb3/3-0:1=
-=2E0'  (string)
-  usb.bus_number =3D 3  (0x3)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 9  (0x9)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 518  (0x206)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 9  (0x9)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D true  (bool)
-  usb.linux.device_number =3D 1  (0x1)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.1/usb3/3=
--0:1.0'  (string)
-  usb.max_power =3D 0  (0x0)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 2  (0x2)  (int)
-  usb.product =3D 'USB Hub Interface'  (string)
-  usb.product_id =3D 1  (0x1)  (int)
-  usb.serial =3D '0000:00:10.1'  (string)
-  usb.speed =3D 12.0 (12) (double)
-  usb.vendor =3D 'Linux Foundation'  (string)
-  usb.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038'
-  info.linux.driver =3D 'uhci_hcd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3038'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.0'  (string)
-  pci.device_class =3D 12  (0xc)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 3  (0x3)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.0'  (str=
-ing)
-  pci.product =3D 'VT82xxxxx UHCI USB 1.1 Controller'  (string)
-  pci.product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_product =3D 'K7VT6'  (string)
-  pci.subsys_product_id =3D 12344  (0x3038)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_0'
-  info.linux.driver =3D 'usb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_3038'  (string=
-)
-  info.product =3D '1.1 root hub'  (string)
-  info.subsystem =3D 'usb_device'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_0'  (string)
-  info.vendor =3D 'Linux Foundation'  (string)
-  linux.device_file =3D '/dev/bus/usb/002/001'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.0/usb2'  (st=
-ring)
-  usb_device.bus_number =3D 2  (0x2)  (int)
-  usb_device.can_wake_up =3D true  (bool)
-  usb_device.configuration_value =3D 1  (0x1)  (int)
-  usb_device.device_class =3D 9  (0x9)  (int)
-  usb_device.device_protocol =3D 0  (0x0)  (int)
-  usb_device.device_revision_bcd =3D 518  (0x206)  (int)
-  usb_device.device_subclass =3D 0  (0x0)  (int)
-  usb_device.is_self_powered =3D true  (bool)
-  usb_device.linux.device_number =3D 1  (0x1)  (int)
-  usb_device.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.0=
-/usb2'  (string)
-  usb_device.max_power =3D 0  (0x0)  (int)
-  usb_device.num_configurations =3D 1  (0x1)  (int)
-  usb_device.num_interfaces =3D 1  (0x1)  (int)
-  usb_device.num_ports =3D 2  (0x2)  (int)
-  usb_device.product =3D '1.1 root hub'  (string)
-  usb_device.product_id =3D 1  (0x1)  (int)
-  usb_device.serial =3D '0000:00:10.0'  (string)
-  usb_device.speed =3D 12.0 (12) (double)
-  usb_device.vendor =3D 'Linux Foundation'  (string)
-  usb_device.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb_device.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_10_0_if=
-0'
-  info.linux.driver =3D 'hub'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_=
-00_10_0'  (string)
-  info.product =3D 'USB Hub Interface'  (string)
-  info.subsystem =3D 'usb'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/usb_device_1d6b_1_0000_00_=
-10_0_if0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'usb'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.0/usb2/2-0:1=
-=2E0'  (string)
-  usb.bus_number =3D 2  (0x2)  (int)
-  usb.can_wake_up =3D true  (bool)
-  usb.configuration_value =3D 1  (0x1)  (int)
-  usb.device_class =3D 9  (0x9)  (int)
-  usb.device_protocol =3D 0  (0x0)  (int)
-  usb.device_revision_bcd =3D 518  (0x206)  (int)
-  usb.device_subclass =3D 0  (0x0)  (int)
-  usb.interface.class =3D 9  (0x9)  (int)
-  usb.interface.number =3D 0  (0x0)  (int)
-  usb.interface.protocol =3D 0  (0x0)  (int)
-  usb.interface.subclass =3D 0  (0x0)  (int)
-  usb.is_self_powered =3D true  (bool)
-  usb.linux.device_number =3D 1  (0x1)  (int)
-  usb.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:10.0/usb2/2=
--0:1.0'  (string)
-  usb.max_power =3D 0  (0x0)  (int)
-  usb.num_configurations =3D 1  (0x1)  (int)
-  usb.num_interfaces =3D 1  (0x1)  (int)
-  usb.num_ports =3D 2  (0x2)  (int)
-  usb.product =3D 'USB Hub Interface'  (string)
-  usb.product_id =3D 1  (0x1)  (int)
-  usb.serial =3D '0000:00:10.0'  (string)
-  usb.speed =3D 12.0 (12) (double)
-  usb.vendor =3D 'Linux Foundation'  (string)
-  usb.vendor_id =3D 7531  (0x1d6b)  (int)
-  usb.version =3D 1.1 (1.1) (double)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_571'
-  info.linux.driver =3D 'VIA_IDE'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master=
- IDE'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_571'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.1'  (string)
-  pci.device_class =3D 1  (0x1)  (int)
-  pci.device_protocol =3D 138  (0x8a)  (int)
-  pci.device_subclass =3D 1  (0x1)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.1'  (str=
-ing)
-  pci.product =3D 'VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master =
-IDE'  (string)
-  pci.product_id =3D 1393  (0x571)  (int)
-  pci.subsys_product =3D 'K7VT2/K7VT6 motherboard'  (string)
-  pci.subsys_product_id =3D 1393  (0x571)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_1_1'
-  ide.channel =3D 1  (0x1)  (int)
-  ide.host =3D 1  (0x1)  (int)
-  info.linux.driver =3D 'ide-cdrom'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_571'  (string)
-  info.product =3D 'IDE device (slave)'  (string)
-  info.subsystem =3D 'ide'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_1_1'  (st=
-ring)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'ide'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.1/ide1/1.1' =
- (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_1_0'
-  ide.channel =3D 0  (0x0)  (int)
-  ide.host =3D 1  (0x1)  (int)
-  info.linux.driver =3D 'ide-cdrom'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_571'  (string)
-  info.product =3D 'IDE device (master)'  (string)
-  info.subsystem =3D 'ide'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_1_0'  (st=
-ring)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'ide'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.1/ide1/1.0' =
- (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_0_1'
-  ide.channel =3D 1  (0x1)  (int)
-  ide.host =3D 0  (0x0)  (int)
-  info.linux.driver =3D 'ide-gd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_571'  (string)
-  info.product =3D 'IDE device (slave)'  (string)
-  info.subsystem =3D 'ide'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_0_1'  (st=
-ring)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'ide'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.1/ide0/0.1' =
- (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_0_0'
-  ide.channel =3D 0  (0x0)  (int)
-  ide.host =3D 0  (0x0)  (int)
-  info.linux.driver =3D 'ide-gd'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_571'  (string)
-  info.product =3D 'IDE device (master)'  (string)
-  info.subsystem =3D 'ide'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_571_ide_0_0'  (st=
-ring)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'ide'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.1/ide0/0.0' =
- (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3149'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VIA VT6420 SATA RAID Controller'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3149'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.0'  (string)
-  pci.device_class =3D 1  (0x1)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 4  (0x4)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0f.0'  (str=
-ing)
-  pci.product =3D 'VIA VT6420 SATA RAID Controller'  (string)
-  pci.product_id =3D 12617  (0x3149)  (int)
-  pci.subsys_product =3D 'K7VT6 motherboard'  (string)
-  pci.subsys_product_id =3D 12617  (0x3149)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_10ec_8139'
-  info.linux.driver =3D '8139too'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'RTL-8139/8139C/8139C+'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_10ec_8139'  (string)
-  info.vendor =3D 'Realtek Semiconductor Co., Ltd.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0a.0'  (string)
-  pci.device_class =3D 2  (0x2)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 0  (0x0)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0a.0'  (str=
-ing)
-  pci.product =3D 'RTL-8139/8139C/8139C+'  (string)
-  pci.product_id =3D 33081  (0x8139)  (int)
-  pci.subsys_product_id =3D 33081  (0x8139)  (int)
-  pci.subsys_vendor =3D 'Realtek Semiconductor Co., Ltd.'  (string)
-  pci.subsys_vendor_id =3D 4332  (0x10ec)  (int)
-  pci.vendor =3D 'Realtek Semiconductor Co., Ltd.'  (string)
-  pci.vendor_id =3D 4332  (0x10ec)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/net_00_08_54_52_31_26'
-  info.capabilities =3D {'net', 'net.80203', 'wake_on_lan'} (string lis=
-t)
-  info.category =3D 'net.80203'  (string)
-  info.interfaces =3D {'org.freedesktop.Hal.Device.WakeOnLan'} (string =
-list)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_10ec_8139'  (string=
-)
-  info.product =3D 'Networking Interface'  (string)
-  info.subsystem =3D 'net'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/net_00_08_54_52_31_26'  (s=
-tring)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'net'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:0a.0/net/eth1' =
- (string)
-  net.80203.mac_address =3D 35774411046  (0x854523126)  (uint64)
-  net.address =3D '00:08:54:52:31:26'  (string)
-  net.arp_proto_hw_id =3D 1  (0x1)  (int)
-  net.interface =3D 'eth1'  (string)
-  net.linux.ifindex =3D 3  (0x3)  (int)
-  net.originating_device =3D '/org/freedesktop/Hal/devices/pci_10ec_813=
-9'  (string)
-  org.freedesktop.Hal.Device.WakeOnLan.method_argnames =3D {'', '', 'en=
-able'} (string list)
-  org.freedesktop.Hal.Device.WakeOnLan.method_execpaths =3D {'hal-syste=
-m-wol-supported', 'hal-system-wol-enabled', 'hal-system-wol-enable'} (s=
-tring list)
-  org.freedesktop.Hal.Device.WakeOnLan.method_names =3D {'GetSupported'=
-, 'GetEnabled', 'SetEnabled'} (string list)
-  org.freedesktop.Hal.Device.WakeOnLan.method_signatures =3D {'', '', '=
-b'} (string list)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_b198'
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT8237/VX700 PCI Bridge'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_b198'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0'  (string)
-  pci.device_class =3D 6  (0x6)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 4  (0x4)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0'  (str=
-ing)
-  pci.product =3D 'VT8237/VX700 PCI Bridge'  (string)
-  pci.product_id =3D 45464  (0xb198)  (int)
-  pci.subsys_product_id =3D 0  (0x0)  (int)
-  pci.subsys_vendor_id =3D 0  (0x0)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1002_5940'
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_b198'  (string=
-)
-  info.product =3D 'RV280 [Radeon 9200 PRO] (Secondary)'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1002_5940'  (string)
-  info.vendor =3D 'ATI Technologies Inc'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0/0000:01:00=
-=2E1'  (string)
-  pci.device_class =3D 3  (0x3)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 128  (0x80)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0/0000:0=
-1:00.1'  (string)
-  pci.product =3D 'RV280 [Radeon 9200 PRO] (Secondary)'  (string)
-  pci.product_id =3D 22848  (0x5940)  (int)
-  pci.subsys_product_id =3D 22881  (0x5961)  (int)
-  pci.subsys_vendor =3D 'ATI Technologies Inc'  (string)
-  pci.subsys_vendor_id =3D 4098  (0x1002)  (int)
-  pci.vendor =3D 'ATI Technologies Inc'  (string)
-  pci.vendor_id =3D 4098  (0x1002)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1002_5960'
-  info.linux.driver =3D 'radeonfb'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1106_b198'  (string=
-)
-  info.product =3D 'RV280 [Radeon 9200 PRO]'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1002_5960'  (string)
-  info.vendor =3D 'ATI Technologies Inc'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0/0000:01:00=
-=2E0'  (string)
-  pci.device_class =3D 3  (0x3)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 0  (0x0)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0/0000:0=
-1:00.0'  (string)
-  pci.product =3D 'RV280 [Radeon 9200 PRO]'  (string)
-  pci.product_id =3D 22880  (0x5960)  (int)
-  pci.subsys_product_id =3D 22880  (0x5960)  (int)
-  pci.subsys_vendor =3D 'ATI Technologies Inc'  (string)
-  pci.subsys_vendor_id =3D 4098  (0x1002)  (int)
-  pci.vendor =3D 'ATI Technologies Inc'  (string)
-  pci.vendor_id =3D 4098  (0x1002)  (int)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1002_5960_drm__null__card0'
-  info.capabilities =3D {'drm'} (string list)
-  info.category =3D 'drm'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/pci_1002_5960'  (string=
-)
-  info.product =3D 'Direct Rendering Manager Device'  (string)
-  info.subsystem =3D 'drm'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1002_5960_drm__null__c=
-ard0'  (string)
-  info.vendor =3D 'ATI Technologies Inc'  (string)
-  linux.device_file =3D '/dev/dri/card0'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'drm'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:01.0/0000:01:00=
-=2E0/drm/card0'  (string)
-
-udi =3D '/org/freedesktop/Hal/devices/pci_1106_3189'
-  info.linux.driver =3D 'agpgart-via'  (string)
-  info.parent =3D '/org/freedesktop/Hal/devices/computer'  (string)
-  info.product =3D 'VT8377 [KT400/KT600 AGP] Host Bridge'  (string)
-  info.subsystem =3D 'pci'  (string)
-  info.udi =3D '/org/freedesktop/Hal/devices/pci_1106_3189'  (string)
-  info.vendor =3D 'VIA Technologies, Inc.'  (string)
-  linux.hotplug_type =3D 2  (0x2)  (int)
-  linux.subsystem =3D 'pci'  (string)
-  linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:00.0'  (string)
-  pci.device_class =3D 6  (0x6)  (int)
-  pci.device_protocol =3D 0  (0x0)  (int)
-  pci.device_subclass =3D 0  (0x0)  (int)
-  pci.linux.sysfs_path =3D '/sys/devices/pci0000:00/0000:00:00.0'  (str=
-ing)
-  pci.product =3D 'VT8377 [KT400/KT600 AGP] Host Bridge'  (string)
-  pci.product_id =3D 12681  (0x3189)  (int)
-  pci.subsys_product =3D 'K7VT6 motherboard'  (string)
-  pci.subsys_product_id =3D 12681  (0x3189)  (int)
-  pci.subsys_vendor =3D 'ASRock Incorporation'  (string)
-  pci.subsys_vendor_id =3D 6217  (0x1849)  (int)
-  pci.vendor =3D 'VIA Technologies, Inc.'  (string)
-  pci.vendor_id =3D 4358  (0x1106)  (int)
-
-
-Dumped 84 device(s) from the Global Device List.
-------------------------------------------------
-
-# dmesg
-Linux version 2.6.31-wotan-10 (witukind@wotan) (gcc version 4.3.3 (GCC)=
- ) #1 Thu Sep 10 21:03:09 CEST 2009
-KERNEL supported cpus:
-  Intel GenuineIntel
-  AMD AuthenticAMD
-  NSC Geode by NSC
-  Cyrix CyrixInstead
-  Centaur CentaurHauls
-  Transmeta GenuineTMx86
-  Transmeta TransmetaCPU
-  UMC UMC UMC UMC
-BIOS-provided physical RAM map:
- BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
- BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
- BIOS-e820: 00000000000ce000 - 00000000000d6000 (reserved)
- BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
- BIOS-e820: 0000000000100000 - 000000002fff0000 (usable)
- BIOS-e820: 000000002fff0000 - 000000002fff8000 (ACPI data)
- BIOS-e820: 000000002fff8000 - 0000000030000000 (ACPI NVS)
- BIOS-e820: 00000000fec00000 - 00000000fec01000 (reserved)
- BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
- BIOS-e820: 00000000fff80000 - 0000000100000000 (reserved)
-DMI 2.3 present.
-last_pfn =3D 0x2fff0 max_arch_pfn =3D 0x100000
-MTRR default type: uncachable
-MTRR fixed ranges enabled:
-  00000-9FFFF write-back
-  A0000-BFFFF uncachable
-  C0000-C7FFF write-protect
-  C8000-EFFFF uncachable
-  F0000-FFFFF write-protect
-MTRR variable ranges enabled:
-  0 base 000000000 mask FE0000000 write-back
-  1 base 020000000 mask FF0000000 write-back
-  2 disabled
-  3 disabled
-  4 disabled
-  5 base 0E0000000 mask FFC000000 write-combining
-  6 disabled
-  7 disabled
-x86 PAT enabled: cpu 0, old 0x7040600070406, new 0x7010600070106
-initial memory mapped : 0 - 01800000
-init_memory_mapping: 0000000000000000-000000002fff0000
- 0000000000 - 0000400000 page 4k
- 0000400000 - 002fc00000 page 2M
- 002fc00000 - 002fff0000 page 4k
-kernel direct mapping tables up to 2fff0000 @ 7000-c000
-ACPI: RSDP 000fa8c0 00014 (v00 AMI   )
-ACPI: RSDT 2fff0000 0002C (v01 AMIINT VIA_K7   00000010 MSFT 00000097)
-ACPI: FACP 2fff0030 00081 (v01 AMIINT VIA_K7   00000011 MSFT 00000097)
-ACPI: DSDT 2fff0120 03502 (v01    VIA    K7VT4 00001000 INTL 02002024)
-ACPI: FACS 2fff8000 00040
-ACPI: APIC 2fff00c0 00054 (v01 AMIINT VIA_K7   00000009 MSFT 00000097)
-ACPI: Local APIC address 0xfee00000
-0MB HIGHMEM available.
-767MB LOWMEM available.
-  mapped low ram: 0 - 2fff0000
-  low ram: 0 - 2fff0000
-  node 0 low ram: 00000000 - 2fff0000
-  node 0 bootmap 00001000 - 00007000
-(6 early reservations) =3D=3D> bootmem [0000000000 - 002fff0000]
-  #0 [0000000000 - 0000001000]   BIOS data page =3D=3D> [0000000000 - 0=
-000001000]
-  #1 [0001000000 - 00012da084]    TEXT DATA BSS =3D=3D> [0001000000 - 0=
-0012da084]
-  #2 [000009fc00 - 0000100000]    BIOS reserved =3D=3D> [000009fc00 - 0=
-000100000]
-  #3 [00012db000 - 00012e1095]              BRK =3D=3D> [00012db000 - 0=
-0012e1095]
-  #4 [0000007000 - 0000008000]          PGTABLE =3D=3D> [0000007000 - 0=
-000008000]
-  #5 [0000001000 - 0000007000]          BOOTMAP =3D=3D> [0000001000 - 0=
-000007000]
-Zone PFN ranges:
-  DMA      0x00000000 -> 0x00001000
-  Normal   0x00001000 -> 0x0002fff0
-  HighMem  0x0002fff0 -> 0x0002fff0
-Movable zone start PFN for each node
-early_node_map[2] active PFN ranges
-    0: 0x00000000 -> 0x0000009f
-    0: 0x00000100 -> 0x0002fff0
-On node 0 totalpages: 196495
-free_area_init_node: node 0, pgdat c125b6d0, node_mem_map c12e2000
-  DMA zone: 32 pages used for memmap
-  DMA zone: 0 pages reserved
-  DMA zone: 3967 pages, LIFO batch:0
-  Normal zone: 1504 pages used for memmap
-  Normal zone: 190992 pages, LIFO batch:31
-Using APIC driver default
-ACPI: PM-Timer IO Port: 0x808
-ACPI: Local APIC address 0xfee00000
-ACPI: LAPIC (acpi_id[0x01] lapic_id[0x00] enabled)
-ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
-IOAPIC[0]: apic_id 2, version 3, address 0xfec00000, GSI 0-23
-ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 low level)
-ACPI: IRQ0 used by override.
-ACPI: IRQ2 used by override.
-ACPI: IRQ9 used by override.
-Enabling APIC mode:  Flat.  Using 1 I/O APICs
-Using ACPI (MADT) for SMP configuration information
-nr_irqs_gsi: 24
-PM: Registered nosave memory: 000000000009f000 - 00000000000a0000
-PM: Registered nosave memory: 00000000000a0000 - 00000000000ce000
-PM: Registered nosave memory: 00000000000ce000 - 00000000000d6000
-PM: Registered nosave memory: 00000000000d6000 - 00000000000f0000
-PM: Registered nosave memory: 00000000000f0000 - 0000000000100000
-Allocating PCI resources starting at 30000000 (gap: 30000000:cec00000)
-Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 19=
-4959
-Kernel command line: BOOT_IMAGE=3DLinux ro root=3D307 vt.default_utf8=3D=
-1
-PID hash table entries: 4096 (order: 12, 16384 bytes)
-Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
-Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
-Enabling fast FPU save and restore... done.
-Enabling unmasked SIMD FPU exception support... done.
-Initializing CPU#0
-Initializing HighMem for node 0 (00000000:00000000)
-Memory: 775904k/786368k available (1691k kernel code, 9916k reserved, 7=
-30k data, 232k init, 0k highmem)
-virtual kernel memory layout:
-    fixmap  : 0xfffa4000 - 0xfffff000   ( 364 kB)
-    pkmap   : 0xff800000 - 0xffc00000   (4096 kB)
-    vmalloc : 0xf07f0000 - 0xff7fe000   ( 240 MB)
-    lowmem  : 0xc0000000 - 0xefff0000   ( 767 MB)
-      .init : 0xc125e000 - 0xc1298000   ( 232 kB)
-      .data : 0xc11a6ef7 - 0xc125d890   ( 730 kB)
-      .text : 0xc1000000 - 0xc11a6ef7   (1691 kB)
-Checking if this processor honours the WP bit even in supervisor mode..=
-=2EOk.
-SLUB: Genslabs=3D13, HWalign=3D32, Order=3D0-3, MinObjects=3D0, CPUs=3D=
-1, Nodes=3D1
-NR_IRQS:288
-=46ast TSC calibration using PIT
-Detected 1666.090 MHz processor.
-Console: colour VGA+ 80x25
-console [tty0] enabled
-Calibrating delay loop (skipped), value calculated using timer frequenc=
-y.. 3332.18 BogoMIPS (lpj=3D1666090)
-Security Framework initialized
-Mount-cache hash table entries: 512
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 256K (64 bytes/line)
-mce: CPU supports 4 MCE banks
-Performance Counters: AMD PMU driver.
-=2E.. version:                 0
-=2E.. bit width:               48
-=2E.. generic counters:        4
-=2E.. value mask:              0000ffffffffffff
-=2E.. max period:              00007fffffffffff
-=2E.. fixed-purpose counters:  0
-=2E.. counter mask:            000000000000000f
-CPU: AMD Sempron(tm) 2400+ stepping 01
-Checking 'hlt' instruction... OK.
-ACPI: Core revision 20090521
-=2E.TIMER: vector=3D0x30 apic1=3D0 pin1=3D2 apic2=3D-1 pin2=3D-1
-NET: Registered protocol family 16
-ACPI: bus type pci registered
-PCI: PCI BIOS revision 2.10 entry at 0xfda71, last bus=3D1
-PCI: Using configuration type 1 for base access
-bio: create slab <bio-0> at 0
-ACPI: EC: Look up EC in DSDT
-ACPI: Interpreter enabled
-ACPI: (supports S0 S1 S4 S5)
-ACPI: Using IOAPIC for interrupt routing
-ACPI: Power Resource [URP1] (off)
-ACPI: Power Resource [URP2] (off)
-ACPI: Power Resource [FDDP] (off)
-ACPI: Power Resource [LPTP] (off)
-ACPI: No dock devices found.
-ACPI: PCI Root Bridge [PCI0] (0000:00)
-pci 0000:00:00.0: reg 10 32bit mmio: [0xe0000000-0xe3ffffff]
-pci 0000:00:01.0: supports D1
-pci 0000:00:0a.0: reg 10 io port: [0xd400-0xd4ff]
-pci 0000:00:0a.0: reg 14 32bit mmio: [0xdfffbf00-0xdfffbfff]
-pci 0000:00:0a.0: supports D1 D2
-pci 0000:00:0a.0: PME# supported from D1 D2 D3hot
-pci 0000:00:0a.0: PME# disabled
-pci 0000:00:0f.0: reg 10 io port: [0xec00-0xec07]
-pci 0000:00:0f.0: reg 14 io port: [0xe800-0xe803]
-pci 0000:00:0f.0: reg 18 io port: [0xe400-0xe407]
-pci 0000:00:0f.0: reg 1c io port: [0xe000-0xe003]
-pci 0000:00:0f.0: reg 20 io port: [0xdc00-0xdc0f]
-pci 0000:00:0f.0: reg 24 io port: [0xd800-0xd8ff]
-pci 0000:00:0f.1: reg 20 io port: [0xfc00-0xfc0f]
-pci 0000:00:10.0: reg 20 io port: [0xc400-0xc41f]
-pci 0000:00:10.0: supports D1 D2
-pci 0000:00:10.0: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:00:10.0: PME# disabled
-pci 0000:00:10.1: reg 20 io port: [0xc800-0xc81f]
-pci 0000:00:10.1: supports D1 D2
-pci 0000:00:10.1: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:00:10.1: PME# disabled
-pci 0000:00:10.2: reg 20 io port: [0xcc00-0xcc1f]
-pci 0000:00:10.2: supports D1 D2
-pci 0000:00:10.2: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:00:10.2: PME# disabled
-pci 0000:00:10.3: reg 20 io port: [0xd000-0xd01f]
-pci 0000:00:10.3: supports D1 D2
-pci 0000:00:10.3: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:00:10.3: PME# disabled
-pci 0000:00:10.4: reg 10 32bit mmio: [0xdfffbd00-0xdfffbdff]
-pci 0000:00:10.4: supports D1 D2
-pci 0000:00:10.4: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:00:10.4: PME# disabled
-pci 0000:00:11.5: reg 10 io port: [0xc000-0xc0ff]
-pci 0000:00:11.5: supports D1 D2
-pci 0000:00:12.0: reg 10 io port: [0xbc00-0xbcff]
-pci 0000:00:12.0: reg 14 32bit mmio: [0xdfffbc00-0xdfffbcff]
-pci 0000:00:12.0: supports D1 D2
-pci 0000:00:12.0: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:00:12.0: PME# disabled
-pci 0000:01:00.0: reg 10 32bit mmio: [0xd0000000-0xd7ffffff]
-pci 0000:01:00.0: reg 14 io port: [0xa800-0xa8ff]
-pci 0000:01:00.0: reg 18 32bit mmio: [0xdfef0000-0xdfefffff]
-pci 0000:01:00.0: reg 30 32bit mmio: [0xdfec0000-0xdfedffff]
-pci 0000:01:00.0: supports D1 D2
-pci 0000:01:00.1: reg 10 32bit mmio: [0xc8000000-0xcfffffff]
-pci 0000:01:00.1: reg 14 32bit mmio: [0xdfee0000-0xdfeeffff]
-pci 0000:01:00.1: supports D1 D2
-pci 0000:00:01.0: bridge io port: [0xa000-0xafff]
-pci 0000:00:01.0: bridge 32bit mmio: [0xdfe00000-0xdfefffff]
-pci 0000:00:01.0: bridge 32bit mmio pref: [0xbfd00000-0xdfcfffff]
-pci_bus 0000:00: on NUMA node 0
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 7 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 7 *10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 *5 7 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNKD] (IRQs *3 4 5 7 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 7 10 11 12 14 15) *0, disab=
-led.
-ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 7 10 11 12 14 15) *0, disab=
-led.
-ACPI: PCI Interrupt Link [LNKG] (IRQs 3 4 5 7 10 11 12 14 15) *0, disab=
-led.
-ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 7 10 11 12 14 15) *0, disab=
-led.
-PCI: Using ACPI for IRQ routing
-pnp: PnP ACPI init
-ACPI: bus type pnp registered
-pnp: PnP ACPI: found 11 devices
-ACPI: ACPI bus type pnp unregistered
-system 00:05: ioport range 0x295-0x296 has been reserved
-system 00:05: ioport range 0x3f0-0x3f1 has been reserved
-system 00:05: ioport range 0x4d0-0x4d1 has been reserved
-system 00:05: ioport range 0x400-0x40f has been reserved
-system 00:05: ioport range 0x800-0x87f has been reserved
-system 00:05: iomem range 0xfec00000-0xfec00fff could not be reserved
-system 00:05: iomem range 0xfee00000-0xfee00fff has been reserved
-pci 0000:00:01.0: PCI bridge, secondary bus 0000:01
-pci 0000:00:01.0:   IO window: 0xa000-0xafff
-pci 0000:00:01.0:   MEM window: 0xdfe00000-0xdfefffff
-pci 0000:00:01.0:   PREFETCH window: 0xbfd00000-0xdfcfffff
-pci 0000:00:01.0: setting latency timer to 64
-pci_bus 0000:00: resource 0 io:  [0x00-0xffff]
-pci_bus 0000:00: resource 1 mem: [0x000000-0xffffffff]
-pci_bus 0000:01: resource 0 io:  [0xa000-0xafff]
-pci_bus 0000:01: resource 1 mem: [0xdfe00000-0xdfefffff]
-pci_bus 0000:01: resource 2 pref mem [0xbfd00000-0xdfcfffff]
-NET: Registered protocol family 2
-IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
-TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
-TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
-TCP: Hash tables configured (established 131072 bind 65536)
-TCP reno registered
-msgmni has been set to 1515
-Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
-io scheduler noop registered
-io scheduler cfq registered (default)
-pci 0000:00:01.0: disabling DAC on VIA PCI bridge
-pci 0000:00:11.0: Bypassing VIA 8237 APIC De-Assert Message
-pci 0000:01:00.0: Boot video device
-radeonfb 0000:01:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-radeonfb: Found Intel x86 BIOS ROM Image
-radeonfb: Retrieved PLL infos from BIOS
-radeonfb: Reference=3D27.00 MHz (RefDiv=3D12) Memory=3D240.00 Mhz, Syst=
-em=3D200.25 MHz
-radeonfb: PLL min 20000 max 40000
-i2c-adapter i2c-1: unable to read EDID block.
-i2c-adapter i2c-1: unable to read EDID block.
-i2c-adapter i2c-1: unable to read EDID block.
-i2c-adapter i2c-3: unable to read EDID block.
-Switched to high resolution mode on CPU 0
-i2c-adapter i2c-3: unable to read EDID block.
-i2c-adapter i2c-3: unable to read EDID block.
-radeonfb: Monitor 1 type CRT found
-radeonfb: EDID probed
-radeonfb: Monitor 2 type no found
-Console: switching to colour frame buffer device 160x64
-radeonfb (0000:01:00.0): ATI Radeon 5960 "Y`"
-Uniform Multi-Platform E-IDE driver
-via82cxxx 0000:00:0f.1: VIA vt8237 (rev 00) IDE UDMA133
-via82cxxx 0000:00:0f.1: IDE controller (0x1106:0x0571 rev 0x06)
-VIA_IDE 0000:00:0f.1: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-via82cxxx 0000:00:0f.1: not 100% native mode: will probe irqs later
-    ide0: BM-DMA at 0xfc00-0xfc07
-    ide1: BM-DMA at 0xfc08-0xfc0f
-Probing IDE interface ide0...
-hda: WDC WD800BB-00JKA0, ATA DISK drive
-hdb: WDC WD800JB-00ETA0, ATA DISK drive
-hda: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hda: UDMA/100 mode selected
-hdb: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hdb: UDMA/100 mode selected
-Probing IDE interface ide1...
-hdc: PHILIPS PCRW5232P, ATAPI CD/DVD-ROM drive
-hdd: LITE-ON DVDRW SOHW-1693S, ATAPI CD/DVD-ROM drive
-hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hdc: UDMA/33 mode selected
-hdd: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hdd: UDMA/66 mode selected
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-ide1 at 0x170-0x177,0x376 on irq 15
-ide-gd driver 1.18
-hda: max request size: 128KiB
-hda: 156301488 sectors (80026 MB) w/2048KiB Cache, CHS=3D65535/16/63
-hda: cache flushes supported
- hda: hda1 hda2 hda3 < hda5 hda6 hda7 hda8 hda9 >
-hdb: max request size: 512KiB
-hdb: 156301488 sectors (80026 MB) w/8192KiB Cache, CHS=3D16383/255/63
-hdb: cache flushes supported
- hdb: hdb1
-PNP: PS/2 Controller [PNP0f13:PS2M] at 0x60,0x64 irq 12
-PNP: PS/2 controller doesn't have KBD irq; using default 1
-serio: i8042 KBD port at 0x60,0x64 irq 1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-mice: PS/2 mouse device common for all mice
-cpuidle: using governor ladder
-cpuidle: using governor menu
-TCP cubic registered
-Using IPI Shortcut mode
-EXT4-fs (hda7): barriers enabled
-kjournald2 starting: pid 350, dev hda7:8, commit interval 5 seconds
-EXT4-fs (hda7): delayed allocation enabled
-EXT4-fs: file extents enabled
-EXT4-fs: mballoc enabled
-EXT4-fs (hda7): mounted filesystem with ordered data mode
-VFS: Mounted root (ext4 filesystem) readonly on device 3:7.
-=46reeing unused kernel memory: 232k freed
-NET: Registered protocol family 1
-input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input0
-ACPI: Power Button [PWRF]
-input: Power Button as /devices/LNXSYSTM:00/device:00/PNP0C0C:00/input/=
-input1
-ACPI: Power Button [PWRB]
-input: Sleep Button as /devices/LNXSYSTM:00/device:00/PNP0C0E:00/input/=
-input2
-ACPI: Sleep Button [SLPB]
-=46loppy drive(s): fd0 is 1.44M
-=46DC 0 is a post-1991 82077
-Linux agpgart interface v0.103
-gameport: NS558 PnP Gameport is pnp00:04/gameport0, io 0x200, speed 101=
-1kHz
-Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-serial8250: ttyS0 at I/O 0x3f8 (irq =3D 4) is a 16550A
-00:02: ttyS0 at I/O 0x3f8 (irq =3D 4) is a 16550A
-agpgart: Detected VIA KT400/KT400A/KT600 chipset
-ide-cd driver 5.00
-agpgart-via 0000:00:00.0: AGP aperture is 64M @ 0xe0000000
-ide-cd: hdc: ATAPI 52X CD-ROM CD-R/RW drive, 2048kB Cache
-Uniform CD-ROM driver Revision: 3.20
-rtc_cmos 00:07: RTC can wake from S4
-8139too Fast Ethernet driver 0.9.28
-via-rhine.c:v1.10-LK1.4.3 2007-03-06 Written by Donald Becker
-via-rhine 0000:00:12.0: PCI INT A -> GSI 23 (level, low) -> IRQ 23
-eth0: VIA Rhine II at 0xdfffbc00, 00:0b:6a:c0:a1:d7, IRQ 23.
-eth0: MII PHY found at address 1, status 0x786d advertising 05e1 Link 4=
-5e1.
-rtc_cmos 00:07: rtc core: registered rtc_cmos as rtc0
-rtc0: alarms up to one year, y3k, 114 bytes nvram
-8139too 0000:00:0a.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-eth1: RealTek RTL8139 at 0xf190af00, 00:08:54:52:31:26, IRQ 18
-usbcore: registered new interface driver usbfs
-usbcore: registered new interface driver hub
-usbcore: registered new device driver usb
-processor LNXCPU:00: registered as cooling_device0
-ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-ehci_hcd 0000:00:10.4: PCI INT C -> GSI 21 (level, low) -> IRQ 21
-ehci_hcd 0000:00:10.4: EHCI Host Controller
-ehci_hcd 0000:00:10.4: new USB bus registered, assigned bus number 1
-ehci_hcd 0000:00:10.4: irq 21, io mem 0xdfffbd00
-ehci_hcd 0000:00:10.4: USB 2.0 started, EHCI 1.00
-usb usb1: configuration #1 chosen from 1 choice
-hub 1-0:1.0: USB hub found
-input: PC Speaker as /devices/platform/pcspkr/input/input3
-hub 1-0:1.0: 8 ports detected
-VIA 82xx Audio 0000:00:11.5: PCI INT C -> GSI 22 (level, low) -> IRQ 22
-VIA 82xx Audio 0000:00:11.5: setting latency timer to 64
-uhci_hcd: USB Universal Host Controller Interface driver
-ide-cd: hdd: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache
-usb 1-1: new high speed USB device using ehci_hcd and address 2
-usb 1-1: configuration #1 chosen from 1 choice
-hub 1-1:1.0: USB hub found
-hub 1-1:1.0: 4 ports detected
-input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio=
-1/input/input4
-uhci_hcd 0000:00:10.0: PCI INT A -> GSI 21 (level, low) -> IRQ 21
-uhci_hcd 0000:00:10.0: UHCI Host Controller
-uhci_hcd 0000:00:10.0: new USB bus registered, assigned bus number 2
-usb 1-3: new high speed USB device using ehci_hcd and address 3
-uhci_hcd 0000:00:10.0: irq 21, io base 0x0000c400
-usb usb2: configuration #1 chosen from 1 choice
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 2 ports detected
-uhci_hcd 0000:00:10.1: PCI INT A -> GSI 21 (level, low) -> IRQ 21
-uhci_hcd 0000:00:10.1: UHCI Host Controller
-uhci_hcd 0000:00:10.1: new USB bus registered, assigned bus number 3
-uhci_hcd 0000:00:10.1: irq 21, io base 0x0000c800
-usb usb3: configuration #1 chosen from 1 choice
-hub 3-0:1.0: USB hub found
-hub 3-0:1.0: 2 ports detected
-uhci_hcd 0000:00:10.2: PCI INT B -> GSI 21 (level, low) -> IRQ 21
-uhci_hcd 0000:00:10.2: UHCI Host Controller
-uhci_hcd 0000:00:10.2: new USB bus registered, assigned bus number 4
-uhci_hcd 0000:00:10.2: irq 21, io base 0x0000cc00
-usb usb4: configuration #1 chosen from 1 choice
-usb 1-3: configuration #1 chosen from 1 choice
-hub 4-0:1.0: USB hub found
-hub 4-0:1.0: 2 ports detected
-uhci_hcd 0000:00:10.3: PCI INT B -> GSI 21 (level, low) -> IRQ 21
-uhci_hcd 0000:00:10.3: UHCI Host Controller
-uhci_hcd 0000:00:10.3: new USB bus registered, assigned bus number 5
-uhci_hcd 0000:00:10.3: irq 21, io base 0x0000d000
-usb usb5: configuration #1 chosen from 1 choice
-hub 5-0:1.0: USB hub found
-hub 5-0:1.0: 2 ports detected
-usbcore: registered new interface driver libusual
-SCSI subsystem initialized
-Initializing USB Mass Storage driver...
-scsi0 : SCSI emulation for USB Mass Storage devices
-usbcore: registered new interface driver usb-storage
-USB Mass Storage support registered.
-usb-storage: device found at 3
-usb-storage: waiting for device to settle before scanning
-usb 4-1: new low speed USB device using uhci_hcd and address 2
-usb 4-1: configuration #1 chosen from 1 choice
-usbcore: registered new interface driver hiddev
-input: Microsoft Comfort Curve Keyboard 2000 as /devices/pci0000:00/000=
-0:00:10.2/usb4/4-1/4-1:1.0/input/input5
-generic-usb 0003:045E:00DD.0001: input,hidraw0: USB HID v1.11 Keyboard =
-[Microsoft Comfort Curve Keyboard 2000] on usb-0000:00:10.2-1/input0
-input: Microsoft Comfort Curve Keyboard 2000 as /devices/pci0000:00/000=
-0:00:10.2/usb4/4-1/4-1:1.1/input/input6
-generic-usb 0003:045E:00DD.0002: input,hidraw1: USB HID v1.11 Device [M=
-icrosoft Comfort Curve Keyboard 2000] on usb-0000:00:10.2-1/input1
-usbcore: registered new interface driver usbhid
-usbhid: v2.6:USB HID core driver
-usb 4-2: new full speed USB device using uhci_hcd and address 3
-usb 4-2: configuration #1 chosen from 1 choice
-Linux video capture interface: v2.00
-gspca: main v2.6.0 registered
-gspca: probing 041e:401c
-zc3xx: probe sif 0x0007
-zc3xx: probe sensor -> 000f
-zc3xx: Find Sensor PAS106
-gspca: probe ok
-usbcore: registered new interface driver zc3xx
-zc3xx: registered
-Adding 3903752k swap on /dev/hda6.  Priority:-1 extents:1 across:390375=
-2k=20
-fuse init (API version 7.12)
-EXT4-fs (hda7): internal journal on hda7:8
-scsi 0:0:0:0: Direct-Access     Maxtor   Basics Portable  0122 PQ: 0 AN=
-SI: 4
-usb-storage: device scan complete
-sd 0:0:0:0: [sda] 488397168 512-byte logical blocks: (250 GB/232 GiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 2d 08 00 00
-sd 0:0:0:0: [sda] Assuming drive cache: write through
-sd 0:0:0:0: [sda] Assuming drive cache: write through
- sda: sda1
-sd 0:0:0:0: [sda] Assuming drive cache: write through
-sd 0:0:0:0: [sda] Attached SCSI disk
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-EXT4-fs (hda5): barriers enabled
-kjournald2 starting: pid 998, dev hda5:8, commit interval 5 seconds
-EXT4-fs (hda5): internal journal on hda5:8
-EXT4-fs (hda5): delayed allocation enabled
-EXT4-fs: file extents enabled
-EXT4-fs: mballoc enabled
-EXT4-fs (hda5): mounted filesystem with ordered data mode
-EXT4-fs (hda8): barriers enabled
-kjournald2 starting: pid 999, dev hda8:8, commit interval 5 seconds
-EXT4-fs (hda8): internal journal on hda8:8
-EXT4-fs (hda8): delayed allocation enabled
-EXT4-fs: file extents enabled
-EXT4-fs: mballoc enabled
-EXT4-fs (hda8): mounted filesystem with ordered data mode
-EXT4-fs (hda9): barriers enabled
-kjournald2 starting: pid 1000, dev hda9:8, commit interval 5 seconds
-EXT4-fs (hda9): internal journal on hda9:8
-EXT4-fs (hda9): delayed allocation enabled
-EXT4-fs: file extents enabled
-EXT4-fs: mballoc enabled
-EXT4-fs (hda9): mounted filesystem with ordered data mode
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on hdb1, internal journal
-EXT3-fs: mounted filesystem with writeback data mode.
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs warning: maximal mount count reached, running e2fsck is recomme=
-nded
-EXT3 FS on sda1, internal journal
-EXT3-fs: mounted filesystem with writeback data mode.
-eth0: link up, 100Mbps, full-duplex, lpa 0x45E1
-NET: Registered protocol family 17
-[drm] Initialized drm 1.1.0 20060810
-[drm] Initialized radeon 1.31.0 20080528 for 0000:01:00.0 on minor 0
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Setting GART location based on new memory map
-[drm] Loading R200 Microcode
-[drm] writeback test succeeded in 1 usecs
-NET: Registered protocol family 10
-lo: Disabled Privacy Extensions
-eth0: no IPv6 routers present
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-agpgart-via 0000:00:00.0: AGP 3.5 bridge
-agpgart-via 0000:00:00.0: putting AGP V3 device into 8x mode
-radeonfb 0000:01:00.0: putting AGP V3 device into 8x mode
-[drm] Loading R200 Microcode
-Adding 3903752k swap on /dev/hda6.  Priority:-1 extents:1 across:390375=
-2k=20
-
---=20
-PGP: 0xC189F229
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+
+
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ Documentation/feature-removal-schedule.txt |   18 --
+ arch/x86/pci/direct.c                      |    5 +-
+ drivers/acpi/blacklist.c                   |    5 +-
+ drivers/ata/Kconfig                        |   21 ++
+ drivers/ata/Makefile                       |    1 +
+ drivers/ata/ahci.c                         |  143 ++++++++---
+ drivers/ata/libata-acpi.c                  |    7 +-
+ drivers/ata/libata-core.c                  |   44 +++-
+ drivers/ata/libata-eh.c                    |  146 ++++++++++-
+ drivers/ata/libata-pmp.c                   |    2 +
+ drivers/ata/libata-scsi.c                  |  159 ++++--------
+ drivers/ata/libata.h                       |    1 +
+ drivers/ata/pata_atiixp.c                  |    1 +
+ drivers/ata/pata_cs5535.c                  |    3 +-
+ drivers/ata/pata_octeon_cf.c               |    4 +-
+ drivers/ata/pata_platform.c                |    8 +-
+ drivers/ata/pata_rb532_cf.c                |    2 +-
+ drivers/ata/pata_rdc.c                     |  400 ++++++++++++++++++++++++++++
+ drivers/ata/pata_rz1000.c                  |    4 +-
+ drivers/ata/sata_fsl.c                     |    1 +
+ drivers/ata/sata_inic162x.c                |    2 +-
+ drivers/ata/sata_mv.c                      |    2 +-
+ drivers/ata/sata_sil.c                     |   13 +
+ drivers/ata/sata_sil24.c                   |   11 +
+ drivers/ata/sata_sis.c                     |   75 ++----
+ drivers/firmware/dmi_scan.c                |   77 ++++--
+ drivers/ide/atiixp.c                       |    1 +
+ drivers/pci/quirks.c                       |    4 +-
+ include/linux/ata.h                        |   36 +++-
+ include/linux/dmi.h                        |   13 +-
+ include/linux/libata.h                     |    3 +-
+ include/linux/pci_ids.h                    |    4 +
+ 32 files changed, 946 insertions(+), 270 deletions(-)
+ create mode 100644 drivers/ata/pata_rdc.c
+
+Alan Cox (1):
+      [libata] Add pata_rdc driver for RDC ATA devices
+
+Ashish Kalra (1):
+      sata_fsl: Defer non-ncq commands when ncq commands active
+
+Jeff Garzik (2):
+      [libata] EH: freeze port before aborting commands
+      [libata] sata_sil: disable DMA engine in sil_freeze()
+
+Joe Perches (1):
+      drivers/ata: Remove unnecessary semicolons
+
+Julia Lawall (1):
+      drivers/ata: use resource_size
+
+Marcin Slusarz (1):
+      pata_rz1000: use printk_once
+
+Martin K. Petersen (1):
+      libata: Delegate nonrot flag setting to SCSI
+
+Matthew Garrett (1):
+      libata: Export AHCI capabilities
+
+Otavio Salvador (1):
+      pata_cs5535: add pci id for AMD based CS5535 controllers
+
+Robert Hancock (2):
+      libata: add command name parsing for error output
+      sata_sil24: always set protocol override for non-ATAPI data commands
+
+Shane Huang (3):
+      libata: add SATA PMP revision information for spec 1.2
+      ahci: Add AMD SB900 SATA/IDE controller device IDs
+      ahci: kill @force_restart and refine CLO for ahci_kick_engine()
+
+Shaohua Li (1):
+      [libata] add DMA setup FIS auto-activate feature
+
+Tejun Heo (9):
+      libata: clear eh_info on reset completion
+      libata: remove spindown skipping and warning
+      sata_sis: convert to slave_link
+      libata: unbreak TPM filtering by reorganizing ata_scsi_pass_thru()
+      dmi: fix date handling in dmi_get_year()
+      dmi: extend dmi_get_year() to dmi_get_date()
+      ahci: make ahci_asus_m2a_vm_32bit_only() quirk more generic
+      ahci: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
+      libata: fix off-by-one error in ata_tf_read_block()
+
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index 09e031c..b3b6290 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -206,24 +206,6 @@ Who:	Len Brown <len.brown@intel.com>
+ 
+ ---------------------------
+ 
+-What: libata spindown skipping and warning
+-When: Dec 2008
+-Why:  Some halt(8) implementations synchronize caches for and spin
+-      down libata disks because libata didn't use to spin down disk on
+-      system halt (only synchronized caches).
+-      Spin down on system halt is now implemented.  sysfs node
+-      /sys/class/scsi_disk/h:c:i:l/manage_start_stop is present if
+-      spin down support is available.
+-      Because issuing spin down command to an already spun down disk
+-      makes some disks spin up just to spin down again, libata tracks
+-      device spindown status to skip the extra spindown command and
+-      warn about it.
+-      This is to give userspace tools the time to get updated and will
+-      be removed after userspace is reasonably updated.
+-Who:  Tejun Heo <htejun@gmail.com>
+-
+----------------------------
+-
+ What:	i386/x86_64 bzImage symlinks
+ When:	April 2010
+ 
+diff --git a/arch/x86/pci/direct.c b/arch/x86/pci/direct.c
+index bd13c3e..347d882 100644
+--- a/arch/x86/pci/direct.c
++++ b/arch/x86/pci/direct.c
+@@ -192,13 +192,14 @@ struct pci_raw_ops pci_direct_conf2 = {
+ static int __init pci_sanity_check(struct pci_raw_ops *o)
+ {
+ 	u32 x = 0;
+-	int devfn;
++	int year, devfn;
+ 
+ 	if (pci_probe & PCI_NO_CHECKS)
+ 		return 1;
+ 	/* Assume Type 1 works for newer systems.
+ 	   This handles machines that don't have anything on PCI Bus 0. */
+-	if (dmi_get_year(DMI_BIOS_DATE) >= 2001)
++	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
++	if (year >= 2001)
+ 		return 1;
+ 
+ 	for (devfn = 0; devfn < 0x100; devfn++) {
+diff --git a/drivers/acpi/blacklist.c b/drivers/acpi/blacklist.c
+index f6baa77..0c4ca4d 100644
+--- a/drivers/acpi/blacklist.c
++++ b/drivers/acpi/blacklist.c
+@@ -78,9 +78,10 @@ static struct acpi_blacklist_item acpi_blacklist[] __initdata = {
+ 
+ static int __init blacklist_by_year(void)
+ {
+-	int year = dmi_get_year(DMI_BIOS_DATE);
++	int year;
++
+ 	/* Doesn't exist? Likely an old system */
+-	if (year == -1) {
++	if (!dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL)) {
+ 		printk(KERN_ERR PREFIX "no DMI BIOS year, "
+ 			"acpi=force is required to enable ACPI\n" );
+ 		return 1;
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index b17c57f..ab2fa4e 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -26,6 +26,17 @@ config ATA_NONSTANDARD
+        bool
+        default n
+ 
++config ATA_VERBOSE_ERROR
++	bool "Verbose ATA error reporting"
++	default y
++	help
++	  This option adds parsing of ATA command descriptions and error bits
++	  in libata kernel output, making it easier to interpret.
++	  This option will enlarge the kernel by approx. 6KB. Disable it only
++	  if kernel size is more important than ease of debugging.
++
++	  If unsure, say Y.
++
+ config ATA_ACPI
+ 	bool "ATA ACPI Support"
+ 	depends on ACPI && PCI
+@@ -586,6 +597,16 @@ config PATA_RB532
+ 
+ 	  If unsure, say N.
+ 
++config PATA_RDC
++	tristate "RDC PATA support"
++	depends on PCI
++	help
++	  This option enables basic support for the later RDC PATA controllers
++	  controllers via the new ATA layer. For the RDC 1010, you need to
++	  enable the IT821X driver instead.
++
++	  If unsure, say N.
++
+ config PATA_RZ1000
+ 	tristate "PC Tech RZ1000 PATA support"
+ 	depends on PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 38906f9..463eb52 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -57,6 +57,7 @@ obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
+ obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
+ obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
+ obj-$(CONFIG_PATA_RB532)	+= pata_rb532_cf.o
++obj-$(CONFIG_PATA_RDC)		+= pata_rdc.o
+ obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
+ obj-$(CONFIG_PATA_SC1200)	+= pata_sc1200.o
+ obj-$(CONFIG_PATA_SERVERWORKS)	+= pata_serverworks.o
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index fe3eba5..d4cd9c2 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -329,10 +329,24 @@ static ssize_t ahci_activity_store(struct ata_device *dev,
+ 				   enum sw_activity val);
+ static void ahci_init_sw_activity(struct ata_link *link);
+ 
++static ssize_t ahci_show_host_caps(struct device *dev,
++				   struct device_attribute *attr, char *buf);
++static ssize_t ahci_show_host_version(struct device *dev,
++				      struct device_attribute *attr, char *buf);
++static ssize_t ahci_show_port_cmd(struct device *dev,
++				  struct device_attribute *attr, char *buf);
++
++DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
++DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
++DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
++
+ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+ 	&dev_attr_em_message_type,
+ 	&dev_attr_em_message,
++	&dev_attr_ahci_host_caps,
++	&dev_attr_ahci_host_version,
++	&dev_attr_ahci_port_cmd,
+ 	NULL
+ };
+ 
+@@ -539,6 +553,12 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(ATI, 0x4394), board_ahci_sb700 }, /* ATI SB700/800 */
+ 	{ PCI_VDEVICE(ATI, 0x4395), board_ahci_sb700 }, /* ATI SB700/800 */
+ 
++	/* AMD */
++	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD SB900 */
++	/* AMD is using RAID class only for ahci controllers */
++	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
++	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
++
+ 	/* VIA */
+ 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
+ 	{ PCI_VDEVICE(VIA, 0x6287), board_ahci_vt8251 }, /* VIA VT8251 */
+@@ -702,6 +722,36 @@ static void ahci_enable_ahci(void __iomem *mmio)
+ 	WARN_ON(1);
+ }
+ 
++static ssize_t ahci_show_host_caps(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	return sprintf(buf, "%x\n", hpriv->cap);
++}
++
++static ssize_t ahci_show_host_version(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	void __iomem *mmio = ap->host->iomap[AHCI_PCI_BAR];
++
++	return sprintf(buf, "%x\n", readl(mmio + HOST_VERSION));
++}
++
++static ssize_t ahci_show_port_cmd(struct device *dev,
++				  struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	void __iomem *port_mmio = ahci_port_base(ap);
++
++	return sprintf(buf, "%x\n", readl(port_mmio + PORT_CMD));
++}
++
+ /**
+  *	ahci_save_initial_config - Save and fixup initial config values
+  *	@pdev: target PCI device
+@@ -1584,7 +1634,7 @@ static void ahci_fill_cmd_slot(struct ahci_port_priv *pp, unsigned int tag,
+ 	pp->cmd_slot[tag].tbl_addr_hi = cpu_to_le32((cmd_tbl_dma >> 16) >> 16);
+ }
+ 
+-static int ahci_kick_engine(struct ata_port *ap, int force_restart)
++static int ahci_kick_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+@@ -1592,18 +1642,16 @@ static int ahci_kick_engine(struct ata_port *ap, int force_restart)
+ 	u32 tmp;
+ 	int busy, rc;
+ 
+-	/* do we need to kick the port? */
+-	busy = status & (ATA_BUSY | ATA_DRQ);
+-	if (!busy && !force_restart)
+-		return 0;
+-
+ 	/* stop engine */
+ 	rc = ahci_stop_engine(ap);
+ 	if (rc)
+ 		goto out_restart;
+ 
+-	/* need to do CLO? */
+-	if (!busy) {
++	/* need to do CLO?
++	 * always do CLO if PMP is attached (AHCI-1.3 9.2)
++	 */
++	busy = status & (ATA_BUSY | ATA_DRQ);
++	if (!busy && !sata_pmp_attached(ap)) {
+ 		rc = 0;
+ 		goto out_restart;
+ 	}
+@@ -1651,7 +1699,7 @@ static int ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
+ 		tmp = ata_wait_register(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1,
+ 					1, timeout_msec);
+ 		if (tmp & 0x1) {
+-			ahci_kick_engine(ap, 1);
++			ahci_kick_engine(ap);
+ 			return -EBUSY;
+ 		}
+ 	} else
+@@ -1674,7 +1722,7 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 	DPRINTK("ENTER\n");
+ 
+ 	/* prepare for SRST (AHCI-1.1 10.4.1) */
+-	rc = ahci_kick_engine(ap, 1);
++	rc = ahci_kick_engine(ap);
+ 	if (rc && rc != -EOPNOTSUPP)
+ 		ata_link_printk(link, KERN_WARNING,
+ 				"failed to reset engine (errno=%d)\n", rc);
+@@ -1890,7 +1938,7 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ 		rc = ata_wait_after_reset(link, jiffies + 2 * HZ,
+ 					  ahci_check_ready);
+ 		if (rc)
+-			ahci_kick_engine(ap, 0);
++			ahci_kick_engine(ap);
+ 	}
+ 	return rc;
+ }
+@@ -2271,7 +2319,7 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
+ 
+ 	/* make DMA engine forget about the failed command */
+ 	if (qc->flags & ATA_QCFLAG_FAILED)
+-		ahci_kick_engine(ap, 1);
++		ahci_kick_engine(ap);
+ }
+ 
+ static void ahci_pmp_attach(struct ata_port *ap)
+@@ -2603,14 +2651,18 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
+ }
+ 
+ /*
+- * SB600 ahci controller on ASUS M2A-VM can't do 64bit DMA with older
+- * BIOS.  The oldest version known to be broken is 0901 and working is
+- * 1501 which was released on 2007-10-26.  Force 32bit DMA on anything
+- * older than 1501.  Please read bko#9412 for more info.
++ * SB600 ahci controller on certain boards can't do 64bit DMA with
++ * older BIOS.
+  */
+-static bool ahci_asus_m2a_vm_32bit_only(struct pci_dev *pdev)
++static bool ahci_sb600_32bit_only(struct pci_dev *pdev)
+ {
+ 	static const struct dmi_system_id sysids[] = {
++		/*
++		 * The oldest version known to be broken is 0901 and
++		 * working is 1501 which was released on 2007-10-26.
++		 * Force 32bit DMA on anything older than 1501.
++		 * Please read bko#9412 for more info.
++		 */
+ 		{
+ 			.ident = "ASUS M2A-VM",
+ 			.matches = {
+@@ -2618,31 +2670,48 @@ static bool ahci_asus_m2a_vm_32bit_only(struct pci_dev *pdev)
+ 					  "ASUSTeK Computer INC."),
+ 				DMI_MATCH(DMI_BOARD_NAME, "M2A-VM"),
+ 			},
++			.driver_data = "20071026",	/* yyyymmdd */
++		},
++		/*
++		 * It's yet unknown whether more recent BIOS fixes the
++		 * problem.  Blacklist the whole board for the time
++		 * being.  Please read the following thread for more
++		 * info.
++		 *
++		 * http://thread.gmane.org/gmane.linux.ide/42326
++		 */
++		{
++			.ident = "Gigabyte GA-MA69VM-S2",
++			.matches = {
++				DMI_MATCH(DMI_BOARD_VENDOR,
++					  "Gigabyte Technology Co., Ltd."),
++				DMI_MATCH(DMI_BOARD_NAME, "GA-MA69VM-S2"),
++			},
+ 		},
+ 		{ }
+ 	};
+-	const char *cutoff_mmdd = "10/26";
+-	const char *date;
+-	int year;
++	const struct dmi_system_id *match;
+ 
++	match = dmi_first_match(sysids);
+ 	if (pdev->bus->number != 0 || pdev->devfn != PCI_DEVFN(0x12, 0) ||
+-	    !dmi_check_system(sysids))
++	    !match)
+ 		return false;
+ 
+-	/*
+-	 * Argh.... both version and date are free form strings.
+-	 * Let's hope they're using the same date format across
+-	 * different versions.
+-	 */
+-	date = dmi_get_system_info(DMI_BIOS_DATE);
+-	year = dmi_get_year(DMI_BIOS_DATE);
+-	if (date && strlen(date) >= 10 && date[2] == '/' && date[5] == '/' &&
+-	    (year > 2007 ||
+-	     (year == 2007 && strncmp(date, cutoff_mmdd, 5) >= 0)))
+-		return false;
++	if (match->driver_data) {
++		int year, month, date;
++		char buf[9];
++
++		dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
++		snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
+ 
+-	dev_printk(KERN_WARNING, &pdev->dev, "ASUS M2A-VM: BIOS too old, "
+-		   "forcing 32bit DMA, update BIOS\n");
++		if (strcmp(buf, match->driver_data) >= 0)
++			return false;
++
++		dev_printk(KERN_WARNING, &pdev->dev, "%s: BIOS too old, "
++			   "forcing 32bit DMA, update BIOS\n", match->ident);
++	} else
++		dev_printk(KERN_WARNING, &pdev->dev, "%s: this board can't "
++			   "do 64bit DMA, forcing 32bit\n", match->ident);
+ 
+ 	return true;
+ }
+@@ -2857,8 +2926,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (board_id == board_ahci_sb700 && pdev->revision >= 0x40)
+ 		hpriv->flags &= ~AHCI_HFLAG_IGN_SERR_INTERNAL;
+ 
+-	/* apply ASUS M2A_VM quirk */
+-	if (ahci_asus_m2a_vm_32bit_only(pdev))
++	/* apply sb600 32bit only quirk */
++	if (ahci_sb600_32bit_only(pdev))
+ 		hpriv->flags |= AHCI_HFLAG_32BIT_ONLY;
+ 
+ 	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI))
+@@ -2869,7 +2938,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	/* prepare host */
+ 	if (hpriv->cap & HOST_CAP_NCQ)
+-		pi.flags |= ATA_FLAG_NCQ;
++		pi.flags |= ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
+ 
+ 	if (hpriv->cap & HOST_CAP_PMP)
+ 		pi.flags |= ATA_FLAG_PMP;
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index ac176da..01964b6 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -689,6 +689,7 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+ 	struct ata_taskfile tf, ptf, rtf;
+ 	unsigned int err_mask;
+ 	const char *level;
++	const char *descr;
+ 	char msg[60];
+ 	int rc;
+ 
+@@ -736,11 +737,13 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+ 		snprintf(msg, sizeof(msg), "filtered out");
+ 		rc = 0;
+ 	}
++	descr = ata_get_cmd_descript(tf.command);
+ 
+ 	ata_dev_printk(dev, level,
+-		       "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x %s\n",
++		       "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x (%s) %s\n",
+ 		       tf.command, tf.feature, tf.nsect, tf.lbal,
+-		       tf.lbam, tf.lbah, tf.device, msg);
++		       tf.lbam, tf.lbah, tf.device,
++		       (descr ? descr : "unknown"), msg);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 072ba5e..df31dea 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -709,7 +709,13 @@ u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev)
+ 		head = tf->device & 0xf;
+ 		sect = tf->lbal;
+ 
+-		block = (cyl * dev->heads + head) * dev->sectors + sect;
++		if (!sect) {
++			ata_dev_printk(dev, KERN_WARNING, "device reported "
++				       "invalid CHS sector 0\n");
++			sect = 1; /* oh well */
++		}
++
++		block = (cyl * dev->heads + head) * dev->sectors + sect - 1;
+ 	}
+ 
+ 	return block;
+@@ -2299,29 +2305,49 @@ static inline u8 ata_dev_knobble(struct ata_device *dev)
+ 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
+ }
+ 
+-static void ata_dev_config_ncq(struct ata_device *dev,
++static int ata_dev_config_ncq(struct ata_device *dev,
+ 			       char *desc, size_t desc_sz)
+ {
+ 	struct ata_port *ap = dev->link->ap;
+ 	int hdepth = 0, ddepth = ata_id_queue_depth(dev->id);
++	unsigned int err_mask;
++	char *aa_desc = "";
+ 
+ 	if (!ata_id_has_ncq(dev->id)) {
+ 		desc[0] = '\0';
+-		return;
++		return 0;
+ 	}
+ 	if (dev->horkage & ATA_HORKAGE_NONCQ) {
+ 		snprintf(desc, desc_sz, "NCQ (not used)");
+-		return;
++		return 0;
+ 	}
+ 	if (ap->flags & ATA_FLAG_NCQ) {
+ 		hdepth = min(ap->scsi_host->can_queue, ATA_MAX_QUEUE - 1);
+ 		dev->flags |= ATA_DFLAG_NCQ;
+ 	}
+ 
++	if (!(dev->horkage & ATA_HORKAGE_BROKEN_FPDMA_AA) &&
++		(ap->flags & ATA_FLAG_FPDMA_AA) &&
++		ata_id_has_fpdma_aa(dev->id)) {
++		err_mask = ata_dev_set_feature(dev, SETFEATURES_SATA_ENABLE,
++			SATA_FPDMA_AA);
++		if (err_mask) {
++			ata_dev_printk(dev, KERN_ERR, "failed to enable AA"
++				"(error_mask=0x%x)\n", err_mask);
++			if (err_mask != AC_ERR_DEV) {
++				dev->horkage |= ATA_HORKAGE_BROKEN_FPDMA_AA;
++				return -EIO;
++			}
++		} else
++			aa_desc = ", AA";
++	}
++
+ 	if (hdepth >= ddepth)
+-		snprintf(desc, desc_sz, "NCQ (depth %d)", ddepth);
++		snprintf(desc, desc_sz, "NCQ (depth %d)%s", ddepth, aa_desc);
+ 	else
+-		snprintf(desc, desc_sz, "NCQ (depth %d/%d)", hdepth, ddepth);
++		snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
++			ddepth, aa_desc);
++	return 0;
+ }
+ 
+ /**
+@@ -2461,7 +2487,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 
+ 		if (ata_id_has_lba(id)) {
+ 			const char *lba_desc;
+-			char ncq_desc[20];
++			char ncq_desc[24];
+ 
+ 			lba_desc = "LBA";
+ 			dev->flags |= ATA_DFLAG_LBA;
+@@ -2475,7 +2501,9 @@ int ata_dev_configure(struct ata_device *dev)
+ 			}
+ 
+ 			/* config NCQ */
+-			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
++			rc = ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
++			if (rc)
++				return rc;
+ 
+ 			/* print device info to dmesg */
+ 			if (ata_msg_drv(ap) && print_info) {
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 79711b6..a04488f 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -40,6 +40,7 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_dbg.h>
+ #include "../scsi/scsi_transport_api.h"
+ 
+ #include <linux/libata.h>
+@@ -999,7 +1000,9 @@ static void __ata_port_freeze(struct ata_port *ap)
+  *	ata_port_freeze - abort & freeze port
+  *	@ap: ATA port to freeze
+  *
+- *	Abort and freeze @ap.
++ *	Abort and freeze @ap.  The freeze operation must be called
++ *	first, because some hardware requires special operations
++ *	before the taskfile registers are accessible.
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+@@ -1013,8 +1016,8 @@ int ata_port_freeze(struct ata_port *ap)
+ 
+ 	WARN_ON(!ap->ops->error_handler);
+ 
+-	nr_aborted = ata_port_abort(ap);
+ 	__ata_port_freeze(ap);
++	nr_aborted = ata_port_abort(ap);
+ 
+ 	return nr_aborted;
+ }
+@@ -2110,6 +2113,116 @@ void ata_eh_autopsy(struct ata_port *ap)
+ }
+ 
+ /**
++ *	ata_get_cmd_descript - get description for ATA command
++ *	@command: ATA command code to get description for
++ *
++ *	Return a textual description of the given command, or NULL if the
++ *	command is not known.
++ *
++ *	LOCKING:
++ *	None
++ */
++const char *ata_get_cmd_descript(u8 command)
++{
++#ifdef CONFIG_ATA_VERBOSE_ERROR
++	static const struct
++	{
++		u8 command;
++		const char *text;
++	} cmd_descr[] = {
++		{ ATA_CMD_DEV_RESET,		"DEVICE RESET" },
++		{ ATA_CMD_CHK_POWER, 		"CHECK POWER MODE" },
++		{ ATA_CMD_STANDBY, 		"STANDBY" },
++		{ ATA_CMD_IDLE, 		"IDLE" },
++		{ ATA_CMD_EDD, 			"EXECUTE DEVICE DIAGNOSTIC" },
++		{ ATA_CMD_DOWNLOAD_MICRO,   	"DOWNLOAD MICROCODE" },
++		{ ATA_CMD_NOP,			"NOP" },
++		{ ATA_CMD_FLUSH, 		"FLUSH CACHE" },
++		{ ATA_CMD_FLUSH_EXT, 		"FLUSH CACHE EXT" },
++		{ ATA_CMD_ID_ATA,  		"IDENTIFY DEVICE" },
++		{ ATA_CMD_ID_ATAPI, 		"IDENTIFY PACKET DEVICE" },
++		{ ATA_CMD_SERVICE, 		"SERVICE" },
++		{ ATA_CMD_READ, 		"READ DMA" },
++		{ ATA_CMD_READ_EXT, 		"READ DMA EXT" },
++		{ ATA_CMD_READ_QUEUED, 		"READ DMA QUEUED" },
++		{ ATA_CMD_READ_STREAM_EXT, 	"READ STREAM EXT" },
++		{ ATA_CMD_READ_STREAM_DMA_EXT,  "READ STREAM DMA EXT" },
++		{ ATA_CMD_WRITE, 		"WRITE DMA" },
++		{ ATA_CMD_WRITE_EXT, 		"WRITE DMA EXT" },
++		{ ATA_CMD_WRITE_QUEUED, 	"WRITE DMA QUEUED EXT" },
++		{ ATA_CMD_WRITE_STREAM_EXT, 	"WRITE STREAM EXT" },
++		{ ATA_CMD_WRITE_STREAM_DMA_EXT, "WRITE STREAM DMA EXT" },
++		{ ATA_CMD_WRITE_FUA_EXT,	"WRITE DMA FUA EXT" },
++		{ ATA_CMD_WRITE_QUEUED_FUA_EXT, "WRITE DMA QUEUED FUA EXT" },
++		{ ATA_CMD_FPDMA_READ,		"READ FPDMA QUEUED" },
++		{ ATA_CMD_FPDMA_WRITE,		"WRITE FPDMA QUEUED" },
++		{ ATA_CMD_PIO_READ,		"READ SECTOR(S)" },
++		{ ATA_CMD_PIO_READ_EXT,		"READ SECTOR(S) EXT" },
++		{ ATA_CMD_PIO_WRITE,		"WRITE SECTOR(S)" },
++		{ ATA_CMD_PIO_WRITE_EXT,	"WRITE SECTOR(S) EXT" },
++		{ ATA_CMD_READ_MULTI,		"READ MULTIPLE" },
++		{ ATA_CMD_READ_MULTI_EXT,	"READ MULTIPLE EXT" },
++		{ ATA_CMD_WRITE_MULTI,		"WRITE MULTIPLE" },
++		{ ATA_CMD_WRITE_MULTI_EXT,	"WRITE MULTIPLE EXT" },
++		{ ATA_CMD_WRITE_MULTI_FUA_EXT, 	"WRITE MULTIPLE FUA EXT" },
++		{ ATA_CMD_SET_FEATURES,		"SET FEATURES" },
++		{ ATA_CMD_SET_MULTI,		"SET MULTIPLE MODE" },
++		{ ATA_CMD_VERIFY,		"READ VERIFY SECTOR(S)" },
++		{ ATA_CMD_VERIFY_EXT,		"READ VERIFY SECTOR(S) EXT" },
++		{ ATA_CMD_WRITE_UNCORR_EXT,	"WRITE UNCORRECTABLE EXT" },
++		{ ATA_CMD_STANDBYNOW1,		"STANDBY IMMEDIATE" },
++		{ ATA_CMD_IDLEIMMEDIATE,	"IDLE IMMEDIATE" },
++		{ ATA_CMD_SLEEP,		"SLEEP" },
++		{ ATA_CMD_INIT_DEV_PARAMS,	"INITIALIZE DEVICE PARAMETERS" },
++		{ ATA_CMD_READ_NATIVE_MAX,	"READ NATIVE MAX ADDRESS" },
++		{ ATA_CMD_READ_NATIVE_MAX_EXT,	"READ NATIVE MAX ADDRESS EXT" },
++		{ ATA_CMD_SET_MAX,		"SET MAX ADDRESS" },
++		{ ATA_CMD_SET_MAX_EXT,		"SET MAX ADDRESS EXT" },
++		{ ATA_CMD_READ_LOG_EXT,		"READ LOG EXT" },
++		{ ATA_CMD_WRITE_LOG_EXT,	"WRITE LOG EXT" },
++		{ ATA_CMD_READ_LOG_DMA_EXT,	"READ LOG DMA EXT" },
++		{ ATA_CMD_WRITE_LOG_DMA_EXT, 	"WRITE LOG DMA EXT" },
++		{ ATA_CMD_TRUSTED_RCV,		"TRUSTED RECEIVE" },
++		{ ATA_CMD_TRUSTED_RCV_DMA, 	"TRUSTED RECEIVE DMA" },
++		{ ATA_CMD_TRUSTED_SND,		"TRUSTED SEND" },
++		{ ATA_CMD_TRUSTED_SND_DMA, 	"TRUSTED SEND DMA" },
++		{ ATA_CMD_PMP_READ,		"READ BUFFER" },
++		{ ATA_CMD_PMP_WRITE,		"WRITE BUFFER" },
++		{ ATA_CMD_CONF_OVERLAY,		"DEVICE CONFIGURATION OVERLAY" },
++		{ ATA_CMD_SEC_SET_PASS,		"SECURITY SET PASSWORD" },
++		{ ATA_CMD_SEC_UNLOCK,		"SECURITY UNLOCK" },
++		{ ATA_CMD_SEC_ERASE_PREP,	"SECURITY ERASE PREPARE" },
++		{ ATA_CMD_SEC_ERASE_UNIT,	"SECURITY ERASE UNIT" },
++		{ ATA_CMD_SEC_FREEZE_LOCK,	"SECURITY FREEZE LOCK" },
++		{ ATA_CMD_SEC_DISABLE_PASS,	"SECURITY DISABLE PASSWORD" },
++		{ ATA_CMD_CONFIG_STREAM,	"CONFIGURE STREAM" },
++		{ ATA_CMD_SMART,		"SMART" },
++		{ ATA_CMD_MEDIA_LOCK,		"DOOR LOCK" },
++		{ ATA_CMD_MEDIA_UNLOCK,		"DOOR UNLOCK" },
++		{ ATA_CMD_CHK_MED_CRD_TYP, 	"CHECK MEDIA CARD TYPE" },
++		{ ATA_CMD_CFA_REQ_EXT_ERR, 	"CFA REQUEST EXTENDED ERROR" },
++		{ ATA_CMD_CFA_WRITE_NE,		"CFA WRITE SECTORS WITHOUT ERASE" },
++		{ ATA_CMD_CFA_TRANS_SECT,	"CFA TRANSLATE SECTOR" },
++		{ ATA_CMD_CFA_ERASE,		"CFA ERASE SECTORS" },
++		{ ATA_CMD_CFA_WRITE_MULT_NE, 	"CFA WRITE MULTIPLE WITHOUT ERASE" },
++		{ ATA_CMD_READ_LONG,		"READ LONG (with retries)" },
++		{ ATA_CMD_READ_LONG_ONCE,	"READ LONG (without retries)" },
++		{ ATA_CMD_WRITE_LONG,		"WRITE LONG (with retries)" },
++		{ ATA_CMD_WRITE_LONG_ONCE,	"WRITE LONG (without retries)" },
++		{ ATA_CMD_RESTORE,		"RECALIBRATE" },
++		{ 0,				NULL } /* terminate list */
++	};
++
++	unsigned int i;
++	for (i = 0; cmd_descr[i].text; i++)
++		if (cmd_descr[i].command == command)
++			return cmd_descr[i].text;
++#endif
++
++	return NULL;
++}
++
++/**
+  *	ata_eh_link_report - report error handling to user
+  *	@link: ATA link EH is going on
+  *
+@@ -2175,6 +2288,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 			ata_link_printk(link, KERN_ERR, "%s\n", desc);
+ 	}
+ 
++#ifdef CONFIG_ATA_VERBOSE_ERROR
+ 	if (ehc->i.serror)
+ 		ata_link_printk(link, KERN_ERR,
+ 		  "SError: { %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}\n",
+@@ -2195,6 +2309,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 		  ehc->i.serror & SERR_TRANS_ST_ERROR ? "TrStaTrns " : "",
+ 		  ehc->i.serror & SERR_UNRECOG_FIS ? "UnrecFIS " : "",
+ 		  ehc->i.serror & SERR_DEV_XCHG ? "DevExch " : "");
++#endif
+ 
+ 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+@@ -2226,14 +2341,23 @@ static void ata_eh_link_report(struct ata_link *link)
+ 				 dma_str[qc->dma_dir]);
+ 		}
+ 
+-		if (ata_is_atapi(qc->tf.protocol))
+-			snprintf(cdb_buf, sizeof(cdb_buf),
++		if (ata_is_atapi(qc->tf.protocol)) {
++			if (qc->scsicmd)
++				scsi_print_command(qc->scsicmd);
++			else
++				snprintf(cdb_buf, sizeof(cdb_buf),
+ 				 "cdb %02x %02x %02x %02x %02x %02x %02x %02x  "
+ 				 "%02x %02x %02x %02x %02x %02x %02x %02x\n         ",
+ 				 cdb[0], cdb[1], cdb[2], cdb[3],
+ 				 cdb[4], cdb[5], cdb[6], cdb[7],
+ 				 cdb[8], cdb[9], cdb[10], cdb[11],
+ 				 cdb[12], cdb[13], cdb[14], cdb[15]);
++		} else {
++			const char *descr = ata_get_cmd_descript(cmd->command);
++			if (descr)
++				ata_dev_printk(qc->dev, KERN_ERR,
++					"failed command: %s\n", descr);
++		}
+ 
+ 		ata_dev_printk(qc->dev, KERN_ERR,
+ 			"cmd %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
+@@ -2252,6 +2376,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 			res->device, qc->err_mask, ata_err_string(qc->err_mask),
+ 			qc->err_mask & AC_ERR_NCQ ? " <F>" : "");
+ 
++#ifdef CONFIG_ATA_VERBOSE_ERROR
+ 		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
+ 				    ATA_ERR)) {
+ 			if (res->command & ATA_BUSY)
+@@ -2275,6 +2400,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 			  res->feature & ATA_UNC ? "UNC " : "",
+ 			  res->feature & ATA_IDNF ? "IDNF " : "",
+ 			  res->feature & ATA_ABORTED ? "ABRT " : "");
++#endif
+ 	}
+ }
+ 
+@@ -2574,11 +2700,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 			postreset(slave, classes);
+ 	}
+ 
+-	/* clear cached SError */
++	/*
++	 * Some controllers can't be frozen very well and may set
++	 * spuruious error conditions during reset.  Clear accumulated
++	 * error information.  As reset is the final recovery action,
++	 * nothing is lost by doing this.
++	 */
+ 	spin_lock_irqsave(link->ap->lock, flags);
+-	link->eh_info.serror = 0;
++	memset(&link->eh_info, 0, sizeof(link->eh_info));
+ 	if (slave)
+-		slave->eh_info.serror = 0;
++		memset(&slave->eh_info, 0, sizeof(link->eh_info));
++	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+ 	spin_unlock_irqrestore(link->ap->lock, flags);
+ 
+ 	/* Make sure onlineness and classification result correspond.
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 619f2c3..51f0ffb 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -221,6 +221,8 @@ static const char *sata_pmp_spec_rev_str(const u32 *gscr)
+ {
+ 	u32 rev = gscr[SATA_PMP_GSCR_REV];
+ 
++	if (rev & (1 << 3))
++		return "1.2";
+ 	if (rev & (1 << 2))
+ 		return "1.1";
+ 	if (rev & (1 << 1))
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d0dfeef..b4ee28d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1119,10 +1119,6 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+ 
+ 		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
+ 	} else {
+-		if (ata_id_is_ssd(dev->id))
+-			queue_flag_set_unlocked(QUEUE_FLAG_NONROT,
+-						sdev->request_queue);
+-
+ 		/* ATA devices must be sector aligned */
+ 		blk_queue_update_dma_alignment(sdev->request_queue,
+ 					       ATA_SECT_SIZE - 1);
+@@ -1257,23 +1253,6 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+ 	return queue_depth;
+ }
+ 
+-/* XXX: for spindown warning */
+-static void ata_delayed_done_timerfn(unsigned long arg)
+-{
+-	struct scsi_cmnd *scmd = (void *)arg;
+-
+-	scmd->scsi_done(scmd);
+-}
+-
+-/* XXX: for spindown warning */
+-static void ata_delayed_done(struct scsi_cmnd *scmd)
+-{
+-	static struct timer_list timer;
+-
+-	setup_timer(&timer, ata_delayed_done_timerfn, (unsigned long)scmd);
+-	mod_timer(&timer, jiffies + 5 * HZ);
+-}
+-
+ /**
+  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
+  *	@qc: Storage for translated ATA taskfile
+@@ -1338,32 +1317,6 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 		     system_entering_hibernation())
+ 			goto skip;
+ 
+-		/* XXX: This is for backward compatibility, will be
+-		 * removed.  Read Documentation/feature-removal-schedule.txt
+-		 * for more info.
+-		 */
+-		if ((qc->dev->flags & ATA_DFLAG_SPUNDOWN) &&
+-		    (system_state == SYSTEM_HALT ||
+-		     system_state == SYSTEM_POWER_OFF)) {
+-			static unsigned long warned;
+-
+-			if (!test_and_set_bit(0, &warned)) {
+-				ata_dev_printk(qc->dev, KERN_WARNING,
+-					"DISK MIGHT NOT BE SPUN DOWN PROPERLY. "
+-					"UPDATE SHUTDOWN UTILITY\n");
+-				ata_dev_printk(qc->dev, KERN_WARNING,
+-					"For more info, visit "
+-					"http://linux-ata.org/shutdown.html\n");
+-
+-				/* ->scsi_done is not used, use it for
+-				 * delayed completion.
+-				 */
+-				scmd->scsi_done = qc->scsidone;
+-				qc->scsidone = ata_delayed_done;
+-			}
+-			goto skip;
+-		}
+-
+ 		/* Issue ATA STANDBY IMMEDIATE command */
+ 		tf->command = ATA_CMD_STANDBYNOW1;
+ 	}
+@@ -1764,14 +1717,6 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ 		}
+ 	}
+ 
+-	/* XXX: track spindown state for spindown skipping and warning */
+-	if (unlikely(qc->tf.command == ATA_CMD_STANDBY ||
+-		     qc->tf.command == ATA_CMD_STANDBYNOW1))
+-		qc->dev->flags |= ATA_DFLAG_SPUNDOWN;
+-	else if (likely(system_state != SYSTEM_HALT &&
+-			system_state != SYSTEM_POWER_OFF))
+-		qc->dev->flags &= ~ATA_DFLAG_SPUNDOWN;
+-
+ 	if (need_sense && !ap->ops->error_handler)
+ 		ata_dump_status(ap->print_id, &qc->result_tf);
+ 
+@@ -2815,28 +2760,6 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		goto invalid_fld;
+ 
+ 	/*
+-	 * Filter TPM commands by default. These provide an
+-	 * essentially uncontrolled encrypted "back door" between
+-	 * applications and the disk. Set libata.allow_tpm=1 if you
+-	 * have a real reason for wanting to use them. This ensures
+-	 * that installed software cannot easily mess stuff up without
+-	 * user intent. DVR type users will probably ship with this enabled
+-	 * for movie content management.
+-	 *
+-	 * Note that for ATA8 we can issue a DCS change and DCS freeze lock
+-	 * for this and should do in future but that it is not sufficient as
+-	 * DCS is an optional feature set. Thus we also do the software filter
+-	 * so that we comply with the TC consortium stated goal that the user
+-	 * can turn off TC features of their system.
+-	 */
+-	if (tf->command >= 0x5C && tf->command <= 0x5F && !libata_allow_tpm)
+-		goto invalid_fld;
+-
+-	/* We may not issue DMA commands if no DMA mode is set */
+-	if (tf->protocol == ATA_PROT_DMA && dev->dma_mode == 0)
+-		goto invalid_fld;
+-
+-	/*
+ 	 * 12 and 16 byte CDBs use different offsets to
+ 	 * provide the various register values.
+ 	 */
+@@ -2885,6 +2808,41 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	tf->device = dev->devno ?
+ 		tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
+ 
++	/* READ/WRITE LONG use a non-standard sect_size */
++	qc->sect_size = ATA_SECT_SIZE;
++	switch (tf->command) {
++	case ATA_CMD_READ_LONG:
++	case ATA_CMD_READ_LONG_ONCE:
++	case ATA_CMD_WRITE_LONG:
++	case ATA_CMD_WRITE_LONG_ONCE:
++		if (tf->protocol != ATA_PROT_PIO || tf->nsect != 1)
++			goto invalid_fld;
++		qc->sect_size = scsi_bufflen(scmd);
++	}
++
++	/*
++	 * Set flags so that all registers will be written, pass on
++	 * write indication (used for PIO/DMA setup), result TF is
++	 * copied back and we don't whine too much about its failure.
++	 */
++	tf->flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	if (scmd->sc_data_direction == DMA_TO_DEVICE)
++		tf->flags |= ATA_TFLAG_WRITE;
++
++	qc->flags |= ATA_QCFLAG_RESULT_TF | ATA_QCFLAG_QUIET;
++
++	/*
++	 * Set transfer length.
++	 *
++	 * TODO: find out if we need to do more here to
++	 *       cover scatter/gather case.
++	 */
++	ata_qc_set_pc_nbytes(qc);
++
++	/* We may not issue DMA commands if no DMA mode is set */
++	if (tf->protocol == ATA_PROT_DMA && dev->dma_mode == 0)
++		goto invalid_fld;
++
+ 	/* sanity check for pio multi commands */
+ 	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf))
+ 		goto invalid_fld;
+@@ -2901,18 +2859,6 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 				       multi_count);
+ 	}
+ 
+-	/* READ/WRITE LONG use a non-standard sect_size */
+-	qc->sect_size = ATA_SECT_SIZE;
+-	switch (tf->command) {
+-	case ATA_CMD_READ_LONG:
+-	case ATA_CMD_READ_LONG_ONCE:
+-	case ATA_CMD_WRITE_LONG:
+-	case ATA_CMD_WRITE_LONG_ONCE:
+-		if (tf->protocol != ATA_PROT_PIO || tf->nsect != 1)
+-			goto invalid_fld;
+-		qc->sect_size = scsi_bufflen(scmd);
+-	}
+-
+ 	/*
+ 	 * Filter SET_FEATURES - XFER MODE command -- otherwise,
+ 	 * SET_FEATURES - XFER MODE must be preceded/succeeded
+@@ -2920,30 +2866,27 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	 * controller (i.e. the reason for ->set_piomode(),
+ 	 * ->set_dmamode(), and ->post_set_mode() hooks).
+ 	 */
+-	if ((tf->command == ATA_CMD_SET_FEATURES)
+-	 && (tf->feature == SETFEATURES_XFER))
++	if (tf->command == ATA_CMD_SET_FEATURES &&
++	    tf->feature == SETFEATURES_XFER)
+ 		goto invalid_fld;
+ 
+ 	/*
+-	 * Set flags so that all registers will be written,
+-	 * and pass on write indication (used for PIO/DMA
+-	 * setup.)
+-	 */
+-	tf->flags |= (ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE);
+-
+-	if (scmd->sc_data_direction == DMA_TO_DEVICE)
+-		tf->flags |= ATA_TFLAG_WRITE;
+-
+-	/*
+-	 * Set transfer length.
++	 * Filter TPM commands by default. These provide an
++	 * essentially uncontrolled encrypted "back door" between
++	 * applications and the disk. Set libata.allow_tpm=1 if you
++	 * have a real reason for wanting to use them. This ensures
++	 * that installed software cannot easily mess stuff up without
++	 * user intent. DVR type users will probably ship with this enabled
++	 * for movie content management.
+ 	 *
+-	 * TODO: find out if we need to do more here to
+-	 *       cover scatter/gather case.
++	 * Note that for ATA8 we can issue a DCS change and DCS freeze lock
++	 * for this and should do in future but that it is not sufficient as
++	 * DCS is an optional feature set. Thus we also do the software filter
++	 * so that we comply with the TC consortium stated goal that the user
++	 * can turn off TC features of their system.
+ 	 */
+-	ata_qc_set_pc_nbytes(qc);
+-
+-	/* request result TF and be quiet about device error */
+-	qc->flags |= ATA_QCFLAG_RESULT_TF | ATA_QCFLAG_QUIET;
++	if (tf->command >= 0x5C && tf->command <= 0x5F && !libata_allow_tpm)
++		goto invalid_fld;
+ 
+ 	return 0;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 89a1e00..be8e262 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -164,6 +164,7 @@ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ extern void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ 			unsigned int action);
+ extern void ata_eh_autopsy(struct ata_port *ap);
++const char *ata_get_cmd_descript(u8 command);
+ extern void ata_eh_report(struct ata_port *ap);
+ extern int ata_eh_reset(struct ata_link *link, int classify,
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+index 4591556..aa4b3f6 100644
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -246,6 +246,7 @@ static const struct pci_device_id atiixp[] = {
+ 	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP400_IDE), },
+ 	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP600_IDE), },
+ 	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP700_IDE), },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_SB900_IDE), },
+ 
+ 	{ },
+ };
+diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
+index d33aa28..403f561 100644
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -202,7 +202,8 @@ static int cs5535_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ }
+ 
+ static const struct pci_device_id cs5535[] = {
+-	{ PCI_VDEVICE(NS, 0x002D), },
++	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_CS5535_IDE), },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_CS5535_IDE), },
+ 
+ 	{ },
+ };
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index abdd19f..d6f6956 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -213,7 +213,7 @@ static void octeon_cf_set_dmamode(struct ata_port *ap, struct ata_device *dev)
+ 	 * This is tI, C.F. spec. says 0, but Sony CF card requires
+ 	 * more, we use 20 nS.
+ 	 */
+-	dma_tim.s.dmack_s = ns_to_tim_reg(tim_mult, 20);;
++	dma_tim.s.dmack_s = ns_to_tim_reg(tim_mult, 20);
+ 	dma_tim.s.dmack_h = ns_to_tim_reg(tim_mult, dma_ackh);
+ 
+ 	dma_tim.s.dmarq = dma_arq;
+@@ -841,7 +841,7 @@ static int __devinit octeon_cf_probe(struct platform_device *pdev)
+ 	ocd = pdev->dev.platform_data;
+ 
+ 	cs0 = devm_ioremap_nocache(&pdev->dev, res_cs0->start,
+-				   res_cs0->end - res_cs0->start + 1);
++				   resource_size(res_cs0));
+ 
+ 	if (!cs0)
+ 		return -ENOMEM;
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index d8d743a..3f6ebc6 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -151,14 +151,14 @@ int __devinit __pata_platform_probe(struct device *dev,
+ 	 */
+ 	if (mmio) {
+ 		ap->ioaddr.cmd_addr = devm_ioremap(dev, io_res->start,
+-				io_res->end - io_res->start + 1);
++				resource_size(io_res));
+ 		ap->ioaddr.ctl_addr = devm_ioremap(dev, ctl_res->start,
+-				ctl_res->end - ctl_res->start + 1);
++				resource_size(ctl_res));
+ 	} else {
+ 		ap->ioaddr.cmd_addr = devm_ioport_map(dev, io_res->start,
+-				io_res->end - io_res->start + 1);
++				resource_size(io_res));
+ 		ap->ioaddr.ctl_addr = devm_ioport_map(dev, ctl_res->start,
+-				ctl_res->end - ctl_res->start + 1);
++				resource_size(ctl_res));
+ 	}
+ 	if (!ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr) {
+ 		dev_err(dev, "failed to map IO/CTL base\n");
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index 8e3cdef..45f1e10 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -151,7 +151,7 @@ static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
+ 	info->irq = irq;
+ 
+ 	info->iobase = devm_ioremap_nocache(&pdev->dev, res->start,
+-				res->end - res->start + 1);
++				resource_size(res));
+ 	if (!info->iobase)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
+new file mode 100644
+index 0000000..c843a1e
+--- /dev/null
++++ b/drivers/ata/pata_rdc.c
+@@ -0,0 +1,400 @@
++/*
++ *  pata_rdc		-	Driver for later RDC PATA controllers
++ *
++ *  This is actually a driver for hardware meeting
++ *  INCITS 370-2004 (1510D): ATA Host Adapter Standards
++ *
++ *  Based on ata_piix.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; see the file COPYING.  If not, write to
++ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/init.h>
++#include <linux/blkdev.h>
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <scsi/scsi_host.h>
++#include <linux/libata.h>
++#include <linux/dmi.h>
++
++#define DRV_NAME	"pata_rdc"
++#define DRV_VERSION	"0.01"
++
++struct rdc_host_priv {
++	u32 saved_iocfg;
++};
++
++/**
++ *	rdc_pata_cable_detect - Probe host controller cable detect info
++ *	@ap: Port for which cable detect info is desired
++ *
++ *	Read 80c cable indicator from ATA PCI device's PCI config
++ *	register.  This register is normally set by firmware (BIOS).
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++
++static int rdc_pata_cable_detect(struct ata_port *ap)
++{
++	struct rdc_host_priv *hpriv = ap->host->private_data;
++	u8 mask;
++
++	/* check BIOS cable detect results */
++	mask = 0x30 << (2 * ap->port_no);
++	if ((hpriv->saved_iocfg & mask) == 0)
++		return ATA_CBL_PATA40;
++	return ATA_CBL_PATA80;
++}
++
++/**
++ *	rdc_pata_prereset - prereset for PATA host controller
++ *	@link: Target link
++ *	@deadline: deadline jiffies for the operation
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++static int rdc_pata_prereset(struct ata_link *link, unsigned long deadline)
++{
++	struct ata_port *ap = link->ap;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++
++	static const struct pci_bits rdc_enable_bits[] = {
++		{ 0x41U, 1U, 0x80UL, 0x80UL },	/* port 0 */
++		{ 0x43U, 1U, 0x80UL, 0x80UL },	/* port 1 */
++	};
++
++	if (!pci_test_config_bits(pdev, &rdc_enable_bits[ap->port_no]))
++		return -ENOENT;
++	return ata_sff_prereset(link, deadline);
++}
++
++/**
++ *	rdc_set_piomode - Initialize host controller PATA PIO timings
++ *	@ap: Port whose timings we are configuring
++ *	@adev: um
++ *
++ *	Set PIO mode for device, in host controller PCI config space.
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++
++static void rdc_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
++	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	unsigned int is_slave	= (adev->devno != 0);
++	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
++	unsigned int slave_port	= 0x44;
++	u16 master_data;
++	u8 slave_data;
++	u8 udma_enable;
++	int control = 0;
++
++	static const	 /* ISP  RTC */
++	u8 timings[][2]	= { { 0, 0 },
++			    { 0, 0 },
++			    { 1, 0 },
++			    { 2, 1 },
++			    { 2, 3 }, };
++
++	if (pio >= 2)
++		control |= 1;	/* TIME1 enable */
++	if (ata_pio_need_iordy(adev))
++		control |= 2;	/* IE enable */
++
++	if (adev->class == ATA_DEV_ATA)
++		control |= 4;	/* PPE enable */
++
++	/* PIO configuration clears DTE unconditionally.  It will be
++	 * programmed in set_dmamode which is guaranteed to be called
++	 * after set_piomode if any DMA mode is available.
++	 */
++	pci_read_config_word(dev, master_port, &master_data);
++	if (is_slave) {
++		/* clear TIME1|IE1|PPE1|DTE1 */
++		master_data &= 0xff0f;
++		/* Enable SITRE (separate slave timing register) */
++		master_data |= 0x4000;
++		/* enable PPE1, IE1 and TIME1 as needed */
++		master_data |= (control << 4);
++		pci_read_config_byte(dev, slave_port, &slave_data);
++		slave_data &= (ap->port_no ? 0x0f : 0xf0);
++		/* Load the timing nibble for this slave */
++		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
++						<< (ap->port_no ? 4 : 0);
++	} else {
++		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
++		master_data &= 0xccf0;
++		/* Enable PPE, IE and TIME as appropriate */
++		master_data |= control;
++		/* load ISP and RCT */
++		master_data |=
++			(timings[pio][0] << 12) |
++			(timings[pio][1] << 8);
++	}
++	pci_write_config_word(dev, master_port, master_data);
++	if (is_slave)
++		pci_write_config_byte(dev, slave_port, slave_data);
++
++	/* Ensure the UDMA bit is off - it will be turned back on if
++	   UDMA is selected */
++
++	pci_read_config_byte(dev, 0x48, &udma_enable);
++	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
++	pci_write_config_byte(dev, 0x48, udma_enable);
++}
++
++/**
++ *	rdc_set_dmamode - Initialize host controller PATA PIO timings
++ *	@ap: Port whose timings we are configuring
++ *	@adev: Drive in question
++ *
++ *	Set UDMA mode for device, in host controller PCI config space.
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++
++static void rdc_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++{
++	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	u8 master_port		= ap->port_no ? 0x42 : 0x40;
++	u16 master_data;
++	u8 speed		= adev->dma_mode;
++	int devid		= adev->devno + 2 * ap->port_no;
++	u8 udma_enable		= 0;
++
++	static const	 /* ISP  RTC */
++	u8 timings[][2]	= { { 0, 0 },
++			    { 0, 0 },
++			    { 1, 0 },
++			    { 2, 1 },
++			    { 2, 3 }, };
++
++	pci_read_config_word(dev, master_port, &master_data);
++	pci_read_config_byte(dev, 0x48, &udma_enable);
++
++	if (speed >= XFER_UDMA_0) {
++		unsigned int udma = adev->dma_mode - XFER_UDMA_0;
++		u16 udma_timing;
++		u16 ideconf;
++		int u_clock, u_speed;
++
++		/*
++		 * UDMA is handled by a combination of clock switching and
++		 * selection of dividers
++		 *
++		 * Handy rule: Odd modes are UDMATIMx 01, even are 02
++		 *	       except UDMA0 which is 00
++		 */
++		u_speed = min(2 - (udma & 1), udma);
++		if (udma == 5)
++			u_clock = 0x1000;	/* 100Mhz */
++		else if (udma > 2)
++			u_clock = 1;		/* 66Mhz */
++		else
++			u_clock = 0;		/* 33Mhz */
++
++		udma_enable |= (1 << devid);
++
++		/* Load the CT/RP selection */
++		pci_read_config_word(dev, 0x4A, &udma_timing);
++		udma_timing &= ~(3 << (4 * devid));
++		udma_timing |= u_speed << (4 * devid);
++		pci_write_config_word(dev, 0x4A, udma_timing);
++
++		/* Select a 33/66/100Mhz clock */
++		pci_read_config_word(dev, 0x54, &ideconf);
++		ideconf &= ~(0x1001 << devid);
++		ideconf |= u_clock << devid;
++		pci_write_config_word(dev, 0x54, ideconf);
++	} else {
++		/*
++		 * MWDMA is driven by the PIO timings. We must also enable
++		 * IORDY unconditionally along with TIME1. PPE has already
++		 * been set when the PIO timing was set.
++		 */
++		unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
++		unsigned int control;
++		u8 slave_data;
++		const unsigned int needed_pio[3] = {
++			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
++		};
++		int pio = needed_pio[mwdma] - XFER_PIO_0;
++
++		control = 3;	/* IORDY|TIME1 */
++
++		/* If the drive MWDMA is faster than it can do PIO then
++		   we must force PIO into PIO0 */
++
++		if (adev->pio_mode < needed_pio[mwdma])
++			/* Enable DMA timing only */
++			control |= 8;	/* PIO cycles in PIO0 */
++
++		if (adev->devno) {	/* Slave */
++			master_data &= 0xFF4F;  /* Mask out IORDY|TIME1|DMAONLY */
++			master_data |= control << 4;
++			pci_read_config_byte(dev, 0x44, &slave_data);
++			slave_data &= (ap->port_no ? 0x0f : 0xf0);
++			/* Load the matching timing */
++			slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
++			pci_write_config_byte(dev, 0x44, slave_data);
++		} else { 	/* Master */
++			master_data &= 0xCCF4;	/* Mask out IORDY|TIME1|DMAONLY
++						   and master timing bits */
++			master_data |= control;
++			master_data |=
++				(timings[pio][0] << 12) |
++				(timings[pio][1] << 8);
++		}
++
++		udma_enable &= ~(1 << devid);
++		pci_write_config_word(dev, master_port, master_data);
++	}
++	pci_write_config_byte(dev, 0x48, udma_enable);
++}
++
++static struct ata_port_operations rdc_pata_ops = {
++	.inherits		= &ata_bmdma32_port_ops,
++	.cable_detect		= rdc_pata_cable_detect,
++	.set_piomode		= rdc_set_piomode,
++	.set_dmamode		= rdc_set_dmamode,
++	.prereset		= rdc_pata_prereset,
++};
++
++static struct ata_port_info rdc_port_info = {
++
++	.flags		= ATA_FLAG_SLAVE_POSS,
++	.pio_mask	= ATA_PIO4,
++	.mwdma_mask	= ATA_MWDMA2,
++	.udma_mask	= ATA_UDMA5,
++	.port_ops	= &rdc_pata_ops,
++};
++
++static struct scsi_host_template rdc_sht = {
++	ATA_BMDMA_SHT(DRV_NAME),
++};
++
++/**
++ *	rdc_init_one - Register PIIX ATA PCI device with kernel services
++ *	@pdev: PCI device to register
++ *	@ent: Entry in rdc_pci_tbl matching with @pdev
++ *
++ *	Called from kernel PCI layer.  We probe for combined mode (sigh),
++ *	and then hand over control to libata, for it to do the rest.
++ *
++ *	LOCKING:
++ *	Inherited from PCI layer (may sleep).
++ *
++ *	RETURNS:
++ *	Zero on success, or -ERRNO value.
++ */
++
++static int __devinit rdc_init_one(struct pci_dev *pdev,
++				   const struct pci_device_id *ent)
++{
++	static int printed_version;
++	struct device *dev = &pdev->dev;
++	struct ata_port_info port_info[2];
++	const struct ata_port_info *ppi[] = { &port_info[0], &port_info[1] };
++	unsigned long port_flags;
++	struct ata_host *host;
++	struct rdc_host_priv *hpriv;
++	int rc;
++
++	if (!printed_version++)
++		dev_printk(KERN_DEBUG, &pdev->dev,
++			   "version " DRV_VERSION "\n");
++
++	port_info[0] = rdc_port_info;
++	port_info[1] = rdc_port_info;
++
++	port_flags = port_info[0].flags;
++
++	/* enable device and prepare host */
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
++	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
++	if (!hpriv)
++		return -ENOMEM;
++
++	/* Save IOCFG, this will be used for cable detection, quirk
++	 * detection and restoration on detach.
++	 */
++	pci_read_config_dword(pdev, 0x54, &hpriv->saved_iocfg);
++
++	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
++	if (rc)
++		return rc;
++	host->private_data = hpriv;
++
++	pci_intx(pdev, 1);
++
++	host->flags |= ATA_HOST_PARALLEL_SCAN;
++
++	pci_set_master(pdev);
++	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &rdc_sht);
++}
++
++static void rdc_remove_one(struct pci_dev *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct rdc_host_priv *hpriv = host->private_data;
++
++	pci_write_config_dword(pdev, 0x54, hpriv->saved_iocfg);
++
++	ata_pci_remove_one(pdev);
++}
++
++static const struct pci_device_id rdc_pci_tbl[] = {
++	{ PCI_DEVICE(0x17F3, 0x1011), },
++	{ PCI_DEVICE(0x17F3, 0x1012), },
++	{ }	/* terminate list */
++};
++
++static struct pci_driver rdc_pci_driver = {
++	.name			= DRV_NAME,
++	.id_table		= rdc_pci_tbl,
++	.probe			= rdc_init_one,
++	.remove			= rdc_remove_one,
++};
++
++
++static int __init rdc_init(void)
++{
++	return pci_register_driver(&rdc_pci_driver);
++}
++
++static void __exit rdc_exit(void)
++{
++	pci_unregister_driver(&rdc_pci_driver);
++}
++
++module_init(rdc_init);
++module_exit(rdc_exit);
++
++MODULE_AUTHOR("Alan Cox (based on ata_piix)");
++MODULE_DESCRIPTION("SCSI low-level driver for RDC PATA controllers");
++MODULE_LICENSE("GPL");
++MODULE_DEVICE_TABLE(pci, rdc_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
+diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
+index 0c574c0..a5e4dfe 100644
+--- a/drivers/ata/pata_rz1000.c
++++ b/drivers/ata/pata_rz1000.c
+@@ -85,7 +85,6 @@ static int rz1000_fifo_disable(struct pci_dev *pdev)
+ 
+ static int rz1000_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+-	static int printed_version;
+ 	static const struct ata_port_info info = {
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = ATA_PIO4,
+@@ -93,8 +92,7 @@ static int rz1000_init_one (struct pci_dev *pdev, const struct pci_device_id *en
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+ 
+-	if (!printed_version++)
+-		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
++	printk_once(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
+ 
+ 	if (rz1000_fifo_disable(pdev) == 0)
+ 		return ata_pci_sff_init_one(pdev, ppi, &rz1000_sht, NULL);
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 94eaa43..d344db4 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1257,6 +1257,7 @@ static struct scsi_host_template sata_fsl_sht = {
+ static struct ata_port_operations sata_fsl_ops = {
+ 	.inherits		= &sata_pmp_port_ops,
+ 
++	.qc_defer = ata_std_qc_defer,
+ 	.qc_prep = sata_fsl_qc_prep,
+ 	.qc_issue = sata_fsl_qc_issue,
+ 	.qc_fill_rtf = sata_fsl_qc_fill_rtf,
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index 8d890cc..4406902 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -405,7 +405,7 @@ static irqreturn_t inic_interrupt(int irq, void *dev_instance)
+ 	struct ata_host *host = dev_instance;
+ 	struct inic_host_priv *hpriv = host->private_data;
+ 	u16 host_irq_stat;
+-	int i, handled = 0;;
++	int i, handled = 0;
+ 
+ 	host_irq_stat = readw(hpriv->mmio_base + HOST_IRQ_STAT);
+ 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index c19417e..17f9ff9 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4013,7 +4013,7 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 
+ 	host->iomap = NULL;
+ 	hpriv->base = devm_ioremap(&pdev->dev, res->start,
+-				   res->end - res->start + 1);
++				   resource_size(res));
+ 	hpriv->base -= SATAHC0_REG_BASE;
+ 
+ 	/*
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 35bd5cc..3cb69d5 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -565,6 +565,19 @@ static void sil_freeze(struct ata_port *ap)
+ 	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
+ 	writel(tmp, mmio_base + SIL_SYSCFG);
+ 	readl(mmio_base + SIL_SYSCFG);	/* flush */
++
++	/* Ensure DMA_ENABLE is off.
++	 *
++	 * This is because the controller will not give us access to the
++	 * taskfile registers while a DMA is in progress
++	 */
++	iowrite8(ioread8(ap->ioaddr.bmdma_addr) & ~SIL_DMA_ENABLE,
++		 ap->ioaddr.bmdma_addr);
++
++	/* According to ata_bmdma_stop, an HDMA transition requires
++	 * on PIO cycle. But we can't read a taskfile register.
++	 */
++	ioread8(ap->ioaddr.bmdma_addr);
+ }
+ 
+ static void sil_thaw(struct ata_port *ap)
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 77aa8d7..e6946fc 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -846,6 +846,17 @@ static void sil24_qc_prep(struct ata_queued_cmd *qc)
+ 	if (!ata_is_atapi(qc->tf.protocol)) {
+ 		prb = &cb->ata.prb;
+ 		sge = cb->ata.sge;
++		if (ata_is_data(qc->tf.protocol)) {
++			u16 prot = 0;
++			ctrl = PRB_CTRL_PROTOCOL;
++			if (ata_is_ncq(qc->tf.protocol))
++				prot |= PRB_PROT_NCQ;
++			if (qc->tf.flags & ATA_TFLAG_WRITE)
++				prot |= PRB_PROT_WRITE;
++			else
++				prot |= PRB_PROT_READ;
++			prb->prot = cpu_to_le16(prot);
++		}
+ 	} else {
+ 		prb = &cb->atapi.prb;
+ 		sge = cb->atapi.sge;
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index 8f98332..f8a91bf 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -109,8 +109,9 @@ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
+-static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
++static unsigned int get_scr_cfg_addr(struct ata_link *link, unsigned int sc_reg)
+ {
++	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	unsigned int addr = SIS_SCR_BASE + (4 * sc_reg);
+ 	u8 pmr;
+@@ -131,6 +132,9 @@ static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
+ 			break;
+ 		}
+ 	}
++	if (link->pmp)
++		addr += 0x10;
++
+ 	return addr;
+ }
+ 
+@@ -138,24 +142,12 @@ static u32 sis_scr_cfg_read(struct ata_link *link,
+ 			    unsigned int sc_reg, u32 *val)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(link->ap->host->dev);
+-	unsigned int cfg_addr = get_scr_cfg_addr(link->ap, sc_reg);
+-	u32 val2 = 0;
+-	u8 pmr;
++	unsigned int cfg_addr = get_scr_cfg_addr(link, sc_reg);
+ 
+ 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+ 		return -EINVAL;
+ 
+-	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+-
+ 	pci_read_config_dword(pdev, cfg_addr, val);
+-
+-	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
+-	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+-		pci_read_config_dword(pdev, cfg_addr+0x10, &val2);
+-
+-	*val |= val2;
+-	*val &= 0xfffffffb;	/* avoid problems with powerdowned ports */
+-
+ 	return 0;
+ }
+ 
+@@ -163,28 +155,16 @@ static int sis_scr_cfg_write(struct ata_link *link,
+ 			     unsigned int sc_reg, u32 val)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(link->ap->host->dev);
+-	unsigned int cfg_addr = get_scr_cfg_addr(link->ap, sc_reg);
+-	u8 pmr;
+-
+-	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+-		return -EINVAL;
+-
+-	pci_read_config_byte(pdev, SIS_PMR, &pmr);
++	unsigned int cfg_addr = get_scr_cfg_addr(link, sc_reg);
+ 
+ 	pci_write_config_dword(pdev, cfg_addr, val);
+-
+-	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
+-	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+-		pci_write_config_dword(pdev, cfg_addr+0x10, val);
+-
+ 	return 0;
+ }
+ 
+ static int sis_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+ 	struct ata_port *ap = link->ap;
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u8 pmr;
++	void __iomem *base = ap->ioaddr.scr_addr + link->pmp * 0x10;
+ 
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+@@ -192,39 +172,23 @@ static int sis_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ 	if (ap->flags & SIS_FLAG_CFGSCR)
+ 		return sis_scr_cfg_read(link, sc_reg, val);
+ 
+-	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+-
+-	*val = ioread32(ap->ioaddr.scr_addr + (sc_reg * 4));
+-
+-	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
+-	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+-		*val |= ioread32(ap->ioaddr.scr_addr + (sc_reg * 4) + 0x10);
+-
+-	*val &= 0xfffffffb;
+-
++	*val = ioread32(base + sc_reg * 4);
+ 	return 0;
+ }
+ 
+ static int sis_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+ 	struct ata_port *ap = link->ap;
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u8 pmr;
++	void __iomem *base = ap->ioaddr.scr_addr + link->pmp * 0x10;
+ 
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+ 
+-	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+-
+ 	if (ap->flags & SIS_FLAG_CFGSCR)
+ 		return sis_scr_cfg_write(link, sc_reg, val);
+-	else {
+-		iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+-		if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
+-		    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+-			iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4)+0x10);
+-		return 0;
+-	}
++
++	iowrite32(val, base + (sc_reg * 4));
++	return 0;
+ }
+ 
+ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -236,7 +200,7 @@ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	u32 genctl, val;
+ 	u8 pmr;
+ 	u8 port2_start = 0x20;
+-	int rc;
++	int i, rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
+@@ -319,6 +283,17 @@ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
++	for (i = 0; i < 2; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		if (ap->flags & ATA_FLAG_SATA &&
++		    ap->flags & ATA_FLAG_SLAVE_POSS) {
++			rc = ata_slave_link_init(ap);
++			if (rc)
++				return rc;
++		}
++	}
++
+ 	if (!(pi.flags & SIS_FLAG_CFGSCR)) {
+ 		void __iomem *mmio;
+ 
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index 24c84ae..938100f 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -568,35 +568,76 @@ const struct dmi_device * dmi_find_device(int type, const char *name,
+ EXPORT_SYMBOL(dmi_find_device);
+ 
+ /**
+- *	dmi_get_year - Return year of a DMI date
+- *	@field:	data index (like dmi_get_system_info)
++ *	dmi_get_date - parse a DMI date
++ *	@field:	data index (see enum dmi_field)
++ *	@yearp: optional out parameter for the year
++ *	@monthp: optional out parameter for the month
++ *	@dayp: optional out parameter for the day
+  *
+- *	Returns -1 when the field doesn't exist. 0 when it is broken.
++ *	The date field is assumed to be in the form resembling
++ *	[mm[/dd]]/yy[yy] and the result is stored in the out
++ *	parameters any or all of which can be omitted.
++ *
++ *	If the field doesn't exist, all out parameters are set to zero
++ *	and false is returned.  Otherwise, true is returned with any
++ *	invalid part of date set to zero.
++ *
++ *	On return, year, month and day are guaranteed to be in the
++ *	range of [0,9999], [0,12] and [0,31] respectively.
+  */
+-int dmi_get_year(int field)
++bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ {
+-	int year;
+-	const char *s = dmi_get_system_info(field);
++	int year = 0, month = 0, day = 0;
++	bool exists;
++	const char *s, *y;
++	char *e;
+ 
+-	if (!s)
+-		return -1;
+-	if (*s == '\0')
+-		return 0;
+-	s = strrchr(s, '/');
+-	if (!s)
+-		return 0;
++	s = dmi_get_system_info(field);
++	exists = s;
++	if (!exists)
++		goto out;
+ 
+-	s += 1;
+-	year = simple_strtoul(s, NULL, 0);
+-	if (year && year < 100) {	/* 2-digit year */
++	/*
++	 * Determine year first.  We assume the date string resembles
++	 * mm/dd/yy[yy] but the original code extracted only the year
++	 * from the end.  Keep the behavior in the spirit of no
++	 * surprises.
++	 */
++	y = strrchr(s, '/');
++	if (!y)
++		goto out;
++
++	y++;
++	year = simple_strtoul(y, &e, 10);
++	if (y != e && year < 100) {	/* 2-digit year */
+ 		year += 1900;
+ 		if (year < 1996)	/* no dates < spec 1.0 */
+ 			year += 100;
+ 	}
++	if (year > 9999)		/* year should fit in %04d */
++		year = 0;
++
++	/* parse the mm and dd */
++	month = simple_strtoul(s, &e, 10);
++	if (s == e || *e != '/' || !month || month > 12) {
++		month = 0;
++		goto out;
++	}
+ 
+-	return year;
++	s = e + 1;
++	day = simple_strtoul(s, &e, 10);
++	if (s == y || s == e || *e != '/' || day > 31)
++		day = 0;
++out:
++	if (yearp)
++		*yearp = year;
++	if (monthp)
++		*monthp = month;
++	if (dayp)
++		*dayp = day;
++	return exists;
+ }
+-EXPORT_SYMBOL(dmi_get_year);
++EXPORT_SYMBOL(dmi_get_date);
+ 
+ /**
+  *	dmi_walk - Walk the DMI table and get called back for every record
+diff --git a/drivers/ide/atiixp.c b/drivers/ide/atiixp.c
+index 923cbfe..6396c3a 100644
+--- a/drivers/ide/atiixp.c
++++ b/drivers/ide/atiixp.c
+@@ -177,6 +177,7 @@ static const struct pci_device_id atiixp_pci_tbl[] = {
+ 	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP400_IDE), 0 },
+ 	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP600_IDE), 1 },
+ 	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP700_IDE), 0 },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_SB900_IDE), 0 },
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, atiixp_pci_tbl);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 06b9656..85ce239 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -992,7 +992,7 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82454NX,
+ 
+ static void __devinit quirk_amd_ide_mode(struct pci_dev *pdev)
+ {
+-	/* set sb600/sb700/sb800 sata to ahci mode */
++	/* set SBX00 SATA in IDE mode to AHCI mode */
+ 	u8 tmp;
+ 
+ 	pci_read_config_byte(pdev, PCI_CLASS_DEVICE, &tmp);
+@@ -1011,6 +1011,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_SATA, quirk
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_SATA, quirk_amd_ide_mode);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_SATA, quirk_amd_ide_mode);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_SATA, quirk_amd_ide_mode);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_SB900_SATA_IDE, quirk_amd_ide_mode);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_SB900_SATA_IDE, quirk_amd_ide_mode);
+ 
+ /*
+  *	Serverworks CSB5 IDE does not fully support native mode
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 9c75921..6299a25 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -210,15 +210,25 @@ enum {
+ 	ATA_CMD_STANDBY		= 0xE2, /* place in standby power mode */
+ 	ATA_CMD_IDLE		= 0xE3, /* place in idle power mode */
+ 	ATA_CMD_EDD		= 0x90,	/* execute device diagnostic */
++	ATA_CMD_DOWNLOAD_MICRO  = 0x92,
++	ATA_CMD_NOP		= 0x00,
+ 	ATA_CMD_FLUSH		= 0xE7,
+ 	ATA_CMD_FLUSH_EXT	= 0xEA,
+ 	ATA_CMD_ID_ATA		= 0xEC,
+ 	ATA_CMD_ID_ATAPI	= 0xA1,
++	ATA_CMD_SERVICE		= 0xA2,
+ 	ATA_CMD_READ		= 0xC8,
+ 	ATA_CMD_READ_EXT	= 0x25,
++	ATA_CMD_READ_QUEUED	= 0x26,
++	ATA_CMD_READ_STREAM_EXT	= 0x2B,
++	ATA_CMD_READ_STREAM_DMA_EXT = 0x2A,
+ 	ATA_CMD_WRITE		= 0xCA,
+ 	ATA_CMD_WRITE_EXT	= 0x35,
++	ATA_CMD_WRITE_QUEUED	= 0x36,
++	ATA_CMD_WRITE_STREAM_EXT = 0x3B,
++	ATA_CMD_WRITE_STREAM_DMA_EXT = 0x3A,
+ 	ATA_CMD_WRITE_FUA_EXT	= 0x3D,
++	ATA_CMD_WRITE_QUEUED_FUA_EXT = 0x3E,
+ 	ATA_CMD_FPDMA_READ	= 0x60,
+ 	ATA_CMD_FPDMA_WRITE	= 0x61,
+ 	ATA_CMD_PIO_READ	= 0x20,
+@@ -235,6 +245,7 @@ enum {
+ 	ATA_CMD_PACKET		= 0xA0,
+ 	ATA_CMD_VERIFY		= 0x40,
+ 	ATA_CMD_VERIFY_EXT	= 0x42,
++	ATA_CMD_WRITE_UNCORR_EXT = 0x45,
+ 	ATA_CMD_STANDBYNOW1	= 0xE0,
+ 	ATA_CMD_IDLEIMMEDIATE	= 0xE1,
+ 	ATA_CMD_SLEEP		= 0xE6,
+@@ -243,15 +254,34 @@ enum {
+ 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
+ 	ATA_CMD_SET_MAX		= 0xF9,
+ 	ATA_CMD_SET_MAX_EXT	= 0x37,
+-	ATA_CMD_READ_LOG_EXT	= 0x2f,
++	ATA_CMD_READ_LOG_EXT	= 0x2F,
++	ATA_CMD_WRITE_LOG_EXT	= 0x3F,
++	ATA_CMD_READ_LOG_DMA_EXT = 0x47,
++	ATA_CMD_WRITE_LOG_DMA_EXT = 0x57,
++	ATA_CMD_TRUSTED_RCV	= 0x5C,
++	ATA_CMD_TRUSTED_RCV_DMA = 0x5D,
++	ATA_CMD_TRUSTED_SND	= 0x5E,
++	ATA_CMD_TRUSTED_SND_DMA = 0x5F,
+ 	ATA_CMD_PMP_READ	= 0xE4,
+ 	ATA_CMD_PMP_WRITE	= 0xE8,
+ 	ATA_CMD_CONF_OVERLAY	= 0xB1,
++	ATA_CMD_SEC_SET_PASS	= 0xF1,
++	ATA_CMD_SEC_UNLOCK	= 0xF2,
++	ATA_CMD_SEC_ERASE_PREP	= 0xF3,
++	ATA_CMD_SEC_ERASE_UNIT	= 0xF4,
+ 	ATA_CMD_SEC_FREEZE_LOCK	= 0xF5,
++	ATA_CMD_SEC_DISABLE_PASS = 0xF6,
++	ATA_CMD_CONFIG_STREAM	= 0x51,
+ 	ATA_CMD_SMART		= 0xB0,
+ 	ATA_CMD_MEDIA_LOCK	= 0xDE,
+ 	ATA_CMD_MEDIA_UNLOCK	= 0xDF,
+ 	ATA_CMD_DSM		= 0x06,
++	ATA_CMD_CHK_MED_CRD_TYP = 0xD1,
++	ATA_CMD_CFA_REQ_EXT_ERR = 0x03,
++	ATA_CMD_CFA_WRITE_NE	= 0x38,
++	ATA_CMD_CFA_TRANS_SECT	= 0x87,
++	ATA_CMD_CFA_ERASE	= 0xC0,
++	ATA_CMD_CFA_WRITE_MULT_NE = 0xCD,
+ 	/* marked obsolete in the ATA/ATAPI-7 spec */
+ 	ATA_CMD_RESTORE		= 0x10,
+ 
+@@ -306,6 +336,7 @@ enum {
+ 	/* SETFEATURE Sector counts for SATA features */
+ 	SATA_AN			= 0x05,  /* Asynchronous Notification */
+ 	SATA_DIPM		= 0x03,  /* Device Initiated Power Management */
++	SATA_FPDMA_AA		= 0x02,  /* DMA Setup FIS Auto-Activate */
+ 
+ 	/* feature values for SET_MAX */
+ 	ATA_SET_MAX_ADDR	= 0x00,
+@@ -525,6 +556,9 @@ static inline int ata_is_data(u8 prot)
+ #define ata_id_has_atapi_AN(id)	\
+ 	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
+ 	  ((id)[78] & (1 << 5)) )
++#define ata_id_has_fpdma_aa(id)	\
++	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
++	  ((id)[78] & (1 << 2)) )
+ #define ata_id_iordy_disable(id) ((id)[ATA_ID_CAPABILITY] & (1 << 10))
+ #define ata_id_has_iordy(id) ((id)[ATA_ID_CAPABILITY] & (1 << 11))
+ #define ata_id_u32(id,n)	\
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index bb5489c..a8a3e1a 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -43,7 +43,7 @@ extern const char * dmi_get_system_info(int field);
+ extern const struct dmi_device * dmi_find_device(int type, const char *name,
+ 	const struct dmi_device *from);
+ extern void dmi_scan_machine(void);
+-extern int dmi_get_year(int field);
++extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
+ extern int dmi_name_in_vendors(const char *str);
+ extern int dmi_name_in_serial(const char *str);
+ extern int dmi_available;
+@@ -58,7 +58,16 @@ static inline const char * dmi_get_system_info(int field) { return NULL; }
+ static inline const struct dmi_device * dmi_find_device(int type, const char *name,
+ 	const struct dmi_device *from) { return NULL; }
+ static inline void dmi_scan_machine(void) { return; }
+-static inline int dmi_get_year(int year) { return 0; }
++static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
++{
++	if (yearp)
++		*yearp = 0;
++	if (monthp)
++		*monthp = 0;
++	if (dayp)
++		*dayp = 0;
++	return false;
++}
+ static inline int dmi_name_in_vendors(const char *s) { return 0; }
+ static inline int dmi_name_in_serial(const char *s) { return 0; }
+ #define dmi_available 0
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index e5b6e33..76319bf 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -143,7 +143,6 @@ enum {
+ 
+ 	ATA_DFLAG_PIO		= (1 << 12), /* device limited to PIO mode */
+ 	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
+-	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
+ 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
+ 	ATA_DFLAG_DUBIOUS_XFER	= (1 << 16), /* data transfer not verified */
+ 	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
+@@ -190,6 +189,7 @@ enum {
+ 	ATA_FLAG_NO_POWEROFF_SPINDOWN = (1 << 11), /* don't spindown before poweroff */
+ 	ATA_FLAG_NO_HIBERNATE_SPINDOWN = (1 << 12), /* don't spindown before hibernation */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
++	ATA_FLAG_FPDMA_AA		= (1 << 14), /* driver supports Auto-Activate */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+ 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+@@ -386,6 +386,7 @@ enum {
+ 	ATA_HORKAGE_FIRMWARE_WARN = (1 << 12),	/* firmware update warning */
+ 	ATA_HORKAGE_1_5_GBPS	= (1 << 13),	/* force 1.5 Gbps */
+ 	ATA_HORKAGE_NOSETXFER	= (1 << 14),	/* skip SETXFER, SATA only */
++	ATA_HORKAGE_BROKEN_FPDMA_AA	= (1 << 15),	/* skip AA */
+ 
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 73b46b6..c8fdcad 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -376,6 +376,9 @@
+ #define PCI_DEVICE_ID_ATI_IXP600_IDE	0x438c
+ #define PCI_DEVICE_ID_ATI_IXP700_SATA	0x4390
+ #define PCI_DEVICE_ID_ATI_IXP700_IDE	0x439c
++/* AMD SB Chipset */
++#define PCI_DEVICE_ID_AMD_SB900_IDE	 0x780c
++#define PCI_DEVICE_ID_AMD_SB900_SATA_IDE 0x7800
+ 
+ #define PCI_VENDOR_ID_VLSI		0x1004
+ #define PCI_DEVICE_ID_VLSI_82C592	0x0005
+@@ -537,6 +540,7 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
++#define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+ #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+ #define PCI_DEVICE_ID_AMD_CS5536_AUDIO  0x2093
