@@ -1,68 +1,55 @@
-From: Wu <wuzhangjin@gmail.com>
-Subject: [PATCH] ide: fixup for fujitsu disk
-Date: Fri, 11 Sep 2009 17:25:58 +0800
-Message-ID: <1252661158-8219-1-git-send-email-wuzhangjin@gmail.com>
+From: "Kalra Ashish-B00888" <ashish.kalra@freescale.com>
+Subject: RE: [RESEND][PATCH] sata_fsl: hard and soft reset split
+Date: Fri, 11 Sep 2009 18:51:46 +0530
+Message-ID: <16444A0F3094A24C83EAB7836A12C63B37495F@zin33exm20.fsl.freescale.net>
+References: <Pine.WNT.4.64.0906291854180.2640@B00888-02.fsl.freescale.net> <4AA9F038.6030207@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:44226 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbZIKJ0H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2009 05:26:07 -0400
+Received: from az33egw02.freescale.net ([192.88.158.103]:47984 "EHLO
+	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbZIKNX7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2009 09:23:59 -0400
+Received: from de01smr01.freescale.net (de01smr01.freescale.net [10.208.0.31])
+	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id n8BDNxoL024363
+	for <linux-ide@vger.kernel.org>; Fri, 11 Sep 2009 06:24:02 -0700 (MST)
+Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
+	by de01smr01.freescale.net (8.13.1/8.13.0) with ESMTP id n8BDPfr8028093
+	for <linux-ide@vger.kernel.org>; Fri, 11 Sep 2009 08:25:42 -0500 (CDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <4AA9F038.6030207@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, huhb@lemote.com, zhangfx@lemote.com, Wu Zhangjin <wuzhangjin@gmail.com>, Yan Hua <yanh@lemote.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-From: Wu Zhangjin <wuzhangjin@gmail.com>
+Hello Jeff,
 
-This patch will fix the following problem on Yeeloong netbook with
-fujitsu disk.
+I will do the rediff and resubmit the patch.
 
-irq 14: nobody cared (try booting with the "irqpoll" option)
-Call Trace:
-[<ffffffff8020d438>] dump_stack+0x8/0x40
-[<ffffffff8027ec64>] __report_bad_irq+0x58/0xe4
-[<ffffffff8027ee6c>] note_interrupt+0x17c/0x23c
-[<ffffffff8027f9b8>] handle_level_irq+0xcc/0x134
-[<ffffffff802125b0>] mach_irq_dispatch+0xb8/0x1e0
-[<ffffffff8020041c>] ret_from_irq+0x0/0x4
-[<ffffffff8029e678>] free_hot_cold_page+0x224/0x2a0
-[<ffffffff8026f794>] swsusp_free+0xb0/0x14c
-[<ffffffff8026ec08>] hibernate+0x198/0x218
-[<ffffffff8026cfa8>] state_store+0x90/0x138
-[<ffffffff8032b5a4>] sysfs_write_file+0x130/0x194
-[<ffffffff802c94fc>] vfs_write+0xb8/0x180
-[<ffffffff802c96b8>] SyS_write+0x50/0x98
-[<ffffffff80203fd8>] handle_sys+0x158/0x174
+Thanks,
+Ashish 
 
-handlers:
-[<ffffffff80429670>] (ide_intr+0x0/0x300)
-Disabling IRQ #14
+-----Original Message-----
+From: Jeff Garzik [mailto:jeff@garzik.org] 
+Sent: Friday, September 11, 2009 12:08 PM
+To: Kalra Ashish-B00888
+Cc: linux-ide@vger.kernel.org; linuxppc-dev@ozlabs.org
+Subject: Re: [RESEND][PATCH] sata_fsl: hard and soft reset split
 
-References:
+On 06/29/2009 09:26 AM, ashish kalra wrote:
+> Split sata_fsl_softreset() into hard and soft resets to make 
+> error-handling more efficient & device and PMP detection more
+reliable.
+>
+> Also includes fix for PMP support, driver tested with Sil3726, Sil4726
 
-1. commit 1fde02e7146d4a1bab80fd1506f9018fe71e8521 of
-git://dev.lemote.com/linux_loongson.git
-2. 8bc1e5aa06a2a9a425c4a6795fc564cba1521487 (ide: respect quirk_drives[]
-list on all controllers)
+> & Exar PMP controllers.
+>
+> Signed-off-by: Ashish Kalra <Ashish.Kalra@freescale.com>
 
-Signed-off-by: Yan Hua <yanh@lemote.com>
-Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
----
- drivers/ide/ide-iops.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+can you rediff this and 'AN' support against latest upstream?
 
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index 2892b24..821af66 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -292,6 +292,7 @@ static const char *nien_quirk_list[] = {
- 	"QUANTUM FIREBALLP KX27.3",
- 	"QUANTUM FIREBALLP LM20.4",
- 	"QUANTUM FIREBALLP LM20.5",
-+	"FUJITSU MHZ2160BH G2",
- 	NULL
- };
- 
--- 
-1.6.2.1
 
