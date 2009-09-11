@@ -1,117 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: What's in libata-dev.git?
-Date: Fri, 11 Sep 2009 02:42:46 -0400
-Message-ID: <20090911064246.GA8422@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Wu <wuzhangjin@gmail.com>
+Subject: [PATCH] ide: fixup for fujitsu disk
+Date: Fri, 11 Sep 2009 17:25:58 +0800
+Message-ID: <1252661158-8219-1-git-send-email-wuzhangjin@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:57553 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704AbZIKGmn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Sep 2009 02:42:43 -0400
-Content-Disposition: inline
+Received: from mail-px0-f189.google.com ([209.85.216.189]:44226 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249AbZIKJ0H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2009 05:26:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, huhb@lemote.com, zhangfx@lemote.com, Wu Zhangjin <wuzhangjin@gmail.com>, Yan Hua <yanh@lemote.com>
 
+From: Wu Zhangjin <wuzhangjin@gmail.com>
 
-This is a summary of the changes current queued on the #upstream branch
-of git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+This patch will fix the following problem on Yeeloong netbook with
+fujitsu disk.
 
-These will be pushed to Linus in the next day or so, when merges start
-flowing.
+irq 14: nobody cared (try booting with the "irqpoll" option)
+Call Trace:
+[<ffffffff8020d438>] dump_stack+0x8/0x40
+[<ffffffff8027ec64>] __report_bad_irq+0x58/0xe4
+[<ffffffff8027ee6c>] note_interrupt+0x17c/0x23c
+[<ffffffff8027f9b8>] handle_level_irq+0xcc/0x134
+[<ffffffff802125b0>] mach_irq_dispatch+0xb8/0x1e0
+[<ffffffff8020041c>] ret_from_irq+0x0/0x4
+[<ffffffff8029e678>] free_hot_cold_page+0x224/0x2a0
+[<ffffffff8026f794>] swsusp_free+0xb0/0x14c
+[<ffffffff8026ec08>] hibernate+0x198/0x218
+[<ffffffff8026cfa8>] state_store+0x90/0x138
+[<ffffffff8032b5a4>] sysfs_write_file+0x130/0x194
+[<ffffffff802c94fc>] vfs_write+0xb8/0x180
+[<ffffffff802c96b8>] SyS_write+0x50/0x98
+[<ffffffff80203fd8>] handle_sys+0x158/0x174
 
-linux-ide hackers, speak up is something is obviously wrong or missing.
+handlers:
+[<ffffffff80429670>] (ide_intr+0x0/0x300)
+Disabling IRQ #14
 
-The only outstanding patch is Robert Hancock's enhance-command-parsing
-patch:  I'm still on the fence about leaving the huge switch table, or
-choosing a better data structure.
+References:
 
+1. commit 1fde02e7146d4a1bab80fd1506f9018fe71e8521 of
+git://dev.lemote.com/linux_loongson.git
+2. 8bc1e5aa06a2a9a425c4a6795fc564cba1521487 (ide: respect quirk_drives[]
+list on all controllers)
 
-Alan Cox (1):
-      [libata] Add pata_rdc driver for RDC ATA devices
+Signed-off-by: Yan Hua <yanh@lemote.com>
+Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+---
+ drivers/ide/ide-iops.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Ashish Kalra (1):
-      sata_fsl: Defer non-ncq commands when ncq commands active
-
-Jeff Garzik (2):
-      [libata] EH: freeze port before aborting commands
-      [libata] sata_sil: disable DMA engine in sil_freeze()
-
-Joe Perches (1):
-      drivers/ata: Remove unnecessary semicolons
-
-Julia Lawall (1):
-      drivers/ata: use resource_size
-
-Marcin Slusarz (1):
-      pata_rz1000: use printk_once
-
-Martin K. Petersen (1):
-      libata: Delegate nonrot flag setting to SCSI
-
-Matthew Garrett (1):
-      libata: Export AHCI capabilities
-
-Otavio Salvador (1):
-      pata_cs5535: add pci id for AMD based CS5535 controllers
-
-Robert Hancock (2):
-      libata: add command name parsing for error output
-      sata_sil24: always set protocol override for non-ATAPI data commands
-
-Shane Huang (3):
-      libata: add SATA PMP revision information for spec 1.2
-      ahci: Add AMD SB900 SATA/IDE controller device IDs
-      ahci: kill @force_restart and refine CLO for ahci_kick_engine()
-
-Shaohua Li (1):
-      [libata] add DMA setup FIS auto-activate feature
-
-Tejun Heo (9):
-      libata: clear eh_info on reset completion
-      libata: remove spindown skipping and warning
-      sata_sis: convert to slave_link
-      libata: unbreak TPM filtering by reorganizing ata_scsi_pass_thru()
-      dmi: fix date handling in dmi_get_year()
-      dmi: extend dmi_get_year() to dmi_get_date()
-      ahci: make ahci_asus_m2a_vm_32bit_only() quirk more generic
-      ahci: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
-      libata: fix off-by-one error in ata_tf_read_block()
-
-
- Documentation/feature-removal-schedule.txt |   18 -
- arch/x86/pci/direct.c                      |    5 
- drivers/acpi/blacklist.c                   |    5 
- drivers/ata/Kconfig                        |   21 +
- drivers/ata/Makefile                       |    1 
- drivers/ata/ahci.c                         |  143 +++++++---
- drivers/ata/libata-acpi.c                  |    7 
- drivers/ata/libata-core.c                  |   44 ++-
- drivers/ata/libata-eh.c                    |  146 ++++++++++
- drivers/ata/libata-pmp.c                   |    2 
- drivers/ata/libata-scsi.c                  |  159 +++--------
- drivers/ata/libata.h                       |    1 
- drivers/ata/pata_atiixp.c                  |    1 
- drivers/ata/pata_cs5535.c                  |    3 
- drivers/ata/pata_octeon_cf.c               |    4 
- drivers/ata/pata_platform.c                |    8 
- drivers/ata/pata_rb532_cf.c                |    2 
- drivers/ata/pata_rdc.c                     |  400 +++++++++++++++++++++++++++++
- drivers/ata/pata_rz1000.c                  |    4 
- drivers/ata/sata_fsl.c                     |    1 
- drivers/ata/sata_inic162x.c                |    2 
- drivers/ata/sata_mv.c                      |    2 
- drivers/ata/sata_sil.c                     |   13 
- drivers/ata/sata_sil24.c                   |   11 
- drivers/ata/sata_sis.c                     |   75 +----
- drivers/firmware/dmi_scan.c                |   77 ++++-
- drivers/ide/atiixp.c                       |    1 
- drivers/pci/quirks.c                       |    4 
- include/linux/ata.h                        |   36 ++
- include/linux/dmi.h                        |   13 
- include/linux/libata.h                     |    3 
- include/linux/pci_ids.h                    |    4 
- 32 files changed, 946 insertions(+), 270 deletions(-)
+diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+index 2892b24..821af66 100644
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -292,6 +292,7 @@ static const char *nien_quirk_list[] = {
+ 	"QUANTUM FIREBALLP KX27.3",
+ 	"QUANTUM FIREBALLP LM20.4",
+ 	"QUANTUM FIREBALLP LM20.5",
++	"FUJITSU MHZ2160BH G2",
+ 	NULL
+ };
+ 
+-- 
+1.6.2.1
 
