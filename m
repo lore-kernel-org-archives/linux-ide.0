@@ -1,52 +1,48 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: [PATCH] pata_amd: do not filter out valid modes in nv_mode_filter
-Date: Sat, 12 Sep 2009 23:54:47 -0600
-Message-ID: <4AAC8927.4030401@gmail.com>
+Subject: Re: What's in libata-dev.git?
+Date: Sun, 13 Sep 2009 01:01:29 -0600
+Message-ID: <4AAC98C9.3050005@gmail.com>
+References: <20090911064246.GA8422@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.211.174]:64227 "EHLO
-	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbZIMFzG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Sep 2009 01:55:06 -0400
-Received: by ywh4 with SMTP id 4so3057170ywh.5
-        for <linux-ide@vger.kernel.org>; Sat, 12 Sep 2009 22:55:10 -0700 (PDT)
+Received: from mail-yx0-f176.google.com ([209.85.210.176]:40483 "EHLO
+	mail-yx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbZIMHB3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Sep 2009 03:01:29 -0400
+In-Reply-To: <20090911064246.GA8422@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>, stable@kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On a Compaq Presario V3000 laptop (NVIDIA MCP51 chipset), pata_amd selects
-PIO0 mode for the PATA DVD-RAM drive instead of MWDMA2 which it supports:
+On 09/11/2009 12:42 AM, Jeff Garzik wrote:
+>
+> This is a summary of the changes current queued on the #upstream branch
+> of git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>
+> These will be pushed to Linus in the next day or so, when merges start
+> flowing.
+>
+> linux-ide hackers, speak up is something is obviously wrong or missing.
+>
+> The only outstanding patch is Robert Hancock's enhance-command-parsing
+> patch:  I'm still on the fence about leaving the huge switch table, or
+> choosing a better data structure.
 
-ata4.00: ATAPI: HL-DT-ST DVDRAM GSA-4084N, KQ09, max MWDMA2
-ata4: nv_mode_filter: 0x39f&0x7001->0x1, BIOS=0x0 (0x0) ACPI=0x7001 (60:600:0x11)
-ata4.00: configured for PIO0
+I just tried implementing some table-based code to achieve something 
+like what the patch I posted was doing. The combined code+data size was 
+only marginally smaller (about a 3K increase versus 4K with the switch 
+version), the function was about the same number of lines, it would be 
+slower (scanning through a table rather than the compiler-generated jump 
+table, though it's not like it's used on a hot path anyway) and it's 
+also less flexible. Particularly with some weird commands (like the way 
+they seem to be heading with the DATA SET MANAGEMENT command where the 
+feature register is being used as a bitmask instead of a simple command 
+code), it would be a lot simpler to implement that in a switch statement 
+rather than having to modify an entire table structure to accommodate it.
 
-For some reason, the BIOS-set UDMA configuration returns 0 and the ACPI _GTM
-reports that UDMA2 and PIO0 are enabled. This causes nv_mode_filter to end up
-allowing only PIO0 and UDMA0-2. Since the drive doesn't support UDMA we end up
-using PIO0.
-
-Since the controllers should always support PIO4, MWDMA2 and UDMA2 regardless
-of what cable type is used, let's make sure we don't filter out these modes
-regardless of what wacky settings the BIOS is using.
-
-Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
-Cc: stable@kernel.org
-
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 33a74f1..567f3f7 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -307,6 +307,9 @@ static unsigned long nv_mode_filter(struct ata_device *dev,
- 		limit |= ATA_MASK_PIO;
- 	if (!(limit & (ATA_MASK_MWDMA | ATA_MASK_UDMA)))
- 		limit |= ATA_MASK_MWDMA | ATA_MASK_UDMA;
-+	/* PIO4, MWDMA2, UDMA2 should always be supported regardless of
-+	   cable detection result */
-+	limit |= ata_pack_xfermask(ATA_PIO4, ATA_MWDMA2, ATA_UDMA2);
- 
- 	ata_port_printk(ap, KERN_DEBUG, "nv_mode_filter: 0x%lx&0x%lx->0x%lx, "
- 			"BIOS=0x%lx (0x%x) ACPI=0x%lx%s\n",
+So essentially my advocated patch is unchanged after that experiment. It 
+may not be the prettiest thing in the world, but I'm not sure it really 
+gets much better..
