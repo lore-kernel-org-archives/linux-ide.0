@@ -1,158 +1,298 @@
-From: "Jung-Ik (John) Lee" <jilee@google.com>
-Subject: Re: [PATCH] libata: Add pata_atp867x driver for Artop/Acard ATP867X
-	controllers
-Date: Sat, 12 Sep 2009 21:55:33 -0700
-Message-ID: <8b5805ff0909122155u77a869c5t89a81fbf1a7eb391@mail.gmail.com>
-References: <8b5805ff0909111906j68c20c3yf7226f2798a67d80@mail.gmail.com>
-	<1252721641.28368.34.camel@desktop> <8b5805ff0909120359g2faf661br463b19518d935110@mail.gmail.com>
-	<4AABD122.2000400@gmail.com> <8b5805ff0909121717w1516c273k2a568779b9c31662@mail.gmail.com>
-	<8b5805ff0909121726g2f1a78c1o1ff7289e059eabe5@mail.gmail.com>
-	<4AAC4315.6010102@pobox.com> <8b5805ff0909121941y38b7764fv3cc4d0b5c1ba6c89@mail.gmail.com>
-	<4AAC632E.3090902@pobox.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
+Date: Sat, 12 Sep 2009 22:59:21 -0600
+Message-ID: <200909122259.21217.tfjellstrom@shaw.ca>
+References: <200909090414.41274.tfjellstrom@shaw.ca> <200909101755.51459.tfjellstrom@shaw.ca> <4AAC4022.4040805@garzik.org>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750958AbZIMEz5@vger.kernel.org>
-In-Reply-To: <4AAC632E.3090902@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Daniel Walker <dwalker@fifo99.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Grant Grundler <grundler@google.com>, Gwendal Grignou <gwendal@google.com>, Eric Uhrhane <ericu@google.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:35609 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbZIME7T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Sep 2009 00:59:19 -0400
+In-Reply-To: <4AAC4022.4040805@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Sat, Sep 12, 2009 at 8:12 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On 09/12/2009 10:41 PM, Jung-Ik (John) Lee wrote:
->>
->> On Sat, Sep 12, 2009 at 5:55 PM, Jeff Garzik<jgarzik@pobox.com> =A0w=
-rote:
->>>
->>>
->>> General comment:
->>>
->>> * since you use iomap to map the region, you should use ioread{8,16=
-,32} /
->>> iowrite{8,16,32} accessors. =A0Do not use inb/outb/inl/outl/etc.
->>
->> .
->> I used them for runtime hot registers by separately mapping them
->> simply to avoid an extra overhead of ioread/iowrite, over the
->> portability.
->> I know it's not a good idea but in this case for these hot ports can
->> in/out be used?
->
-> It is _highly_ unlikely that the overhead is even measureable above t=
-he
-> noise, I would think. =A0Do you have data showing that ioread/iowrite=
- impose a
-> noticeable penalty?
+On Sat September 12 2009, Jeff Garzik wrote:
+> On 09/10/2009 07:55 PM, Thomas Fjellstrom wrote:
+> > On Wed September 9 2009, Thomas Fjellstrom wrote:
+> >> On Wed September 9 2009, Thomas Fjellstrom wrote:
+> >>> On Wed September 9 2009, Jeff Garzik wrote:
+> >>>> On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
+> >>>>> No errors on that disk. Other than the one above, and its more of a
+> >>>>> warning. However, I just rebooted to add some extra drives, thinking
+> >>>>> everything was working a little better now that I've updated to
+> >>>>> 2.6.31-rc9, I'm treated to the following two messages right after
+> >>>>> boot (and a system lockup to boot):
+> >>>>>
+> >>>>> kernel: [  971.033138] ------------[ cut here ]------------
+> >>>>> kernel: [  971.033211] WARNING: at drivers/ata/libata-core.c:4913
+> >>>>> __ata_qc_complete+0x5a/0xe1 [libata]()
+> >>>>> kernel: [  971.033217] Hardware name: GA-MA790FXT-UD5P
+> >>>>> kernel: [  971.033221] Modules linked in: powernow_k8
+> >>>>> cpufreq_conservative cpufreq_stats cpufreq_userspace
+> >>>>> cpufreq_powersave kvm_amd kvm nfsd exportfs nfs lockd fscache nfs_acl
+> >>>>> auth_rpcgss sunrpc bridge stp it87 hwmon_vid adt7473 firewire_sbp2
+> >>>>> loop md_mod
+> >>>>> snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep
+> >>>>> snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_midi snd_rawmidi
+> >>>>> snd_seq_midi_event snd_seq snd_timer snd_seq_device snd
+> >>>>> amd64_edac_mod edac_core i2c_piix4 soundcore snd_page_alloc i2c_core
+> >>>>> evdev wmi parport_pc button parport processor ext3 jbd mbcache dm_mod
+> >>>>> sg sr_mod cdrom sd_mod crc_t10dif usbhid ata_generic ide_pci_generic
+> >>>>> hid mvsas firewire_ohci libsas firewire_core crc_itu_t
+> >>>>> scsi_transport_sas r8169 atiixp ide_core floppy ahci mii ohci_hcd
+> >>>>> libata ehci_hcd scsi_mod thermal fan thermal_sys [last unloaded:
+> >>>>> scsi_wait_scan]
+> >>>>> kernel: [  971.033337] Pid: 0, comm: swapper Not tainted 2.6.31-rc9
+> >>>>> #2 kernel: [  971.033342] Call Trace:
+> >>>>> kernel: [  971.033346]<IRQ>    [<ffffffffa00562ca>] ?
+> >>>>> __ata_qc_complete+0x5a/0xe1 [libata]
+> >>>>> kernel: [  971.033434]  [<ffffffffa00562ca>] ?
+> >>>>> __ata_qc_complete+0x5a/0xe1 [libata]
+> >>>>> kernel: [  971.033446]  [<ffffffff8104aca0>] ?
+> >>>>> warn_slowpath_common+0x77/0xa3 kernel: [  971.033455]
+> >>>>> [<ffffffff81038d06>] ? enqueue_task+0x5c/0x65 kernel: [  971.033496]
+> >>>>> [<ffffffffa00562ca>] ? __ata_qc_complete+0x5a/0xe1 [libata]
+> >>>>> kernel: [  971.033519]  [<ffffffffa00f7b59>] ?
+> >>>>> sas_ata_task_done+0x178/0x210 [libsas]
+> >>>>> kernel: [  971.033528]  [<ffffffff8115ead1>] ?
+> >>>>> blk_run_queue+0x21/0x35 kernel: [  971.033548]  [<ffffffffa010e2ce>]
+> >>>>> ?
+> >>>>> mvs_slot_complete+0x3df/0x41b [mvsas]
+> >>>>> kernel: [  971.033565]  [<ffffffffa010e39c>] ? mvs_int_rx+0x92/0x101
+> >>>>> [mvsas] kernel: [  971.033583]  [<ffffffffa01112ba>] ?
+> >>>>> mvs_int_full+0x25/0x88 [mvsas] kernel: [  971.033600]
+> >>>>> [<ffffffffa011134e>] ? mvs_64xx_isr+0x31/0x40 [mvsas] kernel: [
+> >>>>> 971.033617]  [<ffffffffa010d0e5>] ? mvs_interrupt+0x61/0x78 [mvsas]
+> >>>>> kernel: [  971.033625]  [<ffffffff8108aaac>] ?
+> >>>>> handle_IRQ_event+0x58/0x135 kernel: [  971.033633]
+> >>>>> [<ffffffff8108c1a1>] ? handle_fasteoi_irq+0x7d/0xb5 kernel: [
+> >>>>> 971.033642]
+> >>>>> [<ffffffff8101388d>] ? handle_irq+0x17/0x1d
+> >>>>
+> >>>> That warning is triggered when an ata_queued_cmd is passed to
+> >>>> completion without the ATA_QCFLAG_ACTIVE flag being set (which
+> >>>> indicates the qc was started with some activity).
+> >>>>
+> >>>> That possibly indicates the low-level driver (or libsas) was passing
+> >>>> an already-completed cmd to libata.
+> >>>>
+> >>>>> The added hard drives are connected to a Supermicro AOC-SASLP-MV8,
+> >>>>> which is based on a marvel MV64460/64461/64462 chipset, which uses
+> >>>>> the sata_mv driver.
+> >>>>
+> >>>> Surely you mean 'mvsas' driver?
+> >>>
+> >>> Yes, sorry I did mean mvsas.
+> >>>
+> >>> I am more concerned about the actual oops/BUG rather than the warning
+> >>>   though. Unless the problem causing the warning is also causing the
+> >>> oops.
+> >>>
+> >>>> 	Jeff
+> >>
+> >> Thanks for taking a look so far. But I'm having more and more trouble
+> >> with this card as the days go by:
+> >>
+> >> [  464.792214] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  464.792222] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  494.816170] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  494.816179] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  494.816192] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  494.816197] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  525.817335] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  525.817343] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  525.817358] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  525.817363] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  556.816148] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  556.816157] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  556.816170] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  556.816175] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  587.816171] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  587.816179] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  587.816193] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  587.816199] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  600.616255] INFO: task mount:4395 blocked for more than 120 seconds.
+> >> [  600.616263] "echo 0>  /proc/sys/kernel/hung_task_timeout_secs"
+> >> disables this message.
+> >> [  600.616270] mount         D 0000000000000000     0  4395   4229
+> >>   0x00000000 [  600.616281]  ffff88012fb6f780 0000000000000082
+> >>   ffff8800b808ddc8 ffff8800b80f3d60
+> >> [  600.616290]  ffff880128923c90 0000000000014800 000000000000f800
+> >> ffff88012dd91840
+> >> [  600.616299]  ffff88012dd91b38 0000000300000008 0000000000000000
+> >> ffff88010c5bfa88
+> >> [  600.616308] Call Trace:
+> >> [  600.616324]  [<ffffffff81017015>] ? read_tsc+0xa/0x20
+> >> [  600.616335]  [<ffffffff810adc63>] ? __pagevec_free+0x29/0x3b
+> >> [  600.616343]  [<ffffffff810661e9>] ? getnstimeofday+0x55/0xaf
+> >> [  600.616351]  [<ffffffff810a8e69>] ? sync_page+0x0/0x46
+> >> [  600.616361]  [<ffffffff812dc8cb>] ? io_schedule+0x63/0xa5
+> >> [  600.616368]  [<ffffffff810a8eaa>] ? sync_page+0x41/0x46
+> >> [  600.616376]  [<ffffffff812dcade>] ? __wait_on_bit_lock+0x3f/0x84
+> >> [  600.616383]  [<ffffffff810a8e55>] ? __lock_page+0x5d/0x63
+> >> [  600.616391]  [<ffffffff8105ef14>] ? wake_bit_function+0x0/0x23
+> >> [  600.616401]  [<ffffffff810b0ad4>] ? pagevec_lookup+0x17/0x1e
+> >> [  600.616408]  [<ffffffff810b1bbd>] ?
+> >>   truncate_inode_pages_range+0x288/0x318 [  600.616418]
+> >>   [<ffffffff810fc8cb>] ? set_blocksize+0xc2/0xd2
+> >> [  600.616426]  [<ffffffff810fc8f2>] ? sb_set_blocksize+0x17/0x43
+> >> [  600.616477]  [<ffffffffa04aa8e0>] ? ext4_fill_super+0x1cc/0x2060
+> >> [ext4] [  600.616486]  [<ffffffff8117593b>] ? snprintf+0x44/0x4c
+> >> [  600.616493]  [<ffffffff810fb5b7>] ? check_disk_change+0x22/0x52
+> >> [  600.616501]  [<ffffffff812dd680>] ? __down_write_nested+0x15/0xab
+> >> [  600.616524]  [<ffffffff810dbfe6>] ? get_sb_bdev+0x111/0x159
+> >> [  600.616571]  [<ffffffffa04aa714>] ? ext4_fill_super+0x0/0x2060 [ext4]
+> >> [  600.616582]  [<ffffffff810dbc44>] ? vfs_kern_mount+0x95/0x111
+> >> [  600.616593]  [<ffffffff810dbd13>] ? do_kern_mount+0x43/0xe2
+> >> [  600.616607]  [<ffffffff810ef49d>] ? do_mount+0x767/0x7d6
+> >> [  600.616620]  [<ffffffff810ef591>] ? sys_mount+0x85/0xc8
+> >> [  600.616633]  [<ffffffff81010a02>] ? system_call_fastpath+0x16/0x1b
+> >> [  618.816175] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  618.816184] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  618.816196] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  618.816201] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  618.816241] sd 1:0:3:0: [sdf] Unhandled error code
+> >> [  618.816247] sd 1:0:3:0: [sdf] Result: hostbyte=DID_OK
+> >> driverbyte=DRIVER_TIMEOUT
+> >> [  618.816255] end_request: I/O error, dev sdf, sector 160
+> >> [  618.816263] Buffer I/O error on device md2, logical block 20
+> >> [  618.816274] Buffer I/O error on device md2, logical block 21
+> >> [  618.816280] Buffer I/O error on device md2, logical block 22
+> >> [  618.816285] Buffer I/O error on device md2, logical block 23
+> >> [  618.816291] Buffer I/O error on device md2, logical block 24
+> >> [  618.816298] Buffer I/O error on device md2, logical block 25
+> >> [  618.816307] Buffer I/O error on device md2, logical block 26
+> >> [  618.816316] Buffer I/O error on device md2, logical block 27
+> >> [  618.816324] Buffer I/O error on device md2, logical block 28
+> >> [  618.816331] Buffer I/O error on device md2, logical block 29
+> >> [  649.780185] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  649.780194] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  649.780208] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  649.780214] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  649.780293] ------------[ cut here ]------------
+> >> [  649.780366] WARNING: at drivers/ata/libata-core.c:5129
+> >> ata_qc_issue+0x10a/0x347 [libata]()
+> >> [  649.780373] Hardware name: GA-MA790FXT-UD5P
+> >> [  649.780377] Modules linked in: ext4 jbd2 crc16 raid0 powernow_k8
+> >> cpufreq_conservative cpufreq_stats cpufreq_userspace cpufreq_powersave
+> >>   kvm_amd kvm nfsd exportfs nfs lockd fscache nfs_acl auth_rpcgss sunrpc
+> >>   bridge stp it87 hwmon_vid adt7473 firewire_sbp2 loop md_mod
+> >>   snd_hda_codec_realtek
+> >> snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm
+> >> snd_seq_midi snd_rawmidi snd_seq_midi_event amd64_edac_mod snd_seq
+> >>   edac_core snd_timer snd_seq_device snd soundcore i2c_piix4
+> >> snd_page_alloc i2c_core evdev parport_pc wmi parport button processor
+> >> ext3 jbd mbcache dm_mod usbhid hid sg sr_mod cdrom sd_mod crc_t10dif
+> >> ata_generic ide_pci_generic firewire_ohci firewire_core ohci_hcd
+> >> crc_itu_t atiixp ide_core mvsas ehci_hcd ahci libsas libata
+> >> scsi_transport_sas scsi_mod r8169 mii floppy thermal fan thermal_sys
+> >> [last unloaded: scsi_wait_scan] [  649.780499] Pid: 3185, comm: hddtemp
+> >> Not tainted 2.6.31-rc9 #2 [  649.780504] Call Trace:
+> >> [  649.780551]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
+> >> [  649.780593]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
+> >> [  649.780607]  [<ffffffff8104aca0>] ? warn_slowpath_common+0x77/0xa3
+> >> [  649.780649]  [<ffffffffa00790ce>] ? ata_scsi_pass_thru+0x0/0x240
+> >>   [libata] [  649.780690]  [<ffffffffa0074f90>] ?
+> >> ata_qc_issue+0x10a/0x347 [libata] [  649.780733]  [<ffffffffa00401d6>] ?
+> >> scsi_get_command+0x75/0x97 [scsi_mod] [  649.780776] 
+> >> [<ffffffffa00790ce>] ?
+> >>   ata_scsi_pass_thru+0x0/0x240 [libata] [  649.780815] 
+> >> [<ffffffffa003f7aa>] ? scsi_done+0x0/0xc [scsi_mod] [  649.780858] 
+> >> [<ffffffffa007a4d5>] ? __ata_scsi_queuecmd+0x185/0x1dc [libata]
+> >> [  649.780896]  [<ffffffffa003f7aa>] ? scsi_done+0x0/0xc [scsi_mod]
+> >> [  649.780918]  [<ffffffffa00a3c8e>] ? sas_queuecommand+0x83/0x25d
+> >> [libsas] [  649.780956]  [<ffffffffa003fa7c>] ?
+> >> scsi_dispatch_cmd+0x1c0/0x23c [scsi_mod]
+> >> [  649.780996]  [<ffffffffa0044ff0>] ? scsi_request_fn+0x3a5/0x506
+> >>   [scsi_mod] [  649.781006]  [<ffffffff810546e0>] ? del_timer+0x59/0x62
+> >> [  649.781016]  [<ffffffff81163b70>] ? blk_execute_rq_nowait+0x65/0x89
+> >> [  649.781032]  [<ffffffffa014164f>] ? sg_common_write+0x489/0x4ab [sg]
+> >> [  649.781042]  [<ffffffff8115df56>] ? __freed_request+0x26/0x83
+> >> [  649.781056]  [<ffffffffa01421da>] ? sg_new_write+0x23e/0x269 [sg]
+> >> [  649.781070]  [<ffffffffa0142473>] ? sg_ioctl+0x26e/0xb63 [sg]
+> >> [  649.781080]  [<ffffffff81100f38>] ? inotify_d_instantiate+0x12/0x39
+> >> [  649.781088]  [<ffffffff8105eee6>] ? autoremove_wake_function+0x0/0x2e
+> >> [  649.781098]  [<ffffffff810d80bf>] ? fd_install+0x2e/0x5a
+> >> [  649.781105]  [<ffffffff810e5247>] ? vfs_ioctl+0x56/0x6c
+> >> [  649.781111]  [<ffffffff810e570a>] ? do_vfs_ioctl+0x437/0x475
+> >> [  649.781118]  [<ffffffff810e5799>] ? sys_ioctl+0x51/0x70
+> >> [  649.781128]  [<ffffffff81010a02>] ? system_call_fastpath+0x16/0x1b
+> >> [  649.781134] ---[ end trace 9005373b1b9c6eb7 ]---
+> >> [  680.781672] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  680.781681] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  711.781672] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  711.781681] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  741.816069] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  741.816078] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  741.816090] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  741.816096] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  772.820160] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  772.820168] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  772.820181] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  772.820186] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  803.816212] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  803.816220] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  803.816233] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+> >> [  803.816239] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+> >> [  803.816264] sd 1:0:3:0: [sdf] Unhandled error code
+> >> [  803.816270] sd 1:0:3:0: [sdf] Result: hostbyte=DID_OK
+> >> driverbyte=DRIVER_TIMEOUT
+> >> [  803.816278] end_request: I/O error, dev sdf, sector 512
+> >> [  803.816284] __ratelimit: 70 callbacks suppressed
+> >> [  803.816290] Buffer I/O error on device md2, logical block 64
+> >>
+> >> That's after bringing up a raid0 array I build a few days ago on 4
+> >>   perfectly good (Seagate Baracuda 1TB 7200.12) disks, without the bad
+> >> disk plugged in. I try to mount it, and the driver hangs. Anything
+> >> trying to access any of the 4 disks hangs as well.
+> >>
+> >> I know this array worked a few days ago. The most major change I've made
+> >>   was upgrade from -rc8 (or -rc5, not sure if I mounted the array under
+> >>   -rc8) to -rc9.
+> >
+> > Hi, just wondering if anyone has had a chance to look at this, or if
+> > there's some patches I should try out, or if you need me to do some
+> > testing, I'd be glad to, thanks :)
+> 
+> I was hoping that some VM would jump in.  The BUG in question is, from
+> mm/slab.c:
+> 
+>                  /*
+>                   * The slab was either on partial or free list so
+>                   * there must be at least one object available for
+>                   * allocation.
+>                   */
+>                  BUG_ON(slabp->inuse >= cachep->num);
+> 
+> So I wonder if that is a double-free, indicating a bug in
+> SCSI/libsas/mvsas, or a VM problem of some sort.
+> 
+> Was free memory low on that machine, at that point, perchance?
 
-I agree in that it's hard to measure/signify the additional overhead,
-since those io insts are already too slow.
-Anyways, the two extra "if"s and one PIO_MASK on every ioread/iowrite
-are pure overhead on top of in/out insts.
+Its remotely possible do to leaks in programs, but even konqueror and firefox 
+don't eat up memory _that_ fast, so its very unlikely. This machine has 4G 
+ram.
 
-Thanks,
--John
+> 	Jeff
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
->
->
->>
->>
->>>
->>> * run through scripts/checkpatch.pl
->>>
->>
->> Weird. I don't see any WS issues you pointed below in my source code
->> or git diff file, except UT =3D T/4 below.
->
-> My apologies; most of those appear to be problems with Thunderbird. =A0=
-I think
-> it renders <tab> incorrectly.
->
->
->>>> +static void atp867x_set_dmamode(struct ata_port *ap, struct ata_d=
-evice
->>>> *adev)
->>>> +{
->>>> + =A0 =A0 =A0 struct pci_dev *pdev =A0 =A0=3D to_pci_dev(ap->host-=
->dev);
->>>> + =A0 =A0 =A0 struct atp867x_priv *dp =3D ap->private_data;
->>>> + =A0 =A0 =A0 u8 speed =3D adev->dma_mode;
->>>> + =A0 =A0 =A0 u8 b;
->>>> + =A0 =A0 =A0 u8 mode;
->>>> +
->>>> +
->>>> + =A0 =A0 =A0 switch (speed) {
->>>> + =A0 =A0 =A0 case XFER_UDMA_6:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_6;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 case XFER_UDMA_5:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_5;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 case XFER_UDMA_4:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_4;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 case XFER_UDMA_3:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_3;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 case XFER_UDMA_2:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_2;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 case XFER_UDMA_1:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_1;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 case XFER_UDMA_0:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_0;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>> + =A0 =A0 =A0 default:
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_WARNING "ATP867X: Unsupp=
-orted speed %#x."
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " Default to XFER_UD=
-MA_0.\n", (unsigned)speed);
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mode =3D ATP867X_IO_DMAMODE_UDMA_0;
->>>
->>> a table would be nice, preferred over a switch statement. =A0You ma=
-y use
->>> ARRAY_SIZE() macro to generate a constant at compile time for numbe=
-r of
->>> elements in array.
->>
->> OK. I had it in a pure math like mode =3D speed - XFER_UDMA_0 +1;
->
-> That's fine too.
->
->
->
->
->>>> + =A0 =A0 =A0 /*
->>>> + =A0 =A0 =A0 =A0* Broken BIOS might not set latency high enough
->>>> + =A0 =A0 =A0 =A0*/
->>>> + =A0 =A0 =A0 pci_read_config_byte(pdev, PCI_LATENCY_TIMER,&v);
->>>> + =A0 =A0 =A0 if (v< =A0 =A00x80) {
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 v =3D 0x80;
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_write_config_byte(pdev, PCI_LATE=
-NCY_TIMER, v);
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_DEBUG "ATP867X: set late=
-ncy timer of device
->>>> %s"
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " to %d\n", pci_name=
-(pdev), v);
->>>> + =A0 =A0 =A0 }
->>>
->>> this seems pointless - pci_set_master() already does this
->>>
->> pci_set_master won't re-set it if BIOS set it to somewhere between 1=
-6
->> and 256. This controller wants 0x80.
->> so, if BIOS set to less than 0x80, like 0x20, pci_set_master will ke=
-ep
->> the value.
->> I could do this via pci fixup or quirks but that seems too much for
->> this simple setting.
->
-> Given your explanation, that's fine.
->
-> =A0 =A0 =A0 =A0Jeff
->
->
->
->
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
