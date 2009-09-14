@@ -1,27 +1,34 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 2/7] block: use blkdev_issue_discard in
-	blk_ioctl_discard
-Date: Mon, 14 Sep 2009 11:40:27 +0200
-Message-ID: <20090914094027.GY14984@kernel.dk>
-References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.385741993@bombadil.infradead.org> <20090911222644.GA7197@infradead.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Mon, 14 Sep 2009 08:48:26 -0400
+Message-ID: <4AAE3B9A.2060306@rtr.ca>
+References: <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090911222644.GA7197@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, matthew@wil.cx, dwmw2@infradead.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:49024 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755424AbZINMsY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Sep 2009 08:48:24 -0400
+In-Reply-To: <4AADF471.2020801@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <teheo@suse.de>
+Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
-On Fri, Sep 11 2009, Christoph Hellwig wrote:
-> Jens, can we put this one and possible Dave's treat discard requests
-> as writes patch in early for 2.6.32?  That'll make the discard patch
-> queue quite a bit smaller and will allow easier experimenting.
+Tejun Heo wrote:
+..
+> Oooh, another possibility is the above continuous IDENTIFY tries.
+> Doing things like that generally isn't a good idea because vendors
+> don't expect IDENTIFY to be mixed regularly with normal IOs and
+> firmwares aren't tested against that.  Even smart commands sometimes
+> cause problems.  So, finding out the thing which is obsessed with the
+> identity of the drive and stopping it might help.
+..
 
-Looks fine from a review, I'll include it in the for-2.6.32 branch. I
-plan on asking for a pull of that tomorrow.
+Bullpucky.  That sort of thing, specifically with IDENTIFY,
+has never been an issue.
 
--- 
-Jens Axboe
-
+I wonder if the IDENTIFY is actually coming from libata EH
+after something else failed ?
