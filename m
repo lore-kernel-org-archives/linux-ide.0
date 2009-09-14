@@ -1,55 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC][PATCH] ata: sata_sil.c check sil_scr_read for failure
-Date: Mon, 14 Sep 2009 18:24:44 +0900
-Message-ID: <4AAE0BDC.4040403@kernel.org>
-References: <1252780626.3687.20.camel@ht.satnam>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 2/7] block: use blkdev_issue_discard in
+	blk_ioctl_discard
+Date: Mon, 14 Sep 2009 11:40:27 +0200
+Message-ID: <20090914094027.GY14984@kernel.dk>
+References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.385741993@bombadil.infradead.org> <20090911222644.GA7197@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39110 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750925AbZINJYv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Sep 2009 05:24:51 -0400
-In-Reply-To: <1252780626.3687.20.camel@ht.satnam>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090911222644.GA7197@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, matthew@wil.cx, dwmw2@infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Jaswinder Singh Rajput wrote:
-> [This is untested]
->=20
-> By checking sil_scr_read, we can get rid of this compilation warning:
->=20
->   CC [M]  drivers/ata/sata_sil.o
-> drivers/ata/sata_sil.c: In function =E2=80=98sil_host_intr=E2=80=99:
-> drivers/ata/sata_sil.c:442: warning: =E2=80=98serror=E2=80=99 may be =
-used uninitialized in this function
->=20
-> Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
-> ---
->  drivers/ata/sata_sil.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-> index 3cb69d5..a908031 100644
-> --- a/drivers/ata/sata_sil.c
-> +++ b/drivers/ata/sata_sil.c
-> @@ -445,7 +445,8 @@ static void sil_host_intr(struct ata_port *ap, u3=
-2 bmdma2)
->  		 * controllers continue to assert IRQ as long as
->  		 * SError bits are pending.  Clear SError immediately.
->  		 */
-> -		sil_scr_read(&ap->link, SCR_ERROR, &serror);
-> +		if (sil_scr_read(&ap->link, SCR_ERROR, &serror))
-> +			return;
->  		sil_scr_write(&ap->link, SCR_ERROR, serror);
+On Fri, Sep 11 2009, Christoph Hellwig wrote:
+> Jens, can we put this one and possible Dave's treat discard requests
+> as writes patch in early for 2.6.32?  That'll make the discard patch
+> queue quite a bit smaller and will allow easier experimenting.
 
-Eh.... the driver knows the call wouldn't fail.  I think
-uninitialized_var() would be more appropriate here.
+Looks fine from a review, I'll include it in the for-2.6.32 branch. I
+plan on asking for a pull of that tomorrow.
 
-Thanks.
+-- 
+Jens Axboe
 
---=20
-tejun
