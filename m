@@ -1,36 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA port multiplier support in 2.6.21
-Date: Tue, 15 Sep 2009 16:28:55 +0900
-Message-ID: <4AAF4237.4040809@gmail.com>
-References: <24580821.post@talk.nabble.com> <20090721025034.GA15894@psychosis.jim.sh> 	<4A684F49.3020904@gmail.com> <7efa8a7d0909141847n4d6f51f5wd87d2b156c006c89@mail.gmail.com>
+From: Milan Kocian <milon@wq.cz>
+Subject: Re: [PATCH] sr: consider the last written sector when determining
+ media size
+Date: Tue, 15 Sep 2009 09:05:03 +0200
+Message-ID: <20090915070503.GB13228@ntm.vs.lam.cz>
+References: <4AA07D8A.6090004@kernel.org>
+ <4AAEBB7A.3060700@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.211.174]:33533 "EHLO
-	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755208AbZIOH26 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Sep 2009 03:28:58 -0400
-Received: by ywh4 with SMTP id 4so5375769ywh.5
-        for <linux-ide@vger.kernel.org>; Tue, 15 Sep 2009 00:29:01 -0700 (PDT)
-In-Reply-To: <7efa8a7d0909141847n4d6f51f5wd87d2b156c006c89@mail.gmail.com>
+Received: from srw1.wq.cz ([212.71.155.176]:35667 "EHLO srw1.wq.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751490AbZIOHmZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Sep 2009 03:42:25 -0400
+Content-Disposition: inline
+In-Reply-To: <4AAEBB7A.3060700@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Learner Study <learner.study@gmail.com>
-Cc: Jim Paris <jim@jtan.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Milan Kocian <milan.kocian@wq.cz>, Jan Kara <jack@suse.cz>
 
-Learner Study wrote:
-> I tried the following link but am getting HTTP 403 error!
+On Tue, Sep 15, 2009 at 06:54:02AM +0900, Tejun Heo wrote:
+> Tejun Heo wrote:
+> > On certain cases, UDF disc doesn't report capacity correctly via
+> > READ_CAPACITY but TOC or trackinfo contains valid information which
+> > can be obtained using cdrom_get_last_written().  ide-cd considers both
+> > values and uses the larger one.  Do the same in sr.  This fixes
+> > bko#9668.
+> > 
+> >  http://bugzilla.kernel.org/show_bug.cgi?id=9668
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
+> > Reported-by: Milan Kocian <milan.kocian@wq.cz>
+> > Cc: Jan Kara <jack@suse.cz>
+> 
+> PING.
+> 
+> -- 
+> tejun
+> 
 
-It works fine here.  Can you please try again?
+yes, works for me. You can add :
 
-  http://htj.dyndns.org/export/libata-tj-old/
+Tested-by: Milan Kocian <milan.kocian@wq.cz>
 
-> I would appreciate if you could please point me to patch for port
-> multiplier back ported to 2.6.21?
-
-Eh... I seem to have patches for 17, 18, 22 and 23 but unforunately
-not for 21.
+:-)
 
 -- 
-tejun
+Milan Kocian
