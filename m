@@ -1,84 +1,113 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
-Date: Wed, 16 Sep 2009 04:09:33 +0900
-Message-ID: <4AAFE66D.8050807@gmail.com>
-References: <4AAE8252.8000206@web.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH REDIFFED 4/4 #upstream] ahci: filter FPDMA non-zero offset
+ enable for Aspire 3810T
+Date: Wed, 16 Sep 2009 04:18:03 +0900
+Message-ID: <4AAFE86B.5070100@kernel.org>
+References: <4A77F6B8.4000000@kernel.org> <4AA702E7.7030905@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040404030600070806030806"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:38902 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758337AbZIOTJk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Sep 2009 15:09:40 -0400
-Received: by fxm17 with SMTP id 17so1805012fxm.37
-        for <linux-ide@vger.kernel.org>; Tue, 15 Sep 2009 12:09:43 -0700 (PDT)
-In-Reply-To: <4AAE8252.8000206@web.de>
+Received: from hera.kernel.org ([140.211.167.34]:56334 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758550AbZIOTSE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Sep 2009 15:18:04 -0400
+In-Reply-To: <4AA702E7.7030905@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Holger Hasselmann <hhasselm@web.de>
-Cc: linux-ide@vger.kernel.org, Shane.Huang@amd.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: ide <linux-ide@vger.kernel.org>, meissner@novell.com
 
-This is a multi-part message in MIME format.
---------------040404030600070806030806
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Curiously, Aspire 3810T issues many SATA feature enable commands via
+_GTF, of which one is invalid and another is not supported by the
+drive.  In the process, it also enables FPDMA non-zero offset.
+However, the feature also needs to be supported and enabled from the
+controller and it's wrong to enable it from _GTF unless the controller
+can do it by default.
 
-Holger Hasselmann wrote:
-> Hello Tejun,
-> 
-> I want let you know, that the following laptop would need to be included
-> in the list of the 32bit DMA boards.
-> 
-> First I have used the snapshot 2.6.31-git and was not able to boot until
-> I reversed the patch 58a09b38cfcd700b796ea07ae3d2e0efbb28b561.
-> 
-> I have tried it with the snapshot 2.6.31-git2 and was not able to boot.
-> 
-> I have checked the latest bios (1.10c) for this laptop and it did not
-> worked.
-> 
-> I will attache the dmidecoder output (don't know if this helps).
+Currently, this ends up enabling FPDMA non-zero offset only on the
+drive side leading to NCQ command failures and eventual disabling of
+NCQ.  This patch makes libata filter out FPDMA non-zero offset enable
+for the machine.
 
-Can you please verify the attached patch fixes the problem?  This should
-apply cleanly to 2.6.31.
+This was reported by Marcus Meissner in bnc#522790.
+
+  https://bugzilla.novell.com/show_bug.cgi?id=522790
+
+Reported-by: Marcus Meissner <meissner@novell.com>
+---
+This concludes the four patches to work around a device configuration
+issue caused by strange _GTF.  This looks a bit pervasive for
+#upstream-fixes but the changes should only affect the problematic
+machine and be fairly safe.
 
 Thanks.
 
--- 
-tejun
+ drivers/ata/ahci.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
---------------040404030600070806030806
-Content-Type: text/x-patch;
- name="amilo-pa-2510-32bit-only.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="amilo-pa-2510-32bit-only.patch"
+Index: ata/drivers/ata/ahci.c
+===================================================================
+--- ata.orig/drivers/ata/ahci.c
++++ ata/drivers/ata/ahci.c
+@@ -2858,6 +2858,50 @@ static bool ahci_broken_online(struct pc
+ 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
+ }
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index d4cd9c2..95ac661 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2688,6 +2688,20 @@ static bool ahci_sb600_32bit_only(struct pci_dev *pdev)
- 				DMI_MATCH(DMI_BOARD_NAME, "GA-MA69VM-S2"),
- 			},
- 		},
++static void ahci_gtf_filter_workaround(struct ata_host *host)
++{
++	static const struct dmi_system_id sysids[] = {
 +		/*
-+		 * This laptop can't do 64bit DMA either.  The latest
-+		 * BIOS as of this writing (1.10c) doesn't fix the
-+		 * problem either.
-+		 *
-+		 * http://thread.gmane.org/gmane.linux.ide/42716
++		 * Aspire 3810T issues a bunch of SATA enable commands
++		 * via _GTF including an invalid one and one which is
++		 * rejected by the device.  Among the successful ones
++		 * is FPDMA non-zero offset enable which when enabled
++		 * only on the drive side leads to NCQ command
++		 * failures.  Filter it out.
 +		 */
 +		{
-+			.ident = "Fujitsu-Siemens AMILO Pa 2510",
++			.ident = "Aspire 3810T",
 +			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU SIEMENS"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "AMILO Pa 2510"),
++				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire 3810T"),
 +			},
++			.driver_data = (void *)ATA_ACPI_FILTER_FPDMA_OFFSET,
 +		},
- 		{ }
- 	};
- 	const struct dmi_system_id *match;
++		{ }
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(sysids);
++	unsigned int filter;
++	int i;
++
++	if (!dmi)
++		return;
++
++	filter = (unsigned long)dmi->driver_data;
++	dev_printk(KERN_INFO, host->dev,
++		   "applying extra ACPI _GTF filter 0x%x for %s\n",
++		   filter, dmi->ident);
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++		struct ata_link *link;
++		struct ata_device *dev;
++
++		ata_for_each_link(link, ap, EDGE)
++			ata_for_each_dev(dev, link, ALL)
++				dev->gtf_filter |= filter;
++	}
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+@@ -3023,6 +3067,9 @@ static int ahci_init_one(struct pci_dev
+ 	/* apply workaround for ASUS P5W DH Deluxe mainboard */
+ 	ahci_p5wdh_workaround(host);
 
---------------040404030600070806030806--
++	/* apply gtf filter quirk */
++	ahci_gtf_filter_workaround(host);
++
+ 	/* initialize adapter */
+ 	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
+ 	if (rc)
