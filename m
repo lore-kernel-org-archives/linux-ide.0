@@ -1,113 +1,101 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH REDIFFED 4/4 #upstream] ahci: filter FPDMA non-zero offset
- enable for Aspire 3810T
-Date: Wed, 16 Sep 2009 04:18:03 +0900
-Message-ID: <4AAFE86B.5070100@kernel.org>
+Subject: [PATCH REDIFFED 2/4 #upstream] libata: implement more acpi filtering
+ options
+Date: Wed, 16 Sep 2009 04:17:02 +0900
+Message-ID: <4AAFE82E.8090306@kernel.org>
 References: <4A77F6B8.4000000@kernel.org> <4AA702E7.7030905@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56334 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:56278 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758550AbZIOTSE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Sep 2009 15:18:04 -0400
+	id S1758499AbZIOTRD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Sep 2009 15:17:03 -0400
 In-Reply-To: <4AA702E7.7030905@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: ide <linux-ide@vger.kernel.org>, meissner@novell.com
 
-Curiously, Aspire 3810T issues many SATA feature enable commands via
-_GTF, of which one is invalid and another is not supported by the
-drive.  In the process, it also enables FPDMA non-zero offset.
-However, the feature also needs to be supported and enabled from the
-controller and it's wrong to enable it from _GTF unless the controller
-can do it by default.
+Currently libata-acpi can only filter DIPM among SATA feature enables
+via _GTF.  This patch adds the capability to filter out FPDMA non-zero
+offset, in-order guarantee and auto-activation.
 
-Currently, this ends up enabling FPDMA non-zero offset only on the
-drive side leading to NCQ command failures and eventual disabling of
-NCQ.  This patch makes libata filter out FPDMA non-zero offset enable
-for the machine.
-
-This was reported by Marcus Meissner in bnc#522790.
-
-  https://bugzilla.novell.com/show_bug.cgi?id=522790
-
-Reported-by: Marcus Meissner <meissner@novell.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
-This concludes the four patches to work around a device configuration
-issue caused by strange _GTF.  This looks a bit pervasive for
-#upstream-fixes but the changes should only affect the problematic
-machine and be fairly safe.
+ drivers/ata/libata-acpi.c |   19 +++++++++++++++----
+ include/linux/ata.h       |    3 +++
+ include/linux/libata.h    |    2 ++
+ 3 files changed, 20 insertions(+), 4 deletions(-)
 
-Thanks.
-
- drivers/ata/ahci.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
-
-Index: ata/drivers/ata/ahci.c
+Index: ata/drivers/ata/libata-acpi.c
 ===================================================================
---- ata.orig/drivers/ata/ahci.c
-+++ ata/drivers/ata/ahci.c
-@@ -2858,6 +2858,50 @@ static bool ahci_broken_online(struct pc
- 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
- }
+--- ata.orig/drivers/ata/libata-acpi.c
++++ ata/drivers/ata/libata-acpi.c
+@@ -22,7 +22,7 @@
 
-+static void ahci_gtf_filter_workaround(struct ata_host *host)
-+{
-+	static const struct dmi_system_id sysids[] = {
-+		/*
-+		 * Aspire 3810T issues a bunch of SATA enable commands
-+		 * via _GTF including an invalid one and one which is
-+		 * rejected by the device.  Among the successful ones
-+		 * is FPDMA non-zero offset enable which when enabled
-+		 * only on the drive side leads to NCQ command
-+		 * failures.  Filter it out.
-+		 */
-+		{
-+			.ident = "Aspire 3810T",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire 3810T"),
-+			},
-+			.driver_data = (void *)ATA_ACPI_FILTER_FPDMA_OFFSET,
-+		},
-+		{ }
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(sysids);
-+	unsigned int filter;
-+	int i;
-+
-+	if (!dmi)
-+		return;
-+
-+	filter = (unsigned long)dmi->driver_data;
-+	dev_printk(KERN_INFO, host->dev,
-+		   "applying extra ACPI _GTF filter 0x%x for %s\n",
-+		   filter, dmi->ident);
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+		struct ata_link *link;
-+		struct ata_device *dev;
-+
-+		ata_for_each_link(link, ap, EDGE)
-+			ata_for_each_dev(dev, link, ALL)
-+				dev->gtf_filter |= filter;
-+	}
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-@@ -3023,6 +3067,9 @@ static int ahci_init_one(struct pci_dev
- 	/* apply workaround for ASUS P5W DH Deluxe mainboard */
- 	ahci_p5wdh_workaround(host);
+ static unsigned int ata_acpi_gtf_filter = ATA_ACPI_FILTER_DEFAULT;
+ module_param_named(acpi_gtf_filter, ata_acpi_gtf_filter, int, 0644);
+-MODULE_PARM_DESC(acpi_gtf_filter, "filter mask for ACPI _GTF commands, set to filter out (0x1=set xfermode, 0x2=lock/freeze lock, 0x4=DIPM)");
++MODULE_PARM_DESC(acpi_gtf_filter, "filter mask for ACPI _GTF commands, set to filter out (0x1=set xfermode, 0x2=lock/freeze lock, 0x4=DIPM, 0x8=FPDMA non-zero offset, 0x10=FPDMA DMA Setup FIS auto-activate)");
 
-+	/* apply gtf filter quirk */
-+	ahci_gtf_filter_workaround(host);
+ #define NO_PORT_MULT		0xffff
+ #define SATA_ADR(root, pmp)	(((root) << 16) | (pmp))
+@@ -637,12 +637,23 @@ static int ata_acpi_filter_tf(const stru
+ 			return 1;
+ 	}
+
+-	if (ata_acpi_gtf_filter & ATA_ACPI_FILTER_DIPM) {
++	if (tf->command == ATA_CMD_SET_FEATURES &&
++	    tf->feature == SETFEATURES_SATA_ENABLE) {
+ 		/* inhibit enabling DIPM */
+-		if (tf->command == ATA_CMD_SET_FEATURES &&
+-		    tf->feature == SETFEATURES_SATA_ENABLE &&
++		if (ata_acpi_gtf_filter & ATA_ACPI_FILTER_DIPM &&
+ 		    tf->nsect == SATA_DIPM)
+ 			return 1;
 +
- 	/* initialize adapter */
- 	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
- 	if (rc)
++		/* inhibit FPDMA non-zero offset */
++		if (ata_acpi_gtf_filter & ATA_ACPI_FILTER_FPDMA_OFFSET &&
++		    (tf->nsect == SATA_FPDMA_OFFSET ||
++		     tf->nsect == SATA_FPDMA_IN_ORDER))
++			return 1;
++
++		/* inhibit FPDMA auto activation */
++		if (ata_acpi_gtf_filter & ATA_ACPI_FILTER_FPDMA_AA &&
++		    tf->nsect == SATA_FPDMA_AA)
++			return 1;
+ 	}
+
+ 	return 0;
+Index: ata/include/linux/ata.h
+===================================================================
+--- ata.orig/include/linux/ata.h
++++ ata/include/linux/ata.h
+@@ -334,9 +334,12 @@ enum {
+ 	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
+
+ 	/* SETFEATURE Sector counts for SATA features */
++	SATA_FPDMA_OFFSET	= 0x01,	/* FPDMA non-zero buffer offsets */
+ 	SATA_FPDMA_AA		= 0x02, /* FPDMA Setup FIS Auto-Activate */
+ 	SATA_DIPM		= 0x03,	/* Device Initiated Power Management */
++	SATA_FPDMA_IN_ORDER	= 0x04,	/* FPDMA in-order data delivery */
+ 	SATA_AN			= 0x05,	/* Asynchronous Notification */
++	SATA_SSP		= 0x06,	/* Software Settings Preservation */
+
+ 	/* feature values for SET_MAX */
+ 	ATA_SET_MAX_ADDR	= 0x00,
+Index: ata/include/linux/libata.h
+===================================================================
+--- ata.orig/include/linux/libata.h
++++ ata/include/linux/libata.h
+@@ -423,6 +423,8 @@ enum {
+ 	ATA_ACPI_FILTER_SETXFER	= 1 << 0,
+ 	ATA_ACPI_FILTER_LOCK	= 1 << 1,
+ 	ATA_ACPI_FILTER_DIPM	= 1 << 2,
++	ATA_ACPI_FILTER_FPDMA_OFFSET = 1 << 3,	/* FPDMA non-zero offset */
++	ATA_ACPI_FILTER_FPDMA_AA = 1 << 4,	/* FPDMA auto activate */
+
+ 	ATA_ACPI_FILTER_DEFAULT	= ATA_ACPI_FILTER_SETXFER |
+ 				  ATA_ACPI_FILTER_LOCK |
