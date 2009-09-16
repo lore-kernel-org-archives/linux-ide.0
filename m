@@ -1,51 +1,140 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: 2.6.31-rc5 regression: hd don't show up
-Date: Wed, 16 Sep 2009 11:19:37 +0900
-Message-ID: <4AB04B39.7030907@kernel.org>
-References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org> <4A966F7D.60707@kernel.org> <4A97B9C0.9090003@klingt.org> <4A9B7E1E.8060909@kernel.org> <4A9DAF78.4070703@klingt.org> <4A9DD6D9.50407@kernel.org> <4A9E371A.5040208@klingt.org> <4A9FCD8C.6010107@kernel.org> <4AA18F57.8030107@klingt.org> <4AA1ACF8.7030101@kernel.org> <4AA6C569.9090901@klingt.org>
+Date: Wed, 16 Sep 2009 14:39:08 +0900
+Message-ID: <4AB079FC.6000906@kernel.org>
+References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org> <4A966F7D.60707@kernel.org> <4A97B9C0.9090003@klingt.org> <4A9B7E1E.8060909@kernel.org> <4A9DAF78.4070703@klingt.org> <4A9DD6D9.50407@kernel.org> <4A9E371A.5040208@klingt.org> <4A9FCD8C.6010107@kernel.org> <4AA18F57.8030107@klingt.org> <4AA1ACF8.7030101@kernel.org> <4AA6C569.9090901@klingt.org> <4AB04B39.7030907@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754666AbZIPCTs@vger.kernel.org>
-In-Reply-To: <4AA6C569.9090901@klingt.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------010407000602080409090609"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:56423 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbZIPFjM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Sep 2009 01:39:12 -0400
+In-Reply-To: <4AB04B39.7030907@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Tim Blechmann <tim@klingt.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------010407000602080409090609
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
 Hello,
 
-Tim Blechmann wrote:
-> with this patch, i could reproduce it again on the first boot. bootlog
-> attached.
-
-Thanks a lot for testing.  The offending commit is 816ab897.
-
-commit 816ab89782ac139a8b65147cca990822bb7e8675
-Author: Tejun Heo <tj@kernel.org>
-Date:   Wed Oct 22 00:31:34 2008 +0900
-
-    libata: set device class to NONE if phys_offline
-
-    Reset methods don't have access to phys link status for slave links
-    and may incorrectly indicate device presence causing unnecessary probe
-    failures for unoccupied links.  This patch clears device class to NONE
-    during post-reset processing if phys link is offline.
-
-    As on/offlineness semantics is strictly defined and used in multiple
-    places by the core layer, this won't change behavior for drivers which
-    don't use slave links.
-
-    Signed-off-by: Tejun Heo <tj@kernel.org>
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-
-The problem is that I don't really remember why I added this one back
-then.  This is incorrect because the condition should be dealt with
-later in the reset logic.  That didn't work quite as expected and I
-ended up adding the above to work around that and it turned out wrong.
-I'll dig deeper and find out what was the problem back then.
+Can you please try the attached patch and report the result?  The bug
+shouldn't happen now and for cases where it would have happened,
+libata will report "link online but device misclassified" and retry.
 
 Thanks.
 
 -- 
 tejun
+
+--------------010407000602080409090609
+Content-Type: text/x-patch;
+ name="fix-link-onoffline-handling.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="fix-link-onoffline-handling.patch"
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index a04488f..1f0fd67 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1016,8 +1016,8 @@ int ata_port_freeze(struct ata_port *ap)
+ 
+ 	WARN_ON(!ap->ops->error_handler);
+ 
+-	__ata_port_freeze(ap);
+ 	nr_aborted = ata_port_abort(ap);
++	__ata_port_freeze(ap);
+ 
+ 	return nr_aborted;
+ }
+@@ -2667,14 +2667,14 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 		dev->pio_mode = XFER_PIO_0;
+ 		dev->flags &= ~ATA_DFLAG_SLEEPING;
+ 
+-		if (!ata_phys_link_offline(ata_dev_phys_link(dev))) {
+-			/* apply class override */
+-			if (lflags & ATA_LFLAG_ASSUME_ATA)
+-				classes[dev->devno] = ATA_DEV_ATA;
+-			else if (lflags & ATA_LFLAG_ASSUME_SEMB)
+-				classes[dev->devno] = ATA_DEV_SEMB_UNSUP;
+-		} else
+-			classes[dev->devno] = ATA_DEV_NONE;
++		if (ata_phys_link_offline(ata_dev_phys_link(dev)))
++			continue;
++
++		/* apply class override */
++		if (lflags & ATA_LFLAG_ASSUME_ATA)
++			classes[dev->devno] = ATA_DEV_ATA;
++		else if (lflags & ATA_LFLAG_ASSUME_SEMB)
++			classes[dev->devno] = ATA_DEV_SEMB_UNSUP;
+ 	}
+ 
+ 	/* record current link speed */
+@@ -2713,34 +2713,48 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+ 	spin_unlock_irqrestore(link->ap->lock, flags);
+ 
+-	/* Make sure onlineness and classification result correspond.
++	/*
++	 * Make sure onlineness and classification result correspond.
+ 	 * Hotplug could have happened during reset and some
+ 	 * controllers fail to wait while a drive is spinning up after
+ 	 * being hotplugged causing misdetection.  By cross checking
+-	 * link onlineness and classification result, those conditions
+-	 * can be reliably detected and retried.
++	 * link on/offlineness and classification result, those
++	 * conditions can be reliably detected and retried.
+ 	 */
+ 	nr_unknown = 0;
+ 	ata_for_each_dev(dev, link, ALL) {
+-		/* convert all ATA_DEV_UNKNOWN to ATA_DEV_NONE */
+-		if (classes[dev->devno] == ATA_DEV_UNKNOWN) {
+-			classes[dev->devno] = ATA_DEV_NONE;
+-			if (ata_phys_link_online(ata_dev_phys_link(dev)))
++		if (ata_phys_link_online(ata_dev_phys_link(dev))) {
++			if (classes[dev->devno] == ATA_DEV_UNKNOWN) {
++				ata_dev_printk(dev, KERN_DEBUG, "link online "
++					       "but device misclassifed\n");
++				classes[dev->devno] = ATA_DEV_NONE;
+ 				nr_unknown++;
++			}
++		} else if (ata_phys_link_offline(ata_dev_phys_link(dev))) {
++			if (ata_class_enabled(classes[dev->devno]))
++				ata_dev_printk(dev, KERN_DEBUG, "link offline, "
++					       "clearing class %d to NONE\n",
++					       classes[dev->devno]);
++			classes[dev->devno] = ATA_DEV_NONE;
++		} else if (classes[dev->devno] == ATA_DEV_UNKNOWN) {
++			ata_dev_printk(dev, KERN_DEBUG, "link status unknown, "
++				       "clearing UNKNOWN to NONE\n");
++			classes[dev->devno] = ATA_DEV_NONE;
+ 		}
+ 	}
+ 
+ 	if (classify && nr_unknown) {
+ 		if (try < max_tries) {
+ 			ata_link_printk(link, KERN_WARNING, "link online but "
+-				       "device misclassified, retrying\n");
++					"%d devices misclassified, retrying\n",
++					nr_unknown);
+ 			failed_link = link;
+ 			rc = -EAGAIN;
+ 			goto fail;
+ 		}
+ 		ata_link_printk(link, KERN_WARNING,
+-			       "link online but device misclassified, "
+-			       "device detection might fail\n");
++				"link online but %d devices misclassified, "
++				"device detection might fail\n", nr_unknown);
+ 	}
+ 
+ 	/* reset successful, schedule revalidation */
+
+--------------010407000602080409090609--
