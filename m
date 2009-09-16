@@ -1,43 +1,31 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
-Date: Wed, 16 Sep 2009 19:49:17 +0900
-Message-ID: <4AB0C2AD.6020503@gmail.com>
-References: <4AAE8252.8000206@web.de> <4AAFE66D.8050807@gmail.com> <4AB0ADB2.8090009@web.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Commit 54c38444fad6a99b4b19512f8f0055d69115e69e
+Date: Wed, 16 Sep 2009 20:56:08 +0900
+Message-ID: <4AB0D258.60503@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f180.google.com ([209.85.211.180]:40811 "EHLO
-	mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbZIPKyz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Sep 2009 06:54:55 -0400
-Received: by ywh10 with SMTP id 10so3398964ywh.1
-        for <linux-ide@vger.kernel.org>; Wed, 16 Sep 2009 03:54:59 -0700 (PDT)
-In-Reply-To: <4AB0ADB2.8090009@web.de>
+Received: from hera.kernel.org ([140.211.167.34]:36174 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756004AbZIPL4m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Sep 2009 07:56:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Holger Hasselmann <hhasselm@web.de>
-Cc: linux-ide@vger.kernel.org, Shane.Huang@amd.com
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Holger Hasselmann wrote:
-> I have tried the attached patch on a clean 2.6.31 source and it is working.
-> 
-> dmesg is showing the following:
-> 
-> libata version 3.00 loaded.
-> ahci 0000:00:12.0: version 3.0
-> ahci 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-> ahci 0000:00:12.0: ASUS M2A-VM: BIOS too old, forcing 32bit DMA, update
-> BIOS
-> ahci 0000:00:12.0: controller can't do 64bit DMA, forcing 32bit
-> ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA
-> mode
-> ahci 0000:00:12.0: flags: ncq sntf ilck pm led clo pmp pio slum part
-> 
-> Will try it later on the latest git, I think the dmesg should identify
-> the Board correct then and.
+Jeff,
 
-Oh, yes, please.  It should be printing different message.
+Commit 54c38444fad6a99b4b19512f8f0055d69115e69e triggers
+WARN_ON_ONCE(ap->pflags & ATA_PFLAG_FROZEN); in ata_qc_complete().
+>From the commit history, it seems the change was to add DMA engine
+disable to sil_freeze(), right?  I can't see why changing the orders
+would matter there.  ata_port_abort() just changes the internal state
+of libata and doesn't affect low level driver or the hardware.
+Whether doing it before or after __ata_port_freeze() shouldn't make
+any different to sata_sil's freeze callback.  Am I missing something?
+
+Thanks.
 
 -- 
 tejun
