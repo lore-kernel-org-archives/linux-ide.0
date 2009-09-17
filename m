@@ -1,43 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: restore pci_intx() handling
-Date: Thu, 17 Sep 2009 16:49:56 -0400
-Message-ID: <4AB2A0F4.6010301@garzik.org>
-References: <4AB1058F.3070108@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.31] sata_promise: update reset code
+Date: Thu, 17 Sep 2009 16:50:44 -0400
+Message-ID: <4AB2A124.8010509@pobox.com>
+References: <19119.37343.976763.528719@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50793 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54689 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752978AbZIQUt4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Sep 2009 16:49:56 -0400
-In-Reply-To: <4AB1058F.3070108@kernel.org>
+	id S1750974AbZIQUuq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Sep 2009 16:50:46 -0400
+In-Reply-To: <19119.37343.976763.528719@pilspetsen.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org, Thomas Jarosch <thomas.jarosch@intra2net.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Peter Favrholdt <linux-ide@how.dk>, linux-ide@vger.kernel.org
 
-On 09/16/2009 11:34 AM, Tejun Heo wrote:
-> Commit a5bfc4714b3f01365aef89a92673f2ceb1ccf246 dropped explicit
-> pci_intx() manipulation from ahci because it seemed unnecessary and
-> ahci doesn't seem to be the right place to be tweaking it if it were.
-> This was largely okay but there are exceptions.  There was one on an
-> embedded platform which was fixed via firmware and now bko#14124
-> reports it on a HP DL320.
+On 09/15/2009 09:08 AM, Mikael Pettersson wrote:
+> sata_promise's reset code has deviated quite a bit from
+> the Promise reference driver's, and it has been observed
+> to fail to recover from errors in some cases.
 >
->    http://bugzilla.kernel.org/show_bug.cgi?id=14124
+> This patch thus updates the reset code to more closely
+> match the reference driver:
 >
-> I still think this isn't something libata drivers should be caring
-> about (the only ones which are calling pci_intx() explicitly are
-> libata ones and one other driver) but for now reverting the change
-> seems to be the right thing to do.
+> - soft reset (pdc_reset_port):
+>    * wait for ATA engine to not be in packet command mode
+>      (2nd gen only)
+>    * write reset bit in PDC_CTLSTAT before the first read
+>      in the loop
+>    * for 2nd gen SATA follow up with FPDMA reset and clearing
+>      error status registers
+> - hard reset (pdc_sata_hardreset):
+>    * wait for ATA engine to not be in packet command mode
+>      (2nd gen only)
+>    * reset ATA engine via the PCI control register
+>    * Tejun's change to use non-waiting hardreset + follow-up SRST
 >
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Reported-by: Thomas Jarosch<thomas.jarosch@intra2net.com>
+> I'm not changing the hotplug mask bits since they are taken care
+> of by sata_promise's ->freeze() and ->thaw() operations. And I'm
+> not writing the PMP port # because that's always zero (for now).
+>
+> Tested here on various controllers. In particular, one disk
+> which used to timeout and fail to recover from certain hdparm
+> and smartmonctl commands now works nicely.
+>
+> Signed-off-by: Mikael Pettersson<mikpe@it.uu.se>
 > ---
->   drivers/ata/ahci.c |    4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+> I should have submitted this long ago, sorry.
+> This update involves a lot of details, so it should probably sit
+> in a testing tree for a while before going upstream.
+>
+>   drivers/ata/sata_promise.c |  121 ++++++++++++++++++++++++++++++++++++++++++++-
+>   1 file changed, 120 insertions(+), 1 deletion(-)
 
-applied
+applied -- I would rather push it to upstream and see what happens, 
+given that waiting would probably mean less test exposure at this point 
+[unless we wait a full release cycle]
+
+	Jeff
+
 
 
