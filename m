@@ -1,44 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: MD/RAID time out writing superblock
-Date: Fri, 18 Sep 2009 00:47:44 +0900
-Message-ID: <4AB25A20.3040103@kernel.org>
-References: <20090916222842.GB16053@arachsys.com> <4AB17905.90606@kernel.org> <4AB23B17.2040204@rtr.ca>
+Date: Thu, 17 Sep 2009 12:16:10 -0400
+Message-ID: <4AB260CA.8040308@rtr.ca>
+References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com> <4AB239C8.2020203@rtr.ca> <4AB25736.1060601@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39682 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755203AbZIQPsa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Sep 2009 11:48:30 -0400
-In-Reply-To: <4AB23B17.2040204@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4AB25736.1060601@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <teheo@suse.de>
+Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Chris Webb <chris@arachsys.com>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
-Hello,
-
-Mark Lord wrote:
->> That's interesting.  One important side effect of issuing IDENTIFY is
->> that they will serialize command streams as they are not NCQ commands
->> and thus could change command patterns significantly.
-> ..
+Tejun Heo wrote:
+> Hello,
 > 
-> SMART is the opcode that is most frequently implicated here, not IDENTIFY.
+> Mark Lord wrote:
+>> Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
+> 
+> Nope.
+> 
+>> If not, then I think we may need to add code to do it.
+> 
+> Hmm... can you explain a bit more?  That seems rather extreme to me.
+..
 
-Yeap, any non-NCQ commands would do it.
+You may recall that I first raised this issue about a year ago,
+when my own RAID0 array (MythTV box) started showing errors very
+similar to what Chris is reporting.
 
-> Note that even a barrier FLUSH CACHE is non NCQ and will serialize
-> the stream.
+These were easily triggered by running hddtemp once every few seconds
+to log drive temperatures during Myth recording sessions.
 
-Yeah, I was just thinking that issuing non-NCQ commands mixed with NCQ
-commands would make the command stream fluctuate more.  Modern drives
-are pretty good at lowering power consumption while idle so being more
-fluctuative (is it a word?) might have something to do with the
-problem.  Just a wild speculation tho.
+hddtemp uses SMART commands.
 
-Thanks.
+The actual errors in the logs were command timeouts,
+but at this point I no longer remember which opcode was
+actually timing out.  Disabling the onboard write cache
+immediately "cured" the problem, at the expense of MUCH
+slower I/O times.
 
--- 
-tejun
+My theory at the time, was that some non-NCQ commands might be triggering
+an internal FLUSH CACHE within the (Hitachi) drive firmware, which then
+caused the original command to timeout in libata (due to the large amounts
+of data present in the onboard write-caches).
+
+Now that more people are playing the game, we're seeing more and more
+reports of strange interactions with smartd running in the background.
+
+I suspect more and more now that this is an (avoidable) interaction
+between the write-cache and the SMART opcode, and it could perhaps be
+avoided by doing a FLUSH CACHE before any SMART (or non-data command) opcode.
+
+Cheers
