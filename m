@@ -1,57 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream] libata: Fujitsu AMILO Pa 2510 can't do 64bit DMA
- either
-Date: Fri, 18 Sep 2009 08:43:54 +0900
-Message-ID: <4AB2C9BA.5040103@kernel.org>
+From: "Jung-Ik (John) Lee" <jilee@google.com>
+Subject: Re: [PATCH] libata:ide: Fix udma timings of pdc202xx_old controllers
+Date: Thu, 17 Sep 2009 16:54:09 -0700
+Message-ID: <8b5805ff0909171654i515c832bm570db9bd5936b11a@mail.gmail.com>
+References: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com>
+	<20090918002322.54099f94@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48902 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbZIQXnt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Sep 2009 19:43:49 -0400
+Received: from smtp-out.google.com ([216.239.45.13]:29323 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038AbZIQXyb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2009 19:54:31 -0400
+In-Reply-To: <20090918002322.54099f94@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, hhasselm@web.de
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: sshtylyov@ru.mvista.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is the third SB600 system which can't do 64bit DMA.  Add it to
-blacklist.
+On Thu, Sep 17, 2009 at 4:23 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
+ote:
+> On Thu, 17 Sep 2009 16:02:31 -0700
+> "Jung-Ik (John) Lee" <jilee@google.com> wrote:
+>
+>> From: John(Jung-Ik) Lee <jilee@google.com>
+>>
+>> Fix udma timings of pdc202xx_old controllers.
+>> MB=3D1, MC=3D1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
+>
+> On what documentation is this based ?
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Holger Hasselmann <hhasselm@web.de>
-Cc: Shane Huang <Shane.Huang@amd.com>
----
-This is bad because we can't backport this to -stable and broken 64bit
-DMA makes these systems unusable for kernels released without the
-following blacklisting.  I think we should disable 64bit DMA for
-SB600s in -stable.  Any objections?  Shane?
+I have two documents, 20265, and 20267, and both need to set to the
+same single value for all UDMA modes.
 
- drivers/ata/ahci.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Doc 1:
+  PDC20265 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
+Specification Rev 2.0
+  #7.17.2, Ultra DMA Data Transfer Speed list
+    For all Ultra DMA mode, MB, MC =3D 01h, 01h
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index d4cd9c2..173a150 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2688,6 +2688,20 @@ static bool ahci_sb600_32bit_only(struct pci_dev *pdev)
- 				DMI_MATCH(DMI_BOARD_NAME, "GA-MA69VM-S2"),
- 			},
- 		},
-+		/*
-+		 * This laptop can't do 64bit DMA either.  The latest
-+		 * BIOS as of this writing (1.10c) doesn't fix the
-+		 * problem either.
-+		 *
-+		 * http://thread.gmane.org/gmane.linux.ide/42716
-+		 */
-+		{
-+			.ident = "Fujitsu AMILO Pa 2510",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU SIEMENS"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "AMILO Pa 2510"),
-+			},
-+		},
- 		{ }
- 	};
- 	const struct dmi_system_id *match;
+Doc 2:
+  PDC20267 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
+Specification Rev 2.0
+  #7.17.2, Ultra DMA Data Transfer Speed list
+    For all Ultra DMA mode, MB, MC =3D 01h, 01h
+
+Are there other pdc202xx old controllers that are different?
+
+-John
+
+>
+> Alan
+>
