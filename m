@@ -1,85 +1,31 @@
-From: "Jung-Ik (John) Lee" <jilee@google.com>
-Subject: [PATCH] libata:ide: Fix udma timings of pdc202xx_old controllers
-Date: Thu, 17 Sep 2009 16:02:31 -0700
-Message-ID: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata:ide: Fix udma timings of pdc202xx_old
+ controllers
+Date: Fri, 18 Sep 2009 00:23:22 +0100
+Message-ID: <20090918002322.54099f94@lxorguk.ukuu.org.uk>
+References: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:13937 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbZIQXCw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2009 19:02:52 -0400
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39376 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750741AbZIQXWU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2009 19:22:20 -0400
+In-Reply-To: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Jung-Ik (John) Lee" <jilee@google.com>
+Cc: sshtylyov@ru.mvista.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: John(Jung-Ik) Lee <jilee@google.com>
+On Thu, 17 Sep 2009 16:02:31 -0700
+"Jung-Ik (John) Lee" <jilee@google.com> wrote:
 
-Fix udma timings of pdc202xx_old controllers.
-MB=1, MC=1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
+> From: John(Jung-Ik) Lee <jilee@google.com>
+> 
+> Fix udma timings of pdc202xx_old controllers.
+> MB=1, MC=1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
 
-Signed-off-by: John(Jung-Ik) Lee <jilee@google.com>
----
+On what documentation is this based ?
 
- drivers/ata/pata_pdc202xx_old.c |   15 +++------------
- drivers/ide/pdc202xx_old.c      |    8 +++++---
- 2 files changed, 8 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index 2f3c9be..ae76a9e 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -97,14 +97,6 @@ static void pdc202xx_set_dmamode(struct ata_port
-*ap, struct ata_device *adev)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
--	static u8 udma_timing[6][2] = {
--		{ 0x60, 0x03 },	/* 33 Mhz Clock */
--		{ 0x40, 0x02 },
--		{ 0x20, 0x01 },
--		{ 0x40, 0x02 },	/* 66 Mhz Clock */
--		{ 0x20, 0x01 },
--		{ 0x20, 0x01 }
--	};
- 	static u8 mdma_timing[3][2] = {
- 		{ 0xe0, 0x0f },
- 		{ 0x60, 0x04 },
-@@ -119,10 +111,9 @@ static void pdc202xx_set_dmamode(struct ata_port
-*ap, struct ata_device *adev)
- 	r_cp &= ~0x0F;
-
- 	if (adev->dma_mode >= XFER_UDMA_0) {
--		int speed = adev->dma_mode - XFER_UDMA_0;
--		r_bp |= udma_timing[speed][0];
--		r_cp |= udma_timing[speed][1];
--
-+		/* MB=1, MC=1 for all UDMA modes of pdc2026{57} */
-+		r_bp |= 0x20;
-+		r_cp |= 0x01;
- 	} else {
- 		int speed = adev->dma_mode - XFER_MW_DMA_0;
- 		r_bp |= mdma_timing[speed][0];
-diff --git a/drivers/ide/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
-index cb812f3..95c58dd 100644
---- a/drivers/ide/pdc202xx_old.c
-+++ b/drivers/ide/pdc202xx_old.c
-@@ -51,11 +51,13 @@ static void pdc202xx_set_mode(ide_drive_t *drive,
-const u8 speed)
-
- 	switch(speed) {
- 		case XFER_UDMA_5:
--		case XFER_UDMA_4:	TB = 0x20; TC = 0x01; break;
--		case XFER_UDMA_2:	TB = 0x20; TC = 0x01; break;
-+		case XFER_UDMA_4:
- 		case XFER_UDMA_3:
--		case XFER_UDMA_1:	TB = 0x40; TC = 0x02; break;
-+		case XFER_UDMA_2:
-+		case XFER_UDMA_1:
- 		case XFER_UDMA_0:
-+		/* MB=1, MC=1 for all UDMA modes of pdc2026{57} */
-+					TB = 0x20; TC = 0x01; break;
- 		case XFER_MW_DMA_2:	TB = 0x60; TC = 0x03; break;
- 		case XFER_MW_DMA_1:	TB = 0x60; TC = 0x04; break;
- 		case XFER_MW_DMA_0:	TB = 0xE0; TC = 0x0F; break;
+Alan
