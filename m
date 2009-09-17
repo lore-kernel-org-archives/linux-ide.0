@@ -1,31 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata:ide: Fix udma timings of pdc202xx_old
- controllers
-Date: Fri, 18 Sep 2009 00:23:22 +0100
-Message-ID: <20090918002322.54099f94@lxorguk.ukuu.org.uk>
-References: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream] libata: Fujitsu AMILO Pa 2510 can't do 64bit DMA
+ either
+Date: Fri, 18 Sep 2009 08:43:54 +0900
+Message-ID: <4AB2C9BA.5040103@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39376 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750741AbZIQXWU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2009 19:22:20 -0400
-In-Reply-To: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:48902 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751745AbZIQXnt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Sep 2009 19:43:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Jung-Ik (John) Lee" <jilee@google.com>
-Cc: sshtylyov@ru.mvista.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, hhasselm@web.de
 
-On Thu, 17 Sep 2009 16:02:31 -0700
-"Jung-Ik (John) Lee" <jilee@google.com> wrote:
+This is the third SB600 system which can't do 64bit DMA.  Add it to
+blacklist.
 
-> From: John(Jung-Ik) Lee <jilee@google.com>
-> 
-> Fix udma timings of pdc202xx_old controllers.
-> MB=1, MC=1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Holger Hasselmann <hhasselm@web.de>
+Cc: Shane Huang <Shane.Huang@amd.com>
+---
+This is bad because we can't backport this to -stable and broken 64bit
+DMA makes these systems unusable for kernels released without the
+following blacklisting.  I think we should disable 64bit DMA for
+SB600s in -stable.  Any objections?  Shane?
 
-On what documentation is this based ?
+ drivers/ata/ahci.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Alan
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index d4cd9c2..173a150 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2688,6 +2688,20 @@ static bool ahci_sb600_32bit_only(struct pci_dev *pdev)
+ 				DMI_MATCH(DMI_BOARD_NAME, "GA-MA69VM-S2"),
+ 			},
+ 		},
++		/*
++		 * This laptop can't do 64bit DMA either.  The latest
++		 * BIOS as of this writing (1.10c) doesn't fix the
++		 * problem either.
++		 *
++		 * http://thread.gmane.org/gmane.linux.ide/42716
++		 */
++		{
++			.ident = "Fujitsu AMILO Pa 2510",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU SIEMENS"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "AMILO Pa 2510"),
++			},
++		},
+ 		{ }
+ 	};
+ 	const struct dmi_system_id *match;
