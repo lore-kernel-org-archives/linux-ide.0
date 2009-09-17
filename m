@@ -1,53 +1,74 @@
-From: Mark Lord <liml@rtr.ca>
+From: Allan Wind <allan_wind@lifeintegrity.com>
 Subject: Re: MD/RAID time out writing superblock
-Date: Thu, 17 Sep 2009 12:17:19 -0400
-Message-ID: <4AB2610F.8010904@rtr.ca>
-References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com> <4AB239C8.2020203@rtr.ca> <4AB25736.1060601@suse.de> <4AB260CA.8040308@rtr.ca>
+Date: Thu, 17 Sep 2009 12:36:47 -0400
+Message-ID: <20090917163647.GA6663@lifeintegrity.com>
+References: <20090917115728.GA13854@arachsys.com> <4AB2596D.10809@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4AB260CA.8040308@rtr.ca>
+Content-Disposition: inline
+In-Reply-To: <4AB2596D.10809@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Chris Webb <chris@arachsys.com>
-Cc: Tejun Heo <teheo@suse.de>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Hello,
->>
->> Mark Lord wrote:
->>> Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
->>
->> Nope.
->>
->>> If not, then I think we may need to add code to do it.
->>
->> Hmm... can you explain a bit more?  That seems rather extreme to me.
-> ..
+On 2009-09-18T00:44:45, Tejun Heo wrote:
+> Hello,
 > 
-> You may recall that I first raised this issue about a year ago,
-> when my own RAID0 array (MythTV box) started showing errors very
-> similar to what Chris is reporting.
+> Chris Webb wrote:
+> > It's quite hard for us to do this with these machines as we have
+> > them managed by a third party in a datacentre to which we don't have
+> > physical access.  However, I could very easily get an extra 'test'
+> > machine built in there, generate a work load that consistently
+> > reproduces the problems on the six drives, and then retry with an
+> > array build from 5, 4, 3 and 2 drives successively, taking out the
+> > unused drives from chassis, to see if reducing the load on the power
+> > supply with a smaller array helps.
 > 
-> These were easily triggered by running hddtemp once every few seconds
-> to log drive temperatures during Myth recording sessions.
-> 
-> hddtemp uses SMART commands.
-> 
-> The actual errors in the logs were command timeouts,
-> but at this point I no longer remember which opcode was
-> actually timing out.  Disabling the onboard write cache
-> immediately "cured" the problem, at the expense of MUCH
-> slower I/O times.
-..
+> Yeap, that also should shed some light on it.
 
-Speaking of which.. 
+I have a SuperMicro X8DT3-F motherboard with 2 (2 TB) WDC drives 
+of the 8 bays available in the machine.  They are on a different 
+controller LSI Logic / Symbios Logic SAS1068E PCI-Express Fusion-MPT SAS
+which was flashed into "Integrated Target Mode" to get it running 
+under Linux.
 
-Chris:  I wonder if the errors will also vanish in your situation
-by disabling the onboard write-caches in the drives ?
+Disabling smartmontools seems to have helped in terms of failure 
+frequency.  It is almost always the 2nd drive that is kicked out 
+of the mirror although the last time it was the primary after 
+disabling smart.  hddtemp was never running on this host.
 
-Eg.  hdparm -W0 /dev/sd?
+[2256003.055451] end_request: I/O error, dev sdb, sector 3907028974
+[2256003.055674] md: super_written gets error=-5, uptodate=0
+[2256003.055677] raid1: Disk failure on sdb2, disabling device.
+[2256003.055678] raid1: Operation continuing on 1 devices.
+[2256003.437315] RAID1 conf printout:
+[2256003.437318]  --- wd:1 rd:2
+[2256003.437321]  disk 0, wo:0, o:1, dev:sda2
+[2256003.437323]  disk 1, wo:1, o:0, dev:sdb2
+[2256003.440542] RAID1 conf printout:
+[2256003.440545]  --- wd:1 rd:2
+[2256003.440548]  disk 0, wo:0, o:1, dev:sda2
 
+[3880879.007618] end_request: I/O error, dev sda, sector 3907028974
+[3880879.007839] md: super_written gets error=-5, uptodate=0
+[3880879.007842] raid1: Disk failure on sda2, disabling device.
+[3880879.007843] raid1: Operation continuing on 1 devices.
+[3880879.028518] RAID1 conf printout:
+[3880879.028521]  --- wd:1 rd:2
+[3880879.028524]  disk 0, wo:1, o:0, dev:sda2
+[3880879.028527]  disk 1, wo:0, o:1, dev:sdb2
+[3880879.031607] RAID1 conf printout:
+[3880879.031610]  --- wd:1 rd:2
+[3880879.031613]  disk 1, wo:0, o:1, dev:sdb2
+
+There is barely any load on this box.  Disabling NCQ did not help 
+for me. 
+
+
+/Allan
+-- 
+Allan Wind
+Life Integrity, LLC
+<http://lifeintegrity.com>
 
