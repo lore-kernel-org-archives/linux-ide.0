@@ -1,46 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: Add pata_atp867x driver for Artop/Acard ATP867X
- 	controllers
-Date: Thu, 17 Sep 2009 16:51:37 -0400
-Message-ID: <4AB2A159.907@pobox.com>
-References: <8b5805ff0909111906j68c20c3yf7226f2798a67d80@mail.gmail.com> 	<8b5805ff0909120359g2faf661br463b19518d935110@mail.gmail.com> 	<4AABD122.2000400@gmail.com> <8b5805ff0909121717w1516c273k2a568779b9c31662@mail.gmail.com> 	<8b5805ff0909121726g2f1a78c1o1ff7289e059eabe5@mail.gmail.com> 	<4AAC4315.6010102@pobox.com> <8b5805ff0909121941y38b7764fv3cc4d0b5c1ba6c89@mail.gmail.com> 	<4AAC632E.3090902@pobox.com> <8b5805ff0909122155u77a869c5t89a81fbf1a7eb391@mail.gmail.com> 	<51f3faa70909122250o59fcd174ifee4277ba25a20fe@mail.gmail.com> <8b5805ff0909142132g59fbba8dwebc0b21484d7e157@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata_amd: do not filter out valid modes in nv_mode_filter
+Date: Thu, 17 Sep 2009 16:51:49 -0400
+Message-ID: <4AB2A165.7080507@garzik.org>
+References: <4AAC8927.4030401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54714 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54722 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751418AbZIQUvj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Sep 2009 16:51:39 -0400
-In-Reply-To: <8b5805ff0909142132g59fbba8dwebc0b21484d7e157@mail.gmail.com>
+	id S1754577AbZIQUvt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Sep 2009 16:51:49 -0400
+In-Reply-To: <4AAC8927.4030401@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Jung-Ik (John) Lee" <jilee@google.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Daniel Walker <dwalker@fifo99.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Grant Grundler <grundler@google.com>, Gwendal Grignou <gwendal@google.com>, Eric Uhrhane <ericu@google.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, stable@kernel.org
 
-On 09/15/2009 12:32 AM, Jung-Ik (John) Lee wrote:
-> From: John(Jung-Ik) Lee<jilee@google.com>
+On 09/13/2009 01:54 AM, Robert Hancock wrote:
+> On a Compaq Presario V3000 laptop (NVIDIA MCP51 chipset), pata_amd selects
+> PIO0 mode for the PATA DVD-RAM drive instead of MWDMA2 which it supports:
 >
-> This is a new pata driver for ARTOP 867X 64bit 4-channel UDMA133 ATA ctrls.
-> Based on the Atp867 data sheet rev 1.2, Acard, and in part on early ide codes
-> from Eric Uhrhane<ericu@google.com>.
+> ata4.00: ATAPI: HL-DT-ST DVDRAM GSA-4084N, KQ09, max MWDMA2
+> ata4: nv_mode_filter: 0x39f&0x7001->0x1, BIOS=0x0 (0x0) ACPI=0x7001 (60:600:0x11)
+> ata4.00: configured for PIO0
 >
-> Signed-off-by: John(Jung-Ik) Lee<jilee@google.com>
-> Reviewed-by:  Grant Grundler<grundler@google.com>
-> Reviewed-by:  Gwendal Gringo<gwendal@google.com>
-> ---
+> For some reason, the BIOS-set UDMA configuration returns 0 and the ACPI _GTM
+> reports that UDMA2 and PIO0 are enabled. This causes nv_mode_filter to end up
+> allowing only PIO0 and UDMA0-2. Since the drive doesn't support UDMA we end up
+> using PIO0.
 >
->   rev 01: Cleared some checkpatch.pl complaints. Thanks to Daniel.
->   rev 02: Removed hard-coded value for active/recovery. Thanks to Robert.
->           Use atp867x_cable_detect() until ata_cable_40short()
->   rev 03: changes per Jeff's comment: Thansk to Jeff.
-> 	 ioread/iowrite, enum, speed-to-mode calc, single mapping, etc.
+> Since the controllers should always support PIO4, MWDMA2 and UDMA2 regardless
+> of what cable type is used, let's make sure we don't filter out these modes
+> regardless of what wacky settings the BIOS is using.
 >
->   drivers/ata/Kconfig        |    9 +
->   drivers/ata/Makefile       |    1 +
->   drivers/ata/pata_atp867x.c |  548 ++++++++++++++++++++++++++++++++++++++++++++
->   include/linux/pci_ids.h    |    2 +
->   4 files changed, 560 insertions(+), 0 deletions(-)
+> Signed-off-by: Robert Hancock<hancockrwd@gmail.com>
+> Cc: stable@kernel.org
 
 applied
 
