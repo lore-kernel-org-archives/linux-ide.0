@@ -1,53 +1,55 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: libata warning booting current Linux git HEAD on qemu git HEAD
-Date: Thu, 17 Sep 2009 15:09:09 +0200
-Message-ID: <20090917130909.GA19810@lst.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Thu, 17 Sep 2009 09:29:44 -0400
+Message-ID: <4AB239C8.2020203@rtr.ca>
+References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:38136 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753650AbZIQNJM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Sep 2009 09:09:12 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756747AbZIQN3p@vger.kernel.org>
+In-Reply-To: <20090916231921.GL1924@arachsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chris Webb <chris@arachsys.com>
+Cc: Tejun Heo <teheo@suse.de>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: qemu-devel@nongnu.org, linux-ide@vger.kernel.org
 
-I guess libata required some more standards compliance again that qemu
-doesn't provide yet:
+Chris Webb wrote:
+> Mark Lord <liml@rtr.ca> writes:
+> 
+>> I suspect we're missing some info from this specific failure.
+>> Looking back at Chris's earlier posting, the whole thing started
+>> with a FLUSH_CACHE_EXT failure.  Once that happens, all bets are
+>> off on anything that follows.
+>>
+>>> Everything will be running fine when suddenly:
+>>>
+>>>  ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>>>  ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>>>          res 40/00:00:80:17:91/00:00:37:00:00/40 Emask 0x4 (timeout)
+>>>  ata1.00: status: { DRDY }
+>>>  ata1: hard resetting link
+>>>  ata1: softreset failed (device not ready)
+>>>  ata1: hard resetting link
+>>>  ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>>  ata1.00: configured for UDMA/133
+>>>  ata1: EH complete
+>>>  end_request: I/O error, dev sda, sector 1465147272
+>>>  md: super_written gets error=-5, uptodate=0
+>>>  raid10: Disk failure on sda3, disabling device.
+>>>  raid10: Operation continuing on 5 devices.
+> 
+> Hi Mark. Yes, when the first timeout after a clean boot happens, it's with
+> an 0xea flush command every time:
+..
 
-[    5.163280] WARNING: at
-/home/hch/work/linux-2.6/drivers/ata/libata-core.c:5027
-ata_qc_complete+0x168/0x1d0()
-[    5.164692] Hardware name: 
-[    5.164692] Modules linked in:
-[    5.164692] Pid: 195, comm: ata/0 Not tainted 2.6.31-xfs #364
-[    5.164692] Call Trace:
-[    5.164692]  [<c086083f>] ? printk+0x18/0x1a
-[    5.164692]  [<c06e72a8>] ? ata_qc_complete+0x168/0x1d0
-[    5.164692]  [<c016118c>] warn_slowpath_common+0x6c/0xc0
-[    5.164692]  [<c06e72a8>] ? ata_qc_complete+0x168/0x1d0
-[    5.164692]  [<c01611f5>] warn_slowpath_null+0x15/0x20
-[    5.164692]  [<c06e72a8>] ata_qc_complete+0x168/0x1d0
-[    5.164692]  [<c06f3709>] ata_do_link_abort+0x99/0xe0
-[    5.164692]  [<c06f4f30>] ? ata_sff_error_handler+0x0/0x1c0
-[    5.164692]  [<c06f375a>] ata_port_abort+0xa/0x10
-[    5.164692]  [<c06f377e>] ata_port_freeze+0x1e/0x40
-[    5.164692]  [<c06f5899>] ata_hsm_qc_complete+0xf9/0x100
-[    5.164692]  [<c06f5aa9>] ata_sff_hsm_move+0x209/0x6b0
-[    5.164692]  [<c0131928>] ? sched_clock+0x8/0x10
-[    5.164692]  [<c018aacd>] ? lock_release_holdtime+0x2d/0x200
-[    5.164692]  [<c06f6a3f>] ata_pio_task+0x2f/0x100
-[    5.164692]  [<c01734a5>] worker_thread+0x195/0x290
-[    5.164692]  [<c0173440>] ? worker_thread+0x130/0x290
-[    5.164692]  [<c06f6a10>] ? ata_pio_task+0x0/0x100
-[    5.164692]  [<c0177c20>] ? autoremove_wake_function+0x0/0x50
-[    5.164692]  [<c0173310>] ? worker_thread+0x0/0x290
-[    5.164692]  [<c0177914>] kthread+0x74/0x80
-[    5.164692]  [<c01778a0>] ? kthread+0x0/0x80
-[    5.164692]  [<c012ce47>] kernel_thread_helper+0x7/0x10
-[    5.164692] ---[ end trace 564c33a31f9b3362 ]---
-[    5.206177] ata2.00: ATAPI: QEMU DVD-ROM, 0.11.50, max UDMA/100
-[    5.209679] ata2.00: configured for MWDMA2
+Yes.  Is this still happening from time to time now?
+If so, disable the smartmontools daemon (smartd) and see if the problem goes away.
+And especially disable hddtemp (which issues SMART commands) if that is also around.
 
+It would be good to discover if those are the triggers for what's happening here.
+
+Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
+If not, then I think we may need to add code to do it.
+
+
+Cheers
