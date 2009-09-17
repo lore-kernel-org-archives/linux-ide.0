@@ -1,65 +1,53 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Thu, 17 Sep 2009 13:00:30 +0100
-Message-ID: <20090917120030.GB13854@arachsys.com>
-References: <20090916222842.GB16053@arachsys.com>
- <4AB17905.90606@kernel.org>
- <19121.33823.893569.486518@notabene.brown>
+From: Christoph Hellwig <hch@lst.de>
+Subject: libata warning booting current Linux git HEAD on qemu git HEAD
+Date: Thu, 17 Sep 2009 15:09:09 +0200
+Message-ID: <20090917130909.GA19810@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:38136 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753650AbZIQNJM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Sep 2009 09:09:12 -0400
 Content-Disposition: inline
-In-Reply-To: <19121.33823.893569.486518@notabene.brown>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: qemu-devel@nongnu.org, linux-ide@vger.kernel.org
 
-Neil Brown <neilb@suse.de> writes:
+I guess libata required some more standards compliance again that qemu
+doesn't provide yet:
 
-> For the O_SYNC:
->   I think this is a RAID1 - is that correct?
+[    5.163280] WARNING: at
+/home/hch/work/linux-2.6/drivers/ata/libata-core.c:5027
+ata_qc_complete+0x168/0x1d0()
+[    5.164692] Hardware name: 
+[    5.164692] Modules linked in:
+[    5.164692] Pid: 195, comm: ata/0 Not tainted 2.6.31-xfs #364
+[    5.164692] Call Trace:
+[    5.164692]  [<c086083f>] ? printk+0x18/0x1a
+[    5.164692]  [<c06e72a8>] ? ata_qc_complete+0x168/0x1d0
+[    5.164692]  [<c016118c>] warn_slowpath_common+0x6c/0xc0
+[    5.164692]  [<c06e72a8>] ? ata_qc_complete+0x168/0x1d0
+[    5.164692]  [<c01611f5>] warn_slowpath_null+0x15/0x20
+[    5.164692]  [<c06e72a8>] ata_qc_complete+0x168/0x1d0
+[    5.164692]  [<c06f3709>] ata_do_link_abort+0x99/0xe0
+[    5.164692]  [<c06f4f30>] ? ata_sff_error_handler+0x0/0x1c0
+[    5.164692]  [<c06f375a>] ata_port_abort+0xa/0x10
+[    5.164692]  [<c06f377e>] ata_port_freeze+0x1e/0x40
+[    5.164692]  [<c06f5899>] ata_hsm_qc_complete+0xf9/0x100
+[    5.164692]  [<c06f5aa9>] ata_sff_hsm_move+0x209/0x6b0
+[    5.164692]  [<c0131928>] ? sched_clock+0x8/0x10
+[    5.164692]  [<c018aacd>] ? lock_release_holdtime+0x2d/0x200
+[    5.164692]  [<c06f6a3f>] ata_pio_task+0x2f/0x100
+[    5.164692]  [<c01734a5>] worker_thread+0x195/0x290
+[    5.164692]  [<c0173440>] ? worker_thread+0x130/0x290
+[    5.164692]  [<c06f6a10>] ? ata_pio_task+0x0/0x100
+[    5.164692]  [<c0177c20>] ? autoremove_wake_function+0x0/0x50
+[    5.164692]  [<c0173310>] ? worker_thread+0x0/0x290
+[    5.164692]  [<c0177914>] kthread+0x74/0x80
+[    5.164692]  [<c01778a0>] ? kthread+0x0/0x80
+[    5.164692]  [<c012ce47>] kernel_thread_helper+0x7/0x10
+[    5.164692] ---[ end trace 564c33a31f9b3362 ]---
+[    5.206177] ata2.00: ATAPI: QEMU DVD-ROM, 0.11.50, max UDMA/100
+[    5.209679] ata2.00: configured for MWDMA2
 
-Hi Neil. It's a RAID10n2 of six disks, but I've also seen the behaviour on a
-RAID1 of two disks around the time of 2.6.27.
-
->   With RAID1, as soon as any IO request arrives, resync is suspended and
->   as soon as all resync requests complete, the IO is permitted to
->   proceed.
->   So normal IO takes absolute precedence over resync IO.
-> 
->   So I am very surprised to here that O_SYNC writes deadlock
->   completed.
->   As O_SYNC writes are serialised, there will be a moment between
->   every pair when there is no IO pending.  This will allow resync to
->   get one "window" of resync IO started between each pair of writes.
->   So I can well believe that a sequence of O_SYNC writes are a couple
->   of orders of magnitude slower when resync is happening than without.
->   But it shouldn't deadlock completely.
->   Once you get about 64 sectors of O_SYNC IO through, the resync
->   should notice and back-off and resync IO will be limited to the
->   'minimum' speed.
-
-The symptoms seem to be that I can't read or write to /dev/mdX but I can
-read from the underlying /dev/sd* devices fine, at pretty much full speed. I
-didn't try writing to them as there's lots of live customer data on the RAID
-arrays!
-
-The configuration is lvm2 (i.e. device-mapper linear targets) on top of md
-on top of sd, and we've seen the symptoms with the virtual machines
-accessing the logical volumes configured to open in O_SYNC mode, and with
-them configured to open in O_DIRECT mode. During the deadlock, cat
-/proc/mdstat does return promptly (i.e. not blocked), and shows a slow and
-gradually falling sync rate---I think that there's no sync writing going on
-either and the drives are genuinely idle. We have to reset the machine to
-bring it back to life and a graceful reboot fails.
-
-Anyway, I see this relatively infrequently, so what I'll try to do is to
-create a reproducible test case and then follow up to you and the RAID list
-with that. At the moment, I understand that my reports is a bit anecdotal,
-and without a proper idea of what conditions are needed to make it happen
-its pretty much impossible to diagnose or work on!
-
-Cheers,
-
-Chris.
