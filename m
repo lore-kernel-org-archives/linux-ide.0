@@ -1,52 +1,66 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
-Date: Fri, 18 Sep 2009 09:43:13 +0900
-Message-ID: <4AB2D7A1.8060909@gmail.com>
-References: <4AAE8252.8000206@web.de> <4AAFE66D.8050807@gmail.com> <4AB0ADB2.8090009@web.de> <4AB0C2AD.6020503@gmail.com> <4AB2B463.4010408@web.de>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 2.6.31] sata_promise: update reset code
+Date: Fri, 18 Sep 2009 03:05:03 +0200
+Message-ID: <19122.56511.241470.984707@pilspetsen.it.uu.se>
+References: <19119.37343.976763.528719@pilspetsen.it.uu.se>
+	<4AB2A124.8010509@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:26788 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbZIRAmh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2009 20:42:37 -0400
-Received: by an-out-0708.google.com with SMTP id d40so1026216and.1
-        for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2009 17:42:40 -0700 (PDT)
-In-Reply-To: <4AB2B463.4010408@web.de>
+Received: from fanny.its.uu.se ([130.238.4.241]:41600 "EHLO fanny.its.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754232AbZIRBFJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Sep 2009 21:05:09 -0400
+In-Reply-To: <4AB2A124.8010509@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Holger Hasselmann <hhasselm@web.de>
-Cc: linux-ide@vger.kernel.org, Shane.Huang@amd.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Peter Favrholdt <linux-ide@how.dk>, linux-ide@vger.kernel.org
 
-Hello,
+Jeff Garzik writes:
+ > On 09/15/2009 09:08 AM, Mikael Pettersson wrote:
+ > > sata_promise's reset code has deviated quite a bit from
+ > > the Promise reference driver's, and it has been observed
+ > > to fail to recover from errors in some cases.
+ > >
+ > > This patch thus updates the reset code to more closely
+ > > match the reference driver:
+ > >
+ > > - soft reset (pdc_reset_port):
+ > >    * wait for ATA engine to not be in packet command mode
+ > >      (2nd gen only)
+ > >    * write reset bit in PDC_CTLSTAT before the first read
+ > >      in the loop
+ > >    * for 2nd gen SATA follow up with FPDMA reset and clearing
+ > >      error status registers
+ > > - hard reset (pdc_sata_hardreset):
+ > >    * wait for ATA engine to not be in packet command mode
+ > >      (2nd gen only)
+ > >    * reset ATA engine via the PCI control register
+ > >    * Tejun's change to use non-waiting hardreset + follow-up SRST
+ > >
+ > > I'm not changing the hotplug mask bits since they are taken care
+ > > of by sata_promise's ->freeze() and ->thaw() operations. And I'm
+ > > not writing the PMP port # because that's always zero (for now).
+ > >
+ > > Tested here on various controllers. In particular, one disk
+ > > which used to timeout and fail to recover from certain hdparm
+ > > and smartmonctl commands now works nicely.
+ > >
+ > > Signed-off-by: Mikael Pettersson<mikpe@it.uu.se>
+ > > ---
+ > > I should have submitted this long ago, sorry.
+ > > This update involves a lot of details, so it should probably sit
+ > > in a testing tree for a while before going upstream.
+ > >
+ > >   drivers/ata/sata_promise.c |  121 ++++++++++++++++++++++++++++++++++++++++++++-
+ > >   1 file changed, 120 insertions(+), 1 deletion(-)
+ > 
+ > applied -- I would rather push it to upstream and see what happens, 
+ > given that waiting would probably mean less test exposure at this point 
+ > [unless we wait a full release cycle]
 
-Holger Hasselmann wrote:
-> I have tried the 2.6.31-git2 and this is  the dmesg output :
-> 
-> ibata version 3.00
-> 
-> ahci 0000:00:12.0: version 3.0_
-> ahci 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-> ahci 0000:00:12.0: Fujitsu-Siemens AMILO Pa 2510: this board can't do 64bit
-> DMA, forcing 32bit
-> ahci 0000:00:12.0: controller can't do 64bit DMA, forcing 32bit
-> ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-> ahci 0000:00:12.0: flags: ncq sntf ilck pm led clo pmp pio slum part
-> It's correct now.
+Agreed, using 2.6.32-rc as the testing grounds for this makes sense.
 
-Cool, patch posted with the id string shortened.
-
-> By the way, I was wondering, because I am a lucky owner of the
-> GA-MA69VM-S2 board.  I have seen it when I was trying out the issue
-> with my laptop and read the name of the kernel patch.  You will not
-> believe it, on my board with the bios version F8 I do not have any
-> issue with the plain 2.6.31 kernel without patch.  Thanks again,
-> Holger
-
-I'm confused here.  Gigabyte GA-MA69VM-S2 can't do 64bit DMA either?
-
-Thanks.
-
--- 
-tejun
+/Mikael
