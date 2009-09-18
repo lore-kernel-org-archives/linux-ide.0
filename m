@@ -1,40 +1,48 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Fri, 18 Sep 2009 18:07:42 +0100
-Message-ID: <20090918170742.GJ2141@arachsys.com>
-References: <20090917115728.GA13854@arachsys.com>
- <4AB2596D.10809@kernel.org>
+From: akpm@linux-foundation.org
+Subject: [patch 1/1] ide: use printk_once
+Date: Fri, 18 Sep 2009 12:49:48 -0700
+Message-ID: <200909181949.n8IJnmBN019766@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757100AbZIRRIZ@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AB2596D.10809@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49796 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752377AbZIRT4F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Sep 2009 15:56:05 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, marcin.slusarz@gmail.com, bzolnier@gmail.com
 
-Tejun Heo <tj@kernel.org> writes:
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
 
-> Chris Webb wrote:
->
-> > Would such very slow (but ultimately successful) flushes be
-> > consistent with the theory of power supply issues affecting the
-> > drives? It feels like the 30s timeouts on flush could be just a more
-> > severe version of the 15s very slow flushes.
-> 
-> Probably not.  Power problems usually don't resolve themselves with
-> longer timeout.  If the drive genuinely takes longer than 30s to
-> flush, it would be very interesting tho.  That's something people have
-> been worrying about but hasn't materialized yet.  The timeout is
-> controlled by SD_TIMEOUT in drivers/scsi/sd.h.  You might want to bump
-> it up to, say, 60s and see whether anything changes.
+Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-I'll add that to the list of things to check out on the test machine with a
-more disposable installation on it! The 15s flushes we're seeing on
-superblock barrier writes do already feel dangerously close to the 30s
-hardcoded timeout to me: it's only a factor of two.
+ drivers/ide/ide-proc.c |    8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Cheers,
-
-Chris.
+diff -puN drivers/ide/ide-proc.c~ide-use-printk_once drivers/ide/ide-proc.c
+--- a/drivers/ide/ide-proc.c~ide-use-printk_once
++++ a/drivers/ide/ide-proc.c
+@@ -273,14 +273,8 @@ static const struct ide_proc_devset ide_
+ 
+ static void proc_ide_settings_warn(void)
+ {
+-	static int warned;
+-
+-	if (warned)
+-		return;
+-
+-	printk(KERN_WARNING "Warning: /proc/ide/hd?/settings interface is "
++	printk_once(KERN_WARNING "Warning: /proc/ide/hd?/settings interface is "
+ 			    "obsolete, and will be removed soon!\n");
+-	warned = 1;
+ }
+ 
+ static int ide_settings_proc_show(struct seq_file *m, void *v)
+_
