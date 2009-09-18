@@ -1,58 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
-Date: Fri, 18 Sep 2009 17:09:19 +0900
-Message-ID: <4AB3402F.5010609@gmail.com>
-References: <4AAE8252.8000206@web.de> <4AAFE66D.8050807@gmail.com> <4AB0ADB2.8090009@web.de> <4AB0C2AD.6020503@gmail.com> <4AB2B463.4010408@web.de> <4AB2D7A1.8060909@gmail.com> <C8E4BD7D001E44499280E0884BD9DB30010861B7@sshaexmb1.amd.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] libata:ide: Fix udma timings of pdc202xx_old controllers
+Date: Fri, 18 Sep 2009 15:52:50 +0400
+Message-ID: <4AB37492.90407@ru.mvista.com>
+References: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com> 	<20090918002322.54099f94@lxorguk.ukuu.org.uk> <8b5805ff0909171654i515c832bm570db9bd5936b11a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f199.google.com ([209.85.210.199]:40590 "EHLO
-	mail-yx0-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbZIRIIl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Sep 2009 04:08:41 -0400
-Received: by yxe37 with SMTP id 37so668019yxe.33
-        for <linux-ide@vger.kernel.org>; Fri, 18 Sep 2009 01:08:44 -0700 (PDT)
-In-Reply-To: <C8E4BD7D001E44499280E0884BD9DB30010861B7@sshaexmb1.amd.com>
+Received: from h155.mvista.com ([63.81.120.155]:32958 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753899AbZIRLuV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Sep 2009 07:50:21 -0400
+In-Reply-To: <8b5805ff0909171654i515c832bm570db9bd5936b11a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Holger Hasselmann <hhasselm@web.de>, linux-ide@vger.kernel.org
+To: "Jung-Ik (John) Lee" <jilee@google.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Huang, Shane wrote:
-> Hi Tejun, 
-> 
->> -----Original Message-----
->> From: Tejun Heo [mailto:htejun@gmail.com] 
->>> ahci 0000:00:12.0: version 3.0_
->>> ahci 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
->>> ahci 0000:00:12.0: Fujitsu-Siemens AMILO Pa 2510: this 
->> board can't do 64bit
->>> DMA, forcing 32bit
->>> ahci 0000:00:12.0: controller can't do 64bit DMA, forcing 32bit
->>> ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 
->> 0xf impl SATA mode
->>> ahci 0000:00:12.0: flags: ncq sntf ilck pm led clo pmp pio slum part
->>> It's correct now.
->> Cool, patch posted with the id string shortened.
-> 
-> Just some small questions about this topic:
-> 
-> What is the actual impact of 64-bit DMA not being available?
+Hello.
 
-If IO happens to memory above 4G it will either be bounced (ie. DMA
-will be performed to a bounce buffer < 4G which is copied from / to
-the original buffer or more likely iommu will kick in.
+Jung-Ik (John) Lee wrote:
 
-> How important is it to have this enabled?
->
-> In other words, will the performance be improved significantly
-> after it is enabled? Do you have any experimental data for it? :-)
+>>>From: John(Jung-Ik) Lee <jilee@google.com>
 
-There probably won't be any noticeable performance regression if iommu
-is working properly and no, I don't have any concrete numbers.
+>>>Fix udma timings of pdc202xx_old controllers.
+>>>MB=3D1, MC=3D1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
 
-Thanks..
+    The patch should be broken in two as it's for 2 different subsystem=
+s.
 
--- 
-tejun
+>>On what documentation is this based ?
+
+> I have two documents, 20265, and 20267, and both need to set to the
+> same single value for all UDMA modes.
+
+> Doc 1:
+>   PDC20265 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
+> Specification Rev 2.0
+>   #7.17.2, Ultra DMA Data Transfer Speed list
+>     For all Ultra DMA mode, MB, MC =3D 01h, 01h
+
+> Doc 2:
+>   PDC20267 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
+> Specification Rev 2.0
+>   #7.17.2, Ultra DMA Data Transfer Speed list
+>     For all Ultra DMA mode, MB, MC =3D 01h, 01h
+
+> Are there other pdc202xx old controllers that are different?
+
+    There are PDC20262 and PDC20246. We should ask Bart -- he probably =
+has=20
+the documatation for them...
+
+> -John
+
+>>Alan
+
+WBR, Sergei
+
