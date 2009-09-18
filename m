@@ -1,75 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: MD/RAID time out writing superblock
-Date: Fri, 18 Sep 2009 09:16:30 +0900
-Message-ID: <4AB2D15E.3090809@kernel.org>
-References: <20090917115728.GA13854@arachsys.com> <4AB2596D.10809@kernel.org> <20090917163647.GA6663@lifeintegrity.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Gigabyte GA-MA69VM-S2 can't do 64bit DMA
+Date: Fri, 18 Sep 2009 09:43:13 +0900
+Message-ID: <4AB2D7A1.8060909@gmail.com>
+References: <4AAE8252.8000206@web.de> <4AAFE66D.8050807@gmail.com> <4AB0ADB2.8090009@web.de> <4AB0C2AD.6020503@gmail.com> <4AB2B463.4010408@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59932 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754286AbZIRAPs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Sep 2009 20:15:48 -0400
-In-Reply-To: <20090917163647.GA6663@lifeintegrity.com>
+Received: from an-out-0708.google.com ([209.85.132.244]:26788 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbZIRAmh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2009 20:42:37 -0400
+Received: by an-out-0708.google.com with SMTP id d40so1026216and.1
+        for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2009 17:42:40 -0700 (PDT)
+In-Reply-To: <4AB2B463.4010408@web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Holger Hasselmann <hhasselm@web.de>
+Cc: linux-ide@vger.kernel.org, Shane.Huang@amd.com
 
-Allan Wind wrote:
-> On 2009-09-18T00:44:45, Tejun Heo wrote:
->> Hello,
->>
->> Chris Webb wrote:
->>> It's quite hard for us to do this with these machines as we have
->>> them managed by a third party in a datacentre to which we don't have
->>> physical access.  However, I could very easily get an extra 'test'
->>> machine built in there, generate a work load that consistently
->>> reproduces the problems on the six drives, and then retry with an
->>> array build from 5, 4, 3 and 2 drives successively, taking out the
->>> unused drives from chassis, to see if reducing the load on the power
->>> supply with a smaller array helps.
->> Yeap, that also should shed some light on it.
-> 
-> I have a SuperMicro X8DT3-F motherboard with 2 (2 TB) WDC drives 
-> of the 8 bays available in the machine.  They are on a different 
-> controller LSI Logic / Symbios Logic SAS1068E PCI-Express Fusion-MPT SAS
-> which was flashed into "Integrated Target Mode" to get it running 
-> under Linux.
-> 
-> Disabling smartmontools seems to have helped in terms of failure 
-> frequency.  It is almost always the 2nd drive that is kicked out 
-> of the mirror although the last time it was the primary after 
-> disabling smart.  hddtemp was never running on this host.
-> 
-> [2256003.055451] end_request: I/O error, dev sdb, sector 3907028974
-> [2256003.055674] md: super_written gets error=-5, uptodate=0
-> [2256003.055677] raid1: Disk failure on sdb2, disabling device.
-> [2256003.055678] raid1: Operation continuing on 1 devices.
-> [2256003.437315] RAID1 conf printout:
-> [2256003.437318]  --- wd:1 rd:2
-> [2256003.437321]  disk 0, wo:0, o:1, dev:sda2
-> [2256003.437323]  disk 1, wo:1, o:0, dev:sdb2
-> [2256003.440542] RAID1 conf printout:
-> [2256003.440545]  --- wd:1 rd:2
-> [2256003.440548]  disk 0, wo:0, o:1, dev:sda2
-> 
-> [3880879.007618] end_request: I/O error, dev sda, sector 3907028974
-> [3880879.007839] md: super_written gets error=-5, uptodate=0
-> [3880879.007842] raid1: Disk failure on sda2, disabling device.
-> [3880879.007843] raid1: Operation continuing on 1 devices.
-> [3880879.028518] RAID1 conf printout:
-> [3880879.028521]  --- wd:1 rd:2
-> [3880879.028524]  disk 0, wo:1, o:0, dev:sda2
-> [3880879.028527]  disk 1, wo:0, o:1, dev:sdb2
-> [3880879.031607] RAID1 conf printout:
-> [3880879.031610]  --- wd:1 rd:2
-> [3880879.031613]  disk 1, wo:0, o:1, dev:sdb2
-> 
-> There is barely any load on this box.  Disabling NCQ did not help 
-> for me. 
+Hello,
 
-Can you please post full log?
+Holger Hasselmann wrote:
+> I have tried the 2.6.31-git2 and this is  the dmesg output :
+> 
+> ibata version 3.00
+> 
+> ahci 0000:00:12.0: version 3.0_
+> ahci 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
+> ahci 0000:00:12.0: Fujitsu-Siemens AMILO Pa 2510: this board can't do 64bit
+> DMA, forcing 32bit
+> ahci 0000:00:12.0: controller can't do 64bit DMA, forcing 32bit
+> ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA mode
+> ahci 0000:00:12.0: flags: ncq sntf ilck pm led clo pmp pio slum part
+> It's correct now.
+
+Cool, patch posted with the id string shortened.
+
+> By the way, I was wondering, because I am a lucky owner of the
+> GA-MA69VM-S2 board.  I have seen it when I was trying out the issue
+> with my laptop and read the name of the kernel patch.  You will not
+> believe it, on my board with the bios version F8 I do not have any
+> issue with the plain 2.6.31 kernel without patch.  Thanks again,
+> Holger
+
+I'm confused here.  Gigabyte GA-MA69VM-S2 can't do 64bit DMA either?
+
+Thanks.
 
 -- 
 tejun
