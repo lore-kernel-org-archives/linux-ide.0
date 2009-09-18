@@ -1,61 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata:ide: Fix udma timings of pdc202xx_old controllers
-Date: Fri, 18 Sep 2009 15:52:50 +0400
-Message-ID: <4AB37492.90407@ru.mvista.com>
-References: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com> 	<20090918002322.54099f94@lxorguk.ukuu.org.uk> <8b5805ff0909171654i515c832bm570db9bd5936b11a@mail.gmail.com>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Fri, 18 Sep 2009 18:05:17 +0100
+Message-ID: <20090918170517.GI2141@arachsys.com>
+References: <4AADF3C4.5060004@kernel.org>
+ <4AADF471.2020801@suse.de>
+ <4AAE3B9A.2060306@rtr.ca>
+ <4AAE3F86.8090804@suse.de>
+ <4AAE524C.2030401@rtr.ca>
+ <20090916231921.GL1924@arachsys.com>
+ <4AB239C8.2020203@rtr.ca>
+ <4AB25736.1060601@suse.de>
+ <4AB260CA.8040308@rtr.ca>
+ <4AB2610F.8010904@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:32958 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753899AbZIRLuV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Sep 2009 07:50:21 -0400
-In-Reply-To: <8b5805ff0909171654i515c832bm570db9bd5936b11a@mail.gmail.com>
+Received: from alpha.arachsys.com ([91.203.57.7]:53980 "EHLO
+	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505AbZIRRFS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Sep 2009 13:05:18 -0400
+Content-Disposition: inline
+In-Reply-To: <4AB2610F.8010904@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Jung-Ik (John) Lee" <jilee@google.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <teheo@suse.de>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
-Hello.
+Mark Lord <liml@rtr.ca> writes:
 
-Jung-Ik (John) Lee wrote:
+> Speaking of which..
+> 
+> Chris:  I wonder if the errors will also vanish in your situation
+> by disabling the onboard write-caches in the drives ?
+> 
+> Eg.  hdparm -W0 /dev/sd?
 
->>>From: John(Jung-Ik) Lee <jilee@google.com>
+Hi Mark. I've got a test machine on its way at the moment, so I'll make sure
+I check this one out on it too.
 
->>>Fix udma timings of pdc202xx_old controllers.
->>>MB=3D1, MC=3D1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
+Cheers,
 
-    The patch should be broken in two as it's for 2 different subsystem=
-s.
-
->>On what documentation is this based ?
-
-> I have two documents, 20265, and 20267, and both need to set to the
-> same single value for all UDMA modes.
-
-> Doc 1:
->   PDC20265 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
-> Specification Rev 2.0
->   #7.17.2, Ultra DMA Data Transfer Speed list
->     For all Ultra DMA mode, MB, MC =3D 01h, 01h
-
-> Doc 2:
->   PDC20267 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
-> Specification Rev 2.0
->   #7.17.2, Ultra DMA Data Transfer Speed list
->     For all Ultra DMA mode, MB, MC =3D 01h, 01h
-
-> Are there other pdc202xx old controllers that are different?
-
-    There are PDC20262 and PDC20246. We should ask Bart -- he probably =
-has=20
-the documatation for them...
-
-> -John
-
->>Alan
-
-WBR, Sergei
-
+Chris.
