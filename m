@@ -1,45 +1,45 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Sun, 20 Sep 2009 12:46:27 -0600
-Message-ID: <4AB67883.3010500@gmail.com>
-References: <20090917115728.GA13854@arachsys.com> <4AB2596D.10809@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ahci: display all AHCI 1.3 HBA capability flags
+Date: Sun, 20 Sep 2009 16:39:52 -0400
+Message-ID: <4AB69318.5050904@garzik.org>
+References: <4AB6718C.2050107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.211.173]:44267 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069AbZITSq1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Sep 2009 14:46:27 -0400
-In-Reply-To: <4AB2596D.10809@kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:59732 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751033AbZITUjx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Sep 2009 16:39:53 -0400
+In-Reply-To: <4AB6718C.2050107@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Chris Webb <chris@arachsys.com>, Neil Brown <neilb@suse.de>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On 09/17/2009 09:44 AM, Tejun Heo wrote:
->> Thanks Neil. This implies that when we see these fifteen second
->> hangs reading /proc/mdstat without write errors, there are genuinely
->> successful superblock writes which are taking fifteen seconds to
->> complete, presumably corresponding to flushes which complete but
->> take a full 15s to do so.
->>
->> Would such very slow (but ultimately successful) flushes be
->> consistent with the theory of power supply issues affecting the
->> drives? It feels like the 30s timeouts on flush could be just a more
->> severe version of the 15s very slow flushes.
+On 09/20/2009 02:16 PM, Robert Hancock wrote:
+> @@ -2534,13 +2535,14 @@ static void ahci_print_info(struct ata_host *host)
+>   	struct ahci_host_priv *hpriv = host->private_data;
+>   	struct pci_dev *pdev = to_pci_dev(host->dev);
+>   	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
+> -	u32 vers, cap, impl, speed;
+> +	u32 vers, cap, cap2, impl, speed;
+>   	const char *speed_s;
+>   	u16 cc;
+>   	const char *scc_s;
 >
-> Probably not.  Power problems usually don't resolve themselves with
-> longer timeout.  If the drive genuinely takes longer than 30s to
-> flush, it would be very interesting tho.  That's something people have
-> been worrying about but hasn't materialized yet.  The timeout is
-> controlled by SD_TIMEOUT in drivers/scsi/sd.h.  You might want to bump
-> it up to, say, 60s and see whether anything changes.
+>   	vers = readl(mmio + HOST_VERSION);
+>   	cap = hpriv->cap;
+> +	cap2 = readl(mmio + HOST_CAP2);
 
-It's possible if the power dip only slightly disrupted the drive it 
-might just take longer to complete the write. I've also seen reports of 
-vibration issues causing problems in RAID arrays (there's a video on 
-Youtube of a guy yelling at a Sun disk array during heavy I/O and the 
-resulting vibrations causing an immediate spike in I/O service times). 
-Could be something like that causing issues with simultaneous media 
-access to all drives in the array, too..
+
+1) We cannot unconditionally read from this register location on all 
+chips, as it's undefined for many chips.  Add a chip version check or 
+somesuch.
+
+2) Treat cap2 in the same manner as cap, to prepare for potential future 
+usages.
+
+	Jeff
+
+
