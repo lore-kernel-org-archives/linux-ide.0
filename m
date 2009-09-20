@@ -1,48 +1,87 @@
-From: akpm@linux-foundation.org
-Subject: [patch 1/1] ide: use printk_once
-Date: Fri, 18 Sep 2009 12:49:48 -0700
-Message-ID: <200909181949.n8IJnmBN019766@imap1.linux-foundation.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: [PATCH] ahci: display all AHCI 1.3 HBA capability flags
+Date: Sun, 20 Sep 2009 12:16:44 -0600
+Message-ID: <4AB6718C.2050107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49796 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752377AbZIRT4F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Sep 2009 15:56:05 -0400
+Received: from mail-yw0-f173.google.com ([209.85.211.173]:46658 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbZITSQo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Sep 2009 14:16:44 -0400
+Received: by ywh3 with SMTP id 3so2925672ywh.22
+        for <linux-ide@vger.kernel.org>; Sun, 20 Sep 2009 11:16:48 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, marcin.slusarz@gmail.com, bzolnier@gmail.com
+To: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <tj@kernel.org>
 
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
+Update the AHCI driver to display all of the HBA capabilities defined in the
+AHCI 1.3 specification. Some of these are in a new CAP2 (HBA Capabilities
+Extended) register.
 
-Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-Acked-by: David S. Miller <davem@davemloft.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+For example, on an Intel Ibex Peak (PCH) controller:
 
- drivers/ide/ide-proc.c |    8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
+sxs apst 
 
-diff -puN drivers/ide/ide-proc.c~ide-use-printk_once drivers/ide/ide-proc.c
---- a/drivers/ide/ide-proc.c~ide-use-printk_once
-+++ a/drivers/ide/ide-proc.c
-@@ -273,14 +273,8 @@ static const struct ide_proc_devset ide_
+We don't do anything special with these new flags yet.
+
+Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index acd1162..d7b0f12 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -122,6 +122,7 @@ enum {
+ 	HOST_VERSION		= 0x10, /* AHCI spec. version compliancy */
+ 	HOST_EM_LOC		= 0x1c, /* Enclosure Management location */
+ 	HOST_EM_CTL		= 0x20, /* Enclosure Management Control */
++	HOST_CAP2		= 0x24, /* host capabilities, extended */
  
- static void proc_ide_settings_warn(void)
- {
--	static int warned;
--
--	if (warned)
--		return;
--
--	printk(KERN_WARNING "Warning: /proc/ide/hd?/settings interface is "
-+	printk_once(KERN_WARNING "Warning: /proc/ide/hd?/settings interface is "
- 			    "obsolete, and will be removed soon!\n");
--	warned = 1;
+ 	/* HOST_CTL bits */
+ 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
+@@ -2534,13 +2535,14 @@ static void ahci_print_info(struct ata_host *host)
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
+-	u32 vers, cap, impl, speed;
++	u32 vers, cap, cap2, impl, speed;
+ 	const char *speed_s;
+ 	u16 cc;
+ 	const char *scc_s;
+ 
+ 	vers = readl(mmio + HOST_VERSION);
+ 	cap = hpriv->cap;
++	cap2 = readl(mmio + HOST_CAP2);
+ 	impl = hpriv->port_map;
+ 
+ 	speed = (cap >> 20) & 0xf;
+@@ -2583,7 +2585,7 @@ static void ahci_print_info(struct ata_host *host)
+ 		"flags: "
+ 		"%s%s%s%s%s%s%s"
+ 		"%s%s%s%s%s%s%s"
+-		"%s\n"
++		"%s%s%s%s%s%s%s\n"
+ 		,
+ 
+ 		cap & (1 << 31) ? "64bit " : "",
+@@ -2598,10 +2600,16 @@ static void ahci_print_info(struct ata_host *host)
+ 		cap & (1 << 19) ? "nz " : "",
+ 		cap & (1 << 18) ? "only " : "",
+ 		cap & (1 << 17) ? "pmp " : "",
++		cap & (1 << 16) ? "fbss " : "",
+ 		cap & (1 << 15) ? "pio " : "",
+ 		cap & (1 << 14) ? "slum " : "",
+ 		cap & (1 << 13) ? "part " : "",
+-		cap & (1 << 6) ? "ems ": ""
++		cap & (1 << 7) ? "ccc " : "",
++		cap & (1 << 6) ? "ems " : "",
++		cap & (1 << 5) ? "sxs " : "",
++		cap2 & (1 << 2) ? "apst " : "",
++		cap2 & (1 << 1) ? "nvmp " : "",
++		cap2 & (1 << 0) ? "boh " : ""
+ 		);
  }
  
- static int ide_settings_proc_show(struct seq_file *m, void *v)
-_
