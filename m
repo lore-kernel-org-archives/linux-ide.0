@@ -1,45 +1,66 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: display all AHCI 1.3 HBA capability flags
-Date: Sun, 20 Sep 2009 16:39:52 -0400
-Message-ID: <4AB69318.5050904@garzik.org>
-References: <4AB6718C.2050107@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] libata:ide: Fix udma timings of pdc202xx_old controllers
+Date: Sun, 20 Sep 2009 21:48:36 +0200
+Message-ID: <200909202148.36109.bzolnier@gmail.com>
+References: <8b5805ff0909171602v3dc10db9i5920be3a2abf2e04@mail.gmail.com> <8b5805ff0909171654i515c832bm570db9bd5936b11a@mail.gmail.com> <4AB37492.90407@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59732 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751033AbZITUjx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Sep 2009 16:39:53 -0400
-In-Reply-To: <4AB6718C.2050107@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752077AbZITVGj@vger.kernel.org>
+In-Reply-To: <4AB37492.90407@ru.mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: "Jung-Ik (John) Lee" <jilee@google.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On 09/20/2009 02:16 PM, Robert Hancock wrote:
-> @@ -2534,13 +2535,14 @@ static void ahci_print_info(struct ata_host *host)
->   	struct ahci_host_priv *hpriv = host->private_data;
->   	struct pci_dev *pdev = to_pci_dev(host->dev);
->   	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
-> -	u32 vers, cap, impl, speed;
-> +	u32 vers, cap, cap2, impl, speed;
->   	const char *speed_s;
->   	u16 cc;
->   	const char *scc_s;
->
->   	vers = readl(mmio + HOST_VERSION);
->   	cap = hpriv->cap;
-> +	cap2 = readl(mmio + HOST_CAP2);
+On Friday 18 September 2009 13:52:50 Sergei Shtylyov wrote:
+> Hello.
+>=20
+> Jung-Ik (John) Lee wrote:
+>=20
+> >>>From: John(Jung-Ik) Lee <jilee@google.com>
+>=20
+> >>>Fix udma timings of pdc202xx_old controllers.
+> >>>MB=3D1, MC=3D1 (0x20, 0x01) for all UDMA modes of pdc2026{57}.
+>=20
+>     The patch should be broken in two as it's for 2 different subsyst=
+ems.
+>=20
+> >>On what documentation is this based ?
+>=20
+> > I have two documents, 20265, and 20267, and both need to set to the
+> > same single value for all UDMA modes.
+>=20
+> > Doc 1:
+> >   PDC20265 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
+> > Specification Rev 2.0
+> >   #7.17.2, Ultra DMA Data Transfer Speed list
+> >     For all Ultra DMA mode, MB, MC =3D 01h, 01h
+>=20
+> > Doc 2:
+> >   PDC20267 Bus Mastering Ultra DMA PCI =96ATA/ATAPI Controller
+> > Specification Rev 2.0
+> >   #7.17.2, Ultra DMA Data Transfer Speed list
+> >     For all Ultra DMA mode, MB, MC =3D 01h, 01h
 
+I think that this patch is going in the right direction but it needs to=
+ also
+take care of 66MHz internal clock setting:
 
-1) We cannot unconditionally read from this register location on all 
-chips, as it's undefined for many chips.  Add a chip version check or 
-somesuch.
+* Please note that the same docs say that "For all Ultra DMA modes, 66M=
+Hz
+  internal clock will be used instead of 33MHz internal clock." and tha=
+t this
+  is not true in case of Linux drivers.
 
-2) Treat cap2 in the same manner as cap, to prepare for potential future 
-usages.
+* PDC20246 has no 66MHz internal clock AFAIK so those changes should no=
+t be
+  applied for this controller.
 
-	Jeff
+> > Are there other pdc202xx old controllers that are different?
+>=20
+>     There are PDC20262 and PDC20246. We should ask Bart -- he probabl=
+y has=20
+> the documatation for them...
 
-
+He doesn't, unfortunately..
