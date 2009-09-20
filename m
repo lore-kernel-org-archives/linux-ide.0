@@ -1,87 +1,68 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: [PATCH] ahci: display all AHCI 1.3 HBA capability flags
-Date: Sun, 20 Sep 2009 12:16:44 -0600
-Message-ID: <4AB6718C.2050107@gmail.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Sun, 20 Sep 2009 12:36:39 -0600
+Message-ID: <4AB67637.9060906@gmail.com>
+References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com> <4AB239C8.2020203@rtr.ca> <4AB25736.1060601@suse.de> <4AB260CA.8040308@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.211.173]:46658 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbZITSQo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Sep 2009 14:16:44 -0400
-Received: by ywh3 with SMTP id 3so2925672ywh.22
-        for <linux-ide@vger.kernel.org>; Sun, 20 Sep 2009 11:16:48 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755497AbZITSgm@vger.kernel.org>
+In-Reply-To: <4AB260CA.8040308@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <teheo@suse.de>, Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>
 
-Update the AHCI driver to display all of the HBA capabilities defined in the
-AHCI 1.3 specification. Some of these are in a new CAP2 (HBA Capabilities
-Extended) register.
+On 09/17/2009 10:16 AM, Mark Lord wrote:
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> Mark Lord wrote:
+>>> Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
+>>
+>> Nope.
+>>
+>>> If not, then I think we may need to add code to do it.
+>>
+>> Hmm... can you explain a bit more? That seems rather extreme to me.
+> ..
+>
+> You may recall that I first raised this issue about a year ago,
+> when my own RAID0 array (MythTV box) started showing errors very
+> similar to what Chris is reporting.
+>
+> These were easily triggered by running hddtemp once every few seconds
+> to log drive temperatures during Myth recording sessions.
+>
+> hddtemp uses SMART commands.
+>
+> The actual errors in the logs were command timeouts,
+> but at this point I no longer remember which opcode was
+> actually timing out. Disabling the onboard write cache
+> immediately "cured" the problem, at the expense of MUCH
+> slower I/O times.
+>
+> My theory at the time, was that some non-NCQ commands might be triggering
+> an internal FLUSH CACHE within the (Hitachi) drive firmware, which then
+> caused the original command to timeout in libata (due to the large amounts
+> of data present in the onboard write-caches).
+>
+> Now that more people are playing the game, we're seeing more and more
+> reports of strange interactions with smartd running in the background.
 
-For example, on an Intel Ibex Peak (PCH) controller:
+Well, unless the SMART commands are using a non-standard timeout, it'll 
+be the same as the timeout for the flush cache, so the flush cache would 
+have timed out too..
 
-ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
-sxs apst 
-
-We don't do anything special with these new flags yet.
-
-Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index acd1162..d7b0f12 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -122,6 +122,7 @@ enum {
- 	HOST_VERSION		= 0x10, /* AHCI spec. version compliancy */
- 	HOST_EM_LOC		= 0x1c, /* Enclosure Management location */
- 	HOST_EM_CTL		= 0x20, /* Enclosure Management Control */
-+	HOST_CAP2		= 0x24, /* host capabilities, extended */
- 
- 	/* HOST_CTL bits */
- 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
-@@ -2534,13 +2535,14 @@ static void ahci_print_info(struct ata_host *host)
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
- 	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
--	u32 vers, cap, impl, speed;
-+	u32 vers, cap, cap2, impl, speed;
- 	const char *speed_s;
- 	u16 cc;
- 	const char *scc_s;
- 
- 	vers = readl(mmio + HOST_VERSION);
- 	cap = hpriv->cap;
-+	cap2 = readl(mmio + HOST_CAP2);
- 	impl = hpriv->port_map;
- 
- 	speed = (cap >> 20) & 0xf;
-@@ -2583,7 +2585,7 @@ static void ahci_print_info(struct ata_host *host)
- 		"flags: "
- 		"%s%s%s%s%s%s%s"
- 		"%s%s%s%s%s%s%s"
--		"%s\n"
-+		"%s%s%s%s%s%s%s\n"
- 		,
- 
- 		cap & (1 << 31) ? "64bit " : "",
-@@ -2598,10 +2600,16 @@ static void ahci_print_info(struct ata_host *host)
- 		cap & (1 << 19) ? "nz " : "",
- 		cap & (1 << 18) ? "only " : "",
- 		cap & (1 << 17) ? "pmp " : "",
-+		cap & (1 << 16) ? "fbss " : "",
- 		cap & (1 << 15) ? "pio " : "",
- 		cap & (1 << 14) ? "slum " : "",
- 		cap & (1 << 13) ? "part " : "",
--		cap & (1 << 6) ? "ems ": ""
-+		cap & (1 << 7) ? "ccc " : "",
-+		cap & (1 << 6) ? "ems " : "",
-+		cap & (1 << 5) ? "sxs " : "",
-+		cap2 & (1 << 2) ? "apst " : "",
-+		cap2 & (1 << 1) ? "nvmp " : "",
-+		cap2 & (1 << 0) ? "boh " : ""
- 		);
- }
- 
+>
+> I suspect more and more now that this is an (avoidable) interaction
+> between the write-cache and the SMART opcode, and it could perhaps be
+> avoided by doing a FLUSH CACHE before any SMART (or non-data command)
+> opcode.
+>
+> Cheers
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
