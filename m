@@ -1,240 +1,72 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: [PATCH] ahci: display all AHCI 1.3 HBA capability flags (v2)
-Date: Sun, 20 Sep 2009 17:02:31 -0600
-Message-ID: <4AB6B487.3010907@gmail.com>
-References: <4AB6718C.2050107@gmail.com> <4AB69318.5050904@garzik.org>
+From: Kyle Moffett <kyle@moffetthome.net>
+Subject: Re: MD/RAID time out writing superblock
+Date: Sun, 20 Sep 2009 20:02:04 -0400
+Message-ID: <f73f7ab80909201702q4661cfe4t5b7b8449ba12306a@mail.gmail.com>
+References: <20090917115728.GA13854@arachsys.com> <4AB2596D.10809@kernel.org>
+	<4AB67883.3010500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.211.173]:52979 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753780AbZITXCc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Sep 2009 19:02:32 -0400
-Received: by ywh3 with SMTP id 3so3087251ywh.22
-        for <linux-ide@vger.kernel.org>; Sun, 20 Sep 2009 16:02:35 -0700 (PDT)
-In-Reply-To: <4AB69318.5050904@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755605AbZIUACY@vger.kernel.org>
+In-Reply-To: <4AB67883.3010500@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Chris Webb <chris@arachsys.com>, Neil Brown <neilb@suse.de>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-Update the AHCI driver to display all of the HBA capabilities defined in the
-AHCI 1.3 specification. Some of these are in a new CAP2 (HBA Capabilities
-Extended) register which is only defined on AHCI 1.2 or later. The spec says
-that undefined registers should always return 0 on read, but to be safe we
-assume a value of 0 unless the controller reports AHCI version 1.2 or later.
-The value can also be retrieved through sysfs as with the existing capability
-field.
+On Sun, Sep 20, 2009 at 14:46, Robert Hancock <hancockrwd@gmail.com> wr=
+ote:
+> On 09/17/2009 09:44 AM, Tejun Heo wrote:
+>>>
+>>> Thanks Neil. This implies that when we see these fifteen second
+>>> hangs reading /proc/mdstat without write errors, there are genuinel=
+y
+>>> successful superblock writes which are taking fifteen seconds to
+>>> complete, presumably corresponding to flushes which complete but
+>>> take a full 15s to do so.
+>>>
+>>> Would such very slow (but ultimately successful) flushes be
+>>> consistent with the theory of power supply issues affecting the
+>>> drives? It feels like the 30s timeouts on flush could be just a mor=
+e
+>>> severe version of the 15s very slow flushes.
+>>
+>> Probably not. =C2=A0Power problems usually don't resolve themselves =
+with
+>> longer timeout. =C2=A0If the drive genuinely takes longer than 30s t=
+o
+>> flush, it would be very interesting tho. =C2=A0That's something peop=
+le have
+>> been worrying about but hasn't materialized yet. =C2=A0The timeout i=
+s
+>> controlled by SD_TIMEOUT in drivers/scsi/sd.h. =C2=A0You might want =
+to bump
+>> it up to, say, 60s and see whether anything changes.
+>
+> It's possible if the power dip only slightly disrupted the drive it m=
+ight
+> just take longer to complete the write. I've also seen reports of vib=
+ration
+> issues causing problems in RAID arrays (there's a video on Youtube of=
+ a guy
+> yelling at a Sun disk array during heavy I/O and the resulting vibrat=
+ions
+> causing an immediate spike in I/O service times). Could be something =
+like
+> that causing issues with simultaneous media access to all drives in t=
+he
+> array, too..
 
-For example, on an Intel Ibex Peak (PCH) controller:
+There have been a rather large number of reported firmware problems
+lately with various models of Seagate SATA drives; typically they
+cause command timeouts and occasionally they completely brick the
+drive (restart does not fix it).  I possessed 3 of these for a while
+and they pretty consistently fell over (even with just 3 in a
+low-power-CPU box with a good PSU rated for 8 drives).
 
-ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
-sxs apst 
+You might check with the various Seagate tech support lines to see if
+your drive firmwares are affected by the bugs (Some were related to
+NCQ command processing, others were just single-command failures).
 
-We don't do anything special with the new flags yet.
-
-Also, change the code that displays the flags to use the same bit enumerations
-that are used to control actual operation.
-
-Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index acd1162..66237d5 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -122,6 +122,7 @@ enum {
- 	HOST_VERSION		= 0x10, /* AHCI spec. version compliancy */
- 	HOST_EM_LOC		= 0x1c, /* Enclosure Management location */
- 	HOST_EM_CTL		= 0x20, /* Enclosure Management Control */
-+	HOST_CAP2		= 0x24, /* host capabilities, extended */
- 
- 	/* HOST_CTL bits */
- 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
-@@ -129,16 +130,29 @@ enum {
- 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
- 
- 	/* HOST_CAP bits */
-+	HOST_CAP_SXS		= (1 << 5),  /* Supports External SATA */
- 	HOST_CAP_EMS		= (1 << 6),  /* Enclosure Management support */
--	HOST_CAP_SSC		= (1 << 14), /* Slumber capable */
-+	HOST_CAP_CCC		= (1 << 7),  /* Command Completion Coalescing */
-+	HOST_CAP_PART		= (1 << 13), /* Partial state capable */
-+	HOST_CAP_SSC		= (1 << 14), /* Slumber state capable */
-+	HOST_CAP_PIO_MULTI	= (1 << 15), /* PIO multiple DRQ support */
-+	HOST_CAP_FBS		= (1 << 16), /* FIS-based switching support */
- 	HOST_CAP_PMP		= (1 << 17), /* Port Multiplier support */
-+	HOST_CAP_ONLY		= (1 << 18), /* Supports AHCI mode only */
- 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
-+	HOST_CAP_LED		= (1 << 25), /* Supports activity LED */
- 	HOST_CAP_ALPM		= (1 << 26), /* Aggressive Link PM support */
- 	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
-+	HOST_CAP_MPS		= (1 << 28), /* Mechanical presence switch */
- 	HOST_CAP_SNTF		= (1 << 29), /* SNotification register */
- 	HOST_CAP_NCQ		= (1 << 30), /* Native Command Queueing */
- 	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
- 
-+	/* HOST_CAP2 bits */
-+	HOST_CAP2_BOH		= (1 << 0),  /* BIOS/OS handoff supported */
-+	HOST_CAP2_NVMHCI	= (1 << 1),  /* NVMHCI supported */
-+	HOST_CAP2_APST		= (1 << 2),  /* Automatic partial to slumber */
-+
- 	/* registers for each SATA port */
- 	PORT_LST_ADDR		= 0x00, /* command list DMA addr */
- 	PORT_LST_ADDR_HI	= 0x04, /* command list DMA addr hi */
-@@ -267,8 +281,10 @@ struct ahci_em_priv {
- struct ahci_host_priv {
- 	unsigned int		flags;		/* AHCI_HFLAG_* */
- 	u32			cap;		/* cap to use */
-+	u32			cap2;		/* cap2 to use */
- 	u32			port_map;	/* port map to use */
- 	u32			saved_cap;	/* saved initial cap */
-+	u32			saved_cap2;	/* saved initial cap2 */
- 	u32			saved_port_map;	/* saved initial port_map */
- 	u32 			em_loc; /* enclosure management location */
- };
-@@ -331,12 +347,15 @@ static void ahci_init_sw_activity(struct ata_link *link);
- 
- static ssize_t ahci_show_host_caps(struct device *dev,
- 				   struct device_attribute *attr, char *buf);
-+static ssize_t ahci_show_host_cap2(struct device *dev,
-+				   struct device_attribute *attr, char *buf);
- static ssize_t ahci_show_host_version(struct device *dev,
- 				      struct device_attribute *attr, char *buf);
- static ssize_t ahci_show_port_cmd(struct device *dev,
- 				  struct device_attribute *attr, char *buf);
- 
- DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
-+DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
- DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
- DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
- 
-@@ -345,6 +364,7 @@ static struct device_attribute *ahci_shost_attrs[] = {
- 	&dev_attr_em_message_type,
- 	&dev_attr_em_message,
- 	&dev_attr_ahci_host_caps,
-+	&dev_attr_ahci_host_cap2,
- 	&dev_attr_ahci_host_version,
- 	&dev_attr_ahci_port_cmd,
- 	NULL
-@@ -732,6 +752,16 @@ static ssize_t ahci_show_host_caps(struct device *dev,
- 	return sprintf(buf, "%x\n", hpriv->cap);
- }
- 
-+static ssize_t ahci_show_host_cap2(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+
-+	return sprintf(buf, "%x\n", hpriv->cap2);
-+}
-+
- static ssize_t ahci_show_host_version(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
-@@ -771,7 +801,7 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 				     struct ahci_host_priv *hpriv)
- {
- 	void __iomem *mmio = pcim_iomap_table(pdev)[AHCI_PCI_BAR];
--	u32 cap, port_map;
-+	u32 cap, cap2, vers, port_map;
- 	int i;
- 	int mv;
- 
-@@ -784,6 +814,14 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
- 	hpriv->saved_port_map = port_map = readl(mmio + HOST_PORTS_IMPL);
- 
-+	/* CAP2 register is only defined for AHCI 1.2 and later */
-+	vers = readl(mmio + HOST_VERSION);
-+	if ((vers >> 16) > 1 ||
-+	   ((vers >> 16) == 1 && (vers & 0xFFFF) >= 0x200))
-+		hpriv->saved_cap2 = cap2 = readl(mmio + HOST_CAP2);
-+	else
-+		hpriv->saved_cap2 = cap2 = 0;
-+
- 	/* some chips have errata preventing 64bit use */
- 	if ((cap & HOST_CAP_64) && (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)) {
- 		dev_printk(KERN_INFO, &pdev->dev,
-@@ -869,6 +907,7 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 
- 	/* record values to use during operation */
- 	hpriv->cap = cap;
-+	hpriv->cap2 = cap2;
- 	hpriv->port_map = port_map;
- }
- 
-@@ -887,6 +926,8 @@ static void ahci_restore_initial_config(struct ata_host *host)
- 	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
- 
- 	writel(hpriv->saved_cap, mmio + HOST_CAP);
-+	if (hpriv->saved_cap2)
-+		writel(hpriv->saved_cap2, mmio + HOST_CAP2);
- 	writel(hpriv->saved_port_map, mmio + HOST_PORTS_IMPL);
- 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
- }
-@@ -2534,13 +2575,14 @@ static void ahci_print_info(struct ata_host *host)
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
- 	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
--	u32 vers, cap, impl, speed;
-+	u32 vers, cap, cap2, impl, speed;
- 	const char *speed_s;
- 	u16 cc;
- 	const char *scc_s;
- 
- 	vers = readl(mmio + HOST_VERSION);
- 	cap = hpriv->cap;
-+	cap2 = hpriv->cap2;
- 	impl = hpriv->port_map;
- 
- 	speed = (cap >> 20) & 0xf;
-@@ -2583,25 +2625,29 @@ static void ahci_print_info(struct ata_host *host)
- 		"flags: "
- 		"%s%s%s%s%s%s%s"
- 		"%s%s%s%s%s%s%s"
--		"%s\n"
-+		"%s%s%s%s%s%s\n"
- 		,
- 
--		cap & (1 << 31) ? "64bit " : "",
--		cap & (1 << 30) ? "ncq " : "",
--		cap & (1 << 29) ? "sntf " : "",
--		cap & (1 << 28) ? "ilck " : "",
--		cap & (1 << 27) ? "stag " : "",
--		cap & (1 << 26) ? "pm " : "",
--		cap & (1 << 25) ? "led " : "",
--
--		cap & (1 << 24) ? "clo " : "",
--		cap & (1 << 19) ? "nz " : "",
--		cap & (1 << 18) ? "only " : "",
--		cap & (1 << 17) ? "pmp " : "",
--		cap & (1 << 15) ? "pio " : "",
--		cap & (1 << 14) ? "slum " : "",
--		cap & (1 << 13) ? "part " : "",
--		cap & (1 << 6) ? "ems ": ""
-+		cap & HOST_CAP_64 ? "64bit " : "",
-+		cap & HOST_CAP_NCQ ? "ncq " : "",
-+		cap & HOST_CAP_SNTF ? "sntf " : "",
-+		cap & HOST_CAP_MPS ? "ilck " : "",
-+		cap & HOST_CAP_SSS ? "stag " : "",
-+		cap & HOST_CAP_ALPM ? "pm " : "",
-+		cap & HOST_CAP_LED ? "led " : "",
-+		cap & HOST_CAP_CLO ? "clo " : "",
-+		cap & HOST_CAP_ONLY ? "only " : "",
-+		cap & HOST_CAP_PMP ? "pmp " : "",
-+		cap & HOST_CAP_FBS ? "fbs " : "",
-+		cap & HOST_CAP_PIO_MULTI ? "pio " : "",
-+		cap & HOST_CAP_SSC ? "slum " : "",
-+		cap & HOST_CAP_PART ? "part " : "",
-+		cap & HOST_CAP_CCC ? "ccc " : "",
-+		cap & HOST_CAP_EMS ? "ems " : "",
-+		cap & HOST_CAP_SXS ? "sxs " : "",
-+		cap2 & HOST_CAP2_APST ? "apst " : "",
-+		cap2 & HOST_CAP2_NVMHCI ? "nvmp " : "",
-+		cap2 & HOST_CAP2_BOH ? "boh " : ""
- 		);
- }
- 
+Cheers,
+Kyle Moffett
