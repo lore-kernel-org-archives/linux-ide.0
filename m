@@ -1,117 +1,52 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
+From: =?UTF-8?Q?Maciej_=C5=BBenczykowski?= <zenczykowski@gmail.com>
 Subject: Re: libATA SATA errors on DVD bad sectors...
-Date: Tue, 22 Sep 2009 15:11:30 +0200
-Message-ID: <19128.52482.184096.558888@pilspetsen.it.uu.se>
+Date: Tue, 22 Sep 2009 10:42:30 -0700
+Message-ID: <55a4f86e0909221042h37977c59y4b137380b3d2a1b3@mail.gmail.com>
 References: <55a4f86e0909212101s3097a1e3yf225f3e165ff0bea@mail.gmail.com>
+	 <19128.52482.184096.558888@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fanny.its.uu.se ([130.238.4.241]:53216 "EHLO fanny.its.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756525AbZIVNLh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Sep 2009 09:11:37 -0400
-In-Reply-To: <55a4f86e0909212101s3097a1e3yf225f3e165ff0bea@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?Q?Maciej_=C5=BBenczykowski?= <zenczykowski@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756900AbZIVRmc@vger.kernel.org>
+In-Reply-To: <19128.52482.184096.558888@pilspetsen.it.uu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-(cc: linux-ide added)
+> Later you write that ata12 connects to a Promise SATA300 TX4.
+> In that case, port_status 0x20280000 means:
+> - Overrun Error
+> - Drive Error
+> - Packet Command Cycle
+> which means that the drive set its error status flag and raised an in=
+terrupt which prematurely terminated a data transfer.
 
-=?UTF-8?Q?Maciej_=C5=BBenczykowski?= writes:
- > I'm getting the following on bad sectors on a pretty badly scratched DVD:
- > 
- > Sep 21 20:23:20 zeus kernel: ata12.00: exception Emask 0x0 SAct 0x0
- > SErr 0x0 action 0x6
- > Sep 21 20:23:20 zeus kernel: ata12.00: port_status 0x20280000
+Yes, the code in question is here:
+http://lxr.linux.no/linux+v2.6.31/drivers/ata/sata_promise.c#L748
 
-Later you write that ata12 connects to a Promise SATA300 TX4.
-In that case, port_status 0x20280000 means:
-- Overrun Error
-- Drive Error
-- Packet Command Cycle
-which means that the drive set its error status flag and raised an interrupt
-which prematurely terminated a data transfer.
+> The obvious next experiment would be to swap the drives and see how t=
+he Lite-On behaves on the ICH9 and the LG behaves on the TX4.
 
- > Sep 21 20:23:20 zeus kernel: ata12.00: cmd
- > a0/01:00:00:00:08/00:00:00:00:00/a0 tag 0 dma 2048 in
- > Sep 21 20:23:20 zeus kernel:         cdb a8 00 00 16 02 6c 00 00  00
- > 01 00 00 00 00 00 00
- > Sep 21 20:23:20 zeus kernel:         res
- > 51/30:03:00:00:00/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
- > Sep 21 20:23:20 zeus kernel: ata12.00: status: { DRDY ERR }
- > Sep 21 20:23:20 zeus kernel: ata12: hard resetting link
- > Sep 21 20:23:21 zeus kernel: ata12: SATA link up 1.5 Gbps (SStatus 113
- > SControl 300)
- > Sep 21 20:23:21 zeus kernel: ata12.00: configured for UDMA/100
- > Sep 21 20:23:21 zeus kernel: ata12: EH complete
- > 
- > Sep 21 20:23:24 zeus kernel: ata12.00: exception Emask 0x0 SAct 0x0
- > SErr 0x0 action 0x6
- > Sep 21 20:23:24 zeus kernel: ata12.00: port_status 0x20280000
- > Sep 21 20:23:24 zeus kernel: ata12.00: cmd
- > a0/01:00:00:00:08/00:00:00:00:00/a0 tag 0 dma 2048 in
- > Sep 21 20:23:24 zeus kernel:         cdb a8 00 00 16 02 6d 00 00  00
- > 01 00 00 00 00 00 00
- > Sep 21 20:23:24 zeus kernel:         res
- > 51/30:03:00:00:00/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
- > Sep 21 20:23:24 zeus kernel: ata12.00: status: { DRDY ERR }
- > Sep 21 20:23:24 zeus kernel: ata12: hard resetting link
- > Sep 21 20:23:24 zeus kernel: ata12: SATA link up 1.5 Gbps (SStatus 113
- > SControl 300)
- > Sep 21 20:23:25 zeus kernel: ata12.00: configured for UDMA/100
- > Sep 21 20:23:25 zeus kernel: ata12: EH complete
- > 
- > The command being run is:
- > sg_dd blk_sgio=1 bpt=1 bs=2048 cdbsz=12 coe=0 coe_limit=0 if=/dev/srX
- > odir of=badsector.bin count=1 skip=$i
- > 
- > on a Fedora 11 box:
- > Linux zeus 2.6.30.5-43.fc11.x86_64 #1 SMP Thu Aug 27 21:39:52 EDT 2009
- > x86_64 x86_64 x86_64 GNU/Linux
- > 
- > These only seem to show up when the DVD is inserted into /dev/sr1.
- > /dev/sr0 doesn't seem to spew this crap (although both drives fail to
- > read the sector).
- > 
- > /sys/block/sr0 ->
- > ../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/block/sr0
- > /sys/block/sr1 ->
- > ../devices/pci0000:00/0000:00:1e.0/0000:03:09.0/host11/target11:0:0/11:0:0:0/block/sr1
- > 
- > ata1.00: HL-DT-ST BD-RE GGW-H20L YL05 UDMA/133
- > ata12.00: LITE-ON DVDRW LH-20A1L BL06 UDMA/100
- > 
- > # lspci [-n] | egrep '1e.0|1f.2|3:09'
- > 00:1f.2 0106: 8086:2922 SATA controller: Intel Corporation
- > 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller (rev 02)
- > 00:1e.0 0604: 8086:244e PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
- > 03:09.0 0180: 105a:3d17 Mass storage controller: Promise Technology,
- > Inc. PDC40718 (SATA 300 TX4) (rev 02)
- > 
- > ie. the Lite-On drive on the promise TX4 controller has issues, while
- > the LG on the intel AHCI controller seems fine...
+Yup, did that earlier this morning.  The controller is the cause, not
+the drives. (ie. getting the same error on ata12 even though it's now
+the LG, the LiteOn on AHCI is now kernel error message free, still
+giving IO errors of course)
 
-The obvious next experiment would be to swap the drives and see how
-the Lite-On behaves on the ICH9 and the LG behaves on the TX4.
+> =C2=A0> Would it make sense to add this somewhere into the code as a =
+'bad sector' error condition and not perform a hard reset?
+>
+> The sata_promise driver upon seeing the port_status above sets AC_ERR=
+_HSM and AC_ERR_DEV, and performs a soft reset. Apparently libata-eh fo=
+llows up with a hard(er) reset, which doesn't surprise me given the HSM=
+ and DEV errors.
 
- > Would it make sense to add this somewhere into the code as a 'bad
- > sector' error condition and not perform a hard reset?
+> So things actually work Ok with the Lite-On on the TX4, and you're ma=
+inly concerned about log messages and potential performance loss?
 
-The sata_promise driver upon seeing the port_status above sets
-AC_ERR_HSM and AC_ERR_DEV, and performs a soft reset. Apparently
-libata-eh follows up with a hard(er) reset, which doesn't surprise
-me given the HSM and DEV errors.
+Yes, putting the LiteOn on the AHCI controller seems to speed stuff up
+a fair bit (some 20-25% or so).
+OTOH, I'd prefer to keep the blu-ray drive on AHCI, since the TX4
+controller is just a measly PCI controller.
 
- > It may be worth pointing out that the LiteOn drive is significantly
- > faster in dealing with the bad sectors, and actually successfully
- > reads a far larger number of them (about 15% of the sectors that the
- > LG can't read, the Lite-On can, and in about 2/3 of the time).  I
- > would guess that if it didn't have to hard reset the bus, it'd be even
- > faster...
-
-So things actually work Ok with the Lite-On on the TX4, and you're mainly
-concerned about log messages and potential performance loss?
-
-/Mikael
+- Maciej
