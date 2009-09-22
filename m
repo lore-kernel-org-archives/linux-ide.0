@@ -1,52 +1,30 @@
-From: =?UTF-8?Q?Maciej_=C5=BBenczykowski?= <zenczykowski@gmail.com>
-Subject: Re: libATA SATA errors on DVD bad sectors...
-Date: Tue, 22 Sep 2009 10:42:30 -0700
-Message-ID: <55a4f86e0909221042h37977c59y4b137380b3d2a1b3@mail.gmail.com>
-References: <55a4f86e0909212101s3097a1e3yf225f3e165ff0bea@mail.gmail.com>
-	 <19128.52482.184096.558888@pilspetsen.it.uu.se>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [patch 1/1] ide: use printk_once
+Date: Tue, 22 Sep 2009 16:29:24 -0700 (PDT)
+Message-ID: <20090922.162924.130890550.davem@davemloft.net>
+References: <200909181949.n8IJnmBN019766@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756900AbZIVRmc@vger.kernel.org>
-In-Reply-To: <19128.52482.184096.558888@pilspetsen.it.uu.se>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48900
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751439AbZIVX3G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Sep 2009 19:29:06 -0400
+In-Reply-To: <200909181949.n8IJnmBN019766@imap1.linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, marcin.slusarz@gmail.com, bzolnier@gmail.com
 
-> Later you write that ata12 connects to a Promise SATA300 TX4.
-> In that case, port_status 0x20280000 means:
-> - Overrun Error
-> - Drive Error
-> - Packet Command Cycle
-> which means that the drive set its error status flag and raised an in=
-terrupt which prematurely terminated a data transfer.
+From: akpm@linux-foundation.org
+Date: Fri, 18 Sep 2009 12:49:48 -0700
 
-Yes, the code in question is here:
-http://lxr.linux.no/linux+v2.6.31/drivers/ata/sata_promise.c#L748
+> From: Marcin Slusarz <marcin.slusarz@gmail.com>
+> 
+> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+> Acked-by: David S. Miller <davem@davemloft.net>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-> The obvious next experiment would be to swap the drives and see how t=
-he Lite-On behaves on the ICH9 and the LG behaves on the TX4.
-
-Yup, did that earlier this morning.  The controller is the cause, not
-the drives. (ie. getting the same error on ata12 even though it's now
-the LG, the LiteOn on AHCI is now kernel error message free, still
-giving IO errors of course)
-
-> =C2=A0> Would it make sense to add this somewhere into the code as a =
-'bad sector' error condition and not perform a hard reset?
->
-> The sata_promise driver upon seeing the port_status above sets AC_ERR=
-_HSM and AC_ERR_DEV, and performs a soft reset. Apparently libata-eh fo=
-llows up with a hard(er) reset, which doesn't surprise me given the HSM=
- and DEV errors.
-
-> So things actually work Ok with the Lite-On on the TX4, and you're ma=
-inly concerned about log messages and potential performance loss?
-
-Yes, putting the LiteOn on the AHCI controller seems to speed stuff up
-a fair bit (some 20-25% or so).
-OTOH, I'd prefer to keep the blu-ray drive on AHCI, since the TX4
-controller is just a measly PCI controller.
-
-- Maciej
+Applied.
