@@ -1,26 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: disk speed regression kernel 2.6.29 and after
-Date: Thu, 24 Sep 2009 14:50:48 -0700 (PDT)
-Message-ID: <20090924.145048.14726157.davem@davemloft.net>
-References: <200909241934.27472.bzolnier@gmail.com>
-	<200909242011.20032.elendil@planet.nl>
-	<200909242112.30247.bzolnier@gmail.com>
+From: Ed Tomlinson <edt@aei.ca>
+Subject: Strange .31 freeze - ata related
+Date: Thu, 24 Sep 2009 18:34:53 -0400
+Message-ID: <200909241834.53852.edt@aei.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37917
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751535AbZIXVu3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Sep 2009 17:50:29 -0400
-In-Reply-To: <200909242112.30247.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752659AbZIXWey@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: elendil@planet.nl, whansard@sbcglobal.net, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+Hi,
 
-I'll look closely at this at the next opportunity.
+I just had a strange freeze with 2.6.31.1-rc1.  Looking at the console log from startup I see that ata4 & ata5 have nothing connected.
+Later while working the box stalled.  Checking the serial console I say messages from ata4 & ata5...  There really is nothing plugged
+into the connectors.  Any ideas on what might have happened?
 
-Thanks for bringing it to my direct attention.
-:-)
+Thanks
+Ed
+
+>From startup:
+
+[    2.138060] ata4: SATA link down (SStatus 0 SControl 300)
+[    2.138064] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.138417] ata5: SATA link down (SStatus 0 SControl 300)
+[    2.138818] ata3.00: ATA-8: WDC WD10EADS-00L5B1, 01.01A01, max UDMA/133
+[    2.138820] ata3.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+[    2.140637] ata3.00: configured for UDMA/133
+[    2.142441] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.153147] ata2.00: ATA-7: WDC WD3200KS-00PFB0, 21.00M21, max UDMA/133
+[    2.153150] ata2.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 1)
+[    2.153878] ata2.00: configured for UDMA/133
+[    2.198790] ata6: SATA link down (SStatus 0 SControl 300)
+[    2.545040] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.556880] ata1.00: ATA-7: Maxtor 6L250S0, BACE1G10, max UDMA/133
+[    2.566684] ata1.00: 490234752 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[    2.580221] ata1.00: configured for UDMA/133
+
+Last messages before it stalled:
+
+[49844.950401] ata4: exception Emask 0x73 SAct 0x0 SErr 0xffffffff action 0xe frozen
+[49844.950630] ata5: exception Emask 0x73 SAct 0x0 SErr 0xffffffff action 0xe frozen
+[49844.950677] ata5: irq_stat 0xffffffff, unknown FIS 00000000 00000000 00000000 00000000, host bus
+[49844.950725] ata5: SError: { RecovData RecovComm UnrecovData Persist Proto HostInt PHYRdyChg PHYInt CommWake 10B8B Dispar BadCRC
+[49844.950863] ata5: hard resett
