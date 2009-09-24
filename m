@@ -1,61 +1,46 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH 1/1] ATA: pata_via, fix double put on isa bridge
-Date: Wed, 23 Sep 2009 16:10:56 +0200
-Message-ID: <1253715056-6567-1-git-send-email-jirislaby@gmail.com>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: disk speed regression kernel 2.6.29 and after
+Date: Thu, 24 Sep 2009 20:11:18 +0200
+Message-ID: <200909242011.20032.elendil@planet.nl>
+References: <4ABA0FDA.9090707@sbcglobal.net> <200909241426.49947.bzolnier@gmail.com> <20090924112645.dc97dd07.whansard@sbcglobal.net> <20090924112645.dc97dd07.whansard@sbcglobal.net> <200909241934.27472.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server1.wserver.cz ([82.113.45.157]:53589 "EHLO
-	server1.wserver.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752058AbZIWOKp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Sep 2009 10:10:45 -0400
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:51863 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752970AbZIXSLR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Sep 2009 14:11:17 -0400
+In-reply-To: <200909241934.27472.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: whansard@sbcglobal.net, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, David Miller <davem@davemloft.net>
 
-In via_init_one, when via_isa_bridges iterator reaches
-PCI_DEVICE_ID_VIA_ANON and last but one via_isa_bridges bridge is
-found but rev doesn't match, pci_dev_put(isa) is called twice.
+Bartlomiej Zolnierkiewicz wrote:
+> Regarding additional pursue of the root cause, I think that it is not
+> worth the effort currently since there were no other reports about
+> similar problems and libata is a better solution on most modern systems
+> anyway. 
 
-Do pci_dev_put only once.
+I'm surprised at this, especially if the commit Will bisected it to [1] is 
+the culprit. That is a change in generic ide code and could thus very well 
+affect other users too.
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>
----
- drivers/ata/pata_via.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
+This is a clear regression and IMHO, if it is confirmed that that commit is 
+the cause of the regression, it should be fixed. And if not, it could 
+still be worthwhile to track down which commit is the cause.
 
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 45657ca..9688fe5 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -526,7 +526,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		.port_ops = &via_port_ops
- 	};
- 	const struct ata_port_info *ppi[] = { NULL, NULL };
--	struct pci_dev *isa = NULL;
-+	struct pci_dev *isa;
- 	const struct via_isa_bridge *config;
- 	static int printed_version;
- 	u8 enable;
-@@ -551,15 +551,13 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		if ((isa = pci_get_device(PCI_VENDOR_ID_VIA +
- 			!!(config->flags & VIA_BAD_ID),
- 			config->id, NULL))) {
-+			u8 rev = isa->revision;
-+			pci_dev_put(isa);
- 
--			if (isa->revision >= config->rev_min &&
--			    isa->revision <= config->rev_max)
-+			if (rev >= config->rev_min && rev <= config->rev_max)
- 				break;
--			pci_dev_put(isa);
- 		}
- 
--	pci_dev_put(isa);
--
- 	if (!(config->flags & VIA_NO_ENABLES)) {
- 		/* 0x40 low bits indicate enabled channels */
- 		pci_read_config_byte(pdev, 0x40 , &enable);
--- 
-1.6.4.2
+As for the lack of other reports, that could very well simply be because:
+1) there are not that many users of IDE drivers anymore
+2) most users don't really consciously watch their disk speed
 
+As long as the IDE code is in mainline, I don't see why regressions should 
+be ignored. Adding the ide list and David to CC for other opinions.
+
+Cheers,
+FJP
+
+[1] http://lkml.org/lkml/2009/9/23/550
