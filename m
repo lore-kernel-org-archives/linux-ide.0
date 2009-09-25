@@ -1,30 +1,43 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Fri, 25 Sep 2009 14:48:16 +0200
-Message-ID: <200909251448.17671.elendil@planet.nl>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200909251424.25334.elendil@planet.nl> <4ABCB732.9050609@sbg.ac.at>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.31-rc5 regression: hd don't show up
+Date: Fri, 25 Sep 2009 22:21:31 +0900
+Message-ID: <4ABCC3DB.1000202@kernel.org>
+References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org> <4A966F7D.60707@kernel.org> <4A97B9C0.9090003@klingt.org> <4A9B7E1E.8060909@kernel.org> <4A9DAF78.4070703@klingt.org> <4A9DD6D9.50407@kernel.org> <4A9E371A.5040208@klingt.org> <4A9FCD8C.6010107@kernel.org> <4AA18F57.8030107@klingt.org> <4AA1ACF8.7030101@kernel.org> <4AA6C569.9090901@klingt.org> <4AB04B39.7030907@kernel.org> <4AB079FC.6000906@kernel.org> <4AB09562.3010501@klingt.org> <4AB0D34A.2010502@kernel.org> <4ABC44FE.5050904@kernel.org> <4ABC7543.90407@klingt.org> <4ABC7714.2030709@kernel.org> <4ABCADE2.1020300@klingt.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752770AbZIYMsS@vger.kernel.org>
-In-Reply-To: <4ABCB732.9050609@sbg.ac.at>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, stable@kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:38576 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751537AbZIYNVe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Sep 2009 09:21:34 -0400
+In-Reply-To: <4ABCADE2.1020300@klingt.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tim Blechmann <tim@klingt.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Friday 25 September 2009, Alexander Huemer wrote:
-> > So with the revert already in mainline for .32, the only thing left is
-> > for that to get included in stable updates for .30 and .31.
->
-> please see the last comment in [1].
-> can i do anything else to help ?
+Tim Blechmann wrote:
+>>>>>>> Can you please try the attached patch and report the result?  The bug
+>>>>>>> shouldn't happen now and for cases where it would have happened,
+>>>>>>> libata will report "link online but device misclassified" and retry.
+>>>>>> this patch cannot be applied onto stable-2.6.31/master ... e.g. the
+>>>>>> first chunk is already in there ....
+>>>>> Eh... the first chunk was for the current devel branch.  Here's a
+>>>>> version without that one.
+>>>> Ping.
+>>> i haven't run into any further issues with this patch ... so i somehow
+>>> guess, it solved the problem ...
+>> In your boot logs, do you ever see messages like "link online but
+>> device misclassified, retrying"?
+> 
+> i didn't really pay attention to it ... at my currently running system,
+> it doesn't show up ... but i will keep my eyes open ...
 
-> [1] http://bugzilla.kernel.org/show_bug.cgi?id=14124
+Can you please reboot several times and see whether that happens?  The
+bug is quite obscure and I wanna be sure before pushing it upstream.
 
-Yes, adding that comment was excellent. I also added the relevant people
-in the CC of my previous mail, so it should get taken care of now. Unless 
-they have additional questions no further action from you should be 
-needed.
+Thanks.
+
+-- 
+tejun
