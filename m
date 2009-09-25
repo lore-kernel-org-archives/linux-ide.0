@@ -1,162 +1,66 @@
-From: Walter Hutchins <hutchwa@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] sata_promise: request follow-up SRST
-Date: Fri, 25 Sep 2009 01:24:00 -0400
-Message-ID: <898aa1e70909242224n19c449b0s959f9f56f3ed63ff@mail.gmail.com>
+From: Tim Blechmann <tim@klingt.org>
+Subject: Re: 2.6.31-rc5 regression: hd don't show up
+Date: Fri, 25 Sep 2009 09:46:11 +0200
+Message-ID: <4ABC7543.90407@klingt.org>
+References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org> <4A966F7D.60707@kernel.org> <4A97B9C0.9090003@klingt.org> <4A9B7E1E.8060909@kernel.org> <4A9DAF78.4070703@klingt.org> <4A9DD6D9.50407@kernel.org> <4A9E371A.5040208@klingt.org> <4A9FCD8C.6010107@kernel.org> <4AA18F57.8030107@klingt.org> <4AA1ACF8.7030101@kernel.org> <4AA6C569.9090901@klingt.org> <4AB04B39.7030907@kernel.org> <4AB079FC.6000906@kernel.org> <4AB09562.3010501@klingt.org> <4AB0D34A.2010502@kernel.org> <4ABC44FE.5050904@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig8B0A4CB79E0CD141B45F9415"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.211.174]:40999 "EHLO
-	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbZIYFX4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Sep 2009 01:23:56 -0400
-Received: by ywh4 with SMTP id 4so2595338ywh.33
-        for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2009 22:24:00 -0700 (PDT)
+Received: from mail.klingt.org ([86.59.21.178]:50245 "EHLO klingt.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752650AbZIYHrK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Sep 2009 03:47:10 -0400
+In-Reply-To: <4ABC44FE.5050904@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I have tested this patch:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig8B0A4CB79E0CD141B45F9415
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-http://user.it.uu.se/~mikpe/linux/patches/2.6/OLD/2.6.28/patch-sata_promise-reset-updates-v1-2.6.28
+>>>> Can you please try the attached patch and report the result?  The bu=
+g
+>>>> shouldn't happen now and for cases where it would have happened,
+>>>> libata will report "link online but device misclassified" and retry.=
 
-on a 2.6.31 kernel.
+>>> this patch cannot be applied onto stable-2.6.31/master ... e.g. the
+>>> first chunk is already in there ....
+>>
+>> Eh... the first chunk was for the current devel branch.  Here's a
+>> version without that one.
+>=20
+> Ping.
 
-It continues with the same errors as:
-{ DRDY ERR },
-{ ICRC ABRT },
-exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4,
-link is slow to respond,
-gradually reducing UDMA/133 to UDMA/33,
-etc.,
-with no apparent improvement.
+i haven't run into any further issues with this patch ... so i somehow
+guess, it solved the problem ...
 
-One thing of note is that it happens always on one drive, and not ever
-on the other.
+tim
 
-It never happens on happens on ST3500641AS Seagate esata 500GB.
-It always happens on  WD My Book esata 500GB.
+--=20
+tim@klingt.org
+http://tim.klingt.org
 
-I tried exchanging cables, and even reversing ports
-(including with fstab tweak from sda to sdb) to rule out the cable
-or the the controller port.
-I tried copying data the other way around and the WD still gave one
-group of errors, but writing triggers many more errors than reading.
+After one look at this planet any visitor from outer space would say
+"I want to see the manager."
+  William S. Burroughs
 
-The problem follows the drive.
-The drive passes WD diagnostics and apparently functions fine except
-for the messages. The WD drive is a second RMA replacement for same model
-which gave same messages and I thought it was a problem.
 
-On kernel 2.6.18.8, the throughput to the WD drive is a little faster
-and the messages, which happen with the same frequency, are gentler.
+--------------enig8B0A4CB79E0CD141B45F9415
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-hdparm in case there is some clue:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-hdparm -I /dev/sda
+iEYEARECAAYFAkq8dUcACgkQdL+4qsZfVssQkQCgiuuXAR1C9SNmthpKYMJZj7UF
+5uYAnR+gD3fEMIaZkRJ9nbRx/KR1jLdp
+=WkOi
+-----END PGP SIGNATURE-----
 
-/dev/sda:
-
-ATA device, with non-removable media
-        Model Number:       ST3500641AS
-        Serial Number:      3PM1C9S5
-        Firmware Revision:  3.AAE
-Standards:
-        Supported: 7 6 5 4
-        Likely used: 7
-Configuration:
-        Logical         max     current
-        cylinders       16383   16383
-        heads           16      16
-        sectors/track   63      63
-        --
-        CHS current addressable sectors:   16514064
-        LBA    user addressable sectors:  268435455
-        LBA48  user addressable sectors:  976773168
-        device size with M = 1024*1024:      476940 MBytes
-        device size with M = 1000*1000:      500107 MBytes (500 GB)
-Capabilities:
-        LBA, IORDY(can be disabled)
-        Queue depth: 32
-        Standby timer values: spec'd by Standard, no device specific minimum
-        R/W multiple sector transfer: Max = 16  Current = ?
-        Recommended acoustic management value: 144, current value: 0
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=240ns  IORDY flow control=120ns
-Commands/features:
-        Enabled Supported:
-           *    SMART feature set
-                Security Mode feature set
-           *    Power Management feature set
-           *    Write cache
-           *    Look-ahead
-           *    Host Protected Area feature set
-           *    WRITE_BUFFER command
-           *    READ_BUFFER command
-           *    DOWNLOAD_MICROCODE
-                SET_MAX security extension
-           *    48-bit Address feature set
-           *    Device Configuration Overlay feature set
-           *    Mandatory FLUSH_CACHE
-           *    FLUSH_CACHE_EXT
-           *    SMART error logging
-           *    SMART self-test
-           *    General Purpose Logging feature set
-           *    SATA-I signaling speed (1.5Gb/s)
-           *    SATA-II signaling speed (3.0Gb/s)
-           *    Native Command Queueing (NCQ)
-           *    Phy event counters
-           *    Software settings preservation
-Security:
-        Master password revision code = 65534
-                supported
-        not     enabled
-        not     locked
-        not     frozen
-        not     expired: security count
-        not     supported: enhanced erase
-Checksum: correct
-
-hdparm -I /dev/sdb
-
-/dev/sdb:
-
-ATA device, with non-removable media
-        Model Number:       WD      My Book ESOxford OEMF@J
-        Serial Number:      WD-WCAPW0367705
-        Firmware Revision:  012
-Standards:
-        Used: ATA/ATAPI-6 T13 1410D revision 1
-        Supported: 6 5 4
-Configuration:
-        Logical         max     current
-        cylinders       16383   0
-        heads           16      0
-        sectors/track   63      0
-        --
-        LBA    user addressable sectors:  268435455
-        LBA48  user addressable sectors:  976773168
-        device size with M = 1024*1024:      476940 MBytes
-        device size with M = 1000*1000:      500107 MBytes (500 GB)
-Capabilities:
-        LBA, IORDY(cannot be disabled)
-        Standby timer values: spec'd by Vendor, with device specific minimum
-        R/W multiple sector transfer: Max = 1   Current = 0
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-        Enabled Supported:
-           *    SMART feature set
-           *    Power Management feature set
-           *    Write cache
-           *    48-bit Address feature set
-           *    Mandatory FLUSH_CACHE
-           *    FLUSH_CACHE_EXT
-           *    SMART self-test
-           *    WRITE_{DMA|MULTIPLE}_FUA_EXT
-           *    SATA-I signaling speed (1.5Gb/s)
-           *    SATA-II signaling speed (3.0Gb/s)
-Integrity word not set (found 0x0000, expected 0x51a5)
+--------------enig8B0A4CB79E0CD141B45F9415--
