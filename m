@@ -1,57 +1,34 @@
-From: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Fri, 25 Sep 2009 02:02:57 +0200
-Message-ID: <4ABC08B1.4060303@sbg.ac.at>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200909242124.42187.elendil@planet.nl> <200909242140.10174.elendil@planet.nl>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.31-rc5 regression: hd don't show up
+Date: Fri, 25 Sep 2009 13:20:14 +0900
+Message-ID: <4ABC44FE.5050904@kernel.org>
+References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org> <4A966F7D.60707@kernel.org> <4A97B9C0.9090003@klingt.org> <4A9B7E1E.8060909@kernel.org> <4A9DAF78.4070703@klingt.org> <4A9DD6D9.50407@kernel.org> <4A9E371A.5040208@klingt.org> <4A9FCD8C.6010107@kernel.org> <4AA18F57.8030107@klingt.org> <4AA1ACF8.7030101@kernel.org> <4AA6C569.9090901@klingt.org> <4AB04B39.7030907@kernel.org> <4AB079FC.6000906@kernel.org> <4AB09562.3010501@klingt.org> <4AB0D34A.2010502@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx07.lb01.inode.at ([62.99.145.7]:29136 "EHLO mx.inode.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752988AbZIYAC4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Sep 2009 20:02:56 -0400
-In-Reply-To: <200909242140.10174.elendil@planet.nl>
+Received: from hera.kernel.org ([140.211.167.34]:35025 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750989AbZIYEUR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Sep 2009 00:20:17 -0400
+In-Reply-To: <4AB0D34A.2010502@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexander.huemer@sbg.ac.at
+To: Tim Blechmann <tim@klingt.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Frans Pop wrote:
-> On Thursday 24 September 2009, Frans Pop wrote:
->>> error message from .31:
->>>  [157152.418524] irq 23: nobody cared
->> If no others reply and the issue can be reproduced reliably, running a
->> git bisect between v2.6.29 and v2.6.30 to trace the cause of the
->> regression could be an option.
->
-> Looking at the changes in drivers/ata/ahci.c, it might be worth to try if 
-> reverting the following commit fixes the issue:
->
-> commit a5bfc4714b3f01365aef89a92673f2ceb1ccf246
-> Author: Tejun Heo <tj@kernel.org>
-> Date:   Fri Jan 23 11:31:39 2009 +0900
->
->     ahci: drop intx manipulation on msi enable
->
-> It's a bit of a wild guess though.
-i reproduced the issue.
+Tejun Heo wrote:
+> Tim Blechmann wrote:
+>>> Can you please try the attached patch and report the result?  The bug
+>>> shouldn't happen now and for cases where it would have happened,
+>>> libata will report "link online but device misclassified" and retry.
+>> this patch cannot be applied onto stable-2.6.31/master ... e.g. the
+>> first chunk is already in there ....
+> 
+> Eh... the first chunk was for the current devel branch.  Here's a
+> version without that one.
 
-    [ 3486.747729] Pid: 9573, comm: jc1 Tainted: G        W 
-    2.6.31-gentoo-blackbit #2
-    [ 3486.747731] Call Trace:
-    [ 3486.747733]  <IRQ>  [<ffffffff81066e3f>] ? __report_bad_irq+0x30/0x7d
-    [ 3486.747743]  [<ffffffff81066f93>] ? note_interrupt+0x107/0x170
-    [ 3486.747746]  [<ffffffff81067580>] ? handle_fasteoi_irq+0x8a/0xaa
-    [ 3486.747750]  [<ffffffff8100d1cf>] ? handle_irq+0x17/0x1d
-    [ 3486.747752]  [<ffffffff8100c84b>] ? do_IRQ+0x54/0xb2
-    [ 3486.747756]  [<ffffffff8100b6d3>] ? ret_from_intr+0x0/0xa
-    [ 3486.747758]  <EOI>
-    [ 3486.747759] handlers:
-    [ 3486.747761] [<ffffffff813d2a6f>] (ahci_interrupt+0x0/0x426)
-    [ 3486.747765] Disabling IRQ #23
+Ping.
 
-i will report back after a compile run of gcc-4.3.4 with a kernel
-without the commit you suggested.
-
--alex
+-- 
+tejun
