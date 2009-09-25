@@ -1,61 +1,72 @@
-From: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Fri, 25 Sep 2009 13:28:28 +0200
-Message-ID: <4ABCA95C.3060202@sbg.ac.at>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200909242124.42187.elendil@planet.nl> <200909242140.10174.elendil@planet.nl> <4ABC08B1.4060303@sbg.ac.at>
+From: Tim Blechmann <tim@klingt.org>
+Subject: Re: 2.6.31-rc5 regression: hd don't show up
+Date: Fri, 25 Sep 2009 13:47:46 +0200
+Message-ID: <4ABCADE2.1020300@klingt.org>
+References: <h63737$b2a$1@ger.gmane.org> <4A852BC0.1090404@kernel.org> <4A8559D7.6090405@klingt.org> <4A8774E5.4070609@kernel.org> <4A87D9FC.9070408@klingt.org> <4A96460F.3020600@kernel.org> <4A965E3B.3000808@klingt.org> <4A966F7D.60707@kernel.org> <4A97B9C0.9090003@klingt.org> <4A9B7E1E.8060909@kernel.org> <4A9DAF78.4070703@klingt.org> <4A9DD6D9.50407@kernel.org> <4A9E371A.5040208@klingt.org> <4A9FCD8C.6010107@kernel.org> <4AA18F57.8030107@klingt.org> <4AA1ACF8.7030101@kernel.org> <4AA6C569.9090901@klingt.org> <4AB04B39.7030907@kernel.org> <4AB079FC.6000906@kernel.org> <4AB09562.3010501@klingt.org> <4AB0D34A.2010502@kernel.org> <4ABC44FE.5050904@kernel.org> <4ABC7543.90407@klingt.org> <4ABC7714.2030709@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752351AbZIYL2f@vger.kernel.org>
-In-Reply-To: <4ABC08B1.4060303@sbg.ac.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexander.huemer@sbg.ac.at
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig7BDF7968254A89A4220DB068"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.klingt.org ([86.59.21.178]:52343 "EHLO klingt.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750914AbZIYLsm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Sep 2009 07:48:42 -0400
+In-Reply-To: <4ABC7714.2030709@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alexander Huemer wrote:
-> Frans Pop wrote:
->> On Thursday 24 September 2009, Frans Pop wrote:
->>>> error message from .31:
->>>>  [157152.418524] irq 23: nobody cared
->>> If no others reply and the issue can be reproduced reliably, running a
->>> git bisect between v2.6.29 and v2.6.30 to trace the cause of the
->>> regression could be an option.
->> Looking at the changes in drivers/ata/ahci.c, it might be worth to try if 
->> reverting the following commit fixes the issue:
->>
->> commit a5bfc4714b3f01365aef89a92673f2ceb1ccf246
->> Author: Tejun Heo <tj@kernel.org>
->> Date:   Fri Jan 23 11:31:39 2009 +0900
->>
->>     ahci: drop intx manipulation on msi enable
->>
->> It's a bit of a wild guess though.
-> i reproduced the issue.
->
->     [ 3486.747729] Pid: 9573, comm: jc1 Tainted: G        W 
->     2.6.31-gentoo-blackbit #2
->     [ 3486.747731] Call Trace:
->     [ 3486.747733]  <IRQ>  [<ffffffff81066e3f>] ? __report_bad_irq+0x30/0x7d
->     [ 3486.747743]  [<ffffffff81066f93>] ? note_interrupt+0x107/0x170
->     [ 3486.747746]  [<ffffffff81067580>] ? handle_fasteoi_irq+0x8a/0xaa
->     [ 3486.747750]  [<ffffffff8100d1cf>] ? handle_irq+0x17/0x1d
->     [ 3486.747752]  [<ffffffff8100c84b>] ? do_IRQ+0x54/0xb2
->     [ 3486.747756]  [<ffffffff8100b6d3>] ? ret_from_intr+0x0/0xa
->     [ 3486.747758]  <EOI>
->     [ 3486.747759] handlers:
->     [ 3486.747761] [<ffffffff813d2a6f>] (ahci_interrupt+0x0/0x426)
->     [ 3486.747765] Disabling IRQ #23
->
-> i will report back after a compile run of gcc-4.3.4 with a kernel
-> without the commit you suggested.
->
-> -alex
-4 compilation runs of gcc-4.3.4 finished without the issue re-appearing.
-it seems like you guessed right, Frans.
-i also found this:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=31b239ad1ba7225435e13f5afc47e48eb674c0cc
-i'll report on bugzilla.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig7BDF7968254A89A4220DB068
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-thanks for the help.
--alex
+>>>>>> Can you please try the attached patch and report the result?  The =
+bug
+>>>>>> shouldn't happen now and for cases where it would have happened,
+>>>>>> libata will report "link online but device misclassified" and retr=
+y.
+>>>>> this patch cannot be applied onto stable-2.6.31/master ... e.g. the=
+
+>>>>> first chunk is already in there ....
+>>>> Eh... the first chunk was for the current devel branch.  Here's a
+>>>> version without that one.
+>>> Ping.
+>>
+>> i haven't run into any further issues with this patch ... so i somehow=
+
+>> guess, it solved the problem ...
+>=20
+> In your boot logs, do you ever see messages like "link online but
+> device misclassified, retrying"?
+
+i didn't really pay attention to it ... at my currently running system,
+it doesn't show up ... but i will keep my eyes open ...
+
+tim
+
+--=20
+tim@klingt.org
+http://tim.klingt.org
+
+After one look at this planet any visitor from outer space would say
+"I want to see the manager."
+  William S. Burroughs
+
+
+--------------enig7BDF7968254A89A4220DB068
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkq8reQACgkQdL+4qsZfVssk+wCfTI6TsFIV76ChXt6Cnmvxmkox
+3gMAn02yqCu8YHjfIGNJ88lxJCe1tDHK
+=BwNs
+-----END PGP SIGNATURE-----
+
+--------------enig7BDF7968254A89A4220DB068--
