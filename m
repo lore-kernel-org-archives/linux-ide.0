@@ -1,61 +1,57 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Strange .31 freeze - ata related
-Date: Thu, 24 Sep 2009 17:54:54 -0600
-Message-ID: <4ABC06CE.6040404@gmail.com>
-References: <200909241834.53852.edt@aei.ca>
+From: Alexander Huemer <alexander.huemer@sbg.ac.at>
+Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
+Date: Fri, 25 Sep 2009 02:02:57 +0200
+Message-ID: <4ABC08B1.4060303@sbg.ac.at>
+References: <4ABBB8C2.2080901@sbg.ac.at> <200909242124.42187.elendil@planet.nl> <200909242140.10174.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.211.174]:47752 "EHLO
-	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbZIYACv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Sep 2009 20:02:51 -0400
-In-Reply-To: <200909241834.53852.edt@aei.ca>
+Received: from mx07.lb01.inode.at ([62.99.145.7]:29136 "EHLO mx.inode.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752988AbZIYAC4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Sep 2009 20:02:56 -0400
+In-Reply-To: <200909242140.10174.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ed Tomlinson <edt@aei.ca>
-Cc: LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexander.huemer@sbg.ac.at
 
-On 09/24/2009 04:34 PM, Ed Tomlinson wrote:
-> Hi,
+Frans Pop wrote:
+> On Thursday 24 September 2009, Frans Pop wrote:
+>>> error message from .31:
+>>>  [157152.418524] irq 23: nobody cared
+>> If no others reply and the issue can be reproduced reliably, running a
+>> git bisect between v2.6.29 and v2.6.30 to trace the cause of the
+>> regression could be an option.
 >
-> I just had a strange freeze with 2.6.31.1-rc1.  Looking at the console log from startup I see that ata4&  ata5 have nothing connected.
-> Later while working the box stalled.  Checking the serial console I say messages from ata4&  ata5...  There really is nothing plugged
-> into the connectors.  Any ideas on what might have happened?
+> Looking at the changes in drivers/ata/ahci.c, it might be worth to try if 
+> reverting the following commit fixes the issue:
 >
-> Thanks
-> Ed
+> commit a5bfc4714b3f01365aef89a92673f2ceb1ccf246
+> Author: Tejun Heo <tj@kernel.org>
+> Date:   Fri Jan 23 11:31:39 2009 +0900
 >
->  From startup:
+>     ahci: drop intx manipulation on msi enable
+>
+> It's a bit of a wild guess though.
+i reproduced the issue.
 
-Missing the part that says which driver this is. Can you post the full 
-boot log?
+    [ 3486.747729] Pid: 9573, comm: jc1 Tainted: G        W 
+    2.6.31-gentoo-blackbit #2
+    [ 3486.747731] Call Trace:
+    [ 3486.747733]  <IRQ>  [<ffffffff81066e3f>] ? __report_bad_irq+0x30/0x7d
+    [ 3486.747743]  [<ffffffff81066f93>] ? note_interrupt+0x107/0x170
+    [ 3486.747746]  [<ffffffff81067580>] ? handle_fasteoi_irq+0x8a/0xaa
+    [ 3486.747750]  [<ffffffff8100d1cf>] ? handle_irq+0x17/0x1d
+    [ 3486.747752]  [<ffffffff8100c84b>] ? do_IRQ+0x54/0xb2
+    [ 3486.747756]  [<ffffffff8100b6d3>] ? ret_from_intr+0x0/0xa
+    [ 3486.747758]  <EOI>
+    [ 3486.747759] handlers:
+    [ 3486.747761] [<ffffffff813d2a6f>] (ahci_interrupt+0x0/0x426)
+    [ 3486.747765] Disabling IRQ #23
 
->
-> [    2.138060] ata4: SATA link down (SStatus 0 SControl 300)
-> [    2.138064] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    2.138417] ata5: SATA link down (SStatus 0 SControl 300)
-> [    2.138818] ata3.00: ATA-8: WDC WD10EADS-00L5B1, 01.01A01, max UDMA/133
-> [    2.138820] ata3.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-> [    2.140637] ata3.00: configured for UDMA/133
-> [    2.142441] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    2.153147] ata2.00: ATA-7: WDC WD3200KS-00PFB0, 21.00M21, max UDMA/133
-> [    2.153150] ata2.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 1)
-> [    2.153878] ata2.00: configured for UDMA/133
-> [    2.198790] ata6: SATA link down (SStatus 0 SControl 300)
-> [    2.545040] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [    2.556880] ata1.00: ATA-7: Maxtor 6L250S0, BACE1G10, max UDMA/133
-> [    2.566684] ata1.00: 490234752 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [    2.580221] ata1.00: configured for UDMA/133
->
-> Last messages before it stalled:
->
-> [49844.950401] ata4: exception Emask 0x73 SAct 0x0 SErr 0xffffffff action 0xe frozen
-> [49844.950630] ata5: exception Emask 0x73 SAct 0x0 SErr 0xffffffff action 0xe frozen
-> [49844.950677] ata5: irq_stat 0xffffffff, unknown FIS 00000000 00000000 00000000 00000000, host bus
-> [49844.950725] ata5: SError: { RecovData RecovComm UnrecovData Persist Proto HostInt PHYRdyChg PHYInt CommWake 10B8B Dispar BadCRC
-> [49844.950863] ata5: hard resett
+i will report back after a compile run of gcc-4.3.4 with a kernel
+without the commit you suggested.
 
-The registers returning all ones suggests the hardware somehow went away 
-or stopped responding to reads properly..
+-alex
