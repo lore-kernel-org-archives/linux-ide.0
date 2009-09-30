@@ -1,44 +1,60 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH] ahci: display all AHCI 1.3 HBA capability flags (v2)
-Date: Mon, 28 Sep 2009 20:34:12 -0600
-Message-ID: <51f3faa70909281934o38b23679w72b8231e762412ba@mail.gmail.com>
-References: <4AB6718C.2050107@gmail.com> <4AB69318.5050904@garzik.org>
-	 <4AB6B487.3010907@gmail.com>
+From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+Subject: Re: WARNING: at drivers/ata/libata-core.c:5027 ata_qc_complete+0x200/0x210()
+Date: Wed, 30 Sep 2009 11:33:13 +0200
+Message-ID: <c4e36d110909300233u6f949058j82a28b05644fe265@mail.gmail.com>
+References: <c4e36d110909170213v61c61c94m3b4b3270333dafcc@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:55152 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083AbZI2CeI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Sep 2009 22:34:08 -0400
-Received: by iwn8 with SMTP id 8so2889497iwn.33
-        for <linux-ide@vger.kernel.org>; Mon, 28 Sep 2009 19:34:12 -0700 (PDT)
-In-Reply-To: <4AB6B487.3010907@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754106AbZI3JdN@vger.kernel.org>
+In-Reply-To: <c4e36d110909170213v61c61c94m3b4b3270333dafcc@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On Sun, Sep 20, 2009 at 5:02 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> Update the AHCI driver to display all of the HBA capabilities defined in the
-> AHCI 1.3 specification. Some of these are in a new CAP2 (HBA Capabilities
-> Extended) register which is only defined on AHCI 1.2 or later. The spec says
-> that undefined registers should always return 0 on read, but to be safe we
-> assume a value of 0 unless the controller reports AHCI version 1.2 or later.
-> The value can also be retrieved through sysfs as with the existing capability
-> field.
+2009/9/17 Zdenek Kabelac <zdenek.kabelac@gmail.com>:
+> Hi
 >
-> For example, on an Intel Ibex Peak (PCH) controller:
+> Somewhere during recent merge commits this message started to appear
+> in my qemu kvm guest
+> (already present with some 2.6.31-040xxx commit)
 >
-> ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
-> sxs apst
+> Is this fault of kvm emulation ?
 >
-> We don't do anything special with the new flags yet.
 >
-> Also, change the code that displays the flags to use the same bit enumerations
-> that are used to control actual operation.
+> WARNING: at drivers/ata/libata-core.c:5027 ata_qc_complete+0x200/0x21=
+0()
+> Hardware name:
+> Modules linked in:
+> Pid: 167, comm: ata/0 Not tainted 2.6.31-05317-ged0ecd1 #42
+> Call Trace:
+> =A0[<ffffffff81051ddb>] warn_slowpath_common+0x7b/0xc0
+> =A0[<ffffffff81051e34>] warn_slowpath_null+0x14/0x20
+> =A0[<ffffffff81323690>] ata_qc_complete+0x200/0x210
+> =A0[<ffffffff81330243>] ata_do_link_abort+0xf3/0x110
+> =A0[<ffffffff81330270>] ata_port_abort+0x10/0x20
+> =A0[<ffffffff813302af>] ata_port_freeze+0x2f/0x50
+> =A0[<ffffffff81334101>] ata_hsm_qc_complete+0x131/0x140
+> =A0[<ffffffff81335347>] ata_sff_hsm_move+0x197/0x760
+> =A0[<ffffffff8125891a>] ? delay_tsc+0x8a/0xe0
+> =A0[<ffffffff81335ca0>] ? ata_pio_task+0x0/0x120
+> =A0[<ffffffff81335ca0>] ? ata_pio_task+0x0/0x120
+> =A0[<ffffffff81335cd7>] ata_pio_task+0x37/0x120
+> =A0[<ffffffff8106f88a>] worker_thread+0x21a/0x400
+> =A0[<ffffffff8106f839>] ? worker_thread+0x1c9/0x400
+> =A0[<ffffffff81075a20>] ? autoremove_wake_function+0x0/0x40
+> =A0[<ffffffff8106f670>] ? worker_thread+0x0/0x400
+> =A0[<ffffffff810755f6>] kthread+0x96/0xa0
+> =A0[<ffffffff8100d29a>] child_rip+0xa/0x20
+> =A0[<ffffffff81041574>] ? finish_task_switch+0x74/0xf0
+> =A0[<ffffffff8140d14b>] ? _spin_unlock_irq+0x3b/0x60
+> =A0[<ffffffff8100cc00>] ? restore_args+0x0/0x30
+> =A0[<ffffffff81075560>] ? kthread+0x0/0xa0
+> =A0[<ffffffff8100d290>] ? child_rip+0x0/0x20
 >
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 >
 
-Ping?
+Just confirmation that WARNING trace is still present with 2.6.32-rc1.
+
+Zdenek
