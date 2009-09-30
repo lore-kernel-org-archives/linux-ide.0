@@ -1,67 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: WARNING: at drivers/ata/libata-core.c:5027 ata_qc_complete+0x200/0x210()
-Date: Wed, 30 Sep 2009 06:22:39 -0400
-Message-ID: <4AC3316F.4080200@pobox.com>
-References: <c4e36d110909170213v61c61c94m3b4b3270333dafcc@mail.gmail.com> <c4e36d110909300233u6f949058j82a28b05644fe265@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ahci: display all AHCI 1.3 HBA capability flags (v2)
+Date: Wed, 30 Sep 2009 19:02:27 -0400
+Message-ID: <4AC3E383.3030508@garzik.org>
+References: <4AB6718C.2050107@gmail.com> <4AB69318.5050904@garzik.org>	 <4AB6B487.3010907@gmail.com> <51f3faa70909281934o38b23679w72b8231e762412ba@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52793 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:43483 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753086AbZI3KWj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Sep 2009 06:22:39 -0400
-In-Reply-To: <c4e36d110909300233u6f949058j82a28b05644fe265@mail.gmail.com>
+	id S1754099AbZI3XC0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Sep 2009 19:02:26 -0400
+In-Reply-To: <51f3faa70909281934o38b23679w72b8231e762412ba@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On 09/30/2009 05:33 AM, Zdenek Kabelac wrote:
-> 2009/9/17 Zdenek Kabelac<zdenek.kabelac@gmail.com>:
->> Hi
+On 09/28/2009 10:34 PM, Robert Hancock wrote:
+> On Sun, Sep 20, 2009 at 5:02 PM, Robert Hancock<hancockrwd@gmail.com>  wrote:
+>> Update the AHCI driver to display all of the HBA capabilities defined in the
+>> AHCI 1.3 specification. Some of these are in a new CAP2 (HBA Capabilities
+>> Extended) register which is only defined on AHCI 1.2 or later. The spec says
+>> that undefined registers should always return 0 on read, but to be safe we
+>> assume a value of 0 unless the controller reports AHCI version 1.2 or later.
+>> The value can also be retrieved through sysfs as with the existing capability
+>> field.
 >>
->> Somewhere during recent merge commits this message started to appear
->> in my qemu kvm guest
->> (already present with some 2.6.31-040xxx commit)
+>> For example, on an Intel Ibex Peak (PCH) controller:
 >>
->> Is this fault of kvm emulation ?
+>> ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part ems
+>> sxs apst
 >>
+>> We don't do anything special with the new flags yet.
 >>
->> WARNING: at drivers/ata/libata-core.c:5027 ata_qc_complete+0x200/0x210()
->> Hardware name:
->> Modules linked in:
->> Pid: 167, comm: ata/0 Not tainted 2.6.31-05317-ged0ecd1 #42
->> Call Trace:
->>   [<ffffffff81051ddb>] warn_slowpath_common+0x7b/0xc0
->>   [<ffffffff81051e34>] warn_slowpath_null+0x14/0x20
->>   [<ffffffff81323690>] ata_qc_complete+0x200/0x210
->>   [<ffffffff81330243>] ata_do_link_abort+0xf3/0x110
->>   [<ffffffff81330270>] ata_port_abort+0x10/0x20
->>   [<ffffffff813302af>] ata_port_freeze+0x2f/0x50
->>   [<ffffffff81334101>] ata_hsm_qc_complete+0x131/0x140
->>   [<ffffffff81335347>] ata_sff_hsm_move+0x197/0x760
->>   [<ffffffff8125891a>] ? delay_tsc+0x8a/0xe0
->>   [<ffffffff81335ca0>] ? ata_pio_task+0x0/0x120
->>   [<ffffffff81335ca0>] ? ata_pio_task+0x0/0x120
->>   [<ffffffff81335cd7>] ata_pio_task+0x37/0x120
->>   [<ffffffff8106f88a>] worker_thread+0x21a/0x400
->>   [<ffffffff8106f839>] ? worker_thread+0x1c9/0x400
->>   [<ffffffff81075a20>] ? autoremove_wake_function+0x0/0x40
->>   [<ffffffff8106f670>] ? worker_thread+0x0/0x400
->>   [<ffffffff810755f6>] kthread+0x96/0xa0
->>   [<ffffffff8100d29a>] child_rip+0xa/0x20
->>   [<ffffffff81041574>] ? finish_task_switch+0x74/0xf0
->>   [<ffffffff8140d14b>] ? _spin_unlock_irq+0x3b/0x60
->>   [<ffffffff8100cc00>] ? restore_args+0x0/0x30
->>   [<ffffffff81075560>] ? kthread+0x0/0xa0
->>   [<ffffffff8100d290>] ? child_rip+0x0/0x20
+>> Also, change the code that displays the flags to use the same bit enumerations
+>> that are used to control actual operation.
 >>
+>> Signed-off-by: Robert Hancock<hancockrwd@gmail.com>
 >>
 >
-> Just confirmation that WARNING trace is still present with 2.6.32-rc1.
+> Ping?
 
-hrm, I thought we'd fixed that with 4dc738ed2adf28f62f46dd53ef700a51603777f7
+in the queue, but I want to get some serious libata testing (today) 
+before pushing stuff.  I'm seeing some strange timeouts, on ICH7 AHCI 
+ATAPI, and need to check and see whether (a) libata broke recently or 
+(b) more likely, the hardware is dying.
 
 	Jeff
 
