@@ -1,48 +1,51 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: kernel BUG at drivers/ide/ide-disk.c:187 (2.6.31)
-Date: Thu, 01 Oct 2009 11:53:10 -0700 (PDT)
-Message-ID: <20091001.115310.100974682.davem@davemloft.net>
-References: <20090930110529.GA3676@dis.manty.net>
-	<20091001.114755.132624639.davem@davemloft.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14294] New: kernel BUG at drivers/ide/ide-disk.c:187
+Date: Thu, 1 Oct 2009 21:54:27 GMT
+Message-ID: <bug-14294-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60828
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752952AbZJASwv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Oct 2009 14:52:51 -0400
-In-Reply-To: <20091001.114755.132624639.davem@davemloft.net>
+Received: from demeter.kernel.org ([140.211.167.39]:54843 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235AbZJAVyX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Oct 2009 17:54:23 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n91LsRh6009546
+	for <linux-ide@vger.kernel.org>; Thu, 1 Oct 2009 21:54:27 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: manty@manty.net
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: David Miller <davem@davemloft.net>
-Date: Thu, 01 Oct 2009 11:47:55 -0700 (PDT)
+http://bugzilla.kernel.org/show_bug.cgi?id=14294
 
-> Please add this test patch and let us know what messages
-> you end up with in the logs.  It won't BUG() any more,
-> so you have to watch for the messages.
+           Summary: kernel BUG at drivers/ide/ide-disk.c:187
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.31
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: rjw@sisk.pl
+            Blocks: 13615
+        Regression: Yes
 
-Sorry, there's a small bug in the test patch, please use this one
-instead.
 
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 7f87801..6e0dfa9 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -184,7 +184,12 @@ static ide_startstop_t ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
- 	ide_hwif_t *hwif = drive->hwif;
- 
- 	BUG_ON(drive->dev_flags & IDE_DFLAG_BLOCKED);
--	BUG_ON(!blk_fs_request(rq));
-+	if (!blk_fs_request(rq)) {
-+		pr_alert("IDE: Non-FS req in ide_do_rw_disk(), cmd_type %d\n",
-+			 rq->cmd_type);
-+		ide_kill_rq(drive, rq);
-+		return ide_stopped;
-+	}
- 
- 	ledtrig_ide_activity();
- 
+Subject    : kernel BUG at drivers/ide/ide-disk.c:187 (2.6.31)
+Submitter  : Santiago Garcia Mantinan <manty@manty.net>
+Date       : 2009-09-30 11:05
+References : http://marc.info/?l=linux-kernel&m=125430926311466&w=4
+Handled-By : David Miller <davem@davemloft.net>
+Notify-Also : Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+This entry is being used for tracking a regression from 2.6.30.  Please don't
+close it until the problem is fixed in the mainline.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
