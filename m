@@ -1,38 +1,67 @@
 From: David Miller <davem@davemloft.net>
 Subject: Re: kernel BUG at drivers/ide/ide-disk.c:187 (2.6.31)
-Date: Thu, 01 Oct 2009 11:34:18 -0700 (PDT)
-Message-ID: <20091001.113418.139794332.davem@davemloft.net>
-References: <200910011125.40081.bzolnier@gmail.com>
-	<20091001.094034.161463891.davem@davemloft.net>
-	<200910012021.24260.bzolnier@gmail.com>
+Date: Thu, 01 Oct 2009 11:47:55 -0700 (PDT)
+Message-ID: <20091001.114755.132624639.davem@davemloft.net>
+References: <20090930110529.GA3676@dis.manty.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756204AbZJASeA@vger.kernel.org>
-In-Reply-To: <200910012021.24260.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: elendil@planet.nl, manty@manty.net, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55081
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752736AbZJASrg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Oct 2009 14:47:36 -0400
+In-Reply-To: <20090930110529.GA3676@dis.manty.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: manty@manty.net
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Thu, 1 Oct 2009 20:21:24 +0200
+From: Santiago Garcia Mantinan <manty@manty.net>
+Date: Wed, 30 Sep 2009 13:05:29 +0200
 
-> - for the last three months you haven't debugged/fixed a single IDE issue
->   and you keep dodging every single bug-report 
+>  [<c010f865>] ? dequeue_task+x90/0x9e
+>  [<c029d777>] ? schedule+0x2ad/0x2d9
+>  [<c019f63a>] ? __blk_run_queue+0x39/0x60
+>  [<c0la4f97>] ? cfq_kick_queue+0x0/0xb
+>  [<c01a4fa0>] ? cfq_kick_queue+0x9/0xb
+>  [<c011dd82>] ? worker_thread+0xae/0x11c
 
-I mostly do the same with networking, and I'm the maintainer there
-too. :-)
+So it does look like a normal block I/O request to the disk
+going through the CFQ scheduler.
 
-And regardless of my workload, all reasonable patches and bug fixes
-submitted for IDE flowed freely during this time, or were given
-a review NACK.
+But ->cmd_type of the request is corrupted, but we have no
+idea in what way.
 
-I depend upon subsystem contributors to fix the bugs, that's how this
-works.  I merely mediate, review patches, apply patches, and chip in
-with some work of my own from time to time as the situation and my
-workload dictate.
+Well, we know it's not a special request, because one layer
+up the IDE I/O layer driver does special processing for
+blk_special_request() by calling ide_special_rq().
 
-Nobody is forcing you to fix bugs or work on anything, you can freely
-ignore every IDE related email.  Create a filter for it if you like.
-:-)
+I suspect the request structure has been freed already and
+we're referencing free'd memory.
+
+Please add this test patch and let us know what messages
+you end up with in the logs.  It won't BUG() any more,
+so you have to watch for the messages.
+
+Thanks!
+
+-DaveM (the IDE bug dodger)
+
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 7f87801..54b9dbc 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -184,7 +184,11 @@ static ide_startstop_t ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
+ 	ide_hwif_t *hwif = drive->hwif;
+ 
+ 	BUG_ON(drive->dev_flags & IDE_DFLAG_BLOCKED);
+-	BUG_ON(!blk_fs_request(rq));
++	if (!blk_fs_request(rq)) {
++		pr_alert("IDE: Non-FS req in ide_do_rw_disk(), cmd_type %d\n",
++			 rq->cmd_type);
++		ide_kill_rq(drive, rq);
++	}
+ 
+ 	ledtrig_ide_activity();
+ 
