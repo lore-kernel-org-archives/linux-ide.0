@@ -1,70 +1,42 @@
-From: Santiago Garcia Mantinan <manty@manty.net>
-Subject: Re: kernel BUG at drivers/ide/ide-disk.c:187 (2.6.31)
-Date: Sat, 3 Oct 2009 05:39:42 +0200
-Message-ID: <20091003033942.GA8129@dis.manty.net>
-References: <20090930110529.GA3676@dis.manty.net>
- <20091001.114755.132624639.davem@davemloft.net>
- <20091001.115310.100974682.davem@davemloft.net>
+From: Bernie Innocenti <bernie@codewiz.org>
+Subject: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
+Date: Sat, 03 Oct 2009 01:10:42 -0400
+Message-ID: <1254546642.1438.135.camel@giskard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ara.aytolacoruna.es ([91.117.124.165]:37384 "EHLO
-	mx.aytolacoruna.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754024AbZJCDj4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Oct 2009 23:39:56 -0400
-Content-Disposition: inline
-In-Reply-To: <20091001.115310.100974682.davem@davemloft.net>
+Received: from trinity.develer.com ([83.149.158.210]:59003 "EHLO
+	trinity.develer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525AbZJCFRW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Oct 2009 01:17:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
 
-> Sorry, there's a small bug in the test patch, please use this one
-> instead.
+The error in the subject appears in the console immediately followed bv
+a hard freeze of the machine.  The error occurs reproducibly on two
+identical Opteron servers, each one equipped with two identical
+controller cards:
 
-Applied it to 2.6.31.1, I'll wait and see what the weekend tells us.
+03:04.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
+03:06.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
 
-BTW, I forgot to include info on the controller, disks, ... on the report,
-so here they go just in case they make any difference.
+We can trigger the problem within a few seconds by starting a
+reconstruction on a drive hooked to port 4 (counting from 0) of the
+second controller.  Oddly, every other drive works reliably and the
+faulty drive works if we connect it to, for example, port 4 of the first
+controller.
 
-Uniform Multi-Platform E-IDE driver
-via82cxxx 0000:00:07.1: VIA vt82c596b (rev 23) IDE UDMA66
-via82cxxx 0000:00:07.1: IDE controller (0x1106:0x0571 rev 0x10)
-via82cxxx 0000:00:07.1: not 100% native mode: will probe irqs later
-    ide0: BM-DMA at 0xe800-0xe807
-    ide1: BM-DMA at 0xe808-0xe80f
-Probing IDE interface ide0...
-hda: HL-DT-STDVD-RAM GH22NP20, ATAPI CD/DVD-ROM drive
-hdb: ST3160021A, ATA DISK drive
-hda: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hda: UDMA/66 mode selected
-hdb: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hdb: UDMA/66 mode selected
-Probing IDE interface ide1...
-hdc: ST3160021A, ATA DISK drive
-hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hdc: UDMA/66 mode selected
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-ide1 at 0x170-0x177,0x376 on irq 15
-ide-gd driver 1.18
-hdb: max request size: 512KiB
-hdb: Host Protected Area detected.
-        current capacity is 312579695 sectors (160040 MB)
-        native  capacity is 312581808 sectors (160041 MB)
-hdb: 312579695 sectors (160040 MB) w/2048KiB Cache, CHS=19457/255/63
-hdb: cache flushes supported
- hdb: hdb1 hdb2 hdb3
-hdc: max request size: 512KiB
-hdc: Host Protected Area detected.
-        current capacity is 312579695 sectors (160040 MB)
-        native  capacity is 312581808 sectors (160041 MB)
-hdc: 312579695 sectors (160040 MB) w/2048KiB Cache, CHS=19457/255/63
-hdc: cache flushes supported
- hdc: hdc1 hdc2 hdc3
-ide-cd driver 5.00
-ide-cd: hda: ATAPI 48X DVD-ROM DVD-R/RAM CD-R/RW drive, 2048kB Cache
-Uniform CD-ROM driver Revision: 3.20
+I'd like to stress that the problem occurs systematically, on two
+completely distinct machines.  We swapped drives, cables and controllers
+to exclude other possibilities.
 
-Regards...
+Tested with Debian kernels 2.6.26-19 and 2.6.30-8.  Let me know if
+further details are needed.
+
 -- 
-Manty/BestiaTester -> http://manty.net
+   // Bernie Innocenti - http://codewiz.org/
+ \X/  Sugar Labs       - http://sugarlabs.org/
+
