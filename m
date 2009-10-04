@@ -1,37 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: frequent head unloads
-Date: Sun, 04 Oct 2009 12:27:12 +0900
-Message-ID: <4AC81610.20505@kernel.org>
-References: <op.uyjnnefmv46o6b@localhost>
+From: Santiago Garcia Mantinan <manty@manty.net>
+Subject: Re: kernel BUG at drivers/ide/ide-disk.c:187 (2.6.31)
+Date: Mon, 5 Oct 2009 00:37:05 +0200
+Message-ID: <20091004223705.GB5030@dis.manty.net>
+References: <20090930110529.GA3676@dis.manty.net>
+ <20091001.114755.132624639.davem@davemloft.net>
+ <20091001.115310.100974682.davem@davemloft.net>
+ <20091003033942.GA8129@dis.manty.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42839 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354AbZJDD0z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Oct 2009 23:26:55 -0400
-In-Reply-To: <op.uyjnnefmv46o6b@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757494AbZJDWiK@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20091003033942.GA8129@dis.manty.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Santiago Garcia Mantinan <manty@manty.net>
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Sumner <msumner828@btinternet.com>
-Cc: linux-ide@vger.kernel.org
 
-Mike Sumner wrote:
-> This is the info for my new SONY VAIO FW31E
-> 
-> It was doing an unload cycle every 15 seconds.
+> Applied it to 2.6.31.1, I'll wait and see what the weekend tells us.
 
-Noted in ATA known issues wiki and added to storage-fixup.
+up 2 days,  8:27 and still nothing, maybe I shouldn't have applied it t=
+o .1
+as some of the fixes there could be masking the problem and I should be
+testing it on 2.6.31 :-?
 
-> I have found that the setting does not stick on re-boot or after
-> suspend.  Any suggestions?
+What do you think about, that, should I compile a plain 2.6.31? or shou=
+ld I
+give 2.6.31.1 some more time?
 
-You can use storage-fixup.
+On the other hand when I tried to compile a kernel for a non IDE machin=
+e out
+of the same 2.6.31.1 patched sources I found this error:
 
-  http://git.kernel.org/?p=linux/kernel/git/tj/storage-fixup.git
+ERROR: "ide_kill_rq" [drivers/ide/ide-gd_mod.ko] undefined!
+make[2]: *** [__modpost] Erro 1
+make[1]: *** [modules] Erro 2
+make[1]: Sa=EDndo do directorio `/usr/src/linux-2.6.31'
 
-Thanks.
+After reverting the patch it compiled ok, of course, I was wondering if=
+ this
+only affects the modules build and for the test we are having I have ID=
+E in
+the kernel, so no problem with that, or if that can affect the IDE kern=
+el as
+well and it may break because of the patch or something.
 
--- 
-tejun
+Regards...
+--=20
+Manty/BestiaTester -> http://manty.net
