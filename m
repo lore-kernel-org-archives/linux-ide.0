@@ -1,46 +1,65 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: sata_via: SError: { UnrecovData Proto TrStaTrns }
-Date: Mon, 05 Oct 2009 19:58:40 -0600
-Message-ID: <4ACAA450.6030405@gmail.com>
-References: <m3my46yo5g.fsf@intrepid.localdomain>
+From: Bernie Innocenti <bernie@codewiz.org>
+Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
+Date: Tue, 06 Oct 2009 00:16:25 -0400
+Message-ID: <1254802585.1471.21.camel@giskard>
+References: <1254546642.1438.135.camel@giskard>  <4ACA6904.1060509@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:31997 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753675AbZJFB7w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Oct 2009 21:59:52 -0400
-In-Reply-To: <m3my46yo5g.fsf@intrepid.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751346AbZJFERK@vger.kernel.org>
+In-Reply-To: <4ACA6904.1060509@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/05/2009 07:18 AM, Krzysztof Halasa wrote:
-> Hi,
->
-> What could that be?
-> VIA VT6421A mini-PCI card and SATA SSD from Transcend. IXP425 (ARM)
-> little-endian CPU. 128 MB RAM - VT6421A can access only the first 64 MB
-> of system RAM, but there is bounce buffering (a la swiotlb) for the
-> rest.
->
-> Sometimes it produces:
->
-> ata1.00: exception Emask 0x12 SAct 0x0 SErr 0x1000500 action 0x6
-> ata1.00: BMDMA stat 0x5
-> ata1: SError: { UnrecovData Proto TrStaTrns }
-> ata1.00: cmd c8/00:20:b7:18:38/00:00:00:00:00/e0 tag 0 dma 16384 in
->           res 51/40:20:b7:18:38/00:00:00:00:00/e0 Emask 0x12 (ATA bus error)
-> ata1.00: status: { DRDY ERR }
-> ata1.00: error: { UNC }
-> ata1: hard resetting link
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
->
-> Any ideas?
+El Mon, 05-10-2009 a las 17:45 -0400, Mark Lord escribi=F3:
+>   0x30000040 here means "MRdPerr":
+>     "bad data parity detected during PCI master read".
+>=20
+> Which means there that a data parity error happened
+> during outgoing data transfer on the PCI-X bus.
+> This could happen due to noise on the bus,
+> dying capacitors, or (?) bad RAM (not sure about the last one).
 
-Presumably a SATA bus communication error. Are you sure the SATA 
-connections and cable are good?
+Oddly, we see this on two different machines.  And only on specific
+ports of the second controller card.
+
+On one of these machines, we've also found a bunch of MCEs related to
+ECC errors, but we were unable to reproduce them by exercising the CPU
+and the bus with tools like cpuburn or md5sum of entire drives.
+
+The other one has been running for 2 days with no errors whatsoever.
+Bother have successfully completed a 24h cycle of memtest86+.
+
+
+> The expected behaviour here is for sata_mv to then perform
+> perform a full SATA reset, after which the I/O will be reattempted.
+>
+> But it appears to lock up before that happens.
+> The code does try and clear the PCI error interrupt,
+> but perhaps it needs clearing in more than the one register
+> where it currently does so.
+
+I've got a few of these recoverable errors overnight (perhaps along wit=
+h
+the MCE errors I described above).  The bus was reset as you describe.
+
+The PCI errors seem to cause a system freeze only during RAID
+reconstruction. Perhaps the bus reset logic is not sufficiently locked
+against re-entrance?
+
+
+> Looking over the code and the documentation I have (NDA),
+> nothing obvious springs to view.  There are some extra registers
+> we could be dumping out, to show exactly what PCI phase and address
+> caused the error, but reading those won't cause or prevent a lockup.
+>=20
+> Best bet would be to try replacing the RAM in that box,
+> and see if the problem goes away.
+
+We'll try this tomorrow, thank you very much for providing these clues.
+
+--=20
+   // Bernie Innocenti - http://codewiz.org/
+ \X/  Sugar Labs       - http://sugarlabs.org/
