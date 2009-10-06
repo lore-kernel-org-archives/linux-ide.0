@@ -1,65 +1,46 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Mon, 05 Oct 2009 17:45:40 -0400
-Message-ID: <4ACA6904.1060509@rtr.ca>
-References: <1254546642.1438.135.camel@giskard>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_via: SError: { UnrecovData Proto TrStaTrns }
+Date: Mon, 05 Oct 2009 19:58:40 -0600
+Message-ID: <4ACAA450.6030405@gmail.com>
+References: <m3my46yo5g.fsf@intrepid.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754759AbZJEVqU@vger.kernel.org>
-In-Reply-To: <1254546642.1438.135.camel@giskard>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bernie Innocenti <bernie@codewiz.org>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from qw-out-2122.google.com ([74.125.92.25]:31997 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753675AbZJFB7w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Oct 2009 21:59:52 -0400
+In-Reply-To: <m3my46yo5g.fsf@intrepid.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bernie Innocenti wrote:
-> The error in the subject appears in the console immediately followed bv
-> a hard freeze of the machine.  The error occurs reproducibly on two
-> identical Opteron servers, each one equipped with two identical
-> controller cards:
-> 
-> 03:04.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
-> 03:06.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
-> 
-> We can trigger the problem within a few seconds by starting a
-> reconstruction on a drive hooked to port 4 (counting from 0) of the
-> second controller.  Oddly, every other drive works reliably and the
-> faulty drive works if we connect it to, for example, port 4 of the first
-> controller.
-> 
-> I'd like to stress that the problem occurs systematically, on two
-> completely distinct machines.  We swapped drives, cables and controllers
-> to exclude other possibilities.
-> 
-> Tested with Debian kernels 2.6.26-19 and 2.6.30-8.  Let me know if
-> further details are needed.
-..
-> 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040..
-..
+On 10/05/2009 07:18 AM, Krzysztof Halasa wrote:
+> Hi,
+>
+> What could that be?
+> VIA VT6421A mini-PCI card and SATA SSD from Transcend. IXP425 (ARM)
+> little-endian CPU. 128 MB RAM - VT6421A can access only the first 64 MB
+> of system RAM, but there is bounce buffering (a la swiotlb) for the
+> rest.
+>
+> Sometimes it produces:
+>
+> ata1.00: exception Emask 0x12 SAct 0x0 SErr 0x1000500 action 0x6
+> ata1.00: BMDMA stat 0x5
+> ata1: SError: { UnrecovData Proto TrStaTrns }
+> ata1.00: cmd c8/00:20:b7:18:38/00:00:00:00:00/e0 tag 0 dma 16384 in
+>           res 51/40:20:b7:18:38/00:00:00:00:00/e0 Emask 0x12 (ATA bus error)
+> ata1.00: status: { DRDY ERR }
+> ata1.00: error: { UNC }
+> ata1: hard resetting link
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata1.00: configured for UDMA/100
+> ata1: EH complete
+>
+> Any ideas?
 
-  0x30000040 here means "MRdPerr":
-    "bad data parity detected during PCI master read".
-
-Which means there that a data parity error happened
-during outgoing data transfer on the PCI-X bus.
-This could happen due to noise on the bus,
-dying capacitors, or (?) bad RAM (not sure about the last one).
-
-The expected behaviour here is for sata_mv to then perform
-perform a full SATA reset, after which the I/O will be reattempted.
-
-But it appears to lock up before that happens.
-The code does try and clear the PCI error interrupt,
-but perhaps it needs clearing in more than the one register
-where it currently does so.
-
-Looking over the code and the documentation I have (NDA),
-nothing obvious springs to view.  There are some extra registers
-we could be dumping out, to show exactly what PCI phase and address
-caused the error, but reading those won't cause or prevent a lockup.
-
-Best bet would be to try replacing the RAM in that box,
-and see if the problem goes away.
-
-Cheers
+Presumably a SATA bus communication error. Are you sure the SATA 
+connections and cable are good?
