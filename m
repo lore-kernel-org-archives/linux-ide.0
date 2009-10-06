@@ -1,65 +1,123 @@
-From: Bernie Innocenti <bernie@codewiz.org>
-Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Tue, 06 Oct 2009 00:16:25 -0400
-Message-ID: <1254802585.1471.21.camel@giskard>
-References: <1254546642.1438.135.camel@giskard>  <4ACA6904.1060509@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] libata updates
+Date: Tue, 06 Oct 2009 00:24:05 -0400
+Message-ID: <4ACAC665.7070109@garzik.org>
+References: <20090917204935.GA7432@havoc.gtf.org> <200909202305.06199.bzolnier@gmail.com> <8b5805ff0909211936s4968d11fnd3e6604d38e31c79@mail.gmail.com> <200909281734.11090.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751346AbZJFERK@vger.kernel.org>
-In-Reply-To: <4ACA6904.1060509@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55423 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750948AbZJFEYs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Oct 2009 00:24:48 -0400
+In-Reply-To: <200909281734.11090.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: "Jung-Ik (John) Lee" <jilee@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Grant Grundler <grundler@google.com>, Gwendal Gringo <gwendal@google.com>
 
-El Mon, 05-10-2009 a las 17:45 -0400, Mark Lord escribi=F3:
->   0x30000040 here means "MRdPerr":
->     "bad data parity detected during PCI master read".
->=20
-> Which means there that a data parity error happened
-> during outgoing data transfer on the PCI-X bus.
-> This could happen due to noise on the bus,
-> dying capacitors, or (?) bad RAM (not sure about the last one).
-
-Oddly, we see this on two different machines.  And only on specific
-ports of the second controller card.
-
-On one of these machines, we've also found a bunch of MCEs related to
-ECC errors, but we were unable to reproduce them by exercising the CPU
-and the bus with tools like cpuburn or md5sum of entire drives.
-
-The other one has been running for 2 days with no errors whatsoever.
-Bother have successfully completed a 24h cycle of memtest86+.
-
-
-> The expected behaviour here is for sata_mv to then perform
-> perform a full SATA reset, after which the I/O will be reattempted.
+On 09/28/2009 11:34 AM, Bartlomiej Zolnierkiewicz wrote:
+> Thanks, your patch looks good to me but since there are still some
+> leftover issues left we would also need something like the incremental
+> patch below:
 >
-> But it appears to lock up before that happens.
-> The code does try and clear the PCI error interrupt,
-> but perhaps it needs clearing in more than the one register
-> where it currently does so.
+> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Subject: [PATCH] pata_atp867x: PIO support fixes
+>
+> * use  8 clk setting for active clocks == 7 (was 12 clk)
+> * use 12 clk setting for active clocks>  12 (was  8 clk)
+> * do 66MHz bus fixup before mapping active clocks
+> * fix setup of PIO command timings
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> ---
+>   drivers/ata/pata_atp867x.c |   36 +++++++++++++++++++-----------------
+>   1 file changed, 19 insertions(+), 17 deletions(-)
+>
+> Index: b/drivers/ata/pata_atp867x.c
+> ===================================================================
+> --- a/drivers/ata/pata_atp867x.c
+> +++ b/drivers/ata/pata_atp867x.c
+> @@ -155,30 +155,31 @@ static int atp867x_get_active_clocks_shi
+>   	struct atp867x_priv *dp = ap->private_data;
+>   	unsigned char clocks = clk;
+>
+> +	/*
+> +	 * Doc 6.6.9: increase the clock value by 1 for safer PIO speed
+> +	 * on 66MHz bus
+> +	 */
+> +	if (dp->pci66mhz)
+> +		clocks++;
+> +
+>   	switch (clocks) {
+>   	case 0:
+>   		clocks = 1;
+>   		break;
+> -	case 1 ... 7:
+> -		break;
+> -	case 9 ... 12:
+> -		clocks = 7;
+> +	case 1 ... 6:
+>   		break;
+>   	default:
+>   		printk(KERN_WARNING "ATP867X: active %dclk is invalid. "
+> -			"Using default 8clk.\n", clk);
+> +			"Using 12clk.\n", clk);
+> +	case 9 ... 12:
+> +		clocks = 7;	/* 12 clk */
+> +		break;
+> +	case 7:
+>   	case 8:	/* default 8 clk */
+>   		clocks = 0;
+>   		goto active_clock_shift_done;
+>   	}
+>
+> -	/*
+> -	 * Doc 6.6.9: increase the clock value by 1 for safer PIO speed
+> -	 * on 66MHz bus
+> -	 */
+> -	if (dp->pci66mhz&&  clocks<  7)
+> -		clocks++;
+> -
+>   active_clock_shift_done:
+>   	return clocks<<  ATP867X_IO_PIOSPD_ACTIVE_SHIFT;
+>   }
+> @@ -193,7 +194,8 @@ static int atp867x_get_recover_clocks_sh
+>   		break;
+>   	case 1 ... 11:
+>   		break;
+> -	case 13: case 14:
+> +	case 13:
+> +	case 14:
+>   		--clocks;	/* by the spec */
+>   		break;
+>   	case 15:
+> @@ -235,16 +237,16 @@ static void atp867x_set_piomode(struct a
+>   	iowrite8(b, dp->dma_mode);
+>
+>   	b = atp867x_get_active_clocks_shifted(ap, t.active) |
+> -		atp867x_get_recover_clocks_shifted(t.recover);
+> +	    atp867x_get_recover_clocks_shifted(t.recover);
+>
+>   	if (adev->devno&  1)
+>   		iowrite8(b, dp->slave_piospd);
+>   	else
+>   		iowrite8(b, dp->mstr_piospd);
+>
+> -	/*
+> -	 * use the same value for comand timing as for PIO timimg
+> -	 */
+> +	b = atp867x_get_active_clocks_shifted(ap, t.act8b) |
+> +	    atp867x_get_recover_clocks_shifted(t.rec8b);
+> +
+>   	iowrite8(b, dp->eightb_piospd);
+>   }
+>
+>
 
-I've got a few of these recoverable errors overnight (perhaps along wit=
-h
-the MCE errors I described above).  The bus was reset as you describe.
+This was incremental to the previous patch, or upstream?
 
-The PCI errors seem to cause a system freeze only during RAID
-reconstruction. Perhaps the bus reset logic is not sufficiently locked
-against re-entrance?
+	Jeff
 
 
-> Looking over the code and the documentation I have (NDA),
-> nothing obvious springs to view.  There are some extra registers
-> we could be dumping out, to show exactly what PCI phase and address
-> caused the error, but reading those won't cause or prevent a lockup.
->=20
-> Best bet would be to try replacing the RAM in that box,
-> and see if the problem goes away.
-
-We'll try this tomorrow, thank you very much for providing these clues.
-
---=20
-   // Bernie Innocenti - http://codewiz.org/
- \X/  Sugar Labs       - http://sugarlabs.org/
