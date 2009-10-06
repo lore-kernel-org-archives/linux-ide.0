@@ -1,123 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata updates
-Date: Tue, 06 Oct 2009 00:24:05 -0400
-Message-ID: <4ACAC665.7070109@garzik.org>
-References: <20090917204935.GA7432@havoc.gtf.org> <200909202305.06199.bzolnier@gmail.com> <8b5805ff0909211936s4968d11fnd3e6604d38e31c79@mail.gmail.com> <200909281734.11090.bzolnier@gmail.com>
+Subject: Re: [PATCH #upstream-fixes] ahci: disable 64bit DMA by default on
+ SB600s
+Date: Tue, 06 Oct 2009 00:23:34 -0400
+Message-ID: <4ACAC646.9050606@garzik.org>
+References: <4AC71901.6010005@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55423 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55413 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948AbZJFEYs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Oct 2009 00:24:48 -0400
-In-Reply-To: <200909281734.11090.bzolnier@gmail.com>
+	id S1750787AbZJFEYP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Oct 2009 00:24:15 -0400
+In-Reply-To: <4AC71901.6010005@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: "Jung-Ik (John) Lee" <jilee@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Grant Grundler <grundler@google.com>, Gwendal Gringo <gwendal@google.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Shane Huang <Shane.Huang@amd.com>, stable@kernel.org, balducci@units.it, maierp@informatik.tu-muenchen.de
 
-On 09/28/2009 11:34 AM, Bartlomiej Zolnierkiewicz wrote:
-> Thanks, your patch looks good to me but since there are still some
-> leftover issues left we would also need something like the incremental
-> patch below:
+On 10/03/2009 05:27 AM, Tejun Heo wrote:
+> Till now only one board, ASUS M2A-VM, can do 64bit dma with recent
+> BIOSen.  Enabling 64bit DMA by default already broke three boards.
+> Enabling 64bit DMA isn't worth these regressions.  Disable 64bit DMA
+> by default and enable it only on boards which are known to work.
 >
-> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Subject: [PATCH] pata_atp867x: PIO support fixes
->
-> * use  8 clk setting for active clocks == 7 (was 12 clk)
-> * use 12 clk setting for active clocks>  12 (was  8 clk)
-> * do 66MHz bus fixup before mapping active clocks
-> * fix setup of PIO command timings
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Reported-by: Gabriele Balducci<balducci@units.it>
+> Reported-by: maierp@informatik.tu-muenchen.de
+> Cc: Shane Huang<shane.huang@amd.com>
+> Cc: stable@kernel.org
 > ---
->   drivers/ata/pata_atp867x.c |   36 +++++++++++++++++++-----------------
->   1 file changed, 19 insertions(+), 17 deletions(-)
->
-> Index: b/drivers/ata/pata_atp867x.c
-> ===================================================================
-> --- a/drivers/ata/pata_atp867x.c
-> +++ b/drivers/ata/pata_atp867x.c
-> @@ -155,30 +155,31 @@ static int atp867x_get_active_clocks_shi
->   	struct atp867x_priv *dp = ap->private_data;
->   	unsigned char clocks = clk;
->
-> +	/*
-> +	 * Doc 6.6.9: increase the clock value by 1 for safer PIO speed
-> +	 * on 66MHz bus
-> +	 */
-> +	if (dp->pci66mhz)
-> +		clocks++;
-> +
->   	switch (clocks) {
->   	case 0:
->   		clocks = 1;
->   		break;
-> -	case 1 ... 7:
-> -		break;
-> -	case 9 ... 12:
-> -		clocks = 7;
-> +	case 1 ... 6:
->   		break;
->   	default:
->   		printk(KERN_WARNING "ATP867X: active %dclk is invalid. "
-> -			"Using default 8clk.\n", clk);
-> +			"Using 12clk.\n", clk);
-> +	case 9 ... 12:
-> +		clocks = 7;	/* 12 clk */
-> +		break;
-> +	case 7:
->   	case 8:	/* default 8 clk */
->   		clocks = 0;
->   		goto active_clock_shift_done;
->   	}
->
-> -	/*
-> -	 * Doc 6.6.9: increase the clock value by 1 for safer PIO speed
-> -	 * on 66MHz bus
-> -	 */
-> -	if (dp->pci66mhz&&  clocks<  7)
-> -		clocks++;
-> -
->   active_clock_shift_done:
->   	return clocks<<  ATP867X_IO_PIOSPD_ACTIVE_SHIFT;
->   }
-> @@ -193,7 +194,8 @@ static int atp867x_get_recover_clocks_sh
->   		break;
->   	case 1 ... 11:
->   		break;
-> -	case 13: case 14:
-> +	case 13:
-> +	case 14:
->   		--clocks;	/* by the spec */
->   		break;
->   	case 15:
-> @@ -235,16 +237,16 @@ static void atp867x_set_piomode(struct a
->   	iowrite8(b, dp->dma_mode);
->
->   	b = atp867x_get_active_clocks_shifted(ap, t.active) |
-> -		atp867x_get_recover_clocks_shifted(t.recover);
-> +	    atp867x_get_recover_clocks_shifted(t.recover);
->
->   	if (adev->devno&  1)
->   		iowrite8(b, dp->slave_piospd);
->   	else
->   		iowrite8(b, dp->mstr_piospd);
->
-> -	/*
-> -	 * use the same value for comand timing as for PIO timimg
-> -	 */
-> +	b = atp867x_get_active_clocks_shifted(ap, t.act8b) |
-> +	    atp867x_get_recover_clocks_shifted(t.rec8b);
-> +
->   	iowrite8(b, dp->eightb_piospd);
->   }
->
->
+>   drivers/ata/ahci.c |   60 +++++++++++++++++------------------------------------
+>   1 file changed, 20 insertions(+), 40 deletions(-)
 
-This was incremental to the previous patch, or upstream?
-
-	Jeff
+applied
 
 
