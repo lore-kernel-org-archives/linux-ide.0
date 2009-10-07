@@ -1,44 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH #upstream-fixes] libata: fix incorrect link online check
- during probe
-Date: Tue, 06 Oct 2009 21:03:40 -0400
-Message-ID: <4ACBE8EC.3000609@pobox.com>
-References: <4ACAFB08.8020501@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/4] pata_atp867x: fix it to not claim MWDMA support
+Date: Tue, 06 Oct 2009 21:03:49 -0400
+Message-ID: <4ACBE8F5.40401@garzik.org>
+References: <200910070026.57226.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [207.36.208.214] ([207.36.208.214]:38307 "EHLO mail.dvmed.net"
+Received: from [207.36.208.214] ([207.36.208.214]:38312 "EHLO mail.dvmed.net"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S933852AbZJGBEU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Oct 2009 21:04:20 -0400
-In-Reply-To: <4ACAFB08.8020501@kernel.org>
+	id S933159AbZJGBE2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Oct 2009 21:04:28 -0400
+In-Reply-To: <200910070026.57226.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: ide <linux-ide@vger.kernel.org>, stable@kernel.org, Tim Blechmann <tim@klingt.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: "Jung-Ik Lee (John)" <jilee@google.com>, linux-ide@vger.kernel.org
 
-On 10/06/2009 04:08 AM, Tejun Heo wrote:
-> While trying to work around spurious detection retries for
-> non-existent devices on slave links, commit
-> 816ab89782ac139a8b65147cca990822bb7e8675 incorrectly added link
-> offline check logic before ata_eh_thaw() was called.  This means that
-> if an occupied link goes down briefly at the time that offline check
-> was performed, device class will be cleared to ATA_DEV_NONE and libata
-> wouldn't retry thus failing detection of the device.
+On 10/06/2009 06:26 PM, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Subject: [PATCH] pata_atp867x: fix it to not claim MWDMA support
 >
-> The offline check should be done after the port is thawed together
-> with online check so that such link glitches can be detected by the
-> interrupt handler and handled properly.
+> MWDMA modes are not supported by this driver currently.
 >
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Reported-by: Tim Blechmann<tim@klingt.org>
-> Cc: stable@kernel.org
-> --
->   drivers/ata/libata-eh.c |   50 ++++++++++++++++++++++++++++++------------------
->   1 file changed, 32 insertions(+), 18 deletions(-)
+> Acked-by: Jung-Ik (John) Lee<jilee@google.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> ---
+>   drivers/ata/pata_atp867x.c |   10 +---------
+>   1 file changed, 1 insertion(+), 9 deletions(-)
 
-applied.  BTW, note your separator lost a dash... it should be three 
-dashes (---).
+applied 1-4
 
 
