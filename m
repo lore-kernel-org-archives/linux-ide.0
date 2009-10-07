@@ -1,38 +1,35 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/2] two ide fixes for -rc4
-Date: Wed, 07 Oct 2009 04:06:56 -0700 (PDT)
-Message-ID: <20091007.040656.62828073.davem@davemloft.net>
-References: <alpine.LFD.2.01.0910061534040.3432@localhost.localdomain>
-	<200910070246.05283.bzolnier@gmail.com>
-	<20091007033005.GE21612@spacedout.fries.net>
+Subject: [GIT]: IDE
+Date: Wed, 07 Oct 2009 04:10:23 -0700 (PDT)
+Message-ID: <20091007.041023.205207417.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757631AbZJGLHE@vger.kernel.org>
-In-Reply-To: <20091007033005.GE21612@spacedout.fries.net>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758887AbZJGLK3@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: david@fries.net
-Cc: bzolnier@gmail.com, torvalds@linux-foundation.org, joao.ramos@inov.pt, d.stussy@yahoo.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: David Fries <david@fries.net>
-Date: Tue, 6 Oct 2009 22:30:06 -0500
 
-> On Wed, Oct 07, 2009 at 02:46:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
->> The corrected version below, David please try it instead:
->> 
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Subject: [PATCH take 2] sis5513: fix PIO setup for ATAPI devices
-> 
-> 2.6.31 plus this patch fixed the hang on IDE initialization with the
-> SIS5513.
-> 
-> That's with my testing mode, I'm rebuilding a kernel and will try some
-> benchmarks tomorrow.  I've been testing by hibernating to disk,
-> booting the test kernel with a bad root and resume partition (so if it
-> worked it wouldn't modify the suspended image), then rebooting to
-> resume from disk with the good kernel.  That let me more quickly
-> bisect and test kernels, I just haven't ran this kernel much past the
-> initialization is all.
+Please pull to get the sis5513 PIO bug fix from Bart, and
+the revert that is no longer necessary as the real problem
+is now solved.
 
-All applied, thanks everyone.
+Thanks!
+
+The following changes since commit 0eca52a92735f43462165efe00a7e394345fb38e:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../davem/ide-2.6
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Bartlomiej Zolnierkiewicz (2):
+      sis5513: fix PIO setup for ATAPI devices
+      Revert "Revert "ide: try to use PIO Mode 0 during probe if possible""
+
+ drivers/ide/ide-probe.c |    9 +++++++++
+ drivers/ide/sis5513.c   |   10 ++++++----
+ 2 files changed, 15 insertions(+), 4 deletions(-)
