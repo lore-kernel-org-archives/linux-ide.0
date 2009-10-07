@@ -1,49 +1,53 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Tue, 06 Oct 2009 23:13:51 -0400
-Message-ID: <4ACC076F.7020000@rtr.ca>
-References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>	 <4ACBA33C.7090606@rtr.ca>  <1254873978.1471.463.camel@giskard> <1254879618.1471.525.camel@giskard>
+From: David Fries <david@fries.net>
+Subject: Re: [PATCH 0/2] two ide fixes for -rc4
+Date: Tue, 6 Oct 2009 22:30:06 -0500
+Message-ID: <20091007033005.GE21612@spacedout.fries.net>
+References: <200910070027.30377.bzolnier@gmail.com> <alpine.LFD.2.01.0910061534040.3432@localhost.localdomain> <200910070246.05283.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752967AbZJGDOa@vger.kernel.org>
-In-Reply-To: <1254879618.1471.525.camel@giskard>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754059AbZJGDbE@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200910070246.05283.bzolnier@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bernie Innocenti <bernie@codewiz.org>
-Cc: Harri Olin <harri.olin@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Joao Ramos <joao.ramos@inov.pt>, d.stussy@yahoo.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Bernie Innocenti wrote:
-> El Tue, 06-10-2009 a las 20:06 -0400, Bernie Innocenti escribi=C3=B3:
->>> The early revs of these chips did have a number of errata specific =
-to PCI-X.
->> I checked the revision (09) against the sata_mv source and I couldn'=
-t
->> spot anything relevant to us.
->=20
-> NEWSFLASH: today we replaced the 4x500GB Seagate drives with 4x1.5TB
-> drives and reconstruction of the array has been running for 2h withou=
-t a
-> glitch.
->=20
-> One interesting difference is that the 500GB drives were being
-> configured in 1.5Gbps SATA mode.  Another notable difference is the
-> sequential read speed: ~70MB/s vs ~130MB/s with the 1.5TB model.
->=20
-> Could the PCI bus errors be a red herring?
-=2E.
+On Wed, Oct 07, 2009 at 02:46:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday 07 October 2009 00:35:24 Linus Torvalds wrote:
+> > 
+> > David, can you test these on the sis5513 system that had problems with the 
+> > original pio0 mode setting?
+> > 
+> > 	Thanks,
+> > 		Linus
+> > 
+> > On Wed, 7 Oct 2009, Bartlomiej Zolnierkiewicz wrote:
+> > > 
+> > > patch #1 fixes old bug in sis5513 (uncovered by 2.6.30 device probing
+> > > changes but it could be also triggered in earlier kernels on warm-plug
+> > > operation)
+> 
+> patch #1 contained a stupid mistake preventing it from working (thanks to
+> David Fries for letting me know quickly), I guess that is what one gets for
+> the late night hacking..
+> 
+> The corrected version below, David please try it instead:
+> 
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH take 2] sis5513: fix PIO setup for ATAPI devices
 
-Dunno.  Rev.9 =3D=3D "C0" in Marvell terminology,
-and that's the latest/final rev for the 6081 chip,
-with most of the PCI-X bugs fixed or worked around.
-So not much to go on there.
+2.6.31 plus this patch fixed the hang on IDE initialization with the
+SIS5513.
 
-The Bus error report was real, though.
-But with 3.0gb/sec sata connections, the chip will be
-using some different internal clocks and timings,
-which could be enough to avoid triggering the PCI errors.
+That's with my testing mode, I'm rebuilding a kernel and will try some
+benchmarks tomorrow.  I've been testing by hibernating to disk,
+booting the test kernel with a bad root and resume partition (so if it
+worked it wouldn't modify the suspended image), then rebooting to
+resume from disk with the good kernel.  That let me more quickly
+bisect and test kernels, I just haven't ran this kernel much past the
+initialization is all.
 
-I guess.  Let's hope so, anyway.
-
-Cheers
+-- 
+David Fries <david@fries.net>
+http://fries.net/~david/ (PGP encryption key available)
