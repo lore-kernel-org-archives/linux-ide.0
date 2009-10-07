@@ -1,49 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes] libata: fix incorrect link online check
- during probe
-Date: Wed, 07 Oct 2009 15:17:08 +0900
-Message-ID: <4ACC3264.1030607@kernel.org>
-References: <4ACAFB08.8020501@kernel.org> <4ACBE8EC.3000609@pobox.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 0/2] two ide fixes for -rc4
+Date: Wed, 07 Oct 2009 04:06:56 -0700 (PDT)
+Message-ID: <20091007.040656.62828073.davem@davemloft.net>
+References: <alpine.LFD.2.01.0910061534040.3432@localhost.localdomain>
+	<200910070246.05283.bzolnier@gmail.com>
+	<20091007033005.GE21612@spacedout.fries.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60137 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753598AbZJGGSG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Oct 2009 02:18:06 -0400
-In-Reply-To: <4ACBE8EC.3000609@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757631AbZJGLHE@vger.kernel.org>
+In-Reply-To: <20091007033005.GE21612@spacedout.fries.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: david@fries.net
+Cc: bzolnier@gmail.com, torvalds@linux-foundation.org, joao.ramos@inov.pt, d.stussy@yahoo.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: ide <linux-ide@vger.kernel.org>, stable@kernel.org, Tim Blechmann <tim@klingt.org>
 
-Jeff Garzik wrote:
-> On 10/06/2009 04:08 AM, Tejun Heo wrote:
->> While trying to work around spurious detection retries for
->> non-existent devices on slave links, commit
->> 816ab89782ac139a8b65147cca990822bb7e8675 incorrectly added link
->> offline check logic before ata_eh_thaw() was called.  This means that
->> if an occupied link goes down briefly at the time that offline check
->> was performed, device class will be cleared to ATA_DEV_NONE and libata
->> wouldn't retry thus failing detection of the device.
->>
->> The offline check should be done after the port is thawed together
->> with online check so that such link glitches can be detected by the
->> interrupt handler and handled properly.
->>
->> Signed-off-by: Tejun Heo<tj@kernel.org>
->> Reported-by: Tim Blechmann<tim@klingt.org>
->> Cc: stable@kernel.org
->> -- 
->>   drivers/ata/libata-eh.c |   50
->> ++++++++++++++++++++++++++++++------------------
->>   1 file changed, 32 insertions(+), 18 deletions(-)
+From: David Fries <david@fries.net>
+Date: Tue, 6 Oct 2009 22:30:06 -0500
+
+> On Wed, Oct 07, 2009 at 02:46:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+>> The corrected version below, David please try it instead:
+>> 
+>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Subject: [PATCH take 2] sis5513: fix PIO setup for ATAPI devices
 > 
-> applied.  BTW, note your separator lost a dash... it should be three
-> dashes (---).
+> 2.6.31 plus this patch fixed the hang on IDE initialization with the
+> SIS5513.
+> 
+> That's with my testing mode, I'm rebuilding a kernel and will try some
+> benchmarks tomorrow.  I've been testing by hibernating to disk,
+> booting the test kernel with a bad root and resume partition (so if it
+> worked it wouldn't modify the suspended image), then rebooting to
+> resume from disk with the good kernel.  That let me more quickly
+> bisect and test kernels, I just haven't ran this kernel much past the
+> initialization is all.
 
-Oops, sorry about that.
-
--- 
-tejun
+All applied, thanks everyone.
