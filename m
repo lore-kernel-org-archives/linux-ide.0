@@ -1,73 +1,90 @@
-From: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Fri, 09 Oct 2009 23:30:25 +0200
-Message-ID: <4ACFAB71.1070806@sbg.ac.at>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200909251424.25334.elendil@planet.nl> <4ABCB732.9050609@sbg.ac.at> <200909251448.17671.elendil@planet.nl> <4ACDD45C.5090009@sbg.ac.at>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] libata build fix
+Date: Fri, 09 Oct 2009 17:53:13 -0400
+Message-ID: <4ACFB0C9.605@garzik.org>
+References: <20091009043248.GA12304@havoc.gtf.org> <20091009083903.GA20687@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx08.lb01.inode.at ([62.99.145.8]:47335 "EHLO mx.inode.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934112AbZJIVbJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Oct 2009 17:31:09 -0400
-In-Reply-To: <4ACDD45C.5090009@sbg.ac.at>
+Received: from [207.36.208.214] ([207.36.208.214]:42783 "EHLO mail.dvmed.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S934514AbZJIVyE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Oct 2009 17:54:04 -0400
+In-Reply-To: <20091009083903.GA20687@elte.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, stable@kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Alexander Huemer wrote:
-> Frans Pop wrote:
->> On Friday 25 September 2009, Alexander Huemer wrote:
->>>> So with the revert already in mainline for .32, the only thing left is
->>>> for that to get included in stable updates for .30 and .31.
->>> please see the last comment in [1].
->>> can i do anything else to help ?
->>> [1] http://bugzilla.kernel.org/show_bug.cgi?id=14124
->> Yes, adding that comment was excellent. I also added the relevant people
->> in the CC of my previous mail, so it should get taken care of now. Unless 
->> they have additional questions no further action from you should be 
->> needed.
-> it seems like the problem is _not_ solved.
-> i just booted with 2.6.31.3.
-> 2.6.31-gentoo-r2 is vanilla-2.6.31-r2 with a few unrelated patches.
-> did the usual verification (compilation of gcc-4.3.4),
-> and got this again:
+On 10/09/2009 04:39 AM, Ingo Molnar wrote:
+> From: Ingo Molnar<mingo@elte.hu>
+> Date: Fri, 9 Oct 2009 10:13:56 +0200
+> Subject: [PATCH] ahci: Fix "filter FPDMA non-zero offset enable for A=
+spire 3810T" on !CONFIG_ATA_ACPI
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=3Dutf-8
+> Content-Transfer-Encoding: 8bit
 >
->     [ 1018.059729] irq 23: nobody cared (try booting with the "irqpoll"
->     option)
->     [ 1018.059734] Pid: 8656, comm: sh Tainted: G        W
->     2.6.31-gentoo-r2-blackbit #1
->     [ 1018.059736] Call Trace:
->     [ 1018.059738]  <IRQ>  [<ffffffff81066ecf>] ? __report_bad_irq+0x30/0x7d
->     [ 1018.059748]  [<ffffffff81067023>] ? note_interrupt+0x107/0x170
->     [ 1018.059751]  [<ffffffff81067610>] ? handle_fasteoi_irq+0x8a/0xaa
->     [ 1018.059755]  [<ffffffff8100d1cf>] ? handle_irq+0x17/0x1d
->     [ 1018.059757]  [<ffffffff8100c84b>] ? do_IRQ+0x54/0xb2
->     [ 1018.059761]  [<ffffffff8100b6d3>] ? ret_from_intr+0x0/0xa
->     [ 1018.059762]  <EOI>  [<ffffffff815c7d2c>] ? do_page_fault+0xed/0x2ef
->     [ 1018.059769]  [<ffffffff815c7f12>] ? do_page_fault+0x2d3/0x2ef
->     [ 1018.059773]  [<ffffffff812dd5ed>] ? __put_user_4+0x1d/0x30
->     [ 1018.059776]  [<ffffffff815c5fdf>] ? page_fault+0x1f/0x30
->     [ 1018.059777] handlers:
->     [ 1018.059778] [<ffffffff813d2d8c>] (ahci_interrupt+0x0/0x426)
->     [ 1018.059783] Disabling IRQ #23
+> Commit f80ae7e ("ahci: filter FPDMA non-zero offset enable for Aspire
+> 3810T") introduced a new build breakage:
 >
-> so in my opinion reverting commit [1] with commit [2] missed the point.
-> please comment.
+>    drivers/ata/ahci.c: In function =E2=80=98ahci_gtf_filter_workaroun=
+d=E2=80=99:
+>    drivers/ata/ahci.c:2927: error: =E2=80=98struct ata_device=E2=80=99=
+ has no member named =E2=80=98gtf_filter=E2=80=99
+>    make[2]: *** [drivers/ata/ahci.o] Error 1
+>    make[1]: *** [drivers/ata] Error 2
+>    make[1]: *** Waiting for unfinished jobs....
 >
-> -alex
+> As the acpi taskfile command filter support is a property of
+> libata-acpi - so the ata_device::gtf_filter field only exists
+> under CONFIG_ATA_ACPI.
 >
-> [1] a5bfc4714b3f01365aef89a92673f2ceb1ccf246
-> [2] 31b239ad1ba7225435e13f5afc47e48eb674c0cc
+> Add the trivial #ifdef to turn ahci_gtf_filter_workaround()
+> into a NOP on !CONFIG_ATA_ACPI.
 >
-i hope i do not annoy anybody by posting again, but i am afraid my last
-message was not noticed by anybody.
-is there something i don't know but should ? as it seems the problem is
-still existing.
-i would be happy do test whatever is needed to trace the problem.
+> Cc: Marcus Meissner<meissner@novell.com>
+> Cc: Jeff Garzik<jgarzik@redhat.com>
+> Signed-off-by: Ingo Molnar<mingo@elte.hu>
+> ---
+>   drivers/ata/ahci.c |    2 ++
+>   1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 4edca6e..fc8d527 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -2886,6 +2886,7 @@ static bool ahci_broken_online(struct pci_dev *=
+pdev)
+>
+>   static void ahci_gtf_filter_workaround(struct ata_host *host)
+>   {
+> +#ifdef CONFIG_ATA_ACPI
+>   	static const struct dmi_system_id sysids[] =3D {
+>   		/*
+>   		 * Aspire 3810T issues a bunch of SATA enable commands
+> @@ -2926,6 +2927,7 @@ static void ahci_gtf_filter_workaround(struct a=
+ta_host *host)
+>   			ata_for_each_dev(dev, link, ALL)
+>   				dev->gtf_filter |=3D filter;
+>   	}
+> +#endif
+>   }
 
-please respond.
-regards
--alex
+
+Either way is fine with me.  I tend to prefer conditional compilation t=
+o=20
+be outside a function, but it's not a big deal.  Linus can pull my=20
+submit, or add
+	Acked-by: Jeff Garzik <jgarzik@redhat.com>
+to this Ingo patch.
+
+Same end result; whichever makes people happier, and fixes builds the=20
+most rapidly...
+
+	Jeff
+
+
+
