@@ -1,35 +1,45 @@
-From: Christian Pernegger <pernegger@gmail.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Fri, 9 Oct 2009 04:22:47 +0200
-Message-ID: <bb145bd20910081922t1bf6ec91m5a5c7b32d6f7722d@mail.gmail.com>
-References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>
-	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>
-	 <4ACBA33C.7090606@rtr.ca> <1254873978.1471.463.camel@giskard>
-	 <1254879618.1471.525.camel@giskard> <4ACC076F.7020000@rtr.ca>
-	 <1255020134.30440.698.camel@giskard>
+Date: Thu, 08 Oct 2009 23:07:39 -0400
+Message-ID: <4ACEA8FB.4060901@rtr.ca>
+References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>	 <4ACBA33C.7090606@rtr.ca>  <1254873978.1471.463.camel@giskard>	 <1254879618.1471.525.camel@giskard>  <4ACC076F.7020000@rtr.ca> <1255020134.30440.698.camel@giskard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:5151 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760203AbZJICXy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Oct 2009 22:23:54 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so1391910eyf.19
-        for <linux-ide@vger.kernel.org>; Thu, 08 Oct 2009 19:22:47 -0700 (PDT)
+Received: from rtr.ca ([76.10.145.34]:50000 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932475AbZJIDIS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Oct 2009 23:08:18 -0400
 In-Reply-To: <1255020134.30440.698.camel@giskard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bernie Innocenti <bernie@codewiz.org>
-Cc: linux-ide@vger.kernel.org
+Cc: Harri Olin <harri.olin@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
 
-> Our prayers have not been answered :-(
+Bernie Innocenti wrote:
 >
-> I tried several things:
+> I want to try reducing the frequency of the PCI-X bus, but the BIOS does
+> not seem to provide a setting for it.  Is there another way?
+..
 
-Since we seem to be in a similar boat, can you trigger the error only
-via RAID resync or also via badblocks or somesuch on all disks in
-parallel?
+Nothing that's easy.
 
-Thanks,
+Here.. apply this patch, and post the output after you reboot with it.
 
-C.
+
+--- 2.6.31/drivers/ata/sata_mv.c.orig	2009-08-21 22:16:05.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2009-10-08 23:05:37.392203506 -0400
+@@ -3738,6 +3738,12 @@
+ 			hp_flags |= MV_HP_ERRATA_60X1B2;
+ 			break;
+ 		case 0x9:
++		{
++			struct mv_host_priv *hpriv = host->private_data;
++			void __iomem *mmio = hpriv->base;
++			printk(KERN_INFO "sata_mv: pcix_mode=%d\n", mv_in_pcix_mode(host));
++			printk(KERN_INFO "sata_mv: MV_PCI_COMMAND=%08x\n", readl(mmio + MV_PCI_COMMAND);
++		}
+ 			hp_flags |= MV_HP_ERRATA_60X1C0;
+ 			break;
+ 		default:
