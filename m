@@ -1,42 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Thu, 08 Oct 2009 23:16:05 -0400
-Message-ID: <4ACEAAF5.90304@rtr.ca>
-References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>	 <4ACBA33C.7090606@rtr.ca>  <1254873978.1471.463.camel@giskard>	 <1254879618.1471.525.camel@giskard>  <4ACC076F.7020000@rtr.ca> <1255020134.30440.698.camel@giskard> <4ACEA8FB.4060901@rtr.ca>
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: ahci_gtf_filter_workaround function breaks current git build
+Date: Fri, 9 Oct 2009 05:41:47 +0200
+Message-ID: <20091009034147.GA1985@phenom2.trippelsdorf.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:38249 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760197AbZJIDQn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Oct 2009 23:16:43 -0400
-In-Reply-To: <4ACEA8FB.4060901@rtr.ca>
+Received: from smtp-out-068.synserver.de ([212.40.180.68]:1035 "HELO
+	smtp-out-068.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755220AbZJIDtG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Oct 2009 23:49:06 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bernie Innocenti <bernie@codewiz.org>
-Cc: Harri Olin <harri.olin@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
+To: linux-ide@vger.kernel.org
+Cc: jeff@garzik.org, tj@kernel.org
 
-Mark Lord wrote:
-> Bernie Innocenti wrote:
->>
->> I want to try reducing the frequency of the PCI-X bus, but the BIOS does
->> not seem to provide a setting for it.  Is there another way?
-> ..
-> 
-> Nothing that's easy.
-..
+ahci: Add ifdef wrapper to ahci_gtf_filter_workaround
 
-Adding to that:  there is a register on the chip,
-which software could use to override the normal auto-detected
-PCI mode (bus speed) for the chip.  This could be used to,
-say, select 100Mhz or 66Mhz, or even 33Mhz operation.
+Commit f80ae7e45a0e03da188494c6e947a5c8b0cdfb4a 
+ahci: filter FPDMA non-zero offset enable for Aspire 3810T 
+breaks the current git build for configurations that don't define
+CONFIG_ATA_ACPI.  
+This adds an ifdef wrapper to ahci_gtf_filter_workaround.
 
-BUT.. the register is autodetected from the bus at power-on,
-and so if software wants to override that (by rewriting the reg),
-it will also need to reset the PCI bus afterward.
+Signed-off-by: Markus Trippelsdorf <markus@trippelsdorf.de>
 
-Which requires knowing how to reset a PCI bridge,
-something I don't know about.
-
-Cheers
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 4edca6e..b1a2577 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2884,6 +2884,7 @@ static bool ahci_broken_online(struct pci_dev *pdev)
+ 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
+ }
+ 
++#ifdef CONFIG_ATA_ACPI
+ static void ahci_gtf_filter_workaround(struct ata_host *host)
+ {
+ 	static const struct dmi_system_id sysids[] = {
+@@ -2927,6 +2928,10 @@ static void ahci_gtf_filter_workaround(struct ata_host *host)
+ 				dev->gtf_filter |= filter;
+ 	}
+ }
++#else
++static inline void ahci_gtf_filter_workaround(struct ata_host *host)
++{}
++#endif
+ 
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+-- 
+Markus
