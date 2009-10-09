@@ -1,50 +1,105 @@
-From: Harri Olin <harri.olin@gmail.com>
-Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Fri, 09 Oct 2009 00:51:14 +0300
-Message-ID: <4ACE5ED2.2040106@gmail.com>
-References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>	 <4ACB3741.2030101@gmail.com>  <1254852272.1471.172.camel@giskard> <1255019160.30440.666.camel@giskard>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_sil24 blows up under load, please help diagnose
+Date: Thu, 08 Oct 2009 19:21:39 -0600
+Message-ID: <4ACE9023.8080301@gmail.com>
+References: <bb145bd20910081136m1b4e23e2nfeae068f693c3f64@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:50233 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755908AbZJHVvv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Oct 2009 17:51:51 -0400
-In-Reply-To: <1255019160.30440.666.camel@giskard>
+Received: from mail-qy0-f172.google.com ([209.85.221.172]:55188 "EHLO
+	mail-qy0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756666AbZJIBWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Oct 2009 21:22:18 -0400
+Received: by qyk2 with SMTP id 2so6151971qyk.21
+        for <linux-ide@vger.kernel.org>; Thu, 08 Oct 2009 18:21:42 -0700 (PDT)
+In-Reply-To: <bb145bd20910081136m1b4e23e2nfeae068f693c3f64@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bernie Innocenti <bernie@codewiz.org>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Bernie Innocenti kirjoitti:
-> El Tue, 06-10-2009 a las 14:04 -0400, Bernie Innocenti escribi=F3:
->>> I have heard same thing happened with same kind of configuration, u=
-sing=20
->>> Supermicro H8DME-2 motherboard, Opteron 2378 CPU.
->>>
->>> Even the controllers were on same slots.
->> Close.  Mine is a Supermicro H8DM8-2 with 2x Opteron 2374 HE CPU.
->=20
-> I was wrong (the BIOS DMI block is wrong).  The motherboard is labele=
-d
-> as H8DME-2.
->=20
+On 10/08/2009 12:36 PM, Christian Pernegger wrote:
+> Hi all!
+>
+> My new box doesn't seem to like its sata_sil24 controllers under load.
+>
+> The attached log snippet (syslog.gz) is of the first occurrence of the
+> error, some tens of minutes into a checkarray --all (basically does
+> echo check>/sys/block/md*/md/sync_action). End result was a hang
+> where not even Alt-SysRq would do any good. It isn't md, though, just
+> running badblocks on all disks on one of the sata_sil24s in parallel
+> does the trick as well.
+>
+> The error messages are not always exactly the same and do not always
+> result in a hang of the whole machine. More recently I've had:
+> [  632.710900] sata_sil24: IRQ status == 0xffffffff, PCI fault or
+> device removal?
+> [  632.820017] ata13.00: exception Emask 0x20 SAct 0xffff SErr 0x0
+> action 0x6 frozen
+> [  632.820073] ata11.00: exception Emask 0x20 SAct 0xbfff SErr 0x0
+> action 0x6 frozen
+> [  632.820076] ata11.00: irq_stat 0x00020002, PCI master abort while
+> transferring data
 
-H8DME-2 is the same board as H8DM8-2, just without scsi controller.
+Looks like there's something unhappy between the card and the motherboard..
 
-There is 2 3-pin jumpers somewhere between pci-x slots, one for each=20
-bus. With these you can force the bus to 66MHz PCI or 66MHz PCI-X.=20
-Without jumper means autodetect. Note that this information is only fro=
-m=20
-manual, haven't been able to confirm what it really does :)
+> [  632.820083] ata11.00: cmd 60/00:00:3f:62:45/04:00:00:00:00/40 tag 0
+> ncq 524288 in
+> [  632.820085]          res 6c/0b:02:02:00:00/00:00:00:00:6c/00 Emask
+> 0x22 (host bus error)
+> [  632.820087] ata11.00: status: { DRDY DF DRQ }
+> [  632.820093] ata11.00: cmd 60/00:08:3f:46:45/04:00:00:00:00/40 tag 1
+> ncq 524288 in
+> [  632.820094]          res 6c/0b:02:02:00:00/00:00:00:10:6c/00 Emask
+> 0x22 (host bus error)
+> [  632.820096] ata11.00: status: { DRDY DF DRQ }
+> ... and so on for the other in-flight tags ...
+>
+> Hard- and Software:
+> Tyan Toledo iE3210W (S5211), 6x SATA-300 [ahci]
+> Intel C2Q 9550s
+> 8GB Crucial DDR2-ECC RAM
+> 2x Dawicontrol DC-4320 RAID in the PCI-X 133 slots, 4x SATA-300
+> [sata_sil24] each, RAID BIOS' disabled via jumper
 
-Oh and on the other identical case, I heard that moving other controlle=
-r=20
-to different bus (1st controller in top slot and 2nd controller in 2nd=20
-slot from bottom) resolved the issue, or at least it has not error'd ye=
-t.
+Please see the recent post from Bernie Innocenti "sata_mv 0000:03:06.0: 
+PCI ERROR; PCI IRQ cause=0x30000040". I suspect you could have a similar 
+problem with the system running at too high a PCI-X bus clock speed with 
+two cards installed.
 
---=20
-Harri.
+> 3x RaidSonic IB-554SSK "backplane" (datasheet:
+> http://www.raidsonic.de/de/data/data_pdf/icybox/datasheet_ib-555_554_553_d.pdf)
+> Debian stable (lenny)
+>
+> backplane 1 (onboard ahci controller):
+> - 2x WD5000YS in raid1 = sd[ab][12]
+> - 2x WD10EADS in raid1 = sd[cd]1
+> These work flawlessly.
+>
+> backplane 2 (sata_sil24 on PCI-X 133):
+> - 4x WD1000FYPS = sd[efgh]1
+>
+> backplane 3 (sata_sil24 on PCI-X 133):
+> - 3x WD1002FBYS = sd[ijk]
+> - 1x empty tray
+>
+> Tried temorarily powering half the disks via a second power supply,
+> tried exchanging the power supply, tried switching around cables to
+> maybe isolate a culprit backplane or controller. That last one
+> actually looked promising for a while, but testing wasn't conclusive.
+> Tried a bunch of dirrerent kernels: 2.6.26-19 (lenny) and 2.6.30-7
+> (lenny-backports), 2.6.32-rc3 (vanilla). Not much difference.
+>
+> Unfortunately just scrapping the box isn't an option as this is a
+> personal project and the budget's just too tight ATM. Any pointers on
+> what I could try to narrow down which component is faling or what's
+> going on in general?
+>
+> Also see the attached dmesg, although that's NOT from the same boot as
+> the syslog snippet.
+>
+> Thank you,
+>
+> Christian
+
