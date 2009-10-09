@@ -1,45 +1,42 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
-Date: Thu, 08 Oct 2009 23:07:39 -0400
-Message-ID: <4ACEA8FB.4060901@rtr.ca>
-References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>	 <4ACBA33C.7090606@rtr.ca>  <1254873978.1471.463.camel@giskard>	 <1254879618.1471.525.camel@giskard>  <4ACC076F.7020000@rtr.ca> <1255020134.30440.698.camel@giskard>
+Date: Thu, 08 Oct 2009 23:16:05 -0400
+Message-ID: <4ACEAAF5.90304@rtr.ca>
+References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>	 <4ACBA33C.7090606@rtr.ca>  <1254873978.1471.463.camel@giskard>	 <1254879618.1471.525.camel@giskard>  <4ACC076F.7020000@rtr.ca> <1255020134.30440.698.camel@giskard> <4ACEA8FB.4060901@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:50000 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:38249 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932475AbZJIDIS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Oct 2009 23:08:18 -0400
-In-Reply-To: <1255020134.30440.698.camel@giskard>
+	id S1760197AbZJIDQn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Oct 2009 23:16:43 -0400
+In-Reply-To: <4ACEA8FB.4060901@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bernie Innocenti <bernie@codewiz.org>
 Cc: Harri Olin <harri.olin@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, sysadmin <sysadmin@gnu.org>
 
-Bernie Innocenti wrote:
->
-> I want to try reducing the frequency of the PCI-X bus, but the BIOS does
-> not seem to provide a setting for it.  Is there another way?
+Mark Lord wrote:
+> Bernie Innocenti wrote:
+>>
+>> I want to try reducing the frequency of the PCI-X bus, but the BIOS does
+>> not seem to provide a setting for it.  Is there another way?
+> ..
+> 
+> Nothing that's easy.
 ..
 
-Nothing that's easy.
+Adding to that:  there is a register on the chip,
+which software could use to override the normal auto-detected
+PCI mode (bus speed) for the chip.  This could be used to,
+say, select 100Mhz or 66Mhz, or even 33Mhz operation.
 
-Here.. apply this patch, and post the output after you reboot with it.
+BUT.. the register is autodetected from the bus at power-on,
+and so if software wants to override that (by rewriting the reg),
+it will also need to reset the PCI bus afterward.
 
+Which requires knowing how to reset a PCI bridge,
+something I don't know about.
 
---- 2.6.31/drivers/ata/sata_mv.c.orig	2009-08-21 22:16:05.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2009-10-08 23:05:37.392203506 -0400
-@@ -3738,6 +3738,12 @@
- 			hp_flags |= MV_HP_ERRATA_60X1B2;
- 			break;
- 		case 0x9:
-+		{
-+			struct mv_host_priv *hpriv = host->private_data;
-+			void __iomem *mmio = hpriv->base;
-+			printk(KERN_INFO "sata_mv: pcix_mode=%d\n", mv_in_pcix_mode(host));
-+			printk(KERN_INFO "sata_mv: MV_PCI_COMMAND=%08x\n", readl(mmio + MV_PCI_COMMAND);
-+		}
- 			hp_flags |= MV_HP_ERRATA_60X1C0;
- 			break;
- 		default:
+Cheers
