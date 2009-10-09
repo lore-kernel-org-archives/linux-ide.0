@@ -1,51 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] hpt366: kill unused #define's
-Date: Fri, 9 Oct 2009 17:36:39 +0400
-Message-ID: <200910091736.39797.sshtylyov@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:58960 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756959AbZJINeY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Oct 2009 09:34:24 -0400
-In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH -repost 1/1] ATA: pata_via, fix double put on isa bridge
+Date: Fri,  9 Oct 2009 16:03:52 +0200
+Message-ID: <1255097032-23949-1-git-send-email-jirislaby@gmail.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760882AbZJIOEb@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: josephchan@via.com.tw, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org
 
-These two have been long unused but I've just noticed...
+In via_init_one, when via_isa_bridges iterator reaches
+PCI_DEVICE_ID_VIA_ANON and last but one via_isa_bridges bridge is
+found but rev doesn't match, pci_dev_put(isa) is called twice.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Do pci_dev_put only once.
 
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
 ---
-The patch is against ide-2.6.git tree...
+ drivers/ata/pata_via.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
- drivers/ide/hpt366.c |    2 --
- 1 files changed, 2 deletions(-)
-
-Index: ide-2.6/drivers/ide/hpt366.c
-===================================================================
---- ide-2.6.orig/drivers/ide/hpt366.c
-+++ ide-2.6/drivers/ide/hpt366.c
-@@ -426,14 +426,12 @@ static u32 sixty_six_base_hpt37x[] = {
- };
- #endif
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 45657ca..9688fe5 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -526,7 +526,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.port_ops = &via_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+-	struct pci_dev *isa = NULL;
++	struct pci_dev *isa;
+ 	const struct via_isa_bridge *config;
+ 	static int printed_version;
+ 	u8 enable;
+@@ -551,15 +551,13 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		if ((isa = pci_get_device(PCI_VENDOR_ID_VIA +
+ 			!!(config->flags & VIA_BAD_ID),
+ 			config->id, NULL))) {
++			u8 rev = isa->revision;
++			pci_dev_put(isa);
  
--#define HPT366_DEBUG_DRIVE_INFO		0
- #define HPT371_ALLOW_ATA133_6		1
- #define HPT302_ALLOW_ATA133_6		1
- #define HPT372_ALLOW_ATA133_6		1
- #define HPT370_ALLOW_ATA100_5		0
- #define HPT366_ALLOW_ATA66_4		1
- #define HPT366_ALLOW_ATA66_3		1
--#define HPT366_MAX_DEVS			8
+-			if (isa->revision >= config->rev_min &&
+-			    isa->revision <= config->rev_max)
++			if (rev >= config->rev_min && rev <= config->rev_max)
+ 				break;
+-			pci_dev_put(isa);
+ 		}
  
- /* Supported ATA clock frequencies */
- enum ata_clock {
-
+-	pci_dev_put(isa);
+-
+ 	if (!(config->flags & VIA_NO_ENABLES)) {
+ 		/* 0x40 low bits indicate enabled channels */
+ 		pci_read_config_byte(pdev, 0x40 , &enable);
+-- 
+1.6.4.2
