@@ -1,46 +1,35 @@
 From: Christian Pernegger <pernegger@gmail.com>
-Subject: Re: sata_sil24 blows up under load, please help diagnose
-Date: Fri, 9 Oct 2009 03:57:04 +0200
-Message-ID: <bb145bd20910081857k3de54622qbdde5d13a8182803@mail.gmail.com>
-References: <bb145bd20910081136m1b4e23e2nfeae068f693c3f64@mail.gmail.com>
-	 <4ACE9023.8080301@gmail.com>
+Subject: Re: sata_mv 0000:03:06.0: PCI ERROR; PCI IRQ cause=0x30000040
+Date: Fri, 9 Oct 2009 04:22:47 +0200
+Message-ID: <bb145bd20910081922t1bf6ec91m5a5c7b32d6f7722d@mail.gmail.com>
+References: <1254546642.1438.135.camel@giskard> <4ACA6904.1060509@rtr.ca>
+	 <4ACB3741.2030101@gmail.com> <1254852272.1471.172.camel@giskard>
+	 <4ACBA33C.7090606@rtr.ca> <1254873978.1471.463.camel@giskard>
+	 <1254879618.1471.525.camel@giskard> <4ACC076F.7020000@rtr.ca>
+	 <1255020134.30440.698.camel@giskard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:43446 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758686AbZJIB5l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Oct 2009 21:57:41 -0400
-Received: by ewy4 with SMTP id 4so231552ewy.37
-        for <linux-ide@vger.kernel.org>; Thu, 08 Oct 2009 18:57:04 -0700 (PDT)
-In-Reply-To: <4ACE9023.8080301@gmail.com>
+Received: from ey-out-2122.google.com ([74.125.78.26]:5151 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760203AbZJICXy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Oct 2009 22:23:54 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so1391910eyf.19
+        for <linux-ide@vger.kernel.org>; Thu, 08 Oct 2009 19:22:47 -0700 (PDT)
+In-Reply-To: <1255020134.30440.698.camel@giskard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
+To: Bernie Innocenti <bernie@codewiz.org>
 Cc: linux-ide@vger.kernel.org
 
-> Please see the recent post from Bernie Innocenti "sata_mv 0000:03:06.0: PCI
-> ERROR; PCI IRQ cause=0x30000040". I suspect you could have a similar problem
-> with the system running at too high a PCI-X bus clock speed with two cards
-> installed.
+> Our prayers have not been answered :-(
+>
+> I tried several things:
 
-Speed can be jumpered from 133Mhz down to 100Mhz but that doesn't make
-any difference at all. Since the board has only two slots (and I need
-both) I can't use the insert-slower-card trick to slow the bus down to
-66Mhz.
+Since we seem to be in a similar boat, can you trigger the error only
+via RAID resync or also via badblocks or somesuch on all disks in
+parallel?
 
-Fun detail:
-pcix1 -- controller1 -- backplane1 -- array1
-pcix2 -- controller2 -- backplane2 -- array2
-works as long as it's not stressed. As soon as we switched the cabling
-like so (to see if the initial failing port would "move" with it or
-not):
-pcix1 -- controller1 -- backplane2 -- array2
-pcix2 -- controller2 -- backplane1 -- array1
-the box goes absolutely crazy within seconds of normal access. With
-"luck" even while sitting there idle. The only difference is that
-array1 has 4 disks and array2 has only 3.
+Thanks,
 
-Thank you for trying to help
-
-Christian
+C.
