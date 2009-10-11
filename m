@@ -1,110 +1,32 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-tape: remove the BKL
-Date: Sun, 11 Oct 2009 12:25:19 +0200
-Message-ID: <20091011102519.GA2641@liondog.tnic>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: VT6421 problems with sata_via
+Date: Sun, 11 Oct 2009 14:16:38 +0100
+Message-ID: <20091011141638.616084c0@lxorguk.ukuu.org.uk>
+References: <71cd59b00910110254q2e5318cfw30ac0a4f86770487@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:64765 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754829AbZJKK0B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Oct 2009 06:26:01 -0400
-Received: by fxm27 with SMTP id 27so7965212fxm.17
-        for <linux-ide@vger.kernel.org>; Sun, 11 Oct 2009 03:25:24 -0700 (PDT)
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36965 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757188AbZJKNPx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Oct 2009 09:15:53 -0400
+In-Reply-To: <71cd59b00910110254q2e5318cfw30ac0a4f86770487@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: Corentin Chary <corentin.chary@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Hi,
+On Sun, 11 Oct 2009 11:54:49 +0200
+Corentin Chary <corentin.chary@gmail.com> wrote:
 
-one less BKL user. Tested on a Seagate STT8000A, ATAPI TAPE drive.
+> Hi,
+> I recently needed some more space and bought a Deskstar 7K1000.B for my server.
+> The motherboard is old, and did not have SATA port, so I added a
+> VT6421 PCI SATA controller.
 
----
->From 16e58d4d74a5f3a02204e2fe861d2cb3b3ee65fb Mon Sep 17 00:00:00 2001
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Mon, 5 Oct 2009 07:57:26 +0200
-Subject: [PATCH] ide-tape: remove the BKL
+Lots of 6421 setups do not work on Linux full stop. I've asked VIA
+several times for the relevant data sheet/info to fix this and they've
+never done more than acknowledge receipt of the mail.
 
-Replace the BKL calls in the chrdev_{open,release} interfaces with a
-simple sleeping mutex.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-tape.c |   21 +++++++++++++++------
- 1 files changed, 15 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 58fc920..6a0e625 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -221,6 +221,8 @@ typedef struct ide_tape_obj {
- 
- static DEFINE_MUTEX(idetape_ref_mutex);
- 
-+static DEFINE_MUTEX(idetape_chrdev_mutex);
-+
- static struct class *idetape_sysfs_class;
- 
- static void ide_tape_release(struct device *);
-@@ -1457,10 +1459,11 @@ static int idetape_chrdev_open(struct inode *inode, struct file *filp)
- 	if (i >= MAX_HWIFS * MAX_DRIVES)
- 		return -ENXIO;
- 
--	lock_kernel();
-+	mutex_lock(&idetape_chrdev_mutex);
-+
- 	tape = ide_tape_get(NULL, true, i);
- 	if (!tape) {
--		unlock_kernel();
-+		mutex_unlock(&idetape_chrdev_mutex);
- 		return -ENXIO;
- 	}
- 
-@@ -1519,12 +1522,15 @@ static int idetape_chrdev_open(struct inode *inode, struct file *filp)
- 				tape->door_locked = DOOR_LOCKED;
- 		}
- 	}
--	unlock_kernel();
-+	mutex_unlock(&idetape_chrdev_mutex);
-+
- 	return 0;
- 
- out_put_tape:
- 	ide_tape_put(tape);
--	unlock_kernel();
-+
-+	mutex_unlock(&idetape_chrdev_mutex);
-+
- 	return retval;
- }
- 
-@@ -1551,7 +1557,8 @@ static int idetape_chrdev_release(struct inode *inode, struct file *filp)
- 	ide_drive_t *drive = tape->drive;
- 	unsigned int minor = iminor(inode);
- 
--	lock_kernel();
-+	mutex_lock(&idetape_chrdev_mutex);
-+
- 	tape = drive->driver_data;
- 
- 	ide_debug_log(IDE_DBG_FUNC, "enter");
-@@ -1575,7 +1582,9 @@ static int idetape_chrdev_release(struct inode *inode, struct file *filp)
- 	}
- 	clear_bit(ilog2(IDE_AFLAG_BUSY), &drive->atapi_flags);
- 	ide_tape_put(tape);
--	unlock_kernel();
-+
-+	mutex_unlock(&idetape_chrdev_mutex);
-+
- 	return 0;
- }
- 
--- 
-1.6.3.3
-
-
--- 
-Regards/Gruss,
-    Boris.
+Alan
