@@ -1,70 +1,83 @@
-From: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Mon, 12 Oct 2009 17:03:48 +0200
-Message-ID: <4AD34554.3050701@sbg.ac.at>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200910101513.51320.elendil@planet.nl> <4AD2DFA4.9000602@kernel.org> <200910121148.16439.elendil@planet.nl> <4AD2FC60.8080705@kernel.org> <4AD2FD10.2010800@sbg.ac.at> <4AD2FFC7.5010402@kernel.org> <4AD300B5.6080102@sbg.ac.at>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Western Digital Velociraptor WD740ADFD-00NLR5 - NCQ performance falls
+ off a cliff wi queue depth greater than two
+Date: Mon, 12 Oct 2009 15:18:48 +0100
+Message-ID: <4AD33AC8.6000505@seoss.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932518AbZJLPEf@vger.kernel.org>
-In-Reply-To: <4AD300B5.6080102@sbg.ac.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, alexander.huemer@sbg.ac.at
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay1.allsecurenet.com ([63.246.152.102]:46439 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756682AbZJLPAV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2009 11:00:21 -0400
+Received: from [78.105.152.189] (helo=zebedee.buttersideup.com)
+	by relay1.allsecurenet.com with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <tim@seoss.co.uk>)
+	id 1MxLjc-0000kX-FT
+	for linux-ide@vger.kernel.org; Mon, 12 Oct 2009 14:18:48 +0000
+Received: from [91.208.163.30] (ermintrude [91.208.163.30])
+	by zebedee.buttersideup.com (Postfix) with ESMTP id 901359B8F5
+	for <linux-ide@vger.kernel.org>; Mon, 12 Oct 2009 15:18:46 +0100 (BST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Alexander Huemer wrote:
-> Tejun Heo wrote:
->> Alexander Huemer wrote:
->>  
->>> Tejun Heo wrote:
->>>    
->>>> Frans Pop wrote:
->>>>  
->>>>      
->>>>> On Monday 12 October 2009, Tejun Heo wrote:
->>>>>           
->>>>>> Alexander, can you please attach full boot log and the output of
->>>>>> "lspci -nn"?  Also, how reproducible is the problem?  You already
->>>>>> answered to Frans' question but can you be more specific?
->>>>>>                 
->>>>> Full dmesg was made available earlier at:
->>>>> http://xx.vu/~ahuemer/dmesg_ahuemer_20090923
->>>>>             
->>>> Does blacklisting i801_smbus make any difference?
->>>>
->>>>         
->>> lspci -nn:
->>> http://xx.vu/~ahuemer/lspci_nn_ahuemer_20091012
->>>
->>> what do you mean with "blacklisting i801_smbus" ?
->>>     
->>
->> [    3.872387] i2c /dev entries driver
->> [    3.873943] i801_smbus 0000:00:1f.3: PCI INT B -> GSI 23 (level, 
->> low) -> IRQ 23
->> [    3.875580] w83627hf: Found W83627HF chip at 0x290
->>
->> IRQ23 is also used by i801_smbus and it would be nice to confirm
->> whether the problem can still be triggered with that driver not
->> loaded.  Adding "blacklist i2c_i801" to /etc/modprobe.d/blacklist
->> should probabaly do the trick.
->>
->> Thanks.
->>
->>   
-> okay, i think you assume that i2c_i801 is a module.
-> it is indeed built into the kernel.
-> i'll rebuild the kernel without that component and run a test again.
->
-> regards
-> -alex
-tejun, it seems you hit an interesting point.
-i compiled kernel-2.6.31.3 with my ususal config _without_ i2c_i801.
-my usual test (compilation of gcc-4.3.2) finished 5 times without the error.
-i'll let it run some more times over night.
-does anybody have an idea how i can trace what exactly causes the error 
-during the compilation run so that i can create a short test program ?
+Hello,
 
-regards
--alex
+I have what looks like a firmware or design performance bug with some 
+74G WD Velociraptors WD740ADFD-00NLR5 (firmware 21.07QR5).  Sequential 
+read speed (as measured with 'hdparm -t') drops-off with NCQ depths 
+greater than 2.
+
+Queue-depth(cmds) Speed(MB/s)
+
+1   84
+2   84
+3   46
+5   39
+10   39
+20   44
+31   36
+
+The speed given is the best of 10 - the system was under light load (I 
+couldn't completely unload it, unfortunately).
+
+Western Digital helpfully suggested that I contact my Linux vendor...
+
+
+The system is a Tyan server with a Core2Quad Q6600  @ 2.40GHz, and an 
+ICH9 running Debian 5.0 - kernel 2.6.26-2-openvz-amd64, SATA ports in 
+non-RAID/AHCI/native mode.
+
+I measured the speed like this:
+
+for i in {1..31} ; do echo $i > /sys/block/sda/device/queue_depth ; echo 
+-n "$( cat /sys/block/sda/device/queue_depth | head -c -1 )," ; for j in 
+{1..10} ; do (hdparm -t /dev/sda | egrep -o 
+'[[:digit:]]+\.[[:digit:]]+[[:space:]]+MB/sec' | head -c -1 ) ; done ; 
+echo ; done | sed 's/ MB\/sec/,/g'
+
+... and created a chart and max speed data in openoffice:
+
+http://buttersideup.com/files/wd-raptor-NCQ-bug-1.pdf
+
+with a second run here:
+
+http://buttersideup.com/files/wd-raptor-NCQ-bug-2.pdf
+
+Any comments or suggestions welcome - I'd be happy to repeat the test 
+using a different benchmark if anyone can suggest a command-line they'd 
+like run?
+
+Cheers,
+
+Tim.
+
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.  
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+
