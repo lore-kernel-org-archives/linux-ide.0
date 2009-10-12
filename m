@@ -1,70 +1,59 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Mon, 12 Oct 2009 11:28:53 -0600
-Message-ID: <4AD36755.5040401@gmail.com>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200910101513.51320.elendil@planet.nl> <4AD2DFA4.9000602@kernel.org> <200910121148.16439.elendil@planet.nl> <4AD2FC60.8080705@kernel.org> <4AD2FD10.2010800@sbg.ac.at> <4AD2FFC7.5010402@kernel.org> <4AD300B5.6080102@sbg.ac.at> <4AD34554.3050701@sbg.ac.at>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14294] kernel BUG at drivers/ide/ide-disk.c:187
+Date: Mon, 12 Oct 2009 21:37:00 GMT
+Message-ID: <200910122137.n9CLb07B026383@demeter.kernel.org>
+References: <bug-14294-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757345AbZJLR3j@vger.kernel.org>
-In-Reply-To: <4AD34554.3050701@sbg.ac.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Cc: Tejun Heo <tj@kernel.org>, Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:39876 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758098AbZJLVhh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2009 17:37:37 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9CLb0aJ026384
+	for <linux-ide@vger.kernel.org>; Mon, 12 Oct 2009 21:37:00 GMT
+In-Reply-To: <bug-14294-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 10/12/2009 09:03 AM, Alexander Huemer wrote:
-> Alexander Huemer wrote:
->> Tejun Heo wrote:
->>> Alexander Huemer wrote:
->>>
->>>> Tejun Heo wrote:
->>>>> Frans Pop wrote:
->>>>>
->>>>>> On Monday 12 October 2009, Tejun Heo wrote:
->>>>>>> Alexander, can you please attach full boot log and the output of
->>>>>>> "lspci -nn"? Also, how reproducible is the problem? You already
->>>>>>> answered to Frans' question but can you be more specific?
->>>>>> Full dmesg was made available earlier at:
->>>>>> http://xx.vu/~ahuemer/dmesg_ahuemer_20090923
->>>>> Does blacklisting i801_smbus make any difference?
->>>>>
->>>> lspci -nn:
->>>> http://xx.vu/~ahuemer/lspci_nn_ahuemer_20091012
->>>>
->>>> what do you mean with "blacklisting i801_smbus" ?
->>>
->>> [ 3.872387] i2c /dev entries driver
->>> [ 3.873943] i801_smbus 0000:00:1f.3: PCI INT B -> GSI 23 (level, low)
->>> -> IRQ 23
->>> [ 3.875580] w83627hf: Found W83627HF chip at 0x290
->>>
->>> IRQ23 is also used by i801_smbus and it would be nice to confirm
->>> whether the problem can still be triggered with that driver not
->>> loaded. Adding "blacklist i2c_i801" to /etc/modprobe.d/blacklist
->>> should probabaly do the trick.
->>>
->>> Thanks.
->>>
->> okay, i think you assume that i2c_i801 is a module.
->> it is indeed built into the kernel.
->> i'll rebuild the kernel without that component and run a test again.
->>
->> regards
->> -alex
-> tejun, it seems you hit an interesting point.
-> i compiled kernel-2.6.31.3 with my ususal config _without_ i2c_i801.
-> my usual test (compilation of gcc-4.3.2) finished 5 times without the
-> error.
-> i'll let it run some more times over night.
-> does anybody have an idea how i can trace what exactly causes the error
-> during the compilation run so that i can create a short test program ?
+http://bugzilla.kernel.org/show_bug.cgi?id=14294
 
-Do you have any hardware sensors monitoring software running (such as 
-the GNOME sensors panel applet or something?) Something like that would 
-be the most likely cause for something to access the smbus driver.
 
-Interesting that the device seems to be on the same interrupt but it 
-hasn't registered itself as a handler (it looks like that driver doesn't 
-use interrupts). If the device did generate an interrupt though, it 
-would indeed cause this problem.
+
+
+
+--- Comment #1 from Rafael J. Wysocki <rjw@sisk.pl>  2009-10-12 21:37:00 ---
+On Monday 12 October 2009, Santiago Garcia Mantinan wrote:
+> Hi!
+> 
+> > I gave the user a debugging patch, but they reported that they
+> > can no longer trigger the issue with 2.6.31.1
+> > 
+> > See:
+> > 
+> > 	http://marc.info/?l=linux-ide&m=125469615425454&w=4
+> > 
+> > Maybe that's enough to close this, I dunno.
+> 
+> I'm the user with the debugging patch, I'd say no, don't close it.
+> 
+> Even though on my first tests I had the computer to crash the two weekends I
+> had tested, it seems that crashing on weekend was only luck and seems that
+> having the bug appear is more difficult than I had thought.
+> 
+> So... my comments saying that 2.6.31.1 seemed ok are probably wrong (I have
+> read the .1 changelog and there is an ata patch, but probably unrelated). It
+> is true that I had 2.6.31.1 running for a whole week without it crashing,
+> but seems that crashing it may need more time.
+> 
+> I'm now back to the 2.6.31 with the patch to debug it (3 days uptime) in
+> order to gather more info and after I get the info from 2.6.31 I'd test
+> 3.6.31.latest or even 2.6.32whatever in case you find that better.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
