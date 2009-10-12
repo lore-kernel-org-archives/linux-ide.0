@@ -1,32 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
+From: Alexander Huemer <alexander.huemer@sbg.ac.at>
 Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Mon, 12 Oct 2009 18:52:32 +0900
-Message-ID: <4AD2FC60.8080705@kernel.org>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200910101513.51320.elendil@planet.nl> <4AD2DFA4.9000602@kernel.org> <200910121148.16439.elendil@planet.nl>
+Date: Mon, 12 Oct 2009 11:55:28 +0200
+Message-ID: <4AD2FD10.2010800@sbg.ac.at>
+References: <4ABBB8C2.2080901@sbg.ac.at> <200910101513.51320.elendil@planet.nl> <4AD2DFA4.9000602@kernel.org> <200910121148.16439.elendil@planet.nl> <4AD2FC60.8080705@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57146 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754902AbZJLJxS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Oct 2009 05:53:18 -0400
-In-Reply-To: <200910121148.16439.elendil@planet.nl>
+Received: from mx10.lb01.inode.at ([62.99.145.10]:14841 "EHLO mx.inode.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755028AbZJLJ4M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Oct 2009 05:56:12 -0400
+In-Reply-To: <4AD2FC60.8080705@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Alexander Huemer <alexander.huemer@sbg.ac.at>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, alexander.huemer@sbg.ac.at
 
-Frans Pop wrote:
-> On Monday 12 October 2009, Tejun Heo wrote:
->> Alexander, can you please attach full boot log and the output of
->> "lspci -nn"?  Also, how reproducible is the problem?  You already
->> answered to Frans' question but can you be more specific?
-> 
-> Full dmesg was made available earlier at:
-> http://xx.vu/~ahuemer/dmesg_ahuemer_20090923
+Tejun Heo wrote:
+> Frans Pop wrote:
+>   
+>> On Monday 12 October 2009, Tejun Heo wrote:
+>>     
+>>> Alexander, can you please attach full boot log and the output of
+>>> "lspci -nn"?  Also, how reproducible is the problem?  You already
+>>> answered to Frans' question but can you be more specific?
+>>>       
+>> Full dmesg was made available earlier at:
+>> http://xx.vu/~ahuemer/dmesg_ahuemer_20090923
+>>     
+>
+> Does blacklisting i801_smbus make any difference?
+>
+>   
+lspci -nn:
+http://xx.vu/~ahuemer/lspci_nn_ahuemer_20091012
 
-Does blacklisting i801_smbus make any difference?
+what do you mean with "blacklisting i801_smbus" ?
 
--- 
-tejun
+regards
+-alex
