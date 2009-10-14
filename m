@@ -1,42 +1,61 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-iops: fix for drive side 80-wire cable detection
- failu re f or IBM-DJNA-371350 HD
-Date: Wed, 14 Oct 2009 01:01:14 -0700 (PDT)
-Message-ID: <20091014.010114.30254055.davem@davemloft.net>
-References: <20090928.131808.29003.0@webmail06.vgs.untd.com>
-	<20090928191903.1585f086@lxorguk.ukuu.org.uk>
+From: Igor Serebryany <igor47@moomers.org>
+Subject: disappearing block devices using EFI Partitioning
+Date: Wed, 14 Oct 2009 06:24:18 -0500
+Message-ID: <20091014112418.GJ25852@moomers.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="s9Iby/IdMV6Sk7aK"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52067
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756322AbZJNIBS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2009 04:01:18 -0400
-In-Reply-To: <20090928191903.1585f086@lxorguk.ukuu.org.uk>
+Received: from moomers.org ([64.251.27.79]:43795 "EHLO moomers.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753666AbZJNLct (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Oct 2009 07:32:49 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: mgavl69@juno.com, mikpe@it.uu.se, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Date: Mon, 28 Sep 2009 19:19:03 +0100
 
-> On Mon, 28 Sep 2009 17:18:08 GMT
-> "Michael Gavlick" <mgavl69@juno.com> wrote:
-> 
->>   I've tested only on my own rig with 'known good' 80-wire cables and similar UDMA/66 HD's from Quantum & Seagate without any problems as a single master and a master/slave setup.
->>   I've also tested the IBM-DJNA-371350 as a single master but it still complains about the 80-wire.
-> 
-> Ideally this wants testing on a different controller but can you post the
-> hdparm output and see what value Word 93 is showing. Does sound like this
-> one may indeed be the drive, or at least some specific firmware rev. The
-> 22GXP is a bit late for such a bug but not unbelievably so.
-> 
-> Nothing obvious in kernel logs google can find to contradict your finding
-> either.
+--s9Iby/IdMV6Sk7aK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This seems to be stuck in the mud.  Michael, can you post the hdparm
-output Alan asked for?
+Hi,=20
 
-Thanks.
+	I'm not sure if this is the right place to send this, but I'm
+	not sure where else to send it...
+
+	I've been having a problem where sometimes, creating a new partition
+	(parted mkpart) using GPT disk label causes the block device for the
+	previously created partition to disappear.
+
+	Here is an example: http://pastebin.com/f3acd536
+	You can see on line 15 that after the previous parted command,
+	/dev/sda3 which existed on line 12 is gone. There are no messages in
+	dmesg and the partition itself is still on the disk.=20
+
+	I am working on an automated partitioning too, and so I have seen
+	this happen with a variety of partition layouts, disks and servers
+	(although in slightly different ways each time). I have tried
+	putting space between partitions, time between partition commands
+	and other methods to no avail. A few hints on where to even begin
+	debugging this would be great!
+
+Thanks!
+--Igor
+
+--s9Iby/IdMV6Sk7aK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFK1bTiVyVcp2k8D/kRAk9CAJ0Tm2BdpHuYZwHLiODaA/COrCKbggCg1u6s
+sv5tF7QfCsl3x+02/d15ADs=
+=6FBl
+-----END PGP SIGNATURE-----
+
+--s9Iby/IdMV6Sk7aK--
