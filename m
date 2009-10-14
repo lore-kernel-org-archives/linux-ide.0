@@ -1,44 +1,71 @@
-From: Corentin Chary <corentin.chary@gmail.com>
-Subject: Re: VT6421 problems with sata_via
-Date: Wed, 14 Oct 2009 09:26:32 +0200
-Message-ID: <71cd59b00910140026w3aeab5f0q4913294fe77d9dc0@mail.gmail.com>
-References: <71cd59b00910110254q2e5318cfw30ac0a4f86770487@mail.gmail.com>
-	 <20091011141638.616084c0@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: ATA related kernel warning after resume with 2.6.32-rc4
+Date: Wed, 14 Oct 2009 03:29:33 -0400
+Message-ID: <4AD57DDD.3040201@garzik.org>
+References: <20091014065555.GA6968@mac.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:59986 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbZJNH1J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2009 03:27:09 -0400
-In-Reply-To: <20091011141638.616084c0@lxorguk.ukuu.org.uk>
+Received: from srv5.dvmed.net ([207.36.208.214]:48847 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755371AbZJNHaN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Oct 2009 03:30:13 -0400
+In-Reply-To: <20091014065555.GA6968@mac.home>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: tino.keitel@tikei.de
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Sun, Oct 11, 2009 at 3:16 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Sun, 11 Oct 2009 11:54:49 +0200
-> Corentin Chary <corentin.chary@gmail.com> wrote:
+On 10/14/2009 02:55 AM, Tino Keitel wrote:
+> Hi,
 >
->> Hi,
->> I recently needed some more space and bought a Deskstar 7K1000.B for my server.
->> The motherboard is old, and did not have SATA port, so I added a
->> VT6421 PCI SATA controller.
+> I get this warning after resume from suspend to RAM:
 >
-> Lots of 6421 setups do not work on Linux full stop. I've asked VIA
-> several times for the relevant data sheet/info to fix this and they've
-> never done more than acknowledge receipt of the mail.
->
-> Alan
->
+> ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
+> ata1.00: ACPI cmd ef/03:42:00:00:00:a0 (SET FEATURES) filtered out
+> ata1.00: configured for UDMA/33
+> firewire_core: rediscovered device fw0
+> sd 2:0:1:0: [sda] Starting disk
+> firewire_core: phy config: card 0, new root=ffc1, gap_count=5
+> ------------[ cut here ]------------
+> WARNING: at drivers/ata/libata-core.c:5039
+> ata_qc_complete+0x1ec/0x260()
+> Hardware name: Macmini2,1
+> Modules linked in: ipv6 fbcon font bitblit softcursor i915
+> drm_kms_helper drm fb i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect
+> loop btusb bluetooth firewire_sbp2 snd_hda_codec_idt dvb_usb dvb_core
+> video backlight output snd_hda_intel firewire_ohci usblp firewire_core
+> sky2 snd_hda_codec evdev crc_itu_t snd_pcm snd_timer snd_page_alloc
+> [last unloaded: dvb_usb_vp7045]
+> Pid: 254, comm: ata/0 Not tainted 2.6.32-rc4-00001-gd93a8f8 #24
+> Call Trace:
+>   [<ffffffff8130b5ac>] ? ata_qc_complete+0x1ec/0x260
+>   [<ffffffff8130b5ac>] ? ata_qc_complete+0x1ec/0x260
+>   [<ffffffff8103ceb4>] ? warn_slowpath_common+0x74/0xd0
+>   [<ffffffff8130b5ac>] ? ata_qc_complete+0x1ec/0x260
+>   [<ffffffff81318100>] ? ata_do_link_abort+0xa0/0xe0
+>   [<ffffffff8131b01f>] ? ata_hsm_qc_complete+0x15f/0x170
+>   [<ffffffff8131b1ca>] ? ata_sff_hsm_move+0x19a/0x700
+>   [<ffffffff8131bacf>] ? ata_pio_task+0x2f/0x110
+>   [<ffffffff8131baa0>] ? ata_pio_task+0x0/0x110
+>   [<ffffffff8104eb8b>] ? worker_thread+0x12b/0x1f0
+>   [<ffffffff81052ee0>] ? autoremove_wake_function+0x0/0x30
+>   [<ffffffff8104ea60>] ? worker_thread+0x0/0x1f0
+>   [<ffffffff81052b56>] ? kthread+0x96/0xa0
+>   [<ffffffff8100cc1a>] ? child_rip+0xa/0x20
+>   [<ffffffff81052ac0>] ? kthread+0x0/0xa0
+>   [<ffffffff8100cc10>] ? child_rip+0x0/0x20
+> ---[ end trace 158461bf60ae353f ]---
+> ata3.01: NODEV after polling detection
+> ata3.01: revalidation failed (errno=-2)
 
-I tried to contact VIA, they said the datasheet have been available
-for some month,
-here is the link they gave to me:
-ftp://vtbridge.org/Docs/Storage/DS_VT6421A_100_CCPL.PDF
-Thanks,
+Can you email your full dmesg and lspci?
 
--- 
-Corentin Chary
-http://xf.iksaif.net
+Also, note that linux-ide was added to CC.
+
+	Jeff
+
+
+
+
