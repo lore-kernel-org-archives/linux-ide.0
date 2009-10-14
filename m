@@ -1,29 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_sc1200: Fix crash on boot
-Date: Wed, 14 Oct 2009 13:38:06 +0100
-Message-ID: <20091014133806.63804e19@lxorguk.ukuu.org.uk>
-References: <20091006150737.9610.81541.stgit@localhost.localdomain>
-	<20091013185637.870369c8.akpm@linux-foundation.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/1] sata_mv: Prevent PIO commands to be defered too long
+ if traffic in progress.
+Date: Wed, 14 Oct 2009 08:38:11 -0400
+Message-ID: <4AD5C633.7050003@pobox.com>
+References: <> <1255387440-13313-1-git-send-email-gwendal@google.com> <1255387440-13313-2-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42769 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751749AbZJNMih (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2009 08:38:37 -0400
-In-Reply-To: <20091013185637.870369c8.akpm@linux-foundation.org>
+Received: from [207.36.208.214] ([207.36.208.214]:41084 "EHLO mail.dvmed.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1760081AbZJNMiv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Oct 2009 08:38:51 -0400
+In-Reply-To: <1255387440-13313-2-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alan Cox <alan@linux.intel.com>, jeff@garzik.org, linux-kernel@vger.kernel.org, stable@kernel.org, "Alexandros C. Couloumbis" <alex@ozo.com>, linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: mlord@pobox.com, linux-ide@vger.kernel.org
 
-> This patch applies to 2.6.31 and 2.6.30 (at least).  How far back
-> should it be ported?
+On 10/12/2009 06:44 PM, Gwendal Grignou wrote:
+> Use excl_link when non NCQ commands are defered, to be sure they are processed
+> as soon as outstanding commands are completed. It prevents some commands to be
+> defered indifinitely when using a port multiplier.
+>
+> Signed-off-by: Gwendal Grignou<gwendal@google.com>
+> ---
+>   drivers/ata/sata_mv.c |   29 +++++++++++++++++++++++++++--
+>   1 files changed, 27 insertions(+), 2 deletions(-)
 
-Having had a dig the bug was introduced in
-c0f2ee34a5a0b79fd98d965ad8ae765d4639bfa5
+An ACK from Mark, too, I hope?
 
-I've not however tested the patch with any older releases.
+I'll give this a try on a Gen-IIE chip...
 
-Alan
+	Jeff
+
+
+
+
