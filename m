@@ -1,40 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_sc1200: Fix crash on boot
-Date: Wed, 14 Oct 2009 13:25:18 +0100
-Message-ID: <20091014132518.5dce81be@lxorguk.ukuu.org.uk>
-References: <20091006150737.9610.81541.stgit@localhost.localdomain>
-	<20091013185637.870369c8.akpm@linux-foundation.org>
-	<20091014130046.0aa13166@lxorguk.ukuu.org.uk>
-	<200910141412.29467.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 1/1] sata_mv: Prevent PIO commands to be defered too long
+ if traffic in progress.
+Date: Wed, 14 Oct 2009 08:35:15 -0400
+Message-ID: <4AD5C583.8060006@rtr.ca>
+References: <1255387440-13313-1-git-send-email-gwendal@google.com> <1255387440-13313-2-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760075AbZJNM0U@vger.kernel.org>
-In-Reply-To: <200910141412.29467.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@linux.intel.com>, jeff@garzik.org, linux-kernel@vger.kernel.org, stable@kernel.org, "Alexandros C. Couloumbis" <alex@ozo.com>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:37228 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752591AbZJNMfy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Oct 2009 08:35:54 -0400
+In-Reply-To: <1255387440-13313-2-git-send-email-gwendal@google.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Grant Grundler <grundler@google.com>
 
-> BTW do you happen to know who is the current maintainer of this driver
-> (ditto for other PATA drivers)?
+Gwendal Grignou wrote:
+> Use excl_link when non NCQ commands are defered, to be sure they are processed
+> as soon as outstanding commands are completed. It prevents some commands to be
+> defered indifinitely when using a port multiplier.
 > 
-> MAINTAINERS lists only:
-> 
-> 	SERIAL ATA (SATA) SUBSYSTEM
-> 	P:      Jeff Garzik
-> 	M:      jgarzik@pobox.com
-> 	L:      linux-ide@vger.kernel.org
-> 	T:      git git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-> 	S:      Supported
-> 	F:      drivers/ata/
-> 	F:      include/linux/ata.h
-> 	F:      include/linux/libata.h
-> 
-> but this driver surely ain't SATA.
+> Signed-off-by: Gwendal Grignou <gwendal@google.com>
+..
+> Reviewed-by: Grant Grundler <grundler@google.com>
+..
 
-The subsystem wants renaming. Patches go to Jeff who though he rarely
-appears on listy and stuff keeps the tree and is doing all the submission
-stuff.
+Reviewed-by: Mark Lord <mlord@pobox.com>
 
-Alan
+Looks good to me.  Jeff, please feel free to accept sata_mv patches
+directly from Gwendal and/or Grant -- they know the chips as well as I do.
+
+Cheers
+
+Mark
