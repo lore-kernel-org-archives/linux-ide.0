@@ -1,64 +1,77 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] sata_nv: make sure link is brough up online
- when skipping hardreset
-Date: Wed, 14 Oct 2009 11:18:28 +0900
-Message-ID: <4AD534F4.7000306@kernel.org>
+From: "Alexandros C. Couloumbis" <alex@ozo.com>
+Subject: Re: [PATCH] =?UTF-8?Q?pata=5Fsc=31=32=30=30=3A=20Fix=20crash=20on=20boot?=
+Date: Wed, 14 Oct 2009 06:07:09 +0300
+Message-ID: <546b82ff577223765f15eb26f2f6b300@localhost>
+References: <20091006150737.9610.81541.stgit@localhost.localdomain> <20091013185637.870369c8.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50000 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755536AbZJNCTS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Oct 2009 22:19:18 -0400
+Received: from nsp.dat.demokritos.gr ([143.233.247.10]:32777 "EHLO
+	nsp.dat.demokritos.gr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755182AbZJNDfz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Oct 2009 23:35:55 -0400
+In-Reply-To: <20091013185637.870369c8.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org, frodone@gmail.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alan Cox <alan@linux.intel.com>, jeff@garzik.org, linux-kernel@vger.kernel.org, stable@kernel.org, linux-ide@vger.kernel.org
 
-prereset doesn't bring link online if hardreset is about to happen and
-nv_hardreset() may skip if conditions are not right so softreset may
-be entered with non-working link status if the system firmware didn't
-bring it up before entering OS code which can happen during resume.
-This patch makes nv_hardreset() to bring up the link if it's skipping
-reset.
+On Tue, 13 Oct 2009 18:56:37 -0700, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Tue, 06 Oct 2009 16:07:51 +0100 Alan Cox <alan@linux.intel.com>
+wrote:
+> 
+>> The SC1200 needs a NULL terminator or it may cause a crash on boot.
+>> 
+>> Bug #14227
+>> 
+>> Also correct a bogus comment as the driver had serializing added so can
+>> run
+>> dual port.
+>> 
+>> Signed-off-by: Alan Cox <alan@linux.intel.com>
+>> ---
+>> 
+>>  drivers/ata/pata_sc1200.c |    3 +--
+>>  1 files changed, 1 insertions(+), 2 deletions(-)
+>> 
+>> 
+>> diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
+>> index f49814d..3bbed83 100644
+>> --- a/drivers/ata/pata_sc1200.c
+>> +++ b/drivers/ata/pata_sc1200.c
+>> @@ -235,8 +235,7 @@ static int sc1200_init_one(struct pci_dev *dev,
+>> const struct pci_device_id *id)
+>>  		.udma_mask = ATA_UDMA2,
+>>  		.port_ops = &sc1200_port_ops
+>>  	};
+>> -	/* Can't enable port 2 yet, see top comments */
+>> -	const struct ata_port_info *ppi[] = { &info, };
+>> +	const struct ata_port_info *ppi[] = { &info, NULL };
+>>  
+>>  	return ata_pci_sff_init_one(dev, ppi, &sc1200_sht, NULL);
+>>  }
+> 
+> This patch applies to 2.6.31 and 2.6.30 (at least).  How far back
+> should it be ported?
+> 
+> There was no Cc:stable in the changelog.
+> 
+> There was no Cc:stable in the mail headers.  Nor cc:linux-ide.
+> 
+> Adding a Reported-by: is nice.
+> 
+> Please use the form
+> 
+> Addresses http://bugzilla.kernel.org/show_bug.cgi?id=14227
+> 
+> when mentioning bugzilla reports within changelogs.  To provide a nice
+> greppable pattern for those people who might close off old reports for
+us.
 
-This bug was reported by frodone@gmail.com in the following bug entry.
+According to the git-tree this feature was introduced on linux kernel
+2.6.30:
+http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.30.y.git;a=commitdiff;h=c0f2ee34a5a0b79fd98d965ad8ae765d4639bfa5
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=14329
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: frodone@gmail.com
-Cc: stable@kernel.org
----
- drivers/ata/sata_nv.c |   18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 86a4058..1eb4e02 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1594,9 +1594,21 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
- 	    !ata_dev_enabled(link->device))
- 		sata_link_hardreset(link, sata_deb_timing_hotplug, deadline,
- 				    NULL, NULL);
--	else if (!(ehc->i.flags & ATA_EHI_QUIET))
--		ata_link_printk(link, KERN_INFO,
--				"nv: skipping hardreset on occupied port\n");
-+	else {
-+		const unsigned long *timing = sata_ehc_deb_timing(ehc);
-+		int rc;
-+
-+		if (!(ehc->i.flags & ATA_EHI_QUIET))
-+			ata_link_printk(link, KERN_INFO, "nv: skipping "
-+					"hardreset on occupied port\n");
-+
-+		/* make sure the link is online */
-+		rc = sata_link_resume(link, timing, deadline);
-+		/* whine about phy resume failure but proceed */
-+		if (rc && rc != -EOPNOTSUPP)
-+			ata_link_printk(link, KERN_WARNING, "failed to resume "
-+					"link (errno=%d)\n", rc);
-+	}
-
- 	/* device signature acquisition is unreliable */
- 	return -EAGAIN;
+2.6.29 and older kernels do not have this change/feature
