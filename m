@@ -1,38 +1,29 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 1/1] sata_mv: Prevent PIO commands to be defered too long
- if traffic in progress.
-Date: Wed, 14 Oct 2009 08:35:15 -0400
-Message-ID: <4AD5C583.8060006@rtr.ca>
-References: <1255387440-13313-1-git-send-email-gwendal@google.com> <1255387440-13313-2-git-send-email-gwendal@google.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_sc1200: Fix crash on boot
+Date: Wed, 14 Oct 2009 13:38:06 +0100
+Message-ID: <20091014133806.63804e19@lxorguk.ukuu.org.uk>
+References: <20091006150737.9610.81541.stgit@localhost.localdomain>
+	<20091013185637.870369c8.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37228 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbZJNMfy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Oct 2009 08:35:54 -0400
-In-Reply-To: <1255387440-13313-2-git-send-email-gwendal@google.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42769 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751749AbZJNMih (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2009 08:38:37 -0400
+In-Reply-To: <20091013185637.870369c8.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Grant Grundler <grundler@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alan Cox <alan@linux.intel.com>, jeff@garzik.org, linux-kernel@vger.kernel.org, stable@kernel.org, "Alexandros C. Couloumbis" <alex@ozo.com>, linux-ide@vger.kernel.org
 
-Gwendal Grignou wrote:
-> Use excl_link when non NCQ commands are defered, to be sure they are processed
-> as soon as outstanding commands are completed. It prevents some commands to be
-> defered indifinitely when using a port multiplier.
-> 
-> Signed-off-by: Gwendal Grignou <gwendal@google.com>
-..
-> Reviewed-by: Grant Grundler <grundler@google.com>
-..
+> This patch applies to 2.6.31 and 2.6.30 (at least).  How far back
+> should it be ported?
 
-Reviewed-by: Mark Lord <mlord@pobox.com>
+Having had a dig the bug was introduced in
+c0f2ee34a5a0b79fd98d965ad8ae765d4639bfa5
 
-Looks good to me.  Jeff, please feel free to accept sata_mv patches
-directly from Gwendal and/or Grant -- they know the chips as well as I do.
+I've not however tested the patch with any older releases.
 
-Cheers
-
-Mark
+Alan
