@@ -1,49 +1,47 @@
-From: Igor Serebryany <igor47@moomers.org>
-Subject: Re: disappearing block devices using EFI Partitioning
-Date: Wed, 14 Oct 2009 19:47:36 -0500
-Message-ID: <20091015004736.GP25852@moomers.org>
-References: <20091014112418.GJ25852@moomers.org> <20091014151055.GA28792@psychosis.jim.sh>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH #upstream-fixes] ata: rename AMD SB900 into Hudson-2
+Date: Thu, 15 Oct 2009 10:25:46 +0800
+Message-ID: <C8E4BD7D001E44499280E0884BD9DB30011C93F8@sshaexmb1.amd.com>
+References: <1255403640.3625.6.camel@zm-desktop> <4AD5C6B8.3010703@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xeli5fugN0prYRGq"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moomers.org ([64.251.27.79]:42071 "EHLO moomers.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762211AbZJOAre (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Oct 2009 20:47:34 -0400
-Content-Disposition: inline
-In-Reply-To: <20091014151055.GA28792@psychosis.jim.sh>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:36460 "EHLO
+	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932510AbZJOC0o convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2009 22:26:44 -0400
+Content-Class: urn:content-classes:message
+In-Reply-To: <4AD5C6B8.3010703@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
+
+Hi Jeff, 
+
+> -----Original Message-----
+> From: Jeff Garzik [mailto:jgarzik@pobox.com] 
+> 
+> The patch certainly seems obviously correct, but normally we 
+> deal with 
+> boring chip names, because marketing names change all the 
+> time.  If we 
+> applied "marketing patches" there would be a ton of patches 
+> sent our way.
+> 
+> If the SB900 simply does not / will not exist, then I'm fine 
+> applying this.
+> 
+> Otherwise, I would prefer the chip name over the marketing name...
+ 
+
+"Hudson-2" is not only marketing name, it is the chip name for
+both internal and external use. SB900 will not be used.
+
+So please apply this patch.
 
 
---xeli5fugN0prYRGq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks,
+Shane
 
-On Wed, Oct 14, 2009 at 11:10:55AM -0400, Jim Paris wrote:
-> Does the partition still show up in /proc/partitions?  If so this may
-> be a udev bug.=20
-Right you are! The partition remains in /proc/partitions and getting
-udev to freshen up brings back the missing devices. The udev version in
-the latest Buildroot is too old for bug reports but now I have a
-workaround - thanks!
-
---Igor
-
---xeli5fugN0prYRGq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFK1nEoVyVcp2k8D/kRAmsPAJwLBf/gyKfZAPeKga6p4FHAy4dnIQCffXWL
-JWnSEUUnQk5vLLudaiGqrVM=
-=6KW7
------END PGP SIGNATURE-----
-
---xeli5fugN0prYRGq--
