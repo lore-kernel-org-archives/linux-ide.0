@@ -1,35 +1,67 @@
-From: <JosephChan@via.com.tw>
-Subject: [patch 1/1] pata_via.c : extend the rev_max for VT6430
-Date: Thu, 15 Oct 2009 15:38:33 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A1D14F2@exchtp03.taipei.via.com.tw>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [Patch 1/1] sata_via.c: Remove redundant device ID for VT8261
+Date: Thu, 15 Oct 2009 03:36:10 -0400
+Message-ID: <4AD6D0EA.6090400@garzik.org>
+References: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A1D1498@exchtp03.taipei.via.com.tw> <4AD6CCF1.4030501@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="big5"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:2254 "EHLO
-	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756419AbZJOHjL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Oct 2009 03:39:11 -0400
-Content-class: urn:content-classes:message
+Received: from srv5.dvmed.net ([207.36.208.214]:40284 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754593AbZJOHgw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Oct 2009 03:36:52 -0400
+In-Reply-To: <4AD6CCF1.4030501@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, tj@kernel.org, jeff@garzik.org, JosephChan@via.com.tw
+To: Tejun Heo <tj@kernel.org>
+Cc: JosephChan@via.com.tw, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, postmaster@vger.kernel.org
 
-Fix the VT6430 issue, it's because the rev_max of VT6430 exceeds 0x2f.
-The VT6415 and VT6430 share the same device ID.
+On 10/15/2009 03:19 AM, Tejun Heo wrote:
+> JosephChan@via.com.tw wrote:
+>> Just remove redundant device ID for VT8261.
+>>
+>> Signed-off-by: Joseph Chan<josephchan@via.com.tw>
+>
+> Looks okay to me.
+>
+>> --- a/drivers/ata/sata_via.c	2009-10-15 21:38:14.000000000 +0800
+>> +++ b/drivers/ata/sata_via.c	2009-10-15 21:38:28.000000000 +0800
+>> @@ -93,7 +93,6 @@
+>>   	{ PCI_VDEVICE(VIA, 0x7372), vt6420 },
+>>   	{ PCI_VDEVICE(VIA, 0x5287), vt8251 }, /* 2 sata chnls (Master/Sla=
+ve) */
+>>   	{ PCI_VDEVICE(VIA, 0x9000), vt8251 },
+>> -	{ PCI_VDEVICE(VIA, 0x9040), vt8251 },
+>>
+>>   	{ }	/* terminate list */
+>>   };
+>>
+>> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD=D7=A2=EF=BF=BD=EF=BF=BD^n=EF=BF=BDr=EF=BF=BD=EF=BF=BDz=EF=BF=BD=
+=1A=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD&=EF=BF=BD=EF=
+=BF=BD=1E=EF=BF=BDG=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=03(=EF=BF=BD=E9=
+=9A=8E=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD=1A=EF=BF=BD=1Bm=EF=BF=BD=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDz=EF=BF=BD=DE=96=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+f=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD~=EF=BF=BDmml=3D=
+=3D
+>
+> But, what's the above garbled line?
 
-Signed-off-by: Joseph Chan <josephchan@via.com.tw>
+(cc'ing postmaster@vger)
 
---- a/drivers/ata/pata_via.c	2009-10-15 23:12:49.000000000 +0800
-+++ b/drivers/ata/pata_via.c	2009-10-15 23:12:57.000000000 +0800
-@@ -111,7 +111,7 @@
- 	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_SATA_PATA },
- 	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES },
--	{ "vt6415",	PCI_DEVICE_ID_VIA_6415,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES },
-+	{ "vt6415",	PCI_DEVICE_ID_VIA_6415,     0x00, 0xff, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES },
- 	{ "vt8237a",	PCI_DEVICE_ID_VIA_8237A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+It is interesting that Joseph's email directly to me was OK, but the=20
+copy passing through vger.kernel.org list software included this garble=
+d=20
+line.
+
+Joseph's email was base64-encoded, and vger just got new mailing list=20
+software in the past year or so...   so I wonder if this is a vger bug?
+
+	Jeff
+
+
+
