@@ -1,26 +1,35 @@
 From: <JosephChan@via.com.tw>
-Subject: RE: [Patch 1/1] sata_via.c: Remove redundant device ID for VT8261
-Date: Thu, 15 Oct 2009 15:24:29 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A1D14CC@exchtp03.taipei.via.com.tw>
-References: <4AD6CC3F.6050305@garzik.org>
+Subject: [patch 1/1] pata_via.c : extend the rev_max for VT6430
+Date: Thu, 15 Oct 2009 15:38:33 +0800
+Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A1D14F2@exchtp03.taipei.via.com.tw>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+	charset="big5"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:1521 "EHLO
+Received: from exchtp08.via.com.tw ([61.66.243.7]:2254 "EHLO
 	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757162AbZJOHZI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Oct 2009 03:25:08 -0400
+	with ESMTP id S1756419AbZJOHjL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Oct 2009 03:39:11 -0400
 Content-class: urn:content-classes:message
-In-Reply-To: <4AD6CC3F.6050305@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, tj@kernel.org
+To: linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, tj@kernel.org, jeff@garzik.org, JosephChan@via.com.tw
 
-PiBQQ0kgZGV2aWNlIElEIDB4OTA0MCBkb2VzIG5vdCBleGlzdCBlbHNld2hlcmUgaW4gdGhlIGRy
-aXZlci4uLiAgaG93IGlzIGl0IHJlZHVuZGFudD8NCg0KMS4gU28gZmFyLCB0aGVyZSBpcyBubyBW
-VDgyNjEgc2lsaWNvbiBpbiB0aGUgcHVibGljIG1hcmtldC4NCjIuIERldmljZSBJRCAweDkwMDAg
-YW5kIDB4OTA0MCBhcmUgcmVkdW5kYW50IChmb3IgVlQ4MjYxKS4gVGhlIDB4OTA0MCBpcyByZXNl
-cnZlZCBmb3Igb3RoZXIgdXNhZ2UuDQoNCkJScywNCkpvc2VwaA0KDQoNCg0K
+Fix the VT6430 issue, it's because the rev_max of VT6430 exceeds 0x2f.
+The VT6415 and VT6430 share the same device ID.
+
+Signed-off-by: Joseph Chan <josephchan@via.com.tw>
+
+--- a/drivers/ata/pata_via.c	2009-10-15 23:12:49.000000000 +0800
++++ b/drivers/ata/pata_via.c	2009-10-15 23:12:57.000000000 +0800
+@@ -111,7 +111,7 @@
+ 	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_SATA_PATA },
+ 	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES },
+-	{ "vt6415",	PCI_DEVICE_ID_VIA_6415,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES },
++	{ "vt6415",	PCI_DEVICE_ID_VIA_6415,     0x00, 0xff, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES },
+ 	{ "vt8237a",	PCI_DEVICE_ID_VIA_8237A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
