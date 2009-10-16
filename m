@@ -1,33 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: Add the AHCI controller Linux Device ID for NVIDIA
- 	chipsets.
-Date: Fri, 16 Oct 2009 06:26:53 -0400
-Message-ID: <4AD84A6D.5070600@garzik.org>
-References: <cfaab6210910150134q6cc2d5ffna39cf31bf89a8e2@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/1] sata_mv: Prevent PIO commands to be defered too long
+ if traffic in progress.
+Date: Fri, 16 Oct 2009 06:26:22 -0400
+Message-ID: <4AD84A4E.1090200@pobox.com>
+References: <> <1255387440-13313-1-git-send-email-gwendal@google.com> <1255387440-13313-2-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757844AbZJPK1f@vger.kernel.org>
-In-Reply-To: <cfaab6210910150134q6cc2d5ffna39cf31bf89a8e2@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: peer chen <peerchen@gmail.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>, pchen@nvidia.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:44560 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757450AbZJPK1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Oct 2009 06:27:00 -0400
+In-Reply-To: <1255387440-13313-2-git-send-email-gwendal@google.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: mlord@pobox.com, linux-ide@vger.kernel.org
 
-On 10/15/2009 04:34 AM, peer chen wrote:
-> Add the generic device ID for NVIDIA AHCI controller.
+On 10/12/2009 06:44 PM, Gwendal Grignou wrote:
+> Use excl_link when non NCQ commands are defered, to be sure they are processed
+> as soon as outstanding commands are completed. It prevents some commands to be
+> defered indifinitely when using a port multiplier.
 >
-> Signed-off-by: Peer Chen<peerchen@gmail.com>
+> Signed-off-by: Gwendal Grignou<gwendal@google.com>
 > ---
-> --- linux-2.6.32-rc4/drivers/ata/ahci.c.orig
-> +++ linux-2.6.32-rc4/drivers/ata/ahci.c
-> @@ -605,6 +605,7 @@ static const struct pci_device_id ahci_p
->   	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci_yesncq },	/* MCP67 */
->   	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci_yesncq },	/* MCP67 */
->   	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci_yesncq },	/* MCP67 */
-> +	{ PCI_VDEVICE(NVIDIA, 0x0580), board_ahci_yesncq },	/* Linux ID */
->   	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci_yesncq },	/* MCP73 */
->   	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci_yesncq },	/* MCP73 */
->   	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci_yesncq },	/* MCP73 */
+>   drivers/ata/sata_mv.c |   29 +++++++++++++++++++++++++++--
+>   1 files changed, 27 insertions(+), 2 deletions(-)
 
 applied
+
+
