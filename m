@@ -1,73 +1,41 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 10/14] drivers/ata/libata: Move dereference after NULL test
-Date: Sat, 17 Oct 2009 08:41:47 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0910170841270.9213@ask.diku.dk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14438] IDE Probe fails to find CD drive
+Date: Sun, 18 Oct 2009 20:55:22 GMT
+Message-ID: <200910182055.n9IKtMj1006879@demeter.kernel.org>
+References: <bug-14438-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:39190 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595AbZJQGlo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 17 Oct 2009 02:41:44 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:59138 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755118AbZJRUzS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Oct 2009 16:55:18 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9IKtMW0006880
+	for <linux-ide@vger.kernel.org>; Sun, 18 Oct 2009 20:55:22 GMT
+In-Reply-To: <bug-14438-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+http://bugzilla.kernel.org/show_bug.cgi?id=14438
 
-In each case, if the NULL test on qc is needed, then the derefernce
-should be after the NULL test.
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
+Jean Delvare <khali@linux-fr.org> changed:
 
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|Hardware Monitoring         |IDE
+         AssignedTo|khali@linux-fr.org          |io_ide@kernel-bugs.osdl.org
+            Product|Drivers                     |IO/Storage
 
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
 
----
- drivers/ata/libata-core.c           |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b525a09..d02c95c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4919,10 +4919,11 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev)
-  */
- void ata_qc_free(struct ata_queued_cmd *qc)
- {
--	struct ata_port *ap = qc->ap;
-+	struct ata_port *ap;
- 	unsigned int tag;
- 
- 	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
-+	ap = qc->ap;
- 
- 	qc->flags = 0;
- 	tag = qc->tag;
-@@ -4934,11 +4935,13 @@ void ata_qc_free(struct ata_queued_cmd *qc)
- 
- void __ata_qc_complete(struct ata_queued_cmd *qc)
- {
--	struct ata_port *ap = qc->ap;
--	struct ata_link *link = qc->dev->link;
-+	struct ata_port *ap;
-+	struct ata_link *link;
- 
- 	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
- 	WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_ACTIVE));
-+	ap = qc->ap;
-+	link = qc->dev->link;
- 
- 	if (likely(qc->flags & ATA_QCFLAG_DMAMAP))
- 		ata_sg_clean(qc);
+--- Comment #2 from Jean Delvare <khali@linux-fr.org>  2009-10-18 20:55:21 ---
+Please don't create bugs in bugzilla when you're drunk.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
