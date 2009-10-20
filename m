@@ -1,46 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problem with ICH10R and Port Multipliers
-Date: Tue, 20 Oct 2009 10:49:59 +0900
-Message-ID: <4ADD1747.5070000@kernel.org>
-References: <4ADC9058.4090701@isp-services.nl>
+Subject: Re: disk with ata_piix freezes
+Date: Tue, 20 Oct 2009 10:50:38 +0900
+Message-ID: <4ADD176E.1090609@kernel.org>
+References: <4ADC5BD9.4060907@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49860 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:38741 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932437AbZJTBsq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Oct 2009 21:48:46 -0400
-In-Reply-To: <4ADC9058.4090701@isp-services.nl>
+	id S932441AbZJTBtg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Oct 2009 21:49:36 -0400
+In-Reply-To: <4ADC5BD9.4060907@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom van Klinken / ISP Services BV <tom@isp-services.nl>
+To: Jan Christoph Uhde <UhdeJC@gmx.net>
 Cc: linux-ide@vger.kernel.org
 
-Tom van Klinken / ISP Services BV wrote:
-> Hi,
+Jan Christoph Uhde wrote:
+> with acpi=off it seems to work, probably i just thought that i had
+> tested that option as well and just tried strict, ht, ...
+> Unfortunately this options causes the video card to fail under X ...
 > 
-> I've got a Intel DG45FC motherboard that I would like to integrate into
-> a NAS system.
+> Is there any way to disable acpi for ide only? How do i identify the
+> acpi event and ask the piix driver to dismiss the command?
 > 
-> This board has the ICH10R chipset and from what I have understood this
-> chipset should support port multipliers.
-> (http://www.intel.com/design/chipsets/matrixstorage_sb.htm)
-> 
-> However it does not, it also does not show 'pmp' support in the AHCI flags.
-> 
-> After contacting Intel they told me that Port Multipliers are not
-> supported on their boards.
-> 
-> Did they deliberately turn PMP support off?
+> At the moment i am a bit unsure whether this is an ide or acpi problem:(
 
-IIRC, since ICH8 or 9, intel ahcis do support PMP.  The flag can be
-controlled by the BIOS.  Hmmm.... maybe you can just comment out the
-code and force ahci to enable PMP.  My gut feeling is that it'll
-probably work.  Maybe we need to add quirks or a parameter to force
-it.  Can you please verify it works?
-
-Thanks.
+Is it a samsung laptop?  Can you please post dmidecode?
 
 -- 
 tejun
