@@ -1,44 +1,42 @@
-From: Yoichi Yuasa <yuasa@linux-mips.org>
-Subject: [PATCH] sata_sil: fix uninitialized variable use when
- sil_scr_read() fails
-Date: Tue, 20 Oct 2009 15:34:56 +0900
-Message-ID: <20091020153456.9104e044.yuasa@linux-mips.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14438] IDE Probe fails to find CD drive
+Date: Tue, 20 Oct 2009 06:58:39 GMT
+Message-ID: <200910200658.n9K6wdsh015800@demeter.kernel.org>
+References: <bug-14438-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:21974 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbZJTGev (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Oct 2009 02:34:51 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so1107555eyd.19
-        for <linux-ide@vger.kernel.org>; Mon, 19 Oct 2009 23:34:54 -0700 (PDT)
+Received: from demeter.kernel.org ([140.211.167.39]:47849 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbZJTG6f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Oct 2009 02:58:35 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9K6wdES015801
+	for <linux-ide@vger.kernel.org>; Tue, 20 Oct 2009 06:58:39 GMT
+In-Reply-To: <bug-14438-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: yuasa@linux-mips.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=14438
 
 
-Signed-off-by: Yoichi Yuasa <yuasa@linux-mips.org>
+Borislav Petkov <bbpetkov@yahoo.de> changed:
 
----
- drivers/ata/sata_sil.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bbpetkov@yahoo.de
 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 3cb69d5..d7fff6b 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -439,7 +439,7 @@ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
- 	u8 status;
- 
- 	if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
--		u32 serror;
-+		u32 serror = 0;
- 
- 		/* SIEN doesn't mask SATA IRQs on some 3112s.  Those
- 		 * controllers continue to assert IRQ as long as
+
+
+
+--- Comment #4 from Borislav Petkov <bbpetkov@yahoo.de>  2009-10-20 06:58:38 ---
+Hi,
+
+does libata also fail to detect your drive? I.e., turn off CONFIG_IDE and
+enable CONFIG_PATA_VIA.
+
 -- 
-1.6.5.1
-
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
