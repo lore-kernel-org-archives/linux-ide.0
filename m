@@ -1,66 +1,49 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with SSD
-Date: Wed, 21 Oct 2009 21:39:24 +0200
-Message-ID: <200910212139.24675.bzolnier@gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
+ SSD
+Date: Wed, 21 Oct 2009 19:01:20 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0910211857140.27544@hs20-bc2-1.build.redhat.com>
 References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
+ <19167.25155.379665.259129@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:13931 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426AbZJUTkS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Oct 2009 15:40:18 -0400
-Received: by gv-out-0910.google.com with SMTP id r4so852466gve.37
-        for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2009 12:40:22 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12391 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755045AbZJUXBX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Oct 2009 19:01:23 -0400
+In-Reply-To: <19167.25155.379665.259129@pilspetsen.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
 Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Wednesday 21 October 2009 20:55:28 Mikulas Patocka wrote:
-> Hi
+>  > This patch serializes the operation for CMD646 and 643 (I didn't test
+>  > CMD643 but it may have the same hw bug too because it's earlier design).
+>  > CMD649 is good. I don't know anything about CMD 648.
 > 
-> This patch fixes a data corruption when SSD is connected to Ultra 5.
-> 
-> Mikulas
-> 
-> --
-> 
-> Serialize CMD643 and CMD646 to fix a hardware bug with SSD
-> 
-> CMD646 corrupts data on concurrent transfers on both channels when IDE SSD is
-> connected to one of the channels.
-> 
-> Setup that demonstrates this hardware bug: Ultra 5, onboard CMD646, rev 3.
-> /dev/hda is 8GB Seagate ST38410A in MWDMA2
-> /dev/hdd is 32GB SSD SiliconHardDisk in MWDMA2
-> 
-> - When reading /dev/hdd (for example with dd or fsck), reads from /dev/hda
->   are corrupted, there are twiddled single bits 1->0 and some full 32-bit
->   words corrupted, sometimes commands fail (which switches /dev/hda to
->   PIO mode but the corruptions happen even in PIO).
-> - Reads from /dev/hdd don't seem to be corrupted (i.e. fsck passes fine).
-> - When I connected normal rotating harddisk to /dev/hdd, there was no
->   corruption, so the corruption is something specific to SSD.
-> - I tried the same setup on a PCI card with CMD649 and saw no corruption.
-> 
-> This patch serializes the operation for CMD646 and 643 (I didn't test
-> CMD643 but it may have the same hw bug too because it's earlier design).
-> CMD649 is good. I don't know anything about CMD 648.
-> 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Have you checked if the libata pata_cmd64x driver also has this
+> problem?  I know that it works fine on the Ultra 5 with just a
+> single pata drive, but the pata+ssd combo may not have been tested.
 
-Seems like SSD (simply by being faster) triggers some race condition that
-hardware has tolerated in the past and since we used to always serialize
-operation for CMD646 before:
+I have tried libata driver now --- I see no data corruption but I've got 
+this error under the same operation (both channels reading):
 
-commit e01698aed04811b9a9c4f8d54b73cb182757063d           
-Author: David S. Miller <davem@davemloft.net>             
-Date:   Sun Jun 21 22:48:03 2009 -0700
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata1.00: BMDMA stat 0x24
+ata1.00: cmd c8/00:10:10:c8:d9/00:00:00:00:00/e0 tag 0 dma 8192 in
+         res 50/00:00:1f:c8:d9/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+ata1.00: status: { DRDY }
+pata_cmd64x: active 10 recovery 10 setup 3.
+pata_cmd64x: active 10 recovery 10 setup 3.
+ata1: soft resetting link
+pata_cmd64x: active 3 recovery 1 setup 1.
+pata_cmd64x: active 3 recovery 1 setup 1.
+ata1.00: configured for MWDMA2
+ata1: EH complete
 
-    ide cmd64x: Remove serialize setting.
+(ata1 is the primary channel)
+--- I'm wondering, what does it mean? status 0x50 is OK. DMA status 0x24 
+is also OK. What was the problem there?
 
-it went undetected until now..
+Mikulas
