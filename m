@@ -1,106 +1,131 @@
-From: Alexander Huemer <alexander.huemer@sbg.ac.at>
+From: Jean Delvare <jdelvare@suse.de>
 Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Wed, 21 Oct 2009 12:01:33 +0200
-Message-ID: <4ADEDBFD.6030305@sbg.ac.at>
-References: <4ABBB8C2.2080901@sbg.ac.at> <4AD422F2.4080308@sbg.ac.at> <4AD473F9.7090606@kernel.org> <200910211038.47653.jdelvare@suse.de>
+Date: Wed, 21 Oct 2009 13:28:37 +0200
+Message-ID: <200910211328.38315.jdelvare@suse.de>
+References: <4ABBB8C2.2080901@sbg.ac.at> <200910211038.47653.jdelvare@suse.de> <4ADEDBFD.6030305@sbg.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx08.lb01.inode.at ([62.99.145.8]:37787 "EHLO mx.inode.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751896AbZJUKBh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Oct 2009 06:01:37 -0400
-In-Reply-To: <200910211038.47653.jdelvare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753361AbZJUL2g@vger.kernel.org>
+In-Reply-To: <4ADEDBFD.6030305@sbg.ac.at>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Huemer <alexander.huemer@sbg.ac.at>
+Cc: Tejun Heo <tj@kernel.org>, Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, alexander.huemer@sbg.ac.at
 
-Jean Delvare wrote:
-> Hi Tejun, Alexander,
->
-> Le mardi 13 octobre 2009, Tejun Heo a =E9crit :
->  =20
->> Alexander Huemer wrote:
->>    =20
->>> i compiled gcc in a loop over night, 14 times. no error.
->>> it really seams i2c_i801 was the cause...
->>> unfortunately i still don't know how i can extract the part of the =
-gcc
->>> compilation process that causes the error on an affected kernel.
->>> that would enable me to create a simple test program.
->>>      =20
->> Given that i2c is used for temperature monitoring, I think it is not
->> triggered by any single step of the compiling but rather by the
->> accumulated heat load during compilation.  Let's wait for Jean to
->> chime in.  :-)
->>    =20
->
-> OK, here I am, sorry for the delay. I've read the discussion thread.
-> Here are the few data points I can offer, in the hope it will help:
->
-> * While the i2c-i801 driver received some changes in kernel 2.6.30,
->   none of these are related to PCI nor interrupts. So as the problem
->   is new in kernel 2.6.30, the i2c-i801 driver alone is unlikely to
->   cause it. This may, however, be a combination of something i2c-i801
->   does and something the pci subsystem does since kernel 2.6.30. For
->   this reason, I would still recommend a bisection if the problem can
->   be reliably reproduced. I know it takes time, but it is always
->   easier to fix a bug when we know which commit introduced it.
->
-> * The i2c-i801 driver does _not_ make use of interrupts. It is
->   poll-based (I am not exactly proud of that, but that's the way it
->   is.)
->
->   #define ENABLE_INT9		0	/* set to 0x01 to enable - untested */
->
->   So I am very surprised to read that this driver would cause an IRQ
->   storm.
->
-> * One thing the i2c-i801 driver does on the PCI device is:
->
->   err =3D pci_enable_device(dev);
->
->   I presume this is what causes the following message in dmesg:
->
->   i801_smbus 0000:00:1f.3: PCI INT B -> GSI 23 (level, low) -> IRQ 23
->
->   Basically, even though the driver doesn't make use of interrupts,
->   the IRQ is still registered because this is how the hardware is
->   setup.
->
-> As a conclusion, I suspect that 2 things may be happening: either
-> the SMBus is triggering interrupts when told not to. The ICH6 is a
-> bit different from all the other supported chips, I'll double check
-> if we may have missed something. Or, something else is triggering
-> SMBus transactions. SMI and ACPI come to mind. If this is the case
-> then you do not want to use i2c-i801 on this motherboard.
->
-> Questions to Alexander :
->
-> * Can I please see the output of "sensors" on your system?
-> * What are the brand and model of your motherboard?
-> * Can we get an acpidump for your system?
->
->  =20
-many thanks for your response. i appreciate that.
-first, the data you requested:
+Le mercredi 21 octobre 2009, Alexander Huemer a =E9crit=A0:
+> Jean Delvare wrote:
+> > OK, here I am, sorry for the delay. I've read the discussion thread=
+=2E
+> > Here are the few data points I can offer, in the hope it will help:
+> >
+> > * While the i2c-i801 driver received some changes in kernel 2.6.30,
+> >   none of these are related to PCI nor interrupts. So as the proble=
+m
+> >   is new in kernel 2.6.30, the i2c-i801 driver alone is unlikely to
+> >   cause it. This may, however, be a combination of something i2c-i8=
+01
+> >   does and something the pci subsystem does since kernel 2.6.30. Fo=
+r
+> >   this reason, I would still recommend a bisection if the problem c=
+an
+> >   be reliably reproduced. I know it takes time, but it is always
+> >   easier to fix a bug when we know which commit introduced it.
+> >
+> > * The i2c-i801 driver does _not_ make use of interrupts. It is
+> >   poll-based (I am not exactly proud of that, but that's the way it
+> >   is.)
+> >
+> >   #define ENABLE_INT9		0	/* set to 0x01 to enable - untested */
+> >
+> >   So I am very surprised to read that this driver would cause an IR=
+Q
+> >   storm.
+> >
+> > * One thing the i2c-i801 driver does on the PCI device is:
+> >
+> >   err =3D pci_enable_device(dev);
+> >
+> >   I presume this is what causes the following message in dmesg:
+> >
+> >   i801_smbus 0000:00:1f.3: PCI INT B -> GSI 23 (level, low) -> IRQ =
+23
+> >
+> >   Basically, even though the driver doesn't make use of interrupts,
+> >   the IRQ is still registered because this is how the hardware is
+> >   setup.
+> >
+> > As a conclusion, I suspect that 2 things may be happening: either
+> > the SMBus is triggering interrupts when told not to. The ICH6 is a
+> > bit different from all the other supported chips, I'll double check
 
-    sensors:        http://xx.vu/~ahuemer/sensors-ahuemer-20091021.txt
-    acpidump:       http://xx.vu/~ahuemer/acpidump-ahuemer-20091021.txt
-    motherboard:    tyan tempest i5400pw/s5397 with one intel xeon e542=
-0.
+My bad, it's an 63xxESB-based board, not ICH6. I must have been
+mixing data from a different bug.
 
-the output of sensors was made _without_ i801_smbus in the kernel.
-i noticed that the data of w83627hf-isa-0290 is quite weird. i do not
-have an explanation for that.
-if a bisection is what will bring light into this, i am willing to take
-the time.
-so that would be a bisection between 2.6.29 and 2.6.30 ?
-a quicker test case would be good for that, but i don't have one yet,
-just the compilation of gcc, which takes time, even on this machine wit=
-h
-tmpfs and ccache.
+> > if we may have missed something. Or, something else is triggering
+> > SMBus transactions. SMI and ACPI come to mind. If this is the case
+> > then you do not want to use i2c-i801 on this motherboard.
+> >
+> > Questions to Alexander :
+> >
+> > * Can I please see the output of "sensors" on your system?
+> > * What are the brand and model of your motherboard?
+> > * Can we get an acpidump for your system?
+> >
+> >  =20
+> many thanks for your response. i appreciate that.
+> first, the data you requested:
+>=20
+>     sensors:        http://xx.vu/~ahuemer/sensors-ahuemer-20091021.tx=
+t
+>     acpidump:       http://xx.vu/~ahuemer/acpidump-ahuemer-20091021.t=
+xt
 
+The good news is that I can't see any access to the SMBus in the
+ACPI tables. Nothing can be said about the SMIs though, without an
+intimate knowledge of the BIOS.
 
+>     motherboard:    tyan tempest i5400pw/s5397 with one intel xeon e5=
+420.
+>=20
+> the output of sensors was made _without_ i801_smbus in the kernel.
+
+Then please once again with it. My whole point was to know whether
+there was any hardware monitoring chip connected to the SMBus. Your
+initial kernel configuration suggests that you have a W83793G chip
+there.
+
+> i noticed that the data of w83627hf-isa-0290 is quite weird. i do not
+> have an explanation for that.
+
+I do. This happens when the manufacturer decides that the hardware
+monitoring features of the Super-I/O are insufficient for their
+needs. They add a dedicated chip for the hardware monitoring. This
+is particularly frequent on server boards from Tyan and SuperMicro.
+Ideally they would _also_ disable the feature on the Super-I/O side,
+but often then do not, so the driver still loads, but outputs
+garbage.
+
+You can see the following messages in your log:
+[    3.878703] w83627hf w83627hf.656: Enabling temp2, readings might no=
+t make sense
+[    3.881708] w83627hf w83627hf.656: Enabling temp3, readings might no=
+t make sense
+This is a good hint that this is the case (if the nonsensical data
+displayed by "sensors" wasn't enough to convince you.)
+
+So you should stop loading/including kernel module w83627hf.
+
+> if a bisection is what will bring light into this, i am willing to ta=
+ke
+> the time.
+> so that would be a bisection between 2.6.29 and 2.6.30 ?
+> a quicker test case would be good for that, but i don't have one yet,
+> just the compilation of gcc, which takes time, even on this machine w=
+ith
+> tmpfs and ccache.
+
+--=20
+Jean Delvare
+Suse L3
