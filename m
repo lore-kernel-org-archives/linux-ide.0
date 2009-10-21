@@ -1,48 +1,85 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: sata_via: SError: { UnrecovData Proto TrStaTrns }
-Date: Tue, 20 Oct 2009 18:00:40 +0200
-Message-ID: <m33a5e5a3b.fsf@intrepid.localdomain>
-References: <m3my46yo5g.fsf@intrepid.localdomain>
-	<19147.28614.505296.752363@pilspetsen.it.uu.se>
-	<m3vdii51d8.fsf@intrepid.localdomain>
-	<19157.6679.939371.469696@pilspetsen.it.uu.se>
-	<20091014125344.7d0b2597@lxorguk.ukuu.org.uk>
+From: Jean Delvare <jdelvare@suse.de>
+Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
+Date: Wed, 21 Oct 2009 10:38:47 +0200
+Message-ID: <200910211038.47653.jdelvare@suse.de>
+References: <4ABBB8C2.2080901@sbg.ac.at> <4AD422F2.4080308@sbg.ac.at> <4AD473F9.7090606@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:38654 "EHLO khc.piap.pl"
+Received: from cantor2.suse.de ([195.135.220.15]:38351 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751599AbZJTQAi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Oct 2009 12:00:38 -0400
-In-Reply-To: <20091014125344.7d0b2597@lxorguk.ukuu.org.uk> (Alan Cox's message
-	of "Wed, 14 Oct 2009 12:53:44 +0100")
+	id S1752730AbZJUIiq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Oct 2009 04:38:46 -0400
+In-Reply-To: <4AD473F9.7090606@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Huemer <alexander.huemer@sbg.ac.at>, Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Update: I've connected Kingston SSD instead of Transcend's. The same
-errors appear, but now there is a lot of them (> 30 instead of maybe 5
-per my test with Transcend).
+Hi Tejun, Alexander,
 
-Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
+Le mardi 13 octobre 2009, Tejun Heo a =E9crit=A0:
+> Alexander Huemer wrote:
+> > i compiled gcc in a loop over night, 14 times. no error.
+> > it really seams i2c_i801 was the cause...
+> > unfortunately i still don't know how i can extract the part of the =
+gcc
+> > compilation process that causes the error on an affected kernel.
+> > that would enable me to create a simple test program.
+>=20
+> Given that i2c is used for temperature monitoring, I think it is not
+> triggered by any single step of the compiling but rather by the
+> accumulated heat load during compilation.  Let's wait for Jean to
+> chime in.  :-)
 
-> These two may be worth playing with, especially latency. Forcing the
-> latency on the problem board would be interesting given that it is a DMA
-> transfer that is failing.
+OK, here I am, sorry for the delay. I've read the discussion thread.
+Here are the few data points I can offer, in the hope it will help:
 
-Changing the latency byte doesn't seem to change anything. OTOH the
-VT6421A mini-PCI card is the only PCI device in system (not counting the
-on-CPU AHB-PCI bridge). The problem is also present (to a lesser extent)
-when I plug it into x86-64 machine (using mini-PCI adapter). The SSD
-works fine if connected to motherboard's NVidia MCP55 SATA controller.
+* While the i2c-i801 driver received some changes in kernel 2.6.30,
+  none of these are related to PCI nor interrupts. So as the problem
+  is new in kernel 2.6.30, the i2c-i801 driver alone is unlikely to
+  cause it. This may, however, be a combination of something i2c-i801
+  does and something the pci subsystem does since kernel 2.6.30. For
+  this reason, I would still recommend a bisection if the problem can
+  be reliably reproduced. I know it takes time, but it is always
+  easier to fix a bug when we know which commit introduced it.
 
-I have read the datasheet and tried some changes to PCI registers but it
-doesn't fix it.
+* The i2c-i801 driver does _not_ make use of interrupts. It is
+  poll-based (I am not exactly proud of that, but that's the way it
+  is.)
 
-I'm going to test x86-64 + VT6421A + Kingston SSD combination soon.
+  #define ENABLE_INT9		0	/* set to 0x01 to enable - untested */
 
-Unfortunately I don't have a (mini) PCI analyser... I will look at
-REQ/GNT and similar signals on PCI, though.
--- 
-Krzysztof Halasa
+  So I am very surprised to read that this driver would cause an IRQ
+  storm.
+
+* One thing the i2c-i801 driver does on the PCI device is:
+
+  err =3D pci_enable_device(dev);
+
+  I presume this is what causes the following message in dmesg:
+
+  i801_smbus 0000:00:1f.3: PCI INT B -> GSI 23 (level, low) -> IRQ 23
+
+  Basically, even though the driver doesn't make use of interrupts,
+  the IRQ is still registered because this is how the hardware is
+  setup.
+
+As a conclusion, I suspect that 2 things may be happening: either
+the SMBus is triggering interrupts when told not to. The ICH6 is a
+bit different from all the other supported chips, I'll double check
+if we may have missed something. Or, something else is triggering
+SMBus transactions. SMI and ACPI come to mind. If this is the case
+then you do not want to use i2c-i801 on this motherboard.
+
+Questions to Alexander :
+
+* Can I please see the output of "sensors" on your system?
+* What are the brand and model of your motherboard?
+* Can we get an acpidump for your system?
+
+--=20
+Jean Delvare
+Suse L3
