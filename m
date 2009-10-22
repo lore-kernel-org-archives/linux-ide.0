@@ -1,49 +1,59 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
- SSD
-Date: Wed, 21 Oct 2009 19:01:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0910211857140.27544@hs20-bc2-1.build.redhat.com>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
- <19167.25155.379665.259129@pilspetsen.it.uu.se>
+From: Yuasa Yoichi <yuasa@linux-mips.org>
+Subject: Re: [PATCH] sata_sil: fix uninitialized variable use when
+	sil_scr_read() fails
+Date: Thu, 22 Oct 2009 09:17:00 +0900
+Message-ID: <21eaeb5a0910211717w5692ce4em74482c7e5d4f5b9c@mail.gmail.com>
+References: <20091020153456.9104e044.yuasa@linux-mips.org>
+	 <4ADE9563.2030705@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12391 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755045AbZJUXBX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Oct 2009 19:01:23 -0400
-In-Reply-To: <19167.25155.379665.259129@pilspetsen.it.uu.se>
+Received: from mail-px0-f179.google.com ([209.85.216.179]:59034 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbZJVAQ4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Oct 2009 20:16:56 -0400
+Received: by pxi9 with SMTP id 9so3000325pxi.4
+        for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2009 17:17:01 -0700 (PDT)
+In-Reply-To: <4ADE9563.2030705@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, yuasa@linux-mips.org
 
->  > This patch serializes the operation for CMD646 and 643 (I didn't test
->  > CMD643 but it may have the same hw bug too because it's earlier design).
->  > CMD649 is good. I don't know anything about CMD 648.
-> 
-> Have you checked if the libata pata_cmd64x driver also has this
-> problem?  I know that it works fine on the Ultra 5 with just a
-> single pata drive, but the pata+ssd combo may not have been tested.
+Hi Tejun,
 
-I have tried libata driver now --- I see no data corruption but I've got 
-this error under the same operation (both channels reading):
+2009/10/21 Tejun Heo <tj@kernel.org>:
+> Yoichi Yuasa wrote:
+>> Signed-off-by: Yoichi Yuasa <yuasa@linux-mips.org>
+>>
+>> ---
+>> =A0drivers/ata/sata_sil.c | =A0 =A02 +-
+>> =A01 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+>> index 3cb69d5..d7fff6b 100644
+>> --- a/drivers/ata/sata_sil.c
+>> +++ b/drivers/ata/sata_sil.c
+>> @@ -439,7 +439,7 @@ static void sil_host_intr(struct ata_port *ap, u=
+32 bmdma2)
+>> =A0 =A0 =A0 u8 status;
+>>
+>> =A0 =A0 =A0 if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
+>> - =A0 =A0 =A0 =A0 =A0 =A0 u32 serror;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 u32 serror =3D 0;
+>
+> The first usage of that is
+>
+> =A0sil_scr_read(&ap->link, SCR_ERROR, &serror);
+>
+> which sets the value. =A0So, I don't think the patch is necessary. =A0=
+If
+> it triggers a compile warning, putting uninitialized_var() macro will
+> be more appropriate.
 
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata1.00: BMDMA stat 0x24
-ata1.00: cmd c8/00:10:10:c8:d9/00:00:00:00:00/e0 tag 0 dma 8192 in
-         res 50/00:00:1f:c8:d9/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
-ata1.00: status: { DRDY }
-pata_cmd64x: active 10 recovery 10 setup 3.
-pata_cmd64x: active 10 recovery 10 setup 3.
-ata1: soft resetting link
-pata_cmd64x: active 3 recovery 1 setup 1.
-pata_cmd64x: active 3 recovery 1 setup 1.
-ata1.00: configured for MWDMA2
-ata1: EH complete
+If sil_scr_read() is error, 'serror' is not initialized.
+After that, the wrong bits add to 'ap->link.eh_info.serror' when
+'serror & SERR_PHYRDT_CHG' is true.
 
-(ata1 is the primary channel)
---- I'm wondering, what does it mean? status 0x50 is OK. DMA status 0x24 
-is also OK. What was the problem there?
-
-Mikulas
+Yoichi
