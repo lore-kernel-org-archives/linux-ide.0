@@ -1,59 +1,56 @@
-From: Yuasa Yoichi <yuasa@linux-mips.org>
-Subject: Re: [PATCH] sata_sil: fix uninitialized variable use when
-	sil_scr_read() fails
-Date: Thu, 22 Oct 2009 09:17:00 +0900
-Message-ID: <21eaeb5a0910211717w5692ce4em74482c7e5d4f5b9c@mail.gmail.com>
-References: <20091020153456.9104e044.yuasa@linux-mips.org>
-	 <4ADE9563.2030705@kernel.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
+ SSD
+Date: Wed, 21 Oct 2009 17:41:55 -0700 (PDT)
+Message-ID: <20091021.174155.44894825.davem@davemloft.net>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
+	<200910212139.24675.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.216.179]:59034 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbZJVAQ4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Oct 2009 20:16:56 -0400
-Received: by pxi9 with SMTP id 9so3000325pxi.4
-        for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2009 17:17:01 -0700 (PDT)
-In-Reply-To: <4ADE9563.2030705@kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48346
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753354AbZJVAlc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Oct 2009 20:41:32 -0400
+In-Reply-To: <200910212139.24675.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, yuasa@linux-mips.org
+To: bzolnier@gmail.com
+Cc: mpatocka@redhat.com, linux-ide@vger.kernel.org, elendil@planet.nl
 
-Hi Tejun,
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Wed, 21 Oct 2009 21:39:24 +0200
 
-2009/10/21 Tejun Heo <tj@kernel.org>:
-> Yoichi Yuasa wrote:
->> Signed-off-by: Yoichi Yuasa <yuasa@linux-mips.org>
->>
->> ---
->> =A0drivers/ata/sata_sil.c | =A0 =A02 +-
->> =A01 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
->> index 3cb69d5..d7fff6b 100644
->> --- a/drivers/ata/sata_sil.c
->> +++ b/drivers/ata/sata_sil.c
->> @@ -439,7 +439,7 @@ static void sil_host_intr(struct ata_port *ap, u=
-32 bmdma2)
->> =A0 =A0 =A0 u8 status;
->>
->> =A0 =A0 =A0 if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
->> - =A0 =A0 =A0 =A0 =A0 =A0 u32 serror;
->> + =A0 =A0 =A0 =A0 =A0 =A0 u32 serror =3D 0;
->
-> The first usage of that is
->
-> =A0sil_scr_read(&ap->link, SCR_ERROR, &serror);
->
-> which sets the value. =A0So, I don't think the patch is necessary. =A0=
-If
-> it triggers a compile warning, putting uninitialized_var() macro will
-> be more appropriate.
+> Seems like SSD (simply by being faster) triggers some race condition that
+> hardware has tolerated in the past and since we used to always serialize
+> operation for CMD646 before:
 
-If sil_scr_read() is error, 'serror' is not initialized.
-After that, the wrong bits add to 'ap->link.eh_info.serror' when
-'serror & SERR_PHYRDT_CHG' is true.
+Yes, and technically we only did the synchronization for one
+of the two chips mpatocka is adding the serialize setting to.
 
-Yoichi
+> commit e01698aed04811b9a9c4f8d54b73cb182757063d           
+> Author: David S. Miller <davem@davemloft.net>             
+> Date:   Sun Jun 21 22:48:03 2009 -0700
+> 
+>     ide cmd64x: Remove serialize setting.
+> 
+> it went undetected until now..
+
+Right, and see also:
+
+commit 6b5cde3629701258004b94cde75dd1089b556b02
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Mon Dec 29 20:27:32 2008 +0100
+
+    cmd64x: set IDE_HFLAG_SERIALIZE explictly for CMD646
+
+Which is how we got there.
+
+The most conservative thing to do is to set the flag as
+is done by mpatocka's patch but I'd like Frans to regression
+test that on his ultra5.
+
+Frans can you do that?
+
+Thanks.
