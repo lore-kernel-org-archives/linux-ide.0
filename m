@@ -1,44 +1,29 @@
-From: David Miller <davem@davemloft.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
  SSD
-Date: Thu, 22 Oct 2009 04:20:16 -0700 (PDT)
-Message-ID: <20091022.042016.34969204.davem@davemloft.net>
-References: <200910221144.04471.bzolnier@gmail.com>
-	<20091022.040049.83738097.davem@davemloft.net>
-	<200910221316.00054.bzolnier@gmail.com>
+Date: Thu, 22 Oct 2009 14:56:13 +0100
+Message-ID: <20091022145613.2b7c8c08@lxorguk.ukuu.org.uk>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
+	<200910212139.24675.bzolnier@gmail.com>
+	<20091021.174155.44894825.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39208
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753613AbZJVLTx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2009 07:19:53 -0400
-In-Reply-To: <200910221316.00054.bzolnier@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36296 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755597AbZJVNyu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2009 09:54:50 -0400
+In-Reply-To: <20091021.174155.44894825.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: mpatocka@redhat.com, linux-ide@vger.kernel.org, elendil@planet.nl
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, mpatocka@redhat.com, linux-ide@vger.kernel.org, elendil@planet.nl
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Thu, 22 Oct 2009 13:15:59 +0200
+I doubt there is any hardware bug with the SSD. Some CMD64x hardware
+certainly has errata and as the data sheets were published your starting
+point would be the data sheets for the various chip versions. Does the
+sparc use the same off the shelf part as the PC people or does it have
+different glue or chip versions (eg as a macro cell in something else ?)
 
-> On Thursday 22 October 2009 13:00:49 David Miller wrote:
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Date: Thu, 22 Oct 2009 11:44:04 +0200
->> 
->> > We always did serialization for CMD646, we just used hwif->chipset
->> > == ide_cmd646 (without using IDE_HFLAG_SERIALIZE flag):
->> 
->> I fully acknowledge that we always serialized, sorry for not
->> being explicit.
->> 
->> I was just showing where the serialize IRQ flag got added
->> (and again, it was a correct change).
-> 
-> What for?  The only patch changing behavior was yours and it seems
-> your luck is much worse than mine when it comes to unexpected side
-> effects.. ;)
-
-Like I said, you can attribute my actions to malice or ignorance
-if you want, but it simply isn't there.
+Alan
