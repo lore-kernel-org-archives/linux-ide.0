@@ -1,65 +1,85 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with SSD
-Date: Fri, 23 Oct 2009 20:52:47 +0200
-Message-ID: <200910232052.47860.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com> <4AE1E78A.2090801@ru.mvista.com> <20091023192250.600edc9b@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
+ SSD
+Date: Sat, 24 Oct 2009 00:50:14 +0400
+Message-ID: <4AE21706.2080906@ru.mvista.com>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com> <200910212139.24675.bzolnier@gmail.com> <20091021.174155.44894825.davem@davemloft.net> <Pine.LNX.4.64.0910231031200.324@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:59953 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbZJWSyW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 14:54:22 -0400
-Received: by fxm18 with SMTP id 18so10591311fxm.37
-        for <linux-ide@vger.kernel.org>; Fri, 23 Oct 2009 11:54:25 -0700 (PDT)
-In-Reply-To: <20091023192250.600edc9b@lxorguk.ukuu.org.uk>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:5983 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1751351AbZJWUuS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 16:50:18 -0400
+In-Reply-To: <Pine.LNX.4.64.0910231031200.324@hs20-bc2-1.build.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Mikulas Patocka <mpatocka@redhat.com>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, elendil@planet.nl
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: David Miller <davem@davemloft.net>, bzolnier@gmail.com, linux-ide@vger.kernel.org, elendil@planet.nl
 
-On Friday 23 October 2009 20:22:50 Alan Cox wrote:
-> >     Yeah. The libata driver however doesn't make use of that register, 
-> > unlike  cmd64x. It doesn't even touch the interrupt bits on PCI0646, only 
-> > manipulation the "old" bits on PCI-64[89].
-> 
-> Yes I purposefully left out all the complexity because when I tested the
-> cards I had it simply wasn't needed. I'm also not sure we should merge
-> anything from the old to the new one until we know why the old one
-> corrupts and the new one merely gets upset. Accidentally porting over a
-> corruptor would be very bad indeed.
+Hello.
 
-Oh, we know that.
+Mikulas Patocka wrote:
 
-"Old" one corrupts because somebody thought it would be a smart move to remove
-serialized flag instead of debugging certain problem properly..
+>> Right, and see also:
+>>
+>> commit 6b5cde3629701258004b94cde75dd1089b556b02
+>> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Date:   Mon Dec 29 20:27:32 2008 +0100
+>>
+>>     cmd64x: set IDE_HFLAG_SERIALIZE explictly for CMD646
+>>
+>> Which is how we got there.
+>>
+>> The most conservative thing to do is to set the flag as
+>> is done by mpatocka's patch but I'd like Frans to regression
+>> test that on his ultra5.
+>>
+>> Frans can you do that?
+>>
+>> Thanks.
+>>     
+>
+> I read the thread about wild interrupts that Frans was observing and that 
+> led to disabling the serialization.
+>
+> The thing is tricky --- if we read status register on interrupt, we break 
+> the serialization principle and introduce potential data corruption.
+>
+> If we don't read the status register, the wild interrupt kills the whole 
+> interrupt line.
+>
+> I think the interrupt handler should read the BM-status register on both 
+> channels (it reflects the interrupt state even in PIO mode) to test if 
+>   
 
-"New" one gets serialized at the command issue level (like all other new shiny
-libata PATA stuff) and this may as well explain the difference..
+   Are you sure? Anyway, there's no need as we're reading the interrupt 
+bits CFR/ARTTIM23 registers first (at least in the IDE code). Look at 
+the cmd*_test_irq() methods and ide_intr().
 
-> >     It seems that I need to sync up these two, pata_cmd64x.c seems to be 
-> > lagging behind the changes in cmd64x.c. Well, not only this one, at least 
-> > pata_hpt* drivers are lagging behind too...
+> there is an unexpected interrupt on the inactive channel --- this should 
+> be much more safe than reading the status register. If there is an 
+> interrupt, then
+> --- read the status of the inactive channel? (potential data corruption, 
+> but it is reported to happen only on boot).
+> --- Or can the interrupt be acknowledged only in BM-status without 
+> touching the device? I believe yes,
 
-Just from the memory:
+   And I believe no. BMIDE status bit doesn't acknoledge (clear, to be 
+precise) the IDE interrupts, only the status register read does.
 
-pata_sis, pata_atiixp, pata_it8213, pata_cs5536, pata_amd..
 
-So, gentlemen, when are you planning to remove IDE (not from your playground
-Linux distribution but from kernel.org)?
+> it shoud shut the PCI interrupt but it 
+> would leave the IDE interrupt line on (should be cleared on next command).
+>   
 
-I've heard that it will happen "soon" 4 years ago... :)
+    I think the negated wired-OR of both INTRQ signals serves as an 
+-INTA source, not the BMIDE status bits. At least in the general case, 
+where the BMIDE status doesn't reflect PIO mode interrupts.
 
-> That would be useful - although several of the differences are because
-> the pata_hpt driver took from the vendor supplied reference code not the
-> old IDE code. It also seems more stable for having done that.
+> Mikulas
 
-Yeah, right..
+WBR, Sergei
 
-This reminds me of that hpt366 blacklist that somebody forgot to port over
-initially and which resulted in real world data corruptions..
 
--- 
-Bartlomiej Zolnierkiewicz
