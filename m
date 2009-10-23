@@ -1,33 +1,50 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
- SSD
-Date: Thu, 22 Oct 2009 18:30:05 -0700 (PDT)
-Message-ID: <20091022.183005.22538787.davem@davemloft.net>
-References: <200910212139.24675.bzolnier@gmail.com>
-	<20091021.174155.44894825.davem@davemloft.net>
-	<20091022145613.2b7c8c08@lxorguk.ukuu.org.uk>
+From: Tim Small <tim@seoss.co.uk>
+Subject: WD Scorpio high SMART Load_Cycle_Count in default state and wdidle3.exe
+ reverse engineering?
+Date: Fri, 23 Oct 2009 11:00:29 +0100
+Message-ID: <4AE17EBD.7050400@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57964
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751161AbZJWB3m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2009 21:29:42 -0400
-In-Reply-To: <20091022145613.2b7c8c08@lxorguk.ukuu.org.uk>
+Received: from relay1.allsecurenet.com ([63.246.152.102]:46402 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbZJWJ63 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 05:58:29 -0400
+Received: from [78.105.152.189] (helo=zebedee.buttersideup.com)
+	by relay1.allsecurenet.com with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <tim@seoss.co.uk>)
+	id 1N1Gun-0001wF-0L
+	for linux-ide@vger.kernel.org; Fri, 23 Oct 2009 09:58:33 +0000
+Received: from [91.208.163.30] (ermintrude [91.208.163.30])
+	by zebedee.buttersideup.com (Postfix) with ESMTP id 099819B809
+	for <linux-ide@vger.kernel.org>; Fri, 23 Oct 2009 10:58:31 +0100 (BST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: bzolnier@gmail.com, mpatocka@redhat.com, linux-ide@vger.kernel.org, elendil@planet.nl
+To: linux-ide@vger.kernel.org
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Date: Thu, 22 Oct 2009 14:56:13 +0100
+Hello,
 
-> I doubt there is any hardware bug with the SSD. Some CMD64x hardware
-> certainly has errata and as the data sheets were published your starting
-> point would be the data sheets for the various chip versions. Does the
-> sparc use the same off the shelf part as the PC people or does it have
-> different glue or chip versions (eg as a macro cell in something else ?)
+Another one for the wiki (have already added it) - Western Digital 
+Scorpio WD400UE-22HCT0 approx 100 unloads per hour under Linux 2.6 in 
+the default shipped state.
 
-The sparc machines use the standard cmd64x chips without any special
-glue logic.
+wdidle3.exe workaround fixes.
+
+Incidentally, if anyone fancies a go at reverse-engineering the binary, 
+I can make available a FreeDOS HD image with the Watcom 
+debugger/disassembler and the necessary DOS extender support setup.  
+Unfortunately, I don't think I have the necessary low-level IDE nous to 
+establish what it's doing to alter the timers in question....
+
+Ta,
+
+Tim.
+
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.  
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+
