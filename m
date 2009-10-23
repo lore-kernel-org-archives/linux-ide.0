@@ -1,73 +1,50 @@
-From: Daniela Engert <dani@ngrt.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
  SSD
-Date: Fri, 23 Oct 2009 17:18:44 +0200
-Message-ID: <4AE1C954.8030707@ngrt.de>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com> <200910231644.29919.bzolnier@gmail.com> <Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com> <200910231703.33206.bzolnier@gmail.com>
+Date: Fri, 23 Oct 2009 17:51:57 +0100
+Message-ID: <20091023175157.3a898525@lxorguk.ukuu.org.uk>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
+	<200910221144.04471.bzolnier@gmail.com>
+	<Pine.LNX.4.64.0910231024240.324@hs20-bc2-1.build.redhat.com>
+	<200910231644.29919.bzolnier@gmail.com>
+	<Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:36456 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbZJWPSb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 11:18:31 -0400
-In-Reply-To: <200910231703.33206.bzolnier@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47395 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752398AbZJWQuc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 12:50:32 -0400
+In-Reply-To: <Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, elendil@planet.nl
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, elendil@planet.nl
 
-Bartlomiej Zolnierkiewicz schrieb:
-> On Friday 23 October 2009 16:55:59 Mikulas Patocka wrote:
->    
->> On Fri, 23 Oct 2009, Bartlomiej Zolnierkiewicz wrote:
->>
->>      
->>> On Friday 23 October 2009 16:29:16 Mikulas Patocka wrote:
->>>        
->>>>> We are through this the second time and you're still not willing
->>>>> neither to listen nor to read the code.  We always did serialization
->>>>> for CMD646, we just used  hwif->chipset == ide_cmd646 (without using
->>>>> IDE_HFLAG_SERIALIZE flag):
->>>>>            
->>>>          
->>>>> Agreed, though I wonder whether we should also provide module parameter to
->>>>> disable serializing on those chipsets for people not using SSDs...
->>>>>            
->>>> Don't do it --- disks have cache and reading from the cache is as fast as
->>>> reading from SSD (or even faster), so if there is some speed-race in the
->>>> chip, there is a possibility that the data corruption happens with disks
->>>> too --- just with lower probability.
->>>>
->>>> If we don't know why the chip corrupts data, we must treat it as always
->>>> corrupting data.
->>>>          
->>> I actually suspect that it is device/chipset specific interaction and not
->>> generic problem so adding a fallback option (w/ BIG FAT WARNING) seem to
->>> make sense..
->>>        
->> So, why was it serialized before? I assume that either someone noticed the
->> corruption or someone read some datasheet noting the corruption or someone
->> reverse engineered some other driver and saw the serialization.
->>      
-> Serialization is usually needed in case of chipset not handling concurrent
-> data transfers on both ports.  Unfortunately I don't know details for CMD646.
->    
-Guys, this is old news. CMD643 and CMD646 have a shared data path from 
-the PCI interface to the ATA channel ports. In a document issued by CMD, 
-they explain the requirement for serialization. This issue is rectified 
-with CMD648 and later chips.
->    
->>> Especially since we have never serialized on CMD643 and your patch will
->>> be adding performance regression without even verifying that the issue
->>> also affects this chipset..
->>>        
->> Do you have this chip? If you were IDE maintainer, did you collect cards
->> with IDE chips?
->>      
-> I recall having CMD648 and CMD649 cards somewhere, however not earlier
-> chipsets.
->
->    
+> So, why was it serialized before? I assume that either someone noticed the 
+> corruption or someone read some datasheet noting the corruption or someone 
+> reverse engineered some other driver and saw the serialization.
+
+The data sheet has some things to say for the 643 abd 646
+
+In PIO mode it says you must check
+
+CFR bit 2   (indicates primary interrupt)
+ARTIM23 bit 4  (secondary interrupt)
+
+Both bits can be written 1 to clear the interrupt. The doc doesn't say
+anything about not touching status but it also uses the word "must" about
+the other bits so make what you will of it.
+
+In DMA mode I would read the BMDMA status in preference to status but the
+doc doesn't specifically say to do so and simply say it works to the
+spec. it isn't clear if ARTIM23 and CFR work for reporting/clearing a DMA
+interrupt. You'd have to try it.
+
+ARTIM23 may well need some locking care
+
+
+The 646U2 adds the MRDMODE register so you can check the bits more sanely
+
 
