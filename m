@@ -1,59 +1,62 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
 Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
  SSD
-Date: Fri, 23 Oct 2009 10:50:08 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0910231031200.324@hs20-bc2-1.build.redhat.com>
+Date: Fri, 23 Oct 2009 10:55:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com>
 References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
- <200910212139.24675.bzolnier@gmail.com> <20091021.174155.44894825.davem@davemloft.net>
+ <200910221144.04471.bzolnier@gmail.com> <Pine.LNX.4.64.0910231024240.324@hs20-bc2-1.build.redhat.com>
+ <200910231644.29919.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13829 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:29496 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbZJWOuJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Oct 2009 10:50:09 -0400
-In-Reply-To: <20091021.174155.44894825.davem@davemloft.net>
+	id S1752054AbZJWOz7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Oct 2009 10:55:59 -0400
+In-Reply-To: <200910231644.29919.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, elendil@planet.nl
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, elendil@planet.nl
 
-> Right, and see also:
-> 
-> commit 6b5cde3629701258004b94cde75dd1089b556b02
-> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date:   Mon Dec 29 20:27:32 2008 +0100
-> 
->     cmd64x: set IDE_HFLAG_SERIALIZE explictly for CMD646
-> 
-> Which is how we got there.
-> 
-> The most conservative thing to do is to set the flag as
-> is done by mpatocka's patch but I'd like Frans to regression
-> test that on his ultra5.
-> 
-> Frans can you do that?
-> 
-> Thanks.
 
-I read the thread about wild interrupts that Frans was observing and that 
-led to disabling the serialization.
 
-The thing is tricky --- if we read status register on interrupt, we break 
-the serialization principle and introduce potential data corruption.
+On Fri, 23 Oct 2009, Bartlomiej Zolnierkiewicz wrote:
 
-If we don't read the status register, the wild interrupt kills the whole 
-interrupt line.
+> On Friday 23 October 2009 16:29:16 Mikulas Patocka wrote:
+> > > We are through this the second time and you're still not willing
+> > > neither to listen nor to read the code.  We always did serialization
+> > > for CMD646, we just used  hwif->chipset == ide_cmd646 (without using
+> > > IDE_HFLAG_SERIALIZE flag):
+> > 
+> > > Agreed, though I wonder whether we should also provide module parameter to
+> > > disable serializing on those chipsets for people not using SSDs...
+> > 
+> > Don't do it --- disks have cache and reading from the cache is as fast as 
+> > reading from SSD (or even faster), so if there is some speed-race in the 
+> > chip, there is a possibility that the data corruption happens with disks 
+> > too --- just with lower probability.
+> > 
+> > If we don't know why the chip corrupts data, we must treat it as always 
+> > corrupting data.
+> 
+> I actually suspect that it is device/chipset specific interaction and not
+> generic problem so adding a fallback option (w/ BIG FAT WARNING) seem to
+> make sense..
 
-I think the interrupt handler should read the BM-status register on both 
-channels (it reflects the interrupt state even in PIO mode) to test if 
-there is an unexpected interrupt on the inactive channel --- this should 
-be much more safe than reading the status register. If there is an 
-interrupt, then
---- read the status of the inactive channel? (potential data corruption, 
-but it is reported to happen only on boot).
---- Or can the interrupt be acknowledged only in BM-status without 
-touching the device? I believe yes, it shoud shut the PCI interrupt but it 
-would leave the IDE interrupt line on (should be cleared on next command).
+So, why was it serialized before? I assume that either someone noticed the 
+corruption or someone read some datasheet noting the corruption or someone 
+reverse engineered some other driver and saw the serialization.
+
+> Especially since we have never serialized on CMD643 and your patch will 
+> be adding performance regression without even verifying that the issue 
+> also affects this chipset..
+
+Do you have this chip? If you were IDE maintainer, did you collect cards 
+with IDE chips?
 
 Mikulas
+
+> -- 
+> Bartlomiej Zolnierkiewicz
+> 
