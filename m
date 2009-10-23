@@ -1,71 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14310] [bisected] 2.6.31 regression sis5513 PIO Mode 0 hang
-Date: Fri, 23 Oct 2009 18:32:07 GMT
-Message-ID: <200910231832.n9NIW76D011400@demeter.kernel.org>
-References: <bug-14310-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with SSD
+Date: Fri, 23 Oct 2009 20:52:47 +0200
+Message-ID: <200910232052.47860.bzolnier@gmail.com>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com> <4AE1E78A.2090801@ru.mvista.com> <20091023192250.600edc9b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:34093 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752947AbZJWScD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 14:32:03 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9NIW7RX011402
-	for <linux-ide@vger.kernel.org>; Fri, 23 Oct 2009 18:32:07 GMT
-In-Reply-To: <bug-14310-11633@http.bugzilla.kernel.org/>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:59953 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbZJWSyW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 14:54:22 -0400
+Received: by fxm18 with SMTP id 18so10591311fxm.37
+        for <linux-ide@vger.kernel.org>; Fri, 23 Oct 2009 11:54:25 -0700 (PDT)
+In-Reply-To: <20091023192250.600edc9b@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Mikulas Patocka <mpatocka@redhat.com>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, elendil@planet.nl
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14310
+On Friday 23 October 2009 20:22:50 Alan Cox wrote:
+> >     Yeah. The libata driver however doesn't make use of that register, 
+> > unlike  cmd64x. It doesn't even touch the interrupt bits on PCI0646, only 
+> > manipulation the "old" bits on PCI-64[89].
+> 
+> Yes I purposefully left out all the complexity because when I tested the
+> cards I had it simply wasn't needed. I'm also not sure we should merge
+> anything from the old to the new one until we know why the old one
+> corrupts and the new one merely gets upset. Accidentally porting over a
+> corruptor would be very bad indeed.
 
+Oh, we know that.
 
-Jiri Bohac <jbohac@jikos.cz> changed:
+"Old" one corrupts because somebody thought it would be a smart move to remove
+serialized flag instead of debugging certain problem properly..
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |jbohac@jikos.cz
+"New" one gets serialized at the command issue level (like all other new shiny
+libata PATA stuff) and this may as well explain the difference..
 
+> >     It seems that I need to sync up these two, pata_cmd64x.c seems to be 
+> > lagging behind the changes in cmd64x.c. Well, not only this one, at least 
+> > pata_hpt* drivers are lagging behind too...
 
+Just from the memory:
 
+pata_sis, pata_atiixp, pata_it8213, pata_cs5536, pata_amd..
 
---- Comment #3 from Jiri Bohac <jbohac@jikos.cz>  2009-10-23 18:32:03 ---
-I can still reproduce this on 2.6.31.5, where the
-e13ee546bb06453939014c7b854e77fb643fd6f1 fix is included. Reverting
-6029336426a2b43e4bc6f4a84be8789a047d139e helps.
+So, gentlemen, when are you planning to remove IDE (not from your playground
+Linux distribution but from kernel.org)?
 
-Without reverting 6029336426a2b43e4bc6f4a84be8789a047d139e the system hangs on
-"ide-cd driver 5.00", but sometimes I also get {DriveReady SeekComplete Error}
-errors on hda before the hang -- never seen them without 
-6029336426a2b43e4bc6f4a84be8789a047d139e.
+I've heard that it will happen "soon" 4 years ago... :)
 
-A few interesting lines of output before the hang: (hand-copied, no serial
-console here)
+> That would be useful - although several of the differences are because
+> the pata_hpt driver took from the vendor supplied reference code not the
+> old IDE code. It also seems more stable for having done that.
 
-hda: ST38421A <strange_nonASCII_triangle_character_here> , ATA DISK drive
-hdc: LTN5269, ATAPI CD/DVD-ROM drive
-hdc: tPIO > 2, assuming tPIO=2
-hdc: tPIO > 2, assuming tPIO=2
-..
-..
-<hda seek errors>
-..
-possibly failed opcode: 0xc6
-hda: lost interrupt
-hda: 
-<hda seek error>
-possibly failed opcode: 0x20
- unknown patrition table
-ide-cd driver 5.00
-<hang>
+Yeah, right..
 
-I don't have regular access to this machine, but if help is needed, I can
-arrange access to the machine.
-
-Can we re-open this bug?
+This reminds me of that hpt366 blacklist that somebody forgot to port over
+initially and which resulted in real world data corruptions..
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Bartlomiej Zolnierkiewicz
