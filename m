@@ -1,50 +1,51 @@
 From: Tim Small <tim@seoss.co.uk>
-Subject: WD Scorpio high SMART Load_Cycle_Count in default state and wdidle3.exe
- reverse engineering?
-Date: Fri, 23 Oct 2009 11:00:29 +0100
-Message-ID: <4AE17EBD.7050400@seoss.co.uk>
+Subject: Re: ahci timeouts, retries etc.
+Date: Fri, 23 Oct 2009 12:26:57 +0100
+Message-ID: <4AE19301.9000906@seoss.co.uk>
+References: <4AD60194.8030106@seoss.co.uk> <4AD7C3D9.9090805@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([63.246.152.102]:46402 "EHLO
+Received: from relay1.allsecurenet.com ([63.246.152.102]:54269 "EHLO
 	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbZJWJ63 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 05:58:29 -0400
-Received: from [78.105.152.189] (helo=zebedee.buttersideup.com)
-	by relay1.allsecurenet.com with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.63)
-	(envelope-from <tim@seoss.co.uk>)
-	id 1N1Gun-0001wF-0L
-	for linux-ide@vger.kernel.org; Fri, 23 Oct 2009 09:58:33 +0000
-Received: from [91.208.163.30] (ermintrude [91.208.163.30])
-	by zebedee.buttersideup.com (Postfix) with ESMTP id 099819B809
-	for <linux-ide@vger.kernel.org>; Fri, 23 Oct 2009 10:58:31 +0100 (BST)
+	with ESMTP id S1751402AbZJWLY4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2009 07:24:56 -0400
+In-Reply-To: <4AD7C3D9.9090805@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+Robert Hancock wrote:
+>>
+>> I'm assuming that the kernel will retry these requests after the sata
+>> link has been reset?
+>
+> Yes.
+>
+>>
+>> The errors appear to be randomly distributed over the four drives on
+>> this machine - all are Seagate ST31000340NS with either firmware version
+>> SN05 or SN16...
+>
+> This kind of problem often seems to be due to signal integrity or 
+> power problems. For whatever reason, an insufficient power supply (or 
+> something like overloading one power cable) can tend to trigger SATA 
+> errors as an early symptom..
 
-Another one for the wiki (have already added it) - Western Digital 
-Scorpio WD400UE-22HCT0 approx 100 unloads per hour under Linux 2.6 in 
-the default shipped state.
+Thanks for the reply Robert...  The power (and SATA signal) delivery to 
+these drives is via a hot-swap backplane which is built-into the chassis 
+- I had considered some sort of hardware fault here, and that would seem 
+possible, but I don't really have any way to check as I don't have 
+access to another one of these machines in order to swap-out parts etc.  
+IPMI info looks OK (although I realise this may not catch transient 
+power problems at the drives etc.).
 
-wdidle3.exe workaround fixes.
+The timeouts appear to happen about 4 times per month.  In the absence 
+of any other easy strategies, I've disabled SMART data collection on 
+this machine, on the off-chance that that makes any difference....
 
-Incidentally, if anyone fancies a go at reverse-engineering the binary, 
-I can make available a FreeDOS HD image with the Watcom 
-debugger/disassembler and the necessary DOS extender support setup.  
-Unfortunately, I don't think I have the necessary low-level IDE nous to 
-establish what it's doing to alter the timers in question....
-
-Ta,
+Cheers,
 
 Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
