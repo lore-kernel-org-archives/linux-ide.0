@@ -1,31 +1,35 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
- SSD
-Date: Sat, 24 Oct 2009 06:20:15 -0700 (PDT)
-Message-ID: <20091024.062015.111204159.davem@davemloft.net>
-References: <200910241438.00739.bzolnier@gmail.com>
-	<20091024.055821.30095146.davem@davemloft.net>
-	<200910241513.12934.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14310] [bisected] 2.6.31 regression sis5513 PIO Mode 0 hang
+Date: Sat, 24 Oct 2009 13:38:45 GMT
+Message-ID: <200910241338.n9ODcj1M009385@demeter.kernel.org>
+References: <bug-14310-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47985
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753325AbZJXNTw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Oct 2009 09:19:52 -0400
-In-Reply-To: <200910241513.12934.bzolnier@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:48264 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410AbZJXNil (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Oct 2009 09:38:41 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9ODcjnS009386
+	for <linux-ide@vger.kernel.org>; Sat, 24 Oct 2009 13:38:45 GMT
+In-Reply-To: <bug-14310-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: alan@lxorguk.ukuu.org.uk, sshtylyov@ru.mvista.com, mpatocka@redhat.com, linux-ide@vger.kernel.org, elendil@planet.nl
+To: linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Sat, 24 Oct 2009 15:13:12 +0200
+http://bugzilla.kernel.org/show_bug.cgi?id=14310
 
-> On Saturday 24 October 2009 14:58:21 David Miller wrote:
->> Are you possesing such a level of willingness to change too?
-> 
-> Lets just put all past misunderstandings behind and start over..
 
-Sounds like a good idea to me :-)
+
+
+
+--- Comment #4 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-10-24 13:38:41 ---
+Created an attachment (id=23513)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=23513)
+debug patch for sis5513 issue
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
