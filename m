@@ -1,157 +1,40 @@
-From: Alexander Huemer <alexander.huemer@sbg.ac.at>
-Subject: Re: 2.6.{30,31} x86_64 ahci problem - irq 23: nobody cared
-Date: Mon, 26 Oct 2009 16:01:59 +0100
-Message-ID: <4AE5B9E7.3070500@sbg.ac.at>
-References: <4ABBB8C2.2080901@sbg.ac.at> <200910211038.47653.jdelvare@suse.de> <4ADEDBFD.6030305@sbg.ac.at> <200910211328.38315.jdelvare@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] sata_sil: fix uninitialized variable use when 	sil_scr_read()
+ fails
+Date: Mon, 26 Oct 2009 16:12:43 +0100
+Message-ID: <4AE5BC6B.7060804@kernel.org>
+References: <20091020153456.9104e044.yuasa@linux-mips.org>	 <4ADE9563.2030705@kernel.org> <21eaeb5a0910211717w5692ce4em74482c7e5d4f5b9c@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx04.lb01.inode.at ([62.99.145.4]:35598 "EHLO mx.inode.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752462AbZJZPCF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Oct 2009 11:02:05 -0400
-In-Reply-To: <200910211328.38315.jdelvare@suse.de>
+Received: from hera.kernel.org ([140.211.167.34]:39207 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751711AbZJZPLi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Oct 2009 11:11:38 -0400
+In-Reply-To: <21eaeb5a0910211717w5692ce4em74482c7e5d4f5b9c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, alexander.huemer@sbg.ac.at
+To: Yuasa Yoichi <yuasa@linux-mips.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Jean Delvare wrote:
-> Le mercredi 21 octobre 2009, Alexander Huemer a =E9crit :
->  =20
->> Jean Delvare wrote:
->>    =20
->>> OK, here I am, sorry for the delay. I've read the discussion thread=
-=2E
->>> Here are the few data points I can offer, in the hope it will help:
->>>
->>> * While the i2c-i801 driver received some changes in kernel 2.6.30,
->>>   none of these are related to PCI nor interrupts. So as the proble=
-m
->>>   is new in kernel 2.6.30, the i2c-i801 driver alone is unlikely to
->>>   cause it. This may, however, be a combination of something i2c-i8=
-01
->>>   does and something the pci subsystem does since kernel 2.6.30. Fo=
-r
->>>   this reason, I would still recommend a bisection if the problem c=
-an
->>>   be reliably reproduced. I know it takes time, but it is always
->>>   easier to fix a bug when we know which commit introduced it.
->>>
->>> * The i2c-i801 driver does _not_ make use of interrupts. It is
->>>   poll-based (I am not exactly proud of that, but that's the way it
->>>   is.)
->>>
->>>   #define ENABLE_INT9		0	/* set to 0x01 to enable - untested */
->>>
->>>   So I am very surprised to read that this driver would cause an IR=
-Q
->>>   storm.
->>>
->>> * One thing the i2c-i801 driver does on the PCI device is:
->>>
->>>   err =3D pci_enable_device(dev);
->>>
->>>   I presume this is what causes the following message in dmesg:
->>>
->>>   i801_smbus 0000:00:1f.3: PCI INT B -> GSI 23 (level, low) -> IRQ =
-23
->>>
->>>   Basically, even though the driver doesn't make use of interrupts,
->>>   the IRQ is still registered because this is how the hardware is
->>>   setup.
->>>
->>> As a conclusion, I suspect that 2 things may be happening: either
->>> the SMBus is triggering interrupts when told not to. The ICH6 is a
->>> bit different from all the other supported chips, I'll double check
->>>      =20
->
-> My bad, it's an 63xxESB-based board, not ICH6. I must have been
-> mixing data from a different bug.
->
->  =20
->>> if we may have missed something. Or, something else is triggering
->>> SMBus transactions. SMI and ACPI come to mind. If this is the case
->>> then you do not want to use i2c-i801 on this motherboard.
->>>
->>> Questions to Alexander :
->>>
->>> * Can I please see the output of "sensors" on your system?
->>> * What are the brand and model of your motherboard?
->>> * Can we get an acpidump for your system?
->>>
->>>  =20
->>>      =20
->> many thanks for your response. i appreciate that.
->> first, the data you requested:
+Yuasa Yoichi wrote:
+>> The first usage of that is
 >>
->>     sensors:        http://xx.vu/~ahuemer/sensors-ahuemer-20091021.t=
-xt
->>     acpidump:       http://xx.vu/~ahuemer/acpidump-ahuemer-20091021.=
-txt
->>    =20
->
-> The good news is that I can't see any access to the SMBus in the
-> ACPI tables. Nothing can be said about the SMIs though, without an
-> intimate knowledge of the BIOS.
->
->  =20
->>     motherboard:    tyan tempest i5400pw/s5397 with one intel xeon e=
-5420.
+>>  sil_scr_read(&ap->link, SCR_ERROR, &serror);
 >>
->> the output of sensors was made _without_ i801_smbus in the kernel.
->>    =20
->
-> Then please once again with it. My whole point was to know whether
-> there was any hardware monitoring chip connected to the SMBus. Your
-> initial kernel configuration suggests that you have a W83793G chip
-> there.
->
->  =20
->> i noticed that the data of w83627hf-isa-0290 is quite weird. i do no=
-t
->> have an explanation for that.
->>    =20
->
-> I do. This happens when the manufacturer decides that the hardware
-> monitoring features of the Super-I/O are insufficient for their
-> needs. They add a dedicated chip for the hardware monitoring. This
-> is particularly frequent on server boards from Tyan and SuperMicro.
-> Ideally they would _also_ disable the feature on the Super-I/O side,
-> but often then do not, so the driver still loads, but outputs
-> garbage.
->
-> You can see the following messages in your log:
-> [    3.878703] w83627hf w83627hf.656: Enabling temp2, readings might =
-not make sense
-> [    3.881708] w83627hf w83627hf.656: Enabling temp3, readings might =
-not make sense
-> This is a good hint that this is the case (if the nonsensical data
-> displayed by "sensors" wasn't enough to convince you.)
->
-> So you should stop loading/including kernel module w83627hf.
->
->  =20
->> if a bisection is what will bring light into this, i am willing to t=
-ake
->> the time.
->> so that would be a bisection between 2.6.29 and 2.6.30 ?
->> a quicker test case would be good for that, but i don't have one yet=
-,
->> just the compilation of gcc, which takes time, even on this machine =
-with
->> tmpfs and ccache.
->>    =20
->
->  =20
-here is the output you requested:
-http://xx.vu/~ahuemer/sensors_ahuemer_with_i801_20091026.txt
-i am currently in the middle of a bisection between 2.6.29 and 2.6.30, =
-8
-steps left.
-many thanks for the info on hardware monitoring.
-i'll report back when bisection is finished.
+>> which sets the value.  So, I don't think the patch is necessary.  If
+>> it triggers a compile warning, putting uninitialized_var() macro will
+>> be more appropriate.
+> 
+> If sil_scr_read() is error, 'serror' is not initialized.
+> After that, the wrong bits add to 'ap->link.eh_info.serror' when
+> 'serror & SERR_PHYRDT_CHG' is true.
 
-regards
--alex
+On the controller, sil_scr_read(SCR_ERROR) can never fail.  If it ever
+fails, the whole thing will break anyway.
+
+Thanks.
+
+-- 
+tejun
