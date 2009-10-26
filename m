@@ -1,34 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: Enable SB600 64bit DMA on MSI K9A2 Platinum
-Date: Mon, 26 Oct 2009 14:25:04 +0100
-Message-ID: <4AE5A330.3080506@kernel.org>
-References: <65a6ef750910252203s58af446fv268c857191e698d3@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 04/16] pcmcia: use dynamic debug infrastructure, deprecate
+ CS_CHECK (ide)
+Date: Mon, 26 Oct 2009 18:47:49 +0300
+Message-ID: <4AE5C4A5.7040403@ru.mvista.com>
+References: <20091024194219.GA19546@comet.dominikbrodowski.net> <1256413386-20501-4-git-send-email-linux@dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54957 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754656AbZJZNYE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Oct 2009 09:24:04 -0400
-In-Reply-To: <65a6ef750910252203s58af446fv268c857191e698d3@mail.gmail.com>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:48762 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1751446AbZJZOrT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2009 10:47:19 -0400
+In-Reply-To: <1256413386-20501-4-git-send-email-linux@dominikbrodowski.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Nelson <mdnelson8@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
 
-Hello,
+Hello.
 
-Mark Nelson wrote:
-> Like the Asus M2A-VM, MSI's K9A2 Platinum (MS-7376) can also support 64bit
-> DMA. According to MSI tech support, 64bit DMA is known to work with BIOS
-> versions 1.7 and later.
+Dominik Brodowski wrote:
 
-Have you verified it?  I'd really like for someone to actually verify
-it works before committing the patch as it's pretty nasty when it
-doesn't work.
+> ide-cs.c is the only PCMCIA device driver making use of CONFIG_PCMCIA_DEBUG,
+> so convert it to use the dynamic debug infrastructure.
 
-Thanks.
+> Also, remove all usages of the CS_CHECK macro and replace them with proper
+> Linux style calling and return value checking. The extra error reporting may
+> be dropped, as the PCMCIA core already complains about any (non-driver-author)
+> errors.
 
--- 
-tejun
+> CC: linux-ide@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/ata/pata_pcmcia.c |   16 ++++++++--------
+>  drivers/ide/ide-cs.c      |   32 +++++++++++---------------------
+>  2 files changed, 19 insertions(+), 29 deletions(-)
+
+    Please submit as two separate patches as ide and libata are two separate 
+subsystems.
+
+WBR, Sergei
+
