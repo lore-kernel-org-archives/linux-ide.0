@@ -1,52 +1,48 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [PATCH 04/16] pcmcia: use dynamic debug infrastructure,
-	deprecate CS_CHECK (ide)
-Date: Mon, 26 Oct 2009 16:33:33 +0100
-Message-ID: <20091026153333.GA31865@comet.dominikbrodowski.net>
-References: <20091024194219.GA19546@comet.dominikbrodowski.net> <1256413386-20501-4-git-send-email-linux@dominikbrodowski.net> <4AE5C4A5.7040403@ru.mvista.com>
+From: Philippe De Muyter <phdm@macqel.be>
+Subject: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
+Date: Mon, 26 Oct 2009 17:20:11 +0100
+Message-ID: <20091026162011.GA3289@frolo.macqel>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:39039 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752074AbZJZPjc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Oct 2009 11:39:32 -0400
+Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:3714 "EHLO
+	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752757AbZJZQUO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2009 12:20:14 -0400
 Content-Disposition: inline
-In-Reply-To: <4AE5C4A5.7040403@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
 
-Sergei,
+Hi,
 
-On Mon, Oct 26, 2009 at 06:47:49PM +0300, Sergei Shtylyov wrote:
-> Dominik Brodowski wrote:
->
->> ide-cs.c is the only PCMCIA device driver making use of CONFIG_PCMCIA_DEBUG,
->> so convert it to use the dynamic debug infrastructure.
->
->> Also, remove all usages of the CS_CHECK macro and replace them with proper
->> Linux style calling and return value checking. The extra error reporting may
->> be dropped, as the PCMCIA core already complains about any (non-driver-author)
->> errors.
->
->> CC: linux-ide@vger.kernel.org
->> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
->> ---
->>  drivers/ata/pata_pcmcia.c |   16 ++++++++--------
->>  drivers/ide/ide-cs.c      |   32 +++++++++++---------------------
->>  2 files changed, 19 insertions(+), 29 deletions(-)
->
->    Please submit as two separate patches as ide and libata are two 
-> separate subsystems.
+I just encountered a problem with write-access to a batch of CF cards
+(KINGSTON TECHNOLOGY 4GB COMPACT FLASH CF/4GB
+3.3V/5V 9904321 - 006.AOOLF 4449081 - 1219643 X001 ASSY IN TAIWAN (c) 2008)
+connected to a PC-CARD / PCMCIA interface, with the following error messages :
 
-thanks for your comment. And I see your point -- but as I intend to push this
-upstream using the linux-pcmcia tree, as the IDE and ATA subsystems use the
-same (linux-ide) mailing list, and as both drivers are quire related, I
-thought handling both drivers in one patch is acceptable. If it still needs
-to be done otherwise, I'll re-submit this patch in two parts and udpate my
-workflow accordingly.
+	hda: status timeout: status=0xd0 { Busy }
+	ide: failed opcode was: unknown
+	hda: no DRQ after issuing MULTWRITE
 
-Best,
-	Dominik
+After testing with different bigger values for the WAIT_DRQ timeout value,
+the problem disappeared.  I had success with WAIT_DRQ = 500ms, then with
+WAIT_DRQ = 300ms.  I then tested with WAIT_DRQ = 200ms, but the problem
+reappeared.  So I kept the 300ms value.
+
+Signed-off-by: Philippe De Muyter <phdm@macqel.be>
+
+diff -r a145344bb228 include/linux/ide.h
+--- a/include/linux/ide.h	Thu Oct 22 08:28:28 2009 +0900
++++ b/include/linux/ide.h	Mon Oct 26 16:51:23 2009 +0100
+@@ -125,8 +125,8 @@
+  * Timeouts for various operations:
+  */
+ enum {
+-	/* spec allows up to 20ms */
+-	WAIT_DRQ	= HZ / 10,	/* 100ms */
++	/* spec allows up to 20ms, but some CF cards need more than 200ms */
++	WAIT_DRQ	= 3 * HZ / 10,	/* 300ms */
+ 	/* some laptops are very slow */
+ 	WAIT_READY	= 5 * HZ,	/* 5s */
+ 	/* should be less than 3ms (?), if all ATAPI CD is closed at boot */
