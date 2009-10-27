@@ -1,39 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
-Date: Mon, 26 Oct 2009 18:19:22 -0700 (PDT)
-Message-ID: <20091026.181922.261475236.davem@davemloft.net>
-References: <4AE64031.5060105@gmail.com>
-	<20091026.174525.154760254.davem@davemloft.net>
-	<51f3faa70910261807h54f05f73j48b67067ee3dde70@mail.gmail.com>
+From: Yoichi Yuasa <yuasa@linux-mips.org>
+Subject: Re: [PATCH] sata_sil: fix uninitialized variable use when
+ sil_scr_read() fails
+Date: Tue, 27 Oct 2009 10:37:49 +0900
+Message-ID: <20091027103749.871199e8.yuasa@linux-mips.org>
+References: <20091020153456.9104e044.yuasa@linux-mips.org>
+	<4ADE9563.2030705@kernel.org>
+	<21eaeb5a0910211717w5692ce4em74482c7e5d4f5b9c@mail.gmail.com>
+	<4AE5BC6B.7060804@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48335
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755503AbZJ0BS7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2009 21:18:59 -0400
-In-Reply-To: <51f3faa70910261807h54f05f73j48b67067ee3dde70@mail.gmail.com>
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:57752 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754282AbZJ0Bhm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2009 21:37:42 -0400
+Received: by ewy4 with SMTP id 4so4224439ewy.37
+        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2009 18:37:46 -0700 (PDT)
+In-Reply-To: <4AE5BC6B.7060804@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hancockrwd@gmail.com
-Cc: phdm@macqel.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: yuasa@linux-mips.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-From: Robert Hancock <hancockrwd@gmail.com>
-Date: Mon, 26 Oct 2009 19:07:18 -0600
+On Mon, 26 Oct 2009 16:12:43 +0100
+Tejun Heo <tj@kernel.org> wrote:
 
-> libata only busy-waits for 50 microseconds, if not set then it sleeps
-> for 2ms and polls for another 10 microseconds, if still not set it
-> tries the whole thing again at 16ms intervals. Only after (typically)
-> 30 seconds does it give up.
+> Yuasa Yoichi wrote:
+> >> The first usage of that is
+> >>
+> >>  sil_scr_read(&ap->link, SCR_ERROR, &serror);
+> >>
+> >> which sets the value.  So, I don't think the patch is necessary.  If
+> >> it triggers a compile warning, putting uninitialized_var() macro will
+> >> be more appropriate.
+> > 
+> > If sil_scr_read() is error, 'serror' is not initialized.
+> > After that, the wrong bits add to 'ap->link.eh_info.serror' when
+> > 'serror & SERR_PHYRDT_CHG' is true.
+> 
+> On the controller, sil_scr_read(SCR_ERROR) can never fail.  If it ever
+> fails, the whole thing will break anyway.
 
-Porting that kind of logic over to IDE is a non-starter.
+OK, I got it.
 
-It's easier to get people to move over to using the ATA layer for
-their devices.
+Thanks,
 
-Meanwhile we should provide a way for things to work, and
-realistically the only way to do that currently is to bump the
-WAIT_DRQ value to some large number.
-
-And that's exactly the kind of patch I'm willing to accept for this.
+Yoichi
