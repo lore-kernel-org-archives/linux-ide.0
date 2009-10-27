@@ -1,35 +1,61 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [Bug #14473] ATA related kernel warning after resume
-Date: Mon, 26 Oct 2009 19:55:58 +0100 (CET)
-Message-ID: <6dRYo8ss7vL.A.qTF.-qe5KB@chimera>
-References: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
+Date: Mon, 26 Oct 2009 18:34:57 -0600
+Message-ID: <4AE64031.5060105@gmail.com>
+References: <20091026162011.GA3289@frolo.macqel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59418 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755333AbZJZTFE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2009 15:05:04 -0400
-In-Reply-To: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera>
-Content-Disposition: inline
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:45723 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755400AbZJ0Aez (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2009 20:34:55 -0400
+In-Reply-To: <20091026162011.GA3289@frolo.macqel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Tino Keitel <tino.keitel@tikei.de>
+To: Philippe De Muyter <phdm@macqel.be>
+Cc: linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
 
-This message has been generated automatically as a part of a report
-of recent regressions.
+On 10/26/2009 10:20 AM, Philippe De Muyter wrote:
+> Hi,
+>
+> I just encountered a problem with write-access to a batch of CF cards
+> (KINGSTON TECHNOLOGY 4GB COMPACT FLASH CF/4GB
+> 3.3V/5V 9904321 - 006.AOOLF 4449081 - 1219643 X001 ASSY IN TAIWAN (c) 2008)
+> connected to a PC-CARD / PCMCIA interface, with the following error messages :
+>
+> 	hda: status timeout: status=0xd0 { Busy }
+> 	ide: failed opcode was: unknown
+> 	hda: no DRQ after issuing MULTWRITE
+>
+> After testing with different bigger values for the WAIT_DRQ timeout value,
+> the problem disappeared.  I had success with WAIT_DRQ = 500ms, then with
+> WAIT_DRQ = 300ms.  I then tested with WAIT_DRQ = 200ms, but the problem
+> reappeared.  So I kept the 300ms value.
+>
+> Signed-off-by: Philippe De Muyter<phdm@macqel.be>
+>
+> diff -r a145344bb228 include/linux/ide.h
+> --- a/include/linux/ide.h	Thu Oct 22 08:28:28 2009 +0900
+> +++ b/include/linux/ide.h	Mon Oct 26 16:51:23 2009 +0100
+> @@ -125,8 +125,8 @@
+>    * Timeouts for various operations:
+>    */
+>   enum {
+> -	/* spec allows up to 20ms */
+> -	WAIT_DRQ	= HZ / 10,	/* 100ms */
+> +	/* spec allows up to 20ms, but some CF cards need more than 200ms */
+> +	WAIT_DRQ	= 3 * HZ / 10,	/* 300ms */
+>   	/* some laptops are very slow */
+>   	WAIT_READY	= 5 * HZ,	/* 5s */
+>   	/* should be less than 3ms (?), if all ATAPI CD is closed at boot */
 
-The following bug entry is on the current list of known regressions
-from 2.6.31.  Please verify if it still should be listed and let me know
-(either way).
+This has come up before:
 
+http://marc.info/?l=linux-ide&m=123064513313466&w=2
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14473
-Subject		: ATA related kernel warning after resume
-Submitter	: Tino Keitel <tino.keitel@tikei.de>
-Date		: 2009-10-14 6:55 (13 days old)
-References	: http://marc.info/?l=linux-kernel&m=125550466624678&w=4
-
-
+I think this timeout should not even exist. libata has no such timeout 
+(only the overall command completion timeout), and I can't find any 
+reference in current ATA specs to the device being required to raise DRQ 
+in any particular amount of time.
