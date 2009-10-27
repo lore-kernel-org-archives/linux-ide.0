@@ -1,48 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14310] [bisected] 2.6.31 regression sis5513 PIO Mode 0 hang
-Date: Tue, 27 Oct 2009 08:35:27 GMT
-Message-ID: <200910270835.n9R8ZRB2007651@demeter.kernel.org>
-References: <bug-14310-11633@http.bugzilla.kernel.org/>
+From: Philippe De Muyter <phdm@macqel.be>
+Subject: Re: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
+Date: Tue, 27 Oct 2009 10:45:03 +0100
+Message-ID: <20091027094503.GA3116@frolo.macqel>
+References: <51f3faa70910261807h54f05f73j48b67067ee3dde70@mail.gmail.com> <20091026.181922.261475236.davem@davemloft.net> <51f3faa70910261840v16444067uc323de7129b7592f@mail.gmail.com> <20091026.184318.205708741.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:40112 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756487AbZJ0IfX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Oct 2009 04:35:23 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9R8ZRoT007652
-	for <linux-ide@vger.kernel.org>; Tue, 27 Oct 2009 08:35:27 GMT
-In-Reply-To: <bug-14310-11633@http.bugzilla.kernel.org/>
+Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:8965 "EHLO
+	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752181AbZJ0JpO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Oct 2009 05:45:14 -0400
+Content-Disposition: inline
+In-Reply-To: <20091026.184318.205708741.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: hancockrwd@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14310
+Hi David,
 
-
-
-
-
---- Comment #6 from Jiri Bohac <jbohac@jikos.cz>  2009-10-27 08:35:25 ---
-(In reply to comment #5)
-> Jiri, please try the patch from
+On Mon, Oct 26, 2009 at 06:43:18PM -0700, David Miller wrote:
+> From: Robert Hancock <hancockrwd@gmail.com>
+> Date: Mon, 26 Oct 2009 19:40:03 -0600
 > 
-> http://bugzilla.kernel.org/attachment.cgi?id=23513
+> > On Mon, Oct 26, 2009 at 7:19 PM, David Miller <davem@davemloft.net> wrote:
+> >> Meanwhile we should provide a way for things to work, and
+> >> realistically the only way to do that currently is to bump the
+> >> WAIT_DRQ value to some large number.
+> >>
+> >> And that's exactly the kind of patch I'm willing to accept for this.
+> > 
+> > I agree, it's sub-optimal but it helps.. if the user wants better
+> > behavior they should a) fix it so that the card isn't using PIO, at
+> > least if it supports DMA and b) not use drivers/ide..
 
-Great, this patch, applied on 2.6.31.5, fixes the problem for me.
+Strangely enough, I also had no timeout problem if I started my kernel with
+'ide=nodma', instead of increasing WAIT_DRQ.  So I surmise that WAIT_DRQ
+is used in the dma case.
 
-Out of curiosity, I also tried to revert the original fix
-(e13ee546bb06453939014c7b854e77fb643fd6f1) and, with the debug patch still
-applied, it still worked.
+> 
+> Philippe's patch that started this thread uses "3 * HZ / 10"
+> which isn't large enough for the SSD cases.  Can someone please
+> post a patch that uses a large enough value?
 
-So maybe 6029336426a2b43e4bc6f4a84be8789a047d139e causes two independent
-problems in sis5513? One fixed with e13ee546bb06453939014c7b854e77fb643fd6f1
-and one fixed with this debug patch?
+How big a timeout do you want/accept ? Mark Lord wrote about SSD's in the mail
+referred by Robert Hancock :
+	It should probably be at least 500msec or more now.
 
-It would be great if this patch could be added to the stable tree. Thanks!
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Philippe
