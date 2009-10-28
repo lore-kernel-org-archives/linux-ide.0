@@ -1,39 +1,614 @@
-From: Mark Nelson <mdnelson8@gmail.com>
-Subject: Re: [PATCH] ahci: Enable SB600 64bit DMA on MSI K9A2 Platinum
-Date: Thu, 29 Oct 2009 09:30:35 +1100
-Message-ID: <65a6ef750910281530k159fc622g8f3303758a103fb3@mail.gmail.com>
-References: <65a6ef750910252203s58af446fv268c857191e698d3@mail.gmail.com>
-	 <4AE5A330.3080506@kernel.org>
-	 <65a6ef750910261605q45a08791h53cc2afd5d006bb3@mail.gmail.com>
-	 <4AE7382F.20302@kernel.org>
-	 <65a6ef750910271551i47858982xd1138e4a70a1b076@mail.gmail.com>
-	 <65a6ef750910280449k5597d3abkc0995080954e5760@mail.gmail.com>
-	 <4AE835A9.40806@kernel.org>
+From: Christos Nouskas <nouskas@gmail.com>
+Subject: storage-fixup
+Date: Thu, 29 Oct 2009 00:56:48 +0200
+Message-ID: <200910290056.49057.nouskas@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_xwM6KeW8n4CUvtU"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:53373 "EHLO
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:51336 "EHLO
 	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108AbZJ1Wab (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Oct 2009 18:30:31 -0400
-Received: by ewy4 with SMTP id 4so1263005ewy.37
-        for <linux-ide@vger.kernel.org>; Wed, 28 Oct 2009 15:30:35 -0700 (PDT)
-In-Reply-To: <4AE835A9.40806@kernel.org>
+	with ESMTP id S1754216AbZJ1W4v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Oct 2009 18:56:51 -0400
+Received: by ewy4 with SMTP id 4so1282258ewy.37
+        for <linux-ide@vger.kernel.org>; Wed, 28 Oct 2009 15:56:54 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: linux-ide@vger.kernel.org
 
-On Wed, Oct 28, 2009 at 11:14 PM, Tejun Heo <tj@kernel.org> wrote:
-> Mark Nelson wrote:
->> Things look promising so far with lots of DMAs above 4GB (snippets
->> from syslog):
->
-> It's probably working okay but a good test would be to repeat to copy
-> a large file and checksum it and verify checksums actually match.
->
+--Boundary-00=_xwM6KeW8n4CUvtU
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Okay, that sounds like a good test. I'll give it a go tonight.
+Hi.
 
-Thanks for your help on this!
-Mark
+Dell Vostro 1500, 250GB Seagate model ST9250827AS clicks. hdparm -B 254 
+fixes.
+
+
+
+-- 
+X.
+
+--Boundary-00=_xwM6KeW8n4CUvtU
+Content-Type: text/plain;
+  charset="utf-8";
+  name="hdparm"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="hdparm"
+
+
+/dev/sda:
+
+ATA device, with non-removable media
+	Model Number:       ST9250827AS                             
+	Serial Number:      5RG02FVW
+	Firmware Revision:  3.ADA   
+	Transport:          Serial
+Standards:
+	Used: unknown (minor revision code 0x0029) 
+	Supported: 8 7 6 5 
+	Likely used: 8
+Configuration:
+	Logical		max	current
+	cylinders	16383	16383
+	heads		16	16
+	sectors/track	63	63
+	--
+	CHS current addressable sectors:   16514064
+	LBA    user addressable sectors:  268435455
+	LBA48  user addressable sectors:  488397168
+	Logical  Sector size:                   512 bytes
+	Physical Sector size:                   512 bytes
+	device size with M = 1024*1024:      238475 MBytes
+	device size with M = 1000*1000:      250059 MBytes (250 GB)
+	cache/buffer size  = 8192 KBytes
+	Nominal Media Rotation Rate: 5400
+Capabilities:
+	LBA, IORDY(can be disabled)
+	Queue depth: 32
+	Standby timer values: spec'd by Standard, no device specific minimum
+	R/W multiple sector transfer: Max = 16	Current = 8
+	Advanced power management level: 254
+	Recommended acoustic management value: 208, current value: 254
+	DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6 
+	     Cycle time: min=120ns recommended=120ns
+	PIO: pio0 pio1 pio2 pio3 pio4 
+	     Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+	Enabled	Supported:
+	   *	SMART feature set
+	    	Security Mode feature set
+	   *	Power Management feature set
+	   *	Write cache
+	   *	Look-ahead
+	    	Host Protected Area feature set
+	   *	WRITE_BUFFER command
+	   *	READ_BUFFER command
+	   *	DOWNLOAD_MICROCODE
+	   *	Advanced Power Management feature set
+	    	SET_MAX security extension
+	   *	Automatic Acoustic Management feature set
+	   *	48-bit Address feature set
+	   *	Device Configuration Overlay feature set
+	   *	Mandatory FLUSH_CACHE
+	   *	FLUSH_CACHE_EXT
+	   *	SMART error logging
+	   *	SMART self-test
+	   *	General Purpose Logging feature set
+	   *	64-bit World wide name
+	   *	IDLE_IMMEDIATE with UNLOAD
+	    	Write-Read-Verify feature set
+	   *	WRITE_UNCORRECTABLE_EXT command
+	   *	{READ,WRITE}_DMA_EXT_GPL commands
+	   *	Gen1 signaling speed (1.5Gb/s)
+	   *	Gen2 signaling speed (3.0Gb/s)
+	   *	Native Command Queueing (NCQ)
+	   *	Host-initiated interface power management
+	   *	Phy event counters
+	    	Device-initiated interface power management
+	   *	Software settings preservation
+	   *	SMART Command Transport (SCT) feature set
+	   *	SCT LBA Segment Access (AC2)
+	   *	SCT Features Control (AC4)
+	   *	SCT Data Tables (AC5)
+Security: 
+	Master password revision code = 65534
+		supported
+	not	enabled
+	not	locked
+		frozen
+	not	expired: security count
+	not	supported: enhanced erase
+Logical Unit WWN Device Identifier: 5000c500099f33f8
+	NAA		: 5
+	IEEE OUI	: 000c50
+	Unique ID	: 0099f33f8
+Checksum: correct
+
+--Boundary-00=_xwM6KeW8n4CUvtU
+Content-Type: text/plain;
+  charset="utf-8";
+  name="dmidecode"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmidecode"
+
+# dmidecode 2.10
+SMBIOS 2.4 present.
+45 structures occupying 1977 bytes.
+Table at 0x000F7180.
+
+Handle 0xDA00, DMI type 218, 251 bytes
+OEM-specific Type
+	Header and Data:
+		DA FB 00 DA B2 00 0D 5F 1F 37 40 7D 00 00 00 00
+		00 7E 00 02 00 00 00 40 00 04 00 01 00 41 00 04
+		00 00 00 65 00 05 00 00 00 66 00 05 00 01 00 5E
+		00 06 00 01 00 5F 00 06 00 00 00 89 01 07 00 00
+		00 8A 01 07 00 01 00 42 00 08 00 01 00 43 00 08
+		00 00 00 55 00 09 00 00 00 6D 00 09 00 01 00 2D
+		00 0A 00 02 00 6E 00 0A 00 01 00 2E 00 0A 00 00
+		00 11 01 0B 00 00 00 10 01 0B 00 01 00 F0 00 0C
+		00 01 00 ED 00 0C 00 00 00 41 01 0D 00 01 00 40
+		01 0D 00 00 00 47 01 0E 00 01 00 46 01 0E 00 00
+		00 4A 01 0F 00 00 00 4B 01 0F 00 01 00 52 01 10
+		00 01 00 53 01 10 00 00 00 80 01 11 00 01 00 7F
+		01 11 00 00 00 7C 01 12 00 01 00 7B 01 12 00 00
+		00 7E 01 13 00 01 00 7D 01 13 00 00 00 92 01 14
+		00 00 00 91 01 14 00 01 00 94 01 15 00 00 00 93
+		01 15 00 01 00 FF FF 00 00 00 00
+
+Handle 0xDA01, DMI type 218, 251 bytes
+OEM-specific Type
+	Header and Data:
+		DA FB 01 DA B2 00 0D 5F 1F 37 40 86 01 16 00 01
+		00 85 01 16 00 00 00 82 01 17 00 01 00 81 01 17
+		00 00 00 84 01 18 00 01 00 83 01 18 00 00 00 9B
+		01 19 00 00 00 9C 01 19 00 01 00 9D 01 19 00 02
+		00 9E 01 19 00 03 00 8B 01 1A 00 00 00 8C 01 1A
+		00 01 00 EA 00 1B 00 00 00 EB 00 1B 00 01 00 EC
+		00 1B 00 02 00 28 00 1C 00 00 00 29 00 1C 00 01
+		00 2A 00 1C 00 02 00 2B 00 1D 00 00 00 2C 00 1E
+		00 00 00 E7 00 1F 00 01 00 E6 00 1F 00 00 00 0E
+		01 20 00 01 00 0F 01 20 00 00 00 9B 00 21 00 01
+		00 9C 00 21 00 00 00 4D 01 22 00 01 00 4C 01 22
+		00 00 00 01 01 23 00 00 00 02 01 23 00 01 00 04
+		01 23 00 02 00 37 01 24 00 00 00 38 01 24 00 01
+		00 D9 01 25 00 01 00 D8 01 25 00 00 00 EA 01 26
+		00 00 00 EB 01 26 00 01 00 EC 01 27 00 00 00 ED
+		01 27 00 01 00 FF FF 00 00 00 00
+
+Handle 0xDA02, DMI type 218, 53 bytes
+OEM-specific Type
+	Header and Data:
+		DA 35 02 DA B2 00 0D 5F 1F 37 40 76 01 76 01 01
+		00 75 01 75 01 01 00 01 F0 01 F0 00 00 02 F0 02
+		F0 00 00 03 F0 03 F0 00 00 04 F0 04 F0 00 00 FF
+		FF 00 00 00 00
+
+Handle 0x0000, DMI type 0, 24 bytes
+BIOS Information
+	Vendor: Dell Inc.
+	Version: A06
+	Release Date: 04/21/2008
+	Address: 0xF0000
+	Runtime Size: 64 kB
+	ROM Size: 1024 kB
+	Characteristics:
+		ISA is supported
+		PCI is supported
+		PC Card (PCMCIA) is supported
+		PNP is supported
+		BIOS is upgradeable
+		BIOS shadowing is allowed
+		Boot from CD is supported
+		Selectable boot is supported
+		3.5"/720 kB floppy services are supported (int 13h)
+		Print screen service is supported (int 5h)
+		8042 keyboard services are supported (int 9h)
+		Serial services are supported (int 14h)
+		Printer services are supported (int 17h)
+		CGA/mono video services are supported (int 10h)
+		ACPI is supported
+		USB legacy is supported
+		AGP is supported
+		Smart battery is supported
+		BIOS boot specification is supported
+		Function key-initiated network boot is supported
+		Targeted content distribution is supported
+	BIOS Revision: 0.6
+	Firmware Revision: 0.6
+
+Handle 0x0100, DMI type 1, 27 bytes
+System Information
+	Manufacturer: Dell Inc.
+	Product Name: Vostro 1500                     
+	Version: Not Specified
+	Serial Number: GQDG0G1
+	UUID: 44454C4C-5100-1044-8047-C7C04F304731
+	Wake-up Type: Power Switch
+	SKU Number: Not Specified
+	Family:  
+
+Handle 0x0200, DMI type 2, 9 bytes
+Base Board Information
+	Manufacturer: Dell Inc.
+	Product Name:       
+	Version:    
+	Serial Number: .GQDG0G1.              .
+	Asset Tag:           
+
+Handle 0x0300, DMI type 3, 13 bytes
+Chassis Information
+	Manufacturer: Dell Inc.
+	Type: Portable
+	Lock: Not Present
+	Version: Not Specified
+	Serial Number: GQDG0G1
+	Asset Tag: Not Specified
+	Boot-up State: Safe
+	Power Supply State: Safe
+	Thermal State: Safe
+	Security Status: None
+
+Handle 0x0400, DMI type 4, 40 bytes
+Processor Information
+	Socket Designation: Microprocessor
+	Type: Central Processor
+	Family: Core 2 Duo
+	Manufacturer: Intel
+	ID: FD 06 00 00 FF FB EB BF
+	Signature: Type 0, Family 6, Model 15, Stepping 13
+	Flags:
+		FPU (Floating-point unit on-chip)
+		VME (Virtual mode extension)
+		DE (Debugging extension)
+		PSE (Page size extension)
+		TSC (Time stamp counter)
+		MSR (Model specific registers)
+		PAE (Physical address extension)
+		MCE (Machine check exception)
+		CX8 (CMPXCHG8 instruction supported)
+		APIC (On-chip APIC hardware supported)
+		SEP (Fast system call)
+		MTRR (Memory type range registers)
+		PGE (Page global enable)
+		MCA (Machine check architecture)
+		CMOV (Conditional move instruction supported)
+		PAT (Page attribute table)
+		PSE-36 (36-bit page size extension)
+		CLFSH (CLFLUSH instruction supported)
+		DS (Debug store)
+		ACPI (ACPI supported)
+		MMX (MMX technology supported)
+		FXSR (Fast floating-point save and restore)
+		SSE (Streaming SIMD extensions)
+		SSE2 (Streaming SIMD extensions 2)
+		SS (Self-snoop)
+		HTT (Hyper-threading technology)
+		TM (Thermal monitor supported)
+		PBE (Pending break enabled)
+	Version: Not Specified
+	Voltage: 3.3 V
+	External Clock: 200 MHz
+	Max Speed: 2000 MHz
+	Current Speed: 1600 MHz
+	Status: Populated, Enabled
+	Upgrade: None
+	L1 Cache Handle: 0x0700
+	L2 Cache Handle: 0x0701
+	L3 Cache Handle: Not Provided
+	Serial Number: Not Specified
+	Asset Tag: Not Specified
+	Part Number: Not Specified
+	Core Count: 2
+	Core Enabled: 2
+	Thread Count: 2
+	Characteristics:
+		64-bit capable
+
+Handle 0x0700, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: Not Specified
+	Configuration: Enabled, Not Socketed, Level 1
+	Operational Mode: Write Back
+	Location: Internal
+	Installed Size: 32 kB
+	Maximum Size: 32 kB
+	Supported SRAM Types:
+		Unknown
+	Installed SRAM Type: Unknown
+	Speed: Unknown
+	Error Correction Type: None
+	System Type: Data
+	Associativity: 4-way Set-associative
+
+Handle 0x0701, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: Not Specified
+	Configuration: Enabled, Not Socketed, Level 2
+	Operational Mode: Varies With Memory Address
+	Location: Internal
+	Installed Size: 2048 kB
+	Maximum Size: 2048 kB
+	Supported SRAM Types:
+		Pipeline Burst
+	Installed SRAM Type: Pipeline Burst
+	Speed: 15 ns
+	Error Correction Type: None
+	System Type: Unified
+	Associativity: Other
+
+Handle 0x0804, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: USB
+	Internal Connector Type: None
+	External Reference Designator: Not Specified
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x0806, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: MONITOR
+	Internal Connector Type: None
+	External Reference Designator: Not Specified
+	External Connector Type: DB-15 female
+	Port Type: Video Port
+
+Handle 0x080B, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: FireWire
+	Internal Connector Type: None
+	External Reference Designator: Not Specified
+	External Connector Type: IEEE 1394
+	Port Type: Firewire (IEEE P1394)
+
+Handle 0x080C, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: Modem
+	Internal Connector Type: None
+	External Reference Designator: Not Specified
+	External Connector Type: RJ-11
+	Port Type: Modem Port
+
+Handle 0x080D, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: Ethernet
+	Internal Connector Type: None
+	External Reference Designator: Not Specified
+	External Connector Type: RJ-45
+	Port Type: Network Port
+
+Handle 0x0A00, DMI type 10, 6 bytes
+On Board Device Information
+	Type: Video
+	Status: Enabled
+	Description: NVIDIA NB8P-GS                
+
+Handle 0x0A01, DMI type 10, 6 bytes
+On Board Device Information
+	Type: Sound
+	Status: Enabled
+	Description: Sigmatel 9205
+
+Handle 0x0B00, DMI type 11, 5 bytes
+OEM Strings
+	String 1: Dell System
+	String 2: 5[0005]
+	String 3: 13[PP22L]
+
+Handle 0x0D00, DMI type 13, 22 bytes
+BIOS Language Information
+	Installable Languages: 1
+		en|US|iso8859-1
+	Currently Installed Language: en|US|iso8859-1
+
+Handle 0x1000, DMI type 16, 15 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 4 GB
+	Error Information Handle: Not Provided
+	Number Of Devices: 2
+
+Handle 0x1100, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x1000
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 2048 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM_A
+	Bank Locator: Not Specified
+	Type: DDR
+	Type Detail: Synchronous
+	Speed: 667 MHz
+	Manufacturer: 7F4F000000000000
+	Serial Number: 0007B693
+	Asset Tag: 000804
+	Part Number: JM667QSU-2G       
+
+Handle 0x1101, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x1000
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 2048 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM_B
+	Bank Locator: Not Specified
+	Type: DDR
+	Type Detail: Synchronous
+	Speed: 667 MHz
+	Manufacturer: 0000000000000000
+	Serial Number: 00000000
+	Asset Tag: 000000
+	Part Number: SHTYGD2S188F248667
+
+Handle 0x1301, DMI type 19, 15 bytes
+Memory Array Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x000FFFFFFFF
+	Range Size: 4 GB
+	Physical Array Handle: 0x1000
+	Partition Width: 0
+
+Handle 0x1401, DMI type 20, 19 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x000FFFFFFFF
+	Range Size: 4 GB
+	Physical Device Handle: 0x1100
+	Memory Array Mapped Address Handle: 0x1301
+	Partition Row Position: 1
+	Interleave Position: 1
+	Interleaved Data Depth: 8
+
+Handle 0x1411, DMI type 126, 19 bytes
+Inactive
+
+Handle 0x1402, DMI type 20, 19 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x000FFFFFFFF
+	Range Size: 4 GB
+	Physical Device Handle: 0x1101
+	Memory Array Mapped Address Handle: 0x1301
+	Partition Row Position: 1
+	Interleave Position: 2
+	Interleaved Data Depth: 8
+
+Handle 0x1412, DMI type 126, 19 bytes
+Inactive
+
+Handle 0x1500, DMI type 21, 7 bytes
+Built-in Pointing Device
+	Type: Touch Pad
+	Interface: Bus Mouse
+	Buttons: 2
+
+Handle 0x1600, DMI type 22, 26 bytes
+Portable Battery
+	Location: Sys. Battery Bay
+	Manufacturer: Sanyo           
+	Name: DELL TM97883    
+	Design Capacity: 52000 mWh
+	Design Voltage: 11100 mV
+	SBDS Version: 1.0
+	Maximum Error: 0%
+	SBDS Serial Number: 0838
+	SBDS Manufacture Date: 2008-03-28
+	SBDS Chemistry: LION            
+	OEM-specific Information: 0x00000001
+
+Handle 0x1B00, DMI type 27, 12 bytes
+Cooling Device
+	Type: Fan
+	Status: OK
+	OEM-specific Information: 0x0000DD00
+
+Handle 0x1C00, DMI type 28, 20 bytes
+Temperature Probe
+	Description: CPU Internal Temperature
+	Location: Processor
+	Status: OK
+	Maximum Value: 127.0 deg C
+	Minimum Value: 0.0 deg C
+	Resolution: 1.000 deg C
+	Tolerance: 0.5 deg C
+	Accuracy: Unknown
+	OEM-specific Information: 0x0000DC00
+
+Handle 0x2000, DMI type 32, 11 bytes
+System Boot Information
+	Status: No errors detected
+
+Handle 0xB000, DMI type 176, 5 bytes
+OEM-specific Type
+	Header and Data:
+		B0 05 00 B0 2C
+
+Handle 0xB100, DMI type 177, 12 bytes
+OEM-specific Type
+	Header and Data:
+		B1 0C 00 B1 02 00 00 00 00 00 00 00
+
+Handle 0xB200, DMI type 178, 6 bytes
+OEM-specific Type
+	Header and Data:
+		B2 06 00 B2 99 99
+
+Handle 0xD000, DMI type 208, 10 bytes
+OEM-specific Type
+	Header and Data:
+		D0 0A 00 D0 01 04 FE 00 28 02
+
+Handle 0xD800, DMI type 216, 9 bytes
+OEM-specific Type
+	Header and Data:
+		D8 09 00 D8 01 03 01 F0 03
+	Strings:
+		NVidia Corp.         
+		 
+		060.084.050.000.002.000  
+
+Handle 0xD900, DMI type 217, 8 bytes
+OEM-specific Type
+	Header and Data:
+		D9 08 00 D9 01 02 01 03
+	Strings:
+		US-101
+		Proprietary
+
+Handle 0xDB00, DMI type 219, 9 bytes
+OEM-specific Type
+	Header and Data:
+		DB 09 00 DB 03 01 02 03 FF
+	Strings:
+		System Device Bay
+		Floppy, Battery, CD-ROM, CD-RW, DVD, DVD+RW, DVD+/-RW, Hard Disk, BLU-RAY
+		DVD+/-RW  
+
+Handle 0xDC00, DMI type 220, 22 bytes
+OEM-specific Type
+	Header and Data:
+		DC 16 00 DC 01 F0 00 00 02 F0 00 00 00 00 03 F0
+		04 F0 00 00 00 00
+
+Handle 0xDD00, DMI type 221, 19 bytes
+OEM-specific Type
+	Header and Data:
+		DD 13 00 DD 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00
+
+Handle 0xD400, DMI type 212, 37 bytes
+OEM-specific Type
+	Header and Data:
+		D4 25 00 D4 74 00 75 00 00 10 2D 2E 5C 00 78 BF
+		40 5D 00 78 BF 00 08 00 1D DF 00 03 00 1D DF 00
+		FF FF 00 00 00
+
+Handle 0xD401, DMI type 212, 17 bytes
+OEM-specific Type
+	Header and Data:
+		D4 11 01 D4 74 00 75 00 03 40 49 4A FF FF 00 00
+		00
+
+Handle 0xDE00, DMI type 222, 16 bytes
+OEM-specific Type
+	Header and Data:
+		DE 10 00 DE 01 02 FF FF 00 00 00 00 00 00 00 01
+
+Handle 0x7F00, DMI type 127, 4 bytes
+End Of Table
+
+
+--Boundary-00=_xwM6KeW8n4CUvtU--
