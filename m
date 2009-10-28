@@ -1,301 +1,209 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
- SSD
-Date: Tue, 27 Oct 2009 21:10:48 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0910272109370.24376@hs20-bc2-1.build.redhat.com>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
- <19167.25155.379665.259129@pilspetsen.it.uu.se>
- <Pine.LNX.4.64.0910211857140.27544@hs20-bc2-1.build.redhat.com>
- <20091027113427.5998c4be@lxorguk.ukuu.org.uk>
+From: Mark Nelson <mdnelson8@gmail.com>
+Subject: Re: [PATCH] ahci: Enable SB600 64bit DMA on MSI K9A2 Platinum
+Date: Wed, 28 Oct 2009 22:49:32 +1100
+Message-ID: <65a6ef750910280449k5597d3abkc0995080954e5760@mail.gmail.com>
+References: <65a6ef750910252203s58af446fv268c857191e698d3@mail.gmail.com>
+	 <4AE5A330.3080506@kernel.org>
+	 <65a6ef750910261605q45a08791h53cc2afd5d006bb3@mail.gmail.com>
+	 <4AE7382F.20302@kernel.org>
+	 <65a6ef750910271551i47858982xd1138e4a70a1b076@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757103AbZJ1BK5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Oct 2009 21:10:57 -0400
-In-Reply-To: <20091027113427.5998c4be@lxorguk.ukuu.org.uk>
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:52155 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705AbZJ1Lt3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Oct 2009 07:49:29 -0400
+Received: by ewy4 with SMTP id 4so639508ewy.37
+        for <linux-ide@vger.kernel.org>; Wed, 28 Oct 2009 04:49:32 -0700 (PDT)
+In-Reply-To: <65a6ef750910271551i47858982xd1138e4a70a1b076@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-With every transfer, the pastchcauses this:
+On Wed, Oct 28, 2009 at 9:51 AM, Mark Nelson <mdnelson8@gmail.com> wrot=
+e:
+> Adding back linux-ide and Jeff (accidentally dropped them off on my f=
+irst reply)
+>
+> On Wed, Oct 28, 2009 at 5:13 AM, Tejun Heo <tj@kernel.org> wrote:
+>> Hello, Mark.
+>>
+>> Mark Nelson wrote:
+>>>>From reading this bug report:
+>>> http://bugzilla.kernel.org/show_bug.cgi?id=3D14275
+>>> it sounds like when the SB600 can't do 64bit DMA the machine can fa=
+il to boot.
+>>>
+>>> I've been using the system with a patch that removes the AHCI_HFLAG=
+_32BIT_ONLY
+>>> from board_ahci_sb600 for a few months now, but the system only has=
+ 4GB of RAM,
+>>> with some of it hoisted over the 32bit mark:
+>>>
+>>> Memory: 4048052k/4980736k available (2010k kernel code, 145176k
+>>> reserved, 922k data, 228k init)
+>>>
+>>> This probably isn't a rigorous enough test though... What is the be=
+st way to
+>>> verify it (and that way I can check more BIOS versions)?
+>>
+>> The surest way would be to put one time printk which prints out the
+>> physical dma address if it's above 4G in the issue path. =A0Somethin=
+g
+>> like the following (completely untested).
+>>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index b1a2577..08b987d 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -2019,6 +2019,11 @@ static unsigned int ahci_fill_sg(struct ata_q=
+ueued_cmd *qc, void *cmd_tbl)
+>> =A0 =A0 =A0 =A0for_each_sg(qc->sg, sg, qc->n_elem, si) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0dma_addr_t addr =3D sg_dma_address(sg=
+);
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0u32 sg_len =3D sg_dma_len(sg);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 static int cnt;
+>> +
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (addr > 0xffffffffULL && !(cnt++ % =
+500))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk("ahci: dma'ing =
+to address 0x%llx\n",
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(unsign=
+ed long long)addr);
+>>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ahci_sg[si].addr =3D cpu_to_le32(addr=
+ & 0xffffffff);
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ahci_sg[si].addr_hi =3D cpu_to_le32((=
+addr >> 16) >> 16);
+>>
+>
+> That looks good. I'll have a play with it and see what I get.
+>
 
-------------[ cut here ]------------
-WARNING: at drivers/ata/pata_cmd64x.c:276 cmd64x_bmdma_stop+0x48/0x60()
-Modules linked in: nbd sunhme openpromfs sermouse unix
-Call Trace:
- [00000000005cab68] cmd64x_bmdma_stop+0x48/0x60
- [00000000005c99b8] ata_sff_host_intr+0x158/0x1e0
- [00000000005cb2f8] cmd64x_interrupt+0x178/0x1a0
- [000000000048354c] handle_IRQ_event+0x6c/0x140
- [0000000000485380] handle_fasteoi_irq+0x80/0x140
- [000000000042a660] handler_irq+0xc0/0x100
- [00000000004208b4] tl0_irq5+0x14/0x20
- [00000000005ec08c] skb_copy_datagram_iovec+0x1ec/0x220
- [0000000010000800] unix_dgram_recvmsg+0xc0/0x300 [unix]
- [00000000005e0ca8] sock_recvmsg+0x88/0xc0
- [00000000005e1f50] SyS_recvfrom+0x70/0xe0
- [0000000000406114] linux_sparc_syscall32+0x34/0x40
----[ end trace 62aae040ef69a03d ]---
+Things look promising so far with lots of DMAs above 4GB (snippets from=
+ syslog):
 
-Mikulas
+ahci 0000:00:12.0: version 3.0
+ahci 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
+ahci 0000:00:12.0: MSI K9A2 Platinum: enabling 64bit DMA
+ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl
+SATA mode
+ahci 0000:00:12.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum
+part ccc
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+ata1: SATA max UDMA/133 irq_stat 0x00400000, PHY RDY changed irq 22
+ata2: SATA max UDMA/133 abar m1024@0xfbcff800 port 0xfbcff980 irq 22
+ata3: SATA max UDMA/133 abar m1024@0xfbcff800 port 0xfbcffa00 irq 22
+ata4: SATA max UDMA/133 abar m1024@0xfbcff800 port 0xfbcffa80 irq 22
+pata_atiixp 0000:00:14.1: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+pata_atiixp 0000:00:14.1: setting latency timer to 64
+scsi4 : pata_atiixp
+scsi5 : pata_atiixp
+ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00 irq 14
+ata6: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xff08 irq 15
+ata5.00: ATAPI: PIONEER DVD-RW  DVR-111D, 1.29, max UDMA/66
+ata5.01: ATAPI: HL-DT-ST GCE-8520B, 1.02, max UDMA/33
+ata5.00: configured for UDMA/66
+ata5.01: configured for UDMA/33
+ata3: SATA link down (SStatus 0 SControl 300)
+ata4: SATA link down (SStatus 0 SControl 300)
+ata2: SATA link down (SStatus 0 SControl 300)
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ahci: dma'ing to address 0x12ee49ed8
+ata1.00: ATA-7: ST3320620AS, 3.AAD, max UDMA/133
+ata1.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
+ata1.00: SB600 AHCI: limiting to 255 sectors per cmd
+ata1.00: configured for UDMA/133
+scsi 0:0:0:0: Direct-Access     ATA      ST3320620AS      3.AA PQ: 0
+ANSI: 5
+sd 0:0:0:0: [sda] 625142448 512-byte logical blocks: (320 GB/298 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda:
+scsi 4:0:0:0: CD-ROM            PIONEER  DVD-RW  DVR-111D 1.29 PQ: 0
+ANSI: 5
+sr0: scsi3-mmc drive: 62x/62x writer cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+sr 4:0:0:0: Attached scsi CD-ROM sr0
+scsi 4:0:1:0: CD-ROM            HL-DT-ST CD-RW GCE-8520B  1.02 PQ: 0
+ANSI: 5
+sr1: scsi3-mmc drive: 40x/52x writer cd/rw xa/form2 cdda tray
+sr 4:0:1:0: Attached scsi CD-ROM sr1
+ sda1 sda2 sda3 sda4 < sda5 sda6 >
+sd 0:0:0:0: [sda] Attached SCSI disk
+EXT4-fs (sda5): mounted filesystem with ordered data mode
+VFS: Mounted root (ext4 filesystem) readonly on device 8:5.
+=46reeing unused kernel memory: 392k freed
+ahci: dma'ing to address 0x12e9a8000
+ahci: dma'ing to address 0x12e57a000
+ahci: dma'ing to address 0x12d455000
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sr 4:0:0:0: Attached scsi generic sg1 type 5
+sr 4:0:1:0: Attached scsi generic sg2 type 5
+ahci: dma'ing to address 0x12e13f000
+ahci: dma'ing to address 0x12dd65000
+ahci: dma'ing to address 0x12e594000
+ahci: dma'ing to address 0x12e29a000
+ahci: dma'ing to address 0x12df02000
+ahci: dma'ing to address 0x12cf0d200
+Adding 4939948k swap on /dev/sda6.  Priority:-1 extents:1
+across:4939948k
+ahci: dma'ing to address 0x12d774000
+ahci: dma'ing to address 0x12c40c000
+ahci: dma'ing to address 0x12c01a000
+ahci: dma'ing to address 0x12c3ac000
+ahci: dma'ing to address 0x12beca000
+ahci: dma'ing to address 0x12b25a000
+ahci: dma'ing to address 0x1294b5000
+ahci: dma'ing to address 0x12905d000
+ahci: dma'ing to address 0x12934a000
+ahci: dma'ing to address 0x1287df000
+ahci: dma'ing to address 0x1289c2000
+ahci: dma'ing to address 0x1264f0000
+ahci: dma'ing to address 0x1268a7000
+ahci: dma'ing to address 0x1262ab000
+ahci: dma'ing to address 0x12501b000
+ahci: dma'ing to address 0x124162000
+ahci: dma'ing to address 0x1261a1000
+ahci: dma'ing to address 0x12362c000
+ahci: dma'ing to address 0x122b1a000
+ahci: dma'ing to address 0x121887000
+ahci: dma'ing to address 0x12101c000
+ahci: dma'ing to address 0x120b4b000
+ahci: dma'ing to address 0x11f56b000
+ahci: dma'ing to address 0x11ef71000
+ahci: dma'ing to address 0x120314000
+ahci: dma'ing to address 0x1274e9000
+ahci: dma'ing to address 0x11e129000
+ahci: dma'ing to address 0x11d065000
+ahci: dma'ing to address 0x11cefe000
+ahci: dma'ing to address 0x11c607000
+ahci: dma'ing to address 0x11c384000
+ahci: dma'ing to address 0x1194bb000
+ahci: dma'ing to address 0x11881e000
+ahci: dma'ing to address 0x118669000
+ahci: dma'ing to address 0x1178e7000
+ahci: dma'ing to address 0x116c0c000
+ahci: dma'ing to address 0x116b1b000
+ahci: dma'ing to address 0x1167fe000
+ahci: dma'ing to address 0x11550f000
+ahci: dma'ing to address 0x114cd3000
+ahci: dma'ing to address 0x1147c9000
+ahci: dma'ing to address 0x12464a000
+ahci: dma'ing to address 0x11cf76000
+ahci: dma'ing to address 0x111970000
+ahci: dma'ing to address 0x110bbf000
 
-On Tue, 27 Oct 2009, Alan Cox wrote:
+This was running with BIOS version 1.8. I'll try to test more BIOS
+revisions to work out exactly which ones work with 64bit DMA.
 
-> > (ata1 is the primary channel)
-> > --- I'm wondering, what does it mean? status 0x50 is OK. DMA status 0x24 
-> > is also OK. What was the problem there?
-> 
-> Beats me still. Thanks to Daniela for the info about the chip contention
-> I've got some bits that can be tried, but I don't actually have a 646 to
-> check this.
-> 
-> It should do the neccessary serializing and IRQ bit checks to avoid
-> hitting the case described in the app note.
-> 
-> cmd64x: implement serialization as per notes
-> 
-> From: Alan Cox <alan@linux.intel.com>
-> 
-> Daniela Engert pointed out that there are some implementation notes for the
-> 643 and 646 that deal with certain serialization rules. In theory we don't
-> need them because they apply when the motherboard decides not to retry PCI
-> requests for long enough and the chip is busy doing a DMA transfer on the
-> other channel.
-> 
-> The rule basically is "don't touch the taskfile of the other channel while
-> a DMA is in progress". To implement that we need to
-> 
-> - not issue a command on a channel when there is a DMA command queued
-> - not issue a DMA command on a channel when there are PIO commands queued
-> - use the alternative access to the interrupt source so that we do not
->   touch altstatus or status on shared IRQ.
-> 
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
-> ---
-> 
->  drivers/ata/pata_cmd64x.c |  132 ++++++++++++++++++++++++++++++++++++++++++---
->  1 files changed, 124 insertions(+), 8 deletions(-)
-> 
-> 
-> diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-> index f98dffe..64917ac 100644
-> --- a/drivers/ata/pata_cmd64x.c
-> +++ b/drivers/ata/pata_cmd64x.c
-> @@ -31,7 +31,7 @@
->  #include <linux/libata.h>
->  
->  #define DRV_NAME "pata_cmd64x"
-> -#define DRV_VERSION "0.2.5"
-> +#define DRV_VERSION "0.3.1"
->  
->  /*
->   * CMD64x specific registers definition.
-> @@ -75,6 +75,13 @@ enum {
->  	DTPR1		= 0x7C
->  };
->  
-> +struct cmd_priv
-> +{
-> +	int dma_live;		/* Channel using DMA */
-> +	int irq_t[2];		/* Register to check for IRQ */
-> +	int irq_m[2];		/* Bit to check */
-> +};
-> +
->  static int cmd648_cable_detect(struct ata_port *ap)
->  {
->  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-> @@ -254,17 +261,107 @@ static void cmd648_bmdma_stop(struct ata_queued_cmd *qc)
->  }
->  
->  /**
-> - *	cmd646r1_dma_stop	-	DMA stop callback
-> + *	cmd64x_bmdma_stop	-	DMA stop callback
->   *	@qc: Command in progress
->   *
-> - *	Stub for now while investigating the r1 quirk in the old driver.
-> + *	Track the completion of live DMA commands and clear the dma_live
-> + *	tracking flag as we do.
->   */
->  
-> -static void cmd646r1_bmdma_stop(struct ata_queued_cmd *qc)
-> +static void cmd64x_bmdma_stop(struct ata_queued_cmd *qc)
->  {
-> +	struct ata_port *ap = qc->ap;
-> +	struct cmd_priv *priv = ap->host->private_data;
->  	ata_bmdma_stop(qc);
-> +	WARN_ON(priv->dma_live != ap->port_no );
-> +	priv->dma_live = -1;
-> +}
-> +
-> +/**
-> + *	cmd64x_qc_defer		-	Defer logic for chip limits
-> + *	@qc: queued command
-> + *
-> + *	Decide whether we can issue the command. Called under the host lock.
-> + */
-> +
-> +static int cmd64x_qc_defer(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_host *host = qc->ap->host;
-> +	struct cmd_priv *priv = host->private_data;
-> +	struct ata_port *alt = host->ports[1 ^ qc->ap->port_no];
-> +	int rc;
-> +
-> +	/* Apply the ATA rules first */
-> +	rc = ata_std_qc_defer(qc);
-> +	if (rc)
-> +		return rc;
-> +
-> +	/* If the other port is not live then issue the command */
-> +	if (alt == NULL || !alt->qc_active)
-> +		return 0;
-> +	/* If there is a live DMA command then wait */
-> +	if (priv->dma_live != -1)
-> +		return 	ATA_DEFER_PORT;
-> +	if (qc->tf.protocol == ATAPI_PROT_DMA ||
-> +				qc->tf.protocol == ATA_PROT_DMA) {
-> +		/* Cannot overlap our DMA command */
-> +		if (alt->qc_active)
-> +			return ATA_DEFER_PORT;
-> +		/* Claim the DMA */
-> +		priv->dma_live = qc->ap->port_no;
-> +	}
-> +	return 0;
->  }
->  
-> +/**
-> + *	cmd64x_interrupt - ATA host interrupt handler
-> + *	@irq: irq line (unused)
-> + *	@dev_instance: pointer to our ata_host information structure
-> + *
-> + *	Our interrupt handler for PCI IDE devices.  Calls
-> + *	ata_sff_host_intr() for each port that is flagging an IRQ. We cannot
-> + *	use the defaults as we need to avoid touching status/altstatus during
-> + *	a DMA.
-> + *
-> + *	LOCKING:
-> + *	Obtains host lock during operation.
-> + *
-> + *	RETURNS:
-> + *	IRQ_NONE or IRQ_HANDLED.
-> + */
-> +irqreturn_t cmd64x_interrupt(int irq, void *dev_instance)
-> +{
-> +	struct ata_host *host = dev_instance;
-> +	struct pci_dev *pdev = to_pci_dev(host->dev);
-> +	struct cmd_priv *priv = host->private_data;
-> +	unsigned int i;
-> +	unsigned int handled = 0;
-> +	unsigned long flags;
-> +
-> +	/* TODO: make _irqsave conditional on x86 PCI IDE legacy mode */
-> +	spin_lock_irqsave(&host->lock, flags);
-> +
-> +	for (i = 0; i < host->n_ports; i++) {
-> +		struct ata_port *ap;
-> +		u8 reg;
-> +
-> +		pci_read_config_byte(pdev, priv->irq_t[i], &reg);
-> +		ap = host->ports[i];
-> +		if (ap && (reg & priv->irq_m[i]) &&
-> +		    !(ap->flags & ATA_FLAG_DISABLED)) {
-> +			struct ata_queued_cmd *qc;
-> +
-> +			qc = ata_qc_from_tag(ap, ap->link.active_tag);
-> +			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
-> +			    (qc->flags & ATA_QCFLAG_ACTIVE))
-> +				handled |= ata_sff_host_intr(ap, qc);
-> +		}
-> +	}
-> +
-> +	spin_unlock_irqrestore(&host->lock, flags);
-> +
-> +	return IRQ_RETVAL(handled);
-> +}
->  static struct scsi_host_template cmd64x_sht = {
->  	ATA_BMDMA_SHT(DRV_NAME),
->  };
-> @@ -273,6 +370,8 @@ static const struct ata_port_operations cmd64x_base_ops = {
->  	.inherits	= &ata_bmdma_port_ops,
->  	.set_piomode	= cmd64x_set_piomode,
->  	.set_dmamode	= cmd64x_set_dmamode,
-> +	.bmdma_stop	= cmd64x_bmdma_stop,
-> +	.qc_defer	= cmd64x_qc_defer,
->  };
->  
->  static struct ata_port_operations cmd64x_port_ops = {
-> @@ -282,7 +381,6 @@ static struct ata_port_operations cmd64x_port_ops = {
->  
->  static struct ata_port_operations cmd646r1_port_ops = {
->  	.inherits	= &cmd64x_base_ops,
-> -	.bmdma_stop	= cmd646r1_bmdma_stop,
->  	.cable_detect	= ata_cable_40wire,
->  };
->  
-> @@ -290,6 +388,7 @@ static struct ata_port_operations cmd648_port_ops = {
->  	.inherits	= &cmd64x_base_ops,
->  	.bmdma_stop	= cmd648_bmdma_stop,
->  	.cable_detect	= cmd648_cable_detect,
-> +	.qc_defer	= ata_std_qc_defer
->  };
->  
->  static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-> @@ -340,6 +439,8 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  	const struct ata_port_info *ppi[] = { &cmd_info[id->driver_data], NULL };
->  	u8 mrdmode;
->  	int rc;
-> +	struct ata_host *host;
-> +	struct cmd_priv *cpriv;
->  
->  	rc = pcim_enable_device(pdev);
->  	if (rc)
-> @@ -348,6 +449,17 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class_rev);
->  	class_rev &= 0xFF;
->  
-> +	cpriv = devm_kzalloc(&pdev->dev, sizeof(*cpriv), GFP_KERNEL);
-> +	if (cpriv == NULL)
-> +		return -ENOMEM;
-> +	cpriv->dma_live = -1;
-> +
-> +	/* Table for IRQ checking */
-> +	cpriv->irq_t[0] = CFR;
-> +	cpriv->irq_m[0] = 1 << 2;
-> +	cpriv->irq_t[1] = ARTTIM23;
-> +	cpriv->irq_m[1] = 1 << 4;
-> +
->  	if (id->driver_data == 0)	/* 643 */
->  		ata_pci_bmdma_clear_simplex(pdev);
->  
-> @@ -360,20 +472,24 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  			ppi[0] = &cmd_info[3];
->  	}
->  
-> +
->  	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
->  	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
->  	mrdmode &= ~ 0x30;	/* IRQ set up */
->  	mrdmode |= 0x02;	/* Memory read line enable */
->  	pci_write_config_byte(pdev, MRDMODE, mrdmode);
->  
-> -	/* Force PIO 0 here.. */
-> -
->  	/* PPC specific fixup copied from old driver */
->  #ifdef CONFIG_PPC
->  	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
->  #endif
-> +	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-> +	if (rc)
-> +		return rc;
-> +	host->private_data = cpriv;
->  
-> -	return ata_pci_sff_init_one(pdev, ppi, &cmd64x_sht, NULL);
-> +	pci_set_master(pdev);
-> +	return ata_pci_sff_activate_host(host, cmd64x_interrupt, &cmd64x_sht);
->  }
->  
->  #ifdef CONFIG_PM
-> 
+Thanks!
+Mark
