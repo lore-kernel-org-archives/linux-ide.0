@@ -1,19 +1,66 @@
 From: Simon Jackson <sjackson@bluearc.com>
-Subject: Drives  freeze on Linux appliances.
-Date: Thu, 29 Oct 2009 10:13:21 +0000
-Message-ID: <ABFC24E4C13D81489F7F624E14891C865A9998BB@uk-ex-mbx1.terastack.bluearc.com>
+Subject: RE: Drives  freeze on Linux appliances.
+Date: Thu, 29 Oct 2009 11:14:47 +0000
+Message-ID: <ABFC24E4C13D81489F7F624E14891C865A999919@uk-ex-mbx1.terastack.bluearc.com>
+References: <ABFC24E4C13D81489F7F624E14891C865A9998BB@uk-ex-mbx1.terastack.bluearc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from p01c11o143.mxlogic.net ([208.65.144.66]:33911 "EHLO
-	p01c11o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753220AbZJ2KWo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 06:22:44 -0400
+Received: from p01c12o143.mxlogic.net ([208.65.145.66]:36868 "EHLO
+	p01c12o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370AbZJ2LXr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 07:23:47 -0400
+In-Reply-To: <ABFC24E4C13D81489F7F624E14891C865A9998BB@uk-ex-mbx1.terastack.bluearc.com>
 Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+
+More data from another system that exhibits problems.  In this case the system was rebooted after the drive failed out of the RAID system.  During the Linux boot the drive on ata port 3 did not get detected correctly:
+
+
+
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.101915] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x5 impl SATA mode
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.101917] ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pmp pio slum part
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] scsi0 : ahci
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] scsi1 : ahci
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] scsi2 : ahci
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] scsi3 : ahci
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] scsi4 : ahci
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] scsi5 : ahci
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] ata1: SATA max UDMA/133 abar m2048@0xf0502000 port 0xf0502100 irq 1275
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] ata2: DUMMY
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] ata3: SATA max UDMA/133 abar m2048@0xf0502000 port 0xf0502200 irq 1275
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] ata4: DUMMY
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] ata5: DUMMY
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.105001] ata6: DUMMY
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.763483] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.764623] ata1.00: ATA-8: Hitachi HTE543216L9A300, FB2OC45C, max UDMA/133
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.764624] ata1.00: 312581808 sectors, multi 0: LBA48 NCQ (depth 31/32)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [    3.855671] ata1.00: configured for UDMA/133
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   11.916387] ata3: link is slow to respond, please be patient (ready=0)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   16.502556] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   16.502558] ata3: link online but device misclassified, retrying
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   25.078490] ata3: link is slow to respond, please be patient (ready=0)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   28.981513] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   28.981515] ata3: link online but device misclassified, retrying
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   37.292868] ata3: link is slow to respond, please be patient (ready=0)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   72.525100] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   72.525102] ata3: link online but device misclassified, retrying
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   72.525104] ata3: limiting SATA link speed to 1.5 Gbps
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   78.739656] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   78.739658] ata3: link online but device misclassified, device detection might fail
+2009-10-28T03:30:06-07:00 Stress-Merc-1 kernel: [   79.055602] scsi 0:0:0:0: Direct-Access     ATA      Hitachi HTE54321 FB2O PQ: 0 ANSI: 5
+2009-10-28T0
+
+
+
+-----Original Message-----
+From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Simon Jackson
+Sent: 29 October 2009 10:13
+To: linux-ide@vger.kernel.org
+Subject: Drives freeze on Linux appliances.
 
 
 Hi.
@@ -83,3 +130,7 @@ BIOS version: V1.05
 
 Can anyone shed light on what is happening here?
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
