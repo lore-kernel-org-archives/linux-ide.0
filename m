@@ -1,46 +1,43 @@
-From: Mark Nelson <mdnelson8@gmail.com>
-Subject: Re: [PATCH] ahci: Enable SB600 64bit DMA on MSI K9A2 Platinum
-Date: Thu, 29 Oct 2009 19:32:37 +1100
-Message-ID: <65a6ef750910290132p75312231ub643b631ea43d7f6@mail.gmail.com>
-References: <65a6ef750910252203s58af446fv268c857191e698d3@mail.gmail.com>
-	 <4AE5A330.3080506@kernel.org>
-	 <65a6ef750910261605q45a08791h53cc2afd5d006bb3@mail.gmail.com>
-	 <4AE7382F.20302@kernel.org>
-	 <65a6ef750910271551i47858982xd1138e4a70a1b076@mail.gmail.com>
-	 <65a6ef750910280449k5597d3abkc0995080954e5760@mail.gmail.com>
-	 <4AE835A9.40806@kernel.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] Serialize CMD643 and CMD646 to fix a hardware bug with
+ SSD
+Date: Thu, 29 Oct 2009 03:02:26 -0700 (PDT)
+Message-ID: <20091029.030226.237971377.davem@davemloft.net>
+References: <200910241328.40965.elendil@planet.nl>
+	<20091024.043104.143081386.davem@davemloft.net>
+	<200910250348.33308.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:63072 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753558AbZJ2Ice (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 04:32:34 -0400
-Received: by ewy4 with SMTP id 4so1535712ewy.37
-        for <linux-ide@vger.kernel.org>; Thu, 29 Oct 2009 01:32:38 -0700 (PDT)
-In-Reply-To: <4AE835A9.40806@kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54814
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753584AbZJ2KCD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 06:02:03 -0400
+In-Reply-To: <200910250348.33308.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: elendil@planet.nl
+Cc: bzolnier@gmail.com, mpatocka@redhat.com, linux-ide@vger.kernel.org
 
-On Wed, Oct 28, 2009 at 11:14 PM, Tejun Heo <tj@kernel.org> wrote:
-> Mark Nelson wrote:
->> Things look promising so far with lots of DMAs above 4GB (snippets
->> from syslog):
->
-> It's probably working okay but a good test would be to repeat to copy
-> a large file and checksum it and verify checksums actually match.
->
-Okay, I copied the following file:
+From: Frans Pop <elendil@planet.nl>
+Date: Sun, 25 Oct 2009 03:48:32 +0100
 
--rw-r--r-- 1 mark mark 8715024384 Oct 29 18:42 /home/mark/Test1.mpg
+> On Saturday 24 October 2009, David Miller wrote:
+>> > On Thursday 22 October 2009, David Miller wrote:
+>> >> The most conservative thing to do is to set the flag as
+>> >> is done by mpatocka's patch but I'd like Frans to regression
+>> >> test that on his ultra5.
+>> >>
+>> >> Frans can you do that?
+>> >
+>> > Sure, if you send me the patch (or a link to it). May take a few days.
+>>
+>> It's here:
+>> http://patchwork.ozlabs.org/patch/36615/
+> 
+> Looks to work OK on my system. dmesg shows ide0 and ide1 are now 
+> serialized.
 
-and both the original and the copy came out with the same md5sum of
-c83d8da8fb1aa6843a3b94005278e8a7
-
-This is with BIOS version 1.8 though - I'll go back a few more versions and
-repeat these tests and see if I can find any that don't work with 64bit DMA.
-
-Thanks!
-Mark
+Thanks a lot for testing Frans, I've applied Mikulas's patch
+to ide-2.6
