@@ -1,36 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT]: IDE
-Date: Thu, 29 Oct 2009 07:36:57 -0700 (PDT)
-Message-ID: <20091029.073657.161810259.davem@davemloft.net>
+From: Peter Klotz <peter.klotz@aon.at>
+Subject: Does ICH9M support eSATA Port Multiplier?
+Date: Thu, 29 Oct 2009 20:36:03 +0100
+Message-ID: <4AE9EEA3.1040404@aon.at>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49596
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753813AbZJ2Oge (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 10:36:34 -0400
+Received: from nat-warsl417-02.aon.at ([195.3.96.120]:50837 "EHLO email.aon.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753159AbZJ2Tmm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Oct 2009 15:42:42 -0400
+Received: from smarthub91.highway.telekom.at (HELO email.aon.at) ([172.18.5.238])
+          (envelope-sender <peter.klotz@aon.at>)
+          by fallback43.highway.telekom.at (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 29 Oct 2009 19:36:06 -0000
+Received: from 91-115-38-32.adsl.highway.telekom.at (HELO [192.168.0.102]) ([91.115.38.32])
+          (envelope-sender <peter.klotz@aon.at>)
+          by smarthub91.highway.telekom.at (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 29 Oct 2009 19:36:03 -0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+I have the following setup:
+
+Notebook (Ubuntu 9.10, 2.6.31-14 amd64) with ICH9M controller in AHCI 
+mode and an external storage box (Sil5744, 2 HDDs) connected via eSATA.
+
+The box supports JBOD and the manufacturer says that a Port Multiplier 
+capable eSATA port is needed to see both HDDs.
+
+I see only one HDD.
+
+Here is part of the dmesg output from startup:
+
+[    0.725096] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 4 ports 3 Gbps 
+0x23 impl SATA mode
+[    0.725099] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo 
+pio slum part ems
 
 
-Just once bug fix from Mikulas Patocka, need to add back serialization
-flag to some CMD64X chip variants.
+The pmp flag is not present but several sources claim that ICH9 supports 
+Port Multiplier.
 
-Please pull, thanks a lot!
+Should Port Multiplier be available for ICH9M?
+Can I enable it somehow maybe by using a module option?
 
-The following changes since commit 964fe080d94db82a3268443e9b9ece4c60246414:
-  Linus Torvalds (1):
-        Merge git://git.kernel.org/.../rusty/linux-2.6-for-linus
-
-are available in the git repository at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
-
-Mikulas Patocka (1):
-      ide: Serialize CMD643 and CMD646 to fix a hardware bug with SSD
-
- drivers/ide/cmd64x.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Regards, Peter.
