@@ -1,70 +1,30 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] ide: update Kconfig text to mark as deprecated
-Date: Fri, 30 Oct 2009 00:32:32 +0000
-Message-ID: <20091030003232.6db3f8b8@lxorguk.ukuu.org.uk>
+Date: Fri, 30 Oct 2009 00:33:37 +0000
+Message-ID: <20091030003337.57b712e7@lxorguk.ukuu.org.uk>
 References: <4AE64FCC.4030102@gmail.com>
 	<20091029.031344.102288703.davem@davemloft.net>
 	<51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com>
+	<20091029.173028.248393897.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-14
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56206 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56210 "EHLO
 	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753721AbZJ3Aaz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 20:30:55 -0400
-In-Reply-To: <51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com>
+	with ESMTP id S1755430AbZJ3Aby (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 20:31:54 -0400
+In-Reply-To: <20091029.173028.248393897.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: hancockrwd@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> > 1) Add a way for the ATA layer to create compat device
-> > =A0 nodes so that people can change over to use the ATA
-> > =A0 layer for their devices without any fstab et al. changes.
-> >
-> > =A0 These compat device nodes do not have to be so featureful
-> > =A0 that they support hdparm or smartd or anything like that,
-> > =A0 but they need to work well enough to mount filesystems, and
-> > =A0 mount swap partitions, and interact with device management
-> > =A0 systems like udev as if they were real IDE devices.
->=20
-> I'm not really sure if this is worthwhile.. is having to update fstab
-> really so onerous as to be worth the trouble? You'd presumably have t=
-o
-> enable the creation of the compat device nodes somehow (enabling them
-> by default seems like it would cause a lot of confusion), so it's not
-> like you wouldn't need any config changes that way, either.
+> And I know I won't be the only person in this kind of situation.
+> 
+> So, proceeding in any other way is really a non-starter.
 
-Not worth the pain or the code complexity. Almost no system today hard
-codes the identifiers. For those that do you can use a udev rule to mak=
-e
-symlinks.
-
-> > 2) The two or so remaining devices which have IDE support but
-> > =A0 don't have an ATA layer driver need porting.
->=20
-> Has anyone gone through and made a list of these? pmac seems like the
-> most obvious one..
-
-Pmac is probably the only one that matters. It basically needs an
-alternate set of DMA sg drivers for the MAC DMA, the rest is very
-"normal". The other is SGIIOC4 which I doubt anyone cares about.
-
-There are a few other things that I think could do with addressing
-particularly better IRQ unmasking for both polled PIO (embedded devices=
-)
-and interrupt driven PIO on relatively sane hardware would be helpful
-particularly in the embedded world.
-
-IDE will self correct in time anyway - new hardware doesn't work with i=
-t,
-newer embedded devices are also moving away from compact flash, so it'l=
-l
-die of its own accord.
-
-As such while things like pmac support in libata will be nice I don't
-think there is any need to go around obsoleting it or pressuring people
-to move stacks.
+Then keep old IDE until the hardware rots. Its not worth contaminating
+libata and the scsi core with magic glue that only Dave Miller uses ;)
 
 Alan
