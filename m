@@ -1,87 +1,47 @@
-From: Robert Hancock <hancockrwd@gmail.com>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [PATCH] ide: update Kconfig text to mark as deprecated
-Date: Thu, 29 Oct 2009 18:19:03 -0600
-Message-ID: <51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com>
+Date: Thu, 29 Oct 2009 17:30:28 -0700 (PDT)
+Message-ID: <20091029.173028.248393897.davem@davemloft.net>
 References: <4AE64FCC.4030102@gmail.com>
-	 <20091029.031344.102288703.davem@davemloft.net>
+	<20091029.031344.102288703.davem@davemloft.net>
+	<51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:38916 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756025AbZJ3AS6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 20:18:58 -0400
-In-Reply-To: <20091029.031344.102288703.davem@davemloft.net>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49905
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756041AbZJ3AaF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Oct 2009 20:30:05 -0400
+In-Reply-To: <51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
+To: hancockrwd@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Oct 29, 2009 at 4:13 AM, David Miller <davem@davemloft.net> wro=
-te:
-> From: Robert Hancock <hancockrwd@gmail.com>
-> Date: Mon, 26 Oct 2009 19:41:32 -0600
->
->> The current Kconfig text for CONFIG_IDE doesn't give a hint to users=
- that this
->> subsystem is currently in maintenance mode and isn't actively develo=
-ped.
->> Let's correct this by marking it as deprecated, and also get rid of =
-a bunch of
->> unnecessary text that doesn't really have anything to do with what t=
-he option is
->> for.
->>
->> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
->
-> Applied to ide-next-2.6, thanks.
->
-> But honestly, we have to reword or revert this if certain
-> things don't happen before the next merge window.
->
-> What it comes to is that two things have to happen before
-> we can completely shut down IDE and schedule it's removal.
+From: Robert Hancock <hancockrwd@gmail.com>
+Date: Thu, 29 Oct 2009 18:19:03 -0600
 
-Well, that's why it's a Kconfig patch and not an entry in the feature
-removal schedule.. the idea is to tell people that while they can
-continue using the code for now, it's not under active development and
-will likely someday go away, so migrate if you can. That doesn't imply
-that we're close to being able to schedule IDE removal yet.
+> I think people would be better off just updating their fstab and being
+> done with it.. preferably switching to something like mounting by
+> label or UUID so that things just work even if the devices get
+> reordered when they rearrange their cables or add a new controller,
+> etc. Every Fedora/Red Hat-derived OS has set things up this way by
+> default for years..
 
->
-> 1) Add a way for the ATA layer to create compat device
-> =A0 nodes so that people can change over to use the ATA
-> =A0 layer for their devices without any fstab et al. changes.
->
-> =A0 These compat device nodes do not have to be so featureful
-> =A0 that they support hdparm or smartd or anything like that,
-> =A0 but they need to work well enough to mount filesystems, and
-> =A0 mount swap partitions, and interact with device management
-> =A0 systems like udev as if they were real IDE devices.
+You can't just make devices dissapear without providing some
+kernel option or similar that keeps things working.
 
-I'm not really sure if this is worthwhile.. is having to update fstab
-really so onerous as to be worth the trouble? You'd presumably have to
-enable the creation of the compat device nodes somehow (enabling them
-by default seems like it would cause a lot of confusion), so it's not
-like you wouldn't need any config changes that way, either.
+My very own machines will break unless that happens.
 
-I think people would be better off just updating their fstab and being
-done with it.. preferably switching to something like mounting by
-label or UUID so that things just work even if the devices get
-reordered when they rearrange their cables or add a new controller,
-etc. Every Fedora/Red Hat-derived OS has set things up this way by
-default for years..
+And yes I absolutely do consider it too onerous to change my fstab
+because I have to (or want to be able to) go back to older kernels
+which will only have the IDE stack enabled.  I refuse to have to
+monkey around with my fstab every time I want to go back and forth.
 
->
-> 2) The two or so remaining devices which have IDE support but
-> =A0 don't have an ATA layer driver need porting.
+And god forbid I actually want to test some -stable IDE fix on this
+machine :-)
 
-Has anyone gone through and made a list of these? pmac seems like the
-most obvious one..
+And I know I won't be the only person in this kind of situation.
 
->
-> I plan to work on #1 if I get the time. =A0Someone with the requisite
-> hardware needs to work on #2, and I'm sure whoever wants to work on
-> that will find it easy to get help from some ATA layer experts.
->
+So, proceeding in any other way is really a non-starter.
