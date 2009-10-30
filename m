@@ -1,46 +1,72 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: [PATCH] ide: update Kconfig text to mark as deprecated
-Date: Thu, 29 Oct 2009 21:47:58 -0400
-Message-ID: <4AEA45CE.2060708@garzik.org>
-References: <4AE64FCC.4030102@gmail.com>	<20091029.031344.102288703.davem@davemloft.net>	<51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com> <20091030003232.6db3f8b8@lxorguk.ukuu.org.uk>
+Date: Fri, 30 Oct 2009 09:15:51 +0100
+Message-ID: <200910300915.51836.Martin@lichtvoll.de>
+References: <4AE64FCC.4030102@gmail.com> <51f3faa70910291719kecb5edcp3b8812981b69acb1@mail.gmail.com> <20091029.173028.248393897.davem@davemloft.net> (sfid-20091030_084126_843316_FFA89DBC)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-14; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1930772.Lympb3PX7R";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33956 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754124AbZJ3Br6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Oct 2009 21:47:58 -0400
-In-Reply-To: <20091030003232.6db3f8b8@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755474AbZJ3IPv@vger.kernel.org>
+In-Reply-To: <20091029.173028.248393897.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: David Miller <davem@davemloft.net>, hancockrwd@gmail.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Robert Hancock <hancockrwd@gmail.com>, David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 10/29/2009 08:32 PM, Alan Cox wrote:
-> IDE will self correct in time anyway - new hardware doesn't work with it,
-> newer embedded devices are also moving away from compact flash, so it'll
-> die of its own accord.
->
-> As such while things like pmac support in libata will be nice I don't
-> think there is any need to go around obsoleting it or pressuring people
-> to move stacks.
+--nextPart1930772.Lympb3PX7R
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
+Am Freitag 30 Oktober 2009 schrieb David Miller:
+> And yes I absolutely do consider it too onerous to change my fstab
+> because I have to (or want to be able to) go back to older kernels
+> which will only have the IDE stack enabled.  I refuse to have to
+> monkey around with my fstab every time I want to go back and forth.
 
-This has been my general policy...  people will continue moving away 
-from IDE over time.  Not much need to do anything but let sleeping dogs lie.
+You don't need to when you used UUID or LABEL - I prefer the later cause=20
+its more readable. Actually I never quite understood while one would want=20
+to use dynamic things like /dev/hdd or /dev/sdb in the first place. Thats=20
+for me not that much better than C: or D:. Connect your harddisks=20
+differently and you are screwed.
 
-libata definitely needs pmac support, that is the really only big 
-missing driver piece, IMO.
+On AmigaOS partitions were refered by names since the beginning. When I=20
+copied my OS to a different harddisk I gave the new partition the same=20
+name, copied all files over, removed the old harddisk or renamed the old=20
+partition and reduced its boot priority and be done with it. (Not that=20
+AmigaOS had a fstab that I could have edited anyway.) This way I could=20
+connect an IDE disk with the IDE controller on board, an IDE controller=20
+card like FastATA or via bridge to the UWSCSI controller on the CyberStorm=
+=20
+PPC turbo board without having to change any configuration in order to be=20
+able to boot.
 
-On compatibility:  while a compat ATA block device would be nice -- 
-having a native Linux block driver for ATA disks has been a longstanding 
-"want" since Day One -- a compat block device purely for these 
-situations would be quite a bit of work for a tiny-and-shrinking 
-userbase.  And that totally ignores an idea of attempting compatibility 
-with IDE's ATAPI setup, another huge can-o-worms.
+(Another thing to copy would be how removable storage devices are handled.=
+=20
+If you remove a disk or usb stick prematurely while the OS is still=20
+writing to it you get a "You MUST insert volume xyz again!" requester and=20
+if you do, the writes will be completed. I never have seen any other OS=20
+that does it this sane way as a standard. Other OS either disallow device=20
+removal where possible or loose data.)
 
-	Jeff
+Ciao,
+=2D-=20
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
+--nextPart1930772.Lympb3PX7R
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
+iEYEABECAAYFAkrqoLcACgkQmRvqrKWZhMfkmgCgiKSFTacVvgxyN97P8Wk2c05w
+U/4AnibEcqjw/Htgrug3P0WPSIQukp3a
+=2ObX
+-----END PGP SIGNATURE-----
+
+--nextPart1930772.Lympb3PX7R--
