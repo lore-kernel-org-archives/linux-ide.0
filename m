@@ -1,45 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Bugme-new] [Bug 14518] New: I/O appears to get stuck on
- certain rsync backup job and system clock halts then
-Date: Sat, 31 Oct 2009 14:35:58 +0000
-Message-ID: <20091031143558.1f86e049@lxorguk.ukuu.org.uk>
-References: <bug-14518-10286@http.bugzilla.kernel.org/>
-	<20091031001711.0d3a8238.akpm@linux-foundation.org>
-	<20091031114804.75ca5835@lxorguk.ukuu.org.uk>
-	<200910311322.10242.Martin@lichtvoll.de>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Does ICH9M support eSATA Port Multiplier?
+Date: Sat, 31 Oct 2009 11:02:29 -0600
+Message-ID: <4AEC6DA5.9090603@gmail.com>
+References: <4AE9EEA3.1040404@aon.at> <4AEA2D16.50701@gmail.com> <4AEB6458.20401@aon.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47831 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757798AbZJaOeY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Oct 2009 10:34:24 -0400
-In-Reply-To: <200910311322.10242.Martin@lichtvoll.de>
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:38030 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932373AbZJaRC2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Oct 2009 13:02:28 -0400
+Received: by ywh40 with SMTP id 40so3492290ywh.33
+        for <linux-ide@vger.kernel.org>; Sat, 31 Oct 2009 10:02:33 -0700 (PDT)
+In-Reply-To: <4AEB6458.20401@aon.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, bugzilla-daemon@bugzilla.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: Peter Klotz <peter.klotz@aon.at>
+Cc: linux-ide@vger.kernel.org
 
-> > #2 the Cardbus Sil3512 controller somehow got stuck asserting an
-> > interrupt that wasn't cleared.
-> 
-> What could be the reason for that one? Could it be that the PCMCIA card 
-> had to many plug / unplug cycles. Contacts look fine tough.
+On 10/30/2009 04:10 PM, Peter Klotz wrote:
+> Robert Hancock wrote:
+>>> Can I enable it somehow maybe by using a module option?
+>>
+>> No module parameter for that, you'd have to hack the code in ahci.c to
+>> force the option on. No guarantees it's going to work if the
+>> controller doesn't report the capability, though.
+>
+> Could you please give me a hint what to change in ahci.c?
+>
+> I would like to try and see what happens.
 
-I have no idea.
-> 
-> > Needs the Sil3512 person to look at it. Even with flaky cabling it
-> >  should have either recovered cleanly or dropped the device.
-> 
-> Yes, thats my main concern. Why did it stuck the machine for so long?
+Based on the version in Linus' git, you'd likely want to add to 
+ahci_save_initial_config something like:
 
-It needs someone with 3512 hardware/knowledge to work on it. 
+cap |= HOST_CAP_PMP;
 
-> Ok, if I can help with some test I try my best to take to time for it. I 
-> will wait for further instructions / questions.
+>
+> Could such a hack damage the hardware?
 
-Dump the IRQ counter (cat /proc/interrupts) somewhere before each rsync
-and if it locks up again then when you remove the card take a second
-copy. If its a stuck IRQ then the one IRQ will show up stupendously large
-numbers.
+Not likely. It's not impossible that data loss could result though, 
+better back up important files first..
