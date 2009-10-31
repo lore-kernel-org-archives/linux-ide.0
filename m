@@ -1,39 +1,45 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
-Date: Sat, 31 Oct 2009 09:56:26 -0400
-Message-ID: <4AEC420A.9030502@rtr.ca>
-References: <20091026162011.GA3289@frolo.macqel> <4AE64031.5060105@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [Bugme-new] [Bug 14518] New: I/O appears to get stuck on
+ certain rsync backup job and system clock halts then
+Date: Sat, 31 Oct 2009 14:35:58 +0000
+Message-ID: <20091031143558.1f86e049@lxorguk.ukuu.org.uk>
+References: <bug-14518-10286@http.bugzilla.kernel.org/>
+	<20091031001711.0d3a8238.akpm@linux-foundation.org>
+	<20091031114804.75ca5835@lxorguk.ukuu.org.uk>
+	<200910311322.10242.Martin@lichtvoll.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:55940 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757794AbZJaN4a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Oct 2009 09:56:30 -0400
-In-Reply-To: <4AE64031.5060105@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47831 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757798AbZJaOeY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Oct 2009 10:34:24 -0400
+In-Reply-To: <200910311322.10242.Martin@lichtvoll.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Philippe De Muyter <phdm@macqel.be>, linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, bugzilla-daemon@bugzilla.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 
-Robert Hancock wrote:
-..
-> This has come up before:
+> > #2 the Cardbus Sil3512 controller somehow got stuck asserting an
+> > interrupt that wasn't cleared.
 > 
-> http://marc.info/?l=linux-ide&m=123064513313466&w=2
+> What could be the reason for that one? Could it be that the PCMCIA card 
+> had to many plug / unplug cycles. Contacts look fine tough.
+
+I have no idea.
 > 
-> I think this timeout should not even exist. libata has no such timeout 
-> (only the overall command completion timeout), and I can't find any 
-> reference in current ATA specs to the device being required to raise DRQ 
-> in any particular amount of time.
-..
+> > Needs the Sil3512 person to look at it. Even with flaky cabling it
+> >  should have either recovered cleanly or dropped the device.
+> 
+> Yes, thats my main concern. Why did it stuck the machine for so long?
 
-The reason for the original (20ms, then 50ms) timeout was this text
-from the ATA1 specification, long since outdated:
+It needs someone with 3512 hardware/knowledge to work on it. 
 
-   -  Upon receipt of a Class 3 command, the drive sets BSY within 400 nsec,
-      sets  up the sector buffer for a write operation, sets DRQ within 20
-      msec, and clears BSY within 400 nsec of setting DRQ.
+> Ok, if I can help with some test I try my best to take to time for it. I 
+> will wait for further instructions / questions.
 
-Cheers
+Dump the IRQ counter (cat /proc/interrupts) somewhere before each rsync
+and if it locks up again then when you remove the card take a second
+copy. If its a stuck IRQ then the one IRQ will show up stupendously large
+numbers.
