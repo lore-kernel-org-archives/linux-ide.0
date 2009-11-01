@@ -1,41 +1,52 @@
-From: Milan Burgdorf <milan@wwwburgdorf.de>
-Subject: Re: Request to 2.6.24/patch-sata_promise-limit-sataii-to-1.5Gbps-2.6.24
- because it doesn't work
-Date: Sun, 01 Nov 2009 16:44:28 +0100
-Message-ID: <4AEDACDC.2010609@wwwburgdorf.de>
-References: <200910231231.n9NCVbIV011530@post.webmailer.de> <19169.44382.793296.116944@pilspetsen.it.uu.se> <4AE85B32.7050203@wwwburgdorf.de>
+From: Peter Klotz <peter.klotz@aon.at>
+Subject: Re: Does ICH9M support eSATA Port Multiplier?
+Date: Sun, 01 Nov 2009 21:34:09 +0100
+Message-ID: <4AEDF0C1.5030905@aon.at>
+References: <4AE9EEA3.1040404@aon.at> <4AEA2D16.50701@gmail.com> <4AEB6458.20401@aon.at> <4AEC6DA5.9090603@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.162]:19679 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbZKAPod (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Nov 2009 10:44:33 -0500
-Received: from [10.12.79.11] (p54AE7A9A.dip.t-dialin.net [84.174.122.154])
-	by post.strato.de (klopstock mo27) (RZmta 22.1)
-	with ESMTP id k0566clA1FW356 for <linux-ide@vger.kernel.org>;
-	Sun, 1 Nov 2009 16:44:34 +0100 (MET)
-In-Reply-To: <4AE85B32.7050203@wwwburgdorf.de>
+Received: from WARSL404PIP3.highway.telekom.at ([195.3.96.115]:64845 "EHLO
+	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752265AbZKAUeJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Nov 2009 15:34:09 -0500
+Received: from 212-183-98-186.adsl.highway.telekom.at (HELO [192.168.0.102]) ([212.183.98.186])
+          (envelope-sender <peter.klotz@aon.at>)
+          by smarthub97.highway.telekom.at (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 1 Nov 2009 20:34:09 -0000
+In-Reply-To: <4AEC6DA5.9090603@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
->> the 2.6.32-rc kernel has updates for the controller reset operations
->> which may help get stubborn disks back on line. That patch is available
->> for 2.6.28 to 2.6.31 kernels in the patch repository you mention below.
+Robert Hancock wrote:
+> On 10/30/2009 04:10 PM, Peter Klotz wrote:
+>> Robert Hancock wrote:
+>>>> Can I enable it somehow maybe by using a module option?
+>>>
+>>> No module parameter for that, you'd have to hack the code in ahci.c to
+>>> force the option on. No guarantees it's going to work if the
+>>> controller doesn't report the capability, though.
+>>
+>> Could you please give me a hint what to change in ahci.c?
+>>
+>> I would like to try and see what happens.
 > 
->> Libata has a generic libata.force= parameter which can be used to tweak
->> various settings, including 1.5Gbps vs 3Gbps. I haven't used it myself,
->> but see Documentation/kernel-parameters.txt for details.
+> Based on the version in Linus' git, you'd likely want to add to 
+> ahci_save_initial_config something like:
 > 
+> cap |= HOST_CAP_PMP;
+> 
+>>
+>> Could such a hack damage the hardware?
+> 
+> Not likely. It's not impossible that data loss could result though, 
+> better back up important files first..
 
-Now I'm using Xubuntu 9.10 with Kernel 2.6.31. "libata.force=1.5Gbps"
-parameter at kernel starting works very fine up to now.
+Thanks a lot. I had already prepared the kernel, then I found the Intel 
+datasheet, which states that ICH9 does not support port multipliers.
 
-During the next days I'll patch the sata_promise module with your
-additions to test the "other" way.
+http://www.intel.com/assets/pdf/datasheet/316972.pdf
 
-Thank you very much! My problem is solved!!!
-
-Milan
+Regards, Peter.
