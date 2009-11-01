@@ -1,34 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14515] ATA controller losing interrupt, system stall
-Date: Sat, 31 Oct 2009 23:44:13 GMT
-Message-ID: <200910312344.n9VNiDJe004529@demeter.kernel.org>
-References: <bug-14515-11633@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Thomas Abraham <thomas.ab@samsung.com>
+Subject: [PATCH 2/7] S3C64XX: Add MEM_SYS_CFG register definition.
+Date: Sun,  1 Nov 2009 13:50:31 +0900
+Message-ID: <1257051031-8074-1-git-send-email-thomas.ab@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:33499 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933348AbZJaXoI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Oct 2009 19:44:08 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9VNiDh0004530
-	for <linux-ide@vger.kernel.org>; Sat, 31 Oct 2009 23:44:13 GMT
-In-Reply-To: <bug-14515-11633@http.bugzilla.kernel.org/>
+Received: from ganesha.gnumonks.org ([213.95.27.120]:53528 "EHLO
+	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889AbZKAEwk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Nov 2009 00:52:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: ben-linux@fluff.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, Thomas Abraham <thomas.ab@samsung.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14515
+This patch adds the definition of MEM_SYS_CFG register for
+S3C64xx platform.
 
+Signed-off-by: Abhilash Kesavan <a.kesavan@samsung.com>
+Signed-off-by: Thomas Abraham <thomas.ab@samsung.com>
+---
+ arch/arm/plat-s3c64xx/include/plat/regs-clock.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-
-
-
---- Comment #3 from Lloyd Weehuizen <lloyd@fusion.net.nz>  2009-10-31 23:44:12 ---
-Rolling back to kernel 2.6.30 reduces the occurrence of this issue, but it
-still occurs.
-
+diff --git a/arch/arm/plat-s3c64xx/include/plat/regs-clock.h b/arch/arm/plat-s3c64xx/include/plat/regs-clock.h
+index 2c3224c..ad0823e 100644
+--- a/arch/arm/plat-s3c64xx/include/plat/regs-clock.h
++++ b/arch/arm/plat-s3c64xx/include/plat/regs-clock.h
+@@ -15,6 +15,8 @@
+ #ifndef __PLAT_REGS_CLOCK_H
+ #define __PLAT_REGS_CLOCK_H __FILE__
+ 
++#include <plat/map-base.h>
++
+ #define S3C_CLKREG(x)		(S3C_VA_SYS + (x))
+ 
+ #define S3C_APLL_LOCK		S3C_CLKREG(0x00)
+@@ -33,6 +33,7 @@
+ #define S3C_PCLK_GATE		S3C_CLKREG(0x34)
+ #define S3C_SCLK_GATE		S3C_CLKREG(0x38)
+ #define S3C_MEM0_GATE		S3C_CLKREG(0x3C)
++#define S3C_MEM_SYS_CFG         S3C_CLKREG(0x120)
+ 
+ /* CLKDIV0 */
+ #define S3C6400_CLKDIV0_MFC_MASK	(0xf << 28)
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.5.3.4
+
