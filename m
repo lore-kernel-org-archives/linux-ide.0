@@ -1,30 +1,63 @@
-From: <JosephChan@via.com.tw>
-Subject: [Patch 1/1 v3 RESEND] sata_via.c: Remove redundant device ID for VIA VT8261
-Date: Mon, 2 Nov 2009 19:36:08 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A353BCF@exchtp03.taipei.via.com.tw>
+From: =?UTF-8?B?SMOla29uIEzDuHZkYWw=?= <hlovdal@gmail.com>
+Subject: Re: [PATCH 5/7] S3C64XX: Add platform data and driver resources for
+	IDE controller driver.
+Date: Mon, 2 Nov 2009 22:13:40 +0100
+Message-ID: <a01a16b50911021313h681bac38pdeea996a3e3cfb81@mail.gmail.com>
+References: <1257051403-8146-1-git-send-email-thomas.ab@samsung.com>
+	 <20091101130502.GI8096@trinity.fluff.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:29846 "EHLO
-	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754335AbZKBLgH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Nov 2009 06:36:07 -0500
-Content-class: urn:content-classes:message
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:61750 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754471AbZKBVNg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Nov 2009 16:13:36 -0500
+Received: by ywh40 with SMTP id 40so4868175ywh.33
+        for <linux-ide@vger.kernel.org>; Mon, 02 Nov 2009 13:13:41 -0800 (PST)
+In-Reply-To: <20091101130502.GI8096@trinity.fluff.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, stable@kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, tj@kernel.org, jeff@garzik.org, JosephChan@via.com.tw
+To: Ben Dooks <ben-linux@fluff.org>
+Cc: Thomas Abraham <thomas.ab@samsung.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-UmUtc2VuZC4NCg0KSnVzdCByZW1vdmUgcmVkdW5kYW50IGRldmljZSBJRCBmb3IgVklBIFZUODI2
-MS4NClRoZSBkZXZpY2UgSUQgMHg5MDAwIGFuZCAweDkwNDAgYXJlIHJlZHVuZGFudCAoZm9yIFZU
-ODI2MSkuDQpUaGUgMHg5MDQwIGlzIHJlc2VydmVkIGZvciBvdGhlciB1c2FnZS4NCg0KU2lnbmVk
-LW9mZi1ieTogSm9zZXBoIENoYW4gPGpvc2VwaGNoYW5AdmlhLmNvbS50dz4NCg0KLS0tIGEvZHJp
-dmVycy9hdGEvc2F0YV92aWEuYwkyMDA5LTEwLTE1IDIxOjM4OjE0LjAwMDAwMDAwMCArMDgwMA0K
-KysrIGIvZHJpdmVycy9hdGEvc2F0YV92aWEuYwkyMDA5LTEwLTE1IDIxOjM4OjI4LjAwMDAwMDAw
-MCArMDgwMA0KQEAgLTkzLDcgKzkzLDYgQEANCiAJeyBQQ0lfVkRFVklDRShWSUEsIDB4NzM3Miks
-IHZ0NjQyMCB9LA0KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHg1Mjg3KSwgdnQ4MjUxIH0sIC8qIDIg
-c2F0YSBjaG5scyAoTWFzdGVyL1NsYXZlKSAqLw0KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHg5MDAw
-KSwgdnQ4MjUxIH0sDQotCXsgUENJX1ZERVZJQ0UoVklBLCAweDkwNDApLCB2dDgyNTEgfSwNCiAN
-CiAJeyB9CS8qIHRlcm1pbmF0ZSBsaXN0ICovDQogfTsNCg0K
+2009/11/1 Ben Dooks <ben-linux@fluff.org>:
+> On Sun, Nov 01, 2009 at 01:56:43PM +0900, Thomas Abraham wrote:
+>> + =C2=A0 =C2=A0 if (!pd) {
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 printk(KERN_ERR "%s: no =
+memory for platform data\n", __func__);
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
+>> + =C2=A0 =C2=A0 }
+>> + =C2=A0 =C2=A0 s3c_device_cfcon.dev.platform_data =3D pd;
+>
+> doing:
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!pd)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0printk(KERN_ER=
+R "%s: no memory for platform data\n", __func__);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0else
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0s3c_device_cfc=
+on.dev.platform_data =3D pd;
+>
+> would be better.
+
+I do not quite understand why this would be better. In the former case
+the normal operation (e.g. s3c_dev... =3D pd;) is written directly with=
+out
+any extra indentation and is not buried (deep) down in some error handl=
+ing.
+
+Writing code in that style makes it very easy to read with a mental fil=
+ter like
+
+     if (test) {
+             ERROR HANDLING, ERROR HANDLING, ERROR HANDLING, ERROR HAND=
+LING;
+             return;
+     }
+     NORMAL CASE, NORMAL CASE, NORMAL CASE, ;
+
+See also http://stackoverflow.com/questions/114342/what-are-code-smells=
+-what-is-the-best-way-to-correct-them/223881#223881.
+
+BR H=C3=A5kon L=C3=B8vdal
