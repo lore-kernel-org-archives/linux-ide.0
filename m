@@ -1,31 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [Patch 1/1 v3 RESEND] sata_via.c: Remove redundant device ID
- for VIA VT8261
-Date: Tue, 03 Nov 2009 16:17:46 -0500
-Message-ID: <4AF09DFA.2010503@garzik.org>
-References: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A353BCF@exchtp03.taipei.via.com.tw>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 10/14] drivers/ata/libata: Move dereference after NULL
+ test
+Date: Tue, 03 Nov 2009 16:17:53 -0500
+Message-ID: <4AF09E01.1060205@pobox.com>
+References: <Pine.LNX.4.64.0910170841270.9213@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59991 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60001 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946AbZKCVRp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Nov 2009 16:17:45 -0500
-In-Reply-To: <C80EF34A3D2E494DBAF9AC29C7AE4EB80A353BCF@exchtp03.taipei.via.com.tw>
+	id S1753842AbZKCVRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Nov 2009 16:17:51 -0500
+In-Reply-To: <Pine.LNX.4.64.0910170841270.9213@ask.diku.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: JosephChan@via.com.tw
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk, tj@kernel.org
+To: Julia Lawall <julia@diku.dk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 11/02/2009 06:36 AM, JosephChan@via.com.tw wrote:
-> Re-send.
+On 10/17/2009 02:41 AM, Julia Lawall wrote:
+> From: Julia Lawall<julia@diku.dk>
 >
-> Just remove redundant device ID for VIA VT8261.
-> The device ID 0x9000 and 0x9040 are redundant (for VT8261).
-> The 0x9040 is reserved for other usage.
+> In each case, if the NULL test on qc is needed, then the derefernce
+> should be after the NULL test.
 >
-> Signed-off-by: Joseph Chan<josephchan@via.com.tw>
+> A simplified version of the semantic match that detects this problem is as
+> follows (http://coccinelle.lip6.fr/):
+>
+> //<smpl>
+> @match exists@
+> expression x, E;
+> identifier fld;
+> @@
+>
+> * x->fld
+>    ... when != \(x = E\|&x\)
+> * x == NULL
+> //</smpl>
+>
+> Signed-off-by: Julia Lawall<julia@diku.dk>
 
 applied
 
