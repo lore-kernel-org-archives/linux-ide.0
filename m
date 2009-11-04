@@ -1,60 +1,69 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Wed, 04 Nov 2009 01:50:41 +0100
-Message-ID: <4AF0CFE1.8050407@tomt.net>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org>
+From: Peter Klotz <peter.klotz@aon.at>
+Subject: Re: Problems with Silicon Image Port Multiplier Card
+Date: Wed, 04 Nov 2009 06:54:28 +0100
+Message-ID: <4AF11714.2080809@aon.at>
+References: <4AF0A1FC.4030106@aon.at> <4AF0C6CA.8020205@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.ugh.no ([80.239.42.168]:45066 "EHLO mail1.ugh.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751039AbZKDBXW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Nov 2009 20:23:22 -0500
-In-Reply-To: <4AA7F965.6020408@garzik.org>
+Received: from WARSL404PIP1.highway.telekom.at ([195.3.96.112]:4596 "EHLO
+	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750767AbZKDFy0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Nov 2009 00:54:26 -0500
+Received: from 212-183-97-89.adsl.highway.telekom.at (HELO [192.168.0.102]) ([212.183.97.89])
+          (envelope-sender <peter.klotz@aon.at>)
+          by smarthub96.highway.telekom.at (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 4 Nov 2009 05:54:29 -0000
+In-Reply-To: <4AF0C6CA.8020205@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: tfjellstrom@shaw.ca, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
->> No errors on that disk. Other than the one above, and its more of a 
->> warning.
->> However, I just rebooted to add some extra drives, thinking everything 
->> was
->> working a little better now that I've updated to 2.6.31-rc9, I'm 
->> treated to
->> the following two messages right after boot (and a system lockup to 
->> boot):
+Robert Hancock wrote:
+> On 11/03/2009 03:34 PM, Peter Klotz wrote:
+>> Hello
+>>
+>> My port multiplier capable eSATA Express Card refuses to talk to my
+>> external HDD box (2 HDDs, JBOD mode).
+>>
+>> Inserting the card into the Express Card slot looks normal:
+>>
+>> [ 622.549794] pciehp 0000:00:1c.2:pcie04: Card present on Slot(0)
+>> [ 622.698856] sata_sil24 0000:03:00.0: enabling device (0100 -> 0103)
+>> [ 622.698873] sata_sil24 0000:03:00.0: PCI INT A -> GSI 18 (level, low)
+>> -> IRQ 18
+>> [ 622.702334] scsi8 : sata_sil24
+>> [ 622.709268] scsi9 : sata_sil24
+>> [ 622.709409] ata7: SATA max UDMA/100 host m128@0xfd804000 port
+>> 0xfd800000 irq 18
+>> [ 622.709418] ata8: SATA max UDMA/100 host m128@0xfd804000 port
+>> 0xfd802000 irq 18
+>> [ 624.800150] ata7: SATA link down (SStatus 0 SControl 0)
+>> [ 626.890131] ata8: SATA link down (SStatus 0 SControl 0)
+>>
+>>
+>> Turning on the external box results in lots of errors:
+>>
+>> [ 666.030153] ata8: hard resetting link
+>> [ 668.250125] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+>> [ 668.250949] ata8.15: Port Multiplier 1.1, 0x1095:0x5744 r33, 3 ports,
+>> feat 0x1/0x9
+>> [ 668.251251] ata8.15: applying bridge limits
+>> [ 668.251340] ata8.00: hard resetting link
+>> [ 668.720140] ata8.00: failed to read SCR 0 (Emask=0x40)
+>> [ 668.720156] ata8.15: hard resetting link
+>> [ 668.720161] ata8: controller in dubious state, performing PORT_RST
+> 
+> Which kernel version is this? Can you test latest git?
+> 
 
-Jeff & Co,
+Sorry, I forgot the kernel version.
 
-Just chiming in with a "me too" comment.
+It is 2.6.31-14 (Ubuntu 9.10 amd64). I will try the latest vanilla kernel.
 
-Identical issues with the AOC-SASLP-MV8 card with 8 Seagate Barracuda 
-7200.11 1.5TB drives using the mvsas driver. Creating a md raid array 
-seems to trigger it nearly instantly, however other loads do not trigger 
-it as fast (if at all, only tested briefly with paralell dd).
+The card is able to talk to a single disk enclosure without problems, so 
+  I would assume that either Port Multiplying or my external 2-disk box 
+is at fault here.
 
-Not sure if its related in any way, but I also noticed that with 
-parallell dd read on all ports, the card/driver tops out at 600MB/s even 
-though the card is in a northbridge connected slot running in x4 mode. 
-Only the first 4-5 ports run at nearly full speed, while the rest barely 
-gets to read any data at all. To illustrate, it looks sort of like this 
-in iostat -m:
-sda 122
-sdb 122
-sbc 120
-sdd 121
-sde 100
-sdf 10
-sdg 5
-sdh 5
-
-Starting to think this driver has some issues with concurrency.. The 
-other controllers have no issues saturating all their ports, even if 
-they are on a south bridge connected slot.
-
-Same disks/setup works just fine on AHCI and sata_mv controllers on the 
-same computer, easily pushes 8-900MB/s with md software raid5/6 (Yipes!)
+Regards, Peter.
