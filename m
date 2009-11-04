@@ -1,56 +1,66 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Problems with Silicon Image Port Multiplier Card
-Date: Tue, 03 Nov 2009 18:11:54 -0600
-Message-ID: <4AF0C6CA.8020205@gmail.com>
-References: <4AF0A1FC.4030106@aon.at>
+From: Andre Tomt <andre@tomt.net>
+Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
+Date: Wed, 04 Nov 2009 02:05:06 +0100
+Message-ID: <4AF0D342.3090904@tomt.net>
+References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org> <4AF0CFE1.8050407@tomt.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:47950 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751012AbZKDALw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Nov 2009 19:11:52 -0500
-Received: by gxk26 with SMTP id 26so4107248gxk.1
-        for <linux-ide@vger.kernel.org>; Tue, 03 Nov 2009 16:11:57 -0800 (PST)
-In-Reply-To: <4AF0A1FC.4030106@aon.at>
+Received: from mail1.ugh.no ([80.239.42.168]:51606 "EHLO mail1.ugh.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752147AbZKDBFF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Nov 2009 20:05:05 -0500
+In-Reply-To: <4AF0CFE1.8050407@tomt.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Klotz <peter.klotz@aon.at>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: tfjellstrom@shaw.ca, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On 11/03/2009 03:34 PM, Peter Klotz wrote:
-> Hello
->
-> My port multiplier capable eSATA Express Card refuses to talk to my
-> external HDD box (2 HDDs, JBOD mode).
->
-> Inserting the card into the Express Card slot looks normal:
->
-> [ 622.549794] pciehp 0000:00:1c.2:pcie04: Card present on Slot(0)
-> [ 622.698856] sata_sil24 0000:03:00.0: enabling device (0100 -> 0103)
-> [ 622.698873] sata_sil24 0000:03:00.0: PCI INT A -> GSI 18 (level, low)
-> -> IRQ 18
-> [ 622.702334] scsi8 : sata_sil24
-> [ 622.709268] scsi9 : sata_sil24
-> [ 622.709409] ata7: SATA max UDMA/100 host m128@0xfd804000 port
-> 0xfd800000 irq 18
-> [ 622.709418] ata8: SATA max UDMA/100 host m128@0xfd804000 port
-> 0xfd802000 irq 18
-> [ 624.800150] ata7: SATA link down (SStatus 0 SControl 0)
-> [ 626.890131] ata8: SATA link down (SStatus 0 SControl 0)
->
->
-> Turning on the external box results in lots of errors:
->
-> [ 666.030153] ata8: hard resetting link
-> [ 668.250125] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [ 668.250949] ata8.15: Port Multiplier 1.1, 0x1095:0x5744 r33, 3 ports,
-> feat 0x1/0x9
-> [ 668.251251] ata8.15: applying bridge limits
-> [ 668.251340] ata8.00: hard resetting link
-> [ 668.720140] ata8.00: failed to read SCR 0 (Emask=0x40)
-> [ 668.720156] ata8.15: hard resetting link
-> [ 668.720161] ata8: controller in dubious state, performing PORT_RST
+Andre Tomt wrote:
+> Jeff Garzik wrote:
+>> On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
+>>> No errors on that disk. Other than the one above, and its more of a 
+>>> warning.
+>>> However, I just rebooted to add some extra drives, thinking 
+>>> everything was
+>>> working a little better now that I've updated to 2.6.31-rc9, I'm 
+>>> treated to
+>>> the following two messages right after boot (and a system lockup to 
+>>> boot):
+> 
+> Jeff & Co,
+> 
+> Just chiming in with a "me too" comment.
+> 
+> Identical issues with the AOC-SASLP-MV8 card with 8 Seagate Barracuda 
+> 7200.11 1.5TB drives using the mvsas driver. Creating a md raid array 
+> seems to trigger it nearly instantly, however other loads do not trigger 
+> it as fast (if at all, only tested briefly with paralell dd).
+> 
+> Not sure if its related in any way, but I also noticed that with 
+> parallell dd read on all ports, the card/driver tops out at 600MB/s even 
+> though the card is in a northbridge connected slot running in x4 mode. 
+> Only the first 4-5 ports run at nearly full speed, while the rest barely 
+> gets to read any data at all. To illustrate, it looks sort of like this 
+> in iostat -m:
+> sda 122
+> sdb 122
+> sbc 120
+> sdd 121
+> sde 100
+> sdf 10
+> sdg 5
+> sdh 5
+> 
+> Starting to think this driver has some issues with concurrency.. The 
+> other controllers have no issues saturating all their ports, even if 
+> they are on a south bridge connected slot.
 
-Which kernel version is this? Can you test latest git?
+Err, saturating all the disks. I'm not expecting 300MB/s*8, even though 
+it would be very cool 8)
+
+> 
+> Same disks/setup works just fine on AHCI and sata_mv controllers on the 
+> same computer, easily pushes 8-900MB/s with md software raid5/6 (Yipes!)
+> 
