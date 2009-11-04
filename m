@@ -1,69 +1,56 @@
-From: Peter Klotz <peter.klotz@aon.at>
-Subject: Re: Problems with Silicon Image Port Multiplier Card
-Date: Wed, 04 Nov 2009 06:54:28 +0100
-Message-ID: <4AF11714.2080809@aon.at>
-References: <4AF0A1FC.4030106@aon.at> <4AF0C6CA.8020205@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from WARSL404PIP1.highway.telekom.at ([195.3.96.112]:4596 "EHLO
-	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750767AbZKDFy0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Nov 2009 00:54:26 -0500
-Received: from 212-183-97-89.adsl.highway.telekom.at (HELO [192.168.0.102]) ([212.183.97.89])
-          (envelope-sender <peter.klotz@aon.at>)
-          by smarthub96.highway.telekom.at (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 4 Nov 2009 05:54:29 -0000
-In-Reply-To: <4AF0C6CA.8020205@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH -2nd repost 1/1] ATA: pata_via, fix double put on isa bridge
+Date: Wed,  4 Nov 2009 17:11:03 +0100
+Message-ID: <1257351063-5616-1-git-send-email-jirislaby@gmail.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757115AbZKDQLD@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> On 11/03/2009 03:34 PM, Peter Klotz wrote:
->> Hello
->>
->> My port multiplier capable eSATA Express Card refuses to talk to my
->> external HDD box (2 HDDs, JBOD mode).
->>
->> Inserting the card into the Express Card slot looks normal:
->>
->> [ 622.549794] pciehp 0000:00:1c.2:pcie04: Card present on Slot(0)
->> [ 622.698856] sata_sil24 0000:03:00.0: enabling device (0100 -> 0103)
->> [ 622.698873] sata_sil24 0000:03:00.0: PCI INT A -> GSI 18 (level, low)
->> -> IRQ 18
->> [ 622.702334] scsi8 : sata_sil24
->> [ 622.709268] scsi9 : sata_sil24
->> [ 622.709409] ata7: SATA max UDMA/100 host m128@0xfd804000 port
->> 0xfd800000 irq 18
->> [ 622.709418] ata8: SATA max UDMA/100 host m128@0xfd804000 port
->> 0xfd802000 irq 18
->> [ 624.800150] ata7: SATA link down (SStatus 0 SControl 0)
->> [ 626.890131] ata8: SATA link down (SStatus 0 SControl 0)
->>
->>
->> Turning on the external box results in lots of errors:
->>
->> [ 666.030153] ata8: hard resetting link
->> [ 668.250125] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
->> [ 668.250949] ata8.15: Port Multiplier 1.1, 0x1095:0x5744 r33, 3 ports,
->> feat 0x1/0x9
->> [ 668.251251] ata8.15: applying bridge limits
->> [ 668.251340] ata8.00: hard resetting link
->> [ 668.720140] ata8.00: failed to read SCR 0 (Emask=0x40)
->> [ 668.720156] ata8.15: hard resetting link
->> [ 668.720161] ata8: controller in dubious state, performing PORT_RST
-> 
-> Which kernel version is this? Can you test latest git?
-> 
+In via_init_one, when via_isa_bridges iterator reaches
+PCI_DEVICE_ID_VIA_ANON and last but one via_isa_bridges bridge is
+found but rev doesn't match, pci_dev_put(isa) is called twice.
 
-Sorry, I forgot the kernel version.
+Do pci_dev_put only once.
 
-It is 2.6.31-14 (Ubuntu 9.10 amd64). I will try the latest vanilla kernel.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+---
+ drivers/ata/pata_via.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-The card is able to talk to a single disk enclosure without problems, so 
-  I would assume that either Port Multiplying or my external 2-disk box 
-is at fault here.
-
-Regards, Peter.
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 88984b8..520d5a3 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -526,7 +526,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.port_ops = &via_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+-	struct pci_dev *isa = NULL;
++	struct pci_dev *isa;
+ 	const struct via_isa_bridge *config;
+ 	static int printed_version;
+ 	u8 enable;
+@@ -551,15 +551,13 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		if ((isa = pci_get_device(PCI_VENDOR_ID_VIA +
+ 			!!(config->flags & VIA_BAD_ID),
+ 			config->id, NULL))) {
++			u8 rev = isa->revision;
++			pci_dev_put(isa);
+ 
+-			if (isa->revision >= config->rev_min &&
+-			    isa->revision <= config->rev_max)
++			if (rev >= config->rev_min && rev <= config->rev_max)
+ 				break;
+-			pci_dev_put(isa);
+ 		}
+ 
+-	pci_dev_put(isa);
+-
+ 	if (!(config->flags & VIA_NO_ENABLES)) {
+ 		/* 0x40 low bits indicate enabled channels */
+ 		pci_read_config_byte(pdev, 0x40 , &enable);
+-- 
+1.6.4.2
