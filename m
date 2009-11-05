@@ -1,61 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend
- SSD
-Date: Thu, 5 Nov 2009 10:40:18 +0000
-Message-ID: <20091105104018.357be391@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
-	<200910221144.04471.bzolnier@gmail.com>
-	<Pine.LNX.4.64.0910231024240.324@hs20-bc2-1.build.redhat.com>
-	<200910231644.29919.bzolnier@gmail.com>
-	<Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com>
-	<20091023175157.3a898525@lxorguk.ukuu.org.uk>
-	<4AE1E78A.2090801@ru.mvista.com>
-	<20091023192250.600edc9b@lxorguk.ukuu.org.uk>
-	<Pine.LNX.4.64.0910260731460.21316@hs20-bc2-1.build.redhat.com>
-	<20091026121804.3789c4c0@lxorguk.ukuu.org.uk>
-	<Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: Re: [PATCH] sata_fsl: Split hard and soft reset
+Date: Thu, 5 Nov 2009 09:02:47 -0600
+Message-ID: <795A2621-9D6C-4D1F-B07B-24E15C55B03F@kernel.crashing.org>
+References: <20091016164436.GA12897@oksana.dev.rtsoft.ru>
+Mime-Version: 1.0 (Apple Message framework v1076)
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37051 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752840AbZKEKio (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Nov 2009 05:38:44 -0500
-In-Reply-To: <Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <20091016164436.GA12897@oksana.dev.rtsoft.ru>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-ppc list <linuxppc-dev@ozlabs.org>, Ashish Kalra <Ashish.Kalra@freescale.com>, Jiang Yutang <b14898@freescale.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Wed, 4 Nov 2009 20:25:21 -0500 (EST)
-Mikulas Patocka <mpatocka@redhat.com> wrote:
 
-> Hi
-> 
-> Here is another patch for SSD for VIA UDMA33. Alan, please backport it 
-> into libata.
+On Oct 16, 2009, at 11:44 AM, Anton Vorontsov wrote:
 
-I might consider adding the TS device to the blacklist on libata IFF
-- I have the full ID string so I can match device accurately not blanket
-  cripple hardware
-- I had a much more detailed bug report - eg exact dmesg data up to the
-  lock
-- I know which exact controller card(s) it occurs on (rather than
-  blanket "via")
-- If I knew it occurred on libata
-- If I knew it wasn't an IDE and/or shared IDE/libata bug or didn't
-  appear to be one.
+> From: Jiang Yutang <b14898@freescale.com>
+>
+> Split sata_fsl_softreset() into hard and soft resets to make
+> error-handling more efficient & device and PMP detection more
+> reliable.
+>
+> Also includes fix for PMP support, driver tested with Sil3726,
+> Sil4726 & Exar PMP controllers.
+>
+> [AV: Also fixes resuming from deep sleep on MPC8315 CPUs]
+>
+> Signed-off-by: Jiang Yutang <b14898@freescale.com>
+> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+> ---
+> drivers/ata/sata_fsl.c |   84 ++++++++++++++++++++++++ 
+> +-----------------------
+> 1 files changed, 44 insertions(+), 40 deletions(-)
 
-Crippling every other transcend device user on the planet for your
-specific report (that nobody else has so far reported to me) would almost
-certainly be a regression on a massive scale.
+Jeff,
 
-Does your TS device work with other controllers - do you just have a
-faulty unit or marginal cabling ?
+any update on this going in for .32?
 
-For any real failure case like this I'd expect a pile of entries in
-bugzillas from multiple people. Now it could simply be yours is the first
-in which case I'll look at it a blacklist when I see a few more.
-
-Alan
+- k
