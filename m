@@ -1,68 +1,78 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Problems with Silicon Image Port Multiplier Card
-Date: Wed, 04 Nov 2009 18:14:25 -0600
-Message-ID: <4AF218E1.4020406@gmail.com>
-References: <4AF0A1FC.4030106@aon.at> <4AF0C6CA.8020205@gmail.com> <4AF1EBAC.6030701@aon.at>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend SSD
+Date: Wed, 4 Nov 2009 20:25:21 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
+ <200910221144.04471.bzolnier@gmail.com> <Pine.LNX.4.64.0910231024240.324@hs20-bc2-1.build.redhat.com>
+ <200910231644.29919.bzolnier@gmail.com> <Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com>
+ <20091023175157.3a898525@lxorguk.ukuu.org.uk> <4AE1E78A.2090801@ru.mvista.com>
+ <20091023192250.600edc9b@lxorguk.ukuu.org.uk>
+ <Pine.LNX.4.64.0910260731460.21316@hs20-bc2-1.build.redhat.com>
+ <20091026121804.3789c4c0@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:56670 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbZKEAOW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Nov 2009 19:14:22 -0500
-Received: by yxe17 with SMTP id 17so6853929yxe.33
-        for <linux-ide@vger.kernel.org>; Wed, 04 Nov 2009 16:14:27 -0800 (PST)
-In-Reply-To: <4AF1EBAC.6030701@aon.at>
+Received: from mx1.redhat.com ([209.132.183.28]:35026 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758417AbZKEBZY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Nov 2009 20:25:24 -0500
+In-Reply-To: <20091026121804.3789c4c0@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Klotz <peter.klotz@aon.at>
-Cc: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 11/04/2009 03:01 PM, Peter Klotz wrote:
-> Robert Hancock wrote:
->> On 11/03/2009 03:34 PM, Peter Klotz wrote:
->>> Hello
->>>
->>> My port multiplier capable eSATA Express Card refuses to talk to my
->>> external HDD box (2 HDDs, JBOD mode).
->>>
->>> Inserting the card into the Express Card slot looks normal:
->>>
->>> [ 622.549794] pciehp 0000:00:1c.2:pcie04: Card present on Slot(0)
->>> [ 622.698856] sata_sil24 0000:03:00.0: enabling device (0100 -> 0103)
->>> [ 622.698873] sata_sil24 0000:03:00.0: PCI INT A -> GSI 18 (level, low)
->>> -> IRQ 18
->>> [ 622.702334] scsi8 : sata_sil24
->>> [ 622.709268] scsi9 : sata_sil24
->>> [ 622.709409] ata7: SATA max UDMA/100 host m128@0xfd804000 port
->>> 0xfd800000 irq 18
->>> [ 622.709418] ata8: SATA max UDMA/100 host m128@0xfd804000 port
->>> 0xfd802000 irq 18
->>> [ 624.800150] ata7: SATA link down (SStatus 0 SControl 0)
->>> [ 626.890131] ata8: SATA link down (SStatus 0 SControl 0)
->>>
->>>
->>> Turning on the external box results in lots of errors:
->>>
->>> [ 666.030153] ata8: hard resetting link
->>> [ 668.250125] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
->>> [ 668.250949] ata8.15: Port Multiplier 1.1, 0x1095:0x5744 r33, 3 ports,
->>> feat 0x1/0x9
->>> [ 668.251251] ata8.15: applying bridge limits
->>> [ 668.251340] ata8.00: hard resetting link
->>> [ 668.720140] ata8.00: failed to read SCR 0 (Emask=0x40)
->>> [ 668.720156] ata8.15: hard resetting link
->>> [ 668.720161] ata8: controller in dubious state, performing PORT_RST
->>
->> Which kernel version is this? Can you test latest git?
->
-> Kernel 2.6.32-rc6 behaves exactly the same.
->
-> The driver seems to give up rather quickly. Maybe the external box needs
-> more time?
+Hi
 
-Well, the Emask 0x40 on the first error means AC_ERR_SYSTEM (system 
-error). There are a few places that gets set, but it's not clear which 
-one you might be hitting.. Could we be in a bad state when issuing the 
-PMP commands, like the port being frozen or something I wonder?
+Here is another patch for SSD for VIA UDMA33. Alan, please backport it 
+into libata.
+
+Mikulas
+
+---
+
+Don't use UDMA on VIA UDMA33 controller with Transcend SSD
+
+The computer locks up if Transcend SSD runs in any of UDMA modes.
+It doesn't lockup with different brand SSD, so this is specific to Transcend.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+
+---
+ drivers/ide/via82cxxx.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+Index: linux-2.6.31.5-fast/drivers/ide/via82cxxx.c
+===================================================================
+--- linux-2.6.31.5-fast.orig/drivers/ide/via82cxxx.c	2009-05-29 22:36:58.000000000 +0200
++++ linux-2.6.31.5-fast/drivers/ide/via82cxxx.c	2009-11-04 22:32:55.000000000 +0100
+@@ -195,6 +195,21 @@ static void via_set_pio_mode(ide_drive_t
+ 	via_set_drive(drive, XFER_PIO_0 + pio);
+ }
+ 
++static u8 via_udma_filter(ide_drive_t *drive)
++{
++	char *m = (char *)&drive->id[ATA_ID_PROD];
++
++	/*
++	 * Restrict UDMA for Transcend flash cards.
++	 * On VIA 33, UDMA locks up. On VIA 133, it works. I can't test other
++	 * controllers.
++	 */
++	if (!memcmp(m, "TS", 2) && drive->hwif->ultra_mask == ATA_UDMA2)
++		return 0;
++
++	return drive->hwif->ultra_mask;
++}
++
+ static struct via_isa_bridge *via_config_find(struct pci_dev **isa)
+ {
+ 	struct via_isa_bridge *via_config;
+@@ -372,6 +387,7 @@ static const struct ide_port_ops via_por
+ 	.set_pio_mode		= via_set_pio_mode,
+ 	.set_dma_mode		= via_set_drive,
+ 	.cable_detect		= via82cxxx_cable_detect,
++	.udma_filter		= via_udma_filter,
+ };
+ 
+ static const struct ide_port_info via82cxxx_chipset __devinitdata = {
