@@ -1,48 +1,38 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend
- SSD
-Date: Thu, 5 Nov 2009 18:19:39 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0911051802160.1166@hs20-bc2-1.build.redhat.com>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
- <200910221144.04471.bzolnier@gmail.com> <Pine.LNX.4.64.0910231024240.324@hs20-bc2-1.build.redhat.com>
- <200910231644.29919.bzolnier@gmail.com> <Pine.LNX.4.64.0910231050330.3007@hs20-bc2-1.build.redhat.com>
- <20091023175157.3a898525@lxorguk.ukuu.org.uk> <4AE1E78A.2090801@ru.mvista.com>
- <20091023192250.600edc9b@lxorguk.ukuu.org.uk>
- <Pine.LNX.4.64.0910260731460.21316@hs20-bc2-1.build.redhat.com>
- <20091026121804.3789c4c0@lxorguk.ukuu.org.uk>
- <Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
- <20091105104018.357be391@lxorguk.ukuu.org.uk>
- <Pine.LNX.4.64.0911051657490.1166@hs20-bc2-1.build.redhat.com>
- <20091105224605.10583ce8@lxorguk.ukuu.org.uk>
+From: Greg KH <greg@kroah.com>
+Subject: Re: pata sc1200 fix crash boot, bug #14227
+Date: Thu, 5 Nov 2009 15:21:15 -0800
+Message-ID: <20091105232115.GG20799@kroah.com>
+References: <4AE1F29B.1090009@computer.org>
+ <4AE1F525.5090207@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5140 "EHLO mx1.redhat.com"
+Received: from kroah.org ([198.145.64.141]:34141 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752684AbZKEXTo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Nov 2009 18:19:44 -0500
-In-Reply-To: <20091105224605.10583ce8@lxorguk.ukuu.org.uk>
+	id S1758986AbZKEX2O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Nov 2009 18:28:14 -0500
+Content-Disposition: inline
+In-Reply-To: <4AE1F525.5090207@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, Daniela Engert <dani@ngrt.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jan Ceuleers <jan.ceuleers@computer.org>, linux-kernel@vger.kernel.org, Alan Cox <alan@linux.intel.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, stable@kernel.org
 
-
-
-On Thu, 5 Nov 2009, Alan Cox wrote:
-
-> > The device ID string is: TS64GSSD25-M, serial 002328450083, revision V0826
-> > The south bridge is VIA VT82C586B
-> > 
-> > The lockup happens on partition scan, sometimes the scan passes and it 
-> > locks up when loading init. It doesn't get further.
+On Fri, Oct 23, 2009 at 02:25:41PM -0400, Jeff Garzik wrote:
+> On 10/23/2009 02:14 PM, Jan Ceuleers wrote:
+> > A little while ago [1], a fix was posted here for a boot-time crash in the sc1200 module.
+> >
+> > [1]: http://marc.info/?l=linux-kernel&m=125484259025909&w=2
+> >
+> > Submission to stable was also briefly discussed, but has apparently not happened, despite the fact that this bug appears to have existed since 2.6.29.
+> >
+> > I would therefore like to request that this fix now be submitted to stable.
 > 
-> The Linux driver doesn't set all the time setup strictly but it does set
-> it to be a safer maximum value. That might be worth checking but it would
-> still be a device naughty if so.
+> Looks like commit 6d4f950e9ea15816c6a4f266ce6b9e438346771e is missing 
+> the "CC:stable@kernel.org".  Added implicitly via this message...
 
-I tried UDMA 0 and 1 and no help. I didn't try to fiddle the timing 
-register manually. You mean, try set the disk to UDMA 2 and set the 
-register to a lower timing? Or the other way? I can try ...
+Now queued up.
 
-Mikulas
+thanks,
+
+greg k-h
