@@ -1,49 +1,64 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: Re: [PATCH] sata_fsl: Split hard and soft reset
-Date: Thu, 5 Nov 2009 09:02:47 -0600
-Message-ID: <795A2621-9D6C-4D1F-B07B-24E15C55B03F@kernel.crashing.org>
-References: <20091016164436.GA12897@oksana.dev.rtsoft.ru>
-Mime-Version: 1.0 (Apple Message framework v1076)
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [Bug 14310] [bisected] 2.6.31 regression sis5513 PIO Mode 0 hang
+Date: Thu, 5 Nov 2009 16:54:27 +0100
+Message-ID: <200911051654.27880.bzolnier@gmail.com>
+References: <bug-14310-11633@http.bugzilla.kernel.org/> <200910270835.n9R8ZRB2007651@demeter.kernel.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20091016164436.GA12897@oksana.dev.rtsoft.ru>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-ppc list <linuxppc-dev@ozlabs.org>, Ashish Kalra <Ashish.Kalra@freescale.com>, Jiang Yutang <b14898@freescale.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.153]:47980 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbZKEP4Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Nov 2009 10:56:16 -0500
+Received: by fg-out-1718.google.com with SMTP id d23so2468845fga.1
+        for <linux-ide@vger.kernel.org>; Thu, 05 Nov 2009 07:56:21 -0800 (PST)
+In-Reply-To: <200910270835.n9R8ZRB2007651@demeter.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-ide@vger.kernel.org
 
+On Tuesday 27 October 2009 09:35:27 bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=14310
+> 
+> 
+> 
+> 
+> 
+> --- Comment #6 from Jiri Bohac <jbohac@jikos.cz>  2009-10-27 08:35:25 ---
+> (In reply to comment #5)
+> > Jiri, please try the patch from
+> > 
+> > http://bugzilla.kernel.org/attachment.cgi?id=23513
+> 
+> Great, this patch, applied on 2.6.31.5, fixes the problem for me.
+> 
+> Out of curiosity, I also tried to revert the original fix
+> (e13ee546bb06453939014c7b854e77fb643fd6f1) and, with the debug patch still
+> applied, it still worked.
 
-On Oct 16, 2009, at 11:44 AM, Anton Vorontsov wrote:
+Thanks for checking this.
 
-> From: Jiang Yutang <b14898@freescale.com>
->
-> Split sata_fsl_softreset() into hard and soft resets to make
-> error-handling more efficient & device and PMP detection more
-> reliable.
->
-> Also includes fix for PMP support, driver tested with Sil3726,
-> Sil4726 & Exar PMP controllers.
->
-> [AV: Also fixes resuming from deep sleep on MPC8315 CPUs]
->
-> Signed-off-by: Jiang Yutang <b14898@freescale.com>
-> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
-> ---
-> drivers/ata/sata_fsl.c |   84 ++++++++++++++++++++++++ 
-> +-----------------------
-> 1 files changed, 44 insertions(+), 40 deletions(-)
+> So maybe 6029336426a2b43e4bc6f4a84be8789a047d139e causes two independent
+> problems in sis5513? One fixed with e13ee546bb06453939014c7b854e77fb643fd6f1
+> and one fixed with this debug patch?
 
-Jeff,
+Yes, your findings are correct.
 
-any update on this going in for .32?
+> It would be great if this patch could be added to the stable tree. Thanks!
 
-- k
+The problem is that the change in the debug patch affects all host drivers
+and at this moment is not safe enough neither for -stable nor for -rc.
+
+Somebody needs to go and review all host drivers and their usage of ->media
+field for tuning logic present in ->set_pio_mode implementations first.
+
+Before this happens we probably should revert commit 6029336 but I'll leave
+this up to the maintainer (I seriously doubt he will ever go and review any
+IDE drivers or make any IDE fixes so please just ping him about the revert).
+
+Thanks,
+-- 
+Bartlomiej Zolnierkiewicz
