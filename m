@@ -1,26 +1,43 @@
 From: David Miller <davem@davemloft.net>
-Subject: away but active for next 6 days.
-Date: Sun, 08 Nov 2009 21:04:57 -0800 (PST)
-Message-ID: <20091108.210457.203791846.davem@davemloft.net>
+Subject: [GIT]: IDE
+Date: Sun, 08 Nov 2009 21:30:55 -0800 (PST)
+Message-ID: <20091108.213055.54434626.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40297
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34336
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750758AbZKIFEb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Nov 2009 00:04:31 -0500
+	by vger.kernel.org with ESMTP id S1750739AbZKIFa3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Nov 2009 00:30:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, sparclinux@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-I will be away in New York City from Monday night until Saturday.
+The revert we thought we didn't need, we really do need still, even
+with Bart Z.'s fix.
 
-I intend to be as responsive as I was this past summer when I spent
-nearly 2 months there :-)
+The issue is that we are doing these PIO setting calls before we did
+the device probe and therefore we don't yet know the media type.
 
-I have one IDE fix, 2 or 3 Sparc fixes, and a moderately sized handful
-of networking fixes sitting in my trees which I'll send pull requests
-out for tonight.
+Yet the ->set_pio_mode() of some drivers key off of the media type to
+determine whether to turn prefetching etc. on so it can't possibly
+work properly.
+
+Please pull, thanks!
+
+The following changes since commit 7c9abfb884b8737f0afdc8a88bcea77526f0da87:
+  Linus Torvalds (1):
+        Merge branch 'kvm-updates/2.6.32' of git://git.kernel.org/pub/scm/virt/kvm/kvm
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+David S. Miller (1):
+      Revert "ide: try to use PIO Mode 0 during probe if possible"
+
+ drivers/ide/ide-probe.c |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
