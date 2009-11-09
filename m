@@ -1,37 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: storage-fixup
-Date: Tue, 10 Nov 2009 00:05:15 +0900
-Message-ID: <4AF82FAB.6050407@kernel.org>
-References: <200910290056.49057.nouskas@gmail.com>
+Subject: Re: Dell Latitude D830 information for storage-fixup.git
+Date: Tue, 10 Nov 2009 00:12:56 +0900
+Message-ID: <4AF83178.2070904@kernel.org>
+References: <1af523860910281919p53cf538bh72a22cdb3826a1a2@mail.gmail.com> <1af523860910281921u3281cc94wa541201ec1cc8c62@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33289 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:60333 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753085AbZKIPFO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Nov 2009 10:05:14 -0500
-In-Reply-To: <200910290056.49057.nouskas@gmail.com>
+	id S1750851AbZKIPM4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Nov 2009 10:12:56 -0500
+In-Reply-To: <1af523860910281921u3281cc94wa541201ec1cc8c62@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christos Nouskas <nouskas@gmail.com>
+To: Nicolas Bigaouette <nbigaouette@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Hello,
+Nicolas Bigaouette wrote:
+> Hi,
+> I could not see the model of my drive in the /etc/storage-fixup.conf
+> file so I am sending you the output of dmidecode and hdparm on the
+> drive.
+> The laptop is a Dell Latitude D830.
 
-Christos Nouskas wrote:
-> Dell Vostro 1500, 250GB Seagate model ST9250827AS clicks. hdparm -B 254 
-> fixes.
-
-Isn't this entry already covered by the following entry in
-storage-fixup.conf?
-
- # Reported drive model: ST9160821AS
- rule dell-Vostro-1500
- dmi system-manufacturer		Dell Inc.
- dmi system-product-name		Vostro 1500
- ata model				ST9*AS
- act hdparm -B 254 $DEV
+How many load/unload cycles per hour?  Which APM value works?
 
 Thanks.
 
