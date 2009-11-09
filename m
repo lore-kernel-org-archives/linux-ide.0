@@ -1,57 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: possible ATA hang in 2.6.32-rc6
-Date: Mon, 09 Nov 2009 18:34:02 +0900
-Message-ID: <4AF7E20A.20005@kernel.org>
-References: <4AF5ADA3.3070000@ix.netcom.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [GIT]: IDE
+Date: Mon, 9 Nov 2009 11:35:08 +0100
+Message-ID: <200911091135.09051.bzolnier@gmail.com>
+References: <20091108.213055.54434626.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57645 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754680AbZKIJfM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Nov 2009 04:35:12 -0500
-In-Reply-To: <4AF5ADA3.3070000@ix.netcom.com>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:41165 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753024AbZKIKgN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Nov 2009 05:36:13 -0500
+In-Reply-To: <20091108.213055.54434626.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marty <martyb@ix.netcom.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, User discussion about IVTV <ivtv-users@ivtvdriver.org>
+To: David Miller <davem@davemloft.net>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Marty.
-
-Marty wrote:
-> I got two hard hangs in 2.6.32-rc5 and rc6 in an Asrock A780GXE/128M
-> with AMD 780G+SB700 chipsets, resulting in no response to magic alt-sysreq.
-> The first hang left no log clues.  The second was closely but not
-> immediately preceeded by syslog ATA error messages (see excerpt).
-
-Do you have nmi watchdog configured?
-
-> They occurred days apart, possibly associated with keyboard or
-> mouse operation.  Each hang, both tuner cards were active, with heavy
-> concurrent graphics, SATA and USB activity. The system has I2C and
-> framebuffer issues with the Radeon 7000, causing problems in the
-> tuners, but I don't know if it's relevant. The hangs result in no
-> response to magic alt-sysreq.
+On Monday 09 November 2009 06:30:55 David Miller wrote:
 > 
-> When tuners, USB and graphics are not active, the system passes
-> heavy prolonged stress testing. I got less-complete ATA-related hangs
-> on my previous VIA system, under similar conditions.  I hoped this
-> new board would fix the problem.  The tuner ivtv drivers could be
-> involved, and were known as unstable until about a year ago.
+> The revert we thought we didn't need, we really do need still, even
+> with Bart Z.'s fix.
 > 
-> I am now disabling PMP, to see if that avoids the problem.  Let me
-> know if you need any more information.  Thanks,
+> The issue is that we are doing these PIO setting calls before we did
+> the device probe and therefore we don't yet know the media type.
+> 
+> Yet the ->set_pio_mode() of some drivers key off of the media type to
+> determine whether to turn prefetching etc. on so it can't possibly
+> work properly.
 
-The ata error messages indicate transmission problems.  The fact that
-they're pretty close to each other is interesting and seems to point
-to hardware problem (most likely power fluctuation).  At any rate,
-ahci controllers are very unlikely to cause complete system hang, so
-I'm a bit doubtful that ahci controller is directly responsible for
-the hang.  Can you wire up a separate power supply and move hard
-drives to that one?
+Thanks for quick reaction to the revert request.
 
-Thanks.
+If somebody is interested in the proper way to fix it you just need to
+add ide_unknown media type and set it before probe instead of ide_disk
+one.  Then audit ->set_pio_mode implementations for potential gotchas.
+
+[ However it is too late for -rc and nobody is currently working on
+  IDE fixes anyway so I just requested the revert . ]
 
 -- 
-tejun
+Bartlomiej Zolnierkiewicz
