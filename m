@@ -1,32 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Dell Latitude D830 information for storage-fixup.git
-Date: Tue, 10 Nov 2009 00:12:56 +0900
-Message-ID: <4AF83178.2070904@kernel.org>
-References: <1af523860910281919p53cf538bh72a22cdb3826a1a2@mail.gmail.com> <1af523860910281921u3281cc94wa541201ec1cc8c62@mail.gmail.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: SATA_SIL on IXP425 workaround
+Date: Mon, 09 Nov 2009 18:31:21 +0100
+Message-ID: <m33a4nfvva.fsf@intrepid.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60333 "EHLO hera.kernel.org"
+Received: from khc.piap.pl ([195.187.100.11]:36241 "EHLO khc.piap.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750851AbZKIPM4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Nov 2009 10:12:56 -0500
-In-Reply-To: <1af523860910281921u3281cc94wa541201ec1cc8c62@mail.gmail.com>
+	id S1750749AbZKIRbR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Nov 2009 12:31:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nicolas Bigaouette <nbigaouette@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-Nicolas Bigaouette wrote:
-> Hi,
-> I could not see the model of my drive in the /etc/storage-fixup.conf
-> file so I am sending you the output of dmidecode and hdparm on the
-> drive.
-> The laptop is a Dell Latitude D830.
+I'm trying to add a workaround for IXP4xx CPUs to SATA SIL driver. The
+problem is that IXP4xx CPUs (Intel's XScale (ARM) network-oriented
+processors) are unable to perform 8 and 16-bit read from PCI MMIO, they
+can only do a full 32-bit readl(); SIL chips respond to that with PCI
+abort. The workaround is to use 8 and 16-bit regular IO reads (inb/inw)
+instead (MMIO write is not a problem).
 
-How many load/unload cycles per hour?  Which APM value works?
+For SIL3x12 the workaround is simple (attached) and it works on my 3512.
+I'm not sure about 3114 (the 4-port chip) - the PIO BARs have TF, CTL
+and BWDMA registers which are common to channels 0 and 2, and (the other
+set) to channels 1 and 3. Channel selection is done with bit 4 of
+device/head TF register, this is similar (same?) as PATA master/slave.
+Does that mean that I can simply treat channel 0 as PRI master, ch#2 as
+PRI slave, ch#1 as SEC master and ch#3 as SEC slave, and the SFF code
+will select the right device correctly? Does it need additional code?
+I don't have anything based on 3114.
 
-Thanks.
+Note: the large PRD is not a problem here, the transfer can be started
+by MMIO write. Only reads are an issue.
+
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -757,7 +757,12 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
++#ifdef CONFIG_ARCH_IXP4XX
++	/* We need all 6 regions on IXP4xx */
++	rc = pcim_iomap_regions(pdev, 0x3F, DRV_NAME);
++#else
+ 	rc = pcim_iomap_regions(pdev, 1 << SIL_MMIO_BAR, DRV_NAME);
++#endif
+ 	if (rc == -EBUSY)
+ 		pcim_pin_device(pdev);
+ 	if (rc)
+@@ -777,10 +782,18 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		struct ata_port *ap = host->ports[i];
+ 		struct ata_ioports *ioaddr = &ap->ioaddr;
+ 
++#ifdef CONFIG_ARCH_IXP4XX
++		/* IXP4xx CPUs can't perform 8 and 16-bit MMIO reads,
++		   use normal IO from/to regions 0-5 instead */
++		ioaddr->cmd_addr = host->iomap[i * 2];
++		ioaddr->altstatus_addr = host->iomap[1 + i * 2] + 2;
++		ioaddr->bmdma_addr = host->iomap[4] + sil_port[i].bmdma;
++#else
+ 		ioaddr->cmd_addr = mmio_base + sil_port[i].tf;
+-		ioaddr->altstatus_addr =
+-		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
++		ioaddr->altstatus_addr = mmio_base + sil_port[i].ctl;
+ 		ioaddr->bmdma_addr = mmio_base + sil_port[i].bmdma;
++#endif
++		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
+ 		ioaddr->scr_addr = mmio_base + sil_port[i].scr;
+ 		ata_sff_std_ports(ioaddr);
+ 
 
 -- 
-tejun
+Krzysztof Halasa
