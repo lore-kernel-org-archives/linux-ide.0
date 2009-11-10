@@ -1,39 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_ali can't detect partitions
-Date: Tue, 10 Nov 2009 11:11:25 +0000
-Message-ID: <20091110111125.15a71ed7@lxorguk.ukuu.org.uk>
-References: <20091109220338.GA1604@seek.priv>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [patch] move dereference after null check
+Date: Tue, 10 Nov 2009 09:19:50 -0500
+Message-ID: <1257862790.4184.203.camel@mulgrave.site>
+References: <alpine.DEB.2.00.0911081949070.11108@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48378 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752942AbZKJLJw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Nov 2009 06:09:52 -0500
-In-Reply-To: <20091109220338.GA1604@seek.priv>
+Received: from cantor.suse.de ([195.135.220.2]:42505 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755393AbZKJOTw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Nov 2009 09:19:52 -0500
+In-Reply-To: <alpine.DEB.2.00.0911081949070.11108@bicker>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, gianluca@sottospazio.it
+To: Dan Carpenter <error27@gmail.com>
+Cc: linux-ide@vger.kernel.org, davem@davemloft.net
 
-> commit 1b2c357c301b76118973763e886d9f70a7f50f7e
-> pata_ali: force initialise a few bits
+On Tue, 2009-11-10 at 10:55 +0200, Dan Carpenter wrote:
+> I moved the ops->inherits dereference below the null check.  I moved the 
+> other assignment as well so that they would be together.
 > 
-> I tried to backout the commit but that didn't succeed. So I looked carefully
-> at the diff and I came out with the attached patch which seems to fix the
-> problem (at least now the kernel detects the partitions correctly).
+> Found by smatch static checker.
+> 
+> regards,
+> dan carpenter
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> 
+> --- orig/drivers/ata/libata-core.c	2009-11-08 19:40:18.000000000 +0200
+> +++ devel/drivers/ata/libata-core.c	2009-11-08 19:42:06.000000000 +0200
+> @@ -5938,13 +5938,14 @@
+>  {
+>  	static DEFINE_SPINLOCK(lock);
+>  	const struct ata_port_operations *cur;
+> -	void **begin = (void **)ops;
+> -	void **end = (void **)&ops->inherits;
 
-Thanks for doing this. Can you send me an lspci -vvxxx and a dmesg of the
-machine in question.
+There's no problem here: this isn't a dereference.
 
-> Since I saw that the above commit is fixing some real bugs (sunblade related)
-> I don't know whether the attached patch is right or is backing out the
-> intended fix. All I know is that it works for me and for this reason I'm
-> reporting it.
+James
 
-Some of the registers involved are deep magic (even with the official
-documentation its unclear what should occur in all cases). I will have
-another dig - probably it depends on the chip rev what the right setting
-is.
-
-Alan
