@@ -1,38 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14515] ATA controller losing interrupt, system stall
-Date: Tue, 10 Nov 2009 00:41:40 GMT
-Message-ID: <200911100041.nAA0feFH022845@demeter.kernel.org>
-References: <bug-14515-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
+Date: Tue, 10 Nov 2009 00:00:19 -0500
+Message-ID: <4AF8F363.3010806@rtr.ca>
+References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58088 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942AbZKJAle (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Nov 2009 19:41:34 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAA0feg1022846
-	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2009 00:41:40 GMT
-In-Reply-To: <bug-14515-11633@http.bugzilla.kernel.org/>
+Received: from rtr.ca ([76.10.145.34]:34341 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750756AbZKJFAP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Nov 2009 00:00:15 -0500
+In-Reply-To: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Thiago Farina <tfransosi@gmail.com>
+Cc: jgarzik@pobox.com, mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14515
+Thiago Farina wrote:
+> Use ARRAY_SIZE macro of kernel api instead.
+> 
+> Signed-off-by: Thiago Farina <tfransosi@gmail.com>
+> ---
+>  drivers/ata/sata_mv.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 6f5093b..a8a7be0 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -2217,7 +2217,7 @@ static unsigned int mv_qc_issue_fis(struct ata_queued_cmd *qc)
+>  	int err = 0;
+>  
+>  	ata_tf_to_fis(&qc->tf, link->pmp, 1, (void *)fis);
+> -	err = mv_send_fis(ap, fis, sizeof(fis) / sizeof(fis[0]));
+> +	err = mv_send_fis(ap, fis, ARRAY_SIZE(fis));
+>  	if (err)
+>  		return err;
+>  
+..
 
+What's the point of this ?
 
+There is no "hardcoded array size" there to begin with,
+and using that silly macro obscures the actual calculation.
 
+So now, instead of being able to verify correctness at a glance,
+I have to go off and research some silly macro and verify that
+it does the right thing.
 
+Kind of like all of those "typedef structs" that are abhored around here.
 
---- Comment #7 from Tejun Heo <tj@kernel.org>  2009-11-10 00:41:38 ---
-TUR is coming from open and I have patches to implement in-kernel polling so
-that polling doesn't have to go through open but it depends on workqueue
-patches which are yet to be merged.  I think I can pull it for 2.6.34 but I
-might be too optimistic.  :-P
-
-Thanks.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+-ml
