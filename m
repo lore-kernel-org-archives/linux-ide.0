@@ -1,38 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14515] ATA controller losing interrupt, system stall
-Date: Tue, 10 Nov 2009 06:38:40 GMT
-Message-ID: <200911100638.nAA6cejP009075@demeter.kernel.org>
-References: <bug-14515-11633@http.bugzilla.kernel.org/>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] move dereference after null check
+Date: Tue, 10 Nov 2009 10:55:43 +0200 (SAST)
+Message-ID: <alpine.DEB.2.00.0911081949070.11108@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41575 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbZKJGie (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Nov 2009 01:38:34 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAA6ceiq009076
-	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2009 06:38:40 GMT
-In-Reply-To: <bug-14515-11633@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:60509 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbZKJIzu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Nov 2009 03:55:50 -0500
+Received: by bwz27 with SMTP id 27so4301119bwz.21
+        for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2009 00:55:55 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: davem@davemloft.net
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14515
+I moved the ops->inherits dereference below the null check.  I moved the 
+other assignment as well so that they would be together.
 
+Found by smatch static checker.
 
+regards,
+dan carpenter
 
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-
---- Comment #8 from Andrew Simpson <andrewnz.simpson@gmail.com>  2009-11-10 06:38:36 ---
-O.K., it would appear then that this is not related to Ubuntu bug #445852,
-since the machines in this bug report don't have cdrom drives.
-
-Trying "hal-disable-polling --device /dev/sr0", just gives an error.
-
-Should I open a different bug report?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--- orig/drivers/ata/libata-core.c	2009-11-08 19:40:18.000000000 +0200
++++ devel/drivers/ata/libata-core.c	2009-11-08 19:42:06.000000000 +0200
+@@ -5938,13 +5938,14 @@
+ {
+ 	static DEFINE_SPINLOCK(lock);
+ 	const struct ata_port_operations *cur;
+-	void **begin = (void **)ops;
+-	void **end = (void **)&ops->inherits;
+-	void **pp;
++	void **begin, **end, **pp;
+ 
+ 	if (!ops || !ops->inherits)
+ 		return;
+ 
++	begin = (void **)ops;
++	end = (void **)&ops->inherits;
++
+ 	spin_lock(&lock);
+ 
+ 	for (cur = ops->inherits; cur; cur = cur->inherits) {
