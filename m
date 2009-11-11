@@ -1,62 +1,33 @@
-From: Marcel Holtmann <marcel-kz+m5ild9QBg9hUCZPvPmw@public.gmane.org>
-Subject: Re: [PATCH 13/13] pcmcia: rework the irq_req_t typedef
-Date: Wed, 11 Nov 2009 21:46:03 +0100
-Message-ID: <1257972363.21467.7.camel@violet>
-References: <20091111203303.GA7939@comet.dominikbrodowski.net>
-	 <1257971899-9274-13-git-send-email-linux@dominikbrodowski.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
+Date: Wed, 11 Nov 2009 17:37:17 -0500
+Message-ID: <4AFB3C9D.4020609@rtr.ca>
+References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com> <4AF8F363.3010806@rtr.ca> <200911101651.24912.bzolnier@gmail.com> <84144f020911100808y55f5bfa2v5c203b356583a7b5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1257971899-9274-13-git-send-email-linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Sender: linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Cc: linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:60767 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759524AbZKKWhN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Nov 2009 17:37:13 -0500
+In-Reply-To: <84144f020911100808y55f5bfa2v5c203b356583a7b5@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Thiago Farina <tfransosi@gmail.com>, jgarzik@pobox.com, mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Dominik,
+Pekka Enberg wrote:
+> On Tue, Nov 10, 2009 at 5:51 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+>>> I have to go off and research some silly macro and verify that
+>>> it does the right thing.
+>> You did it already and the macro name is quite descriptive so you
+>> may as well just ACK the patch now.. ;)
+> 
+> Indeed. We use the "silly macro" everywhere in the kernel for code clarity.
+..
 
-> Most of the irq_req_t typedef'd struct can be re-worked quite
-> easily:
-> 
-> (1) IRQInfo2 was unused in any case, so drop it.
-> 
-> (2) IRQInfo1 was used write-only, so drop it.
-> 
-> (3) Instance (private data to be passed to the IRQ handler):
-> 	Most PCMCIA drivers using pcmcia_request_irq() to actually
-> 	register an IRQ handler set the "dev_id" to the same pointer
-> 	as the "priv" pointer in struct pcmcia_device. Modify the two
-> 	exceptions (ipwireless, ibmtr_cs) to also work this waym and
-> 	set the IRQ handler's "dev_id" to p_dev->priv unconditionally.
-> 
-> (4) Handler is to be of type irq_handler_t.
-> 
-> (5) Handler != NULL already tells whether an IRQ handler is present.
-> 	Therefore, we do not need the IRQ_HANDLER_PRESENT flag in
-> 	irq_req_t.Attributes.
-> 
-> CC: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
-> CC: Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>
-> CC: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-> CC: Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>
-> Signed-off-by: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-> ---
->  drivers/ata/pata_pcmcia.c                        |    1 -
->  drivers/bluetooth/bluecard_cs.c                  |    4 +---
->  drivers/bluetooth/bt3c_cs.c                      |    4 +---
->  drivers/bluetooth/btuart_cs.c                    |    4 +---
->  drivers/bluetooth/dtl1_cs.c                      |    4 +---
+Looks like unnecessary churn and obfuscation to me.
 
-for the Bluetooth parts:
-
-Acked-by: Marcel Holtmann <marcel-kz+m5ild9QBg9hUCZPvPmw@public.gmane.org>
-
-Regards
-
-Marcel
+-ml
