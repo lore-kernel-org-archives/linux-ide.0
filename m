@@ -1,41 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14583] SSD system stall, HSM Violation
-Date: Thu, 12 Nov 2009 20:11:17 GMT
-Message-ID: <200911122011.nACKBHmE006225@demeter.kernel.org>
-References: <bug-14583-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
+Date: Thu, 12 Nov 2009 18:53:16 -0500
+Message-ID: <4AFC9FEC.8030304@rtr.ca>
+References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>	 <4AF8F363.3010806@rtr.ca> <200911101651.24912.bzolnier@gmail.com>	 <84144f020911100808y55f5bfa2v5c203b356583a7b5@mail.gmail.com>	 <4AFB3C9D.4020609@rtr.ca> <a4c8a6d00911111450y7e451071h3f0ede0a1003678b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:50820 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbZKLULM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Nov 2009 15:11:12 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nACKBIeC006238
-	for <linux-ide@vger.kernel.org>; Thu, 12 Nov 2009 20:11:18 GMT
-In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
+Received: from rtr.ca ([76.10.145.34]:38947 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755762AbZKLXxN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Nov 2009 18:53:13 -0500
+In-Reply-To: <a4c8a6d00911111450y7e451071h3f0ede0a1003678b@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Thiago Farina <tfransosi@gmail.com>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, jgarzik@pobox.com, mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14583
+Thiago Farina wrote:
+> On Wed, Nov 11, 2009 at 8:37 PM, Mark Lord <liml@rtr.ca> wrote:
+>> Looks like unnecessary churn and obfuscation to me.
+> 
+> Obfuscation? Are you saying that just because you wrote this code?  So
+> what is the usage of a macro? I think you are having a defensive
+> position here.
+..
 
+No, actually I believe Jeff wrote that particular line of code.
 
-
-
-
---- Comment #11 from Tejun Heo <tj@kernel.org>  2009-11-12 20:11:02 ---
-It looks like the device is buggy and fails from time to time without raising
-interrupt.  libata waits till the timeout comes whenever that happens and thus
-the 30sec long stutters.  This is basically caused by crappy hardware.  The
-only workaround is to poll for the failure as irqpoll does.  For now, I think
-you'll have to live with irqpoll.  In the long run, we'll probably need to add
-automatic polling execution for the hardare.  Can you please attach the output
-of "hdparm -I /dev/sda"?
-
-Thanks.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Cheers
