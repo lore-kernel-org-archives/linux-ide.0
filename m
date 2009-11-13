@@ -1,62 +1,88 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: remove experimental tag on PATA drivers
-Date: Fri, 13 Nov 2009 21:30:07 +0000
-Message-ID: <20091113213007.774e75e3@lxorguk.ukuu.org.uk>
-References: <4AFCC0D4.9020708@gmail.com>
-	<200911131715.24377.bzolnier@gmail.com>
-	<20091113182515.38fb3793@lxorguk.ukuu.org.uk>
-	<200911132039.06929.bzolnier@gmail.com>
+From: Sascha Silbe <sascha-ml-linux-kernel-ide@silbe.org>
+Subject: SiI3811 PATA->SATA bridge not working on OpenRD-Base
+Date: Fri, 13 Nov 2009 22:23:32 +0100
+Message-ID: <20091113212332.GD1965@twin.sascha.silbe.org>
+Reply-To: Sascha Silbe <sascha-ml-reply-to-2009-4@silbe.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757553AbZKMV2T@vger.kernel.org>
-In-Reply-To: <200911132039.06929.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="zCKi3GIZzVBPywwA"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from setoy.chost.de ([217.160.209.225]:33069 "EHLO smtp.chost.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753147AbZKMVaM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Nov 2009 16:30:12 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> > Not experimental as we default to not doing ATAPI DMA. Glancing over the
-> 
-> Which is a regression compared to the "old IDE" driver.
 
-And given the two drivers show the difference when exactly the sequence
-of I/O writes/reads occurs one that nobody plans to worry about as its
-clearly some kind of hardware timing issue.
+--zCKi3GIZzVBPywwA
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> > code I notice the ALI C2/C3 workaround probably wants adding to the old
-> > driver as it can do nasty things otherwise. (See the reset function in
-> > the pata_ali driver)
-> 
-> Please let the driver's maintainer know about it.
-> 
-> One would wonder why workaround hasn't been back-ported to stable driver
+Hi!
 
-It's in the stable driver, might not be in drivers/ide. The note about it
-being missing was posted out to various people at the time so I guess it
-got missed
+I can't get a SiI3811-based PATA (device) -> SATA (host) converter to=20
+work on my OpenRD-Base (ARMv5TE) running 2.6.32-rc7 (and -rc4 before=20
+that), even though
+a) the converter is working fine (with the same hard disk(s) attached)=20
+on my PC (amd64, 2.6.26-2-amd64 from Debian),
+b) a native SATA HD is working on the OpenRD-Base and
+c) U-Boot (bootloader) is showing the PATA HD quite fine.
 
-> > > PATA_CMD64X: EXPERIMENTAL
-> > > - potential data corruption issues remains unfixed for CMD64[3,6]
-> > 
-> > Patch in testing, and unlike the old IDE one it doesn't cripple the
-> > controller but implements the proper workaround in full including
-> > permitting parallel PIO command streams. I'll push that back through
-> > stable once done.
-> 
-> This patch is way too complex and risky for -rc, let alone -stable.
+Both hard disk and converter are powered via an external power supply,=20
+so power draw isn't an issue.
 
-How would you know - I've not posted it yet ? And btw I don't plan to
-post it for the -rc. Nor would simply posting a serializing hack fix it.
-It might make it less likely to occur but that isn't a fix.
+The error messages are:
 
-> > it. Trivial and fixed.
-> 
-> I can't see a fix anywhere but I'll assume that I can't look for it
-> properly (I'm really sorry for it).
+Nov 13 21:05:02 flatty kernel: ata2: hard resetting link
+Nov 13 21:05:03 flatty kernel: ata2: SATA link up 1.5 Gbps (SStatus 113=20
+SControl F300)
+Nov 13 21:05:03 flatty kernel: ata2.00: failed to IDENTIFY (I/O error,=20
+err_mask=3D0x2)
+Nov 13 21:05:08 flatty kernel: ata2: hard resetting link
+Nov 13 21:05:08 flatty kernel: ata2: SATA link up 1.5 Gbps (SStatus 113=20
+SControl F300)
+Nov 13 21:05:08 flatty kernel: ata2.00: failed to IDENTIFY (I/O error,=20
+err_mask=3D0x2)
+Nov 13 21:05:08 flatty kernel: ata2: limiting SATA link speed to 1.5=20
+Gbps
+Nov 13 21:05:13 flatty kernel: ata2: hard resetting link
+Nov 13 21:05:14 flatty kernel: ata2: SATA link up 1.5 Gbps (SStatus 113=20
+SControl F310)
+Nov 13 21:05:14 flatty kernel: ata2.00: failed to IDENTIFY (I/O error,=20
+err_mask=3D0x2)
+Nov 13 21:05:19 flatty kernel: ata2: hard resetting link
+Nov 13 21:05:19 flatty kernel: ata2: SATA link up 1.5 Gbps (SStatus 113=20
+SControl F310)
+Nov 13 21:05:19 flatty kernel: ata2: EH complete
 
-Fixed as in I fixed it now. Which is why I just noticed the old IDE ones
-are buggy. I'll add it to the next patch sets for Jeff, along with the
-Toshiba driver and some other bits.
 
-Alan
+Is there a way to figure out what component is to blame? I.e. whether=20
+its the SATA host adapter driver (sata_mv) or something more generic?
+
+CU Sascha
+
+--=20
+http://sascha.silbe.org/
+http://www.infra-silbe.de/
+--zCKi3GIZzVBPywwA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEcBAEBAgAGBQJK/c5RAAoJELpz82VMF3Da64IH/1u7djbYo+hKnOnE7aso9oln
+FIIZdJ3sVDj8wLgBUQFnAGAE8dHPmcoX9+5ZWdgEBzR4I769RXg1seVXHwQ7NqEQ
+pDbNj07Oum3xi0BzEkYehpKqWUm9HSxnsCQT7n0DibWrHCglEbI+2l5V4ZDCVmuz
+k6VbQbu3CFFcMjfrZfuQ7BmbDvatz8yxiplSqx3GwUhlzQ2kKM1KDbWFE+a2zYX3
+IGHKpJ9OEuVZ29Jyzw7ZE+iFJiqLm7EunDH+msUKXdrU3Ttm4Uz/EkO9dMy+BZde
+IkXzTOD334bGL+KiGgatb1egBvH5DpWvvTKLLH8v83/OwPkDzl7GCLfDMXV6H/A=
+=dvqu
+-----END PGP SIGNATURE-----
+
+--zCKi3GIZzVBPywwA--
