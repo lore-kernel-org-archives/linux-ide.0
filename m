@@ -1,36 +1,38 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: [PATCH] libata: remove experimental tag on PATA drivers
-Date: Thu, 12 Nov 2009 20:13:40 -0600
-Message-ID: <4AFCC0D4.9020708@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Fri, 13 Nov 2009 05:58:37 GMT
+Message-ID: <200911130558.nAD5wbDl032014@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:54351 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754821AbZKMCNv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Nov 2009 21:13:51 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:36667 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbZKMF6c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Nov 2009 00:58:32 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAD5wb9D032015
+	for <linux-ide@vger.kernel.org>; Fri, 13 Nov 2009 05:58:37 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
 
-Remove the experimental tag on Parallel ATA drivers. Though some of the
-individual PATA drivers are still marked as experimental, as a group they can
-hardly be considered to be, given they've been used in various distros for some
-time.
+http://bugzilla.kernel.org/show_bug.cgi?id=14583
 
-Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index f2df6e2..33133c6 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -3,7 +3,7 @@
- #
- 
- menuconfig ATA
--	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
-+	tristate "Serial ATA and Parallel ATA drivers"
- 	depends on HAS_IOMEM
- 	depends on BLOCK
- 	depends on !(M32R || M68K) || BROKEN
+
+
+
+--- Comment #12 from Andrew Simpson <andrewnz.simpson@gmail.com>  2009-11-13 05:58:32 ---
+O.K., hdparm output attached below.
+
+Is there any reason that the SSD should work fine with 2.6.28 (Ubuntu 9.04),
+but not with the later 2.6.31?
+
+Thanks.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
