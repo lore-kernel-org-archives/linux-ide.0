@@ -1,62 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] libata: remove experimental tag on PATA drivers
-Date: Fri, 13 Nov 2009 17:15:24 +0100
-Message-ID: <200911131715.24377.bzolnier@gmail.com>
+Date: Fri, 13 Nov 2009 18:25:15 +0000
+Message-ID: <20091113182515.38fb3793@lxorguk.ukuu.org.uk>
 References: <4AFCC0D4.9020708@gmail.com>
+	<200911131715.24377.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:12678 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756144AbZKMQQU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Nov 2009 11:16:20 -0500
-In-Reply-To: <4AFCC0D4.9020708@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48029 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756764AbZKMSXl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Nov 2009 13:23:41 -0500
+In-Reply-To: <200911131715.24377.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Friday 13 November 2009 03:13:40 Robert Hancock wrote:
-> Remove the experimental tag on Parallel ATA drivers. Though some of the
-> individual PATA drivers are still marked as experimental, as a group they can
-> hardly be considered to be, given they've been used in various distros for some
-> time.
+> Fine but please update status of following host drivers that were
+> marked as "stable" prematurely by commit e3389cb first:
 > 
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+> PATA_PDC_OLD: needs to be marked as EXPERIMENTAL (or just BROKEN)
+> - known reliability problems with UDMA
 
-Fine but please update status of following host drivers that were
-marked as "stable" prematurely by commit e3389cb first:
+A few odd reports apparently linked to specific chip revs. It's at
+least as stable as the old IDE one which doesn't work on my hardware. I'd
+love to get it working on everything but neither driver does and I don't
+think we are likely to ever extract more docs from Promise.
 
-PATA_PDC_OLD: needs to be marked as EXPERIMENTAL (or just BROKEN)
-- known reliability problems with UDMA
+> PATA_ALI: EXPERIMENTAL
+> - ATAPI DMA is still broken
 
-PATA_ALI: EXPERIMENTAL
-- ATAPI DMA is still broken
+Not experimental as we default to not doing ATAPI DMA. Glancing over the
+code I notice the ALI C2/C3 workaround probably wants adding to the old
+driver as it can do nasty things otherwise. (See the reset function in
+the pata_ali driver)
 
-PATA_CMD64X: EXPERIMENTAL
-- potential data corruption issues remains unfixed for CMD64[3,6]
+> PATA_CMD64X: EXPERIMENTAL
+> - potential data corruption issues remains unfixed for CMD64[3,6]
 
-PATA_SIS: EXPERIMENTAL
-- missing MWDMA support on newer controllers
+Patch in testing, and unlike the old IDE one it doesn't cripple the
+controller but implements the proper workaround in full including
+permitting parallel PIO command streams. I'll push that back through
+stable once done.
 
-They are all old & known problems and not present in
-[ "old", "deprecated", "legacy" ] counterparts.
+> PATA_SIS: EXPERIMENTAL
+> - missing MWDMA support on newer controllers
 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index f2df6e2..33133c6 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -3,7 +3,7 @@
->  #
->  
->  menuconfig ATA
-> -	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
-> +	tristate "Serial ATA and Parallel ATA drivers"
->  	depends on HAS_IOMEM
->  	depends on BLOCK
->  	depends on !(M32R || M68K) || BROKEN
+Yes seems someone fixed that in the old driver but didn't forward port
+it. Trivial and fixed.
 
--- 
-Bartlomiej Zolnierkiewicz
+BTW - its wrong in the old driver as far as I can see - it doesn't clip
+the DMA mode to the PIO limit as required by the documentation and the
+ATA standard. Remember the same timings are used for both PIO and MWDMA
+cycles.
+
+> They are all old & known problems and not present in
+> [ "old", "deprecated", "legacy" ] counterparts.
+
+Which has its own different set of problems.
+
+Any others spring to mind while you are at it ?
+
+Alan
+
