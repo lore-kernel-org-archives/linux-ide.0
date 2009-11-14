@@ -1,297 +1,48 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: [PATCH] libata: Add ALPM power state accounting to the AHCI driver
-Date: Fri, 13 Nov 2009 19:24:29 -0800
-Message-ID: <20091113192429.4dfc9c39@infradead.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
+Date: Fri, 13 Nov 2009 22:23:13 -0500
+Message-ID: <4AFE22A1.4050707@rtr.ca>
+References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>	 <4AF8F363.3010806@rtr.ca> <200911101651.24912.bzolnier@gmail.com>	 <84144f020911100808y55f5bfa2v5c203b356583a7b5@mail.gmail.com>	 <4AFB3C9D.4020609@rtr.ca>	 <a4c8a6d00911111450y7e451071h3f0ede0a1003678b@mail.gmail.com>	 <4AFC9FEC.8030304@rtr.ca> <4AFCA75C.8000101@pobox.com> <a4c8a6d00911121641k13288cb3s696a876901c68eb3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:49219 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143AbZKNDW4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Nov 2009 22:22:56 -0500
+Received: from rtr.ca ([76.10.145.34]:59533 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755260AbZKNDXJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Nov 2009 22:23:09 -0500
+In-Reply-To: <a4c8a6d00911121641k13288cb3s696a876901c68eb3@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>
-Cc: akpm@linux-foundation.org
+To: Thiago Farina <tfransosi@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
->From f62ff8c98080b4a9e66f82f793145b863b4e183a Mon Sep 17 00:00:00 2001
-From: Arjan van de Ven <arjan@linux.intel.com>
-Date: Fri, 13 Nov 2009 16:54:37 -0800
-Subject: [PATCH] libata: Add ALPM power state accounting to the AHCI driver
+Thiago Farina wrote:
+> On Thu, Nov 12, 2009 at 10:25 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
+>> On 11/12/2009 06:53 PM, Mark Lord wrote:
+>>> Thiago Farina wrote:
+>>>> On Wed, Nov 11, 2009 at 8:37 PM, Mark Lord <liml@rtr.ca> wrote:
+>>>>> Looks like unnecessary churn and obfuscation to me.
+>>>> Obfuscation? Are you saying that just because you wrote this code? So
+>>>> what is the usage of a macro? I think you are having a defensive
+>>>> position here.
+>>> ..
+>>>
+>>> No, actually I believe Jeff wrote that particular line of code.
+>> You know, Linus actually invented a command for people who enjoy this
+>> game...  ;)
+>>
+>>        git blame drivers/ata/sata_mv.c
+>>
+>> shows each line of code, and metadata about each line such as commit id and
+>> author name.
+> 
+> Sure, and I ran this command before saying that Mark wrote this code.
+..
 
-PowerTOP wants to show the user how effective the ALPM link
-power management is for the user. ALPM is worth around 0.5W on a quiet
-link; PowerTOP wants to be able to find and expose cases where the "quiet link" 
-isn't actually quiet.
+I'm probably just the last chap to change the indentation on it.
+It really doesn't look like my style to me.  ;)
 
-This patch adds state accounting functionality to the AHCI driver for
-PowerTOP to use.
-The parts of the patch are
-1) the sysfs logic of exposing the stats for each state in sysfs
-2) the basic accounting logic that gets update on link change interrupts
-   (or when the user accesses the info from sysfs)
-3) a "accounting enable" flag; in order to get the accounting to work,
-   the driver needs to get phyrdy interrupts on link status changes.
-   Normally and currently this is disabled by the driver when ALPM is
-   on (to reduce overhead); when PowerTOP is running this will need
-   to be on to get usable statistics... hence the sysfs tunable.
+There were two authors before me there, and that line looks like one of theirs. :)
 
-The PowerTOP output currently looks like this:
-
-Recent SATA AHCI link activity statistics
-Active	Partial	Slumber	Device name
-  0.5%	 99.5%	  0.0%	host0
-
-(work to resolve "host0" to a more human readable name is in progress in PowerTOP)
-
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
----
- drivers/ata/ahci.c |  175 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 173 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a3241a1..448d684 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -72,6 +72,21 @@ MODULE_PARM_DESC(ignore_sss, "Ignore staggered spinup flag (0=don't ignore, 1=ig
- static int ahci_enable_alpm(struct ata_port *ap,
- 		enum link_pm policy);
- static void ahci_disable_alpm(struct ata_port *ap);
-+
-+static ssize_t ahci_alpm_show_active(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
-+static ssize_t ahci_alpm_show_slumber(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
-+static ssize_t ahci_alpm_show_partial(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
-+
-+static ssize_t ahci_alpm_show_accounting(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
-+
-+static ssize_t ahci_alpm_set_accounting(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count);
-+
- static ssize_t ahci_led_show(struct ata_port *ap, char *buf);
- static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
- 			      size_t size);
-@@ -289,6 +304,13 @@ struct ahci_host_priv {
- 	u32 			em_loc; /* enclosure management location */
- };
- 
-+enum ahci_port_states {
-+	AHCI_PORT_NOLINK = 0,
-+	AHCI_PORT_ACTIVE = 1,
-+	AHCI_PORT_PARTIAL = 2,
-+	AHCI_PORT_SLUMBER = 3
-+};
-+
- struct ahci_port_priv {
- 	struct ata_link		*active_link;
- 	struct ahci_cmd_hdr	*cmd_slot;
-@@ -304,6 +326,14 @@ struct ahci_port_priv {
- 	u32 			intr_mask;	/* interrupts to enable */
- 	/* enclosure management info per PM slot */
- 	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
-+
-+	/* ALPM accounting state and stats */
-+	unsigned int 		accounting_active:1;
-+	u64			active_jiffies;
-+	u64			partial_jiffies;
-+	u64			slumber_jiffies;
-+	int			previous_state;
-+	int			previous_jiffies;
- };
- 
- static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
-@@ -359,6 +389,12 @@ DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
- DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
- DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
- 
-+DEVICE_ATTR(ahci_alpm_active, S_IRUGO, ahci_alpm_show_active, NULL);
-+DEVICE_ATTR(ahci_alpm_partial, S_IRUGO, ahci_alpm_show_partial, NULL);
-+DEVICE_ATTR(ahci_alpm_slumber, S_IRUGO, ahci_alpm_show_slumber, NULL);
-+DEVICE_ATTR(ahci_alpm_accounting, S_IRUGO | S_IWUSR,
-+		ahci_alpm_show_accounting, ahci_alpm_set_accounting);
-+
- static struct device_attribute *ahci_shost_attrs[] = {
- 	&dev_attr_link_power_management_policy,
- 	&dev_attr_em_message_type,
-@@ -367,6 +403,10 @@ static struct device_attribute *ahci_shost_attrs[] = {
- 	&dev_attr_ahci_host_cap2,
- 	&dev_attr_ahci_host_version,
- 	&dev_attr_ahci_port_cmd,
-+	&dev_attr_ahci_alpm_active,
-+	&dev_attr_ahci_alpm_partial,
-+	&dev_attr_ahci_alpm_slumber,
-+	&dev_attr_ahci_alpm_accounting,
- 	NULL
- };
- 
-@@ -1165,9 +1205,14 @@ static int ahci_enable_alpm(struct ata_port *ap,
-  	 * getting woken up due to spurious phy ready interrupts
- 	 * TBD - Hot plug should be done via polling now, is
- 	 * that even supported?
-+	 *
-+	 * However, when accounting_active is set, we do want
-+	 * the interrupts for accounting purposes.
-  	 */
--	pp->intr_mask &= ~PORT_IRQ_PHYRDY;
--	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
-+	if (!pp->accounting_active) {
-+		pp->intr_mask &= ~PORT_IRQ_PHYRDY;
-+		writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
-+	}
- 
- 	/*
-  	 * Set a flag to indicate that we should ignore all PhyRdy
-@@ -2157,6 +2202,131 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 		ata_port_abort(ap);
- }
- 
-+static int get_current_alpm_state(struct ata_port *ap)
-+{
-+	u32 status = 0;
-+
-+	ahci_scr_read(&ap->link, SCR_STATUS, &status);
-+
-+	/* link status is in bits 11-8 */
-+	status = status >> 8;
-+	status = status & 0x7;
-+
-+	if (status == 6)
-+		return AHCI_PORT_SLUMBER;
-+	if (status == 2)
-+		return AHCI_PORT_PARTIAL;
-+	if (status == 1)
-+		return AHCI_PORT_ACTIVE;
-+	return AHCI_PORT_NOLINK;
-+}
-+
-+static void account_alpm_stats(struct ata_port *ap)
-+{
-+	struct ahci_port_priv *pp = ap->private_data;
-+
-+	int new_state;
-+	u64 new_jiffies, jiffies_delta;
-+
-+	new_state = get_current_alpm_state(ap);
-+	new_jiffies = jiffies;
-+
-+	jiffies_delta = new_jiffies - pp->previous_jiffies;
-+
-+	switch (pp->previous_state) {
-+	case AHCI_PORT_NOLINK:
-+		pp->active_jiffies = 0;
-+		pp->partial_jiffies = 0;
-+		pp->slumber_jiffies = 0;
-+		break;
-+	case AHCI_PORT_ACTIVE:
-+		pp->active_jiffies += jiffies_delta;
-+		break;
-+	case AHCI_PORT_PARTIAL:
-+		pp->partial_jiffies += jiffies_delta;
-+		break;
-+	case AHCI_PORT_SLUMBER:
-+		pp->slumber_jiffies += jiffies_delta;
-+		break;
-+	default:
-+		break;
-+	}
-+	pp->previous_state = new_state;
-+	pp->previous_jiffies = new_jiffies;
-+}
-+
-+static ssize_t ahci_alpm_show_active(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ahci_port_priv *pp = ap->private_data;
-+
-+	account_alpm_stats(ap);
-+
-+	return sprintf(buf, "%u\n", jiffies_to_msecs(pp->active_jiffies));
-+}
-+
-+static ssize_t ahci_alpm_show_partial(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ahci_port_priv *pp = ap->private_data;
-+
-+	account_alpm_stats(ap);
-+
-+	return sprintf(buf, "%u\n", jiffies_to_msecs(pp->partial_jiffies));
-+}
-+
-+static ssize_t ahci_alpm_show_slumber(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ahci_port_priv *pp = ap->private_data;
-+
-+	account_alpm_stats(ap);
-+
-+	return sprintf(buf, "%u\n", jiffies_to_msecs(pp->slumber_jiffies));
-+}
-+
-+
-+static ssize_t ahci_alpm_show_accounting(struct device *dev,
-+				  struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ahci_port_priv *pp = ap->private_data;
-+
-+	return sprintf(buf, "%u\n", pp->accounting_active);
-+}
-+
-+static ssize_t ahci_alpm_set_accounting(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	unsigned long flags;
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ahci_port_priv *pp = ap->private_data;
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+
-+	if (buf[0] == '0')
-+		pp->accounting_active = 0;
-+	if (buf[0] == '1')
-+		pp->accounting_active = 1;
-+
-+	/* we need to enable the PHYRDY interrupt when we want accounting */
-+	if (pp->accounting_active) {
-+		spin_lock_irqsave(ap->lock, flags);
-+		pp->intr_mask |= PORT_IRQ_PHYRDY;
-+		writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
-+	return count;
-+}
-+
- static void ahci_port_intr(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
-@@ -2182,6 +2352,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 	if ((hpriv->flags & AHCI_HFLAG_NO_HOTPLUG) &&
- 		(status & PORT_IRQ_PHYRDY)) {
- 		status &= ~PORT_IRQ_PHYRDY;
-+		account_alpm_stats(ap);
- 		ahci_scr_write(&ap->link, SCR_ERROR, ((1 << 16) | (1 << 18)));
- 	}
- 
--- 
-1.6.0.6
-
-
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Cheers
