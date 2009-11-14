@@ -1,48 +1,81 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
-Date: Fri, 13 Nov 2009 22:23:13 -0500
-Message-ID: <4AFE22A1.4050707@rtr.ca>
-References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>	 <4AF8F363.3010806@rtr.ca> <200911101651.24912.bzolnier@gmail.com>	 <84144f020911100808y55f5bfa2v5c203b356583a7b5@mail.gmail.com>	 <4AFB3C9D.4020609@rtr.ca>	 <a4c8a6d00911111450y7e451071h3f0ede0a1003678b@mail.gmail.com>	 <4AFC9FEC.8030304@rtr.ca> <4AFCA75C.8000101@pobox.com> <a4c8a6d00911121641k13288cb3s696a876901c68eb3@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: remove experimental tag on PATA drivers
+Date: Sat, 14 Nov 2009 13:02:46 +0100
+Message-ID: <200911141302.46714.bzolnier@gmail.com>
+References: <4AFCC0D4.9020708@gmail.com> <20091114022951.GA9796@srcf.ucam.org> <200911140354.01808.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:59533 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755260AbZKNDXJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Nov 2009 22:23:09 -0500
-In-Reply-To: <a4c8a6d00911121641k13288cb3s696a876901c68eb3@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755803AbZKNMEL@vger.kernel.org>
+In-Reply-To: <200911140354.01808.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockrwd@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jonathan Corbet <corbet@lwn.net>
 List-Id: linux-ide@vger.kernel.org
-To: Thiago Farina <tfransosi@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Thiago Farina wrote:
-> On Thu, Nov 12, 2009 at 10:25 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
->> On 11/12/2009 06:53 PM, Mark Lord wrote:
->>> Thiago Farina wrote:
->>>> On Wed, Nov 11, 2009 at 8:37 PM, Mark Lord <liml@rtr.ca> wrote:
->>>>> Looks like unnecessary churn and obfuscation to me.
->>>> Obfuscation? Are you saying that just because you wrote this code? So
->>>> what is the usage of a macro? I think you are having a defensive
->>>> position here.
->>> ..
->>>
->>> No, actually I believe Jeff wrote that particular line of code.
->> You know, Linus actually invented a command for people who enjoy this
->> game...  ;)
->>
->>        git blame drivers/ata/sata_mv.c
->>
->> shows each line of code, and metadata about each line such as commit id and
->> author name.
+On Saturday 14 November 2009 03:54:01 Bartlomiej Zolnierkiewicz wrote:
+> On Saturday 14 November 2009 03:29:51 Matthew Garrett wrote:
+> > On Sat, Nov 14, 2009 at 12:46:29AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > 
+> > > Skipping the technical merit of the quoted text for the moment -- I find
+> > > the fact that you keep calling the present IDE host drivers (that many
+> > > developers helped to fix) as "old" ones or "buggy" ones rather degrading
+> > > for their (this includes me of course) hard work.
+> > 
+> > Without making any judgement about the relative quality of the drivers 
+> > in their role as IDE drivers, the fact that ACPI hotplug works with 
+> > libata and doesn't work with drivers/ide means that, rationally, 
+> > distributions need to use the libata stack for the more common parts. 
 > 
-> Sure, and I ran this command before saying that Mark wrote this code.
-..
+> This doesn't change the fact that there are real regressions present in
+> libata host drivers and people who should be responsible for fixing them
+> are just ignoring them..
+> 
+> > There simply isn't the same level of integration between drivers/ide and 
+> > the rest of the OS.
+> 
+> Fully agreed but it doesn't change anything for issues discussed.
+> 
+> On the side note -- certain distributions, I'm sure you know which one
+> I mean specifically [1],  "helped" a lot in making sure that such level
+> of integration would be very difficult to achieve (ACPI hotplug was
+> added later than some distributions, again you know which one I mean
+> specifically [1], switched to libata _only_ for PATA).
 
-I'm probably just the last chap to change the indentation on it.
-It really doesn't look like my style to me.  ;)
+I've checked this now:
 
-There were two authors before me there, and that line looks like one of theirs. :)
+	23 January 2007	F7 Test1 development freeze 
+	..
+	31 May 2007	F7 General Availability
 
-Cheers
+vs.
+
+ommit 237d8440cb2b104a3b97fc971a9bce67960bb616
+Author:     Matthew Garrett <mjg59@srcf.ucam.org>
+AuthorDate: Wed Oct 3 01:24:16 2007 +0100
+Commit:     Jeff Garzik <jeff@garzik.org>
+CommitDate: Fri Oct 12 14:55:45 2007 -0400
+
+    libata: Integrate ACPI-based PATA/SATA hotplug - version 5
+
+    Modern laptops with hotswap bays still tend to utilise a PATA interface
+    on a SATA bridge, generally with the host controller in some legacy
+    emulation mode rather than AHCI. This means that the existing hotplug
+    code in libata is unable to work. The ACPI specification states that
+    ...
+
+Please take a look at dates and author of the commit.
+
+You helped create such situation in the first place and now you try to
+use it as an technical argument to justify past decisions.
+
+Anyway it doesn't matter here at all.
+
+Why are people even bringing this or quality of "old" IDE host drivers
+in the discussion as a justification for the quality of _new_ drivers?
+
+Double standards and hypocrisy comes to a mind.
+
+-- 
+Bartlomiej Zolnierkiewicz
