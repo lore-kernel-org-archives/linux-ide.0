@@ -1,78 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: prepare for removal of experimental tag on PATA drivers
-Date: Sat, 14 Nov 2009 15:37:19 +0100
-Message-ID: <200911141537.19068.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: prepare for removal of experimental tag on PATA
+ drivers
+Date: Sat, 14 Nov 2009 15:23:47 +0000
+Message-ID: <20091114152347.733a52b7@lxorguk.ukuu.org.uk>
+References: <200911141537.19068.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:61525 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156AbZKNOiQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Nov 2009 09:38:16 -0500
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44628 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753340AbZKNP1D (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Nov 2009 10:27:03 -0500
+In-Reply-To: <200911141537.19068.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Push experimental tags to host drivers that still need it so we can
-remove the "global" experimental tag for PATA drivers.
+On Sat, 14 Nov 2009 15:37:19 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-I hear that some issues are being worked on but the patch reflects
-the current situation and we can trivially update status of affected
-host drivers after new fixes are merged.
+> Push experimental tags to host drivers that still need it so we can
+> remove the "global" experimental tag for PATA drivers.
+> 
+> I hear that some issues are being worked on but the patch reflects
+> the current situation and we can trivially update status of affected
+> host drivers after new fixes are merged.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/Kconfig |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+NAK
 
-Index: b/drivers/ata/Kconfig
-===================================================================
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -230,8 +230,8 @@ config PATA_ACPI
- 	  otherwise unsupported hardware.
- 
- config PATA_ALI
--	tristate "ALi PATA support"
--	depends on PCI
-+	tristate "ALi PATA support (Experimental)"
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the ALi ATA interfaces
- 	  found on the many ALi chipsets.
-@@ -293,8 +293,8 @@ config PATA_CMD640_PCI
- 	  If unsure, say N.
- 
- config PATA_CMD64X
--	tristate "CMD64x PATA support"
--	depends on PCI
-+	tristate "CMD64x PATA support (Experimental)"
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the CMD64x series chips
- 	  except for the CMD640.
-@@ -574,8 +574,8 @@ config PATA_PCMCIA
- 	  If unsure, say N.
- 
- config PATA_PDC_OLD
--	tristate "Older Promise PATA controller support"
--	depends on PCI
-+	tristate "Older Promise PATA controller support (Experimental)"
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Promise 20246, 20262, 20263,
- 	  20265 and 20267 adapters.
-@@ -660,8 +660,8 @@ config PATA_SIL680
- 	  If unsure, say N.
- 
- config PATA_SIS
--	tristate "SiS PATA support"
--	depends on PCI
-+	tristate "SiS PATA support (Experimental)"
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for SiS PATA controllers
- 
