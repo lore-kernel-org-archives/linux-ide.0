@@ -1,42 +1,41 @@
 From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [PATCH] libata: Add ALPM power state accounting to the AHCI
  driver
-Date: Sun, 15 Nov 2009 09:00:04 -0800
-Message-ID: <20091115090004.2037838b@infradead.org>
+Date: Sun, 15 Nov 2009 09:46:30 -0800
+Message-ID: <20091115094630.1785b5ca@infradead.org>
 References: <20091113192429.4dfc9c39@infradead.org>
 	<4AFFB65F.3020201@kernel.org>
+	<4AFFBB75.7050601@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:41977 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:39042 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865AbZKOQ62 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Nov 2009 11:58:28 -0500
-In-Reply-To: <4AFFB65F.3020201@kernel.org>
+	with ESMTP id S1752790AbZKORoz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Nov 2009 12:44:55 -0500
+In-Reply-To: <4AFFBB75.7050601@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, akpm@linux-foundation.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-On Sun, 15 Nov 2009 17:05:51 +0900
-Tejun Heo <tj@kernel.org> wrote:
+On Sun, 15 Nov 2009 03:27:33 -0500
+Jeff Garzik <jgarzik@pobox.com> wrote:
 
-> Most of logic seems to belong to libata generic part rather than in
-> ahci itself.  Wouldn't it be better to implement the thing as generic
-> libata feature which ahci uses?
+> 
+> What little there is of driver-specific behavior can be handled from 
+> existing callbacks (->enable_pm) or by creating a driver-specific 
+> function that calls a generic function (eg. ahci_alpm_set_accounting 
+> could call ata_alpm_set_accounting, before twiddling AHCI's
+> PORT_IRQ_MASK).
 
-maybe. AHCI is the only one using it then (2 years ago there was
-discussion about having others do alpm as well but.. well nothing has
-happened).
-
-Doing "most" in libata means that at best you end up with stuff no
-longer local and static, and at worst that you get a bunch of
-new function pointers via method tables going around... for
-something only one driver is using (with no sight of other users).
-
-If there were going to be more users... I'd absolutely agree with you.
-But for only 1 user... I tend to prefer simplicity ;)
+the whole concept of needing that accounting flag is AHCI specific;
+if ever any of the other chip drivers goes to do ALPM, it'll be using
+explicit software control, which doesn't need this kind of enable flag;
+The only reason there is an enable flag is that the hw based accounting
+is resulting in extra interrupts that you don't want except when you
+want the accounting (read: powertop is running)
 
 
 -- 
