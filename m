@@ -1,67 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: Add ALPM power state accounting to the AHCI driver
-Date: Sun, 15 Nov 2009 03:27:33 -0500
-Message-ID: <4AFFBB75.7050601@pobox.com>
-References: <20091113192429.4dfc9c39@infradead.org> <4AFFB65F.3020201@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Luke Ross <luke@lukeross.name>
+Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement
+	ATAPI_HORKAGE_NOPIO and apply it to GGW-H10N
+Date: Sun, 15 Nov 2009 06:13:28 -0500
+Message-ID: <20091115111326.GA21415@lukeross.name>
+References: <4857313A.1000405@kernel.org> <48573174.9050103@kernel.org> <20080617094354.338e186b@lxorguk.ukuu.org.uk> <48578080.5030605@kernel.org> <20080617095439.GA9359@lukeross.name> <20080617110450.668f37e2@lxorguk.ukuu.org.uk> <4857ADC3.3040106@kernel.org> <20080618114828.GB19903@lukeross.name> <4858F894.6030409@garzik.org> <4AFDF5A8.1050005@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49037 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751656AbZKOI1n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Nov 2009 03:27:43 -0500
-In-Reply-To: <4AFFB65F.3020201@kernel.org>
+Received: from slow3-v.mail.gandi.net ([217.70.178.89]:57448 "EHLO
+	slow3-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969AbZKOLp3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Nov 2009 06:45:29 -0500
+Received: from relay4-v.mail.gandi.net (relay4-v.mail.gandi.net [217.70.178.78])
+	by slow3-v.mail.gandi.net (Postfix) with ESMTP id 7847F38034
+	for <linux-ide@vger.kernel.org>; Sun, 15 Nov 2009 12:14:16 +0100 (CET)
+In-Reply-To: <4AFDF5A8.1050005@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, akpm@linux-foundation.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 11/15/2009 03:05 AM, Tejun Heo wrote:
-> 11/14/2009 12:24 PM, Arjan van de Ven wrote:
->>  From f62ff8c98080b4a9e66f82f793145b863b4e183a Mon Sep 17 00:00:00 2001
->> From: Arjan van de Ven<arjan@linux.intel.com>
->> Date: Fri, 13 Nov 2009 16:54:37 -0800
->> Subject: [PATCH] libata: Add ALPM power state accounting to the AHCI driver
->>
->> PowerTOP wants to show the user how effective the ALPM link
->> power management is for the user. ALPM is worth around 0.5W on a quiet
->> link; PowerTOP wants to be able to find and expose cases where the "quiet link"
->> isn't actually quiet.
->>
->> This patch adds state accounting functionality to the AHCI driver for
->> PowerTOP to use.
->> The parts of the patch are
->> 1) the sysfs logic of exposing the stats for each state in sysfs
->> 2) the basic accounting logic that gets update on link change interrupts
->>     (or when the user accesses the info from sysfs)
->> 3) a "accounting enable" flag; in order to get the accounting to work,
->>     the driver needs to get phyrdy interrupts on link status changes.
->>     Normally and currently this is disabled by the driver when ALPM is
->>     on (to reduce overhead); when PowerTOP is running this will need
->>     to be on to get usable statistics... hence the sysfs tunable.
->>
->> The PowerTOP output currently looks like this:
->>
->> Recent SATA AHCI link activity statistics
->> Active	Partial	Slumber	Device name
->>    0.5%	 99.5%	  0.0%	host0
->>
->> (work to resolve "host0" to a more human readable name is in progress in PowerTOP)
+Hi,
+
+On Fri, Nov 13, 2009 at 06:11:20PM -0600, Robert Hancock wrote:
 >
-> Most of logic seems to belong to libata generic part rather than in
-> ahci itself.  Wouldn't it be better to implement the thing as generic
-> libata feature which ahci uses?
+> Luke/Tejun, do you have some error output from those wodim or growisofs  
+> errors? It would be useful to know what commands those were that failed  
+> and whether they were also an unusual data size.
 
-I had pretty much the same comment, on IRC.  The accounting variables 
-should probably live in struct ata_link, or a subsidiary (struct 
-ata_link_accounting ?).
+The only information I still have is on the bug:
 
-What little there is of driver-specific behavior can be handled from 
-existing callbacks (->enable_pm) or by creating a driver-specific 
-function that calls a generic function (eg. ahci_alpm_set_accounting 
-could call ata_alpm_set_accounting, before twiddling AHCI's PORT_IRQ_MASK).
+http://bugzilla.kernel.org/show_bug.cgi?id=10091
 
-	Jeff
+It felt like it must have been something very edge-case, as only 
+nVidia_chipset+LG_drive+Linux seemed to show the issue. Linux on the 
+nVidia with a SATA Lite-On drive worked fine; Linux on an Intel ICH with 
+AHCI and the LG drive worked fine; Windows XP on the nVidia with the LG 
+drive worked fine.
 
+I've since upgraded the motherboard to a newer nVidia chipset (8300) and 
+the drive to a newer LG (GGW-H20L) and these both play fine with AHCI - 
+so I no longer have the original hardware to test with.
 
+Luke
