@@ -1,39 +1,43 @@
 From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [PATCH] libata: Add ALPM power state accounting to the AHCI
  driver
-Date: Sun, 15 Nov 2009 10:36:36 -0800
-Message-ID: <20091115103636.0039910e@infradead.org>
+Date: Sun, 15 Nov 2009 10:42:01 -0800
+Message-ID: <20091115104201.3dec642b@infradead.org>
 References: <20091113192429.4dfc9c39@infradead.org>
 	<4AFFB65F.3020201@kernel.org>
+	<20091115103636.0039910e@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60039 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:44971 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753440AbZKOSe5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Nov 2009 13:34:57 -0500
-In-Reply-To: <4AFFB65F.3020201@kernel.org>
+	with ESMTP id S1751337AbZKOSkT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Nov 2009 13:40:19 -0500
+In-Reply-To: <20091115103636.0039910e@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, akpm@linux-foundation.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, akpm@linux-foundation.org
 
-On Sun, 15 Nov 2009 17:05:51 +0900
-Tejun Heo <tj@kernel.org> wrote:
+On Sun, 15 Nov 2009 10:36:36 -0800
+Arjan van de Ven <arjan@infradead.org> wrote:
 
-> Most of logic seems to belong to libata generic part rather than in
-> ahci itself.  Wouldn't it be better to implement the thing as generic
-> libata feature which ahci uses?
+> On Sun, 15 Nov 2009 17:05:51 +0900
+> Tejun Heo <tj@kernel.org> wrote:
+> 
+> > Most of logic seems to belong to libata generic part rather than in
+> > ahci itself.  Wouldn't it be better to implement the thing as
+> > generic libata feature which ahci uses?
+> 
+> ok how about this?
 
-ok how about this?
-(lots of functions no longer static but ok ;)
+was missing an EXPORT_SYMBOL_GPL on the accounting function; v3 below
 
-
->From 40ed73a676e4d2d518143114ddecc02d192e46d6 Mon Sep 17 00:00:00 2001
+>From 4958476e83d317eaafd424f61fa8d9c7daf31a33 Mon Sep 17 00:00:00 2001
 From: Arjan van de Ven <arjan@linux.intel.com>
 Date: Sun, 15 Nov 2009 10:33:46 -0800
-Subject: [PATCH v2] libata: Add ALPM power state accounting to the AHCI driver
+Subject: [PATCH v3] libata: Add ALPM power state accounting to the AHCI driver
 
 PowerTOP wants to be able to show the user how effective the ALPM link
 power management is for the user. ALPM is worth around 0.5W on a quiet
@@ -56,9 +60,9 @@ The parts of the patch are
 Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 ---
  drivers/ata/ahci.c        |   62 ++++++++++++++++++++++++++++-
- drivers/ata/libata-core.c |   96 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |   30 ++++++++++++++
- 3 files changed, 186 insertions(+), 2 deletions(-)
+ drivers/ata/libata-core.c |   97 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h    |   24 +++++++++++
+ 3 files changed, 181 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
 index a3241a1..d8f2145 100644
@@ -177,10 +181,10 @@ index a3241a1..d8f2145 100644
  	}
  
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index dc72690..a1cee33 100644
+index dc72690..385d7f7 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6733,6 +6733,102 @@ const struct ata_port_info ata_dummy_port_info = {
+@@ -6733,6 +6733,103 @@ const struct ata_port_info ata_dummy_port_info = {
  	.port_ops		= &ata_dummy_port_ops,
  };
  
@@ -235,8 +239,9 @@ index dc72690..a1cee33 100644
 +	ap->link.ata_link_stats.previous_state = new_state;
 +	ap->link.ata_link_stats.previous_jiffies = new_jiffies;
 +}
++EXPORT_SYMBOL_GPL(ata_account_alpm_stats);
 +
-+ssize_t ata_alpm_show_active(struct device *dev,
++static ssize_t ata_alpm_show_active(struct device *dev,
 +				   struct device_attribute *attr, char *buf)
 +{
 +	struct Scsi_Host *shost = class_to_shost(dev);
@@ -248,7 +253,7 @@ index dc72690..a1cee33 100644
 +		jiffies_to_msecs(ap->link.ata_link_stats.active_jiffies));
 +}
 +
-+ssize_t ata_alpm_show_partial(struct device *dev,
++static ssize_t ata_alpm_show_partial(struct device *dev,
 +				   struct device_attribute *attr, char *buf)
 +{
 +	struct Scsi_Host *shost = class_to_shost(dev);
@@ -260,7 +265,7 @@ index dc72690..a1cee33 100644
 +		jiffies_to_msecs(ap->link.ata_link_stats.partial_jiffies));
 +}
 +
-+ssize_t ata_alpm_show_slumber(struct device *dev,
++static ssize_t ata_alpm_show_slumber(struct device *dev,
 +				   struct device_attribute *attr, char *buf)
 +{
 +	struct Scsi_Host *shost = class_to_shost(dev);
@@ -284,7 +289,7 @@ index dc72690..a1cee33 100644
   * libata is essentially a library of internal helper functions for
   * low-level ATA host controller drivers.  As such, the API/ABI is
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8769864..ea9cd25 100644
+index 8769864..f38f4f9 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
 @@ -682,6 +682,22 @@ struct ata_acpi_gtm {
@@ -319,17 +324,11 @@ index 8769864..ea9cd25 100644
  };
  
  struct ata_port {
-@@ -1046,6 +1064,18 @@ extern void ata_timing_merge(const struct ata_timing *,
+@@ -1046,6 +1064,12 @@ extern void ata_timing_merge(const struct ata_timing *,
  			     unsigned int);
  extern u8 ata_timing_cycle2mode(unsigned int xfer_shift, int cycle);
  
 +/* alpm accounting helpers */
-+extern ssize_t ata_alpm_show_active(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
-+extern ssize_t ata_alpm_show_slumber(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
-+extern ssize_t ata_alpm_show_partial(struct device *dev,
-+				  struct device_attribute *attr, char *buf);
 +extern void ata_account_alpm_stats(struct ata_port *ap);
 +extern struct device_attribute dev_attr_ata_alpm_active;
 +extern struct device_attribute dev_attr_ata_alpm_partial;
