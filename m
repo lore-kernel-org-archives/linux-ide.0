@@ -1,190 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] libata: add TRIM support
-Date: Mon, 16 Nov 2009 10:43:43 -0500
-Message-ID: <20091116154343.GA6672@infradead.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Add ALPM power state accounting to the AHCI
+ driver
+Date: Mon, 16 Nov 2009 15:57:34 +0000
+Message-ID: <20091116155734.13912158@lxorguk.ukuu.org.uk>
+References: <20091113192429.4dfc9c39@infradead.org>
+	<4AFFB65F.3020201@kernel.org>
+	<4AFFBB75.7050601@pobox.com>
+	<20091115094630.1785b5ca@infradead.org>
+	<4B004328.8060807@kernel.org>
+	<20091115102334.1396eea6@infradead.org>
+	<4B0047CB.5080509@kernel.org>
+	<20091115103313.4691924d@infradead.org>
+	<4B00B034.5010908@kernel.org>
+	<20091115180058.55caa36f@infradead.org>
+	<4B00B5D0.4010707@kernel.org>
+	<20091115215531.23edcf5e@infradead.org>
+	<4B00EDAC.4080904@kernel.org>
+	<4B0109BC.1020204@pobox.com>
+	<20091116064308.741b9a5b@infradead.org>
+	<4B0168DB.50109@kernel.org>
+	<20091116072114.65c6fbc2@infradead.org>
+	<4B017133.3060209@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49538 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751927AbZKPP5L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Nov 2009 10:57:11 -0500
+In-Reply-To: <4B017133.3060209@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
+> SCR access is a bit subtle because it requires issuing commands if the
+> link is behind PMP and internal commands currently assume EH context.
 
-Add support for the ATA TRIM command in libata.  We translate a WRITE SAME 16
-command with the unmap bit set into an ATA TRIM command and export enough
-information in READ CAPACITY 16 and the block limits EVPD page so that the new
-SCSI layer discard support will driver this for us.
+As do chunks of some of the drivers.
 
-Note that I hardcode the WRITE_SAME_16 opcode for now as the patch to introduce
-the symbolic is not in 2.6.32 yet but only in the SCSI tree - as soon as it is
-merged we can fix it up to properly use the symbolic name.
+> This is true for all link functions, so I'm suggesting the stats
+> helpers to follow the same convention.  This will also make slave link
+> configuration work properly (controllers which present two SATA links
+> as master/slave of the same port but still provide access to separate
+> SCR registers).  You know, it's a link function, make it take a link
+> as all other stuff is designed that way.
 
-Tested with a OCZ Vertex SSD and my still quite hackish TRIM emulation
-for qemu.
+I don't see how you can do per link reporting on AHCI.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Sure maybe some devices should expose it per link, but it's so expensive
+and it'll get really ugly fast.
 
-Index: linux-2.6/drivers/ata/libata-scsi.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-scsi.c	2009-11-16 16:37:37.776003870 +0100
-+++ linux-2.6/drivers/ata/libata-scsi.c	2009-11-16 16:37:41.864004223 +0100
-@@ -47,6 +47,7 @@
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
- #include <linux/suspend.h>
-+#include <asm/unaligned.h>
- 
- #include "libata.h"
- 
-@@ -1964,6 +1965,7 @@ static unsigned int ata_scsiop_inq_00(st
- 		0x80,	/* page 0x80, unit serial no page */
- 		0x83,	/* page 0x83, device ident page */
- 		0x89,	/* page 0x89, ata info page */
-+		0xb0,	/* page 0xb0, block limits page */
- 		0xb1,	/* page 0xb1, block device characteristics page */
- 	};
- 
-@@ -2085,6 +2087,40 @@ static unsigned int ata_scsiop_inq_89(st
- 	return 0;
- }
- 
-+static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
-+{
-+	u32 min_io_sectors;
-+
-+	rbuf[1] = 0xb0;
-+	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
-+
-+	/*
-+	 * Optimal transfer length granularity.
-+	 *
-+	 * This is always one physical block, but for disks with a smaller
-+	 * logical than physical sector size we need to figure out what the
-+	 * latter is.
-+	 */
-+	min_io_sectors = 1;
-+	if ((args->id[106] & 0xc000) == 0x4000 && (args->id[106] & (1 << 13)))
-+		min_io_sectors *= args->id[106] & 0xf;
-+	put_unaligned_be16(min_io_sectors, &rbuf[6]);
-+
-+	/*
-+	 * Optimal unmap granularity.
-+	 *
-+	 * The ATA spec doesn't even know about a granularity or alignment
-+	 * for the TRIM command.  We can leave away most of the unmap related
-+	 * VPD page entries, but we have specifify a granularity to signal
-+	 * that we support some form of unmap - in thise case via WRITE SAME
-+	 * with the unmap bit set.
-+	 */
-+	if (ata_id_has_trim(args->id))
-+		put_unaligned_be32(1, &rbuf[28]);
-+
-+	return 0;
-+}
-+
- static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
- {
- 	int form_factor = ata_id_form_factor(args->id);
-@@ -2374,6 +2410,9 @@ static unsigned int ata_scsiop_read_cap(
- 		rbuf[13] = log_per_phys;
- 		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
- 		rbuf[15] = lowest_aligned;
-+
-+		if (ata_id_has_trim(args->id))
-+			rbuf[14] |= 0x80;
- 	}
- 
- 	return 0;
-@@ -2896,6 +2935,70 @@ static unsigned int ata_scsi_pass_thru(s
- 	return 1;
- }
- 
-+static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
-+{
-+	struct ata_taskfile *tf = &qc->tf;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct ata_device *dev = qc->dev;
-+	const u8 *cdb = scmd->cmnd;
-+	u64 block;
-+	u32 n_block;
-+	u32 size;
-+	void *buf;
-+
-+	/* we may not issue DMA commands if no DMA mode is set */
-+	if (unlikely(!dev->dma_mode))
-+		goto invalid_fld;
-+
-+	if (unlikely(scmd->cmd_len < 16))
-+		goto invalid_fld;
-+	scsi_16_lba_len(cdb, &block, &n_block);
-+
-+	/* for now we only support WRITE SAME with the unmap bit set */
-+	if (unlikely(!(cdb[1] & 0x8)))
-+		goto invalid_fld;
-+
-+	/*
-+	 * WRITE SAME always has a sector sized buffer as payload, this
-+	 * should never be a multiple entry S/G list.
-+	 */
-+	if (!scsi_sg_count(scmd))
-+		goto invalid_fld;
-+
-+	buf = page_address(sg_page(scsi_sglist(scmd)));
-+	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
-+
-+	tf->protocol = ATA_PROT_DMA;
-+	tf->hob_feature = 0;
-+	tf->feature = ATA_DSM_TRIM;
-+	tf->hob_nsect = (size / 512) >> 8;
-+	tf->nsect = size / 512;
-+	tf->hob_lbal = 0;
-+	tf->lbal = 0;
-+	tf->hob_lbam = 0;
-+	tf->lbam = 0;
-+	tf->hob_lbah = 0;
-+	tf->lbah = 0;
-+	tf->device = ATA_LBA;
-+	tf->command = ATA_CMD_DSM;
-+	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
-+		     ATA_TFLAG_WRITE;
-+	tf->device = dev->devno ?
-+		tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
-+
-+	qc->sect_size = ATA_SECT_SIZE;
-+	qc->flags |= ATA_QCFLAG_RESULT_TF | ATA_QCFLAG_QUIET;
-+
-+	ata_qc_set_pc_nbytes(qc);
-+
-+	return 0;
-+
-+ invalid_fld:
-+	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x00);
-+	/* "Invalid field in cdb" */
-+	return 1;
-+}
-+
- /**
-  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
-  *	@dev: ATA device
-@@ -2920,6 +3023,9 @@ static inline ata_xlat_func_t ata_get_xl
- 	case WRITE_16:
- 		return ata_scsi_rw_xlat;
- 
-+	case 0x93 /*WRITE_SAME_16*/:
-+		return ata_scsi_write_same_xlat;
-+
- 	case SYNCHRONIZE_CACHE:
- 		if (ata_try_flush_cache(dev))
- 			return ata_scsi_flush_xlat;
-@@ -3109,6 +3215,9 @@ void ata_scsi_simulate(struct ata_device
- 		case 0x89:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
- 			break;
-+		case 0xb0:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b0);
-+			break;
- 		case 0xb1:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
- 			break;
+I'd say it has to go in at host level for now. If some super whizzo
+future silicon exposes it per link without being beaten around the head
+by the software stack then it's easy enough to add per link data and a
+generic helper which provides a summary set of numbers at the host level
+for hardware that can report link data.
+
+That gives us a useful API now and the ability to fix it in the future,
+not that I anticipate anyone ever needing to. AHCI (or AHCI-ish) seems to
+be what everyone is working to nowdays with little obvious pressure to
+move anywhere else.
+
+Alan
