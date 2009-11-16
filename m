@@ -1,33 +1,94 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Add ALPM power state accounting to the AHCI driver
-Date: Mon, 16 Nov 2009 10:51:48 +0900
-Message-ID: <4B00B034.5010908@kernel.org>
-References: <20091113192429.4dfc9c39@infradead.org>	<4AFFB65F.3020201@kernel.org>	<4AFFBB75.7050601@pobox.com>	<20091115094630.1785b5ca@infradead.org>	<4B004328.8060807@kernel.org>	<20091115102334.1396eea6@infradead.org>	<4B0047CB.5080509@kernel.org> <20091115103313.4691924d@infradead.org>
+From: Shaohua Li <shaohua.li@intel.com>
+Subject: [PATCH]AHCI: disable sntf cap for ich8
+Date: Mon, 16 Nov 2009 09:56:05 +0800
+Message-ID: <20091116015605.GA21717@sli10-desk.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58075 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750978AbZKPBus (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Nov 2009 20:50:48 -0500
-In-Reply-To: <20091115103313.4691924d@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752005AbZKPB4E@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jgarzik@redhat.com, sean.hefty@intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-11/16/2009 03:33 AM, Arjan van de Ven wrote:
->> Enabling DIPM means that the drive will be in charge of transitioning
->> the link into powersave modes, so if sampling SStatus is necessary to
->> determine how much time the link spends in powersave mode.
-> 
-> do we get a link interrupt when the state changes?
-> (with ALPM we do.. optionally.. which is where the flag comes in)
+I obseved there is a sata_async_notification() for every ahci interrupt. But the
+async notification does nothing (this is hard disk drive and no pmp). This cause
+cpu wastes some time on sntf register access.
 
-It will depend on the controller I suppose but we can always poll.
+It appears ICH AHCI doesn't support SNotification register, but the controller
+reports it does. After quirking it, the async notification disappears.
 
-Thanks.
+PS. it appears all ICH don't support SNotification register from ICH manual, don't
+know if we need quirk all ICH. I don't have machines with all kinds of ICH.
 
--- 
-tejun
+Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+---
+ drivers/ata/ahci.c |   20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+Index: linux/drivers/ata/ahci.c
+===================================================================
+--- linux.orig/drivers/ata/ahci.c	2009-11-16 09:36:40.000000000 +0800
++++ linux/drivers/ata/ahci.c	2009-11-16 09:53:44.000000000 +0800
+@@ -113,6 +113,7 @@ enum {
+ 	board_ahci_mcp65	= 6,
+ 	board_ahci_nopmp	= 7,
+ 	board_ahci_yesncq	= 8,
++	board_ahci_nosntf	= 9,
+ 
+ 	/* global controller registers */
+ 	HOST_CAP		= 0x00, /* host capabilities */
+@@ -235,6 +236,7 @@ enum {
+ 	AHCI_HFLAG_NO_SUSPEND		= (1 << 10), /* don't suspend */
+ 	AHCI_HFLAG_SRST_TOUT_IS_OFFLINE	= (1 << 11), /* treat SRST timeout as
+ 							link offline */
++	AHCI_HFLAG_NO_SNTF		= (1 << 12), /* no sntf */
+ 
+ 	/* ap->flags bits */
+ 
+@@ -508,7 +510,7 @@ static const struct ata_port_info ahci_p
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
+-	/* board_ahci_yesncq */
++	[board_ahci_yesncq] =
+ 	{
+ 		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
+ 		.flags		= AHCI_FLAG_COMMON,
+@@ -516,6 +518,14 @@ static const struct ata_port_info ahci_p
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_nosntf] =
++	{
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_SNTF),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ };
+ 
+ static const struct pci_device_id ahci_pci_tbl[] = {
+@@ -531,7 +541,7 @@ static const struct pci_device_id ahci_p
+ 	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
+ 	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
+ 	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
+-	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* ICH8 */
++	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8 */
+ 	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
+ 	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
+ 	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
+@@ -849,6 +859,12 @@ static void ahci_save_initial_config(str
+ 		cap &= ~HOST_CAP_PMP;
+ 	}
+ 
++	if ((cap & HOST_CAP_SNTF) && (hpriv->flags & AHCI_HFLAG_NO_SNTF)) {
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "controller can't do SNTF, turning off CAP_SNTF\n");
++		cap &= ~HOST_CAP_SNTF;
++	}
++
+ 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361 &&
+ 	    port_map != 1) {
+ 		dev_printk(KERN_INFO, &pdev->dev,
