@@ -1,32 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] libata: add TRIM support
-Date: Mon, 16 Nov 2009 16:07:48 +0000
-Message-ID: <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
-References: <20091116154343.GA6672@infradead.org>
+Date: Mon, 16 Nov 2009 19:19:39 +0300
+Message-ID: <4B017B9B.6090702@ru.mvista.com>
+References: <20091116154343.GA6672@infradead.org> <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60861 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752790AbZKPQGA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Nov 2009 11:06:00 -0500
-In-Reply-To: <20091116154343.GA6672@infradead.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:42555 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1752632AbZKPQTx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Nov 2009 11:19:53 -0500
+In-Reply-To: <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
-> +	min_io_sectors = 1;
-> +	if ((args->id[106] & 0xc000) == 0x4000 && (args->id[106] & (1 << 13)))
-> +		min_io_sectors *= args->id[106] & 0xf;
+Hello.
 
-That magic probably wants to be an ata_id_foo helper of some sort but
-otherwise all looks sensible enough for ATA. I'm assuming gcc is smart
-enough to collapse that into
+Alan Cox wrote:
 
-	id[106] & 0xE000 != 0x6000
+>> +	min_io_sectors = 1;
+>> +	if ((args->id[106] & 0xc000) == 0x4000 && (args->id[106] & (1 << 13)))
+>> +		min_io_sectors *= args->id[106] & 0xf;
+>>     
+>
+> That magic probably wants to be an ata_id_foo helper of some sort but
+> otherwise all looks sensible enough for ATA. I'm assuming gcc is smart
+> enough to collapse that into
+>
+> 	id[106] & 0xE000 != 0x6000
+>   
 
-anyway
+   You probably meant ==, not !=. Not sure if gcc is that smart...
 
-Alan
+WBR, Sergei
+
+
