@@ -1,32 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Tue, 17 Nov 2009 10:00:13 -0500
-Message-ID: <20091117150012.GA10748@infradead.org>
-References: <20091116154343.GA6672@infradead.org> <4B02AD86.8010304@rtr.ca> <20091117143507.GC588@infradead.org> <20091117145239.768072c9@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@linux.intel.com>
+Subject: [PATCH 0/4] Series short description
+Date: Tue, 17 Nov 2009 14:44:28 +0000
+Message-ID: <20091117144413.15356.34793.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37310 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbZKQPAN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 10:00:13 -0500
-Content-Disposition: inline
-In-Reply-To: <20091117145239.768072c9@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:54227 "EHLO
+	bob.linux.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752631AbZKQPAh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 10:00:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Nov 17, 2009 at 02:52:39PM +0000, Alan Cox wrote:
-> I'm not convinced that is the right way to handle it. If we start doing
-> that we'll have this massive unmanagable set of magic flags and twiddles
-> for every possible host specific corner case.
-> 
-> Far better to keep the issue of the command as Christoph has done and
-> block the command issue in the afflicted devices qc_issue so that you get
-> an error back. That keeps the mess in the right places.
+The following series implements...
 
-Ok, new version of the patch without this will go out this minute.  I'm
-happy to add whatever patch is nessecary to block it for controllers
-that can't accept it once we agree on a method.
+---
 
+Alan Cox (4):
+      pata: Update experimental tags
+      cmd64x: implement serialization as per notes
+      pata_sis: Implement MWDMA for the UDMA 133 capable chips
+      pata_via: Blacklist some combinations of Transcend Flash and via
+
+
+ drivers/ata/Kconfig       |    8 +--
+ drivers/ata/pata_cmd64x.c |  132 ++++++++++++++++++++++++++++++++++++++++++---
+ drivers/ata/pata_sis.c    |   88 +++++++++++++++++++++++-------
+ drivers/ata/pata_via.c    |   27 +++++++++
+ 4 files changed, 222 insertions(+), 33 deletions(-)
+
+-- 
+Signature
