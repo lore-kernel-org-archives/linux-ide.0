@@ -1,43 +1,58 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14622] Second IDE device not found
-Date: Tue, 17 Nov 2009 07:11:03 GMT
-Message-ID: <200911170711.nAH7B3AB006808@demeter.kernel.org>
-References: <bug-14622-11633@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Vivek Mahajan <vivek.mahajan@freescale.com>
+Subject: [PATCH 1/1] sata_sil24: MSI support cleanup
+Date: Tue, 17 Nov 2009 13:01:23 +0530
+Message-ID: <1258443083-6203-1-git-send-email-vivek.mahajan@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:57548 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752697AbZKQHK6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 02:10:58 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAH7B3E8006809
-	for <linux-ide@vger.kernel.org>; Tue, 17 Nov 2009 07:11:03 GMT
-In-Reply-To: <bug-14622-11633@http.bugzilla.kernel.org/>
+Received: from az33egw02.freescale.net ([192.88.158.103]:61277 "EHLO
+	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755107AbZKQHbY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 02:31:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, Vivek Mahajan <vivek.mahajan@freescale.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14622
+Grant Grundler suggested the following cleanup:
 
+* Rename module param 'msi' to 'sata_sil24_msi'
+* Remove pci_intx() as pci_enable_msi() internally
+  takes care of it.
 
-Zeno R.R. Davatz <zdavatz@gmail.com> changed:
+Reviewed-by: Grant Grundler <grundler@google.com>
+Signed-off-by: Vivek Mahajan <vivek.mahajan@freescale.com>
+---
+ drivers/ata/sata_sil24.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |zdavatz@gmail.com
-
-
-
-
---- Comment #1 from Zeno R.R. Davatz <zdavatz@gmail.com>  2009-11-17 07:11:02 ---
-This one is still open. I am on an older kernel version at the moment for my
-SW-Raid-Server. 
-
-Linux oldie 2.6.27.39 #2 SMP Wed Nov 11 19:38:45 CET 2009 i686 Intel(R)
-Pentium(R) III CPU family 1266MHz GenuineIntel GNU/Linux
-
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 1370df6..783d8c7 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -417,9 +417,9 @@ static struct ata_port_operations sil24_ops = {
+ #endif
+ };
+ 
+-static int sata_sil24_msi;    /* Disable MSI */
+-module_param_named(msi, sata_sil24_msi, bool, S_IRUGO);
+-MODULE_PARM_DESC(msi, "Enable MSI (Default: false)");
++static int modparam_sata_sil24_msi;    /* Disable MSI */
++module_param_named(sata_sil24_msi, modparam_sata_sil24_msi, bool, S_IRUGO);
++MODULE_PARM_DESC(sata_sil24_msi, "Enable MSI (default: false)");
+ 
+ /*
+  * Use bits 30-31 of port_flags to encode available port numbers.
+@@ -1344,10 +1344,8 @@ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	sil24_init_controller(host);
+ 
+-	if (sata_sil24_msi && !pci_enable_msi(pdev)) {
++	if (modparam_sata_sil24_msi && !pci_enable_msi(pdev))
+ 		dev_printk(KERN_INFO, &pdev->dev, "Using MSI\n");
+-		pci_intx(pdev, 0);
+-	}
+ 
+ 	pci_set_master(pdev);
+ 	return ata_host_activate(host, pdev->irq, sil24_interrupt, IRQF_SHARED,
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.5.6.5
+
