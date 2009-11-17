@@ -1,32 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] ata/sata_sil24: MSI support, disabled by default
-Date: Mon, 16 Nov 2009 22:19:44 -0500
-Message-ID: <4B021650.6050708@garzik.org>
-References: <1258352362-11231-1-git-send-email-vivek.mahajan@freescale.com>
+Subject: Re: [PATCH]AHCI: disable sntf cap for ich8
+Date: Mon, 16 Nov 2009 22:19:34 -0500
+Message-ID: <4B021646.5040102@garzik.org>
+References: <20091116015605.GA21717@sli10-desk.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50969 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50959 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755200AbZKQDTk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Nov 2009 22:19:40 -0500
-In-Reply-To: <1258352362-11231-1-git-send-email-vivek.mahajan@freescale.com>
+	id S1754661AbZKQDTb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Nov 2009 22:19:31 -0500
+In-Reply-To: <20091116015605.GA21717@sli10-desk.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vivek Mahajan <vivek.mahajan@freescale.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, sean.hefty@intel.com, Arjan van de Ven <arjan@linux.intel.com>, Alan Cox <alan@linux.intel.com>
 
-On 11/16/2009 01:19 AM, Vivek Mahajan wrote:
-> The following patch adds MSI support. Some platforms
-> may have broken MSI, so those are defaulted to use
-> legacy PCI interrupts.
+On 11/15/2009 08:56 PM, Shaohua Li wrote:
+> I obseved there is a sata_async_notification() for every ahci interrupt. But the
+> async notification does nothing (this is hard disk drive and no pmp). This cause
+> cpu wastes some time on sntf register access.
 >
-> Signed-off-by: Vivek Mahajan<vivek.mahajan@freescale.com>
-> ---
->   drivers/ata/sata_sil24.c |    9 +++++++++
->   1 files changed, 9 insertions(+), 0 deletions(-)
+> It appears ICH AHCI doesn't support SNotification register, but the controller
+> reports it does. After quirking it, the async notification disappears.
 
-applied
+Patch applied.
+
+
+> PS. it appears all ICH don't support SNotification register from ICH manual, don't
+> know if we need quirk all ICH. I don't have machines with all kinds of ICH.
+
+You work for Intel -- you or somebody needs to research and figure this 
+out...  This is an Intel vendor issue that only Intel can definitively 
+resolve.
+
+	Jeff
 
 
