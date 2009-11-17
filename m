@@ -1,40 +1,91 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH]AHCI: disable sntf cap for ich8
-Date: Mon, 16 Nov 2009 22:19:34 -0500
-Message-ID: <4B021646.5040102@garzik.org>
-References: <20091116015605.GA21717@sli10-desk.sh.intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Mon, 16 Nov 2009 22:34:36 -0500
+Message-ID: <4B0219CC.2060401@pobox.com>
+References: <20091116154343.GA6672@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50959 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36427 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754661AbZKQDTb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Nov 2009 22:19:31 -0500
-In-Reply-To: <20091116015605.GA21717@sli10-desk.sh.intel.com>
+	id S1752669AbZKQDee (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Nov 2009 22:34:34 -0500
+In-Reply-To: <20091116154343.GA6672@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@redhat.com, sean.hefty@intel.com, Arjan van de Ven <arjan@linux.intel.com>, Alan Cox <alan@linux.intel.com>
-
-On 11/15/2009 08:56 PM, Shaohua Li wrote:
-> I obseved there is a sata_async_notification() for every ahci interrupt. But the
-> async notification does nothing (this is hard disk drive and no pmp). This cause
-> cpu wastes some time on sntf register access.
->
-> It appears ICH AHCI doesn't support SNotification register, but the controller
-> reports it does. After quirking it, the async notification disappears.
-
-Patch applied.
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
 
-> PS. it appears all ICH don't support SNotification register from ICH manual, don't
-> know if we need quirk all ICH. I don't have machines with all kinds of ICH.
 
-You work for Intel -- you or somebody needs to research and figure this 
-out...  This is an Intel vendor issue that only Intel can definitively 
-resolve.
+Overall, OK.
 
-	Jeff
+Needs minor revisions, including one bug fix (tf->device stomping).
 
+
+> +static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+> +{
+> +	u32 min_io_sectors;
+> +
+> +	rbuf[1] = 0xb0;
+> +	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
+> +
+> +	/*
+> +	 * Optimal transfer length granularity.
+> +	 *
+> +	 * This is always one physical block, but for disks with a smaller
+> +	 * logical than physical sector size we need to figure out what the
+> +	 * latter is.
+> +	 */
+> +	min_io_sectors = 1;
+> +	if ((args->id[106]&  0xc000) == 0x4000&&  (args->id[106]&  (1<<  13)))
+> +		min_io_sectors *= args->id[106]&  0xf;
+
+args->id[] access should be via ata_id_* functions from include/linux/ata.h.
+
+Create new ata_id_* as needed.
+
+Plus...  add some whitespace before all C operators, to be consistent 
+with the rest of libata.
+
+
+> +	buf = page_address(sg_page(scsi_sglist(scmd)));
+> +	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
+> +
+> +	tf->protocol = ATA_PROT_DMA;
+> +	tf->hob_feature = 0;
+> +	tf->feature = ATA_DSM_TRIM;
+> +	tf->hob_nsect = (size / 512)>>  8;
+
+needs whitespace before op
+
+
+> +	tf->nsect = size / 512;
+> +	tf->hob_lbal = 0;
+> +	tf->lbal = 0;
+> +	tf->hob_lbam = 0;
+> +	tf->lbam = 0;
+> +	tf->hob_lbah = 0;
+> +	tf->lbah = 0;
+
+taskfile is pre-zeroed for you (ata_scsi_qc_new -> ata_qc_new_init -> 
+ata_qc_reinit -> ata_tf_init), so zap all those zeroing lines.
+
+
+> +	tf->device = ATA_LBA;
+
+__do not__ overwrite tf->device value.  It is already assigned a useful 
+value, which you just stomped.
+
+
+> +	tf->device = dev->devno ?
+> +		tf->device | ATA_DEV1 : tf->device&  ~ATA_DEV1;
+
+delete this; already done in ata_tf_init()
+
+
+> +	qc->sect_size = ATA_SECT_SIZE;
+
+delete this; already done in ata_qc_reinit()
 
