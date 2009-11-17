@@ -1,33 +1,38 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: pata_ali can't detect partitions
-Date: Tue, 17 Nov 2009 04:26:52 -0800 (PST)
-Message-ID: <20091117.042652.166768278.davem@davemloft.net>
-References: <20091109220338.GA1604@seek.priv>
-	<20091110202532.GA22588@seek.priv>
+Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend
+ SSD
+Date: Tue, 17 Nov 2009 04:30:02 -0800 (PST)
+Message-ID: <20091117.043002.224755438.davem@davemloft.net>
+References: <Pine.LNX.4.64.0910260731460.21316@hs20-bc2-1.build.redhat.com>
+	<20091026121804.3789c4c0@lxorguk.ukuu.org.uk>
+	<Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35481
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42910
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751445AbZKQM0f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 07:26:35 -0500
-In-Reply-To: <20091110202532.GA22588@seek.priv>
+	by vger.kernel.org with ESMTP id S1752097AbZKQM3p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 07:29:45 -0500
+In-Reply-To: <Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gianluca@sottospazio.it
-Cc: linux-ide@vger.kernel.org
+To: mpatocka@redhat.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-From: gianluca <gianluca@sottospazio.it>
-Date: Tue, 10 Nov 2009 21:25:33 +0100
+From: Mikulas Patocka <mpatocka@redhat.com>
+Date: Wed, 4 Nov 2009 20:25:21 -0500 (EST)
 
-> As requested I'm attaching the output of the commands lspci -vvxxx and
-> dmesg. Since they were quite big I gzipped them.
+> Don't use UDMA on VIA UDMA33 controller with Transcend SSD
 > 
-> You can find the uncompressed copy also here for your convenience:
+> The computer locks up if Transcend SSD runs in any of UDMA modes.
+> It doesn't lockup with different brand SSD, so this is specific to Transcend.
 > 
-> http://www.sottospazio.it/lspci-k63d
-> http://www.sottospazio.it/dmesg-k63d
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
-I want to help with this so I'm going to fire up some of my
-ALI using sparc64 systems and try to give a hand.
+Mikulas, I'm happy to apply this if you match on the full
+ID string, not just "TS".
+
+Please update your patch and I'll push it upstream.
+
+Thank you.
