@@ -1,38 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/5] pata_sis: Implement MWDMA for the UDMA 133 capable
- chips
-Date: Tue, 17 Nov 2009 17:38:23 +0000
-Message-ID: <20091117173823.217b95a7@lxorguk.ukuu.org.uk>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain>
-	<20091117145111.15430.67106.stgit@localhost.localdomain>
-	<200911171827.29891.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 3/5] cmd64x: implement serialization as per notes
+Date: Tue, 17 Nov 2009 18:35:05 +0100
+Message-ID: <200911171835.05232.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091117145122.15430.70080.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46885 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751198AbZKQRg3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 12:36:29 -0500
-In-Reply-To: <200911171827.29891.bzolnier@gmail.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:48285 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbZKQRiV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 12:38:21 -0500
+In-Reply-To: <20091117145122.15430.70080.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> > +static int mwdma_clip_to_pio(struct ata_device *adev)
-> > +{
-> > +	const int mwdma_to_pio[3] = {
-> > +		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
-> > +	};
-> > +	return min(mwdma_to_pio[adev->dma_mode - XFER_MW_DMA_0],
-> > +				adev->pio_mode - XFER_PIO_0);
-> > +}
-> 
-> This wants to be in the generic libata code.
+On Tuesday 17 November 2009 15:51:32 Alan Cox wrote:
 
-I'm not convinced because for the majority of drivers the libata timing
-interface handles it. SiS needs it just because it does things by
-precomputed tables. It's a one off interface.
+> +struct cmd_priv
+> +{
+> +	int dma_live;		/* Channel using DMA */
+> +	int irq_t[2];		/* Register to check for IRQ */
+> +	int irq_m[2];		/* Bit to check */
+> +};
 
-Alan
+irq_t and irq_m content will be identical for all host instances
+so you may as well add one instance for it, use ->private_data to
+store dma_live information and remove cmd_priv allocation
+
+> +	/* If the other port is not live then issue the command */
+> +	if (alt == NULL || !alt->qc_active) {
+> +		if (dma)
+> +			priv->dma_live = qc->ap->port_no;
+> +		return 0;
+> +	}
+> +	/* If there is a live DMA command then wait */
+> +	if (priv->dma_live != -1)
+> +		return 	ATA_DEFER_PORT;
+> +	if (dma) {
+> +		/* Cannot overlap our DMA command */
+> +		if (alt->qc_active)
+> +			return ATA_DEFER_PORT;
+
+no need to check alt->qc_active again here
+
+-- 
+Bartlomiej Zolnierkiewicz
