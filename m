@@ -1,36 +1,37 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH -2nd repost 1/1] ATA: pata_via, fix double put on isa
- bridge
-Date: Mon, 16 Nov 2009 22:17:47 -0500
-Message-ID: <4B0215DB.2010301@pobox.com>
-References: <1257351063-5616-1-git-send-email-jirislaby@gmail.com>
+Subject: Re: ATA: Make CS5536 PATA driver use 32-bit BM DMA template instead
+ of 16-bit.
+Date: Mon, 16 Nov 2009 22:18:02 -0500
+Message-ID: <4B0215EA.9080800@pobox.com>
+References: <m3my2u0w6f.fsf@intrepid.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50930 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753655AbZKQDRo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Nov 2009 22:17:44 -0500
-In-Reply-To: <1257351063-5616-1-git-send-email-jirislaby@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754280AbZKQDSB@vger.kernel.org>
+In-Reply-To: <m3my2u0w6f.fsf@intrepid.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/04/2009 11:11 AM, Jiri Slaby wrote:
-> In via_init_one, when via_isa_bridges iterator reaches
-> PCI_DEVICE_ID_VIA_ANON and last but one via_isa_bridges bridge is
-> found but rev doesn't match, pci_dev_put(isa) is called twice.
+On 11/10/2009 06:58 PM, Krzysztof Halasa wrote:
+> Tested on IXP425 + CS5536.
 >
-> Do pci_dev_put only once.
+> Signed-off-by: Krzysztof Ha=C5=82asa<khc@pm.waw.pl>
 >
-> Signed-off-by: Jiri Slaby<jirislaby@gmail.com>
-> Cc: Jeff Garzik<jgarzik@pobox.com>
-> ---
->   drivers/ata/pata_via.c |   10 ++++------
->   1 files changed, 4 insertions(+), 6 deletions(-)
+> diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+> index 88a7933..0898213 100644
+> --- a/drivers/ata/pata_cs5536.c
+> +++ b/drivers/ata/pata_cs5536.c
+> @@ -232,7 +232,7 @@ static struct scsi_host_template cs5536_sht =3D {
+>   };
+>
+>   static struct ata_port_operations cs5536_port_ops =3D {
+> -	.inherits		=3D&ata_bmdma_port_ops,
+> +	.inherits		=3D&ata_bmdma32_port_ops,
+>   	.cable_detect		=3D cs5536_cable_detect,
+>   	.set_piomode		=3D cs5536_set_piomode,
+>   	.set_dmamode		=3D cs5536_set_dmamode,
 
 applied
-
-
