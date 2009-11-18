@@ -1,109 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] hpt366: remove dead old timing tables
-Date: Wed, 18 Nov 2009 19:32:07 +0100
-Message-ID: <200911181932.07651.bzolnier@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] hpt366: remove dead old timing tables
+Date: Wed, 18 Nov 2009 10:38:48 -0800 (PST)
+Message-ID: <20091118.103848.39318908.davem@davemloft.net>
+References: <200911181932.07651.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:37566 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932367AbZKRSc4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2009 13:32:56 -0500
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49230
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754738AbZKRSic (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2009 13:38:32 -0500
+In-Reply-To: <200911181932.07651.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-It has been enough time since introduction of the new timing tables
-(commit 809b53c from Dec 12 2007) and the old timing tables are still
-available in pata_hpt37x.c (or git history) if somebody needs them.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Wed, 18 Nov 2009 19:32:07 +0100
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/hpt366.c |   63 ---------------------------------------------------
- 1 file changed, 63 deletions(-)
+> It has been enough time since introduction of the new timing tables
+> (commit 809b53c from Dec 12 2007) and the old timing tables are still
+> available in pata_hpt37x.c (or git history) if somebody needs them.
+> 
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Index: b/drivers/ide/hpt366.c
-===================================================================
---- a/drivers/ide/hpt366.c
-+++ b/drivers/ide/hpt366.c
-@@ -297,68 +297,6 @@ static u32 twenty_five_base_hpt36x[] = {
- 	/* XFER_PIO_0 */	0xc0d08585
- };
- 
--#if 0
--/* These are the timing tables from the HighPoint open source drivers... */
--static u32 thirty_three_base_hpt37x[] = {
--	/* XFER_UDMA_6 */	0x12446231,	/* 0x12646231 ?? */
--	/* XFER_UDMA_5 */	0x12446231,
--	/* XFER_UDMA_4 */	0x12446231,
--	/* XFER_UDMA_3 */	0x126c6231,
--	/* XFER_UDMA_2 */	0x12486231,
--	/* XFER_UDMA_1 */	0x124c6233,
--	/* XFER_UDMA_0 */	0x12506297,
--
--	/* XFER_MW_DMA_2 */	0x22406c31,
--	/* XFER_MW_DMA_1 */	0x22406c33,
--	/* XFER_MW_DMA_0 */	0x22406c97,
--
--	/* XFER_PIO_4 */	0x06414e31,
--	/* XFER_PIO_3 */	0x06414e42,
--	/* XFER_PIO_2 */	0x06414e53,
--	/* XFER_PIO_1 */	0x06814e93,
--	/* XFER_PIO_0 */	0x06814ea7
--};
--
--static u32 fifty_base_hpt37x[] = {
--	/* XFER_UDMA_6 */	0x12848242,
--	/* XFER_UDMA_5 */	0x12848242,
--	/* XFER_UDMA_4 */	0x12ac8242,
--	/* XFER_UDMA_3 */	0x128c8242,
--	/* XFER_UDMA_2 */	0x120c8242,
--	/* XFER_UDMA_1 */	0x12148254,
--	/* XFER_UDMA_0 */	0x121882ea,
--
--	/* XFER_MW_DMA_2 */	0x22808242,
--	/* XFER_MW_DMA_1 */	0x22808254,
--	/* XFER_MW_DMA_0 */	0x228082ea,
--
--	/* XFER_PIO_4 */	0x0a81f442,
--	/* XFER_PIO_3 */	0x0a81f443,
--	/* XFER_PIO_2 */	0x0a81f454,
--	/* XFER_PIO_1 */	0x0ac1f465,
--	/* XFER_PIO_0 */	0x0ac1f48a
--};
--
--static u32 sixty_six_base_hpt37x[] = {
--	/* XFER_UDMA_6 */	0x1c869c62,
--	/* XFER_UDMA_5 */	0x1cae9c62,	/* 0x1c8a9c62 */
--	/* XFER_UDMA_4 */	0x1c8a9c62,
--	/* XFER_UDMA_3 */	0x1c8e9c62,
--	/* XFER_UDMA_2 */	0x1c929c62,
--	/* XFER_UDMA_1 */	0x1c9a9c62,
--	/* XFER_UDMA_0 */	0x1c829c62,
--
--	/* XFER_MW_DMA_2 */	0x2c829c62,
--	/* XFER_MW_DMA_1 */	0x2c829c66,
--	/* XFER_MW_DMA_0 */	0x2c829d2e,
--
--	/* XFER_PIO_4 */	0x0c829c62,
--	/* XFER_PIO_3 */	0x0c829c84,
--	/* XFER_PIO_2 */	0x0c829ca6,
--	/* XFER_PIO_1 */	0x0d029d26,
--	/* XFER_PIO_0 */	0x0d029d5e
--};
--#else
- /*
-  * The following are the new timing tables with PIO mode data/taskfile transfer
-  * overclocking fixed...
-@@ -424,7 +362,6 @@ static u32 sixty_six_base_hpt37x[] = {
- 	/* XFER_PIO_1 */	0x0d02ff26,
- 	/* XFER_PIO_0 */	0x0d42ff7f
- };
--#endif
- 
- #define HPT366_DEBUG_DRIVE_INFO		0
- #define HPT371_ALLOW_ATA133_6		1
+Applied to ide-next-2.6, thanks.
