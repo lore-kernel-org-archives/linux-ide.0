@@ -1,35 +1,72 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend
- SSD
-Date: Wed, 18 Nov 2009 13:04:27 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0911181303261.20509@hs20-bc2-1.build.redhat.com>
-References: <20091118172258.59894130@lxorguk.ukuu.org.uk>
- <20091118.093233.83428970.davem@davemloft.net>
- <Pine.LNX.4.64.0911181245330.5068@hs20-bc2-1.build.redhat.com>
- <20091118.095346.231454962.davem@davemloft.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 4/5] pata: Update experimental tags
+Date: Wed, 18 Nov 2009 19:19:19 +0100
+Message-ID: <200911181919.19127.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091117145137.15430.11229.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13248 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755851AbZKRSEb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Nov 2009 13:04:31 -0500
-In-Reply-To: <20091118.095346.231454962.davem@davemloft.net>
+Received: from ey-out-2122.google.com ([74.125.78.24]:57155 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758217AbZKRSVF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2009 13:21:05 -0500
+In-Reply-To: <20091117145137.15430.11229.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 18 Nov 2009, David Miller wrote:
-
-> From: Mikulas Patocka <mpatocka@redhat.com>
-> Date: Wed, 18 Nov 2009 12:46:37 -0500 (EST)
+On Tuesday 17 November 2009 15:51:39 Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ---
 > 
-> > And what will you do with 16G or 32G versions of the same device? You 
-> > really think they use different controllers and are not affected?
+>  drivers/ata/Kconfig |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
 > 
-> Firmware changes often.
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index f2df6e2..36931e0 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -374,7 +374,7 @@ config PATA_HPT366
+>  	  If unsure, say N.
+>  
+>  config PATA_HPT37X
+> -	tristate "HPT 370/370A/371/372/374/302 PATA support (Experimental)"
+> +	tristate "HPT 370/370A/371/372/374/302 PATA support"
+>  	depends on PCI && EXPERIMENTAL
+>  	help
+>  	  This option enables support for the majority of the later HPT
+> @@ -383,7 +383,7 @@ config PATA_HPT37X
+>  	  If unsure, say N.
+>  
+>  config PATA_HPT3X2N
+> -	tristate "HPT 372N/302N PATA support (Experimental)"
+> +	tristate "HPT 372N/302N PATA support"
+>  	depends on PCI && EXPERIMENTAL
+>  	help
+>  	  This option enables support for the N variant HPT PATA
 
-So use the firmware revision field to match it.
+Maybe they are 'stable' but when it comes to features they are behind hpt366
+(i.e. they lack PCI PM), which is also much cleaner than your drivers, easier
+to understand and much smaller..
 
-Mikulas
+ 1609 drivers/ide/hpt366.c
+
+  432 drivers/ata/pata_hpt366.c
+ 1041 drivers/ata/pata_hpt37x.c
+  594 drivers/ata/pata_hpt3x2n.c
+ 2067 total
+
+(we can still easily cut more than 100 LOC from hpt366)
+
+Having separate drivers wasn't the best decisions from the maintainability
+point-of-view.   It added needless complexity (different chips share the same
+PCI IDs which make detection across multiple drivers extremely painful) and
+confusion (i.e. would you have guessed that HPT302 is supported by pata_hpt37x
+while HPT302N by pata_hpt3x2n?).
+
+-- 
+Bartlomiej Zolnierkiewicz
