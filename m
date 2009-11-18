@@ -1,64 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement ATAPI_HORKAGE_NOPIO
- 	and apply it to GGW-H10N
-Date: Tue, 17 Nov 2009 21:14:36 -0500
-Message-ID: <4B03588C.7050708@garzik.org>
-References: <4857313A.1000405@kernel.org>	 <20080617094354.338e186b@lxorguk.ukuu.org.uk>	 <48578080.5030605@kernel.org> <20080617095439.GA9359@lukeross.name>	 <20080617110450.668f37e2@lxorguk.ukuu.org.uk>	 <4857ADC3.3040106@kernel.org> <20080618114828.GB19903@lukeross.name>	 <4858F894.6030409@garzik.org> <4AFDF5A8.1050005@gmail.com>	 <4AFFB8ED.9050404@kernel.org> <51f3faa70911151022g53be8a38g9252edece084e7b4@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: help with PMP failures
+Date: Wed, 18 Nov 2009 13:03:00 +0900
+Message-ID: <4B0371F4.9060703@gmail.com>
+References: <20091116184242.GA22250@merlins.org> <20091116184853.GA23126@merlins.org> <4B0238EC.6060803@kernel.org> <20091117173955.GA19029@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33957 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756362AbZKRCOn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Nov 2009 21:14:43 -0500
-In-Reply-To: <51f3faa70911151022g53be8a38g9252edece084e7b4@mail.gmail.com>
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:53775 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816AbZKREDB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Nov 2009 23:03:01 -0500
+Received: by gxk26 with SMTP id 26so733143gxk.1
+        for <linux-ide@vger.kernel.org>; Tue, 17 Nov 2009 20:03:07 -0800 (PST)
+In-Reply-To: <20091117173955.GA19029@merlins.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Luke Ross <luke@lukeross.name>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Marc MERLIN <marc@merlins.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On 11/15/2009 01:22 PM, Robert Hancock wrote:
-> On Sun, Nov 15, 2009 at 2:16 AM, Tejun Heo<tj@kernel.org>  wrote:
->> Hello,
->>
->> 11/14/2009 09:11 AM, Robert Hancock wrote:
->>> Luke/Tejun, do you have some error output from those wodim or growisofs
->>> errors? It would be useful to know what commands those were that failed
->>> and whether they were also an unusual data size.
->>
->> I don't have anything.  For some reason, ahci works fine on the setups
->> here.  :-(
->>
->> I'm waiting for Dan's further report.  I still am not sure whether
->> we're actually seeing a lot of ahci ATAPI failures or it's just that a
->> lot of reports are on ahci because it's the most often used driver
->> now.  I don't think anything fundamental is broken.  The reports are
->> too infrequent for that to be true.  It might have something to do
->> with the buffer padding / draining we do or how the controller and
->> driver react.
+Hello,
+
+11/18/2009 02:39 AM, Marc MERLIN wrote:
+>> This is the actual failure.  Your 6.02 drive reported media error
+>> which combined with the controller errata caused port wide failure.
+>  
+> Ah, I see, so it should be the one for me to focus on.
+> If it hadn't had an error, everything wouldn't have gone down the toilet,
+> next, right?
+
+Yes, that's my guess.
+
+> scsi 6:2:0:0: Direct-Access     ATA      Hitachi HDS72101 GKAO PQ: 0 ANSI: 5
+> sd 6:2:0:0: [sdj] 1953525168 512-byte hardware sectors: (1.00 TB/931 GiB)
 >
->> From the bug 10091 it looks like the failing command was a MODE SELECT
-> with data transfer length of 66 bytes which is definitely odd..
->
-> My suspicion is that we're either padding out the data buffer and the
-> indicated PRD length to a longer length than the drive actually wants
-> to transfer, and the controller isn't happy with that, OR maybe
-> vice-versa (i.e. we don't pad out the length and it wants us to). It's
-> not clear if this and Jeff's issue are actually the same thing as the
-> response is fairly different (interface fatal error and SError
-> indications on the NV vs. a timeout on whatever chipset Jeff's using),
-> but that may just be a chipset difference.
->
-> If Jeff has a repeatable test case then that's likely the most
-> promising place to start poking at things..
+> If it's a media error, shouldn't it show up in the smart counters?
 
-Nope, I replied to that original thread, well after the fact, noting my 
-hardware likely flaky.  Unable to reproduce the problem anymore, 
-unfortunately.
+Does smartctl -a output shows any logged errors?
 
-	Jeff
+> I can't really move it to another PMP port but I have indeed had failures
+> that required not just a reboot of my server but an actual power cycle
+> of the drive.
 
+Yeah, some old drives do that after abruptly aborted while executing
+commands.  :-(
 
+> Ok, so this all sounds like it's a bit fragile due to hardware issues :)
+> 
+> I now have to figure out if /dev/sdj has a bad sector or not.
+> 
+> Last time I had this happen, though I did run 
+> dd if=/dev/drive of=/dev/null bs=1M
+> for my 5 drives, and it ran clean.
+> 
+> If I had a bad sector, shouldn't it show up in Current_Pending_Sector
+> and shouldn't reading the entire drive with dd fail?
 
+I'm not sure which smart counter would be affected.  It also depends
+on the firmware implementation and read errors might happen one time
+but not on the next trial (if the drive for some reason didn't move
+the failed sector elsewhere) or maybe the drive is continuously
+developing bad sectors.
 
+Thanks.
+
+-- 
+tejun
