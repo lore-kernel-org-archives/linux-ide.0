@@ -1,50 +1,71 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: help with PMP failures
-Date: Wed, 18 Nov 2009 17:33:23 +0900
-Message-ID: <4B03B153.8050507@gmail.com>
-References: <20091116184242.GA22250@merlins.org> <20091116184853.GA23126@merlins.org> <4B0238EC.6060803@kernel.org> <20091117173955.GA19029@merlins.org> <4B0371F4.9060703@gmail.com> <20091118074145.GA24488@merlins.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] libata-acpi: missing _SDD is not an error
+Date: Wed, 18 Nov 2009 22:24:21 +0900
+Message-ID: <4B03F585.3090000@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:51066 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbZKRIdX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2009 03:33:23 -0500
-Received: by ywh40 with SMTP id 40so131286ywh.33
-        for <linux-ide@vger.kernel.org>; Wed, 18 Nov 2009 00:33:29 -0800 (PST)
-In-Reply-To: <20091118074145.GA24488@merlins.org>
+Received: from hera.kernel.org ([140.211.167.34]:41282 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753691AbZKRNY2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Nov 2009 08:24:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>
 
-Hello,
+Missing _SDD is not an error.  Don't treat it as one.
 
-11/18/2009 04:41 PM, Marc MERLIN wrote:
-> Didn't know about -a, good call.
-> Yep, they do and the times are about consistent with the raid going down
-> 
-> Not sure if the last 5 errors are enough to give a good clue, or not.
-> 
-> If I can't quite figure it out, I'll just pop in a 16 port adaptec sata 
-> board I recently picked up. It'll take PMP out of the equation if I truly
-> have drives returning read / write errors that don't quite seem to show up
-> in smart yet.
-> 
->   ER ST SC SN CL CH DH
->   -- -- -- -- -- -- --
->   84 51 00 46 59 70 44
-> 
->   Commands leading to the command that caused the error were:
->   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
->   -- -- -- -- -- -- -- --  ----------------  --------------------
->   61 08 00 3f 59 70 40 08  13d+19:41:56.500  WRITE FPDMA QUEUED
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Takashi Iwai <tiwai@suse.de>
+---
+ drivers/ata/libata-acpi.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-All the loggedcommands are write but the one which triggered the
-failure was read.  Error value of 0x84 indicates ICRC and ABORT, so
-all the logged commands were failed due to transmission failure from
-the host.  Hmmm....
-
--- 
-tejun
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index b0882cd..1245838 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -807,12 +807,11 @@ static int ata_acpi_exec_tfs(struct ata_device *dev, int *nr_executed)
+  * EH context.
+  *
+  * RETURNS:
+- * 0 on success, -errno on failure.
++ * 0 on success, -ENOENT if _SDD doesn't exist, -errno on failure.
+  */
+ static int ata_acpi_push_id(struct ata_device *dev)
+ {
+ 	struct ata_port *ap = dev->link->ap;
+-	int err;
+ 	acpi_status status;
+ 	struct acpi_object_list input;
+ 	union acpi_object in_params[1];
+@@ -835,12 +834,16 @@ static int ata_acpi_push_id(struct ata_device *dev)
+ 	status = acpi_evaluate_object(dev->acpi_handle, "_SDD", &input, NULL);
+ 	swap_buf_le16(dev->id, ATA_ID_WORDS);
+ 
+-	err = ACPI_FAILURE(status) ? -EIO : 0;
+-	if (err < 0)
++	if (status == AE_NOT_FOUND)
++		return -ENOENT;
++
++	if (ACPI_FAILURE(status)) {
+ 		ata_dev_printk(dev, KERN_WARNING,
+ 			       "ACPI _SDD failed (AE 0x%x)\n", status);
++		return -EIO;
++	}
+ 
+-	return err;
++	return 0;
+ }
+ 
+ /**
+@@ -971,7 +974,7 @@ int ata_acpi_on_devcfg(struct ata_device *dev)
+ 	/* do _SDD if SATA */
+ 	if (acpi_sata) {
+ 		rc = ata_acpi_push_id(dev);
+-		if (rc)
++		if (rc && rc != -ENOENT)
+ 			goto acpi_err;
+ 	}
+ 
