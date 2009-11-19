@@ -1,42 +1,48 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 17:38:38 +0300
-Message-ID: <4B05586E.4080401@ru.mvista.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain>	<20091118184125.623e063d@lxorguk.ukuu.org.uk>	<200911182007.07405.bzolnier@gmail.com>	<200911182056.16517.bzolnier@gmail.com>	<20091119140259.2fee86e2@lxorguk.ukuu.org.uk>	<4B05533A.7020508@ru.mvista.com> <20091119143129.0fe41623@lxorguk.ukuu.org.uk>
+Date: Thu, 19 Nov 2009 15:50:25 +0100
+Message-ID: <200911191550.25476.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911191517.15090.bzolnier@gmail.com> <20091119143351.1d0e2c59@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:4913 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1752091AbZKSOhz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 09:37:55 -0500
-In-Reply-To: <20091119143129.0fe41623@lxorguk.ukuu.org.uk>
+Received: from ey-out-2122.google.com ([74.125.78.25]:16425 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084AbZKSOvg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 09:51:36 -0500
+In-Reply-To: <20091119143351.1d0e2c59@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-
->>    Point out the breakage please. The driver has been developed and tested 
->>on non-x86 machine with 66 MHz PCI.
-
-> static int init_chipset_hpt366(struct pci_dev *dev)
+On Thursday 19 November 2009 15:33:51 Alan Cox wrote:
+> On Thu, 19 Nov 2009 15:17:14 +0100
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
->         if (chip_type >= HPT370) {
+> > On Thursday 19 November 2009 14:16:36 Alan Cox wrote:
+> > > > Only pata_hpt37x has broken cable detection while pata_hpt3x2n is
+> > > > okay. ;)
+> > > 
+> > > I think you have that backwards according to the vendor drivers. 3x2n
+> > > looks like it needs adjusting.
+> > 
+> > lol, just fix the damn pata_hpt37x driver _lacking_ ->cable_detect method..
 > 
->                if ((temp & 0xFFFFF000) != 0xABCDE000) {
+> It doesn't need one. It still sets the cable type in the pre reset
+> function as the older drivers that haven't converted to a cable_detect
+> method do.
 
-> it then falls through and gets a 33MHz answer from the tests.
+If you know about other drivers still using ->pre_reset for cable detection
+please let us know because they need fixing ASAP.
 
-> If I stash the MHz answer from boot then it works. So I imagine the boot
-> time value just needs to be dumped into a static for resume to use.
+->cable_detect method is there for a reason, by knowingly not using it you
+already have a buggy cable detection (since ->pre_reset ignores the mandatory
+by spec part of cable detection which is probing slave before master) and
+make it more likely to cause breakages in the future when some other developer
+do a change under assumption that all host drivers use API correctly.
 
-    Ah, that... sure, this test only works at boot if there was no smart 
-enough BIOS around to save the f_CNT -- then the DPLL gets reprogrammed, and 
-doesn't reflect the default clock anymore...
-
-> Alan
-
-WBR, Sergei
+-- 
+Bartlomiej Zolnierkiewicz
