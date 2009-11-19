@@ -1,27 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 16:34:57 -0500
-Message-ID: <4B05BA01.4030905@pobox.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <4B0590A2.9050306@ru.mvista.com> <200911192003.09675.bzolnier@gmail.com> <200911192031.31613.bzolnier@gmail.com>
+Date: Thu, 19 Nov 2009 16:36:50 -0500
+Message-ID: <4B05BA72.2030406@garzik.org>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091117145137.15430.11229.stgit@localhost.localdomain> <200911181919.19127.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756751AbZKSVfI@vger.kernel.org>
-In-Reply-To: <200911192031.31613.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:59013 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753053AbZKSVgq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Nov 2009 16:36:46 -0500
+In-Reply-To: <200911181919.19127.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/19/2009 02:31 PM, Bartlomiej Zolnierkiewicz wrote:
-> Jeff, this is incremental to my previous fix.
+On 11/18/2009 01:19 PM, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 17 November 2009 15:51:39 Alan Cox wrote:
+>> Signed-off-by: Alan Cox<alan@linux.intel.com>
+>> ---
+>>
+>>   drivers/ata/Kconfig |    8 ++++----
+>>   1 files changed, 4 insertions(+), 4 deletions(-)
+>>
+>>
+>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>> index f2df6e2..36931e0 100644
+>> --- a/drivers/ata/Kconfig
+>> +++ b/drivers/ata/Kconfig
+>> @@ -374,7 +374,7 @@ config PATA_HPT366
+>>   	  If unsure, say N.
+>>
+>>   config PATA_HPT37X
+>> -	tristate "HPT 370/370A/371/372/374/302 PATA support (Experimental)"
+>> +	tristate "HPT 370/370A/371/372/374/302 PATA support"
+>>   	depends on PCI&&  EXPERIMENTAL
+>>   	help
+>>   	  This option enables support for the majority of the later HPT
+>> @@ -383,7 +383,7 @@ config PATA_HPT37X
+>>   	  If unsure, say N.
+>>
+>>   config PATA_HPT3X2N
+>> -	tristate "HPT 372N/302N PATA support (Experimental)"
+>> +	tristate "HPT 372N/302N PATA support"
+>>   	depends on PCI&&  EXPERIMENTAL
+>>   	help
+>>   	  This option enables support for the N variant HPT PATA
 >
-> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Subject: [PATCH] pata_hpt{37x,3x2n}: add debounce delay to cable detection methods
+> Maybe they are 'stable' but when it comes to features they are behind hpt366
+> (i.e. they lack PCI PM), which is also much cleaner than your drivers, easier
+> to understand and much smaller..
 
-PLEASE update the email subject, in future emails, to reflect a patch is 
-buried in here!
+That sounds like an ACK to Alan's patch, to me ;-)
 
-Thanks,
+A libata driver can be stable, yet not have all the features of drivers/ide.
+
+That said, I do agree that libata drivers need to have the features 
+found in the drivers/ide/ drivers.
 
 	Jeff
+
+
+
