@@ -1,51 +1,66 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 16:48:26 -0500
-Message-ID: <4B05BD2A.5070706@pobox.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911191645.29885.bzolnier@gmail.com> <20091119162738.7e8e5665@lxorguk.ukuu.org.uk> <200911191838.11791.bzolnier@gmail.com>
+Date: Thu, 19 Nov 2009 16:49:12 -0500
+Message-ID: <4B05BD58.8040008@pobox.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <4B0590A2.9050306@ru.mvista.com> <200911192003.09675.bzolnier@gmail.com> <200911192031.31613.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34943 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753655AbZKSVs3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Nov 2009 16:48:29 -0500
-In-Reply-To: <200911191838.11791.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757367AbZKSVtR@vger.kernel.org>
+In-Reply-To: <200911192031.31613.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On 11/19/2009 12:38 PM, Bartlomiej Zolnierkiewicz wrote:
+On 11/19/2009 02:31 PM, Bartlomiej Zolnierkiewicz wrote:
+> Subject: [PATCH] pata_hpt{37x,3x2n}: add debounce delay to cable detection methods
 >
+> Alan Cox reported that cable detection sometimes works unreliably
+> for HPT3xxN and that the issue is fixed by adding debounce delay
+> as used by the vendor driver.
+>
+> Sergei Shtylyov also noticed that debounce delay is needed for all
+> HPT37x and HPT3xxN chipsets according to vendor drivers.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> ---
+> In comparison to original patch the conversion from PCI access to
+> io has been dropped as it is not required for the bugfix and makes
+> patch easier for back-porting into -stable kernels.
+>
+>   drivers/ata/pata_hpt37x.c  |    3 +++
+>   drivers/ata/pata_hpt3x2n.c |    3 +++
+>   2 files changed, 6 insertions(+)
+>
+> Index: b/drivers/ata/pata_hpt37x.c
+> ===================================================================
+> --- a/drivers/ata/pata_hpt37x.c
+> +++ b/drivers/ata/pata_hpt37x.c
+> @@ -324,6 +324,9 @@ static int hpt37x_pre_reset(struct ata_l
+>
+>   	pci_read_config_byte(pdev, 0x5B,&scr2);
+>   	pci_write_config_byte(pdev, 0x5B, scr2&  ~0x01);
+> +
+> +	udelay(10); /* debounce */
+> +
+>   	/* Cable register now active */
+>   	pci_read_config_byte(pdev, 0x5A,&ata66);
+>   	/* Restore state */
 > Index: b/drivers/ata/pata_hpt3x2n.c
 > ===================================================================
 > --- a/drivers/ata/pata_hpt3x2n.c
 > +++ b/drivers/ata/pata_hpt3x2n.c
-> @@ -133,7 +133,7 @@ static int hpt3x2n_cable_detect(struct a
->   	/* Restore state */
->   	pci_write_config_byte(pdev, 0x5B, scr2);
+> @@ -128,6 +128,9 @@ static int hpt3x2n_cable_detect(struct a
 >
-> -	if (ata66&  (1<<  ap->port_no))
-> +	if (ata66&  (2>>  ap->port_no))
->   		return ATA_CBL_PATA40;
->   	else
->   		return ATA_CBL_PATA80;
+>   	pci_read_config_byte(pdev, 0x5B,&scr2);
+>   	pci_write_config_byte(pdev, 0x5B, scr2&  ~0x01);
+> +
+> +	udelay(10); /* debounce */
+> +
+>   	/* Cable register now active */
+>   	pci_read_config_byte(pdev, 0x5A,&ata66);
+>   	/* Restore state */
 
 
-Applied.
-
-Note to Alan -- even if cable detect wants more changes, this is a nice, 
-self-contained fix easily backported to stable@, etc.  So I preferred 
-the above form of change.
-
-Please do send any updates you guys (Bart | Alan) have on top of 
-libata-dev.git#upstream.
-
-Thanks,
-
-	Jeff
-
-
-
+applied -- same comment as last email, regarding hpt3x2n_cable_detect() fix
