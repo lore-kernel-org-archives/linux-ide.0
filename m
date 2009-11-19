@@ -1,31 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/5] Series short description
-Date: Thu, 19 Nov 2009 16:41:22 -0500
-Message-ID: <4B05BB82.7030106@garzik.org>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 4/5] pata: Update experimental tags
+Date: Thu, 19 Nov 2009 22:42:59 +0100
+Message-ID: <200911192242.59476.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911181919.19127.bzolnier@gmail.com> <4B05BA72.2030406@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48164 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755907AbZKSVlS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Nov 2009 16:41:18 -0500
-In-Reply-To: <20091117144450.15430.83450.stgit@localhost.localdomain>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:35909 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373AbZKSVo2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 16:44:28 -0500
+In-Reply-To: <4B05BA72.2030406@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/17/2009 09:50 AM, Alan Cox wrote:
-> Pending experimental bits. Not necessarily ready to apply but so folks know
-> what is going on.
+On Thursday 19 November 2009 22:36:50 Jeff Garzik wrote:
+> On 11/18/2009 01:19 PM, Bartlomiej Zolnierkiewicz wrote:
+> > On Tuesday 17 November 2009 15:51:39 Alan Cox wrote:
+> >> Signed-off-by: Alan Cox<alan@linux.intel.com>
+> >> ---
+> >>
+> >>   drivers/ata/Kconfig |    8 ++++----
+> >>   1 files changed, 4 insertions(+), 4 deletions(-)
+> >>
+> >>
+> >> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> >> index f2df6e2..36931e0 100644
+> >> --- a/drivers/ata/Kconfig
+> >> +++ b/drivers/ata/Kconfig
+> >> @@ -374,7 +374,7 @@ config PATA_HPT366
+> >>   	  If unsure, say N.
+> >>
+> >>   config PATA_HPT37X
+> >> -	tristate "HPT 370/370A/371/372/374/302 PATA support (Experimental)"
+> >> +	tristate "HPT 370/370A/371/372/374/302 PATA support"
+> >>   	depends on PCI&&  EXPERIMENTAL
+> >>   	help
+> >>   	  This option enables support for the majority of the later HPT
+> >> @@ -383,7 +383,7 @@ config PATA_HPT37X
+> >>   	  If unsure, say N.
+> >>
+> >>   config PATA_HPT3X2N
+> >> -	tristate "HPT 372N/302N PATA support (Experimental)"
+> >> +	tristate "HPT 372N/302N PATA support"
+> >>   	depends on PCI&&  EXPERIMENTAL
+> >>   	help
+> >>   	  This option enables support for the N variant HPT PATA
+> >
+> > Maybe they are 'stable' but when it comes to features they are behind hpt366
+> > (i.e. they lack PCI PM), which is also much cleaner than your drivers, easier
+> > to understand and much smaller..
+> 
+> That sounds like an ACK to Alan's patch, to me ;-)
+> 
+> A libata driver can be stable, yet not have all the features of drivers/ide.
+> 
+> That said, I do agree that libata drivers need to have the features 
+> found in the drivers/ide/ drivers.
 
-Seems sane, modulo my Kconfig comment, and on-going thread resolution of 
-course :)
+Feel free to add them Mr. Maintainer. :)
 
-	Jeff
-
-
-
-
+-- 
+Bartlomiej Zolnierkiewicz
