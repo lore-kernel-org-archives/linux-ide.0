@@ -1,51 +1,168 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 18:52:23 +0100
-Message-ID: <200911191852.23061.bzolnier@gmail.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911191838.11791.bzolnier@gmail.com> <20091119175051.6a91d160@lxorguk.ukuu.org.uk>
+Subject: [PATCH 1/2] pata_hpt37x: add proper cable detection methods
+Date: Thu, 19 Nov 2009 19:10:44 +0100
+Message-ID: <200911191910.44609.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:54807 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181AbZKSRxJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 12:53:09 -0500
-In-Reply-To: <20091119175051.6a91d160@lxorguk.ukuu.org.uk>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:65465 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbZKSSNb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 13:13:31 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 19 November 2009 18:50:51 Alan Cox wrote:
-> On Thu, 19 Nov 2009 18:38:11 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > On Thursday 19 November 2009 17:27:38 Alan Cox wrote:
-> > > > > > already have a buggy cable detection (since ->pre_reset ignores the mandatory
-> > > > > 
-> > > > > Wrong.
-> > > > 
-> > > > You cannot know it unless you know how chip operates internally.  That's it.
-> > > 
-> > > Read the code. How the chip operates is irrelevant.
-> > 
-> > lol, there is a genuine cable detection bug in pata_hpt3x2n on closer look...
-> 
-> Oh you found it now I told you which one was buggy - well done. Already
-> patched along with adding suspend/resume and fixing a performance funny.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ata/pata_hpt37x.c |   86 +++++++++++++++++++++++++++++-----------------
+ 1 file changed, 56 insertions(+), 30 deletions(-)
 
-LOL
-
-Fixed where?  I posted the patch as soon as I noticed the problem.
-
-Told me about it?  Now this is extra funny since the bug been there for like
-three years and still would be unfixed if it wasn't for this discussion.
-
-The best part is that the bug would never have happened in the first place
-if you weren't artificially splitting HPT37x and HPT3xxN support cause cable
-detection for all those chipsets (except HPT374 fn 1) is identical!! :)
-
--- 
-Bartlomiej Zolnierkiewicz
+Index: b/drivers/ata/pata_hpt37x.c
+===================================================================
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -303,6 +303,59 @@ static unsigned long hpt370a_filter(stru
+ }
+ 
+ /**
++ *	hpt37x_cable_detect	-	Detect the cable type
++ *	@ap: ATA port to detect on
++ *
++ *	Return the cable type attached to this port
++ */
++
++static int hpt37x_cable_detect(struct ata_port *ap)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	u8 scr2, ata66;
++
++	pci_read_config_byte(pdev, 0x5B, &scr2);
++	pci_write_config_byte(pdev, 0x5B, scr2 & ~0x01);
++	/* Cable register now active */
++	pci_read_config_byte(pdev, 0x5A, &ata66);
++	/* Restore state */
++	pci_write_config_byte(pdev, 0x5B, scr2);
++
++	if (ata66 & (2 >> ap->port_no))
++		return ATA_CBL_PATA40;
++	else
++		return ATA_CBL_PATA80;
++}
++
++/**
++ *	hpt374_fn1_cable_detect	-	Detect the cable type
++ *	@ap: ATA port to detect on
++ *
++ *	Return the cable type attached to this port
++ */
++
++static int hpt374_fn1_cable_detect(struct ata_port *ap)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	unsigned int mcrbase = 0x50 + 4 * ap->port_no;
++	u16 mcr3;
++	u8 ata66;
++
++	/* Do the extra channel work */
++	pci_read_config_word(pdev, mcrbase + 2, &mcr3);
++	/* Set bit 15 of 0x52 to enable TCBLID as input */
++	pci_write_config_word(pdev, mcrbase + 2, mcr3 | 0x8000);
++	pci_read_config_byte(pdev, 0x5A, &ata66);
++	/* Reset TCBLID/FCBLID to output */
++	pci_write_config_word(pdev, mcrbase + 2, mcr3);
++
++	if (ata66 & (2 >> ap->port_no))
++		return ATA_CBL_PATA40;
++	else
++		return ATA_CBL_PATA80;
++}
++
++/**
+  *	hpt37x_pre_reset	-	reset the hpt37x bus
+  *	@link: ATA link to reset
+  *	@deadline: deadline jiffies for the operation
+@@ -312,7 +365,6 @@ static unsigned long hpt370a_filter(stru
+ 
+ static int hpt37x_pre_reset(struct ata_link *link, unsigned long deadline)
+ {
+-	u8 scr2, ata66;
+ 	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	static const struct pci_bits hpt37x_enable_bits[] = {
+@@ -322,18 +374,6 @@ static int hpt37x_pre_reset(struct ata_l
+ 	if (!pci_test_config_bits(pdev, &hpt37x_enable_bits[ap->port_no]))
+ 		return -ENOENT;
+ 
+-	pci_read_config_byte(pdev, 0x5B, &scr2);
+-	pci_write_config_byte(pdev, 0x5B, scr2 & ~0x01);
+-	/* Cable register now active */
+-	pci_read_config_byte(pdev, 0x5A, &ata66);
+-	/* Restore state */
+-	pci_write_config_byte(pdev, 0x5B, scr2);
+-
+-	if (ata66 & (2 >> ap->port_no))
+-		ap->cbl = ATA_CBL_PATA40;
+-	else
+-		ap->cbl = ATA_CBL_PATA80;
+-
+ 	/* Reset the state machine */
+ 	pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
+ 	udelay(100);
+@@ -347,29 +387,12 @@ static int hpt374_fn1_pre_reset(struct a
+ 		{ 0x50, 1, 0x04, 0x04 },
+ 		{ 0x54, 1, 0x04, 0x04 }
+ 	};
+-	u16 mcr3;
+-	u8 ata66;
+ 	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned int mcrbase = 0x50 + 4 * ap->port_no;
+ 
+ 	if (!pci_test_config_bits(pdev, &hpt37x_enable_bits[ap->port_no]))
+ 		return -ENOENT;
+ 
+-	/* Do the extra channel work */
+-	pci_read_config_word(pdev, mcrbase + 2, &mcr3);
+-	/* Set bit 15 of 0x52 to enable TCBLID as input
+-	 */
+-	pci_write_config_word(pdev, mcrbase + 2, mcr3 | 0x8000);
+-	pci_read_config_byte(pdev, 0x5A, &ata66);
+-	/* Reset TCBLID/FCBLID to output */
+-	pci_write_config_word(pdev, mcrbase + 2, mcr3);
+-
+-	if (ata66 & (2 >> ap->port_no))
+-		ap->cbl = ATA_CBL_PATA40;
+-	else
+-		ap->cbl = ATA_CBL_PATA80;
+-
+ 	/* Reset the state machine */
+ 	pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
+ 	udelay(100);
+@@ -584,6 +607,7 @@ static struct ata_port_operations hpt370
+ 	.bmdma_stop	= hpt370_bmdma_stop,
+ 
+ 	.mode_filter	= hpt370_filter,
++	.cable_detect	= hpt37x_cable_detect,
+ 	.set_piomode	= hpt370_set_piomode,
+ 	.set_dmamode	= hpt370_set_dmamode,
+ 	.prereset	= hpt37x_pre_reset,
+@@ -608,6 +632,7 @@ static struct ata_port_operations hpt372
+ 
+ 	.bmdma_stop	= hpt37x_bmdma_stop,
+ 
++	.cable_detect	= hpt37x_cable_detect,
+ 	.set_piomode	= hpt372_set_piomode,
+ 	.set_dmamode	= hpt372_set_dmamode,
+ 	.prereset	= hpt37x_pre_reset,
+@@ -620,6 +645,7 @@ static struct ata_port_operations hpt372
+ 
+ static struct ata_port_operations hpt374_fn1_port_ops = {
+ 	.inherits	= &hpt372_port_ops,
++	.cable_detect	= hpt374_fn1_cable_detect,
+ 	.prereset	= hpt374_fn1_pre_reset,
+ };
+ 
