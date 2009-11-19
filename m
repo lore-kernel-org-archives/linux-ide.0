@@ -1,35 +1,29 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Thu, 19 Nov 2009 10:23:46 +0000
-Message-ID: <20091119102346.3c656b99@lxorguk.ukuu.org.uk>
-References: <20091116154343.GA6672@infradead.org>
-	<4B02AD86.8010304@rtr.ca>
-	<20091117143507.GC588@infradead.org>
-	<20091117145239.768072c9@lxorguk.ukuu.org.uk>
-	<20091117150012.GA10748@infradead.org>
-	<4B04BD01.5090706@rtr.ca>
+From: Alan Cox <alan@linux.intel.com>
+Subject: Re: [PATCH 4/5] pata: Update experimental tags
+Date: Thu, 19 Nov 2009 13:16:36 +0000
+Message-ID: <20091119131636.15800a11@linux.intel.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain>
+	<20091118184125.623e063d@lxorguk.ukuu.org.uk>
+	<200911182007.07405.bzolnier@gmail.com>
+	<200911182056.16517.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37562 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755101AbZKSKZj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 05:25:39 -0500
-In-Reply-To: <4B04BD01.5090706@rtr.ca>
+Received: from mga05.intel.com ([192.55.52.89]:21448 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752095AbZKSNdi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 08:33:38 -0500
+In-Reply-To: <200911182056.16517.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> I imagine some sort of port or host flag, that the LLD could set
-> to indicate that it can correctly handle TRIM.  Or not handle TRIM.
-> 
-> Tejun is pretty good at these flag things.. I wonder what he might suggest?
+> Only pata_hpt37x has broken cable detection while pata_hpt3x2n is
+> okay. ;)
 
-As I said - just error it in your driver qc_issue function. If you are
-feeling really arty you can hook do_identify and mask the bit in the
-ident data as well. See it821x 'smart' RAID mode for both of those in
-pata_it821x.c
+I think you have that backwards according to the vendor drivers. 3x2n
+looks like it needs adjusting.
+ 
 
-Alan
