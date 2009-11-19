@@ -1,38 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 20:54:32 +0100
-Message-ID: <200911192054.32533.bzolnier@gmail.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911192031.31613.bzolnier@gmail.com> <20091119194213.7f4dd425@lxorguk.ukuu.org.uk>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [Bug #14622] Second IDE device not found
+Date: Thu, 19 Nov 2009 12:05:50 -0800 (PST)
+Message-ID: <20091119.120550.183823935.davem@davemloft.net>
+References: <GUZt44bIwCE.A.vLF.pSdALB@chimera>
+	<xXQGFmujPl.A.n7F.4SdALB@chimera>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:58466 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754770AbZKSTzl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 14:55:41 -0500
-In-Reply-To: <20091119194213.7f4dd425@lxorguk.ukuu.org.uk>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38771
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755330AbZKSUFd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 15:05:33 -0500
+In-Reply-To: <xXQGFmujPl.A.n7F.4SdALB@chimera>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: rjw@sisk.pl
+Cc: linux-kernel@vger.kernel.org, kernel-testers@vger.kernel.org, zdavatz@gmail.com, linux-ide@vger.kernel.org
 
-On Thursday 19 November 2009 20:42:13 Alan Cox wrote:
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > In comparison to original patch the conversion from PCI access to
-> > io has been dropped as it is not required for the bugfix and makes
-> > patch easier for back-porting into -stable kernels.
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Mon, 16 Nov 2009 23:37:47 +0100 (CET)
+
+> This message has been generated automatically as a part of a report
+> of recent regressions.
 > 
-> Acked-by: Alan Cox <alan@linux.intel.com>
+> The following bug entry is on the current list of known regressions
+> from 2.6.31.  Please verify if it still should be listed and let me know
+> (either way).
 > 
-> (and from what Sergey says about the 371N then the I/O conversion
-> is probably not needed anyway)
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14622
+> Subject		: Second IDE device not found
+> Submitter	: Zeno Davatz <zdavatz@gmail.com>
+> Date		: 2009-11-11 17:31 (6 days old)
+> References	: http://marc.info/?l=linux-kernel&m=125796105822353&w=4
 
-Thanks, I'll re-sync other pata_hpt37x patches on top of this one later.
+We're going to need more information to diagnose this.
 
-ps if you could also push the fix to hpt366.c it would be great
+And linux-ide should have been at least CC:'d from the very
+beginning.
 
--- 
-Bartlomiej Zolnierkiewicz
+>From what I can discern the problem is introduced somewhere between
+2.6.27 and 2.6.31, you have a Serverworks CSB5 and primarily the issue
+is that attaching or detaching your CD-ROM driver influences whether
+both of your disks are properly detected.  Correct?
+
+You seem to have played around with using the IDE layer vs. the
+ATA layer.  Can you see any difference in behavior if you try
+using just the IDE layer vs. just the ATA layer with the 2.6.31
+kernel?
+
+Thanks.
