@@ -1,29 +1,50 @@
-From: Alan Cox <alan@linux.intel.com>
-Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 13:16:36 +0000
-Message-ID: <20091119131636.15800a11@linux.intel.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain>
-	<20091118184125.623e063d@lxorguk.ukuu.org.uk>
-	<200911182007.07405.bzolnier@gmail.com>
-	<200911182056.16517.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: Re: [PATCH] sata_fsl: Split hard and soft reset
+Date: Thu, 19 Nov 2009 07:51:27 -0600
+Message-ID: <FF648E22-3953-4121-9DCE-862BAC5995B9@kernel.crashing.org>
+References: <20091016164436.GA12897@oksana.dev.rtsoft.ru> <795A2621-9D6C-4D1F-B07B-24E15C55B03F@kernel.crashing.org>
+Mime-Version: 1.0 (Apple Message framework v1076)
+Content-Type: text/plain; charset=us-ascii; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:21448 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752095AbZKSNdi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 08:33:38 -0500
-In-Reply-To: <200911182056.16517.bzolnier@gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:60970 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752861AbZKSNvo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Nov 2009 08:51:44 -0500
+In-Reply-To: <795A2621-9D6C-4D1F-B07B-24E15C55B03F@kernel.crashing.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-ppc list <linuxppc-dev@ozlabs.org>, Ashish Kalra <Ashish.Kalra@freescale.com>, Jiang Yutang <b14898@freescale.com>
 
-> Only pata_hpt37x has broken cable detection while pata_hpt3x2n is
-> okay. ;)
 
-I think you have that backwards according to the vendor drivers. 3x2n
-looks like it needs adjusting.
- 
+On Nov 5, 2009, at 9:02 AM, Kumar Gala wrote:
 
+>
+> On Oct 16, 2009, at 11:44 AM, Anton Vorontsov wrote:
+>
+>> From: Jiang Yutang <b14898@freescale.com>
+>>
+>> Split sata_fsl_softreset() into hard and soft resets to make
+>> error-handling more efficient & device and PMP detection more
+>> reliable.
+>>
+>> Also includes fix for PMP support, driver tested with Sil3726,
+>> Sil4726 & Exar PMP controllers.
+>>
+>> [AV: Also fixes resuming from deep sleep on MPC8315 CPUs]
+>>
+>> Signed-off-by: Jiang Yutang <b14898@freescale.com>
+>> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+>> ---
+>> drivers/ata/sata_fsl.c |   84 ++++++++++++++++++++++++ 
+>> +-----------------------
+>> 1 files changed, 44 insertions(+), 40 deletions(-)
+>
+> Jeff,
+>
+> any update on this going in for .32?
+
+Jeff?
+
+- k
