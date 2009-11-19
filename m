@@ -1,45 +1,31 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 16:38:39 -0500
-Message-ID: <4B05BADF.1010205@garzik.org>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091118184125.623e063d@lxorguk.ukuu.org.uk> <200911182007.07405.bzolnier@gmail.com> <200911182056.16517.bzolnier@gmail.com>
+Subject: Re: [PATCH 0/5] Series short description
+Date: Thu, 19 Nov 2009 16:41:22 -0500
+Message-ID: <4B05BB82.7030106@garzik.org>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59027 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48164 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754203AbZKSVig (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Nov 2009 16:38:36 -0500
-In-Reply-To: <200911182056.16517.bzolnier@gmail.com>
+	id S1755907AbZKSVlS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Nov 2009 16:41:18 -0500
+In-Reply-To: <20091117144450.15430.83450.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/18/2009 02:56 PM, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 18 November 2009 20:07:07 Bartlomiej Zolnierkiewicz wrote:
->> On Wednesday 18 November 2009 19:41:25 Alan Cox wrote:
->>>> Maybe they are 'stable' but when it comes to features they are behind hpt366
->>>> (i.e. they lack PCI PM), which is also much cleaner than your drivers, easier
->>>> to understand and much smaller..
->>>
->>> 37x and 3xn lack PCI PM.  Added to the TODO list.
->>>
->>> The smaller size is a bit questionable given its mostly comments, and
->>> three drivers versus one.
->>
->> I wonder what you find 'questionable' in the numbers given..
->
-> BTW we can immediately reclaim 300 LOC by simply merging drivers back..
+On 11/17/2009 09:50 AM, Alan Cox wrote:
+> Pending experimental bits. Not necessarily ready to apply but so folks know
+> what is going on.
 
-Merging drivers is a big pain for distributions and end users, even with 
-the new module_alias facility.
-
-Absent stronger justification, libata remains with separate drivers, 
-even if that means some code duplication.
+Seems sane, modulo my Kconfig comment, and on-going thread resolution of 
+course :)
 
 	Jeff
+
 
 
 
