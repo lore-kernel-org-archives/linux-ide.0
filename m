@@ -1,46 +1,185 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH V2] libata: add TRIM support
-Date: Wed, 18 Nov 2009 22:36:52 -0500
-Message-ID: <4B04BD54.7020203@rtr.ca>
-References: <20091117150047.GB10748@infradead.org> <4B031D2F.7030004@pobox.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream] libata: retry failed FLUSH if device didn't fail
+ it
+Date: Thu, 19 Nov 2009 15:36:45 +0900
+Message-ID: <4B04E77D.8070807@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:56048 "EHLO mail.rtr.ca"
+Received: from hera.kernel.org ([140.211.167.34]:45140 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932390AbZKSDgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Nov 2009 22:36:47 -0500
-In-Reply-To: <4B031D2F.7030004@pobox.com>
+	id S1751377AbZKSGhA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Nov 2009 01:37:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrey Vihrov <andrey.vihrov@gmail.com>
 
-Jeff Garzik wrote:
-> On 11/17/2009 10:00 AM, Christoph Hellwig wrote:
->> Add support for the ATA TRIM command in libata.  We translate a WRITE 
->> SAME 16
->> command with the unmap bit set into an ATA TRIM command and export enough
->> information in READ CAPACITY 16 and the block limits EVPD page so that 
->> the new
->> SCSI layer discard support will driver this for us.
->>
->> Note that I hardcode the WRITE_SAME_16 opcode for now as the patch to 
->> introduce
->> the symbolic is not in 2.6.32 yet but only in the SCSI tree - as soon 
->> as it is
->> merged we can fix it up to properly use the symbolic name.
->>
->> Signed-off-by: Christoph Hellwig<hch@lst.de>
-> 
-> Looks good to me....  will apply to libata-dev.git#upstream soonish
-..
+If ATA device failed FLUSH, it means that the device failed to write
+out some amount of data and the error needs to be reported to upper
+layers. As retries can't recover the lost data, FLUSH failures need to
+be reported immediately in general.
 
-Just make sure that no filesystem tries to use it by default.
-The performance penalty from this is absolutely massive.
+However, if FLUSH fails due to transmission errors, the FLUSH needs to
+be retried; otherwise, filesystems may switch to RO mode and/or raid
+array may drop a drive for a random transmission glitch.
 
-At least until the interface can do multiple trim ranges
-per single trim command.
+This condition can be rather easily reproduced on certain ahci
+controllers which go through a PHY event after powersave mode switch +
+ext4 combination.  Powersave mode switch is often closely followed by
+flush from the filesystem failing the FLUSH with ATA bus error which
+makes the filesystem code believe that data is lost and drop to RO
+mode.  This was reported in the following bugzilla bug.
 
-Cheers
+  http://bugzilla.kernel.org/show_bug.cgi?id=14543
+
+This patch makes libata EH retry FLUSH if it wasn't failed by the
+device.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Andrey Vihrov <andrey.vihrov@gmail.com>
+---
+ drivers/ata/libata-eh.c |   94 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h  |    2 -
+ 2 files changed, 95 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index bba2ae5..0ea97c9 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -110,6 +110,13 @@ static const unsigned long ata_eh_identify_timeouts[] = {
+ 	ULONG_MAX,
+ };
+ 
++static const unsigned long ata_eh_flush_timeouts[] = {
++	15000,	/* be generous with flush */
++	15000,  /* ditto */
++	30000,	/* and even more generous */
++	ULONG_MAX,
++};
++
+ static const unsigned long ata_eh_other_timeouts[] = {
+ 	 5000,	/* same rationale as identify timeout */
+ 	10000,	/* ditto */
+@@ -147,6 +154,8 @@ ata_eh_cmd_timeout_table[ATA_EH_CMD_TIMEOUT_TABLE_SIZE] = {
+ 	  .timeouts = ata_eh_other_timeouts, },
+ 	{ .commands = CMDS(ATA_CMD_INIT_DEV_PARAMS),
+ 	  .timeouts = ata_eh_other_timeouts, },
++	{ .commands = CMDS(ATA_CMD_FLUSH, ATA_CMD_FLUSH_EXT),
++	  .timeouts = ata_eh_flush_timeouts },
+ };
+ #undef CMDS
+ 
+@@ -3112,6 +3121,82 @@ static int atapi_eh_clear_ua(struct ata_device *dev)
+ 	return 0;
+ }
+ 
++/**
++ *	ata_eh_maybe_retry_flush - Retry FLUSH if necessary
++ *	@dev: ATA device which may need FLUSH retry
++ *
++ *	If @dev failed FLUSH, it needs to be reported upper layer
++ *	immediately as it means that @dev failed to remap and already
++ *	lost at least a sector and further FLUSH retrials won't make
++ *	any difference to the lost sector.  However, if FLUSH failed
++ *	for other reasons, for example transmission error, FLUSH needs
++ *	to be retried.
++ *
++ *	This function determines whether FLUSH failure retry is
++ *	necessary and performs it if so.
++ *
++ *	RETURNS:
++ *	0 if EH can continue, -errno if EH needs to be repeated.
++ */
++static int ata_eh_maybe_retry_flush(struct ata_device *dev)
++{
++	struct ata_link *link = dev->link;
++	struct ata_port *ap = link->ap;
++	struct ata_queued_cmd *qc;
++	struct ata_taskfile tf;
++	unsigned int err_mask;
++	int rc = 0;
++
++	/* did flush fail for this device? */
++	if (!ata_tag_valid(link->active_tag))
++		return 0;
++
++	qc = __ata_qc_from_tag(ap, link->active_tag);
++	if (qc->dev != dev || (qc->tf.command != ATA_CMD_FLUSH_EXT &&
++			       qc->tf.command != ATA_CMD_FLUSH))
++		return 0;
++
++	/* if the device failed it, it should be reported to upper layers */
++	if (qc->err_mask & AC_ERR_DEV)
++		return 0;
++
++	/* flush failed for some other reason, give it another shot */
++	ata_tf_init(dev, &tf);
++
++	tf.command = qc->tf.command;
++	tf.flags |= ATA_TFLAG_DEVICE;
++	tf.protocol = ATA_PROT_NODATA;
++
++	ata_dev_printk(dev, KERN_WARNING, "retrying FLUSH 0x%x Emask 0x%x\n",
++		       tf.command, qc->err_mask);
++
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
++	if (!err_mask) {
++		/*
++		 * FLUSH is complete but there's no way to
++		 * successfully complete a failed command from EH.
++		 * Making sure retry is allowed at least once and
++		 * retrying it should do the trick - whatever was in
++		 * the cache is already on the platter and this won't
++		 * cause infinite loop.
++		 */
++		qc->scsicmd->allowed = max(qc->scsicmd->allowed, 1);
++	} else {
++		ata_dev_printk(dev, KERN_WARNING, "FLUSH failed Emask 0x%x\n",
++			       err_mask);
++		rc = -EIO;
++
++		/* if device failed it, report it to upper layers */
++		if (err_mask & AC_ERR_DEV) {
++			qc->err_mask |= AC_ERR_DEV;
++			qc->result_tf = tf;
++			if (!(ap->pflags & ATA_PFLAG_FROZEN))
++				rc = 0;
++		}
++	}
++	return rc;
++}
++
+ static int ata_link_nr_enabled(struct ata_link *link)
+ {
+ 	struct ata_device *dev;
+@@ -3455,6 +3540,15 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			}
+ 		}
+ 
++		/* retry flush if necessary */
++		ata_for_each_dev(dev, link, ALL) {
++			if (dev->class != ATA_DEV_ATA)
++				continue;
++			rc = ata_eh_maybe_retry_flush(dev);
++			if (rc)
++				goto dev_fail;
++		}
++
+ 		/* configure link power saving */
+ 		if (ehc->i.action & ATA_EH_LPM)
+ 			ata_for_each_dev(dev, link, ALL)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 8769864..ba07e84 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -365,7 +365,7 @@ enum {
+ 	/* This should match the actual table size of
+ 	 * ata_eh_cmd_timeout_table in libata-eh.c.
+ 	 */
+-	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 5,
++	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 6,
+ 
+ 	/* Horkage types. May be set by libata or controller on drives
+ 	   (some horkage may be drive/controller pair dependant */
