@@ -1,50 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Wed, 18 Nov 2009 20:56:16 +0100
-Message-ID: <200911182056.16517.bzolnier@gmail.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091118184125.623e063d@lxorguk.ukuu.org.uk> <200911182007.07405.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Wed, 18 Nov 2009 22:35:29 -0500
+Message-ID: <4B04BD01.5090706@rtr.ca>
+References: <20091116154343.GA6672@infradead.org> <4B02AD86.8010304@rtr.ca> <20091117143507.GC588@infradead.org> <20091117145239.768072c9@lxorguk.ukuu.org.uk> <20091117150012.GA10748@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:34271 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758281AbZKRT51 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2009 14:57:27 -0500
-In-Reply-To: <200911182007.07405.bzolnier@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:56040 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932347AbZKSDf0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Nov 2009 22:35:26 -0500
+In-Reply-To: <20091117150012.GA10748@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
-On Wednesday 18 November 2009 20:07:07 Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 18 November 2009 19:41:25 Alan Cox wrote:
-> > > Maybe they are 'stable' but when it comes to features they are behind hpt366
-> > > (i.e. they lack PCI PM), which is also much cleaner than your drivers, easier
-> > > to understand and much smaller..
-> > 
-> > 37x and 3xn lack PCI PM.  Added to the TODO list.
-> > 
-> > The smaller size is a bit questionable given its mostly comments, and
-> > three drivers versus one.
+Christoph Hellwig wrote:
+> On Tue, Nov 17, 2009 at 02:52:39PM +0000, Alan Cox wrote:
+>> I'm not convinced that is the right way to handle it. If we start doing
+>> that we'll have this massive unmanagable set of magic flags and twiddles
+>> for every possible host specific corner case.
+>>
+>> Far better to keep the issue of the command as Christoph has done and
+>> block the command issue in the afflicted devices qc_issue so that you get
+>> an error back. That keeps the mess in the right places.
 > 
-> I wonder what you find 'questionable' in the numbers given..
+> Ok, new version of the patch without this will go out this minute.  I'm
+> happy to add whatever patch is nessecary to block it for controllers
+> that can't accept it once we agree on a method.
+..
 
-BTW we can immediately reclaim 300 LOC by simply merging drivers back..
+I imagine some sort of port or host flag, that the LLD could set
+to indicate that it can correctly handle TRIM.  Or not handle TRIM.
 
-> > themselves don't keep common. Even more importantly we get to break *one*
-> > type of device at a time.
-> 
-> I prefer to not break anything, but hey my way of doing things is not
-> very much welcomed here..
-> 
-> I also like to think that by sharing code we get better testing coverage
-> and are in reality able to fix problems much faster because of this..
+Tejun is pretty good at these flag things.. I wonder what he might suggest?
 
-Wait, you seem to be right!
-
-Only pata_hpt37x has broken cable detection while pata_hpt3x2n is okay. ;)
-
--- 
-Bartlomiej Zolnierkiewicz
+Cheers
