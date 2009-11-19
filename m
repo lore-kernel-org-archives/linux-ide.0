@@ -1,66 +1,49 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 16:49:12 -0500
-Message-ID: <4B05BD58.8040008@pobox.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <4B0590A2.9050306@ru.mvista.com> <200911192003.09675.bzolnier@gmail.com> <200911192031.31613.bzolnier@gmail.com>
+Date: Thu, 19 Nov 2009 22:49:16 +0100
+Message-ID: <200911192249.16860.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911182056.16517.bzolnier@gmail.com> <4B05BADF.1010205@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757367AbZKSVtR@vger.kernel.org>
-In-Reply-To: <200911192031.31613.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ey-out-2122.google.com ([74.125.78.27]:45147 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755614AbZKSVty (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 16:49:54 -0500
+In-Reply-To: <4B05BADF.1010205@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/19/2009 02:31 PM, Bartlomiej Zolnierkiewicz wrote:
-> Subject: [PATCH] pata_hpt{37x,3x2n}: add debounce delay to cable detection methods
->
-> Alan Cox reported that cable detection sometimes works unreliably
-> for HPT3xxN and that the issue is fixed by adding debounce delay
-> as used by the vendor driver.
->
-> Sergei Shtylyov also noticed that debounce delay is needed for all
-> HPT37x and HPT3xxN chipsets according to vendor drivers.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> ---
-> In comparison to original patch the conversion from PCI access to
-> io has been dropped as it is not required for the bugfix and makes
-> patch easier for back-porting into -stable kernels.
->
->   drivers/ata/pata_hpt37x.c  |    3 +++
->   drivers/ata/pata_hpt3x2n.c |    3 +++
->   2 files changed, 6 insertions(+)
->
-> Index: b/drivers/ata/pata_hpt37x.c
-> ===================================================================
-> --- a/drivers/ata/pata_hpt37x.c
-> +++ b/drivers/ata/pata_hpt37x.c
-> @@ -324,6 +324,9 @@ static int hpt37x_pre_reset(struct ata_l
->
->   	pci_read_config_byte(pdev, 0x5B,&scr2);
->   	pci_write_config_byte(pdev, 0x5B, scr2&  ~0x01);
-> +
-> +	udelay(10); /* debounce */
-> +
->   	/* Cable register now active */
->   	pci_read_config_byte(pdev, 0x5A,&ata66);
->   	/* Restore state */
-> Index: b/drivers/ata/pata_hpt3x2n.c
-> ===================================================================
-> --- a/drivers/ata/pata_hpt3x2n.c
-> +++ b/drivers/ata/pata_hpt3x2n.c
-> @@ -128,6 +128,9 @@ static int hpt3x2n_cable_detect(struct a
->
->   	pci_read_config_byte(pdev, 0x5B,&scr2);
->   	pci_write_config_byte(pdev, 0x5B, scr2&  ~0x01);
-> +
-> +	udelay(10); /* debounce */
-> +
->   	/* Cable register now active */
->   	pci_read_config_byte(pdev, 0x5A,&ata66);
->   	/* Restore state */
+On Thursday 19 November 2009 22:38:39 Jeff Garzik wrote:
+> On 11/18/2009 02:56 PM, Bartlomiej Zolnierkiewicz wrote:
+> > On Wednesday 18 November 2009 20:07:07 Bartlomiej Zolnierkiewicz wrote:
+> >> On Wednesday 18 November 2009 19:41:25 Alan Cox wrote:
+> >>>> Maybe they are 'stable' but when it comes to features they are behind hpt366
+> >>>> (i.e. they lack PCI PM), which is also much cleaner than your drivers, easier
+> >>>> to understand and much smaller..
+> >>>
+> >>> 37x and 3xn lack PCI PM.  Added to the TODO list.
+> >>>
+> >>> The smaller size is a bit questionable given its mostly comments, and
+> >>> three drivers versus one.
+> >>
+> >> I wonder what you find 'questionable' in the numbers given..
+> >
+> > BTW we can immediately reclaim 300 LOC by simply merging drivers back..
+> 
+> Merging drivers is a big pain for distributions and end users, even with 
+> the new module_alias facility.
 
+Could please explain in more detail 'a big pain' part?
 
-applied -- same comment as last email, regarding hpt3x2n_cable_detect() fix
+> Absent stronger justification, libata remains with separate drivers, 
+> even if that means some code duplication.
+
+I can always hold my own tree with such changes if needed.
+
+-- 
+Bartlomiej Zolnierkiewicz
