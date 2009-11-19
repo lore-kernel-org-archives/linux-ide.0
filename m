@@ -1,65 +1,61 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH 4/5] pata: Update experimental tags
-Date: Thu, 19 Nov 2009 19:58:34 +0100
-Message-ID: <200911191958.34247.bzolnier@gmail.com>
-References: <20091117144450.15430.83450.stgit@localhost.localdomain> <200911191852.23061.bzolnier@gmail.com> <20091119182132.5155f819@lxorguk.ukuu.org.uk>
+Date: Thu, 19 Nov 2009 20:03:09 +0100
+Message-ID: <200911192003.09675.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091119182132.5155f819@lxorguk.ukuu.org.uk> <4B0590A2.9050306@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:61763 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753035AbZKSTAn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 14:00:43 -0500
-In-Reply-To: <20091119182132.5155f819@lxorguk.ukuu.org.uk>
+Received: from qw-out-2122.google.com ([74.125.92.26]:8012 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901AbZKSTDr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2009 14:03:47 -0500
+In-Reply-To: <4B0590A2.9050306@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Thursday 19 November 2009 19:21:32 Alan Cox wrote:
-> > Fixed where?  I posted the patch as soon as I noticed the problem.
+On Thursday 19 November 2009 19:38:26 Sergei Shtylyov wrote:
+> Alan Cox wrote:
 > 
-> Its not posted because unlike you I don't post patches as soon as I
-> notice them. I test them first. Which is why for example I discovered the
-> bug in the drivers/ide one. Did you check the vendor driver and then
-> stick 40 and 80 wire cables on the system to check the bits on a 3x2N ?
-> No I didn't think so. You see if you had you'd have discovered something
-
-I did check the vendor driver but I don't have 3x2N to test it so posting
-patch ASAP to make it possible for other people to verify it was the best
-course of action and completely justified.  Don't you agree?
-
-> else. You'd have discovered another bug in the old IDE one. The driver
-
-You mean 'another' like yours _three_ year old 'one'? :)
-
-> code for these chips isn't reliable and doesn't work at all in some cases.
+> >>Fixed where?  I posted the patch as soon as I noticed the problem.
 > 
-> > Told me about it?  
+> > Its not posted because unlike you I don't post patches as soon as I
+> > notice them. I test them first. Which is why for example I discovered the
+> > bug in the drivers/ide one. Did you check the vendor driver and then
+> > stick 40 and 80 wire cables on the system to check the bits on a 3x2N ?
 > 
-> Yes - or do you only write replies not read them ?
+> > No I didn't think so. You see if you had you'd have discovered something
+> > else. You'd have discovered another bug in the old IDE one. The driver
+> > code for these chips isn't reliable and doesn't work at all in some cases.
+> 
+> >>Told me about it?  
+> 
+> > Yes - or do you only write replies not read them ?
+> 
+> > NAK - the patch is inadequate.
+> 
+>     No, it was. And yours isn't quite.
+> 
+> > The procedure in the vendor driver does
+> > appear to work on the newer chips however.
+> 
+> > Probably worth double checking
+> > the HPT37x and seeing if it needs the same debounce delays.
+> 
+>     All vendor drivers I have do call StallExec(10) when detecting cable 
+> type, so need to add the delay to pata_hpt37x too.
 
-Well, yours have low SNR and I value my time..
+Given this I take back my ACK to Alan's patch.
 
-> NAK - the patch is inadequate. The procedure in the vendor driver does
+>     I'd suggest to address the delay by another, separate patch to both 
+> pata_hpt37x and pata_hpt3x2n drivers, and accept Bart's original patch for 
+> bit reversing...
 
-Patch is completely adequate in what it tries to achieve (fixing three year
-old problem with testing the bit for the wrong port) and you could have made
-an incremental fix for 'a second issue' easily.
-
-However I'm not into NIH so your patch is also fine and a more complete one.
-
->     pata_hpt3x2n: Fix cable detection
->     
->     The version inherited from drivers/ide doesn't work on the newer chipsets
->     at least not reliably. The vendors own driver uses a different process and
->     that one appears to produce plausible numbers.
-
-Well, maybe except how you decided to 'skip' in the patch description
-the part about how you have managed to introduce a regression three years
-ago into already unreliable cable detection taken from hpt366.. ;)
+Yes.
 
 -- 
 Bartlomiej Zolnierkiewicz
