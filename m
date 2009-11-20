@@ -1,68 +1,52 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] hpt366: add debounce delay to cable_detect() method
-Date: Fri, 20 Nov 2009 22:52:22 +0400
-Message-ID: <200911202152.22910.sshtylyov@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com>
+From: Thiago Farina <tfransosi@gmail.com>
+Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
+Date: Fri, 20 Nov 2009 17:15:29 -0200
+Message-ID: <a4c8a6d00911201115s276bb2a7i2a2c546356b71842@mail.gmail.com>
+References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>
+	 <4B0215E3.2020400@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:30183 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1755167AbZKTSvi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 13:51:38 -0500
-In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:41332 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754027AbZKTTPZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 14:15:25 -0500
+In-Reply-To: <4B0215E3.2020400@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox reported that cable detection sometimes works unreliably
-for HPT3xxN and that the issue is fixed by adding debounce delay
-as used by the vendor drivers.
+Hi Jeff,
 
-While at it, get rid of unneeded parens/space in the vicinity...
+On Tue, Nov 17, 2009 at 1:17 AM, Jeff Garzik <jgarzik@pobox.com> wrote:
+> On 11/08/2009 02:30 PM, Thiago Farina wrote:
+>>
+>> Use ARRAY_SIZE macro of kernel api instead.
+>>
+>> Signed-off-by: Thiago Farina<tfransosi@gmail.com>
+>> ---
+>> =C2=A0drivers/ata/sata_mv.c | =C2=A0 =C2=A02 +-
+>> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+>> index 6f5093b..a8a7be0 100644
+>> --- a/drivers/ata/sata_mv.c
+>> +++ b/drivers/ata/sata_mv.c
+>> @@ -2217,7 +2217,7 @@ static unsigned int mv_qc_issue_fis(struct
+>> ata_queued_cmd *qc)
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0int err =3D 0;
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0ata_tf_to_fis(&qc->tf, link->pmp, 1, (voi=
+d *)fis);
+>> - =C2=A0 =C2=A0 =C2=A0 err =3D mv_send_fis(ap, fis, sizeof(fis) / si=
+zeof(fis[0]));
+>> + =C2=A0 =C2=A0 =C2=A0 err =3D mv_send_fis(ap, fis, ARRAY_SIZE(fis))=
+;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err)
+>
+> applied
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: stable@kernel.org
-
----
-The patcn is atop of ide-2.6.git tree...
-
- drivers/ide/hpt366.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
-
-Index: ide-2.6/drivers/ide/hpt366.c
-===================================================================
---- ide-2.6.orig/drivers/ide/hpt366.c
-+++ ide-2.6/drivers/ide/hpt366.c
-@@ -1236,8 +1236,9 @@ static u8 hpt3xx_cable_detect(ide_hwif_t
- 		u16 mcr;
- 
- 		pci_read_config_word(dev, mcr_addr, &mcr);
--		pci_write_config_word(dev, mcr_addr, (mcr | 0x8000));
--		/* now read cable id register */
-+		pci_write_config_word(dev, mcr_addr, mcr | 0x8000);
-+		/* Debounce, then read cable ID register */
-+		udelay(10);
- 		pci_read_config_byte(dev, 0x5a, &scr1);
- 		pci_write_config_word(dev, mcr_addr, mcr);
- 	} else if (chip_type >= HPT370) {
-@@ -1248,10 +1249,11 @@ static u8 hpt3xx_cable_detect(ide_hwif_t
- 		u8 scr2 = 0;
- 
- 		pci_read_config_byte(dev, 0x5b, &scr2);
--		pci_write_config_byte(dev, 0x5b, (scr2 & ~1));
--		/* now read cable id register */
-+		pci_write_config_byte(dev, 0x5b, scr2 & ~1);
-+		/* Debounce, then read cable ID register */
-+		udelay(10);
- 		pci_read_config_byte(dev, 0x5a, &scr1);
--		pci_write_config_byte(dev, 0x5b,  scr2);
-+		pci_write_config_byte(dev, 0x5b, scr2);
- 	} else
- 		pci_read_config_byte(dev, 0x5a, &scr1);
- 
-
+Was it applied to this tree
+http://git.kernel.org/?p=3Dlinux/kernel/git/jgarzik/libata-dev.git?
