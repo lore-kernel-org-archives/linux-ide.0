@@ -1,124 +1,227 @@
-From: Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Bug #14622] Second IDE device not found
-Date: Fri, 20 Nov 2009 06:31:38 -0500
-Message-ID: <4B067E1A.7000102@garzik.org>
-References: <GUZt44bIwCE.A.vLF.pSdALB@chimera>	 <xXQGFmujPl.A.n7F.4SdALB@chimera>	 <20091119.120550.183823935.davem@davemloft.net>	 <40a4ed590911192359o563b104fo562f325ad9f5358e@mail.gmail.com>	 <4B065648.6040609@garzik.org> <40a4ed590911200129p6f0d048dqef10df2b311d4744@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata fix
+Date: Fri, 20 Nov 2009 06:44:05 -0500
+Message-ID: <20091120114404.GA23315@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <40a4ed590911200129p6f0d048dqef10df2b311d4744-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Zeno Davatz <zdavatz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:46769 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752015AbZKTLn7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Nov 2009 06:43:59 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On 11/20/2009 04:29 AM, Zeno Davatz wrote:
-> On Fri, Nov 20, 2009 at 9:41 AM, Jeff Garzik<jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>  wrote:
->> On 11/20/2009 02:59 AM, Zeno Davatz wrote:
->>>
->>> On Thu, Nov 19, 2009 at 9:05 PM, David Miller<davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>    wrote:
->>>>
->>>> From: "Rafael J. Wysocki"<rjw-KKrjLPT3xs0@public.gmane.org>
->>>> Date: Mon, 16 Nov 2009 23:37:47 +0100 (CET)
->>>>
->>>>> This message has been generated automatically as a part of a report
->>>>> of recent regressions.
->>>>>
->>>>> The following bug entry is on the current list of known regressions
->>>>> from 2.6.31.  Please verify if it still should be listed and let me know
->>>>> (either way).
->>>>>
->>>>>
->>>>> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=14622
->>>>> Subject               : Second IDE device not found
->>>>> Submitter     : Zeno Davatz<zdavatz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>>>> Date          : 2009-11-11 17:31 (6 days old)
->>>>> References    : http://marc.info/?l=linux-kernel&m=125796105822353&w=4
->>>>
->>>> We're going to need more information to diagnose this.
->>>>
->>>> And linux-ide should have been at least CC:'d from the very
->>>> beginning.
->>>>
->>>>   From what I can discern the problem is introduced somewhere between
->>>> 2.6.27 and 2.6.31, you have a Serverworks CSB5 and primarily the issue
->>>> is that attaching or detaching your CD-ROM driver influences whether
->>>> both of your disks are properly detected.  Correct?
->>>>
->>>> You seem to have played around with using the IDE layer vs. the
->>>> ATA layer.  Can you see any difference in behavior if you try
->>>> using just the IDE layer vs. just the ATA layer with the 2.6.31
->>>> kernel?
->>>
->>> Please see:
->>>
->>> http://www.flickr.com/photos/zrr/4118682747/
->>>
->>> and
->>>
->>> http://www.flickr.com/photos/zrr/4119453092/
->>
->> Unfortunately, both of these photos only show that MD (block major 9) device
->> could not be found for root.
->>
->> For either ATA or IDE, we would need to see full dmesg somehow -- perhaps
->> capturing serial console output?  (Documentation/serial-console.txt)
->
-> Ok, I appended
->
-> console=ttyS1,9600 console=tty0
->
-> to the kernel command line at lilo after choosing the kernel image and
-> I get a ton of output. But how to I save the output to a file?
-
-I use minicom and a null modem serial cable.  One of minicom's commands 
-will capture everything sent to the serial port, to a file.  Other 
-options are available.  Googling for "linux serial console" found 
-several useful starting-point links.
-
-The basic idea is to sent console output to a serial port, and then have 
-some method of reading and capturing the serial port's data.
-
-Another alternative is netconsole (google for "linux netconsole"), which 
-permits output over the network.
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
->>> I makes no difference if I choose ATA or only IDE.
->>>
->>> I am also attaching you my Kernel .config
->>>
->>> I could also test with 2.6.32-rc8 (torvalds-git)
->>>
->>> I suggest you send me two .config that I can both test with 2.6.31.6
->>
->> I bet libata fails because CONFIG_BLK_DEV_SD is not enabled.  Probably want
->> to enable CONFIG_BLK_DEV_SR too, for libata CD-ROM support.  I would be
->> interested to see your failing ATA config, with IDE disabled.
->
-> I enabled CONFIG_BLK_DEV_SR. Do you want above test with or without
->
-> CONFIG_BLK_DEV_SVWKS (OSB4/CSB5) enabled?
+A fix for a platform driver that was a bit overdue, and needs
+to be in 2.6.32.
 
-Well, this goes back to David's basic request:  IDE-only or ATA-only.
 
-You really, really, really should not to enable both at the same time.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-If you are choosing ATA-only (libata), then you should disable 
-CONFIG_IDE and everything associated with CONFIG_IDE, including 
-CONFIG_BLK_DEV_SVWKS.
+to receive the following updates:
 
-libata will want something like
-CONFIG_ATA
-CONFIG_ATA_VERBOSE_ERROR	<-- optional, but helpful
-CONFIG_PATA_SERVERWORKS
+ drivers/ata/sata_fsl.c |   84 +++++++++++++++++++++++++-----------------------
+ 1 files changed, 44 insertions(+), 40 deletions(-)
 
-CONFIG_SCSI
-CONFIG_SCSI_LOGGING		<-- ditto
-CONFIG_SCSI_CONSTANTS		<-- ditto
-CONFIG_BLK_DEV_SD
-CONFIG_BLK_DEV_SR		<-- required only for CD-ROM support
+    sata_fsl: Split hard and soft reset
+    
+    Split sata_fsl_softreset() into hard and soft resets to make
+    error-handling more efficient & device and PMP detection more
+    reliable.
+    
+    Also includes fix for PMP support, driver tested with Sil3726,
+    Sil4726 & Exar PMP controllers.
+    
+    [AV: Also fixes resuming from deep sleep on MPC8315 CPUs]
+    
+    Signed-off-by: Jiang Yutang <b14898@freescale.com>
+    Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
-Regards,
-
-	Jeff
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index d344db4..172b57e 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -707,34 +707,17 @@ static unsigned int sata_fsl_dev_classify(struct ata_port *ap)
+ 	return ata_dev_classify(&tf);
+ }
+ 
+-static int sata_fsl_prereset(struct ata_link *link, unsigned long deadline)
+-{
+-	/* FIXME: Never skip softreset, sata_fsl_softreset() is
+-	 * combination of soft and hard resets.  sata_fsl_softreset()
+-	 * needs to be splitted into soft and hard resets.
+-	 */
+-	return 0;
+-}
+-
+-static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
++static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
+ 					unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
+-	struct sata_fsl_port_priv *pp = ap->private_data;
+ 	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+-	int pmp = sata_srst_pmp(link);
+ 	u32 temp;
+-	struct ata_taskfile tf;
+-	u8 *cfis;
+-	u32 Serror;
+ 	int i = 0;
+ 	unsigned long start_jiffies;
+ 
+-	DPRINTK("in xx_softreset\n");
+-
+-	if (pmp != SATA_PMP_CTRL_PORT)
+-		goto issue_srst;
++	DPRINTK("in xx_hardreset\n");
+ 
+ try_offline_again:
+ 	/*
+@@ -749,7 +732,7 @@ try_offline_again:
+ 
+ 	if (temp & ONLINE) {
+ 		ata_port_printk(ap, KERN_ERR,
+-				"Softreset failed, not off-lined %d\n", i);
++				"Hardreset failed, not off-lined %d\n", i);
+ 
+ 		/*
+ 		 * Try to offline controller atleast twice
+@@ -761,7 +744,7 @@ try_offline_again:
+ 			goto try_offline_again;
+ 	}
+ 
+-	DPRINTK("softreset, controller off-lined\n");
++	DPRINTK("hardreset, controller off-lined\n");
+ 	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
+ 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
+ 
+@@ -786,11 +769,11 @@ try_offline_again:
+ 
+ 	if (!(temp & ONLINE)) {
+ 		ata_port_printk(ap, KERN_ERR,
+-				"Softreset failed, not on-lined\n");
++				"Hardreset failed, not on-lined\n");
+ 		goto err;
+ 	}
+ 
+-	DPRINTK("softreset, controller off-lined & on-lined\n");
++	DPRINTK("hardreset, controller off-lined & on-lined\n");
+ 	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
+ 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
+ 
+@@ -806,7 +789,7 @@ try_offline_again:
+ 				"No Device OR PHYRDY change,Hstatus = 0x%x\n",
+ 				ioread32(hcr_base + HSTATUS));
+ 		*class = ATA_DEV_NONE;
+-		goto out;
++		return 0;
+ 	}
+ 
+ 	/*
+@@ -819,11 +802,44 @@ try_offline_again:
+ 	if ((temp & 0xFF) != 0x18) {
+ 		ata_port_printk(ap, KERN_WARNING, "No Signature Update\n");
+ 		*class = ATA_DEV_NONE;
+-		goto out;
++		goto do_followup_srst;
+ 	} else {
+ 		ata_port_printk(ap, KERN_INFO,
+ 				"Signature Update detected @ %d msecs\n",
+ 				jiffies_to_msecs(jiffies - start_jiffies));
++		*class = sata_fsl_dev_classify(ap);
++		return 0;
++	}
++
++do_followup_srst:
++	/*
++	 * request libATA to perform follow-up softreset
++	 */
++	return -EAGAIN;
++
++err:
++	return -EIO;
++}
++
++static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
++					unsigned long deadline)
++{
++	struct ata_port *ap = link->ap;
++	struct sata_fsl_port_priv *pp = ap->private_data;
++	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
++	void __iomem *hcr_base = host_priv->hcr_base;
++	int pmp = sata_srst_pmp(link);
++	u32 temp;
++	struct ata_taskfile tf;
++	u8 *cfis;
++	u32 Serror;
++
++	DPRINTK("in xx_softreset\n");
++
++	if (ata_link_offline(link)) {
++		DPRINTK("PHY reports no device\n");
++		*class = ATA_DEV_NONE;
++		return 0;
+ 	}
+ 
+ 	/*
+@@ -834,7 +850,6 @@ try_offline_again:
+ 	 * reached here, we can send a command to the target device
+ 	 */
+ 
+-issue_srst:
+ 	DPRINTK("Sending SRST/device reset\n");
+ 
+ 	ata_tf_init(link->device, &tf);
+@@ -860,6 +875,8 @@ issue_srst:
+ 		ioread32(CA + hcr_base), ioread32(CC + hcr_base));
+ 
+ 	iowrite32(0xFFFF, CC + hcr_base);
++	if (pmp != SATA_PMP_CTRL_PORT)
++		iowrite32(pmp, CQPMP + hcr_base);
+ 	iowrite32(1, CQ + hcr_base);
+ 
+ 	temp = ata_wait_register(CQ + hcr_base, 0x1, 0x1, 1, 5000);
+@@ -926,7 +943,6 @@ issue_srst:
+ 		VPRINTK("cereg = 0x%x\n", ioread32(hcr_base + CE));
+ 	}
+ 
+-out:
+ 	return 0;
+ 
+ err:
+@@ -988,18 +1004,6 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+ 		ehi->err_mask |= AC_ERR_ATA_BUS;
+ 		ehi->action |= ATA_EH_SOFTRESET;
+ 
+-		/*
+-		 * Ignore serror in case of fatal errors as we always want
+-		 * to do a soft-reset of the FSL SATA controller. Analyzing
+-		 * serror may cause libata to schedule a hard-reset action,
+-		 * and hard-reset currently does not do controller
+-		 * offline/online, causing command timeouts and leads to an
+-		 * un-recoverable state, hence make libATA ignore
+-		 * autopsy in case of fatal errors.
+-		 */
+-
+-		ehi->flags |= ATA_EHI_NO_AUTOPSY;
+-
+ 		freeze = 1;
+ 	}
+ 
+@@ -1267,8 +1271,8 @@ static struct ata_port_operations sata_fsl_ops = {
+ 
+ 	.freeze = sata_fsl_freeze,
+ 	.thaw = sata_fsl_thaw,
+-	.prereset = sata_fsl_prereset,
+ 	.softreset = sata_fsl_softreset,
++	.hardreset = sata_fsl_hardreset,
+ 	.pmp_softreset = sata_fsl_softreset,
+ 	.error_handler = sata_fsl_error_handler,
+ 	.post_internal_cmd = sata_fsl_post_internal_cmd,
