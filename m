@@ -1,227 +1,97 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata fix
-Date: Fri, 20 Nov 2009 06:44:05 -0500
-Message-ID: <20091120114404.GA23315@havoc.gtf.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Fri, 20 Nov 2009 12:46:24 +0000
+Message-ID: <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
+References: <20091116154343.GA6672@infradead.org>
+	<4B02AD86.8010304@rtr.ca>
+	<20091117143507.GC588@infradead.org>
+	<20091117145239.768072c9@lxorguk.ukuu.org.uk>
+	<20091117150012.GA10748@infradead.org>
+	<4B04BD01.5090706@rtr.ca>
+	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>
+	<4B0554A2.9060404@rtr.ca>
+	<4B05DE00.3020707@gmail.com>
+	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>
+	<4B05E3D1.1000904@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:46769 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752015AbZKTLn7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Nov 2009 06:43:59 -0500
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52337 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753205AbZKTMpV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 07:45:21 -0500
+In-Reply-To: <4B05E3D1.1000904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Mark Lord <liml@rtr.ca>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
+> > For those that pee themselves you don't need a host flag, you need a
+> > qc_issue hook - you need that hook for the purpose of actually making the
+> > command work, so in the short term making it just return AC_ERR_DEV isn't
+> > exactly hard. Not having the flag and fixing those odd few drivers would
+> > be far more productive.
+> 
+> We are talking about chips whose command set is essentially fixed at 
+> manufacture time.
 
-A fix for a platform driver that was a bit overdue, and needs
-to be in 2.6.32.
+There are only two of those I know of
+- IT821x which already uses qc_issue to filter.
+- pata_st412, which uses qc_issue and isn't in tree anyway and probably
+  never will be.
 
+The SIL ones jut need babysitting. The older Promise at least only snoop
+SET_FEATURES and the transfer lengths for some DMA ops. We disable the
+features snooping (its there to make driverless windows stuff work well I
+assume), and we babysit the transfer lengths for the chip as per the
+documentation for issuing LBA48 etc.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+> So the alternative is to create a table of known-working commands in 
+> each driver, and fail all commands outside that table.  In the case of
 
-to receive the following updates:
+For most drivers all commands just work. There are very few with command
+tables. LBA48 confused some not because of command tables but because the
+double load of the taskfile was a sequence they couldn't hack or because
+they snooped the transfer length. The latter is kept correctly by the new
+commands.
 
- drivers/ata/sata_fsl.c |   84 +++++++++++++++++++++++++-----------------------
- 1 files changed, 44 insertions(+), 40 deletions(-)
+> SiI and Promise at least, I think that command table will be the same 
+> (ATA-7 commands).
 
-    sata_fsl: Split hard and soft reset
-    
-    Split sata_fsl_softreset() into hard and soft resets to make
-    error-handling more efficient & device and PMP detection more
-    reliable.
-    
-    Also includes fix for PMP support, driver tested with Sil3726,
-    Sil4726 & Exar PMP controllers.
-    
-    [AV: Also fixes resuming from deep sleep on MPC8315 CPUs]
-    
-    Signed-off-by: Jiang Yutang <b14898@freescale.com>
-    Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+It's certainly not quite that simple. A table wouldn't be too bad for
+just kernel issued commands as we don't issue very many but for the
+general case it would not be pretty at all. The command list for SII is
+btw not ATA-7 its a bit more complicated, which is another reason not to
+do a command filter but to worry about feature sets we care about.
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index d344db4..172b57e 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -707,34 +707,17 @@ static unsigned int sata_fsl_dev_classify(struct ata_port *ap)
- 	return ata_dev_classify(&tf);
- }
- 
--static int sata_fsl_prereset(struct ata_link *link, unsigned long deadline)
--{
--	/* FIXME: Never skip softreset, sata_fsl_softreset() is
--	 * combination of soft and hard resets.  sata_fsl_softreset()
--	 * needs to be splitted into soft and hard resets.
--	 */
--	return 0;
--}
--
--static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
-+static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
- 					unsigned long deadline)
- {
- 	struct ata_port *ap = link->ap;
--	struct sata_fsl_port_priv *pp = ap->private_data;
- 	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
- 	void __iomem *hcr_base = host_priv->hcr_base;
--	int pmp = sata_srst_pmp(link);
- 	u32 temp;
--	struct ata_taskfile tf;
--	u8 *cfis;
--	u32 Serror;
- 	int i = 0;
- 	unsigned long start_jiffies;
- 
--	DPRINTK("in xx_softreset\n");
--
--	if (pmp != SATA_PMP_CTRL_PORT)
--		goto issue_srst;
-+	DPRINTK("in xx_hardreset\n");
- 
- try_offline_again:
- 	/*
-@@ -749,7 +732,7 @@ try_offline_again:
- 
- 	if (temp & ONLINE) {
- 		ata_port_printk(ap, KERN_ERR,
--				"Softreset failed, not off-lined %d\n", i);
-+				"Hardreset failed, not off-lined %d\n", i);
- 
- 		/*
- 		 * Try to offline controller atleast twice
-@@ -761,7 +744,7 @@ try_offline_again:
- 			goto try_offline_again;
- 	}
- 
--	DPRINTK("softreset, controller off-lined\n");
-+	DPRINTK("hardreset, controller off-lined\n");
- 	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
- 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
- 
-@@ -786,11 +769,11 @@ try_offline_again:
- 
- 	if (!(temp & ONLINE)) {
- 		ata_port_printk(ap, KERN_ERR,
--				"Softreset failed, not on-lined\n");
-+				"Hardreset failed, not on-lined\n");
- 		goto err;
- 	}
- 
--	DPRINTK("softreset, controller off-lined & on-lined\n");
-+	DPRINTK("hardreset, controller off-lined & on-lined\n");
- 	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
- 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
- 
-@@ -806,7 +789,7 @@ try_offline_again:
- 				"No Device OR PHYRDY change,Hstatus = 0x%x\n",
- 				ioread32(hcr_base + HSTATUS));
- 		*class = ATA_DEV_NONE;
--		goto out;
-+		return 0;
- 	}
- 
- 	/*
-@@ -819,11 +802,44 @@ try_offline_again:
- 	if ((temp & 0xFF) != 0x18) {
- 		ata_port_printk(ap, KERN_WARNING, "No Signature Update\n");
- 		*class = ATA_DEV_NONE;
--		goto out;
-+		goto do_followup_srst;
- 	} else {
- 		ata_port_printk(ap, KERN_INFO,
- 				"Signature Update detected @ %d msecs\n",
- 				jiffies_to_msecs(jiffies - start_jiffies));
-+		*class = sata_fsl_dev_classify(ap);
-+		return 0;
-+	}
-+
-+do_followup_srst:
-+	/*
-+	 * request libATA to perform follow-up softreset
-+	 */
-+	return -EAGAIN;
-+
-+err:
-+	return -EIO;
-+}
-+
-+static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
-+					unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct sata_fsl_port_priv *pp = ap->private_data;
-+	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
-+	void __iomem *hcr_base = host_priv->hcr_base;
-+	int pmp = sata_srst_pmp(link);
-+	u32 temp;
-+	struct ata_taskfile tf;
-+	u8 *cfis;
-+	u32 Serror;
-+
-+	DPRINTK("in xx_softreset\n");
-+
-+	if (ata_link_offline(link)) {
-+		DPRINTK("PHY reports no device\n");
-+		*class = ATA_DEV_NONE;
-+		return 0;
- 	}
- 
- 	/*
-@@ -834,7 +850,6 @@ try_offline_again:
- 	 * reached here, we can send a command to the target device
- 	 */
- 
--issue_srst:
- 	DPRINTK("Sending SRST/device reset\n");
- 
- 	ata_tf_init(link->device, &tf);
-@@ -860,6 +875,8 @@ issue_srst:
- 		ioread32(CA + hcr_base), ioread32(CC + hcr_base));
- 
- 	iowrite32(0xFFFF, CC + hcr_base);
-+	if (pmp != SATA_PMP_CTRL_PORT)
-+		iowrite32(pmp, CQPMP + hcr_base);
- 	iowrite32(1, CQ + hcr_base);
- 
- 	temp = ata_wait_register(CQ + hcr_base, 0x1, 0x1, 1, 5000);
-@@ -926,7 +943,6 @@ issue_srst:
- 		VPRINTK("cereg = 0x%x\n", ioread32(hcr_base + CE));
- 	}
- 
--out:
- 	return 0;
- 
- err:
-@@ -988,18 +1004,6 @@ static void sata_fsl_error_intr(struct ata_port *ap)
- 		ehi->err_mask |= AC_ERR_ATA_BUS;
- 		ehi->action |= ATA_EH_SOFTRESET;
- 
--		/*
--		 * Ignore serror in case of fatal errors as we always want
--		 * to do a soft-reset of the FSL SATA controller. Analyzing
--		 * serror may cause libata to schedule a hard-reset action,
--		 * and hard-reset currently does not do controller
--		 * offline/online, causing command timeouts and leads to an
--		 * un-recoverable state, hence make libATA ignore
--		 * autopsy in case of fatal errors.
--		 */
--
--		ehi->flags |= ATA_EHI_NO_AUTOPSY;
--
- 		freeze = 1;
- 	}
- 
-@@ -1267,8 +1271,8 @@ static struct ata_port_operations sata_fsl_ops = {
- 
- 	.freeze = sata_fsl_freeze,
- 	.thaw = sata_fsl_thaw,
--	.prereset = sata_fsl_prereset,
- 	.softreset = sata_fsl_softreset,
-+	.hardreset = sata_fsl_hardreset,
- 	.pmp_softreset = sata_fsl_softreset,
- 	.error_handler = sata_fsl_error_handler,
- 	.post_internal_cmd = sata_fsl_post_internal_cmd,
+> At that point, whether it's a common function (is_ata7_command) or a 
+> command flag (ATA_HFLAG_NO_NEW_COMMANDS) is largely a point of taste.
+
+SII controllers support a subset of commands based on legacy (WD1010),
+ATA and bits of CF. However they also support things like a subset of
+smart commands and some extensions. That means a command table isn't
+sufficient for the general case, you actually have to parse the features
+field if you want to do every case right (ick ick ick)
+
+You don't actually want to do that filtering on SII controllers
+anyway because their default behaviour is to abort an unsupported command.
+So it all "just works" because the stack sees an abort and assumes the
+drive replied with command not supported status (see 10.3.4.2). The chip
+designers got that one right.
+
+The SII anyhow supports telling the controller the command behaviour
+required, which means that a filter isn't what you need anyway. You need
+to set up the command table to allow TRIM through. That means we don't
+need a filter, the driver just needs enhancing to fix that quirk.
+
+So who will actually use this flag ? Which other drivers have problems
+in this area ? Rather than blindly implement a flag we need to work
+through those that *actually* have a problem.
+
+As far as I can see the TRIM stuff will just work as it is right now. The
+problem controllers like the IT821x will return AC_ERR_DEV on qc_issue and
+the SII controllers will fake a drive abort for command unknown. The
+older Promise at least will handle the command.
+
+Alan
