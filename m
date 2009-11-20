@@ -1,52 +1,33 @@
-From: Thiago Farina <tfransosi@gmail.com>
-Subject: Re: [PATCH] ata: Clean up hard coded array size calculation.
-Date: Fri, 20 Nov 2009 17:15:29 -0200
-Message-ID: <a4c8a6d00911201115s276bb2a7i2a2c546356b71842@mail.gmail.com>
-References: <1257708657-1232-1-git-send-email-tfransosi@gmail.com>
-	 <4B0215E3.2020400@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] hpt366: add debounce delay to cable_detect() method
+Date: Fri, 20 Nov 2009 19:45:37 +0000
+Message-ID: <20091120194537.7b4004c2@lxorguk.ukuu.org.uk>
+References: <200702140101.26639.sshtylyov@ru.mvista.com>
+	<200911202152.22910.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:41332 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754027AbZKTTPZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 14:15:25 -0500
-In-Reply-To: <4B0215E3.2020400@pobox.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36751 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751986AbZKTToj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 14:44:39 -0500
+In-Reply-To: <200911202152.22910.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: mlord@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: davem@davemloft.net, linux-ide@vger.kernel.org, stable@kernel.org, bzolnier@gmail.com
 
-Hi Jeff,
+On Fri, 20 Nov 2009 22:52:22 +0400
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
-On Tue, Nov 17, 2009 at 1:17 AM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On 11/08/2009 02:30 PM, Thiago Farina wrote:
->>
->> Use ARRAY_SIZE macro of kernel api instead.
->>
->> Signed-off-by: Thiago Farina<tfransosi@gmail.com>
->> ---
->> =C2=A0drivers/ata/sata_mv.c | =C2=A0 =C2=A02 +-
->> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
->> index 6f5093b..a8a7be0 100644
->> --- a/drivers/ata/sata_mv.c
->> +++ b/drivers/ata/sata_mv.c
->> @@ -2217,7 +2217,7 @@ static unsigned int mv_qc_issue_fis(struct
->> ata_queued_cmd *qc)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0int err =3D 0;
->>
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0ata_tf_to_fis(&qc->tf, link->pmp, 1, (voi=
-d *)fis);
->> - =C2=A0 =C2=A0 =C2=A0 err =3D mv_send_fis(ap, fis, sizeof(fis) / si=
-zeof(fis[0]));
->> + =C2=A0 =C2=A0 =C2=A0 err =3D mv_send_fis(ap, fis, ARRAY_SIZE(fis))=
-;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err)
->
-> applied
+> Alan Cox reported that cable detection sometimes works unreliably
+> for HPT3xxN and that the issue is fixed by adding debounce delay
+> as used by the vendor drivers.
+> 
+> While at it, get rid of unneeded parens/space in the vicinity...
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Cc: stable@kernel.org
 
-Was it applied to this tree
-http://git.kernel.org/?p=3Dlinux/kernel/git/jgarzik/libata-dev.git?
+Acked-by: Alan Cox <alan@linux.intel.com>
