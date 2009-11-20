@@ -1,97 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Fri, 20 Nov 2009 12:46:24 +0000
-Message-ID: <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
-References: <20091116154343.GA6672@infradead.org>
-	<4B02AD86.8010304@rtr.ca>
-	<20091117143507.GC588@infradead.org>
-	<20091117145239.768072c9@lxorguk.ukuu.org.uk>
-	<20091117150012.GA10748@infradead.org>
-	<4B04BD01.5090706@rtr.ca>
-	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>
-	<4B0554A2.9060404@rtr.ca>
-	<4B05DE00.3020707@gmail.com>
-	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>
-	<4B05E3D1.1000904@pobox.com>
+From: Zeno Davatz <zdavatz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bug #14622] Second IDE device not found
+Date: Fri, 20 Nov 2009 14:35:07 +0100
+Message-ID: <40a4ed590911200535j2fe970fas3db14492c4c30b9d@mail.gmail.com>
+References: <GUZt44bIwCE.A.vLF.pSdALB@chimera>
+	 <xXQGFmujPl.A.n7F.4SdALB@chimera>
+	 <20091119.120550.183823935.davem@davemloft.net>
+	 <40a4ed590911192359o563b104fo562f325ad9f5358e@mail.gmail.com>
+	 <4B065648.6040609@garzik.org>
+	 <40a4ed590911200129p6f0d048dqef10df2b311d4744@mail.gmail.com>
+	 <4B067E1A.7000102@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52337 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753205AbZKTMpV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 07:45:21 -0500
-In-Reply-To: <4B05E3D1.1000904@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4B067E1A.7000102-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Mark Lord <liml@rtr.ca>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
-> > For those that pee themselves you don't need a host flag, you need a
-> > qc_issue hook - you need that hook for the purpose of actually making the
-> > command work, so in the short term making it just return AC_ERR_DEV isn't
-> > exactly hard. Not having the flag and fixing those odd few drivers would
-> > be far more productive.
-> 
-> We are talking about chips whose command set is essentially fixed at 
-> manufacture time.
+On Fri, Nov 20, 2009 at 12:31 PM, Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org> wrote:
 
-There are only two of those I know of
-- IT821x which already uses qc_issue to filter.
-- pata_st412, which uses qc_issue and isn't in tree anyway and probably
-  never will be.
+> I use minicom and a null modem serial cable. =A0One of minicom's comm=
+ands will
+> capture everything sent to the serial port, to a file. =A0Other optio=
+ns are
+> available. =A0Googling for "linux serial console" found several usefu=
+l
+> starting-point links.
+>
+> The basic idea is to sent console output to a serial port, and then h=
+ave
+> some method of reading and capturing the serial port's data.
+>
+> Another alternative is netconsole (google for "linux netconsole"), wh=
+ich
+> permits output over the network.
 
-The SIL ones jut need babysitting. The older Promise at least only snoop
-SET_FEATURES and the transfer lengths for some DMA ops. We disable the
-features snooping (its there to make driverless windows stuff work well I
-assume), and we babysit the transfer lengths for the chip as per the
-documentation for issuing LBA48 etc.
+Ok, I will try to look into this.
 
-> So the alternative is to create a table of known-working commands in 
-> each driver, and fail all commands outside that table.  In the case of
+> Well, this goes back to David's basic request: =A0IDE-only or ATA-onl=
+y.
 
-For most drivers all commands just work. There are very few with command
-tables. LBA48 confused some not because of command tables but because the
-double load of the taskfile was a sequence they couldn't hack or because
-they snooped the transfer length. The latter is kept correctly by the new
-commands.
+I find it a bit irritating, that CONFIG_IDE is mentioned as ATA in
+make menuconfig. But I'm trying to understand your point.
 
-> SiI and Promise at least, I think that command table will be the same 
-> (ATA-7 commands).
+> You really, really, really should not to enable both at the same time=
+=2E
 
-It's certainly not quite that simple. A table wouldn't be too bad for
-just kernel issued commands as we don't issue very many but for the
-general case it would not be pretty at all. The command list for SII is
-btw not ATA-7 its a bit more complicated, which is another reason not to
-do a command filter but to worry about feature sets we care about.
+I recompiled the kernel only with below settings all enabled.
 
-> At that point, whether it's a common function (is_ata7_command) or a 
-> command flag (ATA_HFLAG_NO_NEW_COMMANDS) is largely a point of taste.
+> If you are choosing ATA-only (libata), then you should disable CONFIG=
+_IDE
+> and everything associated with CONFIG_IDE, including CONFIG_BLK_DEV_S=
+VWKS.
 
-SII controllers support a subset of commands based on legacy (WD1010),
-ATA and bits of CF. However they also support things like a subset of
-smart commands and some extensions. That means a command table isn't
-sufficient for the general case, you actually have to parse the features
-field if you want to do every case right (ick ick ick)
+I disabled CONFIG_IDE this time.
 
-You don't actually want to do that filtering on SII controllers
-anyway because their default behaviour is to abort an unsupported command.
-So it all "just works" because the stack sees an abort and assumes the
-drive replied with command not supported status (see 10.3.4.2). The chip
-designers got that one right.
+> libata will want something like
+> CONFIG_ATA
+> CONFIG_ATA_VERBOSE_ERROR =A0 =A0 =A0 =A0<-- optional, but helpful
+> CONFIG_PATA_SERVERWORKS
+>
+> CONFIG_SCSI
+> CONFIG_SCSI_LOGGING =A0 =A0 =A0 =A0 =A0 =A0 <-- ditto
+> CONFIG_SCSI_CONSTANTS =A0 =A0 =A0 =A0 =A0 <-- ditto
+> CONFIG_BLK_DEV_SD
+> CONFIG_BLK_DEV_SR =A0 =A0 =A0 =A0 =A0 =A0 =A0 <-- required only for C=
+D-ROM support
 
-The SII anyhow supports telling the controller the command behaviour
-required, which means that a filter isn't what you need anyway. You need
-to set up the command table to allow TRIM through. That means we don't
-need a filter, the driver just needs enhancing to fix that quirk.
+Recompiled with above enabled. And indeed: It worked. Booting as normal=
+=2E
 
-So who will actually use this flag ? Which other drivers have problems
-in this area ? Rather than blindly implement a flag we need to work
-through those that *actually* have a problem.
+Thank you for the detailed instructions.
 
-As far as I can see the TRIM stuff will just work as it is right now. The
-problem controllers like the IT821x will return AC_ERR_DEV on qc_issue and
-the SII controllers will fake a drive abort for command unknown. The
-older Promise at least will handle the command.
-
-Alan
+Best
+Zeno
