@@ -1,33 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] hpt366: add debounce delay to cable_detect() method
-Date: Fri, 20 Nov 2009 19:45:37 +0000
-Message-ID: <20091120194537.7b4004c2@lxorguk.ukuu.org.uk>
-References: <200702140101.26639.sshtylyov@ru.mvista.com>
-	<200911202152.22910.sshtylyov@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14622] Second IDE device not found
+Date: Fri, 20 Nov 2009 20:27:10 GMT
+Message-ID: <200911202027.nAKKRAA9009087@demeter.kernel.org>
+References: <bug-14622-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36751 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751986AbZKTToj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 14:44:39 -0500
-In-Reply-To: <200911202152.22910.sshtylyov@ru.mvista.com>
+Received: from demeter.kernel.org ([140.211.167.39]:41202 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755475AbZKTU1E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Nov 2009 15:27:04 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAKKRAew009088
+	for <linux-ide@vger.kernel.org>; Fri, 20 Nov 2009 20:27:10 GMT
+In-Reply-To: <bug-14622-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: davem@davemloft.net, linux-ide@vger.kernel.org, stable@kernel.org, bzolnier@gmail.com
+To: linux-ide@vger.kernel.org
 
-On Fri, 20 Nov 2009 22:52:22 +0400
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=14622
 
-> Alan Cox reported that cable detection sometimes works unreliably
-> for HPT3xxN and that the issue is fixed by adding debounce delay
-> as used by the vendor drivers.
-> 
-> While at it, get rid of unneeded parens/space in the vicinity...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Cc: stable@kernel.org
 
-Acked-by: Alan Cox <alan@linux.intel.com>
+Rafael J. Wysocki <rjw@sisk.pl> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |DOCUMENTED
+
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
