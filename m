@@ -1,50 +1,30 @@
-From: Mark Nelson <mdnelson8@gmail.com>
-Subject: [PATCH] ahci: let users know that Promise PDC42819 support is limited
-	to SATA devices
-Date: Sun, 22 Nov 2009 12:07:41 +1100
-Message-ID: <65a6ef750911211707m3cece36fsc464e8e5d9273782@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Sat, 21 Nov 2009 21:39:54 -0500
+Message-ID: <4B08A47A.3030001@rtr.ca>
+References: <20091116154343.GA6672@infradead.org> <4B02AD86.8010304@rtr.ca>	<20091117143507.GC588@infradead.org>	<20091117145239.768072c9@lxorguk.ukuu.org.uk>	<20091117150012.GA10748@infradead.org> <4B04BD01.5090706@rtr.ca>	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>	<4B0554A2.9060404@rtr.ca> <4B05DE00.3020707@gmail.com>	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>	<4B05E3D1.1000904@pobox.com>	<20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>	<4B076DB7.3040303@rtr.ca> <yq1einss91u.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:60728 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbZKVBHh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Nov 2009 20:07:37 -0500
-Received: by ewy19 with SMTP id 19so773958ewy.21
-        for <linux-ide@vger.kernel.org>; Sat, 21 Nov 2009 17:07:42 -0800 (PST)
+Received: from rtr.ca ([76.10.145.34]:49067 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804AbZKVCjv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 21 Nov 2009 21:39:51 -0500
+In-Reply-To: <yq1einss91u.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Robert Hancock <hancockrwd@gmail.com>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <willy@wil.cx>
 
-ahci can drive the Promise PDC42819, but obviously it can only use SATA
-disks connected to this controller. The controller can actually support
-SAS disks as well, but we only know how to use it in it's AHCI mode.
+Martin K. Petersen wrote:
+> Mark> The sata_mv driver will choke the chipset if the TRIM command
+> Mark> involves more than one sector of TRIM data.
+> 
+> We never issue more than a single sector.
+..
 
-Add a message to let users know that because ahci is driving their chip
-they can only use the SATA disks connected to this controller.
+Today.
 
-Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
----
- drivers/ata/ahci.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+:)
 
-Index: linux-2.6/drivers/ata/ahci.c
-===================================================================
---- linux-2.6.orig/drivers/ata/ahci.c
-+++ linux-2.6/drivers/ata/ahci.c
-@@ -2988,6 +2988,14 @@ static int ahci_init_one(struct pci_dev
- 	if (pdev->vendor == PCI_VENDOR_ID_MARVELL && !marvell_enable)
- 		return -ENODEV;
-
-+	/* Promise's PDC42819 is a SAS/SATA controller that has an AHCI mode.
-+	 * At the moment, we can only use the AHCI mode. Let the users know
-+	 * that for SAS drives they're out of luck.
-+	 */
-+	if (pdev->vendor == PCI_VENDOR_ID_PROMISE)
-+		dev_printk(KERN_INFO, &pdev->dev, "PDC42819 "
-+			   "can only drive SATA devices with this driver\n");
-+
- 	/* acquire resources */
- 	rc = pcim_enable_device(pdev);
- 	if (rc)
