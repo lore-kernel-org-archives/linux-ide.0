@@ -1,64 +1,33 @@
-From: "Pedanekar, Hemant" <hemantp@ti.com>
-Subject: Not able to set DMA mode other than default using hdparm
-Date: Mon, 23 Nov 2009 22:28:41 +0530
-Message-ID: <2A3DCF3DA181AD40BDE86A3150B27B6B02F6D66E3C@dbde02.ent.ti.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] block: Allow devices to indicate whether discarded
+	blocks are zeroed
+Date: Mon, 23 Nov 2009 12:03:25 -0500
+Message-ID: <20091123170325.GA23217@infradead.org>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-2-git-send-email-martin.petersen@oracle.com> <20091121101356.GA21716@infradead.org> <20091121195802.GC8502@parisc-linux.org> <4B08A543.909@rtr.ca> <4B0ABA2F.2090407@redhat.com> <87f94c370911230854v46c1dc35g417a54b8a415ba16@mail.gmail.com> <4B0AC038.6050606@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:46405 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128AbZKWQ6m convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 11:58:42 -0500
-Received: from dbdp20.itg.ti.com ([172.24.170.38])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id nANGwk6f026028
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Mon, 23 Nov 2009 10:58:48 -0600
-Content-Language: en-US
+Received: from bombadil.infradead.org ([18.85.46.34]:57866 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725AbZKWRDf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 12:03:35 -0500
+Content-Disposition: inline
+In-Reply-To: <4B0AC038.6050606@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: "davinci-linux-open-source@linux.davincidsp.com" <davinci-linux-open-source@linux.davincidsp.com>, "Pedanekar, Hemant" <hemantp@ti.com>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Mark Lord <liml@rtr.ca>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello,
+On Mon, Nov 23, 2009 at 12:02:48PM -0500, Ric Wheeler wrote:
+> I agree - the discard of the whole device is a good idea.
+>
+> I just want to make clear that "discard block X; write block X with 
+> zeroed data" undoes the discard in general :-)
 
-I am getting following error when trying to set DMA transfer mode as UD=
-MA2 on latest DaVinci (DM6467) git kernel using hdparm (9.27 or older):
-
-# ./hdparm -d1 -Xudma2  /dev/hda
-/dev/hda:hda: UDMA/66 mode selected
- setting using_dma to 1 (on)
-hda: UDMA/66 mode selected
- setting xfermode to 66 (UltraDMA mode2)
- HDIO_DRIVE_CMD(setxfermode) failed: Invalid argument
- using_dma     =3D  1 (on)
-
-It seems DMA mode setting other than the default mode returns this erro=
-r. That is, if I use "-Xudma4" in above command it returns success as U=
-DMA4 is the default mode on DM6467.
-
-I made following change which allows hdparm to set any supported DMA mo=
-de. Can anyone confirm if this is a hdparm compatibility (incorrect use=
- of ioctl?) or the patch below indeed fixes the issue?
-
-diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
-index d3440b5..6e7ae2b 100644
---- a/drivers/ide/ide-ioctls.c
-+++ b/drivers/ide/ide-ioctls.c
-@@ -162,7 +162,7 @@ static int ide_cmd_ioctl(ide_drive_t *drive, unsign=
-ed long arg)
-        if (tf->command =3D=3D ATA_CMD_SET_FEATURES &&
-            tf->feature =3D=3D SETFEATURES_XFER &&
-            tf->nsect >=3D XFER_SW_DMA_0) {
--               xfer_rate =3D ide_find_dma_mode(drive, XFER_UDMA_6);
-+               xfer_rate =3D ide_find_dma_mode(drive, tf->nsect);
-                if (xfer_rate !=3D tf->nsect) {
-                        err =3D -EINVAL;
-                        goto abort;
-
-
-Thanks.
--
-Hemant
-=A0
+We can skip the writing of zeroes if we know the device returns zeroed
+blocks after a trim.  Martin's patch exports that information to
+userspace, and once we have a nice enough interface (e.g. blkid or an
+ioctl) we can actually use it in mkfs to optimize the writing of zeroes
+away.  Raw growling in sysfs is a bit too nasty to add it to mkfs for
+those few blocks IMHO.
 
