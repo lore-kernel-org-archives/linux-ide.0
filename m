@@ -1,48 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] pata_hpt37x: add proper cable detection methods
-Date: Mon, 23 Nov 2009 21:07:22 +0100
-Message-ID: <200911232107.22868.bzolnier@gmail.com>
-References: <200911191910.44609.bzolnier@gmail.com> <4B0AE59F.7040202@ru.mvista.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: drivers/ide/au1xxx-ide.c: use resource_size()
+Date: Mon, 23 Nov 2009 12:20:38 -0800 (PST)
+Message-ID: <20091123.122038.64001211.davem@davemloft.net>
+References: <BD79186B4FD85F4B8E60E381CAEE190901EE5C0C@mi8nycmail19.Mi8.com>
+	<20091123.103810.44071453.davem@davemloft.net>
+	<BD79186B4FD85F4B8E60E381CAEE190901EE5C3E@mi8nycmail19.Mi8.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:42490 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756418AbZKWUIR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 15:08:17 -0500
-In-Reply-To: <4B0AE59F.7040202@ru.mvista.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50524
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755589AbZKWUUU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 15:20:20 -0500
+In-Reply-To: <BD79186B4FD85F4B8E60E381CAEE190901EE5C3E@mi8nycmail19.Mi8.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: hartleys@visionengravers.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Monday 23 November 2009 08:42:23 pm Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  drivers/ata/pata_hpt37x.c |   86 +++++++++++++++++++++++++++++-----------------
-> >  1 file changed, 56 insertions(+), 30 deletions(-)
-> 
-> > Index: b/drivers/ata/pata_hpt37x.c
-> > ===================================================================
-> > --- a/drivers/ata/pata_hpt37x.c
-> > +++ b/drivers/ata/pata_hpt37x.c
-> > @@ -303,6 +303,59 @@ static unsigned long hpt370a_filter(stru
-> 
->     As this driver still carries a version info, don't we need to update it?
+From: "H Hartley Sweeten" <hartleys@visionengravers.com>
+Date: Mon, 23 Nov 2009 15:01:02 -0500
 
-While doing the previously mentioned PATA rework I've looked at
-the ratio of patches actually updating version numbers and not
-doing so.  This lead me to the same conclusions as with version
-numbers in IDE drivers previously..
+> On Monday, November 23, 2009 11:38 AM, David Miller wrote:
+>>>  
+>>> -	ahwif->regbase = (u32)ioremap(res->start, res->end - res->start + 1);
+>>> +	ahwif->regbase = (u32)ioremap(res->start, resource_size(res));
+>>>  	if (ahwif->regbase == 0) {
+>>>  		ret = -ENOMEM;
+>>>  		goto out;
+>>
+>> That needs some fixing.  ioremap()'s return value is an
+>> "__iomem" pointer, not an integer.  ->regbase's type should be
+>> changed to something like "void __iomem *" etc.
+> 
+> FWIW, following is an updated patch that fixes the "__iomem" pointer.
 
-However this is just my opinion so if you for some reason would
-like to bump version numbers of some drivers I won't complain..
+Please, I've already applied your resource_size() patch, and you
+should submit a seperate patch relative to that in order to address
+the ioremap() pointer issues.
 
---
-Bartlomiej Zolnierkiewicz
+Thank you.
