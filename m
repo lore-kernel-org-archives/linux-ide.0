@@ -1,28 +1,37 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: drivers/ide/au1xxx-ide.c: use resource_size()
-Date: Mon, 23 Nov 2009 10:38:10 -0800 (PST)
-Message-ID: <20091123.103810.44071453.davem@davemloft.net>
-References: <BD79186B4FD85F4B8E60E381CAEE190901EE5BFD@mi8nycmail19.Mi8.com>
-	<20091123.102817.157628485.davem@davemloft.net>
-	<BD79186B4FD85F4B8E60E381CAEE190901EE5C0C@mi8nycmail19.Mi8.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] pata_hpt37x: add proper cable detection methods
+Date: Mon, 23 Nov 2009 22:42:23 +0300
+Message-ID: <4B0AE59F.7040202@ru.mvista.com>
+References: <200911191910.44609.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35520
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753062AbZKWShx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 13:37:53 -0500
-In-Reply-To: <BD79186B4FD85F4B8E60E381CAEE190901EE5C0C@mi8nycmail19.Mi8.com>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:6728 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1755098AbZKWTlc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 14:41:32 -0500
+In-Reply-To: <200911191910.44609.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hartleys@visionengravers.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: "H Hartley Sweeten" <hartleys@visionengravers.com>
-Date: Mon, 23 Nov 2009 13:37:05 -0500
+Hello.
 
-> I don't have to hardware to test this so I didn't want to dig to deeply
-> into fixing that.
+Bartlomiej Zolnierkiewicz wrote:
 
-Fair enough.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ata/pata_hpt37x.c |   86 +++++++++++++++++++++++++++++-----------------
+>  1 file changed, 56 insertions(+), 30 deletions(-)
+
+> Index: b/drivers/ata/pata_hpt37x.c
+> ===================================================================
+> --- a/drivers/ata/pata_hpt37x.c
+> +++ b/drivers/ata/pata_hpt37x.c
+> @@ -303,6 +303,59 @@ static unsigned long hpt370a_filter(stru
+
+    As this driver still carries a version info, don't we need to update it?
+
+MBR, Sergei
