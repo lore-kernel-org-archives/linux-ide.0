@@ -1,57 +1,72 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 1/4] block: Allow devices to indicate whether discarded
- blocks are zeroed
-Date: Mon, 23 Nov 2009 11:50:05 -0600
-Message-ID: <4B0ACB4D.1030403@redhat.com>
-References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-2-git-send-email-martin.petersen@oracle.com> <20091121101356.GA21716@infradead.org> <20091121195802.GC8502@parisc-linux.org> <4B08A543.909@rtr.ca> <4B0ABA2F.2090407@redhat.com> <87f94c370911230854v46c1dc35g417a54b8a415ba16@mail.gmail.com> <4B0AC038.6050606@redhat.com> <20091123170325.GA23217@infradead.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Not able to set DMA mode other than default using hdparm
+Date: Mon, 23 Nov 2009 19:10:03 +0100
+Message-ID: <200911231910.03383.bzolnier@gmail.com>
+References: <2A3DCF3DA181AD40BDE86A3150B27B6B02F6D66E3C@dbde02.ent.ti.com> <4B0AC9FE.1070504@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35977 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753218AbZKWRus (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Nov 2009 12:50:48 -0500
-In-Reply-To: <20091123170325.GA23217@infradead.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:57918 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932AbZKWSKz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Nov 2009 13:10:55 -0500
+Received: by ewy19 with SMTP id 19so2116598ewy.21
+        for <linux-ide@vger.kernel.org>; Mon, 23 Nov 2009 10:11:00 -0800 (PST)
+In-Reply-To: <4B0AC9FE.1070504@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Greg Freemyer <greg.freemyer@gmail.com>, Mark Lord <liml@rtr.ca>, Matthew Wilcox <matthew@wil.cx>, "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: "Pedanekar, Hemant" <hemantp@ti.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "davinci-linux-open-source@linux.davincidsp.com" <davinci-linux-open-source@linux.davincidsp.com>
 
-Christoph Hellwig wrote:
-> On Mon, Nov 23, 2009 at 12:02:48PM -0500, Ric Wheeler wrote:
->> I agree - the discard of the whole device is a good idea.
->>
->> I just want to make clear that "discard block X; write block X with 
->> zeroed data" undoes the discard in general :-)
+On Monday 23 November 2009 06:44:30 pm Sergei Shtylyov wrote:
+> Pedanekar, Hemant wrote:
 > 
-> We can skip the writing of zeroes if we know the device returns zeroed
-> blocks after a trim.  Martin's patch exports that information to
-> userspace, and once we have a nice enough interface (e.g. blkid or an
-> ioctl) we can actually use it in mkfs to optimize the writing of zeroes
-> away.  Raw growling in sysfs is a bit too nasty to add it to mkfs for
-> those few blocks IMHO.
+> > I am getting following error when trying to set DMA transfer mode as UDMA2 on latest DaVinci (DM6467) git kernel using hdparm (9.27 or older):
 > 
+> > # ./hdparm -d1 -Xudma2  /dev/hda
+> > /dev/hda:hda: UDMA/66 mode selected
+> >  setting using_dma to 1 (on)
+> > hda: UDMA/66 mode selected
+> >  setting xfermode to 66 (UltraDMA mode2)
+> >  HDIO_DRIVE_CMD(setxfermode) failed: Invalid argument
+> >  using_dma     =  1 (on)
+> 
+> > It seems DMA mode setting other than the default mode returns this error. That is, if I use "-Xudma4" in above command it returns success as UDMA4 is the default mode on DM6467.
+> 
+> > I made following change which allows hdparm to set any supported DMA mode. Can anyone confirm if this is a hdparm compatibility (incorrect use of ioctl?) or the patch below indeed fixes the issue?
+> 
+> > diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
+> > index d3440b5..6e7ae2b 100644
+> > --- a/drivers/ide/ide-ioctls.c
+> > +++ b/drivers/ide/ide-ioctls.c
+> > @@ -162,7 +162,7 @@ static int ide_cmd_ioctl(ide_drive_t *drive, unsigned long arg)
+> >         if (tf->command == ATA_CMD_SET_FEATURES &&
+> >             tf->feature == SETFEATURES_XFER &&
+> >             tf->nsect >= XFER_SW_DMA_0) {
+> > -               xfer_rate = ide_find_dma_mode(drive, XFER_UDMA_6);
+> > +               xfer_rate = ide_find_dma_mode(drive, tf->nsect);
+> >                 if (xfer_rate != tf->nsect) {
+> >                         err = -EINVAL;
+> >                         goto abort;
+> > 
+> 
+>     Looks like the patch is correct, the following commit has introduced the 
+> mistake:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=a9c415090710a108edcd81b3392b90396f190a9a
 
-well, in testing, I've found that not all devices which claim to return
-0s post-trim, do.
+Indeed, there is a thinko in the above commit and the patch corrects it.
 
-For example one ssd I have, if I pattern 1M of 0xaf, then trim from
-512k to 1M, and read it back (all IO done direct) I get:
+>     Could you resubmit your patch with proper description and sign-off?
 
-00000000  af af af af af af af af  af af af af af af af af
-*
-00080000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-*
-000a9000  af af af af af af af af  af af af af af af af af
-*
-00100000
+You may also add:
 
-with scraps of data left over at 0xA9000.
+	Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-So for the very few blocks that we zero at mkfs (thinking xfs here,
-anyway) I'd really rather just zero them post-trim to be safe, at least
-for now.
+while at it:
 
--Eric
-
+Thanks.
+--
+Bartlomiej Zolnierkiewicz
