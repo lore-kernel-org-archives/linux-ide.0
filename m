@@ -1,121 +1,84 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_hpt{37x|3x2n}: fix timing register masks
-Date: Wed, 25 Nov 2009 00:15:52 +0400
-Message-ID: <200911242315.52826.sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_hpt366: fix timing register documentation
+Date: Wed, 25 Nov 2009 00:17:31 +0400
+Message-ID: <200911242317.31495.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:10697 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:54756 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S932508AbZKXUO7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 15:14:59 -0500
+	with SMTP id S932611AbZKXUQh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 15:16:37 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-These drivers inherited from the older 'hpt366' IDE driver the buggy timing
-register masks in their set_piomode() metods. As a result, too low command
-cycle active time is programmed for slow PIO modes.  Quite fortunately, it's
-later "fixed up" by the set_dmamode() methods which also "helpfully" reprogram
-the command timings, usually to PIO mode 4.
+The comment in the driver actually describes HPT37x's timing register layout,
+which is different from HPT36x.  Fix it and reformat the comment, while at it.
 
-However, the drivers added some breakage of their own too:  the bit that they
-set/clear to control the FIFO is wrong -- it's actually the MSB of the command
-cycle setup time; setting it in DMA mode is also wrong as this bit is only for
-PIO actually...
-
-Fix all this and bump the drivers' versions, accounting for recenjt patches
-that forgot to do it...
+Bump the driver version, accounting for several patches that forgot to do it.
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: stable@kernel.org
 
 ---
-The patch is against the recent Linus' tree. It's intended to go into all
-stable kernels starting with 2.6.19, when the PATA drivers were first merged.
+The patch is against the recent Linus' tree.
 
- drivers/ata/pata_hpt37x.c  |   13 ++++++-------
- drivers/ata/pata_hpt3x2n.c |   13 ++++++-------
- 2 files changed, 12 insertions(+), 14 deletions(-)
+ drivers/ata/pata_hpt366.c |   30 ++++++++++++++----------------
+ 1 files changed, 14 insertions(+), 16 deletions(-)
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
+Index: linux-2.6/drivers/ata/pata_hpt366.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
+--- linux-2.6.orig/drivers/ata/pata_hpt366.c
++++ linux-2.6/drivers/ata/pata_hpt366.c
+@@ -27,7 +27,7 @@
  #include <linux/libata.h>
  
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.12"
-+#define DRV_VERSION	"0.6.14"
+ #define DRV_NAME	"pata_hpt366"
+-#define DRV_VERSION	"0.6.2"
++#define DRV_VERSION	"0.6.7"
  
  struct hpt_clock {
- 	u8	xfer_speed;
-@@ -404,9 +404,9 @@ static void hpt370_set_piomode(struct at
+ 	u8	xfer_mode;
+@@ -36,24 +36,22 @@ struct hpt_clock {
  
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt37x_find_mode(ap, adev->pio_mode);
--	mode &= ~0x8000000;	/* No FIFO in PIO */
--	mode &= ~0x30070000;	/* Leave config bits alone */
--	reg &= 0x30070000;	/* Strip timing bits */
-+	mode &= ~0x80000000;	/* Disable FIFO */
-+	mode &= ~0x303C0000;	/* Leave config/UDMA bits alone */
-+	reg &= 0x303C0000;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-@@ -438,9 +438,8 @@ static void hpt370_set_dmamode(struct at
- 
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt37x_find_mode(ap, adev->dma_mode);
--	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
--	mode &= ~0xC0000000;	/* Leave config bits alone */
--	reg &= 0xC0000000;	/* Strip timing bits */
-+	mode &= ~0xCE03FE00;	/* Leave config/command bits alone */
-+	reg &= 0xCE03FE00;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
-+++ linux-2.6/drivers/ata/pata_hpt3x2n.c
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt3x2n"
--#define DRV_VERSION	"0.3.4"
-+#define DRV_VERSION	"0.3.7"
- 
- enum {
- 	HPT_PCI_FAST	=	(1 << 31),
-@@ -185,9 +185,9 @@ static void hpt3x2n_set_piomode(struct a
- 
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt3x2n_find_mode(ap, adev->pio_mode);
--	mode &= ~0x8000000;	/* No FIFO in PIO */
--	mode &= ~0x30070000;	/* Leave config bits alone */
--	reg &= 0x30070000;	/* Strip timing bits */
-+	mode &= ~0x80000000;	/* Disable FIFO */
-+	mode &= ~0x303C0000;	/* Leave config/UDMA bits alone */
-+	reg &= 0x303C0000;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-@@ -218,9 +218,8 @@ static void hpt3x2n_set_dmamode(struct a
- 
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt3x2n_find_mode(ap, adev->dma_mode);
--	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
--	mode &= ~0xC0000000;	/* Leave config bits alone */
--	reg &= 0xC0000000;	/* Strip timing bits */
-+	mode &= ~0xCE03FE00;	/* Leave config/command bits alone */
-+	reg &= 0xCE03FE00;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
+ /* key for bus clock timings
+  * bit
+- * 0:3    data_high_time. inactive time of DIOW_/DIOR_ for PIO and MW
+- *        DMA. cycles = value + 1
+- * 4:8    data_low_time. active time of DIOW_/DIOR_ for PIO and MW
+- *        DMA. cycles = value + 1
+- * 9:12   cmd_high_time. inactive time of DIOW_/DIOR_ during task file
++ * 0:3    data_high_time. Inactive time of DIOW_/DIOR_ for PIO and MW DMA.
++ *        cycles = value + 1
++ * 4:7    data_low_time. Active time of DIOW_/DIOR_ for PIO and MW DMA.
++ *        cycles = value + 1
++ * 8:11   cmd_high_time. Inactive time of DIOW_/DIOR_ during task file
+  *        register access.
+- * 13:17  cmd_low_time. active time of DIOW_/DIOR_ during task file
++ * 12:15  cmd_low_time. Active time of DIOW_/DIOR_ during task file
+  *        register access.
+- * 18:21  udma_cycle_time. clock freq and clock cycles for UDMA xfer.
+- *        during task file register access.
+- * 22:24  pre_high_time. time to initialize 1st cycle for PIO and MW DMA
+- *        xfer.
+- * 25:27  cmd_pre_high_time. time to initialize 1st PIO cycle for task
++ * 16:18  udma_cycle_time. Clock cycles for UDMA xfer?
++ * 19:21  pre_high_time. Time to initialize 1st cycle for PIO and MW DMA xfer.
++ * 22:24  cmd_pre_high_time. Time to initialize 1st PIO cycle for task file
+  *        register access.
+- * 28     UDMA enable
+- * 29     DMA enable
+- * 30     PIO_MST enable. if set, the chip is in bus master mode during
+- *        PIO.
++ * 28     UDMA enable.
++ * 29     DMA  enable.
++ * 30     PIO_MST enable. If set, the chip is in bus master mode during
++ *        PIO xfer.
+  * 31     FIFO enable.
+  */
  
 
