@@ -1,53 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Need Info about IDE driver
-Date: Tue, 24 Nov 2009 17:16:07 +0100
-Message-ID: <200911241716.07836.bzolnier@gmail.com>
-References: <846629303ABF174A9EA5BB26D6965A594D5465@MX2.AlphionCorp.local>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement ATAPI_HORKAGE_NOPIO
+	and apply it to GGW-H10N
+Date: Tue, 24 Nov 2009 09:50:03 -0700
+Message-ID: <e9c3a7c20911240850t6001bce0ua951526061dadb28@mail.gmail.com>
+References: <4857313A.1000405@kernel.org>
+	 <20080617094354.338e186b@lxorguk.ukuu.org.uk>
+	 <48578080.5030605@kernel.org> <20080617095439.GA9359@lukeross.name>
+	 <20080617110450.668f37e2@lxorguk.ukuu.org.uk>
+	 <4857ADC3.3040106@kernel.org> <20080618114828.GB19903@lukeross.name>
+	 <4858F894.6030409@garzik.org> <4AFDF5A8.1050005@gmail.com>
+	 <4AFFB8ED.9050404@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:34219 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933231AbZKXQRc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 11:17:32 -0500
-In-Reply-To: <846629303ABF174A9EA5BB26D6965A594D5465@MX2.AlphionCorp.local>
+Received: from mail-vw0-f192.google.com ([209.85.212.192]:42522 "EHLO
+	mail-vw0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933443AbZKXQt6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 11:49:58 -0500
+Received: by vws30 with SMTP id 30so1862243vws.33
+        for <linux-ide@vger.kernel.org>; Tue, 24 Nov 2009 08:50:04 -0800 (PST)
+In-Reply-To: <4AFFB8ED.9050404@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sachin Rane <SRane@alphion.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jeff@garzik.org>, Luke Ross <luke@lukeross.name>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+On Sun, Nov 15, 2009 at 1:16 AM, Tejun Heo <tj@kernel.org> wrote:
+> I'm waiting for Dan's further report.
 
-Hi,
+After pressing a bit more for details, the customer reports that they
+have resolved the issue.  I was hoping to get details on the malformed
+request that was being sent so that maybe the kernel could report an
+error rather than silently dropping the initial command and timing out
+a subsequent command... no such luck.
 
-On Tuesday 24 November 2009 02:02:35 pm Sachin Rane wrote:
-> 
-> Hi,
->  
-> I am new to  'IDE' Linux driver.
-> Before writing this mail I tried to get information from internet but
-> couldn't hit the website which can give developer point of view
-> information.
->  
-> I am going through the code '
-> kernel-2.6.16.1-ts.amcc440gx.basic.1/drivers/ide/pci/siimage.c' and user
-> manual for 'Sil0680' to understand how the IDE driver works.
-> 
-> I have very basic questions:
-> 1. What does mean the value '2' i.e. 'Custom' which has been set for
-> 'hwif->mmio'
+Thanks for the attention.
 
-'Custom' value is gone in newer kernels and it is rather unlikely that you'll
-find people interested in the community support for 3.5 years old kernel.
-
-> 2. Where I can find details about 'TaskFile'?
-
-http://ata.wiki.kernel.org/index.php/Developer_Resources
-
-PS Please cc: linux-ide@vger.kernel.org mailing list on discussions related
-to Linux ATA support.
-
-Thanks.
---
-Bartlomiej Zolnierkiewicz
+Regards,
+Dan
