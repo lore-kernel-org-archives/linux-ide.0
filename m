@@ -1,84 +1,29 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_hpt366: fix timing register documentation
-Date: Wed, 25 Nov 2009 00:17:31 +0400
-Message-ID: <200911242317.31495.sshtylyov@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata: use pci_dev->revision
+Date: Tue, 24 Nov 2009 21:07:53 +0000
+Message-ID: <20091124210753.46dd7c45@lxorguk.ukuu.org.uk>
+References: <200911242154.49540.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:54756 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S932611AbZKXUQh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 15:16:37 -0500
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39669 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932736AbZKXVGJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 16:06:09 -0500
+In-Reply-To: <200911242154.49540.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-The comment in the driver actually describes HPT37x's timing register layout,
-which is different from HPT36x.  Fix it and reformat the comment, while at it.
+On Tue, 24 Nov 2009 22:54:49 +0400
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
-Bump the driver version, accounting for several patches that forgot to do it.
+> Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID, so
+> they weren't converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65
+> (PCI: Change all drivers to use pci_device->revision).
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
----
-The patch is against the recent Linus' tree.
-
- drivers/ata/pata_hpt366.c |   30 ++++++++++++++----------------
- 1 files changed, 14 insertions(+), 16 deletions(-)
-
-Index: linux-2.6/drivers/ata/pata_hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt366.c
-+++ linux-2.6/drivers/ata/pata_hpt366.c
-@@ -27,7 +27,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt366"
--#define DRV_VERSION	"0.6.2"
-+#define DRV_VERSION	"0.6.7"
- 
- struct hpt_clock {
- 	u8	xfer_mode;
-@@ -36,24 +36,22 @@ struct hpt_clock {
- 
- /* key for bus clock timings
-  * bit
-- * 0:3    data_high_time. inactive time of DIOW_/DIOR_ for PIO and MW
-- *        DMA. cycles = value + 1
-- * 4:8    data_low_time. active time of DIOW_/DIOR_ for PIO and MW
-- *        DMA. cycles = value + 1
-- * 9:12   cmd_high_time. inactive time of DIOW_/DIOR_ during task file
-+ * 0:3    data_high_time. Inactive time of DIOW_/DIOR_ for PIO and MW DMA.
-+ *        cycles = value + 1
-+ * 4:7    data_low_time. Active time of DIOW_/DIOR_ for PIO and MW DMA.
-+ *        cycles = value + 1
-+ * 8:11   cmd_high_time. Inactive time of DIOW_/DIOR_ during task file
-  *        register access.
-- * 13:17  cmd_low_time. active time of DIOW_/DIOR_ during task file
-+ * 12:15  cmd_low_time. Active time of DIOW_/DIOR_ during task file
-  *        register access.
-- * 18:21  udma_cycle_time. clock freq and clock cycles for UDMA xfer.
-- *        during task file register access.
-- * 22:24  pre_high_time. time to initialize 1st cycle for PIO and MW DMA
-- *        xfer.
-- * 25:27  cmd_pre_high_time. time to initialize 1st PIO cycle for task
-+ * 16:18  udma_cycle_time. Clock cycles for UDMA xfer?
-+ * 19:21  pre_high_time. Time to initialize 1st cycle for PIO and MW DMA xfer.
-+ * 22:24  cmd_pre_high_time. Time to initialize 1st PIO cycle for task file
-  *        register access.
-- * 28     UDMA enable
-- * 29     DMA enable
-- * 30     PIO_MST enable. if set, the chip is in bus master mode during
-- *        PIO.
-+ * 28     UDMA enable.
-+ * 29     DMA  enable.
-+ * 30     PIO_MST enable. If set, the chip is in bus master mode during
-+ *        PIO xfer.
-  * 31     FIFO enable.
-  */
- 
-
+Acked-by: Alan Cox <alan@linux.intel.com>
