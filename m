@@ -1,54 +1,53 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 3/4] libata: Report zeroed read after Trim and max	discard
- size
-Date: Tue, 24 Nov 2009 10:20:28 -0500
-Message-ID: <4B0BF9BC.3080006@teksavvy.com>
-References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-4-git-send-email-martin.petersen@oracle.com> <20091121104923.GB30153@infradead.org> <yq11vjrskfu.fsf@sermon.lab.mkp.net> <20091124143508.GB21629@infradead.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Need Info about IDE driver
+Date: Tue, 24 Nov 2009 17:16:07 +0100
+Message-ID: <200911241716.07836.bzolnier@gmail.com>
+References: <846629303ABF174A9EA5BB26D6965A594D5465@MX2.AlphionCorp.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:64159 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757339AbZKXPaJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 10:30:09 -0500
-In-Reply-To: <20091124143508.GB21629@infradead.org>
+Received: from mail-ew0-f215.google.com ([209.85.219.215]:34219 "EHLO
+	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933231AbZKXQRc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 11:17:32 -0500
+In-Reply-To: <846629303ABF174A9EA5BB26D6965A594D5465@MX2.AlphionCorp.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sachin Rane <SRane@alphion.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Sat, Nov 21, 2009 at 03:16:05PM -0500, Martin K. Petersen wrote:
->> I was trying to help Eric figure out why his drive pooped on big Trim
->> requests.  For WRITE SAME the limit is inherent in the arguments,
->> whereas our SATL implementation is limited by the 512-byte WRITE SAME
->> payload.  So I needed a way to convey this up the stack.
->>
->> Since you already return a B0 VPD page I thought it would be a
->> convenient place to communicate the max without having to tweak the
->> queue limits directly from within libata.
->>
->> You are right that I'm relying on fuzziness in SBC which requires both
->> the max LBA count and the descriptor count to be specified for UNMAP.
+
+Hi,
+
+On Tuesday 24 November 2009 02:02:35 pm Sachin Rane wrote:
 > 
-> I think the better way is to make sure we can support any TRIM that
-> can be sent down.  Given that TRIM is not NCQ-capable we can just
-> allocate one buffer for the TRIM ranges per TRIM capable device.
-..
+> Hi,
+>  
+> I am new to  'IDE' Linux driver.
+> Before writing this mail I tried to get information from internet but
+> couldn't hit the website which can give developer point of view
+> information.
+>  
+> I am going through the code '
+> kernel-2.6.16.1-ts.amcc440gx.basic.1/drivers/ide/pci/siimage.c' and user
+> manual for 'Sil0680' to understand how the IDE driver works.
+> 
+> I have very basic questions:
+> 1. What does mean the value '2' i.e. 'Custom' which has been set for
+> 'hwif->mmio'
 
-Good approach.
+'Custom' value is gone in newer kernels and it is rather unlikely that you'll
+find people interested in the community support for 3.5 years old kernel.
 
-I suppose that buffer would be only 512 bytes long, per device?
-That might be a bit restrictive, as TRIM can handle much larger
-requests, and some drives (Indinlinx-based at least) prefer large
-TRIM lists at present.
+> 2. Where I can find details about 'TaskFile'?
 
-On the other hand, the Marvell chipsets cannot handle more than a
-single sector of data without first fixing the driver to work around
-chipset bugs.  That's probably unique to sata_mv, though.
+http://ata.wiki.kernel.org/index.php/Developer_Resources
 
-Cheers
+PS Please cc: linux-ide@vger.kernel.org mailing list on discussions related
+to Linux ATA support.
 
-Mark Lord
-
+Thanks.
+--
+Bartlomiej Zolnierkiewicz
