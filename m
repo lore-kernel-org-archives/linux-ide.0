@@ -1,40 +1,237 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement ATAPI_HORKAGE_NOPIO
-	and apply it to GGW-H10N
-Date: Tue, 24 Nov 2009 09:50:03 -0700
-Message-ID: <e9c3a7c20911240850t6001bce0ua951526061dadb28@mail.gmail.com>
-References: <4857313A.1000405@kernel.org>
-	 <20080617094354.338e186b@lxorguk.ukuu.org.uk>
-	 <48578080.5030605@kernel.org> <20080617095439.GA9359@lukeross.name>
-	 <20080617110450.668f37e2@lxorguk.ukuu.org.uk>
-	 <4857ADC3.3040106@kernel.org> <20080618114828.GB19903@lukeross.name>
-	 <4858F894.6030409@garzik.org> <4AFDF5A8.1050005@gmail.com>
-	 <4AFFB8ED.9050404@kernel.org>
+From: "Bhartiya Anju-B07263" <B07263@freescale.com>
+Subject: PMP hot plug issue in kernel
+Date: Tue, 24 Nov 2009 18:05:41 +0530
+Message-ID: <0BFAB844762735448F252416AE17AB5E0124ED35@zin33exm23.fsl.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f192.google.com ([209.85.212.192]:42522 "EHLO
-	mail-vw0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933443AbZKXQt6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 11:49:58 -0500
-Received: by vws30 with SMTP id 30so1862243vws.33
-        for <linux-ide@vger.kernel.org>; Tue, 24 Nov 2009 08:50:04 -0800 (PST)
-In-Reply-To: <4AFFB8ED.9050404@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============7498635016997902948=="
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+Content-class: urn:content-classes:message
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, "Chen, Eric" <YunBin.Chen@Honeywell.com>, Kalra Ashish-B00888 <B00888@freescale.com>, Ensheng.Huang@exar.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jeff@garzik.org>, Luke Ross <luke@lukeross.name>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sun, Nov 15, 2009 at 1:16 AM, Tejun Heo <tj@kernel.org> wrote:
-> I'm waiting for Dan's further report.
+This is a multi-part message in MIME format.
 
-After pressing a bit more for details, the customer reports that they
-have resolved the issue.  I was hoping to get details on the malformed
-request that was being sent so that maybe the kernel could report an
-error rather than silently dropping the initial command and timing out
-a subsequent command... no such luck.
+--===============7498635016997902948==
+Content-class: urn:content-classes:message
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01CA6D02.A27AEFD8"
 
-Thanks for the attention.
+This is a multi-part message in MIME format.
 
-Regards,
-Dan
+------_=_NextPart_001_01CA6D02.A27AEFD8
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
+
+Hi All,
+=20
+Recently came across an issue which is decribed below.
+=20
+Setup: Port Multiplier with 2 HDD's connected to it; Port multiplier is
+connected to a SATA port of the Host Controller.
+=20
+Test: HDD1 is mounted and using dd command a file of size 512MB is being
+written on it.
+Command: time sh -c "dd if=3D/dev/zero of=3D/mnt/hd/ddfile bs=3D1k
+count=3D512000 && sync"
+=20
+While this command is running, if the second HDD on PMP is plugged out,
+the R/W speed of the first HDD gets affected.
+Please see the results of experiments on 2.6.31 kernel.
+=20
+Plug Out	 Plug in	 Normal=09
+real    0m34.433s
+user    0m0.932s
+sys     0m21.352s	 real    0m23.726s
+user    0m0.908s
+sys     0m21.388s	 real    0m23.329s
+user    0m1.132s
+sys     0m20.968s=09
+=20
+The results are similiar with multiple Port Multipliers (Si3726, Si4726
+and EXAR PMP) and multiple Host controllers (Si3132  and sata_fsl).
+=20
+As the behaviour with multiple Host controllers and Port Multipliers is
+the same so this seems to be an issue with libata stack.
+Is there already a patch for this issue? Any pointers or help to fix
+this will be greatly appreciated.
+=20
+Best Regards,
+Anju
+Applications Engineer=20
+Freescale Semiconductor
+
+------_=_NextPart_001_01CA6D02.A27AEFD8
+Content-Type: text/html;
+	charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dus-ascii">
+<META content=3D"MSHTML 6.00.2900.3627" name=3DGENERATOR></HEAD>
+<BODY>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009>Hi=20
+All,</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D771454605-24112009></SPAN></FONT>&nbsp;</DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN =
+class=3D771454605-24112009>Recently came across=20
+an issue which is decribed below.</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D771454605-24112009></SPAN></FONT>&nbsp;</DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN =
+class=3D771454605-24112009>Setup:&nbsp;Port=20
+Multiplier with 2 HDD's connected to it; Port multiplier is connected to =
+a SATA=20
+port of the Host Controller.</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D771454605-24112009></SPAN></FONT>&nbsp;</DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009>Test: =
+HDD1 is=20
+mounted and using dd command a file of size 512MB is being written on=20
+it.</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN =
+class=3D771454605-24112009>Command: <SPAN=20
+lang=3DEN>time sh -c "dd if=3D/dev/zero of=3D/mnt/hd/ddfile bs=3D1k =
+count=3D512000=20
+&amp;&amp; sync"</SPAN></SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN=20
+lang=3DEN></SPAN></SPAN></FONT>&nbsp;</DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN =
+lang=3DEN>While=20
+this command is running, if the second HDD on PMP is plugged out, the =
+R/W speed=20
+of the first HDD gets affected.</SPAN></SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN =
+lang=3DEN>Please=20
+see the results of experiments on&nbsp;2.6.31 =
+kernel.</SPAN></SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN=20
+lang=3DEN></SPAN></SPAN></FONT>&nbsp;</DIV><FONT size=3D2><SPAN=20
+class=3D771454605-24112009><SPAN lang=3DEN>
+<DIV>
+<TABLE style=3D"WIDTH: 388pt; BORDER-COLLAPSE: collapse" cellSpacing=3D0 =
+
+cellPadding=3D0 width=3D518 border=3D0 x:str>
+  <COLGROUP><FONT face=3DArial>
+  <COL style=3D"WIDTH: 137pt; mso-width-source: userset; mso-width-alt: =
+6692"=20
+  width=3D183>
+  <COL style=3D"WIDTH: 141pt; mso-width-source: userset; mso-width-alt: =
+6875"=20
+  width=3D188>
+  <COL style=3D"WIDTH: 110pt; mso-width-source: userset; mso-width-alt: =
+5376"=20
+  width=3D147></FONT>
+  <TBODY>
+  <TR style=3D"HEIGHT: 12.75pt" height=3D17>
+    <TD class=3Dxl22=20
+    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
+windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; WIDTH: =
+137pt; BORDER-BOTTOM: windowtext 0.5pt solid; HEIGHT: 12.75pt; =
+BACKGROUND-COLOR: transparent"=20
+    width=3D183 height=3D17><FONT face=3DArial size=3D2><STRONG>Plug=20
+      Out</STRONG></FONT></TD>
+    <TD class=3Dxl22=20
+    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
+windowtext 0.5pt solid; BORDER-LEFT: windowtext; WIDTH: 141pt; =
+BORDER-BOTTOM: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
+    width=3D188><FONT face=3DArial size=3D2><STRONG>Plug =
+in</STRONG></FONT></TD>
+    <TD class=3Dxl22=20
+    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
+windowtext 0.5pt solid; BORDER-LEFT: windowtext; WIDTH: 110pt; =
+BORDER-BOTTOM: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
+    width=3D147><FONT face=3DArial =
+size=3D2><STRONG>Normal</STRONG></FONT></TD></TR>
+  <TR style=3D"HEIGHT: 42pt; mso-height-source: userset" height=3D56>
+    <TD class=3Dxl23=20
+    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
+windowtext; BORDER-LEFT: windowtext 0.5pt solid; WIDTH: 137pt; =
+BORDER-BOTTOM: windowtext 0.5pt solid; HEIGHT: 42pt; BACKGROUND-COLOR: =
+transparent"=20
+    width=3D183 height=3D56><FONT face=3DArial =
+size=3D2><STRONG>real<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
+</SPAN>0m34.433s<BR>user<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
+</SPAN>0m0.932s<BR>sys<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;=20
+      </SPAN>0m21.352s</STRONG></FONT></TD>
+    <TD class=3Dxl23=20
+    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
+windowtext; BORDER-LEFT: windowtext; WIDTH: 141pt; BORDER-BOTTOM: =
+windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
+    width=3D188><FONT face=3DArial size=3D2><STRONG>real<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
+</SPAN>0m23.726s<BR>user<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
+</SPAN>0m0.908s<BR>sys<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;=20
+      </SPAN>0m21.388s</STRONG></FONT></TD>
+    <TD class=3Dxl23=20
+    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
+windowtext; BORDER-LEFT: windowtext; WIDTH: 110pt; BORDER-BOTTOM: =
+windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
+    width=3D147><STRONG><FONT face=3DArial size=3D2>real<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
+</SPAN>0m23.329s<BR>user<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
+</SPAN>0m1.132s<BR>sys<SPAN=20
+      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;=20
+      </SPAN>0m20.968s</FONT></STRONG></TD></TR></TBODY></TABLE></DIV>
+<DIV><FONT face=3DArial></FONT>&nbsp;</DIV>
+<DIV><SPAN class=3D771454605-24112009><FONT face=3DArial>The results are =
+similiar=20
+with multiple Port Multipliers (Si3726, Si4726 and EXAR PMP) and =
+multiple Host=20
+controllers (Si3132&nbsp;&nbsp;and sata_fsl).</FONT></SPAN></DIV>
+<DIV><SPAN class=3D771454605-24112009><FONT =
+face=3DArial></FONT></SPAN>&nbsp;</DIV>
+<DIV><SPAN class=3D771454605-24112009><FONT face=3DArial>As the =
+behaviour with=20
+multiple Host controllers and Port Multipliers is the same so this seems =
+to be=20
+an issue with libata stack.</FONT></SPAN></DIV>
+<DIV><SPAN class=3D771454605-24112009><FONT face=3DArial>Is there =
+already a patch=20
+for this issue? Any pointers or help to fix this will be greatly=20
+appreciated.</FONT></SPAN></DIV>
+<DIV><SPAN class=3D771454605-24112009><FONT =
+face=3DArial></FONT></SPAN>&nbsp;</DIV>
+<DIV></SPAN></SPAN></FONT><FONT face=3DArial><FONT size=3D2>Best =
+Regards<SPAN=20
+class=3D771454605-24112009>,</SPAN></FONT></FONT></DIV>
+<DIV align=3Dleft><FONT face=3DArial size=3D2>Anju</FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN =
+class=3D771454605-24112009>Applications=20
+Engineer </SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN =
+class=3D771454605-24112009>Freescale=20
+Semiconductor</SPAN></FONT></DIV></BODY></HTML>
+
+------_=_NextPart_001_01CA6D02.A27AEFD8--
+
+--===============7498635016997902948==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Linuxppc-dev mailing list
+Linuxppc-dev@lists.ozlabs.org
+https://lists.ozlabs.org/listinfo/linuxppc-dev
+--===============7498635016997902948==--
