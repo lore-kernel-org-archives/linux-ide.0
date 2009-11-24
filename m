@@ -1,71 +1,33 @@
-From: "Bhartiya Anju-B07263" <B07263@freescale.com>
-Subject: FW: PMP hot plug issue in kernel
-Date: Tue, 24 Nov 2009 18:58:04 +0530
-Message-ID: <0BFAB844762735448F252416AE17AB5E0124ED43@zin33exm23.fsl.freescale.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/4] libata: Report zeroed read after Trim and max
+	discard size
+Date: Tue, 24 Nov 2009 09:35:08 -0500
+Message-ID: <20091124143508.GB21629@infradead.org>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-4-git-send-email-martin.petersen@oracle.com> <20091121104923.GB30153@infradead.org> <yq11vjrskfu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:51064 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932790AbZKXN2B convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 08:28:01 -0500
-Received: from de01smr01.freescale.net (de01smr01.freescale.net [10.208.0.31])
-	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id nAODS6hO007630
-	for <linux-ide@vger.kernel.org>; Tue, 24 Nov 2009 06:28:07 -0700 (MST)
-Received: from zin33exm23.fsl.freescale.net (zin33exm23.ap.freescale.net [10.232.192.22])
-	by de01smr01.freescale.net (8.13.1/8.13.0) with ESMTP id nAODWJkp006619
-	for <linux-ide@vger.kernel.org>; Tue, 24 Nov 2009 07:32:20 -0600 (CST)
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq11vjrskfu.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
- 
-	 Hi All,
+On Sat, Nov 21, 2009 at 03:16:05PM -0500, Martin K. Petersen wrote:
+> I was trying to help Eric figure out why his drive pooped on big Trim
+> requests.  For WRITE SAME the limit is inherent in the arguments,
+> whereas our SATL implementation is limited by the 512-byte WRITE SAME
+> payload.  So I needed a way to convey this up the stack.
+> 
+> Since you already return a B0 VPD page I thought it would be a
+> convenient place to communicate the max without having to tweak the
+> queue limits directly from within libata.
+> 
+> You are right that I'm relying on fuzziness in SBC which requires both
+> the max LBA count and the descriptor count to be specified for UNMAP.
 
-		 
-		Recently came across an issue which is decribed below.
-		 
-		Setup: Port Multiplier with 2 HDD's connected to it;
-Port multiplier is connected to a SATA port of the Host Controller.
-		 
-		Test: HDD1 is mounted and using dd command a file of
-size 512MB is being written on it.
-		Command: time sh -c "dd if=/dev/zero of=/mnt/hd/ddfile
-bs=1k count=512000 && sync"
-		 
-		While this command is running, if the second HDD on PMP
-is plugged out, the R/W speed of the first HDD gets affected.
-		Please see the results of experiments on 2.6.31 kernel.
-		 
-		Plug Out	 	 	
-		real    0m34.433s
-		user    0m0.932s
-		sys     0m21.352s	 
-
-		Plug in
-		real    0m23.726s
-		user    0m0.908s
-		sys     0m21.388s	 
-
-		Normal
-		real    0m23.329s
-		user    0m1.132s
-		sys     0m20.968s	
-		 
-		The results are similiar with multiple Port Multipliers
-(Si3726, Si4726 and EXAR PMP) and multiple Host controllers (Si3132  and
-sata_fsl).
-		 
-		As the behaviour with multiple Host controllers and Port
-Multipliers is the same so this seems to be an issue with libata stack.
-		Is there already a patch for this issue? Any pointers or
-help to fix this will be greatly appreciated.
-		 
-		Best Regards,
-		Anju
-		Applications Engineer 
-		Freescale Semiconductor
+I think the better way is to make sure we can support any TRIM that
+can be sent down.  Given that TRIM is not NCQ-capable we can just
+allocate one buffer for the TRIM ranges per TRIM capable device.
 
