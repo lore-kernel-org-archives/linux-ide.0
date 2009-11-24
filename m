@@ -1,237 +1,237 @@
-From: "Bhartiya Anju-B07263" <B07263@freescale.com>
-Subject: PMP hot plug issue in kernel
-Date: Tue, 24 Nov 2009 18:05:41 +0530
-Message-ID: <0BFAB844762735448F252416AE17AB5E0124ED35@zin33exm23.fsl.freescale.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ata: use pci_dev->revision
+Date: Tue, 24 Nov 2009 22:54:49 +0400
+Message-ID: <200911242154.49540.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============7498635016997902948=="
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-Content-class: urn:content-classes:message
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, "Chen, Eric" <YunBin.Chen@Honeywell.com>, Kalra Ashish-B00888 <B00888@freescale.com>, Ensheng.Huang@exar.com
-List-Id: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
-
---===============7498635016997902948==
-Content-class: urn:content-classes:message
-Content-Type: multipart/alternative;
-	boundary="----_=_NextPart_001_01CA6D02.A27AEFD8"
-
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01CA6D02.A27AEFD8
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
-
-Hi All,
-=20
-Recently came across an issue which is decribed below.
-=20
-Setup: Port Multiplier with 2 HDD's connected to it; Port multiplier is
-connected to a SATA port of the Host Controller.
-=20
-Test: HDD1 is mounted and using dd command a file of size 512MB is being
-written on it.
-Command: time sh -c "dd if=3D/dev/zero of=3D/mnt/hd/ddfile bs=3D1k
-count=3D512000 && sync"
-=20
-While this command is running, if the second HDD on PMP is plugged out,
-the R/W speed of the first HDD gets affected.
-Please see the results of experiments on 2.6.31 kernel.
-=20
-Plug Out	 Plug in	 Normal=09
-real    0m34.433s
-user    0m0.932s
-sys     0m21.352s	 real    0m23.726s
-user    0m0.908s
-sys     0m21.388s	 real    0m23.329s
-user    0m1.132s
-sys     0m20.968s=09
-=20
-The results are similiar with multiple Port Multipliers (Si3726, Si4726
-and EXAR PMP) and multiple Host controllers (Si3132  and sata_fsl).
-=20
-As the behaviour with multiple Host controllers and Port Multipliers is
-the same so this seems to be an issue with libata stack.
-Is there already a patch for this issue? Any pointers or help to fix
-this will be greatly appreciated.
-=20
-Best Regards,
-Anju
-Applications Engineer=20
-Freescale Semiconductor
-
-------_=_NextPart_001_01CA6D02.A27AEFD8
-Content-Type: text/html;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML><HEAD>
-<META http-equiv=3DContent-Type content=3D"text/html; =
-charset=3Dus-ascii">
-<META content=3D"MSHTML 6.00.2900.3627" name=3DGENERATOR></HEAD>
-<BODY>
-<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009>Hi=20
-All,</SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN=20
-class=3D771454605-24112009></SPAN></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN =
-class=3D771454605-24112009>Recently came across=20
-an issue which is decribed below.</SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN=20
-class=3D771454605-24112009></SPAN></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN =
-class=3D771454605-24112009>Setup:&nbsp;Port=20
-Multiplier with 2 HDD's connected to it; Port multiplier is connected to =
-a SATA=20
-port of the Host Controller.</SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN=20
-class=3D771454605-24112009></SPAN></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009>Test: =
-HDD1 is=20
-mounted and using dd command a file of size 512MB is being written on=20
-it.</SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN =
-class=3D771454605-24112009>Command: <SPAN=20
-lang=3DEN>time sh -c "dd if=3D/dev/zero of=3D/mnt/hd/ddfile bs=3D1k =
-count=3D512000=20
-&amp;&amp; sync"</SPAN></SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN=20
-lang=3DEN></SPAN></SPAN></FONT>&nbsp;</DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN =
-lang=3DEN>While=20
-this command is running, if the second HDD on PMP is plugged out, the =
-R/W speed=20
-of the first HDD gets affected.</SPAN></SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN =
-lang=3DEN>Please=20
-see the results of experiments on&nbsp;2.6.31 =
-kernel.</SPAN></SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN class=3D771454605-24112009><SPAN=20
-lang=3DEN></SPAN></SPAN></FONT>&nbsp;</DIV><FONT size=3D2><SPAN=20
-class=3D771454605-24112009><SPAN lang=3DEN>
-<DIV>
-<TABLE style=3D"WIDTH: 388pt; BORDER-COLLAPSE: collapse" cellSpacing=3D0 =
-
-cellPadding=3D0 width=3D518 border=3D0 x:str>
-  <COLGROUP><FONT face=3DArial>
-  <COL style=3D"WIDTH: 137pt; mso-width-source: userset; mso-width-alt: =
-6692"=20
-  width=3D183>
-  <COL style=3D"WIDTH: 141pt; mso-width-source: userset; mso-width-alt: =
-6875"=20
-  width=3D188>
-  <COL style=3D"WIDTH: 110pt; mso-width-source: userset; mso-width-alt: =
-5376"=20
-  width=3D147></FONT>
-  <TBODY>
-  <TR style=3D"HEIGHT: 12.75pt" height=3D17>
-    <TD class=3Dxl22=20
-    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
-windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; WIDTH: =
-137pt; BORDER-BOTTOM: windowtext 0.5pt solid; HEIGHT: 12.75pt; =
-BACKGROUND-COLOR: transparent"=20
-    width=3D183 height=3D17><FONT face=3DArial size=3D2><STRONG>Plug=20
-      Out</STRONG></FONT></TD>
-    <TD class=3Dxl22=20
-    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
-windowtext 0.5pt solid; BORDER-LEFT: windowtext; WIDTH: 141pt; =
-BORDER-BOTTOM: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
-    width=3D188><FONT face=3DArial size=3D2><STRONG>Plug =
-in</STRONG></FONT></TD>
-    <TD class=3Dxl22=20
-    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
-windowtext 0.5pt solid; BORDER-LEFT: windowtext; WIDTH: 110pt; =
-BORDER-BOTTOM: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
-    width=3D147><FONT face=3DArial =
-size=3D2><STRONG>Normal</STRONG></FONT></TD></TR>
-  <TR style=3D"HEIGHT: 42pt; mso-height-source: userset" height=3D56>
-    <TD class=3Dxl23=20
-    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
-windowtext; BORDER-LEFT: windowtext 0.5pt solid; WIDTH: 137pt; =
-BORDER-BOTTOM: windowtext 0.5pt solid; HEIGHT: 42pt; BACKGROUND-COLOR: =
-transparent"=20
-    width=3D183 height=3D56><FONT face=3DArial =
-size=3D2><STRONG>real<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
-</SPAN>0m34.433s<BR>user<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
-</SPAN>0m0.932s<BR>sys<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;=20
-      </SPAN>0m21.352s</STRONG></FONT></TD>
-    <TD class=3Dxl23=20
-    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
-windowtext; BORDER-LEFT: windowtext; WIDTH: 141pt; BORDER-BOTTOM: =
-windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
-    width=3D188><FONT face=3DArial size=3D2><STRONG>real<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
-</SPAN>0m23.726s<BR>user<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
-</SPAN>0m0.908s<BR>sys<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;=20
-      </SPAN>0m21.388s</STRONG></FONT></TD>
-    <TD class=3Dxl23=20
-    style=3D"BORDER-RIGHT: windowtext 0.5pt solid; BORDER-TOP: =
-windowtext; BORDER-LEFT: windowtext; WIDTH: 110pt; BORDER-BOTTOM: =
-windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"=20
-    width=3D147><STRONG><FONT face=3DArial size=3D2>real<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
-</SPAN>0m23.329s<BR>user<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp; =
-</SPAN>0m1.132s<BR>sys<SPAN=20
-      style=3D"mso-spacerun: yes">&nbsp;&nbsp;&nbsp;&nbsp;=20
-      </SPAN>0m20.968s</FONT></STRONG></TD></TR></TBODY></TABLE></DIV>
-<DIV><FONT face=3DArial></FONT>&nbsp;</DIV>
-<DIV><SPAN class=3D771454605-24112009><FONT face=3DArial>The results are =
-similiar=20
-with multiple Port Multipliers (Si3726, Si4726 and EXAR PMP) and =
-multiple Host=20
-controllers (Si3132&nbsp;&nbsp;and sata_fsl).</FONT></SPAN></DIV>
-<DIV><SPAN class=3D771454605-24112009><FONT =
-face=3DArial></FONT></SPAN>&nbsp;</DIV>
-<DIV><SPAN class=3D771454605-24112009><FONT face=3DArial>As the =
-behaviour with=20
-multiple Host controllers and Port Multipliers is the same so this seems =
-to be=20
-an issue with libata stack.</FONT></SPAN></DIV>
-<DIV><SPAN class=3D771454605-24112009><FONT face=3DArial>Is there =
-already a patch=20
-for this issue? Any pointers or help to fix this will be greatly=20
-appreciated.</FONT></SPAN></DIV>
-<DIV><SPAN class=3D771454605-24112009><FONT =
-face=3DArial></FONT></SPAN>&nbsp;</DIV>
-<DIV></SPAN></SPAN></FONT><FONT face=3DArial><FONT size=3D2>Best =
-Regards<SPAN=20
-class=3D771454605-24112009>,</SPAN></FONT></FONT></DIV>
-<DIV align=3Dleft><FONT face=3DArial size=3D2>Anju</FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN =
-class=3D771454605-24112009>Applications=20
-Engineer </SPAN></FONT></DIV>
-<DIV><FONT face=3DArial size=3D2><SPAN =
-class=3D771454605-24112009>Freescale=20
-Semiconductor</SPAN></FONT></DIV></BODY></HTML>
-
-------_=_NextPart_001_01CA6D02.A27AEFD8--
-
---===============7498635016997902948==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:29561 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S933857AbZKXSx7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Nov 2009 13:53:59 -0500
 Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-_______________________________________________
-Linuxppc-dev mailing list
-Linuxppc-dev@lists.ozlabs.org
-https://lists.ozlabs.org/listinfo/linuxppc-dev
---===============7498635016997902948==--
+Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID, so
+they weren't converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65
+(PCI: Change all drivers to use pci_device->revision).
+
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+---
+The patch is against the recent Linus' tree.
+
+ drivers/ata/pata_cmd64x.c  |    9 ++-------
+ drivers/ata/pata_hpt366.c  |    8 ++------
+ drivers/ata/pata_hpt37x.c  |   21 +++++++++------------
+ drivers/ata/pata_hpt3x2n.c |   15 +++++----------
+ drivers/ata/pata_sil680.c  |    6 ++----
+ 5 files changed, 20 insertions(+), 39 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_cmd64x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_cmd64x.c
++++ linux-2.6/drivers/ata/pata_cmd64x.c
+@@ -294,8 +294,6 @@ static struct ata_port_operations cmd648
+ 
+ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	u32 class_rev;
+-
+ 	static const struct ata_port_info cmd_info[6] = {
+ 		{	/* CMD 643 - no UDMA */
+ 			.flags = ATA_FLAG_SLAVE_POSS,
+@@ -345,18 +343,15 @@ static int cmd64x_init_one(struct pci_de
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class_rev);
+-	class_rev &= 0xFF;
+-
+ 	if (id->driver_data == 0)	/* 643 */
+ 		ata_pci_bmdma_clear_simplex(pdev);
+ 
+ 	if (pdev->device == PCI_DEVICE_ID_CMD_646) {
+ 		/* Does UDMA work ? */
+-		if (class_rev > 4)
++		if (pdev->revision > 4)
+ 			ppi[0] = &cmd_info[2];
+ 		/* Early rev with other problems ? */
+-		else if (class_rev == 1)
++		else if (pdev->revision == 1)
+ 			ppi[0] = &cmd_info[3];
+ 	}
+ 
+Index: linux-2.6/drivers/ata/pata_hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt366.c
++++ linux-2.6/drivers/ata/pata_hpt366.c
+@@ -344,7 +344,6 @@ static int hpt36x_init_one(struct pci_de
+ 	const struct ata_port_info *ppi[] = { &info_hpt366, NULL };
+ 
+ 	void *hpriv = NULL;
+-	u32 class_rev;
+ 	u32 reg1;
+ 	int rc;
+ 
+@@ -352,13 +351,10 @@ static int hpt36x_init_one(struct pci_de
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+-	class_rev &= 0xFF;
+-
+ 	/* May be a later chip in disguise. Check */
+ 	/* Newer chips are not in the HPT36x driver. Ignore them */
+-	if (class_rev > 2)
+-			return -ENODEV;
++	if (dev->revision > 2)
++		return -ENODEV;
+ 
+ 	hpt36x_init_chipset(dev);
+ 
+Index: linux-2.6/drivers/ata/pata_hpt37x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
++++ linux-2.6/drivers/ata/pata_hpt37x.c
+@@ -790,9 +790,8 @@ static int hpt37x_init_one(struct pci_de
+ 	static const int MHz[4] = { 33, 40, 50, 66 };
+ 	void *private_data = NULL;
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+-
++	u8 rev = dev->revision;
+ 	u8 irqmask;
+-	u32 class_rev;
+ 	u8 mcr1;
+ 	u32 freq;
+ 	int prefer_dpll = 1;
+@@ -807,19 +806,16 @@ static int hpt37x_init_one(struct pci_de
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+-	class_rev &= 0xFF;
+-
+ 	if (dev->device == PCI_DEVICE_ID_TTI_HPT366) {
+ 		/* May be a later chip in disguise. Check */
+ 		/* Older chips are in the HPT366 driver. Ignore them */
+-		if (class_rev < 3)
++		if (rev < 3)
+ 			return -ENODEV;
+ 		/* N series chips have their own driver. Ignore */
+-		if (class_rev == 6)
++		if (rev == 6)
+ 			return -ENODEV;
+ 
+-		switch(class_rev) {
++		switch(rev) {
+ 			case 3:
+ 				ppi[0] = &info_hpt370;
+ 				chip_table = &hpt370;
+@@ -835,28 +831,29 @@ static int hpt37x_init_one(struct pci_de
+ 				chip_table = &hpt372;
+ 				break;
+ 			default:
+-				printk(KERN_ERR "pata_hpt37x: Unknown HPT366 subtype please report (%d).\n", class_rev);
++				printk(KERN_ERR "pata_hpt37x: Unknown HPT366 "
++				       "subtype, please report (%d).\n", rev);
+ 				return -ENODEV;
+ 		}
+ 	} else {
+ 		switch(dev->device) {
+ 			case PCI_DEVICE_ID_TTI_HPT372:
+ 				/* 372N if rev >= 2*/
+-				if (class_rev >= 2)
++				if (rev >= 2)
+ 					return -ENODEV;
+ 				ppi[0] = &info_hpt372;
+ 				chip_table = &hpt372a;
+ 				break;
+ 			case PCI_DEVICE_ID_TTI_HPT302:
+ 				/* 302N if rev > 1 */
+-				if (class_rev > 1)
++				if (rev > 1)
+ 					return -ENODEV;
+ 				ppi[0] = &info_hpt372;
+ 				/* Check this */
+ 				chip_table = &hpt302;
+ 				break;
+ 			case PCI_DEVICE_ID_TTI_HPT371:
+-				if (class_rev > 1)
++				if (rev > 1)
+ 					return -ENODEV;
+ 				ppi[0] = &info_hpt372;
+ 				chip_table = &hpt371;
+Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
++++ linux-2.6/drivers/ata/pata_hpt3x2n.c
+@@ -446,10 +446,8 @@ static int hpt3x2n_init_one(struct pci_d
+ 		.port_ops = &hpt3x2n_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+-
++	u8 rev = dev->revision;
+ 	u8 irqmask;
+-	u32 class_rev;
+-
+ 	unsigned int pci_mhz;
+ 	unsigned int f_low, f_high;
+ 	int adjust;
+@@ -461,26 +459,23 @@ static int hpt3x2n_init_one(struct pci_d
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+-	class_rev &= 0xFF;
+-
+ 	switch(dev->device) {
+ 		case PCI_DEVICE_ID_TTI_HPT366:
+-			if (class_rev < 6)
++			if (rev < 6)
+ 				return -ENODEV;
+ 			break;
+ 		case PCI_DEVICE_ID_TTI_HPT371:
+-			if (class_rev < 2)
++			if (rev < 2)
+ 				return -ENODEV;
+ 			/* 371N if rev > 1 */
+ 			break;
+ 		case PCI_DEVICE_ID_TTI_HPT372:
+ 			/* 372N if rev >= 2*/
+-			if (class_rev < 2)
++			if (rev < 2)
+ 				return -ENODEV;
+ 			break;
+ 		case PCI_DEVICE_ID_TTI_HPT302:
+-			if (class_rev < 2)
++			if (rev < 2)
+ 				return -ENODEV;
+ 			break;
+ 		case PCI_DEVICE_ID_TTI_HPT372N:
+Index: linux-2.6/drivers/ata/pata_sil680.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_sil680.c
++++ linux-2.6/drivers/ata/pata_sil680.c
+@@ -212,13 +212,11 @@ static struct ata_port_operations sil680
+ 
+ static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
+ {
+-	u32 class_rev	= 0;
+ 	u8 tmpbyte	= 0;
+ 
+-        pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class_rev);
+-        class_rev &= 0xff;
+         /* FIXME: double check */
+-	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, (class_rev) ? 1 : 255);
++	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE,
++			      pdev->revision ? 1 : 255);
+ 
+ 	pci_write_config_byte(pdev, 0x80, 0x00);
+ 	pci_write_config_byte(pdev, 0x84, 0x00);
+
