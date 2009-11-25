@@ -1,27 +1,23 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 37/86] pata_it8213: fix wrong PIO timings being programmed
-Date: Wed, 25 Nov 2009 18:06:44 +0100
-Message-ID: <20091125170644.5446.73492.sendpatchset@localhost>
+Subject: [PATCH 35/86] pata_it8213: fix UDMA handling
+Date: Wed, 25 Nov 2009 18:06:30 +0100
+Message-ID: <20091125170630.5446.62655.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:42882 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932331AbZKYRHV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:07:21 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932473AbZKYRHP@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_it8213: fix wrong PIO timings being programmed
+Subject: [PATCH] pata_it8213: fix UDMA handling
 
-* do not clear PIO timings for master when programming slave
-* program new PIO timings in the correct register nibble
+Driver should program the cycle timing not the mode number
+(doing the latter results in wrong timings being used).
 
-Both changes should be safe as this is how we have been doing
-things in IDE it8213 host driver for years.
+There shouldn't be any problems with it as IDE it8213 host driver
+has been doing it this way for years.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
@@ -32,19 +28,16 @@ Index: b/drivers/ata/pata_it8213.c
 ===================================================================
 --- a/drivers/ata/pata_it8213.c
 +++ b/drivers/ata/pata_it8213.c
-@@ -112,13 +112,13 @@ static void it8213_set_piomode (struct a
- 	} else {
- 		u8 slave_data;
+@@ -173,10 +173,10 @@ static void it8213_set_dmamode (struct a
  
--		idetm_data &= 0xCC0F;
-+		idetm_data &= 0xFF0F;
- 		idetm_data |= (control << 4);
+ 		udma_enable |= (1 << devid);
  
- 		/* Slave timing in separate register */
- 		pci_read_config_byte(dev, 0x44, &slave_data);
- 		slave_data &= 0xF0;
--		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << 4;
-+		slave_data |= (timings[pio][0] << 2) | timings[pio][1];
- 		pci_write_config_byte(dev, 0x44, slave_data);
- 	}
+-		/* Load the UDMA mode number */
++		/* Load the UDMA cycle time */
+ 		pci_read_config_word(dev, 0x4A, &udma_timing);
+ 		udma_timing &= ~(3 << (4 * devid));
+-		udma_timing |= (udma & 3) << (4 * devid);
++		udma_timing |= u_speed << (4 * devid);
+ 		pci_write_config_word(dev, 0x4A, udma_timing);
  
+ 		/* Load the clock selection */
