@@ -1,82 +1,33 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 40/86] pata_it8213: fix register naming used in it8213_set_piomode()
-Date: Wed, 25 Nov 2009 18:07:05 +0100
-Message-ID: <20091125170705.5446.54786.sendpatchset@localhost>
+Subject: [PATCH 53/86] pata_marvell: fix marvell_pre_reset() documentation
+Date: Wed, 25 Nov 2009 18:08:41 +0100
+Message-ID: <20091125170841.5446.28051.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:42882 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932583AbZKYRHm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:07:42 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933343AbZKYRTn@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_it8213: fix register naming used in it8213_set_piomode()
-
-Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
-and 'master_data' respectively to match register naming used in
-it8213_set_dma_mode() and in ata_piix.c.
-
-Fix 'master_port' type while at it.
+Subject: [PATCH] pata_marvell: fix marvell_pre_reset() documentation
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_it8213.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/ata/pata_marvell.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ata/pata_it8213.c
+Index: b/drivers/ata/pata_marvell.c
 ===================================================================
---- a/drivers/ata/pata_it8213.c
-+++ b/drivers/ata/pata_it8213.c
-@@ -76,8 +76,8 @@ static void it8213_set_piomode (struct a
- {
- 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
--	u16 idetm_data;
-+	u8 master_port		= ap->port_no ? 0x42 : 0x40;
-+	u16 master_data;
- 	int control = 0;
- 
- 	/*
-@@ -100,19 +100,19 @@ static void it8213_set_piomode (struct a
- 	if (adev->class != ATA_DEV_ATA)
- 		control |= 4;	/* PPE */
- 
--	pci_read_config_word(dev, idetm_port, &idetm_data);
-+	pci_read_config_word(dev, master_port, &master_data);
- 
- 	/* Set PPE, IE, and TIME as appropriate */
- 	if (adev->devno == 0) {
--		idetm_data &= 0xCCF0;
--		idetm_data |= control;
--		idetm_data |= (timings[pio][0] << 12) |
-+		master_data &= 0xCCF0;
-+		master_data |= control;
-+		master_data |= (timings[pio][0] << 12) |
- 			(timings[pio][1] << 8);
- 	} else {
- 		u8 slave_data;
- 
--		idetm_data &= 0xFF0F;
--		idetm_data |= (control << 4);
-+		master_data &= 0xFF0F;
-+		master_data |= (control << 4);
- 
- 		/* Slave timing in separate register */
- 		pci_read_config_byte(dev, 0x44, &slave_data);
-@@ -121,8 +121,8 @@ static void it8213_set_piomode (struct a
- 		pci_write_config_byte(dev, 0x44, slave_data);
- 	}
- 
--	idetm_data |= 0x4000;	/* Ensure SITRE is set */
--	pci_write_config_word(dev, idetm_port, idetm_data);
-+	master_data |= 0x4000;	/* Ensure SITRE is set */
-+	pci_write_config_word(dev, master_port, master_data);
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -58,7 +58,7 @@ static int marvell_pata_active(struct pc
  }
  
  /**
+- *	marvell_pre_reset	-	check for 40/80 pin
++ *	marvell_pre_reset	-	probe begin
+  *	@link: link
+  *	@deadline: deadline jiffies for the operation
+  *
