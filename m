@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 56/86] pata_oldpiix: unify code for programming PIO and MWDMA timings
-Date: Wed, 25 Nov 2009 18:09:03 +0100
-Message-ID: <20091125170903.5446.45582.sendpatchset@localhost>
+Subject: [PATCH 58/86] pata_pdc2027x: add 32-bit PIO support
+Date: Wed, 25 Nov 2009 18:09:18 +0100
+Message-ID: <20091125170918.5446.7331.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759330AbZKYRJt@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933508AbZKYRKD@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,146 +11,26 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_oldpiix: unify code for programming PIO and MWDMA timings
+Subject: [PATCH] pata_pdc2027x: add 32-bit PIO support
 
-It results in ~12% decrease in the driver LOC count and also ~5%
-decrease in the driver binary size (as measured on x86-32).
+There shouldn't be any problems with it as IDE pdc202xx_new host driver
+has been allowing 32-bit PIO operations for years.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_oldpiix.c |   88 +++++++++++++--------------------------------
- 1 file changed, 27 insertions(+), 61 deletions(-)
+ drivers/ata/pata_pdc2027x.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ata/pata_oldpiix.c
+Index: b/drivers/ata/pata_pdc2027x.c
 ===================================================================
---- a/drivers/ata/pata_oldpiix.c
-+++ b/drivers/ata/pata_oldpiix.c
-@@ -50,20 +50,9 @@ static int oldpiix_pre_reset(struct ata_
- 	return ata_sff_prereset(link, deadline);
- }
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -133,7 +133,7 @@ static struct scsi_host_template pdc2027
+ };
  
--/**
-- *	oldpiix_set_piomode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: Device whose timings we are configuring
-- *
-- *	Set PIO mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void oldpiix_set_piomode (struct ata_port *ap, struct ata_device *adev)
-+static void oldpiix_set_timings(struct ata_port *ap, struct ata_device *adev,
-+				u8 pio, bool use_mwdma)
- {
--	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
- 	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
- 	u16 idetm_data;
-@@ -82,14 +71,18 @@ static void oldpiix_set_piomode (struct 
- 			    { 2, 1 },
- 			    { 2, 3 }, };
- 
--	if (pio > 1)
-+	if (pio > 1 || use_mwdma)
- 		control |= 1;	/* TIME */
--	if (ata_pio_need_iordy(adev))
-+	if (ata_pio_need_iordy(adev) || use_mwdma)
- 		control |= 2;	/* IE */
--
- 	/* Intel specifies that the prefetch/posting is for disk only */
- 	if (adev->class == ATA_DEV_ATA)
- 		control |= 4;	/* PPE */
-+	/* If the drive MWDMA is faster than it can do PIO then
-+	   we must force PIO into PIO0 */
-+	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
-+		/* Enable DMA timing only */
-+		control |= 8;	/* PIO cycles in PIO0 */
- 
- 	pci_read_config_word(dev, idetm_port, &idetm_data);
- 
-@@ -113,6 +106,22 @@ static void oldpiix_set_piomode (struct 
- }
- 
- /**
-+ *	oldpiix_set_piomode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: Device whose timings we are configuring
-+ *
-+ *	Set PIO mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void oldpiix_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	oldpiix_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
-+}
-+
-+/**
-  *	oldpiix_set_dmamode - Initialize host controller PATA DMA timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Device to program
-@@ -125,58 +134,15 @@ static void oldpiix_set_piomode (struct 
- 
- static void oldpiix_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- {
--	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	u8 idetm_port		= ap->port_no ? 0x42 : 0x40;
--	u16 idetm_data;
--
--	static const	 /* ISP  RTC */
--	u8 timings[][2]	= { { 0, 0 },
--			    { 0, 0 },
--			    { 1, 0 },
--			    { 2, 1 },
--			    { 2, 3 }, };
--
--	/*
--	 * MWDMA is driven by the PIO timings. We must also enable
--	 * IORDY unconditionally along with TIME1. PPE has already
--	 * been set when the PIO timing was set.
--	 */
-+	/* MWDMA is driven by the PIO timings. */
- 
- 	unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
--	unsigned int control;
- 	const unsigned int needed_pio[3] = {
- 		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
- 	};
- 	int pio = needed_pio[mwdma] - XFER_PIO_0;
- 
--	pci_read_config_word(dev, idetm_port, &idetm_data);
--
--	control = 3;	/* IORDY|TIME0 */
--	/* Intel specifies that the PPE functionality is for disk only */
--	if (adev->class == ATA_DEV_ATA)
--		control |= 4;	/* PPE enable */
--
--	/* If the drive MWDMA is faster than it can do PIO then
--	   we must force PIO into PIO0 */
--
--	if (adev->pio_mode < needed_pio[mwdma])
--		/* Enable DMA timing only */
--		control |= 8;	/* PIO cycles in PIO0 */
--
--	/* Mask out the relevant control and timing bits we will load. Also
--	   clear the other drive TIME register as a precaution */
--	if (adev->devno == 0) {
--		idetm_data &= 0xCCE0;
--		idetm_data |= control;
--	} else {
--		idetm_data &= 0xCC0E;
--		idetm_data |= (control << 4);
--	}
--	idetm_data |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
--	pci_write_config_word(dev, idetm_port, idetm_data);
--
--	/* Track which port is configured */
--	ap->private_data = adev;
-+	oldpiix_set_timings(ap, adev, pio, 1);
- }
- 
- /**
+ static struct ata_port_operations pdc2027x_pata100_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &ata_bmdma32_port_ops,
+ 	.check_atapi_dma	= pdc2027x_check_atapi_dma,
+ 	.cable_detect		= pdc2027x_cable_detect,
+ 	.prereset		= pdc2027x_prereset,
