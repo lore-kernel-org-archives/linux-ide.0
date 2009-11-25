@@ -1,81 +1,107 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/86] pata_atiixp: add proper ->prereset method
-Date: Wed, 25 Nov 2009 18:03:44 +0100
-Message-ID: <20091125170344.5446.54715.sendpatchset@localhost>
+Subject: [PATCH 22/86] pata_cmd64x: add cmd64x_fixup()
+Date: Wed, 25 Nov 2009 18:04:57 +0100
+Message-ID: <20091125170457.5446.67239.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759096AbZKYRE0@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:53682 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759211AbZKYRFf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:05:35 -0500
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_atiixp: add proper ->prereset method
+Subject: [PATCH] pata_cmd64x: add cmd64x_fixup()
+
+Factor out common code from cmd64x_[re]init_one() to cmd64x_fixup().
+
+Remove stale comment and fix CodingStyle issue while at it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_atiixp.c |   35 ++++++++++++++++++++++++++---------
- 1 file changed, 26 insertions(+), 9 deletions(-)
+ drivers/ata/pata_cmd64x.c |   41 +++++++++++++++++++----------------------
+ 1 file changed, 19 insertions(+), 22 deletions(-)
 
-Index: b/drivers/ata/pata_atiixp.c
+Index: b/drivers/ata/pata_cmd64x.c
 ===================================================================
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -47,6 +47,31 @@ static int atiixp_cable_detect(struct at
- }
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -292,6 +292,22 @@ static struct ata_port_operations cmd648
+ 	.cable_detect	= cmd648_cable_detect,
+ };
  
- /**
-+ *	atiixp_prereset	-	perform reset handling
-+ *	@link: ATA link
-+ *	@deadline: deadline jiffies for the operation
-+ *
-+ *	Reset sequence checking enable bits to see which ports are
-+ *	active.
-+ */
-+
-+static int atiixp_prereset(struct ata_link *link, unsigned long deadline)
++static void cmd64x_fixup(struct pci_dev *pdev)
 +{
-+	static const struct pci_bits atiixp_enable_bits[] = {
-+		{ 0x48, 1, 0x01, 0x00 },
-+		{ 0x48, 1, 0x08, 0x00 }
-+	};
++	u8 mrdmode;
 +
-+	struct ata_port *ap = link->ap;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
++	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
++	mrdmode &= ~0x30;	/* IRQ set up */
++	mrdmode |= 0x02;	/* Memory read line enable */
++	pci_write_config_byte(pdev, MRDMODE, mrdmode);
 +
-+	if (!pci_test_config_bits(pdev, &atiixp_enable_bits[ap->port_no]))
-+		return -ENOENT;
-+
-+	return ata_sff_prereset(link, deadline);
++	/* PPC specific fixup copied from old driver */
++#ifdef CONFIG_PPC
++	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
++#endif
 +}
 +
-+/**
-  *	atiixp_set_pio_timing	-	set initial PIO mode data
-  *	@ap: ATA interface
-  *	@adev: ATA device
-@@ -151,6 +176,7 @@ static struct ata_port_operations atiixp
- 
- 	.qc_prep 	= ata_sff_dumb_qc_prep,
- 
-+	.prereset	= atiixp_prereset,
- 	.cable_detect	= atiixp_cable_detect,
- 	.set_piomode	= atiixp_set_piomode,
- 	.set_dmamode	= atiixp_set_dmamode,
-@@ -165,16 +191,7 @@ static int atiixp_init_one(struct pci_de
- 		.udma_mask = ATA_UDMA5,
- 		.port_ops = &atiixp_port_ops
+ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	u32 class_rev;
+@@ -338,7 +354,6 @@ static int cmd64x_init_one(struct pci_de
+ 		}
  	};
--	static const struct pci_bits atiixp_enable_bits[] = {
--		{ 0x48, 1, 0x01, 0x00 },
--		{ 0x48, 1, 0x08, 0x00 }
--	};
- 	const struct ata_port_info *ppi[] = { &info, &info };
--	int i;
--
--	for (i = 0; i < 2; i++)
--		if (!pci_test_config_bits(pdev, &atiixp_enable_bits[i]))
--			ppi[i] = &ata_dummy_port_info;
+ 	const struct ata_port_info *ppi[] = { &cmd_info[id->driver_data], NULL };
+-	u8 mrdmode;
+ 	int rc;
  
- 	return ata_pci_sff_init_one(pdev, ppi, &atiixp_sht, NULL);
+ 	rc = pcim_enable_device(pdev);
+@@ -360,18 +375,7 @@ static int cmd64x_init_one(struct pci_de
+ 			ppi[0] = &cmd_info[3];
+ 	}
+ 
+-	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
+-	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
+-	mrdmode &= ~ 0x30;	/* IRQ set up */
+-	mrdmode |= 0x02;	/* Memory read line enable */
+-	pci_write_config_byte(pdev, MRDMODE, mrdmode);
+-
+-	/* Force PIO 0 here.. */
+-
+-	/* PPC specific fixup copied from old driver */
+-#ifdef CONFIG_PPC
+-	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
+-#endif
++	cmd64x_fixup(pdev);
+ 
+ 	return ata_pci_sff_init_one(pdev, ppi, &cmd64x_sht, NULL);
+ }
+@@ -380,21 +384,14 @@ static int cmd64x_init_one(struct pci_de
+ static int cmd64x_reinit_one(struct pci_dev *pdev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+-	u8 mrdmode;
+ 	int rc;
+ 
+ 	rc = ata_pci_device_do_resume(pdev);
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
+-	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
+-	mrdmode &= ~ 0x30;	/* IRQ set up */
+-	mrdmode |= 0x02;	/* Memory read line enable */
+-	pci_write_config_byte(pdev, MRDMODE, mrdmode);
+-#ifdef CONFIG_PPC
+-	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
+-#endif
++	cmd64x_fixup(pdev);
++
+ 	ata_host_resume(host);
+ 	return 0;
  }
