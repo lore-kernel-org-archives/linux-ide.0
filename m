@@ -1,101 +1,55 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 73/86] pata_serverworks: use standard cable detection methods
-Date: Wed, 25 Nov 2009 18:11:07 +0100
-Message-ID: <20091125171107.5446.66796.sendpatchset@localhost>
+Subject: [PATCH 70/86] pata_scc: add proper cable detection method
+Date: Wed, 25 Nov 2009 18:10:46 +0100
+Message-ID: <20091125171046.5446.49179.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:39574 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933582AbZKYRLq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:11:46 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934727AbZKYRLg@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_serverworks: use standard cable detection methods
+Subject: [PATCH] pata_scc: add proper cable detection method
+
+Use standard ata_cable_80wire() method for the cable detection,
+as a bonus this allows us to use the default ->prereset method.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_serverworks.c |   45 ++++++++++-------------------------------
- 1 file changed, 12 insertions(+), 33 deletions(-)
+ drivers/ata/pata_scc.c |   14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-Index: b/drivers/ata/pata_serverworks.c
+Index: b/drivers/ata/pata_scc.c
 ===================================================================
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -64,7 +64,8 @@ static const char *csb_bad_ata100[] = {
-  *	bits of the subsystem ID.
-  */
- 
--static int dell_cable(struct ata_port *ap) {
-+static int dell_cable(struct ata_port *ap)
-+{
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 
- 	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
-@@ -81,7 +82,8 @@ static int dell_cable(struct ata_port *a
-  *	need to extend the Dell one in future
-  */
- 
--static int sun_cable(struct ata_port *ap) {
-+static int sun_cable(struct ata_port *ap)
-+{
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 
- 	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
-@@ -89,29 +91,6 @@ static int sun_cable(struct ata_port *ap
- 	return ATA_CBL_PATA40;
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -865,18 +865,6 @@ static void scc_freeze (struct ata_port
  }
  
--/**
-- *	osb4_cable	-	OSB4 cable detect
-- *	@ap: ATA port to check
-- *
-- *	The OSB4 isn't UDMA66 capable so this is easy
+ /**
+- *	scc_pata_prereset - prepare for reset
+- *	@ap: ATA port to be reset
+- *	@deadline: deadline jiffies for the operation
 - */
 -
--static int osb4_cable(struct ata_port *ap) {
--	return ATA_CBL_PATA40;
+-static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
+-{
+-	link->ap->cbl = ATA_CBL_PATA80;
+-	return ata_sff_prereset(link, deadline);
 -}
 -
 -/**
-- *	csb_cable	-	CSB5/6 cable detect
-- *	@ap: ATA port to check
-- *
-- *	Serverworks default arrangement is to use the drive side detection
-- *	only.
-- */
--
--static int csb_cable(struct ata_port *ap) {
--	return ATA_CBL_PATA_UNK;
--}
--
- struct sv_cable_table {
- 	int device;
- 	int subvendor;
-@@ -124,14 +103,14 @@ struct sv_cable_table {
-  */
+  *	scc_postreset - standard postreset callback
+  *	@ap: the target ata_port
+  *	@classes: classes of attached devices
+@@ -986,7 +974,7 @@ static struct ata_port_operations scc_pa
+ 	.sff_data_xfer		= scc_data_xfer,
  
- static struct sv_cable_table cable_detect[] = {
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE, PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_VENDOR_ID_SUN,  sun_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE, PCI_ANY_ID, osb4_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_ANY_ID, csb_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE, PCI_ANY_ID, csb_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2, PCI_ANY_ID, csb_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_HT1000IDE, PCI_ANY_ID, csb_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, dell_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, dell_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  sun_cable  },
-+	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE,   PCI_ANY_ID, ata_cable_40wire  },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_ANY_ID, ata_cable_unknown },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_ANY_ID, ata_cable_unknown },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2,  PCI_ANY_ID, ata_cable_unknown },
-+	{ PCI_DEVICE_ID_SERVERWORKS_HT1000IDE, PCI_ANY_ID, ata_cable_unknown },
- 	{ }
- };
- 
+ 	.freeze			= scc_freeze,
+-	.prereset		= scc_pata_prereset,
++	.cable_detect		= ata_cable_80wire,
+ 	.softreset		= scc_softreset,
+ 	.postreset		= scc_postreset,
+ 	.post_internal_cmd	= scc_bmdma_stop,
