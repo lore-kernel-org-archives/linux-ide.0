@@ -1,87 +1,82 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 61/86] pata_sis: Power Management fix
-Date: Wed, 25 Nov 2009 18:09:40 +0100
-Message-ID: <20091125170940.5446.67928.sendpatchset@localhost>
+Subject: [PATCH 59/86] pata_pdc2027x: add Power Management support
+Date: Wed, 25 Nov 2009 18:09:25 +0100
+Message-ID: <20091125170925.5446.32918.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759371AbZKYRK3@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:37967 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933512AbZKYRKE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:10:04 -0500
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_pdc202xx_old: Power Management fix
+Subject: [PATCH] pata_pdc2027x: add Power Management support
 
-Enable burst mode on resume for PDC2026x controllers.
+There shouldn't be any problems with it as IDE pdc202xx_new host driver
+has been supporting Power Management for over year now.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_pdc202xx_old.c |   33 +++++++++++++++++++++++++++++++--
- 1 file changed, 31 insertions(+), 2 deletions(-)
+ drivers/ata/pata_pdc2027x.c |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Index: b/drivers/ata/pata_pdc202xx_old.c
+Index: b/drivers/ata/pata_pdc2027x.c
 ===================================================================
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -232,14 +232,21 @@ static void pdc2026x_dev_config(struct a
- 	adev->max_sectors = 256;
- }
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -63,6 +63,7 @@ enum {
+ };
  
--static int pdc2026x_port_start(struct ata_port *ap)
-+static void pdc2026x_bmdma_enable_burst(struct ata_port *ap)
- {
- 	void __iomem *bmdma = ap->ioaddr.bmdma_addr;
-+
- 	if (bmdma) {
- 		/* Enable burst mode */
- 		u8 burst = ioread8(bmdma + 0x1f);
- 		iowrite8(burst | 0x01, bmdma + 0x1f);
- 	}
-+}
-+
-+static int pdc2026x_port_start(struct ata_port *ap)
-+{
-+	pdc2026x_bmdma_enable_burst(ap);
-+
- 	return ata_sff_port_start32(ap);
- }
+ static int pdc2027x_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
++static int pdc2027x_reinit_one(struct pci_dev *pdev);
+ static int pdc2027x_prereset(struct ata_link *link, unsigned long deadline);
+ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev);
+ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+@@ -126,6 +127,10 @@ static struct pci_driver pdc2027x_pci_dr
+ 	.id_table		= pdc2027x_pci_tbl,
+ 	.probe			= pdc2027x_init_one,
+ 	.remove			= ata_pci_remove_one,
++#ifdef CONFIG_PM
++	.suspend		= ata_pci_device_suspend,
++	.resume			= pdc2027x_reinit_one,
++#endif
+ };
  
-@@ -327,6 +334,28 @@ static int pdc202xx_init_one(struct pci_
- 	return ata_pci_sff_init_one(dev, ppi, &pdc202xx_sht, NULL);
+ static struct scsi_host_template pdc2027x_sht = {
+@@ -758,6 +763,31 @@ static int __devinit pdc2027x_init_one(s
+ 				 IRQF_SHARED, &pdc2027x_sht);
  }
  
 +#ifdef CONFIG_PM
-+static int pdc202xx_reinit_one(struct pci_dev *pdev)
++static int pdc2027x_reinit_one(struct pci_dev *pdev)
 +{
 +	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int rc, i;
++	unsigned int board_idx;
++	int rc;
 +
 +	rc = ata_pci_device_do_resume(pdev);
 +	if (rc)
 +		return rc;
 +
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
++	if (pdev->device == PCI_DEVICE_ID_PROMISE_20268 ||
++	    pdev->device == PCI_DEVICE_ID_PROMISE_20270)
++		board_idx = PDC_UDMA_100;
++	else
++		board_idx = PDC_UDMA_133;
 +
-+		if (ap->udma_mask > ATA_UDMA2)
-+			pdc2026x_bmdma_enable_burst(ap);
-+	}
++	if (pdc_hardware_init(host, board_idx))
++		return -EIO;
 +
 +	ata_host_resume(host);
 +	return 0;
 +}
 +#endif
 +
- static const struct pci_device_id pdc202xx[] = {
- 	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20246), 0 },
- 	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20262), 1 },
-@@ -344,7 +373,7 @@ static struct pci_driver pdc202xx_pci_dr
- 	.remove		= ata_pci_remove_one,
- #ifdef CONFIG_PM
- 	.suspend	= ata_pci_device_suspend,
--	.resume		= ata_pci_device_resume,
-+	.resume		= pdc202xx_reinit_one,
- #endif
- };
- 
+ /**
+  * pdc2027x_init - Called after this module is loaded into the kernel.
+  */
