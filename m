@@ -1,62 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 62/86] pata_pdc202xx_old: document known issues
-Date: Wed, 25 Nov 2009 12:50:26 -0500
-Message-ID: <4B0D6E62.3010609@garzik.org>
-References: <20091125170218.5446.13513.sendpatchset@localhost>	<20091125170948.5446.32754.sendpatchset@localhost> <20091125174632.174666be@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 82/86] pata_via: clear UDMA transfer mode bit for PIO
+ and MWDMA
+Date: Wed, 25 Nov 2009 17:52:57 +0000
+Message-ID: <20091125175257.796afeb3@lxorguk.ukuu.org.uk>
+References: <20091125170218.5446.13513.sendpatchset@localhost>
+	<20091125171218.5446.41962.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934793AbZKYRuc@vger.kernel.org>
-In-Reply-To: <20091125174632.174666be@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56871 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932858AbZKYRuw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:50:52 -0500
+In-Reply-To: <20091125171218.5446.41962.sendpatchset@localhost>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On 11/25/2009 12:46 PM, Alan Cox wrote:
-> On Wed, 25 Nov 2009 18:09:48 +0100
-> Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>  wrote:
->
->> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->> Subject: [PATCH] pata_pdc202xx_old: document known issues
->>
->> Document known issues with the driver to aid distribution makers,
->> users and developers in making informed decisions instead of wasting
->> their time needlessly.
->>
->> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->> ---
->>   drivers/ata/Kconfig |    4 ++++
->>   1 file changed, 4 insertions(+)
->>
->> Index: b/drivers/ata/Kconfig
->> ===================================================================
->> --- a/drivers/ata/Kconfig
->> +++ b/drivers/ata/Kconfig
->> @@ -583,6 +583,10 @@ config PATA_PDC_OLD
->>   	  This option enables support for the Promise 20246, 20262, 20263,
->>   	  20265 and 20267 adapters.
->>
->> +	  Known issues:
->> +	  - UDMA transfers fail mysteriously on some chipsets
->> +	  - ATAPI DMA is unsupported currently
->
-> Not sure this is useful, because the reports of UDMA failures are lower
-> than most other reports. Should IPV6 have "known issues, mysterious timer
-> list corruption" for example which occurs far more. Not do we list 'no
-> atapi dma' in the help for the IDE SII driver ?
+>  	/* Set UDMA unless device is not UDMA capable */
+> -	if (udma_type && t.udma) {
+> -		u8 cable80_status;
+> +	if (udma_type) {
+> +		u8 udma_etc;
 
-If the chip can support ATAPI DMI, but the driver does not, that 
-deserves a comment, even if it's "hardware bugs prevent ATAPI DMA" or 
-"ATAPI DMA would require much more code to support, so we did not bother 
-for now"
+This seems odd the original test is that we are a udma controller and
+have a udma timing specified. Otherwise there is no point doing any work.
 
-Ditto for things like useful ideas ("consider PIO-over-DMA in SiI 311x") 
-and other would-be-nice-to-have ideas.  These can serve as projects for 
-newbies, or reminders for old-timers.
+The rest seems to be gratuitious register renaming and makes the patches
+hard to review. Please split this sort of stuff up.
 
-Space in the driver source code comment header is cheap.  Use liberally 
-:)  Write a Shakespearean soliloquy on a chip's hardware bugs, if you'd 
-like.
-
-	Jeff
