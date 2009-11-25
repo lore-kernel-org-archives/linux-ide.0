@@ -1,49 +1,82 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Wed, 25 Nov 2009 12:19:49 -0500
-Message-ID: <4B0D6735.8000604@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 40/86] pata_it8213: fix register naming used in it8213_set_piomode()
+Date: Wed, 25 Nov 2009 18:07:05 +0100
+Message-ID: <20091125170705.5446.54786.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934855AbZKYRTy@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:42882 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932583AbZKYRHm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:07:42 -0500
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On 11/25/2009 12:02 PM, Bartlomiej Zolnierkiewicz wrote:
-> I've been going through PATA drivers for the last few days to make
-> sure that we offer similar level of hardware support in the new PATA
-> drivers as with the old IDE subsystem and the following patchset is
-> the end result of said audit.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_it8213: fix register naming used in it8213_set_piomode()
 
-Thanks!
+Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
+and 'master_data' respectively to match register naming used in
+it8213_set_dma_mode() and in ata_piix.c.
 
-> - add 32-bit PIO support for more controllers
->
->    ( pata_artop, pata_atiixp, pata_efar, pata_cmd64x, pata_cs5520,
->      pata_cs5530, pata_cs5535, pata_cypress, pata_hpt366, pata_hpt37x,
->      pata_hpt3x2n, pata_it8213, pata_it821x, pata_jmicron, pata_ns87415,
->      pata_opti, pata_pdc2027x, pata_pdc202xx_old, pata_rz1000,
->      pata_sc1200, pata_scc, pata_sch, pata_serverworks, pata_sl82c105,
->      pata_sis, pata_triflex&  pata_via )
+Fix 'master_port' type while at it.
 
-This should be all in one patch.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ata/pata_it8213.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-I'll let the comments from Alan and others trickle in before applying...
-
-> - add ->init_host method for abstracting host specific controller
->   initialization and then use it to cleanup Power Managment code
->   resulting in over 100 LOC gone
->
->   ( pata_ali, pata_amd, pata_artop, pata_cmd640, pata_cmd64x,
->     pata_cs5530, pata_hpt366, pata_hpt3x3, pata_it821x, pata_ninja32,
->     pata_ns87415, pata_pdc2027x & sata_sil )
-
-hmmmm....  will reserve comment until I review it thoroughly, but I am a 
-bit reluctant to move away from the current struct-driver style driver 
-init/setup model.
-
-	Jeff
+Index: b/drivers/ata/pata_it8213.c
+===================================================================
+--- a/drivers/ata/pata_it8213.c
++++ b/drivers/ata/pata_it8213.c
+@@ -76,8 +76,8 @@ static void it8213_set_piomode (struct a
+ {
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+-	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
+-	u16 idetm_data;
++	u8 master_port		= ap->port_no ? 0x42 : 0x40;
++	u16 master_data;
+ 	int control = 0;
+ 
+ 	/*
+@@ -100,19 +100,19 @@ static void it8213_set_piomode (struct a
+ 	if (adev->class != ATA_DEV_ATA)
+ 		control |= 4;	/* PPE */
+ 
+-	pci_read_config_word(dev, idetm_port, &idetm_data);
++	pci_read_config_word(dev, master_port, &master_data);
+ 
+ 	/* Set PPE, IE, and TIME as appropriate */
+ 	if (adev->devno == 0) {
+-		idetm_data &= 0xCCF0;
+-		idetm_data |= control;
+-		idetm_data |= (timings[pio][0] << 12) |
++		master_data &= 0xCCF0;
++		master_data |= control;
++		master_data |= (timings[pio][0] << 12) |
+ 			(timings[pio][1] << 8);
+ 	} else {
+ 		u8 slave_data;
+ 
+-		idetm_data &= 0xFF0F;
+-		idetm_data |= (control << 4);
++		master_data &= 0xFF0F;
++		master_data |= (control << 4);
+ 
+ 		/* Slave timing in separate register */
+ 		pci_read_config_byte(dev, 0x44, &slave_data);
+@@ -121,8 +121,8 @@ static void it8213_set_piomode (struct a
+ 		pci_write_config_byte(dev, 0x44, slave_data);
+ 	}
+ 
+-	idetm_data |= 0x4000;	/* Ensure SITRE is set */
+-	pci_write_config_word(dev, idetm_port, idetm_data);
++	master_data |= 0x4000;	/* Ensure SITRE is set */
++	pci_write_config_word(dev, master_port, master_data);
+ }
+ 
+ /**
