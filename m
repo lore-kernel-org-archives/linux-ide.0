@@ -1,25 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 03/86] pata_artop: add 32-bit PIO support
-Date: Wed, 25 Nov 2009 17:12:42 +0000
-Message-ID: <20091125171242.70b8019f@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 29/86] pata_cypress: document known issues
+Date: Wed, 25 Nov 2009 18:05:46 +0100
+Message-ID: <20091125170546.5446.7389.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-	<20091125170239.5446.26287.sendpatchset@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934787AbZKYRRk@vger.kernel.org>
-In-Reply-To: <20091125170239.5446.26287.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:57397 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759271AbZKYRGY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:06:24 -0500
+In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Wed, 25 Nov 2009 18:02:39 +0100
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_cypress: document known issues
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] pata_artop: add 32-bit PIO support
-> 
-> There shouldn't be any problems with it as IDE aec62xx host driver
-> has been allowing 32-bit PIO operations for years.
+Document known issues with the driver to aid distribution makers,
+users and developers in making informed decisions instead of wasting
+their time needlessly.
 
-Allowing or defaulting too ?
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ata/Kconfig |    3 +++
+ 1 file changed, 3 insertions(+)
+
+Index: b/drivers/ata/Kconfig
+===================================================================
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -344,6 +344,9 @@ config PATA_CYPRESS
+ 	  This option enables support for the Cypress/Contaq CY82C693
+ 	  chipset found in some Alpha systems
+ 
++	  Known issues:
++	  - only the primary channel is currently supported
++
+ 	  If unsure, say N.
+ 
+ config PATA_EFAR
