@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 33/86] pata_hpt3x3: Power Management fix
-Date: Wed, 25 Nov 2009 18:06:14 +0100
-Message-ID: <20091125170614.5446.69651.sendpatchset@localhost>
+Subject: [PATCH 34/86] pata_it8213: add 32-bit PIO support
+Date: Wed, 25 Nov 2009 18:06:21 +0100
+Message-ID: <20091125170621.5446.10720.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932329AbZKYRG5@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932402AbZKYRHK@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,36 +11,26 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_hpt3x3: Power Management fix
+Subject: [PATCH] pata_it8213: add 32-bit PIO support
 
-Fix ->resume method to re-enable & re-init PCI device properly
-before doing chipset specific setup.
+There shouldn't be any problems with it as IDE it8213 host driver
+has been allowing 32-bit PIO operations for years.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_hpt3x3.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/ata/pata_it8213.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ata/pata_hpt3x3.c
+Index: b/drivers/ata/pata_it8213.c
 ===================================================================
---- a/drivers/ata/pata_hpt3x3.c
-+++ b/drivers/ata/pata_hpt3x3.c
-@@ -255,8 +255,17 @@ static int hpt3x3_init_one(struct pci_de
- #ifdef CONFIG_PM
- static int hpt3x3_reinit_one(struct pci_dev *dev)
- {
-+	struct ata_host *host = dev_get_drvdata(&dev->dev);
-+	int rc;
-+
-+	rc = ata_pci_device_do_resume(dev);
-+	if (rc)
-+		return rc;
-+
- 	hpt3x3_init_chipset(dev);
--	return ata_pci_device_resume(dev);
-+
-+	ata_host_resume(host);
-+	return 0;
- }
- #endif
+--- a/drivers/ata/pata_it8213.c
++++ b/drivers/ata/pata_it8213.c
+@@ -235,7 +235,7 @@ static struct scsi_host_template it8213_
  
+ 
+ static struct ata_port_operations it8213_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &ata_bmdma32_port_ops,
+ 	.cable_detect		= it8213_cable_detect,
+ 	.set_piomode		= it8213_set_piomode,
+ 	.set_dmamode		= it8213_set_dmamode,
