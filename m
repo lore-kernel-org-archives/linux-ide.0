@@ -1,104 +1,52 @@
-From: Gorgone <gorgone@gmx.de>
-Subject: not full working ata_piix
-Date: Wed, 25 Nov 2009 09:16:56 +0100
-Message-ID: <931603659.20091125091656@gmx.de>
-Reply-To: Gorgone <gorgone@gmx.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Wed, 25 Nov 2009 10:28:26 GMT
+Message-ID: <200911251028.nAPASQVY001567@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:59533 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751834AbZKYIRA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 03:17:00 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:53357 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758638AbZKYK2U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 05:28:20 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAPASQsb001569
+	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2009 10:28:26 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello mr. Jeff Garzik,
+http://bugzilla.kernel.org/show_bug.cgi?id=14583
 
-I had a conversation with Dave Hansen dave@sr71.net
-and he confirmed the problem with the Intel SS4200
-the ata_piix dont detect the ide ports only ide-generic
-and with ide generic is no ide-dma possible.
-is there any solution(quirks) out there ?
 
-    nas:~# hdparm -tT /dev/hda
+slesru@gmail.com changed:
 
-    /dev/hda:
-    Timing cached reads:   840 MB in  2.00 seconds = 419.87 MB/sec
-    Timing buffered disk reads:    6 MB in  3.24 seconds =   1.85 MB/sec
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |slesru@gmail.com
 
-    nas:~# lspci
-    00:00.0 Host bridge: Intel Corporation 82945G/GZ/P/PL Memory Controller Hub (rev 02)
-    00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express Port 1 (rev 01)
-    00:1c.2 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express Port 3 (rev 01)
-    00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI Controller #1 (rev 01)
-    00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI Controller #2 (rev 01)
-    00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI Controller #3 (rev 01)
-    00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI Controller #4 (rev 01)
-    00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2 EHCI Controller (rev 01)
-    00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev e1)
-    00:1f.0 ISA bridge: Intel Corporation 82801GB/GR (ICH7 Family) LPC Interface Bridge (rev 01)
-    00:1f.2 SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) SATA AHCI Controller (rev 01)
-    00:1f.3 SMBus: Intel Corporation 82801G (ICH7 Family) SMBus Controller (rev 01)
-    01:00.0 Ethernet controller: Intel Corporation 82573V Gigabit Ethernet Controller (Copper) (rev 03)
-    02:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
 
-    nas:~# hdparm -i /dev/hda
-    /dev/hda:
-    Model=CF Card, FwRev=Ver2.32, SerialNo=843B0799080700308500
-    Config={ HardSect NotMFM Fixed DTR>10Mbs }
-    RawCHS=15636/16/63, TrkSize=32256, SectSize=512, ECCbytes=4
-    BuffType=DualPort, BuffSize=1kB, MaxMultSect=1, MultSect=off
-    CurCHS=15636/16/63, CurSects=15761088, LBA=yes, LBAsects=15761088
-    IORDY=yes, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-    PIO modes:  pio0 pio1 pio2 pio3 pio4
-    DMA modes:  mdma0 mdma1 mdma2
-    UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
-    AdvancedPM=no WriteCache=disabled
-    * signifies the current active mode
 
-    nas:~# hdparm -d1 /dev/hda
-    /dev/hda:
-    setting using_dma to 1 (on)
-    HDIO_SET_DMA failed: Operation not permitted
-    using_dma     =  0 (off)
 
-    nas:~# lspci -n
-    00:00.0 0600: 8086:2770 (rev 02)
-    00:02.0 0300: 8086:2772 (rev 02)
-    00:1c.0 0604: 8086:27d0 (rev 01)
-    00:1c.2 0604: 8086:27d4 (rev 01)
-    00:1d.0 0c03: 8086:27c8 (rev 01)
-    00:1d.1 0c03: 8086:27c9 (rev 01)
-    00:1d.2 0c03: 8086:27ca (rev 01)
-    00:1d.3 0c03: 8086:27cb (rev 01)
-    00:1d.7 0c03: 8086:27cc (rev 01)
-    00:1e.0 0604: 8086:244e (rev e1)
-    00:1f.0 0601: 8086:27b8 (rev 01)
-    00:1f.2 0106: 8086:27c1 (rev 01)
-    00:1f.3 0c05: 8086:27da (rev 01)
-    01:00.0 0200: 8086:108b (rev 03)
-    02:00.0 0180: 1095:3132 (rev 01)
+--- Comment #17 from slesru@gmail.com  2009-11-25 10:28:22 ---
+I'd like to add that this problem exists on hdd drive, ubuntu 9.10, dell 120l :
 
----------------------------------------------------
-On Tue, 2009-11-24 at 00:31 +0100, Gorgone wrote:
-> excuse me if I'm going to annoy
-> 
-> but i cant enable the ide dma
-> 
-> is there a trick ?
+[ 6702.000206] ata1: lost interrupt (Status 0x58)
+[ 6702.004018] ata1: drained 32768 bytes to clear DRQ.
+[ 6702.093725] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[ 6702.093739] ata1.01: cmd a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0
+[ 6702.093740] cdb 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[ 6702.093742] res 58/00:01:00:00:00/00:00:00:00:00/b0 Emask 0x2 (HSM
+violation)
+[ 6702.093746] ata1.01: status: { DRDY DRQ }
+[ 6702.093859] ata1: soft resetting link
+[ 6702.340796] ata1.00: configured for UDMA/100
+[ 6702.372409] ata1.01: configured for UDMA/33
+[ 6702.391202] ata1: EH complete
 
-I tried a bunch of different stuff and was never
-able to get it to turnon.  I suspect the chipset
-is crippled.  Even the EMC software didn't
-read from the IDE port after boot.
-
--- Dave
---------------------------------------------------
-
-h.a.n.d 
-mailto:gorgone@gmx.de
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
