@@ -1,107 +1,39 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 22/86] pata_cmd64x: add cmd64x_fixup()
-Date: Wed, 25 Nov 2009 18:04:57 +0100
-Message-ID: <20091125170457.5446.67239.sendpatchset@localhost>
+Subject: [PATCH 16/86] pata_efar: MWDMA0 is unsupported
+Date: Wed, 25 Nov 2009 18:04:15 +0100
+Message-ID: <20091125170415.5446.15073.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:53682 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759211AbZKYRFf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:05:35 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759168AbZKYRE5@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cmd64x: add cmd64x_fixup()
+Subject: [PATCH] pata_efar: MWDMA0 is unsupported
 
-Factor out common code from cmd64x_[re]init_one() to cmd64x_fixup().
+MWDMA0 timings cannot be met with the PIIX based controller
+programming interface.
 
-Remove stale comment and fix CodingStyle issue while at it.
+This change should be safe as this is how we have been doing
+things in IDE slc90e66 host driver for years.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cmd64x.c |   41 +++++++++++++++++++----------------------
- 1 file changed, 19 insertions(+), 22 deletions(-)
+ drivers/ata/pata_efar.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ata/pata_cmd64x.c
+Index: b/drivers/ata/pata_efar.c
 ===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -292,6 +292,22 @@ static struct ata_port_operations cmd648
- 	.cable_detect	= cmd648_cable_detect,
- };
- 
-+static void cmd64x_fixup(struct pci_dev *pdev)
-+{
-+	u8 mrdmode;
-+
-+	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
-+	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
-+	mrdmode &= ~0x30;	/* IRQ set up */
-+	mrdmode |= 0x02;	/* Memory read line enable */
-+	pci_write_config_byte(pdev, MRDMODE, mrdmode);
-+
-+	/* PPC specific fixup copied from old driver */
-+#ifdef CONFIG_PPC
-+	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
-+#endif
-+}
-+
- static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	u32 class_rev;
-@@ -338,7 +354,6 @@ static int cmd64x_init_one(struct pci_de
- 		}
+--- a/drivers/ata/pata_efar.c
++++ b/drivers/ata/pata_efar.c
+@@ -252,7 +252,7 @@ static int efar_init_one (struct pci_dev
+ 	static const struct ata_port_info info = {
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+-		.mwdma_mask	= ATA_MWDMA2,
++		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.udma_mask 	= ATA_UDMA4,
+ 		.port_ops	= &efar_ops,
  	};
- 	const struct ata_port_info *ppi[] = { &cmd_info[id->driver_data], NULL };
--	u8 mrdmode;
- 	int rc;
- 
- 	rc = pcim_enable_device(pdev);
-@@ -360,18 +375,7 @@ static int cmd64x_init_one(struct pci_de
- 			ppi[0] = &cmd_info[3];
- 	}
- 
--	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
--	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
--	mrdmode &= ~ 0x30;	/* IRQ set up */
--	mrdmode |= 0x02;	/* Memory read line enable */
--	pci_write_config_byte(pdev, MRDMODE, mrdmode);
--
--	/* Force PIO 0 here.. */
--
--	/* PPC specific fixup copied from old driver */
--#ifdef CONFIG_PPC
--	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
--#endif
-+	cmd64x_fixup(pdev);
- 
- 	return ata_pci_sff_init_one(pdev, ppi, &cmd64x_sht, NULL);
- }
-@@ -380,21 +384,14 @@ static int cmd64x_init_one(struct pci_de
- static int cmd64x_reinit_one(struct pci_dev *pdev)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
--	u8 mrdmode;
- 	int rc;
- 
- 	rc = ata_pci_device_do_resume(pdev);
- 	if (rc)
- 		return rc;
- 
--	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
--	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
--	mrdmode &= ~ 0x30;	/* IRQ set up */
--	mrdmode |= 0x02;	/* Memory read line enable */
--	pci_write_config_byte(pdev, MRDMODE, mrdmode);
--#ifdef CONFIG_PPC
--	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
--#endif
-+	cmd64x_fixup(pdev);
-+
- 	ata_host_resume(host);
- 	return 0;
- }
