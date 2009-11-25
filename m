@@ -1,33 +1,40 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 62/86] pata_pdc202xx_old: document known issues
-Date: Wed, 25 Nov 2009 18:09:09 +0000
-Message-ID: <20091125180909.2fb696ad@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 45/86] pata_legacy: do not probe extra ports
+ automatically if PCI is not present
+Date: Wed, 25 Nov 2009 18:12:05 +0000
+Message-ID: <20091125181205.24c2c97f@lxorguk.ukuu.org.uk>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-	<20091125170948.5446.32754.sendpatchset@localhost>
-	<20091125174632.174666be@lxorguk.ukuu.org.uk>
-	<4B0D6E62.3010609@garzik.org>
+	<20091125170740.5446.67217.sendpatchset@localhost>
+	<20091125173215.539b5630@lxorguk.ukuu.org.uk>
+	<200911251845.52700.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44560 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932992AbZKYSHM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 13:07:12 -0500
-In-Reply-To: <4B0D6E62.3010609@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934923AbZKYSKE@vger.kernel.org>
+In-Reply-To: <200911251845.52700.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Space in the driver source code comment header is cheap.  Use liberally 
-> :)  Write a Shakespearean soliloquy on a chip's hardware bugs, if you'd 
-> like.
+> > NAK. You made a rather peculiar set of changes in the IDE layer but the
+> 
+> Please give commit numbers and describe such 'peculiar set of changes in
+> the IDE layer' in more details or skip such baseless, unjust and pointless
 
-[Don't tempt me, I've sneaked other little ditties and bits of filk into
- the kernel before now, but "Lost Andre" is probably a bit too long and
- lost on non-Hawkwind fans]
+Disabling what can be a safe probe
 
-This isnt the driver source code comment at the moment.
+> comments from your mails.
 
-Alan
+The old IDE code didn't do the full PCI check that libata did at the time
+there were public complaints. Libata legacy also doesn't fall for the bug
+where legacy loads and blocks PCI adapters as it has a smart check in it,
+including for weirdness like the CS55x0 and the MPIIX.
+
+So I'm firmly of the opinion that
+- We should leave it as is
+- If it causes a problem we should look at the exact case involved.
+  Possibly it would need a CONFIG_X86 but thats sort of implied as
+  embedded use pata_platform in preference.
+
+The fact it just works by default is very very important.
