@@ -1,64 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 45/86] pata_legacy: do not probe extra ports automatically if PCI is not present
-Date: Wed, 25 Nov 2009 19:20:53 +0100
-Message-ID: <200911251920.53484.bzolnier@gmail.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <200911251845.52700.bzolnier@gmail.com> <20091125181205.24c2c97f@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 48/86] pata_legacy: add pointers to QDI65x0 documentation
+Date: Wed, 25 Nov 2009 19:21:53 +0100
+Message-ID: <200911251921.53754.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <200911251844.59772.bzolnier@gmail.com> <20091125181253.14159347@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:58833 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753414AbZKYSXh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 13:23:37 -0500
-In-Reply-To: <20091125181205.24c2c97f@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759319AbZKYSXo@vger.kernel.org>
+In-Reply-To: <20091125181253.14159347@lxorguk.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Wednesday 25 November 2009 07:12:05 pm Alan Cox wrote:
-> > > NAK. You made a rather peculiar set of changes in the IDE layer but the
+On Wednesday 25 November 2009 07:12:53 pm Alan Cox wrote:
+> On Wed, 25 Nov 2009 18:44:59 +0100
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> > On Wednesday 25 November 2009 06:38:52 pm Alan Cox wrote:
+> > > > + *	QDI65x0 probe code based on drivers/ide/legacy/qd65xx.c
+> > > > + *	Rewritten from the work of Colten Edwards <pje120@cs.usask.ca> by
+> > > > + *	Samuel Thibault <samuel.thibault@ens-lyon.org>
+> > > 
+> > > It's not drivers/ide/legacy/qd65xx.c - because you moved it back in the
+> > > old IDE code.
 > > 
-> > Please give commit numbers and describe such 'peculiar set of changes in
-> > the IDE layer' in more details or skip such baseless, unjust and pointless
+> > It was the correct path/driver when the aforementioned code was added.
 > 
-> Disabling what can be a safe probe
+> Sure but the path has changed so its more helpful for anyone looking back
+> to have the right path.
 
-In many of your comments recent you're referring to IDE state from five or
-more years ago.
-
-> > comments from your mails.
-> 
-> The old IDE code didn't do the full PCI check that libata did at the time
-> there were public complaints. Libata legacy also doesn't fall for the bug
-> where legacy loads and blocks PCI adapters as it has a smart check in it,
-> including for weirdness like the CS55x0 and the MPIIX.
-
-This was fixed long time ago and the needed checks were added
-(despite complete lack of code input from you).
-
-> So I'm firmly of the opinion that
-> - We should leave it as is
-
-We may as well decide to do it before we have more data or more recent
-bug-report at hand.  No big deal.
-
-> - If it causes a problem we should look at the exact case involved.
-
-While it was being fixed a year or two ago you were on cc: for original
-patch (+ asked whether the same should be needed for pata_legacy) and
-the bug-report from mikpe was on linux-ide ML.
-
-IOW You were not interested into it the issue back when it was reported.
-
->   Possibly it would need a CONFIG_X86 but thats sort of implied as
->   embedded use pata_platform in preference.
-> 
-> The fact it just works by default is very very important.
-
-Agreed on this one.
+I disagree.  The code from back then is not the same code as today and we
+have git log --follow for this.
 
 --
 Bartlomiej Zolnierkiewicz
