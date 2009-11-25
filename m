@@ -1,44 +1,36 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 80/86] libata: make ata_sff_data_xfer_noirq() work with 32-bit PIO
-Date: Wed, 25 Nov 2009 18:12:04 +0100
-Message-ID: <20091125171204.5446.97471.sendpatchset@localhost>
+Subject: [PATCH 79/86] pata_triflex: add 32-bit PIO support
+Date: Wed, 25 Nov 2009 18:11:55 +0100
+Message-ID: <20091125171155.5446.41850.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:52976 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934782AbZKYRMm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:12:42 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753527AbZKYRMm@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: make ata_sff_data_xfer_noirq() work with 32-bit PIO
+Subject: [PATCH] pata_triflex: add 32-bit PIO support
 
-Always use ata_sff_data_xfer32() in ata_sff_data_xfer_noirq()
-so the latter can be also used for host controllers supporting
-32-bit PIO operations.
-
-[ It is safe since if 32-bit PIO is not supported or enabled
-  ata_sff_data_xfer32() will fallback to a standard method. ]
+There shouldn't be any problems with it as IDE triflex host driver
+has been allowing 32-bit PIO operations for years.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/libata-sff.c |    2 +-
+ drivers/ata/pata_triflex.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ata/libata-sff.c
+Index: b/drivers/ata/pata_triflex.c
 ===================================================================
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -838,7 +838,7 @@ unsigned int ata_sff_data_xfer_noirq(str
- 	unsigned int consumed;
+--- a/drivers/ata/pata_triflex.c
++++ b/drivers/ata/pata_triflex.c
+@@ -179,7 +179,7 @@ static struct scsi_host_template triflex
+ };
  
- 	local_irq_save(flags);
--	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
-+	consumed = ata_sff_data_xfer32(dev, buf, buflen, rw);
- 	local_irq_restore(flags);
- 
- 	return consumed;
+ static struct ata_port_operations triflex_port_ops = {
+-	.inherits	= &ata_bmdma_port_ops,
++	.inherits	= &ata_bmdma32_port_ops,
+ 	.bmdma_start 	= triflex_bmdma_start,
+ 	.bmdma_stop	= triflex_bmdma_stop,
+ 	.cable_detect	= ata_cable_40wire,
