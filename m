@@ -1,85 +1,37 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 82/86] pata_via: clear UDMA transfer mode bit for PIO and MWDMA
-Date: Wed, 25 Nov 2009 18:58:38 +0100
-Message-ID: <200911251858.38491.bzolnier@gmail.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125171218.5446.41962.sendpatchset@localhost> <20091125175257.796afeb3@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 86/86] libata: add private driver field to struct ata_device
+Date: Wed, 25 Nov 2009 19:02:44 +0100
+Message-ID: <200911251902.45049.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125171248.5446.22482.sendpatchset@localhost> <20091125175650.64de8a10@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934907AbZKYR7m@vger.kernel.org>
-In-Reply-To: <20091125175257.796afeb3@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:59566 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753155AbZKYSD0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 13:03:26 -0500
+In-Reply-To: <20091125175650.64de8a10@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Wednesday 25 November 2009 06:52:57 pm Alan Cox wrote:
-> >  	/* Set UDMA unless device is not UDMA capable */
-> > -	if (udma_type && t.udma) {
-> > -		u8 cable80_status;
-> > +	if (udma_type) {
-> > +		u8 udma_etc;
+On Wednesday 25 November 2009 06:56:50 pm Alan Cox wrote:
+> On Wed, 25 Nov 2009 18:12:48 +0100
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
-> This seems odd the original test is that we are a udma controller and
-> have a udma timing specified. Otherwise there is no point doing any work.
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] libata: add private driver field to struct ata_device
+> > 
+> > This brings struct ata_device in-line with struct ata_{port,host}.
+> 
+> Do we need it for anything yet - whoever first needs it can add it,
+> otherwise its just waste.
 
-The patch is based on the data sheet and is needed.
-
-We may not hit the problem with the current chipset tuning model but things
-are not set in the stone and one day we may pay a price for embedding such
-undocumented assumptions into our drivers.
-
-> The rest seems to be gratuitious register renaming and makes the patches
-> hard to review. Please split this sort of stuff up.
-
-The name now matches documentation.
-
-Do you really find such tidy patch hard to review?
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_via: clear UDMA transfer mode bit for PIO and MWDMA
-
-Fix register naming while at it.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/pata_via.c |   19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
-
-Index: b/drivers/ata/pata_via.c
-===================================================================
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -296,14 +296,21 @@ static void via_do_set_mode(struct ata_p
- 	}
- 
- 	/* Set UDMA unless device is not UDMA capable */
--	if (udma_type && t.udma) {
--		u8 cable80_status;
-+	if (udma_type) {
-+		u8 udma_etc;
- 
--		/* Get 80-wire cable detection bit */
--		pci_read_config_byte(pdev, 0x50 + offset, &cable80_status);
--		cable80_status &= 0x10;
-+		pci_read_config_byte(pdev, 0x50 + offset, &udma_etc);
- 
--		pci_write_config_byte(pdev, 0x50 + offset, ut | cable80_status);
-+		/* clear transfer mode bit */
-+		udma_etc &= ~0x20;
-+
-+		if (t.udma) {
-+			/* preserve 80-wire cable detection bit */
-+			udma_etc &= 0x10;
-+			udma_etc |= ut;
-+		}
-+
-+		pci_write_config_byte(pdev, 0x50 + offset, udma_etc);
- 	}
- }
- 
-
+There is a new driver using it (to be posted later) and it makes libata API
+more coherent for driver developers..
 
 --
 Bartlomiej Zolnierkiewicz
