@@ -1,37 +1,25 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 71/86] pata_sch: add 32-bit PIO support
-Date: Wed, 25 Nov 2009 18:10:53 +0100
-Message-ID: <20091125171053.5446.22658.sendpatchset@localhost>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 03/86] pata_artop: add 32-bit PIO support
+Date: Wed, 25 Nov 2009 17:12:42 +0000
+Message-ID: <20091125171242.70b8019f@lxorguk.ukuu.org.uk>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:52976 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933772AbZKYRLb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:11:31 -0500
-In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+	<20091125170239.5446.26287.sendpatchset@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934787AbZKYRRk@vger.kernel.org>
+In-Reply-To: <20091125170239.5446.26287.sendpatchset@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_sch: add 32-bit PIO support
+On Wed, 25 Nov 2009 18:02:39 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/pata_sch.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] pata_artop: add 32-bit PIO support
+> 
+> There shouldn't be any problems with it as IDE aec62xx host driver
+> has been allowing 32-bit PIO operations for years.
 
-Index: b/drivers/ata/pata_sch.c
-===================================================================
---- a/drivers/ata/pata_sch.c
-+++ b/drivers/ata/pata_sch.c
-@@ -76,7 +76,7 @@ static struct scsi_host_template sch_sht
- };
- 
- static struct ata_port_operations sch_pata_ops = {
--	.inherits		= &ata_bmdma_port_ops,
-+	.inherits		= &ata_bmdma32_port_ops,
- 	.cable_detect		= ata_cable_unknown,
- 	.set_piomode		= sch_set_piomode,
- 	.set_dmamode		= sch_set_dmamode,
+Allowing or defaulting too ?
