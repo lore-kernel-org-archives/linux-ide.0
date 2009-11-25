@@ -1,42 +1,29 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 86/86] libata: add private driver field to struct
- ata_device
-Date: Wed, 25 Nov 2009 18:17:09 +0000
-Message-ID: <20091125181709.15f28381@lxorguk.ukuu.org.uk>
-References: <20091125170218.5446.13513.sendpatchset@localhost>
-	<20091125171248.5446.22482.sendpatchset@localhost>
-	<20091125175650.64de8a10@lxorguk.ukuu.org.uk>
-	<200911251902.45049.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 82/86] pata_via: clear UDMA transfer mode bit for PIO and MWDMA
+Date: Wed, 25 Nov 2009 19:10:06 +0100
+Message-ID: <200911251910.06924.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <200911251858.38491.bzolnier@gmail.com> <20091125180648.6ab19725@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50390 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758851AbZKYSPF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 13:15:05 -0500
-In-Reply-To: <200911251902.45049.bzolnier@gmail.com>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:58833 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321AbZKYSXg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 13:23:36 -0500
+In-Reply-To: <20091125180648.6ab19725@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 25 Nov 2009 19:02:44 +0100
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-
-> On Wednesday 25 November 2009 06:56:50 pm Alan Cox wrote:
-> > On Wed, 25 Nov 2009 18:12:48 +0100
-> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > 
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Subject: [PATCH] libata: add private driver field to struct ata_device
-> > > 
-> > > This brings struct ata_device in-line with struct ata_{port,host}.
-> > 
-> > Do we need it for anything yet - whoever first needs it can add it,
-> > otherwise its just waste.
+On Wednesday 25 November 2009 07:06:48 pm Alan Cox wrote:
+> > Do you really find such tidy patch hard to review?
 > 
-> There is a new driver using it (to be posted later) and it makes libata API
-> more coherent for driver developers..
+> When doing it at speed - yes.
 
-Ok by me
+Do you review everybody else patches 'at speed' or only mine?
+
+--
+Bartlomiej Zolnierkiewicz
