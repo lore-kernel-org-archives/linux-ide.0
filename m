@@ -1,45 +1,45 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 45/86] pata_legacy: do not probe extra ports automatically if PCI is not present
-Date: Wed, 25 Nov 2009 18:45:52 +0100
-Message-ID: <200911251845.52700.bzolnier@gmail.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170740.5446.67217.sendpatchset@localhost> <20091125173215.539b5630@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 19/86] pata_cmd640: document known issues
+Date: Wed, 25 Nov 2009 18:44:01 +0100
+Message-ID: <200911251844.01227.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125172633.7a15711b@lxorguk.ukuu.org.uk> <4B0D6B4F.9030605@garzik.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:57215 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.157]:34390 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933090AbZKYRrD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:47:03 -0500
-In-Reply-To: <20091125173215.539b5630@lxorguk.ukuu.org.uk>
+	with ESMTP id S932922AbZKYRq7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:46:59 -0500
+In-Reply-To: <4B0D6B4F.9030605@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 25 November 2009 06:32:15 pm Alan Cox wrote:
-> On Wed, 25 Nov 2009 18:07:40 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Wednesday 25 November 2009 06:37:19 pm Jeff Garzik wrote:
+> On 11/25/2009 12:26 PM, Alan Cox wrote:
+> > On Wed, 25 Nov 2009 18:04:36 +0100
+> > Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>  wrote:
+> >
+> >> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> >> Subject: [PATCH] pata_cmd640: document known issues
+> >>
+> >> Document known issues with the driver to aid distribution makers,
+> >> users and developers in making informed decisions instead of wasting
+> >> their time needlessly.
+> >
+> > Umm. its a) under CONFIG_PCI, and b) says CMD640 PCI IDE...
 > 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] pata_legacy: do not probe extra ports automatically if PCI is not present
-> > 
-> > It can be problematic if there are other ISA/VLB devices using
-> > those ports.
+> Agreed, that's a bit redundant.
 > 
-> NAK. You made a rather peculiar set of changes in the IDE layer but the
+> Also, as I noted in another email, known issues should be listed in the 
+> driver source code at the top of the file, not in Kconfig.
 
-Please give commit numbers and describe such 'peculiar set of changes in
-the IDE layer' in more details or skip such baseless, unjust and pointless
-comments from your mails.
-
-> PCI handling in pata_legacy includes knowledge of the various half-pci
-> devices and on a non PCI system 0x1E8/0x168 are reserved for extra IDE.
-> 
-> We've had no complaints at all, ever about this.
-
-OTOH We had. :)
+Agreed, since virtually everybody should be looking into source
+code of each single driver before compiling kernel and/or deciding
+to include it into distribution kernel.
 
 --
 Bartlomiej Zolnierkiewicz
