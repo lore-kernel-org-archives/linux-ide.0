@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 70/86] pata_scc: add proper cable detection method
-Date: Wed, 25 Nov 2009 18:10:46 +0100
-Message-ID: <20091125171046.5446.49179.sendpatchset@localhost>
+Subject: [PATCH 69/86] pata_scc: add 32-bit PIO support
+Date: Wed, 25 Nov 2009 18:10:39 +0100
+Message-ID: <20091125171039.5446.68680.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934727AbZKYRLg@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933592AbZKYRLd@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,45 +11,26 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_scc: add proper cable detection method
+Subject: [PATCH] pata_scc: add 32-bit PIO support
 
-Use standard ata_cable_80wire() method for the cable detection,
-as a bonus this allows us to use the default ->prereset method.
+There shouldn't be any problems with it as IDE scc_pata host driver
+has been allowing 32-bit PIO operations for years.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_scc.c |   14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+ drivers/ata/pata_scc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 Index: b/drivers/ata/pata_scc.c
 ===================================================================
 --- a/drivers/ata/pata_scc.c
 +++ b/drivers/ata/pata_scc.c
-@@ -865,18 +865,6 @@ static void scc_freeze (struct ata_port
- }
+@@ -966,7 +966,7 @@ static struct scsi_host_template scc_sht
+ };
  
- /**
-- *	scc_pata_prereset - prepare for reset
-- *	@ap: ATA port to be reset
-- *	@deadline: deadline jiffies for the operation
-- */
--
--static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
--{
--	link->ap->cbl = ATA_CBL_PATA80;
--	return ata_sff_prereset(link, deadline);
--}
--
--/**
-  *	scc_postreset - standard postreset callback
-  *	@ap: the target ata_port
-  *	@classes: classes of attached devices
-@@ -986,7 +974,7 @@ static struct ata_port_operations scc_pa
- 	.sff_data_xfer		= scc_data_xfer,
+ static struct ata_port_operations scc_pata_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &ata_bmdma32_port_ops,
  
- 	.freeze			= scc_freeze,
--	.prereset		= scc_pata_prereset,
-+	.cable_detect		= ata_cable_80wire,
- 	.softreset		= scc_softreset,
- 	.postreset		= scc_postreset,
- 	.post_internal_cmd	= scc_bmdma_stop,
+ 	.set_piomode		= scc_set_piomode,
+ 	.set_dmamode		= scc_set_dmamode,
