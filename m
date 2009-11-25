@@ -1,40 +1,26 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 28/86] pata_cypress: add 32-bit PIO support
-Date: Wed, 25 Nov 2009 18:05:39 +0100
-Message-ID: <20091125170539.5446.88568.sendpatchset@localhost>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 19/86] pata_cmd640: document known issues
+Date: Wed, 25 Nov 2009 17:26:33 +0000
+Message-ID: <20091125172633.7a15711b@lxorguk.ukuu.org.uk>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:41135 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759219AbZKYRGQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:06:16 -0500
-In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+	<20091125170436.5446.83994.sendpatchset@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759433AbZKYRYf@vger.kernel.org>
+In-Reply-To: <20091125170436.5446.83994.sendpatchset@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cypress: add 32-bit PIO support
+On Wed, 25 Nov 2009 18:04:36 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-There shouldn't be any problems with it as IDE cy82c693 host driver
-has been allowing 32-bit PIO operations for years.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] pata_cmd640: document known issues
+> 
+> Document known issues with the driver to aid distribution makers,
+> users and developers in making informed decisions instead of wasting
+> their time needlessly.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/pata_cypress.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: b/drivers/ata/pata_cypress.c
-===================================================================
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -114,7 +114,7 @@ static struct scsi_host_template cy82c69
- };
- 
- static struct ata_port_operations cy82c693_port_ops = {
--	.inherits	= &ata_bmdma_port_ops,
-+	.inherits	= &ata_bmdma32_port_ops,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= cy82c693_set_piomode,
- 	.set_dmamode	= cy82c693_set_dmamode,
+Umm. its a) under CONFIG_PCI, and b) says CMD640 PCI IDE...
