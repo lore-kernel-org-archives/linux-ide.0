@@ -1,31 +1,33 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 82/86] pata_via: clear UDMA transfer mode bit for PIO
- and MWDMA
-Date: Wed, 25 Nov 2009 18:06:48 +0000
-Message-ID: <20091125180648.6ab19725@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 62/86] pata_pdc202xx_old: document known issues
+Date: Wed, 25 Nov 2009 18:09:09 +0000
+Message-ID: <20091125180909.2fb696ad@lxorguk.ukuu.org.uk>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-	<20091125171218.5446.41962.sendpatchset@localhost>
-	<20091125175257.796afeb3@lxorguk.ukuu.org.uk>
-	<200911251858.38491.bzolnier@gmail.com>
+	<20091125170948.5446.32754.sendpatchset@localhost>
+	<20091125174632.174666be@lxorguk.ukuu.org.uk>
+	<4B0D6E62.3010609@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934879AbZKYSEq@vger.kernel.org>
-In-Reply-To: <200911251858.38491.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44560 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932992AbZKYSHM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 13:07:12 -0500
+In-Reply-To: <4B0D6E62.3010609@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Do you really find such tidy patch hard to review?
+> Space in the driver source code comment header is cheap.  Use liberally 
+> :)  Write a Shakespearean soliloquy on a chip's hardware bugs, if you'd 
+> like.
 
-When doing it at speed - yes.
+[Don't tempt me, I've sneaked other little ditties and bits of filk into
+ the kernel before now, but "Lost Andre" is probably a bit too long and
+ lost on non-Hawkwind fans]
 
->  	/* Set UDMA unless device is not UDMA capable */
-> -	if (udma_type && t.udma) {
-> -		u8 cable80_status;
-> +	if (udma_type) {
-> +		u8 udma_etc;
+This isnt the driver source code comment at the moment.
 
-Ok that makes sense - we in fact could hit this case on a failure
-changedown from UDMA to PIO.
+Alan
