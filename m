@@ -1,40 +1,176 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 72/86] pata_serverworks: add 32-bit PIO support
-Date: Wed, 25 Nov 2009 18:11:00 +0100
-Message-ID: <20091125171100.5446.73058.sendpatchset@localhost>
+Subject: [PATCH 84/86] libata: add ata_mwdma_to_pio() inline helper
+Date: Wed, 25 Nov 2009 18:12:32 +0100
+Message-ID: <20091125171232.5446.28166.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:39819 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934738AbZKYRLj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:11:39 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934882AbZKYRON@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_serverworks: add 32-bit PIO support
-
-There shouldn't be any problems with it as IDE serverworks host driver
-has been allowing 32-bit PIO operations for years.
+Subject: [PATCH] libata: add ata_mwdma_to_pio() inline helper
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_serverworks.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/ata_piix.c     |   11 ++---------
+ drivers/ata/pata_efar.c    |    8 +-------
+ drivers/ata/pata_it8213.c  |    8 +-------
+ drivers/ata/pata_oldpiix.c |    9 +--------
+ drivers/ata/pata_radisys.c |   12 +++---------
+ drivers/ata/pata_rdc.c     |   11 ++---------
+ include/linux/ata.h        |   11 +++++++++++
+ 7 files changed, 21 insertions(+), 49 deletions(-)
 
-Index: b/drivers/ata/pata_serverworks.c
+Index: b/drivers/ata/ata_piix.c
 ===================================================================
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -300,7 +300,7 @@ static struct scsi_host_template serverw
- };
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -831,16 +831,9 @@ static void do_pata_set_dmamode(struct a
+ 		pci_write_config_byte(dev, 0x48, udma_enable);
  
- static struct ata_port_operations serverworks_osb4_port_ops = {
--	.inherits	= &ata_bmdma_port_ops,
-+	.inherits	= &ata_bmdma32_port_ops,
- 	.cable_detect	= serverworks_cable_detect,
- 	.mode_filter	= serverworks_osb4_filter,
- 	.set_piomode	= serverworks_set_piomode,
+ 		spin_unlock_irqrestore(&piix_lock, flags);
+-	} else {
++	} else
+ 		/* MWDMA is driven by the PIO timings. */
+-		unsigned int mwdma = speed - XFER_MW_DMA_0;
+-		const unsigned int needed_pio[3] = {
+-			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-		};
+-		int pio = needed_pio[mwdma] - XFER_PIO_0;
+-
+-		piix_set_timings(ap, adev, pio, 1);
+-	}
++		piix_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
+ }
+ 
+ /**
+Index: b/drivers/ata/pata_efar.c
+===================================================================
+--- a/drivers/ata/pata_efar.c
++++ b/drivers/ata/pata_efar.c
+@@ -176,13 +176,7 @@ static void efar_set_dmamode (struct ata
+ 		pci_write_config_word(dev, 0x4A, udma_timing);
+ 	} else {
+ 		/* MWDMA is driven by the PIO timings. */
+-		unsigned int mwdma = speed - XFER_MW_DMA_0;
+-		const unsigned int needed_pio[3] = {
+-			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-		};
+-		int pio = needed_pio[mwdma] - XFER_PIO_0;
+-
+-		efar_set_timings(ap, adev, pio, 1);
++		efar_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
+ 
+ 		udma_enable &= ~(1 << devid);
+ 	}
+Index: b/drivers/ata/pata_it8213.c
+===================================================================
+--- a/drivers/ata/pata_it8213.c
++++ b/drivers/ata/pata_it8213.c
+@@ -186,13 +186,7 @@ static void it8213_set_dmamode (struct a
+ 		pci_write_config_word(dev, 0x54, ideconf);
+ 	} else {
+ 		/* MWDMA is driven by the PIO timings. */
+-		unsigned int mwdma = speed - XFER_MW_DMA_0;
+-		static const unsigned int needed_pio[3] = {
+-			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-		};
+-		int pio = needed_pio[mwdma] - XFER_PIO_0;
+-
+-		it8213_set_timings(ap, adev, pio, 1);
++		it8213_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
+ 
+ 		udma_enable &= ~(1 << devid);
+ 	}
+Index: b/drivers/ata/pata_oldpiix.c
+===================================================================
+--- a/drivers/ata/pata_oldpiix.c
++++ b/drivers/ata/pata_oldpiix.c
+@@ -135,14 +135,7 @@ static void oldpiix_set_piomode(struct a
+ static void oldpiix_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+ 	/* MWDMA is driven by the PIO timings. */
+-
+-	unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
+-	const unsigned int needed_pio[3] = {
+-		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-	};
+-	int pio = needed_pio[mwdma] - XFER_PIO_0;
+-
+-	oldpiix_set_timings(ap, adev, pio, 1);
++	oldpiix_set_timings(ap, adev, ata_mwdma_to_pio(adev->dma_mode), 1);
+ }
+ 
+ /**
+Index: b/drivers/ata/pata_radisys.c
+===================================================================
+--- a/drivers/ata/pata_radisys.c
++++ b/drivers/ata/pata_radisys.c
+@@ -102,18 +102,12 @@ static void radisys_set_dmamode (struct
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+ 	u8 udma_enable;
+ 
+-	/* MWDMA is driven by the PIO timings. */
+-
+ 	pci_read_config_byte(dev, 0x48, &udma_enable);
+ 
+ 	if (adev->dma_mode < XFER_UDMA_0) {
+-		unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
+-		const unsigned int needed_pio[3] = {
+-			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-		};
+-		int pio = needed_pio[mwdma] - XFER_PIO_0;
+-
+-		radisys_set_timings(ap, adev, pio, 1);
++		/* MWDMA is driven by the PIO timings. */
++		radisys_set_timings(ap, adev,
++				    ata_mwdma_to_pio(adev->dma_mode), 1);
+ 
+ 		udma_enable &= ~(1 << adev->devno);
+ 	} else {
+Index: b/drivers/ata/pata_rdc.c
+===================================================================
+--- a/drivers/ata/pata_rdc.c
++++ b/drivers/ata/pata_rdc.c
+@@ -227,16 +227,9 @@ static void rdc_set_dmamode(struct ata_p
+ 		pci_write_config_word(dev, 0x54, ideconf);
+ 
+ 		pci_write_config_byte(dev, 0x48, udma_enable);
+-	} else {
++	} else
+ 		/* MWDMA is driven by the PIO timings. */
+-		unsigned int mwdma = speed - XFER_MW_DMA_0;
+-		const unsigned int needed_pio[3] = {
+-			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-		};
+-		int pio = needed_pio[mwdma] - XFER_PIO_0;
+-
+-		rdc_set_timings(ap, adev, pio, 1);
+-	}
++		rdc_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
+ }
+ 
+ static struct ata_port_operations rdc_pata_ops = {
+Index: b/include/linux/ata.h
+===================================================================
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -1012,4 +1012,15 @@ static inline int lba_48_ok(u64 block, u
+ #define sata_pmp_gscr_rev(gscr)		(((gscr)[SATA_PMP_GSCR_REV] >> 8) & 0xff)
+ #define sata_pmp_gscr_ports(gscr)	((gscr)[SATA_PMP_GSCR_PORT_INFO] & 0xf)
+ 
++/* returns PIO number matching given MWDMA mode */
++static inline u8 ata_mwdma_to_pio(u8 mwdma_mode)
++{
++	unsigned int mwdma = mwdma_mode - XFER_MW_DMA_0;
++	const unsigned int needed_pio[3] = {
++		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
++	};
++
++	return needed_pio[mwdma] - XFER_PIO_0;
++}
++
+ #endif /* __LINUX_ATA_H__ */
