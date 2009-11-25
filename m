@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 02/86] ata_piix: unify code for programming PIO and MWDMA timings
-Date: Wed, 25 Nov 2009 18:02:32 +0100
-Message-ID: <20091125170232.5446.65235.sendpatchset@localhost>
+Subject: [PATCH 04/86] pata_artop: fix chipsets naming
+Date: Wed, 25 Nov 2009 18:02:46 +0100
+Message-ID: <20091125170246.5446.583.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758914AbZKYRDU@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758942AbZKYRDa@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,193 +11,351 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ata_piix: unify code for programming PIO and MWDMA timings
+Subject: [PATCH] pata_artop: fix chipsets naming
 
-It results in ~2% decrease in the driver LOC count and also ~2%
-decrease in the driver binary size (as measured on x86-32).
+6210, 6260[R] and 6280[R] are names used for AEC cards while
+ARTOP chipset names are: 850, 860[R] and 865[R] respectively.
 
-This change should be safe as this is how we have been doing
-things in IDE piix host driver for years.
+Fix the naming used in the driver to avoid confusion and make
+it more consistent with pata_atp87x.c.
 
-Fix piix_set_piomode() documentation while at it.
+While at it:
+- use atp86x_ prefix for functions used by all ATP86x chipsets
+  (previously they were erroneously prefixed with artop6260_)
+- use '133' instead of 'fast' to denote UDMA133 support
+- use '6880' instead of '6280 + fast' to denote AEC6880 card
+- fix documentation of ->prereset method
+- fix typo in the documentation of ->qc_defer method
+- fix few CodingStyle issues
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/ata_piix.c |  112 ++++++++++++++++---------------------------------
- 1 file changed, 37 insertions(+), 75 deletions(-)
+ drivers/ata/pata_artop.c |  111 +++++++++++++++++++++++------------------------
+ 1 file changed, 55 insertions(+), 56 deletions(-)
 
-Index: b/drivers/ata/ata_piix.c
+Index: b/drivers/ata/pata_artop.c
 ===================================================================
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -666,22 +666,11 @@ static int piix_pata_prereset(struct ata
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -39,7 +39,7 @@
  
- static DEFINE_SPINLOCK(piix_lock);
+ static int clock = 0;
  
--/**
-- *	piix_set_piomode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: um
-- *
-- *	Set PIO mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
-+			     u8 pio, bool use_mwdma)
+-static int artop6210_pre_reset(struct ata_link *link, unsigned long deadline)
++static int atp850_pre_reset(struct ata_link *link, unsigned long deadline)
  {
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
- 	unsigned long flags;
--	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
- 	unsigned int is_slave	= (adev->devno != 0);
- 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
- 	unsigned int slave_port	= 0x44;
-@@ -702,14 +691,18 @@ static void piix_set_piomode(struct ata_
- 			    { 2, 1 },
- 			    { 2, 3 }, };
- 
--	if (pio >= 2)
-+	if (pio >= 2 || use_mwdma)
- 		control |= 1;	/* TIME1 enable */
--	if (ata_pio_need_iordy(adev))
-+	if (ata_pio_need_iordy(adev) || use_mwdma)
- 		control |= 2;	/* IE enable */
--
- 	/* Intel specifies that the PPE functionality is for disk only */
- 	if (adev->class == ATA_DEV_ATA)
- 		control |= 4;	/* PPE enable */
-+	/* If the drive MWDMA is faster than it can do PIO then
-+	   we must force PIO into PIO0 */
-+	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
-+		/* Enable DMA timing only */
-+		control |= 8;	/* PIO cycles in PIO0 */
- 
- 	spin_lock_irqsave(&piix_lock, flags);
- 
-@@ -757,6 +750,22 @@ static void piix_set_piomode(struct ata_
+ 	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+@@ -55,15 +55,14 @@ static int artop6210_pre_reset(struct at
  }
  
  /**
-+ *	piix_set_piomode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: Drive in question
-+ *
-+ *	Set PIO mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	piix_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
-+}
-+
-+/**
-  *	do_pata_set_dmamode - Initialize host controller PATA PIO timings
+- *	artop6260_pre_reset	-	check for 40/80 pin
++ *	atp86x_pre_reset	-	probe begin
+  *	@link: link
+  *	@deadline: deadline jiffies for the operation
+  *
+- *	The ARTOP hardware reports the cable detect bits in register 0x49.
+  *	Nothing complicated needed here.
+  */
+ 
+-static int artop6260_pre_reset(struct ata_link *link, unsigned long deadline)
++static int atp86x_pre_reset(struct ata_link *link, unsigned long deadline)
+ {
+ 	static const struct pci_bits artop_enable_bits[] = {
+ 		{ 0x4AU, 1U, 0x02UL, 0x02UL },	/* port 0 */
+@@ -81,13 +80,13 @@ static int artop6260_pre_reset(struct at
+ }
+ 
+ /**
+- *	artop6260_cable_detect	-	identify cable type
++ *	atp86x_cable_detect	-	identify cable type
+  *	@ap: Port
+  *
+  *	Identify the cable type for the ARTOP interface in question
+  */
+ 
+-static int artop6260_cable_detect(struct ata_port *ap)
++static int atp86x_cable_detect(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u8 tmp;
+@@ -98,7 +97,7 @@ static int artop6260_cable_detect(struct
+ }
+ 
+ /**
+- *	artop6210_load_piomode - Load a set of PATA PIO timings
++ *	atp850_load_piomode - Load a set of PATA PIO timings
   *	@ap: Port whose timings we are configuring
-  *	@adev: Drive in question
-@@ -772,31 +781,20 @@ static void do_pata_set_dmamode(struct a
+  *	@adev: Device
+  *	@pio: PIO mode
+@@ -111,7 +110,8 @@ static int artop6260_cable_detect(struct
+  *	None (inherited from caller).
+  */
+ 
+-static void artop6210_load_piomode(struct ata_port *ap, struct ata_device *adev, unsigned int pio)
++static void atp850_load_piomode(struct ata_port *ap, struct ata_device *adev,
++				unsigned int pio)
  {
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
- 	unsigned long flags;
--	u8 master_port		= ap->port_no ? 0x42 : 0x40;
--	u16 master_data;
- 	u8 speed		= adev->dma_mode;
- 	int devid		= adev->devno + 2 * ap->port_no;
- 	u8 udma_enable		= 0;
- 
--	static const	 /* ISP  RTC */
--	u8 timings[][2]	= { { 0, 0 },
--			    { 0, 0 },
--			    { 1, 0 },
--			    { 2, 1 },
--			    { 2, 3 }, };
--
--	spin_lock_irqsave(&piix_lock, flags);
--
--	pci_read_config_word(dev, master_port, &master_data);
--	if (ap->udma_mask)
--		pci_read_config_byte(dev, 0x48, &udma_enable);
--
- 	if (speed >= XFER_UDMA_0) {
--		unsigned int udma = adev->dma_mode - XFER_UDMA_0;
-+		unsigned int udma = speed - XFER_UDMA_0;
- 		u16 udma_timing;
- 		u16 ideconf;
- 		int u_clock, u_speed;
- 
-+		spin_lock_irqsave(&piix_lock, flags);
-+
-+		pci_read_config_byte(dev, 0x48, &udma_enable);
-+
- 		/*
- 		 * UDMA is handled by a combination of clock switching and
- 		 * selection of dividers
-@@ -829,56 +827,20 @@ static void do_pata_set_dmamode(struct a
- 			   performance (WR_PingPong_En) */
- 			pci_write_config_word(dev, 0x54, ideconf);
- 		}
-+
-+		pci_write_config_byte(dev, 0x48, udma_enable);
-+
-+		spin_unlock_irqrestore(&piix_lock, flags);
- 	} else {
--		/*
--		 * MWDMA is driven by the PIO timings. We must also enable
--		 * IORDY unconditionally along with TIME1. PPE has already
--		 * been set when the PIO timing was set.
--		 */
--		unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
--		unsigned int control;
--		u8 slave_data;
-+		/* MWDMA is driven by the PIO timings. */
-+		unsigned int mwdma = speed - XFER_MW_DMA_0;
- 		const unsigned int needed_pio[3] = {
- 			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
- 		};
- 		int pio = needed_pio[mwdma] - XFER_PIO_0;
- 
--		control = 3;	/* IORDY|TIME1 */
--
--		/* If the drive MWDMA is faster than it can do PIO then
--		   we must force PIO into PIO0 */
--
--		if (adev->pio_mode < needed_pio[mwdma])
--			/* Enable DMA timing only */
--			control |= 8;	/* PIO cycles in PIO0 */
--
--		if (adev->devno) {	/* Slave */
--			master_data &= 0xFF4F;  /* Mask out IORDY|TIME1|DMAONLY */
--			master_data |= control << 4;
--			pci_read_config_byte(dev, 0x44, &slave_data);
--			slave_data &= (ap->port_no ? 0x0f : 0xf0);
--			/* Load the matching timing */
--			slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
--			pci_write_config_byte(dev, 0x44, slave_data);
--		} else { 	/* Master */
--			master_data &= 0xCCF4;	/* Mask out IORDY|TIME1|DMAONLY
--						   and master timing bits */
--			master_data |= control;
--			master_data |=
--				(timings[pio][0] << 12) |
--				(timings[pio][1] << 8);
--		}
--
--		if (ap->udma_mask)
--			udma_enable &= ~(1 << devid);
--
--		pci_write_config_word(dev, master_port, master_data);
-+		piix_set_timings(ap, adev, pio, 1);
- 	}
--	/* Don't scribble on 0x48 if the controller does not support UDMA */
--	if (ap->udma_mask)
--		pci_write_config_byte(dev, 0x48, udma_enable);
--
--	spin_unlock_irqrestore(&piix_lock, flags);
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+@@ -125,7 +125,7 @@ static void artop6210_load_piomode(struc
  }
  
  /**
+- *	artop6210_set_piomode - Initialize host controller PATA PIO timings
++ *	atp850_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device we are configuring
+  *
+@@ -138,13 +138,13 @@ static void artop6210_load_piomode(struc
+  *	None (inherited from caller).
+  */
+ 
+-static void artop6210_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static void atp850_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+ 	u8 ultra;
+ 
+-	artop6210_load_piomode(ap, adev, adev->pio_mode - XFER_PIO_0);
++	atp850_load_piomode(ap, adev, adev->pio_mode - XFER_PIO_0);
+ 
+ 	/* Clear the UDMA mode bits (set_dmamode will redo this if needed) */
+ 	pci_read_config_byte(pdev, 0x54, &ultra);
+@@ -153,19 +153,20 @@ static void artop6210_set_piomode(struct
+ }
+ 
+ /**
+- *	artop6260_load_piomode - Initialize host controller PATA PIO timings
++ *	atp86x_load_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device we are configuring
+  *	@pio: PIO mode
+  *
+- *	Set PIO mode for device, in host controller PCI config space. The
+- *	ARTOP6260 and relatives store the timing data differently.
++ *	Set PIO mode for device, in host controller PCI config space.
++ *	The ATP860 and relatives store the timing data differently.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+  */
+ 
+-static void artop6260_load_piomode (struct ata_port *ap, struct ata_device *adev, unsigned int pio)
++static void atp86x_load_piomode(struct ata_port *ap, struct ata_device *adev,
++				unsigned int pio)
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+@@ -179,7 +180,7 @@ static void artop6260_load_piomode (stru
+ }
+ 
+ /**
+- *	artop6260_set_piomode - Initialize host controller PATA PIO timings
++ *	atp86x_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device we are configuring
+  *
+@@ -192,12 +193,12 @@ static void artop6260_load_piomode (stru
+  *	None (inherited from caller).
+  */
+ 
+-static void artop6260_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static void atp86x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	u8 ultra;
+ 
+-	artop6260_load_piomode(ap, adev, adev->pio_mode - XFER_PIO_0);
++	atp86x_load_piomode(ap, adev, adev->pio_mode - XFER_PIO_0);
+ 
+ 	/* Clear the UDMA mode bits (set_dmamode will redo this if needed) */
+ 	pci_read_config_byte(pdev, 0x44 + ap->port_no, &ultra);
+@@ -206,7 +207,7 @@ static void artop6260_set_piomode(struct
+ }
+ 
+ /**
+- *	artop6210_set_dmamode - Initialize host controller PATA PIO timings
++ *	atp850_set_dmamode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device whose timings we are configuring
+  *
+@@ -216,7 +217,7 @@ static void artop6260_set_piomode(struct
+  *	None (inherited from caller).
+  */
+ 
+-static void artop6210_set_dmamode (struct ata_port *ap, struct ata_device *adev)
++static void atp850_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	unsigned int pio;
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+@@ -229,7 +230,7 @@ static void artop6210_set_dmamode (struc
+ 		pio = 4;
+ 
+ 	/* Load the PIO timing active/recovery bits */
+-	artop6210_load_piomode(ap, adev, pio);
++	atp850_load_piomode(ap, adev, pio);
+ 
+ 	pci_read_config_byte(pdev, 0x54, &ultra);
+ 	ultra &= ~(3 << (2 * dn));
+@@ -245,18 +246,18 @@ static void artop6210_set_dmamode (struc
+ }
+ 
+ /**
+- *	artop6260_set_dmamode - Initialize host controller PATA PIO timings
++ *	atp86x_set_dmamode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device we are configuring
+  *
+- *	Set DMA mode for device, in host controller PCI config space. The
+- *	ARTOP6260 and relatives store the timing data differently.
++ *	Set DMA mode for device, in host controller PCI config space.
++ *	The ATP860 and relatives store the timing data differently.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+  */
+ 
+-static void artop6260_set_dmamode (struct ata_port *ap, struct ata_device *adev)
++static void atp86x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+@@ -268,7 +269,7 @@ static void artop6260_set_dmamode (struc
+ 		pio = 4;
+ 
+ 	/* Load the PIO timing active/recovery bits */
+-	artop6260_load_piomode(ap, adev, pio);
++	atp86x_load_piomode(ap, adev, pio);
+ 
+ 	/* Add ultra DMA bits if in UDMA mode */
+ 	pci_read_config_byte(pdev, 0x44 + ap->port_no, &ultra);
+@@ -283,13 +284,13 @@ static void artop6260_set_dmamode (struc
+ }
+ 
+ /**
+- *	artop_6210_qc_defer	-	implement serialization
++ *	atp850_qc_defer	-	implement serialization
+  *	@qc: command
+  *
+  *	Issue commands per host on this chip.
+  */
+ 
+-static int artop6210_qc_defer(struct ata_queued_cmd *qc)
++static int atp850_qc_defer(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_host *host = qc->ap->host;
+ 	struct ata_port *alt = host->ports[1 ^ qc->ap->port_no];
+@@ -311,21 +312,21 @@ static struct scsi_host_template artop_s
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+-static struct ata_port_operations artop6210_ops = {
++static struct ata_port_operations atp850_ops = {
+ 	.inherits		= &ata_bmdma32_port_ops,
+ 	.cable_detect		= ata_cable_40wire,
+-	.set_piomode		= artop6210_set_piomode,
+-	.set_dmamode		= artop6210_set_dmamode,
+-	.prereset		= artop6210_pre_reset,
+-	.qc_defer		= artop6210_qc_defer,
++	.set_piomode		= atp850_set_piomode,
++	.set_dmamode		= atp850_set_dmamode,
++	.prereset		= atp850_pre_reset,
++	.qc_defer		= atp850_qc_defer,
+ };
+ 
+-static struct ata_port_operations artop6260_ops = {
++static struct ata_port_operations atp86x_ops = {
+ 	.inherits		= &ata_bmdma32_port_ops,
+-	.cable_detect		= artop6260_cable_detect,
+-	.set_piomode		= artop6260_set_piomode,
+-	.set_dmamode		= artop6260_set_dmamode,
+-	.prereset		= artop6260_pre_reset,
++	.cable_detect		= atp86x_cable_detect,
++	.set_piomode		= atp86x_set_piomode,
++	.set_dmamode		= atp86x_set_dmamode,
++	.prereset		= atp86x_pre_reset,
+ };
+ 
+ 
+@@ -346,33 +347,33 @@ static struct ata_port_operations artop6
+ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	static int printed_version;
+-	static const struct ata_port_info info_6210 = {
++	static const struct ata_port_info atp850_info = {
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA2,
+ 		.udma_mask 	= ATA_UDMA2,
+-		.port_ops	= &artop6210_ops,
++		.port_ops	= &atp850_ops,
+ 	};
+-	static const struct ata_port_info info_626x = {
++	static const struct ata_port_info atp860_info = {
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA2,
+ 		.udma_mask 	= ATA_UDMA4,
+-		.port_ops	= &artop6260_ops,
++		.port_ops	= &atp86x_ops,
+ 	};
+-	static const struct ata_port_info info_628x = {
++	static const struct ata_port_info atp865_info = {
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA2,
+ 		.udma_mask 	= ATA_UDMA5,
+-		.port_ops	= &artop6260_ops,
++		.port_ops	= &atp86x_ops,
+ 	};
+-	static const struct ata_port_info info_628x_fast = {
++	static const struct ata_port_info atp865_133_info = {
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA2,
+ 		.udma_mask 	= ATA_UDMA6,
+-		.port_ops	= &artop6260_ops,
++		.port_ops	= &atp86x_ops,
+ 	};
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+ 	int rc;
+@@ -385,20 +386,19 @@ static int artop_init_one (struct pci_de
+ 	if (rc)
+ 		return rc;
+ 
+-	if (id->driver_data == 0) {	/* 6210 variant */
+-		ppi[0] = &info_6210;
++	if (id->driver_data == 0) {		/* AEC6210 */
++		ppi[0] = &atp850_info;
+ 		/* BIOS may have left us in UDMA, clear it before libata probe */
+ 		pci_write_config_byte(pdev, 0x54, 0);
+-	}
+-	else if (id->driver_data == 1)	/* 6260 */
+-		ppi[0] = &info_626x;
+-	else if (id->driver_data == 2)	{ /* 6280 or 6280 + fast */
++	} else if (id->driver_data == 1) {	/* AEC6260[R] */
++		ppi[0] = &atp860_info;
++	} else if (id->driver_data == 2) { 	/* AEC6280[R] */
+ 		unsigned long io = pci_resource_start(pdev, 4);
+ 		u8 reg;
+ 
+-		ppi[0] = &info_628x;
+-		if (inb(io) & 0x10)
+-			ppi[0] = &info_628x_fast;
++		ppi[0] = &atp865_info;
++		if (inb(io) & 0x10)		/* AEC6880[R] */
++			ppi[0] = &atp865_133_info;
+ 		/* Mac systems come up with some registers not set as we
+ 		   will need them */
+ 
+@@ -416,7 +416,6 @@ static int artop_init_one (struct pci_de
+ 		/* Enable IRQ output and burst mode */
+ 		pci_read_config_byte(pdev, 0x4a, &reg);
+ 		pci_write_config_byte(pdev, 0x4a, (reg & ~0x01) | 0x80);
+-
+ 	}
+ 
+ 	BUG_ON(ppi[0] == NULL);
