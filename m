@@ -1,29 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Wed, 25 Nov 2009 18:01:18 +0000
-Message-ID: <20091125180118.66053387@lxorguk.ukuu.org.uk>
-References: <20091125170218.5446.13513.sendpatchset@localhost>
-	<4B0D6735.8000604@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 62/86] pata_pdc202xx_old: document known issues
+Date: Wed, 25 Nov 2009 18:52:40 +0100
+Message-ID: <200911251852.40281.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125174632.174666be@lxorguk.ukuu.org.uk> <4B0D6E62.3010609@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52245 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758837AbZKYR7X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:59:23 -0500
-In-Reply-To: <4B0D6735.8000604@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934890AbZKYR7e@vger.kernel.org>
+In-Reply-To: <4B0D6E62.3010609@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Summary would be lots of really good stuff and review.
+On Wednesday 25 November 2009 06:50:26 pm Jeff Garzik wrote:
+> On 11/25/2009 12:46 PM, Alan Cox wrote:
+> > On Wed, 25 Nov 2009 18:09:48 +0100
+> > Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>  wrote:
+> >
+> >> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> >> Subject: [PATCH] pata_pdc202xx_old: document known issues
+> >>
+> >> Document known issues with the driver to aid distribution makers,
+> >> users and developers in making informed decisions instead of wasting
+> >> their time needlessly.
+> >>
+> >> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> >> ---
+> >>   drivers/ata/Kconfig |    4 ++++
+> >>   1 file changed, 4 insertions(+)
+> >>
+> >> Index: b/drivers/ata/Kconfig
+> >> ===================================================================
+> >> --- a/drivers/ata/Kconfig
+> >> +++ b/drivers/ata/Kconfig
+> >> @@ -583,6 +583,10 @@ config PATA_PDC_OLD
+> >>   	  This option enables support for the Promise 20246, 20262, 20263,
+> >>   	  20265 and 20267 adapters.
+> >>
+> >> +	  Known issues:
+> >> +	  - UDMA transfers fail mysteriously on some chipsets
+> >> +	  - ATAPI DMA is unsupported currently
+> >
+> > Not sure this is useful, because the reports of UDMA failures are lower
+> > than most other reports. Should IPV6 have "known issues, mysterious timer
+> > list corruption" for example which occurs far more. Not do we list 'no
+> > atapi dma' in the help for the IDE SII driver ?
+> 
+> If the chip can support ATAPI DMI, but the driver does not, that 
+> deserves a comment, even if it's "hardware bugs prevent ATAPI DMA" or 
+> "ATAPI DMA would require much more code to support, so we did not bother 
+> for now"
+> 
+> Ditto for things like useful ideas ("consider PIO-over-DMA in SiI 311x") 
+> and other would-be-nice-to-have ideas.  These can serve as projects for 
+> newbies, or reminders for old-timers.
 
-> hmmmm....  will reserve comment until I review it thoroughly, but I am a 
-> bit reluctant to move away from the current struct-driver style driver 
-> init/setup model.
+The problem is that the old driver supported ATAPI DMA so people may have
+quite different expectations than in case of never-ever-implemented-ideas.
 
-I think the model is right - I'd prefer it to be in the driver structs
-somewhere but the basic point that init and resume often do the same job
-is a very sound one.
+--
+Bartlomiej Zolnierkiewicz
