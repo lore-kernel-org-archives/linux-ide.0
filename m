@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 06/86] pata_artop: unify ->prereset methods
-Date: Wed, 25 Nov 2009 18:03:00 +0100
-Message-ID: <20091125170300.5446.25122.sendpatchset@localhost>
+Subject: [PATCH 17/86] pata_efar: fix register naming used in efar_set_piomode()
+Date: Wed, 25 Nov 2009 18:04:22 +0100
+Message-ID: <20091125170422.5446.10637.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758976AbZKYRDn@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759173AbZKYRFG@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,79 +11,79 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_artop: unify ->prereset methods
+Subject: [PATCH] pata_efar: fix register naming used in efar_set_piomode()
 
-We can use the same ->prereset method for ATP850 and ATP86xR chipsets.
+Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
+and 'master_data' respectively to match register naming used in
+efar_set_dma_mode() and in ata_piix.c.
+
+Fix efar_set_piomode() documentation and 'master_port' type
+while at it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_artop.c |   28 +++++++---------------------
- 1 file changed, 7 insertions(+), 21 deletions(-)
+ drivers/ata/pata_efar.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-Index: b/drivers/ata/pata_artop.c
+Index: b/drivers/ata/pata_efar.c
 ===================================================================
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -39,30 +39,15 @@
- 
- static int clock = 0;
- 
--static int atp850_pre_reset(struct ata_link *link, unsigned long deadline)
--{
--	struct ata_port *ap = link->ap;
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	const struct pci_bits artop_enable_bits[] = {
--		{ 0x4AU, 1U, 0x02UL, 0x02UL },	/* port 0 */
--		{ 0x4AU, 1U, 0x04UL, 0x04UL },	/* port 1 */
--	};
--
--	if (!pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
--		return -ENOENT;
--
--	return ata_sff_prereset(link, deadline);
--}
--
+--- a/drivers/ata/pata_efar.c
++++ b/drivers/ata/pata_efar.c
+@@ -71,7 +71,7 @@ static int efar_cable_detect(struct ata_
  /**
-- *	atp86x_pre_reset	-	probe begin
-+ *	atp8xx_prereset	-	probe begin
-  *	@link: link
-  *	@deadline: deadline jiffies for the operation
+  *	efar_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+- *	@adev: um
++ *	@adev: Device to program
   *
-  *	Nothing complicated needed here.
-  */
- 
--static int atp86x_pre_reset(struct ata_link *link, unsigned long deadline)
-+static int atp8xx_prereset(struct ata_link *link, unsigned long deadline)
+  *	Set PIO mode for device, in host controller PCI config space.
+  *
+@@ -83,8 +83,8 @@ static void efar_set_piomode (struct ata
  {
- 	static const struct pci_bits artop_enable_bits[] = {
- 		{ 0x4AU, 1U, 0x02UL, 0x02UL },	/* port 0 */
-@@ -72,8 +57,9 @@ static int atp86x_pre_reset(struct ata_l
- 	struct ata_port *ap = link->ap;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+-	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
+-	u16 idetm_data;
++	u8 master_port		= ap->port_no ? 0x42 : 0x40;
++	u16 master_data;
+ 	int control = 0;
  
--	/* Odd numbered device ids are the units with enable bits (the -R cards) */
--	if (pdev->device % 1 && !pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
-+	/* Odd numbered device ids are the units with enable bits. */
-+	if (pdev->device % 1 &&
-+	    !pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
- 		return -ENOENT;
+ 	/*
+@@ -107,20 +107,20 @@ static void efar_set_piomode (struct ata
+ 	if (adev->class == ATA_DEV_ATA)
+ 		control |= 4;	/* PPE */
  
- 	return ata_sff_prereset(link, deadline);
-@@ -317,7 +303,7 @@ static struct ata_port_operations atp850
- 	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= atp850_set_piomode,
- 	.set_dmamode		= atp850_set_dmamode,
--	.prereset		= atp850_pre_reset,
-+	.prereset		= atp8xx_prereset,
- 	.qc_defer		= atp850_qc_defer,
- };
+-	pci_read_config_word(dev, idetm_port, &idetm_data);
++	pci_read_config_word(dev, master_port, &master_data);
  
-@@ -326,7 +312,7 @@ static struct ata_port_operations atp86x
- 	.cable_detect		= atp86x_cable_detect,
- 	.set_piomode		= atp86x_set_piomode,
- 	.set_dmamode		= atp86x_set_dmamode,
--	.prereset		= atp86x_pre_reset,
-+	.prereset		= atp8xx_prereset,
- };
+ 	/* Set PPE, IE, and TIME as appropriate */
+ 	if (adev->devno == 0) {
+-		idetm_data &= 0xCCF0;
+-		idetm_data |= control;
+-		idetm_data |= (timings[pio][0] << 12) |
++		master_data &= 0xCCF0;
++		master_data |= control;
++		master_data |= (timings[pio][0] << 12) |
+ 			(timings[pio][1] << 8);
+ 	} else {
+ 		int shift = 4 * ap->port_no;
+ 		u8 slave_data;
  
- static void atp8xx_fixup(struct pci_dev *pdev)
+-		idetm_data &= 0xFF0F;
+-		idetm_data |= (control << 4);
++		master_data &= 0xFF0F;
++		master_data |= (control << 4);
+ 
+ 		/* Slave timing in separate register */
+ 		pci_read_config_byte(dev, 0x44, &slave_data);
+@@ -129,8 +129,8 @@ static void efar_set_piomode (struct ata
+ 		pci_write_config_byte(dev, 0x44, slave_data);
+ 	}
+ 
+-	idetm_data |= 0x4000;	/* Ensure SITRE is set */
+-	pci_write_config_word(dev, idetm_port, idetm_data);
++	master_data |= 0x4000;	/* Ensure SITRE is set */
++	pci_write_config_word(dev, master_port, master_data);
+ }
+ 
+ /**
