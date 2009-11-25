@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 05/86] pata_artop: add Power Management support
-Date: Wed, 25 Nov 2009 18:02:53 +0100
-Message-ID: <20091125170253.5446.62167.sendpatchset@localhost>
+Subject: [PATCH 07/86] pata_artop: remove dead 34MHz PCI clock support
+Date: Wed, 25 Nov 2009 18:03:07 +0100
+Message-ID: <20091125170307.5446.12439.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758957AbZKYRDi@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758997AbZKYRDv@vger.kernel.org>
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,132 +11,88 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_artop: add Power Management support
+Subject: [PATCH] pata_artop: remove dead 34MHz PCI clock support
 
-There shouldn't be any problems with it as IDE aec62xx host driver
-has been supporting Power Management for over year now.
+It has been dead for the last three years (== since the initial driver
+merge) and probability that it will ever get fixed is quite low.
+
+Since there is no reason to keep this dead code around any longer just
+remove it (it can still be retrieved from the git history if necessary).
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_artop.c |   72 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 51 insertions(+), 21 deletions(-)
+ drivers/ata/pata_artop.c |   29 ++++++++---------------------
+ 1 file changed, 8 insertions(+), 21 deletions(-)
 
 Index: b/drivers/ata/pata_artop.c
 ===================================================================
 --- a/drivers/ata/pata_artop.c
 +++ b/drivers/ata/pata_artop.c
-@@ -2,7 +2,7 @@
-  *    pata_artop.c - ARTOP ATA controller driver
-  *
-  *	(C) 2006 Red Hat
-- *	(C) 2007 Bartlomiej Zolnierkiewicz
-+ *	(C) 2007,2009 Bartlomiej Zolnierkiewicz
-  *
-  *    Based in part on drivers/ide/pci/aec62xx.c
-  *	Copyright (C) 1999-2002	Andre Hedrick <andre@linux-ide.org>
-@@ -330,6 +330,33 @@ static struct ata_port_operations atp86x
- 	.prereset		= atp86x_pre_reset,
- };
+@@ -30,15 +30,6 @@
+ #define DRV_NAME	"pata_artop"
+ #define DRV_VERSION	"0.4.5"
  
-+static void atp8xx_fixup(struct pci_dev *pdev)
-+{
-+	if (pdev->device == 0x0005)
-+		/* BIOS may have left us in UDMA, clear it before probe */
-+		pci_write_config_byte(pdev, 0x54, 0);
-+	else if (pdev->device == 0x0008 || pdev->device == 0x0009) {
-+		u8 reg;
-+
-+		/* Mac systems come up with some registers not set as we
-+		   will need them */
-+
-+		/* Clear reset & test bits */
-+		pci_read_config_byte(pdev, 0x49, &reg);
-+		pci_write_config_byte(pdev, 0x49, reg & ~ 0x30);
-+
-+		/* PCI latency must be > 0x80 for burst mode, tweak it
-+		 * if required.
-+		 */
-+		pci_read_config_byte(pdev, PCI_LATENCY_TIMER, &reg);
-+		if (reg <= 0x80)
-+			pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x90);
-+
-+		/* Enable IRQ output and burst mode */
-+		pci_read_config_byte(pdev, 0x4a, &reg);
-+		pci_write_config_byte(pdev, 0x4a, (reg & ~0x01) | 0x80);
-+	}
-+}
- 
+-/*
+- *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
+- *	get PCI bus speed functionality we leave this as 0. Its a variable
+- *	for when we get the functionality and also for folks wanting to
+- *	test stuff.
+- */
+-
+-static int clock = 0;
+-
  /**
-  *	artop_init_one - Register ARTOP ATA PCI device with kernel services
-@@ -389,41 +416,40 @@ static int artop_init_one (struct pci_de
+  *	atp8xx_prereset	-	probe begin
+  *	@link: link
+@@ -101,13 +92,11 @@ static void atp850_load_piomode(struct a
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+-	const u16 timing[2][5] = {
+-		{ 0x0000, 0x000A, 0x0008, 0x0303, 0x0301 },
+-		{ 0x0700, 0x070A, 0x0708, 0x0403, 0x0401 }
++	const u16 timing[5] =
++		{ 0x0000, 0x000A, 0x0008, 0x0303, 0x0301 };
  
- 	if (id->driver_data == 0) {		/* AEC6210 */
- 		ppi[0] = &atp850_info;
--		/* BIOS may have left us in UDMA, clear it before libata probe */
--		pci_write_config_byte(pdev, 0x54, 0);
- 	} else if (id->driver_data == 1) {	/* AEC6260[R] */
- 		ppi[0] = &atp860_info;
- 	} else if (id->driver_data == 2) { 	/* AEC6280[R] */
- 		unsigned long io = pci_resource_start(pdev, 4);
--		u8 reg;
- 
- 		ppi[0] = &atp865_info;
- 		if (inb(io) & 0x10)		/* AEC6880[R] */
- 			ppi[0] = &atp865_133_info;
--		/* Mac systems come up with some registers not set as we
--		   will need them */
--
--		/* Clear reset & test bits */
--		pci_read_config_byte(pdev, 0x49, &reg);
--		pci_write_config_byte(pdev, 0x49, reg & ~ 0x30);
--
--		/* PCI latency must be > 0x80 for burst mode, tweak it
--		 * if required.
--		 */
--		pci_read_config_byte(pdev, PCI_LATENCY_TIMER, &reg);
--		if (reg <= 0x80)
--			pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x90);
--
--		/* Enable IRQ output and burst mode */
--		pci_read_config_byte(pdev, 0x4a, &reg);
--		pci_write_config_byte(pdev, 0x4a, (reg & ~0x01) | 0x80);
- 	}
- 
- 	BUG_ON(ppi[0] == NULL);
- 
-+	atp8xx_fixup(pdev);
-+
- 	return ata_pci_sff_init_one(pdev, ppi, &artop_sht, NULL);
+-	};
+ 	/* Load the PIO timing active/recovery bits */
+-	pci_write_config_word(pdev, 0x40 + 2 * dn, timing[clock][pio]);
++	pci_write_config_word(pdev, 0x40 + 2 * dn, timing[pio]);
  }
  
-+#ifdef CONFIG_PM
-+static int atp8xx_reinit_one(struct pci_dev *pdev)
-+{
-+	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int rc;
-+
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc)
-+		return rc;
-+
-+	atp8xx_fixup(pdev);
-+
-+	ata_host_resume(host);
-+	return 0;
-+}
-+#endif
-+
- static const struct pci_device_id artop_pci_tbl[] = {
- 	{ PCI_VDEVICE(ARTOP, 0x0005), 0 },
- 	{ PCI_VDEVICE(ARTOP, 0x0006), 1 },
-@@ -439,6 +465,10 @@ static struct pci_driver artop_pci_drive
- 	.id_table		= artop_pci_tbl,
- 	.probe			= artop_init_one,
- 	.remove			= ata_pci_remove_one,
-+#ifdef CONFIG_PM
-+	.suspend		= ata_pci_device_suspend,
-+	.resume			= atp8xx_reinit_one,
-+#endif
- };
+ /**
+@@ -156,13 +145,11 @@ static void atp86x_load_piomode(struct a
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+-	const u8 timing[2][5] = {
+-		{ 0x00, 0x0A, 0x08, 0x33, 0x31 },
+-		{ 0x70, 0x7A, 0x78, 0x43, 0x41 }
++	const u8 timing[5] =
++		{ 0x00, 0x0A, 0x08, 0x33, 0x31 };
  
- static int __init artop_init(void)
+-	};
+ 	/* Load the PIO timing active/recovery bits */
+-	pci_write_config_byte(pdev, 0x40 + dn, timing[clock][pio]);
++	pci_write_config_byte(pdev, 0x40 + dn, timing[pio]);
+ }
+ 
+ /**
+@@ -223,7 +210,7 @@ static void atp850_set_dmamode(struct at
+ 
+ 	/* Add ultra DMA bits if in UDMA mode */
+ 	if (adev->dma_mode >= XFER_UDMA_0) {
+-		u8 mode = (adev->dma_mode - XFER_UDMA_0) + 1 - clock;
++		u8 mode = (adev->dma_mode - XFER_UDMA_0) + 1;
+ 		if (mode == 0)
+ 			mode = 1;
+ 		ultra |= (mode << (2 * dn));
+@@ -261,7 +248,7 @@ static void atp86x_set_dmamode(struct at
+ 	pci_read_config_byte(pdev, 0x44 + ap->port_no, &ultra);
+ 	ultra &= ~(7 << (4  * adev->devno));	/* One nibble per drive */
+ 	if (adev->dma_mode >= XFER_UDMA_0) {
+-		u8 mode = adev->dma_mode - XFER_UDMA_0 + 1 - clock;
++		u8 mode = adev->dma_mode - XFER_UDMA_0 + 1;
+ 		if (mode == 0)
+ 			mode = 1;
+ 		ultra |= (mode << (4 * adev->devno));
