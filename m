@@ -1,33 +1,35 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 53/86] pata_marvell: fix marvell_pre_reset() documentation
-Date: Wed, 25 Nov 2009 18:08:41 +0100
-Message-ID: <20091125170841.5446.28051.sendpatchset@localhost>
-References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933343AbZKYRTn@vger.kernel.org>
-In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
+Subject: Re: [PATCH 03/86] pata_artop: add 32-bit PIO support
+Date: Wed, 25 Nov 2009 18:18:18 +0100
+Message-ID: <200911251818.18521.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170239.5446.26287.sendpatchset@localhost> <20091125171242.70b8019f@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933459AbZKYRUR@vger.kernel.org>
+In-Reply-To: <20091125171242.70b8019f@lxorguk.ukuu.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_marvell: fix marvell_pre_reset() documentation
+On Wednesday 25 November 2009 06:12:42 pm Alan Cox wrote:
+> On Wed, 25 Nov 2009 18:02:39 +0100
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] pata_artop: add 32-bit PIO support
+> > 
+> > There shouldn't be any problems with it as IDE aec62xx host driver
+> > has been allowing 32-bit PIO operations for years.
+> 
+> Allowing or defaulting too ?
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/pata_marvell.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+For aec62xx: allowing, for some other drivers: defaulting ('using'
+in the patch description instead of 'allowing').  However some
+popular distributions have been defaulting to always enabling it
+if was supported by the driver.
 
-Index: b/drivers/ata/pata_marvell.c
-===================================================================
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -58,7 +58,7 @@ static int marvell_pata_active(struct pc
- }
- 
- /**
-- *	marvell_pre_reset	-	check for 40/80 pin
-+ *	marvell_pre_reset	-	probe begin
-  *	@link: link
-  *	@deadline: deadline jiffies for the operation
-  *
+--
+Bartlomiej Zolnierkiewicz
