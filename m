@@ -1,38 +1,101 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 63/86] pata_radisys: fix UDMA handling
-Date: Wed, 25 Nov 2009 18:09:55 +0100
-Message-ID: <20091125170955.5446.92093.sendpatchset@localhost>
+Subject: [PATCH 73/86] pata_serverworks: use standard cable detection methods
+Date: Wed, 25 Nov 2009 18:11:07 +0100
+Message-ID: <20091125171107.5446.66796.sendpatchset@localhost>
 References: <20091125170218.5446.13513.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759305AbZKYRKp@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:39574 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933582AbZKYRLq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Nov 2009 12:11:46 -0500
 In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_radisys: fix UDMA handling
-
-Set correct bits to switch between UDMA2 and UDMA4.
+Subject: [PATCH] pata_serverworks: use standard cable detection methods
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_radisys.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/pata_serverworks.c |   45 ++++++++++-------------------------------
+ 1 file changed, 12 insertions(+), 33 deletions(-)
 
-Index: b/drivers/ata/pata_radisys.c
+Index: b/drivers/ata/pata_serverworks.c
 ===================================================================
---- a/drivers/ata/pata_radisys.c
-+++ b/drivers/ata/pata_radisys.c
-@@ -139,9 +139,9 @@ static void radisys_set_dmamode (struct 
- 		pci_read_config_byte(dev, 0x4A, &udma_mode);
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -64,7 +64,8 @@ static const char *csb_bad_ata100[] = {
+  *	bits of the subsystem ID.
+  */
  
- 		if (adev->xfer_mode == XFER_UDMA_2)
--			udma_mode &= ~ (1 << adev->devno);
-+			udma_mode &= ~(2 << (adev->devno * 4));
- 		else /* UDMA 4 */
--			udma_mode |= (1 << adev->devno);
-+			udma_mode |= (2 << (adev->devno * 4));
+-static int dell_cable(struct ata_port *ap) {
++static int dell_cable(struct ata_port *ap)
++{
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
  
- 		pci_write_config_byte(dev, 0x4A, udma_mode);
+ 	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
+@@ -81,7 +82,8 @@ static int dell_cable(struct ata_port *a
+  *	need to extend the Dell one in future
+  */
+ 
+-static int sun_cable(struct ata_port *ap) {
++static int sun_cable(struct ata_port *ap)
++{
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 
+ 	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
+@@ -89,29 +91,6 @@ static int sun_cable(struct ata_port *ap
+ 	return ATA_CBL_PATA40;
+ }
+ 
+-/**
+- *	osb4_cable	-	OSB4 cable detect
+- *	@ap: ATA port to check
+- *
+- *	The OSB4 isn't UDMA66 capable so this is easy
+- */
+-
+-static int osb4_cable(struct ata_port *ap) {
+-	return ATA_CBL_PATA40;
+-}
+-
+-/**
+- *	csb_cable	-	CSB5/6 cable detect
+- *	@ap: ATA port to check
+- *
+- *	Serverworks default arrangement is to use the drive side detection
+- *	only.
+- */
+-
+-static int csb_cable(struct ata_port *ap) {
+-	return ATA_CBL_PATA_UNK;
+-}
+-
+ struct sv_cable_table {
+ 	int device;
+ 	int subvendor;
+@@ -124,14 +103,14 @@ struct sv_cable_table {
+  */
+ 
+ static struct sv_cable_table cable_detect[] = {
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_VENDOR_ID_DELL, dell_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE, PCI_VENDOR_ID_DELL, dell_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_VENDOR_ID_SUN,  sun_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE, PCI_ANY_ID, osb4_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_ANY_ID, csb_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE, PCI_ANY_ID, csb_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2, PCI_ANY_ID, csb_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_HT1000IDE, PCI_ANY_ID, csb_cable },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, dell_cable },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, dell_cable },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  sun_cable  },
++	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE,   PCI_ANY_ID, ata_cable_40wire  },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_ANY_ID, ata_cable_unknown },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_ANY_ID, ata_cable_unknown },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2,  PCI_ANY_ID, ata_cable_unknown },
++	{ PCI_DEVICE_ID_SERVERWORKS_HT1000IDE, PCI_ANY_ID, ata_cable_unknown },
+ 	{ }
+ };
  
