@@ -1,100 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 64/86] pata_radisys: unify code for programming PIO and
- MWDMA timings
-Date: Thu, 26 Nov 2009 22:03:53 +0300
-Message-ID: <4B0ED119.1090802@ru.mvista.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125171003.5446.66341.sendpatchset@localhost>
+From: Ryan Mallon <ryan@bluewatersys.com>
+Subject: Re: [PATCH] add PATA host controller support for Cirrus Logic's EP93xx
+ CPUs
+Date: Fri, 27 Nov 2009 08:46:01 +1300
+Message-ID: <4B0EDAF9.7080902@bluewatersys.com>
+References: <200911261651.40928.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:3695 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1750888AbZKZTC4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 14:02:56 -0500
-In-Reply-To: <20091125171003.5446.66341.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752486AbZKZTpl@vger.kernel.org>
+In-Reply-To: <200911261651.40928.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.montavista.com>, Joao Ramos <joao.ramos@inov.pt>, H Hartley Sweeten <hsweeten@visionengravers.com>
+List-Id: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
+> Based on the older IDE host driver by Joao Ramos and review comments
+> for it from Sergei Shtylyov.  Not yet tested with the real hardware.
 
-> It results in ~6% decrease in the driver LOC count and also ~1%
-> decrease in the driver binary size (as measured on x86-32).
+> 
+> Sidenote:
+> 
+> I have neither the hardware nor much personal interest in adding support
+> for it so I did it mainly cause:
+> 
+> - IDE host driver wasn't merged due to policy change and I hate seeing fair
+>   amount of review work from me & Sergei going into waste. :)
+> 
+> - I was curious about some claims I've been hearing recently so I decided to
+>   verify them in practice (porting the driver to libata was relatively easy
+>   but unfortunately in the process it gained almost 50% in the LOC count..).
+> 
+> so if somebody would like to take over this patch feel free to do it.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ata/pata_radisys.c |   66 +++++++++++++++++----------------------------
->  1 file changed, 25 insertions(+), 41 deletions(-)
+Thanks for doing this. I'll see if I can dig out a hard-drive and give
+this a test. I had some comments, but I will fix them up myself if I get
+round to testing this.
 
-> Index: b/drivers/ata/pata_radisys.c
-> ===================================================================
-> --- a/drivers/ata/pata_radisys.c
-> +++ b/drivers/ata/pata_radisys.c
-> @@ -26,20 +26,9 @@
->  #define DRV_NAME	"pata_radisys"
->  #define DRV_VERSION	"0.4.4"
->  
-> -/**
-> - *	radisys_set_piomode - Initialize host controller PATA PIO timings
-> - *	@ap: ATA port
-> - *	@adev: Device whose timings we are configuring
-> - *
-> - *	Set PIO mode for device, in host controller PCI config space.
-> - *
-> - *	LOCKING:
-> - *	None (inherited from caller).
-> - */
-> -
-> -static void radisys_set_piomode (struct ata_port *ap, struct ata_device *adev)
-> +static void radisys_set_timings(struct ata_port *ap, struct ata_device *adev,
-> +				u8 pio, bool use_mwdma)
->  {
-> -	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
->  	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
->  	u16 idetm_data;
->  	int control = 0;
-> @@ -52,7 +41,7 @@ static void radisys_set_piomode (struct
->  	 */
->  
->  	static const	 /* ISP  RTC */
-> -	u8 timings[][2]	= { { 0, 0 },	/* Check me */
-> +	u8 timings[][2]	= { { 0, 0 },
->  			    { 0, 0 },
->  			    { 1, 1 },
->  			    { 2, 2 },
-> @@ -62,6 +51,10 @@ static void radisys_set_piomode (struct
->  		control |= 1;	/* TIME1 enable */
->  	if (ata_pio_need_iordy(adev))
->  		control |= 2;	/* IE IORDY */
-> +	/* If the drive MWDMA is faster than it can do PIO then
-> +	   we must force PIO0 for PIO cycles. */
+~Ryan
 
-    Multi-line comment style should preferrably be:
+-- 
+Bluewater Systems Ltd - ARM Technology Solution Centre
 
-	/*
-	 * blah
-	 * blah
-	 */
-
-> +	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
-> +		control = 1;
-
-    Hm, shouldn't that be 8?
-
-> @@ -115,20 +112,8 @@ static void radisys_set_dmamode (struct
->  			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
->  		};
->  		int pio = needed_pio[mwdma] - XFER_PIO_0;
-> -		int control = 3;	/* IORDY|TIME0 */
-> -
-> -		/* If the drive MWDMA is faster than it can do PIO then
-> -		   we must force PIO0 for PIO cycles. */
-> -
-> -		if (adev->pio_mode < needed_pio[mwdma])
-> -			control = 1;
-
-    Perhaps there's a bug here?
-
-MBR, Sergei
+Ryan Mallon         		5 Amuri Park, 404 Barbadoes St
+ryan@bluewatersys.com         	PO Box 13 889, Christchurch 8013
+http://www.bluewatersys.com	New Zealand
+Phone: +64 3 3779127		Freecall: Australia 1800 148 751
+Fax:   +64 3 3779135			  USA 1800 261 2934
