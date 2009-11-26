@@ -1,41 +1,48 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: add comment documenting PIO latency issues on UP
-Date: Thu, 26 Nov 2009 17:11:16 +0100
-Message-ID: <200911261711.16954.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 16/86] pata_efar: MWDMA0 is unsupported
+Date: Thu, 26 Nov 2009 19:17:00 +0300
+Message-ID: <4B0EA9FC.1000208@ru.mvista.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091126151546.6c891014@lxorguk.ukuu.org.uk> <4B0E9FB9.8050508@ru.mvista.com> <200911261640.39208.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760770AbZKZQMO@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:57931 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1755859AbZKZQQD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 11:16:03 -0500
+In-Reply-To: <200911261640.39208.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hello.
 
-Based on:
-http://lkml.indiana.edu/hypermail/linux/kernel/0908.2/01420.html
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/libata-core.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+>>>>>>MWDMA0 timings cannot be met with the PIIX based controller
+>>>>>>programming interface.
 
-Index: b/drivers/ata/libata-core.c
-===================================================================
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6624,6 +6624,13 @@ static int __init ata_init(void)
- {
- 	ata_parse_force_param();
- 
-+	/*
-+	 * FIXME: In UP case, there is only one workqueue thread and if you
-+	 * have more than one PIO device, latency is bloody awful, with
-+	 * occasional multi-second "hiccups" as one PIO device waits for
-+	 * another.  It's an ugly wart that users DO occasionally complain
-+	 * about; luckily most users have at most one PIO polled device.
-+	 */
- 	ata_wq = create_workqueue("ata");
- 	if (!ata_wq)
- 		goto free_force_tbl;
+>>>>>The efar documentation makes no reference to not being capable of MWDMA0,
+>>>>>so where does this come from ? No MWDMA0 is an Intel erratum it appears.
+
+>>>>No MWDMA0 support is a common issue on all 'PIIX-like' controllers.
+
+>>>>In case of this chipset while the (preliminary) documentation claims MWDMA0
+>>>>support on the 'FEATURES' page the later 'programming guide' part describes
+>>>>only PIO0-4, SWDMA2, MWDMA1-2 and UDMA0-4 transfer modes as supported.
+
+>>>Cool - I only have the original docs.
+
+>>    Hm, me too... perhaps worth putting in Jeff's documentation archive?
+
+> Me too?  I just have what 'The Good Uncle Google' has..
+
+    Well, I've googled for it and was unable to find any valid links even to 
+my preliminary version anymore. Perhaps I haven't looked hard enough...
+
+> --
+> Bartlomiej Zolnierkiewicz
+
+MBR, Sergei
