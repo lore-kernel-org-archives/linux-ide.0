@@ -1,46 +1,50 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Thin provisioning fixes (take 3)
-Date: Thu, 26 Nov 2009 11:09:40 -0600
-Message-ID: <1259255380.7584.64.camel@mulgrave.site>
-References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata_it8213: MWDMA0 is unsupported
+Date: Thu, 26 Nov 2009 20:23:18 +0300
+Message-ID: <4B0EB986.2010801@ru.mvista.com>
+References: <200911261728.36433.bzolnier@gmail.com> <200911261800.55025.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:45882 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755151AbZKZRJj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Nov 2009 12:09:39 -0500
-In-Reply-To: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:27171 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1756432AbZKZRWV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 12:22:21 -0500
+In-Reply-To: <200911261800.55025.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jens.axboe@oracle.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 2009-11-26 at 12:00 -0500, Martin K. Petersen wrote:
-> Changes since last kit:
-> 
->  - Patch 1 (block): Wire up an ioctl that reports whether the
->    block device zeroes after discard
-> 
->  - Patch 2 (sd): Tweak max_discard_sectors reporting
-> 
->  - Patch 3 (scsi, new): Retry temporary TP write errors
-> 
->  - Patch 4 (libata): No change
-> 
->  - Patch 5 (libata): Switch to a bytes-in, bytes-out convention
->    for ata_set_lba_range_entries() to make things more clear
-> 
-> I think we need a bit R&D wrt. discard coalescing and I doubt
-> we'll have that ready for the merge window.  So I suggest we
-> stick with the current loop-over-max-discard-sectors approach for
-> 2.6.32.
+Bartlomiej Zolnierkiewicz wrote:
 
-So you forgot to specify ordering.  I think the right ordering is that
-actually, there isn't any.  Jens can take 1, I can take 2,3 and Jeff can
-take 4,5 without running any postmerge trees ... is that correct?
+>>MWDMA0 timings cannot be met with the PIIX based controller
+>>programming interface.
 
-James
+>>This change should be safe as this is how we have been doing
+>>things in IDE it8213 host driver for years.
 
+>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>---
+>>Verified with the documentation (similar case as with pata_efar).
 
+> Uhhh, no...
+
+> Too many damn drivers.
+
+> Too much damn duplication.
+
+> Too much damn subtle differences here and there.
+
+> The hardware is probably fine for MWMDA0 when it comes to pata_{efar,it8213},
+> it just not documented properly in the data sheet.
+
+    How so with pata_efar? The active/recovery bitfields are still 2-bit 
+wide, no?
+
+> I'll drop those two patches from my tree and take some break..
+
+    Taking a break is good, not sure about dropping yet.
+
+MBR, Sergei
