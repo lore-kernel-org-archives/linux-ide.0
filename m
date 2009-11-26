@@ -1,86 +1,206 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] add PATA host controller support for Cirrus Logic's
- EP93xx CPUs
-Date: Thu, 26 Nov 2009 17:03:39 +0000
-Message-ID: <20091126170339.218f6674@lxorguk.ukuu.org.uk>
-References: <200911261651.40928.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 2/5] sd: WRITE SAME(16) / UNMAP support
+Date: Thu, 26 Nov 2009 12:00:40 -0500
+Message-ID: <1259254843-8326-3-git-send-email-martin.petersen@oracle.com>
+References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48885 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760840AbZKZRCJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 12:02:09 -0500
-In-Reply-To: <200911261651.40928.bzolnier@gmail.com>
+Received: from acsinet12.oracle.com ([141.146.126.234]:42337 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760698AbZKZRCi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 12:02:38 -0500
+In-Reply-To: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.montavista.com>, Joao Ramos <joao.ramos@inov.pt>, H Hartley Sweeten <hsweeten@visionengravers.com>, Ryan Mallon <ryan@bluewatersys.com>
+To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
+Implement a function for handling discard requests that sends either
+WRITE SAME(16) or UNMAP(10) depending on parameters indicated by the
+device in the block limits VPD.
 
-> +static void pata_ep93xx_set_piomode(struct ata_port *ap,
-> +				    struct ata_device *adev)
-> +{
-> +	void __iomem *base = ap->host->private_data;
-> +	struct ata_device *pair = ata_dev_pair(adev);
-> +	const struct ata_timing *t = ata_timing_find_mode(adev->pio_mode);
-> +	const struct ata_timing *cmd_t = t;
-> +	u32 reg = IDECFG_IDEEN | IDECFG_PIO;
-> +	u8 pio = adev->pio_mode - XFER_PIO_0;
-> +
-> +	if (pair && pair->pio_mode < adev->pio_mode)
-> +		cmd_t = ata_timing_find_mode(pair->pio_mode);
-> +
-> +	/*
-> +	 * store the adequate PIO mode timings, to be used later
-> +	 * by pata_ep93xx_{read,write}
-> +	 */
-> +	adev->private_data = (void *)t;
-> +	ap->private_data = (void *)cmd_t;
-> +
-> +	/* reconfigure IDE controller according to PIO mode (?) */
+Extract unmap constraints and report them to the block layer.
 
-This would probably be better in both drivers as a simple table. It would
-then not be a switch but collapse the entire pile into a single
+Based in part by a patch by Christoph Hellwig <hch@lst.de>.
 
-	writel(pio_timing[pio], base + IDECFG);
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.h |    2 +
+ 2 files changed, 109 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9093c72..255da53 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -264,6 +264,15 @@ sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
+ 	return snprintf(buf, 20, "%u\n", sdkp->ATO);
+ }
+ 
++static ssize_t
++sd_show_thin_provisioning(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->thin_provisioning);
++}
++
+ static struct device_attribute sd_disk_attrs[] = {
+ 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
+ 	       sd_store_cache_type),
+@@ -274,6 +283,7 @@ static struct device_attribute sd_disk_attrs[] = {
+ 	       sd_store_manage_start_stop),
+ 	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
+ 	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
++	__ATTR(thin_provisioning, S_IRUGO, sd_show_thin_provisioning, NULL),
+ 	__ATTR_NULL,
+ };
+ 
+@@ -399,6 +409,57 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
+ }
+ 
+ /**
++ * sd_prepare_discard - unmap blocks on thinly provisioned device
++ * @rq: Request to prepare
++ *
++ * Will issue either UNMAP or WRITE SAME(16) depending on preference
++ * indicated by target device.
++ **/
++static int sd_prepare_discard(struct request *rq)
++{
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	struct bio *bio = rq->bio;
++	sector_t sector = bio->bi_sector;
++	unsigned int num = bio_sectors(bio);
++
++	if (sdkp->device->sector_size == 4096) {
++		sector >>= 3;
++		num >>= 3;
++	}
++
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->timeout = SD_TIMEOUT;
++
++	memset(rq->cmd, 0, rq->cmd_len);
++
++	if (sdkp->unmap) {
++		char *buf = kmap_atomic(bio_page(bio), KM_USER0);
++
++		rq->cmd[0] = UNMAP;
++		rq->cmd[8] = 24;
++		rq->cmd_len = 10;
++
++		/* Ensure that data length matches payload */
++		rq->__data_len = bio->bi_size = bio->bi_io_vec->bv_len = 24;
++
++		put_unaligned_be16(6 + 16, &buf[0]);
++		put_unaligned_be16(16, &buf[2]);
++		put_unaligned_be64(sector, &buf[8]);
++		put_unaligned_be32(num, &buf[16]);
++
++		kunmap_atomic(buf, KM_USER0);
++	} else {
++		rq->cmd[0] = WRITE_SAME_16;
++		rq->cmd[1] = 0x8; /* UNMAP */
++		put_unaligned_be64(sector, &rq->cmd[2]);
++		put_unaligned_be32(num, &rq->cmd[10]);
++		rq->cmd_len = 16;
++	}
++
++	return BLKPREP_OK;
++}
++
++/**
+  *	sd_init_command - build a scsi (read or write) command from
+  *	information in the request structure.
+  *	@SCpnt: pointer to mid-level's per scsi command structure that
+@@ -418,6 +479,13 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	int ret, host_dif;
+ 	unsigned char protect;
+ 
++	/*
++	 * Discard request come in as REQ_TYPE_FS but we turn them into
++	 * block PC requests to make life easier.
++	 */
++	if (blk_discard_rq(rq))
++		ret = sd_prepare_discard(rq);
++
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
+@@ -1432,6 +1500,19 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "physical block alignment offset: %u\n", alignment);
+ 
++	if (buffer[14] & 0x80) { /* TPE */
++		struct request_queue *q = sdp->request_queue;
++
++		sdkp->thin_provisioning = 1;
++		q->limits.discard_granularity = sdkp->hw_sector_size;
++		q->limits.max_discard_sectors = 0xffffffff;
++
++		if (buffer[14] & 0x40) /* TPRZ */
++			q->limits.discard_zeroes_data = 1;
++
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
++	}
++
+ 	sdkp->capacity = lba + 1;
+ 	return sector_size;
+ }
+@@ -1863,6 +1944,7 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+  */
+ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ {
++	struct request_queue *q = sdkp->disk->queue;
+ 	unsigned int sector_sz = sdkp->device->sector_size;
+ 	char *buffer;
+ 
+@@ -1877,6 +1959,31 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_opt(sdkp->disk->queue,
+ 			 get_unaligned_be32(&buffer[12]) * sector_sz);
+ 
++	/* Thin provisioning enabled and page length indicates TP support */
++	if (sdkp->thin_provisioning && buffer[3] == 0x3c) {
++		unsigned int lba_count, desc_count, granularity;
++
++		lba_count = get_unaligned_be32(&buffer[20]);
++		desc_count = get_unaligned_be32(&buffer[24]);
++
++		if (lba_count) {
++			q->limits.max_discard_sectors =
++				lba_count * sector_sz >> 9;
++
++			if (desc_count)
++				sdkp->unmap = 1;
++		}
++
++		granularity = get_unaligned_be32(&buffer[28]);
++
++		if (granularity)
++			q->limits.discard_granularity = granularity * sector_sz;
++
++		if (buffer[32] & 0x80)
++			q->limits.discard_alignment =
++				get_unaligned_be32(&buffer[32]) & ~(1 << 31);
++	}
++
+ 	kfree(buffer);
+ }
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index e374804..43d3caf 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -60,6 +60,8 @@ struct scsi_disk {
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+ 	unsigned	first_scan : 1;
++	unsigned	thin_provisioning : 1;
++	unsigned	unmap : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
+-- 
+1.6.0.6
 
-> +static u16 __pata_ep93xx_read(void __iomem *base, void *addr,
-> +			      struct ata_timing *t)
-> +{
-> +	u32 reg;
-> +
-> +	reg = (unsigned long)addr | IDECTRL_DIORN | IDECTRL_DIOWN;
-> +	writel(reg, base + IDECTRL);
-> +	ndelay(t->setup);
-
-This implies a bus with no posting, which seems to the case from the
-other driver code.
-
-> +	while (!pata_ep93xx_check_iordy(base))
-> +		cpu_relax();
-
-And if the drive was hot unplugged this is doom incorporated (plus we
-might not be using an IORDY mode.
-
->
-> +	while (!pata_ep93xx_check_iordy(base))
-> +		cpu_relax();
-
-Ditto
-
-
-I don't see anything wrong in the conversion. 
-
-The size thing is true - libata tried to abstract at a higher level which
-in turn avoids lots of computed branches to one liners and lets the
-compiler inline stuff better (eg all the private read/write methods into
-a single call free tf_* etc). It could I guess provide an "awkward
-case" skeleton tf_* and other sets of functions that were passed inb/outb
-ops. One for Jeff to ponder ?
-
-
-
-Alan
