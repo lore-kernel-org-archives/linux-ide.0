@@ -1,40 +1,65 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: Thin provisioning fixes
-Date: Thu, 26 Nov 2009 10:14:30 -0500
-Message-ID: <4B0E9B56.3040904@teksavvy.com>
-References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <20091126105947.GA28120@infradead.org> <20091126110157.GV8742@kernel.dk> <20091126110545.GA364@infradead.org> <4B0E9B08.3020204@teksavvy.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 36/86] pata_it8213: add UDMA100 and UDMA133 support
+Date: Thu, 26 Nov 2009 18:17:51 +0300
+Message-ID: <4B0E9C1F.4000104@ru.mvista.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170637.5446.77089.sendpatchset@localhost> <4B0E9928.2020809@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:50013 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755122AbZKZPOZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 10:14:25 -0500
-In-Reply-To: <4B0E9B08.3020204@teksavvy.com>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:26718 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1754788AbZKZPQy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 10:16:54 -0500
+In-Reply-To: <4B0E9928.2020809@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Christoph Hellwig wrote:
->>
->> Note that we might have to add blacklists for this in libata pretty soon
->> as the OCZ Vertex seems to get it wrong, but that's material for another
->> patch not touching the block layer..
-> ..
-> 
-> With the current (latest) firmware on the Vertex,
-> it does not claim "read zeros after trim".
-> Which is correct.
-> 
-> How does this get something wrong?
-..
+Hello, I wrote:
 
-Oh.. answering my own question here..
+>> There shouldn't be any problems with it as IDE it8213 host driver
+>> has been supporting UDMA100 and UDMA133 for years.
 
-All of the earlier firmwares *did* get it wrong,
-so I suppose those could/should be X-listed.
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Cheers!
+>> Index: b/drivers/ata/pata_it8213.c
+>> ===================================================================
+>> --- a/drivers/ata/pata_it8213.c
+>> +++ b/drivers/ata/pata_it8213.c
+>> @@ -164,7 +164,7 @@ static void it8213_set_dmamode (struct a
+>>  
+>>          /* Clocks follow the PIIX style */
+>>          u_speed = min(2 - (udma & 1), udma);
+>> -        if (udma == 5)
+>> +        if (udma > 4)
+>>              u_clock = 0x1000;    /* 100Mhz */
+>>          else if (udma > 2)
+>>              u_clock = 1;        /* 66Mhz */
+>> @@ -264,7 +264,7 @@ static int it8213_init_one (struct pci_d
+>>          .flags        = ATA_FLAG_SLAVE_POSS,
+>>          .pio_mask    = ATA_PIO4,
+>>          .mwdma_mask    = ATA_MWDMA2,
+>> -        .udma_mask     = ATA_UDMA4, /* FIXME: want UDMA 100? */
+>> +        .udma_mask     = ATA_UDMA6,
+>>          .port_ops    = &it8213_ops,
+>>      };
+>>      /* Current IT8213 stuff is single port */
+
+>    Well, at 100 MHz it's probably not really UDMA6 but UDMA5 in 
+> disguise... though u_speed would be 2 instead of 1 which should 
+> correspond to either 3 clocks or 1 clock according to Intel's 
+> documentation (different Intel docs give different figures and even ICH 
+> PRM gives *both* clocks).
+
+    If we take 3 clocks as correct (1 clock doesn't seem correct anyways, as 
+with UDMA mode 5 UDMA cycle must be 20 ns and 1 clock gives only 10 ns). 
+Well, then UDMA5 doesn't seem different from UDMA4 with ICH controllers and 
+it's not clear why all the fuss about 100 MHz bit was necessary... :-/
+    Returning to IT8213, with UDMA6 we have 'u_speed' of 2 that should 
+correspond to 2 clocks which is 20 ns at 100 MHz and really is an UDMA5 
+speed. Well, given UDMA5's slowness, that's definitely a gain. The question 
+remains however, isn't this value reserved like on original ICH?
+
+MBR, Sergei
