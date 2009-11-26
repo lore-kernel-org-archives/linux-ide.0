@@ -1,35 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Thin provisioning fixes (take 3)
-Date: Thu, 26 Nov 2009 12:27:20 -0500
-Message-ID: <yq14oohb3if.fsf@sermon.lab.mkp.net>
-References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
-	<1259255380.7584.64.camel@mulgrave.site>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_it8213: MWDMA0 is unsupported
+Date: Thu, 26 Nov 2009 19:00:11 +0100
+Message-ID: <200911261900.11506.bzolnier@gmail.com>
+References: <200911261728.36433.bzolnier@gmail.com> <200911261800.55025.bzolnier@gmail.com> <4B0EB986.2010801@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:20923 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760437AbZKZR2K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 12:28:10 -0500
-In-Reply-To: <1259255380.7584.64.camel@mulgrave.site> (James Bottomley's
-	message of "Thu, 26 Nov 2009 11:09:40 -0600")
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750993AbZKZSJ2@vger.kernel.org>
+In-Reply-To: <4B0EB986.2010801@ru.mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
->>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
+On Thursday 26 November 2009 06:23:18 pm Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> >>MWDMA0 timings cannot be met with the PIIX based controller
+> >>programming interface.
+> 
+> >>This change should be safe as this is how we have been doing
+> >>things in IDE it8213 host driver for years.
+> 
+> >>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >>---
+> >>Verified with the documentation (similar case as with pata_efar).
+> 
+> > Uhhh, no...
+> 
+> > Too many damn drivers.
+> 
+> > Too much damn duplication.
+> 
+> > Too much damn subtle differences here and there.
+> 
+> > The hardware is probably fine for MWMDA0 when it comes to pata_{efar,it8213},
+> > it just not documented properly in the data sheet.
+> 
+>     How so with pata_efar? The active/recovery bitfields are still 2-bit 
+> wide, no?
 
-James> So you forgot to specify ordering.  I think the right ordering is
-James> that actually, there isn't any.  Jens can take 1, I can take 2,3
-James> and Jeff can take 4,5 without running any postmerge trees ... is
-James> that correct?
+Yes but when TIMEx bit is disabled we are using XFER_PIO_SLOW timings.
 
-The only dependency is that the sd patch (#2) requires "block: Expose
-discard granularity" (86b37281411cf1e9bc0a6b5406c45edb7bd9ea5d) in Jens'
-for-2.6.33 tree.
+All data sheets including original Intel ones are a complete crap when it
+comes to explicitly documenting this behavior.
 
-So we will need either a rebase or a postmerge tree.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--
+Bartlomiej Zolnierkiewicz
