@@ -1,61 +1,100 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_it8213: MWDMA0 is unsupported
-Date: Thu, 26 Nov 2009 21:47:03 +0300
-Message-ID: <4B0ECD27.7050302@ru.mvista.com>
-References: <200911261728.36433.bzolnier@gmail.com> <200911261903.01199.bzolnier@gmail.com> <4B0EC52B.2070805@ru.mvista.com> <200911261927.00597.bzolnier@gmail.com> <4B0EC9EA.9000608@ru.mvista.com>
+Subject: Re: [PATCH 64/86] pata_radisys: unify code for programming PIO and
+ MWDMA timings
+Date: Thu, 26 Nov 2009 22:03:53 +0300
+Message-ID: <4B0ED119.1090802@ru.mvista.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125171003.5446.66341.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:4748 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:3695 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1750867AbZKZSqF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 13:46:05 -0500
-In-Reply-To: <4B0EC9EA.9000608@ru.mvista.com>
+	with SMTP id S1750888AbZKZTC4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 14:02:56 -0500
+In-Reply-To: <20091125171003.5446.66341.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, I wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->>>>>>>> MWDMA0 timings cannot be met with the PIIX based controller
->>>>>>>> programming interface.
+> It results in ~6% decrease in the driver LOC count and also ~1%
+> decrease in the driver binary size (as measured on x86-32).
 
->>>>>>>> This change should be safe as this is how we have been doing
->>>>>>>> things in IDE it8213 host driver for years.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ata/pata_radisys.c |   66 +++++++++++++++++----------------------------
+>  1 file changed, 25 insertions(+), 41 deletions(-)
 
->>>>>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>>>>>> ---
->>>>>>>> Verified with the documentation (similar case as with pata_efar).
+> Index: b/drivers/ata/pata_radisys.c
+> ===================================================================
+> --- a/drivers/ata/pata_radisys.c
+> +++ b/drivers/ata/pata_radisys.c
+> @@ -26,20 +26,9 @@
+>  #define DRV_NAME	"pata_radisys"
+>  #define DRV_VERSION	"0.4.4"
+>  
+> -/**
+> - *	radisys_set_piomode - Initialize host controller PATA PIO timings
+> - *	@ap: ATA port
+> - *	@adev: Device whose timings we are configuring
+> - *
+> - *	Set PIO mode for device, in host controller PCI config space.
+> - *
+> - *	LOCKING:
+> - *	None (inherited from caller).
+> - */
+> -
+> -static void radisys_set_piomode (struct ata_port *ap, struct ata_device *adev)
+> +static void radisys_set_timings(struct ata_port *ap, struct ata_device *adev,
+> +				u8 pio, bool use_mwdma)
+>  {
+> -	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+>  	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+>  	u16 idetm_data;
+>  	int control = 0;
+> @@ -52,7 +41,7 @@ static void radisys_set_piomode (struct
+>  	 */
+>  
+>  	static const	 /* ISP  RTC */
+> -	u8 timings[][2]	= { { 0, 0 },	/* Check me */
+> +	u8 timings[][2]	= { { 0, 0 },
+>  			    { 0, 0 },
+>  			    { 1, 1 },
+>  			    { 2, 2 },
+> @@ -62,6 +51,10 @@ static void radisys_set_piomode (struct
+>  		control |= 1;	/* TIME1 enable */
+>  	if (ata_pio_need_iordy(adev))
+>  		control |= 2;	/* IE IORDY */
+> +	/* If the drive MWDMA is faster than it can do PIO then
+> +	   we must force PIO0 for PIO cycles. */
 
->>>>>>> Uhhh, no...
+    Multi-line comment style should preferrably be:
 
->>>>>>> Too many damn drivers.
+	/*
+	 * blah
+	 * blah
+	 */
 
->>>>>>> Too much damn duplication.
+> +	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
+> +		control = 1;
 
->>>>>>> Too much damn subtle differences here and there.
+    Hm, shouldn't that be 8?
 
->>>>>>> The hardware is probably fine for MWMDA0 when it comes to 
->>>>>>> pata_{efar,it8213},
->>>>>>> it just not documented properly in the data sheet.
+> @@ -115,20 +112,8 @@ static void radisys_set_dmamode (struct
+>  			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+>  		};
+>  		int pio = needed_pio[mwdma] - XFER_PIO_0;
+> -		int control = 3;	/* IORDY|TIME0 */
+> -
+> -		/* If the drive MWDMA is faster than it can do PIO then
+> -		   we must force PIO0 for PIO cycles. */
+> -
+> -		if (adev->pio_mode < needed_pio[mwdma])
+> -			control = 1;
 
->>>>>>   How so with pata_efar? The active/recovery bitfields are still 
->>>>>> 2-bit wide, no?
-
->>>>> Yes but when TIMEx bit is disabled we are using XFER_PIO_SLOW timings.
-
->>>    600 ns cycle vs spec'ed 480 ns? Is it really worth it?
-
->> 960 ns actually
-
->    That table you're looking at (probably in the SLC90E66 datasheet?) 
-> must be screwed up. 960 ns is used for command cycles, according to 
-> Intel's docs, data cycles run at 600 ns...
-
-    Well, after doublke checking 82371AB datasheet has 660 ns, and ICH PRM 
-has 900 ns. Not sure where I got what I've cited now, perhaps in some older 
-version of PRM... what a mess indeed. :-/
+    Perhaps there's a bug here?
 
 MBR, Sergei
