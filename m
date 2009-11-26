@@ -1,55 +1,63 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 16/86] pata_efar: MWDMA0 is unsupported
-Date: Thu, 26 Nov 2009 19:44:07 +0300
-Message-ID: <4B0EB057.10301@ru.mvista.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <200911261640.39208.bzolnier@gmail.com> <4B0EA9FC.1000208@ru.mvista.com> <200911261729.46700.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_it8213: MWDMA0 is unsupported
+Date: Thu, 26 Nov 2009 18:00:54 +0100
+Message-ID: <200911261800.55025.bzolnier@gmail.com>
+References: <200911261728.36433.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:24722 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1755851AbZKZQnJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 11:43:09 -0500
-In-Reply-To: <200911261729.46700.bzolnier@gmail.com>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:60854 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759955AbZKZRB6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 12:01:58 -0500
+In-Reply-To: <200911261728.36433.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Thursday 26 November 2009 05:28:36 pm Bartlomiej Zolnierkiewicz wrote:
+> 
+> MWDMA0 timings cannot be met with the PIIX based controller
+> programming interface.
+> 
+> This change should be safe as this is how we have been doing
+> things in IDE it8213 host driver for years.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> Verified with the documentation (similar case as with pata_efar).
 
->>>>>>>>MWDMA0 timings cannot be met with the PIIX based controller
->>>>>>>>programming interface.
+Uhhh, no...
 
->>>>>>>The efar documentation makes no reference to not being capable of MWDMA0,
->>>>>>>so where does this come from ? No MWDMA0 is an Intel erratum it appears.
+Too many damn drivers.
 
->>>>>>No MWDMA0 support is a common issue on all 'PIIX-like' controllers.
+Too much damn duplication.
 
->>>>>>In case of this chipset while the (preliminary) documentation claims MWDMA0
->>>>>>support on the 'FEATURES' page the later 'programming guide' part describes
->>>>>>only PIO0-4, SWDMA2, MWDMA1-2 and UDMA0-4 transfer modes as supported.
+Too much damn subtle differences here and there.
 
->>>>>Cool - I only have the original docs.
+The hardware is probably fine for MWMDA0 when it comes to pata_{efar,it8213},
+it just not documented properly in the data sheet.
 
->>>>   Hm, me too... perhaps worth putting in Jeff's documentation archive?
+I'll drop those two patches from my tree and take some break..
 
->>>Me too?  I just have what 'The Good Uncle Google' has..
-
->>    Well, I've googled for it and was unable to find any valid links even to 
->>my preliminary version anymore. Perhaps I haven't looked hard enough...
-
-> Maybe... ;)
-
-> FWIW my file is called 38384_SMSC_SLC90E66.pdf
-
-    Well, that brought me to some Chinese site with 07/10/2002 version 
-(which I've already found minutes before that). But it still claims support 
-for MWDMA0 under the features... ah, I need to look further down... no 
-"programming guide" part, hm... but thanks anyway. :-)
-
-> --
-> Bartlomiej Zolnierkiewicz
-
-WBR, Sergei
+> On top of patches from yesterday.
+> 
+>  drivers/ata/pata_it8213.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: b/drivers/ata/pata_it8213.c
+> ===================================================================
+> --- a/drivers/ata/pata_it8213.c
+> +++ b/drivers/ata/pata_it8213.c
+> @@ -227,7 +227,7 @@ static int it8213_init_one (struct pci_d
+>  	static const struct ata_port_info info = {
+>  		.flags		= ATA_FLAG_SLAVE_POSS,
+>  		.pio_mask	= ATA_PIO4,
+> -		.mwdma_mask	= ATA_MWDMA2,
+> +		.mwdma_mask	= ATA_MWDMA12_ONLY,
+>  		.udma_mask 	= ATA_UDMA6,
+>  		.port_ops	= &it8213_ops,
+>  	};
