@@ -1,162 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/5] block: Allow devices to indicate whether discarded blocks are zeroed
-Date: Thu, 26 Nov 2009 12:00:39 -0500
-Message-ID: <1259254843-8326-2-git-send-email-martin.petersen@oracle.com>
-References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Thin provisioning fixes (take 3)
+Date: Thu, 26 Nov 2009 12:00:38 -0500
+Message-ID: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:47943 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760882AbZKZRDC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 12:03:02 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.orgl
 
-The discard ioctl is used by mkfs utilities to clear a block device
-prior to putting metadata down.  However, not all devices return zeroed
-blocks after a discard.  Some drives return stale data, potentially
-containing old superblocks.  It is therefore important to know whether
-discarded blocks are properly zeroed.
+Changes since last kit:
 
-Both ATA and SCSI drives have configuration bits that indicate whether
-zeroes are returned after a discard operation.  Implement a block level
-interface that allows this information to be bubbled up the stack and
-queried via a new block device ioctl.
+ - Patch 1 (block): Wire up an ioctl that reports whether the
+   block device zeroes after discard
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- block/blk-settings.c   |    2 ++
- block/blk-sysfs.c      |   11 +++++++++++
- block/compat_ioctl.c   |    2 ++
- block/ioctl.c          |    2 ++
- include/linux/blkdev.h |   14 ++++++++++++++
- include/linux/fs.h     |    1 +
- 6 files changed, 32 insertions(+), 0 deletions(-)
+ - Patch 2 (sd): Tweak max_discard_sectors reporting
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 7f986ca..1027e30 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -100,6 +100,7 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->discard_granularity = 0;
- 	lim->discard_alignment = 0;
- 	lim->discard_misaligned = 0;
-+	lim->discard_zeroes_data = -1;
- 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
- 	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
- 	lim->alignment_offset = 0;
-@@ -543,6 +544,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 
- 	t->io_min = max(t->io_min, b->io_min);
- 	t->no_cluster |= b->no_cluster;
-+	t->discard_zeroes_data &= b->discard_zeroes_data;
- 
- 	/* Bottom device offset aligned? */
- 	if (offset &&
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 3147145..8606c95 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -136,6 +136,11 @@ static ssize_t queue_discard_max_show(struct request_queue *q, char *page)
- 	return queue_var_show(q->limits.max_discard_sectors << 9, page);
- }
- 
-+static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(queue_discard_zeroes_data(q), page);
-+}
-+
- static ssize_t
- queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
- {
-@@ -313,6 +318,11 @@ static struct queue_sysfs_entry queue_discard_max_entry = {
- 	.show = queue_discard_max_show,
- };
- 
-+static struct queue_sysfs_entry queue_discard_zeroes_data_entry = {
-+	.attr = {.name = "discard_zeroes_data", .mode = S_IRUGO },
-+	.show = queue_discard_zeroes_data_show,
-+};
-+
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_nonrot_show,
-@@ -350,6 +360,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_io_opt_entry.attr,
- 	&queue_discard_granularity_entry.attr,
- 	&queue_discard_max_entry.attr,
-+	&queue_discard_zeroes_data_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
-diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
-index 9bd086c..4eb8e9e 100644
---- a/block/compat_ioctl.c
-+++ b/block/compat_ioctl.c
-@@ -747,6 +747,8 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
- 		return compat_put_uint(arg, bdev_io_opt(bdev));
- 	case BLKALIGNOFF:
- 		return compat_put_int(arg, bdev_alignment_offset(bdev));
-+	case BLKDISCARDZEROES:
-+		return compat_put_uint(arg, bdev_discard_zeroes_data(bdev));
- 	case BLKFLSBUF:
- 	case BLKROSET:
- 	case BLKDISCARD:
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 1f4d1de..be48ea5 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -280,6 +280,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		return put_uint(arg, bdev_io_opt(bdev));
- 	case BLKALIGNOFF:
- 		return put_int(arg, bdev_alignment_offset(bdev));
-+	case BLKDISCARDZEROES:
-+		return put_uint(arg, bdev_discard_zeroes_data(bdev));
- 	case BLKSECTGET:
- 		return put_ushort(arg, queue_max_sectors(bdev_get_queue(bdev)));
- 	case BLKRASET:
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3b67221..bb92f15 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -322,6 +322,7 @@ struct queue_limits {
- 	unsigned char		misaligned;
- 	unsigned char		discard_misaligned;
- 	unsigned char		no_cluster;
-+	signed char		discard_zeroes_data;
- };
- 
- struct request_queue
-@@ -1152,6 +1153,19 @@ static inline int queue_sector_discard_alignment(struct request_queue *q,
- 		& (q->limits.discard_granularity - 1);
- }
- 
-+static inline unsigned int queue_discard_zeroes_data(struct request_queue *q)
-+{
-+	if (q->limits.discard_zeroes_data == 1)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static inline unsigned int bdev_discard_zeroes_data(struct block_device *bdev)
-+{
-+	return queue_discard_zeroes_data(bdev_get_queue(bdev));
-+}
-+
- static inline int queue_dma_alignment(struct request_queue *q)
- {
- 	return q ? q->dma_alignment : 511;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2620a8c..6962d0d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -304,6 +304,7 @@ struct inodes_stat_t {
- #define BLKIOOPT _IO(0x12,121)
- #define BLKALIGNOFF _IO(0x12,122)
- #define BLKPBSZGET _IO(0x12,123)
-+#define BLKDISCARDZEROES _IO(0x12,124)
- 
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
+ - Patch 3 (scsi, new): Retry temporary TP write errors
+
+ - Patch 4 (libata): No change
+
+ - Patch 5 (libata): Switch to a bytes-in, bytes-out convention
+   for ata_set_lba_range_entries() to make things more clear
+
+I think we need a bit R&D wrt. discard coalescing and I doubt
+we'll have that ready for the merge window.  So I suggest we
+stick with the current loop-over-max-discard-sectors approach for
+2.6.32.
+
 -- 
-1.6.0.6
+Martin K. Petersen      Oracle Linux Engineering
+
 
