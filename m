@@ -1,109 +1,84 @@
-From: =?ISO-8859-1?Q?Jo=E3o_Ramos?= <joao.ramos@inov.pt>
-Subject: Re: [PATCH] add PATA host controller support for Cirrus Logic's EP93xx
-	CPUs
-Date: Thu, 26 Nov 2009 22:15:50 +0000
-Message-ID: <4B0EFE16.6020808@inov.pt>
-References: <200911261651.40928.bzolnier@gmail.com>
-	<4B0EDAF9.7080902@bluewatersys.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 5/5] pata_piccolo: Driver for old Toshiba chipsets
+Date: Fri, 27 Nov 2009 15:28:09 +0100
+Message-ID: <200911271528.09697.bzolnier@gmail.com>
+References: <20091117144450.15430.83450.stgit@localhost.localdomain> <20091117145144.15430.55784.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0958657270=="
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <4B0EDAF9.7080902@bluewatersys.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: linux-arm-kernel-bounces@lists.infradead.org
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Ryan Mallon <ryan@bluewatersys.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, H Hartley Sweeten <hsweeten@visionengravers.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sergei Shtylyov <sshtylyov@ru.montavista.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:59406 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752556AbZK0OaQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Nov 2009 09:30:16 -0500
+In-Reply-To: <20091117145144.15430.55784.stgit@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
---===============0958657270==
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Tuesday 17 November 2009 03:52:12 pm Alan Cox wrote:
+> We were never able to get docs for this out of Toshiba for years. Dave
+> Barnes produced a NetBSD driver however and from that we can fill in the
+> needed tables
+> 
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ---
+> 
+>  drivers/ata/Kconfig        |   25 +++++---
+>  drivers/ata/Makefile       |    1 
+>  drivers/ata/ata_generic.c  |    5 +-
+>  drivers/ata/pata_piccolo.c |  140 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci_ids.h    |    7 +-
+>  5 files changed, 166 insertions(+), 12 deletions(-)
+>  create mode 100644 drivers/ata/pata_piccolo.c
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
-  <title></title>
-</head>
-<body bgcolor="#ffffff" text="#000000">
-Ryan Mallon escreveu:
-<blockquote cite="mid:4B0EDAF9.7080902@bluewatersys.com" type="cite">
-  <pre wrap="">Bartlomiej Zolnierkiewicz wrote:
-  </pre>
-  <blockquote type="cite">
-    <pre wrap="">Based on the older IDE host driver by Joao Ramos and review comments
-for it from Sergei Shtylyov.  Not yet tested with the real hardware.
-    </pre>
-  </blockquote>
-  <pre wrap=""><!---->
-  </pre>
-  <blockquote type="cite">
-    <pre wrap="">Sidenote:
+[...]
 
-I have neither the hardware nor much personal interest in adding support
-for it so I did it mainly cause:
+> --- a/drivers/ata/ata_generic.c
+> +++ b/drivers/ata/ata_generic.c
+> @@ -168,9 +168,12 @@ static struct pci_device_id ata_generic[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE), },
+> +#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO), },
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_5),  },
+> +#endif	
 
-- IDE host driver wasn't merged due to policy change and I hate seeing fair
-  amount of review work from me &amp; Sergei going into waste. :)
+[...]
 
-- I was curious about some claims I've been hearing recently so I decided to
-  verify them in practice (porting the driver to libata was relatively easy
-  but unfortunately in the process it gained almost 50% in the LOC count..).
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -1496,9 +1496,10 @@
+>  #define PCI_DEVICE_ID_SBE_WANXL400	0x0104
+>  
+>  #define PCI_VENDOR_ID_TOSHIBA		0x1179
+> -#define PCI_DEVICE_ID_TOSHIBA_PICCOLO	0x0102
+> -#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_1	0x0103
+> -#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_2	0x0105
+> +#define PCI_DEVICE_ID_TOSHIBA_PICCOLO	0x0101
+> +#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_2	0x0102
+> +#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_3	0x0103
+> +#define PCI_DEVICE_ID_TOSHIBA_PICCOLO_5	0x0105
+>  #define PCI_DEVICE_ID_TOSHIBA_TOPIC95	0x060a
+>  #define PCI_DEVICE_ID_TOSHIBA_TOPIC97	0x060f
+>  #define PCI_DEVICE_ID_TOSHIBA_TOPIC100	0x0617
 
-so if somebody would like to take over this patch feel free to do it.
-    </pre>
-  </blockquote>
-  <pre wrap=""><!---->
-Thanks for doing this. I'll see if I can dig out a hard-drive and give
-this a test. I had some comments, but I will fix them up myself if I get
-round to testing this.
+This adds kernel regression and breaks kernel build (it is generally good to
+grep kernel tree for the existing users before doing changes like the above):
 
-~Ryan
+drivers/ide/ide-pci-generic.c:
 
-  </pre>
-</blockquote>
-<font face="Calibri"><br>
-Hi,<br>
-<br>
-Thanks for pushing this one up to the kernel and Bart, for the
-extensive rework made to support libata.<br>
-<br>
-Unfornately, since the last patch I send for approval, I haven't had
-much time to continue this work; as a matter of fact, the work I was
-developing with the EP9315 processor is done, and I am no longer
-working on it (for now, I suppose), so I hadn't much time to work on
-this and to further improve the patch for submission; so I must thank
-Bart for giving this patch another try and finishing it.<br>
-The important thing is that it didn't get lost in the middle and the
-EP93xx users can use this functionallity in their EP93xx-based boards.<br>
-<br>
-If I have an opportunity, I will try to check if everything is ok (I'll
-have to dig up my EDB9315A board somewhere in the old project's box :) )<br>
-<br>
-Once again, thanks for finishing this patch.<br>
-<br>
-Joao Ramos<br>
-</font><br>
-</body>
-</html>
+        { PCI_VDEVICE(TOSHIBA,  PCI_DEVICE_ID_TOSHIBA_PICCOLO),          4 },
+        { PCI_VDEVICE(TOSHIBA,  PCI_DEVICE_ID_TOSHIBA_PICCOLO_1),        4 },
+        { PCI_VDEVICE(TOSHIBA,  PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),        4 },
 
+Please fix your patch.
 
---===============0958657270==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---===============0958657270==--
+--
+Bartlomiej Zolnierkiewicz
