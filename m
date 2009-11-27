@@ -1,249 +1,191 @@
-From: Otavio Salvador <otavio@ossystems.com.br>
-Subject: Re: Vortex86SX: only works with irqpoll
-Date: Fri, 27 Nov 2009 15:38:11 -0200
-Message-ID: <be7a9f3d0911270938l2a09627fu7aaef74a7fc0dd6f__33669.2594145008$1259343523$gmane$org@mail.gmail.com>
-References: <be7a9f3d0911191311p45d4438bg84d55234eacdd320@mail.gmail.com>
-	 <be7a9f3d0911240331n61637196gf243af4e607403ff@mail.gmail.com>
-	 <be7a9f3d0911240355s5a85545amb32d25a7df7e09f0@mail.gmail.com>
-	 <200911241351.58032.jbe@pengutronix.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_hpt{37x|3x2n}: fix timing register masks (take 2)
+Date: Fri, 27 Nov 2009 22:29:02 +0400
+Message-ID: <200911272129.02616.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001485f9a72c798f6e04795dc15f
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:33504 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883AbZK0RiH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Nov 2009 12:38:07 -0500
-In-Reply-To: <200911241351.58032.jbe@pengutronix.de>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:56741 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1751408AbZK0S2G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Nov 2009 13:28:06 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Juergen Beisert <jbe@pengutronix.de>
-Cc: linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
---001485f9a72c798f6e04795dc15f
-Content-Type: text/plain; charset=ISO-8859-1
+These drivers inherited from the older 'hpt366' IDE driver the buggy timing
+register masks in their set_piomode() metods. As a result, too low command
+cycle active time is programmed for slow PIO modes.  Quite fortunately, it's
+later "fixed up" by the set_dmamode() methods which also "helpfully" reprogram
+the command timings, usually to PIO mode 4; unfortunately, setting an UltraDMA
+mode #N also reprograms already set PIO data timings, usually to MWDMA mode #
+max(N, 2) timings...
 
-Hello,
+However, the drivers added some breakage of their own too:  the bit that they
+set/clear to control the FIFO is sometimes wrong -- it's actually the MSB of
+the command cycle setup time; also, setting it in DMA mode is wrong as this
+bit is only for PIO actually and clearing it for PIO modes is not needed as
+no mode in any timing table has it set...
 
-On Tue, Nov 24, 2009 at 10:51 AM, Juergen Beisert <jbe@pengutronix.de> wrote:
-> Otavio Salvador wrote:
->> On Tue, Nov 24, 2009 at 9:31 AM, Otavio Salvador
->>
->> <otavio@ossystems.com.br> wrote:
->> > I'll take a look on the dmesg output and see if I see something
->> > interesting :-)
->>
->> In fact I did find some interesting issues. First:
->> [...]
->
-> Our kernel states:
-> CPU: Vortex86 SoC 05/02 stepping 02
->
-> Your kernel states:
-> CPU: Cyrix Cx486SLC
->
-> BTW: Try to enable the DEBUG macro in "arch/x86/include/asm/pci_x86.h" and
-> boot again this kernel. On earlier kernels this increases the verbosity of
-> the kernel when it tries to detect the IRQ routing.
+Fix all this, inverting the masks while at it, like in the 'hpt366' and
+'pata_hpt366' drivers; bump the drivers' versions, accounting for recent
+patches that forgot to do it...
 
-So I did. Here goes the dmesg with the debug enabled.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: stable@kernel.org
 
--- 
-Otavio Salvador                  O.S. Systems
-E-mail: otavio@ossystems.com.br  http://www.ossystems.com.br
-Mobile: +55 53 9981-7854         http://projetos.ossystems.com.br
+---
+The patch is against the recent Linus' tree. It's intended to go into all
+stable kernels starting with 2.6.19, when the PATA drivers were first merged --
+the version change hunks should be dropped when merging to the older kernels...
 
---001485f9a72c798f6e04795dc15f
-Content-Type: application/octet-stream; name="dmesg.out"
-Content-Disposition: attachment; filename="dmesg.out"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g2j8kj8l0
+ drivers/ata/pata_hpt37x.c  |   32 +++++++++++++++-----------------
+ drivers/ata/pata_hpt3x2n.c |   17 ++++++++---------
+ 2 files changed, 23 insertions(+), 26 deletions(-)
 
-TGludXggdmVyc2lvbiAyLjYuMzEuNiAob3RhdmlvQG5ldW1hbm4pIChnY2MgdmVyc2lvbiA0LjMu
-NCAoRGViaWFuIDQuMy40LTYpICkgIzMgRnJpIE5vdiAyNyAxNToxMjo1MSBCUlNUIDIwMDkKS0VS
-TkVMIHN1cHBvcnRlZCBjcHVzOgogIEludGVsIEdlbnVpbmVJbnRlbAogIEFNRCBBdXRoZW50aWNB
-TUQKICBOU0MgR2VvZGUgYnkgTlNDCiAgQ3lyaXggQ3lyaXhJbnN0ZWFkCiAgQ2VudGF1ciBDZW50
-YXVySGF1bHMKICBUcmFuc21ldGEgR2VudWluZVRNeDg2CiAgVHJhbnNtZXRhIFRyYW5zbWV0YUNQ
-VQogIFVNQyBVTUMgVU1DIFVNQwpCSU9TLXByb3ZpZGVkIHBoeXNpY2FsIFJBTSBtYXA6CiBCSU9T
-LWU4MjA6IDAwMDAwMDAwMDAwMDAwMDAgLSAwMDAwMDAwMDAwMDlmYzAwICh1c2FibGUpCiBCSU9T
-LWU4MjA6IDAwMDAwMDAwMDAwOWZjMDAgLSAwMDAwMDAwMDAwMGEwMDAwIChyZXNlcnZlZCkKIEJJ
-T1MtZTgyMDogMDAwMDAwMDAwMDBlMDAwMCAtIDAwMDAwMDAwMDAxMDAwMDAgKHJlc2VydmVkKQog
-QklPUy1lODIwOiAwMDAwMDAwMDAwMTAwMDAwIC0gMDAwMDAwMDAwODAwMDAwMCAodXNhYmxlKQog
-QklPUy1lODIwOiAwMDAwMDAwMGZmMDAwMDAwIC0gMDAwMDAwMDEwMDAwMDAwMCAocmVzZXJ2ZWQp
-CkRNSSBub3QgcHJlc2VudCBvciBpbnZhbGlkLgpsYXN0X3BmbiA9IDB4ODAwMCBtYXhfYXJjaF9w
-Zm4gPSAweDEwMDAwMAppbml0aWFsIG1lbW9yeSBtYXBwZWQgOiAwIC0gMDA4MDAwMDAKaW5pdF9t
-ZW1vcnlfbWFwcGluZzogMDAwMDAwMDAwMDAwMDAwMC0wMDAwMDAwMDA4MDAwMDAwCiAwMDAwMDAw
-MDAwIC0gMDAwODAwMDAwMCBwYWdlIDRrCmtlcm5lbCBkaXJlY3QgbWFwcGluZyB0YWJsZXMgdXAg
-dG8gODAwMDAwMCBAIDcwMDAtMmEwMDAKUkFNRElTSzogMDdjZDEwMDAgLSAwN2ZkZmNmZgpBQ1BJ
-IEVycm9yOiBBIHZhbGlkIFJTRFAgd2FzIG5vdCBmb3VuZCAyMDA5MDUyMSB0Ynhmcm9vdC0yMTkK
-MTI4TUIgTE9XTUVNIGF2YWlsYWJsZS4KICBtYXBwZWQgbG93IHJhbTogMCAtIDA4MDAwMDAwCiAg
-bG93IHJhbTogMCAtIDA4MDAwMDAwCiAgbm9kZSAwIGxvdyByYW06IDAwMDAwMDAwIC0gMDgwMDAw
-MDAKICBub2RlIDAgYm9vdG1hcCAwMDAwMTAwMCAtIDAwMDAyMDAwCig3IGVhcmx5IHJlc2VydmF0
-aW9ucykgPT0+IGJvb3RtZW0gWzAwMDAwMDAwMDAgLSAwMDA4MDAwMDAwXQogICMwIFswMDAwMDAw
-MDAwIC0gMDAwMDAwMTAwMF0gICBCSU9TIGRhdGEgcGFnZSA9PT4gWzAwMDAwMDAwMDAgLSAwMDAw
-MDAxMDAwXQogICMxIFswMDAwMTAwMDAwIC0gMDAwMDQ2NjBkOF0gICAgVEVYVCBEQVRBIEJTUyA9
-PT4gWzAwMDAxMDAwMDAgLSAwMDAwNDY2MGQ4XQogICMyIFswMDA3Y2QxMDAwIC0gMDAwN2ZkZmNm
-Zl0gICAgICAgICAgUkFNRElTSyA9PT4gWzAwMDdjZDEwMDAgLSAwMDA3ZmRmY2ZmXQogICMzIFsw
-MDAwMDlmODAwIC0gMDAwMDEwMDAwMF0gICAgQklPUyByZXNlcnZlZCA9PT4gWzAwMDAwOWY4MDAg
-LSAwMDAwMTAwMDAwXQogICM0IFswMDAwNDY3MDAwIC0gMDAwMDQ2OTAwMF0gICAgICAgICAgICAg
-IEJSSyA9PT4gWzAwMDA0NjcwMDAgLSAwMDAwNDY5MDAwXQogICM1IFswMDAwMDA3MDAwIC0gMDAw
-MDAyNTAwMF0gICAgICAgICAgUEdUQUJMRSA9PT4gWzAwMDAwMDcwMDAgLSAwMDAwMDI1MDAwXQog
-ICM2IFswMDAwMDAxMDAwIC0gMDAwMDAwMjAwMF0gICAgICAgICAgQk9PVE1BUCA9PT4gWzAwMDAw
-MDEwMDAgLSAwMDAwMDAyMDAwXQpab25lIFBGTiByYW5nZXM6CiAgRE1BICAgICAgMHgwMDAwMDAw
-MCAtPiAweDAwMDAxMDAwCiAgTm9ybWFsICAgMHgwMDAwMTAwMCAtPiAweDAwMDA4MDAwCk1vdmFi
-bGUgem9uZSBzdGFydCBQRk4gZm9yIGVhY2ggbm9kZQplYXJseV9ub2RlX21hcFsyXSBhY3RpdmUg
-UEZOIHJhbmdlcwogICAgMDogMHgwMDAwMDAwMCAtPiAweDAwMDAwMDlmCiAgICAwOiAweDAwMDAw
-MTAwIC0+IDB4MDAwMDgwMDAKT24gbm9kZSAwIHRvdGFscGFnZXM6IDMyNjcxCmZyZWVfYXJlYV9p
-bml0X25vZGU6IG5vZGUgMCwgcGdkYXQgYzAzYzhiMzQsIG5vZGVfbWVtX21hcCBjMTAwMDAwMAog
-IERNQSB6b25lOiAzMiBwYWdlcyB1c2VkIGZvciBtZW1tYXAKICBETUEgem9uZTogMCBwYWdlcyBy
-ZXNlcnZlZAogIERNQSB6b25lOiAzOTY3IHBhZ2VzLCBMSUZPIGJhdGNoOjAKICBOb3JtYWwgem9u
-ZTogMjI0IHBhZ2VzIHVzZWQgZm9yIG1lbW1hcAogIE5vcm1hbCB6b25lOiAyODQ0OCBwYWdlcywg
-TElGTyBiYXRjaDo3ClVzaW5nIEFQSUMgZHJpdmVyIGRlZmF1bHQKTm8gbG9jYWwgQVBJQyBwcmVz
-ZW50IG9yIGhhcmR3YXJlIGRpc2FibGVkCkFQSUM6IGRpc2FibGUgYXBpYyBmYWNpbGl0eQpucl9p
-cnFzX2dzaTogMTYKQWxsb2NhdGluZyBQQ0kgcmVzb3VyY2VzIHN0YXJ0aW5nIGF0IDgwMDAwMDAg
-KGdhcDogODAwMDAwMDpmNzAwMDAwMCkKQnVpbHQgMSB6b25lbGlzdHMgaW4gWm9uZSBvcmRlciwg
-bW9iaWxpdHkgZ3JvdXBpbmcgb24uICBUb3RhbCBwYWdlczogMzI0MTUKS2VybmVsIGNvbW1hbmQg
-bGluZTogaW5pdHJkPWluc3RhbGxlciBpbWFnZXNlcnZlcj1odHRwOi8vMTkyLjE2OC4yNTQuMjUx
-L29zaWkgc2hlbGwgZGVidWcgQk9PVF9JTUFHRT1rZXJuZWwgClBJRCBoYXNoIHRhYmxlIGVudHJp
-ZXM6IDUxMiAob3JkZXI6IDksIDIwNDggYnl0ZXMpCkRlbnRyeSBjYWNoZSBoYXNoIHRhYmxlIGVu
-dHJpZXM6IDE2Mzg0IChvcmRlcjogNCwgNjU1MzYgYnl0ZXMpCklub2RlLWNhY2hlIGhhc2ggdGFi
-bGUgZW50cmllczogODE5MiAob3JkZXI6IDMsIDMyNzY4IGJ5dGVzKQpJbml0aWFsaXppbmcgQ1BV
-IzAKTWVtb3J5OiAxMjI2NzJrLzEzMTA3MmsgYXZhaWxhYmxlICgyMTA0ayBrZXJuZWwgY29kZSwg
-Nzg2OGsgcmVzZXJ2ZWQsIDc1NmsgZGF0YSwgMjUyayBpbml0LCAwayBoaWdobWVtKQp2aXJ0dWFs
-IGtlcm5lbCBtZW1vcnkgbGF5b3V0OgogICAgZml4bWFwICA6IDB4ZmZmYTMwMDAgLSAweGZmZmZm
-MDAwICAgKCAzNjgga0IpCiAgICB2bWFsbG9jIDogMHhjODgwMDAwMCAtIDB4ZmZmYTEwMDAgICAo
-IDg4NyBNQikKICAgIGxvd21lbSAgOiAweGMwMDAwMDAwIC0gMHhjODAwMDAwMCAgICggMTI4IE1C
-KQogICAgICAuaW5pdCA6IDB4YzAzY2MwMDAgLSAweGMwNDBiMDAwICAgKCAyNTIga0IpCiAgICAg
-IC5kYXRhIDogMHhjMDMwZTA4MSAtIDB4YzAzY2IzMTggICAoIDc1NiBrQikKICAgICAgLnRleHQg
-OiAweGMwMTAwMDAwIC0gMHhjMDMwZTA4MSAgICgyMTA0IGtCKQpDaGVja2luZyBpZiB0aGlzIHBy
-b2Nlc3NvciBob25vdXJzIHRoZSBXUCBiaXQgZXZlbiBpbiBzdXBlcnZpc29yIG1vZGUuLi5Pay4K
-TlJfSVJRUzoyODgKQ29uc29sZTogY29sb3VyIFZHQSsgODB4MjUKY29uc29sZSBbdHR5MF0gZW5h
-YmxlZApDYWxpYnJhdGluZyBkZWxheSBsb29wLi4uIDk5LjMyIEJvZ29NSVBTIChscGo9NDk2NjQw
-KQpNb3VudC1jYWNoZSBoYXNoIHRhYmxlIGVudHJpZXM6IDUxMgpDUFU6IEN5cml4IEN4NDg2U0xD
-CkNoZWNraW5nICdobHQnIGluc3RydWN0aW9uLi4uIE9LLgpORVQ6IFJlZ2lzdGVyZWQgcHJvdG9j
-b2wgZmFtaWx5IDE2ClBDSTogVXNpbmcgY29uZmlndXJhdGlvbiB0eXBlIDEgZm9yIGJhc2UgYWNj
-ZXNzCmJpbzogY3JlYXRlIHNsYWIgPGJpby0wPiBhdCAwCkFDUEk6IEludGVycHJldGVyIGRpc2Fi
-bGVkLgpTQ1NJIHN1YnN5c3RlbSBpbml0aWFsaXplZApsaWJhdGEgdmVyc2lvbiAzLjAwIGxvYWRl
-ZC4KdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2Jmcwp1c2Jjb3Jl
-OiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVyIGh1Ygp1c2Jjb3JlOiByZWdpc3RlcmVk
-IG5ldyBkZXZpY2UgZHJpdmVyIHVzYgpQQ0k6IFByb2JpbmcgUENJIGhhcmR3YXJlClBDSTogUHJv
-YmluZyBQQ0kgaGFyZHdhcmUgKGJ1cyAwMCkKcGNpIDAwMDA6MDA6MDMuMDogcmVnIDEwIDMyYml0
-IG1taW86IFsweGY4MDAwMDAwLTB4ZmJmZmZmZmZdCnBjaSAwMDAwOjAwOjAzLjA6IHJlZyAxNCAz
-MmJpdCBtbWlvOiBbMHhmZWZjMDAwMC0weGZlZmZmZmZmXQpwY2kgMDAwMDowMDowMy4wOiByZWcg
-MTggaW8gcG9ydDogWzB4ZWY4MC0weGVmZmZdCnBjaSAwMDAwOjAwOjAzLjA6IHN1cHBvcnRzIEQx
-IEQyCnBjaSAwMDAwOjAwOjA4LjA6IHJlZyAxMCBpbyBwb3J0OiBbMHhlZTAwLTB4ZWVmZl0KcGNp
-IDAwMDA6MDA6MDguMDogcmVnIDE0IDMyYml0IG1taW86IFsweGZlZmJiNDAwLTB4ZmVmYmI0ZmZd
-CnBjaSAwMDAwOjAwOjBhLjA6IHJlZyAxMCAzMmJpdCBtbWlvOiBbMHgwZTIwMDAtMHgwZTJmZmZd
-CnBjaSAwMDAwOjAwOjBhLjE6IHJlZyAxMCAzMmJpdCBtbWlvOiBbMHgwZTMwMDAtMHgwZTMwZmZd
-CnBjaSAwMDAwOjAwOjBiLjA6IHJlZyAxMCAzMmJpdCBtbWlvOiBbMHgwZTAwMDAtMHgwZTBmZmZd
-CnBjaSAwMDAwOjAwOjBiLjE6IHJlZyAxMCAzMmJpdCBtbWlvOiBbMHgwZTEwMDAtMHgwZTEwZmZd
-CnBjaSAwMDAwOjAwOjBjLjA6IHJlZyAxMCBpbyBwb3J0OiBbMHgxZjAtMHgxZjddCnBjaSAwMDAw
-OjAwOjBjLjA6IHJlZyAxNCBpbyBwb3J0OiBbMHgzZjQtMHgzZjddCnBjaSAwMDAwOjAwOjBjLjA6
-IHJlZyAxOCBpbyBwb3J0OiBbMHgxNzAtMHgxNzddCnBjaSAwMDAwOjAwOjBjLjA6IHJlZyAxYyBp
-byBwb3J0OiBbMHgzNzQtMHgzNzddCnBjaSAwMDAwOjAwOjBjLjA6IHJlZyAyMCBpbyBwb3J0OiBb
-MHhmZmYwLTB4ZmZmZl0KcGNpIDAwMDA6MDA6MGMuMDogcmVnIDMwIDMyYml0IG1taW86IFsweDAw
-MDAwMC0weDAxZmZmZl0KUENJOiBJUlEgaW5pdApQQ0k6IEludGVycnVwdCBSb3V0aW5nIFRhYmxl
-IGZvdW5kIGF0IDB4YzAwZjMyNzAKMDA6MDggc2xvdD0wMCAwOjA1L2RlZjggMTowMC8wMDAwIDI6
-MDAvMDAwMCAzOjAwLzAwMDAKMDA6MGEgc2xvdD0wMCAwOjA3L2RlZjggMTowOC9kZWY4IDI6MDAv
-MDAwMCAzOjAwLzAwMDAKMDA6MGIgc2xvdD0wMCAwOjA5L2RlZjggMTowYS9kZWY4IDI6MDAvMDAw
-MCAzOjAwLzAwMDAKMDA6MGMgc2xvdD0wMCAwOjBiL2RlZjggMTowMC8wMDAwIDI6MDAvMDAwMCAz
-OjAwLzAwMDAKMDA6MGYgc2xvdD0wMCAwOjBkL2RlZjggMTowMC8wMDAwIDI6MDAvMDAwMCAzOjAw
-LzAwMDAKMDA6MDEgc2xvdD0wMSAwOjAxL2RlZjggMTowMi9kZWY4IDI6MDMvZGVmOCAzOjA0L2Rl
-ZjgKMDA6MDIgc2xvdD0wMiAwOjAyL2RlZjggMTowMy9kZWY4IDI6MDQvZGVmOCAzOjAxL2RlZjgK
-MDA6MDMgc2xvdD0wMyAwOjAzL2RlZjggMTowNC9kZWY4IDI6MDEvZGVmOCAzOjAyL2RlZjgKMDA6
-MDQgc2xvdD0wNCAwOjA0L2RlZjggMTowMS9kZWY4IDI6MDIvZGVmOCAzOjAzL2RlZjgKMDA6MDUg
-c2xvdD0wNSAwOjAxL2RlZjggMTowMi9kZWY4IDI6MDMvZGVmOCAzOjA0L2RlZjgKMDA6MDYgc2xv
-dD0wNiAwOjAyL2RlZjggMTowMy9kZWY4IDI6MDQvZGVmOCAzOjAxL2RlZjgKUENJOiBBdHRlbXB0
-aW5nIHRvIGZpbmQgSVJRIHJvdXRlciBmb3IgWzE3ZjM6NjAzMV0KcGNpIDAwMDA6MDA6MDcuMDog
-ZGVmYXVsdCBJUlEgcm91dGVyIFsxN2YzOjYwMzFdClBDSTogSVJRIGZpeHVwClBDSTogQWxsb2Nh
-dGluZyByZXNvdXJjZXMKcGNpIDAwMDA6MDA6MGEuMDogQkFSIDA6IGFkZHJlc3Mgc3BhY2UgY29s
-bGlzaW9uIG9uIG9mIGRldmljZSBbMHgwZTIwMDAtMHgwZTJmZmZdCnBjaSAwMDAwOjAwOjBhLjA6
-IEJBUiAwOiBjYW4ndCBhbGxvY2F0ZSByZXNvdXJjZQpwY2kgMDAwMDowMDowYS4xOiBCQVIgMDog
-YWRkcmVzcyBzcGFjZSBjb2xsaXNpb24gb24gb2YgZGV2aWNlIFsweDBlMzAwMC0weDBlMzBmZl0K
-cGNpIDAwMDA6MDA6MGEuMTogQkFSIDA6IGNhbid0IGFsbG9jYXRlIHJlc291cmNlCnBjaSAwMDAw
-OjAwOjBiLjA6IEJBUiAwOiBhZGRyZXNzIHNwYWNlIGNvbGxpc2lvbiBvbiBvZiBkZXZpY2UgWzB4
-MGUwMDAwLTB4MGUwZmZmXQpwY2kgMDAwMDowMDowYi4wOiBCQVIgMDogY2FuJ3QgYWxsb2NhdGUg
-cmVzb3VyY2UKcGNpIDAwMDA6MDA6MGIuMTogQkFSIDA6IGFkZHJlc3Mgc3BhY2UgY29sbGlzaW9u
-IG9uIG9mIGRldmljZSBbMHgwZTEwMDAtMHgwZTEwZmZdCnBjaSAwMDAwOjAwOjBiLjE6IEJBUiAw
-OiBjYW4ndCBhbGxvY2F0ZSByZXNvdXJjZQpwbnA6IFBuUCBBQ1BJOiBkaXNhYmxlZApwY2lfYnVz
-IDAwMDA6MDA6IHJlc291cmNlIDAgaW86ICBbMHgwMC0weGZmZmZdCnBjaV9idXMgMDAwMDowMDog
-cmVzb3VyY2UgMSBtZW06IFsweDAwMDAwMC0weGZmZmZmZmZmXQpORVQ6IFJlZ2lzdGVyZWQgcHJv
-dG9jb2wgZmFtaWx5IDIKSVAgcm91dGUgY2FjaGUgaGFzaCB0YWJsZSBlbnRyaWVzOiAxMDI0IChv
-cmRlcjogMCwgNDA5NiBieXRlcykKVENQIGVzdGFibGlzaGVkIGhhc2ggdGFibGUgZW50cmllczog
-NDA5NiAob3JkZXI6IDMsIDMyNzY4IGJ5dGVzKQpUQ1AgYmluZCBoYXNoIHRhYmxlIGVudHJpZXM6
-IDQwOTYgKG9yZGVyOiAyLCAxNjM4NCBieXRlcykKVENQOiBIYXNoIHRhYmxlcyBjb25maWd1cmVk
-IChlc3RhYmxpc2hlZCA0MDk2IGJpbmQgNDA5NikKVENQIHJlbm8gcmVnaXN0ZXJlZApORVQ6IFJl
-Z2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDEKVHJ5aW5nIHRvIHVucGFjayByb290ZnMgaW1hZ2Ug
-YXMgaW5pdHJhbWZzLi4uCkZyZWVpbmcgaW5pdHJkIG1lbW9yeTogMzEzMWsgZnJlZWQKcGxhdGZv
-cm0gcnRjX2Ntb3M6IHJlZ2lzdGVyZWQgcGxhdGZvcm0gUlRDIGRldmljZSAobm8gUE5QIGRldmlj
-ZSBmb3VuZCkKc3F1YXNoZnM6IHZlcnNpb24gNC4wICgyMDA5LzAxLzMxKSBQaGlsbGlwIExvdWdo
-ZXIKYXVmcyAyLTMxCm1zZ21uaSBoYXMgYmVlbiBzZXQgdG8gMjQ1CmFsZzogTm8gdGVzdCBmb3Ig
-c3Rkcm5nIChrcm5nKQppbyBzY2hlZHVsZXIgbm9vcCByZWdpc3RlcmVkCmlvIHNjaGVkdWxlciBk
-ZWFkbGluZSByZWdpc3RlcmVkIChkZWZhdWx0KQpwY2kgMDAwMDowMDowMy4wOiBCb290IHZpZGVv
-IGRldmljZQpscDogZHJpdmVyIGxvYWRlZCBidXQgbm8gZGV2aWNlcyBmb3VuZApHZW5lcmljIFJU
-QyBEcml2ZXIgdjEuMDcKU2VyaWFsOiA4MjUwLzE2NTUwIGRyaXZlciwgNCBwb3J0cywgSVJRIHNo
-YXJpbmcgZGlzYWJsZWQKYnJkOiBtb2R1bGUgbG9hZGVkCmxvb3A6IG1vZHVsZSBsb2FkZWQKc2Nz
-aTAgOiBwYXRhX2l0ODIxeApzY3NpMSA6IHBhdGFfaXQ4MjF4CmF0YTE6IFBBVEEgbWF4IE1XRE1B
-MiBjbWQgMHgxZjAgY3RsIDB4M2Y0IGJtZG1hIDB4ZmZmMCBpcnEgMTQKYXRhMjogUEFUQSBtYXgg
-TVdETUEyIGNtZCAweDE3MCBjdGwgMHgzNzQgYm1kbWEgMHhmZmY4IGlycSAxNApyNjA0MDogUkRD
-IFI2MDQwIE5BUEkgbmV0IGRyaXZlcix2ZXJzaW9uIDAuMjQgKDA4SnVsMjAwOSkKUFBQIGdlbmVy
-aWMgZHJpdmVyIHZlcnNpb24gMi40LjIKUFBQIERlZmxhdGUgQ29tcHJlc3Npb24gbW9kdWxlIHJl
-Z2lzdGVyZWQKY29uc29sZSBbbmV0Y29uMF0gZW5hYmxlZApuZXRjb25zb2xlOiBuZXR3b3JrIGxv
-Z2dpbmcgc3RhcnRlZAplaGNpX2hjZDogVVNCIDIuMCAnRW5oYW5jZWQnIEhvc3QgQ29udHJvbGxl
-ciAoRUhDSSkgRHJpdmVyCmVoY2lfaGNkIDAwMDA6MDA6MGEuMTogRUhDSSBIb3N0IENvbnRyb2xs
-ZXIKZWhjaV9oY2QgMDAwMDowMDowYS4xOiBuZXcgVVNCIGJ1cyByZWdpc3RlcmVkLCBhc3NpZ25l
-ZCBidXMgbnVtYmVyIDEKZWhjaV9oY2QgMDAwMDowMDowYS4xOiBpcnEgOSwgaW8gbWVtIDB4MDgw
-MjIwMDAKZWhjaV9oY2QgMDAwMDowMDowYS4xOiBVU0IgMi4wIHN0YXJ0ZWQsIEVIQ0kgMS4wMAp1
-c2IgdXNiMTogY29uZmlndXJhdGlvbiAjMSBjaG9zZW4gZnJvbSAxIGNob2ljZQpodWIgMS0wOjEu
-MDogVVNCIGh1YiBmb3VuZApodWIgMS0wOjEuMDogMiBwb3J0cyBkZXRlY3RlZAplaGNpX2hjZCAw
-MDAwOjAwOjBiLjE6IEVIQ0kgSG9zdCBDb250cm9sbGVyCmVoY2lfaGNkIDAwMDA6MDA6MGIuMTog
-bmV3IFVTQiBidXMgcmVnaXN0ZXJlZCwgYXNzaWduZWQgYnVzIG51bWJlciAyCmVoY2lfaGNkIDAw
-MDA6MDA6MGIuMTogaXJxIDEwLCBpbyBtZW0gMHgwODAyMjEwMAplaGNpX2hjZCAwMDAwOjAwOjBi
-LjE6IFVTQiAyLjAgc3RhcnRlZCwgRUhDSSAxLjAwCnVzYiB1c2IyOiBjb25maWd1cmF0aW9uICMx
-IGNob3NlbiBmcm9tIDEgY2hvaWNlCmh1YiAyLTA6MS4wOiBVU0IgaHViIGZvdW5kCmh1YiAyLTA6
-MS4wOiAyIHBvcnRzIGRldGVjdGVkCm9oY2lfaGNkOiBVU0IgMS4xICdPcGVuJyBIb3N0IENvbnRy
-b2xsZXIgKE9IQ0kpIERyaXZlcgpvaGNpX2hjZCAwMDAwOjAwOjBhLjA6IE9IQ0kgSG9zdCBDb250
-cm9sbGVyCm9oY2lfaGNkIDAwMDA6MDA6MGEuMDogbmV3IFVTQiBidXMgcmVnaXN0ZXJlZCwgYXNz
-aWduZWQgYnVzIG51bWJlciAzCm9oY2lfaGNkIDAwMDA6MDA6MGEuMDogaXJxIDUsIGlvIG1lbSAw
-eDA4MDIwMDAwCnVzYiB1c2IzOiBjb25maWd1cmF0aW9uICMxIGNob3NlbiBmcm9tIDEgY2hvaWNl
-Cmh1YiAzLTA6MS4wOiBVU0IgaHViIGZvdW5kCmh1YiAzLTA6MS4wOiAyIHBvcnRzIGRldGVjdGVk
-Cm9oY2lfaGNkIDAwMDA6MDA6MGIuMDogT0hDSSBIb3N0IENvbnRyb2xsZXIKb2hjaV9oY2QgMDAw
-MDowMDowYi4wOiBuZXcgVVNCIGJ1cyByZWdpc3RlcmVkLCBhc3NpZ25lZCBidXMgbnVtYmVyIDQK
-b2hjaV9oY2QgMDAwMDowMDowYi4wOiBpcnEgMTEsIGlvIG1lbSAweDA4MDIxMDAwCnVzYiB1c2I0
-OiBjb25maWd1cmF0aW9uICMxIGNob3NlbiBmcm9tIDEgY2hvaWNlCmh1YiA0LTA6MS4wOiBVU0Ig
-aHViIGZvdW5kCmh1YiA0LTA6MS4wOiAyIHBvcnRzIGRldGVjdGVkCnVzYmNvcmU6IHJlZ2lzdGVy
-ZWQgbmV3IGludGVyZmFjZSBkcml2ZXIgY2RjX2FjbQpjZGNfYWNtOiB2MC4yNjpVU0IgQWJzdHJh
-Y3QgQ29udHJvbCBNb2RlbCBkcml2ZXIgZm9yIFVTQiBtb2RlbXMgYW5kIElTRE4gYWRhcHRlcnMK
-dXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2JscApJbml0aWFsaXpp
-bmcgVVNCIE1hc3MgU3RvcmFnZSBkcml2ZXIuLi4KdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50
-ZXJmYWNlIGRyaXZlciB1c2Itc3RvcmFnZQpVU0IgTWFzcyBTdG9yYWdlIHN1cHBvcnQgcmVnaXN0
-ZXJlZC4KdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2JzZXJpYWwK
-VVNCIFNlcmlhbCBzdXBwb3J0IHJlZ2lzdGVyZWQgZm9yIGdlbmVyaWMKdXNiY29yZTogcmVnaXN0
-ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2JzZXJpYWxfZ2VuZXJpYwp1c2JzZXJpYWw6IFVT
-QiBTZXJpYWwgRHJpdmVyIGNvcmUKVVNCIFNlcmlhbCBzdXBwb3J0IHJlZ2lzdGVyZWQgZm9yIEdT
-TSBtb2RlbSAoMS1wb3J0KQp1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVy
-IG9wdGlvbgpvcHRpb246IHYwLjcuMjpVU0IgRHJpdmVyIGZvciBHU00gbW9kZW1zClVTQiBTZXJp
-YWwgc3VwcG9ydCByZWdpc3RlcmVkIGZvciBwbDIzMDMKdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcg
-aW50ZXJmYWNlIGRyaXZlciBwbDIzMDMKcGwyMzAzOiBQcm9saWZpYyBQTDIzMDMgVVNCIHRvIHNl
-cmlhbCBhZGFwdG9yIGRyaXZlcgpQTlA6IE5vIFBTLzIgY29udHJvbGxlciBmb3VuZC4gUHJvYmlu
-ZyBwb3J0cyBkaXJlY3RseS4Kc2VyaW86IGk4MDQyIEtCRCBwb3J0IGF0IDB4NjAsMHg2NCBpcnEg
-MQpzZXJpbzogaTgwNDIgQVVYIHBvcnQgYXQgMHg2MCwweDY0IGlycSAxMgptaWNlOiBQUy8yIG1v
-dXNlIGRldmljZSBjb21tb24gZm9yIGFsbCBtaWNlCmNwdWlkbGU6IHVzaW5nIGdvdmVybm9yIGxh
-ZGRlcgpjcHVpZGxlOiB1c2luZyBnb3Zlcm5vciBtZW51CnVzYmNvcmU6IHJlZ2lzdGVyZWQgbmV3
-IGludGVyZmFjZSBkcml2ZXIgdXNiaGlkCnVzYmhpZDogdjIuNjpVU0IgSElEIGNvcmUgZHJpdmVy
-CkFkdmFuY2VkIExpbnV4IFNvdW5kIEFyY2hpdGVjdHVyZSBEcml2ZXIgVmVyc2lvbiAxLjAuMjAu
-CmlucHV0OiBBVCBUcmFuc2xhdGVkIFNldCAyIGtleWJvYXJkIGFzIC9jbGFzcy9pbnB1dC9pbnB1
-dDAKQUxTQSBkZXZpY2UgbGlzdDoKICBObyBzb3VuZGNhcmRzIGZvdW5kLgpUQ1AgY3ViaWMgcmVn
-aXN0ZXJlZApORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDE3ClVzaW5nIElQSSBTaG9y
-dGN1dCBtb2RlCnVzYiA0LTE6IG5ldyBsb3cgc3BlZWQgVVNCIGRldmljZSB1c2luZyBvaGNpX2hj
-ZCBhbmQgYWRkcmVzcyAyCnVzYiA0LTE6IGNvbmZpZ3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBj
-aG9pY2UKaW5wdXQ6IFBJWEFSVCBVU0IgT1BUSUNBTCBNT1VTRSBhcyAvY2xhc3MvaW5wdXQvaW5w
-dXQxCmdlbmVyaWMtdXNiIDAwMDM6MDkzQToyNTEwLjAwMDE6IGlucHV0OiBVU0IgSElEIHYxLjEw
-IE1vdXNlIFtQSVhBUlQgVVNCIE9QVElDQUwgTU9VU0VdIG9uIHVzYi0wMDAwOjAwOjBiLjAtMS9p
-bnB1dDAKYXRhMi4wMDogcWMgdGltZW91dCAoY21kIDB4OTEpCmF0YTIuMDA6IGZhaWxlZCB0byBJ
-REVOVElGWSAoSU5JVF9ERVZfUEFSQU1TIGZhaWxlZCwgZXJyX21hc2s9MHg0KQphdGEyLjAwOiBx
-YyB0aW1lb3V0IChjbWQgMHg5MSkKYXRhMi4wMDogZmFpbGVkIHRvIElERU5USUZZIChJTklUX0RF
-Vl9QQVJBTVMgZmFpbGVkLCBlcnJfbWFzaz0weDQpCmF0YTIuMDA6IHFjIHRpbWVvdXQgKGNtZCAw
-eDkxKQphdGEyLjAwOiBmYWlsZWQgdG8gSURFTlRJRlkgKElOSVRfREVWX1BBUkFNUyBmYWlsZWQs
-IGVycl9tYXNrPTB4NCkKRnJlZWluZyB1bnVzZWQga2VybmVsIG1lbW9yeTogMjUyayBmcmVlZApC
-RlMgQ1BVIHNjaGVkdWxlciB2MC4zMTAgYnkgQ29uIEtvbGl2YXMuCg==
---001485f9a72c798f6e04795dc15f--
+Index: linux-2.6/drivers/ata/pata_hpt37x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
++++ linux-2.6/drivers/ata/pata_hpt37x.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.12"
++#define DRV_VERSION	"0.6.14"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -404,9 +404,8 @@ static void hpt370_set_piomode(struct at
+ 
+ 	pci_read_config_dword(pdev, addr1, &reg);
+ 	mode = hpt37x_find_mode(ap, adev->pio_mode);
+-	mode &= ~0x8000000;	/* No FIFO in PIO */
+-	mode &= ~0x30070000;	/* Leave config bits alone */
+-	reg &= 0x30070000;	/* Strip timing bits */
++	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
++	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
+ 	pci_write_config_dword(pdev, addr1, reg | mode);
+ }
+ 
+@@ -423,8 +422,7 @@ static void hpt370_set_dmamode(struct at
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u32 addr1, addr2;
+-	u32 reg;
+-	u32 mode;
++	u32 reg, mode, mask;
+ 	u8 fast;
+ 
+ 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
+@@ -436,11 +434,12 @@ static void hpt370_set_dmamode(struct at
+ 	fast |= 0x01;
+ 	pci_write_config_byte(pdev, addr2, fast);
+ 
++	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
++
+ 	pci_read_config_dword(pdev, addr1, &reg);
+ 	mode = hpt37x_find_mode(ap, adev->dma_mode);
+-	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
+-	mode &= ~0xC0000000;	/* Leave config bits alone */
+-	reg &= 0xC0000000;	/* Strip timing bits */
++	mode &= mask;
++	reg &= ~mask;
+ 	pci_write_config_dword(pdev, addr1, reg | mode);
+ }
+ 
+@@ -508,9 +507,8 @@ static void hpt372_set_piomode(struct at
+ 	mode = hpt37x_find_mode(ap, adev->pio_mode);
+ 
+ 	printk("Find mode for %d reports %X\n", adev->pio_mode, mode);
+-	mode &= ~0x80000000;	/* No FIFO in PIO */
+-	mode &= ~0x30070000;	/* Leave config bits alone */
+-	reg &= 0x30070000;	/* Strip timing bits */
++	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
++	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
+ 	pci_write_config_dword(pdev, addr1, reg | mode);
+ }
+ 
+@@ -527,8 +525,7 @@ static void hpt372_set_dmamode(struct at
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u32 addr1, addr2;
+-	u32 reg;
+-	u32 mode;
++	u32 reg, mode, mask;
+ 	u8 fast;
+ 
+ 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
+@@ -539,12 +536,13 @@ static void hpt372_set_dmamode(struct at
+ 	fast &= ~0x07;
+ 	pci_write_config_byte(pdev, addr2, fast);
+ 
++	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
++
+ 	pci_read_config_dword(pdev, addr1, &reg);
+ 	mode = hpt37x_find_mode(ap, adev->dma_mode);
+ 	printk("Find mode for DMA %d reports %X\n", adev->dma_mode, mode);
+-	mode &= ~0xC0000000;	/* Leave config bits alone */
+-	mode |= 0x80000000;	/* FIFO in MWDMA or UDMA */
+-	reg &= 0xC0000000;	/* Strip timing bits */
++	mode &= mask;
++	reg &= ~mask;
+ 	pci_write_config_dword(pdev, addr1, reg | mode);
+ }
+ 
+Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
++++ linux-2.6/drivers/ata/pata_hpt3x2n.c
+@@ -25,7 +25,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt3x2n"
+-#define DRV_VERSION	"0.3.4"
++#define DRV_VERSION	"0.3.7"
+ 
+ enum {
+ 	HPT_PCI_FAST	=	(1 << 31),
+@@ -185,9 +185,8 @@ static void hpt3x2n_set_piomode(struct a
+ 
+ 	pci_read_config_dword(pdev, addr1, &reg);
+ 	mode = hpt3x2n_find_mode(ap, adev->pio_mode);
+-	mode &= ~0x8000000;	/* No FIFO in PIO */
+-	mode &= ~0x30070000;	/* Leave config bits alone */
+-	reg &= 0x30070000;	/* Strip timing bits */
++	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
++	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
+ 	pci_write_config_dword(pdev, addr1, reg | mode);
+ }
+ 
+@@ -204,8 +203,7 @@ static void hpt3x2n_set_dmamode(struct a
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u32 addr1, addr2;
+-	u32 reg;
+-	u32 mode;
++	u32 reg, mode, mask;
+ 	u8 fast;
+ 
+ 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
+@@ -216,11 +214,12 @@ static void hpt3x2n_set_dmamode(struct a
+ 	fast &= ~0x07;
+ 	pci_write_config_byte(pdev, addr2, fast);
+ 
++	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
++
+ 	pci_read_config_dword(pdev, addr1, &reg);
+ 	mode = hpt3x2n_find_mode(ap, adev->dma_mode);
+-	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
+-	mode &= ~0xC0000000;	/* Leave config bits alone */
+-	reg &= 0xC0000000;	/* Strip timing bits */
++	mode &= mask;
++	reg &= ~mask;
+ 	pci_write_config_dword(pdev, addr1, reg | mode);
+ }
+ 
+
