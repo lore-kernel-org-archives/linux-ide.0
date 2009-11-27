@@ -1,191 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_hpt{37x|3x2n}: fix timing register masks (take 2)
-Date: Fri, 27 Nov 2009 22:29:02 +0400
-Message-ID: <200911272129.02616.sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_oldpiix: MWDMA0 is unsupported
+Date: Fri, 27 Nov 2009 19:53:35 +0100
+Message-ID: <200911271953.35241.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:56741 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1751408AbZK0S2G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Nov 2009 13:28:06 -0500
-Content-Disposition: inline
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:51786 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbZK0S6K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Nov 2009 13:58:10 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-These drivers inherited from the older 'hpt366' IDE driver the buggy timing
-register masks in their set_piomode() metods. As a result, too low command
-cycle active time is programmed for slow PIO modes.  Quite fortunately, it's
-later "fixed up" by the set_dmamode() methods which also "helpfully" reprogram
-the command timings, usually to PIO mode 4; unfortunately, setting an UltraDMA
-mode #N also reprograms already set PIO data timings, usually to MWDMA mode #
-max(N, 2) timings...
+MWDMA0 timings cannot be met with the PIIX based controller
+programming interface.
 
-However, the drivers added some breakage of their own too:  the bit that they
-set/clear to control the FIFO is sometimes wrong -- it's actually the MSB of
-the command cycle setup time; also, setting it in DMA mode is wrong as this
-bit is only for PIO actually and clearing it for PIO modes is not needed as
-no mode in any timing table has it set...
-
-Fix all this, inverting the masks while at it, like in the 'hpt366' and
-'pata_hpt366' drivers; bump the drivers' versions, accounting for recent
-patches that forgot to do it...
-
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: stable@kernel.org
-
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-The patch is against the recent Linus' tree. It's intended to go into all
-stable kernels starting with 2.6.19, when the PATA drivers were first merged --
-the version change hunks should be dropped when merging to the older kernels...
+ drivers/ata/pata_oldpiix.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/ata/pata_hpt37x.c  |   32 +++++++++++++++-----------------
- drivers/ata/pata_hpt3x2n.c |   17 ++++++++---------
- 2 files changed, 23 insertions(+), 26 deletions(-)
-
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
+Index: b/drivers/ata/pata_oldpiix.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.12"
-+#define DRV_VERSION	"0.6.14"
- 
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -404,9 +404,8 @@ static void hpt370_set_piomode(struct at
- 
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt37x_find_mode(ap, adev->pio_mode);
--	mode &= ~0x8000000;	/* No FIFO in PIO */
--	mode &= ~0x30070000;	/* Leave config bits alone */
--	reg &= 0x30070000;	/* Strip timing bits */
-+	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
-+	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-@@ -423,8 +422,7 @@ static void hpt370_set_dmamode(struct at
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 reg, mode, mask;
- 	u8 fast;
- 
- 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-@@ -436,11 +434,12 @@ static void hpt370_set_dmamode(struct at
- 	fast |= 0x01;
- 	pci_write_config_byte(pdev, addr2, fast);
- 
-+	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
-+
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt37x_find_mode(ap, adev->dma_mode);
--	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
--	mode &= ~0xC0000000;	/* Leave config bits alone */
--	reg &= 0xC0000000;	/* Strip timing bits */
-+	mode &= mask;
-+	reg &= ~mask;
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-@@ -508,9 +507,8 @@ static void hpt372_set_piomode(struct at
- 	mode = hpt37x_find_mode(ap, adev->pio_mode);
- 
- 	printk("Find mode for %d reports %X\n", adev->pio_mode, mode);
--	mode &= ~0x80000000;	/* No FIFO in PIO */
--	mode &= ~0x30070000;	/* Leave config bits alone */
--	reg &= 0x30070000;	/* Strip timing bits */
-+	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
-+	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-@@ -527,8 +525,7 @@ static void hpt372_set_dmamode(struct at
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 reg, mode, mask;
- 	u8 fast;
- 
- 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-@@ -539,12 +536,13 @@ static void hpt372_set_dmamode(struct at
- 	fast &= ~0x07;
- 	pci_write_config_byte(pdev, addr2, fast);
- 
-+	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
-+
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt37x_find_mode(ap, adev->dma_mode);
- 	printk("Find mode for DMA %d reports %X\n", adev->dma_mode, mode);
--	mode &= ~0xC0000000;	/* Leave config bits alone */
--	mode |= 0x80000000;	/* FIFO in MWDMA or UDMA */
--	reg &= 0xC0000000;	/* Strip timing bits */
-+	mode &= mask;
-+	reg &= ~mask;
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
-+++ linux-2.6/drivers/ata/pata_hpt3x2n.c
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt3x2n"
--#define DRV_VERSION	"0.3.4"
-+#define DRV_VERSION	"0.3.7"
- 
- enum {
- 	HPT_PCI_FAST	=	(1 << 31),
-@@ -185,9 +185,8 @@ static void hpt3x2n_set_piomode(struct a
- 
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt3x2n_find_mode(ap, adev->pio_mode);
--	mode &= ~0x8000000;	/* No FIFO in PIO */
--	mode &= ~0x30070000;	/* Leave config bits alone */
--	reg &= 0x30070000;	/* Strip timing bits */
-+	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
-+	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-@@ -204,8 +203,7 @@ static void hpt3x2n_set_dmamode(struct a
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 reg, mode, mask;
- 	u8 fast;
- 
- 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-@@ -216,11 +214,12 @@ static void hpt3x2n_set_dmamode(struct a
- 	fast &= ~0x07;
- 	pci_write_config_byte(pdev, addr2, fast);
- 
-+	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
-+
- 	pci_read_config_dword(pdev, addr1, &reg);
- 	mode = hpt3x2n_find_mode(ap, adev->dma_mode);
--	mode |= 0x8000000;	/* FIFO in MWDMA or UDMA */
--	mode &= ~0xC0000000;	/* Leave config bits alone */
--	reg &= 0xC0000000;	/* Strip timing bits */
-+	mode &= mask;
-+	reg &= ~mask;
- 	pci_write_config_dword(pdev, addr1, reg | mode);
- }
- 
-
+--- a/drivers/ata/pata_oldpiix.c
++++ b/drivers/ata/pata_oldpiix.c
+@@ -198,7 +198,7 @@ static int oldpiix_init_one (struct pci_
+ 	static const struct ata_port_info info = {
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+-		.mwdma_mask	= ATA_MWDMA2,
++		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.port_ops	= &oldpiix_pata_ops,
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
