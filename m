@@ -1,59 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_hpt{37x|3x2n}: fix timing register masks
-Date: Fri, 27 Nov 2009 00:42:24 +0300
-Message-ID: <4B0EF640.5060000@ru.mvista.com>
-References: <200911242315.52826.sshtylyov@ru.mvista.com> <20091124212006.4730aacf@lxorguk.ukuu.org.uk> <200911262151.05067.bzolnier@gmail.com> <4B0EF0A4.1000201@ru.mvista.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH 4/5] libata: Report zeroed read after Trim and max discard
+ size
+Date: Thu, 26 Nov 2009 20:55:18 -0500
+Message-ID: <4B0F3186.6000903@teksavvy.com>
+References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com> <1259254843-8326-5-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:56782 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1750919AbZKZVmd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 16:42:33 -0500
-In-Reply-To: <4B0EF0A4.1000201@ru.mvista.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:46709 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751319AbZK0BzO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Nov 2009 20:55:14 -0500
+In-Reply-To: <1259254843-8326-5-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, stable@kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello, I wrote:
+Martin K. Petersen wrote:
+..
+> If a storage device supports Trim and the DRAT and RZAT bits are set,
+> report TPRZ=1 in Read Capacity(16).
+..
+> +static inline int ata_id_has_zero_after_trim(const u16 *id)
+> +{
+> +	/* DSM supported, deterministic read, and read zero after trim set */
+> +	if (ata_id_has_trim(id) && id[ATA_ID_ADDITIONAL_SUPP] & 0x4020)
+> +		return 1;
+..
 
->>>> These drivers inherited from the older 'hpt366' IDE driver the 
->>>> buggy timing
->>>> register masks in their set_piomode() metods. As a result, too low 
->>>> command
->>>> cycle active time is programmed for slow PIO modes.  Quite 
->>>> fortunately, it's
->>>> later "fixed up" by the set_dmamode() methods which also 
->>>> "helpfully" reprogram
->>>> the command timings, usually to PIO mode 4.
->>>>
->>>> However, the drivers added some breakage of their own too:  the bit 
->>>> that they
->>>> set/clear to control the FIFO is wrong -- it's actually the MSB of 
->>>> the command
->>>> cycle setup time; setting it in DMA mode is also wrong as this bit 
->>>> is only for
->>>> PIO actually...
->>>>
->>>> Fix all this and bump the drivers' versions, accounting for recenjt 
->>>> patches
->>>> that forgot to do it...
->>>>       
->>
->> Sergei, pata_hpt37x contains another copy of ->set_{piomode,dmamode} 
->> methods
->> (for HPT372 and later chipsets) which also need to be updated.
->>   
->
->   Oh, horror... :-(
->   They also all need to be squashed together and the interrupt bit 
-> manipulation moved to some other place...
+Is that correct, or should it be this:
 
-   I think I'll also do use different masks for UDMA and MWDMA in order 
-to not change PIO data timings when setting an UDMA mode.
+        if (ata_id_has_trim(id) && (id[ATA_ID_ADDITIONAL_SUPP] & 0x4020) == 0x4020)
 
-MBR, Sergei
-
-
+??
