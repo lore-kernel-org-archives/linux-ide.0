@@ -1,29 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata PM question
-Date: Mon, 30 Nov 2009 16:45:27 +0900
-Message-ID: <4B137817.2090106@kernel.org>
-References: <1259547765.2076.48.camel@pasglop> <4B1373BE.3000709@kernel.org> <1259566343.14613.0.camel@sli10-desk.sh.intel.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT]: IDE
+Date: Mon, 30 Nov 2009 01:17:28 -0800 (PST)
+Message-ID: <20091130.011728.178511140.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42965 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753956AbZK3HpZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Nov 2009 02:45:25 -0500
-In-Reply-To: <1259566343.14613.0.camel@sli10-desk.sh.intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48609
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752964AbZK3JRW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2009 04:17:22 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/30/2009 04:32 PM, Shaohua Li wrote:
-> yes, looks reasonable though spec doesn't mention such case.
 
-Freezing being a software thing, I think that's understandable.  Can
-you please post a patch to change that?
+Fix regression in ATA_CMD_SET_FEATURES IDE ioctls done on UDMA modes,
+the code accidently was changed to use a fixed XFER_UDMA_6 when it
+should instead use the given tf->nsect value.
 
-Thanks.
+Please pull, thanks a lot!
 
--- 
-tejun
+The following changes since commit a8a8a669ea13d792296737505adc43ccacf3a648:
+  Linus Torvalds (1):
+        Merge branch 'i2c-pnx-fixes' of git://git.fluff.org/bjdooks/linux
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Hemant Pedanekar (1):
+      ide: fix ioctl to pass requested transfer mode to ide_find_dma_mode instead of UDMA6
+
+ drivers/ide/ide-ioctls.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
