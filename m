@@ -1,24 +1,37 @@
-From: aaa bbb <ilana90@013net.net>
-Subject: Hello
-Date: Fri, 27 Nov 2009 23:36:17 +0000 (GMT)
-Message-ID: <f709a0203712.4b106271__15297.6006073461$1259384572$gmane$org@netvision.net.il>
-Reply-To: missojita@rediffmail.com
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: libata PM question
+Date: Mon, 30 Nov 2009 13:22:44 +1100
+Message-ID: <1259547765.2076.48.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxout5.netvision.net.il ([194.90.9.29]:27763 "EHLO
-	mxout5.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbZK1FCQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Nov 2009 00:02:16 -0500
-Content-language: en
-Content-disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:58101 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753016AbZK3CX3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Nov 2009 21:23:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
+
+Hi there !
+
+So I (finally !) resumed work on pata_macio.c to replace ide/pmac.c :-)
+
+I've started looking at the suspend/resume stuff. It looks like most of
+it just comes for free thanks to libata, yay ! :-)
+
+One quick nit tho, in libata-eh.c, in ata_eh_handle_port_suspend(), any
+reason why you always call ata_acpi_set_state(ap, PMSG_SUSPEND) rather
+than ata_acpi_set_state(ap, ap->pm_mesg) ?
+
+Not directly related to my pmac driver but it seems like it would cause
+calls into ACPI suspend/resume code even when doing freeze/thaw for
+hibernation which doesn't sound totally right to me ... or do I miss
+something ?
+
+Cheers,
+Ben.
 
 
-
-Hello
-How are you today? I hope you are fine.If so thank be to God almighty.My name is Miss Ojita,26 years, single girl looking for honest and nice person. whom i can partner with. i have the sum of $7,000,000.00(Seven Million US Dollars) which i intend to use for business purpose.I would like to know you more,most especially what you like and what you dislike, I don't care about your colour or ethnicity, I'm sending you this beautiful mail, with a wish for much happiness.I am looking forward to hear from you,
-Love from,
-Ojita
