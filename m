@@ -1,47 +1,18 @@
-From: Alan Cox <alan@linux.intel.com>
-Subject: [PATCH 5/6] pata_ali: Fix regression with old devices
-Date: Mon, 30 Nov 2009 13:23:05 +0000
-Message-ID: <20091130132305.27236.95145.stgit@localhost.localdomain>
-References: <20091130132005.27236.77890.stgit@localhost.localdomain>
+From: "Eddy Wall" <fandreassi@prohomecare.com>
+Subject: Don't let your manhood fall!
+Date: Mon, 30 Nov 2009 19:52:50 +0200
+Message-ID: <20091130195250.8080903@prohomecare.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50847 "EHLO
-	bob.linux.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752839AbZK3Nmj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2009 08:42:39 -0500
-In-Reply-To: <20091130132005.27236.77890.stgit@localhost.localdomain>
+Received: from ppp-94-68-125-167.home.otenet.gr ([94.68.125.167]:64796 "HELO
+	ppp-94-68-125-167.home.otenet.gr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752831AbZK3R43 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2009 12:56:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jeff@garzik.org, davem@davemloft.net
+To: linux-ide@vger.kernel.org
 
-Making the new stuff work broke some of the old chipsets. We need to go
-back to the old set up values for these it seems. Unfortunately even with
-documentation this is basically a mix of cargoculting and guesswork.
-
-Chased down to the exact line by Gianluca.
-
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
-
- drivers/ata/pata_ali.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 1432dc9..9434114 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -453,7 +453,9 @@ static void ali_init_chipset(struct pci_dev *pdev)
- 			/* Clear CD-ROM DMA write bit */
- 			tmp &= 0x7F;
- 		/* Cable and UDMA */
--		pci_write_config_byte(pdev, 0x4B, tmp | 0x09);
-+		if (pdev->revision >= 0xc2)
-+			tmp |= 0x01;
-+		pci_write_config_byte(pdev, 0x4B, tmp | 0x08);
- 		/*
- 		 * CD_ROM DMA on (0x53 bit 0). Enable this even if we want
- 		 * to use PIO. 0x53 bit 1 (rev 20 only) - enable FIFO control
+Ancient secret of treatment bad condition. http://hdyq.smilesexcite.com/
 
