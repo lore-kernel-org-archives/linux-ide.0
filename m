@@ -1,50 +1,76 @@
 From: Alan Cox <alan@linux.intel.com>
-Subject: [PATCH 0/6] ATA driver updates
-Date: Mon, 30 Nov 2009 13:22:37 +0000
-Message-ID: <20091130132005.27236.77890.stgit@localhost.localdomain>
+Subject: [PATCH 1/6] pata_via: Blacklist some combinations of Transcend Flash
+	and via
+Date: Mon, 30 Nov 2009 13:22:43 +0000
+Message-ID: <20091130132243.27236.69356.stgit@localhost.localdomain>
+References: <20091130132005.27236.77890.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50825 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50830 "EHLO
 	bob.linux.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752276AbZK3NmN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2009 08:42:13 -0500
+	with ESMTP id S1752318AbZK3NmR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2009 08:42:17 -0500
+In-Reply-To: <20091130132005.27236.77890.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, jeff@garzik.org, davem@davemloft.net
 
-(Cc'd Davem as the piccolo driver touches the drivers/ide/ide-pci-generic.c
- to update the PCI identifiers and keep them all in sync with the name
- corrections as pointed out by Bartlomiej)
+Reported by Mikulas Patocka.
 
+VIA VT82C586B + Transcend TS64GSSD25-M v0826 does not work in UDMA mode
+
+Signed-off-by: Alan Cox <alan@linux.intel.com>
 ---
 
-Alan Cox (6):
-      pata_piccolo: Driver for old Toshiba chipsets
-      pata_ali: Fix regression with old devices
-      pata: Update experimental tags
-      cmd64x: implement serialization as per notes
-      pata_sis: Implement MWDMA for the UDMA 133 capable chips
-      pata_via: Blacklist some combinations of Transcend Flash and via
+ drivers/ata/pata_via.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
 
- drivers/ata/Kconfig           |   39 +++++++----
- drivers/ata/Makefile          |    1 
- drivers/ata/ata_generic.c     |    5 +
- drivers/ata/pata_ali.c        |    4 +
- drivers/ata/pata_cmd64x.c     |  116 ++++++++++++++++++++++++++++++++--
- drivers/ata/pata_piccolo.c    |  140 +++++++++++++++++++++++++++++++++++++++++
- drivers/ata/pata_sis.c        |   91 ++++++++++++++++++++-------
- drivers/ata/pata_via.c        |   27 ++++++++
- drivers/ide/ide-pci-generic.c |    3 +
- include/linux/pci_ids.h       |    7 +-
- 10 files changed, 382 insertions(+), 51 deletions(-)
- create mode 100644 drivers/ata/pata_piccolo.c
-
--- 
-"The IETF already has more than enough RFCs that codify the obvious, make
-stupidity illegal, support truth, justice, and the IETF way, and generally
-demonstrate the author is a brilliant and valuable Contributor to The
-Standards Process." -- Vernon Schryver
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 520d5a3..78eac27 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -337,6 +337,32 @@ static void via_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ /**
++ *	via_mode_filter		-	filter buggy device/mode pairs
++ *	@dev: ATA device
++ *	@mask: Mode bitmask
++ *
++ *	We need to apply some minimal filtering for old controllers and at least
++ *	one breed of Transcend SSD. Return the updated mask.
++ */
++
++static unsigned long via_mode_filter(struct ata_device *dev, unsigned long mask)
++{
++	struct ata_host *host = dev->link->ap->host;
++	const struct via_isa_bridge *config = host->private_data;
++	unsigned char model_num[ATA_ID_PROD_LEN + 1];
++
++	if (config->id == PCI_DEVICE_ID_VIA_82C586_0) {
++		ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
++		if (strcmp(model_num, "TS64GSSD25-M") == 0) {
++			ata_dev_printk(dev, KERN_WARNING,
++	"disabling UDMA mode due to reported lockups with this device.\n");
++			mask &= ~ ATA_MASK_UDMA;
++		}
++	}
++	return ata_bmdma_mode_filter(dev, mask);
++}
++
++/**
+  *	via_tf_load - send taskfile registers to host controller
+  *	@ap: Port to which output is sent
+  *	@tf: ATA taskfile register set
+@@ -427,6 +453,7 @@ static struct ata_port_operations via_port_ops = {
+ 	.prereset	= via_pre_reset,
+ 	.sff_tf_load	= via_tf_load,
+ 	.port_start	= via_port_start,
++	.mode_filter	= via_mode_filter,
+ };
+ 
+ static struct ata_port_operations via_port_ops_noirq = {
 
