@@ -1,56 +1,33 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 05/86] pata_artop: add Power Management support
-Date: Tue, 01 Dec 2009 21:34:53 +0300
-Message-ID: <4B1561CD.2030600@ru.mvista.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170253.5446.62167.sendpatchset@localhost>
+From: Andreas Schwab <schwab@linux-m68k.org>
+Subject: Re: [PATCH 5/5] libata/drivers: Add pata_macio, driver Apple PowerMac/PowerBook IDE controller
+Date: Tue, 01 Dec 2009 21:43:47 +0100
+Message-ID: <m2hbsazapo.fsf@igel.home>
+References: <20091201070834.6A840B7B63@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:12440 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1752513AbZLASdr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 13:33:47 -0500
-In-Reply-To: <20091125170253.5446.62167.sendpatchset@localhost>
+Received: from mail-out.m-online.net ([212.18.0.9]:53260 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934AbZLAUnp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 15:43:45 -0500
+In-Reply-To: <20091201070834.6A840B7B63@ozlabs.org> (Benjamin Herrenschmidt's
+	message of "Tue, 01 Dec 2009 18:08:33 +1100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, jeff@garzik.org, tj@kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Benjamin Herrenschmidt <benh@kernel.crashing.org> writes:
 
-> There shouldn't be any problems with it as IDE aec62xx host driver
-> has been supporting Power Management for over year now.
+> This is a libata driver for the "macio" IDE controller used on most Apple
+> PowerMac and PowerBooks. It's a libata equivalent of drivers/ide/ppc/pmac.c
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ata/pata_artop.c |   72 +++++++++++++++++++++++++++++++++--------------
->  1 file changed, 51 insertions(+), 21 deletions(-)
+Tried it on my iBook G4 and I got an oops during probing, in
+pata_macio_common_init+0x378/0x614.
 
-> Index: b/drivers/ata/pata_artop.c
-> ===================================================================
-> --- a/drivers/ata/pata_artop.c
-> +++ b/drivers/ata/pata_artop.c
-[...]
-> @@ -330,6 +330,33 @@ static struct ata_port_operations atp86x
->  	.prereset		= atp86x_pre_reset,
->  };
->  
-> +static void atp8xx_fixup(struct pci_dev *pdev)
-> +{
-> +	if (pdev->device == 0x0005)
-> +		/* BIOS may have left us in UDMA, clear it before probe */
-> +		pci_write_config_byte(pdev, 0x54, 0);
-> +	else if (pdev->device == 0x0008 || pdev->device == 0x0009) {
-> +		u8 reg;
-> +
-> +		/* Mac systems come up with some registers not set as we
-> +		   will need them */
-> +
-> +		/* Clear reset & test bits */
-> +		pci_read_config_byte(pdev, 0x49, &reg);
-> +		pci_write_config_byte(pdev, 0x49, reg & ~ 0x30);
+Andreas.
 
-    Space not needed between ~ and 0x30...
-
-MBR, Sergei
+-- 
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
