@@ -1,161 +1,63 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/5] libata/drivers: Add pata_macio, driver Apple PowerMac/PowerBook
- IDE controller
-Date: Tue, 01 Dec 2009 17:00:34 +0900
-Message-ID: <4B14CD22.4020806@kernel.org>
-References: <20091201070834.6A840B7B63@ozlabs.org>
+Subject: Re: Intermittent SATA failures ("link offline, clearing class 1 to
+ NONE")
+Date: Tue, 01 Dec 2009 17:12:51 +0900
+Message-ID: <4B14D003.30407@kernel.org>
+References: <1258054583-sup-4108@utwig> <4B14B207.9010208@kernel.org> <1259652273-sup-686@utwig>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39441 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:57942 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751960AbZLAIAb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Dec 2009 03:00:31 -0500
-In-Reply-To: <20091201070834.6A840B7B63@ozlabs.org>
+	id S1750876AbZLAIOH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Dec 2009 03:14:07 -0500
+In-Reply-To: <1259652273-sup-686@utwig>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Jeff Garzik <jeff@garzik.org>, Holger Macht <hmacht@suse.de>
+To: Alex Vandiver <alex@chmrr.net>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
-(cc'ing Holger Macht, please read the comment below pata_macio_mb_event())
 Hello,
 
-On 12/01/2009 04:08 PM, Benjamin Herrenschmidt wrote:
-> This is a libata driver for the "macio" IDE controller used on most Apple
-> PowerMac and PowerBooks. It's a libata equivalent of drivers/ide/ppc/pmac.c
+On 12/01/2009 04:37 PM, Alex Vandiver wrote:
+> My original post included both 'goodboot' and 'badboot' files, which
+> were the dmesg output from a successful boot, and a failed boot with
+> the event -- is that not what you are looking for?  Apologies if I'm
+> misunderstanding.
 
-Don't know much about the controller or the platform so my comments
-will be pretty confined.
+Ooh... sorry, I missed them.  A problem with large screen is that
+those attachments show up so far down in the screen that they become
+pretty easy to miss.  :-)
 
-> +/*
-> + * Wait 1s for disk to answer on IDE bus after a hard reset
-> + * of the device (via GPIO/FCR).
-> + *
-> + * Some devices seem to "pollute" the bus even after dropping
-> + * the BSY bit (typically some combo drives slave on the UDMA
-> + * bus) after a hard reset. Since we hard reset all drives on
-> + * KeyLargo ATA66, we have to keep that delay around. I may end
-> + * up not hard resetting anymore on these and keep the delay only
-> + * for older interfaces instead (we have to reset when coming
-> + * from MacOS...) --BenH.
-> + */
-> +#define IDE_WAKEUP_DELAY	(1*HZ)
+> I tried 2.6.32-rc6 at the time as well -- it happened to have the
+> fault much more often, and showed that both ata2.00 and ata2.01 could
+> be affected.  I've attached dmesg output from a successful boot, as
+> well as dmesg output from a boot which affected sdc, and a boot which
+> affected sdd.
 
-nitpick: In libata, it's common to use msecs for timing values so that
-might be a better option.
+Hmmm... Okay, the problem is that, ata_piix has SCR regs but doesn't
+have PHY event notification.  libata reset protocol does the following
+during reset.
 
-> +static const struct pata_macio_timing *pata_macio_find_timing(
-> +					    struct pata_macio_priv *priv,
-> +					    int mode)
-> +{
-> +	int i = 0;
-> +
-> +	while (priv->timings[i].mode > 0) {
-> +		if (priv->timings[i].mode == mode)
-> +			return &priv->timings[i];
-> +		i++;
-> +	}
-> +	return NULL;
+1. plug interrupts.
+2. reset and determine device presence.
+3. clear PHY events.
+4. unplug interrupts.
+5. check link status and retry if link status doesn't match device
+   presence so that no hotplug event is lost.
 
-Wouldn't for (i = 0; ...) look better?
+The assumption is that a controller which reports link status will
+notify EH if something happens after #4.  ata_piix doesn't have such
+thing and #5 sees that the link is offline (this sometimes happens
+after hardreset, links bounces between on and offline states) and
+marks that the device is not present.  As the link was temporarily
+down, when it gets back up, it would notify another link event and
+libata will retry probing but that never happens with ata_piix so it
+misses the devices.
 
-> +static void pata_macio_bmdma_start(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +	struct pata_macio_priv *priv = ap->private_data;
-> +	struct dbdma_regs __iomem *dma_regs = ap->ioaddr.bmdma_addr;
-> +
-> +	dev_dbgdma(priv->dev, "%s: qc %p\n", __func__, qc);
-> +
-> +	writel((RUN << 16) | RUN, &dma_regs->control);
-> +	/* Make sure it gets to the controller right now */
-> +	(void)readl(&dma_regs->control);
-
-Is flushing necessary here?  There's no ordering issue here, right?
-
-> +static void pata_macio_bmdma_stop(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +	struct pata_macio_priv *priv = ap->private_data;
-> +	struct dbdma_regs __iomem *dma_regs = ap->ioaddr.bmdma_addr;
-> +
-> +	dev_dbgdma(priv->dev, "%s: qc %p\n", __func__, qc);
-> +
-> +	/* Stop the DMA engine and wait for it to full halt */
-> +	writel (((RUN|WAKE|DEAD) << 16), &dma_regs->control);
-> +	while (readl(&dma_regs->status) & RUN)
-> +		udelay(1);
-
-Heh... this is a scary looking loop.  It would be great if the above
-loop can be capped somehow.
-
-> +static u8 pata_macio_bmdma_status(struct ata_port *ap)
-> +{
-> +	struct pata_macio_priv *priv = ap->private_data;
-> +	struct dbdma_regs __iomem *dma_regs = ap->ioaddr.bmdma_addr;
-> +	u32 dstat, rstat = ATA_DMA_INTR;
-> +	unsigned long timeout = 0;
-> +
-> +	dstat = readl(&dma_regs->status);
-> +
-> +	dev_dbgdma(priv->dev, "%s: dstat=%x\n", __func__, dstat);
-> +
-> +	/* We have to things to deal with here:
-                   ^^
-                   two
-
-> +/* port_start is when we allocate the DMA command list */
-> +static int pata_macio_port_start(struct ata_port *ap)
-> +{
-> +	struct pata_macio_priv *priv = ap->private_data;
-> +	struct dbdma_regs __iomem *dma_regs = ap->ioaddr.bmdma_addr;
-> +
-> +	if (dma_regs == NULL)
-> +		return 0;
-> +
-> +	/* Make sure DMA controller is stopped */
-> +	writel((RUN|PAUSE|FLUSH|WAKE|DEAD) << 16, &dma_regs->control);
-> +	while (readl(&dma_regs->status) & RUN)
-> +		udelay(1);
-
-Hmmm.... this probably belongs to ->freeze() which is responsible for
-stopping any in-flight operations and masking IRQ and libata will call
-it during initialization before requesting IRQ, so you won't need to
-call it explicitly here.
-
-> +#ifdef CONFIG_PMAC_MEDIABAY
-> +static void pata_macio_mb_event(struct macio_dev* mdev, int mb_state)
-> +{
-> +	struct ata_host *host = macio_get_drvdata(mdev);
-> +	struct ata_port *ap;
-> +	struct ata_eh_info *ehi;
-> +	struct ata_device *dev;
-> +	unsigned long flags;
-> +
-> +	if (!host)
-> +		return;
-> +	ap = host->ports[0];
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	ehi = &ap->link.eh_info;
-> +	if (mb_state == MB_CD) {
-> +		ata_ehi_push_desc(ehi, "mediabay plug");
-> +		ata_ehi_hotplugged(ehi);
-> +		ata_port_freeze(ap);
-> +	} else {
-> +		ata_ehi_push_desc(ehi, "mediabay unplug");
-> +		ata_for_each_dev(dev, &ap->link, ALL)
-> +			dev->flags |= ATA_DFLAG_DETACH;
-> +		ata_port_schedule_eh(ap);
-
-I think you'll need an ata_port_freeze() or abort() here because at
-this point the drive is already gone and all in-flight commands need
-to be failed right away.  Holger, do you remember why
-ata_acpi_detach_device() is using ata_port_schedule_eh() instead?  Was
-it because ata_port_freeze() might end up poking registers after
-hotunplug happened?  ISTR reports where accessing any register there
-causing the whole system to lock up but then why can't it use
-ata_port_abort() instead?
+Removing PIIX_FLAG_SIDPR from ich8_sata and ich8_2port_sata entries in
+ata_piix.c::piix_port_info fixes the problem, right?
 
 Thanks.
 
