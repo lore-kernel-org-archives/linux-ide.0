@@ -1,58 +1,43 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: libata hotplug question
-Date: Tue, 01 Dec 2009 16:57:53 +1100
-Message-ID: <1259647073.2076.247.camel@pasglop>
-References: <1259561052.2076.73.camel@pasglop>
-	 <1259624651.2076.158.camel@pasglop>  <4B1459B5.40504@kernel.org>
-	 <1259635420.2076.180.camel@pasglop> <1259644647.2076.204.camel@pasglop>
-	 <4B14A809.8000304@kernel.org> <1259645409.2076.213.camel@pasglop>
-	 <4B14AAD0.4060806@kernel.org>  <1259645941.2076.225.camel@pasglop>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Intermittent SATA failures ("link offline, clearing class 1 to
+ NONE")
+Date: Tue, 01 Dec 2009 15:04:55 +0900
+Message-ID: <4B14B207.9010208@kernel.org>
+References: <1258054583-sup-4108@utwig>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:53670 "EHLO gate.crashing.org"
+Received: from hera.kernel.org ([140.211.167.34]:39950 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752294AbZLAF62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Dec 2009 00:58:28 -0500
-In-Reply-To: <1259645941.2076.225.camel@pasglop>
+	id S1751138AbZLAGGK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Dec 2009 01:06:10 -0500
+In-Reply-To: <1258054583-sup-4108@utwig>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Alex Vandiver <alex@chmrr.net>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
-On Tue, 2009-12-01 at 16:39 +1100, Benjamin Herrenschmidt wrote:
-> On Tue, 2009-12-01 at 14:34 +0900, Tejun Heo wrote:
-> > In effect, they would be the same but if the hotplug notification can
-> > be made reliable, I think using DFLAG_DETACH would be better as
-> > there's already other users doing that (user requested detach and ACPI
-> > dock removal). 
+On 11/13/2009 04:43 AM, Alex Vandiver wrote:
+> Heya,
 > 
-> Allright. I just need to find how to tell it at boot that it's detached
-> to avoid time probing a non existing interface but that's no big deal.
+>   I've been seeing intermittent failures of one of the SATA ports on a
+> new machine.  I've tried swapping out hard drives and cables, and even
+> gotten a new motherboard from Dell, but it seems to persist.  It
+> manifests as:
+> 
+> [    2.512022] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    2.512037] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    2.512043] ata2.01: SATA link up <unknown> (SStatus 300 SControl 123)
+> [    2.512057] ata2.00: link offline, clearing class 1 to NONE
+> [    2.512064] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> 
+> ata2.00 is always the port which is reset.  The only other person to
+> see that error seems to have been Tim Blechmann, in
+> <4AC9C373.80603@klingt.org>, which had similar symtoms.  lspci -v for
+> this machine's IDE controllers is:
 
-No point bothering, it looks like it picks up the ff's at boot just fine
-like an unpopulated interface and things just work without any spurrious
-delay.
+Can you please attach full dmesg output after such event?
 
-I'll do a few more tests and will send the patches for review.
-
-Note that I had to do one change to libata-sff:
-
---- linux-work.orig/drivers/ata/libata-sff.c	2009-12-01 16:51:10.000000000 +1100
-+++ linux-work/drivers/ata/libata-sff.c	2009-12-01 16:52:59.000000000 +1100
-@@ -2384,7 +2384,7 @@ void ata_sff_post_internal_cmd(struct at
- 	ap->hsm_task_state = HSM_ST_IDLE;
- 
- 	if (ap->ioaddr.bmdma_addr)
--		ata_bmdma_stop(qc);
-+		ap->ops->bmdma_stop(qc);
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
-
-I'll include that change in my patch series.
-
-Cheers,
-Ben.
-
-
+-- 
+tejun
