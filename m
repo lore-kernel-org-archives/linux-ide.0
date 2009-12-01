@@ -1,35 +1,51 @@
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [PATCH 4/5] libata/sff: Use ops->bmdma_stop instead of ata_bmdma_stop()
-Date: Tue, 01 Dec 2009 18:08:33 +1100
-Message-ID: <20091201070833.CC084B7BD9@ozlabs.org>
+Subject: [PATCH 2/5] powerpc/macio: Add dma_parms support to macio
+Date: Tue, 01 Dec 2009 18:08:32 +1100
+Message-ID: <20091201070832.A8B621007D2@ozlabs.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:43799 "EHLO ozlabs.org"
+Received: from ozlabs.org ([203.10.76.45]:43778 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753330AbZLAHI1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Dec 2009 02:08:27 -0500
+	id S1753313AbZLAHI0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Dec 2009 02:08:26 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linuxppc-dev@lists.ozlabs.org, jeff@garzik.org, tj@kernel.org
 
-In libata-sff, ata_sff_post_internal_cmd() directly calls ata_bmdma_stop()
-instead of ap->ops->bmdma_stop(). This can be a problem for controllers
-that use their own bmdma_stop for which the generic sff one isn't suitable
+This adds dma_parms to macio devices and initializes them with
+default values. This will allow pata_macio to setup the appropriate
+max segment size for the block layer.
 
 Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
 
- drivers/ata/libata-sff.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/powerpc/include/asm/macio.h |    1 +
+ drivers/macintosh/macio_asic.c   |    5 +++++
+ 2 files changed, 6 insertions(+)
 
---- linux-work.orig/drivers/ata/libata-sff.c	2009-12-01 17:48:27.000000000 +1100
-+++ linux-work/drivers/ata/libata-sff.c	2009-12-01 17:48:48.000000000 +1100
-@@ -2384,7 +2384,7 @@ void ata_sff_post_internal_cmd(struct at
- 	ap->hsm_task_state = HSM_ST_IDLE;
+--- linux-work.orig/arch/powerpc/include/asm/macio.h	2009-11-27 14:38:05.000000000 +1100
++++ linux-work/arch/powerpc/include/asm/macio.h	2009-11-27 14:38:20.000000000 +1100
+@@ -39,6 +39,7 @@ struct macio_dev
+ 	struct macio_bus	*bus;		/* macio bus this device is on */
+ 	struct macio_dev	*media_bay;	/* Device is part of a media bay */
+ 	struct of_device	ofdev;
++	struct device_dma_parameters dma_parms; /* ide needs that */
+ 	int			n_resources;
+ 	struct resource		resource[MACIO_DEV_COUNT_RESOURCES];
+ 	int			n_interrupts;
+Index: linux-work/drivers/macintosh/macio_asic.c
+===================================================================
+--- linux-work.orig/drivers/macintosh/macio_asic.c	2009-11-27 14:39:24.000000000 +1100
++++ linux-work/drivers/macintosh/macio_asic.c	2009-11-27 16:37:39.000000000 +1100
+@@ -379,6 +379,11 @@ static struct macio_dev * macio_add_one_
+ 	dev->ofdev.dev.parent = parent;
+ 	dev->ofdev.dev.bus = &macio_bus_type;
+ 	dev->ofdev.dev.release = macio_release_dev;
++	dev->ofdev.dev.dma_parms = &dev->dma_parms;
++
++	/* Standard DMA paremeters */
++	dma_set_max_seg_size(&dev->ofdev.dev, 65536);
++	dma_set_seg_boundary(&dev->ofdev.dev, 0xffffffff);
  
- 	if (ap->ioaddr.bmdma_addr)
--		ata_bmdma_stop(qc);
-+		ap->ops->bmdma_stop(qc);
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- }
+ #ifdef CONFIG_PCI
+ 	/* Set the DMA ops to the ones from the PCI device, this could be
