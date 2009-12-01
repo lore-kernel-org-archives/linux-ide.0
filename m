@@ -1,79 +1,56 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 07/86] pata_artop: remove dead 34MHz PCI clock support
-Date: Tue, 01 Dec 2009 20:23:01 +0300
-Message-ID: <4B1550F5.5070909@ru.mvista.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170307.5446.12439.sendpatchset@localhost>
+Subject: Re: [PATCH 05/86] pata_artop: add Power Management support
+Date: Tue, 01 Dec 2009 21:34:53 +0300
+Message-ID: <4B1561CD.2030600@ru.mvista.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170253.5446.62167.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:16380 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:12440 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1752542AbZLARVx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 12:21:53 -0500
-In-Reply-To: <20091125170307.5446.12439.sendpatchset@localhost>
+	with SMTP id S1752513AbZLASdr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 13:33:47 -0500
+In-Reply-To: <20091125170253.5446.62167.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
-
 Bartlomiej Zolnierkiewicz wrote:
 
-> It has been dead for the last three years (== since the initial driver
-> merge) and probability that it will ever get fixed is quite low.
-
-> Since there is no reason to keep this dead code around any longer just
-> remove it (it can still be retrieved from the git history if necessary).
+> There shouldn't be any problems with it as IDE aec62xx host driver
+> has been supporting Power Management for over year now.
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
->  drivers/ata/pata_artop.c |   29 ++++++++---------------------
->  1 file changed, 8 insertions(+), 21 deletions(-)
+>  drivers/ata/pata_artop.c |   72 +++++++++++++++++++++++++++++++++--------------
+>  1 file changed, 51 insertions(+), 21 deletions(-)
 
 > Index: b/drivers/ata/pata_artop.c
 > ===================================================================
 > --- a/drivers/ata/pata_artop.c
 > +++ b/drivers/ata/pata_artop.c
-> @@ -30,15 +30,6 @@
->  #define DRV_NAME	"pata_artop"
->  #define DRV_VERSION	"0.4.5"
->  
-> -/*
-> - *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
-> - *	get PCI bus speed functionality we leave this as 0. Its a variable
-> - *	for when we get the functionality and also for folks wanting to
-> - *	test stuff.
-> - */
-> -
-> -static int clock = 0;
-> -
->  /**
->   *	atp8xx_prereset	-	probe begin
->   *	@link: link
 [...]
-> @@ -223,7 +210,7 @@ static void atp850_set_dmamode(struct at
+> @@ -330,6 +330,33 @@ static struct ata_port_operations atp86x
+>  	.prereset		= atp86x_pre_reset,
+>  };
 >  
->  	/* Add ultra DMA bits if in UDMA mode */
->  	if (adev->dma_mode >= XFER_UDMA_0) {
-> -		u8 mode = (adev->dma_mode - XFER_UDMA_0) + 1 - clock;
-> +		u8 mode = (adev->dma_mode - XFER_UDMA_0) + 1;
->  		if (mode == 0)
->  			mode = 1;
+> +static void atp8xx_fixup(struct pci_dev *pdev)
+> +{
+> +	if (pdev->device == 0x0005)
+> +		/* BIOS may have left us in UDMA, clear it before probe */
+> +		pci_write_config_byte(pdev, 0x54, 0);
+> +	else if (pdev->device == 0x0008 || pdev->device == 0x0009) {
+> +		u8 reg;
+> +
+> +		/* Mac systems come up with some registers not set as we
+> +		   will need them */
+> +
+> +		/* Clear reset & test bits */
+> +		pci_read_config_byte(pdev, 0x49, &reg);
+> +		pci_write_config_byte(pdev, 0x49, reg & ~ 0x30);
 
-    Note that 'mode' can't be 0 anymore, so this check can be removed.
-
->  		ultra |= (mode << (2 * dn));
-> @@ -261,7 +248,7 @@ static void atp86x_set_dmamode(struct at
->  	pci_read_config_byte(pdev, 0x44 + ap->port_no, &ultra);
->  	ultra &= ~(7 << (4  * adev->devno));	/* One nibble per drive */
->  	if (adev->dma_mode >= XFER_UDMA_0) {
-> -		u8 mode = adev->dma_mode - XFER_UDMA_0 + 1 - clock;
-> +		u8 mode = adev->dma_mode - XFER_UDMA_0 + 1;
->  		if (mode == 0)
->  			mode = 1;
-
-    Same here...
+    Space not needed between ~ and 0x30...
 
 MBR, Sergei
