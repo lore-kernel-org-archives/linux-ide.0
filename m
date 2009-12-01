@@ -1,89 +1,79 @@
-From: saeed bishara <saeed.bishara@gmail.com>
-Subject: Re: Random shutdown of disks using sata_mv
-Date: Tue, 1 Dec 2009 17:45:54 +0200
-Message-ID: <c70ff3ad0912010745o77dca817v3cae2020581026e7@mail.gmail.com>
-References: <34963.87.210.74.220.1259669744.squirrel@ketsers.dhs.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 07/86] pata_artop: remove dead 34MHz PCI clock support
+Date: Tue, 01 Dec 2009 20:23:01 +0300
+Message-ID: <4B1550F5.5070909@ru.mvista.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125170307.5446.12439.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:41873 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944AbZLAPpu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 10:45:50 -0500
-Received: by yxe17 with SMTP id 17so4663669yxe.33
-        for <linux-ide@vger.kernel.org>; Tue, 01 Dec 2009 07:45:55 -0800 (PST)
-In-Reply-To: <34963.87.210.74.220.1259669744.squirrel@ketsers.dhs.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:16380 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1752542AbZLARVx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 12:21:53 -0500
+In-Reply-To: <20091125170307.5446.12439.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 1, 2009 at 2:15 PM, Caspar Smit <c.smit@truebit.nl> wrote:
->
->
-> Hi,
->
-> I'm having a problem where in random one of my disks shuts
-> down and is disconnected from the linux kernel. In other words I have=
- to
-> reboot the system or physically unplug/replug the disk to get it to w=
-ork
-> again.
->
-> I will provide my configuration:
->
-> SuperMicro
-> SC-216 chassis (24 bay 2,5" disks)
-> 24x Seagate ST9500420AS 500Gb
-> 7200 RPM Hard Drives
-> 3x SuperMicro AOC-SAT2-MV8 (SATA Controller
-> using the sata_mv kernel driver)
->
-> I use Debian Lenny 5.0 and
-> kernel: linux-image-2.6.30-bpo.2-amd64
-> (2.6.30-8~bpo50+1) from the
-> backports repository.
->
-> The symptom is that after a while of
-> operation a disk is shut down and kicked out of a RAID set. It doesn'=
-t
-> matter if there is load or not on the system.
->
-> The logging
-> says:
->
-> sd 11:0:0:0: [sdk] Unhandled error code
-> sd 11:0:0:0:
-> Result: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-> sd 11:0:0:0:
-> end_request: I/O error, dev sdk, sector 0
-This part of the log doesn't show any message from the libata nor the
-sata_mv drivers.
-can you send the whole system log?
->
-> In this case sdk,
-> but it happens to all disks.
-> Then the disk is not readable by the
-> system anymore.
->
-> When I check the disk for errors
-> (badblocks/smart) in another system it doesn't give any errors.
-> I
-> only have this with 2,5" systems.
->
-> Is this a sata_mv
-> problem? A disk problem? or anything else?
-> I can provide more info if
-> needed.
->
-> Kind regards,
-> Caspar Smit
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Hello.
+
+Bartlomiej Zolnierkiewicz wrote:
+
+> It has been dead for the last three years (== since the initial driver
+> merge) and probability that it will ever get fixed is quite low.
+
+> Since there is no reason to keep this dead code around any longer just
+> remove it (it can still be retrieved from the git history if necessary).
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ata/pata_artop.c |   29 ++++++++---------------------
+>  1 file changed, 8 insertions(+), 21 deletions(-)
+
+> Index: b/drivers/ata/pata_artop.c
+> ===================================================================
+> --- a/drivers/ata/pata_artop.c
+> +++ b/drivers/ata/pata_artop.c
+> @@ -30,15 +30,6 @@
+>  #define DRV_NAME	"pata_artop"
+>  #define DRV_VERSION	"0.4.5"
+>  
+> -/*
+> - *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
+> - *	get PCI bus speed functionality we leave this as 0. Its a variable
+> - *	for when we get the functionality and also for folks wanting to
+> - *	test stuff.
+> - */
+> -
+> -static int clock = 0;
+> -
+>  /**
+>   *	atp8xx_prereset	-	probe begin
+>   *	@link: link
+[...]
+> @@ -223,7 +210,7 @@ static void atp850_set_dmamode(struct at
+>  
+>  	/* Add ultra DMA bits if in UDMA mode */
+>  	if (adev->dma_mode >= XFER_UDMA_0) {
+> -		u8 mode = (adev->dma_mode - XFER_UDMA_0) + 1 - clock;
+> +		u8 mode = (adev->dma_mode - XFER_UDMA_0) + 1;
+>  		if (mode == 0)
+>  			mode = 1;
+
+    Note that 'mode' can't be 0 anymore, so this check can be removed.
+
+>  		ultra |= (mode << (2 * dn));
+> @@ -261,7 +248,7 @@ static void atp86x_set_dmamode(struct at
+>  	pci_read_config_byte(pdev, 0x44 + ap->port_no, &ultra);
+>  	ultra &= ~(7 << (4  * adev->devno));	/* One nibble per drive */
+>  	if (adev->dma_mode >= XFER_UDMA_0) {
+> -		u8 mode = adev->dma_mode - XFER_UDMA_0 + 1 - clock;
+> +		u8 mode = adev->dma_mode - XFER_UDMA_0 + 1;
+>  		if (mode == 0)
+>  			mode = 1;
+
+    Same here...
+
+MBR, Sergei
