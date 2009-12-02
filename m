@@ -1,41 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/5] libata/drivers: Add pata_macio, driver Apple PowerMac/PowerBook
- IDE controller
-Date: Wed, 02 Dec 2009 10:07:27 +0900
-Message-ID: <4B15BDCF.5020000@kernel.org>
-References: <20091202003630.29919100851@ozlabs.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] add PATA host controller support for Cirrus Logic's EP93xx CPUs
+Date: Wed, 2 Dec 2009 02:06:59 +0100
+Message-ID: <200912020206.59659.bzolnier@gmail.com>
+References: <200911261651.40928.bzolnier@gmail.com> <4B15BAA1.2010408@bluewatersys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35090 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754734AbZLBBHR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Dec 2009 20:07:17 -0500
-In-Reply-To: <20091202003630.29919100851@ozlabs.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:48923 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754809AbZLBBHz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Dec 2009 20:07:55 -0500
+In-Reply-To: <4B15BAA1.2010408@bluewatersys.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, jeff@garzik.org
+To: Ryan Mallon <ryan@bluewatersys.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.montavista.com>, Joao Ramos <joao.ramos@inov.pt>, H Hartley Sweeten <hsweeten@visionengravers.com>
 
-On 12/02/2009 09:36 AM, Benjamin Herrenschmidt wrote:
-> This is a libata driver for the "macio" IDE controller used on most Apple
-> PowerMac and PowerBooks. It's a libata equivalent of drivers/ide/ppc/pmac.c
+On Wednesday 02 December 2009 01:53:53 am Ryan Mallon wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Based on the older IDE host driver by Joao Ramos and review comments
+> > for it from Sergei Shtylyov.  Not yet tested with the real hardware.
+> >
 > 
-> It supports all the features of its predecessor, including mediabay hotplug
-> and suspend/resume. It should also support module load/unload.
+> Hi Bartlomiej,
 > 
-> The timing calculations have been simplified to use pre-calculated tables
-> compared to drivers/ide/pmac.c and it uses the new mediabay interface
-> provided by a previous patch.
+> I have got as far as patching this into my kernel and doing a build test
+> (still need to find a hard-disk to test). I got some build errors, see
+> below:
 
-Other than the media bay locking thing I mentioned before, it looks
-good to me and the media bay thing can be dealth with further patches,
-so...
+Hi,
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Many thanks for picking this driver up.
 
-Thanks.
+The following preparatory libata one-liner is needed to make it build:
 
--- 
-tejun
+	http://patchwork.kernel.org/patch/62926/
+
+and you may also need to update ep93xx ide gpio patch:
+
+	http://thread.gmane.org/gmane.linux.ports.arm.kernel/57688/focus=58730
+
+to current kernels to make the hardware work.
+
+--
+Bartlomiej Zolnierkiewicz
