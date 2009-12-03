@@ -1,35 +1,63 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/6] pdc202xx_old: remove no longer needed debugging code
-Date: Fri, 04 Dec 2009 00:42:06 +0300
-Message-ID: <4B1830AE.7010107@ru.mvista.com>
-References: <20091203195145.9093.88261.sendpatchset@localhost> <20091203195219.9093.45804.sendpatchset@localhost>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 00/86] PATA fixes
+Date: Thu, 3 Dec 2009 22:42:05 +0100
+Message-ID: <200912032242.05785.bzolnier@gmail.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <200912032045.48728.bzolnier@gmail.com> <4B182A9F.5090708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:53849 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1752733AbZLCVmP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:42:15 -0500
-In-Reply-To: <20091203195219.9093.45804.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754824AbZLCVnY@vger.kernel.org>
+In-Reply-To: <4B182A9F.5090708@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 
-Hello.
+On Thursday 03 December 2009 10:16:15 pm Jeff Garzik wrote:
 
-Bartlomiej Zolnierkiewicz wrote:
+> >        pata_efar: MWDMA0 is unsupported
+> 
+> skipped, pending discussion (just sent email)
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] pdc202xx_old: remove no longer needed debugging code
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->
->   
+The discussion was there, you were not especially interested
+(http://lkml.org/lkml/2009/11/26/343).
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> >        pata_hpt3x2n: fix overclocked MWDMA0 timing
+> 
+> skipped, pending discussion (just sent email)
 
-MBR, Sergei
+ditto (http://lkml.org/lkml/2009/11/27/257).
+
+There were no complains so I'm pretty sure Sergei was fine with it.
+
+> >        pata_hpt3x3: Power Management fix
+> 
+> applied, on a hope and a prayer (did not see this posted to mailing 
+> list?).  It looks correct to me.
+
+I prefer sticking to technical facts. ;)
+
+Patch was posted to both mailing lists: http://lkml.org/lkml/2009/11/25/321
+
+> >        pata_via: clear UDMA transfer mode bit for PIO and MWDMA
+> 
+> applied -- even though Alan's comment was correct.  It is standard 
+> kernel practice to place cosmetic changes into their own patches, 
+> because it is standard kernel practice to break up logically distinct 
+> changes.
+
+We are talking about:
+
+ pata_via.c |   19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+patch here (http://lkml.org/lkml/2009/11/25/380) and cosmetic change
+is clearly documented in the patch description.
 
 
+Do people really wonder why I find upstream to be too much hassle to
+deal with?
+
+--
+Bartlomiej Zolnierkiewicz
