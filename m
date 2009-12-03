@@ -1,39 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_hpt3x2n: fix overclocked MWDMA0 timing
-Date: Thu, 03 Dec 2009 15:56:53 -0500
-Message-ID: <4B182615.8030104@garzik.org>
-References: <200911271956.55939.bzolnier@gmail.com> <4B102B83.1080102@ru.mvista.com> <4B102CE5.1050901@ru.mvista.com>
+Subject: Re: [PATCH] pata_it8213: MWDMA0 is unsupported
+Date: Thu, 03 Dec 2009 16:04:42 -0500
+Message-ID: <4B1827EA.4050608@garzik.org>
+References: <200911261728.36433.bzolnier@gmail.com> <200911261800.55025.bzolnier@gmail.com> <4B0EB986.2010801@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:47070 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbZLCU4s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 15:56:48 -0500
-In-Reply-To: <4B102CE5.1050901@ru.mvista.com>
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:51951 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbZLCVEi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:04:38 -0500
+In-Reply-To: <4B0EB986.2010801@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/27/2009 02:47 PM, Sergei Shtylyov wrote:
-> Hello, I wrote:
+On 11/26/2009 12:23 PM, Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+>
+>>> MWDMA0 timings cannot be met with the PIIX based controller
+>>> programming interface.
+>
+>>> This change should be safe as this is how we have been doing
+>>> things in IDE it8213 host driver for years.
 >
 >>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 >>> ---
->>> Sergei, XFER_UDMA_5 timing also looks suspicious,
->>> please take a look when you have a minute, thanks.
+>>> Verified with the documentation (similar case as with pata_efar).
 >
->> Yeah, but it's the same as XFER_UDMA_4, so actually underclocked...
->> However, it matches what the HPT371N datasheet and the vendor drivers
->> have. The 'hpt366' driver uses more speedy mode, with 22.5 ns cycle. ;-)
+>> Uhhh, no...
 >
-> I have just verified: this driver has always used this timing
-> historically, at least for HPT372+ chips.
+>> Too many damn drivers.
+>
+>> Too much damn duplication.
+>
+>> Too much damn subtle differences here and there.
+>
+>> The hardware is probably fine for MWMDA0 when it comes to
+>> pata_{efar,it8213},
+>> it just not documented properly in the data sheet.
+>
+> How so with pata_efar? The active/recovery bitfields are still 2-bit
+> wide, no?
 
-Could you clarify which "this timing" you are referring to?  :)  I never 
-saw an Acked-by on this one.
+So....  pata_it8213 is fine for MWDMA0, then?
 
 	Jeff
 
