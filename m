@@ -1,36 +1,37 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Thu, 3 Dec 2009 22:17:58 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0912032214040.23464@uplift.swm.pp.se>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org> <4AF0CFE1.8050407@tomt.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 0/6] ide: dead/stale code removal
+Date: Thu, 03 Dec 2009 13:25:43 -0800 (PST)
+Message-ID: <20091203.132543.201642745.davem@davemloft.net>
+References: <20091203195145.9093.88261.sendpatchset@localhost>
+	<200912032054.49131.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756242AbZLCVRx@vger.kernel.org>
-In-Reply-To: <4AF0CFE1.8050407@tomt.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: Jeff Garzik <jeff@garzik.org>, tfjellstrom@shaw.ca, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55366
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753971AbZLCVZh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:25:37 -0500
+In-Reply-To: <200912032054.49131.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 4 Nov 2009, Andre Tomt wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Thu, 3 Dec 2009 20:54:49 +0100
 
-> Identical issues with the AOC-SASLP-MV8 card with 8 Seagate Barracuda 
-> 7200.11 1.5TB drives using the mvsas driver. Creating a md raid array 
-> seems to trigger it nearly instantly, however other loads do not trigger 
-> it as fast (if at all, only tested briefly with paralell dd).
+> 
+> [ uh, this time using the correct file, sorry for the noise ]
 
-Would just like to chime in with a "me too" on this. I've tried both 
-ubuntu 9.10 kernel (2.6.31) and their 10.04 pre-alpha (guess it's 
-2.6.32-rc8) and mvsas + AOC-SASLP-MV8 is pretty much unusable. If I start 
-md creation it stalls immediately and gets nowhere, last time I tried it 
-md claimed it had written 160 blocks then it stalled (all drive LEDs on 
-the controller is constantly lit).
+Looks better :-)
 
-If I boot without drives and then hot-plug the drives, it immediately 
-oops:es.
+> Just a small cleanup removing dead/stale code from few IDE host drivers
+> (it makes comparisions between old/new drivers and porting fixes in both
+> directions much easier).
+ ...
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git ide-dcr
 
-Any code/fixes I can try, this is a lab machine so I can easily do 
-whatever needed with it...
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Pulled, thanks a lot Bart.
