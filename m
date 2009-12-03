@@ -1,37 +1,31 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 03 Dec 2009 12:48:04 -0800 (PST)
-Message-ID: <20091203.124804.168589603.davem@davemloft.net>
-References: <4B1771CD.3090409@garzik.org>
-	<20091203165947.13841802@lxorguk.ukuu.org.uk>
-	<4B17F7E4.9040302@garzik.org>
+Subject: Re: [PATCH 0/6] ide: dead/stale code removal
+Date: Thu, 03 Dec 2009 12:49:03 -0800 (PST)
+Message-ID: <20091203.124903.257367015.davem@davemloft.net>
+References: <20091203195145.9093.88261.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54194
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54200
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755186AbZLCUr6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 15:47:58 -0500
-In-Reply-To: <4B17F7E4.9040302@garzik.org>
+	by vger.kernel.org with ESMTP id S1755349AbZLCUs5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 15:48:57 -0500
+In-Reply-To: <20091203195145.9093.88261.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Thu, 03 Dec 2009 12:39:48 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Thu, 03 Dec 2009 20:51:45 +0100
 
-> On 12/03/2009 11:59 AM, Alan Cox wrote:
->>> The merge window is upon us, which by strict rules means that anything
->>> not already in libata-dev.git#upstream needs to wait until 2.6.34.
->>
->> Not quite yet - Linus hasn't said "go"
+> The following changes since commit 184b8405d5d3e8510163d66efbac99d351faba2e:
+>   Bartlomiej Zolnierkiewicz (1):
+>         libata: add private driver field to struct ata_device
 > 
-> He rarely if ever says "go."  The kernel X is released, and people
-> send pull requests to Linus for X+1.  He typically merges immediately,
-> but does not push out the first set of merges for a few days.
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-for-2.6.33
 
-I don't think he even starts pulling until 1 or 2 days later.
-
-I personally never send him a pull request until a day or two in.
+I think you've swapped which GIT tree you're meaning to report here.
