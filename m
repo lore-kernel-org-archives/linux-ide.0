@@ -1,33 +1,35 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 03 Dec 2009 13:41:03 -0800 (PST)
-Message-ID: <20091203.134103.207880474.davem@davemloft.net>
-References: <4B17F7E4.9040302@garzik.org>
-	<20091203.124804.168589603.davem@davemloft.net>
-	<4B182E5D.2020905@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 4/6] pdc202xx_old: remove no longer needed debugging code
+Date: Fri, 04 Dec 2009 00:42:06 +0300
+Message-ID: <4B1830AE.7010107@ru.mvista.com>
+References: <20091203195145.9093.88261.sendpatchset@localhost> <20091203195219.9093.45804.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56019
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753640AbZLCVk5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:40:57 -0500
-In-Reply-To: <4B182E5D.2020905@garzik.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:53849 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1752733AbZLCVmP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:42:15 -0500
+In-Reply-To: <20091203195219.9093.45804.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Thu, 03 Dec 2009 16:32:13 -0500
+Hello.
 
-> In any case, the basic point is that Linus does not say "go" for merge
-> windows.  People send, he pulls when he chooses, and pushes when he
-> chooses.  It's all very zen ;-)
+Bartlomiej Zolnierkiewicz wrote:
 
-True.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] pdc202xx_old: remove no longer needed debugging code
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>
+>   
 
-But I also want to mention that I wait 2 days for another reason,
-so that whatever I do toss to him gets full exposure in -next
-at least one time.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
+
+
