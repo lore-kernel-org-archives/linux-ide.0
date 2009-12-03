@@ -1,55 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Intermittent SATA failures ("link offline, clearing class 1 to
- NONE")
-Date: Thu, 03 Dec 2009 09:42:04 +0900
-Message-ID: <4B17095C.50204@kernel.org>
-References: <1258054583-sup-4108@utwig> <4B14B207.9010208@kernel.org> <1259652273-sup-686@utwig> <4B14D003.30407@kernel.org> <4B14D454.7010300@kernel.org> <1259704924-sup-4007@utwig> <4B15C64E.7090106@kernel.org> <1259774491-sup-9212@utwig> <4B17042B.5070400@kernel.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
+Date: Wed, 02 Dec 2009 21:57:38 -0800 (PST)
+Message-ID: <20091202.215738.12118816.davem@davemloft.net>
+References: <20091026162011.GA3289@frolo.macqel>
+	<4AE64031.5060105@gmail.com>
+	<4AEC420A.9030502@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34403 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752753AbZLCAnC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Dec 2009 19:43:02 -0500
-In-Reply-To: <4B17042B.5070400@kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45574
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751073AbZLCF5c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 00:57:32 -0500
+In-Reply-To: <4AEC420A.9030502@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alex Vandiver <alex@chmrr.net>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: liml@rtr.ca
+Cc: hancockrwd@gmail.com, phdm@macqel.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 12/03/2009 09:19 AM, Tejun Heo wrote:
-> On 12/03/2009 02:45 AM, Alex Vandiver wrote:
->> At Tue Dec 01 20:43:42 -0500 2009, Tejun Heo wrote:
->>> Can you please try this one?
->>
->> Good and bad dmesg output attached.
+From: Mark Lord <liml@rtr.ca>
+Date: Sat, 31 Oct 2009 09:56:26 -0400
+
+> Robert Hancock wrote:
+> ..
+>> This has come up before:
+>> http://marc.info/?l=linux-ide&m=123064513313466&w=2
+>> I think this timeout should not even exist. libata has no such timeout
+>> (only the overall command completion timeout), and I can't find any
+>> reference in current ATA specs to the device being required to raise
+>> DRQ in any particular amount of time.
+> ..
 > 
-> That's interesting.  The link state seems to oscillates for quite long
-> time.  Can you please try the followings?
+> The reason for the original (20ms, then 50ms) timeout was this text
+> from the ATA1 specification, long since outdated:
 > 
-> 1. Change sata_deb_timing_hotplug to sata_deb_timing_long in
->    ata_piix.c::piidx_sidpr_hardreset() and see whether it solves the
->    problem?
-> 
-> 2. Switch the controller into ahci mode in BIOS if possible and see
->    whether the problem goes away.
-> 
-> 3. Try kernel parameter "libata.force=nohrst" and see whether it makes
->    any difference.
+>   -  Upon receipt of a Class 3 command, the drive sets BSY within 400 nsec,
+>      sets  up the sector buffer for a write operation, sets DRQ within 20
+>      msec, and clears BSY within 400 nsec of setting DRQ.
 
-One more thing to try.
+Ok, I'd like to resolve this as follows.  We had stated "at least
+500msec for SSD drives" so I doubled it.
 
-4. You can tell libata to reset the port by running the following command.
+This should be a pretty safe change.  The only major side effect is
+that if the device really does hang before setting DRQ it will take
+a full second before we notice it.
 
-   echo "- - -" > /sys/class/scsi_host/hostN/scan
+Any major objections?
 
-   N would be 0 or 1 on your configuration.  Can you please run the
-   above command repeatedly and see whether it triggers a reset
-   failure?  If so, the above will be far more convenient way to test
-   than rebooting repeatedly.
+ide: Increase WAIT_DRQ to accomodate some CF cards and SSD drives.
 
-Thanks.
+Based upon a patch by Philippe De Muyter, and feedback from Mark
+Lord and Robert Hancock.
 
--- 
-tejun
+As noted by Mark Lord, the outdated ATA1 spec specifies a 20msec
+timeout for setting DRQ but lots of common devices overshoot this.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index e4135d6..0ec6129 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -125,8 +125,8 @@ struct ide_io_ports {
+  * Timeouts for various operations:
+  */
+ enum {
+-	/* spec allows up to 20ms */
+-	WAIT_DRQ	= HZ / 10,	/* 100ms */
++	/* spec allows up to 20ms, but CF cards and SSD drives need more */
++	WAIT_DRQ	= 1 * HZ,	/* 1s */
+ 	/* some laptops are very slow */
+ 	WAIT_READY	= 5 * HZ,	/* 5s */
+ 	/* should be less than 3ms (?), if all ATAPI CD is closed at boot */
