@@ -1,75 +1,51 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH ide] : Increase WAIT_DRQ to support slow CF cards
-Date: Wed, 02 Dec 2009 21:57:38 -0800 (PST)
-Message-ID: <20091202.215738.12118816.davem@davemloft.net>
-References: <20091026162011.GA3289@frolo.macqel>
-	<4AE64031.5060105@gmail.com>
-	<4AEC420A.9030502@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 4/5] libata/sff: Use ops->bmdma_stop instead of ata_bmdma_stop()
+Date: Thu, 03 Dec 2009 02:35:51 -0500
+Message-ID: <4B176A57.5040605@garzik.org>
+References: <20091202003629.4342710080C@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45574
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751073AbZLCF5c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 00:57:32 -0500
-In-Reply-To: <4AEC420A.9030502@rtr.ca>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:55473 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbZLCHfr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 02:35:47 -0500
+Received: by yxe17 with SMTP id 17so926735yxe.33
+        for <linux-ide@vger.kernel.org>; Wed, 02 Dec 2009 23:35:54 -0800 (PST)
+In-Reply-To: <20091202003629.4342710080C@ozlabs.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: liml@rtr.ca
-Cc: hancockrwd@gmail.com, phdm@macqel.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, tj@kernel.org
 
-From: Mark Lord <liml@rtr.ca>
-Date: Sat, 31 Oct 2009 09:56:26 -0400
+On 12/01/2009 07:36 PM, Benjamin Herrenschmidt wrote:
+> In libata-sff, ata_sff_post_internal_cmd() directly calls ata_bmdma_stop()
+> instead of ap->ops->bmdma_stop(). This can be a problem for controllers
+> that use their own bmdma_stop for which the generic sff one isn't suitable
+>
+> Signed-off-by: Benjamin Herrenschmidt<benh@kernel.crashing.org>
+> ---
+>
+>   drivers/ata/libata-sff.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- linux-work.orig/drivers/ata/libata-sff.c	2009-12-01 17:48:27.000000000 +1100
+> +++ linux-work/drivers/ata/libata-sff.c	2009-12-01 17:48:48.000000000 +1100
+> @@ -2384,7 +2384,7 @@ void ata_sff_post_internal_cmd(struct at
+>   	ap->hsm_task_state = HSM_ST_IDLE;
+>
+>   	if (ap->ioaddr.bmdma_addr)
+> -		ata_bmdma_stop(qc);
+> +		ap->ops->bmdma_stop(qc);
+>
+>   	spin_unlock_irqrestore(ap->lock, flags);
 
-> Robert Hancock wrote:
-> ..
->> This has come up before:
->> http://marc.info/?l=linux-ide&m=123064513313466&w=2
->> I think this timeout should not even exist. libata has no such timeout
->> (only the overall command completion timeout), and I can't find any
->> reference in current ATA specs to the device being required to raise
->> DRQ in any particular amount of time.
-> ..
-> 
-> The reason for the original (20ms, then 50ms) timeout was this text
-> from the ATA1 specification, long since outdated:
-> 
->   -  Upon receipt of a Class 3 command, the drive sets BSY within 400 nsec,
->      sets  up the sector buffer for a write operation, sets DRQ within 20
->      msec, and clears BSY within 400 nsec of setting DRQ.
+applied
 
-Ok, I'd like to resolve this as follows.  We had stated "at least
-500msec for SSD drives" so I doubled it.
+As we discussed, feel free to carry this in your tree as well.  git 
+should be able to sort it out.
 
-This should be a pretty safe change.  The only major side effect is
-that if the device really does hang before setting DRQ it will take
-a full second before we notice it.
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-Any major objections?
 
-ide: Increase WAIT_DRQ to accomodate some CF cards and SSD drives.
-
-Based upon a patch by Philippe De Muyter, and feedback from Mark
-Lord and Robert Hancock.
-
-As noted by Mark Lord, the outdated ATA1 spec specifies a 20msec
-timeout for setting DRQ but lots of common devices overshoot this.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index e4135d6..0ec6129 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -125,8 +125,8 @@ struct ide_io_ports {
-  * Timeouts for various operations:
-  */
- enum {
--	/* spec allows up to 20ms */
--	WAIT_DRQ	= HZ / 10,	/* 100ms */
-+	/* spec allows up to 20ms, but CF cards and SSD drives need more */
-+	WAIT_DRQ	= 1 * HZ,	/* 1s */
- 	/* some laptops are very slow */
- 	WAIT_READY	= 5 * HZ,	/* 5s */
- 	/* should be less than 3ms (?), if all ATAPI CD is closed at boot */
