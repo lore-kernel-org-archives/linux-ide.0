@@ -1,114 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: What's in libata-dev.git?
-Date: Thu, 3 Dec 2009 02:56:53 -0500
-Message-ID: <20091203075653.GA30612@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 4/5] libata: Report zeroed read after Trim and max discard
+ size
+Date: Thu, 03 Dec 2009 02:57:54 -0500
+Message-ID: <4B176F82.4050907@pobox.com>
+References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>	<1259254843-8326-5-git-send-email-martin.petersen@oracle.com>	<4B0F3186.6000903@teksavvy.com> <yq18wds3a10.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:55518 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751991AbZLCH4q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Dec 2009 02:56:46 -0500
-Content-Disposition: inline
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:61000 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755016AbZLCH5t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 02:57:49 -0500
+In-Reply-To: <yq18wds3a10.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mark Lord <kernel@teksavvy.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On 11/26/2009 10:46 PM, Martin K. Petersen wrote:
+>>>>>> "Mark" == Mark Lord<kernel@teksavvy.com>  writes:
+>
+> Mark>  Is that correct, or should it be this:
+>
+> Mark>         if (ata_id_has_trim(id)&&  (id[ATA_ID_ADDITIONAL_SUPP]&
+> Mark>         0x4020) == 0x4020)
+>
+> Good spotting!  You are right, I need both bits to be set...
+>
+>
+> libata: Report zeroed read after Trim and max discard size
+>
+> Our current Trim payload is a single sector that can accommodate 64 *
+> 65535 blocks being unmapped.  Report this value in the Block Limits
+> Maximum Unmap LBA count field.
+>
+> If a storage device supports Trim and the DRAT and RZAT bits are set,
+> report TPRZ=1 in Read Capacity(16).
+>
+> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
+
+The two libata patches look good.  I need to review the thread one more 
+time, and then will apply these...
 
 
-This is the contents of the recently-rebased "upstream" branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-This is what will get sent RSN for 2.6.33.
-
-I am hoping we can also get Bart's big chunk o patches in for 2.6.33,
-too?
-
-Alan Cox (6):
-      pata_via: Blacklist some combinations of Transcend Flash and via
-      pata_sis: Implement MWDMA for the UDMA 133 capable chips
-      pata_cmd64x: implement serialization as per notes
-      [libata] PATA: Update experimental tags
-      pata_ali: Fix regression with old devices
-      pata_piccolo: Driver for old Toshiba chipsets
-
-Bartlomiej Zolnierkiewicz (5):
-      pata_hpt37x: add proper cable detection methods
-      pata_hpt37x: unify ->pre_reset methods
-      pata_hpt3x2n: fix cable detection
-      pata_hpt{37x,3x2n}: add debounce delay to cable detection methods
-      libata: add comment documenting PIO latency issues on UP
-
-Benjamin Herrenschmidt (1):
-      libata/sff: Use ops->bmdma_stop instead of ata_bmdma_stop()
-
-Christoph Hellwig (1):
-      libata: add translation for SCSI WRITE SAME (aka TRIM support)
-
-Jiri Slaby (1):
-      pata_via: fix double put on isa bridge
-
-Krzysztof Halasa (1):
-      pata_cs5536: use 32-bit BM DMA template instead of 16-bit.
-
-Mark Nelson (1):
-      ahci: let users know that Promise PDC42819 support is limited to SATA devices
-
-Matthew Garrett (1):
-      ata: Don't require newlines for link_power_management_policy
-
-Otavio Salvador (1):
-      pata-it821x: use PCI_DEVICE_ID_RDC_D1010 define
-
-Robert Hancock (1):
-      libata: remove experimental tag on PATA drivers
-
-Sergei Shtylyov (3):
-      pata_hpt{37x|3x2n}: fix timing register masks (take 2)
-      pata_hpt366: fix timing register documentation
-      ata: use pci_dev->revision
-
-Shaohua Li (1):
-      ahci: disable SNotification capability for ich8
-
-Tejun Heo (2):
-      libata-acpi: missing _SDD is not an error
-      libata: retry failed FLUSH if device didn't fail it
-
-Thiago Farina (1):
-      sata_mv: Clean up hard coded array size calculation.
-
-Vivek Mahajan (1):
-      sata_sil24: MSI support, disabled by default
-
-ashish kalra (1):
-      sata_fsl: Add asynchronous notification support
-
- drivers/ata/Kconfig           |   41 +++++++-----
- drivers/ata/Makefile          |    1 
- drivers/ata/ahci.c            |   28 +++++++-
- drivers/ata/ata_generic.c     |    5 +
- drivers/ata/libata-acpi.c     |   15 ++--
- drivers/ata/libata-core.c     |    7 ++
- drivers/ata/libata-eh.c       |   94 ++++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c     |  101 +++++++++++++++++++++++++++++-
- drivers/ata/libata-sff.c      |    2 
- drivers/ata/pata_ali.c        |    4 -
- drivers/ata/pata_cmd64x.c     |  125 +++++++++++++++++++++++++++++++++----
- drivers/ata/pata_cs5536.c     |    2 
- drivers/ata/pata_hpt366.c     |   38 ++++-------
- drivers/ata/pata_hpt37x.c     |  137 +++++++++++++++++++++--------------------
- drivers/ata/pata_hpt3x2n.c    |   37 +++++------
- drivers/ata/pata_it821x.c     |    2 
- drivers/ata/pata_piccolo.c    |  140 ++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/pata_sil680.c     |    6 -
- drivers/ata/pata_sis.c        |   91 ++++++++++++++++++++-------
- drivers/ata/pata_via.c        |   37 +++++++++--
- drivers/ata/sata_fsl.c        |   18 +++--
- drivers/ata/sata_mv.c         |    2 
- drivers/ata/sata_sil24.c      |    9 ++
- drivers/ide/ide-pci-generic.c |    3 
- include/linux/ata.h           |   13 +++
- include/linux/libata.h        |    2 
- include/linux/pci_ids.h       |    7 +-
- 27 files changed, 767 insertions(+), 200 deletions(-)
