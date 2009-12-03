@@ -1,137 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 03 Dec 2009 16:16:15 -0500
-Message-ID: <4B182A9F.5090708@garzik.org>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <200912031339.14440.bzolnier@gmail.com> <4B17FB37.2030501@garzik.org> <200912032045.48728.bzolnier@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
+Date: Thu, 3 Dec 2009 22:17:58 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.0912032214040.23464@uplift.swm.pp.se>
+References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org> <4AF0CFE1.8050407@tomt.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756641AbZLCVQT@vger.kernel.org>
-In-Reply-To: <200912032045.48728.bzolnier@gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756242AbZLCVRx@vger.kernel.org>
+In-Reply-To: <4AF0CFE1.8050407@tomt.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andre Tomt <andre@tomt.net>
+Cc: Jeff Garzik <jeff@garzik.org>, tfjellstrom@shaw.ca, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
+On Wed, 4 Nov 2009, Andre Tomt wrote:
 
-Alan,
+> Identical issues with the AOC-SASLP-MV8 card with 8 Seagate Barracuda 
+> 7200.11 1.5TB drives using the mvsas driver. Creating a md raid array 
+> seems to trigger it nearly instantly, however other loads do not trigger 
+> it as fast (if at all, only tested briefly with paralell dd).
 
-Can you sanity check me on these?
+Would just like to chime in with a "me too" on this. I've tried both 
+ubuntu 9.10 kernel (2.6.31) and their 10.04 pre-alpha (guess it's 
+2.6.32-rc8) and mvsas + AOC-SASLP-MV8 is pretty much unusable. If I start 
+md creation it stalls immediately and gets nowhere, last time I tried it 
+md claimed it had written 160 blocks then it stalled (all drive LEDs on 
+the controller is constantly lit).
 
-> Bartlomiej Zolnierkiewicz (28):
->        ide-pci-generic: build fix
+If I boot without drives and then hot-plug the drives, it immediately 
+oops:es.
 
-ACK but skipped -- already applied myself
+Any code/fixes I can try, this is a lab machine so I can easily do 
+whatever needed with it...
 
->        ata_piix: fix MWDMA handling on PIIX3
-
-applied
-
->        pata_efar: fix wrong PIO timings being programmed
-
-applied
-
->        pata_efar: fix wrong MWDMA timings being programmed
-
-applied
-
->        pata_efar: MWDMA0 is unsupported
-
-skipped, pending discussion (just sent email)
-
->        pata_cmd640: document known issues
-
-rejected, for reasons already explained
-
->        pata_cs5520: remove dead VDMA support
-
-applied
-
->        pata_cypress: document known issues
-
-rejected, for reasons already explained
-
->        pata_hpt3x2n: fix overclocked MWDMA0 timing
-
-skipped, pending discussion (just sent email)
-
->        pata_hpt3x3: Power Management fix
-
-applied, on a hope and a prayer (did not see this posted to mailing 
-list?).  It looks correct to me.
-
->        pata_it8213: fix UDMA handling
-
-applied
-
->        pata_it8213: fix wrong PIO timings being programmed
-
-applied
-
->        pata_it8213: fix PIO2 underclocking
-
-applied
-
->        pata_it8213: fix wrong MWDMA timings being programmed
-
-applied
-
->        pata_it8213: fix it8213_pre_reset() documentation
-
-applied
-
->        pata_it8213: MWDMA0 is unsupported
-
-skipped, pending discussion (just sent email)
-
->        pata_legacy: fix QDI6580DP support
-
-applied
-
->        pata_legacy: fix access to control register for QDI6580
-
-applied
-
->        pata_legacy: add pointers to QDI65x0 documentation
-
-applied.  I did not think the file path issue raised was important 
-enough to warrant patch rejection.
-
->        pata_marvell: fix marvell_pre_reset() documentation
-
-applied
-
->        pata_ns87415: Power Management fix
-
-applied
-
->        pata_oldpiix: MWDMA0 is unsupported
-
-skipped -- Alan, Sergey, comments?
-
->        pata_pdc202xx_old: document known issues
-
-rejected, for reasons already explained
-
->        pata_radisys: fix UDMA handling
-
-applied
-
->        pata_rdc: MWDMA0 is unsupported
-
-skipped -- Alan, Sergey, comments?
-
->        pata_rz1000: Power Management fix
-
-applied
-
->        pata_sis: Power Management fix
-
-applied
-
->        pata_via: clear UDMA transfer mode bit for PIO and MWDMA
-
-applied -- even though Alan's comment was correct.  It is standard 
-kernel practice to place cosmetic changes into their own patches, 
-because it is standard kernel practice to break up logically distinct 
-changes.
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
