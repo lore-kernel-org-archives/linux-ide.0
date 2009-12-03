@@ -1,44 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 03 Dec 2009 12:39:48 -0500
-Message-ID: <4B17F7E4.9040302@garzik.org>
-References: <20091125170218.5446.13513.sendpatchset@localhost>	<4B1771CD.3090409@garzik.org> <20091203165947.13841802@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH #upstream, v3] ahci: Implement SATA AHCI FIS-based switching
+ support
+Date: Thu, 03 Dec 2009 12:42:05 -0500
+Message-ID: <4B17F86D.1080805@pobox.com>
+References: <1252402105.3514.7.camel@zm-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:33306 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429AbZLCRjn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 12:39:43 -0500
-In-Reply-To: <20091203165947.13841802@lxorguk.ukuu.org.uk>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:52725 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbZLCRmA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 12:42:00 -0500
+Received: by yxe17 with SMTP id 17so1338180yxe.33
+        for <linux-ide@vger.kernel.org>; Thu, 03 Dec 2009 09:42:06 -0800 (PST)
+In-Reply-To: <1252402105.3514.7.camel@zm-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: shane.huang@amd.com
+Cc: tj@kernel.org, linux-ide@vger.kernel.org
 
-On 12/03/2009 11:59 AM, Alan Cox wrote:
->> The merge window is upon us, which by strict rules means that anything
->> not already in libata-dev.git#upstream needs to wait until 2.6.34.
+On 09/08/2009 05:28 AM, Shane Huang wrote:
+> Implement SATA AHCI FIS-based switching support.
 >
-> Not quite yet - Linus hasn't said "go"
+> Tested on AMD internal reference board.
+>
+> Signed-off-by: Shane Huang<shane.huang@amd.com>
+> Cc: Tejun Heo<tj@kernel.org>
+> ---
+> Changes from the last version(v2):
+> * Move fbs_need_dec from struct ahci_port_priv to ahci_error_intr() as
+>    a local variable.
+> * Add BUG_ON(!pp->fbs_enabled) for ahci_fbs_dec_intr().
+> * Refine the retry loop in ahci_fbs_dec_intr().
+> * Refine the code to determine failed active link with ap->pmp_link in
+>    ahci_error_intr().
+> * WARN_ON() in ahci_port_intr() can storm the machine with consecutive
+>    stack dumps, replace it with WARN_ON_ONCE().
+> * Refine ahci_enable_fbs()/ahci_disable_fbs(), and discard the message
+>    for controllers which do not support FBS.
+> * Add a warning message in ahci_port_start() for those weird controllers
+>    which support CAP.FBSS but do not support PxCMD.FBSCP.
+> * Several small corrections for better coding style.
+>
+>   drivers/ata/ahci.c |  225 +++++++++++++++++++++++++++++++++++++++++++++++-----
+>   1 files changed, 206 insertions(+), 19 deletions(-)
 
-He rarely if ever says "go."  The kernel X is released, and people send 
-pull requests to Linus for X+1.  He typically merges immediately, but 
-does not push out the first set of merges for a few days.
+OK, I'm ready to get back to this...   Would you please resubmit this 
+patch, rediff'd for the current upstream kernel?
 
-The stuff pushed to Linus for kernel X+1 should have already been living 
-in linux-next (libata-dev.git#NEXT, to us).
-
-
-> The bits that probably should be delayed a bit more (if any) IMHO are the
-> 32bit enables for hardware that doesn't use 32bit by default on the
-> drivers/ide stack, and tweaks for obscure old hardware that won't get
-> much testing.
-
-Agreed mostly...  I still want to push fixes even if for obscure hardware.
+I will queue it for kernel 2.6.34, because it needs plenty of testing -- 
+both for FBS-enabled AHCI, and to be sure we don't break non-FBS AHCI.
 
 	Jeff
+
 
 
 
