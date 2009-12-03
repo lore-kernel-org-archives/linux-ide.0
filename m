@@ -1,67 +1,16 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 3 Dec 2009 20:45:48 +0100
-Message-ID: <200912032045.48728.bzolnier@gmail.com>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <200912031339.14440.bzolnier@gmail.com> <4B17FB37.2030501@garzik.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/6] ide: dead/stale code removal
+Date: Thu, 03 Dec 2009 20:51:45 +0100
+Message-ID: <20091203195145.9093.88261.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:63395 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753727AbZLCTtd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 14:49:33 -0500
-In-Reply-To: <4B17FB37.2030501@garzik.org>
+Received: from ey-out-2122.google.com ([74.125.78.25]:25744 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389AbZLCTw3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 14:52:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-On Thursday 03 December 2009 06:53:59 pm Jeff Garzik wrote:
-> On 12/03/2009 07:39 AM, Bartlomiej Zolnierkiewicz wrote:
-> > On Thursday 03 December 2009 09:07:41 am Jeff Garzik wrote:
-> >> The merge window is upon us, which by strict rules means that anything
-> >> not already in libata-dev.git#upstream needs to wait until 2.6.34.
-> >>
-> >> However, bug fixes and the like should definitely be in 2.6.33.
-> >> ->init_host is definitely 2.6.34 material.  Some of the other stuff
-> >> could go either way.
-> 
-> > If you would like to apply some of my patches to 2.6.33 you are more than
-> > welcome to do it.  I can even prepare separate git tree with specific changes
-> > to make it easier for you once you tell me which changes you would like to
-> > see in it.
-> 
-> OK, great.
-> 
-> Can you prepare a patchset containing only fixes?  Comment-only changes 
-> are acceptable too.  Trivial changes too, if they are extremely trivial :)
-> 
-> Include nothing that adds features, removes or unifies drivers, etc.
-
-Since this is pretty high-level description and some changes fall into
-many categories at once (i.e. addition of proper PCI Power Management
-handling could be considered both as a fix and as a feature) I prepared
-a rather conservative set of changes (which means that unfortunately
-it misses many enhancements available in my tree):
-
-> Please do it in standard kernel submit form, which is either
-> (a) repost the patches (yes, again) being submitted for 2.6.33, or
-> (b) a standard git pull request, which includes shortlog, diffstat, and 
-> all-in-one diff.
-
-Thank you for the detailed explanation of the standard kernel submit
-form (I wonder how would I know this otherwise :) but the thing is that
-at the current moment I'm not submitting anything to the upstream.
-
-That's it.  While this may sound strange to some people it turns out
-that in practice it is much less hassle for me personally to keep some
-of trees outside of the (sometimes greatly overrated) upstream.
-
-If knowing the above you still would like to include the aforementioned
-set of changes in your libata-dev tree they are at kernel.org now.
-
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 
 The following changes since commit 184b8405d5d3e8510163d66efbac99d351faba2e:
   Bartlomiej Zolnierkiewicz (1):
