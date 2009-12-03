@@ -1,46 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 4/5] libata: Report zeroed read after Trim and max discard
- size
-Date: Thu, 03 Dec 2009 02:57:54 -0500
-Message-ID: <4B176F82.4050907@pobox.com>
-References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>	<1259254843-8326-5-git-send-email-martin.petersen@oracle.com>	<4B0F3186.6000903@teksavvy.com> <yq18wds3a10.fsf@sermon.lab.mkp.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 86/86] libata: add private driver field to struct ata_device
+Date: Thu, 03 Dec 2009 03:04:40 -0500
+Message-ID: <4B177118.5020501@garzik.org>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125171248.5446.22482.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:61000 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755016AbZLCH5t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 02:57:49 -0500
-In-Reply-To: <yq18wds3a10.fsf@sermon.lab.mkp.net>
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:52336 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbZLCIEf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 03:04:35 -0500
+In-Reply-To: <20091125171248.5446.22482.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mark Lord <kernel@teksavvy.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/26/2009 10:46 PM, Martin K. Petersen wrote:
->>>>>> "Mark" == Mark Lord<kernel@teksavvy.com>  writes:
+On 11/25/2009 12:12 PM, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Subject: [PATCH] libata: add private driver field to struct ata_device
 >
-> Mark>  Is that correct, or should it be this:
+> This brings struct ata_device in-line with struct ata_{port,host}.
 >
-> Mark>         if (ata_id_has_trim(id)&&  (id[ATA_ID_ADDITIONAL_SUPP]&
-> Mark>         0x4020) == 0x4020)
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> ---
+>   include/linux/libata.h |    1 +
+>   1 file changed, 1 insertion(+)
 >
-> Good spotting!  You are right, I need both bits to be set...
->
->
-> libata: Report zeroed read after Trim and max discard size
->
-> Our current Trim payload is a single sector that can accommodate 64 *
-> 65535 blocks being unmapped.  Report this value in the Block Limits
-> Maximum Unmap LBA count field.
->
-> If a storage device supports Trim and the DRAT and RZAT bits are set,
-> report TPRZ=1 in Read Capacity(16).
->
-> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
+> Index: b/include/linux/libata.h
+> ===================================================================
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -585,6 +585,7 @@ struct ata_device {
+>   	unsigned int		horkage;	/* List of broken features */
+>   	unsigned long		flags;		/* ATA_DFLAG_xxx */
+>   	struct scsi_device	*sdev;		/* attached SCSI device */
+> +	void			*private_data;
+>   #ifdef CONFIG_ATA_ACPI
+>   	acpi_handle		acpi_handle;
+>   	union acpi_object	*gtf_cache;
 
-The two libata patches look good.  I need to review the thread one more 
-time, and then will apply these...
+I'm fine with this, and would like to merge this sooner rather than later.
+
+However, BIG FAT WARNING:  you must take special care to be sure you 
+don't leak as devices appear and disappear, etc.  IOW, watch your object 
+lifetimes carefully.  Object lifetime was the reason this was not added 
+until now.
 
 
