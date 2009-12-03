@@ -1,51 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 4/5] libata/sff: Use ops->bmdma_stop instead of ata_bmdma_stop()
-Date: Thu, 03 Dec 2009 02:35:51 -0500
-Message-ID: <4B176A57.5040605@garzik.org>
-References: <20091202003629.4342710080C@ozlabs.org>
+Subject: Re: [PATCH 6/6] pata_piccolo: Driver for old Toshiba chipsets
+Date: Thu, 03 Dec 2009 02:36:08 -0500
+Message-ID: <4B176A68.9000401@garzik.org>
+References: <20091130132005.27236.77890.stgit@localhost.localdomain> <20091130132310.27236.83518.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:55473 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020AbZLCHfr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 02:35:47 -0500
-Received: by yxe17 with SMTP id 17so926735yxe.33
-        for <linux-ide@vger.kernel.org>; Wed, 02 Dec 2009 23:35:54 -0800 (PST)
-In-Reply-To: <20091202003629.4342710080C@ozlabs.org>
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:46659 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbZLCHgE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 02:36:04 -0500
+Received: by gxk26 with SMTP id 26so995273gxk.1
+        for <linux-ide@vger.kernel.org>; Wed, 02 Dec 2009 23:36:10 -0800 (PST)
+In-Reply-To: <20091130132310.27236.83518.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, tj@kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, davem@davemloft.net
 
-On 12/01/2009 07:36 PM, Benjamin Herrenschmidt wrote:
-> In libata-sff, ata_sff_post_internal_cmd() directly calls ata_bmdma_stop()
-> instead of ap->ops->bmdma_stop(). This can be a problem for controllers
-> that use their own bmdma_stop for which the generic sff one isn't suitable
+On 11/30/2009 08:23 AM, Alan Cox wrote:
+> We were never able to get docs for this out of Toshiba for years. Dave
+> Barnes produced a NetBSD driver however and from that we can fill in the
+> needed tables.
 >
-> Signed-off-by: Benjamin Herrenschmidt<benh@kernel.crashing.org>
+> As we correct the PCI identifiers a bit also update the old ide generic driver
+> at the same time so it stays compiling.
+>
+> Signed-off-by: Alan Cox<alan@linux.intel.com>
 > ---
 >
->   drivers/ata/libata-sff.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> --- linux-work.orig/drivers/ata/libata-sff.c	2009-12-01 17:48:27.000000000 +1100
-> +++ linux-work/drivers/ata/libata-sff.c	2009-12-01 17:48:48.000000000 +1100
-> @@ -2384,7 +2384,7 @@ void ata_sff_post_internal_cmd(struct at
->   	ap->hsm_task_state = HSM_ST_IDLE;
->
->   	if (ap->ioaddr.bmdma_addr)
-> -		ata_bmdma_stop(qc);
-> +		ap->ops->bmdma_stop(qc);
->
->   	spin_unlock_irqrestore(ap->lock, flags);
+>   drivers/ata/Kconfig           |    9 +++
+>   drivers/ata/Makefile          |    1
+>   drivers/ata/ata_generic.c     |    5 +
+>   drivers/ata/pata_piccolo.c    |  140 +++++++++++++++++++++++++++++++++++++++++
+>   drivers/ide/ide-pci-generic.c |    3 +
+>   include/linux/pci_ids.h       |    7 +-
+>   6 files changed, 160 insertions(+), 5 deletions(-)
+>   create mode 100644 drivers/ata/pata_piccolo.c
 
-applied
-
-As we discussed, feel free to carry this in your tree as well.  git 
-should be able to sort it out.
-
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+applied 1-6 (hi DaveM)
 
 
