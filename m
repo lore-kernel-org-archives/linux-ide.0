@@ -1,42 +1,32 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 03 Dec 2009 12:53:59 -0500
-Message-ID: <4B17FB37.2030501@garzik.org>
-References: <20091125170218.5446.13513.sendpatchset@localhost> <4B1771CD.3090409@garzik.org> <200912031339.14440.bzolnier@gmail.com>
+Subject: Re: [PATCH 1/3] sata_mv: increase PIO IORDY timeout
+Date: Thu, 03 Dec 2009 12:55:20 -0500
+Message-ID: <4B17FB88.10309@garzik.org>
+References: <1245771838-1332-1-git-send-email-saeed@marvell.com>	 <4A41E4C4.7050508@garzik.org>	 <alpine.DEB.2.00.0906241135270.31324@ubuntu-saeed.il.marvell.com> <c70ff3ad0912010737sbb87636k7c84f2193e132ea5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756406AbZLCRx6@vger.kernel.org>
-In-Reply-To: <200912031339.14440.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:55173 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754409AbZLCRzO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 12:55:14 -0500
+Received: by yxe17 with SMTP id 17so1348736yxe.33
+        for <linux-ide@vger.kernel.org>; Thu, 03 Dec 2009 09:55:21 -0800 (PST)
+In-Reply-To: <c70ff3ad0912010737sbb87636k7c84f2193e132ea5@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: Saeed Bishara <saeed@marvell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "liml@rtr.ca" <liml@rtr.ca>
 
-On 12/03/2009 07:39 AM, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 03 December 2009 09:07:41 am Jeff Garzik wrote:
->> The merge window is upon us, which by strict rules means that anything
->> not already in libata-dev.git#upstream needs to wait until 2.6.34.
->>
->> However, bug fixes and the like should definitely be in 2.6.33.
->> ->init_host is definitely 2.6.34 material.  Some of the other stuff
->> could go either way.
+On 12/01/2009 10:37 AM, saeed bishara wrote:
+> Jeff, any idea if this patch and the following two patches going to be merged?
 
-> If you would like to apply some of my patches to 2.6.33 you are more than
-> welcome to do it.  I can even prepare separate git tree with specific changes
-> to make it easier for you once you tell me which changes you would like to
-> see in it.
-
-OK, great.
-
-Can you prepare a patchset containing only fixes?  Comment-only changes 
-are acceptable too.  Trivial changes too, if they are extremely trivial :)
-
-Include nothing that adds features, removes or unifies drivers, etc.
-
-Please do it in standard kernel submit form, which is either
-(a) repost the patches (yes, again) being submitted for 2.6.33, or
-(b) a standard git pull request, which includes shortlog, diffstat, and 
-all-in-one diff.
+hrm, I cannot find these in my mail archives for some reason.  Can you 
+resend, please?
 
 	Jeff
+
+
+
+
