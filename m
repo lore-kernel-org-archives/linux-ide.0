@@ -1,27 +1,43 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] cs5535: add pci id for AMD based CS5535 controllers
-Date: Wed, 02 Dec 2009 14:23:11 -0800 (PST)
-Message-ID: <20091202.142311.82133182.davem@davemloft.net>
-References: <200912021856.34029.bzolnier@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Intermittent SATA failures ("link offline, clearing class 1 to
+ NONE")
+Date: Thu, 03 Dec 2009 09:19:55 +0900
+Message-ID: <4B17042B.5070400@kernel.org>
+References: <1258054583-sup-4108@utwig> <4B14B207.9010208@kernel.org> <1259652273-sup-686@utwig> <4B14D003.30407@kernel.org> <4B14D454.7010300@kernel.org> <1259704924-sup-4007@utwig> <4B15C64E.7090106@kernel.org> <1259774491-sup-9212@utwig>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48319
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755105AbZLBWXG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Dec 2009 17:23:06 -0500
-In-Reply-To: <200912021856.34029.bzolnier@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:40443 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755879AbZLCAUy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Dec 2009 19:20:54 -0500
+In-Reply-To: <1259774491-sup-9212@utwig>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alex Vandiver <alex@chmrr.net>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Wed, 2 Dec 2009 18:56:33 +0100
-
-> Based on commit 02cb009 for pata_cs5530.
+On 12/03/2009 02:45 AM, Alex Vandiver wrote:
+> At Tue Dec 01 20:43:42 -0500 2009, Tejun Heo wrote:
+>> Can you please try this one?
 > 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Good and bad dmesg output attached.
 
-Applied to ide-2.6, thank you very much.
+That's interesting.  The link state seems to oscillates for quite long
+time.  Can you please try the followings?
+
+1. Change sata_deb_timing_hotplug to sata_deb_timing_long in
+   ata_piix.c::piidx_sidpr_hardreset() and see whether it solves the
+   problem?
+
+2. Switch the controller into ahci mode in BIOS if possible and see
+   whether the problem goes away.
+
+3. Try kernel parameter "libata.force=nohrst" and see whether it makes
+   any difference.
+
+Thanks.
+
+-- 
+tejun
