@@ -1,85 +1,65 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Thu, 03 Dec 2009 03:07:41 -0500
-Message-ID: <4B1771CD.3090409@garzik.org>
-References: <20091125170218.5446.13513.sendpatchset@localhost>
+Subject: Re: [PATCH 5/5] libata/drivers: Add pata_macio, driver Apple PowerMac/PowerBook
+ IDE controller
+Date: Thu, 03 Dec 2009 03:12:00 -0500
+Message-ID: <4B1772D0.5030303@garzik.org>
+References: <20091202003630.29919100851@ozlabs.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:46147 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbZLCIHg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 03:07:36 -0500
-In-Reply-To: <20091125170218.5446.13513.sendpatchset@localhost>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:39669 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581AbZLCILz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 03:11:55 -0500
+Received: by yxe17 with SMTP id 17so941552yxe.33
+        for <linux-ide@vger.kernel.org>; Thu, 03 Dec 2009 00:12:02 -0800 (PST)
+In-Reply-To: <20091202003630.29919100851@ozlabs.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, tj@kernel.org
 
-On 11/25/2009 12:02 PM, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
+On 12/01/2009 07:36 PM, Benjamin Herrenschmidt wrote:
+> This is a libata driver for the "macio" IDE controller used on most Apple
+> PowerMac and PowerBooks. It's a libata equivalent of drivers/ide/ppc/pmac.c
 >
-> I've been going through PATA drivers for the last few days to make
-> sure that we offer similar level of hardware support in the new PATA
-> drivers as with the old IDE subsystem and the following patchset is
-> the end result of said audit.
+> It supports all the features of its predecessor, including mediabay hotplug
+> and suspend/resume. It should also support module load/unload.
+>
+> The timing calculations have been simplified to use pre-calculated tables
+> compared to drivers/ide/pmac.c and it uses the new mediabay interface
+> provided by a previous patch.
+>
+> Signed-off-by: Benjamin Herrenschmidt<benh@kernel.crashing.org>
+> ---
+>
+> v2. Better tested now, seems to be reasonably solid.
+>
+> Addressed Tejun comments and made remove more robust vs. media-bay,
+> should also fix Andreas problem.
 >
 >
-> Inside:
->
-> - many bugfixes
->
->    ( ata_piix, pata_artop, pata_atiixp, pata_efar, pata_cmd64x,
->      pata_hpt3x3, pata_it8213, pata_legacy, pata_ns87415, pata_sis,
->      pata_radisys, pata_rz1000&  pata_via )
->
-> - add Power Management support for more controllers
->
->    ( pata_artop, pata_pdc2027x, pata_sl82c105 )
->
-> - add 32-bit PIO support for more controllers
->
->    ( pata_artop, pata_atiixp, pata_efar, pata_cmd64x, pata_cs5520,
->      pata_cs5530, pata_cs5535, pata_cypress, pata_hpt366, pata_hpt37x,
->      pata_hpt3x2n, pata_it8213, pata_it821x, pata_jmicron, pata_ns87415,
->      pata_opti, pata_pdc2027x, pata_pdc202xx_old, pata_rz1000,
->      pata_sc1200, pata_scc, pata_sch, pata_serverworks, pata_sl82c105,
->      pata_sis, pata_triflex&  pata_via )
->
-> - fix QDI65x0 support in pata_legacy driver so pata_qdi driver can
->    be finally removed
->
-> - remove pata_qdi and pata_winbond drivers resulting in 600 LOC gone
->
->    (affected hardware is fully supported by pata_legacy driver now)
->
-> - unify code for programming PIO and MWDMA timings for 'PIIX-like'
->    controllers resulting in 200 LOC gone
->
->    ( ata_piix, pata_efar, pata_it8213, pata_oldpiix, pata_radisys&
->      pata_rdc )
->
-> - add ->init_host method for abstracting host specific controller
->    initialization and then use it to cleanup Power Managment code
->    resulting in over 100 LOC gone
->
->    ( pata_ali, pata_amd, pata_artop, pata_cmd640, pata_cmd64x,
->      pata_cs5530, pata_hpt366, pata_hpt3x3, pata_it821x, pata_ninja32,
->      pata_ns87415, pata_pdc2027x&  sata_sil )
->
-> - misc fixes and cleanups
+>   drivers/ata/Kconfig      |   10
+>   drivers/ata/Makefile     |    1
+>   drivers/ata/pata_macio.c | 1427 +++++++++++++++++++++++++++++++++++++++++++++++
+>   3 files changed, 1438 insertions(+)
 
-What are your plans for 2.6.33?
+Looks fine to me.  Two minor comments, which might perhaps be ignored if 
+that is your taste:
 
-The merge window is upon us, which by strict rules means that anything 
-not already in libata-dev.git#upstream needs to wait until 2.6.34.
+* prefer enums to #define's, for constants
 
-However, bug fixes and the like should definitely be in 2.6.33. 
-->init_host is definitely 2.6.34 material.  Some of the other stuff 
-could go either way.
+* prefer direct function call to "ap->ops->foo_bar()", because 
+ap->ops->foo_bar() is guaranteed to be a constant value known to the 
+driver.  The driver is the entity responsible for the function pointer.
+
+Maybe saves a cycle or two.  Not terribly important, but hey, calling 
+ap->ops->sff_exec_command() from pata_macio_bmdma_setup() is a hot path.
 
 	Jeff
+
+
 
 
 
