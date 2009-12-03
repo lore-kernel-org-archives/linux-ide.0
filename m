@@ -1,33 +1,33 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/6] cmd64x: remove no longer needed debugging code
-Date: Fri, 04 Dec 2009 00:38:03 +0300
-Message-ID: <4B182FBB.2010002@ru.mvista.com>
-References: <20091203195145.9093.88261.sendpatchset@localhost> <20091203195203.9093.35271.sendpatchset@localhost>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 00/86] PATA fixes
+Date: Thu, 03 Dec 2009 13:41:03 -0800 (PST)
+Message-ID: <20091203.134103.207880474.davem@davemloft.net>
+References: <4B17F7E4.9040302@garzik.org>
+	<20091203.124804.168589603.davem@davemloft.net>
+	<4B182E5D.2020905@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:30199 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1754007AbZLCViM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:38:12 -0500
-In-Reply-To: <20091203195203.9093.35271.sendpatchset@localhost>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56019
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753640AbZLCVk5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2009 16:40:57 -0500
+In-Reply-To: <4B182E5D.2020905@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+To: jeff@garzik.org
+Cc: alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+From: Jeff Garzik <jeff@garzik.org>
+Date: Thu, 03 Dec 2009 16:32:13 -0500
 
-Bartlomiej Zolnierkiewicz wrote:
+> In any case, the basic point is that Linus does not say "go" for merge
+> windows.  People send, he pulls when he chooses, and pushes when he
+> chooses.  It's all very zen ;-)
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] cmd64x: remove no longer needed debugging code
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.
+True.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
-
+But I also want to mention that I wait 2 days for another reason,
+so that whatever I do toss to him gets full exposure in -next
+at least one time.
