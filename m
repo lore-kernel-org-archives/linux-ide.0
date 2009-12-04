@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 1/2] pata_hpt37x: use ATA_DMA_* constants
-Date: Sat, 5 Dec 2009 00:37:43 +0400
-Message-ID: <200912042337.43381.sshtylyov@ru.mvista.com>
+Subject: [PATCH 2/2] pata_cs5520: use ATA_DMA_* constants
+Date: Sat, 5 Dec 2009 00:39:00 +0400
+Message-ID: <200912042339.00746.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:11031 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:19271 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1757247AbZLDUga (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 15:36:30 -0500
+	with SMTP id S1757170AbZLDUhr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 15:37:47 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -24,46 +24,24 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 ---
 The patch is against the recent Linus' tree.
 
- drivers/ata/pata_hpt37x.c |   19 ++++++++++---------
- 1 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/ata/pata_cs5520.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
+Index: linux-2.6/drivers/ata/pata_cs5520.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -454,24 +454,25 @@ static void hpt370_bmdma_stop(struct ata
+--- linux-2.6.orig/drivers/ata/pata_cs5520.c
++++ linux-2.6/drivers/ata/pata_cs5520.c
+@@ -99,9 +99,9 @@ static void cs5520_set_timings(struct at
+ static void cs5520_enable_dma(struct ata_port *ap, struct ata_device *adev)
  {
- 	struct ata_port *ap = qc->ap;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 dma_stat = ioread8(ap->ioaddr.bmdma_addr + 2);
--	u8 dma_cmd;
- 	void __iomem *bmdma = ap->ioaddr.bmdma_addr;
-+	u8 dma_stat = ioread8(bmdma + ATA_DMA_STATUS);
-+	u8 dma_cmd;
+ 	/* Set the DMA enable/disable flag */
+-	u8 reg = ioread8(ap->ioaddr.bmdma_addr + 0x02);
+-	reg |= 1<<(adev->devno + 5);
+-	iowrite8(reg, ap->ioaddr.bmdma_addr + 0x02);
++	u8 reg = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
++	reg |= 1 << (adev->devno + 5);
++	iowrite8(reg, ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+ }
  
--	if (dma_stat & 0x01) {
-+	if (dma_stat & ATA_DMA_ACTIVE) {
- 		udelay(20);
--		dma_stat = ioread8(bmdma + 2);
-+		dma_stat = ioread8(bmdma + ATA_DMA_STATUS);
- 	}
--	if (dma_stat & 0x01) {
-+	if (dma_stat & ATA_DMA_ACTIVE) {
- 		/* Clear the engine */
- 		pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
- 		udelay(10);
- 		/* Stop DMA */
--		dma_cmd = ioread8(bmdma );
--		iowrite8(dma_cmd & 0xFE, bmdma);
-+		dma_cmd = ioread8(bmdma + ATA_DMA_CMD);
-+		iowrite8(dma_cmd & ~ATA_DMA_START, bmdma + ATA_DMA_CMD);
- 		/* Clear Error */
--		dma_stat = ioread8(bmdma + 2);
--		iowrite8(dma_stat | 0x06 , bmdma + 2);
-+		dma_stat = ioread8(bmdma + ATA_DMA_STATUS);
-+		iowrite8(dma_stat | ATA_DMA_INTR | ATA_DMA_ERR,
-+			 bmdma + ATA_DMA_STATUS);
- 		/* Clear the engine */
- 		pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
- 		udelay(10);
+ /**
 
