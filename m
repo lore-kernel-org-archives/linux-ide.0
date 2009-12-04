@@ -1,49 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 00/86] PATA fixes
-Date: Fri, 4 Dec 2009 12:16:04 +0000
-Message-ID: <20091204121604.37be4da2@lxorguk.ukuu.org.uk>
-References: <20091125170218.5446.13513.sendpatchset@localhost>
-	<200912031339.14440.bzolnier@gmail.com>
-	<4B17FB37.2030501@garzik.org>
-	<200912032045.48728.bzolnier@gmail.com>
-	<4B182A9F.5090708@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 84/86] libata: add ata_mwdma_to_pio() inline helper
+Date: Fri, 04 Dec 2009 21:07:10 +0300
+Message-ID: <4B194FCE.60801@ru.mvista.com>
+References: <20091125170218.5446.13513.sendpatchset@localhost> <20091125171232.5446.28166.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38016 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755576AbZLDMOD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 07:14:03 -0500
-In-Reply-To: <4B182A9F.5090708@garzik.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:43380 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S932311AbZLDSF7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 13:05:59 -0500
+In-Reply-To: <20091125171232.5446.28166.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> >        pata_oldpiix: MWDMA0 is unsupported
-> 
-> skipped -- Alan, Sergey, comments?
+Hello.
 
-Would need to look at the chip docs again. Certainly the ICH documents
-the lack of MWDMA. Dunno about the original PIIX.
+Bartlomiej Zolnierkiewicz wrote:
 
-Rest looks sane, and that one probably is as the only way to to DMA0
-appears to be with TIME0 clear. Unfortunately I can't lay my hands on a
-PIIX errata sheet right now. The PIIX4 programming tables don't list
-MWDMA0.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] libata: add ata_mwdma_to_pio() inline helper
 
-The original PIIX datasheet clarifies one other point too
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-For 32bit PIO it seems you must have bit 4 and 0 of IDETIM set for 32bit
-data port access. That is you cannot use 32bit PIO when TIME0/TIME1 are
-not set for that device.
+[...]
 
-MPIIX fixes that restriction (no DMA but does have 32bit PIO for all
-modes) by inserting the needed mode 0 two clocks of CS deselect even if
-not visible on the ISA bus. The restriction is also not mentioned on
-PIIX4+ so presumably is specific to the original chip.
+>  static struct ata_port_operations rdc_pata_ops = {
+> Index: b/include/linux/ata.h
+> ===================================================================
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -1012,4 +1012,15 @@ static inline int lba_48_ok(u64 block, u
+>  #define sata_pmp_gscr_rev(gscr)		(((gscr)[SATA_PMP_GSCR_REV] >> 8) & 0xff)
+>  #define sata_pmp_gscr_ports(gscr)	((gscr)[SATA_PMP_GSCR_PORT_INFO] & 0xf)
+>  
+> +/* returns PIO number matching given MWDMA mode */
+> +static inline u8 ata_mwdma_to_pio(u8 mwdma_mode)
+> +{
+> +	unsigned int mwdma = mwdma_mode - XFER_MW_DMA_0;
+> +	const unsigned int needed_pio[3] = {
 
+    'u8' would have been enough.
 
+> +		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+> +	};
 
+    Er, perhaps this should be 'static' array?.. Intialization *auto* class 
+arrays produces some real code... Also, why not simply {0, 3, 4}?
 
+> +
+> +	return needed_pio[mwdma] - XFER_PIO_0;
+> +}
+> +
+>  #endif /* __LINUX_ATA_H__ */
+
+MBR, Sergei
