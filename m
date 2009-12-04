@@ -1,31 +1,30 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_hpt3x2n: fix timing register masks (take 2)
-Date: Sat, 05 Dec 2009 01:29:34 +0300
-Message-ID: <4B198D4E.8030906@ru.mvista.com>
-References: <200912042330.23507.sshtylyov@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/2] pata_cs5520: use ATA_DMA_* constants
+Date: Fri, 4 Dec 2009 23:26:36 +0000
+Message-ID: <20091204232636.5171bc15@lxorguk.ukuu.org.uk>
+References: <200912042339.00746.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:44195 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1754504AbZLDW3r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 17:29:47 -0500
-In-Reply-To: <200912042330.23507.sshtylyov@ru.mvista.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58694 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932409AbZLDXYp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 18:24:45 -0500
+In-Reply-To: <200912042339.00746.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello.
+On Sat, 5 Dec 2009 00:39:00 +0400
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
-Sergei Shtylyov wrote:
-> The clock turnaround code still doesn't work for several reasons:
->   
+> Use ATA_DMA_* constants instead of the bare numbers for the BMIDE registers.
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-   Oops, the subject should read "[PATCH] pata_hpt3x2n: fix clock 
-turnaround". I shouldn't tarry so much at work...
+If we are dropping out the virtual DMA support as Bartlomiej proposed
+that bit can go completely.
 
-MBR, Sergei
-
-
+Alan
