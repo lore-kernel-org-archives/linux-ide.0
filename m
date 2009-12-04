@@ -1,47 +1,31 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] pata_cs5520: use ATA_DMA_* constants
-Date: Sat, 5 Dec 2009 00:39:00 +0400
-Message-ID: <200912042339.00746.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata_hpt3x2n: fix timing register masks (take 2)
+Date: Sat, 05 Dec 2009 01:29:34 +0300
+Message-ID: <4B198D4E.8030906@ru.mvista.com>
+References: <200912042330.23507.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:19271 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:44195 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1757170AbZLDUhr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 15:37:47 -0500
-Content-Disposition: inline
+	with SMTP id S1754504AbZLDW3r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 17:29:47 -0500
+In-Reply-To: <200912042330.23507.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-Use ATA_DMA_* constants instead of the bare numbers for the BMIDE registers.
+Hello.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Sergei Shtylyov wrote:
+> The clock turnaround code still doesn't work for several reasons:
+>   
 
----
-The patch is against the recent Linus' tree.
+   Oops, the subject should read "[PATCH] pata_hpt3x2n: fix clock 
+turnaround". I shouldn't tarry so much at work...
 
- drivers/ata/pata_cs5520.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+MBR, Sergei
 
-Index: linux-2.6/drivers/ata/pata_cs5520.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_cs5520.c
-+++ linux-2.6/drivers/ata/pata_cs5520.c
-@@ -99,9 +99,9 @@ static void cs5520_set_timings(struct at
- static void cs5520_enable_dma(struct ata_port *ap, struct ata_device *adev)
- {
- 	/* Set the DMA enable/disable flag */
--	u8 reg = ioread8(ap->ioaddr.bmdma_addr + 0x02);
--	reg |= 1<<(adev->devno + 5);
--	iowrite8(reg, ap->ioaddr.bmdma_addr + 0x02);
-+	u8 reg = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
-+	reg |= 1 << (adev->devno + 5);
-+	iowrite8(reg, ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
- }
- 
- /**
 
