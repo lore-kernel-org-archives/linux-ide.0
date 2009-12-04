@@ -1,40 +1,49 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: [PATCH #upstream, v3] ahci: Implement SATA AHCI FIS-based switching support
-Date: Fri, 4 Dec 2009 12:39:50 +0800
-Message-ID: <C8E4BD7D001E44499280E0884BD9DB30014C46E0@sshaexmb1.amd.com>
-References: <1252402105.3514.7.camel@zm-desktop> <4B17F86D.1080805@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 00/86] PATA fixes
+Date: Fri, 4 Dec 2009 12:16:04 +0000
+Message-ID: <20091204121604.37be4da2@lxorguk.ukuu.org.uk>
+References: <20091125170218.5446.13513.sendpatchset@localhost>
+	<200912031339.14440.bzolnier@gmail.com>
+	<4B17FB37.2030501@garzik.org>
+	<200912032045.48728.bzolnier@gmail.com>
+	<4B182A9F.5090708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:9423 "EHLO
-	VA3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755800AbZLDEj7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Dec 2009 23:39:59 -0500
-Content-Class: urn:content-classes:message
-In-Reply-To: <4B17F86D.1080805@pobox.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38016 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755576AbZLDMOD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2009 07:14:03 -0500
+In-Reply-To: <4B182A9F.5090708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Jeff, 
-
-> -----Original Message-----
-> From: Jeff Garzik [mailto:jgpobox@gmail.com] On Behalf Of Jeff Garzik
+> >        pata_oldpiix: MWDMA0 is unsupported
 > 
-> OK, I'm ready to get back to this...   Would you please resubmit this 
-> patch, rediff'd for the current upstream kernel?
-> 
-> I will queue it for kernel 2.6.34, because it needs plenty of 
-> testing -- 
-> both for FBS-enabled AHCI, and to be sure we don't break non-FBS AHCI.
+> skipped -- Alan, Sergey, comments?
+
+Would need to look at the chip docs again. Certainly the ICH documents
+the lack of MWDMA. Dunno about the original PIIX.
+
+Rest looks sane, and that one probably is as the only way to to DMA0
+appears to be with TIME0 clear. Unfortunately I can't lay my hands on a
+PIIX errata sheet right now. The PIIX4 programming tables don't list
+MWDMA0.
+
+The original PIIX datasheet clarifies one other point too
+
+For 32bit PIO it seems you must have bit 4 and 0 of IDETIM set for 32bit
+data port access. That is you cannot use 32bit PIO when TIME0/TIME1 are
+not set for that device.
+
+MPIIX fixes that restriction (no DMA but does have 32bit PIO for all
+modes) by inserting the needed mode 0 two clocks of CS deselect even if
+not visible on the ISA bus. The restriction is also not mentioned on
+PIIX4+ so presumably is specific to the original chip.
 
 
-OK I'll rediff it for the current upstream kernel and set it into v4.
 
-
-Thanks,
-Shane
 
