@@ -1,99 +1,96 @@
-From: Saeed Bishara <saeed@marvell.com>
-Subject: [PATCH 5/6] sata_mv: store the board_idx into the host private data
-Date: Sun,  6 Dec 2009 18:26:21 +0200
-Message-ID: <1260116782-31714-5-git-send-email-saeed@marvell.com>
-References: <1260116782-31714-1-git-send-email-saeed@marvell.com>
- <1260116782-31714-2-git-send-email-saeed@marvell.com>
- <1260116782-31714-3-git-send-email-saeed@marvell.com>
- <1260116782-31714-4-git-send-email-saeed@marvell.com>
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Subject: [PATCH] doc: remove compilation options section from ide-cd documentation
+Date: Sun,  6 Dec 2009 15:42:49 -0200
+Message-ID: <1260121370-648-1-git-send-email-cascardo@holoscopio.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:50752 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755824AbZLFQ01 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Dec 2009 11:26:27 -0500
-In-Reply-To: <1260116782-31714-4-git-send-email-saeed@marvell.com>
+Received: from liberdade.minaslivre.org ([72.232.254.139]:60330 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933998AbZLFRm4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Dec 2009 12:42:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jeff@garzik.org
-Cc: liml@rtr.ca, nico@fluxnic.net, buytenh@wantstofly.org, Saeed Bishara <saeed@marvell.com>
+To: trivial@kernel.org
+Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>, Borislav Petkov <petkovbb@gmail.com>, Jens Axboe <axboe@kernel.dk>, Randy Dunlap <rdunlap@xenotime.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
-This information will be used int the resume function.
+This section pointed out to compilation options which no longer exist.
 
-Signed-off-by: Saeed Bishara <saeed@marvell.com>
+VERBOSE_IDE_CD_ERRORS has been replace by config option
+CONFIG_BLK_DEV_IDECD_VERBOSE_ERRORS.
+
+STANDARD_ATAPI is no longer needed, since the non-standard drivers, which
+required bcd2bin are now detected, and there's a flag for them.
+
+NO_DOOR_LOCKING is now a sysctl parameter for cdrom drivers.
+
+CDROM_NBLOCKS_BUFFER is not used anymore. The READAUDIO is now in cdrom.c and it
+allocates as much as user space has requested to read, backing off if it fails.
+
+TEST is not there anymore or in cdrom either. ide allows to send ATA commands
+through ioctl, although it may be helpful to send MMC packets through the cdrom
+layer directly.
+
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
 ---
- drivers/ata/sata_mv.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+ Documentation/cdrom/ide-cd |   39 ++-------------------------------------
+ 1 files changed, 2 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 3eadbd5..71ac62e 100755
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -539,6 +539,7 @@ struct mv_port_signal {
+diff --git a/Documentation/cdrom/ide-cd b/Documentation/cdrom/ide-cd
+index 2c558cd..f4dc9de 100644
+--- a/Documentation/cdrom/ide-cd
++++ b/Documentation/cdrom/ide-cd
+@@ -159,42 +159,7 @@ two arguments:  the CDROM device, and the slot number to which you wish
+ to change.  If the slot number is -1, the drive is unloaded.
  
- struct mv_host_priv {
- 	u32			hp_flags;
-+	unsigned int 		board_idx;
- 	u32			main_irq_mask;
- 	struct mv_port_signal	signal[8];
- 	const struct mv_hw_ops	*ops;
-@@ -3859,7 +3860,6 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
- /**
-  *      mv_init_host - Perform some early initialization of the host.
-  *	@host: ATA host to initialize
-- *      @board_idx: controller index
-  *
-  *      If possible, do an early global reset of the host.  Then do
-  *      our port init and clear/unmask all/relevant host interrupts.
-@@ -3867,13 +3867,13 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
-  *      LOCKING:
-  *      Inherited from caller.
-  */
--static int mv_init_host(struct ata_host *host, unsigned int board_idx)
-+static int mv_init_host(struct ata_host *host)
- {
- 	int rc = 0, n_hc, port, hc;
- 	struct mv_host_priv *hpriv = host->private_data;
- 	void __iomem *mmio = hpriv->base;
  
--	rc = mv_chip_id(host, board_idx);
-+	rc = mv_chip_id(host, hpriv->board_idx);
- 	if (rc)
- 		goto done;
+-4. Compilation options
+-----------------------
+-
+-There are a few additional options which can be set when compiling the
+-driver.  Most people should not need to mess with any of these; they
+-are listed here simply for completeness.  A compilation option can be
+-enabled by adding a line of the form `#define <option> 1' to the top
+-of ide-cd.c.  All these options are disabled by default.
+-
+-VERBOSE_IDE_CD_ERRORS
+-  If this is set, ATAPI error codes will be translated into textual
+-  descriptions.  In addition, a dump is made of the command which
+-  provoked the error.  This is off by default to save the memory used
+-  by the (somewhat long) table of error descriptions.  
+-
+-STANDARD_ATAPI
+-  If this is set, the code needed to deal with certain drives which do
+-  not properly implement the ATAPI spec will be disabled.  If you know
+-  your drive implements ATAPI properly, you can turn this on to get a
+-  slightly smaller kernel.
+-
+-NO_DOOR_LOCKING
+-  If this is set, the driver will never attempt to lock the door of
+-  the drive.
+-
+-CDROM_NBLOCKS_BUFFER
+-  This sets the size of the buffer to be used for a CDROMREADAUDIO
+-  ioctl.  The default is 8.
+-
+-TEST
+-  This currently enables an additional ioctl which enables a user-mode
+-  program to execute an arbitrary packet command.  See the source for
+-  details.  This should be left off unless you know what you're doing.
+-
+-
+-5. Common problems
++4. Common problems
+ ------------------
  
-@@ -4032,6 +4032,7 @@ static int mv_platform_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	host->private_data = hpriv;
- 	hpriv->n_ports = n_ports;
-+	hpriv->board_idx = chip_soc;
+ This section discusses some common problems encountered when trying to
+@@ -371,7 +336,7 @@ f. Data corruption.
+     expense of low system performance.
  
- 	host->iomap = NULL;
- 	hpriv->base = devm_ioremap(&pdev->dev, res->start,
-@@ -4057,7 +4058,7 @@ static int mv_platform_probe(struct platform_device *pdev)
- 		goto err;
  
- 	/* initialize adapter */
--	rc = mv_init_host(host, chip_soc);
-+	rc = mv_init_host(host);
- 	if (rc)
- 		goto err;
+-6. cdchange.c
++5. cdchange.c
+ -------------
  
-@@ -4274,6 +4275,7 @@ static int mv_pci_init_one(struct pci_dev *pdev,
- 		return -ENOMEM;
- 	host->private_data = hpriv;
- 	hpriv->n_ports = n_ports;
-+	hpriv->board_idx = board_idx;
- 
- 	/* acquire resources */
- 	rc = pcim_enable_device(pdev);
-@@ -4306,7 +4308,7 @@ static int mv_pci_init_one(struct pci_dev *pdev,
- 	}
- 
- 	/* initialize adapter */
--	rc = mv_init_host(host, board_idx);
-+	rc = mv_init_host(host);
- 	if (rc)
- 		return rc;
- 
+ /*
 -- 
-1.6.0.4
+1.6.3.3
 
