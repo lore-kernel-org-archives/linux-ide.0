@@ -1,131 +1,72 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH 6/6] sata_mv: add power management support for the PCI
-	controllers.
-Date: Sun, 6 Dec 2009 22:32:15 -0800
-Message-ID: <da824cf30912062232i5e04a6f2u20f0ff8ed5aa51cb@mail.gmail.com>
-References: <1260116782-31714-1-git-send-email-saeed@marvell.com>
-	 <1260116782-31714-2-git-send-email-saeed@marvell.com>
-	 <1260116782-31714-3-git-send-email-saeed@marvell.com>
-	 <1260116782-31714-4-git-send-email-saeed@marvell.com>
-	 <1260116782-31714-5-git-send-email-saeed@marvell.com>
-	 <1260116782-31714-6-git-send-email-saeed@marvell.com>
+From: Erwan MAS <erwan@mas.nom.fr>
+Subject: Sr2760-2s-s2 & Sil4723 & pmp
+Date: Mon, 7 Dec 2009 12:44:17 +0100
+Message-ID: <20091207114417.GB1863@voyageur.mas.nom.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:8987 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752877AbZLGGcO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 01:32:14 -0500
-Received: from wpaz24.hot.corp.google.com (wpaz24.hot.corp.google.com [172.24.198.88])
-	by smtp-out.google.com with ESMTP id nB76WIo2023719
-	for <linux-ide@vger.kernel.org>; Sun, 6 Dec 2009 22:32:19 -0800
-Received: from ey-out-1920.google.com (eyg4.prod.google.com [10.208.7.4])
-	by wpaz24.hot.corp.google.com with ESMTP id nB76WF7x013155
-	for <linux-ide@vger.kernel.org>; Sun, 6 Dec 2009 22:32:16 -0800
-Received: by ey-out-1920.google.com with SMTP id 4so314727eyg.18
-        for <linux-ide@vger.kernel.org>; Sun, 06 Dec 2009 22:32:15 -0800 (PST)
-In-Reply-To: <1260116782-31714-6-git-send-email-saeed@marvell.com>
+Received: from pulsar.zoreil.com ([83.167.33.49]:39081 "EHLO pulsar.zoreil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934215AbZLGLwK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Dec 2009 06:52:10 -0500
+Received: from pulsar.zoreil.com (IDENT:zhF6bC9KmAKPKNKlO75aCarJSeHg2KIq@localhost [127.0.0.1])
+	by pulsar.zoreil.com (8.12.10/8.12.10) with ESMTP id nB7Bik6p007552
+	for <linux-ide@vger.kernel.org>; Mon, 7 Dec 2009 12:44:46 +0100
+Received: (from uucp@localhost)
+	by pulsar.zoreil.com (8.12.10/8.12.10) id nB7BikqR007550
+	for linux-ide@vger.kernel.org; Mon, 7 Dec 2009 12:44:46 +0100
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org, liml@rtr.ca, nico@fluxnic.net, buytenh@wantstofly.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Dec 6, 2009 at 8:26 AM, Saeed Bishara <saeed@marvell.com> wrote=
-:
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
-> ---
-> =C2=A0drivers/ata/sata_mv.c | =C2=A0 29 +++++++++++++++++++++++++++++
-> =C2=A01 files changed, 29 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 71ac62e..704d86f 100755
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -4161,6 +4161,9 @@ static struct platform_driver mv_platform_drive=
-r =3D {
-> =C2=A0#ifdef CONFIG_PCI
-> =C2=A0static int mv_pci_init_one(struct pci_dev *pdev,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 const struct pci_device_id *ent);
-> +#ifdef CONFIG_PM
-> +static int mv_pci_device_resume(struct pci_dev *pdev);
-> +#endif
->
->
-> =C2=A0static struct pci_driver mv_pci_driver =3D {
-> @@ -4168,6 +4171,11 @@ static struct pci_driver mv_pci_driver =3D {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0.id_table =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =3D mv_pci_tbl,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0.probe =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0=3D mv_pci_init_one,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0.remove =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =3D ata_pci_remove_one,
-> +#ifdef CONFIG_PM
-> + =C2=A0 =C2=A0 =C2=A0 .suspend =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0=3D ata_pci_device_suspend,
-> + =C2=A0 =C2=A0 =C2=A0 .resume =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =3D mv_pci_device_resume,
-> +#endif
+Hello ,
 
-Saeed,
-Apologies - Ignore my previous comment on the mv_platform_driver() patc=
-h.
-I should have been looking at this patch.
+I tried to use sr2760-2s-s2 ( http://www.raidon.com.tw/content.php?sno=0000095&p_id=53 ) with linux !
 
-And interesting to see that sata_via is the only SATA driver setting
-ata_pci_device_resume() for it's .resume call. The rest of the callers
-are PATA drivers.
+With
+  kernel 2.6.21           => work 
+  kernel 2.6.26 & 2.6.28  => does not work 
 
-Reviewed-by: Grant Grundler <grundler@google.com>
+In 2.26.21 , the device is detect as sata disk , i can access to it !
 
-thanks,
-grant
+In 2.26.26 & 2.6.28 , the sata port multiplier detect the sil4723 chipset and try to use in a port multiplier mode 
+( i suppose ) .
 
-> +
-> =C2=A0};
->
-> =C2=A0/* move to PCI layer or libata core? */
-> @@ -4324,6 +4332,27 @@ static int mv_pci_init_one(struct pci_dev *pde=
-v,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0return ata_host_activate(host, pdev->irq, =
-mv_interrupt, IRQF_SHARED,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 IS_GEN_I(hpriv) ? &mv5_sht :=
- &mv6_sht);
-> =C2=A0}
-> +
-> +#ifdef CONFIG_PM
-> +static int mv_pci_device_resume(struct pci_dev *pdev)
-> +{
-> + =C2=A0 =C2=A0 =C2=A0 struct ata_host *host =3D dev_get_drvdata(&pde=
-v->dev);
-> + =C2=A0 =C2=A0 =C2=A0 int rc;
-> +
-> + =C2=A0 =C2=A0 =C2=A0 rc =3D ata_pci_device_do_resume(pdev);
-> + =C2=A0 =C2=A0 =C2=A0 if (rc)
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return rc;
-> +
-> + =C2=A0 =C2=A0 =C2=A0 /* initialize adapter */
-> + =C2=A0 =C2=A0 =C2=A0 rc =3D mv_init_host(host);
-> + =C2=A0 =C2=A0 =C2=A0 if (rc)
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return rc;
-> +
-> + =C2=A0 =C2=A0 =C2=A0 ata_host_resume(host);
-> +
-> + =C2=A0 =C2=A0 =C2=A0 return 0;
-> +}
-> +#endif
-> =C2=A0#endif
->
-> =C2=A0static int mv_platform_probe(struct platform_device *pdev);
-> --
-> 1.6.0.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Extract of /var/log/messages
+
+Dec  6 14:13:56 charlie kernel: [    6.765363] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Dec  6 14:13:56 charlie kernel: [    6.768941] ata4.15: Port Multiplier 1.1, 0x1095:0x4723 r28, 3 ports, feat 0x1/0x9
+Dec  6 14:13:56 charlie kernel: [    6.768941] ata4.00: hard resetting link
+Dec  6 14:13:56 charlie kernel: [    7.125525] ata4.00: SATA link down (SStatus 0 SControl 0)
+Dec  6 14:13:56 charlie kernel: [    7.125525] ata4.01: hard resetting link
+Dec  6 14:13:56 charlie kernel: [    7.668637] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Dec  6 14:13:56 charlie kernel: [    7.668637] ata4.02: hard resetting link
+Dec  6 14:13:56 charlie kernel: [    8.036177] ata4.02: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Dec  6 14:13:56 charlie kernel: [    8.036177] ata4.01: unsupported device, disabling
+Dec  6 14:13:56 charlie kernel: [    8.036177] ata4.01: disabled
+Dec  6 14:13:56 charlie kernel: [    8.042941] ata4: EH complete
+
+My systems as asus M3A motherboard . 
+
+a part of output from lspci -v :
+
+00:12.0 SATA controller: ATI Technologies Inc SB600 Non-Raid-5 SATA (prog-if 01 [AHCI 1.0])
+	Subsystem: ASUSTeK Computer Inc. Device 8231
+	Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 22
+	I/O ports at c000 [size=8]
+	I/O ports at b000 [size=4]
+	I/O ports at a000 [size=8]
+	I/O ports at 9000 [size=4]
+	I/O ports at 8000 [size=16]
+	Memory at f9fff800 (32-bit, non-prefetchable) [size=1K]
+	Capabilities: [60] Power Management version 2
+	Kernel driver in use: ahci
+	Kernel modules: ahci
+
+-- 
+     ____________________________________________________________
+    / Erwan MAS                                                 /\
+   | mailto:erwan@mas.nom.fr                                   |_/
+___|________________________________________________________   |
+\___________________________________________________________\__/
