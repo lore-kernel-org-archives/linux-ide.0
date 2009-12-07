@@ -1,62 +1,78 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH resend] pata_hpt3x2n: fix clock turnaround
-Date: Mon, 07 Dec 2009 14:29:26 -0500
-Message-ID: <4B1D5796.5080306@pobox.com>
-References: <200912071652.57615.sshtylyov@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 3/5] pata_hpt366: remove redundant code
+Date: Mon, 7 Dec 2009 23:36:15 +0400
+Message-ID: <200912072236.15718.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:47688 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758772AbZLGT3W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 14:29:22 -0500
-Received: by yxe17 with SMTP id 17so4209267yxe.33
-        for <linux-ide@vger.kernel.org>; Mon, 07 Dec 2009 11:29:28 -0800 (PST)
-In-Reply-To: <200912071652.57615.sshtylyov@ru.mvista.com>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:56896 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S932170AbZLGTe4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 14:34:56 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On 12/07/2009 08:52 AM, Sergei Shtylyov wrote:
-> The clock turnaround code still doesn't work for several reasons:
->
-> - 'USE_DPLL' flag in 'ap->host->private_data' is never initialized or updated,
->    so the driver can only set the chip to the DPLL clock mode, not the PCI mode;
->
-> - the driver doesn't serialize access to the channels depending on the current
->    clock mode like the vendor drivers, so the clock turnaround is only executed
->    "optionally", not always as it should be;
->
-> - the wrong ports are written to when hpt3x2n_set_clock() is called for the
->    secondary channel;
->
-> - hpt3x2n_set_clock() can inadvertently enable the disabled channels when
->    resetting the channel state machines.
->
-> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
-> Cc: stable@kernel.org
->
-> ---
-> Resending with the corrected subject...
->
-> The patch is against the recent Linus' tree. It's intended to go into all
-> stable kernels starting with 2.6.19, when the PATA drivers were first merged --
-> the version change hunks could be dropped when merging to the older kernels...
->
->   drivers/ata/pata_hpt3x2n.c |   64 ++++++++++++++++++++++++---------------------
->   1 files changed, 35 insertions(+), 29 deletions(-)
+There's no need to clear the fast interrupt bit in hpt366_set_mode() since
+we're doing it in hpt366_init_chipset() already.
 
-FWIW, I am basically waiting on Linus's pull before opening 
-#upstream-fixes (2.6.33) and #upstream (2.5.34) branches of libata-dev.git.
+While at it, rename 'addr1' local variable to 'addr' and exclude 'ap->port_no'
+from its calculation as HPT36x are single-channel-per-function chips.
 
-As soon as the merge happens, I'll immediately apply the patches from 
-you and others...
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-	Jeff
+---
+The patch is against the recent Linus' tree.
 
+ drivers/ata/pata_hpt366.c |   17 ++++-------------
+ 1 files changed, 4 insertions(+), 13 deletions(-)
 
-
-
+Index: linux-2.6/drivers/ata/pata_hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt366.c
++++ linux-2.6/drivers/ata/pata_hpt366.c
+@@ -27,7 +27,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt366"
+-#define DRV_VERSION	"0.6.7"
++#define DRV_VERSION	"0.6.8"
+ 
+ struct hpt_clock {
+ 	u8	xfer_mode;
+@@ -207,17 +207,8 @@ static void hpt366_set_mode(struct ata_p
+ {
+ 	struct hpt_clock *clocks = ap->host->private_data;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u32 addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
+-	u32 addr2 = 0x51 + 4 * ap->port_no;
++	u32 addr = 0x40 + 4 * adev->devno;
+ 	u32 mask, reg;
+-	u8 fast;
+-
+-	/* Fast interrupt prediction disable, hold off interrupt disable */
+-	pci_read_config_byte(pdev, addr2, &fast);
+-	if (fast & 0x80) {
+-		fast &= ~0x80;
+-		pci_write_config_byte(pdev, addr2, fast);
+-	}
+ 
+ 	/* determine timing mask and find matching clock entry */
+ 	if (mode < XFER_MW_DMA_0)
+@@ -240,9 +231,9 @@ static void hpt366_set_mode(struct ata_p
+ 	 * on-chip PIO FIFO/buffer (and PIO MST mode as well) to avoid
+ 	 * problems handling I/O errors later.
+ 	 */
+-	pci_read_config_dword(pdev, addr1, &reg);
++	pci_read_config_dword(pdev, addr, &reg);
+ 	reg = ((reg & ~mask) | (clocks->timing & mask)) & ~0xc0000000;
+-	pci_write_config_dword(pdev, addr1, reg);
++	pci_write_config_dword(pdev, addr, reg);
+ }
+ 
+ /**
 
