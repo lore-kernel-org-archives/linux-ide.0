@@ -1,33 +1,50 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] hpt366: add debounce delay to cable_detect() method
-Date: Mon, 07 Dec 2009 17:57:29 +0300
-Message-ID: <4B1D17D9.4040906@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com> <200911202152.22910.sshtylyov@ru.mvista.com>
+Subject: [PATCH] hpt366: fix clock turnaround
+Date: Mon, 7 Dec 2009 19:03:36 +0400
+Message-ID: <200912071803.37117.sshtylyov@ru.mvista.com>
+References: <200702140101.26639.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:9144 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:22000 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1757915AbZLGO4K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 09:56:10 -0500
-In-Reply-To: <200911202152.22910.sshtylyov@ru.mvista.com>
+	with SMTP id S932689AbZLGPCS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 10:02:18 -0500
+In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-Hello, I wrote:
+DPLL clock (0x21) should be used for writes and PCI clock (0x23) for reads,
+not vice versa.
 
-> Alan Cox reported that cable detection sometimes works unreliably
-> for HPT3xxN and that the issue is fixed by adding debounce delay
-> as used by the vendor drivers.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: stable@kernel.org
 
-> While at it, get rid of unneeded parens/space in the vicinity...
+---
+The patch is atop of ide-2.6.git tree.
 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Cc: stable@kernel.org
+Not sure why I didn't fix this back in 2007... well, nobody has ever
+complained. :-)
 
-    David, will you (finally) apply this patch?
+ drivers/ide/hpt366.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-MBR, Sergei
+Index: ide-2.6/drivers/ide/hpt366.c
+===================================================================
+--- ide-2.6.orig/drivers/ide/hpt366.c
++++ ide-2.6/drivers/ide/hpt366.c
+@@ -901,7 +901,7 @@ static void hpt3xxn_set_clock(ide_hwif_t
+ 
+ static void hpt3xxn_rw_disk(ide_drive_t *drive, struct request *rq)
+ {
+-	hpt3xxn_set_clock(drive->hwif, rq_data_dir(rq) ? 0x23 : 0x21);
++	hpt3xxn_set_clock(drive->hwif, rq_data_dir(rq) ? 0x21 : 0x23);
+ }
+ 
+ /**
+
