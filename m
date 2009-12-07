@@ -1,45 +1,46 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/6] pata_sis: Implement MWDMA for the UDMA 133 capable
- chips
-Date: Mon, 07 Dec 2009 16:26:00 +0300
-Message-ID: <4B1D0268.4090508@ru.mvista.com>
-References: <20091130132005.27236.77890.stgit@localhost.localdomain> <20091130132248.27236.35287.stgit@localhost.localdomain>
+Subject: Re: [git patches] libata updates for 2.6.33
+Date: Mon, 07 Dec 2009 16:28:25 +0300
+Message-ID: <4B1D02F9.4000503@ru.mvista.com>
+References: <20091206210752.GA19268@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:26809 "HELO
+Received: from gateway-1237.mvista.com ([206.112.117.35]:44300 "HELO
 	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1757901AbZLGNYk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 08:24:40 -0500
-In-Reply-To: <20091130132248.27236.35287.stgit@localhost.localdomain>
+	with SMTP id S1757007AbZLGN1F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 08:27:05 -0500
+In-Reply-To: <20091206210752.GA19268@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org, davem@davemloft.net
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 Hello.
 
-Alan Cox wrote:
+Jeff Garzik wrote:
 
-> Bartlomiej pointed out that while this got fixed in the old driver whoever
-> did it didn't port it across.
+> Nothing world-shakingly-notable.  Notable notables:
 
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> - TRIM work from Christoph and mkp, to make SSD life a bit better
+> - PATA fixes and updates from Bart and Alan
+> - long overdue removal of 'experimental' tag from PATA driver submenu
+>   in Kconfig
+> - various bug fixes and minor updates
+
+> Please pull from 'upstream-linus' branch of
+> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+> to receive the following updates:
 
 [...]
 
-> +static int mwdma_clip_to_pio(struct ata_device *adev)
-> +{
-> +	const int mwdma_to_pio[3] = {
-> +		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
-> +	};
-> +	return min(mwdma_to_pio[adev->dma_mode - XFER_MW_DMA_0],
-> +				adev->pio_mode - XFER_PIO_0);
-> +}
+> Alan Cox (6):
+>       pata_via: Blacklist some combinations of Transcend Flash and via
+>       pata_sis: Implement MWDMA for the UDMA 133 capable chips
 
-    You call min() on uncomparables, i.e. mwdma_to_pio[] contains XFER_PIO_* 
-and adev->pio_mode - XFER_PIO_0 yields you a mode number. Thus the second 
-argument will always "win" as a minimal one.
+    Unfortunately, this patch contains a coding mistake. Probably too late 
+to correct it now though Linus hasn't pulled as yet...
 
 MBR, Sergei
