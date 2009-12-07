@@ -1,352 +1,62 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/5] pata_hpt{37x|3x2n}: unify mode programming
-Date: Mon, 7 Dec 2009 23:30:06 +0400
-Message-ID: <200912072230.06256.sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH resend] pata_hpt3x2n: fix clock turnaround
+Date: Mon, 07 Dec 2009 14:29:26 -0500
+Message-ID: <4B1D5796.5080306@pobox.com>
+References: <200912071652.57615.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:39661 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1756164AbZLGT2r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 14:28:47 -0500
-Content-Disposition: inline
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:47688 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758772AbZLGT3W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 14:29:22 -0500
+Received: by yxe17 with SMTP id 17so4209267yxe.33
+        for <linux-ide@vger.kernel.org>; Mon, 07 Dec 2009 11:29:28 -0800 (PST)
+In-Reply-To: <200912071652.57615.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-As these drivers' set_piomode() and set_dmamode() methods are almost identical,
-factor out the common hpt{37x|3x2n}_set_mode() function to be called by both of
-them, the same as in 'pata_hpt366' driver.
+On 12/07/2009 08:52 AM, Sergei Shtylyov wrote:
+> The clock turnaround code still doesn't work for several reasons:
+>
+> - 'USE_DPLL' flag in 'ap->host->private_data' is never initialized or updated,
+>    so the driver can only set the chip to the DPLL clock mode, not the PCI mode;
+>
+> - the driver doesn't serialize access to the channels depending on the current
+>    clock mode like the vendor drivers, so the clock turnaround is only executed
+>    "optionally", not always as it should be;
+>
+> - the wrong ports are written to when hpt3x2n_set_clock() is called for the
+>    secondary channel;
+>
+> - hpt3x2n_set_clock() can inadvertently enable the disabled channels when
+>    resetting the channel state machines.
+>
+> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+> Cc: stable@kernel.org
+>
+> ---
+> Resending with the corrected subject...
+>
+> The patch is against the recent Linus' tree. It's intended to go into all
+> stable kernels starting with 2.6.19, when the PATA drivers were first merged --
+> the version change hunks could be dropped when merging to the older kernels...
+>
+>   drivers/ata/pata_hpt3x2n.c |   64 ++++++++++++++++++++++++---------------------
+>   1 files changed, 35 insertions(+), 29 deletions(-)
 
-This results in ~5% decrease in the 'pata_hpt37x' driver binary size and in ~4%
-decrease in the 'pata_hpt3x2n' driver binary size (as measured on x86-32).
+FWIW, I am basically waiting on Linus's pull before opening 
+#upstream-fixes (2.6.33) and #upstream (2.5.34) branches of libata-dev.git.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+As soon as the merge happens, I'll immediately apply the patches from 
+you and others...
 
----
-The patch is against the recent Linus' tree.
+	Jeff
 
- drivers/ata/pata_hpt37x.c  |  137 +++++++++++++++++++--------------------------
- drivers/ata/pata_hpt3x2n.c |   69 ++++++++++------------
- 2 files changed, 90 insertions(+), 116 deletions(-)
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.14"
-+#define DRV_VERSION	"0.6.15"
- 
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -377,20 +377,12 @@ static int hpt374_fn1_pre_reset(struct a
- 	return ata_sff_prereset(link, deadline);
- }
- 
--/**
-- *	hpt370_set_piomode		-	PIO setup
-- *	@ap: ATA interface
-- *	@adev: device on the interface
-- *
-- *	Perform PIO mode setup.
-- */
--
--static void hpt370_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+static void hpt370_set_mode(struct ata_port *ap, struct ata_device *adev,
-+			    u8 mode)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 reg, timing, mask;
- 	u8 fast;
- 
- 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-@@ -402,11 +394,31 @@ static void hpt370_set_piomode(struct at
- 	fast |= 0x01;
- 	pci_write_config_byte(pdev, addr2, fast);
- 
-+	/* Determine timing mask and find matching mode entry */
-+	if (mode < XFER_MW_DMA_0)
-+		mask = 0xcfc3ffff;
-+	else if (mode < XFER_UDMA_0)
-+		mask = 0x31c001ff;
-+	else
-+		mask = 0x303c0000;
-+
-+	timing = hpt37x_find_mode(ap, mode);
-+
- 	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt37x_find_mode(ap, adev->pio_mode);
--	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
--	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	reg = (reg & ~mask) | (timing & mask);
-+	pci_write_config_dword(pdev, addr1, reg);
-+}
-+/**
-+ *	hpt370_set_piomode		-	PIO setup
-+ *	@ap: ATA interface
-+ *	@adev: device on the interface
-+ *
-+ *	Perform PIO mode setup.
-+ */
-+
-+static void hpt370_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	hpt370_set_mode(ap, adev, adev->pio_mode);
- }
- 
- /**
-@@ -414,33 +426,12 @@ static void hpt370_set_piomode(struct at
-  *	@ap: ATA interface
-  *	@adev: Device being configured
-  *
-- *	Set up the channel for MWDMA or UDMA modes. Much the same as with
-- *	PIO, load the mode number and then set MWDMA or UDMA flag.
-+ *	Set up the channel for MWDMA or UDMA modes.
-  */
- 
- static void hpt370_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 addr1, addr2;
--	u32 reg, mode, mask;
--	u8 fast;
--
--	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
--	addr2 = 0x51 + 4 * ap->port_no;
--
--	/* Fast interrupt prediction disable, hold off interrupt disable */
--	pci_read_config_byte(pdev, addr2, &fast);
--	fast &= ~0x02;
--	fast |= 0x01;
--	pci_write_config_byte(pdev, addr2, fast);
--
--	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
--
--	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt37x_find_mode(ap, adev->dma_mode);
--	mode &= mask;
--	reg &= ~mask;
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	hpt370_set_mode(ap, adev, adev->dma_mode);
- }
- 
- /**
-@@ -480,20 +471,12 @@ static void hpt370_bmdma_stop(struct ata
- 	ata_bmdma_stop(qc);
- }
- 
--/**
-- *	hpt372_set_piomode		-	PIO setup
-- *	@ap: ATA interface
-- *	@adev: device on the interface
-- *
-- *	Perform PIO mode setup.
-- */
--
--static void hpt372_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+static void hpt372_set_mode(struct ata_port *ap, struct ata_device *adev,
-+			    u8 mode)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 reg, timing, mask;
- 	u8 fast;
- 
- 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-@@ -504,13 +487,32 @@ static void hpt372_set_piomode(struct at
- 	fast &= ~0x07;
- 	pci_write_config_byte(pdev, addr2, fast);
- 
-+	/* Determine timing mask and find matching mode entry */
-+	if (mode < XFER_MW_DMA_0)
-+		mask = 0xcfc3ffff;
-+	else if (mode < XFER_UDMA_0)
-+		mask = 0x31c001ff;
-+	else
-+		mask = 0x303c0000;
-+
-+	timing = hpt37x_find_mode(ap, mode);
-+
- 	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt37x_find_mode(ap, adev->pio_mode);
-+	reg = (reg & ~mask) | (timing & mask);
-+	pci_write_config_dword(pdev, addr1, reg);
-+}
- 
--	printk("Find mode for %d reports %X\n", adev->pio_mode, mode);
--	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
--	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+/**
-+ *	hpt372_set_piomode		-	PIO setup
-+ *	@ap: ATA interface
-+ *	@adev: device on the interface
-+ *
-+ *	Perform PIO mode setup.
-+ */
-+
-+static void hpt372_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	hpt372_set_mode(ap, adev, adev->pio_mode);
- }
- 
- /**
-@@ -518,33 +520,12 @@ static void hpt372_set_piomode(struct at
-  *	@ap: ATA interface
-  *	@adev: Device being configured
-  *
-- *	Set up the channel for MWDMA or UDMA modes. Much the same as with
-- *	PIO, load the mode number and then set MWDMA or UDMA flag.
-+ *	Set up the channel for MWDMA or UDMA modes.
-  */
- 
- static void hpt372_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 addr1, addr2;
--	u32 reg, mode, mask;
--	u8 fast;
--
--	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
--	addr2 = 0x51 + 4 * ap->port_no;
--
--	/* Fast interrupt prediction disable, hold off interrupt disable */
--	pci_read_config_byte(pdev, addr2, &fast);
--	fast &= ~0x07;
--	pci_write_config_byte(pdev, addr2, fast);
--
--	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
--
--	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt37x_find_mode(ap, adev->dma_mode);
--	printk("Find mode for DMA %d reports %X\n", adev->dma_mode, mode);
--	mode &= mask;
--	reg &= ~mask;
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	hpt372_set_mode(ap, adev, adev->dma_mode);
- }
- 
- /**
-Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
-+++ linux-2.6/drivers/ata/pata_hpt3x2n.c
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt3x2n"
--#define DRV_VERSION	"0.3.9"
-+#define DRV_VERSION	"0.3.10"
- 
- enum {
- 	HPT_PCI_FAST	=	(1 << 31),
-@@ -159,20 +159,12 @@ static int hpt3x2n_pre_reset(struct ata_
- 	return ata_sff_prereset(link, deadline);
- }
- 
--/**
-- *	hpt3x2n_set_piomode		-	PIO setup
-- *	@ap: ATA interface
-- *	@adev: device on the interface
-- *
-- *	Perform PIO mode setup.
-- */
--
--static void hpt3x2n_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+static void hpt3x2n_set_mode(struct ata_port *ap, struct ata_device *adev,
-+			     u8 mode)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr1, addr2;
--	u32 reg;
--	u32 mode;
-+	u32 reg, timing, mask;
- 	u8 fast;
- 
- 	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
-@@ -183,11 +175,32 @@ static void hpt3x2n_set_piomode(struct a
- 	fast &= ~0x07;
- 	pci_write_config_byte(pdev, addr2, fast);
- 
-+	/* Determine timing mask and find matching mode entry */
-+	if (mode < XFER_MW_DMA_0)
-+		mask = 0xcfc3ffff;
-+	else if (mode < XFER_UDMA_0)
-+		mask = 0x31c001ff;
-+	else
-+		mask = 0x303c0000;
-+
-+	timing = hpt3x2n_find_mode(ap, mode);
-+
- 	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt3x2n_find_mode(ap, adev->pio_mode);
--	mode &= 0xCFC3FFFF;	/* Leave DMA bits alone */
--	reg &= ~0xCFC3FFFF;	/* Strip timing bits */
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	reg = (reg & ~mask) | (timing & mask);
-+	pci_write_config_dword(pdev, addr1, reg);
-+}
-+
-+/**
-+ *	hpt3x2n_set_piomode		-	PIO setup
-+ *	@ap: ATA interface
-+ *	@adev: device on the interface
-+ *
-+ *	Perform PIO mode setup.
-+ */
-+
-+static void hpt3x2n_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	hpt3x2n_set_mode(ap, adev, adev->pio_mode);
- }
- 
- /**
-@@ -195,32 +208,12 @@ static void hpt3x2n_set_piomode(struct a
-  *	@ap: ATA interface
-  *	@adev: Device being configured
-  *
-- *	Set up the channel for MWDMA or UDMA modes. Much the same as with
-- *	PIO, load the mode number and then set MWDMA or UDMA flag.
-+ *	Set up the channel for MWDMA or UDMA modes.
-  */
- 
- static void hpt3x2n_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 addr1, addr2;
--	u32 reg, mode, mask;
--	u8 fast;
--
--	addr1 = 0x40 + 4 * (adev->devno + 2 * ap->port_no);
--	addr2 = 0x51 + 4 * ap->port_no;
--
--	/* Fast interrupt prediction disable, hold off interrupt disable */
--	pci_read_config_byte(pdev, addr2, &fast);
--	fast &= ~0x07;
--	pci_write_config_byte(pdev, addr2, fast);
--
--	mask = adev->dma_mode < XFER_UDMA_0 ? 0x31C001FF : 0x303C0000;
--
--	pci_read_config_dword(pdev, addr1, &reg);
--	mode = hpt3x2n_find_mode(ap, adev->dma_mode);
--	mode &= mask;
--	reg &= ~mask;
--	pci_write_config_dword(pdev, addr1, reg | mode);
-+	hpt3x2n_set_mode(ap, adev, adev->dma_mode);
- }
- 
- /**
+
+
 
