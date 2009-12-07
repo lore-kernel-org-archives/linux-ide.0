@@ -1,72 +1,45 @@
-From: Erwan MAS <erwan@mas.nom.fr>
-Subject: Sr2760-2s-s2 & Sil4723 & pmp
-Date: Mon, 7 Dec 2009 12:44:17 +0100
-Message-ID: <20091207114417.GB1863@voyageur.mas.nom.fr>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/6] pata_sis: Implement MWDMA for the UDMA 133 capable
+ chips
+Date: Mon, 07 Dec 2009 16:26:00 +0300
+Message-ID: <4B1D0268.4090508@ru.mvista.com>
+References: <20091130132005.27236.77890.stgit@localhost.localdomain> <20091130132248.27236.35287.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pulsar.zoreil.com ([83.167.33.49]:39081 "EHLO pulsar.zoreil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934215AbZLGLwK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Dec 2009 06:52:10 -0500
-Received: from pulsar.zoreil.com (IDENT:zhF6bC9KmAKPKNKlO75aCarJSeHg2KIq@localhost [127.0.0.1])
-	by pulsar.zoreil.com (8.12.10/8.12.10) with ESMTP id nB7Bik6p007552
-	for <linux-ide@vger.kernel.org>; Mon, 7 Dec 2009 12:44:46 +0100
-Received: (from uucp@localhost)
-	by pulsar.zoreil.com (8.12.10/8.12.10) id nB7BikqR007550
-	for linux-ide@vger.kernel.org; Mon, 7 Dec 2009 12:44:46 +0100
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([206.112.117.35]:26809 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1757901AbZLGNYk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 08:24:40 -0500
+In-Reply-To: <20091130132248.27236.35287.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org, davem@davemloft.net
 
-Hello ,
+Hello.
 
-I tried to use sr2760-2s-s2 ( http://www.raidon.com.tw/content.php?sno=0000095&p_id=53 ) with linux !
+Alan Cox wrote:
 
-With
-  kernel 2.6.21           => work 
-  kernel 2.6.26 & 2.6.28  => does not work 
+> Bartlomiej pointed out that while this got fixed in the old driver whoever
+> did it didn't port it across.
 
-In 2.26.21 , the device is detect as sata disk , i can access to it !
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
-In 2.26.26 & 2.6.28 , the sata port multiplier detect the sil4723 chipset and try to use in a port multiplier mode 
-( i suppose ) .
+[...]
 
-Extract of /var/log/messages
+> +static int mwdma_clip_to_pio(struct ata_device *adev)
+> +{
+> +	const int mwdma_to_pio[3] = {
+> +		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+> +	};
+> +	return min(mwdma_to_pio[adev->dma_mode - XFER_MW_DMA_0],
+> +				adev->pio_mode - XFER_PIO_0);
+> +}
 
-Dec  6 14:13:56 charlie kernel: [    6.765363] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Dec  6 14:13:56 charlie kernel: [    6.768941] ata4.15: Port Multiplier 1.1, 0x1095:0x4723 r28, 3 ports, feat 0x1/0x9
-Dec  6 14:13:56 charlie kernel: [    6.768941] ata4.00: hard resetting link
-Dec  6 14:13:56 charlie kernel: [    7.125525] ata4.00: SATA link down (SStatus 0 SControl 0)
-Dec  6 14:13:56 charlie kernel: [    7.125525] ata4.01: hard resetting link
-Dec  6 14:13:56 charlie kernel: [    7.668637] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-Dec  6 14:13:56 charlie kernel: [    7.668637] ata4.02: hard resetting link
-Dec  6 14:13:56 charlie kernel: [    8.036177] ata4.02: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-Dec  6 14:13:56 charlie kernel: [    8.036177] ata4.01: unsupported device, disabling
-Dec  6 14:13:56 charlie kernel: [    8.036177] ata4.01: disabled
-Dec  6 14:13:56 charlie kernel: [    8.042941] ata4: EH complete
+    You call min() on uncomparables, i.e. mwdma_to_pio[] contains XFER_PIO_* 
+and adev->pio_mode - XFER_PIO_0 yields you a mode number. Thus the second 
+argument will always "win" as a minimal one.
 
-My systems as asus M3A motherboard . 
-
-a part of output from lspci -v :
-
-00:12.0 SATA controller: ATI Technologies Inc SB600 Non-Raid-5 SATA (prog-if 01 [AHCI 1.0])
-	Subsystem: ASUSTeK Computer Inc. Device 8231
-	Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 22
-	I/O ports at c000 [size=8]
-	I/O ports at b000 [size=4]
-	I/O ports at a000 [size=8]
-	I/O ports at 9000 [size=4]
-	I/O ports at 8000 [size=16]
-	Memory at f9fff800 (32-bit, non-prefetchable) [size=1K]
-	Capabilities: [60] Power Management version 2
-	Kernel driver in use: ahci
-	Kernel modules: ahci
-
--- 
-     ____________________________________________________________
-    / Erwan MAS                                                 /\
-   | mailto:erwan@mas.nom.fr                                   |_/
-___|________________________________________________________   |
-\___________________________________________________________\__/
+MBR, Sergei
