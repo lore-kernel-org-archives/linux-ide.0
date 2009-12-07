@@ -1,58 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/6] pata_sis: Implement MWDMA for the UDMA 133 capable chips
-Date: Mon, 7 Dec 2009 17:34:40 +0100
-Message-ID: <200912071734.40916.bzolnier@gmail.com>
-References: <20091130132005.27236.77890.stgit@localhost.localdomain> <4B1D0268.4090508@ru.mvista.com> <200912071605.28364.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] libata updates for 2.6.33
+Date: Mon, 07 Dec 2009 11:39:31 -0500
+Message-ID: <4B1D2FC3.4090003@garzik.org>
+References: <20091206210752.GA19268@havoc.gtf.org> <4B1D02F9.4000503@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:59109 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934935AbZLGQgH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 11:36:07 -0500
-Received: by ewy19 with SMTP id 19so655421ewy.1
-        for <linux-ide@vger.kernel.org>; Mon, 07 Dec 2009 08:36:12 -0800 (PST)
-In-Reply-To: <200912071605.28364.bzolnier@gmail.com>
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:61936 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934829AbZLGQj0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2009 11:39:26 -0500
+In-Reply-To: <4B1D02F9.4000503@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, jeff@garzik.org, davem@davemloft.net
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Monday 07 December 2009 04:05:28 pm Bartlomiej Zolnierkiewicz wrote:
-> On Monday 07 December 2009 02:26:00 pm Sergei Shtylyov wrote:
-> > Hello.
-> > 
-> > Alan Cox wrote:
-> > 
-> > > Bartlomiej pointed out that while this got fixed in the old driver whoever
-> > > did it didn't port it across.
-> > 
-> > > Signed-off-by: Alan Cox <alan@linux.intel.com>
-> > 
-> > [...]
-> > 
-> > > +static int mwdma_clip_to_pio(struct ata_device *adev)
-> > > +{
-> > > +	const int mwdma_to_pio[3] = {
-> > > +		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
-> > > +	};
-> > > +	return min(mwdma_to_pio[adev->dma_mode - XFER_MW_DMA_0],
-> > > +				adev->pio_mode - XFER_PIO_0);
-> > > +}
-> > 
-> >     You call min() on uncomparables, i.e. mwdma_to_pio[] contains XFER_PIO_* 
-> > and adev->pio_mode - XFER_PIO_0 yields you a mode number. Thus the second 
-> > argument will always "win" as a minimal one.
-> 
-> There are more issues with the patch related to mwdma_clip_to_pio().
+On 12/07/2009 08:28 AM, Sergei Shtylyov wrote:
+> Hello.
+>
+> Jeff Garzik wrote:
+>
+>> Nothing world-shakingly-notable. Notable notables:
+>
+>> - TRIM work from Christoph and mkp, to make SSD life a bit better
+>> - PATA fixes and updates from Bart and Alan
+>> - long overdue removal of 'experimental' tag from PATA driver submenu
+>> in Kconfig
+>> - various bug fixes and minor updates
+>
+>> Please pull from 'upstream-linus' branch of
+>> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>> upstream-linus
+>
+>> to receive the following updates:
+>
+> [...]
+>
+>> Alan Cox (6):
+>> pata_via: Blacklist some combinations of Transcend Flash and via
+>> pata_sis: Implement MWDMA for the UDMA 133 capable chips
+>
+> Unfortunately, this patch contains a coding mistake. Probably too late
+> to correct it now though Linus hasn't pulled as yet...
 
-Hmm.. why cannot ->qc_issue be used here (like in all other host drivers with
-shared PIO/MWDMA timings) instead of some new 'clipping'?
+Well, absence of a push does not necessarily imply absence of a pull :) 
+  In fact it seems pretty normal these days that Linus collects a bunch 
+of pull requests, and then pushes them out later all in one batch.
 
-->qc_issue is the standard way to do it, takes care of more corner cases
-and would also allow for faster MWDMA0 timings. 
+But we can revert, absolutely, given the feedback from you and Bart...
 
---
-Bartlomiej Zolnierkiewicz
+	Jeff
+
+
+
+
