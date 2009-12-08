@@ -1,42 +1,81 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/5] pata_hpt3x2n: always stretch UltraDMA timing
-Date: Tue, 8 Dec 2009 20:28:22 +0100
-Message-ID: <200912082028.22088.bzolnier@gmail.com>
-References: <200912072225.52223.sshtylyov@ru.mvista.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT]: IDE
+Date: Tue, 08 Dec 2009 15:49:30 -0800 (PST)
+Message-ID: <20091208.154930.55611259.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:63262 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756186AbZLHTaE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Dec 2009 14:30:04 -0500
-Received: by ewy1 with SMTP id 1so3176006ewy.28
-        for <linux-ide@vger.kernel.org>; Tue, 08 Dec 2009 11:30:09 -0800 (PST)
-In-Reply-To: <200912072225.52223.sshtylyov@ru.mvista.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41014
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S937002AbZLHXtY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Dec 2009 18:49:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Hi,
+Mostly minor cleanups, and an increase in WAIT_DRQ to accomodate
+CF cards, SSD drives, and other slow devices.
 
-On Monday 07 December 2009 08:25:52 pm Sergei Shtylyov wrote:
-> The UltraDMA Tss timing must be stretched with ATA clock of 66 MHz, but the
-> driver only does this when PCI clock is 66 MHz, whereas it always programs
-> DPLL clock (which is used as the ATA clock) to 66 MHz.
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Also a UDMA fix for the slc90e66 driver which came a bit late
+for 2.6.32 and I have thus queued up for -stable.
 
-I've reviewed those patches and they all look fine to me.
+Please pull, thanks a lot.
 
-Same with your other HPT3xx pending fixes, namely:
-* hpt366: fix clock turnaround
-* pata_hpt3x2n: fix clock turnaround
-* hpt366: add debounce delay to cable_detect() method
+The following changes since commit a252e749f1ae17e43ccc5824f7b1b5854417c98b:
+  Linus Torvalds (1):
+        sctp: fix compile error due to sysctl mismerge
 
-PS everything is in my ATA fixes tree now
---
-Bartlomiej Zolnierkiewicz
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-next-2.6.git master
+
+Bartlomiej Zolnierkiewicz (9):
+      hpt366: remove dead old timing tables
+      slc90e66: fix UDMA handling
+      cs5535: add pci id for AMD based CS5535 controllers
+      alim15x3: remove obsolete and dangerous wdc_udma parameter
+      cmd64x: remove no longer needed debugging code
+      cy82c693: remove no longer needed debugging code
+      pdc202xx_old: remove no longer needed debugging code
+      sis5513: remove stale TODO
+      sl82c105: remove no longer needed debugging code
+
+Borislav Petkov (1):
+      ide-tape: remove the BKL
+
+David S. Miller (4):
+      ide: Increase WAIT_DRQ to accomodate some CF cards and SSD drives.
+      Merge branch 'master' of master.kernel.org:/.../davem/ide-2.6
+      Merge branch 'master' of /home/davem/src/GIT/linux-2.6/
+      Merge branch 'ide-dcr' of git://git.kernel.org/.../bart/misc
+
+H Hartley Sweeten (3):
+      drivers/ide/au1xxx-ide.c: use resource_size()
+      drivers/ide/ide_platform.c: use resource_size()
+      drivers/ide/tx4938ide.c: use resource_size()
+
+Robert Hancock (1):
+      ide: update Kconfig text to mark as deprecated
+
+Sergei Shtylyov (1):
+      hpt366: kill unused #define's
+
+ drivers/ide/Kconfig        |   43 ++++++-----------------------
+ drivers/ide/alim15x3.c     |   12 +-------
+ drivers/ide/au1xxx-ide.c   |    7 ++---
+ drivers/ide/cmd64x.c       |   17 -----------
+ drivers/ide/cs5535.c       |    1 +
+ drivers/ide/cy82c693.c     |   27 ------------------
+ drivers/ide/hpt366.c       |   65 --------------------------------------------
+ drivers/ide/ide-tape.c     |   21 ++++++++++----
+ drivers/ide/ide_platform.c |    8 +++---
+ drivers/ide/pdc202xx_old.c |   15 ----------
+ drivers/ide/sis5513.c      |    9 ------
+ drivers/ide/sl82c105.c     |   24 +---------------
+ drivers/ide/slc90e66.c     |    3 +-
+ drivers/ide/tx4938ide.c    |    2 +-
+ include/linux/ide.h        |    4 +-
+ 15 files changed, 38 insertions(+), 220 deletions(-)
