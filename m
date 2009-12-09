@@ -1,81 +1,54 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT]: IDE
-Date: Tue, 08 Dec 2009 15:49:30 -0800 (PST)
-Message-ID: <20091208.154930.55611259.davem@davemloft.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Wed, 9 Dec 2009 02:40:51 GMT
+Message-ID: <200912090240.nB92epHx008898@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41014
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S937002AbZLHXtY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Dec 2009 18:49:24 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:41230 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756480AbZLICkp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Dec 2009 21:40:45 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nB92epnh008899
+	for <linux-ide@vger.kernel.org>; Wed, 9 Dec 2009 02:40:51 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=14583
 
 
-Mostly minor cleanups, and an increase in WAIT_DRQ to accomodate
-CF cards, SSD drives, and other slow devices.
+Robert Hancock <hancockrwd@gmail.com> changed:
 
-Also a UDMA fix for the slc90e66 driver which came a bit late
-for 2.6.32 and I have thus queued up for -stable.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |hancockrwd@gmail.com
 
-Please pull, thanks a lot.
 
-The following changes since commit a252e749f1ae17e43ccc5824f7b1b5854417c98b:
-  Linus Torvalds (1):
-        sctp: fix compile error due to sysctl mismerge
 
-are available in the git repository at:
 
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-next-2.6.git master
+--- Comment #25 from Robert Hancock <hancockrwd@gmail.com>  2009-12-09 02:40:49 ---
+It looks like most of these bug reports indicate BMDMA status 0x04 or 0x64 when
+the timeout occurs, indicating that the controller should be asserting an
+interrupt and the BMDMA transfer is not or is no longer active. But the device
+registers indicate DRQ is asserted, indicating the device wants to transfer
+more data. It looks like this is why libata reports an HSM violation.
 
-Bartlomiej Zolnierkiewicz (9):
-      hpt366: remove dead old timing tables
-      slc90e66: fix UDMA handling
-      cs5535: add pci id for AMD based CS5535 controllers
-      alim15x3: remove obsolete and dangerous wdc_udma parameter
-      cmd64x: remove no longer needed debugging code
-      cy82c693: remove no longer needed debugging code
-      pdc202xx_old: remove no longer needed debugging code
-      sis5513: remove stale TODO
-      sl82c105: remove no longer needed debugging code
+The amount of data drained indicates that no data was actually transferred (I
+notice there's a bug that causes the amount of data reported as drained to be
+half the actual amount, I'll submit a patch for that). I don't see a reason for
+the device to generate an interrupt at this point. Thus I tend to suspect that
+the cause is a bug in the device.
 
-Borislav Petkov (1):
-      ide-tape: remove the BKL
+As far as why an interrupt is shown as generated but doesn't actually get
+received, I'm not sure. Maybe the controller doesn't propagate the interrupt if
+the state machine doesn't say it should be getting one? DRQ + interrupt
+asserted certainly doesn't seem like a combination that should happen.
 
-David S. Miller (4):
-      ide: Increase WAIT_DRQ to accomodate some CF cards and SSD drives.
-      Merge branch 'master' of master.kernel.org:/.../davem/ide-2.6
-      Merge branch 'master' of /home/davem/src/GIT/linux-2.6/
-      Merge branch 'ide-dcr' of git://git.kernel.org/.../bart/misc
-
-H Hartley Sweeten (3):
-      drivers/ide/au1xxx-ide.c: use resource_size()
-      drivers/ide/ide_platform.c: use resource_size()
-      drivers/ide/tx4938ide.c: use resource_size()
-
-Robert Hancock (1):
-      ide: update Kconfig text to mark as deprecated
-
-Sergei Shtylyov (1):
-      hpt366: kill unused #define's
-
- drivers/ide/Kconfig        |   43 ++++++-----------------------
- drivers/ide/alim15x3.c     |   12 +-------
- drivers/ide/au1xxx-ide.c   |    7 ++---
- drivers/ide/cmd64x.c       |   17 -----------
- drivers/ide/cs5535.c       |    1 +
- drivers/ide/cy82c693.c     |   27 ------------------
- drivers/ide/hpt366.c       |   65 --------------------------------------------
- drivers/ide/ide-tape.c     |   21 ++++++++++----
- drivers/ide/ide_platform.c |    8 +++---
- drivers/ide/pdc202xx_old.c |   15 ----------
- drivers/ide/sis5513.c      |    9 ------
- drivers/ide/sl82c105.c     |   24 +---------------
- drivers/ide/slc90e66.c     |    3 +-
- drivers/ide/tx4938ide.c    |    2 +-
- include/linux/ide.h        |    4 +-
- 15 files changed, 38 insertions(+), 220 deletions(-)
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
