@@ -1,37 +1,52 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: [PATCH] libata: fix reporting of drained bytes when clearing DRQ
-Date: Tue, 08 Dec 2009 20:48:10 -0600
-Message-ID: <4B1F0FEA.7070403@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Wed, 9 Dec 2009 06:29:55 GMT
+Message-ID: <200912090629.nB96TtnF005098@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:57239 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755086AbZLICsI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Dec 2009 21:48:08 -0500
-Received: by gxk26 with SMTP id 26so5739709gxk.1
-        for <linux-ide@vger.kernel.org>; Tue, 08 Dec 2009 18:48:15 -0800 (PST)
+Received: from demeter.kernel.org ([140.211.167.39]:54955 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752025AbZLIG3t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Dec 2009 01:29:49 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nB96TtiG005099
+	for <linux-ide@vger.kernel.org>; Wed, 9 Dec 2009 06:29:55 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
 
-When we drain data from a device to clear DRQ during error recovery, the number
-of bytes reported as drained is too low by a factor of 2 because the count
-is actually reporting the number of words drained, not bytes. Fix this.
+http://bugzilla.kernel.org/show_bug.cgi?id=14583
 
-Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 51eb1e2..3afa21b 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2275,7 +2275,7 @@ void ata_sff_drain_fifo(struct ata_queued_cmd *qc)
- 	ap = qc->ap;
- 	/* Drain up to 64K of data before we give up this recovery method */
- 	for (count = 0; (ap->ops->sff_check_status(ap) & ATA_DRQ)
--						&& count < 32768; count++)
-+						&& count < 65536; count += 2)
- 		ioread16(ap->ioaddr.data_addr);
- 
- 	/* Can become DEBUG later */
+
+
+
+--- Comment #26 from Andrew Simpson <andrewnz.simpson@gmail.com>  2009-12-09 06:29:53 ---
+Thanks. I'm not a kernel developer, but I get the general gist of that. 
+However, there are several reasons that I don't think this is necessarily a bug
+in the SSD device.
+
+Firstly, it affects a range of SSD devices from different manufacturers and
+different production dates.  I guess they could share common firmware (and
+hence the same bug), but that has to be rather remote possibility.
+
+Secondly, the SSD devices are performing without issue on 2.6.28 (and one
+report of 2.6.30), but the same machines fail on 2.6.31/2.6.32.  This suggests
+something changed in the kernel that affects the SSD between 2.6.30 and 2.6.31.
+
+Thirdly, these machines were often sold with factory installed Linux.  O.K., so
+it was an earlier kernel, but the SSD has clearly worked enough to met the
+manufacturer's satisfaction.
+
+Fourthly, (and this where I show I'm not a developer), we are only seeing the
+end result of the transaction (the HSM violation).  Could there have been
+several erroneous - but not out-of-band - command/response exchanges leading up
+to the HSM violation?
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
