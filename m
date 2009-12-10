@@ -1,47 +1,35 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14583] SSD system stall, HSM Violation
-Date: Thu, 10 Dec 2009 06:05:05 GMT
-Message-ID: <200912100605.nBA655Sb015871@demeter.kernel.org>
-References: <bug-14583-11633@http.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@lst.de>
+Subject: libata: use the WRITE_SAME_16 define
+Date: Thu, 10 Dec 2009 10:36:01 +0100
+Message-ID: <20091210093601.GA30917@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:50685 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932780AbZLJGE7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Dec 2009 01:04:59 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBA655qq015872
-	for <linux-ide@vger.kernel.org>; Thu, 10 Dec 2009 06:05:05 GMT
-In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
+Received: from verein.lst.de ([213.95.11.210]:60115 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758659AbZLJJgF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Dec 2009 04:36:05 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14583
+Now that the scsi tree has hit mainline we can use the newly added WRITE_SAME_16
+define.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-
-
---- Comment #28 from Andrew Simpson <andrewnz.simpson@gmail.com>  2009-12-10 06:05:01 ---
-You could be right that all the devices have common firmware (and bug).  It
-just feels remote in this case.
-
-More importantly, some interesting research on the Ubuntu bug report by a
-number of users:
-
-Ubuntu 9.10 (Karmic) shows the bug with 2.6.28, 2.6.29, 2.6.31, 2.6.32.
-
-Ubuntu 9.04 (Jaunty) shows NO bug with 2.6.28, 2.6.30, 2.6.31, 2.6.32
-
-This has been confirmed by three different users.  Ext4 has been ruled out
-(same results with ext2).
-
-Two questions:  Is this a bug outside the kernel space?  And how can a
-userspace bug affect the disk operations?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Index: linux-2.6/drivers/ata/libata-scsi.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata-scsi.c	2009-12-10 10:21:05.735254334 +0100
++++ linux-2.6/drivers/ata/libata-scsi.c	2009-12-10 10:21:29.562255983 +0100
+@@ -3022,7 +3022,7 @@ static inline ata_xlat_func_t ata_get_xl
+ 	case WRITE_16:
+ 		return ata_scsi_rw_xlat;
+ 
+-	case 0x93 /*WRITE_SAME_16*/:
++	case WRITE_SAME_16:
+ 		return ata_scsi_write_same_xlat;
+ 
+ 	case SYNCHRONIZE_CACHE:
