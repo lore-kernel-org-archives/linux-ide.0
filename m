@@ -1,37 +1,42 @@
-From: "H Hartley Sweeten" <hartleys@visionengravers.com>
-Subject: [PATCH] pata_octeon_cf.c: use resource_size()
-Date: Thu, 10 Dec 2009 20:03:10 -0500
-Message-ID: <BD79186B4FD85F4B8E60E381CAEE190901FB0FB6@mi8nycmail19.Mi8.com>
+From: James Andrewartha <jamesa@daa.com.au>
+Subject: Re: ATA support for 4k sector size
+Date: Fri, 11 Dec 2009 15:05:56 +0800
+Message-ID: <4B21EF54.9070609@daa.com.au>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>	<20090226025043.GJ1363@mit.edu>	<20090226030735.GA16891@parisc-linux.org> <yq1myc9g9ua.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod6og101.obsmtp.com ([64.18.1.181]:56468 "EHLO
-	exprod6og101.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757766AbZLKBDH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Dec 2009 20:03:07 -0500
-Content-class: urn:content-classes:message
+Received: from quoll.daa.com.au ([203.17.251.1]:54399 "EHLO quoll.daa.com.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933386AbZLKHPn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Dec 2009 02:15:43 -0500
+In-Reply-To: <yq1myc9g9ua.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, "H. Peter Anvin" <hpa@zytor.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-It appears the size for cs1 is calculated using the wrong resource.
-Use the function resource_size to get the correct value.
+Martin K. Petersen wrote:
+>>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
+> 
+> Matthew> Lowest aligned logical block address=0
+> 
+> Matthew> This disagrees with Martin's assertion.
+> 
+> The original roadmap was to transition to 4KB sectors in 2006,
+> coinciding with the Vista release.
+> 
+> Given how long this has taken (we're now talking ~2011 for GA) it may
+> very well be that the alignment knobs will be unused because everybody
+> will be using Vista or 7 by then.
 
-Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+The plan does seem to have changed - WD's shipping 4k sector drives that are 
+sane and require a drive jumper or tool for WinXP and old cloning utilities.
 
----
+http://techreport.com/discussions.x/18115
+http://wdc.com/en/products/advancedformat/
+http://www.wdc.com/wdproducts/library/whitepapers/en/2579-771430-A00.pdf
 
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index d6f6956..37ef416 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -853,7 +853,7 @@ static int __devinit octeon_cf_probe(struct platform_device *pdev)
- 			return -EINVAL;
- 
- 		cs1 = devm_ioremap_nocache(&pdev->dev, res_cs1->start,
--					   res_cs0->end - res_cs1->start + 1);
-+					   resource_size(res_cs1));
- 
- 		if (!cs1)
- 			return -ENOMEM; 
+-- 
+James Andrewartha
