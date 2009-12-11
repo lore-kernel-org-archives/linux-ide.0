@@ -1,42 +1,52 @@
-From: James Andrewartha <jamesa@daa.com.au>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: ATA support for 4k sector size
-Date: Fri, 11 Dec 2009 15:05:56 +0800
-Message-ID: <4B21EF54.9070609@daa.com.au>
-References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>	<20090226025043.GJ1363@mit.edu>	<20090226030735.GA16891@parisc-linux.org> <yq1myc9g9ua.fsf@sermon.lab.mkp.net>
+Date: Thu, 10 Dec 2009 23:26:39 -0800
+Message-ID: <4B21F42F.4070400@zytor.com>
+References: <1235600698-6446-1-git-send-email-matthew@wil.cx>	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>	<20090226025043.GJ1363@mit.edu>	<20090226030735.GA16891@parisc-linux.org> <yq1myc9g9ua.fsf@sermon.lab.mkp.net> <4B21EF54.9070609@daa.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from quoll.daa.com.au ([203.17.251.1]:54399 "EHLO quoll.daa.com.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933386AbZLKHPn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Dec 2009 02:15:43 -0500
-In-Reply-To: <yq1myc9g9ua.fsf@sermon.lab.mkp.net>
+Received: from terminus.zytor.com ([198.137.202.10]:50061 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbZLKH05 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Dec 2009 02:26:57 -0500
+In-Reply-To: <4B21EF54.9070609@daa.com.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, "H. Peter Anvin" <hpa@zytor.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
+To: James Andrewartha <jamesa@daa.com.au>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
 
-Martin K. Petersen wrote:
->>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
+On 12/10/2009 11:05 PM, James Andrewartha wrote:
+> Martin K. Petersen wrote:
+>>>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
+>>
+>> Matthew> Lowest aligned logical block address=0
+>>
+>> Matthew> This disagrees with Martin's assertion.
+>>
+>> The original roadmap was to transition to 4KB sectors in 2006,
+>> coinciding with the Vista release.
+>>
+>> Given how long this has taken (we're now talking ~2011 for GA) it may
+>> very well be that the alignment knobs will be unused because everybody
+>> will be using Vista or 7 by then.
 > 
-> Matthew> Lowest aligned logical block address=0
+> The plan does seem to have changed - WD's shipping 4k sector drives that
+> are sane and require a drive jumper or tool for WinXP and old cloning
+> utilities.
 > 
-> Matthew> This disagrees with Martin's assertion.
+> http://techreport.com/discussions.x/18115
+> http://wdc.com/en/products/advancedformat/
+> http://www.wdc.com/wdproducts/library/whitepapers/en/2579-771430-A00.pdf
 > 
-> The original roadmap was to transition to 4KB sectors in 2006,
-> coinciding with the Vista release.
-> 
-> Given how long this has taken (we're now talking ~2011 for GA) it may
-> very well be that the alignment knobs will be unused because everybody
-> will be using Vista or 7 by then.
 
-The plan does seem to have changed - WD's shipping 4k sector drives that are 
-sane and require a drive jumper or tool for WinXP and old cloning utilities.
+Even more important, the alignment can be changed as opposed to being
+fixed for the manufacture of the disk.
 
-http://techreport.com/discussions.x/18115
-http://wdc.com/en/products/advancedformat/
-http://www.wdc.com/wdproducts/library/whitepapers/en/2579-771430-A00.pdf
+	-hpa
 
 -- 
-James Andrewartha
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
+
