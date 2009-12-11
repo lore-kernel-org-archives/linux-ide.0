@@ -1,46 +1,188 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: ATA support for 4k sector size
-Date: Fri, 11 Dec 2009 02:32:46 -0500
-Message-ID: <yq17hsuufs1.fsf@sermon.lab.mkp.net>
-References: <1235600698-6446-1-git-send-email-matthew@wil.cx>
-	<49A5CBF7.9000501@zytor.com> <yq1hc2iumg9.fsf@sermon.lab.mkp.net>
-	<20090226025043.GJ1363@mit.edu>
-	<20090226030735.GA16891@parisc-linux.org>
-	<yq1myc9g9ua.fsf@sermon.lab.mkp.net> <4B21EF54.9070609@daa.com.au>
+From: "H Hartley Sweeten" <hartleys@visionengravers.com>
+Subject: [PATCH] au1xxx-ide.c: ioremap() returns a void __iomem *
+Date: Fri, 11 Dec 2009 16:04:38 -0500
+Message-ID: <BD79186B4FD85F4B8E60E381CAEE190901FB10C2@mi8nycmail19.Mi8.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:29125 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757368AbZLKHdr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Dec 2009 02:33:47 -0500
-In-Reply-To: <4B21EF54.9070609@daa.com.au> (James Andrewartha's message of
-	"Fri, 11 Dec 2009 15:05:56 +0800")
+Received: from exprod6ob117.obsmtp.com ([64.18.1.38]:36269 "EHLO psmtp.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756746AbZLKVEi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Dec 2009 16:04:38 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Andrewartha <jamesa@daa.com.au>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, "H. Peter Anvin" <hpa@zytor.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sandeen@redhat.com
+To: kernel list <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, David Miller <davem@davemloft.net>
 
->>>>> "James" == James Andrewartha <jamesa@daa.com.au> writes:
+The ioremap return value is an __iomem *, not an integer.  Update the
+private structure to reflect this.  While here, remove the typedef
+for _auide_hwif and just use struct auide_hwif instead as recommended
+by Documentation/CodingStyle.
 
->> Given how long this has taken (we're now talking ~2011 for GA) it may
->> very well be that the alignment knobs will be unused because
->> everybody will be using Vista or 7 by then.
+auide_setup_ports() still needs to cast the regbase back to an integer
+to correctly setup the io_ports_array.
 
-James> The plan does seem to have changed - WD's shipping 4k sector
-James> drives that are sane and require a drive jumper or tool for WinXP
-James> and old cloning utilities.
+Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+Cc: David Miller <davem@davemloft.net>
 
-The disk vendors have agreed to transition no later than 2011.  There
-are definitely drives coming out with 4KB physical blocks before then.
+---
 
-There has been a lot of discussion of the merits of shipping 1-aligned
-drives by default given that Vista and Windows 7 handle alignment
-correctly.
-
-I don't think there has been any firm decisions in IDEMA wrt. 0
-vs. 1-aligned.  It may be up to each vendor's discretion, target market
-segment, etc.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+diff --git a/Documentation/mips/AU1xxx_IDE.README b/Documentation/mips/AU1xxx_IDE.README
+index 8ace35e..37c6c34 100644
+--- a/Documentation/mips/AU1xxx_IDE.README
++++ b/Documentation/mips/AU1xxx_IDE.README
+@@ -45,7 +45,7 @@ FILES, CONFIGS AND COMPATABILITY
+ Two files are introduced:
+ 
+   a) 'arch/mips/include/asm/mach-au1x00/au1xxx_ide.h'
+-     containes : struct _auide_hwif
++     containes : struct auide_hwif
+                  timing parameters for PIO mode 0/1/2/3/4
+                  timing parameters for MWDMA 0/1/2
+ 
+diff --git a/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h b/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
+index 5656c72..f44b8bc 100644
+--- a/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
++++ b/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
+@@ -46,7 +46,7 @@
+ #define CONFIG_BLK_DEV_IDE_AU1XXX_BURSTABLE_ON	0
+ #endif
+ 
+-typedef struct {
++struct auide_hwif {
+ 	u32			tx_dev_id, rx_dev_id, target_dev_id;
+ 	u32			tx_chan, rx_chan;
+ 	void			*tx_desc_head, *rx_desc_head;
+@@ -57,8 +57,8 @@ typedef struct {
+ 	dma_addr_t		dma_table_dma;
+ #endif
+ 	int			irq;
+-	u32			regbase;
+-} _auide_hwif;
++	void __iomem		*regbase;
++};
+ 
+ /******************************************************************************/
+ /* PIO Mode timing calculation :					      */
+diff --git a/drivers/ide/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
+index 87cef0c..65abf57 100644
+--- a/drivers/ide/au1xxx-ide.c
++++ b/drivers/ide/au1xxx-ide.c
+@@ -46,13 +46,13 @@
+ /* enable the burstmode in the dbdma */
+ #define IDE_AU1XXX_BURSTMODE	1
+ 
+-static _auide_hwif auide_hwif;
++static struct auide_hwif auide_hwif;
+ 
+ #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA)
+ 
+ static inline void auide_insw(unsigned long port, void *addr, u32 count)
+ {
+-	_auide_hwif *ahwif = &auide_hwif;
++	struct auide_hwif *ahwif = &auide_hwif;
+ 	chan_tab_t *ctp;
+ 	au1x_ddma_desc_t *dp;
+ 
+@@ -70,7 +70,7 @@ static inline void auide_insw(unsigned long port, void *addr, u32 count)
+ 
+ static inline void auide_outsw(unsigned long port, void *addr, u32 count)
+ {
+-	_auide_hwif *ahwif = &auide_hwif;
++	struct auide_hwif *ahwif = &auide_hwif;
+ 	chan_tab_t *ctp;
+ 	au1x_ddma_desc_t *dp;
+ 
+@@ -212,7 +212,7 @@ static void auide_set_dma_mode(ide_drive_t *drive, const u8 speed)
+ static int auide_build_dmatable(ide_drive_t *drive, struct ide_cmd *cmd)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+-	_auide_hwif *ahwif = &auide_hwif;
++	struct auide_hwif *ahwif = &auide_hwif;
+ 	struct scatterlist *sg;
+ 	int i = cmd->sg_nents, count = 0;
+ 	int iswrite = !!(cmd->tf_flags & IDE_TFLAG_WRITE);
+@@ -344,7 +344,7 @@ static const struct ide_dma_ops au1xxx_dma_ops = {
+ 
+ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ {
+-	_auide_hwif *auide = &auide_hwif;
++	struct auide_hwif *auide = &auide_hwif;
+ 	dbdev_tab_t source_dev_tab, target_dev_tab;
+ 	u32 dev_id, tsize, devwidth, flags;
+ 
+@@ -404,7 +404,7 @@ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ #else
+ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ {
+-	_auide_hwif *auide = &auide_hwif;
++	struct auide_hwif *auide = &auide_hwif;
+ 	dbdev_tab_t source_dev_tab;
+ 	int flags;
+ 
+@@ -449,17 +449,18 @@ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ }
+ #endif
+ 
+-static void auide_setup_ports(struct ide_hw *hw, _auide_hwif *ahwif)
++static void auide_setup_ports(struct ide_hw *hw, struct auide_hwif *ahwif)
+ {
+-	int i;
+ 	unsigned long *ata_regs = hw->io_ports_array;
++	unsigned long regbase = (unsigned long)ahwif->regbase;
++	int i;
+ 
+ 	/* FIXME? */
+ 	for (i = 0; i < 8; i++)
+-		*ata_regs++ = ahwif->regbase + (i << IDE_REG_SHIFT);
++		*ata_regs++ = regbase + (i << IDE_REG_SHIFT);
+ 
+ 	/* set the Alternative Status register */
+-	*ata_regs = ahwif->regbase + (14 << IDE_REG_SHIFT);
++	*ata_regs = regbase + (14 << IDE_REG_SHIFT);
+ }
+ 
+ #ifdef CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA
+@@ -504,7 +505,7 @@ static const struct ide_port_info au1xxx_port_info = {
+ 
+ static int au_ide_probe(struct platform_device *dev)
+ {
+-	_auide_hwif *ahwif = &auide_hwif;
++	struct auide_hwif *ahwif = &auide_hwif;
+ 	struct resource *res;
+ 	struct ide_host *host;
+ 	int ret = 0;
+@@ -516,7 +517,7 @@ static int au_ide_probe(struct platform_device *dev)
+ 	char *mode = "PIO+DDMA(offload)";
+ #endif
+ 
+-	memset(&auide_hwif, 0, sizeof(_auide_hwif));
++	memset(&auide_hwif, 0, sizeof(struct auide_hwif));
+ 	ahwif->irq = platform_get_irq(dev, 0);
+ 
+ 	res = platform_get_resource(dev, IORESOURCE_MEM, 0);
+@@ -538,7 +539,7 @@ static int au_ide_probe(struct platform_device *dev)
+ 		goto out;
+ 	}
+ 
+-	ahwif->regbase = (u32)ioremap(res->start, resource_size(res));
++	ahwif->regbase = ioremap(res->start, resource_size(res));
+ 	if (ahwif->regbase == 0) {
+ 		ret = -ENOMEM;
+ 		goto out;
+@@ -567,11 +568,11 @@ static int au_ide_remove(struct platform_device *dev)
+ {
+ 	struct resource *res;
+ 	struct ide_host *host = platform_get_drvdata(dev);
+-	_auide_hwif *ahwif = &auide_hwif;
++	struct auide_hwif *ahwif = &auide_hwif;
+ 
+ 	ide_host_remove(host);
+ 
+-	iounmap((void *)ahwif->regbase);
++	iounmap(ahwif->regbase);
+ 
+ 	res = platform_get_resource(dev, IORESOURCE_MEM, 0);
+ 	release_mem_region(res->start, resource_size(res)); 
