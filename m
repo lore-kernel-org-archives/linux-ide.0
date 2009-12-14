@@ -1,41 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] add PATA host controller support for Cirrus Logic's EP93xx
- CPUs
-Date: Mon, 14 Dec 2009 17:06:34 -0500
-Message-ID: <4B26B6EA.8050403@garzik.org>
-References: <200911261651.40928.bzolnier@gmail.com> <4B15BAA1.2010408@bluewatersys.com> <200912020206.59659.bzolnier@gmail.com> <4B26B0D6.4080809@bluewatersys.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: SiI3811 PATA->SATA bridge not working on OpenRD-Base
+Date: Tue, 15 Dec 2009 08:07:37 +0900
+Message-ID: <4B26C539.1030202@kernel.org>
+References: <20091113212332.GD1965@twin.sascha.silbe.org> <4B14B2C8.6080002@kernel.org> <20091214195909.GB29549@twin.sascha.silbe.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:53684 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758593AbZLNWGh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 17:06:37 -0500
-In-Reply-To: <4B26B0D6.4080809@bluewatersys.com>
+Received: from hera.kernel.org ([140.211.167.34]:32944 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758736AbZLNXHp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Dec 2009 18:07:45 -0500
+In-Reply-To: <20091214195909.GB29549@twin.sascha.silbe.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ryan Mallon <ryan@bluewatersys.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.montavista.com>, Joao Ramos <joao.ramos@inov.pt>, H Hartley Sweeten <hsweeten@visionengravers.com>
+To: linux-ide@vger.kernel.org, Sascha Silbe <sascha-ml-reply-to-2009-4@silbe.org>, Mark Lord <mlord@pobox.com>
 
-On 12/14/2009 04:40 PM, Ryan Mallon wrote:
-> I have added some of my own debugging. The problem appears to be that
-> __pata_ep93xx_write gets called from probe (via ata_host_activate), but
-> ap->private_data (ata_timing) is still null. The timing private_data is
-> set by pata_ep93xx_set_piomode, but that needs adev->pio_mode set, but I
-> don't know where this happens. I assume the ATA core handles this. Do I
-> need to call pata_ep93xx_set_piomode from pata_ep93xx_probe before
-> ata_host_activate, or should the private_data timing be set to some
-> default in the probe?
+Hello,
 
+cc'ing Mark and quoting whole body.  Mark, sata_mv timing problem.
+Can you please handle this one?
 
-ap->private_data is traditionally initialized in the ->port_start() hook.
+Thanks.
 
-Likely, you should follow other drivers and allocate a useful data 
-structure containing useful default values, which can then be adjusted 
-in other hooks such as ->set_dmamode() or ->set_piomode()
+On 12/15/2009 04:59 AM, Sascha Silbe wrote:
+> On Tue, Dec 01, 2009 at 03:08:08PM +0900, Tejun Heo wrote:
+>> In libata-sff.c there are several places which set AC_ERR_HSM.  They
+>> store the reason why they're setting it using ata_eh_push_desc() but
+>> for EH commands those messages aren't printed out (we probably need to
+>> fix that).  Anyways, can you please conver those to printk's and see
+>> which one is setting HSM error?
+> OK, this got me going, thanks! I couldn't find where AC_ERR_HSM is set,
+> but sata_mv now told me about the IORDY timeout. It seems the IDE<->SATA
+> converter is slower than the internal native SATA HD, but probably (see
+> below) still within spec.
+> 
+> mv_soc_reset_hc_port() sets EDMA_IORDY_TMOUT to the default value of
+> 0xBC which assumes a 150MHz clock. After setting it to 0xFA (which
+> assumes a 200MHz clock) the device works fine (at least with hdparm -tT).
+> 
+> Clock description for the 88F6281 (the SoC on the OpenRD-Base) is
+> incomplete and/or messy in the published documents (Functional
+> Specifications and Hardware Specifications), so I'm not quite sure what
+> the right value is:
+> - Hardware Specifications defines TCLK/Core clock as 200MHz and SATA
+> clock as 150MHz
+> - stock UBoot (i.e. Marvell version) prints 400MHz for "SysClock" and
+> 200MHz for "TClock"
+> - Functional Specifications says eIORdyTimeout is the "number of system
+> cycles", giving 0xBC for "SysClock == 150MHz"
+> 
+> So depending on what exactly the clock source for the IORDY timeout is,
+> the correct value should be one of:
+> - 0x00BC (150MHz, SATA clock from Hardware Specifications; implying the
+> device is too slow so unlikely as it works fine with other hosts)
+> - 0x00FA (200MHz, TCLK from Hardware Specifications)
+> - 0x01F4 (400MHz, SysClock from UBoot)
 
-	Jeff
-
-
-
+-- 
+tejun
