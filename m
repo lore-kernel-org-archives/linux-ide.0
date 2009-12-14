@@ -1,42 +1,61 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14583] SSD system stall, HSM Violation
-Date: Mon, 14 Dec 2009 16:51:23 GMT
-Message-ID: <200912141651.nBEGpNlh000743@demeter.kernel.org>
-References: <bug-14583-11633@http.bugzilla.kernel.org/>
+From: "H Hartley Sweeten" <hartleys@visionengravers.com>
+Subject: RE: [PATCH] au1xxx-ide.c: ioremap() returns a void __iomem *
+Date: Mon, 14 Dec 2009 12:27:29 -0500
+Message-ID: <BD79186B4FD85F4B8E60E381CAEE19090200E9AD@mi8nycmail19.Mi8.com>
+References: <BD79186B4FD85F4B8E60E381CAEE190901FB10C2@mi8nycmail19.Mi8.com><4B241F10.7050706@ru.mvista.com> <20091213.205212.212692978.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44362 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757856AbZLNQvY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 11:51:24 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBEGpNWA000747
-	for <linux-ide@vger.kernel.org>; Mon, 14 Dec 2009 16:51:23 GMT
-In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932248AbZLNR1i@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <20091213.205212.212692978.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>, sshtylyov@ru.mvista.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14583
+On Sunday, December 13, 2009 9:52 PM, David Miller wrote:
+>
+> From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Date: Sun, 13 Dec 2009 01:54:08 +0300
+> 
+>> H Hartley Sweeten wrote:
+>> 
+>>> The ioremap return value is an __iomem *, not an integer.  Update the
+>>> private structure to reflect this.  While here, remove the typedef
+>>> for _auide_hwif and just use struct auide_hwif instead as recommended
+>>> by Documentation/CodingStyle.
+>>>
+>>> auide_setup_ports() still needs to cast the regbase back to an integer
+>>> to correctly setup the io_ports_array.
+>>>
+>>> Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+ ...
+>>>     a) 'arch/mips/include/asm/mach-au1x00/au1xxx_ide.h'
+>>> -     containes : struct _auide_hwif
+>>> +     containes : struct auide_hwif
+>>>   
+>> 
+>>   Contains?
+>> 
+>>   Other than that,
+>> 
+>> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+Oops... Did not notice that spelling error.  Will fix and repost the patch.
 
-Johan Van den Neste <jvdneste@gmail.com> changed:
+> Also, this patch doesn't apply to the current tree, the
+> au_ide_remove() function has been fixed to use
+> resource_size().
+>
+> Please respin your patch, and also incorporate the
+> documentation spelling fix suggested by Sergei (and
+> make sure to keep the alignment of that section of
+> documentation when you do that).
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |jvdneste@gmail.com
+Hmmm.. That patch was also mine.  I waited until it was merged before creating
+this one. It should have accounted for that.  I will recheck the patch to see
+what was missed.
 
-
-
-
---- Comment #32 from Johan Van den Neste <jvdneste@gmail.com>  2009-12-14 16:51:20 ---
-Comment #28 points out that indeed the bug does not show on older distros with
-a new kernel. The devicekit suggestion looks to be spot on, indicated by
-comments 107 and 108 in the ubuntu bug tracker (referenced here in comment
-#24).
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Regards,
+Hartley
