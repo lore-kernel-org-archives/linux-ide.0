@@ -1,56 +1,63 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] au1xxx-ide.c: ioremap() returns a void __iomem *
-Date: Sun, 13 Dec 2009 20:52:12 -0800 (PST)
-Message-ID: <20091213.205212.212692978.davem@davemloft.net>
-References: <BD79186B4FD85F4B8E60E381CAEE190901FB10C2@mi8nycmail19.Mi8.com>
-	<4B241F10.7050706@ru.mvista.com>
+From: Xavier <shiningxc@gmail.com>
+Subject: Re: storage fixup laptop model dependent ?
+Date: Mon, 14 Dec 2009 13:29:25 +0100
+Message-ID: <91752840912140429s22d3aa86jd625e4c6411eb125@mail.gmail.com>
+References: <91752840912030533k18aa5595kbdd6bbf716ce5976@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42491
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756702AbZLNEwM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Dec 2009 23:52:12 -0500
-In-Reply-To: <4B241F10.7050706@ru.mvista.com>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:36307 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757202AbZLNM31 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 07:29:27 -0500
+Received: by fxm5 with SMTP id 5so3443428fxm.28
+        for <linux-ide@vger.kernel.org>; Mon, 14 Dec 2009 04:29:26 -0800 (PST)
+In-Reply-To: <91752840912030533k18aa5595kbdd6bbf716ce5976@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: hartleys@visionengravers.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Kel Modderman <kel@otaku42.de>
 
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Date: Sun, 13 Dec 2009 01:54:08 +0300
+On Thu, Dec 3, 2009 at 2:33 PM, Xavier <shiningxc@gmail.com> wrote:
+> Hello,
+>
+> I have a dell xps m1530 which had a seagate 320 gb (not sure which
+> model exactly).
+> Anyway that disk was working fine except the last part of the disk
+> (~20gb or so) was bad and had many bad sectors.
+> I just stopped to use the bad part of the disk, and I had no problems
+> for almost one year. I finally decided to get it replaced, and got a
+> WDC WD3200BEVT-75ZCT2 instead.
+>
+> I noticed directly that the disk was much more noisy, and also made a
+> lot of annoying click. After a few days, I check load cycle count,
+> which is pretty huge :
+> =A09 Power_On_Hours =A0 =A0 =A0 =A0 =A00x0032 =A0 100 =A0 100 =A0 000=
+ =A0 =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 36
+> 193 Load_Cycle_Count =A0 =A0 =A0 =A00x0032 =A0 200 =A0 200 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 2481
+>
+> I noticed this disk, or at least the pattern BEVT appear already 4
+> times in storage-fixup though the 4rd occurence seems to be either a
+> bug or a typo (BEVT vs BEVE) :
+> # Reported drive model: WDC WD1600BEVT-75ZCT0
+> ata model =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WDC WD*BEVT*
+> # Reported drive model: WDC WD3200BEVT-22ZCT0
+> ata model =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WDC WD*BEVT*
+> # Reported drive model: WDC WD1600BEVT-22ZCT0
+> ata model =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WDC WD*BEVT*
+> # Reported drive model: WDC WD3200BEVT-22ZCT0
+> ata model =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WDC WD*BEVE*
+>
+> I am just wondering : does it really matter in which laptop that disk
+> is used ? As laptop disk can be changed/replaced easily, this also
+> sounds strange to me, but there might be a good reason I am missing :=
+)
+>
 
-> H Hartley Sweeten wrote:
-> 
->> The ioremap return value is an __iomem *, not an integer.  Update the
->> private structure to reflect this.  While here, remove the typedef
->> for _auide_hwif and just use struct auide_hwif instead as recommended
->> by Documentation/CodingStyle.
->>
->> auide_setup_ports() still needs to cast the regbase back to an integer
->> to correctly setup the io_ports_array.
->>
->> Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
- ...
->>     a) 'arch/mips/include/asm/mach-au1x00/au1xxx_ide.h'
->> -     containes : struct _auide_hwif
->> +     containes : struct auide_hwif
->>   
-> 
->   Contains?
-> 
->   Other than that,
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-Also, this patch doesn't apply to the current tree, the
-au_ide_remove() function has been fixed to use
-resource_size().
-
-Please respin your patch, and also incorporate the
-documentation spelling fix suggested by Sergei (and
-make sure to keep the alignment of that section of
-documentation when you do that).
-
-Thanks.
+Was it the right place for this information ?
+I added the two people who committed to storage-fixup git, just in case=
+=2E
