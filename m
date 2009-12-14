@@ -1,39 +1,46 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: New equivalent of old ide2= kernel parameter?
-Date: Mon, 14 Dec 2009 16:05:15 +0100
-Message-ID: <10f740e80912140705k206018e5kbacdfb9c299853be@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: New equivalent of old ide2= kernel parameter?
+Date: Mon, 14 Dec 2009 16:17:30 +0000
+Message-ID: <20091214161730.0857e17e@lxorguk.ukuu.org.uk>
+References: <10f740e80912140705k206018e5kbacdfb9c299853be@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:64735 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757480AbZLNPFR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 10:05:17 -0500
-Received: by ewy19 with SMTP id 19so3471824ewy.21
-        for <linux-ide@vger.kernel.org>; Mon, 14 Dec 2009 07:05:15 -0800 (PST)
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33227 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757691AbZLNQQm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 11:16:42 -0500
+In-Reply-To: <10f740e80912140705k206018e5kbacdfb9c299853be@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-ide@vger.kernel.org
 
-I'm trying to boot from an XUbuntu 9.10 CD on an old Sony VAIO Z600.
-The special thing about this laptop is that the CD-ROM drive is actually a
-drive connected to a PCMCIA card.
+On Mon, 14 Dec 2009 16:05:15 +0100
+Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 
-With the old ide subsystem, you had to pass `ide2=0x180,0x386' on the
-kernel command line to make install CDs find the CD-ROM drive. Recent
-distros use the new ata subsystem, hence this doesn't work anymore.
+> I'm trying to boot from an XUbuntu 9.10 CD on an old Sony VAIO Z600.
+> The special thing about this laptop is that the CD-ROM drive is actually a
+> drive connected to a PCMCIA card.
 
-Does there exist an equivalent for the new ata subsystem?
+Nothing special about that.
 
-Thanks in advance!
+> With the old ide subsystem, you had to pass `ide2=0x180,0x386' on the
+> kernel command line to make install CDs find the CD-ROM drive. Recent
+> distros use the new ata subsystem, hence this doesn't work anymore.
+> 
+> Does there exist an equivalent for the new ata subsystem?
 
-Gr{oetje,eeting}s,
+With both the recent old and the current libata your pcmcia or cardbus
+subsystem as appropriate should discover the device. ide=a,b,c won't
+actually work because the kernel pcmica subsystem will re-init the port
+from the BIOS whacky setup to normal PCMCIA/Cardbus.
 
-						Geert
+Not tried this on the Z600 but it is true for several others.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+If it doesn't work on the Z600 get more some dmi strings, lspci dumps and
+verify what the pcmcia layer does and we can make it automatic as it
+should be.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Alan
