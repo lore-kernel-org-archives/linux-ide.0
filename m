@@ -1,26 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Bug 14583] SSD system stall, HSM Violation
-Date: Tue, 15 Dec 2009 15:37:59 +0100
-Message-ID: <200912151537.59646.bzolnier@gmail.com>
-References: <bug-14583-11633@http.bugzilla.kernel.org/> <200912150058.nBF0w8WR022101@demeter.kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Tue, 15 Dec 2009 14:39:37 GMT
+Message-ID: <200912151439.nBFEdbY9007818@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:34676 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530AbZLOOje (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2009 09:39:34 -0500
-Received: by ewy6 with SMTP id 6so18509ewy.29
-        for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 06:39:32 -0800 (PST)
-In-Reply-To: <200912150058.nBF0w8WR022101@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:50214 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446AbZLOOjh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2009 09:39:37 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBFEdbIJ007819
+	for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 14:39:37 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tuesday 15 December 2009 01:58:08 am bugzilla-daemon@bugzilla.kernel.org wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=14583
+
+
+
+
+
+--- Comment #38 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-12-15 14:39:35 ---
+On Tuesday 15 December 2009 01:58:08 am bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=14583
 > 
 > 
@@ -52,3 +58,8 @@ Sharing low-level code base with smartmontools will be great as it is not
 Linux-only thing (which in this case helps a lot with additional testing
 and verification on other platforms) and actually has a people with a lot
 of needed ATA background/experience behind the project.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
