@@ -1,54 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14583] SSD system stall, HSM Violation
-Date: Tue, 15 Dec 2009 11:27:53 GMT
-Message-ID: <200912151127.nBFBRrYT010882@demeter.kernel.org>
-References: <bug-14583-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [Bug 14583] SSD system stall, HSM Violation
+Date: Tue, 15 Dec 2009 15:37:59 +0100
+Message-ID: <200912151537.59646.bzolnier@gmail.com>
+References: <bug-14583-11633@http.bugzilla.kernel.org/> <200912150058.nBF0w8WR022101@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:42442 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759936AbZLOL1y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2009 06:27:54 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBFBRrIn010883
-	for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 11:27:53 GMT
-In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:34676 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbZLOOje (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2009 09:39:34 -0500
+Received: by ewy6 with SMTP id 6so18509ewy.29
+        for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 06:39:32 -0800 (PST)
+In-Reply-To: <200912150058.nBF0w8WR022101@demeter.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D14583
+On Tuesday 15 December 2009 01:58:08 am bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=14583
+> 
+> 
+> Tejun Heo <tj@kernel.org> changed:
+> 
+>            What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>                  CC|                            |kay.sievers@vrfy.org
+> 
+> 
+> 
+> 
+> --- Comment #36 from Tejun Heo <tj@kernel.org>  2009-12-15 00:58:06 ---
+> cc'ing Kay Sievers as he knows one or two things about how these things are
+> going.  Bartlomiej, yeah, it would have been nice if the code base were shared
+> but well nobody did that and it's good to have desktop integration.  It's
 
+After reading project's homepage it is clear that it was done in order
+for desktop integration.  However I couldn't find any previous discussions
+about the best way to solve the problem on the net and it just seems like
+there wasn't even any attempt of involving smartmontools developers in the
+loop (I didn't look very carefully though).
 
+While this is not a lot of code it is a very sensitive area and bugs
+involving S.M.A.R.T. support (or firmware issues in general) have been
+always real hassle to debug and workaround/fix.
 
-
-
---- Comment #37 from Kay Sievers <kay.sievers@vrfy.org>  2009-12-15 11:=
-27:48 ---
-On Tue, Dec 15, 2009 at 01:58,  <bugzilla-daemon@bugzilla.kernel.org> w=
-rote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D14583
-
-> It's probably *lib*atasmart - it doesn't have anything to do with lib=
-ata. =C2=A0Anyways,
-> deviation from the command sequence used by smartmontools seems to ca=
-use two
-> problems till now.
->
-> * HSM violations on certain firmwares.
->
-> * Spinning up drives in standby mode (smartmontools uses CHK_POWER to=
- check
-> power state before issuing SMART commands).
->
-> If someone is gonna report this to the upstream developer, please inc=
-lude both.
-
-Pinged Lennart with a pointer to this bug. Thanks!
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Sharing low-level code base with smartmontools will be great as it is not
+Linux-only thing (which in this case helps a lot with additional testing
+and verification on other platforms) and actually has a people with a lot
+of needed ATA background/experience behind the project.
