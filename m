@@ -1,26 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Bug 14583] SSD system stall, HSM Violation
-Date: Tue, 15 Dec 2009 01:32:37 +0100
-Message-ID: <200912150132.37671.bzolnier@gmail.com>
-References: <bug-14583-11633@http.bugzilla.kernel.org/> <200912142010.nBEKA0fv005256@demeter.kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Tue, 15 Dec 2009 00:34:22 GMT
+Message-ID: <200912150034.nBF0YMpr019380@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:41790 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbZLOAeT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 19:34:19 -0500
-Received: by ewy19 with SMTP id 19so4034555ewy.21
-        for <linux-ide@vger.kernel.org>; Mon, 14 Dec 2009 16:34:17 -0800 (PST)
-In-Reply-To: <200912142010.nBEKA0fv005256@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:36385 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbZLOAeW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 19:34:22 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBF0YMqY019381
+	for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 00:34:22 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-ide@vger.kernel.org, mzjro@0pointer.net
+To: linux-ide@vger.kernel.org
 
-On Monday 14 December 2009 09:10:00 pm bugzilla-daemon@bugzilla.kernel.org wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=14583
+
+
+
+
+
+--- Comment #35 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-12-15 00:34:20 ---
+On Monday 14 December 2009 09:10:00 pm bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=14583
 > 
 > 
@@ -48,7 +54,7 @@ Slightly off-topic but WTF is this?  NIH smartmontools implementation?
 
 Oh, I see.. 
 
-	http://0pointer.de/blog/projects/being-smart.html
+    http://0pointer.de/blog/projects/being-smart.html
 
 Why, oh, why...  smartmontools were working just fine and could have
 been _easily_ been ported to C from C++ or enhanced into libsmartmon..
@@ -65,3 +71,8 @@ To make things worse Ubuntu is actually shipping it.  What a mess...
 First my audio, now my disks.. :(
 --
 Bartlomiej Zolnierkiewicz
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
