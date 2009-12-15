@@ -1,82 +1,49 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: HDD power up in standby
-Date: Mon, 14 Dec 2009 19:24:04 -0600
-Message-ID: <51f3faa70912141724w3bebca39g7f9853064a245fd5@mail.gmail.com>
-References: <315c01ca7ca7$641ff8c0$0400a8c0@dcccs> <4B26E03E.5050309@gmail.com>
-	 <369401ca7d25$0045b230$0400a8c0@dcccs>
+Subject: Re: BUG null dereference in drivers/ata/sata_mv.c
+Date: Mon, 14 Dec 2009 19:34:49 -0600
+Message-ID: <4B26E7B9.3070103@gmail.com>
+References: <200912142051.34029.strakh@ispras.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:36595 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758944AbZLOBYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 20:24:08 -0500
-In-Reply-To: <369401ca7d25$0045b230$0400a8c0@dcccs>
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:58191 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719AbZLOBex (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 20:34:53 -0500
+In-Reply-To: <200912142051.34029.strakh@ispras.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alexander Strakh <strakh@ispras.ru>
+Cc: Mark Lord <mlord@pobox.com>, linux-ide@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org
 
-2009/12/14 Janos Haar <janos.haar@netcenter.hu>:
-> Hello,
+On 12/14/2009 02:51 PM, Alexander Strakh wrote:
+> 	KERNEL_VERSION: 2.6.32
+> 	SUBJECT: null dereference in function mv_unexpected_intr
+> 	DESCRIBE:
+> 	In ./drivers/ata/sata_mv.c in function mv_port_intr
 >
-> ----- Original Message ----- From: "Robert Hancock" <hancockrwd@gmail.com>
-> To: "Janos Haar" <djani22@netcenter.hu>
-> Cc: <linux-kernel@vger.kernel.org>
-> Sent: Tuesday, December 15, 2009 2:02 AM
-> Subject: Re: HDD power up in standby
+> 1. If ap == NULL in line 2778, then we goto line 2779.
+> 2. In line 2779 function mv_unexpected_intr(ap, 0) is called.
+> 3. In line 2538 null dereference: "ap->link.eh_info"
 >
+> 2773 static void mv_port_intr(struct ata_port *ap, u32 port_cause)
+> 2774 {
+> ...
+> 2778         if (!ap || (ap->flags&  ATA_FLAG_DISABLED)) {
+> 2779                 mv_unexpected_intr(ap, 0);
+> 2780                 return;
+> 2781         }
+> ...
+> 2809 }
 >
->> On 12/14/2009 04:22 AM, Janos Haar wrote:
->>>
->>> Hello list,
->>>
->>> I have posted to the common, because this theme is for more lists (ide,
->>> sata, scsi), i think....
->>>
->>> I know you will not like me guys, but i have one wish.... :-)
->>>
->>> I am building cheap but big storages, and after 12 drive / PC i have
->>> faced
->>> with one problem:
->>> The too much spinup current wich made by the 12-16 drive at the same
->>> time.
->>> In my actual case, in 12V, there is more than 2A / drive for some
->>> seconds.
->>>
->>> I know, in SCSI, there is a jumper for this, and the card can wake up the
->>> drives one by one, but i am using 2TB drives, and in SCSI/SAS this have
->>> horrible price...
->>> I have done some invesrtigation, and found this:
->>> The most of the simple sata drives handles the PUIS mode (by set
->>> features ata command), but unfortunately
->>> only the professional and expensive raid cards supports the wakeing up.
->>> If the cheap cards founds only 0 byte drives, this is not a problem at
->>> all,
->>> because linux usually not use BIOS support fortunately. :-)
->>> But i have found when i have spent a little time in google, and in the
->>> documentation, linux doesn't support PUIS.
->>>
->>> I think this would be great, and (relatively) simple to implement this
->>> feature.
->>> I can imagine in this way:
->>> Wake up from PUIS is disabled by default, but can be enabled by command
->>> line
->>> parameter, or compile time configuration.
->>> The drivers should send the wake up command one by one to the drives,
->>> waits
->>> for RDY DSC, and than scan the drives, and register....
->>>
->>> What do you think?
->>
->> As far as I can see, if the drive reports it's in power-up in standby mode
->> from the identify response, the kernel will send the command to spin up the
->> drive. It might depend on whether parallel scan is enabled for the
->> controller as far as whether they actually spin up one at a time, however.
+> 2536 static void mv_unexpected_intr(struct ata_port *ap, int edma_was_enabled)
+> 2537 {
+> 2538         struct ata_eh_info *ehi =&ap->link.eh_info;
+> ...
+> 2555 }
 >
-> I am working with 2TB Hitachi drive wich is set to PUIS, and reports itself
-> as 0 byte, but existing device (pcb factory alias), but with my promise
-> card, the kernel see only bad geometry and disable the port only. :-(
-> I have missed something?
+> Found by Linux Device Drivers Verification Project (Svace Detector)
 
-Can you post the full boot log?
+I don't think it should be possible for ap to be null at the point the 
+check is made. The null check could likely be removed.
