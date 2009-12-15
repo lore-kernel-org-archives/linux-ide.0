@@ -1,78 +1,75 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14583] SSD system stall, HSM Violation
-Date: Tue, 15 Dec 2009 00:34:22 GMT
-Message-ID: <200912150034.nBF0YMpr019380@demeter.kernel.org>
-References: <bug-14583-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: SiI3811 PATA->SATA bridge not working on OpenRD-Base
+Date: Mon, 14 Dec 2009 19:51:04 -0500
+Message-ID: <4B26DD78.6030509@pobox.com>
+References: <20091113212332.GD1965@twin.sascha.silbe.org>
+ <4B14B2C8.6080002@kernel.org> <20091214195909.GB29549@twin.sascha.silbe.org>
+ <4B26C539.1030202@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36385 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbZLOAeW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 19:34:22 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBF0YMqY019381
-	for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 00:34:22 GMT
-In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
+Received: from a-pb-sasl-quonix.pobox.com ([208.72.237.25]:47638 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755997AbZLOAvM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Dec 2009 19:51:12 -0500
+In-Reply-To: <4B26C539.1030202@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Sascha Silbe <sascha-ml-reply-to-2009-4@silbe.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14583
+There's a patch from Saeed Bishara to address this.
+He's been (re)posting it for a few months now,
+most recently about a week ago.
 
-
-
-
-
---- Comment #35 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2009-12-15 00:34:20 ---
-On Monday 14 December 2009 09:10:00 pm bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=14583
-> 
-> 
-> David Zeuthen <zeuthen@gmail.com> changed:
-> 
->            What    |Removed                     |Added
-> ----------------------------------------------------------------------------
->                  CC|                            |zeuthen@gmail.com
-> 
-> 
-> 
-> 
-> --- Comment #34 from David Zeuthen <zeuthen@gmail.com>  2009-12-14 20:09:58 ---
-> (In reply to comment #33)
-> > I've been tracking a bug we've linked to this on Ubuntu, the most recent
-> > replies received from affected users do indicate that it's the
-> > devkit-disks-probe-ata-smart command that triggers the HSM Violations and death
-> > of their SSD.
-> 
-> This program is a user of libatasmart. You want to look at
-> 
->  http://git.0pointer.de/?p=libatasmart.git;a=summary
-
-Slightly off-topic but WTF is this?  NIH smartmontools implementation?
-
-Oh, I see.. 
-
-    http://0pointer.de/blog/projects/being-smart.html
-
-Why, oh, why...  smartmontools were working just fine and could have
-been _easily_ been ported to C from C++ or enhanced into libsmartmon..
-
-"Please note that I certainly don't plan to replace smartmontools.
- libatasmart will always implement only a subset of S.M.A.R.T. If you
- want the full set of functionality then please refer to smartmontools."
-
-I somehow find it suspicious given how (only some) USB/ATA bridges
-support were added later to *libata*smart project...
-
-To make things worse Ubuntu is actually shipping it.  What a mess...
-
-First my audio, now my disks.. :(
---
-Bartlomiej Zolnierkiewicz
-
+Cheers
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
+
+
+Tejun Heo wrote:
+> Hello,
+> 
+> cc'ing Mark and quoting whole body.  Mark, sata_mv timing problem.
+> Can you please handle this one?
+> 
+> Thanks.
+> 
+> On 12/15/2009 04:59 AM, Sascha Silbe wrote:
+>> On Tue, Dec 01, 2009 at 03:08:08PM +0900, Tejun Heo wrote:
+>>> In libata-sff.c there are several places which set AC_ERR_HSM.  They
+>>> store the reason why they're setting it using ata_eh_push_desc() but
+>>> for EH commands those messages aren't printed out (we probably need to
+>>> fix that).  Anyways, can you please conver those to printk's and see
+>>> which one is setting HSM error?
+>> OK, this got me going, thanks! I couldn't find where AC_ERR_HSM is set,
+>> but sata_mv now told me about the IORDY timeout. It seems the IDE<->SATA
+>> converter is slower than the internal native SATA HD, but probably (see
+>> below) still within spec.
+>>
+>> mv_soc_reset_hc_port() sets EDMA_IORDY_TMOUT to the default value of
+>> 0xBC which assumes a 150MHz clock. After setting it to 0xFA (which
+>> assumes a 200MHz clock) the device works fine (at least with hdparm -tT).
+>>
+>> Clock description for the 88F6281 (the SoC on the OpenRD-Base) is
+>> incomplete and/or messy in the published documents (Functional
+>> Specifications and Hardware Specifications), so I'm not quite sure what
+>> the right value is:
+>> - Hardware Specifications defines TCLK/Core clock as 200MHz and SATA
+>> clock as 150MHz
+>> - stock UBoot (i.e. Marvell version) prints 400MHz for "SysClock" and
+>> 200MHz for "TClock"
+>> - Functional Specifications says eIORdyTimeout is the "number of system
+>> cycles", giving 0xBC for "SysClock == 150MHz"
+>>
+>> So depending on what exactly the clock source for the IORDY timeout is,
+>> the correct value should be one of:
+>> - 0x00BC (150MHz, SATA clock from Hardware Specifications; implying the
+>> device is too slow so unlikely as it works fine with other hosts)
+>> - 0x00FA (200MHz, TCLK from Hardware Specifications)
+>> - 0x01F4 (400MHz, SysClock from UBoot)
+> 
+
