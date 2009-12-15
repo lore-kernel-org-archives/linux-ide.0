@@ -1,41 +1,54 @@
-From: ronnie sahlberg <ronniesahlberg@gmail.com>
-Subject: Re: IOZone: Number of outstanding requests..
-Date: Tue, 15 Dec 2009 20:25:23 +1100
-Message-ID: <c9a3e4540912150125h55dfd311t2515418799df3de8@mail.gmail.com>
-References: <7efa8a7d0912150050v77af4af9x6762ad66e5fbfb75@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14583] SSD system stall, HSM Violation
+Date: Tue, 15 Dec 2009 11:27:53 GMT
+Message-ID: <200912151127.nBFBRrYT010882@demeter.kernel.org>
+References: <bug-14583-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <samba-technical-bounces@lists.samba.org>
-In-Reply-To: <7efa8a7d0912150050v77af4af9x6762ad66e5fbfb75@mail.gmail.com>
-List-Unsubscribe: <https://lists.samba.org/mailman/options/samba-technical>,
-	<mailto:samba-technical-request@lists.samba.org?subject=unsubscribe>
-List-Archive: <http://lists.samba.org/pipermail/samba-technical>
-List-Post: <mailto:samba-technical@lists.samba.org>
-List-Help: <mailto:samba-technical-request@lists.samba.org?subject=help>
-List-Subscribe: <https://lists.samba.org/mailman/listinfo/samba-technical>,
-	<mailto:samba-technical-request@lists.samba.org?subject=subscribe>
-Sender: samba-technical-bounces@lists.samba.org
-Errors-To: samba-technical-bounces@lists.samba.org
-To: Learner Study <learner.study@gmail.com>
-Cc: samba@lists.samba.org, linux-ide@vger.kernel.org, samba-technical@lists.samba.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:42442 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759936AbZLOL1y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2009 06:27:54 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nBFBRrIn010883
+	for <linux-ide@vger.kernel.org>; Tue, 15 Dec 2009 11:27:53 GMT
+In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Have you tried dbench.samba.org ?
-it can generate native smb,nfs,iscsi commands with a great amount of
-control of what is exactly passed on the wire.
-
+http://bugzilla.kernel.org/show_bug.cgi?id=3D14583
 
 
 
-On Tue, Dec 15, 2009 at 7:50 PM, Learner Study <learner.study@gmail.com> wrote:
-> Hello:
+
+
+--- Comment #37 from Kay Sievers <kay.sievers@vrfy.org>  2009-12-15 11:=
+27:48 ---
+On Tue, Dec 15, 2009 at 01:58,  <bugzilla-daemon@bugzilla.kernel.org> w=
+rote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=3D14583
+
+> It's probably *lib*atasmart - it doesn't have anything to do with lib=
+ata. =C2=A0Anyways,
+> deviation from the command sequence used by smartmontools seems to ca=
+use two
+> problems till now.
 >
-> Sorry for asking iozone ques in this mailing list but couldn't find
-> any mailing list on iozone...
+> * HSM violations on certain firmwares.
 >
-> In IOZone, is there a way to configure # of outstanding requests
-> client sends to server side? Something on the lines of IOMeter option
-> "Number of outstanding requests".
+> * Spinning up drives in standby mode (smartmontools uses CHK_POWER to=
+ check
+> power state before issuing SMART commands).
 >
-> Thanks a lot!
->
+> If someone is gonna report this to the upstream developer, please inc=
+lude both.
+
+Pinged Lennart with a pointer to this bug. Thanks!
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
