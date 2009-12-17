@@ -1,75 +1,99 @@
-From: Dan Porat <dan.porat@gmail.com>
-Subject: Re: NCQ high speed data integrity issues
-Date: Thu, 17 Dec 2009 08:49:54 +0200
-Message-ID: <93b143da0912162249q2b439537hb9d18dae00359d38@mail.gmail.com>
-References: <93b143da0912151129obdf3613q558295b320e4db65@mail.gmail.com>
-	 <da824cf30912151247r14c4e29cp6c97421683d82eb2@mail.gmail.com>
+From: Romain Kubany <rkubany@ikoula.com>
+Subject: RE: Possible regression of LBA48 support for piix
+Date: Thu, 17 Dec 2009 11:04:38 +0100
+Message-ID: <A9C151C7BD19EC47976D4AA14CF277A8BC64DFB2C1@HMCEXMBX01CLUS.hmcikoula.com>
+References: <A9C151C7BD19EC47976D4AA14CF277A8BC64DFB2AF@HMCEXMBX01CLUS.hmcikoula.com>
+ <19241.63911.160765.909812@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:34869 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbZLQGtz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Dec 2009 01:49:55 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so805436fgg.1
-        for <linux-ide@vger.kernel.org>; Wed, 16 Dec 2009 22:49:54 -0800 (PST)
-In-Reply-To: <da824cf30912151247r14c4e29cp6c97421683d82eb2@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764300AbZLQKEp@vger.kernel.org>
+In-Reply-To: <19241.63911.160765.909812@pilspetsen.it.uu.se>
+Content-Language: fr-FR
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: linux-ide@vger.kernel.org
 
-Variyng the speed - using usleep.
+Ok, thanks for the prompt reply and the notice for the cc: :)
+I'm using libata and ata_piix now.
+My disk is seen as "sda" and a lshw is reporting the controler as using=
+ "ata_piix" :=20
 
-bpt is a parameter but when used over sd , it seems to be ignored somehow , and
-transfers have variating sizes.
+# lshw -c STORAGE
+  *-ide
+       description: IDE interface
+       product: 82371AB/EB/MB PIIX4 IDE
+       vendor: Intel Corporation
+       physical id: 7.1
+       bus info: pci@0000:00:07.1
+       logical name: scsi0
+       logical name: scsi1
+       version: 01
+       width: 32 bits
+       clock: 33MHz
+       capabilities: ide bus_master emulated
+       configuration: driver=3Data_piix latency=3D0
 
-regarding the data - since the problem is a timing issues or
-synchronization issue , it does not always appear.
-The disk is written with the same character and when read , using
-sgp_dd , sometimes , some data is just different.
+But fdisk always recognize the disk as 136.8Gb :
 
-We know for sure that the data is written correctly as it sometimes
-does succeed to read all successfully.
-No errors are to be seen in kernel level , and definitely not in the
-application side.
+# fdisk -l
 
-We have seen that the more threads there are , the more likely this
-problem to occur.
-Same as the amount of data.
-The bigger the data , the more likely for us to see the problem.
+Disk /dev/sda: 136.8 GB, 136899993600 bytes
+16 heads, 63 sectors/track, 265260 cylinders
+Units =3D cylinders of 1008 * 512 =3D 516096 bytes
+Disk identifier: 0xd7267427
 
-Any suggestion how to investigate ?
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1         204      102815+  83  Linux
+/dev/sda2             205        2236     1024128   82  Linux swap / So=
+laris
+/dev/sda3            2237       20805     9358776   83  Linux
 
+Here is the new kernel config file : http://pastebin.com/f65fd472b
 
-Dan Porat
+-----Message d'origine-----
+De=A0: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-owner@vg=
+er.kernel.org] De la part de Mikael Pettersson
+Envoy=E9=A0: jeudi 17 d=E9cembre 2009 10:28
+=C0=A0: Romain Kubany
+Cc=A0: linux-kernel@vger.kernel.org
+Objet=A0: Re: Possible regression of LBA48 support for piix
 
-On Tue, Dec 15, 2009 at 10:47 PM, Grant Grundler <grundler@google.com> wrote:
->
-> On Tue, Dec 15, 2009 at 11:29 AM, Dan Porat <dan.porat@gmail.com> wrote:
-> > I am running into data integrity issues while running sgp_dd ver 1.20
-> > against any sg device while running 31 threads.
-> > kernel 2.6.28 Ubuntu.
-> > When running it in slow speed (20 MB/s) all runs well.
-> > When pushing it towards the 50MB/s , Data integrity issues appear.
->
-> How are you varying the speed?
->
-> > When running it against sd devices - no integrity issues , but bpt is
-> > not determined and changes .
->
-> Hrm? bpt is a parameter. What do you mean?
->
-> I don't know offhand why sg vs sd would make a difference but it's
-> obviously of interest.
->
-> > Any idea how to fix the sg data integrity issues?
->
-> Can you post Good vs Bad data?
-> Knowing the offset, size, and type of corruption will help narrow down
-> possible sources of corruption.
->
-> Any errors reported by the device driver, memory controller, sg device?
->
-> cheers,
-> grant
+Romain Kubany writes:
+ > Hello,
+ >=20
+ > We are using Microsoft Hyper-V Virtualization technology for some of=
+ our GNU/Linux guests and we recently discovered=20
+ > that the emulated hardware does not seem to support LBA48 adressing =
+on IDE controller.
+ >=20
+ > After some tests, here are the results on a VM with a 200GB virtual =
+disk : disk is detected as 214748MB up to kernel 2.6.27.41 and as 13689=
+9MB in 2.6.28 and up.
+ >=20
+ > The two kernels (2.6.27.41 and 2.6.28) were compiled with approximat=
+ively the same parameters (just an oldconfig between them, I'll paste a=
+ line to their respective config at the end of the mail)
+ > except that many changes occured in IDE management between 2.6.27 an=
+d 2.6.28 series of the kernel so it is possible that the problem is com=
+ing from a misconfiguration on our side (in which case I'll present you=
+ my truthful apologies for making you waste your time).
+ >=20
+ > Here are some useful informations (I think) for start :
+ >=20
+ > [On the "working" kernel, 2.6.27.41 w/ 200GB recognized vdisk]
+ >=20
+ > # hdparm -I /dev/hda
+
+Try using libata and ata_piix instead of the old IDE drivers, but
+be aware that the disk will show up as /dev/sda not /dev/hda.
+
+Also, IDE/ATA-related issues should be cc:d to linux-ide (see MAINTAINE=
+RS).
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
+ in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
