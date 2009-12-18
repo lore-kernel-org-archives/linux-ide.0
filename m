@@ -1,53 +1,49 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: kernel 2.6.31.1 + Sil 3512 + WDC WD5000AAKS-00V1A0 = no NCQ and
- UDMA5 instead of UDMA6
-Date: Thu, 17 Dec 2009 21:49:49 -0600
-Message-ID: <4B2AFBDD.30601@hardwarefreak.com>
-References: <4B2A3D25.9030209@hardwarefreak.com> <4B2A720B.2040809@pobox.com> <4B2AE779.9060109@hardwarefreak.com> <4B2AF2C2.9010708@pobox.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH RFC] ahci: implement handoff quirk
+Date: Thu, 17 Dec 2009 21:54:30 -0600
+Message-ID: <4B2AFCF6.5030602@gmail.com>
+References: <485882FE.1060409@kernel.org> <4B29D0FA.6060805@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:33204 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553AbZLRDtv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Dec 2009 22:49:51 -0500
-In-Reply-To: <4B2AF2C2.9010708@pobox.com>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:61618 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756853AbZLRDyd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Dec 2009 22:54:33 -0500
+Received: by yxe17 with SMTP id 17so2580132yxe.33
+        for <linux-ide@vger.kernel.org>; Thu, 17 Dec 2009 19:54:32 -0800 (PST)
+In-Reply-To: <4B29D0FA.6060805@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Zhao, Richard" <Richard.Zhao@amd.com>, shane.huang@amd.com
 
-Jeff Garzik put forth on 12/17/2009 9:10 PM:
+On 12/17/2009 12:34 AM, Jeff Garzik wrote:
+> On 06/17/2008 11:37 PM, Tejun Heo wrote:
+>> ahci 1.2 has an exciting! new feature called BIOS/OS handoff which
+>> basically is there to allow BIOS to keep tinkering with the controller
+>> even after OS starts executing. I have no idea what this is useful
+>> for but it's there and we need to do it.
+>>
+>> This patch implements the handoff as FIXUP_HEADER as the controller
+>> needs to be claimed before the OS changes any configuration including
+>> IRQ routing.
+>>
+>> I'm yet to see any controller which actually requires this, so it's
+>> not for inclusion yet. Maybe keep this in a separate branch?
+>>
+>> RFC, DON'T COMMIT
+>> ---
+>> drivers/pci/quirks.c | 109
+>> +++++++++++++++++++++++++++++++++++++++++++++++++++
+>> 1 file changed, 109 insertions(+)
+>
+> Looking through old emails... did AMD ever confirm the usefulness of
+> this patch? Is it actually needed in the field? I'm guessing the silence
+> implies "No"... :)
 
-> Nope.  You are pretty much maxing out the drive, of whatever drive you
-> plug in.  The sata bus -- at its hardware spec'd maximum -- is far
-> faster than just about any drive, and the PCI bus is far faster than the
-> sata bus.
-
-I'm on the old 32bit/33MHz PCI bus of 133MB/s.  SATA1 at 150MB/s is
-slightly faster, no?  No argument here that both are far faster than
-almost all drives on the market.  I was just wondering if bumping up
-from the default UDMA/100 to UDMA/133 would allow quicker PCI bus
-bursting and thus a slight improvement in overall performance.
-
-> You could probably max out the SATA bus with a RAM-based SATA device;
-> that's it.
-
-Yeah, I've seen some results published of quality SSDs and they just
-absolutely scream in latency, IOPs, and throughput.  That's not in my
-future, it's complete overkill for my applications, performance and
-dollar wise.  I just want to optimize the performance of what I already
-have.
-
-I think I only gave $15 for this Koutech Sil3512 PCI (32/33) controller
-at Newegg.  You being you with the knowledge you have, would buying one
-of the cards whose chipset supports NCQ, such as the sata_sil24 cards,
-be anything close to worth the additional investment in dollars and time
-spent swapping hardware and drivers?  Is NCQ the performance panacea
-that some purport it to be?  How much difference does it really make?
-
-Thanks again for your time and advice Jeff.
-
---
-Stan
+Well, we only implemented the feature bit displaying for the BOH 
+"capability" recently, so I guess we wouldn't likely have seen it if 
+something did advertise it. However, it's true I don't know why any sane 
+BIOS would want to do this. Can't hurt to have the support, however..
