@@ -1,69 +1,97 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: pata_cmd64x broken in 2.6.33-rc1 on sparc64
-Date: Sat, 19 Dec 2009 17:33:16 -0500
-Message-ID: <4B2D54AC.3080509@garzik.org>
-References: <alpine.SOC.1.00.0912200017540.17801@math.ut.ee>
+From: Mike Cui <cuicui@gmail.com>
+Subject: Re: 2.6.32 seemed to have broken nVidia MCP7A sata controller
+Date: Sat, 19 Dec 2009 14:37:12 -0800
+Message-ID: <7c8826910912191437k4e1d93bap12874a6d6e0046d3@mail.gmail.com>
+References: <7c8826910912182213o2e0e8af7ic305f150c52e0618@mail.gmail.com>
+	 <4B2C80DD.9080005@garzik.org> <4B2D1CF3.4070106@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:56913 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753828AbZLSWdT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Dec 2009 17:33:19 -0500
-In-Reply-To: <alpine.SOC.1.00.0912200017540.17801@math.ut.ee>
+Received: from fg-out-1718.google.com ([72.14.220.152]:46800 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbZLSWhO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Dec 2009 17:37:14 -0500
+In-Reply-To: <4B2D1CF3.4070106@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 12/19/2009 05:23 PM, Meelis Roos wrote:
-> This running on Sun Ultra 5 with CMD646 onboard ide.
+Thanks, changing that one line fixed it. I can try to find an intel
+motherboard sometime next week to see if it's the drive or the
+controller.
+
+On Sat, Dec 19, 2009 at 10:35 AM, Robert Hancock <hancockrwd@gmail.com>=
+ wrote:
+> On 12/19/2009 01:29 AM, Jeff Garzik wrote:
+>>
+>> On 12/19/2009 01:13 AM, Mike Cui wrote:
+>>>
+>>> I have an nVidia MCP7A AHCI controller. I upgraded to 2.6.32.2 and =
+my
+>>> system deterministically freezes trying to mount file systems. Once=
+ in
+>>> a while it will come back and finish booting after freezing for 1
+>>> minute or 2. dmesg indicates that there were NCQ errors, but 2.6.31
+>>> anb before has always worked flawlessly for me. What changed in
+>>> 2.6.32? I will be more than happy to help track down this issue.
+>>
+>>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+>>> ata1.00: cmd 61/08:00:4f:ad:03/00:00:00:00:00/40 tag 0 ncq 4096 out
+>>> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1: hard resetting link
+>>> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> ata1.00: configured for UDMA/133
+>>> ata1.00: device reported invalid CHS sector 0
+>>
+>> Looks like things are timing out, and then go downhill from there. T=
+his
+>> explanation of timeout gives some hints on possible causes:
+>> http://ata.wiki.kernel.org/index.php/Libata_error_messages#Error_cla=
+sses
+>>
+>> The ideal would be if you could bisect between 2.6.31 and 2.6.32, to=
+ see
+>> if it's a software change that is the cause.
+>>
+>> Looking at drivers/ata/ahci.c history, the only thing that -might- c=
+ause
+>> problems is 388539f3ff0cf1de926b03f94e1eec112358f74d ('git show $com=
+mit'
+>> for full commit info and diff).
 >
-> scsi0 : pata_cmd64x
-> scsi1 : pata_cmd64x
-> ata1: PATA max MWDMA2 cmd 0x1fe02c00000 ctl 0x1fe02c00008 bmdma 0x1fe02c00020 irq 14
-> ata2: PATA max MWDMA2 cmd 0x1fe02c00010 ctl 0x1fe02c00018 bmdma 0x1fe02c00028 irq 14
-> pata_cmd64x: active 10 recovery 10 setup 3.
-> pata_cmd64x: active 10 recovery 10 setup 3.
-> PCI: Enabling device: (0000:01:01.1), cmd 2
-> sunhme.c:v3.10 August 26, 2008 David S. Miller (davem@davemloft.net)
-> eth0: HAPPY MEAL (PCI/CheerIO) 10/100BaseT Ethernet 08:00:20:f8:c7:72
-> mice: PS/2 mouse device common for all mice
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/pata_cmd64x.c:268 cmd64x_bmdma_stop+0x3c/0x60()
-> Modules linked in:
-> Call Trace:
->   [000000000064987c] cmd64x_bmdma_stop+0x3c/0x60
->   [0000000000644610] ata_sff_post_internal_cmd+0x30/0x60
->   [0000000000635910] ata_exec_internal_sg+0x310/0x4e0
->   [0000000000635b30] ata_exec_internal+0x50/0x80
->   [0000000000635ddc] ata_do_dev_read_id+0x1c/0x40
->   [0000000000635fb0] ata_dev_read_id+0x1b0/0x5c0
->   [00000000006423a8] ata_eh_recover+0x5c8/0x1280
->   [0000000000643288] ata_do_eh+0x28/0xa0
->   [0000000000643e94] ata_scsi_error+0x374/0x600
->   [00000000006221ec] scsi_error_handler+0xcc/0x460
->   [000000000046fdc0] kthread+0x60/0x80
->   [000000000042b4b0] kernel_thread+0x30/0x60
->   [000000000046fd1c] kthreadd+0x9c/0xe0
-> ---[ end trace 61a1d617a7f4a94d ]---
-
-
-linux-ide CC added.
-
-Does backing out the following commit fix things?
-
-	commit d43744390e460dce6626fb8de2c02a24ff650005
-	Author: Alan Cox <alan@linux.intel.com>
-	Date:   Mon Nov 30 13:22:54 2009 +0000
-
-	    pata_cmd64x: implement serialization as per notes
-
-Although quite unlikely, commit f0353813afe784330622596ff141e7525ccd99de 
-may also change things.  Try backing that out, if backing out the first 
-commit (d43744...) fails to improve behavior.
-
-	Jeff
-
-
+> I suspect that as well (it's the commit that adds FPDMA auto-activate=
+ on DMA
+> setup FIS support). Your drive indicates it's supported but it's poss=
+ible
+> it's broken on that drive or the controller. If the drive doesn't set=
+ the
+> activate bit in the DMA setup FIS properly or the controller doesn't =
+respect
+> it, then FPDMA requests will stall.
+>
+> Mike, can you try and revert that patch, or else just change this lin=
+e in
+> drivers/ata/ahci.c:
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pi.flags |=3D =
+ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
+>
+> to
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pi.flags |=3D =
+ATA_FLAG_NCQ;
+>
+> and rebuild and see if it works better?
+>
+> I tend to suspect the controller is the problem (I've got WD drives t=
+hat
+> work fine with AA on Intel AHCI, though it could be model-specific). =
+I guess
+> the only way to verify for sure which one it is would be if someone e=
+lse had
+> that particular drive model on a different AHCI controller and could =
+verify
+> if it worked with 2.6.32+ or not.
+>
