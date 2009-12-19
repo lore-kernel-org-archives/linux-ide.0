@@ -1,69 +1,43 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: 2.6.32 seemed to have broken nVidia MCP7A sata controller
-Date: Sat, 19 Dec 2009 12:35:31 -0600
-Message-ID: <4B2D1CF3.4070106@gmail.com>
-References: <7c8826910912182213o2e0e8af7ic305f150c52e0618@mail.gmail.com> <4B2C80DD.9080005@garzik.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata updates
+Date: Sat, 19 Dec 2009 11:05:48 -0800 (PST)
+Message-ID: <alpine.LFD.2.00.0912191102320.3712@localhost.localdomain>
+References: <20091219181350.GA21058@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:54130 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbZLSSfd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Dec 2009 13:35:33 -0500
-In-Reply-To: <4B2C80DD.9080005@garzik.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33476 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751973AbZLSTGA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Dec 2009 14:06:00 -0500
+In-Reply-To: <20091219181350.GA21058@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Mike Cui <cuicui@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 12/19/2009 01:29 AM, Jeff Garzik wrote:
-> On 12/19/2009 01:13 AM, Mike Cui wrote:
->> I have an nVidia MCP7A AHCI controller. I upgraded to 2.6.32.2 and my
->> system deterministically freezes trying to mount file systems. Once in
->> a while it will come back and finish booting after freezing for 1
->> minute or 2. dmesg indicates that there were NCQ errors, but 2.6.31
->> anb before has always worked flawlessly for me. What changed in
->> 2.6.32? I will be more than happy to help track down this issue.
->
->> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
->> ata1.00: cmd 61/08:00:4f:ad:03/00:00:00:00:00/40 tag 0 ncq 4096 out
->> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->> ata1: hard resetting link
->> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> ata1.00: configured for UDMA/133
->> ata1.00: device reported invalid CHS sector 0
->
-> Looks like things are timing out, and then go downhill from there. This
-> explanation of timeout gives some hints on possible causes:
-> http://ata.wiki.kernel.org/index.php/Libata_error_messages#Error_classes
->
-> The ideal would be if you could bisect between 2.6.31 and 2.6.32, to see
-> if it's a software change that is the cause.
->
-> Looking at drivers/ata/ahci.c history, the only thing that -might- cause
-> problems is 388539f3ff0cf1de926b03f94e1eec112358f74d ('git show $commit'
-> for full commit info and diff).
 
-I suspect that as well (it's the commit that adds FPDMA auto-activate on 
-DMA setup FIS support). Your drive indicates it's supported but it's 
-possible it's broken on that drive or the controller. If the drive 
-doesn't set the activate bit in the DMA setup FIS properly or the 
-controller doesn't respect it, then FPDMA requests will stall.
 
-Mike, can you try and revert that patch, or else just change this line 
-in drivers/ata/ahci.c:
+On Sat, 19 Dec 2009, Jeff Garzik wrote:
+> 
+> to receive the following updates:
+> 
+>  drivers/ata/libata-scsi.c    |    2 +-
+>  drivers/ata/libata-sff.c     |    2 +-
+>  drivers/ata/pata_hpt3x2n.c   |   64 ++++++++++---------
+>  drivers/ata/pata_octeon_cf.c |    2 +-
+>  drivers/ata/sata_mv.c        |  144 ++++++++++++++++++++++++++++++++++++------
+>  5 files changed, 163 insertions(+), 51 deletions(-)
+>  mode change 100644 => 100755 drivers/ata/sata_mv.c
 
-		pi.flags |= ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
+WTF is that mode change?
 
-to
+It's introduced by commit 6481f2b52cd5411ea6342b749daf0e4f3b390d7b: 
+"sata_mv: add power management support for the platform driver", and it's 
+totally nonsensical.
 
-		pi.flags |= ATA_FLAG_NCQ;
+I fixed that crazy stuff when merging, but you should look at your own 
+summaries a bit, and should have noticed that it was crazy. That file 
+isn't an executable.
 
-and rebuild and see if it works better?
-
-I tend to suspect the controller is the problem (I've got WD drives that 
-work fine with AA on Intel AHCI, though it could be model-specific). I 
-guess the only way to verify for sure which one it is would be if 
-someone else had that particular drive model on a different AHCI 
-controller and could verify if it worked with 2.6.32+ or not.
+			Linus
