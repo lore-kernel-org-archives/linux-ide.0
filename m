@@ -1,51 +1,121 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cmd64x: fix overclocking of UDMA0-2 modes
-Date: Sun, 20 Dec 2009 19:22:33 +0100
-Message-ID: <200912201922.33210.bzolnier@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: old Plextor CD Writer PX-W1210A is not recognized
+Date: Sun, 20 Dec 2009 13:26:25 -0600
+Message-ID: <4B2E7A61.7080000@gmail.com>
+References: <20091220123215.2ae100e7@x2.grafnetz>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:52738 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbZLTS1q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Dec 2009 13:27:46 -0500
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:48405 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754526AbZLTT02 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Dec 2009 14:26:28 -0500
+Received: by iwn1 with SMTP id 1so3247161iwn.33
+        for <linux-ide@vger.kernel.org>; Sun, 20 Dec 2009 11:26:27 -0800 (PST)
+In-Reply-To: <20091220123215.2ae100e7@x2.grafnetz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, stable@kernel.org
+To: Mario Bachmann <grafgrimm77@gmx.de>
+Cc: linux-ide@vger.kernel.org
 
+On 12/20/2009 05:32 AM, Mario Bachmann wrote:
+> Hello,
+>
+> my old PLEXTOR CD-R PX-W1210A, FwRev=1.09 is not recognized any more in Linux 2.6.31.4.
+>
+> In my old Rescue-Linux on the same machine with Linux 2.6.25.14 the CD-Writer is recognized and it works.
+>
+> To give you some Information about the Plextor-CD-Burner, I booted my old 2.6.25.14-Linux:
+>
+> # uname -a
+> Linux amd2000 2.6.25.14 #1 Fri Aug 1 23:55:59 CEST 2008 i686 AMD Athlon(tm) XP 2000+ AuthenticAMD GNU/Linux
+>
+> # hdparm -Ii /dev/hdc
+> /dev/hdc:
+>
+>   Model=PLEXTOR CD-R PX-W1210A, FwRev=1.09, SerialNo=
+>   Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
+>   RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
+>   BuffType=unknown, BuffSize=0kB, MaxMultSect=0
+>   (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
+>   IORDY=on/off, tPIO={min:180,w/IORDY:120}, tDMA={min:120,rec:120}
+>   PIO modes:  pio0 pio1 pio2 pio3 pio4
+>   DMA modes:  sdma0 sdma1 sdma2 mdma0 mdma1 *mdma2
+>   AdvancedPM=no
+>
+>   * signifies the current active mode
+>
+> # ls /dev/hd*
+> /dev/hda
+> /dev/hda1
+> /dev/hda10
+> /dev/hda11
+> /dev/hda2
+> /dev/hda3
+> /dev/hda4
+> /dev/hda5
+> /dev/hda6
+> /dev/hda7
+> /dev/hda8
+> /dev/hda9
+> /dev/hdb
+> /dev/hdb1
+> /dev/hdc
+>
+> # dmesg|grep -e hda -e hdb -e hdc -e hdd
+>      ide0: BM-DMA at 0xff00-0xff07, BIOS settings: hda:DMA, hdb:DMA
+>      ide1: BM-DMA at 0xff08-0xff0f, BIOS settings: hdc:DMA, hdd:DMA
+> hda: SAMSUNG SP1614N, ATA DISK drive
+> hdb: SAMSUNG SP1614N, ATA DISK drive
+> hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> hda: UDMA/100 mode selected
+> hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> hdb: UDMA/100 mode selected
+> hdc: PLEXTOR CD-R PX-W1210A, ATAPI CD/DVD-ROM drive
+> hdc: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> hdc: MWDMA2 mode selected
+> hda: max request size: 512KiB
+> hda: 312581808 sectors (160041 MB) w/8192KiB Cache, CHS=19457/255/63
+> hda: cache flushes supported
+>   hda: hda1 hda2 hda3 hda4<  hda5 hda6 hda7 hda8 hda9 hda10 hda11>
+> hdb: max request size: 512KiB
+> hdb: Host Protected Area detected.
+> hdb: Host Protected Area disabled.
+> hdb: 312581808 sectors (160041 MB) w/8192KiB Cache, CHS=19457/255/63
+> hdb: cache flushes supported
+>   hdb: hdb1
+> hdc: ATAPI 32X CD-ROM CD-R/RW drive, 2048kB Cache
+> XFS mounting filesystem hda9
+> Ending clean XFS mount for filesystem: hda9
+> XFS mounting filesystem hda6
+> Ending clean XFS mount for filesystem: hda6
+> XFS mounting filesystem hda8
+> Ending clean XFS mount for filesystem: hda8
+> Adding 1199992k swap on /dev/hda10.  Priority:1 extents:1 across:1199992k
+>
+> # dmesg |grep ide
+> BIOS-provided physical RAM map:
+> ACPI: IRQ0 used by override.
+> ACPI: IRQ2 used by override.
+> ACPI: IRQ9 used by override.
+> Kernel command line: BOOT_IMAGE=Rescue ro root=309 video=vesafb:ywrap,mtrr agp=off max_loop=16
+> pci 0000:01:00.0: Boot video device
+> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+>      ide0: BM-DMA at 0xff00-0xff07, BIOS settings: hda:DMA, hdb:DMA
+>      ide1: BM-DMA at 0xff08-0xff0f, BIOS settings: hdc:DMA, hdd:DMA
+> Probing IDE interface ide0...
+> Probing IDE interface ide1...
+> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> ide1 at 0x170-0x177,0x376 on irq 15
+>
+> The difference between my old 2.6.25.14-Linux and the newer 2.6.31.4-Linux is mainly the actuality of the updates (and the kernel).
+> I configured the kernel by my own and the changes were made with "make oldconfig" and answer the questions.
+>
+> Can You please tell me if/why the Plextor do not work any more. Or better: Give me instructions to get it working again in newer versions of Linux Kernel.
 
-adev->dma_mode stores the transfer mode value not UDMA mode number
-so the condition in cmd64x_set_dmamode() is always true and the higher
-UDMA clock is always selected.  This can potentially result in data
-corruption when UDMA33 device is used, when 40-wire cable is used or
-when the error recovery code decides to lower the device speed down.
-
-The issue was introduced in the commit 6a40da0 ("libata cmd64x: whack
-into a shape that looks like the documentation") which goes back to
-kernel 2.6.20.
-
-Cc: stable@kernel.org
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-it is patch #116 in my local working queue but I thought it would
-be nice to get it upstream ahead of other patches..
-
- drivers/ata/pata_cmd64x.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: b/drivers/ata/pata_cmd64x.c
-===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -254,7 +254,7 @@ static void cmd64x_set_dmamode(struct at
- 		regU |= udma_data[adev->dma_mode - XFER_UDMA_0] << shift;
- 		/* Merge the control bits */
- 		regU |= 1 << adev->devno; /* UDMA on */
--		if (adev->dma_mode > 2)	/* 15nS timing */
-+		if (adev->dma_mode > XFER_UDMA_2) /* 15nS timing */
- 			regU |= 4 << adev->devno;
- 	} else {
- 		regU &= ~ (1 << adev->devno);	/* UDMA off */
+It's difficult to say without seeing the dmesg output from the newer 
+kernel. However, from the output you posted above it seems that you may 
+not have any hardware-specific IDE driver enabled in your kernel 
+configuration and it's using a generic driver. I believe this mode isn't 
+supported anymore, at least not by default.
