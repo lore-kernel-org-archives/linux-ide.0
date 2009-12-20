@@ -1,69 +1,119 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: pata_cmd64x broken in 2.6.33-rc1 on sparc64
-Date: Sun, 20 Dec 2009 02:38:40 +0100
-Message-ID: <19245.32800.949699.409703@pilspetsen.it.uu.se>
-References: <alpine.SOC.1.00.0912200017540.17801@math.ut.ee>
-	<4B2D54AC.3080509@garzik.org>
+From: Mario Bachmann <grafgrimm77@gmx.de>
+Subject: old Plextor CD Writer PX-W1210A is not recognized
+Date: Sun, 20 Dec 2009 12:32:15 +0100
+Message-ID: <20091220123215.2ae100e7@x2.grafnetz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fanny.its.uu.se ([130.238.4.241]:56288 "EHLO fanny.its.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754773AbZLTBiw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Dec 2009 20:38:52 -0500
-In-Reply-To: <4B2D54AC.3080509@garzik.org>
+Received: from mail.gmx.net ([213.165.64.20]:43190 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752947AbZLTLcd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Dec 2009 06:32:33 -0500
+Received: from x2.grafnetz ([192.168.0.4])
+	by duron.grafnetz with esmtps (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
+	(Exim 4.71)
+	(envelope-from <grafgrimm77@gmx.de>)
+	id 1NMK1I-0001S9-Ew
+	for linux-ide@vger.kernel.org; Sun, 20 Dec 2009 12:32:30 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Meelis Roos <mroos@linux.ee>, Linux Kernel list <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik writes:
- > On 12/19/2009 05:23 PM, Meelis Roos wrote:
- > > This running on Sun Ultra 5 with CMD646 onboard ide.
- > >
- > > scsi0 : pata_cmd64x
- > > scsi1 : pata_cmd64x
- > > ata1: PATA max MWDMA2 cmd 0x1fe02c00000 ctl 0x1fe02c00008 bmdma 0x1fe02c00020 irq 14
- > > ata2: PATA max MWDMA2 cmd 0x1fe02c00010 ctl 0x1fe02c00018 bmdma 0x1fe02c00028 irq 14
- > > pata_cmd64x: active 10 recovery 10 setup 3.
- > > pata_cmd64x: active 10 recovery 10 setup 3.
- > > PCI: Enabling device: (0000:01:01.1), cmd 2
- > > sunhme.c:v3.10 August 26, 2008 David S. Miller (davem@davemloft.net)
- > > eth0: HAPPY MEAL (PCI/CheerIO) 10/100BaseT Ethernet 08:00:20:f8:c7:72
- > > mice: PS/2 mouse device common for all mice
- > > ------------[ cut here ]------------
- > > WARNING: at drivers/ata/pata_cmd64x.c:268 cmd64x_bmdma_stop+0x3c/0x60()
- > > Modules linked in:
- > > Call Trace:
- > >   [000000000064987c] cmd64x_bmdma_stop+0x3c/0x60
- > >   [0000000000644610] ata_sff_post_internal_cmd+0x30/0x60
- > >   [0000000000635910] ata_exec_internal_sg+0x310/0x4e0
- > >   [0000000000635b30] ata_exec_internal+0x50/0x80
- > >   [0000000000635ddc] ata_do_dev_read_id+0x1c/0x40
- > >   [0000000000635fb0] ata_dev_read_id+0x1b0/0x5c0
- > >   [00000000006423a8] ata_eh_recover+0x5c8/0x1280
- > >   [0000000000643288] ata_do_eh+0x28/0xa0
- > >   [0000000000643e94] ata_scsi_error+0x374/0x600
- > >   [00000000006221ec] scsi_error_handler+0xcc/0x460
- > >   [000000000046fdc0] kthread+0x60/0x80
- > >   [000000000042b4b0] kernel_thread+0x30/0x60
- > >   [000000000046fd1c] kthreadd+0x9c/0xe0
- > > ---[ end trace 61a1d617a7f4a94d ]---
- > 
- > 
- > linux-ide CC added.
- > 
- > Does backing out the following commit fix things?
- > 
- > 	commit d43744390e460dce6626fb8de2c02a24ff650005
- > 	Author: Alan Cox <alan@linux.intel.com>
- > 	Date:   Mon Nov 30 13:22:54 2009 +0000
- > 
- > 	    pata_cmd64x: implement serialization as per notes
- > 
- > Although quite unlikely, commit f0353813afe784330622596ff141e7525ccd99de 
+Hello, 
 
-My SPARC Ultra5 boots 2.6.32 Ok but hangs during boot of 2.6.33-rc1.
-Reverting d43744390e460dce6626fb8de2c02a24ff650005 allows it to boot
-Ok again.
+my old PLEXTOR CD-R PX-W1210A, FwRev=1.09 is not recognized any more in Linux 2.6.31.4. 
+
+In my old Rescue-Linux on the same machine with Linux 2.6.25.14 the CD-Writer is recognized and it works. 
+
+To give you some Information about the Plextor-CD-Burner, I booted my old 2.6.25.14-Linux: 
+
+# uname -a
+Linux amd2000 2.6.25.14 #1 Fri Aug 1 23:55:59 CEST 2008 i686 AMD Athlon(tm) XP 2000+ AuthenticAMD GNU/Linux
+
+# hdparm -Ii /dev/hdc
+/dev/hdc:
+
+ Model=PLEXTOR CD-R PX-W1210A, FwRev=1.09, SerialNo=
+ Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
+ RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=0
+ (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
+ IORDY=on/off, tPIO={min:180,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4 
+ DMA modes:  sdma0 sdma1 sdma2 mdma0 mdma1 *mdma2 
+ AdvancedPM=no
+
+ * signifies the current active mode
+
+# ls /dev/hd*
+/dev/hda
+/dev/hda1
+/dev/hda10
+/dev/hda11
+/dev/hda2
+/dev/hda3
+/dev/hda4
+/dev/hda5
+/dev/hda6
+/dev/hda7
+/dev/hda8
+/dev/hda9
+/dev/hdb
+/dev/hdb1
+/dev/hdc
+
+# dmesg|grep -e hda -e hdb -e hdc -e hdd
+    ide0: BM-DMA at 0xff00-0xff07, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0xff08-0xff0f, BIOS settings: hdc:DMA, hdd:DMA
+hda: SAMSUNG SP1614N, ATA DISK drive
+hdb: SAMSUNG SP1614N, ATA DISK drive
+hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hda: UDMA/100 mode selected
+hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hdb: UDMA/100 mode selected
+hdc: PLEXTOR CD-R PX-W1210A, ATAPI CD/DVD-ROM drive
+hdc: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hdc: MWDMA2 mode selected
+hda: max request size: 512KiB
+hda: 312581808 sectors (160041 MB) w/8192KiB Cache, CHS=19457/255/63
+hda: cache flushes supported
+ hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 hda9 hda10 hda11 >
+hdb: max request size: 512KiB
+hdb: Host Protected Area detected.
+hdb: Host Protected Area disabled.
+hdb: 312581808 sectors (160041 MB) w/8192KiB Cache, CHS=19457/255/63
+hdb: cache flushes supported
+ hdb: hdb1
+hdc: ATAPI 32X CD-ROM CD-R/RW drive, 2048kB Cache
+XFS mounting filesystem hda9
+Ending clean XFS mount for filesystem: hda9
+XFS mounting filesystem hda6
+Ending clean XFS mount for filesystem: hda6
+XFS mounting filesystem hda8
+Ending clean XFS mount for filesystem: hda8
+Adding 1199992k swap on /dev/hda10.  Priority:1 extents:1 across:1199992k
+
+# dmesg |grep ide
+BIOS-provided physical RAM map:
+ACPI: IRQ0 used by override.
+ACPI: IRQ2 used by override.
+ACPI: IRQ9 used by override.
+Kernel command line: BOOT_IMAGE=Rescue ro root=309 video=vesafb:ywrap,mtrr agp=off max_loop=16
+pci 0000:01:00.0: Boot video device
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+    ide0: BM-DMA at 0xff00-0xff07, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0xff08-0xff0f, BIOS settings: hdc:DMA, hdd:DMA
+Probing IDE interface ide0...
+Probing IDE interface ide1...
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+
+The difference between my old 2.6.25.14-Linux and the newer 2.6.31.4-Linux is mainly the actuality of the updates (and the kernel). 
+I configured the kernel by my own and the changes were made with "make oldconfig" and answer the questions. 
+
+Can You please tell me if/why the Plextor do not work any more. Or better: Give me instructions to get it working again in newer versions of Linux Kernel. 
+Thank You. 
+
+Greetings
+Mario
