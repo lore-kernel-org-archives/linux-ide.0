@@ -1,46 +1,64 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.32.2 SATA link detect failed, 2.6.32.1 works fine
-Date: Thu, 24 Dec 2009 16:33:43 +0900
-Message-ID: <4B331957.7030906@kernel.org>
-References: <alpine.LNX.2.00.0912211855460.1689@darkstar.example.net> <4B30134C.1050609@gmail.com> <alpine.LNX.2.00.0912220859060.1686@darkstar.example.net> <51f3faa70912211708j200ab584wa835ffe50981415e@mail.gmail.com> <alpine.LNX.2.00.0912220955341.1696@darkstar.example.net> <4B31DB17.4050509@kernel.org> <alpine.LNX.2.00.0912231719440.1694@darkstar.example.net>
+Subject: Re: Long delays while hibernating
+Date: Thu, 24 Dec 2009 16:45:26 +0900
+Message-ID: <4B331C16.4080901@kernel.org>
+References: <74fd948d0912221950m1ade8475pfe3ec3018e14d834@mail.gmail.com>	 <4B31CAF9.8070104@kernel.org> <74fd948d0912230550i639f7c05m9a6e5c9996479c01@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------050304030502080109020001"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58378 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34396 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754545AbZLXHaO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Dec 2009 02:30:14 -0500
-In-Reply-To: <alpine.LNX.2.00.0912231719440.1694@darkstar.example.net>
+	id S1754336AbZLXHlu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Dec 2009 02:41:50 -0500
+In-Reply-To: <74fd948d0912230550i639f7c05m9a6e5c9996479c01@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: fengxiangjun <fengxiangjun@neusoft.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pedro Ribeiro <pedrib@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On 12/23/2009 06:29 PM, fengxiangjun wrote:
->=20
-> Hi,
->=20
-> with this patch, the problem still exists.
->=20
-> ata1.01: XXX debounce start, SStatus=3D4
-> ata1.01: XXX debounce done, SStatus=3D4, DET stable for 520 msecs
-> ata1.00: SATA link down (SStatus 0 SControl 301)
-> ata1.01: SATA link down (SStatus 0 Scontrol 300)
-> ...
-> VFS; cannot open root device ...
->=20
-> The kernel just panic, and I can't see what's the messege printing be=
-fore=20
-> that.
->=20
-> So, I tried 'console=3DttyS0 console=3Dtty1'=EF=BC=8Cfull dmesg attac=
-hed=E3=80=82
+This is a multi-part message in MIME format.
+--------------050304030502080109020001
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Can you please capture full failing log?  In the attached log, ata1.00
-is detected successfully.
+On 12/23/2009 10:50 PM, Pedro Ribeiro wrote:
+>> Can you please attach the output of dmidecode?
+> 
+> Thanks for the quick reply, here is what you requested.
+> http://pastebin.com/m72748645
+
+Can you please try the attached patch?
 
 Thanks.
 
---=20
+-- 
 tejun
+
+--------------050304030502080109020001
+Content-Type: text/x-patch;
+ name="tp-t400-broken-suspend.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="tp-t400-broken-suspend.patch"
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 19136a7..a90d52f 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1085,6 +1085,13 @@ static int piix_broken_suspend(void)
+ 				DMI_MATCH(DMI_PRODUCT_NAME, "VGN-BX297XP"),
+ 			},
+ 		},
++		{
++			.ident = "ThinkPad T400",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "7417PLU"),
++			},
++		},
+ 
+ 		{ }	/* terminate list */
+ 	};
+
+--------------050304030502080109020001--
