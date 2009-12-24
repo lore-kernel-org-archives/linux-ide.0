@@ -1,39 +1,44 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_nv times out for BD-ROM iHOS104-08
-Date: Thu, 24 Dec 2009 16:25:37 +0900
-Message-ID: <4B331771.3090309@kernel.org>
-References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<4B31C8EE.3030003@kernel.org> <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com>
+Subject: Re: 2.6.32.2 SATA link detect failed, 2.6.32.1 works fine
+Date: Thu, 24 Dec 2009 16:33:43 +0900
+Message-ID: <4B331957.7030906@kernel.org>
+References: <alpine.LNX.2.00.0912211855460.1689@darkstar.example.net> <4B30134C.1050609@gmail.com> <alpine.LNX.2.00.0912220859060.1686@darkstar.example.net> <51f3faa70912211708j200ab584wa835ffe50981415e@mail.gmail.com> <alpine.LNX.2.00.0912220955341.1696@darkstar.example.net> <4B31DB17.4050509@kernel.org> <alpine.LNX.2.00.0912231719440.1694@darkstar.example.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59539 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:58378 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754504AbZLXHWF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Dec 2009 02:22:05 -0500
-In-Reply-To: <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com>
+	id S1754545AbZLXHaO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Dec 2009 02:30:14 -0500
+In-Reply-To: <alpine.LNX.2.00.0912231719440.1694@darkstar.example.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: fengxiangjun <fengxiangjun@neusoft.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 12/24/2009 04:02 PM, Cengiz G=C3=BCnay wrote:
+On 12/23/2009 06:29 PM, fengxiangjun wrote:
 >=20
-> On Wed, Dec 23, 2009 at 2:38 AM, Tejun Heo <tj@kernel.org
-> <mailto:tj@kernel.org>> wrote:
+> Hi,
 >=20
->     Can you please try kernel parameter irqpoll?  Also, does having a
->     readable media in the drive during boot make any difference?
+> with this patch, the problem still exists.
 >=20
+> ata1.01: XXX debounce start, SStatus=3D4
+> ata1.01: XXX debounce done, SStatus=3D4, DET stable for 520 msecs
+> ata1.00: SATA link down (SStatus 0 SControl 301)
+> ata1.01: SATA link down (SStatus 0 Scontrol 300)
+> ...
+> VFS; cannot open root device ...
 >=20
-> Sorry, neither made any difference.
+> The kernel just panic, and I can't see what's the messege printing be=
+fore=20
+> that.
 >=20
-> By the way, kernel 2.6.23.9 goes into an infinite loop at bootup with
-> ata3 exception messages. I can write them down if it would help.
+> So, I tried 'console=3DttyS0 console=3Dtty1'=EF=BC=8Cfull dmesg attac=
+hed=E3=80=82
 
-Hmmm... can you please take a photo?  I don't think the controller has
-anything to do with the issue but just in case can you please try it
-with a different controller?
+Can you please capture full failing log?  In the attached log, ata1.00
+is detected successfully.
 
 Thanks.
 
