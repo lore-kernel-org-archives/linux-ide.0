@@ -1,74 +1,84 @@
-From: Pedro Ribeiro <pedrib@gmail.com>
-Subject: Re: Long delays while hibernating
-Date: Sat, 26 Dec 2009 16:32:24 +0000
-Message-ID: <74fd948d0912260832i3716ec59rbb812bb18c5d6a07@mail.gmail.com>
-References: <74fd948d0912221950m1ade8475pfe3ec3018e14d834@mail.gmail.com>
-	 <4B31CAF9.8070104@kernel.org>
-	 <74fd948d0912230550i639f7c05m9a6e5c9996479c01@mail.gmail.com>
-	 <4B331C16.4080901@kernel.org>
-	 <74fd948d0912240634h621de8b6l746470556da3eb7f@mail.gmail.com>
-	 <74fd948d0912240759n72e8c141y6b75f1ee7caadf60@mail.gmail.com>
-	 <4B34D2AC.8040908@kernel.org>
-	 <74fd948d0912251010y2bba5bd6nf7aa3a34a7946c31@mail.gmail.com>
-	 <4B35665F.20001@kernel.org>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: 2.6.33-rc2 pata_macio fails to detect PMac G3 CD-drive
+Date: Sat, 26 Dec 2009 18:18:30 +0100
+Message-ID: <19254.17766.674348.933702@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:62786 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbZLZQc0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Dec 2009 11:32:26 -0500
-Received: by ewy19 with SMTP id 19so750011ewy.21
-        for <linux-ide@vger.kernel.org>; Sat, 26 Dec 2009 08:32:25 -0800 (PST)
-In-Reply-To: <4B35665F.20001@kernel.org>
+Received: from fanny.its.uu.se ([130.238.4.241]:56160 "EHLO fanny.its.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751564AbZLZRSk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 Dec 2009 12:18:40 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: linux-ide@vger.kernel.org
+Cc: benh@kernel.crashing.org
 
-On Sat, Dec 26, 2009 at 1:26 AM, Tejun Heo <tj@kernel.org> wrote:
-> (cc'ing Rafael)
->
-> On 12/26/2009 03:10 AM, Pedro Ribeiro wrote:
->>> Oh... Can you please try this one then?
->>
->> Sorry, still hangs with this patch :(
->>
->> This only happens in hibernation... suspend is fine.
->
-> Hmmm... the patch does apply to both suspend and hibernation. =A0Rafa=
-el,
-> Pedro's ThinkPad T400 burns cpu cycle for 30secs on "Atomic
-> copy/restore" step of hibernation if the ultrabay is powered off. =A0=
-The
-> original report can be found at...
->
-> =A0http://thread.gmane.org/gmane.linux.ide/44190
->
-> Please note that it's with TuxOnIce patches. =A0Anyways, ata_piix on
-> certain configurations have similar issues where after the OS is done
-> suspending and powering off the piix controller, the BIOS tries to
-> access it and ends up burning cpu cycles which can be worked around b=
-y
-> leaving the controller on after suspend. =A0Applying the same workaro=
-und
-> didn't resolve the issue. =A0Do you know what can make cpu burn for
-> 30secs on the atomic copy/restore step?
->
-> Pedro, can you please try to reproduce the problem without TuxOnIce
-> patches?
->
-> Thanks.
->
-> --
-> tejun
->
+I decided to give the new pata_macio a try on my old PMac G3 (Beige).
+None of the disks are connected to the PMAC IDE controller, but the
+CD-drive is.
 
-Hi Rafael and Tejun,
+2.6.32 with legacy IDE detects things nicely:
 
-I am experiencing the same delay with the kernel swsusp, so this is
-definitely not a TuxOnIce issue.
+ide-pmac: Found Apple Heathrow ATA controller (macio), bus ID 0, irq 30
+Probing IDE interface ide0...
+hda: MATSHITA CR-585, ATAPI CD/DVD-ROM drive
+hda: host max PIO4 wanted PIO255(auto-tune) selected PIO3
+hda: MWDMA1 mode selected
+ide0 at 0xf1018000-0xf1018070,0xf1018160 on irq 30
+ide-pmac: Found Apple Heathrow ATA controller (macio), bus ID 1, irq 34
+Probing IDE interface ide1...
+ide1 at 0xf1020000-0xf1020070,0xf1020160 on irq 34
+ide-gd driver 1.18
+...
+ide-cd driver 5.00
+ide-cd: hda: ATAPI 24X CD-ROM drive, 128kB Cache
+Uniform CD-ROM driver Revision: 3.20
 
-Regards,
-Pedro
+but 2.6.33-rc2 with pata_macio does not:
+
+pata-macio 0.00020000:ide: Activating pata-macio chipset Heathrow ATA, Apple bus ID 0
+scsi1 : pata_macio
+ata1: PATA max MWDMA2 irq 30
+irq 30: nobody cared (try booting with the "irqpoll" option)
+Call Trace:
+[ef87bc40] [c00094a0] show_stack+0x74/0x1a8 (unreliable)
+[ef87bc70] [c006049c] __report_bad_irq+0x40/0xd4
+[ef87bc90] [c0060728] note_interrupt+0x1f8/0x254
+[ef87bcc0] [c0061144] handle_edge_irq+0xe4/0x1ac
+[ef87bce0] [c0007004] do_IRQ+0xa8/0xcc
+[ef87bd00] [c00142cc] ret_from_except+0x0/0x14
+--- Exception: 501 at ata_eh_freeze_port+0x34/0x48
+    LR = ata_eh_freeze_port+0x30/0x48
+[ef87bdd0] [c01a8f34] ata_eh_reset+0x370/0xd90
+[ef87be50] [c01aabfc] ata_eh_recover+0x300/0x115c
+[ef87bee0] [c01abc60] ata_do_eh+0x54/0xc8
+[ef87bf10] [c01adcb0] ata_sff_error_handler+0x144/0x228
+[ef87bf30] [c01ac5ec] ata_scsi_error+0x320/0x548
+[ef87bf60] [c017e4b4] scsi_error_handler+0x174/0x444
+[ef87bfc0] [c0046b88] kthread+0x80/0x84
+[ef87bff0] [c0013a44] kernel_thread+0x4c/0x68
+handlers:
+[<c01afc68>] (ata_sff_interrupt+0x0/0x12c)
+Disabling IRQ #30
+ata1.00: ATAPI: MATSHITA CR-585, ZS20, max MWDMA1
+ata1.00: configured for MWDMA1
+pata-macio 0.00021000:ide: Activating pata-macio chipset Heathrow ATA, Apple bus ID 1
+scsi2 : pata_macio
+ata2: PATA max MWDMA2 irq 34
+...
+ata1.00: qc timeout (cmd 0xa0)
+ata1.00: TEST_UNIT_READY failed (err_mask=0x5)
+ata1.00: configured for MWDMA1
+ata1.00: qc timeout (cmd 0xa0)
+ata1.00: TEST_UNIT_READY failed (err_mask=0x5)
+ata1.00: limiting speed to MWDMA1:PIO2
+ata1.00: configured for MWDMA1
+ata1.00: qc timeout (cmd 0xa0)
+ata1.00: TEST_UNIT_READY failed (err_mask=0x5)
+ata1.00: disabled
+ata1: soft resetting link
+ata1: EH complete
+
+/Mikael
