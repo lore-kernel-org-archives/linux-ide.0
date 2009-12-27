@@ -1,72 +1,104 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH 0/3] AHCI updates: Marvell AHCI PATA works; pata_marvell
- fate?
-Date: Sun, 27 Dec 2009 15:52:19 -0600
-Message-ID: <4B37D713.4070407@gmail.com>
-References: <20090417023949.GA14469@havoc.gtf.org> <loom.20091227T054252-842@post.gmane.org>
+Subject: Re: 2.6.32 seemed to have broken nVidia MCP7A sata controller
+Date: Sun, 27 Dec 2009 15:52:46 -0600
+Message-ID: <51f3faa70912271352g2784edc8oc899bd6def7b7275@mail.gmail.com>
+References: <7c8826910912182213o2e0e8af7ic305f150c52e0618@mail.gmail.com>
+	 <4B2C80DD.9080005@garzik.org> <4B2D1CF3.4070106@gmail.com>
+	 <7c8826910912191437k4e1d93bap12874a6d6e0046d3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:35220 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbZL0Vsh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Dec 2009 16:48:37 -0500
-Received: by ywh6 with SMTP id 6so9995817ywh.4
-        for <linux-ide@vger.kernel.org>; Sun, 27 Dec 2009 13:48:36 -0800 (PST)
-In-Reply-To: <loom.20091227T054252-842@post.gmane.org>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:38695 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbZL0Vwr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Dec 2009 16:52:47 -0500
+In-Reply-To: <7c8826910912191437k4e1d93bap12874a6d6e0046d3@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Raman Gupta <rocketraman@fastmail.fm>
-Cc: linux-ide@vger.kernel.org
+To: Mike Cui <cuicui@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 12/26/2009 11:13 PM, Raman Gupta wrote:
-> Jeff Garzik<jeff<at>  garzik.org>  writes:
->> This is an update of the recent libahci patchset, currently available
->> on the 'libahci' branch of
->> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->> [...]
->> The mv-ahci code is obviously still a bit raw with "#if 0" in places,
->> but it is nonetheless ready for testing.
->
-> I tested the libata-dev kernel as of commit c3939cc09. I had to comment out a
-> bunch of code (for example, code related to the sntf board in ahci.c and some
-> other stuff) and add a cap2 variable to the ahci_host_priv struct in ahci.h in
-> order to successfully compile the branch.
->
-> I also had to comment out the pata_enable check in mv-ahci.c:mv_ahci_init_one in
-> order to get the mv_ahci module to initialize my hardware, even though I have
-> the pata_marvell module blacklisted.
->
-> My test hardware:
->
-> Intel D75XBX2 motherboard with 2 onboard SATA controllers
-> - ICH7 controller in AHCI mode
->    - 3 disks (2 x ST3320620AS, 1 x ST3500418AS)
-> - Marvell 88SE6145 controller, using AHCI (ahci.marvell_enable=1)
->    - 3 disks (3 x ST3500418AS)
->
-> I used "fio surface-scan" for my test (is that a good way to test this?) and I
-> found no regressions from the stock Fedora 12 kernel 2.6.31.6-166.fc12.x86_64.
-> However, I was hoping the latest libata-dev branch resolved this issue:
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=549981
->
-> It did not. I continue to get the same error as described in my bugzilla report
-> with libata-dev.
+On Sat, Dec 19, 2009 at 4:37 PM, Mike Cui <cuicui@gmail.com> wrote:
+> Thanks, changing that one line fixed it. I can try to find an intel
+> motherboard sometime next week to see if it's the drive or the
+> controller.
 
-I wouldn't expect any bug fixes to be in that branch, it's just a code 
-reorganization.
+Hi Mike, did you ever get a chance to try this test?
 
- From your last post on the Bugzilla report, it looks like all 3 drives 
-basically stopped talking to the point they wouldn't respond to IDENTIFY 
-commands. That seems really strange to me. You mentioned you were doing 
-a surface scan at the time, which presumably would involve all disks 
-being accessed simultaneously. I'd have a good look at the hardware on 
-that system, specifically the power supply. We've seen a number of cases 
-where running multiple HDs on a system can trigger such problems with 
-SATA links because of voltage sags (even momentary). HDs draw much 
-higher peak power under certain conditions than when idle so such 
-problems may not be obvious unless you stress multiple drives at once.
-
-I'm not sure if that's related to the SMART issue you were seeing or not..
+>
+> On Sat, Dec 19, 2009 at 10:35 AM, Robert Hancock <hancockrwd@gmail.co=
+m> wrote:
+>> On 12/19/2009 01:29 AM, Jeff Garzik wrote:
+>>>
+>>> On 12/19/2009 01:13 AM, Mike Cui wrote:
+>>>>
+>>>> I have an nVidia MCP7A AHCI controller. I upgraded to 2.6.32.2 and=
+ my
+>>>> system deterministically freezes trying to mount file systems. Onc=
+e in
+>>>> a while it will come back and finish booting after freezing for 1
+>>>> minute or 2. dmesg indicates that there were NCQ errors, but 2.6.3=
+1
+>>>> anb before has always worked flawlessly for me. What changed in
+>>>> 2.6.32? I will be more than happy to help track down this issue.
+>>>
+>>>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+>>>> ata1.00: cmd 61/08:00:4f:ad:03/00:00:00:00:00/40 tag 0 ncq 4096 ou=
+t
+>>>> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>>> ata1: hard resetting link
+>>>> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>>> ata1.00: configured for UDMA/133
+>>>> ata1.00: device reported invalid CHS sector 0
+>>>
+>>> Looks like things are timing out, and then go downhill from there. =
+This
+>>> explanation of timeout gives some hints on possible causes:
+>>> http://ata.wiki.kernel.org/index.php/Libata_error_messages#Error_cl=
+asses
+>>>
+>>> The ideal would be if you could bisect between 2.6.31 and 2.6.32, t=
+o see
+>>> if it's a software change that is the cause.
+>>>
+>>> Looking at drivers/ata/ahci.c history, the only thing that -might- =
+cause
+>>> problems is 388539f3ff0cf1de926b03f94e1eec112358f74d ('git show $co=
+mmit'
+>>> for full commit info and diff).
+>>
+>> I suspect that as well (it's the commit that adds FPDMA auto-activat=
+e on DMA
+>> setup FIS support). Your drive indicates it's supported but it's pos=
+sible
+>> it's broken on that drive or the controller. If the drive doesn't se=
+t the
+>> activate bit in the DMA setup FIS properly or the controller doesn't=
+ respect
+>> it, then FPDMA requests will stall.
+>>
+>> Mike, can you try and revert that patch, or else just change this li=
+ne in
+>> drivers/ata/ahci.c:
+>>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pi.flags |=3D ATA_FLAG_NCQ | ATA_FLAG=
+_FPDMA_AA;
+>>
+>> to
+>>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pi.flags |=3D ATA_FLAG_NCQ;
+>>
+>> and rebuild and see if it works better?
+>>
+>> I tend to suspect the controller is the problem (I've got WD drives =
+that
+>> work fine with AA on Intel AHCI, though it could be model-specific).=
+ I guess
+>> the only way to verify for sure which one it is would be if someone =
+else had
+>> that particular drive model on a different AHCI controller and could=
+ verify
+>> if it worked with 2.6.32+ or not.
+>>
+>
