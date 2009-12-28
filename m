@@ -1,41 +1,37 @@
-From: Raman Gupta <rocketraman@fastmail.fm>
-Subject: Re: [PATCH 0/3] AHCI updates: Marvell AHCI PATA works; pata_marvell
- fate?
-Date: Mon, 28 Dec 2009 00:19:28 -0500
-Message-ID: <4B383FE0.3000701@fastmail.fm>
-References: <20090417023949.GA14469@havoc.gtf.org> <loom.20091227T054252-842@post.gmane.org> <4B37D713.4070407@gmail.com> <4B37FB36.1040603@fastmail.fm>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.32.2 SATA link detect failed, 2.6.32.1 works fine
+Date: Mon, 28 Dec 2009 19:02:46 +0900
+Message-ID: <4B388246.3040100@kernel.org>
+References: <alpine.LNX.2.00.0912211855460.1689@darkstar.example.net> <4B30134C.1050609@gmail.com> <alpine.LNX.2.00.0912220859060.1686@darkstar.example.net> <51f3faa70912211708j200ab584wa835ffe50981415e@mail.gmail.com> <alpine.LNX.2.00.0912220955341.1696@darkstar.example.net> <4B31DB17.4050509@kernel.org> <alpine.LNX.2.00.0912231719440.1694@darkstar.example.net> <4B331957.7030906@kernel.org> <alpine.LNX.2.00.0912241535340.1682@darkstar.example.net> <4B331D93.2010000@kernel.org> <alpine.LNX.2.00.0912241557170.1682@darkstar.example.net> <alpine.LNX.2.00.0912242010350.1691@darkstar.example.net> <4B336153.8090206@kernel.org> <alpine.LNX.2.00.0912250931510.1680@darkstar.example.net> <4B34C097.1000206@kernel.org> <alpine.LNX.2.00.0912260919490.1729@darkstar.example.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:49696 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751198AbZL1FTa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Dec 2009 00:19:30 -0500
-In-Reply-To: <4B37FB36.1040603@fastmail.fm>
+Received: from hera.kernel.org ([140.211.167.34]:47688 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752119AbZL1KAz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Dec 2009 05:00:55 -0500
+In-Reply-To: <alpine.LNX.2.00.0912260919490.1729@darkstar.example.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: fengxiangjun <fengxiangjun@neusoft.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 12/27/2009 07:26 PM, Raman Gupta wrote:
-> On 12/27/2009 04:52 PM, Robert Hancock wrote:
->> From your last post on the Bugzilla report, it looks like all 3 drives
->> basically stopped talking to the point they wouldn't respond to IDENTIFY
->> commands. That seems really strange to me. You mentioned you were doing
->> a surface scan at the time, which presumably would involve all disks
->> being accessed simultaneously.
->
-> Yes, all drives were being access simultaneously, as they are part of a
-> 4-disk md RAID-5 array.
+Hello,
 
-Very interesting: I re-ran the fio test, but this time I configured 
-the smartd and hddtemp daemons to ignore the drives attached to the 
-Marvell controller. The test completed with no errors.
+On 12/26/2009 10:25 AM, fengxiangjun wrote:
+>> Can you please try this one?  Retry logic was wrong in the original
+>> patch.  With this patch, you should see one "link resume succeeded
+>> after %d retries" message when the original kernel would have failed
+>> probe.  Can you please test this patch and post boot log with such
+>> message?
+> 
+> Just reboot 3 times, and test STR, every thing works fine.
+> And the 3 reboots have the same message:
+> 
+> ata1.00: link resume succeeded after 1 retries
 
-It certainly seems as if disk commands executed by the smartd or 
-hddtemp daemons are causing the exception.
+Cool, does it ever boot without the message?
 
-Cheers,
-Raman
+-- 
+tejun
