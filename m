@@ -1,67 +1,25 @@
-From: fengxiangjun <fengxiangjun@neusoft.com>
-Subject: Re: 2.6.32.2 SATA link detect failed, 2.6.32.1 works fine
-Date: Tue, 29 Dec 2009 09:08:21 +0800 (CST)
-Message-ID: <alpine.LNX.2.00.0912290904140.1689@darkstar.example.net>
-References: <alpine.LNX.2.00.0912211855460.1689@darkstar.example.net>
- <4B30134C.1050609@gmail.com>
- <alpine.LNX.2.00.0912220859060.1686@darkstar.example.net>
- <51f3faa70912211708j200ab584wa835ffe50981415e@mail.gmail.com>
- <alpine.LNX.2.00.0912220955341.1696@darkstar.example.net>
- <4B31DB17.4050509@kernel.org>
- <alpine.LNX.2.00.0912231719440.1694@darkstar.example.net>
- <4B331957.7030906@kernel.org>
- <alpine.LNX.2.00.0912241535340.1682@darkstar.example.net>
- <4B331D93.2010000@kernel.org>
- <alpine.LNX.2.00.0912241557170.1682@darkstar.example.net>
- <alpine.LNX.2.00.0912242010350.1691@darkstar.example.net>
- <4B336153.8090206@kernel.org>
- <alpine.LNX.2.00.0912250931510.1680@darkstar.example.net>
- <4B34C097.1000206@kernel.org>
- <alpine.LNX.2.00.0912260919490.1729@darkstar.example.net>
- <4B388246.3040100@kernel.org>
+From: "Gao, Yunpeng" <yunpeng.gao@intel.com>
+Subject: how to flush write back cache of storage driver
+Date: Tue, 29 Dec 2009 11:20:03 +0800
+Message-ID: <1EC975D79B8B1F4BBDC50EA54418A004071E7344C4@shzsmsx501.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailget.neusoft.com ([210.83.25.69]:64437 "EHLO
-	mailgate.neusoft.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbZL2BGT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Dec 2009 20:06:19 -0500
-In-reply-to: <4B388246.3040100@kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:51158 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751638AbZL2DSv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Dec 2009 22:18:51 -0500
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+To my understanding, the 'sync' shell command is not aware of the existence of write-back cache in the block device driver layer. 
+So, if a storge driver (ide, scsi hard disk, nand flash disk and so on) uses write-back cache, then even if user executes 'sync' before power off the hardware,
+there's still the possibilities that the cached data are not really write back into the block device.
 
-Hi,
+I'm not sure whether there are any storage drivers in Linux kernel use write-back caches or not. If any, can someone give me an example and tell me how it handles the issue of write-back cache flush? That is, how to ensure the data not lost if user executes 'sync' and then power off the hardware? Thanks a lot.
 
-> > Just reboot 3 times, and test STR, every thing works fine.
-> > And the 3 reboots have the same message:
-> > 
-> > ata1.00: link resume succeeded after 1 retries
-> 
-> Cool, does it ever boot without the message?
-
-Yesterday, the boot message has no such line(just boot 1 time).
-
-Today, there is.
-
-$ dmesg | grep ata1.00
-ata1.00: link resume succeeded after 1 retries
-ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: ATA-7: WDC WD800JD-60LSA5, 10.01E03, max UDMA/100
-ata1.00: 156301488 sectors, multi 16: LBA48
-ata1.00: configured for UDMA/100
-
-Thanks.
----------------------------------------------------------------------------------------------------
-Confidentiality Notice: The information contained in this e-mail and any accompanying attachment(s) 
-is intended only for the use of the intended recipient and may be confidential and/or privileged of 
-Neusoft Corporation, its subsidiaries and/or its affiliates. If any reader of this communication is 
-not the intended recipient, unauthorized use, forwarding, printing,  storing, disclosure or copying 
-is strictly prohibited, and may be unlawful.If you have received this communication in error,please 
-immediately notify the sender by return e-mail, and delete the original message and all copies from 
-your system. Thank you. 
----------------------------------------------------------------------------------------------------
-
+Best Regards,
+Yunpeng
