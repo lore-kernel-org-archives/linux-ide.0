@@ -1,57 +1,74 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: [PATCH 0/3] AHCI updates: Marvell AHCI PATA works; pata_marvell
- fate?
-Date: Wed, 30 Dec 2009 17:16:59 +0000
-Message-ID: <4B3B8B0B.2080805@seoss.co.uk>
-References: <20090417023949.GA14469@havoc.gtf.org> <loom.20091227T054252-842@post.gmane.org> <4B37D713.4070407@gmail.com> <4B37FB36.1040603@fastmail.fm>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Re: the biggest regression at all
+Date: Wed, 30 Dec 2009 13:19:18 -0600
+Message-ID: <4B3BA7B6.3050405@mail.usask.ca>
+References: <LptzGUUXbTK.A.MSF.ymhOLB@chimera> <200912292153.32853.rjw@sisk.pl> <web-125862914@zbackend1.aha.ru> <200912292335.10178.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([63.246.152.102]:53434 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbZL3SFi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Dec 2009 13:05:38 -0500
-In-Reply-To: <4B37FB36.1040603@fastmail.fm>
+Received: from mail-gx0-f211.google.com ([209.85.217.211]:60718 "EHLO
+	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214AbZL3TAS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Dec 2009 14:00:18 -0500
+Received: by gxk3 with SMTP id 3so76611gxk.1
+        for <linux-ide@vger.kernel.org>; Wed, 30 Dec 2009 11:00:17 -0800 (PST)
+In-Reply-To: <200912292335.10178.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Raman Gupta <rocketraman@fastmail.fm>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: werner <w.landgraf@ru.ru>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, ide <linux-ide@vger.kernel.org>
 
-Raman Gupta wrote:
-> However, note that I can make the "exception Emask 0x0 SAct 0x0 SErr 
-> 0x0 action 0x6 frozen" happen even with the RAID array stopped and no 
-> filesystems mounted. All I have to do is run the smartctl -a /dev/sdd 
-> command (sdd is attached to the Marvell controller) repeatedly until 
-> this exception occurs:
+On 01/-10/-28163 01:59 PM, Rafael J. Wysocki wrote:
+> Hi,
 >
-> Dec 27 18:59:30 x kernel: ata6.00: exception Emask 0x0 SAct 0x0 SErr 
-> 0x0 action 0x6 frozen
-> Dec 27 18:59:30 x kernel: ata6.00: cmd 
-> ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
-> Dec 27 18:59:30 x kernel:         res 
-> 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
-> Dec 27 18:59:30 x kernel: ata6.00: status: { DRDY }
-> Dec 27 18:59:30 x kernel: ata6: hard resetting link
-> Dec 27 18:59:30 x kernel: ata6: SATA link up 3.0 Gbps (SStatus 123 
-> SControl 300)
-> Dec 27 18:59:30 x kernel: ata6.00: configured for UDMA/133
-> Dec 27 18:59:30 x kernel: ata6: EH complete
+> First of all, I'm not the right person to report these problems to.
 >
-> Usually 10-15 executions is sufficient to replicate the issue.
+> On Tuesday 29 December 2009, werner wrote:
+>> It's very important your work to collect regressions.
+>> Because in the last months accumulate more and more
+>> regressions, which gave on more and more computers
+>> (especially, laptops) problems.
+>>
+>> There continues two problems which I reported earlier, and
+>> which are big problems, making impossible the instalation
+>> of new Linux kernels on a good part of laptops, but which
+>> were ignored or even negated, anyway not resolved.
+>>
+>> / The earlier hda=scsi command line parameter don't work
+>> more correctly or perhaps was substituted (I dont know
+>> exactly, because the kernel command line parameter list is
+>> obsolete, too).   Anyway, there are laptops, whose IDE
+>> devices during booting is reclamed as ocupied, without
+>> end.  After some minutes the boot process cancel this and
+>> continues, however without assign the device as detected.
+>> Then booting fails because the disk and the system isn't
+>> found.
+>>
+>> The only manner how I found to get detected the IDE device
+>> is with pci=off (I tried plenty other things).  But then
+>> other things like sound, grafics etc are not detected (and
+>> lspci don't give output) and the system works only in text
+>> mode.
+>>
+>> For my opinion, the best solution is to introduce an
+>> option pci=noide, so that only the IDE devices will be
+>> excluded and then detected or taken over by the BIOS. All
+>> other things should be detected normally.
+>
+> The issue above should better be reported to the people on
+> linux-ide@vger.kernel.org , as no one else really can take care of it.
+>
+> Still, I think there's a known way to solve this problem, since I've never
+> seen it myself and I happen to install Linux quite often on notebooks.
+>
+> What distribution do you use?
 
-Hmm.  I wonder what running this script from this bug:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14831
-
-against drives attached to other controllers would do?  It doesn't do 
-anything particularly special - just runs smartctl in a loop while also 
-writing to the same drive (via fs using dd).
-
-Out of interest have you tried drives from other manufacturers?  Would 
-also be interested to see what happens if you run the script against the 
-same drive, but attached to the ICH7?
-
-Cheers,
-
-Tim.
+I can't really make any sense out of this report. We need more 
+information: what type of machine was being used, what kernel version, 
+which IDE drivers (IDE or libata), for starters. The only thing I can 
+suspect may be an issue is that if you're using the old IDE drivers then 
+you don't have a proper hardware-specific driver for your machine 
+enabled in your kernel configuration. At some point I believe the 
+generic IDE driver was changed to not attach to as many devices as it 
+did previously as it would end up being used in cases where it shouldn't be.
