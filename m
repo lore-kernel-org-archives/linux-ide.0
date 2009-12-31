@@ -1,20 +1,20 @@
 From: thomas schorpp <thomas.schorpp@googlemail.com>
 Subject: Re: HSM violations from ATA PACKET cmd ABRT errors in initial comms
  with   LG GH22 SATA DVDRW
-Date: Wed, 30 Dec 2009 23:40:01 +0100
-Message-ID: <4B3BD6C1.80807@gmail.com>
+Date: Thu, 31 Dec 2009 12:55:13 +0100
+Message-ID: <4B3C9121.70008@gmail.com>
 References: <4B37C58D.2090200@gmail.com>	<4B37D50F.4010804@gmail.com> <19257.17141.825766.63548@pilspetsen.it.uu.se>
 Reply-To: thomas.schorpp@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:37960 "EHLO
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:56230 "EHLO
 	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbZLaAkL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Dec 2009 19:40:11 -0500
-Received: by fxm25 with SMTP id 25so6372038fxm.21
-        for <linux-ide@vger.kernel.org>; Wed, 30 Dec 2009 16:40:09 -0800 (PST)
+	with ESMTP id S1751042AbZLaLzT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Dec 2009 06:55:19 -0500
+Received: by fxm25 with SMTP id 25so6622497fxm.21
+        for <linux-ide@vger.kernel.org>; Thu, 31 Dec 2009 03:55:18 -0800 (PST)
 In-Reply-To: <19257.17141.825766.63548@pilspetsen.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -113,6 +113,9 @@ Mikael Pettersson wrote:
 >  > 
 >  > Well, it's a READ command, and the response is "LOGICAL BLOCK ADDRESS 
 >  > OUT OF RANGE". Seems reasonable if it's a blank disc in the drive (is it?)
+
+Yes.
+
 >  > 
 >  > According to the code comments in sata_promise, "overrun error" means 
 >  > the S/G byte count was larger than the drive requires. Which I suppose 
@@ -125,53 +128,14 @@ Mikael Pettersson wrote:
 > the severity of overruns to something less than HSM.
 > 
 >  > What were the errors you were seeing on the VIA controller?
+
+See previous mails in thread.
+
 > 
 > I'd like to see that too.
 
-No such HSM error messages or any EH invocation with the sata-via on 2.6.32.2 :-)
-Nor on growisofs startup or dvdrw drive servo failure like it occured with sata-promise.
+See previous mails in thread.
 
-Hot-swapped drives:
-...
-ata2: link is slow to respond, please be patient (ready=0)
-ata2: soft resetting link
-ata2: link is slow to respond, please be patient (ready=0)
-ata2: SRST failed (errno=-16)
-ata2: soft resetting link
-ata2: link is slow to respond, please be patient (ready=0)
-ata3: exception Emask 0x10 SAct 0x0 SErr 0x180000 action 0xe frozen
-ata3: hotplug_status 0x1
-ata3: SError: { 10B8B Dispar }
-ata3: hard resetting link
-ata2: SRST failed (errno=-16)
-ata2: soft resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata2: link is slow to respond, please be patient (ready=0)
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3: limiting SATA link speed to 1.5 Gbps
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 310)
-ata3.00: disabled
-ata3: EH complete
-ata3.00: detaching (SCSI 2:0:0:0)
-ata2.00: class mismatch 1 != 3
-ata2.00: revalidation failed (errno=-19)
-ata2: soft resetting link
-ata2.00: class mismatch 1 != 3
-ata2.00: revalidation failed (errno=-19)
-ata2.00: disabled
-ata2: soft resetting link
-ata2.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
-ata2.00: configured for UDMA/100
-ata2: EH complete
-ata2.00: detaching (SCSI 1:0:0:0)
-sd 1:0:0:0: [sdb] Synchronizing SCSI cache
-sd 1:0:0:0: [sdb] Stopping disk
-scsi 1:0:0:0: CD-ROM            HL-DT-ST DVDRAM GH22NS40  NL01 PQ: 0 ANSI: 5
-sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
-sr 1:0:0:0: Attached scsi CD-ROM sr0
-sr 1:0:0:0: Attached scsi generic sg1 type 5
-...
-
-
+> 
+> /Mikael
+> 
