@@ -1,30 +1,145 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Sun, 3 Jan 2010 11:40:52 +0000
-Message-ID: <20100103114052.58881f14@lxorguk.ukuu.org.uk>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk>
-	<20091224215451.GA2476@flint.arm.linux.org.uk>
-	<20100103002314.GA16528@flint.arm.linux.org.uk>
-	<4B400A10.3000103@gmail.com>
-	<20100103100545.GA26225@flint.arm.linux.org.uk>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: HSM violations from ATA PACKET cmd ABRT errors in initial comms
+ with   LG GH22 SATA DVDRW
+Date: Sun, 3 Jan 2010 22:36:32 +0100
+Message-ID: <19265.3552.13209.914969@pilspetsen.it.uu.se>
+References: <4B37C58D.2090200@gmail.com>
+	<4B37D50F.4010804@gmail.com>
+	<19257.17141.825766.63548@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33324 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752790Ab0ACLhl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jan 2010 06:37:41 -0500
-In-Reply-To: <20100103100545.GA26225@flint.arm.linux.org.uk>
+Received: from fanny.its.uu.se ([130.238.4.241]:56192 "EHLO fanny.its.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752907Ab0ACVgj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Jan 2010 16:36:39 -0500
+In-Reply-To: <19257.17141.825766.63548@pilspetsen.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Robert Hancock <hancockrwd@gmail.com>, thomas.schorpp@gmail.com, thomas schorpp <thomas.schorpp@googlemail.com>, linux-ide@vger.kernel.org
 
-> eventually to PIO is guaranteed to fix it.  The SCSI layer can't know
-> this, and shouldn't know this.  The MD layer certainly doesn't get to
+Mikael Pettersson writes:
+ > Robert Hancock writes:
+ >  > On 12/27/2009 02:37 PM, thomas schorpp wrote:
+ >  > > LG GH22NS40 NL01 (possibly Renesas chipset)
+ >  > > VIA8237 SATA (produces basically same errors), Promise SATA II 150 20579
+ >  > > HBAs.
+ >  > >
+ >  > > Linux 2.6.32.2
+ >  > > hal polling
+ >  > > devkit polling
+ >  > > wodim
+ >  > > growisofs
+ >  > >
+ >  > > port_status 0x20280000 (Data Transfer Overrun Error & Target Device Fault)?
+ >  > >
+ >  > > Looks like a hardware combination incompatibility.
+ >  > > Most applicable ATA_HORKAGES in sourcecode already tried.
+ >  > >
+ >  > > Not found the sense code yet since FEATURE specific according to
+ >  > > T13/1410D revision 3b.
+ >  > >
+ >  > > Comments?
+ >  > >
+ >  > > y
+ >  > > tom
+ >  > >
+ >  > > dmesg |grep -A 10 ata
+ >  > >
+ >  > > sata_promise 0000:00:0d.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+ >  > > scsi5 : sata_promise
+ >  > > scsi6 : sata_promise
+ >  > > scsi7 : sata_promise
+ >  > > ata6: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe200 irq 17
+ >  > > ata7: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe280 irq 17
+ >  > > ata8: PATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe300 irq 17
+ >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ >  > > ata6.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
+ >  > > ata6.00: configured for UDMA/100
+ >  > > scsi 5:0:0:0: CD-ROM HL-DT-ST DVDRAM GH22NS40 NL01 PQ: 0 ANSI: 5
+ >  > > sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
+ >  > > sr 5:0:0:0: Attached scsi CD-ROM sr0
+ >  > > sr 5:0:0:0: Attached scsi generic sg2 type 5
+ >  > > ata7: SATA link down (SStatus 0 SControl 300)
+ >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+ >  > > ata6.00: port_status 0x20280000
+ >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
+ >  > > ata6.00: cmd a0/01:00:00:00:fc/00:00:00:00:00/a0 tag 0 dma 131072 in
+ >  > > res 51/54:03:00:00:fc/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+ >  > > ata6.00: status: { DRDY ERR }
+ >  > > ata6: hard resetting link
+ >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ >  > > ata6.00: configured for UDMA/100
+ >  > > ata6: EH complete
+ >  > > ...
+ >  > > <period, ~10 times in series>
+ >  > > ...
+ >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+ >  > > ata6.00: port_status 0x20280000
+ >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+ >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+ >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+ >  > > ata6.00: status: { DRDY ERR }
+ >  > > ata6: hard resetting link
+ >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ >  > > ata6.00: configured for UDMA/100
+ >  > > ata6: EH complete
+ >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+ >  > > ata6.00: port_status 0x20280000
+ >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+ >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+ >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+ >  > > ata6.00: status: { DRDY ERR }
+ >  > > ata6: hard resetting link
+ >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ >  > > ata6.00: configured for UDMA/100
+ >  > > ata6: EH complete
+ >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+ >  > > ata6.00: port_status 0x20280000
+ >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+ >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+ >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+ >  > > ata6.00: status: { DRDY ERR }
+ >  > > ata6: hard resetting link
+ >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ >  > > ata6.00: configured for UDMA/100
+ >  > > sr 5:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+ >  > > sr 5:0:0:0: [sr0] Sense Key : 0x5 [current] Info fld=0x0
+ >  > > sr 5:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+ >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+ >  > 
+ >  > Well, it's a READ command, and the response is "LOGICAL BLOCK ADDRESS 
+ >  > OUT OF RANGE". Seems reasonable if it's a blank disc in the drive (is it?)
+ >  > 
+ >  > According to the code comments in sata_promise, "overrun error" means 
+ >  > the S/G byte count was larger than the drive requires. Which I suppose 
+ >  > would happen here, because the drive didn't actually transfer any data. 
+ >  > sata_promise raises an HSM error on that though which triggers resets 
+ >  > and such. Seems like an overreaction, for ATAPI commands anyway, as that 
+ >  > can happen normally. CCing Mikael.
+ > 
+ > Thanks for the report. I'll try to come up with a patch to reduce
+ > the severity of overruns to something less than HSM.
 
-That depends which bit you mean - at the lower levels SCSI most certainly
-knows this kind of stuff as it too must deal with speed shifting and
-of course has to handle domain validation.
+I've looked at the available AC_ERR_ values and how they're treated by
+libata-eh, and to avoid resets but allow for retries it seems that one
+should use AC_ERR_OTHER, or possibly AC_ERR_DEV, or possibly no AC_ERR_
+at all (i.e., zero). So please first try the patch below. If it doesn't
+eliminate the reset loop, change the AC_ERR_OTHER to AC_ERR_DEV and try
+again. And if that one still causes reset loops, try a plain 0.
 
+/Mikael
+
+--- linux-2.6.32/drivers/ata/sata_promise.c.~1~	2009-12-03 12:38:32.000000000 +0100
++++ linux-2.6.32/drivers/ata/sata_promise.c	2010-01-03 22:08:08.000000000 +0100
+@@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_po
+ 	if (port_status & PDC_DRIVE_ERR)
+ 		ac_err_mask |= AC_ERR_DEV;
+ 	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
+-		ac_err_mask |= AC_ERR_HSM;
++		ac_err_mask |= AC_ERR_OTHER; /* or AC_ERR_DEV, or zero */
+ 	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
+ 		ac_err_mask |= AC_ERR_ATA_BUS;
+ 	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
