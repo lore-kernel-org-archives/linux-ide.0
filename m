@@ -1,64 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Mon, 4 Jan 2010 18:20:36 +0000
-Message-ID: <20100104182036.6622ba32@lxorguk.ukuu.org.uk>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk>
-	<20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>
-	<20100104133024.GA10521@flint.arm.linux.org.uk>
-	<201001041731.35619.bzolnier@gmail.com>
-	<20100104172816.GD18335@flint.arm.linux.org.uk>
-	<20100104173958.28439d63@lxorguk.ukuu.org.uk>
-	<20100104174652.GF18335@flint.arm.linux.org.uk>
+Date: Mon, 04 Jan 2010 13:29:41 -0500
+Message-ID: <4B423395.6070309@garzik.org>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk>	<20091224215451.GA2476@flint.arm.linux.org.uk>	<20100103002314.GA16528@flint.arm.linux.org.uk>	<20100103234655.GB24920@flint.arm.linux.org.uk>	<20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>	<20100104133024.GA10521@flint.arm.linux.org.uk>	<4B420871.2090309@garzik.org>	<20100104154607.0b6e51dd@lxorguk.ukuu.org.uk>	<4B421827.6050308@garzik.org> <20100104170236.5d85959f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37000 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752414Ab0ADSRL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 13:17:11 -0500
-In-Reply-To: <20100104174652.GF18335@flint.arm.linux.org.uk>
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:35993 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753526Ab0ADS3n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 13:29:43 -0500
+Received: by ywh6 with SMTP id 6so15574826ywh.4
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 10:29:42 -0800 (PST)
+In-Reply-To: <20100104170236.5d85959f@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
 
+On 01/04/2010 12:02 PM, Alan Cox wrote:
+> If we had any SFF PATA controllers using MMIO. I can't find any.
 
-> libata certainly didn't when I wrote the driver in 2007.
-> 
-> int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
-> {
->         /* Record simplex status. If we selected DMA then the other
->          * host channels are not permitted to do so.
->          */
->         if (used_dma && (ap->host->flags & ATA_HOST_SIMPLEX))
->                 ap->host->simplex_claimed = ap;
-> ...
-> static void ata_dev_xfermask(struct ata_device *dev)
-> {
-> ...
->         if ((host->flags & ATA_HOST_SIMPLEX) &&
->             host->simplex_claimed && host->simplex_claimed != ap) {
->                 xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
->                 ata_dev_printk(dev, KERN_WARNING, "simplex DMA is claimed by "
->                                "other device, disabling DMA\n");
->         }
-> 
-> and apparantly still doesn't.  Only one channel of a simplex device is
-> permitted to be configured for DMA at any one time.
+Well,
 
-Simplex has a specific meaning and we implement it to the meaning of the
-standard PCI config bits, which is that you have a single channel that can
-be configured for DMA. There is nothing in the standard that says you can
-play fast and loose flipping them back and forth.
+[jgarzik@bd linux-2.6]$ grep -l ATA_FLAG_MMIO drivers/ata/pata_*.c
+drivers/ata/pata_at32.c
+drivers/ata/pata_bf54x.c
+drivers/ata/pata_ixp4xx_cf.c
+drivers/ata/pata_macio.c
+drivers/ata/pata_octeon_cf.c
+drivers/ata/pata_palmld.c
+drivers/ata/pata_pdc2027x.c
+drivers/ata/pata_rb532_cf.c
+drivers/ata/pata_scc.c
 
-If your controller simply can't handle two DMA transactions (or two
-transactions in general) at the same time you can provide a private
-qc_defer function and ask the midlayer to defer commands that don't fit
-your needs.
+plus drivers/ata/pata_platform.c
 
-Ie the simplex handling is like the Simplex bit handling in drivers/ide,
-and the qc_defer method is akin to the ->serialize flag in drivers/ide,
-but a bit more flexible.
-
-Alan
