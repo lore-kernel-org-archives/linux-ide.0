@@ -1,87 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Mon, 04 Jan 2010 20:16:44 +0300
-Message-ID: <4B42227C.2070600@ru.mvista.com>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk> <20100104151637.559c4780@lxorguk.ukuu.org.uk> <4B420A27.9060407@garzik.org> <20100104154406.GB18335@flint.arm.linux.org.uk> <20100104155544.0c7dbfaa@lxorguk.ukuu.org.uk> <20100104161537.GC18335@flint.arm.linux.org.uk>
+Date: Mon, 04 Jan 2010 12:27:54 -0500
+Message-ID: <4B42251A.9030106@garzik.org>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk>	<20091224215451.GA2476@flint.arm.linux.org.uk>	<20100103002314.GA16528@flint.arm.linux.org.uk>	<20100103234655.GB24920@flint.arm.linux.org.uk>	<20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>	<20100104133024.GA10521@flint.arm.linux.org.uk>	<4B420871.2090309@garzik.org>	<20100104154607.0b6e51dd@lxorguk.ukuu.org.uk>	<4B421827.6050308@garzik.org> <20100104170236.5d85959f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:35441 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1752193Ab0ADROc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 12:14:32 -0500
-In-Reply-To: <20100104161537.GC18335@flint.arm.linux.org.uk>
+Received: from mail-gx0-f211.google.com ([209.85.217.211]:61408 "EHLO
+	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051Ab0ADR15 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 12:27:57 -0500
+Received: by gxk3 with SMTP id 3so2924330gxk.1
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 09:27:56 -0800 (PST)
+In-Reply-To: <20100104170236.5d85959f@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
 
-Hello.
+On 01/04/2010 12:02 PM, Alan Cox wrote:
+>> (1b)  The solution for MMIO controllers is a bit more complex:  replace
+>> the dummy AltStatus register read with something else.
+>
+> If we had any SFF PATA controllers using MMIO. I can't find any. SATA is
+> different anyway. In fact we probably want to avoid such delays on a pure
+> SATA controller.
 
-Russell King wrote:
+Early SATA controllers are just PATA controllers in disguise.  All SFF 
+controllers want that 400ns delay.  The 400ns delay should -not- be avoided.
 
->>>That's not the problem here - with the printk's I've added, there's no
->>>way for the IO read/writes to come that fast.  Slowing down the IO
->>>accesses made no difference what so ever.
+Because several SATA controllers are SFF and use the code in question, 
+the MMIO issue is relevant for the code change, even if it is irrelevant 
+to drivers/ata/pata_*.c.
 
->>Doing it within 400nS of command setup is suspect at the ATA level and
->>can trivially fixed.
+	Jeff
 
->>Sane PCI controllers (and quite a few less than sane ones) all implement
->>an AltStatus which can be checked for busy bits with DMA running or stall
->>that access until the DMA completes (wrongly in some CMD64x cases).
 
->>The 20246 implements its own magic 'am I busy' flag which old IDE
->>supports and libata doesn't. So as well as the ndelay(400) fix for PIO
->>controllers it needs pdc202xx_test_irq porting over to complete the fix.
-
-> Yes, but please use a non-buggy version of pdc202xx_test_irq() as per
-> my recent patch.  Testing for the DMA FIFOs being non-empty to qualify
-> an interrupt is Very Bad News too.
-
-    Sorry about that -- I was the author of pdc202xx_test_irq()...
-
-> It's interesting to note that SFF 8038 suggests an approach to dealing
-> with IDE interrupts connected to a SFF compatible host interface:
-
-> 3) Software issues the appropriate DMA transfer command to the disk device.
-> 4) Engage the bus master function by writing a '1' to the Start bit in the
->    Bus Master IDE Command Register for the appropriate channel.
-> 5) The controller transfers data to/from memory responding to DMA requests
->    from the IDE device.
-> 6) at the end of the transfer the IDE device signals an interrupt .
-> 7) In response to the interrupt, software resets the Start/Stop bit in the
->    command register. It then reads the controller status and then the drive
->    status to determine if the transfer completed successfully.
-
-> It goes on to say that the interrupt status bit in the BM-DMA status
-> register will only be set after buffered data has been transferred -
-> which means reading the altstatus register to determine when the device
-> has finished would give a premature indication and doesn't take any
-> account of the BM-DMA buffering.
-
-    Yes.
-
-> So I think Jeff is not right on the "must read altstatus" point.
-
-    Frankly speaking, I'm not sure why Jeff insisted on that, at least for 
-the DMA case...
-
-> I would not be surprised if lots of host controllers were actually buggy
-> in respect of reading any ATA device register mid-transfer - firstly a
-> started UDMA operation can't be stopped before at least one word has been
-> transferred, nor can it be stopped without first transferring the CRC
-> bytes.  That's an awful lot of logic (and overhead) to be randomly
-> interacting with due to other shared devices interrupt activity.
-
-> Reading the BM-DMA status register (or equivalent on hosts) seems to be
-> the right way to tell if an interrupt is pending.
-
-    Except the BMDMA interrupt bit (generally) doesn't get  set for the PIO 
-transfers. Anyway, the IDE core eventually reads that register for the DMA 
-transfers. I'm sure libata also does eventually read it; looking at the code 
-in ata_sff_host_intr(), it even reads the BMDMA status first, before 
-touching any of the IDE status registers.
-
-MBR, Sergei
