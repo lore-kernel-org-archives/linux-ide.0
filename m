@@ -1,55 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Russell King <rmk@arm.linux.org.uk>
 Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Mon, 4 Jan 2010 15:46:07 +0000
-Message-ID: <20100104154607.0b6e51dd@lxorguk.ukuu.org.uk>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk>
-	<20091224215451.GA2476@flint.arm.linux.org.uk>
-	<20100103002314.GA16528@flint.arm.linux.org.uk>
-	<20100103234655.GB24920@flint.arm.linux.org.uk>
-	<20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>
-	<20100104133024.GA10521@flint.arm.linux.org.uk>
-	<4B420871.2090309@garzik.org>
+Date: Mon, 4 Jan 2010 15:44:06 +0000
+Message-ID: <20100104154406.GB18335@flint.arm.linux.org.uk>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk> <20100104151637.559c4780@lxorguk.ukuu.org.uk> <4B420A27.9060407@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47127 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752909Ab0ADPmo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 10:42:44 -0500
-In-Reply-To: <4B420871.2090309@garzik.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:44347 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753371Ab0ADPoU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 10:44:20 -0500
+Content-Disposition: inline
+In-Reply-To: <4B420A27.9060407@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-> Without AltStatus, you would not be able to check and see if a command 
-> is complete...  pretty much by definition you should able to access that 
+On Mon, Jan 04, 2010 at 10:32:55AM -0500, Jeff Garzik wrote:
+> On 01/04/2010 10:16 AM, Alan Cox wrote:
+>>> If the drive immediately starts the UDMA protocol after a write to the
+>>> command register (as it probably will for the DMA WRITE command), then
+>>> we'll be accessing the taskfile in the middle of the UDMA setup, which
+>>> can't be good.  It's certainly a violation of the ATA specs.
+>>
+>> I concur entirely - that wants pushing into the upstream kernel ASAP and
+>> if its ok backporting. May also be worth seeing if that fixes the funny
+>> in the ALi setup.
+>
+> How do you think one tests for command completion?  :)  There does not  
+> seem to be a general problem reading AltStatus(BSY) during a DMA  
+> transfer.  IDE driver and other well known codebases have been doing  
+> that for decades.
+>
+> I think the undefined behavior is only where the AltStatus read occurs  
+> before the 400ns period specified by ATA...  excising the AltStatus read  
+> there (ata_sff_pause) should be fine for PIO, but problematic for MMIO  
+> chipsets that need posted writes flushed prior to the 400ns delay.
 
-Correct - and you may not make that check for 400nS after the command is
-issued. The old IDE code enforces this (I know because I added it to fix
-real problems as PC's got fast enough to go from write to IRQ in 400nS)
+That's not the problem here - with the printk's I've added, there's no
+way for the IO read/writes to come that fast.  Slowing down the IO
+accesses made no difference what so ever.
 
-> It is certainly conceivable that this is a problem on a rare controller 
-> or two, but in general, AltStatus is how you poll for DMA completion. 
-> You are allowed to hit it during a DMA transfer.
-
-But not for 400nS after a command is issued, or on certain old
-controllers during a DMA transfer before you halt it.
-
-> HOWEVER, accessing AltStatus prior to the 400ns post-exec-command period 
-> is potentially an area of undefined behavior.  Changing this code is 
-> only a problem for MMIO-based controllers, which use the AltStatus read 
-> to guarantee that the 400ns delay occurs outside any posted writes.
-
-Certainly for pio interfaces we should use ndelay(400). All our MMIO
-controllers are SATA and that's a different world anyway, including the
-fact that an altstatus read isn't going to produce a timing delay !
-Basically we know ndelay(400) works.
-
-SIL680 is MMIO in the old IDE stack but the hardware appears to be doing
-the required magic itself. In fact as it can stack two commands in non
-LBA48 mode (a feature we don't use) it would seem to have a fairly
-complete internal state machine.
-
-Alan
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
