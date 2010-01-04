@@ -1,74 +1,90 @@
-From: Russell King <rmk@arm.linux.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Mon, 4 Jan 2010 16:15:37 +0000
-Message-ID: <20100104161537.GC18335@flint.arm.linux.org.uk>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk> <20100104151637.559c4780@lxorguk.ukuu.org.uk> <4B420A27.9060407@garzik.org> <20100104154406.GB18335@flint.arm.linux.org.uk> <20100104155544.0c7dbfaa@lxorguk.ukuu.org.uk>
+Date: Mon, 04 Jan 2010 11:32:39 -0500
+Message-ID: <4B421827.6050308@garzik.org>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk>	<20091224215451.GA2476@flint.arm.linux.org.uk>	<20100103002314.GA16528@flint.arm.linux.org.uk>	<20100103234655.GB24920@flint.arm.linux.org.uk>	<20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>	<20100104133024.GA10521@flint.arm.linux.org.uk>	<4B420871.2090309@garzik.org> <20100104154607.0b6e51dd@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:37105 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753523Ab0ADQP7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 11:15:59 -0500
-Content-Disposition: inline
-In-Reply-To: <20100104155544.0c7dbfaa@lxorguk.ukuu.org.uk>
+Received: from mail-gx0-f211.google.com ([209.85.217.211]:34093 "EHLO
+	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035Ab0ADQcn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 11:32:43 -0500
+Received: by gxk3 with SMTP id 3so2876065gxk.1
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 08:32:41 -0800 (PST)
+In-Reply-To: <20100104154607.0b6e51dd@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
 
-On Mon, Jan 04, 2010 at 03:55:44PM +0000, Alan Cox wrote:
-> > That's not the problem here - with the printk's I've added, there's no
-> > way for the IO read/writes to come that fast.  Slowing down the IO
-> > accesses made no difference what so ever.
-> 
-> Doing it within 400nS of command setup is suspect at the ATA level and
-> can trivially fixed.
-> 
-> Sane PCI controllers (and quite a few less than sane ones) all implement
-> an AltStatus which can be checked for busy bits with DMA running or stall
-> that access until the DMA completes (wrongly in some CMD64x cases).
-> 
-> The 20246 implements its own magic 'am I busy' flag which old IDE
-> supports and libata doesn't. So as well as the ndelay(400) fix for PIO
-> controllers it needs pdc202xx_test_irq porting over to complete the fix.
+On 01/04/2010 10:46 AM, Alan Cox wrote:
+>> Without AltStatus, you would not be able to check and see if a command
+>> is complete...  pretty much by definition you should able to access that
+>
+> Correct - and you may not make that check for 400nS after the command is
+> issued. The old IDE code enforces this (I know because I added it to fix
+> real problems as PC's got fast enough to go from write to IRQ in 400nS)
+>
+>> It is certainly conceivable that this is a problem on a rare controller
+>> or two, but in general, AltStatus is how you poll for DMA completion.
+>> You are allowed to hit it during a DMA transfer.
+>
+> But not for 400nS after a command is issued, or on certain old
+> controllers during a DMA transfer before you halt it.
+>
+>> HOWEVER, accessing AltStatus prior to the 400ns post-exec-command period
+>> is potentially an area of undefined behavior.  Changing this code is
+>> only a problem for MMIO-based controllers, which use the AltStatus read
+>> to guarantee that the 400ns delay occurs outside any posted writes.
+>
+> Certainly for pio interfaces we should use ndelay(400). All our MMIO
+> controllers are SATA and that's a different world anyway, including the
+> fact that an altstatus read isn't going to produce a timing delay !
+> Basically we know ndelay(400) works.
 
-Yes, but please use a non-buggy version of pdc202xx_test_irq() as per
-my recent patch.  Testing for the DMA FIFOs being non-empty to qualify
-an interrupt is Very Bad News too.
+I think you misunderstood the "Changing this code..." sentence.  I make 
+no claim, nor is there code, that says AltStatus produces the necessary 
+400ns delay.
 
-It's interesting to note that SFF 8038 suggests an approach to dealing
-with IDE interrupts connected to a SFF compatible host interface:
+To rephrase/repeat, the AltStatus read in ata_sff_pause() exists to 
+ensure that any previous posted MMIO writes -- most notably the taskfile 
+registers we just wrote -- are flushed from CPU and PCI bridges etc. to 
+the ATA host controller chip.
 
-3) Software issues the appropriate DMA transfer command to the disk device.
-4) Engage the bus master function by writing a '1' to the Start bit in the
-   Bus Master IDE Command Register for the appropriate channel.
-5) The controller transfers data to/from memory responding to DMA requests
-   from the IDE device.
-6) at the end of the transfer the IDE device signals an interrupt .
-7) In response to the interrupt, software resets the Start/Stop bit in the
-   command register. It then reads the controller status and then the drive
-   status to determine if the transfer completed successfully.
+After the AltStatus read is executed, the delay is executed.  Here is 
+the libata implementation, in its entirety:
 
-It goes on to say that the interrupt status bit in the BM-DMA status
-register will only be set after buffered data has been transferred -
-which means reading the altstatus register to determine when the device
-has finished would give a premature indication and doesn't take any
-account of the BM-DMA buffering.
+	void ata_sff_pause(struct ata_port *ap)
+	{
+	        ata_sff_sync(ap); /* dummy AltStatus register read */
+	        ndelay(400);
+	}
 
-So I think Jeff is not right on the "must read altstatus" point.
+On MMIO, you cannot guarantee that ndelay(400) occurs after the ATA 
+Command register is written, without some method of ensuring that all 
+posted writes are flushed.  Typically, this is done by a dummy register 
+read of some worthless register -- AltStatus was used in this case.
 
-I would not be surprised if lots of host controllers were actually buggy
-in respect of reading any ATA device register mid-transfer - firstly a
-started UDMA operation can't be stopped before at least one word has been
-transferred, nor can it be stopped without first transferring the CRC
-bytes.  That's an awful lot of logic (and overhead) to be randomly
-interacting with due to other shared devices interrupt activity.
+Absent that, ndelay(400) could occur in _parallel_ with the posted 
+taskfile writes, essentially eliminating the spec-required delay.
 
-Reading the BM-DMA status register (or equivalent on hosts) seems to be
-the right way to tell if an interrupt is pending.
+Thus,
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+(1a)  The solution for non-MMIO controllers is obvious and easy: remove 
+the dummy AltStatus register read, as Russell has done in his test patch.
+
+(1b)  The solution for MMIO controllers is a bit more complex:  replace 
+the dummy AltStatus register read with something else.
+
+
+> SIL680 is MMIO in the old IDE stack but the hardware appears to be doing
+> the required magic itself.
+
+You cannot draw such a conclusion from looking only at the SIL680 chip. 
+   SIL680 might easily be behind a PCI bridge.
+
+	Jeff
+
+
