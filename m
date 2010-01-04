@@ -1,145 +1,278 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Fix Promise UDMA33 IDE driver (pdc202xx_old)
-Date: Mon, 04 Jan 2010 22:14:55 +0300
-Message-ID: <4B423E2F.9040808@ru.mvista.com>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103223542.GA24920@flint.arm.linux.org.uk>
+From: thomas schorpp <thomas.schorpp@googlemail.com>
+Subject: Re: HSM violations from ATA PACKET cmd ABRT errors in initial comms
+ with   LG GH22 SATA DVDRW
+Date: Mon, 04 Jan 2010 22:06:15 +0100
+Message-ID: <4B425847.40906@gmail.com>
+References: <4B37C58D.2090200@gmail.com>	<4B37D50F.4010804@gmail.com>	<19257.17141.825766.63548@pilspetsen.it.uu.se>	<19265.3552.13209.914969@pilspetsen.it.uu.se>	<4B414BCF.1020607@gmail.com> <19265.45934.749278.904695@pilspetsen.it.uu.se>
+Reply-To: thomas.schorpp@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:6037 "HELO
-	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1753864Ab0ADTMn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 14:12:43 -0500
-In-Reply-To: <20100103223542.GA24920@flint.arm.linux.org.uk>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:40913 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051Ab0ADVGV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 16:06:21 -0500
+Received: by fxm25 with SMTP id 25so9158709fxm.21
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 13:06:19 -0800 (PST)
+In-Reply-To: <19265.45934.749278.904695@pilspetsen.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-Hello.
-
-Russell King wrote:
-
->>- with IDE
->>  - locks the interrupt line, and makes the machine extremely painful -
->>    about an hour to get to the point of being able to unload the
->>    pdc202xx_old module.
-
-> Having manually bisected kernel versions, I've narrowed it down to some
-> change between 2.6.30 and 2.6.31.  There's not much which has changed
-> between the two kernels, but one change stands out like a sore thumb:
-
-> +static int pdc202xx_test_irq(ide_hwif_t *hwif)
-> +{
-> +       struct pci_dev *dev     = to_pci_dev(hwif->dev);
-> +       unsigned long high_16   = pci_resource_start(dev, 4);
-> +       u8 sc1d                 = inb(high_16 + 0x1d);
-> +
-> +       if (hwif->channel) {
-> +               /*
-> +                * bit 7: error, bit 6: interrupting,
-> +                * bit 5: FIFO full, bit 4: FIFO empty
-> +                */
-> +               return ((sc1d & 0x50) == 0x40) ? 1 : 0;
-> +       } else  {
-> +               /*
-> +                * bit 3: error, bit 2: interrupting,
-> +                * bit 1: FIFO full, bit 0: FIFO empty
-> +                */
-> +               return ((sc1d & 0x05) == 0x04) ? 1 : 0;
-> +       }
-> +}
-
-    Sigh, it was mine... :-/
-
-> Reading the (documented as a 32-bit) system control register when the
-> interface is idle gives: 0x01da110c
-
-    Oh, you even have the docs... :-)
-
-> So, the byte at 0x1d is 0x11, which is documented as meaning that the
-> primary and secondary FIFOs are empty.
-
-> The code above, which is trying to see whether an IRQ is pending, checks
-> for the IRQ bit to be one, and the FIFO bit to be zero - or in English,
-> to be non-empty.
-
-    Yeah, here's the older driver code that I got inspiration from:
-
-static int pdc202xx_dma_test_irq(ide_drive_t *drive)
-{
-        ide_hwif_t *hwif        = drive->hwif;
-        unsigned long high_16   = hwif->extra_base - 16;
-        u8 dma_stat             = inb(hwif->dma_base + ATA_DMA_STATUS);
-        u8 sc1d                 = inb(high_16 + 0x001d);
-
-        if (hwif->channel) {
-                /* bit7: Error, bit6: Interrupting, bit5: FIFO Full, bit4: 
-FIFO Empty */
-                if ((sc1d & 0x50) == 0x50)
-                        goto somebody_else;
-                else if ((sc1d & 0x40) == 0x40)
-                        return (dma_stat & 4) == 4;
-        } else {
-                /* bit3: Error, bit2: Interrupting, bit1: FIFO Full, bit0: 
-FIFO Empty */
-                if ((sc1d & 0x05) == 0x05)
-                        goto somebody_else;
-                else if ((sc1d & 0x04) == 0x04)
-                        return (dma_stat & 4) == 4;
-        }
-somebody_else:
-        return (dma_stat & 4) == 4;     /* return 1 if INTR asserted */
-}
-
-    Now you can see the source of the confusion -- interrupts with FIFO 
-empty were regarded as coming from something else.  The 'sc1d' value was 
-effectively ignored at that time though, that's why this went unnoticed so far.
-
-> Since during a BM-DMA read, the FIFOs will naturally be drained to the
-> PCI bus, the chance of us getting to the interface before this happens
-> are extremely small - and if we don't, it means we decide not to service
-> the interrupt.  Hence, the screaming interrupt problem with drivers/ide.
-
-> Fix this by only indicating an interrupt is ready if both the interrupt
-> and FIFO empty bits are at '1'.
-
-    I suggest that we completely ignore the "FIFO empty" bit. dma_test_irq() 
-method which is called eventually when doing FMA should yield the needed 
-result WRT FIFO flushing, filtering out .
-
-> This bug only affects PDC20246/PDC20247 (Promise Ultra33) based cards,
-> and has been tested on 2.6.31 and 2.6.33-rc2.
+Mikael Pettersson wrote:
+> thomas schorpp writes:
+>  > Mikael Pettersson wrote:
+>  > > Mikael Pettersson writes:
+>  > >  > Robert Hancock writes:
+>  > >  >  > On 12/27/2009 02:37 PM, thomas schorpp wrote:
+>  > >  >  > > LG GH22NS40 NL01 (possibly Renesas chipset)
+>  > >  >  > > VIA8237 SATA (produces basically same errors), Promise SATA II 150 20579
+>  > >  >  > > HBAs.
+>  > >  >  > >
+>  > >  >  > > Linux 2.6.32.2
+>  > >  >  > > hal polling
+>  > >  >  > > devkit polling
+>  > >  >  > > wodim
+>  > >  >  > > growisofs
+>  > >  >  > >
+>  > >  >  > > port_status 0x20280000 (Data Transfer Overrun Error & Target Device Fault)?
+>  > >  >  > >
+>  > >  >  > > Looks like a hardware combination incompatibility.
+>  > >  >  > > Most applicable ATA_HORKAGES in sourcecode already tried.
+>  > >  >  > >
+>  > >  >  > > Not found the sense code yet since FEATURE specific according to
+>  > >  >  > > T13/1410D revision 3b.
+>  > >  >  > >
+>  > >  >  > > Comments?
+>  > >  >  > >
+>  > >  >  > > y
+>  > >  >  > > tom
+>  > >  >  > >
+>  > >  >  > > dmesg |grep -A 10 ata
+>  > >  >  > >
+>  > >  >  > > sata_promise 0000:00:0d.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+>  > >  >  > > scsi5 : sata_promise
+>  > >  >  > > scsi6 : sata_promise
+>  > >  >  > > scsi7 : sata_promise
+>  > >  >  > > ata6: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe200 irq 17
+>  > >  >  > > ata7: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe280 irq 17
+>  > >  >  > > ata8: PATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe300 irq 17
+>  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  > >  >  > > ata6.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
+>  > >  >  > > ata6.00: configured for UDMA/100
+>  > >  >  > > scsi 5:0:0:0: CD-ROM HL-DT-ST DVDRAM GH22NS40 NL01 PQ: 0 ANSI: 5
+>  > >  >  > > sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
+>  > >  >  > > sr 5:0:0:0: Attached scsi CD-ROM sr0
+>  > >  >  > > sr 5:0:0:0: Attached scsi generic sg2 type 5
+>  > >  >  > > ata7: SATA link down (SStatus 0 SControl 300)
+>  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  > >  >  > > ata6.00: port_status 0x20280000
+>  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
+>  > >  >  > > ata6.00: cmd a0/01:00:00:00:fc/00:00:00:00:00/a0 tag 0 dma 131072 in
+>  > >  >  > > res 51/54:03:00:00:fc/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  > >  >  > > ata6.00: status: { DRDY ERR }
+>  > >  >  > > ata6: hard resetting link
+>  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  > >  >  > > ata6.00: configured for UDMA/100
+>  > >  >  > > ata6: EH complete
+>  > >  >  > > ...
+>  > >  >  > > <period, ~10 times in series>
+>  > >  >  > > ...
+>  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  > >  >  > > ata6.00: port_status 0x20280000
+>  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  > >  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+>  > >  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  > >  >  > > ata6.00: status: { DRDY ERR }
+>  > >  >  > > ata6: hard resetting link
+>  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  > >  >  > > ata6.00: configured for UDMA/100
+>  > >  >  > > ata6: EH complete
+>  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  > >  >  > > ata6.00: port_status 0x20280000
+>  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  > >  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+>  > >  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  > >  >  > > ata6.00: status: { DRDY ERR }
+>  > >  >  > > ata6: hard resetting link
+>  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  > >  >  > > ata6.00: configured for UDMA/100
+>  > >  >  > > ata6: EH complete
+>  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  > >  >  > > ata6.00: port_status 0x20280000
+>  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  > >  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+>  > >  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  > >  >  > > ata6.00: status: { DRDY ERR }
+>  > >  >  > > ata6: hard resetting link
+>  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  > >  >  > > ata6.00: configured for UDMA/100
+>  > >  >  > > sr 5:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+>  > >  >  > > sr 5:0:0:0: [sr0] Sense Key : 0x5 [current] Info fld=0x0
+>  > >  >  > > sr 5:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+>  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  > >  >  > 
+>  > >  >  > Well, it's a READ command, and the response is "LOGICAL BLOCK ADDRESS 
+>  > >  >  > OUT OF RANGE". Seems reasonable if it's a blank disc in the drive (is it?)
+>  > >  >  > 
+>  > >  >  > According to the code comments in sata_promise, "overrun error" means 
+>  > >  >  > the S/G byte count was larger than the drive requires. Which I suppose 
+>  > >  >  > would happen here, because the drive didn't actually transfer any data. 
+>  > >  >  > sata_promise raises an HSM error on that though which triggers resets 
+>  > >  >  > and such. Seems like an overreaction, for ATAPI commands anyway, as that 
+>  > >  >  > can happen normally. CCing Mikael.
+>  > >  > 
+>  > >  > Thanks for the report. I'll try to come up with a patch to reduce
+>  > >  > the severity of overruns to something less than HSM.
+>  > > 
+>  > > I've looked at the available AC_ERR_ values and how they're treated by
+>  > > libata-eh, and to avoid resets but allow for retries it seems that one
+>  > > should use AC_ERR_OTHER, or possibly AC_ERR_DEV, or possibly no AC_ERR_
+>  > > at all (i.e., zero). So please first try the patch below. If it doesn't
+>  > > eliminate the reset loop, change the AC_ERR_OTHER to AC_ERR_DEV and try
+>  > > again. And if that one still causes reset loops, try a plain 0.
+>  > > 
+>  > > /Mikael
+>  > > 
+>  > > --- linux-2.6.32/drivers/ata/sata_promise.c.~1~	2009-12-03 12:38:32.000000000 +0100
+>  > > +++ linux-2.6.32/drivers/ata/sata_promise.c	2010-01-03 22:08:08.000000000 +0100
+>  > > @@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_po
+>  > >  	if (port_status & PDC_DRIVE_ERR)
+>  > >  		ac_err_mask |= AC_ERR_DEV;
+>  > >  	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
+>  > > -		ac_err_mask |= AC_ERR_HSM;
+>  > > +		ac_err_mask |= AC_ERR_OTHER; /* or AC_ERR_DEV, or zero */
+>  > >  	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
+>  > >  		ac_err_mask |= AC_ERR_ATA_BUS;
+>  > >  	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
+>  > > 
+>  > 
+>  > FIXED with AC_ERR_OTHER.
+>  > TESTED Drive reads and writes media fine.
+>  > 
+>  > Many Thanks :-)
 > 
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> Tested-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> ---
->  drivers/ide/pdc202xx_old.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ide/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
-> index cb812f3..f5c08f4 100644
-> --- a/drivers/ide/pdc202xx_old.c
-> +++ b/drivers/ide/pdc202xx_old.c
-> @@ -100,13 +100,13 @@ static int pdc202xx_test_irq(ide_hwif_t *hwif)
->  		 * bit 7: error, bit 6: interrupting,
->  		 * bit 5: FIFO full, bit 4: FIFO empty
->  		 */
-> -		return ((sc1d & 0x50) == 0x40) ? 1 : 0;
-> +		return ((sc1d & 0x50) == 0x50) ? 1 : 0;
+> Great. Can you show me the kernel messages from the patched driver,
+> including driver initialization, device enumeration, and your accesses
+> to the ATAPI device? I want to make sure everything looks ok before
+> pushing this upstream.
 
-+		return (sc1d & 0x40) ? 1 : 0;
+sata_promise 0000:00:0d.0: version 2.12
+sata_promise 0000:00:0d.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+scsi2 : sata_promise
+scsi3 : sata_promise
+scsi4 : sata_promise
+ata3: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe200 irq 17
+ata4: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe280 irq 17
+ata5: PATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe300 irq 17
 
->  	} else	{
->  		/*
->  		 * bit 3: error, bit 2: interrupting,
->  		 * bit 1: FIFO full, bit 0: FIFO empty
->  		 */
-> -		return ((sc1d & 0x05) == 0x04) ? 1 : 0;
-> +		return ((sc1d & 0x05) == 0x05) ? 1 : 0;
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
+ata3.00: configured for UDMA/100
+scsi 2:0:0:0: CD-ROM            HL-DT-ST DVDRAM GH22NS40  NL01 PQ: 0 ANSI: 5
+sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
+sr 2:0:0:0: Attached scsi CD-ROM sr0
+sr 2:0:0:0: Attached scsi generic sg2 type 5
+--
+ata4: SATA link down (SStatus 0 SControl 300)
 
-+		return (sc1d & 0x04) ? 1 : 0;
+hal+devkit polling on raw dvd+r media:
 
-MBR, Sergei
+sr 2:0:0:0: Attached scsi CD-ROM sr0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
+end_request: I/O error, dev sr0, sector 0
+Buffer I/O error on device sr0, logical block 0
+Buffer I/O error on device sr0, logical block 1
+Buffer I/O error on device sr0, logical block 2
+Buffer I/O error on device sr0, logical block 3
+Buffer I/O error on device sr0, logical block 4
+Buffer I/O error on device sr0, logical block 5
+Buffer I/O error on device sr0, logical block 6
+Buffer I/O error on device sr0, logical block 7
+Buffer I/O error on device sr0, logical block 8
+Buffer I/O error on device sr0, logical block 9
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 08 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 08 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
+end_request: I/O error, dev sr0, sector 0
+Buffer I/O error on device sr0, logical block 0
+Buffer I/O error on device sr0, logical block 1
+Buffer I/O error on device sr0, logical block 2
+Buffer I/O error on device sr0, logical block 3
+Buffer I/O error on device sr0, logical block 4
+Buffer I/O error on device sr0, logical block 5
+Buffer I/O error on device sr0, logical block 6
+Buffer I/O error on device sr0, logical block 7
+Buffer I/O error on device sr0, logical block 8
+Buffer I/O error on device sr0, logical block 9
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
+sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
+sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+end_request: I/O error, dev sr0, sector 0
 
+No messages for R/W of data media.
+
+y
+tom
