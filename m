@@ -1,70 +1,156 @@
-From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
-Subject: Re: 2.9.29.2: ide-tape: panic when probing device at boot
-Date: Mon, 4 Jan 2010 11:45:12 +1030 (CST)
-Message-ID: <201001040115.o041FCEA025051@turbo.physics.adelaide.edu.au>
-References: <4A062702.8020404@kernel.org>
+From: thomas schorpp <thomas.schorpp@googlemail.com>
+Subject: Re: HSM violations from ATA PACKET cmd ABRT errors in initial comms
+ with   LG GH22 SATA DVDRW
+Date: Mon, 04 Jan 2010 03:00:47 +0100
+Message-ID: <4B414BCF.1020607@gmail.com>
+References: <4B37C58D.2090200@gmail.com>	<4B37D50F.4010804@gmail.com>	<19257.17141.825766.63548@pilspetsen.it.uu.se> <19265.3552.13209.914969@pilspetsen.it.uu.se>
+Reply-To: thomas.schorpp@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752895Ab0ADBQJ@vger.kernel.org>
-In-Reply-To: <4A062702.8020404@kernel.org> from "Tejun Heo" at May 10, 2009 09:59:46 AM
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:59474 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414Ab0ADCAx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jan 2010 21:00:53 -0500
+Received: by fxm25 with SMTP id 25so8368203fxm.21
+        for <linux-ide@vger.kernel.org>; Sun, 03 Jan 2010 18:00:51 -0800 (PST)
+In-Reply-To: <19265.3552.13209.914969@pilspetsen.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-Hi
-
-> Borislav Petkov wrote:
-> > Hi,
-> > 
-> > On Sat, May 09, 2009 at 05:57:49PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> >> [ cc:ing linux-ide and knowledgeable people ]
-> >>
-> >> Borislav/Tejun:
-> >>
-> >> Is the 2.6.29 problem the same thing that was fixed recently?
-> > 
-> > I'll let Tejun answer that one since I don't get an oops. However, now
-> > that I have an ide-tape hardware here, I do get something DMA-related
-> > failing during boot:
-> > 
-> > [    1.677012] hdb: Seagate STT8000A, ATAPI TAPE drive
-> > 
-> > ..
-> > 
-> > [    1.701097] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> > [    1.708289] hdb: bad DMA info in identify block
-> > [    1.712872] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
-> > 
-> > ..
-> > 
-> > [    3.450381] Uniform CD-ROM driver Revision: 3.20
-> > [    5.467347] ide-tape: hdb <-> ht0: Seagate STT8000A rev 5.44
-> > [    5.484852] ide-tape: hdb <-> ht0: 88KBps, 14*26kB buffer, 400ms tDS
-> > 
-> > and more specifically the bad DMA info in identify block thing above. I
-> > haven't looked into it yet but its next on my TODO.
+Mikael Pettersson wrote:
+> Mikael Pettersson writes:
+>  > Robert Hancock writes:
+>  >  > On 12/27/2009 02:37 PM, thomas schorpp wrote:
+>  >  > > LG GH22NS40 NL01 (possibly Renesas chipset)
+>  >  > > VIA8237 SATA (produces basically same errors), Promise SATA II 150 20579
+>  >  > > HBAs.
+>  >  > >
+>  >  > > Linux 2.6.32.2
+>  >  > > hal polling
+>  >  > > devkit polling
+>  >  > > wodim
+>  >  > > growisofs
+>  >  > >
+>  >  > > port_status 0x20280000 (Data Transfer Overrun Error & Target Device Fault)?
+>  >  > >
+>  >  > > Looks like a hardware combination incompatibility.
+>  >  > > Most applicable ATA_HORKAGES in sourcecode already tried.
+>  >  > >
+>  >  > > Not found the sense code yet since FEATURE specific according to
+>  >  > > T13/1410D revision 3b.
+>  >  > >
+>  >  > > Comments?
+>  >  > >
+>  >  > > y
+>  >  > > tom
+>  >  > >
+>  >  > > dmesg |grep -A 10 ata
+>  >  > >
+>  >  > > sata_promise 0000:00:0d.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+>  >  > > scsi5 : sata_promise
+>  >  > > scsi6 : sata_promise
+>  >  > > scsi7 : sata_promise
+>  >  > > ata6: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe200 irq 17
+>  >  > > ata7: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe280 irq 17
+>  >  > > ata8: PATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe300 irq 17
+>  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  >  > > ata6.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
+>  >  > > ata6.00: configured for UDMA/100
+>  >  > > scsi 5:0:0:0: CD-ROM HL-DT-ST DVDRAM GH22NS40 NL01 PQ: 0 ANSI: 5
+>  >  > > sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
+>  >  > > sr 5:0:0:0: Attached scsi CD-ROM sr0
+>  >  > > sr 5:0:0:0: Attached scsi generic sg2 type 5
+>  >  > > ata7: SATA link down (SStatus 0 SControl 300)
+>  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  >  > > ata6.00: port_status 0x20280000
+>  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
+>  >  > > ata6.00: cmd a0/01:00:00:00:fc/00:00:00:00:00/a0 tag 0 dma 131072 in
+>  >  > > res 51/54:03:00:00:fc/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  >  > > ata6.00: status: { DRDY ERR }
+>  >  > > ata6: hard resetting link
+>  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  >  > > ata6.00: configured for UDMA/100
+>  >  > > ata6: EH complete
+>  >  > > ...
+>  >  > > <period, ~10 times in series>
+>  >  > > ...
+>  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  >  > > ata6.00: port_status 0x20280000
+>  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+>  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  >  > > ata6.00: status: { DRDY ERR }
+>  >  > > ata6: hard resetting link
+>  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  >  > > ata6.00: configured for UDMA/100
+>  >  > > ata6: EH complete
+>  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  >  > > ata6.00: port_status 0x20280000
+>  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+>  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  >  > > ata6.00: status: { DRDY ERR }
+>  >  > > ata6: hard resetting link
+>  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  >  > > ata6.00: configured for UDMA/100
+>  >  > > ata6: EH complete
+>  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>  >  > > ata6.00: port_status 0x20280000
+>  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
+>  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  >  > > ata6.00: status: { DRDY ERR }
+>  >  > > ata6: hard resetting link
+>  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>  >  > > ata6.00: configured for UDMA/100
+>  >  > > sr 5:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
+>  >  > > sr 5:0:0:0: [sr0] Sense Key : 0x5 [current] Info fld=0x0
+>  >  > > sr 5:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
+>  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
+>  >  > 
+>  >  > Well, it's a READ command, and the response is "LOGICAL BLOCK ADDRESS 
+>  >  > OUT OF RANGE". Seems reasonable if it's a blank disc in the drive (is it?)
+>  >  > 
+>  >  > According to the code comments in sata_promise, "overrun error" means 
+>  >  > the S/G byte count was larger than the drive requires. Which I suppose 
+>  >  > would happen here, because the drive didn't actually transfer any data. 
+>  >  > sata_promise raises an HSM error on that though which triggers resets 
+>  >  > and such. Seems like an overreaction, for ATAPI commands anyway, as that 
+>  >  > can happen normally. CCing Mikael.
+>  > 
+>  > Thanks for the report. I'll try to come up with a patch to reduce
+>  > the severity of overruns to something less than HSM.
 > 
-> Yeah, I've been seeing that too (before and after my changes).
-> Haven't investigated it yet.  Good that it's on your todo list.  :-)
+> I've looked at the available AC_ERR_ values and how they're treated by
+> libata-eh, and to avoid resets but allow for retries it seems that one
+> should use AC_ERR_OTHER, or possibly AC_ERR_DEV, or possibly no AC_ERR_
+> at all (i.e., zero). So please first try the patch below. If it doesn't
+> eliminate the reset loop, change the AC_ERR_OTHER to AC_ERR_DEV and try
+> again. And if that one still causes reset loops, try a plain 0.
 > 
-> >> Should I just push commit 1e75540ec5202cae63cd238c86bd880e3d496546
-> >> ("ide-tape: remove back-to-back REQUEST_SENSE detection") to Linus
-> >> or there is more needed to bring ide-tape to the world of living?
-> > 
-> > ... and I'm afraid we'll have to do some serious bugfixing since this
-> > driver is behaving really funny :). Stay tuned, I'm on it.
+> /Mikael
 > 
-> Cool.
+> --- linux-2.6.32/drivers/ata/sata_promise.c.~1~	2009-12-03 12:38:32.000000000 +0100
+> +++ linux-2.6.32/drivers/ata/sata_promise.c	2010-01-03 22:08:08.000000000 +0100
+> @@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_po
+>  	if (port_status & PDC_DRIVE_ERR)
+>  		ac_err_mask |= AC_ERR_DEV;
+>  	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
+> -		ac_err_mask |= AC_ERR_HSM;
+> +		ac_err_mask |= AC_ERR_OTHER; /* or AC_ERR_DEV, or zero */
+>  	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
+>  		ac_err_mask |= AC_ERR_ATA_BUS;
+>  	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
+> 
 
-Has there been any movement on this in recent months?  I gave 2.6.30 a whirl
-on the machine when that was released but it still gave major problems with
-the ide-tape driver.  Is 2.6.32 likely to be improved?  If so I'll make
-arrangements to test that version.
+FIXED with AC_ERR_OTHER.
+TESTED Drive reads and writes media fine.
 
-Presently I'm stuck with 2.6.24.x on this system since ide-tape holds
-together enough on this version to work.  I really want to upgrade to a more
-recent kernel but obviously I can't until ide-tape is functional again.
+Many Thanks :-)
 
-Regards
-  jonathan
+y
+tom
