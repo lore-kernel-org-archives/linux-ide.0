@@ -1,100 +1,81 @@
 From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Mon, 04 Jan 2010 19:03:49 -0600
-Message-ID: <4B428FF5.7040702@gmail.com>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk>
+Date: Mon, 04 Jan 2010 20:06:59 -0600
+Message-ID: <4B429EC3.9090305@gmail.com>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk> <4B420871.2090309@garzik.org> <20100104154212.GA18335@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:55588 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756Ab0AEBDw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 20:03:52 -0500
-Received: by yxe26 with SMTP id 26so15137350yxe.4
-        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 17:03:52 -0800 (PST)
-In-Reply-To: <20100104133024.GA10521@flint.arm.linux.org.uk>
+Received: from mail-gx0-f211.google.com ([209.85.217.211]:41778 "EHLO
+	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754018Ab0AECHF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 21:07:05 -0500
+Received: by gxk3 with SMTP id 3so3326979gxk.1
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 18:07:02 -0800 (PST)
+In-Reply-To: <20100104154212.GA18335@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Russell King <rmk@arm.linux.org.uk>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-On 01/04/2010 07:30 AM, Russell King wrote:
-> On Mon, Jan 04, 2010 at 10:37:56AM +0000, Alan Cox wrote:
->>> 1. There is no way for the 247 to see any configuration settings;
->>>     the only thing it can see are the taskfile reads and writes, and
->>>     the timing of the DMA signals from the 246.
+On 01/04/2010 09:42 AM, Russell King wrote:
+> On Mon, Jan 04, 2010 at 10:25:37AM -0500, Jeff Garzik wrote:
+>> On 01/04/2010 08:30 AM, Russell King wrote:
+>>> This rather makes sense.  The PDC20247 handles the UDMA part of the
+>>> protocol.  It has no way to tell the PDC20246 to wait while it suspends
+>>> UDMA, so that a normal register access can take place - the 246 ploughs
+>>> on with the register access without any regard to the state of the 247.
 >>>
->>> 2. The 246 timings for MWDMA2 and UDMA0 are identical; there is no
->>>     programming difference between these two modes.  The only way the
->>>     246 can know that UDMA is selected is by looking for the SET
->>>     FEATURES command to the drive.
+>>> If the drive immediately starts the UDMA protocol after a write to the
+>>> command register (as it probably will for the DMA WRITE command), then
+>>> we'll be accessing the taskfile in the middle of the UDMA setup, which
+>>> can't be good.  It's certainly a violation of the ATA specs.
 >>
->> The 2026x certainly snoops SET FEATURES so that would be a reasonable
->> assumption.
+>> Well...
 >>
->>> I've tried changing the set xfermode code to use a version of
->>> ata_exec_internal() which doesn't return the taskfile, but this makes no
->>> difference to the promise exploding with CRC errors with UDMA writes.
->>> Is it possible to do a similar thing with IDENTIFY?
->>
->> No because you need to know if it worked.
->>
->>> Also, is it possible to get rid of the additional identify and read native
->>> max address commands which seem to be repeated (command register writes
->>> listed):
->>
->> You can turn off Host Protected Area support for this. You could also btw
->> turn *on* host protected area for the IDE stack and see what occurs but I
->> imagine its a red herring anyway. If the snoop is failing then it is more
->> likely to be that the chip has some limitations on the taskfile snooping
->> and perhaps requires that the device register is always written or that
->> the registers are written in a specific order when writing the set
->> features command.
->>
->> Another thing to try if that fails is using a polled set features in case
->> the chip has problems in that area. We've seen a similar bug on some older
->> VIA devices.
+>> Without AltStatus, you would not be able to check and see if a command
+>> is complete...
 >
-> Found the problem - getting rid of the read of the alt status register
-> after the command has been written fixes the UDMA CRC errors on write:
->
-> @@ -676,7 +676,8 @@ void ata_sff_exec_command(struct ata_port *ap, const struct
-> ata_taskfile *tf)
->          DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
->
->          iowrite8(tf->command, ap->ioaddr.command_addr);
-> -       ata_sff_pause(ap);
-> +       ndelay(400);
-> +//     ata_sff_pause(ap);
->   }
->   EXPORT_SYMBOL_GPL(ata_sff_exec_command);
->
->
-> This rather makes sense.  The PDC20247 handles the UDMA part of the
-> protocol.  It has no way to tell the PDC20246 to wait while it suspends
-> UDMA, so that a normal register access can take place - the 246 ploughs
-> on with the register access without any regard to the state of the 247.
->
-> If the drive immediately starts the UDMA protocol after a write to the
-> command register (as it probably will for the DMA WRITE command), then
-> we'll be accessing the taskfile in the middle of the UDMA setup, which
-> can't be good.  It's certainly a violation of the ATA specs.
+> I wasn't inferring that reading altstatus was a bad idea.  I was saying
+> that causing altstatus to be read in the middle of an active UDMA
+> transfer (in other words, while the hosts DMACK is active) is a
+> violation of the spec.
 
-I don't think it is. From ATA-8 APT:
+I wouldn't say that's the case, as I don't see any such prohibition in 
+the ATA or SFF host adapter specs. The host doesn't necessarily know 
+whether or not a UDMA transfer is active or not. It's supposed to be the 
+controller's job to either terminate the UDMA burst or stall the access 
+until it can handle the request. It seems a bit of a deficiency of this 
+controller that it can't.
 
-"HDMA0: Check_Status State: This state is entered when the host has 
-written a DMA command to the device; when all data for the command has 
-been transferred and nIEN is set to one; or when all data for the 
-command has been transferred, nIEN is cleared zero, and INTRQ has been 
-asserted.
+The problem with just taking the altstatus read out is that in certain 
+cases, the ATA spec requires that we wait for not 400ns, but one PIO 
+cycle time before reading the status register (which may be up to 
+600ns). The altstatus read inherently accomplishes this since it causes 
+a bus cycle. The spec says nothing about not being allowed to access 
+altstatus during this period, and in fact ATA-6 and up explictly suggest 
+a dummy altstatus read to do this.
 
-When in this state, the host shall read the device Status register. When 
-entering this state from the HI4 state, the host shall wait 400 ns 
-before reading the Status register. When entering this state from the 
-HDMA1 state,
-the host shall wait one PIO transfer cycle time before reading the 
-Status register. The wait may be accomplished by reading the Alternate 
-Status register and ignoring the result."
+One alternative might be to increase the delay to 600ns and change it to 
+read the BMDMA status register instead (to ensure PCI posted write 
+flushing with MMIO). The trick in doing this in generic code is that the 
+register might not exist (BMDMA controllers are a subset of SFF 
+controllers, which is what this code deals with).
 
-The last sentence is basically what the code in ata_sff_pause is doing..
+> There's no way for the 20247 (UDMA add-on) to know that the IO access
+> is coming; the first the 247 knows about it is when the CS/address lines
+> to the drive have been activated - in violation of the ATA specification
+> (which calls for the CS lines to be inactive and address lines to be zero
+> while UDMA is occuring.)
+>
+> That means there's absolutely no way for the 20247 to stop the UDMA
+> protocol to allow a read of any registers on the drive until UDMA has
+> completed.
+>
+> Yes, technically a buggy host design...
+
+Indeed, which is why I suspect that a global change to handle this 
+controller may not be a good idea. Overriding sff_exec_command for this 
+driver to not do the altstatus read (just wait 600ns, maybe) might be 
+the best solution for now.
