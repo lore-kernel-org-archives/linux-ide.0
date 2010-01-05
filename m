@@ -1,50 +1,44 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: [PATCH] Fix Promise UDMA33 IDE driver (pdc202xx_old)
-Date: Tue, 5 Jan 2010 17:49:15 +0000
-Message-ID: <20100105174915.GC30868@flint.arm.linux.org.uk>
-References: <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103223542.GA24920@flint.arm.linux.org.uk> <4B423E2F.9040808@ru.mvista.com> <20100104.222658.93634328.davem@davemloft.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 8567] DMA: Wrong device is disabled
+Date: Tue, 5 Jan 2010 17:50:06 GMT
+Message-ID: <201001051750.o05Ho6xb022817@demeter.kernel.org>
+References: <bug-8567-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:42092 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754666Ab0AERtm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 12:49:42 -0500
-Content-Disposition: inline
-In-Reply-To: <20100104.222658.93634328.davem@davemloft.net>
+Received: from demeter.kernel.org ([140.211.167.39]:57416 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754721Ab0AERuH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 12:50:07 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o05Ho68Z022818
+	for <linux-ide@vger.kernel.org>; Tue, 5 Jan 2010 17:50:06 GMT
+In-Reply-To: <bug-8567-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, Jan 04, 2010 at 10:26:58PM -0800, David Miller wrote:
-> From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Date: Mon, 04 Jan 2010 22:14:55 +0300
-> 
-> >    I suggest that we completely ignore the "FIFO empty"
-> >    bit. dma_test_irq() method which is called eventually when doing FMA
-> >    should yield the needed result WRT FIFO flushing, filtering out .
-> 
-> Can someone implement and test such a revised patch?
+http://bugzilla.kernel.org/show_bug.cgi?id=8567
 
-Do we have any guarantee that the interrupt bit in this register will
-only be set when the DMA FIFOs on the card have emptied?
 
-Unlike the SFF status register's interrupt bit, which is defined by SFF
-to only be asserted when the drive signals an interrupt _and_ the FIFOs
-have emptied, there seems to be no such words in the PDC20246 data which
-suggests that the same is true of the interrupt bit in this alternative
-register.
 
-Therefore, I would suggest that using this alternative bit could be unsafe
-with shared interrupts without also qualifying it with the FIFO empty
-bit - we could end up disabling the DMA before the transfer has completed,
-thereby corrupting the last few words of a transfer from the drive.
 
-What was the reason for checking this alternate promise-special register
-in the first place, rather than the SFF BM-DMA status register?
+
+--- Comment #8 from dark_sylinc@yahoo.com.ar  2010-01-05 17:48:57 ---
+I'm afraid that PC has now more serious HW problems (bad caps, replaced them
+but still doesn't work right) which makes it difficult to test. I can hardly
+keep it up running for long without a complete freeze right now. I use it as a
+DVD player plugged to my TV until it completely dies...
+
+The PC had serious HW problems that's for sure; the actual bug in the kernel
+was that hdb (a CD-RW drive) DMA was being disabled when the conflicting device
+was the Hard Drive at hda (an 40GB HDD).
+Note the linux kernel correctly identified the malfunctioning HDD drive, it
+just disabled the wrong device.
+
+If I am able to update the latest kernel to that machine, I'll post it here
 
 -- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
