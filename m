@@ -1,79 +1,115 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] add PATA host controller support for Cirrus Logic's
-	EP93xx CPUs
-Date: Tue, 5 Jan 2010 19:56:50 +0100
-Message-ID: <201001051956.50961.bzolnier@gmail.com>
-References: <200911261651.40928.bzolnier@gmail.com>
-	<4B26B0D6.4080809@bluewatersys.com> <4B26B6EA.8050403@garzik.org>
+Subject: Re: [PATCH 2/2] ide: add __init/__exit macros to drivers/ide/scc_pata.c
+Date: Tue, 5 Jan 2010 19:39:07 +0100
+Message-ID: <201001051939.07756.bzolnier@gmail.com>
+References: <1261470564-23754-1-git-send-email-peterhuewe@gmx.de> <1261470564-23754-2-git-send-email-peterhuewe@gmx.de> <alpine.LNX.2.00.1001051124150.2277@pobox.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <4B26B6EA.8050403@garzik.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: linux-arm-kernel-bounces@lists.infradead.org
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: H Hartley Sweeten <hsweeten@visionengravers.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Ryan Mallon <ryan@bluewatersys.com>, Sergei Shtylyov <sshtylyov@ru.montavista.com>, Joao Ramos <joao.ramos@inov.pt>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755328Ab0AETCJ@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1001051124150.2277@pobox.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Peter Huewe <peterhuewe@gmx.de>, kernel-janitors@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Monday 14 December 2009 11:06:34 pm Jeff Garzik wrote:
-> On 12/14/2009 04:40 PM, Ryan Mallon wrote:
-> > I have added some of my own debugging. The problem appears to be that
-> > __pata_ep93xx_write gets called from probe (via ata_host_activate), but
-> > ap->private_data (ata_timing) is still null. The timing private_data is
-> > set by pata_ep93xx_set_piomode, but that needs adev->pio_mode set, but I
-> > don't know where this happens. I assume the ATA core handles this. Do I
-> > need to call pata_ep93xx_set_piomode from pata_ep93xx_probe before
-> > ata_host_activate, or should the private_data timing be set to some
-> > default in the probe?
+On Tuesday 05 January 2010 11:25:13 am Jiri Kosina wrote:
+> On Tue, 22 Dec 2009, peterhuewe@gmx.de wrote:
 > 
+> > From: Peter Huewe <peterhuewe@gmx.de>
+> > 
+> > Trivial patch which adds the __init/__exit macros to the module_init/
+> > module_exit functions of
+> > 
+> > drivers/ide/scc_pata.c
+> > 
+> > Please have a look at the small patch and either pull it through
+> > your tree, or please ack' it so Jiri can pull it through the trivial
+> > tree.
+> > 
+> > Patch against linux-next-tree, 22. Dez 08:38:18 CET 2009
+> > but also present in linus tree.
+> > 
+> > Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+> > ---
+> >  drivers/ide/scc_pata.c |    4 ++--
+> >  1 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/ide/scc_pata.c b/drivers/ide/scc_pata.c
+> > index 1104bb3..58c9c91 100644
+> > --- a/drivers/ide/scc_pata.c
+> > +++ b/drivers/ide/scc_pata.c
+> > @@ -872,14 +872,14 @@ static struct pci_driver scc_pci_driver = {
+> >  	.remove = __devexit_p(scc_remove),
+> >  };
+> >  
+> > -static int scc_ide_init(void)
+> > +static int __init scc_ide_init(void)
+> >  {
+> >  	return ide_pci_register_driver(&scc_pci_driver);
+> >  }
+> >  
+> >  module_init(scc_ide_init);
+> >  /* -- No exit code?
+> > -static void scc_ide_exit(void)
+> > +static void __exit scc_ide_exit(void)
+> >  {
+> >  	ide_pci_unregister_driver(&scc_pci_driver);
+> >  }
 > 
-> ap->private_data is traditionally initialized in the ->port_start() hook.
+> This code is commented out anyway. So we should either nuke it out 
+> completely if it is not needed, or uncomment and fix.
+> 
+> Bartlomiej, David?
 
-Ryan, this incremental patch should fix the OOPS (it adds ->port_start
-implementation which sets the default 'port PIO mode' to PIO0 so we have
-sane default setting before device probing takes place and ->set_piomode
-takes over), please retest the driver once you have a minute..
+We can fix it nowadays, though I worry that by fixing it we may be 'creating
+competition' for 'officially blessed yet unmaintained' PATA stack... 8-)
 
-[ Thanks for debugging the problem and sorry for the delay.. ]
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] scc_pata: fix module unloading
 
+scc_pata host driver predated module unloading support for IDE host
+drivers so even though it supports PCI hot-unplug and implements
+PCI device ->remove method it doesn't allow module removal.  Fix it.
+
+Add missing __init/__exit tags to module_init/module_exit functions
+while at it (from Peter Huewe).
+
+Noticed-by: Jiri Kosina <jkosina@suse.cz>
+Cc: Peter Huewe <peterhuewe@gmx.de>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_ep93xx.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/ide/scc_pata.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-Index: b/drivers/ata/pata_ep93xx.c
+Index: b/drivers/ide/scc_pata.c
 ===================================================================
---- a/drivers/ata/pata_ep93xx.c
-+++ b/drivers/ata/pata_ep93xx.c
-@@ -613,6 +613,15 @@ static void pata_ep93xx_postreset(struct
- 	}
- }
- 
-+static int pata_ep93xx_port_start(struct ata_port *ap)
-+{
-+	const struct ata_timing *cmd_t = ata_timing_find_mode(XFER_PIO_0);
-+
-+	ap->private_data = (void *)cmd_t;
-+
-+	return ata_sff_port_start(ap);
-+}
-+
- static struct ata_port_operations pata_ep93xx_port_ops = {
- 	.inherits		= &ata_sff_port_ops,
- 
-@@ -631,6 +640,8 @@ static struct ata_port_operations pata_e
- 	.freeze			= pata_ep93xx_freeze,
- 	.softreset		= pata_ep93xx_softreset,
- 	.postreset		= pata_ep93xx_postreset,
-+
-+	.port_start		= pata_ep93xx_port_start,
+--- a/drivers/ide/scc_pata.c
++++ b/drivers/ide/scc_pata.c
+@@ -872,20 +872,18 @@ static struct pci_driver scc_pci_driver
+ 	.remove = __devexit_p(scc_remove),
  };
  
- static int __init pata_ep93xx_probe(struct platform_device *pdev)
+-static int scc_ide_init(void)
++static int __init scc_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&scc_pci_driver);
+ }
+ 
+-module_init(scc_ide_init);
+-/* -- No exit code?
+-static void scc_ide_exit(void)
++static void __exit scc_ide_exit(void)
+ {
+-	ide_pci_unregister_driver(&scc_pci_driver);
++	pci_unregister_driver(&scc_pci_driver);
+ }
+-module_exit(scc_ide_exit);
+- */
+ 
++module_init(scc_ide_init);
++module_exit(scc_ide_exit);
+ 
+ MODULE_DESCRIPTION("PCI driver module for Toshiba SCC IDE");
+ MODULE_LICENSE("GPL");
