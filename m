@@ -1,49 +1,62 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Tue, 05 Jan 2010 08:11:28 -0500
-Message-ID: <4B433A80.8010900@garzik.org>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk> <4B420871.2090309@garzik.org> <20100104154212.GA18335@flint.arm.linux.org.uk> <4B429EC3.9090305@gmail.com>
+Date: Tue, 5 Jan 2010 13:37:39 +0000
+Message-ID: <20100105133739.28d11761@lxorguk.ukuu.org.uk>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk>
+	<20091224215451.GA2476@flint.arm.linux.org.uk>
+	<20100103002314.GA16528@flint.arm.linux.org.uk>
+	<20100103234655.GB24920@flint.arm.linux.org.uk>
+	<20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>
+	<20100104133024.GA10521@flint.arm.linux.org.uk>
+	<4B420871.2090309@garzik.org>
+	<20100104154212.GA18335@flint.arm.linux.org.uk>
+	<4B429EC3.9090305@gmail.com>
+	<20100105112537.48ae5800@lxorguk.ukuu.org.uk>
+	<4B4337EA.1000504@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:51424 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab0AENLa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 08:11:30 -0500
-Received: by ywh6 with SMTP id 6so16343914ywh.4
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jan 2010 05:11:30 -0800 (PST)
-In-Reply-To: <4B429EC3.9090305@gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40881 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751119Ab0AENeQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 08:34:16 -0500
+In-Reply-To: <4B4337EA.1000504@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Russell King <rmk@arm.linux.org.uk>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
 
-On 01/04/2010 09:06 PM, Robert Hancock wrote:
-> Indeed, which is why I suspect that a global change to handle this
-> controller may not be a good idea. Overriding sff_exec_command for this
-> driver to not do the altstatus read (just wait 600ns, maybe) might be
-> the best solution for now.
+> To which old-IDE do you refer?  :)  This specific area of functionality 
+> varies from 2.4.x to 2.6.x.  Old-Old-IDE even picks and chooses whether 
+> or not to wait depending on protocol (PIO or not), something that has 
+> changed in the more recent old-IDE code.
 
+Which is irrelevant to the discussion.
 
-Well, I think it's fair to say that this should be applied more 
-generally than just one driver.  It is definitely conceivable that 
-reading AltStatus causes a problem with more than one host controller, 
-even though the ATA7 and ATA8 state diagrams recommends doing so.
+> It's not muddy, the rules for MMIO are quite clear, as is kernel 
+> practice for drivers driving MMIO-based hardware.
 
-One solution could be taken from the old-IDE driver: handle things at 
-the other end of the transaction.  Audit the paths that check status at 
-the end of a drive command, rather than focusing on the start of the 
-transaction.
+The IDE layer shows the SI3112 doesn't have this problem so we shouldn't
+cripple it with Jeff paranoia.
 
-That is where the "hard requirements" exist, anyway.  ATA requires us to
+> Any PATA MMIO controller on a PCI card -- pata_pdc2027x comes to mind -- 
+> must handle this situation, because the PCI posting situation varies 
+> depending on where you slot in your PCI card.  That's not something a 
+> controller can really handle internally.
 
-* wait 400ns before reading Status, and/or
-* wait one PIO cycle before reading Status
+Of course it can. The controller can implement a 400nS delay internally
+if it gets a back to back command write and a read of a tf register state.
+Nobody implementing an MMIO controller is going to not do that because
+avoiding an artificial posting stall is a big performance win. Compared
+to the big chunk of logic they all have for fifo draining interlocks its
+nothing. Without that its going to be cheaper to operate PIO cycles not
+MMIO cycles !
 
-And logically, we only need to read Status at the end of the 
-transaction, or when handling a non-DMA PCI shared interrupt.
+My SI controllers at least don't seem to need any kind of posting
+protection in MMIO mode. They seem to be handling it all internally
+somehow - Try rdtsc/write to cmd/rdtsc/read status/rdtsc
 
-	Jeff
+Alan
 
 
