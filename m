@@ -1,278 +1,100 @@
-From: thomas schorpp <thomas.schorpp@googlemail.com>
-Subject: Re: HSM violations from ATA PACKET cmd ABRT errors in initial comms
- with   LG GH22 SATA DVDRW
-Date: Mon, 04 Jan 2010 22:06:15 +0100
-Message-ID: <4B425847.40906@gmail.com>
-References: <4B37C58D.2090200@gmail.com>	<4B37D50F.4010804@gmail.com>	<19257.17141.825766.63548@pilspetsen.it.uu.se>	<19265.3552.13209.914969@pilspetsen.it.uu.se>	<4B414BCF.1020607@gmail.com> <19265.45934.749278.904695@pilspetsen.it.uu.se>
-Reply-To: thomas.schorpp@gmail.com
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
+Date: Mon, 04 Jan 2010 19:03:49 -0600
+Message-ID: <4B428FF5.7040702@gmail.com>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:40913 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051Ab0ADVGV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 16:06:21 -0500
-Received: by fxm25 with SMTP id 25so9158709fxm.21
-        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 13:06:19 -0800 (PST)
-In-Reply-To: <19265.45934.749278.904695@pilspetsen.it.uu.se>
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:55588 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756Ab0AEBDw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jan 2010 20:03:52 -0500
+Received: by yxe26 with SMTP id 26so15137350yxe.4
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jan 2010 17:03:52 -0800 (PST)
+In-Reply-To: <20100104133024.GA10521@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: Russell King <rmk@arm.linux.org.uk>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> thomas schorpp writes:
->  > Mikael Pettersson wrote:
->  > > Mikael Pettersson writes:
->  > >  > Robert Hancock writes:
->  > >  >  > On 12/27/2009 02:37 PM, thomas schorpp wrote:
->  > >  >  > > LG GH22NS40 NL01 (possibly Renesas chipset)
->  > >  >  > > VIA8237 SATA (produces basically same errors), Promise SATA II 150 20579
->  > >  >  > > HBAs.
->  > >  >  > >
->  > >  >  > > Linux 2.6.32.2
->  > >  >  > > hal polling
->  > >  >  > > devkit polling
->  > >  >  > > wodim
->  > >  >  > > growisofs
->  > >  >  > >
->  > >  >  > > port_status 0x20280000 (Data Transfer Overrun Error & Target Device Fault)?
->  > >  >  > >
->  > >  >  > > Looks like a hardware combination incompatibility.
->  > >  >  > > Most applicable ATA_HORKAGES in sourcecode already tried.
->  > >  >  > >
->  > >  >  > > Not found the sense code yet since FEATURE specific according to
->  > >  >  > > T13/1410D revision 3b.
->  > >  >  > >
->  > >  >  > > Comments?
->  > >  >  > >
->  > >  >  > > y
->  > >  >  > > tom
->  > >  >  > >
->  > >  >  > > dmesg |grep -A 10 ata
->  > >  >  > >
->  > >  >  > > sata_promise 0000:00:0d.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
->  > >  >  > > scsi5 : sata_promise
->  > >  >  > > scsi6 : sata_promise
->  > >  >  > > scsi7 : sata_promise
->  > >  >  > > ata6: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe200 irq 17
->  > >  >  > > ata7: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe280 irq 17
->  > >  >  > > ata8: PATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe300 irq 17
->  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->  > >  >  > > ata6.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
->  > >  >  > > ata6.00: configured for UDMA/100
->  > >  >  > > scsi 5:0:0:0: CD-ROM HL-DT-ST DVDRAM GH22NS40 NL01 PQ: 0 ANSI: 5
->  > >  >  > > sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
->  > >  >  > > sr 5:0:0:0: Attached scsi CD-ROM sr0
->  > >  >  > > sr 5:0:0:0: Attached scsi generic sg2 type 5
->  > >  >  > > ata7: SATA link down (SStatus 0 SControl 300)
->  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
->  > >  >  > > ata6.00: port_status 0x20280000
->  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
->  > >  >  > > ata6.00: cmd a0/01:00:00:00:fc/00:00:00:00:00/a0 tag 0 dma 131072 in
->  > >  >  > > res 51/54:03:00:00:fc/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
->  > >  >  > > ata6.00: status: { DRDY ERR }
->  > >  >  > > ata6: hard resetting link
->  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->  > >  >  > > ata6.00: configured for UDMA/100
->  > >  >  > > ata6: EH complete
->  > >  >  > > ...
->  > >  >  > > <period, ~10 times in series>
->  > >  >  > > ...
->  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
->  > >  >  > > ata6.00: port_status 0x20280000
->  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
->  > >  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
->  > >  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
->  > >  >  > > ata6.00: status: { DRDY ERR }
->  > >  >  > > ata6: hard resetting link
->  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->  > >  >  > > ata6.00: configured for UDMA/100
->  > >  >  > > ata6: EH complete
->  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
->  > >  >  > > ata6.00: port_status 0x20280000
->  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
->  > >  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
->  > >  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
->  > >  >  > > ata6.00: status: { DRDY ERR }
->  > >  >  > > ata6: hard resetting link
->  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->  > >  >  > > ata6.00: configured for UDMA/100
->  > >  >  > > ata6: EH complete
->  > >  >  > > ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
->  > >  >  > > ata6.00: port_status 0x20280000
->  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
->  > >  >  > > ata6.00: cmd a0/01:00:00:00:10/00:00:00:00:00/a0 tag 0 dma 4096 in
->  > >  >  > > res 51/54:03:00:00:10/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
->  > >  >  > > ata6.00: status: { DRDY ERR }
->  > >  >  > > ata6: hard resetting link
->  > >  >  > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->  > >  >  > > ata6.00: configured for UDMA/100
->  > >  >  > > sr 5:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
->  > >  >  > > sr 5:0:0:0: [sr0] Sense Key : 0x5 [current] Info fld=0x0
->  > >  >  > > sr 5:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
->  > >  >  > > sr 5:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
->  > >  >  > 
->  > >  >  > Well, it's a READ command, and the response is "LOGICAL BLOCK ADDRESS 
->  > >  >  > OUT OF RANGE". Seems reasonable if it's a blank disc in the drive (is it?)
->  > >  >  > 
->  > >  >  > According to the code comments in sata_promise, "overrun error" means 
->  > >  >  > the S/G byte count was larger than the drive requires. Which I suppose 
->  > >  >  > would happen here, because the drive didn't actually transfer any data. 
->  > >  >  > sata_promise raises an HSM error on that though which triggers resets 
->  > >  >  > and such. Seems like an overreaction, for ATAPI commands anyway, as that 
->  > >  >  > can happen normally. CCing Mikael.
->  > >  > 
->  > >  > Thanks for the report. I'll try to come up with a patch to reduce
->  > >  > the severity of overruns to something less than HSM.
->  > > 
->  > > I've looked at the available AC_ERR_ values and how they're treated by
->  > > libata-eh, and to avoid resets but allow for retries it seems that one
->  > > should use AC_ERR_OTHER, or possibly AC_ERR_DEV, or possibly no AC_ERR_
->  > > at all (i.e., zero). So please first try the patch below. If it doesn't
->  > > eliminate the reset loop, change the AC_ERR_OTHER to AC_ERR_DEV and try
->  > > again. And if that one still causes reset loops, try a plain 0.
->  > > 
->  > > /Mikael
->  > > 
->  > > --- linux-2.6.32/drivers/ata/sata_promise.c.~1~	2009-12-03 12:38:32.000000000 +0100
->  > > +++ linux-2.6.32/drivers/ata/sata_promise.c	2010-01-03 22:08:08.000000000 +0100
->  > > @@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_po
->  > >  	if (port_status & PDC_DRIVE_ERR)
->  > >  		ac_err_mask |= AC_ERR_DEV;
->  > >  	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
->  > > -		ac_err_mask |= AC_ERR_HSM;
->  > > +		ac_err_mask |= AC_ERR_OTHER; /* or AC_ERR_DEV, or zero */
->  > >  	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
->  > >  		ac_err_mask |= AC_ERR_ATA_BUS;
->  > >  	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
->  > > 
->  > 
->  > FIXED with AC_ERR_OTHER.
->  > TESTED Drive reads and writes media fine.
->  > 
->  > Many Thanks :-)
-> 
-> Great. Can you show me the kernel messages from the patched driver,
-> including driver initialization, device enumeration, and your accesses
-> to the ATAPI device? I want to make sure everything looks ok before
-> pushing this upstream.
+On 01/04/2010 07:30 AM, Russell King wrote:
+> On Mon, Jan 04, 2010 at 10:37:56AM +0000, Alan Cox wrote:
+>>> 1. There is no way for the 247 to see any configuration settings;
+>>>     the only thing it can see are the taskfile reads and writes, and
+>>>     the timing of the DMA signals from the 246.
+>>>
+>>> 2. The 246 timings for MWDMA2 and UDMA0 are identical; there is no
+>>>     programming difference between these two modes.  The only way the
+>>>     246 can know that UDMA is selected is by looking for the SET
+>>>     FEATURES command to the drive.
+>>
+>> The 2026x certainly snoops SET FEATURES so that would be a reasonable
+>> assumption.
+>>
+>>> I've tried changing the set xfermode code to use a version of
+>>> ata_exec_internal() which doesn't return the taskfile, but this makes no
+>>> difference to the promise exploding with CRC errors with UDMA writes.
+>>> Is it possible to do a similar thing with IDENTIFY?
+>>
+>> No because you need to know if it worked.
+>>
+>>> Also, is it possible to get rid of the additional identify and read native
+>>> max address commands which seem to be repeated (command register writes
+>>> listed):
+>>
+>> You can turn off Host Protected Area support for this. You could also btw
+>> turn *on* host protected area for the IDE stack and see what occurs but I
+>> imagine its a red herring anyway. If the snoop is failing then it is more
+>> likely to be that the chip has some limitations on the taskfile snooping
+>> and perhaps requires that the device register is always written or that
+>> the registers are written in a specific order when writing the set
+>> features command.
+>>
+>> Another thing to try if that fails is using a polled set features in case
+>> the chip has problems in that area. We've seen a similar bug on some older
+>> VIA devices.
+>
+> Found the problem - getting rid of the read of the alt status register
+> after the command has been written fixes the UDMA CRC errors on write:
+>
+> @@ -676,7 +676,8 @@ void ata_sff_exec_command(struct ata_port *ap, const struct
+> ata_taskfile *tf)
+>          DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
+>
+>          iowrite8(tf->command, ap->ioaddr.command_addr);
+> -       ata_sff_pause(ap);
+> +       ndelay(400);
+> +//     ata_sff_pause(ap);
+>   }
+>   EXPORT_SYMBOL_GPL(ata_sff_exec_command);
+>
+>
+> This rather makes sense.  The PDC20247 handles the UDMA part of the
+> protocol.  It has no way to tell the PDC20246 to wait while it suspends
+> UDMA, so that a normal register access can take place - the 246 ploughs
+> on with the register access without any regard to the state of the 247.
+>
+> If the drive immediately starts the UDMA protocol after a write to the
+> command register (as it probably will for the DMA WRITE command), then
+> we'll be accessing the taskfile in the middle of the UDMA setup, which
+> can't be good.  It's certainly a violation of the ATA specs.
 
-sata_promise 0000:00:0d.0: version 2.12
-sata_promise 0000:00:0d.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-scsi2 : sata_promise
-scsi3 : sata_promise
-scsi4 : sata_promise
-ata3: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe200 irq 17
-ata4: SATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe280 irq 17
-ata5: PATA max UDMA/133 mmio m4096@0xfbefe000 ata 0xfbefe300 irq 17
+I don't think it is. From ATA-8 APT:
 
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata3.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL01, max UDMA/100
-ata3.00: configured for UDMA/100
-scsi 2:0:0:0: CD-ROM            HL-DT-ST DVDRAM GH22NS40  NL01 PQ: 0 ANSI: 5
-sr0: scsi3-mmc drive: 125x/125x writer dvd-ram cd/rw xa/form2 cdda tray
-sr 2:0:0:0: Attached scsi CD-ROM sr0
-sr 2:0:0:0: Attached scsi generic sg2 type 5
---
-ata4: SATA link down (SStatus 0 SControl 300)
+"HDMA0: Check_Status State: This state is entered when the host has 
+written a DMA command to the device; when all data for the command has 
+been transferred and nIEN is set to one; or when all data for the 
+command has been transferred, nIEN is cleared zero, and INTRQ has been 
+asserted.
 
-hal+devkit polling on raw dvd+r media:
+When in this state, the host shall read the device Status register. When 
+entering this state from the HI4 state, the host shall wait 400 ns 
+before reading the Status register. When entering this state from the 
+HDMA1 state,
+the host shall wait one PIO transfer cycle time before reading the 
+Status register. The wait may be accomplished by reading the Alternate 
+Status register and ignoring the result."
 
-sr 2:0:0:0: Attached scsi CD-ROM sr0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
-end_request: I/O error, dev sr0, sector 0
-Buffer I/O error on device sr0, logical block 0
-Buffer I/O error on device sr0, logical block 1
-Buffer I/O error on device sr0, logical block 2
-Buffer I/O error on device sr0, logical block 3
-Buffer I/O error on device sr0, logical block 4
-Buffer I/O error on device sr0, logical block 5
-Buffer I/O error on device sr0, logical block 6
-Buffer I/O error on device sr0, logical block 7
-Buffer I/O error on device sr0, logical block 8
-Buffer I/O error on device sr0, logical block 9
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 08 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 08 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 40 00
-end_request: I/O error, dev sr0, sector 0
-Buffer I/O error on device sr0, logical block 0
-Buffer I/O error on device sr0, logical block 1
-Buffer I/O error on device sr0, logical block 2
-Buffer I/O error on device sr0, logical block 3
-Buffer I/O error on device sr0, logical block 4
-Buffer I/O error on device sr0, logical block 5
-Buffer I/O error on device sr0, logical block 6
-Buffer I/O error on device sr0, logical block 7
-Buffer I/O error on device sr0, logical block 8
-Buffer I/O error on device sr0, logical block 9
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-sr 2:0:0:0: [sr0] Result: hostbyte=0x00 driverbyte=0x08
-sr 2:0:0:0: [sr0] Sense Key : 0x5 [current] 
-sr 2:0:0:0: [sr0] ASC=0x21 ASCQ=0x0
-sr 2:0:0:0: [sr0] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 02 00
-end_request: I/O error, dev sr0, sector 0
-
-No messages for R/W of data media.
-
-y
-tom
+The last sentence is basically what the code in ata_sff_pause is doing..
