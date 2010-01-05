@@ -1,42 +1,29 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 7735] DriveReady SeekComplete Error every 5 minutes by plextor
- CD-R/RW 40/12/40A
-Date: Tue, 5 Jan 2010 17:15:30 GMT
-Message-ID: <201001051715.o05HFU9k017272@demeter.kernel.org>
-References: <bug-7735-11633@http.bugzilla.kernel.org/>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
+Date: Tue, 5 Jan 2010 17:44:04 +0000
+Message-ID: <20100105174403.GB30868@flint.arm.linux.org.uk>
+References: <20091224181300.GA4654@flint.arm.linux.org.uk> <20091224215451.GA2476@flint.arm.linux.org.uk> <20100103002314.GA16528@flint.arm.linux.org.uk> <20100103234655.GB24920@flint.arm.linux.org.uk> <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk> <20100104133024.GA10521@flint.arm.linux.org.uk> <4B428FF5.7040702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:43003 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754986Ab0AERPb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 12:15:31 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o05HFUDT017273
-	for <linux-ide@vger.kernel.org>; Tue, 5 Jan 2010 17:15:30 GMT
-In-Reply-To: <bug-7735-11633@http.bugzilla.kernel.org/>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:56707 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754706Ab0AERoR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 12:44:17 -0500
+Content-Disposition: inline
+In-Reply-To: <4B428FF5.7040702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7735
+On Mon, Jan 04, 2010 at 07:03:49PM -0600, Robert Hancock wrote:
+> I don't think it is. From ATA-8 APT:
 
-
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|bzolnier@gmail.com          |io_ide@kernel-bugs.osdl.org
-         Regression|---                         |No
-
-
-
-
---- Comment #28 from Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  2010-01-05 17:15:12 ---
-I traced it to the smartctl misbehavior (which tries IDENTIFY on ATAPI when it
-shouldn't).  Can be closed as 'not a kernel bug'..
+Now go and look at the drive state diagram rather than the host
+state diagram.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
