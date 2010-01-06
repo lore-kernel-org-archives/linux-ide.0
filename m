@@ -1,35 +1,78 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: 2.6.32: Promise UDMA33 card refuses to work in UDMA mode
-Date: Tue, 5 Jan 2010 18:30:06 -0600
-Message-ID: <51f3faa71001051630x5941cf8cy6b8c8d6f044f77fe@mail.gmail.com>
-References: <20091224181300.GA4654@flint.arm.linux.org.uk>
-	 <20091224215451.GA2476@flint.arm.linux.org.uk>
-	 <20100103002314.GA16528@flint.arm.linux.org.uk>
-	 <20100103234655.GB24920@flint.arm.linux.org.uk>
-	 <20100104103756.6cfa5b3a@lxorguk.ukuu.org.uk>
-	 <20100104133024.GA10521@flint.arm.linux.org.uk>
-	 <4B428FF5.7040702@gmail.com>
-	 <20100105174403.GB30868@flint.arm.linux.org.uk>
+Subject: Re: ata error EH in SWNCQ mode, with nVidia MCP55 sata controller
+ and    SAMSUNG HD103UJ
+Date: Tue, 05 Jan 2010 18:50:36 -0600
+Message-ID: <4B43DE5C.2040106@gmail.com>
+References: <f6be8a431001050956v481017e9i119bca6db20ba1be@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:45596 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755043Ab0AFAaH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 19:30:07 -0500
-Received: by iwn32 with SMTP id 32so1225910iwn.33
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jan 2010 16:30:06 -0800 (PST)
-In-Reply-To: <20100105174403.GB30868@flint.arm.linux.org.uk>
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:57890 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754186Ab0AFAuj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 19:50:39 -0500
+In-Reply-To: <f6be8a431001050956v481017e9i119bca6db20ba1be@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Marco Bisetto <marco.bisetto@gmail.com>
+Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-On Tue, Jan 5, 2010 at 11:44 AM, Russell King <rmk@arm.linux.org.uk> wrote:
-> On Mon, Jan 04, 2010 at 07:03:49PM -0600, Robert Hancock wrote:
->> I don't think it is. From ATA-8 APT:
+On 01/05/2010 11:56 AM, Marco Bisetto wrote:
+> Hi,
 >
-> Now go and look at the drive state diagram rather than the host
-> state diagram.
+> A problem with a "IDE interface: nVidia Corporation MCP55 SATA Controller
+> (rev a3)" and two SAMSUNG HD103UJ sata hard disk drives. Disabling write
+> cache on a disk gives error:
+>
+> kernel: [   45.584445] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> kernel: [   45.584445] ata1: SWNCQ:qc_active 0x1 defer_bits 0x0
+> last_issue_tag 0x0
+> kernel: [   45.584445]   dhfis 0x1 dmafis 0x1 sdbfis 0x0
+> kernel: [   45.584445] ata1: ATA_REG 0x40 ERR_REG 0x0
+> kernel: [   45.584445] ata1: tag : dhfis dmafis sdbfis sacitve
+> kernel: [   45.584445] ata1: tag 0x0: 1 1 0 1
+> kernel: [   45.584445] ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0
+> action 0x6 frozen
+> kernel: [   45.584445] ata1.00: cmd
+> 61/08:00:3f:f4:e8/00:00:02:00:00/40 tag 0 ncq 4096 out
+> kernel: [   45.584445]          res
+> 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+> kernel: [   45.584445] ata1.00: status: { DRDY }
+> kernel: [   45.584445] ata1: hard resetting link
+>
+> The error appears four times for each disk at startup, only when a disk has
+> write cache disabled. For example, disabling write cache in two disks:
+>
+>   45.595788] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+>   45.595800] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+>   76.491877] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+>   76.511331] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> 107.391075] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> 107.423701] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> 138.287465] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> 138.332093] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+>
+> Disabling write cache on disk attached to ata4 and enabling it on disk
+> attached to ata1:
+>
+>   45.583489] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+>   76.479940] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> 107.375643] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+> 138.272023] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
+>
+> Enabling write cache on both disks = no errors.
+>
+> I don't think the problem can be associated with bad cables or power
+> supply, as it happens in each channel, it is the same for each disk and
+> happens at the same time.
+>
+> Anybody has ideas on what can it be and if there is a solution?
 
-What about it are you referring to?
+ From what I can see, that debug output from sata_nv means that the 
+drive hasn't reported it's completed the command (no SDB FIS) after the 
+timeout (usually 30 seconds). That's an awfully long time. It could be 
+that those drives have issues with NCQ and disabled write cache where 
+some of the commands in the queue can be starved for overly long periods..
+
+CCing linux-ide.
