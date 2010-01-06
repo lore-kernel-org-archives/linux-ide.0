@@ -1,78 +1,93 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: ata error EH in SWNCQ mode, with nVidia MCP55 sata controller
- and    SAMSUNG HD103UJ
-Date: Tue, 05 Jan 2010 18:50:36 -0600
-Message-ID: <4B43DE5C.2040106@gmail.com>
-References: <f6be8a431001050956v481017e9i119bca6db20ba1be@mail.gmail.com>
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
+Subject: New MSI support in sata_sil24 still broken in 2.6.33-rc3
+Date: Wed, 6 Jan 2010 10:37:29 +0100
+Message-ID: <64bb37e1001060137h597322e8s4305b7cc1c91527e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:57890 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754186Ab0AFAuj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2010 19:50:39 -0500
-In-Reply-To: <f6be8a431001050956v481017e9i119bca6db20ba1be@mail.gmail.com>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:64696 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753324Ab0AFJhb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jan 2010 04:37:31 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marco Bisetto <marco.bisetto@gmail.com>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Vivek Mahajan <vivek.mahajan@freescale.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 01/05/2010 11:56 AM, Marco Bisetto wrote:
-> Hi,
->
-> A problem with a "IDE interface: nVidia Corporation MCP55 SATA Controller
-> (rev a3)" and two SAMSUNG HD103UJ sata hard disk drives. Disabling write
-> cache on a disk gives error:
->
-> kernel: [   45.584445] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> kernel: [   45.584445] ata1: SWNCQ:qc_active 0x1 defer_bits 0x0
-> last_issue_tag 0x0
-> kernel: [   45.584445]   dhfis 0x1 dmafis 0x1 sdbfis 0x0
-> kernel: [   45.584445] ata1: ATA_REG 0x40 ERR_REG 0x0
-> kernel: [   45.584445] ata1: tag : dhfis dmafis sdbfis sacitve
-> kernel: [   45.584445] ata1: tag 0x0: 1 1 0 1
-> kernel: [   45.584445] ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0
-> action 0x6 frozen
-> kernel: [   45.584445] ata1.00: cmd
-> 61/08:00:3f:f4:e8/00:00:02:00:00/40 tag 0 ncq 4096 out
-> kernel: [   45.584445]          res
-> 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
-> kernel: [   45.584445] ata1.00: status: { DRDY }
-> kernel: [   45.584445] ata1: hard resetting link
->
-> The error appears four times for each disk at startup, only when a disk has
-> write cache disabled. For example, disabling write cache in two disks:
->
->   45.595788] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
->   45.595800] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
->   76.491877] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
->   76.511331] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> 107.391075] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> 107.423701] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> 138.287465] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> 138.332093] ata1: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
->
-> Disabling write cache on disk attached to ata4 and enabling it on disk
-> attached to ata1:
->
->   45.583489] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
->   76.479940] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> 107.375643] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> 138.272023] ata4: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
->
-> Enabling write cache on both disks = no errors.
->
-> I don't think the problem can be associated with bad cables or power
-> supply, as it happens in each channel, it is the same for each disk and
-> happens at the same time.
->
-> Anybody has ideas on what can it be and if there is a solution?
+After activating the MSI support by adding sata_sil24.msi=1 to the
+kernel command line, the first write to a drive attached to the SiI
+3132 controller results in the following errors:
 
- From what I can see, that debug output from sata_nv means that the 
-drive hasn't reported it's completed the command (no SDB FIS) after the 
-timeout (usually 30 seconds). That's an awfully long time. It could be 
-that those drives have issues with NCQ and disabled write cache where 
-some of the commands in the queue can be starved for overly long periods..
+[  138.950074] ata2.00: exception Emask 0x0 SAct 0xf SErr 0x0 action 0x6 frozen
+[  138.961023] ata2.00: failed command: WRITE FPDMA QUEUED
+[  138.970034] ata2.00: cmd 61/00:00:a5:95:4a/04:00:01:00:00/40 tag 0
+ncq 524288 out
+[  138.970037]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  138.992467] ata2.00: status: { DRDY }
+[  138.999864] ata2.00: failed command: WRITE FPDMA QUEUED
+[  139.008830] ata2.00: cmd 61/00:08:a5:91:4a/04:00:01:00:00/40 tag 1
+ncq 524288 out
+[  139.008833]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  139.031370] ata2.00: status: { DRDY }
+[  139.038906] ata2.00: failed command: WRITE FPDMA QUEUED
+[  139.048055] ata2.00: cmd 61/00:10:a5:8d:4a/04:00:01:00:00/40 tag 2
+ncq 524288 out
+[  139.048058]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  139.070828] ata2.00: status: { DRDY }
+[  139.078383] ata2.00: failed command: WRITE FPDMA QUEUED
+[  139.087506] ata2.00: cmd 61/00:18:a5:99:4a/04:00:01:00:00/40 tag 3
+ncq 524288 out
+[  139.087509]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  139.110281] ata2.00: status: { DRDY }
+[  139.117877] ata2: hard resetting link
+[  141.310057] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[  146.310037] ata2.00: qc timeout (cmd 0xec)
+[  146.318032] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+[  146.328027] ata2.00: revalidation failed (errno=-5)
+[  146.336815] ata2: hard resetting link
+[  148.530055] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[  158.530035] ata2.00: qc timeout (cmd 0xec)
+[  158.538066] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+[  158.548122] ata2.00: revalidation failed (errno=-5)
+[  158.556955] ata2: limiting SATA link speed to 1.5 Gbps
+[  158.566052] ata2: hard resetting link
+[  160.760071] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
+[  190.760046] ata2.00: qc timeout (cmd 0xec)
+[  190.768137] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+[  190.778219] ata2.00: revalidation failed (errno=-5)
+[  190.787085] ata2.00: disabled
+[  190.794002] ata2.00: device reported invalid CHS sector 0
+[  190.803368] ata2.00: device reported invalid CHS sector 0
+[  190.812704] ata2.00: device reported invalid CHS sector 0
+[  190.821965] ata2.00: device reported invalid CHS sector 0
+[  190.831231] ata2: hard resetting link
+[  193.030050] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
+[  193.030073] ata2: EH complete
+[  193.030112] sd 1:0:0:0: [sdb] Unhandled error code
+[  193.030120] sd 1:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK
+[  193.030127] sd 1:0:0:0: [sdb] CDB: Write(10): 2a 00 01 4a 99 a5 00 04 00 00
+[  193.030141] end_request: I/O error, dev sdb, sector 21666213
+[  193.039854] sd 1:0:0:0: [sdb] Unhandled error code
+[  193.039857] sd 1:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK
+[  193.039862] sd 1:0:0:0: [sdb] CDB: Write(10): 2a 00 01 4a 8d a5 00 04 00 00
+[  193.039874] end_request: I/O error, dev sdb, sector 21663141
+[  193.040083] sd 1:0:0:0: [sdb] Unhandled error code
 
-CCing linux-ide.
+This repeats for a large number of times, then the XFS filesystem gets
+shut down.
+
+More information about my system are in my first report:
+http://lkml.org/lkml/2009/12/19/82
+
+lspci -vv for both the normal, working and the broken MSI case are in
+my second try to report this:
+http://lkml.org/lkml/2009/12/25/12
+
+Please ask, if you need more information.
+
+Torsten
