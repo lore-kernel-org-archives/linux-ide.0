@@ -1,40 +1,20 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
 Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
-Date: Thu, 07 Jan 2010 14:15:11 -0500
-Message-ID: <4B4632BF.4070806@pobox.com>
-References: <4B3BDB66.6000008@googlemail.com>
+Date: Thu, 07 Jan 2010 21:34:06 +0100
+Message-ID: <4B46453E.1060206@googlemail.com>
+References: <4B3BDB66.6000008@googlemail.com> <4B4632BF.4070806@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f211.google.com ([209.85.217.211]:42571 "EHLO
-	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627Ab0AGTPR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jan 2010 14:15:17 -0500
-In-Reply-To: <4B3BDB66.6000008@googlemail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4B4632BF.4070806@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On 12/30/2009 05:59 PM, Ren=E9 Bolldorf wrote:
-> We don't need this ;-).
->
-> Best regards Ren=E9 Bolldorf & a happy new year in advance.
->
-> --- ./drivers/ata/libata-eh.c 2009-12-30 23:44:05.578988545 +0100
-> +++ ./drivers/ata/libata-eh.c 2009-12-30 23:45:06.991987607 +0100
-> @@ -1505,9 +1505,6 @@ static unsigned int atapi_eh_request_sen
->
-> DPRINTK("ATAPI request sense\n");
->
-> - /* FIXME: is this needed? */
-> - memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+On 01/07/10 20:15, Jeff Garzik wrote:
+> I need a little bit more detail than an unqualified statement...  Did
+> you audit all paths leading to this code point?
 
-I need a little bit more detail than an unqualified statement...  Did=20
-you audit all paths leading to this code point?
-
-	Jeff
-
-
+Yes, and my two systems running fine with the patch, no oops or panic's.
