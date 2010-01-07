@@ -1,186 +1,193 @@
-From: Robert Hancock <hancockrwd@gmail.com>
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
 Subject: Re: New MSI support in sata_sil24 still broken in 2.6.33-rc3
-Date: Wed, 06 Jan 2010 21:05:47 -0600
-Message-ID: <4B454F8B.5040900@gmail.com>
-References: <64bb37e1001060137h597322e8s4305b7cc1c91527e@mail.gmail.com>	 <4B4531F9.3060108@gmail.com> <64bb37e1001061827i64ead7f9m3dbe1b7b707c79eb@mail.gmail.com>
+Date: Thu, 7 Jan 2010 04:28:20 +0100
+Message-ID: <64bb37e1001061928k746d090cpe48d2ea7bbd3f774@mail.gmail.com>
+References: <64bb37e1001060137h597322e8s4305b7cc1c91527e@mail.gmail.com>
+	 <4B4531F9.3060108@gmail.com>
+	 <64bb37e1001061827i64ead7f9m3dbe1b7b707c79eb@mail.gmail.com>
+	 <4B454F8B.5040900@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:40504 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932356Ab0AGDFv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jan 2010 22:05:51 -0500
-In-Reply-To: <64bb37e1001061827i64ead7f9m3dbe1b7b707c79eb@mail.gmail.com>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:36094 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932330Ab0AGD2W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jan 2010 22:28:22 -0500
+In-Reply-To: <4B454F8B.5040900@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
+To: Robert Hancock <hancockrwd@gmail.com>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Vivek Mahajan <vivek.mahajan@freescale.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Yinghai Lu <yinghai@kernel.org>
 
-On 01/06/2010 08:27 PM, Torsten Kaiser wrote:
-> On Thu, Jan 7, 2010 at 1:59 AM, Robert Hancock<hancockrwd@gmail.com>  wrote:
->> On 01/06/2010 03:37 AM, Torsten Kaiser wrote:
->>>
->>> After activating the MSI support by adding sata_sil24.msi=1 to the
->>> kernel command line, the first write to a drive attached to the SiI
->>> 3132 controller results in the following errors:
->>>
->>> [  138.950074] ata2.00: exception Emask 0x0 SAct 0xf SErr 0x0 action 0x6
->>> frozen
->>> [  138.961023] ata2.00: failed command: WRITE FPDMA QUEUED
->>> [  138.970034] ata2.00: cmd 61/00:00:a5:95:4a/04:00:01:00:00/40 tag 0
->>> ncq 524288 out
->>> [  138.970037]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
->>> 0x4 (timeout)
->>
->> Looking at the code in sata_sil24 and the SiI3132 datasheet, there's a
->> control bit which doesn't seem to be handled in the driver, global control
->> register bit 30: "MSI Acknowledge (W). Writing a one to this bit
->> acknowledges a Message Signaled Interrupt and permits generation of another
->> MSI. This bit is cleared immediately after the acknowledgement is recognized
->> by the control logic, hence the bit will always be read as a zero. If all
->> interrupt conditions are removed subsequent to an MSI, it is not necessary
->> to assert this Acknowledge; another MSI will be generated when an interrupt
->> condition occurs."
->>
->> The way the interrupt handler for this driver works is that we check the
->> global IRQ status register, and then based on what ports indicated an
->> interrupt in that register, we check the individual port command completion
->> registers. The issue would seem to be that if a port got an interrupt
->> condition in between these two operations, we'd miss it, and the MSI logic
->> described above then wouldn't generate any more interrupts since we didn't
->> remove all interrupt conditions.
->>
->> Can you try this patch and see if it helps? (Might be whitespace damaged but
->> hopefully you can apply manually in that case.)
+On Thu, Jan 7, 2010 at 4:05 AM, Robert Hancock <hancockrwd@gmail.com> w=
+rote:
+> Hmm, well presumably the problem isn't related to that then. I was lo=
+oking
+> at your lspci output though:
 >
-> Tried it, but writing still fails:
-> [   53.467694] XFS mounting filesystem sdb2
-> [  141.010058] ata2.00: exception Emask 0x0 SAct 0xf SErr 0x0 action 0x6 frozen
-> [  141.020361] ata2.00: failed command: WRITE FPDMA QUEUED
-> [  141.028718] ata2.00: cmd 61/00:00:5d:cd:48/04:00:01:00:00/40 tag 0
-> ncq 524288 out
-> [  141.028721]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [  141.049895] ata2.00: status: { DRDY }
-> [  141.056715] ata2.00: failed command: WRITE FPDMA QUEUED
-> [  141.065133] ata2.00: cmd 61/00:08:5d:c5:48/04:00:01:00:00/40 tag 1
-> ncq 524288 out
-> [  141.065135]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [  141.086492] ata2.00: status: { DRDY }
-> [  141.093313] ata2.00: failed command: WRITE FPDMA QUEUED
-> [  141.101679] ata2.00: cmd 61/00:10:5d:c9:48/04:00:01:00:00/40 tag 2
-> ncq 524288 out
-> [  141.101682]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [  141.122813] ata2.00: status: { DRDY }
-> [  141.129522] ata2.00: failed command: WRITE FPDMA QUEUED
-> [  141.137769] ata2.00: cmd 61/00:18:5d:d1:48/04:00:01:00:00/40 tag 3
-> ncq 524288 out
-> [  141.137771]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [  141.158660] ata2.00: status: { DRDY }
-> [  141.165313] ata2: hard resetting link
-> [  143.370049] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  148.370031] ata2.00: qc timeout (cmd 0xec)
-> [  148.377198] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [  148.386450] ata2.00: revalidation failed (errno=-5)
-> [  148.394504] ata2: hard resetting link
-> [  150.600064] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  160.600038] ata2.00: qc timeout (cmd 0xec)
-> [  160.607451] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [  160.616913] ata2.00: revalidation failed (errno=-5)
-> [  160.625181] ata2: limiting SATA link speed to 1.5 Gbps
-> [  160.633746] ata2: hard resetting link
-> [  162.830049] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-> ...
+> 00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev =
+a3)
+> (prog-if 85 [Master SecO PriO])
+> =A0 =A0 =A0 =A0Subsystem: ASUSTeK Computer Inc. Device 81f0
+> =A0 =A0 =A0 =A0Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGAS=
+noop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx+
+> =A0 =A0 =A0 =A0Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=3Dfas=
+t >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> =A0 =A0 =A0 =A0Latency: 0 (750ns min, 250ns max)
+> =A0 =A0 =A0 =A0Interrupt: pin A routed to IRQ 30
+> =A0 =A0 =A0 =A0Region 0: I/O ports at cc00 [size=3D8]
+> =A0 =A0 =A0 =A0Region 1: I/O ports at c880 [size=3D4]
+> =A0 =A0 =A0 =A0Region 2: I/O ports at c800 [size=3D8]
+> =A0 =A0 =A0 =A0Region 3: I/O ports at c480 [size=3D4]
+> =A0 =A0 =A0 =A0Region 4: I/O ports at c400 [size=3D16]
+> =A0 =A0 =A0 =A0Region 5: Memory at efafb000 (32-bit, non-prefetchable=
+) [size=3D4K]
+> =A0 =A0 =A0 =A0Capabilities: [44] Power Management version 2
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Flags: PMEClk- DSI- D1- D2- AuxCurrent=
+=3D0mA
+> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Status: D0 NoSoftRst- PME-Enable- DSel=
+=3D0 DScale=3D0 PME-
+> =A0 =A0 =A0 =A0Capabilities: [b0] MSI: Enable+ Count=3D1/4 Maskable- =
+64bit+
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Address: 00000000fee0f00c =A0Data: 418=
+9
+> =A0 =A0 =A0 =A0Capabilities: [cc] HyperTransport: MSI Mapping Enable-=
+ Fixed+
 >
-> Please note, that in my first report I also mentioned that I get the
-> same behavior with sata_nv. If I use sata_nv.msi=1 writing to the
-> drives attached to the MCP55 fail. The sata_nv problem is not new,
-> that never worked for me, but I only retried it with 2.6.33-rc1.
-> Other drivers can use MSI successfull (tg3, hda-intel, radeon).
+> The HT MSI Mapping capability is not enabled on the device. I'm think=
+ing it
+> should be, but I'm not sure. And it's also not enabled on the bus whi=
+ch has
+> the Silicon Image controller:
 >
->> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
->> index 1370df6..d3d8dec 100644
->> --- a/drivers/ata/sata_sil24.c
->> +++ b/drivers/ata/sata_sil24.c
->> @@ -102,6 +102,7 @@ enum {
->>         HOST_CTRL_STOP          = (1<<  18), /* latched PCI STOP */
->>         HOST_CTRL_DEVSEL        = (1<<  19), /* latched PCI DEVSEL */
->>         HOST_CTRL_REQ64         = (1<<  20), /* latched PCI REQ64 */
->> +       HOST_CTRL_MSIACK        = (1<<  30), /* MSI acknowledge */
->>         HOST_CTRL_GLOBAL_RST    = (1<<  31), /* global reset */
->>
->>         /*
->> @@ -1168,6 +1169,7 @@ static irqreturn_t sil24_interrupt(int irq, void
->> *dev_instance)
->>                                        ": interrupt from disabled port %d\n",
->> i);
->>                 }
->>
->> +       writel(IRQ_STAT_4PORTS | HOST_CTRL_MSIACK, host_base + HOST_CTRL);
->>         spin_unlock(&host->lock);
->>   out:
->>         return IRQ_RETVAL(handled);
->>
+> 04:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial =
+ATA
+> Raid II Controller (rev 01)
+>
+> on its subordinate bus:
+>
+> 00:0b.0 PCI bridge: nVidia Corporation MCP55 PCI Express bridge (rev =
+a3)
+> (prog-if 00 [Normal decode])
+> =A0 =A0 =A0 =A0Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGAS=
+noop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx+
+> =A0 =A0 =A0 =A0Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfas=
+t >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> =A0 =A0 =A0 =A0Latency: 0, Cache Line Size: 64 bytes
+> =A0 =A0 =A0 =A0Bus: primary=3D00, secondary=3D04, subordinate=3D04, s=
+ec-latency=3D0
+> =A0 =A0 =A0 =A0I/O behind bridge: 0000e000-0000efff
+> =A0 =A0 =A0 =A0Memory behind bridge: efe00000-efefffff
+> =A0 =A0 =A0 =A0Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfas=
+t >TAbort-
+> <TAbort- <MAbort- <SERR- <PERR-
+> =A0 =A0 =A0 =A0BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- F=
+astB2B-
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0PriDiscTmr- SecDiscTmr- DiscTmrStat- D=
+iscTmrSERREn-
+> =A0 =A0 =A0 =A0Capabilities: [40] Subsystem: nVidia Corporation Devic=
+e 0000
+> =A0 =A0 =A0 =A0Capabilities: [48] Power Management version 2
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Flags: PMEClk- DSI- D1- D2- AuxCurrent=
+=3D0mA
+> PME(D0+,D1+,D2+,D3hot+,D3cold+)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Status: D0 NoSoftRst- PME-Enable- DSel=
+=3D0 DScale=3D0 PME-
+> =A0 =A0 =A0 =A0Capabilities: [50] MSI: Enable+ Count=3D1/2 Maskable- =
+64bit+
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Address: 00000000fee0f00c =A0Data: 414=
+9
+> =A0 =A0 =A0 =A0Capabilities: [60] HyperTransport: MSI Mapping Enable-=
+ Fixed-
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Mapping Address Base: 00000000fee00000
+>
+> CCing some people that might have some idea about this..
 
-Hmm, well presumably the problem isn't related to that then. I was 
-looking at your lspci output though:
+part of the PCI tree:
+           +-0b.0-[04]----00.0  Silicon Image, Inc. SiI 3132 Serial
+ATA Raid II Controller
+           +-0c.0-[03]----00.0  Broadcom Corporation NetXtreme BCM5754
+Gigabit Ethernet PCI Express
+           +-0d.0-[02]----00.0  Broadcom Corporation NetXtreme BCM5754
+Gigabit Ethernet PCI Express
+           +-0f.0-[01]--+-00.0  ATI Technologies Inc RV370 5B60
+[Radeon X300 (PCIE)]
+           |            \-00.1  ATI Technologies Inc RV370 [Radeon X300=
+SE]
 
-00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3) 
-(prog-if 85 [Master SecO PriO])
-	Subsystem: ASUSTeK Computer Inc. Device 81f0
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0 (750ns min, 250ns max)
-	Interrupt: pin A routed to IRQ 30
-	Region 0: I/O ports at cc00 [size=8]
-	Region 1: I/O ports at c880 [size=4]
-	Region 2: I/O ports at c800 [size=8]
-	Region 3: I/O ports at c480 [size=4]
-	Region 4: I/O ports at c400 [size=16]
-	Region 5: Memory at efafb000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [44] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [b0] MSI: Enable+ Count=1/4 Maskable- 64bit+
-		Address: 00000000fee0f00c  Data: 4189
-	Capabilities: [cc] HyperTransport: MSI Mapping Enable- Fixed+
+The three devices attached to 0c.0, 0d.0 and 0f.0 work correctly with M=
+SI.
+But each of these PCI Express bridges also has this Mapping disabled:
+        Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
+                Mapping Address Base: 00000000fee00000
 
-The HT MSI Mapping capability is not enabled on the device. I'm thinking 
-it should be, but I'm not sure. And it's also not enabled on the bus 
-which has the Silicon Image controller:
+This capability seems only to be enabled at the root:
+00:00.0 RAM memory: nVidia Corporation MCP55 Memory Controller (rev a2)
+        Subsystem: ASUSTeK Computer Inc. Device 81f0
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- S
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=3Dfast >TAbort=
+-
+<TAbort- <MAbort
+        Latency: 0
+        Capabilities: [44] HyperTransport: Slave or Primary Interface
+                Command: BaseUnitID=3D0 UnitCnt=3D15 MastHost- DefDir- =
+DUL-
+                Link Control 0: CFlE+ CST- CFE- <LkFail- Init+ EOC-
+TXO- <CRCErr=3D0 Isoc
+                Link Config 0: MLWI=3D16bit DwFcIn- MLWO=3D16bit DwFcOu=
+t-
+LWI=3D16bit DwFcInE
+                Link Control 1: CFlE- CST- CFE- <LkFail+ Init- EOC+
+TXO+ <CRCErr=3D0 Isoc
+                Link Config 1: MLWI=3D8bit DwFcIn- MLWO=3D8bit DwFcOut-
+LWI=3D8bit DwFcInEn-
+                Revision ID: 1.03
+                Link Frequency 0: 1.0GHz
+                Link Error 0: <Prot- <Ovfl- <EOC- CTLTm-
+                Link Frequency Capability 0: 200MHz+ 300MHz+ 400MHz+
+500MHz+ 600MHz+ 80
+                Feature Capability: IsocFC+ LDTSTOP+ CRCTM- ECTLT- 64bA=
+- UIDRD-
+                Link Frequency 1: 200MHz
+                Link Error 1: <Prot- <Ovfl- <EOC- CTLTm-
+                Link Frequency Capability 1: 200MHz- 300MHz- 400MHz-
+500MHz- 600MHz- 80
+                Error Handling: PFlE+ OFlE+ PFE- OFE- EOCFE- RFE-
+CRCFE- SERRFE- CF- RE
+                Prefetchable memory behind bridge Upper: 00-00
+                Bus Number: 00
+        Capabilities: [dc] HyperTransport: MSI Mapping Enable+ Fixed-
+                Mapping Address Base: 00000000fee00000
 
-04:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA 
-Raid II Controller (rev 01)
+=46rom my dmesg:
+[    1.636318] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.641854] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.647420] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.652946] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.658505] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.664055] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.669597] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.675172] pci 0000:00:00.0: Found enabled HT MSI Mapping
+[    1.680715] pci 0000:00:00.0: Found enabled HT MSI Mapping
 
-on its subordinate bus:
+I found this output very strange, as it always referred to the same
+pci device, but looking at the code, that might only be a visual nit.
 
-00:0b.0 PCI bridge: nVidia Corporation MCP55 PCI Express bridge (rev a3) 
-(prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
-	I/O behind bridge: 0000e000-0000efff
-	Memory behind bridge: efe00000-efefffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Subsystem: nVidia Corporation Device 0000
-	Capabilities: [48] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
-		Address: 00000000fee0f00c  Data: 4149
-	Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
-		Mapping Address Base: 00000000fee00000
+The output is from msi_ht_cap_enabled() in drivers/pci/quirks.c. This
+will be called via nv_ht_enable_msi_mapping(), but always to check the
+'host_bridge', not the devices that __nv_msi_ht_cap_quirk() loops
+over.
 
-CCing some people that might have some idea about this..
+But I do not have the knowlegde to to decide, if this is just a
+overeager debug output, or if this should be switched to test each
+device.
+
+
+Torsten
