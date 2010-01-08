@@ -1,38 +1,55 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 2/2] ide: add __init/__exit macros to
- drivers/ide/scc_pata.c
-Date: Fri, 08 Jan 2010 00:14:16 -0800 (PST)
-Message-ID: <20100108.001416.189746434.davem@davemloft.net>
-References: <alpine.LNX.2.00.1001051124150.2277@pobox.suse.cz>
-	<201001051939.07756.bzolnier@gmail.com>
-	<20100108.001302.146106973.davem@davemloft.net>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
+Date: Fri, 8 Jan 2010 12:30:13 +0100
+Message-ID: <201001081230.14419.eike-kernel@sf-tec.de>
+References: <4B3BDB66.6000008@googlemail.com> <4B46453E.1060206@googlemail.com> <4B4646B2.6050103@googlemail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart1800099.K2pXvrlG51";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53184
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753337Ab0AHIOJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jan 2010 03:14:09 -0500
-In-Reply-To: <20100108.001302.146106973.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752966Ab0AHLbA@vger.kernel.org>
+In-Reply-To: <4B4646B2.6050103@googlemail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?iso-8859-1?q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: jkosina@suse.cz, peterhuewe@gmx.de, kernel-janitors@vger.kernel.org, sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: David Miller <davem@davemloft.net>
-Date: Fri, 08 Jan 2010 00:13:02 -0800 (PST)
+--nextPart1800099.K2pXvrlG51
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Tue, 5 Jan 2010 19:39:07 +0100
-> 
->> -	ide_pci_unregister_driver(&scc_pci_driver);
->> +	pci_unregister_driver(&scc_pci_driver);
-> 
-> As a side note I can't figure out how this driver can currently even
-> build without errors before this patch.
-> 
-> ide_pci_unregister_driver() isn't even defined anywhere these days.
+Ren=E9 Bolldorf wrote:
+> On 01/07/10 21:34, Ren=E9 Bolldorf wrote:
+> > On 01/07/10 20:15, Jeff Garzik wrote:
+> >> I need a little bit more detail than an unqualified statement... Did
+> >> you audit all paths leading to this code point?
+> >
+> > Yes, and my two systems running fine with the patch, no oops or panic's.
+>=20
+> Sry forgot that:
+> 	/* initialize sense_buf with the error register,
+> 	 * for the case where they are -not- overwritten
+> 	 */
+> 	sense_buf[0] =3D 0x70;
+> 	sense_buf[2] =3D dfl_sense_key;
+>=20
+> So i think memset() is not needed and works very well without it.
 
-Ignore me, I'm an idiot, this code was commented out of course.
-:-)
+What happens to sense_buf[1]?
+
+--nextPart1800099.K2pXvrlG51
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAktHF0YACgkQXKSJPmm5/E6rFwCfVCg5PogrUdwVJOuEeXK5w+LN
+hVsAn05KNRlTAQyUdHgCdSoFJ+ou3gFf
+=/Ctq
+-----END PGP SIGNATURE-----
+
+--nextPart1800099.K2pXvrlG51--
