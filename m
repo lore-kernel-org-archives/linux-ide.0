@@ -1,38 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.33-rc2 pata_macio fails to detect PMac G3 CD-drive
-Date: Mon, 11 Jan 2010 16:01:49 +0900
-Message-ID: <4B4ACCDD.8040803@kernel.org>
-References: <19254.17766.674348.933702@pilspetsen.it.uu.se> <1263186759.724.132.camel@pasglop>
+Subject: [PATCH #upstream-fixes] ata_piix: enable 32bit PIO on SATA piix
+Date: Mon, 11 Jan 2010 17:03:11 +0900
+Message-ID: <4B4ADB3F.2080505@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35902 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:59919 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751536Ab0AKG4L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Jan 2010 01:56:11 -0500
-In-Reply-To: <1263186759.724.132.camel@pasglop>
+	id S1751651Ab0AKH5i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Jan 2010 02:57:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+Commit 871af1210f13966ab911ed2166e4ab2ce775b99d enabled 32bit PIO for
+PATA piix but didn't for SATA.  There's no reason not to use 32bit PIO
+on SATA piix.  Enable it.
 
-On 01/11/2010 02:12 PM, Benjamin Herrenschmidt wrote:
-> Tejun, what's your take here ? It looks like reading the status reg
-> is not enough to bring the interrupt down. We could try to disable_irq
-> in freeze() (we know we don't share interrupts in the case of macio)
-> and re-enable it right after firing off the first taskfile maybe ?
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+---
+ drivers/ata/ata_piix.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It would be best if the controller has an IRQ pending bit and IRQ can
-be cleared as spurious on those bogus interrupts.  The reason why SFF
-IDE interface is so prone to IRQ storm is because there's no way the
-driver can tell whether the controller is raising interrupt or not.
-Does the controller have a way to clear IRQ other than reading the
-status reg?
-
-Thanks.
-
--- 
-tejun
+Index: ata/drivers/ata/ata_piix.c
+===================================================================
+--- ata.orig/drivers/ata/ata_piix.c
++++ ata/drivers/ata/ata_piix.c
+@@ -329,7 +329,7 @@ static struct ata_port_operations ich_pa
+ };
+ 
+ static struct ata_port_operations piix_sata_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &ata_bmdma32_port_ops,
+ };
+ 
+ static struct ata_port_operations piix_sidpr_sata_ops = {
