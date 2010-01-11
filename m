@@ -1,99 +1,43 @@
-From: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
-Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
-Date: Mon, 11 Jan 2010 21:18:02 +0100
-Message-ID: <4B4B877A.8060106@googlemail.com>
-References: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com> <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH #upstream-fixes] libata: retry link resume if necessary
+Date: Mon, 11 Jan 2010 14:57:26 -0800
+Message-ID: <20100111225726.GA6591@kroah.com>
+References: <4B4A8994.8030600@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754236Ab0AKURk@vger.kernel.org>
-In-Reply-To: <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Bejarano <beej@beej.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from kroah.org ([198.145.64.141]:44664 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750809Ab0AKW6H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Jan 2010 17:58:07 -0500
+Content-Disposition: inline
+In-Reply-To: <4B4A8994.8030600@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, fengxiangjun <fengxiangjun@neusoft.com>, Jim Faulkner <jfaulkne@ccs.neu.edu>
 
-On 01/11/10 20:41, Marc Bejarano wrote:
-> and once more in plain text.  (sorry vger)
->
-> 2010/1/11 Marc Bejarano<beej@beej.org>:
->> oops.  seems that GMANE's reply function only goes to a single "news=
-group".
->>   original recipients re-added.
->> marc
->> ----
->> From: Marc Bejarano<beej<at>  beej.org>
->> Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
->> Newsgroups: gmane.linux.scsi
->> Date: 2010-01-08 22:21:09 GMT (2 days, 20 hours and 40 minutes ago)
->>
->> Ren=E9 Bolldorf<xsecute<at>  googlemail.com>  writes:
->>> On 01/08/10 16:28, James Bottomley wrote:
->>>> On Thu, 2010-01-07 at 14:15 -0500, Jeff Garzik wrote:
->>>>> On 12/30/2009 05:59 PM, Ren=E9 Bolldorf wrote:
->>>>>> We don't need this .
->>
->>>>>> - /* FIXME: is this needed? */
->>>>>> - memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
->>>>>
->>>>> I need a little bit more detail than an unqualified statement... =
- Did
->>>>> you audit all paths leading to this code point?
->>
->>>> But one also here:
->>>>
->>>> u8 *sense_buffer =3D dev->link->ap->sector_buf;
->>>> [...]
->>>> err_mask =3D atapi_eh_request_sense(dev, sense_buffer, sense_key);
->>>>
->>>> Which doesn't look OK because it looks like the sector_buf isn't c=
-leared
->>>> (and it is reused).
->>>>
->>>> James
->>>>
->>>>
->>>
->>> Thank's, you're right. I have overseen this, sry for that.
->>
->> Ren=E9: perhaps you'd like to submit a patch that substitutes FIXME =
-comment
->> for one that explains why the memset is needed, crediting James in t=
-he
->> description?  we may as well gain something permanent from this disc=
-ussion
->> that you started :)
->>
->> cheers,
->> marc
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo<at>  vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> ----
+On Mon, Jan 11, 2010 at 11:14:44AM +0900, Tejun Heo wrote:
+> Interestingly, when SIDPR is used in ata_piix, writes to DET in
+> SControl sometimes get ignored leading to detection failure.  Update
+> sata_link_resume() such that it reads back SControl after clearing DET
+> and retry if it's not clear.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: fengxiangjun <fengxiangjun@neusoft.com>
+> Reported-by: Jim Faulkner <jfaulkne@ccs.neu.edu>
+> Cc: stable@kernel.org
+> ---
+> Greg, although this patch should be included in -stable release in
+> time, I think it should receive some more testing in devel branch for
+> at least a couple of -rc cycles as it changes very fundamental part of
+> hardreset protocol.  Is there a protocol for delayed inclusion into
+> -stable?  If not, I'll try to remember and ping you back after some
+> time but I'm almost sure that I'm gonna forget this.  :-)
 
-I hope that's good enough explained :-).
+I'll drop this into my "todo-stable" queue, and ping you back on this in
+a few weeks.  Sound good?
 
-Best regards
-Ren=E9
+thanks,
 
---- ./drivers/ata/libata-eh.c   2010-01-07 23:21:23.622464012 +0100
-+++ ./drivers/ata/libata-eh.c   2010-01-11 21:11:19.869092897 +0100
-@@ -1505,7 +1505,10 @@ static unsigned int atapi_eh_request_sen
-
-         DPRINTK("ATAPI request sense\n");
-
--       /* FIXME: is this needed? */
-+       /* make sure sense_buf is cleared then atapi_eh_request_sense i=
-s=20
-called.
-+        * (to make sure nothing get's reused.)
-+        * thanks to James Bottomley
-+        */
-         memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
-
-         /* initialize sense_buf with the error register,
+greg k-h
