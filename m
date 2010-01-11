@@ -1,44 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Rapidly increasing Load_Cycle_Count on Acer 2930z
-Date: Mon, 11 Jan 2010 17:33:55 +0900
-Message-ID: <4B4AE273.9050005@kernel.org>
-References: <200912151956.02364.kailed@kailed.net> <4B2F3034.1030208@kernel.org> <200912211833.26000.kailed@kailed.net>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: 2.6.33-rc2 pata_macio fails to detect PMac G3 CD-drive
+Date: Mon, 11 Jan 2010 20:41:06 +1100
+Message-ID: <1263202866.724.134.camel@pasglop>
+References: <19254.17766.674348.933702@pilspetsen.it.uu.se>
+	 <1263186759.724.132.camel@pasglop>  <4B4ACCDD.8040803@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55433 "EHLO hera.kernel.org"
+Received: from gate.crashing.org ([63.228.1.57]:55342 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752187Ab0AKI2O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Jan 2010 03:28:14 -0500
-In-Reply-To: <200912211833.26000.kailed@kailed.net>
+	id S1752590Ab0AKJnH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Jan 2010 04:43:07 -0500
+In-Reply-To: <4B4ACCDD.8040803@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kailed@kailed.net
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-On 12/22/2009 02:33 AM, Daniele wrote:
-> Il luned=C3=AC 21 dicembre 2009, Tejun Heo scrisse:
->> On 12/16/2009 03:56 AM, Daniele wrote:
->>> Hi folks,
->>> on my acer2930z Load_Cycle_Count increase every 5 seconds when
->>> idle.
->>>
->>> Setting APM_LEVEL to 200 (default 128) fix the issue, LCC doesn't
->>> not increase anymore.
->>
->> Can you please *attach* the outputs and also include the output of
->> dmidecode for later reference?
-> Which outputs ? hdparm, smarctl or both ?
->=20
-> So tell me exactly which outputs do you want and if before or after=20
-> changing the APM value.
->=20
-> Dmidecode attached.
+On Mon, 2010-01-11 at 16:01 +0900, Tejun Heo wrote:
+> It would be best if the controller has an IRQ pending bit and IRQ can
+> be cleared as spurious on those bogus interrupts.  The reason why SFF
+> IDE interface is so prone to IRQ storm is because there's no way the
+> driver can tell whether the controller is raising interrupt or not.
+> Does the controller have a way to clear IRQ other than reading the
+> status reg?
 
-Added to storage-fixup and recorded on ata-wiki.
+Nope. Those old Apple controllers have neither a pending bit nor a
+clear, I think the disk interrupt is wired pretty much directly to
+the PIC.
 
-Thanks.
+I can't tell for sure about Mikael's precise case because I can't
+reproduce it, but in the past, I've seen the CD drive act up similarily
+when touching NIEN on a wallstreet powerbook (same controller, though
+for some reason it doesn't act up for me right now) and reading the
+status reg wasn't clearing the IRQ neither.
 
---=20
-tejun
+I suspect those guys have the IRQ in some kind of floating state after
+the HW reset and don't get it "right" until they get the first taskfile
+to kick them into some kind of shape...
+
+Cheers,
+Ben.
+
+
