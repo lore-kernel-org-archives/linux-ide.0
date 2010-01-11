@@ -1,46 +1,51 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: 2.6.33-rc2 pata_macio fails to detect PMac G3 CD-drive
-Date: Mon, 11 Jan 2010 20:41:06 +1100
-Message-ID: <1263202866.724.134.camel@pasglop>
-References: <19254.17766.674348.933702@pilspetsen.it.uu.se>
-	 <1263186759.724.132.camel@pasglop>  <4B4ACCDD.8040803@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14438] IDE Probe fails to find CD drive
+Date: Mon, 11 Jan 2010 13:49:31 GMT
+Message-ID: <201001111349.o0BDnVtX007835@demeter.kernel.org>
+References: <bug-14438-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:55342 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590Ab0AKJnH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Jan 2010 04:43:07 -0500
-In-Reply-To: <4B4ACCDD.8040803@kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:35518 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844Ab0AKNtb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2010 08:49:31 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0BDnV96007836
+	for <linux-ide@vger.kernel.org>; Mon, 11 Jan 2010 13:49:31 GMT
+In-Reply-To: <bug-14438-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 2010-01-11 at 16:01 +0900, Tejun Heo wrote:
-> It would be best if the controller has an IRQ pending bit and IRQ can
-> be cleared as spurious on those bogus interrupts.  The reason why SFF
-> IDE interface is so prone to IRQ storm is because there's no way the
-> driver can tell whether the controller is raising interrupt or not.
-> Does the controller have a way to clear IRQ other than reading the
-> status reg?
-
-Nope. Those old Apple controllers have neither a pending bit nor a
-clear, I think the disk interrupt is wired pretty much directly to
-the PIC.
-
-I can't tell for sure about Mikael's precise case because I can't
-reproduce it, but in the past, I've seen the CD drive act up similarily
-when touching NIEN on a wallstreet powerbook (same controller, though
-for some reason it doesn't act up for me right now) and reading the
-status reg wasn't clearing the IRQ neither.
-
-I suspect those guys have the IRQ in some kind of floating state after
-the HW reset and don't get it "right" until they get the first taskfile
-to kick them into some kind of shape...
-
-Cheers,
-Ben.
+http://bugzilla.kernel.org/show_bug.cgi?id=14438
 
 
+andrea <andrea.gilbert@clearswift.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |andrea.gilbert@clearswift.c
+                   |                            |om
+
+
+
+
+--- Comment #7 from andrea <andrea.gilbert@clearswift.com>  2010-01-11 13:49:29 ---
+I had a problem which sounds very similar last week.
+
+I started a forum thread here (before I discovered this DB):
+http://www.linuxquestions.org/questions/linux-virtualization-90/2.6.31-kernel-guest-os-on-vmware-esx-3.5.0-780042/ 
+
+The solution (for us) was to regress out this kernel change:
+http://kerneltrap.org/mailarchive/git-commits-head/2009/6/12/5948973
+
+A more resilient fix might be to leave ide_probe_port() as-is but to fix 
+ide_wait_not_busy() to return the last successful rc code (only returning
+-ENODEV if strictly no device is detected on the IDE port). I do not know what
+other repercussions such a fix might have however.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
