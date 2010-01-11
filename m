@@ -1,51 +1,75 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14438] IDE Probe fails to find CD drive
-Date: Mon, 11 Jan 2010 13:49:31 GMT
-Message-ID: <201001111349.o0BDnVtX007835@demeter.kernel.org>
-References: <bug-14438-11633@http.bugzilla.kernel.org/>
+From: Marc Bejarano <beej@beej.org>
+Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
+Date: Mon, 11 Jan 2010 11:41:35 -0800
+Message-ID: <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
+References: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35518 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844Ab0AKNtb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2010 08:49:31 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0BDnV96007836
-	for <linux-ide@vger.kernel.org>; Mon, 11 Jan 2010 13:49:31 GMT
-In-Reply-To: <bug-14438-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753995Ab0AKTll@vger.kernel.org>
+In-Reply-To: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14438
+and once more in plain text. =A0(sorry vger)
 
-
-andrea <andrea.gilbert@clearswift.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |andrea.gilbert@clearswift.c
-                   |                            |om
-
-
-
-
---- Comment #7 from andrea <andrea.gilbert@clearswift.com>  2010-01-11 13:49:29 ---
-I had a problem which sounds very similar last week.
-
-I started a forum thread here (before I discovered this DB):
-http://www.linuxquestions.org/questions/linux-virtualization-90/2.6.31-kernel-guest-os-on-vmware-esx-3.5.0-780042/ 
-
-The solution (for us) was to regress out this kernel change:
-http://kerneltrap.org/mailarchive/git-commits-head/2009/6/12/5948973
-
-A more resilient fix might be to leave ide_probe_port() as-is but to fix 
-ide_wait_not_busy() to return the last successful rc code (only returning
--ENODEV if strictly no device is detected on the IDE port). I do not know what
-other repercussions such a fix might have however.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+2010/1/11 Marc Bejarano <beej@beej.org>:
+> oops. =A0seems that GMANE's reply function only goes to a single "new=
+sgroup".
+> =A0original recipients re-added.
+> marc
+> ----
+> From: Marc Bejarano <beej <at> beej.org>
+> Subject:=A0Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
+> Newsgroups:=A0gmane.linux.scsi
+> Date: 2010-01-08 22:21:09 GMT (2 days, 20 hours and 40 minutes ago)
+>
+> Ren=E9 Bolldorf <xsecute <at> googlemail.com> writes:
+>> On 01/08/10 16:28, James Bottomley wrote:
+>> > On Thu, 2010-01-07 at 14:15 -0500, Jeff Garzik wrote:
+>> >> On 12/30/2009 05:59 PM, Ren=E9 Bolldorf wrote:
+>> >>> We don't need this .
+>
+>> >>> - /* FIXME: is this needed? */
+>> >>> - memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+>> >>
+>> >> I need a little bit more detail than an unqualified statement... =
+=A0Did
+>> >> you audit all paths leading to this code point?
+>
+>> > But one also here:
+>> >
+>> > u8 *sense_buffer =3D dev->link->ap->sector_buf;
+>> > [...]
+>> > err_mask =3D atapi_eh_request_sense(dev, sense_buffer, sense_key);
+>> >
+>> > Which doesn't look OK because it looks like the sector_buf isn't c=
+leared
+>> > (and it is reused).
+>> >
+>> > James
+>> >
+>> >
+>>
+>> Thank's, you're right. I have overseen this, sry for that.
+>
+> Ren=E9: perhaps you'd like to submit a patch that substitutes FIXME c=
+omment
+> for one that explains why the memset is needed, crediting James in th=
+e
+> description? =A0we may as well gain something permanent from this dis=
+cussion
+> that you started :)
+>
+> cheers,
+> marc
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo <at> vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+> ----
