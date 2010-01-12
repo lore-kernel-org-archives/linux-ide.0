@@ -1,136 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 12 Jan 2010 14:36:25 -0500
-Message-ID: <20100112193625.GA22031@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.33-rc3] sata_promise: don't classify overruns as HSM
+ errors
+Date: Tue, 12 Jan 2010 14:38:31 -0500
+Message-ID: <4B4CCFB7.6090108@pobox.com>
+References: <19273.998.753256.526176@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:46430 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754804Ab0ALTg2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Jan 2010 14:36:28 -0500
-Content-Disposition: inline
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:45885 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754785Ab0ALTie (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jan 2010 14:38:34 -0500
+Received: by yxe17 with SMTP id 17so21719035yxe.33
+        for <linux-ide@vger.kernel.org>; Tue, 12 Jan 2010 11:38:33 -0800 (PST)
+In-Reply-To: <19273.998.753256.526176@pilspetsen.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, thomas schorpp <thomas.schorpp@googlemail.com>
+
+On 01/09/2010 05:32 PM, Mikael Pettersson wrote:
+> When sata_promise encounters an overrun or underrun error it
+> translates that to a libata AC_ERR_HSM, causing a hard reset.
+> Since over/under-runs were thought to be rare and transient,
+> this action seemed reasonable.
+>
+> Unfortunately it turns out that the controller throws overrun
+> errors when e.g. hal polls a CD or DVD writer containing blank
+> media, causing long sequences of hard resets and retries before
+> EH finally gives up.
+>
+> This patch updates sata_promise to classify over/under-runs as
+> AC_ERR_OTHER instead. This allows libata EH and upper layers to
+> retry or fail the operation as they see fit without the disruption
+> caused by repeated hard resets.
+>
+> This fixes a problem using a DVD-RAM drive with sata_promise,
+> reported by Thomas Schorpp. I also tested it on a DVD-RW drive.
+>
+> Signed-off-by: Mikael Pettersson<mikpe@it.uu.se>
+> Tested-by: thomas schorpp<thomas.schorpp@googlemail.com>
+> ---
+>   drivers/ata/sata_promise.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+
+applied
 
 
-There is one other fix about to go upstream, for a problem discovered by
-Russell King related to PATA.
-
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/ata_piix.c     |    2 +-
- drivers/ata/libata-core.c  |   38 +++++++++++++++++++++++++++++++-------
- drivers/ata/sata_promise.c |    2 +-
- include/linux/libata.h     |    3 +++
- 4 files changed, 36 insertions(+), 9 deletions(-)
-
-Mikael Pettersson (1):
-      sata_promise: don't classify overruns as HSM errors
-
-Tejun Heo (2):
-      ata_piix: enable 32bit PIO on SATA piix
-      libata: retry link resume if necessary
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 19136a7..6f3f225 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -329,7 +329,7 @@ static struct ata_port_operations ich_pata_ops = {
- };
- 
- static struct ata_port_operations piix_sata_ops = {
--	.inherits		= &ata_bmdma_port_ops,
-+	.inherits		= &ata_bmdma32_port_ops,
- };
- 
- static struct ata_port_operations piix_sidpr_sata_ops = {
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 22ff51b..6728328 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3790,21 +3790,45 @@ int sata_link_debounce(struct ata_link *link, const unsigned long *params,
- int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 		     unsigned long deadline)
- {
-+	int tries = ATA_LINK_RESUME_TRIES;
- 	u32 scontrol, serror;
- 	int rc;
- 
- 	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
- 		return rc;
- 
--	scontrol = (scontrol & 0x0f0) | 0x300;
-+	/*
-+	 * Writes to SControl sometimes get ignored under certain
-+	 * controllers (ata_piix SIDPR).  Make sure DET actually is
-+	 * cleared.
-+	 */
-+	do {
-+		scontrol = (scontrol & 0x0f0) | 0x300;
-+		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
-+			return rc;
-+		/*
-+		 * Some PHYs react badly if SStatus is pounded
-+		 * immediately after resuming.  Delay 200ms before
-+		 * debouncing.
-+		 */
-+		msleep(200);
- 
--	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
--		return rc;
-+		/* is SControl restored correctly? */
-+		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
-+			return rc;
-+	} while ((scontrol & 0xf0f) != 0x300 && --tries);
- 
--	/* Some PHYs react badly if SStatus is pounded immediately
--	 * after resuming.  Delay 200ms before debouncing.
--	 */
--	msleep(200);
-+	if ((scontrol & 0xf0f) != 0x300) {
-+		ata_link_printk(link, KERN_ERR,
-+				"failed to resume link (SControl %X)\n",
-+				scontrol);
-+		return 0;
-+	}
-+
-+	if (tries < ATA_LINK_RESUME_TRIES)
-+		ata_link_printk(link, KERN_WARNING,
-+				"link resume succeeded after %d retries\n",
-+				ATA_LINK_RESUME_TRIES - tries);
- 
- 	if ((rc = sata_link_debounce(link, params, deadline)))
- 		return rc;
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 07d8d00..6330628 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc,
- 	if (port_status & PDC_DRIVE_ERR)
- 		ac_err_mask |= AC_ERR_DEV;
- 	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
--		ac_err_mask |= AC_ERR_HSM;
-+		ac_err_mask |= AC_ERR_OTHER;
- 	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
- 		ac_err_mask |= AC_ERR_ATA_BUS;
- 	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6a9c4dd..7311225 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -354,6 +354,9 @@ enum {
- 	/* max tries if error condition is still set after ->error_handler */
- 	ATA_EH_MAX_TRIES	= 5,
- 
-+	/* sometimes resuming a link requires several retries */
-+	ATA_LINK_RESUME_TRIES	= 5,
-+
- 	/* how hard are we gonna try to probe/recover devices */
- 	ATA_PROBE_MAX_TRIES	= 3,
- 	ATA_EH_DEV_TRIES	= 3,
