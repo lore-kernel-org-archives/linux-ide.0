@@ -1,49 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.33-rc3] sata_promise: don't classify overruns as HSM
- errors
-Date: Tue, 12 Jan 2010 14:38:31 -0500
-Message-ID: <4B4CCFB7.6090108@pobox.com>
-References: <19273.998.753256.526176@pilspetsen.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] libata: retry link resume if necessary
+Date: Tue, 12 Jan 2010 14:38:40 -0500
+Message-ID: <4B4CCFC0.2070508@garzik.org>
+References: <4B4A8994.8030600@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:45885 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754785Ab0ALTie (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jan 2010 14:38:34 -0500
-Received: by yxe17 with SMTP id 17so21719035yxe.33
-        for <linux-ide@vger.kernel.org>; Tue, 12 Jan 2010 11:38:33 -0800 (PST)
-In-Reply-To: <19273.998.753256.526176@pilspetsen.it.uu.se>
+Received: from mail-gx0-f228.google.com ([209.85.217.228]:53268 "EHLO
+	mail-gx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754737Ab0ALTim (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jan 2010 14:38:42 -0500
+Received: by gxk28 with SMTP id 28so15939065gxk.9
+        for <linux-ide@vger.kernel.org>; Tue, 12 Jan 2010 11:38:42 -0800 (PST)
+In-Reply-To: <4B4A8994.8030600@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, thomas schorpp <thomas.schorpp@googlemail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, fengxiangjun <fengxiangjun@neusoft.com>, Jim Faulkner <jfaulkne@ccs.neu.edu>, Greg KH <greg@kroah.com>
 
-On 01/09/2010 05:32 PM, Mikael Pettersson wrote:
-> When sata_promise encounters an overrun or underrun error it
-> translates that to a libata AC_ERR_HSM, causing a hard reset.
-> Since over/under-runs were thought to be rare and transient,
-> this action seemed reasonable.
+On 01/10/2010 09:14 PM, Tejun Heo wrote:
+> Interestingly, when SIDPR is used in ata_piix, writes to DET in
+> SControl sometimes get ignored leading to detection failure.  Update
+> sata_link_resume() such that it reads back SControl after clearing DET
+> and retry if it's not clear.
 >
-> Unfortunately it turns out that the controller throws overrun
-> errors when e.g. hal polls a CD or DVD writer containing blank
-> media, causing long sequences of hard resets and retries before
-> EH finally gives up.
->
-> This patch updates sata_promise to classify over/under-runs as
-> AC_ERR_OTHER instead. This allows libata EH and upper layers to
-> retry or fail the operation as they see fit without the disruption
-> caused by repeated hard resets.
->
-> This fixes a problem using a DVD-RAM drive with sata_promise,
-> reported by Thomas Schorpp. I also tested it on a DVD-RW drive.
->
-> Signed-off-by: Mikael Pettersson<mikpe@it.uu.se>
-> Tested-by: thomas schorpp<thomas.schorpp@googlemail.com>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Reported-by: fengxiangjun<fengxiangjun@neusoft.com>
+> Reported-by: Jim Faulkner<jfaulkne@ccs.neu.edu>
+> Cc: stable@kernel.org
 > ---
->   drivers/ata/sata_promise.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> Greg, although this patch should be included in -stable release in
+> time, I think it should receive some more testing in devel branch for
+> at least a couple of -rc cycles as it changes very fundamental part of
+> hardreset protocol.  Is there a protocol for delayed inclusion into
+> -stable?  If not, I'll try to remember and ping you back after some
+> time but I'm almost sure that I'm gonna forget this.  :-)
+>
+> Thanks.
+>
+>   drivers/ata/libata-core.c |   38 +++++++++++++++++++++++++++++++-------
+>   include/linux/libata.h    |    3 +++
+>   2 files changed, 34 insertions(+), 7 deletions(-)
 
 applied
 
