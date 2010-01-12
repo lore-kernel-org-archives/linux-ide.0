@@ -1,64 +1,136 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: [PATCH] ide/ide-cs: fix order of releasing resources
-Date: Tue, 12 Jan 2010 20:34:54 +0100
-Message-ID: <1263324894-28117-1-git-send-email-w.sang@pengutronix.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Tue, 12 Jan 2010 14:36:25 -0500
+Message-ID: <20100112193625.GA22031@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59985 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503Ab0ALTeT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jan 2010 14:34:19 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:46430 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754804Ab0ALTg2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Jan 2010 14:36:28 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-pcmcia@lists.infradead.org, Wolfram Sang <w.sang@pengutronix.de>, Dominik Brodowski <linux@dominikbrodowski.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "David S. Miller" <davem@davemloft.net>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-ide_detach() called first ide_release() and then release_region(). This
-produced the following warnings:
 
-  Trying to free nonexistent resource <000000000000c10e-000000000000c10e>
-  Trying to free nonexistent resource <000000000000c100-000000000000c107>
+There is one other fix about to go upstream, for a problem discovered by
+Russell King related to PATA.
 
-This is true, because the callchain inside ide_release() is:
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-  ide_release -> pcmcia_disable_device -> pcmcia_release_io
+to receive the following updates:
 
-So, the whole io-block is already gone for release_region(). To fix
-this, just swap the order of releasing (and remove the now obsolete
-shadowing).
+ drivers/ata/ata_piix.c     |    2 +-
+ drivers/ata/libata-core.c  |   38 +++++++++++++++++++++++++++++++-------
+ drivers/ata/sata_promise.c |    2 +-
+ include/linux/libata.h     |    3 +++
+ 4 files changed, 36 insertions(+), 9 deletions(-)
 
-Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>
----
- drivers/ide/ide-cs.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+Mikael Pettersson (1):
+      sata_promise: don't classify overruns as HSM errors
 
-diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
-index dd63963..43ed330 100644
---- a/drivers/ide/ide-cs.c
-+++ b/drivers/ide/ide-cs.c
-@@ -122,18 +122,14 @@ static void ide_detach(struct pcmcia_device *link)
+Tejun Heo (2):
+      ata_piix: enable 32bit PIO on SATA piix
+      libata: retry link resume if necessary
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 19136a7..6f3f225 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -329,7 +329,7 @@ static struct ata_port_operations ich_pata_ops = {
+ };
+ 
+ static struct ata_port_operations piix_sata_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &ata_bmdma32_port_ops,
+ };
+ 
+ static struct ata_port_operations piix_sidpr_sata_ops = {
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 22ff51b..6728328 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3790,21 +3790,45 @@ int sata_link_debounce(struct ata_link *link, const unsigned long *params,
+ int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 		     unsigned long deadline)
  {
-     ide_info_t *info = link->priv;
-     ide_hwif_t *hwif = info->host->ports[0];
--    unsigned long data_addr, ctl_addr;
++	int tries = ATA_LINK_RESUME_TRIES;
+ 	u32 scontrol, serror;
+ 	int rc;
  
-     dev_dbg(&link->dev, "ide_detach(0x%p)\n", link);
+ 	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+ 		return rc;
  
--    data_addr = hwif->io_ports.data_addr;
--    ctl_addr  = hwif->io_ports.ctl_addr;
-+    release_region(hwif->io_ports.ctl_addr, 1);
-+    release_region(hwif->io_ports.data_addr, 8);
+-	scontrol = (scontrol & 0x0f0) | 0x300;
++	/*
++	 * Writes to SControl sometimes get ignored under certain
++	 * controllers (ata_piix SIDPR).  Make sure DET actually is
++	 * cleared.
++	 */
++	do {
++		scontrol = (scontrol & 0x0f0) | 0x300;
++		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
++			return rc;
++		/*
++		 * Some PHYs react badly if SStatus is pounded
++		 * immediately after resuming.  Delay 200ms before
++		 * debouncing.
++		 */
++		msleep(200);
  
-     ide_release(link);
+-	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+-		return rc;
++		/* is SControl restored correctly? */
++		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
++			return rc;
++	} while ((scontrol & 0xf0f) != 0x300 && --tries);
  
--    release_region(ctl_addr, 1);
--    release_region(data_addr, 8);
--
-     kfree(info);
- } /* ide_detach */
+-	/* Some PHYs react badly if SStatus is pounded immediately
+-	 * after resuming.  Delay 200ms before debouncing.
+-	 */
+-	msleep(200);
++	if ((scontrol & 0xf0f) != 0x300) {
++		ata_link_printk(link, KERN_ERR,
++				"failed to resume link (SControl %X)\n",
++				scontrol);
++		return 0;
++	}
++
++	if (tries < ATA_LINK_RESUME_TRIES)
++		ata_link_printk(link, KERN_WARNING,
++				"link resume succeeded after %d retries\n",
++				ATA_LINK_RESUME_TRIES - tries);
  
--- 
-1.6.3.3
-
+ 	if ((rc = sata_link_debounce(link, params, deadline)))
+ 		return rc;
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 07d8d00..6330628 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc,
+ 	if (port_status & PDC_DRIVE_ERR)
+ 		ac_err_mask |= AC_ERR_DEV;
+ 	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
+-		ac_err_mask |= AC_ERR_HSM;
++		ac_err_mask |= AC_ERR_OTHER;
+ 	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
+ 		ac_err_mask |= AC_ERR_ATA_BUS;
+ 	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6a9c4dd..7311225 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -354,6 +354,9 @@ enum {
+ 	/* max tries if error condition is still set after ->error_handler */
+ 	ATA_EH_MAX_TRIES	= 5,
+ 
++	/* sometimes resuming a link requires several retries */
++	ATA_LINK_RESUME_TRIES	= 5,
++
+ 	/* how hard are we gonna try to probe/recover devices */
+ 	ATA_PROBE_MAX_TRIES	= 3,
+ 	ATA_EH_DEV_TRIES	= 3,
