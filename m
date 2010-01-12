@@ -1,41 +1,44 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: 2.6.33-rc2 pata_macio fails to detect PMac G3 CD-drive
-Date: Tue, 12 Jan 2010 11:35:30 +1100
-Message-ID: <1263256530.724.166.camel@pasglop>
-References: <19254.17766.674348.933702@pilspetsen.it.uu.se>
-	 <1263186759.724.132.camel@pasglop>  <4B4ACCDD.8040803@kernel.org>
-	 <1263202866.724.134.camel@pasglop>  <4B4BC3CE.8010102@kernel.org>
+From: Marc Bejarano <beej@beej.org>
+Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
+Date: Mon, 11 Jan 2010 16:55:45 -0800
+Message-ID: <5543f88f1001111655t7ae4a4eamd4f010b5ab7e7c82@mail.gmail.com>
+References: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com>
+	 <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
+	 <4B4B877A.8060106@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38207 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754505Ab0ALAhY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Jan 2010 19:37:24 -0500
-In-Reply-To: <4B4BC3CE.8010102@kernel.org>
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:41411 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab0ALAzr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2010 19:55:47 -0500
+In-Reply-To: <4B4B877A.8060106@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-On Tue, 2010-01-12 at 09:35 +0900, Tejun Heo wrote:
-> 
-> I think the only solution then is to disable the IRQ from the PIC.
-> We'll probably need to generalize there a bit as it seems there are
-> odd cases where we fall into IRQ storm but for now I think adding
-> special case code with sufficient comment should do it.
+2010/1/11 Ren=E9 Bolldorf <xsecute@googlemail.com>:
+> I hope that's good enough explained :-).
 
-I'll cook up a patch for pata_macio that keeps the irq disabled
-until the first taskfile is fired. We don't share interrupts on
-those guys so it shouldn't be a big deal, we'll see if it helps
-with Mikael's problem.
-
-For the more "generic" case, I think you are stuffed when shared
-interrupts enter the picture. We'll see if you still get reports
-of such interrupt storms, when they happen ...
-
-Cheers,
-Ben.
+definitely an improvement, but i think jeff is going to want your
+S-O-B and at least a patch title, if no description :)
 
 
+> + =A0 =A0 =A0 /* make sure sense_buf is cleared then atapi_eh_request=
+_sense is
+> called.
+
+s/then/when/ ?
+
+> + =A0 =A0 =A0 =A0* (to make sure nothing get's reused.)
+
+probably not necessary
+
+> + =A0 =A0 =A0 =A0* thanks to James Bottomley
+
+this may be better in a patch description
+
+cheers,
+marc
