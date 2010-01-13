@@ -1,47 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ata_piix: enable 32bit PIO on SATA piix
-Date: Tue, 12 Jan 2010 14:38:46 -0500
-Message-ID: <4B4CCFC6.5000503@garzik.org>
-References: <4B4ADB3F.2080505@kernel.org>
+From: Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel Cougar Point DeviceIDs
+Date: Tue, 12 Jan 2010 17:00:18 -0800
+Message-ID: <201001121700.18234.seth.heasley@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:45885 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754842Ab0ALTis (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jan 2010 14:38:48 -0500
-Received: by mail-yx0-f187.google.com with SMTP id 17so21719035yxe.33
-        for <linux-ide@vger.kernel.org>; Tue, 12 Jan 2010 11:38:48 -0800 (PST)
-In-Reply-To: <4B4ADB3F.2080505@kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:57786 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750946Ab0AMBEs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Jan 2010 20:04:48 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: seth.heasley@intel.com
 
-On 01/11/2010 03:03 AM, Tejun Heo wrote:
-> Commit 871af1210f13966ab911ed2166e4ab2ce775b99d enabled 32bit PIO for
-> PATA piix but didn't for SATA.  There's no reason not to use 32bit PIO
-> on SATA piix.  Enable it.
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Cc: Alan Cox<alan@lxorguk.ukuu.org.uk>
-> ---
->   drivers/ata/ata_piix.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> Index: ata/drivers/ata/ata_piix.c
-> ===================================================================
-> --- ata.orig/drivers/ata/ata_piix.c
-> +++ ata/drivers/ata/ata_piix.c
-> @@ -329,7 +329,7 @@ static struct ata_port_operations ich_pa
->   };
->
->   static struct ata_port_operations piix_sata_ops = {
-> -	.inherits		=&ata_bmdma_port_ops,
-> +	.inherits		=&ata_bmdma32_port_ops,
->   };
+This patch adds the Intel Cougar Point (PCH) SATA AHCI and RAID Controller DeviceIDs.
 
-applied
+Signed-off-by: Seth Heasley <seth.heasley@intel.com>
 
-
+--- linux-2.6.32.3/drivers/ata/ahci.c.orig	2010-01-06 15:07:45.000000000 -0800
++++ linux-2.6.32.3/drivers/ata/ahci.c	2010-01-07 13:55:23.000000000 -0800
+@@ -560,6 +560,12 @@
+ 	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci }, /* CPT AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci }, /* CPT RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c06), board_ahci }, /* CPT RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c07), board_ahci }, /* CPT RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
