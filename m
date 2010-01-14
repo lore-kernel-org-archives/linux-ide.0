@@ -1,38 +1,44 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: SATA_SIL on IXP425 workaround
-Date: Thu, 14 Jan 2010 21:12:47 +0100
-Message-ID: <m3my0gh2dc.fsf@intrepid.localdomain>
-References: <m33a4nfvva.fsf@intrepid.localdomain>
-	<201001141659.19687.bzolnier@gmail.com>
-	<20100114192210.62593ead@lxorguk.ukuu.org.uk>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel
+ Cougar Point DeviceIDs
+Date: Thu, 14 Jan 2010 18:11:36 -0200
+Message-ID: <20100114201136.GA3814@khazad-dum.debian.net>
+References: <201001121700.18234.seth.heasley@intel.com>
+ <4B4D4EAA.2010109@gmail.com>
+ <4B4DAA68.60608@pobox.com>
+ <51f3faa71001131611y343ad225n1acc73900fd49894@mail.gmail.com>
+ <51f3faa71001131642u2cc9de80n8e73be7a8707afb2@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:56868 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753832Ab0ANUMu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Jan 2010 15:12:50 -0500
-In-Reply-To: <20100114192210.62593ead@lxorguk.ukuu.org.uk> (Alan Cox's message
-	of "Thu, 14 Jan 2010 19:22:10 +0000")
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:39697 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753312Ab0ANUVo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 15:21:44 -0500
+Content-Disposition: inline
+In-Reply-To: <51f3faa71001131642u2cc9de80n8e73be7a8707afb2@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
+On Wed, 13 Jan 2010, Robert Hancock wrote:
+> Hmm, it seems like it's a bit more complicated than that. For ICH6R
+> (0x2652), ata_piix attaches to it regardless of mode intentionally, it
+> has specific logic to disable AHCI on the controller since it can be
+> used in either mode. That seems a bit questionable. Having the same
+> device being handled by different enabled drivers and depending on
+> link or module load order to decide which one loads is fragile and
+> prone to errors. I'd be in favor of removing the ICH6R support from
+> ata_piix entirely and saying that you should be using ahci for that
+> device. Maybe when ahci was immature there was a benefit to allowing
+> ata_piix to run it, but I doubt that's true today.
 
-> I think this is the wrong place. If your platform can't do MMIO properly
-> then the platform pci_iomap or pci quirk code should do the needed
-> cleaning up, not put turds into the drivers. Why not just quirk it on your
-> specific platform and clear the MMIO mapping.
+Maybe it is the silicon AHCI in ICH6R that is immature, and one is much
+better of using it in IDE mode?
 
-We need to use the MMIO BAR at least for starting DMA transfers, the
-I/O ones are 64KB-limited. We can't just use read[bw] if reading all
-32 bits has side effects.
-
-Most of the time there are no problems with MMIO on IXP4xx as modern
-devices usually use 32-bit registers anyway, or at least they have no
-problem with read[bw] always driving all four PCI byte enable lines
-(write[bw] doesn't have this issue).
 -- 
-Krzysztof Halasa
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
