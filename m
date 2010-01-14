@@ -1,40 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 1/2] libata: cleanup ata_sff_interrupt()
-Date: Thu, 14 Jan 2010 12:38:40 -0500
-Message-ID: <4B4F56A0.6060606@garzik.org>
-References: <4B4ECCCD.1040902@kernel.org>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Thu, 14 Jan 2010 19:08:39 +0100
+Message-ID: <m3y6k0h848.fsf@intrepid.localdomain>
+References: <m33a4nfvva.fsf@intrepid.localdomain>
+	<201001141659.19687.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f194.google.com ([209.85.221.194]:36819 "EHLO
-	mail-qy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757229Ab0ANRim (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 12:38:42 -0500
-Received: by qyk32 with SMTP id 32so4134823qyk.4
-        for <linux-ide@vger.kernel.org>; Thu, 14 Jan 2010 09:38:42 -0800 (PST)
-In-Reply-To: <4B4ECCCD.1040902@kernel.org>
+Received: from khc.piap.pl ([195.187.100.11]:58373 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750984Ab0ANSIm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Jan 2010 13:08:42 -0500
+In-Reply-To: <201001141659.19687.bzolnier@gmail.com> (Bartlomiej
+	Zolnierkiewicz's message of "Thu, 14 Jan 2010 16:59:19 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-On 01/14/2010 02:50 AM, Tejun Heo wrote:
-> host->ports[i] is never NULL if i<  host->n_ports and non-NULL return
-> from ata_qc_from_tag() guarantees that the returned qc is active.
-> Drop unnecessary tests.
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> ---
->   drivers/ata/libata-sff.c |   17 +++++++----------
->   1 file changed, 7 insertions(+), 10 deletions(-)
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> writes:
 
-This is more #upstream material, don't you think?  We are pretty deep 
-into -rc at this point.
+> FWIW your patch is now in my atang tree (I'm aware that Jeff is working
+> on generic solution but in the meantime this non-intrusive patch allows
+> sata_sil to work on IXP425).
 
-(headed out for the weekend, fyi)
+Thanks. BTW I could help with the "general solution", but I wonder if
+what we need is simply adding those other ARM archs to IXP4xx (through
+Kconfig)? If they have the same problem, namely inability to do
+readb/readw only, while being able to write[bwl] and all kinds of non-MM
+I/O.
 
-	Jeff
-
-
-
+writeb() is important since it starts the "large PRD" transfers (it has
+to use MMIO BAR to be "large").
+-- 
+Krzysztof Halasa
