@@ -1,40 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend
- SSD
-Date: Thu, 14 Jan 2010 19:24:10 +0000
-Message-ID: <20100114192410.33b989d5@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com>
-	<20091026121804.3789c4c0@lxorguk.ukuu.org.uk>
-	<Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
-	<201001141649.13073.bzolnier@gmail.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Thu, 14 Jan 2010 21:12:47 +0100
+Message-ID: <m3my0gh2dc.fsf@intrepid.localdomain>
+References: <m33a4nfvva.fsf@intrepid.localdomain>
+	<201001141659.19687.bzolnier@gmail.com>
+	<20100114192210.62593ead@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34057 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757028Ab0ANTVR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 14:21:17 -0500
-In-Reply-To: <201001141649.13073.bzolnier@gmail.com>
+Received: from khc.piap.pl ([195.187.100.11]:56868 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753832Ab0ANUMu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Jan 2010 15:12:50 -0500
+In-Reply-To: <20100114192210.62593ead@lxorguk.ukuu.org.uk> (Alan Cox's message
+	of "Thu, 14 Jan 2010 19:22:10 +0000")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-> The computer locks up if Transcend SSD runs in any of UDMA modes.
-> It doesn't lockup with different brand SSD, so this is specific to Transcend.
-> 
-> bzolnier:
-> - limit it to VT82C586A/B + TS64GSSD25-M (per commit 10734fc) for now
-> - add warning message
+Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
-Looks good to me.
+> I think this is the wrong place. If your platform can't do MMIO properly
+> then the platform pci_iomap or pci quirk code should do the needed
+> cleaning up, not put turds into the drivers. Why not just quirk it on your
+> specific platform and clear the MMIO mapping.
 
+We need to use the MMIO BAR at least for starting DMA transfers, the
+I/O ones are 64KB-limited. We can't just use read[bw] if reading all
+32 bits has side effects.
 
-> +		printk(KERN_WARNING "%s: disabling UDMA mode due to reported "
-> +			"lockups with this device.\n", drive->name);
-
-That sounds odd - I think I'd have put ": not using UDMA mode as lockups
-have been reported with this device" or similar.
-
-Ackity-ack
+Most of the time there are no problems with MMIO on IXP4xx as modern
+devices usually use 32-bit registers anyway, or at least they have no
+problem with read[bw] always driving all four PCI byte enable lines
+(write[bw] doesn't have this issue).
+-- 
+Krzysztof Halasa
