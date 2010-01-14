@@ -1,21 +1,19 @@
 From: Krzysztof Halasa <khc@pm.waw.pl>
 Subject: Re: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel  Cougar Point DeviceIDs
-Date: Thu, 14 Jan 2010 15:40:47 +0100
-Message-ID: <m3iqb4iwb4.fsf@intrepid.localdomain>
+Date: Thu, 14 Jan 2010 16:40:36 +0100
+Message-ID: <m3eilsitjf.fsf@intrepid.localdomain>
 References: <201001121700.18234.seth.heasley@intel.com>
 	<4B4D4EAA.2010109@gmail.com> <4B4DAA68.60608@pobox.com>
-	<m3my0i6nou.fsf@intrepid.localdomain> <4B4DFE1A.4000606@pobox.com>
-	<m3iqb57ts7.fsf@intrepid.localdomain>
-	<51f3faa71001131557n52e34260k13bf1fe3057bb0e@mail.gmail.com>
+	<51f3faa71001131611y343ad225n1acc73900fd49894@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:54325 "EHLO khc.piap.pl"
+Received: from khc.piap.pl ([195.187.100.11]:33505 "EHLO khc.piap.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476Ab0ANOkv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Jan 2010 09:40:51 -0500
-In-Reply-To: <51f3faa71001131557n52e34260k13bf1fe3057bb0e@mail.gmail.com>
-	(Robert Hancock's message of "Wed, 13 Jan 2010 17:57:22 -0600")
+	id S1753548Ab0ANPkj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Jan 2010 10:40:39 -0500
+In-Reply-To: <51f3faa71001131611y343ad225n1acc73900fd49894@mail.gmail.com>
+	(Robert Hancock's message of "Wed, 13 Jan 2010 18:11:43 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Robert Hancock <hancockrwd@gmail.com>
@@ -23,12 +21,30 @@ Cc: Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linu
 
 Robert Hancock <hancockrwd@gmail.com> writes:
 
-> The behavior here is strange, the controller reports a connection
-> status change interrupt with CommWake which should indicate that some
-> device completed the handshake with the controller, but then the SATA
-> link shows down. I assume there's nothing plugged into the two JMicron
-> SATA ports?
+> Well, ata_piix does have a couple of entries that are listed in ahci
+> as well, for ICH6 device IDs 0x2652 and 0x2653. For 0x2653 ata_piix
+> checks the class code to make sure it's IDE, but for the 0x2652 entry,
+> and in both cases in ahci, the class code isn't checked. Deleting the
+> specific entries from ahci for those controllers would seemingly
+> actually improve the situation, since then ahci wouldn't try and
+> attach to those devices when they indicate IDE class. ata_piix should
+> also should be checking for IDE class on 0x2652 as well.
 
-Precisely nothing. Only the PATA is connected.
+Interestingly the ICH6* datasheet says:
+2651 is plain ICH6 (not RAID/AHCI capable)
+2652 is ICH6R
+2553 is ICH6-M
+
+The subclass code is:
+for plain ICH6: 01 (IDE controller)
+for ICH6R: 04 (RAID controller)
+for ICH6-M: 01 (IDE) or 06 (SATA=AHCI)
+
+I think later chips change their subclass depending on
+IDE/AHCI/RAID BIOS setting, wasn't it the ICH6R case as well?
+
+Not checking the subclass for ICH6-M in ahci driver may be a bug,
+unless ahci can handle the chip in BIOS-set IDE mode. Not checking
+ICH6R code (or checking only for RAID) seems right, though.
 -- 
 Krzysztof Halasa
