@@ -1,126 +1,83 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide/ide-cs: fix order of releasing resources
-Date: Thu, 14 Jan 2010 16:50:17 +0100
-Message-ID: <201001141650.17348.bzolnier@gmail.com>
-References: <1263324894-28117-1-git-send-email-w.sang@pengutronix.de> <20100114.015938.224705378.davem@davemloft.net>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Thu, 14 Jan 2010 16:59:19 +0100
+Message-ID: <201001141659.19687.bzolnier@gmail.com>
+References: <m33a4nfvva.fsf@intrepid.localdomain>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:42661 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932253Ab0ANRCX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 12:02:23 -0500
-Received: by mail-ew0-f209.google.com with SMTP id 1so43871ewy.28
-        for <linux-ide@vger.kernel.org>; Thu, 14 Jan 2010 09:02:20 -0800 (PST)
-In-Reply-To: <20100114.015938.224705378.davem@davemloft.net>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:56294 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932252Ab0ANRCW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 12:02:22 -0500
+In-Reply-To: <m33a4nfvva.fsf@intrepid.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: w.sang@pengutronix.de, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux@dominikbrodowski.net
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-On Thursday 14 January 2010 10:59:38 am David Miller wrote:
-> From: Wolfram Sang <w.sang@pengutronix.de>
-> Date: Tue, 12 Jan 2010 20:34:54 +0100
+On Monday 09 November 2009 06:31:21 pm Krzysztof Halasa wrote:
+> I'm trying to add a workaround for IXP4xx CPUs to SATA SIL driver. The
+> problem is that IXP4xx CPUs (Intel's XScale (ARM) network-oriented
+> processors) are unable to perform 8 and 16-bit read from PCI MMIO, they
+> can only do a full 32-bit readl(); SIL chips respond to that with PCI
+> abort. The workaround is to use 8 and 16-bit regular IO reads (inb/inw)
+> instead (MMIO write is not a problem).
 > 
-> > ide_detach() called first ide_release() and then release_region(). This
-> > produced the following warnings:
-> > 
-> >   Trying to free nonexistent resource <000000000000c10e-000000000000c10e>
-> >   Trying to free nonexistent resource <000000000000c100-000000000000c107>
-> > 
-> > This is true, because the callchain inside ide_release() is:
-> > 
-> >   ide_release -> pcmcia_disable_device -> pcmcia_release_io
-> > 
-> > So, the whole io-block is already gone for release_region(). To fix
-> > this, just swap the order of releasing (and remove the now obsolete
-> > shadowing).
-> > 
-> > Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+> For SIL3x12 the workaround is simple (attached) and it works on my 3512.
+> I'm not sure about 3114 (the 4-port chip) - the PIO BARs have TF, CTL
+> and BWDMA registers which are common to channels 0 and 2, and (the other
+> set) to channels 1 and 3. Channel selection is done with bit 4 of
+> device/head TF register, this is similar (same?) as PATA master/slave.
+> Does that mean that I can simply treat channel 0 as PRI master, ch#2 as
+> PRI slave, ch#1 as SEC master and ch#3 as SEC slave, and the SFF code
+> will select the right device correctly? Does it need additional code?
+> I don't have anything based on 3114.
 > 
-> Applied, thanks a lot!
+> Note: the large PRD is not a problem here, the transfer can be started
+> by MMIO write. Only reads are an issue.
 
-Port resources should not be freed before ide_host_remove() call in
-ide_release() returns as port and/or devices may still be in use.
+FWIW your patch is now in my atang tree (I'm aware that Jeff is working
+on generic solution but in the meantime this non-intrusive patch allows
+sata_sil to work on IXP425).
 
-FWIW the following modified version of the patch is now in my atang tree:
+> --- a/drivers/ata/sata_sil.c
+> +++ b/drivers/ata/sata_sil.c
+> @@ -757,7 +757,12 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	if (rc)
+>  		return rc;
+>  
+> +#ifdef CONFIG_ARCH_IXP4XX
+> +	/* We need all 6 regions on IXP4xx */
+> +	rc = pcim_iomap_regions(pdev, 0x3F, DRV_NAME);
+> +#else
+>  	rc = pcim_iomap_regions(pdev, 1 << SIL_MMIO_BAR, DRV_NAME);
+> +#endif
+>  	if (rc == -EBUSY)
+>  		pcim_pin_device(pdev);
+>  	if (rc)
+> @@ -777,10 +782,18 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  		struct ata_port *ap = host->ports[i];
+>  		struct ata_ioports *ioaddr = &ap->ioaddr;
+>  
+> +#ifdef CONFIG_ARCH_IXP4XX
+> +		/* IXP4xx CPUs can't perform 8 and 16-bit MMIO reads,
+> +		   use normal IO from/to regions 0-5 instead */
+> +		ioaddr->cmd_addr = host->iomap[i * 2];
+> +		ioaddr->altstatus_addr = host->iomap[1 + i * 2] + 2;
+> +		ioaddr->bmdma_addr = host->iomap[4] + sil_port[i].bmdma;
+> +#else
+>  		ioaddr->cmd_addr = mmio_base + sil_port[i].tf;
+> -		ioaddr->altstatus_addr =
+> -		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
+> +		ioaddr->altstatus_addr = mmio_base + sil_port[i].ctl;
+>  		ioaddr->bmdma_addr = mmio_base + sil_port[i].bmdma;
+> +#endif
+> +		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
+>  		ioaddr->scr_addr = mmio_base + sil_port[i].scr;
+>  		ata_sff_std_ports(ioaddr);
 
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: [PATCH] ide/ide-cs: fix order of releasing resources
-
-ide_detach() called first ide_release() and then release_region(). This
-produced the following warnings:
-
-  Trying to free nonexistent resource <000000000000c10e-000000000000c10e>
-  Trying to free nonexistent resource <000000000000c100-000000000000c107>
-
-This is true, because the callchain inside ide_release() is:
-
-  ide_release -> pcmcia_disable_device -> pcmcia_release_io
-
-So, the whole io-block is already gone for release_region(). To fix
-this, just swap the order of releasing (and remove the now obsolete
-shadowing).
-
-bzolnier:
-- release resources in ide_release() to fix ordering of events
-- remove stale FIXME note while at it
-
-Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-cs.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
-
-Index: b/drivers/ide/ide-cs.c
-===================================================================
---- a/drivers/ide/ide-cs.c
-+++ b/drivers/ide/ide-cs.c
-@@ -131,19 +131,11 @@ static int ide_probe(struct pcmcia_devic
- static void ide_detach(struct pcmcia_device *link)
- {
-     ide_info_t *info = link->priv;
--    ide_hwif_t *hwif = info->host->ports[0];
--    unsigned long data_addr, ctl_addr;
- 
-     DEBUG(0, "ide_detach(0x%p)\n", link);
- 
--    data_addr = hwif->io_ports.data_addr;
--    ctl_addr  = hwif->io_ports.ctl_addr;
--
-     ide_release(link);
- 
--    release_region(ctl_addr, 1);
--    release_region(data_addr, 8);
--
-     kfree(info);
- } /* ide_detach */
- 
-@@ -365,12 +357,19 @@ static void ide_release(struct pcmcia_de
- 
-     DEBUG(0, "ide_release(0x%p)\n", link);
- 
--    if (info->ndev)
--	/* FIXME: if this fails we need to queue the cleanup somehow
--	   -- need to investigate the required PCMCIA magic */
-+    if (info->ndev) {
-+	ide_hwif_t *hwif = host->ports[0];
-+	unsigned long data_addr, ctl_addr;
-+
-+	data_addr = hwif->io_ports.data_addr;
-+	ctl_addr = hwif->io_ports.ctl_addr;
-+
- 	ide_host_remove(host);
-+	info->ndev = 0;
- 
--    info->ndev = 0;
-+	release_region(ctl_addr, 1);
-+	release_region(data_addr, 8);
-+    }
- 
-     pcmcia_disable_device(link);
- } /* ide_release */
+--
+Bartlomiej Zolnierkiewicz
