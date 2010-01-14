@@ -1,83 +1,98 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: SATA_SIL on IXP425 workaround
-Date: Thu, 14 Jan 2010 16:59:19 +0100
-Message-ID: <201001141659.19687.bzolnier@gmail.com>
-References: <m33a4nfvva.fsf@intrepid.localdomain>
+Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend SSD
+Date: Thu, 14 Jan 2010 16:49:13 +0100
+Message-ID: <201001141649.13073.bzolnier@gmail.com>
+References: <Pine.LNX.4.64.0910211452160.17897@hs20-bc2-1.build.redhat.com> <20091026121804.3789c4c0@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:56294 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252Ab0ANRCW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 12:02:22 -0500
-In-Reply-To: <m33a4nfvva.fsf@intrepid.localdomain>
+Received: from ey-out-2122.google.com ([74.125.78.26]:38057 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757338Ab0ANRCP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 12:02:15 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so435388eyf.5
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jan 2010 09:02:14 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.64.0911042021530.19963@hs20-bc2-1.build.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Monday 09 November 2009 06:31:21 pm Krzysztof Halasa wrote:
-> I'm trying to add a workaround for IXP4xx CPUs to SATA SIL driver. The
-> problem is that IXP4xx CPUs (Intel's XScale (ARM) network-oriented
-> processors) are unable to perform 8 and 16-bit read from PCI MMIO, they
-> can only do a full 32-bit readl(); SIL chips respond to that with PCI
-> abort. The workaround is to use 8 and 16-bit regular IO reads (inb/inw)
-> instead (MMIO write is not a problem).
+On Thursday 05 November 2009 02:25:21 am Mikulas Patocka wrote:
+> Hi
 > 
-> For SIL3x12 the workaround is simple (attached) and it works on my 3512.
-> I'm not sure about 3114 (the 4-port chip) - the PIO BARs have TF, CTL
-> and BWDMA registers which are common to channels 0 and 2, and (the other
-> set) to channels 1 and 3. Channel selection is done with bit 4 of
-> device/head TF register, this is similar (same?) as PATA master/slave.
-> Does that mean that I can simply treat channel 0 as PRI master, ch#2 as
-> PRI slave, ch#1 as SEC master and ch#3 as SEC slave, and the SFF code
-> will select the right device correctly? Does it need additional code?
-> I don't have anything based on 3114.
+> Here is another patch for SSD for VIA UDMA33. Alan, please backport it 
+> into libata.
 > 
-> Note: the large PRD is not a problem here, the transfer can be started
-> by MMIO write. Only reads are an issue.
+> Mikulas
+> 
+> ---
+> 
+> Don't use UDMA on VIA UDMA33 controller with Transcend SSD
+> 
+> The computer locks up if Transcend SSD runs in any of UDMA modes.
+> It doesn't lockup with different brand SSD, so this is specific to Transcend.
+> 
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
-FWIW your patch is now in my atang tree (I'm aware that Jeff is working
-on generic solution but in the meantime this non-intrusive patch allows
-sata_sil to work on IXP425).
+FWIW the following modified version of your patch is now in my atang tree:
 
-> --- a/drivers/ata/sata_sil.c
-> +++ b/drivers/ata/sata_sil.c
-> @@ -757,7 +757,12 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (rc)
->  		return rc;
->  
-> +#ifdef CONFIG_ARCH_IXP4XX
-> +	/* We need all 6 regions on IXP4xx */
-> +	rc = pcim_iomap_regions(pdev, 0x3F, DRV_NAME);
-> +#else
->  	rc = pcim_iomap_regions(pdev, 1 << SIL_MMIO_BAR, DRV_NAME);
-> +#endif
->  	if (rc == -EBUSY)
->  		pcim_pin_device(pdev);
->  	if (rc)
-> @@ -777,10 +782,18 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		struct ata_port *ap = host->ports[i];
->  		struct ata_ioports *ioaddr = &ap->ioaddr;
->  
-> +#ifdef CONFIG_ARCH_IXP4XX
-> +		/* IXP4xx CPUs can't perform 8 and 16-bit MMIO reads,
-> +		   use normal IO from/to regions 0-5 instead */
-> +		ioaddr->cmd_addr = host->iomap[i * 2];
-> +		ioaddr->altstatus_addr = host->iomap[1 + i * 2] + 2;
-> +		ioaddr->bmdma_addr = host->iomap[4] + sil_port[i].bmdma;
-> +#else
->  		ioaddr->cmd_addr = mmio_base + sil_port[i].tf;
-> -		ioaddr->altstatus_addr =
-> -		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
-> +		ioaddr->altstatus_addr = mmio_base + sil_port[i].ctl;
->  		ioaddr->bmdma_addr = mmio_base + sil_port[i].bmdma;
-> +#endif
-> +		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
->  		ioaddr->scr_addr = mmio_base + sil_port[i].scr;
->  		ata_sff_std_ports(ioaddr);
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] via82cxxx: don't use UDMA on VIA UDMA33 controller with Transcend SSD
 
---
-Bartlomiej Zolnierkiewicz
+Don't use UDMA on VIA UDMA33 controller with Transcend SSD.
+
+The computer locks up if Transcend SSD runs in any of UDMA modes.
+It doesn't lockup with different brand SSD, so this is specific to Transcend.
+
+bzolnier:
+- limit it to VT82C586A/B + TS64GSSD25-M (per commit 10734fc) for now
+- add warning message
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: David Miller <davem@davemloft.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/via82cxxx.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+Index: b/drivers/ide/via82cxxx.c
+===================================================================
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -195,6 +195,24 @@ static void via_set_pio_mode(ide_drive_t
+ 	via_set_drive(drive, XFER_PIO_0 + pio);
+ }
+ 
++static u8 via_udma_filter(ide_drive_t *drive)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	struct pci_dev *dev = to_pci_dev(hwif->dev);
++	struct ide_host *host = pci_get_drvdata(dev);
++	struct via82cxxx_dev *vdev = host->host_priv;
++	char *m = (char *)&drive->id[ATA_ID_PROD];
++
++	if (vdev->via_config->id == PCI_DEVICE_ID_VIA_82C586_0 &&
++	    strcmp(m, "TS64GSSD25-M") == 0) {
++		printk(KERN_WARNING "%s: disabling UDMA mode due to reported "
++			"lockups with this device.\n", drive->name);
++		return 0;
++	}
++
++	return hwif->ultra_mask;
++}
++
+ static struct via_isa_bridge *via_config_find(struct pci_dev **isa)
+ {
+ 	struct via_isa_bridge *via_config;
+@@ -372,6 +390,7 @@ static const struct ide_port_ops via_por
+ 	.set_pio_mode		= via_set_pio_mode,
+ 	.set_dma_mode		= via_set_drive,
+ 	.cable_detect		= via82cxxx_cable_detect,
++	.udma_filter		= via_udma_filter,
+ };
+ 
+ static const struct ide_port_info via82cxxx_chipset __devinitdata = {
