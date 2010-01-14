@@ -1,50 +1,126 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel  Cougar Point DeviceIDs
-Date: Thu, 14 Jan 2010 16:40:36 +0100
-Message-ID: <m3eilsitjf.fsf@intrepid.localdomain>
-References: <201001121700.18234.seth.heasley@intel.com>
-	<4B4D4EAA.2010109@gmail.com> <4B4DAA68.60608@pobox.com>
-	<51f3faa71001131611y343ad225n1acc73900fd49894@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide/ide-cs: fix order of releasing resources
+Date: Thu, 14 Jan 2010 16:50:17 +0100
+Message-ID: <201001141650.17348.bzolnier@gmail.com>
+References: <1263324894-28117-1-git-send-email-w.sang@pengutronix.de> <20100114.015938.224705378.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:33505 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753548Ab0ANPkj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Jan 2010 10:40:39 -0500
-In-Reply-To: <51f3faa71001131611y343ad225n1acc73900fd49894@mail.gmail.com>
-	(Robert Hancock's message of "Wed, 13 Jan 2010 18:11:43 -0600")
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:42661 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932253Ab0ANRCX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 12:02:23 -0500
+Received: by mail-ew0-f209.google.com with SMTP id 1so43871ewy.28
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jan 2010 09:02:20 -0800 (PST)
+In-Reply-To: <20100114.015938.224705378.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: w.sang@pengutronix.de, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux@dominikbrodowski.net
 
-Robert Hancock <hancockrwd@gmail.com> writes:
+On Thursday 14 January 2010 10:59:38 am David Miller wrote:
+> From: Wolfram Sang <w.sang@pengutronix.de>
+> Date: Tue, 12 Jan 2010 20:34:54 +0100
+> 
+> > ide_detach() called first ide_release() and then release_region(). This
+> > produced the following warnings:
+> > 
+> >   Trying to free nonexistent resource <000000000000c10e-000000000000c10e>
+> >   Trying to free nonexistent resource <000000000000c100-000000000000c107>
+> > 
+> > This is true, because the callchain inside ide_release() is:
+> > 
+> >   ide_release -> pcmcia_disable_device -> pcmcia_release_io
+> > 
+> > So, the whole io-block is already gone for release_region(). To fix
+> > this, just swap the order of releasing (and remove the now obsolete
+> > shadowing).
+> > 
+> > Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+> 
+> Applied, thanks a lot!
 
-> Well, ata_piix does have a couple of entries that are listed in ahci
-> as well, for ICH6 device IDs 0x2652 and 0x2653. For 0x2653 ata_piix
-> checks the class code to make sure it's IDE, but for the 0x2652 entry,
-> and in both cases in ahci, the class code isn't checked. Deleting the
-> specific entries from ahci for those controllers would seemingly
-> actually improve the situation, since then ahci wouldn't try and
-> attach to those devices when they indicate IDE class. ata_piix should
-> also should be checking for IDE class on 0x2652 as well.
+Port resources should not be freed before ide_host_remove() call in
+ide_release() returns as port and/or devices may still be in use.
 
-Interestingly the ICH6* datasheet says:
-2651 is plain ICH6 (not RAID/AHCI capable)
-2652 is ICH6R
-2553 is ICH6-M
+FWIW the following modified version of the patch is now in my atang tree:
 
-The subclass code is:
-for plain ICH6: 01 (IDE controller)
-for ICH6R: 04 (RAID controller)
-for ICH6-M: 01 (IDE) or 06 (SATA=AHCI)
+From: Wolfram Sang <w.sang@pengutronix.de>
+Subject: [PATCH] ide/ide-cs: fix order of releasing resources
 
-I think later chips change their subclass depending on
-IDE/AHCI/RAID BIOS setting, wasn't it the ICH6R case as well?
+ide_detach() called first ide_release() and then release_region(). This
+produced the following warnings:
 
-Not checking the subclass for ICH6-M in ahci driver may be a bug,
-unless ahci can handle the chip in BIOS-set IDE mode. Not checking
-ICH6R code (or checking only for RAID) seems right, though.
--- 
-Krzysztof Halasa
+  Trying to free nonexistent resource <000000000000c10e-000000000000c10e>
+  Trying to free nonexistent resource <000000000000c100-000000000000c107>
+
+This is true, because the callchain inside ide_release() is:
+
+  ide_release -> pcmcia_disable_device -> pcmcia_release_io
+
+So, the whole io-block is already gone for release_region(). To fix
+this, just swap the order of releasing (and remove the now obsolete
+shadowing).
+
+bzolnier:
+- release resources in ide_release() to fix ordering of events
+- remove stale FIXME note while at it
+
+Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-cs.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
+
+Index: b/drivers/ide/ide-cs.c
+===================================================================
+--- a/drivers/ide/ide-cs.c
++++ b/drivers/ide/ide-cs.c
+@@ -131,19 +131,11 @@ static int ide_probe(struct pcmcia_devic
+ static void ide_detach(struct pcmcia_device *link)
+ {
+     ide_info_t *info = link->priv;
+-    ide_hwif_t *hwif = info->host->ports[0];
+-    unsigned long data_addr, ctl_addr;
+ 
+     DEBUG(0, "ide_detach(0x%p)\n", link);
+ 
+-    data_addr = hwif->io_ports.data_addr;
+-    ctl_addr  = hwif->io_ports.ctl_addr;
+-
+     ide_release(link);
+ 
+-    release_region(ctl_addr, 1);
+-    release_region(data_addr, 8);
+-
+     kfree(info);
+ } /* ide_detach */
+ 
+@@ -365,12 +357,19 @@ static void ide_release(struct pcmcia_de
+ 
+     DEBUG(0, "ide_release(0x%p)\n", link);
+ 
+-    if (info->ndev)
+-	/* FIXME: if this fails we need to queue the cleanup somehow
+-	   -- need to investigate the required PCMCIA magic */
++    if (info->ndev) {
++	ide_hwif_t *hwif = host->ports[0];
++	unsigned long data_addr, ctl_addr;
++
++	data_addr = hwif->io_ports.data_addr;
++	ctl_addr = hwif->io_ports.ctl_addr;
++
+ 	ide_host_remove(host);
++	info->ndev = 0;
+ 
+-    info->ndev = 0;
++	release_region(ctl_addr, 1);
++	release_region(data_addr, 8);
++    }
+ 
+     pcmcia_disable_device(link);
+ } /* ide_release */
