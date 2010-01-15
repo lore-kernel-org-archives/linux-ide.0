@@ -1,36 +1,49 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes 1/2] libata: cleanup ata_sff_interrupt()
-Date: Fri, 15 Jan 2010 12:36:08 +0900
-Message-ID: <4B4FE2A8.3070002@kernel.org>
-References: <4B4ECCCD.1040902@kernel.org> <4B4EEFF9.8060805@ru.mvista.com>
+Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement spurious irq handling
+ for SFF and apply it to piix
+Date: Fri, 15 Jan 2010 12:39:35 +0900
+Message-ID: <4B4FE377.5090302@kernel.org>
+References: <4B4ECCCD.1040902@kernel.org> <4B4ECD81.8020205@kernel.org> <4B4F113B.30400@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40930 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:46751 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751279Ab0AODaf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Jan 2010 22:30:35 -0500
-In-Reply-To: <4B4EEFF9.8060805@ru.mvista.com>
+	id S1753077Ab0AODeF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Jan 2010 22:34:05 -0500
+In-Reply-To: <4B4F113B.30400@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>
 
-On 01/14/2010 07:20 PM, Sergei Shtylyov wrote:
->> +        qc = ata_qc_from_tag(ap, ap->link.active_tag);
->> +        if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+Hello,
+
+On 01/14/2010 09:42 PM, Sergei Shtylyov wrote:
+>> +static bool piix_irq_check(struct ata_port *ap)
+>> +{
+>> +    if (unlikely(!ap->ioaddr.bmdma_addr))
+>> +        return false;
+>> +
+>> +    return ap->ops->bmdma_status(ap) & ATA_DMA_INTR;
+>> +}
+>> +
 >>   
 > 
->   () not needed around !x.
+>   I'm not at all sure that old, pre-ICH controllers set this bit also
+> for the PIO mode commands, not only for DMA. And if you didn't make such
+> assumption, I don't see why this can't be generic and placed into
+> libata-sff.c instead...
 
-Eh... I don't know.  I personally prefer using minimum number of
-parantheses but quite a few people dislike not using them when && & ||
-| are mixed.  In the end, I don't think it really matters.  It's like
-debating about how far the second part of a broken line should be
-indented.  Many people strong opinions but in the end it doesn't
-really matter.  Anyhow, if it bothers you enough to write an email
-about it, I'll be happy to oblige.  :-)
+Because different controllers have different mechanisms for detecting
+pending IRQ?  Also, I think the current round is a bit dangerous in
+that it might end up accessing registers while the driver is doing
+polling PIO.  Having spurious IRQ clearing support would definitely be
+helpful for such conditions but it might also lead to silent data
+corruption which is worse.  I'll update the patch series so that the
+mechanism only kicks in only when the controller is believed to be
+completely idle.
 
 Thanks.
 
