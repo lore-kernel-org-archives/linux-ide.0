@@ -1,39 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: SATA_SIL on IXP425 workaround
-Date: Thu, 14 Jan 2010 21:05:15 +0000
-Message-ID: <20100114210515.7a477a43@lxorguk.ukuu.org.uk>
-References: <m33a4nfvva.fsf@intrepid.localdomain>
-	<201001141659.19687.bzolnier@gmail.com>
-	<20100114192210.62593ead@lxorguk.ukuu.org.uk>
-	<m3my0gh2dc.fsf@intrepid.localdomain>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel
+	Cougar Point DeviceIDs
+Date: Thu, 14 Jan 2010 18:15:08 -0600
+Message-ID: <51f3faa71001141615n5776454cwbf6787b7a7fb0081@mail.gmail.com>
+References: <201001121700.18234.seth.heasley@intel.com>
+	 <4B4D4EAA.2010109@gmail.com> <4B4DAA68.60608@pobox.com>
+	 <m3my0i6nou.fsf@intrepid.localdomain> <4B4DFE1A.4000606@pobox.com>
+	 <m3iqb57ts7.fsf@intrepid.localdomain>
+	 <51f3faa71001131557n52e34260k13bf1fe3057bb0e@mail.gmail.com>
+	 <m3iqb4iwb4.fsf@intrepid.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45612 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754507Ab0ANVCB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 16:02:01 -0500
-In-Reply-To: <m3my0gh2dc.fsf@intrepid.localdomain>
+Received: from mail-iw0-f197.google.com ([209.85.223.197]:35158 "EHLO
+	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754388Ab0AOAPK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2010 19:15:10 -0500
+In-Reply-To: <m3iqb4iwb4.fsf@intrepid.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> We need to use the MMIO BAR at least for starting DMA transfers, the
-> I/O ones are 64KB-limited. We can't just use read[bw] if reading all
-> 32 bits has side effects.
+On Thu, Jan 14, 2010 at 8:40 AM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
+> Robert Hancock <hancockrwd@gmail.com> writes:
+>
+>> The behavior here is strange, the controller reports a connection
+>> status change interrupt with CommWake which should indicate that some
+>> device completed the handshake with the controller, but then the SATA
+>> link shows down. I assume there's nothing plugged into the two JMicron
+>> SATA ports?
+>
+> Precisely nothing. Only the PATA is connected.
 
-Last time I instrumented this on x86 we never issued a > 64K linear block
-in our s/g lists. In fact we went for years before anyone noticed we had
-a bug with CS5530 and a couple of other chips that mishandled 64K segment
-sizes, and that was only finally noticed in a very specific and weird
-circumstance.
-
-> Most of the time there are no problems with MMIO on IXP4xx as modern
-> devices usually use 32-bit registers anyway, or at least they have no
-> problem with read[bw] always driving all four PCI byte enable lines
-> (write[bw] doesn't have this issue).
-
-Fair enough
-
+It would be interesting to see what happens if you actually plug
+something into that port that's having the issues, and see what
+happens. I'm kind of inclined to suspect it's a hardware fault, though
+it would likely require a report from someone else with the same or
+similar board model to confirm that..
