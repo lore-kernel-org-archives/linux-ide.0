@@ -1,52 +1,50 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: Re: [PATCH] ide/ide-cs: fix order of releasing resources
-Date: Fri, 15 Jan 2010 10:43:55 +0100
-Message-ID: <20100115094355.GA4785@pengutronix.de>
-References: <1263324894-28117-1-git-send-email-w.sang@pengutronix.de> <20100114.015938.224705378.davem@davemloft.net> <201001141650.17348.bzolnier@gmail.com> <20100115.013117.223126399.davem@davemloft.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement spurious irq handling
+ for SFF and apply it to piix
+Date: Fri, 15 Jan 2010 13:23:29 +0300
+Message-ID: <4B504221.6060107@ru.mvista.com>
+References: <4B4ECCCD.1040902@kernel.org> <4B4ECD81.8020205@kernel.org> <4B4F113B.30400@ru.mvista.com> <4B4FE377.5090302@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:46604 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757285Ab0AOJn5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jan 2010 04:43:57 -0500
-Content-Disposition: inline
-In-Reply-To: <20100115.013117.223126399.davem@davemloft.net>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:7759 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1751231Ab0AOKX4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jan 2010 05:23:56 -0500
+In-Reply-To: <4B4FE377.5090302@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux@dominikbrodowski.net
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>
+
+Hello.
+
+Tejun Heo wrote:
+
+>>> +static bool piix_irq_check(struct ata_port *ap)
+>>> +{
+>>> +    if (unlikely(!ap->ioaddr.bmdma_addr))
+>>> +        return false;
+>>> +
+>>> +    return ap->ops->bmdma_status(ap) & ATA_DMA_INTR;
+>>> +}
+>>> +
+>>>   
+>>>       
+>>   I'm not at all sure that old, pre-ICH controllers set this bit also
+>> for the PIO mode commands, not only for DMA. And if you didn't make such
+>> assumption, I don't see why this can't be generic and placed into
+>> libata-sff.c instead...
+>>     
+>
+> Because different controllers have different mechanisms for detecting
+> pending IRQ?
+
+   All SFF-8038i (BMIDE) controllers have the same mechanism. They may 
+have some additional interrupt bits though, reflecting the interrupt 
+status in both PIO and DMA mode though.
+
+WBR, Sergei
 
 
---EVF5PPMfhYS0aIcm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-> > bzolnier:
-> > - release resources in ide_release() to fix ordering of events
-> > - remove stale FIXME note while at it
->=20
-> Ok this does look better, Wolfram can you test this?
-
-ACK, looks better. I will test it, might not happen before Sunday, though.
-
---=20
-Pengutronix e.K.                           | Wolfram Sang                |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
---EVF5PPMfhYS0aIcm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAktQONsACgkQD27XaX1/VRtUjwCguv2Gr6W1h32845fSl5m9A4Wg
-8AEAnA7fy2cvJQpkpdBwqqL11PWDW9a0
-=KKkw
------END PGP SIGNATURE-----
-
---EVF5PPMfhYS0aIcm--
