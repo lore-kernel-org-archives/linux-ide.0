@@ -1,61 +1,70 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: silicon image 3124 support PATA
-Date: Sat, 16 Jan 2010 11:48:34 -0600
-Message-ID: <4B51FBF2.7070501@gmail.com>
-References: <9edb119c1001160231v3081a2e4u79884988fc5e2359@mail.gmail.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel  Cougar Point DeviceIDs
+Date: Sat, 16 Jan 2010 19:02:31 +0100
+Message-ID: <m3vdf26i88.fsf@intrepid.localdomain>
+References: <201001121700.18234.seth.heasley@intel.com>
+	<4B4D4EAA.2010109@gmail.com> <4B4DAA68.60608@pobox.com>
+	<m3my0i6nou.fsf@intrepid.localdomain> <4B4DFE1A.4000606@pobox.com>
+	<m3iqb57ts7.fsf@intrepid.localdomain>
+	<51f3faa71001131557n52e34260k13bf1fe3057bb0e@mail.gmail.com>
+	<m3iqb4iwb4.fsf@intrepid.localdomain>
+	<51f3faa71001141615n5776454cwbf6787b7a7fb0081@mail.gmail.com>
+	<m3iqb3rqmz.fsf@intrepid.localdomain>
+	<51f3faa71001151732s77c198bdu1268879afadd2308@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:58476 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753269Ab0APRsh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jan 2010 12:48:37 -0500
-Received: by iwn35 with SMTP id 35so1245551iwn.4
-        for <linux-ide@vger.kernel.org>; Sat, 16 Jan 2010 09:48:36 -0800 (PST)
-In-Reply-To: <9edb119c1001160231v3081a2e4u79884988fc5e2359@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755734Ab0APSCg@vger.kernel.org>
+In-Reply-To: <51f3faa71001151732s77c198bdu1268879afadd2308@mail.gmail.com>
+	(Robert Hancock's message of "Fri, 15 Jan 2010 19:32:34 -0600")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: amruth pattanada <amruth.vamadev@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 01/16/2010 04:31 AM, amruth pattanada wrote:
-> Hi
-> I am currently working on porting linux sata silicon image 3124 to
-> RTOS based kernel. I have checked the code and found that it supports
-> native sata mode only.
-> I have legacy ide driver and want to integrate 3124 controller. I
-> wanted to run 3124 in PATA mode. I checked libata and found that it
-> only supports 3112.
-> Can anybody please point what steps needs to be taken for making 3124
-> run in PATA mode.
+Robert Hancock <hancockrwd@gmail.com> writes:
 
-If you mean run in SFF-compatible mode like the 3112, you can't. The 
-3124 is a pure FIS-based SATA controller and doesn't support a legacy 
-SFF-style interface. If you're trying to make an IDE driver for the 3124 
-I think you will have a lot of trouble, the IDE code was not really 
-designed to handle such a device.
+> Hmm.. From those test results I really suspect some kind of hardware
+> fault. Could be a defective motherboard - I don't know if that chip
+> needs any terminating resistors on the motherboard for the SATA signal
+> lines or something, if so, could be they weren't installed properly..
 
-> Here is my observation so far.
-> I have MMIO for both port and host using PCI configuration space.
-> I can read global control register and after reset I can see that the
-> default values are set correctly.
-> I have port map of 8192
-> bytes(0-2000,2000-4000,4000-6000,6000-8000)ports 0..3 respectively,
-> and planning to reset the port, followed steps from linux code but
-> unable to validate if the port is successfully reset.
-> I have PRB mapped but after softreset, reading low,mid and high LBA
-> but signature is not as per data sheet.
-> Can I can use default standard ATA PRB and map it to legacy ide driver
-> or is there any register setting needs to be done to bring in PATA
-> mode.
-> Any pointers will be appreciated.
-> Thanks
-> Amruth p.v
-> Sr.Embedded Engineer
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Unfortunately I can't find a JMB363 datasheet on the net, but there is
+a certain mb (p965t-a) schematic available.
+It seems JMB363 doesn't need terminators on SATA RX/TX lines, there is
+capacitative coupling only (10 nF in each line).
 
+The port in question (SATA#2) on my mb (P45 Neo2) uses pins 56 (RXP)
+57 (RXN) and 60 (TXN) 61 (TXP). No visible irregularity, the traces look
+like they should, go straigt to the capacitors, and then to 0R R-packs
+and to the connector. It looks exactly the same for both ports. There is
+no short circuit past the capacitors (from the connector side). I'd say
+quite low probability that there is something wrong with these signals.
+
+It seems the chip uses extra 12k resistors for SATA (p965t-a calls the
+pins SJ_REXT[12]), pin 44 for port#1 and 55 for port#2. Both look sane.
+I will check the suspected connections with the machine powered off
+later.
+
+The RX and TX trace pairs go next to each other for up to 10 mm, could
+that be a problem at these frequencies? If so it would show up on
+all/many such boards certainly? Can't find any report.
+
+OTOH other people have similar problems with other boards: e.g.
+ASUS P5KC: http://ubuntuforums.org/showthread.php?t=766217
+           https://bugs.launchpad.net/ubuntu/+source/linux/+bug/377633
+
+(unknown boards)
+https://archlinux-fr.org/doku.php?id=securisation:logcheck
+http://forum.ubuntu-fr.org/viewtopic.php?pid=2739616
+http://ubuntu-ky.ubuntuforums.org/showthread.php?p=7243061
+The last one claims:
+this started after an upgrade to ubuntu 9.04 and is stll here after re-installing
+ubuntu 8.10.
+this was fixed by re-installing ubuntu 8.10 only using the kernal,
+2.6.27-7-generic.
+I don't know if JMB36x is involved in this case, and how reliable the
+info is.
+
+Investigating as time permits.
+-- 
+Krzysztof Halasa
