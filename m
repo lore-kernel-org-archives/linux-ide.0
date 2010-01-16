@@ -1,57 +1,35 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH 2.6.32.3] ahci: AHCI and RAID mode SATA patch for Intel
-	Cougar Point DeviceIDs
-Date: Fri, 15 Jan 2010 22:57:37 -0600
-Message-ID: <51f3faa71001152057n66524711x316ac055d3043625@mail.gmail.com>
-References: <201001121700.18234.seth.heasley@intel.com>
-	 <4B4D4EAA.2010109@gmail.com> <4B4DAA68.60608@pobox.com>
-	 <51f3faa71001131611y343ad225n1acc73900fd49894@mail.gmail.com>
-	 <51f3faa71001131642u2cc9de80n8e73be7a8707afb2@mail.gmail.com>
-	 <20100114201136.GA3814@khazad-dum.debian.net>
-	 <51f3faa71001141615k3223a02fhb0b882b6cbe680cf@mail.gmail.com>
-	 <20100116030257.GG3814@khazad-dum.debian.net>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Fri, 15 Jan 2010 23:03:27 -0600
+Message-ID: <4B51489F.8010105@gmail.com>
+References: <m33a4nfvva.fsf@intrepid.localdomain>	<201001141659.19687.bzolnier@gmail.com>	<20100114192210.62593ead@lxorguk.ukuu.org.uk>	<m3my0gh2dc.fsf@intrepid.localdomain> <20100114210515.7a477a43@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:54796 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757378Ab0APE5i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jan 2010 23:57:38 -0500
-In-Reply-To: <20100116030257.GG3814@khazad-dum.debian.net>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:44164 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab0APFDa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jan 2010 00:03:30 -0500
+In-Reply-To: <20100114210515.7a477a43@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-On Fri, Jan 15, 2010 at 9:02 PM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> On Thu, 14 Jan 2010, Robert Hancock wrote:
->> > Maybe it is the silicon AHCI in ICH6R that is immature, and one is=
- much
->> > better of using it in IDE mode?
->>
->> That seems unlikely, since the Intel-provided Matrix Storage drivers
->> for that controller on Windows will be using AHCI mode..
+On 01/14/2010 03:05 PM, Alan Cox wrote:
+>> We need to use the MMIO BAR at least for starting DMA transfers, the
+>> I/O ones are 64KB-limited. We can't just use read[bw] if reading all
+>> 32 bits has side effects.
 >
-> That doesn't say much.
->
-> If the change doesn't risk switching unaware users from IDE mode to A=
-HCI, it
-> is not a problem. =A0But if it does, why risk it? =A0It is not like a=
-nyone that
-> wants hotplug and has an ICH6-R/M system won't have figured it out by=
- now
-> how to get it to use AHCI, these are NOT new systems.
->
-> AHCI in ICH6R or ICH6M is not always an advantage. =A0You don't want =
-it on
-> ICH6-M in a laptop if it is not going to use the hotplug, for example=
-=2E =A0In
-> AHCI mode, the chip draws more power.
+> Last time I instrumented this on x86 we never issued a>  64K linear block
+> in our s/g lists. In fact we went for years before anyone noticed we had
+> a bug with CS5530 and a couple of other chips that mishandled 64K segment
+> sizes, and that was only finally noticed in a very specific and weird
+> circumstance.
 
-Well, the ICH6M seems to be stuck in whatever mode the user and/or
-BIOS designer has stuck it in,so nothing would change with it, only
-with the ICH6R which is not a mobile chipset. I'm not sure about using
-more power in the controller in AHCI mode, but in IDE mode, you can't
-use SATA link power saving, which is likely just as significant.
+Having a block over 64KB may be rare, but the other thing that the large 
+block transfer feature does is remove the restriction on a block 
+crossing a 64KB boundary, which based on the experiments I did when I 
+worked on adding the feature, does happen fairly commonly if the driver 
+allows it.
