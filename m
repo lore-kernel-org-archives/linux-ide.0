@@ -1,93 +1,84 @@
-From: amruth pattanada <amruth.vamadev@gmail.com>
-Subject: Re: silicon image 3124 support PATA
-Date: Sun, 17 Jan 2010 02:25:46 -0800
-Message-ID: <9edb119c1001170225j4a3553edl68376c6ba2c11cd5@mail.gmail.com>
-References: <9edb119c1001160231v3081a2e4u79884988fc5e2359@mail.gmail.com>
-	 <4B51FBF2.7070501@gmail.com>
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+Subject: Re: sata_nv times out for BD-ROM iHOS104-08
+Date: Sun, 17 Jan 2010 17:28:55 +0200
+Message-ID: <4B532CB7.4060005@pardus.org.tr>
+References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<4B31C8EE.3030003@kernel.org> <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com> 	<4B331771.3090309@kernel.org> <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:43103 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753606Ab0AQKZr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jan 2010 05:25:47 -0500
-Received: by pxi12 with SMTP id 12so2396715pxi.33
-        for <linux-ide@vger.kernel.org>; Sun, 17 Jan 2010 02:25:46 -0800 (PST)
-In-Reply-To: <4B51FBF2.7070501@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753757Ab0AQP2y@vger.kernel.org>
+In-Reply-To: <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Thanks Robert for the information. I wanted to send standard ATA
-commands via 3124 controller and basically map it to legacy ide
-interface  because the RTOS does not have SATA framework and works
-with only legacy based ide device.We have supported server works, ALI,
-intel BMDE chipset successfully.Is it feasible idea to map 3124 to
-ide.I see in the data sheet that standard ATA commands can be sent via
-3124 controller by populating PRB block(FIS type 0x27) in LRAM.Can you
-please let me know if we can follow this approach. I want to enable
-minimum configuration to operationalise the device so that I can read
-and write data onto the device.
-As per your response I see that legacy based IDE (ATA SFF interface)
-is not supported in 3124, can we atleast enable with minimum settings
-for controller to work. How do we enable 32 bit mode only instead of
-64 bit mode supported natively. I see that in linux driver only 64bit
-is activated. Please let me know
-Thanks
-Amruth p.v
+Cengiz G=C3=BCnay wrote:
+> 2009/12/24 Tejun Heo <tj@kernel.org>:
+>> I don't think the controller has anything to do with the issue but
+>> just in case can you please try it with a different controller?
+>=20
+> I tried the iHOS BD-ROM with a VIA VT6412 SATA controller today and i=
+t worked:
+>=20
 
-On Sat, Jan 16, 2010 at 9:48 AM, Robert Hancock <hancockrwd@gmail.com> =
-wrote:
-> On 01/16/2010 04:31 AM, amruth pattanada wrote:
->>
->> Hi
->> I am currently working on porting linux sata silicon image 3124 to
->> RTOS based kernel. I have checked the code and found that it support=
-s
->> native sata mode only.
->> I have legacy ide driver and want to integrate 3124 controller. I
->> wanted to run 3124 in PATA mode. I checked libata and found that it
->> only supports 3112.
->> Can anybody please point what steps needs to be taken for making 312=
-4
->> run in PATA mode.
->
-> If you mean run in SFF-compatible mode like the 3112, you can't. The =
-3124 is
-> a pure FIS-based SATA controller and doesn't support a legacy SFF-sty=
-le
-> interface. If you're trying to make an IDE driver for the 3124 I thin=
-k you
-> will have a lot of trouble, the IDE code was not really designed to h=
-andle
-> such a device.
->
->> Here is my observation so far.
->> I have MMIO for both port and host using PCI configuration space.
->> I can read global control register and after reset I can see that th=
-e
->> default values are set correctly.
->> I have port map of 8192
->> bytes(0-2000,2000-4000,4000-6000,6000-8000)ports 0..3 respectively,
->> and planning to reset the port, followed steps from linux code but
->> unable to validate if the port is successfully reset.
->> I have PRB mapped but after softreset, reading low,mid and high LBA
->> but signature is not as per data sheet.
->> Can I can use default standard ATA PRB and map it to legacy ide driv=
-er
->> or is there any register setting needs to be done to bring in PATA
->> mode.
->> Any pointers will be appreciated.
->> Thanks
->> Amruth p.v
->> Sr.Embedded Engineer
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-ide"=
- in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
->
+I don't have the possibility to try with another controller but exactly=
+ the same issue with PIONEER DVD-RW DVRKD08RS:
+
+[    4.618380] ata1.00: ATAPI: PIONEER DVD-RW DVRKD08RS, 1.02, max UDMA=
+/33     =20
+[    4.618447] ata1: nv_mode_filter: 0x739f&0x739f->0x739f, BIOS=3D0x70=
+00 (0xc000c700) ACPI=3D0x701f (60:600:0x13)                            =
+                     =20
+[    4.625131] ata1.00: configured for UDMA/33                         =
+        =20
+[    4.625214] ata1.00: TEST_UNIT_READY failed (err_mask=3D0x2)        =
+          =20
+[    4.838039] usb 3-2: new low speed USB device using ohci_hcd and add=
+ress 2  =20
+[    4.909709] input: PS/2 Mouse as /devices/platform/i8042/serio1/inpu=
+t/input6=20
+[    4.944821] input: AlpsPS/2 ALPS GlidePoint as /devices/platform/i80=
+42/serio1/input/input7                                                 =
+                 =20
+[    5.000029] Clocksource tsc unstable (delta =3D -254057140 ns)      =
+          =20
+[    5.027063] usb 3-2: New USB device found, idVendor=3D05e3, idProduc=
+t=3D1205    =20
+[    5.027071] usb 3-2: New USB device strings: Mfr=3D0, Product=3D1, S=
+erialNumber=3D0
+[    5.027078] usb 3-2: Product: USB Mouse                             =
+        =20
+[    5.027199] usb 3-2: configuration #1 chosen from 1 choice          =
+        =20
+[    5.037758] input: USB Mouse               as /devices/pci0000:00/00=
+00:00:02.0/usb3/3-2/3-2:1.0/input/input8                               =
+                 =20
+[    5.037936] generic-usb 0003:05E3:1205.0001: input,hidraw0: USB HID =
+v1.10 Mouse [USB Mouse              ] on usb-0000:00:02.0-2/input0     =
+                 =20
+[    5.708253] ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00023f7cba=
+403d32] =20
+[    9.769407] ata1: nv_mode_filter: 0x739f&0x739f->0x739f, BIOS=3D0x70=
+00 (0xc000c700) ACPI=3D0x701f (60:600:0x13)                            =
+                     =20
+[    9.775326] ata1.00: configured for UDMA/33                         =
+        =20
+[    9.775408] ata1.00: TEST_UNIT_READY failed (err_mask=3D0x2)        =
+          =20
+[    9.775417] ata1.00: limiting speed to UDMA/33:PIO3                 =
+        =20
+[   14.920401] ata1: nv_mode_filter: 0x738f&0x739f->0x738f, BIOS=3D0x70=
+00 (0xc000c700) ACPI=3D0x701f (60:600:0x13)                            =
+                     =20
+[   14.926332] ata1.00: configured for UDMA/33                         =
+        =20
+[   14.926412] ata1.00: TEST_UNIT_READY failed (err_mask=3D0x2)        =
+          =20
+[   14.926418] ata1.00: disabled                                       =
+        =20
+[   14.926452] ata1: soft resetting link                               =
+        =20
+[   15.077100] ata1: EH complete                                       =
+        =20
+[   15.077155] ata2: port disabled. ignoring.
