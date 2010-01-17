@@ -1,28 +1,93 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: JMB363 false hotplug detections (was: ahci: AHCI and RAID mode
- SATA 	patch for Intel Cougar Point DeviceIDs)
-Date: Sun, 17 Jan 2010 11:07:18 +0900
-Message-ID: <4B5270D6.6030005@kernel.org>
-References: <51f3faa71001161010m47d885cfx5d17486016476ed5@mail.gmail.com>
+From: amruth pattanada <amruth.vamadev@gmail.com>
+Subject: Re: silicon image 3124 support PATA
+Date: Sun, 17 Jan 2010 02:25:46 -0800
+Message-ID: <9edb119c1001170225j4a3553edl68376c6ba2c11cd5@mail.gmail.com>
+References: <9edb119c1001160231v3081a2e4u79884988fc5e2359@mail.gmail.com>
+	 <4B51FBF2.7070501@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753286Ab0AQCBc@vger.kernel.org>
-In-Reply-To: <51f3faa71001161010m47d885cfx5d17486016476ed5@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Krzysztof Halasa <khc@pm.waw.pl>, Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-px0-f182.google.com ([209.85.216.182]:43103 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753606Ab0AQKZr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jan 2010 05:25:47 -0500
+Received: by pxi12 with SMTP id 12so2396715pxi.33
+        for <linux-ide@vger.kernel.org>; Sun, 17 Jan 2010 02:25:46 -0800 (PST)
+In-Reply-To: <4B51FBF2.7070501@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 01/17/2010 03:10 AM, Robert Hancock wrote:
-> 03:00.0 SATA controller: JMicron Technologies, Inc. 20360/20363 Serial
-> ATA Controller (rev 03) (prog-if 01 [AHCI 1.0])
-> 
-> Tejun, any other ideas?
+Thanks Robert for the information. I wanted to send standard ATA
+commands via 3124 controller and basically map it to legacy ide
+interface  because the RTOS does not have SATA framework and works
+with only legacy based ide device.We have supported server works, ALI,
+intel BMDE chipset successfully.Is it feasible idea to map 3124 to
+ide.I see in the data sheet that standard ATA commands can be sent via
+3124 controller by populating PRB block(FIS type 0x27) in LRAM.Can you
+please let me know if we can follow this approach. I want to enable
+minimum configuration to operationalise the device so that I can read
+and write data onto the device.
+As per your response I see that legacy based IDE (ATA SFF interface)
+is not supported in 3124, can we atleast enable with minimum settings
+for controller to work. How do we enable 32 bit mode only instead of
+64 bit mode supported natively. I see that in linux driver only 64bit
+is activated. Please let me know
+Thanks
+Amruth p.v
 
-Can someone point me to the original thread?
-
-Thanks.
-
--- 
-tejun
+On Sat, Jan 16, 2010 at 9:48 AM, Robert Hancock <hancockrwd@gmail.com> =
+wrote:
+> On 01/16/2010 04:31 AM, amruth pattanada wrote:
+>>
+>> Hi
+>> I am currently working on porting linux sata silicon image 3124 to
+>> RTOS based kernel. I have checked the code and found that it support=
+s
+>> native sata mode only.
+>> I have legacy ide driver and want to integrate 3124 controller. I
+>> wanted to run 3124 in PATA mode. I checked libata and found that it
+>> only supports 3112.
+>> Can anybody please point what steps needs to be taken for making 312=
+4
+>> run in PATA mode.
+>
+> If you mean run in SFF-compatible mode like the 3112, you can't. The =
+3124 is
+> a pure FIS-based SATA controller and doesn't support a legacy SFF-sty=
+le
+> interface. If you're trying to make an IDE driver for the 3124 I thin=
+k you
+> will have a lot of trouble, the IDE code was not really designed to h=
+andle
+> such a device.
+>
+>> Here is my observation so far.
+>> I have MMIO for both port and host using PCI configuration space.
+>> I can read global control register and after reset I can see that th=
+e
+>> default values are set correctly.
+>> I have port map of 8192
+>> bytes(0-2000,2000-4000,4000-6000,6000-8000)ports 0..3 respectively,
+>> and planning to reset the port, followed steps from linux code but
+>> unable to validate if the port is successfully reset.
+>> I have PRB mapped but after softreset, reading low,mid and high LBA
+>> but signature is not as per data sheet.
+>> Can I can use default standard ATA PRB and map it to legacy ide driv=
+er
+>> or is there any register setting needs to be done to bring in PATA
+>> mode.
+>> Any pointers will be appreciated.
+>> Thanks
+>> Amruth p.v
+>> Sr.Embedded Engineer
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-ide"=
+ in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
