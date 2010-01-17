@@ -1,132 +1,98 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: MSI broken in libata?
-Date: Sun, 17 Jan 2010 13:22:43 -0600
-Message-ID: <4B536383.7090609@gmail.com>
-References: <64bb37e0912250122n4e0e1842q88c0dad7e99ec6a7@mail.gmail.com>	 <4B484829.6060405@kernel.org>	 <64bb37e1001092033r1f0b4defw46c1a07101bb2d1b@mail.gmail.com>	 <4B4A7BC7.6060106@kernel.org> <4B4A815A.60503@gmail.com> <64bb37e1001161358r79ea2da0u88e9894fa5987ef1@mail.gmail.com>
+Subject: Re: silicon image 3124 support PATA
+Date: Sun, 17 Jan 2010 13:36:18 -0600
+Message-ID: <4B5366B2.302@gmail.com>
+References: <9edb119c1001160231v3081a2e4u79884988fc5e2359@mail.gmail.com>	 <4B51FBF2.7070501@gmail.com> <9edb119c1001170225j4a3553edl68376c6ba2c11cd5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:41881 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754346Ab0AQTWr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jan 2010 14:22:47 -0500
-In-Reply-To: <64bb37e1001161358r79ea2da0u88e9894fa5987ef1@mail.gmail.com>
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:58866 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398Ab0AQTgW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jan 2010 14:36:22 -0500
+Received: by ywh12 with SMTP id 12so846476ywh.21
+        for <linux-ide@vger.kernel.org>; Sun, 17 Jan 2010 11:36:20 -0800 (PST)
+In-Reply-To: <9edb119c1001170225j4a3553edl68376c6ba2c11cd5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: amruth pattanada <amruth.vamadev@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 01/16/2010 03:58 PM, Torsten Kaiser wrote:
-> On Mon, Jan 11, 2010 at 2:39 AM, Robert Hancock<hancockrwd@gmail.com>=
-  wrote:
->> On 01/10/2010 07:15 PM, Tejun Heo wrote:
+On 01/17/2010 04:25 AM, amruth pattanada wrote:
+> Thanks Robert for the information. I wanted to send standard ATA
+> commands via 3124 controller and basically map it to legacy ide
+> interface  because the RTOS does not have SATA framework and works
+> with only legacy based ide device.We have supported server works, ALI,
+> intel BMDE chipset successfully.Is it feasible idea to map 3124 to
+> ide.I see in the data sheet that standard ATA commands can be sent via
+> 3124 controller by populating PRB block(FIS type 0x27) in LRAM.Can you
+> please let me know if we can follow this approach. I want to enable
+> minimum configuration to operationalise the device so that I can read
+> and write data onto the device.
+> As per your response I see that legacy based IDE (ATA SFF interface)
+> is not supported in 3124, can we atleast enable with minimum settings
+> for controller to work. How do we enable 32 bit mode only instead of
+> 64 bit mode supported natively. I see that in linux driver only 64bit
+> is activated. Please let me know
+
+I don't know what RTOS you're using or how its IDE framework works, but 
+I suspect this controller is different enough from anything SFF-based 
+that you'll have some trouble. (This is a big reason why libata was 
+created instead of trying to cram such drivers into the IDE framework.) 
+The only suggestion I'd have would be to look at the libata code in 
+sata_sil24 and see how it's doing things and see if you can adapt that 
+somehow. (Keeping in mind that the Linux code is under GPL, of course..)
+
+> Thanks
+> Amruth p.v
+>
+> On Sat, Jan 16, 2010 at 9:48 AM, Robert Hancock<hancockrwd@gmail.com>  wrote:
+>> On 01/16/2010 04:31 AM, amruth pattanada wrote:
 >>>
->>> On 01/10/2010 01:33 PM, Torsten Kaiser wrote:
->>>>
->>>> I did try the patch from Robert Hancock in
->>>> http://lkml.org/lkml/2010/1/6/417 ,but without success.
->>>>
->>>> if you need any more information, or have something for me to try,
->>>> please just ask. I did look at the code and the documentation abou=
-t
->>>> enabling MSI, but did not see anything (obvious) wrong, so I don't
->>>> know what to try next.
->>>
->>> Can you please try the attached patch?
->>>
->>> Thanks.
+>>> Hi
+>>> I am currently working on porting linux sata silicon image 3124 to
+>>> RTOS based kernel. I have checked the code and found that it supports
+>>> native sata mode only.
+>>> I have legacy ide driver and want to integrate 3124 controller. I
+>>> wanted to run 3124 in PATA mode. I checked libata and found that it
+>>> only supports 3112.
+>>> Can anybody please point what steps needs to be taken for making 3124
+>>> run in PATA mode.
+>>
+>> If you mean run in SFF-compatible mode like the 3112, you can't. The 3124 is
+>> a pure FIS-based SATA controller and doesn't support a legacy SFF-style
+>> interface. If you're trying to make an IDE driver for the 3124 I think you
+>> will have a lot of trouble, the IDE code was not really designed to handle
+>> such a device.
+>>
+>>> Here is my observation so far.
+>>> I have MMIO for both port and host using PCI configuration space.
+>>> I can read global control register and after reset I can see that the
+>>> default values are set correctly.
+>>> I have port map of 8192
+>>> bytes(0-2000,2000-4000,4000-6000,6000-8000)ports 0..3 respectively,
+>>> and planning to reset the port, followed steps from linux code but
+>>> unable to validate if the port is successfully reset.
+>>> I have PRB mapped but after softreset, reading low,mid and high LBA
+>>> but signature is not as per data sheet.
+>>> Can I can use default standard ATA PRB and map it to legacy ide driver
+>>> or is there any register setting needs to be done to bring in PATA
+>>> mode.
+>>> Any pointers will be appreciated.
+>>> Thanks
+>>> Amruth p.v
+>>> Sr.Embedded Engineer
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>>
 >>
->> It'd be interesting to see if it makes a difference, but I don't thi=
-nk the
->> patch is quite right.
->
-> As written in the other mail: No, Tejuns patch also didn't work.
->
->> According to the datasheet, doing the MSI ack while
->> the interrupt source is still pending will cause a new MSI to be sen=
-t, so if
->> you do it before handling the interrupt you'll generate a spurious i=
-nterrupt
->> after every real one.
 >>
->> Though, apparently my patch that did the MSI ack after the handling =
-didn't
->> help, so either that's wrong or the problem is unrelated. (I tend to=
- suspect
->> the latter, given that sata_nv is also failing in the same way.)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> Reading http://www.siliconimage.com/docs/SiI-DS-0138-D.pdf a possible
-> cause might have been, that this MSI ACK was never needed. Page 63 of
-> this PDF says about 'Global Control': "If all interrupt conditions ar=
-e
-> removed subsequent to an MSI, it is not necessary to assert this
-> Acknowledge; another MSI will be generated when an interrupt conditio=
-n
-> occurs."
->
-> But I did not find anything that might explain my problem.
->
-> Looking at my lspci output I noted the following:
-> For the PCIe-bridges:
-> 	Capabilities: [80] Express (v1) Root Port (Slot+), MSI 00
-> 		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s<64ns, L1<1us
-> 			ExtTag- RBE+ FLReset-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> For the tg3 onboard network chips:
-> 	Capabilities: [d0] Express (v1) Endpoint, MSI 00
-> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s<4us, L1 unli=
-mited
-> 			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> 			MaxPayload 128 bytes, MaxReadReq 4096 bytes
-> For the SiI chip:
-> 	Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
-> 		DevCap:	MaxPayload 1024 bytes, PhantFunc 0, Latency L0s<64ns, L1<1u=
-s
-> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> 			MaxPayload 128 bytes, MaxReadReq 4096 bytes
->
-> So the maximum payload for it is bigger then that of the nVidia bridg=
-e.
-> As I don't have knowlegde of the PCI specs, I guess DevCap is what a
-> device is physically capable and DevCtl is the value that the BIOS /
-> kernel hat programmed into it for actual use.
-> If my guess is correct, then the SiI should be correctly limited to
-> 128 bytes payload and that it should work.
->
-> BUT: Page 47 of the SiI-PDF says for 'Device Status and Control' the =
-following:
-> Bit [14:12]: Max Read Request Size (R/W) =96 Allowable values are 000=
-B
-> to 011B (128 to 1024 bytes).
-> Default is 010B (512 bytes).
->
-> So a MaxReadReq value of 4096 as indicated by lspci for my system
-> would be out of bounds.
->
-> Is is important? (Somehow it seems not: In the Not-MSI-case it is als=
-o
-> 4096 bytes, but the system works fine...)
->
->
-> Can I do anything else to help debug this?
 
-I don't think the MaxReadReq difference would be an issue - it's the ma=
-x=20
-request size that device is allowed to generate, not the max it can=20
-accept. In any case, not sure how it would affect MSI since those=20
-requests would be a write, not a read, and would be tiny. You could=20
-always try changing it (I think setpci should be able to do it, though=20
-you might need to dig through specs to find out which bits those are).
-
-Unfortunately I don't have any great debug suggestions other than=20
-those.. My first suspect would still be some kind of HT-MSI mapping=20
-issue, but it's strange that only writes seem to be having problems..
