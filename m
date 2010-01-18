@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 35/64] opti621: remove stale driver history
-Date: Mon, 18 Jan 2010 18:19:06 +0100
-Message-ID: <20100118171906.14623.71239.sendpatchset@localhost>
+Subject: [PATCH 36/64] pdc202xx_old: add ->init_hwif method
+Date: Mon, 18 Jan 2010 18:19:14 +0100
+Message-ID: <20100118171914.14623.74426.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-fx0-f225.google.com ([209.85.220.225]:57577 "EHLO
 	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754922Ab0ARRUV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:20:21 -0500
+	with ESMTP id S1755079Ab0ARRUZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:20:25 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,92 +15,73 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] opti621: remove stale driver history
+Subject: [PATCH] pdc202xx_old: add ->init_hwif method
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/opti621.c |   71 --------------------------------------------------
- 1 file changed, 71 deletions(-)
+ drivers/ide/pdc202xx_old.c |   18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-Index: b/drivers/ide/opti621.c
+Index: b/drivers/ide/pdc202xx_old.c
 ===================================================================
---- a/drivers/ide/opti621.c
-+++ b/drivers/ide/opti621.c
-@@ -8,77 +8,6 @@
-  * Jan Harkes <jaharkes@cwi.nl>,
-  * Mark Lord <mlord@pobox.com>
-  * Some parts of code are from ali14xx.c and from rz1000.c.
-- *
-- * OPTi is trademark of OPTi, Octek is trademark of Octek.
-- *
-- * I used docs from OPTi databook, from ftp.opti.com, file 9123-0002.ps
-- * and disassembled/traced setupvic.exe (DOS program).
-- * It increases kernel code about 2 kB.
-- * I don't have this card no more, but I hope I can get some in case
-- * of needed development.
-- * My card is Octek PIDE 1.01 (on card) or OPTiViC (program).
-- * It has a place for a secondary connector in circuit, but nothing
-- * is there. Also BIOS says no address for
-- * secondary controller (see bellow in ide_init_opti621).
-- * I've only tested this on my system, which only has one disk.
-- * It's Western Digital WDAC2850, with PIO mode 3. The PCI bus
-- * is at 20 MHz (I have DX2/80, I tried PCI at 40, but I got random
-- * lockups). I tried the OCTEK double speed CD-ROM and
-- * it does not work! But I can't boot DOS also, so it's probably
-- * hardware fault. I have connected Conner 80MB, the Seagate 850MB (no
-- * problems) and Seagate 1GB (as slave, WD as master). My experiences
-- * with the third, 1GB drive: I got 3MB/s (hdparm), but sometimes
-- * it slows to about 100kB/s! I don't know why and I have
-- * not this drive now, so I can't try it again.
-- * I write this driver because I lost the paper ("manual") with
-- * settings of jumpers on the card and I have to boot Linux with
-- * Loadlin except LILO, cause I have to run the setupvic.exe program
-- * already or I get disk errors (my test: rpm -Vf
-- * /usr/X11R6/bin/XF86_SVGA - or any big file).
-- * Some numbers from hdparm -t /dev/hda:
-- * Timing buffer-cache reads:   32 MB in  3.02 seconds =10.60 MB/sec
-- * Timing buffered disk reads:  16 MB in  5.52 seconds = 2.90 MB/sec
-- * I have 4 Megs/s before, but I don't know why (maybe changes
-- * in hdparm test).
-- * After release of 0.1, I got some successful reports, so it might work.
-- *
-- * The main problem with OPTi is that some timings for master
-- * and slave must be the same. For example, if you have master
-- * PIO 3 and slave PIO 0, driver have to set some timings of
-- * master for PIO 0. Second problem is that opti621_set_pio_mode
-- * got only one drive to set, but have to set both drives.
-- * This is solved in compute_pios. If you don't set
-- * the second drive, compute_pios use ide_get_best_pio_mode
-- * for autoselect mode (you can change it to PIO 0, if you want).
-- * If you then set the second drive to another PIO, the old value
-- * (automatically selected) will be overrided by yours.
-- * There is a 25/33MHz switch in configuration
-- * register, but driver is written for use at any frequency.
-- *
-- * Version 0.1, Nov 8, 1996
-- * by Jaromir Koutek, for 2.1.8.
-- * Initial version of driver.
-- *
-- * Version 0.2
-- * Number 0.2 skipped.
-- *
-- * Version 0.3, Nov 29, 1997
-- * by Mark Lord (probably), for 2.1.68
-- * Updates for use with new IDE block driver.
-- *
-- * Version 0.4, Dec 14, 1997
-- * by Jan Harkes
-- * Fixed some errors and cleaned the code.
-- *
-- * Version 0.5, Jan 2, 1998
-- * by Jaromir Koutek
-- * Updates for use with (again) new IDE block driver.
-- * Update of documentation.
-- *
-- * Version 0.6, Jan 2, 1999
-- * by Jaromir Koutek
-- * Reversed to version 0.3 of the driver, because
-- * 0.5 doesn't work.
-  */
+--- a/drivers/ide/pdc202xx_old.c
++++ b/drivers/ide/pdc202xx_old.c
+@@ -1,7 +1,7 @@
+ /*
+  *  Copyright (C) 1998-2002		Andre Hedrick <andre@linux-ide.org>
+  *  Copyright (C) 2006-2007, 2009	MontaVista Software, Inc.
+- *  Copyright (C) 2007			Bartlomiej Zolnierkiewicz
++ *  Copyright (C) 2007-2010		Bartlomiej Zolnierkiewicz
+  *
+  *  Portions Copyright (C) 1999 Promise Technology, Inc.
+  *  Author: Frank Tiernan (frankt@promise.com)
+@@ -21,8 +21,6 @@
  
- #include <linux/types.h>
+ #define DRV_NAME "pdc202xx_old"
+ 
+-static void pdc_old_disable_66MHz_clock(ide_hwif_t *);
+-
+ static void pdc202xx_set_mode(ide_drive_t *drive, const u8 speed)
+ {
+ 	ide_hwif_t *hwif	= drive->hwif;
+@@ -32,12 +30,6 @@ static void pdc202xx_set_mode(ide_drive_
+ 	u8			AP = 0, BP = 0, CP = 0;
+ 	u8			TA = 0, TB = 0, TC = 0;
+ 
+-	/*
+-	 * TODO: do this once per channel
+-	 */
+-	if (dev->device != PCI_DEVICE_ID_PROMISE_20246)
+-		pdc_old_disable_66MHz_clock(hwif);
+-
+ 	pci_read_config_byte(dev, drive_pci,     &AP);
+ 	pci_read_config_byte(dev, drive_pci + 1, &BP);
+ 	pci_read_config_byte(dev, drive_pci + 2, &CP);
+@@ -145,6 +137,11 @@ static void pdc_old_disable_66MHz_clock(
+ 	outb(clock & ~(hwif->channel ? 0x08 : 0x02), clock_reg);
+ }
+ 
++static void pdc2026x_init_hwif(ide_hwif_t *hwif)
++{
++	pdc_old_disable_66MHz_clock(hwif);
++}
++
+ static void pdc202xx_dma_start(ide_drive_t *drive)
+ {
+ 	if (drive->current_speed > XFER_UDMA_2)
+@@ -261,6 +258,7 @@ static const struct ide_dma_ops pdc2026x
+ 	{ \
+ 		.name		= DRV_NAME, \
+ 		.init_chipset	= init_chipset_pdc202xx, \
++		.init_hwif	= pdc2026x_init_hwif, \
+ 		.port_ops	= &pdc2026x_port_ops, \
+ 		.dma_ops	= &pdc2026x_dma_ops, \
+ 		.host_flags	= IDE_HFLAGS_PDC202XX, \
+@@ -356,6 +354,6 @@ static void __exit pdc202xx_ide_exit(voi
+ module_init(pdc202xx_ide_init);
+ module_exit(pdc202xx_ide_exit);
+ 
+-MODULE_AUTHOR("Andre Hedrick, Frank Tiernan");
++MODULE_AUTHOR("Andre Hedrick, Frank Tiernan, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for older Promise IDE");
+ MODULE_LICENSE("GPL");
