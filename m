@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 60/64] palm_bk3710: use ->pio_mode value to determine pair device speed
-Date: Mon, 18 Jan 2010 18:22:09 +0100
-Message-ID: <20100118172209.14623.38294.sendpatchset@localhost>
+Subject: [PATCH 42/64] via82cxxx: workaround h/w bugs
+Date: Mon, 18 Jan 2010 18:20:00 +0100
+Message-ID: <20100118172000.14623.73749.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:50713 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381Ab0ARRXT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:23:19 -0500
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755306Ab0ARRVJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:21:09 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,27 +15,95 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] palm_bk3710: use ->pio_mode value to determine pair device speed
+Subject: [PATCH] via82cxxx: workaround h/w bugs
 
-Use the current PIO mode value instead of the physical maximum one
-of the pair device on the port to determine PIO commmand timings used
-for both devices on the port.
+Add custom struct ide_tp_ops instance to fix the internal bug of some VIA
+chipsets which will reset the device register after changing the nIEN bit
+in the device control register.
+
+Based on commit bfce5e0 for pata_via host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/palm_bk3710.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ide/via82cxxx.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
 
-Index: b/drivers/ide/palm_bk3710.c
+Index: b/drivers/ide/via82cxxx.c
 ===================================================================
---- a/drivers/ide/palm_bk3710.c
-+++ b/drivers/ide/palm_bk3710.c
-@@ -166,7 +166,7 @@ static void palm_bk3710_setpiomode(void
- 	writel(val32, base + BK3710_DATRCVR);
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -107,6 +107,7 @@ struct via82cxxx_dev
+ {
+ 	struct via_isa_bridge *via_config;
+ 	unsigned int via_80w;
++	u8 cached_device[2];
+ };
  
- 	if (mate) {
--		u8 mode2 = ide_get_best_pio_mode(mate, 255, 4);
-+		u8 mode2 = mate->pio_mode - XFER_PIO_0;
+ /**
+@@ -382,10 +383,66 @@ static const struct ide_port_ops via_por
+ 	.cable_detect		= via82cxxx_cable_detect,
+ };
  
- 		if (mode2 < mode)
- 			mode = mode2;
++static void via_write_devctl(ide_hwif_t *hwif, u8 ctl)
++{
++	struct via82cxxx_dev *vdev = hwif->host->host_priv;
++
++	outb(ctl, hwif->io_ports.ctl_addr);
++	outb(vdev->cached_device[hwif->channel], hwif->io_ports.device_addr);
++}
++
++static void __via_dev_select(ide_drive_t *drive, u8 select)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	struct via82cxxx_dev *vdev = hwif->host->host_priv;
++
++	outb(select, hwif->io_ports.device_addr);
++	vdev->cached_device[hwif->channel] = select;
++}
++
++static void via_dev_select(ide_drive_t *drive)
++{
++	__via_dev_select(drive, drive->select | ATA_DEVICE_OBS);
++}
++
++static void via_tf_load(ide_drive_t *drive, struct ide_taskfile *tf, u8 valid)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	struct ide_io_ports *io_ports = &hwif->io_ports;
++
++	if (valid & IDE_VALID_FEATURE)
++		outb(tf->feature, io_ports->feature_addr);
++	if (valid & IDE_VALID_NSECT)
++		outb(tf->nsect, io_ports->nsect_addr);
++	if (valid & IDE_VALID_LBAL)
++		outb(tf->lbal, io_ports->lbal_addr);
++	if (valid & IDE_VALID_LBAM)
++		outb(tf->lbam, io_ports->lbam_addr);
++	if (valid & IDE_VALID_LBAH)
++		outb(tf->lbah, io_ports->lbah_addr);
++	if (valid & IDE_VALID_DEVICE)
++		__via_dev_select(drive, tf->device);
++}
++
++const struct ide_tp_ops via_tp_ops = {
++	.exec_command		= ide_exec_command,
++	.read_status		= ide_read_status,
++	.read_altstatus		= ide_read_altstatus,
++	.write_devctl		= via_write_devctl,
++
++	.dev_select		= via_dev_select,
++	.tf_load		= via_tf_load,
++	.tf_read		= ide_tf_read,
++
++	.input_data		= ide_input_data,
++	.output_data		= ide_output_data,
++};
++
+ static const struct ide_port_info via82cxxx_chipset __devinitdata = {
+ 	.name		= DRV_NAME,
+ 	.init_chipset	= init_chipset_via82cxxx,
+ 	.enablebits	= { { 0x40, 0x02, 0x02 }, { 0x40, 0x01, 0x01 } },
++	.tp_ops		= &via_tp_ops,
+ 	.port_ops	= &via_port_ops,
+ 	.host_flags	= IDE_HFLAG_PIO_NO_BLACKLIST |
+ 			  IDE_HFLAG_POST_SET_MODE |
