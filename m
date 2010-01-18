@@ -1,37 +1,83 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 40/64] ide: add SATA cable detection support
-Date: Mon, 18 Jan 2010 18:19:44 +0100
-Message-ID: <20100118171944.14623.92267.sendpatchset@localhost>
+Subject: [PATCH 39/64] via82cxxx: vx855 is a single channel controller
+Date: Mon, 18 Jan 2010 18:19:37 +0100
+Message-ID: <20100118171937.14623.67352.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755263Ab0ARRUz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:20:55 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755272Ab0ARRUz@vger.kernel.org>
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add SATA cable detection support
+Subject: [PATCH] via82cxxx: vx855 is a single channel controller
+
+Based on commit e4d866c for pata_via host driver
+(PCI ID was later changed by commit 5993856).
+
+Update my credits while at it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-iops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ide/via82cxxx.c |   19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-Index: b/drivers/ide/ide-iops.c
+Index: b/drivers/ide/via82cxxx.c
 ===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -231,7 +231,7 @@ u8 eighty_ninty_three(ide_drive_t *drive
- 	u16 *id = drive->id;
- 	int ivb = ide_in_drive_list(id, ivb_list);
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -6,7 +6,7 @@
+  *   vt8235, vt8237, vt8237a
+  *
+  * Copyright (c) 2000-2002 Vojtech Pavlik
+- * Copyright (c) 2007 Bartlomiej Zolnierkiewicz
++ * Copyright (c) 2007-2010 Bartlomiej Zolnierkiewicz
+  *
+  * Based on the work of:
+  *	Michel Aubry
+@@ -55,6 +55,10 @@
+ #define VIA_BAD_ID		0x10 /* Has wrong vendor ID (0x1107) */
+ #define VIA_BAD_AST		0x20 /* Don't touch Address Setup Timing */
  
--	if (hwif->cbl == ATA_CBL_PATA40_SHORT)
-+	if (hwif->cbl == ATA_CBL_SATA || hwif->cbl == ATA_CBL_PATA40_SHORT)
- 		return 1;
++enum {
++	VIA_IDFLAG_SINGLE = (1 << 1), /* single channel controller */
++};
++
+ /*
+  * VIA SouthBridge chips.
+  */
+@@ -436,10 +440,13 @@ static int __devinit via_init_one(struct
+ 		via_clock = 33333;
+ 	}
  
- 	if (ivb)
+-	if (idx == 0)
+-		d.host_flags |= IDE_HFLAG_NO_AUTODMA;
+-	else
++	if (idx == 1)
+ 		d.enablebits[1].reg = d.enablebits[0].reg = 0;
++	else
++		d.host_flags |= IDE_HFLAG_NO_AUTODMA;
++
++	if (idx == VIA_IDFLAG_SINGLE)
++		d.host_flags |= IDE_HFLAG_SINGLE;
+ 
+ 	if ((via_config->flags & VIA_NO_UNMASK) == 0)
+ 		d.host_flags |= IDE_HFLAG_UNMASK_IRQS;
+@@ -475,7 +482,7 @@ static const struct pci_device_id via_pc
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C576_1),  0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C586_1),  0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_CX700_IDE), 0 },
+-	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_VX855_IDE), 0 },
++	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_VX855_IDE), VIA_IDFLAG_SINGLE },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_6410),      1 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_SATA_EIDE), 1 },
+ 	{ 0, },
+@@ -504,6 +511,6 @@ static void __exit via_ide_exit(void)
+ module_init(via_ide_init);
+ module_exit(via_ide_exit);
+ 
+-MODULE_AUTHOR("Vojtech Pavlik, Michel Aubry, Jeff Garzik, Andre Hedrick");
++MODULE_AUTHOR("Vojtech Pavlik, Bartlomiej Zolnierkiewicz, Michel Aubry, Jeff Garzik, Andre Hedrick");
+ MODULE_DESCRIPTION("PCI driver module for VIA IDE");
+ MODULE_LICENSE("GPL");
