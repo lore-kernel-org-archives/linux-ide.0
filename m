@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 26/64] alim15x3: fix PIO timings calculations
-Date: Mon, 18 Jan 2010 18:17:37 +0100
-Message-ID: <20100118171737.14623.10091.sendpatchset@localhost>
+Subject: [PATCH 35/64] opti621: remove stale driver history
+Date: Mon, 18 Jan 2010 18:19:06 +0100
+Message-ID: <20100118171906.14623.71239.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881Ab0ARRTH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:19:07 -0500
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:57577 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754922Ab0ARRUV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:20:21 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,90 +15,92 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] alim15x3: fix PIO timings calculations
-
-Just use the standard ide_timing_compute() helper to calculate
-PIO timings.  This fixes many issues with the open-coded version
-like potential recovery timings underclocking or not accounting
-for the enhanced cycle time specified by the device.
-
-Based on libata pata_ali host driver.
+Subject: [PATCH] opti621: remove stale driver history
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/alim15x3.c |   34 +++++++++++++++-------------------
- 1 file changed, 15 insertions(+), 19 deletions(-)
+ drivers/ide/opti621.c |   71 --------------------------------------------------
+ 1 file changed, 71 deletions(-)
 
-Index: b/drivers/ide/alim15x3.c
+Index: b/drivers/ide/opti621.c
 ===================================================================
---- a/drivers/ide/alim15x3.c
-+++ b/drivers/ide/alim15x3.c
-@@ -8,7 +8,7 @@
-  *  Copyright (C) 2002 Alan Cox
-  *  ALi (now ULi M5228) support by Clear Zhang <Clear.Zhang@ali.com.tw>
-  *  Copyright (C) 2007 MontaVista Software, Inc. <source@mvista.com>
-- *  Copyright (C) 2007 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-+ *  Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
-  *
-  *  (U)DMA capable version of ali 1533/1543(C), 1535(D)
-  *
-@@ -60,28 +60,22 @@ static void ali_set_pio_mode(ide_drive_t
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	struct ide_timing *t = ide_timing_find_mode(XFER_PIO_0 + pio);
--	int s_time = t->setup, a_time = t->active, c_time = t->cycle;
--	u8 s_clc, a_clc, r_clc;
- 	unsigned long flags;
- 	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
-+	unsigned long T =  1000000 / bus_speed; /* PCI clock based */
- 	int port = hwif->channel ? 0x5c : 0x58;
- 	int portFIFO = hwif->channel ? 0x55 : 0x54;
- 	u8 cd_dma_fifo = 0, unit = drive->dn & 1;
-+	struct ide_timing t;
+--- a/drivers/ide/opti621.c
++++ b/drivers/ide/opti621.c
+@@ -8,77 +8,6 @@
+  * Jan Harkes <jaharkes@cwi.nl>,
+  * Mark Lord <mlord@pobox.com>
+  * Some parts of code are from ali14xx.c and from rz1000.c.
+- *
+- * OPTi is trademark of OPTi, Octek is trademark of Octek.
+- *
+- * I used docs from OPTi databook, from ftp.opti.com, file 9123-0002.ps
+- * and disassembled/traced setupvic.exe (DOS program).
+- * It increases kernel code about 2 kB.
+- * I don't have this card no more, but I hope I can get some in case
+- * of needed development.
+- * My card is Octek PIDE 1.01 (on card) or OPTiViC (program).
+- * It has a place for a secondary connector in circuit, but nothing
+- * is there. Also BIOS says no address for
+- * secondary controller (see bellow in ide_init_opti621).
+- * I've only tested this on my system, which only has one disk.
+- * It's Western Digital WDAC2850, with PIO mode 3. The PCI bus
+- * is at 20 MHz (I have DX2/80, I tried PCI at 40, but I got random
+- * lockups). I tried the OCTEK double speed CD-ROM and
+- * it does not work! But I can't boot DOS also, so it's probably
+- * hardware fault. I have connected Conner 80MB, the Seagate 850MB (no
+- * problems) and Seagate 1GB (as slave, WD as master). My experiences
+- * with the third, 1GB drive: I got 3MB/s (hdparm), but sometimes
+- * it slows to about 100kB/s! I don't know why and I have
+- * not this drive now, so I can't try it again.
+- * I write this driver because I lost the paper ("manual") with
+- * settings of jumpers on the card and I have to boot Linux with
+- * Loadlin except LILO, cause I have to run the setupvic.exe program
+- * already or I get disk errors (my test: rpm -Vf
+- * /usr/X11R6/bin/XF86_SVGA - or any big file).
+- * Some numbers from hdparm -t /dev/hda:
+- * Timing buffer-cache reads:   32 MB in  3.02 seconds =10.60 MB/sec
+- * Timing buffered disk reads:  16 MB in  5.52 seconds = 2.90 MB/sec
+- * I have 4 Megs/s before, but I don't know why (maybe changes
+- * in hdparm test).
+- * After release of 0.1, I got some successful reports, so it might work.
+- *
+- * The main problem with OPTi is that some timings for master
+- * and slave must be the same. For example, if you have master
+- * PIO 3 and slave PIO 0, driver have to set some timings of
+- * master for PIO 0. Second problem is that opti621_set_pio_mode
+- * got only one drive to set, but have to set both drives.
+- * This is solved in compute_pios. If you don't set
+- * the second drive, compute_pios use ide_get_best_pio_mode
+- * for autoselect mode (you can change it to PIO 0, if you want).
+- * If you then set the second drive to another PIO, the old value
+- * (automatically selected) will be overrided by yours.
+- * There is a 25/33MHz switch in configuration
+- * register, but driver is written for use at any frequency.
+- *
+- * Version 0.1, Nov 8, 1996
+- * by Jaromir Koutek, for 2.1.8.
+- * Initial version of driver.
+- *
+- * Version 0.2
+- * Number 0.2 skipped.
+- *
+- * Version 0.3, Nov 29, 1997
+- * by Mark Lord (probably), for 2.1.68
+- * Updates for use with new IDE block driver.
+- *
+- * Version 0.4, Dec 14, 1997
+- * by Jan Harkes
+- * Fixed some errors and cleaned the code.
+- *
+- * Version 0.5, Jan 2, 1998
+- * by Jaromir Koutek
+- * Updates for use with (again) new IDE block driver.
+- * Update of documentation.
+- *
+- * Version 0.6, Jan 2, 1999
+- * by Jaromir Koutek
+- * Reversed to version 0.3 of the driver, because
+- * 0.5 doesn't work.
+  */
  
--	if ((s_clc = (s_time * bus_speed + 999) / 1000) >= 8)
--		s_clc = 0;
--	if ((a_clc = (a_time * bus_speed + 999) / 1000) >= 8)
--		a_clc = 0;
-+	ide_timing_compute(drive, XFER_PIO_0 + pio, &t, T, 1);
-+
-+	t.setup = clamp_val(t.setup, 1, 8) & 7;
-+	t.active = clamp_val(t.active, 1, 8) & 7;
-+	t.recover = clamp_val(t.recover, 1, 16) & 15;
- 
--	if (!(r_clc = (c_time * bus_speed + 999) / 1000 - a_clc - s_clc)) {
--		r_clc = 1;
--	} else {
--		if (r_clc >= 16)
--			r_clc = 0;
--	}
- 	local_irq_save(flags);
--	
-+
- 	/* 
- 	 * PIO mode => ATA FIFO on, ATAPI FIFO off
- 	 */
-@@ -99,9 +93,11 @@ static void ali_set_pio_mode(ide_drive_t
- 			pci_write_config_byte(dev, portFIFO, cd_dma_fifo & 0xF0);
- 		}
- 	}
--	
--	pci_write_config_byte(dev, port, s_clc);
--	pci_write_config_byte(dev, port + unit + 2, (a_clc << 4) | r_clc);
-+
-+	pci_write_config_byte(dev, port, t.setup);
-+	pci_write_config_byte(dev, port + unit + 2,
-+			      (t.active << 4) | t.recover);
-+
- 	local_irq_restore(flags);
- }
- 
-@@ -584,6 +580,6 @@ static void __exit ali15x3_ide_exit(void
- module_init(ali15x3_ide_init);
- module_exit(ali15x3_ide_exit);
- 
--MODULE_AUTHOR("Michael Aubry, Andrzej Krzysztofowicz, CJ, Andre Hedrick, Alan Cox");
-+MODULE_AUTHOR("Michael Aubry, Andrzej Krzysztofowicz, CJ, Andre Hedrick, Alan Cox, Bartlomiej Zolnierkiewicz");
- MODULE_DESCRIPTION("PCI driver module for ALi 15x3 IDE");
- MODULE_LICENSE("GPL");
+ #include <linux/types.h>
