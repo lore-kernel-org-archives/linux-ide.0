@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 54/64] alim15x3: fix handling of UDMA enable bit
-Date: Mon, 18 Jan 2010 18:21:26 +0100
-Message-ID: <20100118172126.14623.55960.sendpatchset@localhost>
+Subject: [PATCH 64/64] ide: make ide_get_best_pio_mode() static
+Date: Mon, 18 Jan 2010 18:22:38 +0100
+Message-ID: <20100118172238.14623.41430.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755453Ab0ARRWo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:22:44 -0500
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:34219 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755556Ab0ARRXt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:23:49 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,102 +15,44 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] alim15x3: fix handling of UDMA enable bit
-
-Clear UDMA enable bit also for PIO modes.
-
-Based on libata pata_ali host driver.
+Subject: [PATCH] ide: make ide_get_best_pio_mode() static
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/alim15x3.c |   43 ++++++++++++++++++-------------------------
- 1 file changed, 18 insertions(+), 25 deletions(-)
+ drivers/ide/ide-xfer-mode.c |    3 +--
+ include/linux/ide.h         |    1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-Index: b/drivers/ide/alim15x3.c
+Index: b/drivers/ide/ide-xfer-mode.c
 ===================================================================
---- a/drivers/ide/alim15x3.c
-+++ b/drivers/ide/alim15x3.c
-@@ -62,11 +62,22 @@ static void ali_fifo_control(ide_hwif_t
- }
+--- a/drivers/ide/ide-xfer-mode.c
++++ b/drivers/ide/ide-xfer-mode.c
+@@ -58,7 +58,7 @@ EXPORT_SYMBOL(ide_xfer_verbose);
+  *	This is used by most chipset support modules when "auto-tuning".
+  */
  
- static void ali_program_timings(ide_hwif_t *hwif, ide_drive_t *drive,
--				struct ide_timing *t)
-+				struct ide_timing *t, u8 ultra)
+-u8 ide_get_best_pio_mode(ide_drive_t *drive, u8 mode_wanted, u8 max_mode)
++static u8 ide_get_best_pio_mode(ide_drive_t *drive, u8 mode_wanted, u8 max_mode)
  {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 	int port = hwif->channel ? 0x5c : 0x58;
--	u8 unit = drive->dn & 1;
-+	int udmat = 0x56 + hwif->channel;
-+	u8 unit = drive->dn & 1, udma;
-+	int shift = 4 * unit;
-+
-+	/* Set up the UDMA */
-+	pci_read_config_byte(dev, udmat, &udma);
-+	udma &= ~(0x0F << shift);
-+	udma |= ultra << shift;
-+	pci_write_config_byte(dev, udmat, udma);
-+
-+	if (t == NULL)
-+		return;
+ 	u16 *id = drive->id;
+ 	int pio_mode = -1, overridden = 0;
+@@ -105,7 +105,6 @@ u8 ide_get_best_pio_mode(ide_drive_t *dr
  
- 	t->setup = clamp_val(t->setup, 1, 8) & 7;
- 	t->act8b = clamp_val(t->act8b, 1, 8) & 7;
-@@ -114,7 +125,7 @@ static void ali_set_pio_mode(ide_hwif_t
- 	 */
- 	ali_fifo_control(hwif, drive, (drive->media == ide_disk) ? 0x05 : 0x00);
- 
--	ali_program_timings(hwif, drive, &t);
-+	ali_program_timings(hwif, drive, &t, 0);
+ 	return pio_mode;
  }
+-EXPORT_SYMBOL_GPL(ide_get_best_pio_mode);
  
- /**
-@@ -152,29 +163,16 @@ static u8 ali_udma_filter(ide_drive_t *d
- 
- static void ali_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ int ide_pio_need_iordy(ide_drive_t *drive, const u8 pio)
  {
-+	static u8 udma_timing[7] = { 0xC, 0xB, 0xA, 0x9, 0x8, 0xF, 0xD };
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
- 	ide_drive_t *pair	= ide_get_pair_dev(drive);
- 	int bus_speed		= ide_pci_clk ? ide_pci_clk : 33;
- 	unsigned long T		=  1000000 / bus_speed; /* PCI clock based */
- 	const u8 speed		= drive->dma_mode;
--	u8 speed1		= speed;
--	u8 unit			= drive->dn & 1;
- 	u8 tmpbyte		= 0x00;
--	int m5229_udma		= (hwif->channel) ? 0x57 : 0x56;
- 	struct ide_timing t;
- 
--	if (speed == XFER_UDMA_6)
--		speed1 = 0x47;
--
- 	if (speed < XFER_UDMA_0) {
--		u8 ultra_enable	= (unit) ? 0x7f : 0xf7;
--		/*
--		 * clear "ultra enable" bit
--		 */
--		pci_read_config_byte(dev, m5229_udma, &tmpbyte);
--		tmpbyte &= ultra_enable;
--		pci_write_config_byte(dev, m5229_udma, tmpbyte);
--
- 		ide_timing_compute(drive, drive->dma_mode, &t, T, 1);
- 		if (pair) {
- 			struct ide_timing p;
-@@ -189,15 +187,10 @@ static void ali_set_dma_mode(ide_hwif_t
- 					IDE_TIMING_SETUP | IDE_TIMING_8BIT);
- 			}
- 		}
--		ali_program_timings(hwif, drive, &t);
-+		ali_program_timings(hwif, drive, &t, 0);
- 	} else {
--		pci_read_config_byte(dev, m5229_udma, &tmpbyte);
--		tmpbyte &= (0x0f << ((1-unit) << 2));
--		/*
--		 * enable ultra dma and set timing
--		 */
--		tmpbyte |= ((0x08 | ((4-speed1)&0x07)) << (unit << 2));
--		pci_write_config_byte(dev, m5229_udma, tmpbyte);
-+		ali_program_timings(hwif, drive, NULL,
-+				udma_timing[speed - XFER_UDMA_0]);
- 		if (speed >= XFER_UDMA_3) {
- 			pci_read_config_byte(dev, 0x4b, &tmpbyte);
- 			tmpbyte |= 1;
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1496,7 +1496,6 @@ int ide_timing_compute(ide_drive_t *, u8
+ #ifdef CONFIG_IDE_XFER_MODE
+ int ide_scan_pio_blacklist(char *);
+ const char *ide_xfer_verbose(u8);
+-u8 ide_get_best_pio_mode(ide_drive_t *, u8, u8);
+ int ide_pio_need_iordy(ide_drive_t *, const u8);
+ int ide_set_pio_mode(ide_drive_t *, u8);
+ int ide_set_dma_mode(ide_drive_t *, u8);
