@@ -1,83 +1,65 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 39/64] via82cxxx: vx855 is a single channel controller
-Date: Mon, 18 Jan 2010 18:19:37 +0100
-Message-ID: <20100118171937.14623.67352.sendpatchset@localhost>
+Subject: [PATCH 41/64] via82cxxx: fix SATA cable detection
+Date: Mon, 18 Jan 2010 18:19:53 +0100
+Message-ID: <20100118171953.14623.7914.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755272Ab0ARRUz@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.156]:5715 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755077Ab0ARRVF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:21:05 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] via82cxxx: vx855 is a single channel controller
+Subject: [PATCH] via82cxxx: fix SATA cable detection
 
-Based on commit e4d866c for pata_via host driver
-(PCI ID was later changed by commit 5993856).
+Add VIA_SATA_PATA flag for cx700, vx800 and vx855 chipsets
+(the first port is SATA).
 
-Update my credits while at it.
+Based on commits 7585eb1, bfce5e0 and e4d866c for pata_via
+host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/via82cxxx.c |   19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/ide/via82cxxx.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 Index: b/drivers/ide/via82cxxx.c
 ===================================================================
 --- a/drivers/ide/via82cxxx.c
 +++ b/drivers/ide/via82cxxx.c
-@@ -6,7 +6,7 @@
-  *   vt8235, vt8237, vt8237a
-  *
-  * Copyright (c) 2000-2002 Vojtech Pavlik
-- * Copyright (c) 2007 Bartlomiej Zolnierkiewicz
-+ * Copyright (c) 2007-2010 Bartlomiej Zolnierkiewicz
-  *
-  * Based on the work of:
-  *	Michel Aubry
-@@ -55,6 +55,10 @@
+@@ -54,6 +54,7 @@
+ #define VIA_NO_UNMASK		0x08 /* Doesn't work with IRQ unmasking on */
  #define VIA_BAD_ID		0x10 /* Has wrong vendor ID (0x1107) */
  #define VIA_BAD_AST		0x20 /* Don't touch Address Setup Timing */
++#define VIA_SATA_PATA		0x80 /* SATA/PATA combined configuration */
  
-+enum {
-+	VIA_IDFLAG_SINGLE = (1 << 1), /* single channel controller */
-+};
+ enum {
+ 	VIA_IDFLAG_SINGLE = (1 << 1), /* single channel controller */
+@@ -71,9 +72,9 @@ static struct via_isa_bridge {
+ 	u8 udma_mask;
+ 	u8 flags;
+ } via_isa_bridges[] = {
+-	{ "vx855",	PCI_DEVICE_ID_VIA_VX855,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vx855",	PCI_DEVICE_ID_VIA_VX855,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
++	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
++	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
+ 	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+ 	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+ 	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+@@ -366,6 +367,9 @@ static u8 via82cxxx_cable_detect(ide_hwi
+ 	if (via_cable_override(pdev))
+ 		return ATA_CBL_PATA40_SHORT;
+ 
++	if ((vdev->via_config->flags & VIA_SATA_PATA) && hwif->channel == 0)
++		return ATA_CBL_SATA;
 +
- /*
-  * VIA SouthBridge chips.
-  */
-@@ -436,10 +440,13 @@ static int __devinit via_init_one(struct
- 		via_clock = 33333;
- 	}
- 
--	if (idx == 0)
--		d.host_flags |= IDE_HFLAG_NO_AUTODMA;
--	else
-+	if (idx == 1)
- 		d.enablebits[1].reg = d.enablebits[0].reg = 0;
-+	else
-+		d.host_flags |= IDE_HFLAG_NO_AUTODMA;
-+
-+	if (idx == VIA_IDFLAG_SINGLE)
-+		d.host_flags |= IDE_HFLAG_SINGLE;
- 
- 	if ((via_config->flags & VIA_NO_UNMASK) == 0)
- 		d.host_flags |= IDE_HFLAG_UNMASK_IRQS;
-@@ -475,7 +482,7 @@ static const struct pci_device_id via_pc
- 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C576_1),  0 },
- 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C586_1),  0 },
- 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_CX700_IDE), 0 },
--	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_VX855_IDE), 0 },
-+	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_VX855_IDE), VIA_IDFLAG_SINGLE },
- 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_6410),      1 },
- 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_SATA_EIDE), 1 },
- 	{ 0, },
-@@ -504,6 +511,6 @@ static void __exit via_ide_exit(void)
- module_init(via_ide_init);
- module_exit(via_ide_exit);
- 
--MODULE_AUTHOR("Vojtech Pavlik, Michel Aubry, Jeff Garzik, Andre Hedrick");
-+MODULE_AUTHOR("Vojtech Pavlik, Bartlomiej Zolnierkiewicz, Michel Aubry, Jeff Garzik, Andre Hedrick");
- MODULE_DESCRIPTION("PCI driver module for VIA IDE");
- MODULE_LICENSE("GPL");
+ 	if ((vdev->via_80w >> hwif->channel) & 1)
+ 		return ATA_CBL_PATA80;
+ 	else
