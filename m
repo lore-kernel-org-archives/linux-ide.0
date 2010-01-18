@@ -1,41 +1,57 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 58/64] cs5536: use ->pio_mode value to determine pair device speed
-Date: Mon, 18 Jan 2010 18:21:55 +0100
-Message-ID: <20100118172155.14623.42696.sendpatchset@localhost>
+Subject: [PATCH 52/64] alim15x3: fix handling of command timings
+Date: Mon, 18 Jan 2010 18:21:12 +0100
+Message-ID: <20100118172112.14623.45532.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:51627 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755263Ab0ARRXF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:23:05 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755450Ab0ARRWl@vger.kernel.org>
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] cs5536: use ->pio_mode value to determine pair device speed
+Subject: [PATCH] alim15x3: fix handling of command timings
 
-Use the current PIO mode value instead of the physical maximum one
-of the pair device on the port to determine PIO commmand timings used
-for both devices on the port.
+Stop depending on the BIOS setup.
+
+Based on libata pata_ali host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/cs5536.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ide/alim15x3.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/cs5536.c
+Index: b/drivers/ide/alim15x3.c
 ===================================================================
---- a/drivers/ide/cs5536.c
-+++ b/drivers/ide/cs5536.c
-@@ -152,7 +152,7 @@ static void cs5536_set_pio_mode(ide_hwif
- 	u8 cmd_pio = pio;
+--- a/drivers/ide/alim15x3.c
++++ b/drivers/ide/alim15x3.c
+@@ -84,14 +84,18 @@ static void ali_set_pio_mode(ide_hwif_t
+ 		struct ide_timing p;
  
- 	if (pair)
--		cmd_pio = min(pio, ide_get_best_pio_mode(pair, 255, 4));
-+		cmd_pio = min_t(u8, pio, pair->pio_mode - XFER_PIO_0);
+ 		ide_timing_compute(pair, pair->pio_mode, &p, T, 1);
+-		ide_timing_merge(&p, &t, &t, IDE_TIMING_SETUP);
++		ide_timing_merge(&p, &t, &t,
++			IDE_TIMING_SETUP | IDE_TIMING_8BIT);
+ 		if (pair->dma_mode) {
+ 			ide_timing_compute(pair, pair->dma_mode, &p, T, 1);
+-			ide_timing_merge(&p, &t, &t, IDE_TIMING_SETUP);
++			ide_timing_merge(&p, &t, &t,
++				IDE_TIMING_SETUP | IDE_TIMING_8BIT);
+ 		}
+ 	}
  
- 	timings &= (IDE_DRV_MASK << 8);
- 	timings |= drv_timings[pio];
+ 	t.setup = clamp_val(t.setup, 1, 8) & 7;
++	t.act8b = clamp_val(t.act8b, 1, 8) & 7;
++	t.rec8b = clamp_val(t.rec8b, 1, 16) & 15;
+ 	t.active = clamp_val(t.active, 1, 8) & 7;
+ 	t.recover = clamp_val(t.recover, 1, 16) & 15;
+ 
+@@ -101,6 +105,7 @@ static void ali_set_pio_mode(ide_hwif_t
+ 	ali_fifo_control(hwif, drive, (drive->media == ide_disk) ? 0x05 : 0x00);
+ 
+ 	pci_write_config_byte(dev, port, t.setup);
++	pci_write_config_byte(dev, port + 1, (t.act8b << 4) | t.rec8b);
+ 	pci_write_config_byte(dev, port + unit + 2,
+ 			      (t.active << 4) | t.recover);
+ }
