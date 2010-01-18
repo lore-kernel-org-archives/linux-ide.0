@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 42/64] via82cxxx: workaround h/w bugs
-Date: Mon, 18 Jan 2010 18:20:00 +0100
-Message-ID: <20100118172000.14623.73749.sendpatchset@localhost>
+Subject: [PATCH 56/64] cmd64x: fix handling of address setup timings
+Date: Mon, 18 Jan 2010 18:21:41 +0100
+Message-ID: <20100118172141.14623.95484.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:51627 "EHLO
 	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755306Ab0ARRVJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:21:09 -0500
+	with ESMTP id S1755405Ab0ARRXW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:23:22 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,95 +15,48 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] via82cxxx: workaround h/w bugs
+Subject: [PATCH] cmd64x: fix handling of address setup timings
 
-Add custom struct ide_tp_ops instance to fix the internal bug of some VIA
-chipsets which will reset the device register after changing the nIEN bit
-in the device control register.
-
-Based on commit bfce5e0 for pata_via host driver.
+Account for the requirements of the DMA mode currently used.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/via82cxxx.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
+ drivers/ide/cmd64x.c |   17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-Index: b/drivers/ide/via82cxxx.c
+Index: b/drivers/ide/cmd64x.c
 ===================================================================
---- a/drivers/ide/via82cxxx.c
-+++ b/drivers/ide/via82cxxx.c
-@@ -107,6 +107,7 @@ struct via82cxxx_dev
- {
- 	struct via_isa_bridge *via_config;
- 	unsigned int via_80w;
-+	u8 cached_device[2];
- };
+--- a/drivers/ide/cmd64x.c
++++ b/drivers/ide/cmd64x.c
+@@ -87,9 +87,6 @@ static void cmd64x_program_timings(ide_d
+ 	pci_write_config_byte(dev, drwtim_regs[drive->dn],
+ 			      (t.active << 4) | t.recover);
  
- /**
-@@ -382,10 +383,66 @@ static const struct ide_port_ops via_por
- 	.cable_detect		= via82cxxx_cable_detect,
- };
+-	if (mode >= XFER_SW_DMA_0)
+-		return;
+-
+ 	/*
+ 	 * The primary channel has individual address setup timing registers
+ 	 * for each drive and the hardware selects the slowest timing itself.
+@@ -99,11 +96,17 @@ static void cmd64x_program_timings(ide_d
+ 	if (hwif->channel) {
+ 		ide_drive_t *pair = ide_get_pair_dev(drive);
  
-+static void via_write_devctl(ide_hwif_t *hwif, u8 ctl)
-+{
-+	struct via82cxxx_dev *vdev = hwif->host->host_priv;
-+
-+	outb(ctl, hwif->io_ports.ctl_addr);
-+	outb(vdev->cached_device[hwif->channel], hwif->io_ports.device_addr);
-+}
-+
-+static void __via_dev_select(ide_drive_t *drive, u8 select)
-+{
-+	ide_hwif_t *hwif = drive->hwif;
-+	struct via82cxxx_dev *vdev = hwif->host->host_priv;
-+
-+	outb(select, hwif->io_ports.device_addr);
-+	vdev->cached_device[hwif->channel] = select;
-+}
-+
-+static void via_dev_select(ide_drive_t *drive)
-+{
-+	__via_dev_select(drive, drive->select | ATA_DEVICE_OBS);
-+}
-+
-+static void via_tf_load(ide_drive_t *drive, struct ide_taskfile *tf, u8 valid)
-+{
-+	ide_hwif_t *hwif = drive->hwif;
-+	struct ide_io_ports *io_ports = &hwif->io_ports;
-+
-+	if (valid & IDE_VALID_FEATURE)
-+		outb(tf->feature, io_ports->feature_addr);
-+	if (valid & IDE_VALID_NSECT)
-+		outb(tf->nsect, io_ports->nsect_addr);
-+	if (valid & IDE_VALID_LBAL)
-+		outb(tf->lbal, io_ports->lbal_addr);
-+	if (valid & IDE_VALID_LBAM)
-+		outb(tf->lbam, io_ports->lbam_addr);
-+	if (valid & IDE_VALID_LBAH)
-+		outb(tf->lbah, io_ports->lbah_addr);
-+	if (valid & IDE_VALID_DEVICE)
-+		__via_dev_select(drive, tf->device);
-+}
-+
-+const struct ide_tp_ops via_tp_ops = {
-+	.exec_command		= ide_exec_command,
-+	.read_status		= ide_read_status,
-+	.read_altstatus		= ide_read_altstatus,
-+	.write_devctl		= via_write_devctl,
-+
-+	.dev_select		= via_dev_select,
-+	.tf_load		= via_tf_load,
-+	.tf_read		= ide_tf_read,
-+
-+	.input_data		= ide_input_data,
-+	.output_data		= ide_output_data,
-+};
-+
- static const struct ide_port_info via82cxxx_chipset __devinitdata = {
- 	.name		= DRV_NAME,
- 	.init_chipset	= init_chipset_via82cxxx,
- 	.enablebits	= { { 0x40, 0x02, 0x02 }, { 0x40, 0x01, 0x01 } },
-+	.tp_ops		= &via_tp_ops,
- 	.port_ops	= &via_port_ops,
- 	.host_flags	= IDE_HFLAG_PIO_NO_BLACKLIST |
- 			  IDE_HFLAG_POST_SET_MODE |
+-		ide_set_drivedata(drive, (void *)(unsigned long)t.setup);
++		if (pair) {
++			struct ide_timing tp;
+ 
+-		if (pair)
+-			t.setup = max_t(u8, t.setup,
+-					(unsigned long)ide_get_drivedata(pair));
++			ide_timing_compute(pair, pair->pio_mode, &tp, T, 0);
++			ide_timing_merge(&t, &tp, &t, IDE_TIMING_SETUP);
++			if (pair->dma_mode) {
++				ide_timing_compute(pair, pair->dma_mode,
++						&tp, T, 0);
++				ide_timing_merge(&tp, &t, &t, IDE_TIMING_SETUP);
++			}
++		}
+ 	}
+ 
+ 	if (t.setup > 5)		/* shouldn't actually happen... */
