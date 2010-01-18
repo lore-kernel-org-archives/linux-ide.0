@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 21/64] pata_serverworks: cleanup cable detection
-Date: Mon, 18 Jan 2010 18:16:55 +0100
-Message-ID: <20100118171655.14623.12567.sendpatchset@localhost>
+Subject: [PATCH 02/64] pata_ali: documentation fixes
+Date: Mon, 18 Jan 2010 18:14:05 +0100
+Message-ID: <20100118171405.14623.95544.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754880Ab0ARRSS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:18:18 -0500
+Received: from ey-out-2122.google.com ([74.125.78.24]:8245 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753641Ab0ARRPQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:15:16 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,70 +15,43 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_serverworks: cleanup cable detection
+Subject: [PATCH] pata_ali: documentation fixes
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_serverworks.c |   37 +++++++------------------------------
- 1 file changed, 7 insertions(+), 30 deletions(-)
+ drivers/ata/pata_ali.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Index: b/drivers/ata/pata_serverworks.c
+Index: b/drivers/ata/pata_ali.c
 ===================================================================
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -57,32 +57,14 @@ static const char *csb_bad_ata100[] = {
- };
- 
- /**
-- *	dell_cable	-	Dell serverworks cable detection
-+ *	oem_cable	-	Dell/Sun serverworks cable detection
-  *	@ap: ATA port to do cable detect
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -159,8 +159,7 @@ static void ali_fifo_control(struct ata_
+  *	ali_program_modes	-	load mode registers
+  *	@ap: ALi channel to load
+  *	@adev: Device the timing is for
+- *	@cmd: Command timing
+- *	@data: Data timing
++ *	@t: timing data
+  *	@ultra: UDMA timing or zero for off
   *
-- *	Dell hide the 40/80 pin select for their interfaces in the top two
-- *	bits of the subsystem ID.
-+ *	Dell PowerEdge and Sun Cobalt 'Alpine' hide the 40/80 pin select
-+ *	for their interfaces in the top two bits of the subsystem ID.
+  *	Loads the timing registers for cmd/data and disable UDMA if
+@@ -202,8 +201,7 @@ static void ali_program_modes(struct ata
+  *	@ap: ATA interface
+  *	@adev: ATA device
+  *
+- *	Program the ALi registers for PIO mode. FIXME: add timings for
+- *	PIO5.
++ *	Program the ALi registers for PIO mode.
   */
  
--static int dell_cable(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
--		return ATA_CBL_PATA80;
--	return ATA_CBL_PATA40;
--}
--
--/**
-- *	sun_cable	-	Sun Cobalt 'Alpine' cable detection
-- *	@ap: ATA port to do cable select
-- *
-- *	Cobalt CSB5 IDE hides the 40/80pin in the top two bits of the
-- *	subsystem ID the same as dell. We could use one function but we may
-- *	need to extend the Dell one in future
-- */
--
--static int sun_cable(struct ata_port *ap)
-+static int oem_cable(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ static void ali_set_piomode(struct ata_port *ap, struct ata_device *adev)
+@@ -237,7 +235,7 @@ static void ali_set_piomode(struct ata_p
+  *	@ap: ATA interface
+  *	@adev: ATA device
+  *
+- *	FIXME: MWDMA timings
++ *	Program the ALi registers for DMA mode.
+  */
  
-@@ -97,15 +79,10 @@ struct sv_cable_table {
- 	int (*cable_detect)(struct ata_port *ap);
- };
- 
--/*
-- *	Note that we don't copy the old serverworks code because the old
-- *	code contains obvious mistakes
-- */
--
- static struct sv_cable_table cable_detect[] = {
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  sun_cable  },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, oem_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, oem_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  oem_cable },
- 	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE,   PCI_ANY_ID, ata_cable_40wire  },
- 	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_ANY_ID, ata_cable_unknown },
- 	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_ANY_ID, ata_cable_unknown },
+ static void ali_set_dmamode(struct ata_port *ap, struct ata_device *adev)
