@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 13/64] pata_cs5535: use correct values for PIO1 and PIO2 data timings
-Date: Mon, 18 Jan 2010 18:15:38 +0100
-Message-ID: <20100118171538.14623.27441.sendpatchset@localhost>
+Subject: [PATCH 15/64] pata_efar: always program master_data before slave_data
+Date: Mon, 18 Jan 2010 18:15:55 +0100
+Message-ID: <20100118171555.14623.3131.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-ew0-f214.google.com ([209.85.219.214]:53275 "EHLO
 	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466Ab0ARRQw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:16:52 -0500
+	with ESMTP id S1754487Ab0ARRRN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:17:13 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,27 +15,60 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cs5535: use correct values for PIO1 and PIO2 data timings
+Subject: [PATCH] pata_efar: always program master_data before slave_data
 
-There shouldn't be any problems with it as IDE cs5535 host driver
-has been using those values for years and they match values given
-in the (publicly available) datasheet.
+We may need to set SITRE before programming slave_data.
+
+This makes pata_efar match the behavior of IDE slc90e66 host driver
+and also libata ata_piix one.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cs5535.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/pata_efar.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Index: b/drivers/ata/pata_cs5535.c
+Index: b/drivers/ata/pata_efar.c
 ===================================================================
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -98,7 +98,7 @@ static int cs5535_cable_detect(struct at
- static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
+--- a/drivers/ata/pata_efar.c
++++ b/drivers/ata/pata_efar.c
+@@ -72,8 +72,10 @@ static void efar_set_timings(struct ata_
+ 			     u8 pio, bool use_mwdma)
  {
- 	static const u16 pio_timings[5] = {
--		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
-+		0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
- 	};
- 	static const u16 pio_cmd_timings[5] = {
- 		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	unsigned int is_slave	= (adev->devno != 0);
+ 	u8 master_port		= ap->port_no ? 0x42 : 0x40;
+ 	u16 master_data;
++	u8 slave_data;
+ 	int control = 0;
+ 
+ 	/*
+@@ -104,14 +106,13 @@ static void efar_set_timings(struct ata_
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 
+ 	/* Set PPE, IE, and TIME as appropriate */
+-	if (adev->devno == 0) {
++	if (is_slave == 0) {
+ 		master_data &= 0xCCF0;
+ 		master_data |= control;
+ 		master_data |= (timings[pio][0] << 12) |
+ 			(timings[pio][1] << 8);
+ 	} else {
+ 		int shift = 4 * ap->port_no;
+-		u8 slave_data;
+ 
+ 		master_data &= 0xFF0F;
+ 		master_data |= (control << 4);
+@@ -120,11 +121,12 @@ static void efar_set_timings(struct ata_
+ 		pci_read_config_byte(dev, 0x44, &slave_data);
+ 		slave_data &= ap->port_no ? 0x0F : 0xF0;
+ 		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << shift;
+-		pci_write_config_byte(dev, 0x44, slave_data);
+ 	}
+ 
+ 	master_data |= 0x4000;	/* Ensure SITRE is set */
+ 	pci_write_config_word(dev, master_port, master_data);
++	if (is_slave)
++		pci_write_config_byte(dev, 0x44, slave_data);
+ }
+ 
+ /**
