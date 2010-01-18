@@ -1,48 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 07/64] pata_atiixp: enable parallel scan
-Date: Mon, 18 Jan 2010 19:18:49 +0100
-Message-ID: <201001181918.49304.bzolnier@gmail.com>
-References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118171447.14623.47438.sendpatchset@localhost> <20100118175256.32096b44@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 01/64] libata: fix CFA handling in ide_timing_compute()
+Date: Mon, 18 Jan 2010 21:23:32 +0300
+Message-ID: <4B54A724.6080701@ru.mvista.com>
+References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118171357.14623.36435.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755881Ab0ARSXp@vger.kernel.org>
-In-Reply-To: <20100118175256.32096b44@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([206.112.117.35]:38689 "HELO
+	imap.sh.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1751548Ab0ARSZU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 13:25:20 -0500
+In-Reply-To: <20100118171357.14623.36435.sendpatchset@localhost>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 18 January 2010 06:52:56 pm Alan Cox wrote:
-> >  	const struct ata_port_info *ppi[] = { &info, &info };
-> > +	struct ata_host *host;
-> > +	int rc;
-> >  
-> > -	return ata_pci_sff_init_one(pdev, ppi, &atiixp_sht, NULL);
-> > +	/* enable device and prepare host */
-> > +	rc = pcim_enable_device(pdev);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	host->flags |= ATA_HOST_PARALLEL_SCAN;
-> > +
-> > +	pci_set_master(pdev);
-> > +
-> > +	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &atiixp_sht);
-> >  }
-> 
-> Adding a small essay to each host that activates parallel scan doesn't
-> make sense. This should be a helper (ignore that if you make it a helper
-> later in the patch set...)
+Hello.
 
-Patch adding such helper would be probably a nice incremental improvement,
-though 'a small essay' works just fine for the current needs as parallel
-scanning functionality is added only to pata_atiixp and pata_efar hosts..
+Bartlomiej Zolnierkiewicz wrote:
 
---
-Bartlomiej Zolnierkiewicz
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] libata: fix CFA handling in ide_timing_compute()
+>
+> Use standard cycle timing for CFA PIO5 and PIO6 modes.
+>
+> Based on commit 74638c8 for IDE subsystem.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ata/libata-core.c |   17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
+>
+> Index: b/drivers/ata/libata-core.c
+> ===================================================================
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3211,6 +3211,7 @@ const struct ata_timing *ata_timing_find
+>  int ata_timing_compute(struct ata_device *adev, unsigned short speed,
+>  		       struct ata_timing *t, int T, int UT)
+>  {
+> +	const u16 *id = adev->id;
+>  	const struct ata_timing *s;
+>  	struct ata_timing p;
+>  
+> @@ -3228,14 +3229,18 @@ int ata_timing_compute(struct ata_device
+>  	 * PIO/MW_DMA cycle timing.
+>  	 */
+>  
+> -	if (adev->id[ATA_ID_FIELD_VALID] & 2) {	/* EIDE drive */
+> +	if (id[ATA_ID_FIELD_VALID] & 2) {	/* EIDE drive */
+>  		memset(&p, 0, sizeof(p));
+> +
+>  		if (speed >= XFER_PIO_0 && speed <= XFER_SW_DMA_0) {
+>   
+
+   BTW, shouldn't this actually be 'speed < XFER_SW_DMA_0'?
+
+MBR, Sergei
+
