@@ -1,33 +1,28 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide/ide-cs: fix order of releasing resources
-Date: Sun, 17 Jan 2010 18:59:24 -0800 (PST)
-Message-ID: <20100117.185924.13978043.davem@davemloft.net>
-References: <201001141650.17348.bzolnier@gmail.com>
-	<20100115.013117.223126399.davem@davemloft.net>
-	<20100116185124.GA7040@pengutronix.de>
+From: Prashant Bhole <prashantsmailcenter@gmail.com>
+Subject: sata_mv: wrong EDMA error cause when disk unplugged
+Date: Mon, 18 Jan 2010 15:17:39 +0530
+Message-ID: <9ff69a5d1001180147h643572e5m2e9db0361caeb334@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36077
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751116Ab0ARC7P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jan 2010 21:59:15 -0500
-In-Reply-To: <20100116185124.GA7040@pengutronix.de>
+Received: from qw-out-2122.google.com ([74.125.92.24]:11523 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753419Ab0ARJrm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 04:47:42 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so676938qwe.37
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jan 2010 01:47:39 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: w.sang@pengutronix.de
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux@dominikbrodowski.net
+To: linux-ide@vger.kernel.org
 
-From: Wolfram Sang <w.sang@pengutronix.de>
-Date: Sat, 16 Jan 2010 19:51:24 +0100
+Hi,
+I am using latest marvell sata driver version 1.28 for marvell chip
+88SX6081, I noticed following behavior:
+1) When I plug a disk, EDMA error cause value is: 0x00000010. This is correct.
+2) But when I unplug a disk, EDMA error cause value is: 0x00000020
+(EDMA_ERR_SERR).
+    which is wrong. It should be 0x00000008 (EDMA_ERR_DEV_DCON).
 
->> > bzolnier:
->> > - release resources in ide_release() to fix ordering of events
->> > - remove stale FIXME note while at it
->> 
->> Ok this does look better, Wolfram can you test this?
-> 
-> Works as expected.
-
-Great, thanks for testing.
+Please let me know if anybody experiencing the same problem.
+-- 
+~p~r~a~s~h~a~n~t~
