@@ -1,55 +1,41 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 45/64] via82cxxx: fix UDMA settings programming
-Date: Mon, 18 Jan 2010 18:20:21 +0100
-Message-ID: <20100118172021.14623.2326.sendpatchset@localhost>
+Subject: [PATCH 55/64] amd74xx: use ->pio_mode value to determine pair device speed
+Date: Mon, 18 Jan 2010 18:21:33 +0100
+Message-ID: <20100118172133.14623.99453.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755364Ab0ARRVr@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ey-out-2122.google.com ([74.125.78.25]:55501 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754923Ab0ARRWo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:22:44 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] via82cxxx: fix UDMA settings programming
+Subject: [PATCH] amd74xx: use ->pio_mode value to determine pair device speed
 
-* preserve 80-wire cable detection bit
-* don't clear UDMA settings when programming PIO/MWDMA modes
+Use the current PIO mode value instead of the current transfer speed
+of the pair device on the port to determine PIO commmand timings used
+for both devices on the port.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/via82cxxx.c |   19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/ide/amd74xx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ide/via82cxxx.c
+Index: b/drivers/ide/amd74xx.c
 ===================================================================
---- a/drivers/ide/via82cxxx.c
-+++ b/drivers/ide/via82cxxx.c
-@@ -146,10 +146,25 @@ static void via_set_speed(ide_hwif_t *hw
- 	case ATA_UDMA4: t = timing->udma ? (0xe8 | (clamp_val(timing->udma, 2, 9) - 2)) : 0x0f; break;
- 	case ATA_UDMA5: t = timing->udma ? (0xe0 | (clamp_val(timing->udma, 2, 9) - 2)) : 0x07; break;
- 	case ATA_UDMA6: t = timing->udma ? (0xe0 | (clamp_val(timing->udma, 2, 9) - 2)) : 0x07; break;
--	default: return;
+--- a/drivers/ide/amd74xx.c
++++ b/drivers/ide/amd74xx.c
+@@ -94,7 +94,7 @@ static void amd_set_drive(ide_hwif_t *hw
+ 	ide_timing_compute(drive, speed, &t, T, UT);
+ 
+ 	if (peer) {
+-		ide_timing_compute(peer, peer->current_speed, &p, T, UT);
++		ide_timing_compute(peer, peer->pio_mode, &p, T, UT);
+ 		ide_timing_merge(&p, &t, &t, IDE_TIMING_8BIT);
  	}
  
--	pci_write_config_byte(dev, VIA_UDMA_TIMING + (3 - dn), t);
-+	/* Set UDMA unless device is not UDMA capable */
-+	if (vdev->via_config->udma_mask) {
-+		u8 udma_etc;
-+
-+		pci_read_config_byte(dev, VIA_UDMA_TIMING + 3 - dn, &udma_etc);
-+
-+		/* clear transfer mode bit */
-+		udma_etc &= ~0x20;
-+
-+		if (timing->udma) {
-+			/* preserve 80-wire cable detection bit */
-+			udma_etc &= 0x10;
-+			udma_etc |= t;
-+		}
-+
-+		pci_write_config_byte(dev, VIA_UDMA_TIMING + 3 - dn, udma_etc);
-+	}
- }
- 
- /**
