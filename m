@@ -1,71 +1,84 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/64] pata_cmd64x: remove unused definitions
-Date: Mon, 18 Jan 2010 18:15:18 +0100
-Message-ID: <20100118171518.14623.13340.sendpatchset@localhost>
+Subject: [PATCH 21/64] pata_serverworks: cleanup cable detection
+Date: Mon, 18 Jan 2010 18:16:55 +0100
+Message-ID: <20100118171655.14623.12567.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754261Ab0ARRQr@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754880Ab0ARRSS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:18:18 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cmd64x: remove unused definitions
-
-s/ARTIM2/ARTTIM23/ in cmd648_bmdma_stop() while at it
+Subject: [PATCH] pata_serverworks: cleanup cable detection
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cmd64x.c |   12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+ drivers/ata/pata_serverworks.c |   37 +++++++------------------------------
+ 1 file changed, 7 insertions(+), 30 deletions(-)
 
-Index: b/drivers/ata/pata_cmd64x.c
+Index: b/drivers/ata/pata_serverworks.c
 ===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -41,10 +41,6 @@
- enum {
- 	CFR 		= 0x50,
- 		CFR_INTR_CH0  = 0x04,
--	CNTRL 		= 0x51,
--		CNTRL_DIS_RA0 = 0x40,
--		CNTRL_DIS_RA1 = 0x80,
--		CNTRL_ENA_2ND = 0x08,
- 	CMDTIM 		= 0x52,
- 	ARTTIM0 	= 0x53,
- 	DRWTIM0 	= 0x54,
-@@ -54,9 +50,6 @@ enum {
- 		ARTTIM23_DIS_RA2  = 0x04,
- 		ARTTIM23_DIS_RA3  = 0x08,
- 		ARTTIM23_INTR_CH1 = 0x10,
--	ARTTIM2 	= 0x57,
--	ARTTIM3 	= 0x57,
--	DRWTIM23	= 0x58,
- 	DRWTIM2 	= 0x58,
- 	BRST 		= 0x59,
- 	DRWTIM3 	= 0x5b,
-@@ -64,14 +57,11 @@ enum {
- 	MRDMODE		= 0x71,
- 		MRDMODE_INTR_CH0 = 0x04,
- 		MRDMODE_INTR_CH1 = 0x08,
--		MRDMODE_BLK_CH0  = 0x10,
--		MRDMODE_BLK_CH1	 = 0x20,
- 	BMIDESR0	= 0x72,
- 	UDIDETCR0	= 0x73,
- 	DTPR0		= 0x74,
- 	BMIDECR1	= 0x78,
- 	BMIDECSR	= 0x79,
--	BMIDESR1	= 0x7A,
- 	UDIDETCR1	= 0x7B,
- 	DTPR1		= 0x7C
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -57,32 +57,14 @@ static const char *csb_bad_ata100[] = {
  };
-@@ -282,7 +272,7 @@ static void cmd648_bmdma_stop(struct ata
+ 
+ /**
+- *	dell_cable	-	Dell serverworks cable detection
++ *	oem_cable	-	Dell/Sun serverworks cable detection
+  *	@ap: ATA port to do cable detect
+  *
+- *	Dell hide the 40/80 pin select for their interfaces in the top two
+- *	bits of the subsystem ID.
++ *	Dell PowerEdge and Sun Cobalt 'Alpine' hide the 40/80 pin select
++ *	for their interfaces in the top two bits of the subsystem ID.
+  */
+ 
+-static int dell_cable(struct ata_port *ap)
+-{
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-
+-	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
+-		return ATA_CBL_PATA80;
+-	return ATA_CBL_PATA40;
+-}
+-
+-/**
+- *	sun_cable	-	Sun Cobalt 'Alpine' cable detection
+- *	@ap: ATA port to do cable select
+- *
+- *	Cobalt CSB5 IDE hides the 40/80pin in the top two bits of the
+- *	subsystem ID the same as dell. We could use one function but we may
+- *	need to extend the Dell one in future
+- */
+-
+-static int sun_cable(struct ata_port *ap)
++static int oem_cable(struct ata_port *ap)
+ {
  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u8 dma_intr;
- 	int dma_mask = ap->port_no ? ARTTIM23_INTR_CH1 : CFR_INTR_CH0;
--	int dma_reg = ap->port_no ? ARTTIM2 : CFR;
-+	int dma_reg = ap->port_no ? ARTTIM23 : CFR;
  
- 	ata_bmdma_stop(qc);
+@@ -97,15 +79,10 @@ struct sv_cable_table {
+ 	int (*cable_detect)(struct ata_port *ap);
+ };
  
+-/*
+- *	Note that we don't copy the old serverworks code because the old
+- *	code contains obvious mistakes
+- */
+-
+ static struct sv_cable_table cable_detect[] = {
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, dell_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, dell_cable },
+-	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  sun_cable  },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, oem_cable },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, oem_cable },
++	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  oem_cable },
+ 	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE,   PCI_ANY_ID, ata_cable_40wire  },
+ 	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_ANY_ID, ata_cable_unknown },
+ 	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_ANY_ID, ata_cable_unknown },
