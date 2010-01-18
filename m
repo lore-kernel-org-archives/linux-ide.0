@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 47/64] ide: add drive->dma_mode field
-Date: Mon, 18 Jan 2010 18:20:35 +0100
-Message-ID: <20100118172035.14623.50000.sendpatchset@localhost>
+Subject: [PATCH 26/64] alim15x3: fix PIO timings calculations
+Date: Mon, 18 Jan 2010 18:17:37 +0100
+Message-ID: <20100118171737.14623.10091.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:51627 "EHLO
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:52797 "EHLO
 	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253Ab0ARRVq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:21:46 -0500
+	with ESMTP id S1754881Ab0ARRTH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:19:07 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,58 +15,90 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add drive->dma_mode field
+Subject: [PATCH] alim15x3: fix PIO timings calculations
 
-Add dma_mode field to ide_drive_t matching dma_mode field used in
-struct ata_device.
+Just use the standard ide_timing_compute() helper to calculate
+PIO timings.  This fixes many issues with the open-coded version
+like potential recovery timings underclocking or not accounting
+for the enhanced cycle time specified by the device.
 
-The validity of the field is restricted to ->dma_pio_mode method
-only currently in IDE subsystem.
+Based on libata pata_ali host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/aec62xx.c       |    1 +
- drivers/ide/ide-xfer-mode.c |    2 ++
- include/linux/ide.h         |    1 +
- 3 files changed, 4 insertions(+)
+ drivers/ide/alim15x3.c |   34 +++++++++++++++-------------------
+ 1 file changed, 15 insertions(+), 19 deletions(-)
 
-Index: b/drivers/ide/aec62xx.c
+Index: b/drivers/ide/alim15x3.c
 ===================================================================
---- a/drivers/ide/aec62xx.c
-+++ b/drivers/ide/aec62xx.c
-@@ -136,6 +136,7 @@ static void aec6260_set_mode(ide_drive_t
- 
- static void aec_set_pio_mode(ide_drive_t *drive, const u8 pio)
+--- a/drivers/ide/alim15x3.c
++++ b/drivers/ide/alim15x3.c
+@@ -8,7 +8,7 @@
+  *  Copyright (C) 2002 Alan Cox
+  *  ALi (now ULi M5228) support by Clear Zhang <Clear.Zhang@ali.com.tw>
+  *  Copyright (C) 2007 MontaVista Software, Inc. <source@mvista.com>
+- *  Copyright (C) 2007 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
++ *  Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
+  *
+  *  (U)DMA capable version of ali 1533/1543(C), 1535(D)
+  *
+@@ -60,28 +60,22 @@ static void ali_set_pio_mode(ide_drive_t
  {
-+	drive->dma_mode = pio + XFER_PIO_0;
- 	drive->hwif->port_ops->set_dma_mode(drive, pio + XFER_PIO_0);
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	struct ide_timing *t = ide_timing_find_mode(XFER_PIO_0 + pio);
+-	int s_time = t->setup, a_time = t->active, c_time = t->cycle;
+-	u8 s_clc, a_clc, r_clc;
+ 	unsigned long flags;
+ 	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
++	unsigned long T =  1000000 / bus_speed; /* PCI clock based */
+ 	int port = hwif->channel ? 0x5c : 0x58;
+ 	int portFIFO = hwif->channel ? 0x55 : 0x54;
+ 	u8 cd_dma_fifo = 0, unit = drive->dn & 1;
++	struct ide_timing t;
+ 
+-	if ((s_clc = (s_time * bus_speed + 999) / 1000) >= 8)
+-		s_clc = 0;
+-	if ((a_clc = (a_time * bus_speed + 999) / 1000) >= 8)
+-		a_clc = 0;
++	ide_timing_compute(drive, XFER_PIO_0 + pio, &t, T, 1);
++
++	t.setup = clamp_val(t.setup, 1, 8) & 7;
++	t.active = clamp_val(t.active, 1, 8) & 7;
++	t.recover = clamp_val(t.recover, 1, 16) & 15;
+ 
+-	if (!(r_clc = (c_time * bus_speed + 999) / 1000 - a_clc - s_clc)) {
+-		r_clc = 1;
+-	} else {
+-		if (r_clc >= 16)
+-			r_clc = 0;
+-	}
+ 	local_irq_save(flags);
+-	
++
+ 	/* 
+ 	 * PIO mode => ATA FIFO on, ATAPI FIFO off
+ 	 */
+@@ -99,9 +93,11 @@ static void ali_set_pio_mode(ide_drive_t
+ 			pci_write_config_byte(dev, portFIFO, cd_dma_fifo & 0xF0);
+ 		}
+ 	}
+-	
+-	pci_write_config_byte(dev, port, s_clc);
+-	pci_write_config_byte(dev, port + unit + 2, (a_clc << 4) | r_clc);
++
++	pci_write_config_byte(dev, port, t.setup);
++	pci_write_config_byte(dev, port + unit + 2,
++			      (t.active << 4) | t.recover);
++
+ 	local_irq_restore(flags);
  }
  
-Index: b/drivers/ide/ide-xfer-mode.c
-===================================================================
---- a/drivers/ide/ide-xfer-mode.c
-+++ b/drivers/ide/ide-xfer-mode.c
-@@ -167,9 +167,11 @@ int ide_set_dma_mode(ide_drive_t *drive,
- 	if (hwif->host_flags & IDE_HFLAG_POST_SET_MODE) {
- 		if (ide_config_drive_speed(drive, mode))
- 			return -1;
-+		drive->dma_mode = mode;
- 		port_ops->set_dma_mode(drive, mode);
- 		return 0;
- 	} else {
-+		drive->dma_mode = mode;
- 		port_ops->set_dma_mode(drive, mode);
- 		return ide_config_drive_speed(drive, mode);
- 	}
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -516,6 +516,7 @@ struct ide_drive_s {
-         u8	current_speed;	/* current transfer rate set */
- 	u8	desired_speed;	/* desired transfer rate set */
- 	u8	pio_mode;	/* for ->set_pio_mode _only_ */
-+	u8	dma_mode;	/* for ->dma_pio_mode _only_ */
-         u8	dn;		/* now wide spread use */
- 	u8	acoustic;	/* acoustic management */
- 	u8	media;		/* disk, cdrom, tape, floppy, ... */
+@@ -584,6 +580,6 @@ static void __exit ali15x3_ide_exit(void
+ module_init(ali15x3_ide_init);
+ module_exit(ali15x3_ide_exit);
+ 
+-MODULE_AUTHOR("Michael Aubry, Andrzej Krzysztofowicz, CJ, Andre Hedrick, Alan Cox");
++MODULE_AUTHOR("Michael Aubry, Andrzej Krzysztofowicz, CJ, Andre Hedrick, Alan Cox, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for ALi 15x3 IDE");
+ MODULE_LICENSE("GPL");
