@@ -1,42 +1,41 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 16/64] pata_efar: fix secondary port support
-Date: Mon, 18 Jan 2010 18:16:03 +0100
-Message-ID: <20100118171603.14623.7966.sendpatchset@localhost>
+Subject: [PATCH 13/64] pata_cs5535: use correct values for PIO1 and PIO2 data timings
+Date: Mon, 18 Jan 2010 18:15:38 +0100
+Message-ID: <20100118171538.14623.27441.sendpatchset@localhost>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754783Ab0ARRR3@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:53275 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab0ARRQw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 12:16:52 -0500
 In-Reply-To: <20100118171349.14623.90030.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_efar: fix secondary port support
+Subject: [PATCH] pata_cs5535: use correct values for PIO1 and PIO2 data timings
+
+There shouldn't be any problems with it as IDE cs5535 host driver
+has been using those values for years and they match values given
+in the (publicly available) datasheet.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_efar.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/pata_cs5535.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ata/pata_efar.c
+Index: b/drivers/ata/pata_cs5535.c
 ===================================================================
---- a/drivers/ata/pata_efar.c
-+++ b/drivers/ata/pata_efar.c
-@@ -2,7 +2,7 @@
-  *    pata_efar.c - EFAR PIIX clone controller driver
-  *
-  *	(C) 2005 Red Hat
-- *	(C) 2009 Bartlomiej Zolnierkiewicz
-+ *	(C) 2009-2010 Bartlomiej Zolnierkiewicz
-  *
-  *    Some parts based on ata_piix.c by Jeff Garzik and others.
-  *
-@@ -222,7 +222,7 @@ static int efar_init_one (struct pci_dev
- 		.udma_mask 	= ATA_UDMA4,
- 		.port_ops	= &efar_ops,
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -98,7 +98,7 @@ static int cs5535_cable_detect(struct at
+ static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	static const u16 pio_timings[5] = {
+-		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
++		0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
  	};
--	const struct ata_port_info *ppi[] = { &info, NULL };
-+	const struct ata_port_info *ppi[] = { &info, &info };
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 	static const u16 pio_cmd_timings[5] = {
+ 		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
