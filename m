@@ -1,24 +1,33 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 64/64] ide: make ide_get_best_pio_mode() static
-Date: Tue, 19 Jan 2010 01:54:46 -0800 (PST)
-Message-ID: <20100119.015446.89906617.davem@davemloft.net>
+Subject: Re: [PATCH 60/64] palm_bk3710: use ->pio_mode value to determine
+ pair device speed
+Date: Tue, 19 Jan 2010 01:54:20 -0800 (PST)
+Message-ID: <20100119.015420.37462625.davem@davemloft.net>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-	<20100118172238.14623.41430.sendpatchset@localhost>
+	<20100118172209.14623.38294.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756579Ab0ASJzI@vger.kernel.org>
-In-Reply-To: <20100118172238.14623.41430.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50258
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750703Ab0ASJyL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 04:54:11 -0500
+In-Reply-To: <20100118172209.14623.38294.sendpatchset@localhost>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 18 Jan 2010 18:22:38 +0100
+Date: Mon, 18 Jan 2010 18:22:09 +0100
 
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: make ide_get_best_pio_mode() static
+> Subject: [PATCH] palm_bk3710: use ->pio_mode value to determine pair device speed
+> 
+> Use the current PIO mode value instead of the physical maximum one
+> of the pair device on the port to determine PIO commmand timings used
+> for both devices on the port.
 > 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
