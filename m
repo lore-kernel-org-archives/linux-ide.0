@@ -1,48 +1,73 @@
-From: Torsten Kaiser <just.for.lkml@googlemail.com>
-Subject: Re: MSI broken in libata?
-Date: Tue, 19 Jan 2010 08:00:43 +0100
-Message-ID: <64bb37e1001182300u13f41817hf1a3d18ffdc75847@mail.gmail.com>
-References: <64bb37e0912250122n4e0e1842q88c0dad7e99ec6a7@mail.gmail.com>
-	 <4B484829.6060405@kernel.org>
-	 <64bb37e1001092033r1f0b4defw46c1a07101bb2d1b@mail.gmail.com>
-	 <4B4A7BC7.6060106@kernel.org> <4B4A815A.60503@gmail.com>
-	 <64bb37e1001161358r79ea2da0u88e9894fa5987ef1@mail.gmail.com>
-	 <4B536383.7090609@gmail.com>
-	 <64bb37e1001171311u21c58fbj9a13b6aaeb7b2c3f@mail.gmail.com>
-	 <64bb37e1001181251y733513cdm1be9850af880ee73@mail.gmail.com>
-	 <4B55130D.8070503@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: JMB363 false hotplug detections
+Date: Tue, 19 Jan 2010 17:57:59 +0900
+Message-ID: <4B557417.6030806@kernel.org>
+References: <51f3faa71001161010m47d885cfx5d17486016476ed5@mail.gmail.com>	<4B5270D6.6030005@kernel.org> <m3eilocwmz.fsf@intrepid.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:60042 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353Ab0ASHAp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 02:00:45 -0500
-In-Reply-To: <4B55130D.8070503@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:60192 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755571Ab0ASI6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Jan 2010 03:58:51 -0500
+In-Reply-To: <m3eilocwmz.fsf@intrepid.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Seth Heasley <seth.heasley@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 19, 2010 at 3:03 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> On 01/18/2010 02:51 PM, Torsten Kaiser wrote:
->> Should I try to put some printks in arch/x86/kernel/apic/io_apic.c
->> __assign_irq_vector() or is there a better way to look at the irq
->> vectors?
->
-> Might not be a bad idea.
+Hello,
 
-OK, I will try it later today.
+On 01/18/2010 05:19 AM, Krzysztof Halasa wrote:
+> http://lkml.org/lkml/2010/1/13/342
+> http://lkml.org/lkml/2010/1/15/245
 
-> Something definitely seems to be banging on vector
-> 165. Any references to 165 in dmesg prior to that? I wonder where that is
-> coming from..
+Definitely looks like electrical problem to me.  The controller is
+repeatedly reporting spurious hotplug events and the problem is not
+universal to the controller either.  I've played with several
+different jmb363s and they all worked just fine.  It would be
+interesting to see whether the problem is reproducible on different
+boards of the same model.
 
-No, grepping for 165 only shows some timestamps and some output from
-the serial driver, because that's a 16550A.
+> BTW setting the JMB363 mode in BIOS setup from IDE to AHCI or RAID
+> (thus enabling JMB363 BIOS) changes nothing.
 
-I hope adding these debugs will help, maybe something suspicious
-reserved 164 or 166...
+That's expected.  The controller is always put into ahci mode during
+intialization regardless of the mode programmed by the bios.
 
+> The only weird thing is that some time ago the problems weren't there.
+> It could be genuine hardware problem. I have full kernel logs. Sometimes
+> the same kernel (build) is "good" at one time and "bad" at another.
+> 
+> I had booted the board (with JMB363 and the driver enabled) 57 times.
+> Out of these, there was no problems 16 times (date-hrs-result):
+...
+> There are no significant kernel log differences between *good and *bad
+> (excluding the AHCI messages). Sometimes the exceptions were sporadic,
+> like in 09-01-12:53-bad case:
+> 
+> Sep  1 12:53:38 Machine booted
+> Sep  1 13:02:33 ata8: exception Emask 0x10 SAct 0x0 SErr 0x4040000 action 0xe frozen
+> Sep  1 13:02:33 ata8: irq_stat 0x00000040, connection status changed
+> Sep  1 13:02:33 ata8: SError: { CommWake DevExch }
+> Sep  1 13:02:33 ata8: hard resetting link
+> Sep  1 13:02:34 ata8: SATA link down (SStatus 0 SControl 300)
+> Sep  1 13:02:34 ata8: EH complete
+> Sep  1 15:47:12 Machine rebooted
+> 
+> Perhaps I should really check these resistors around the JMB363 chip,
+> and maybe using a vacuum cleaner is a good idea? I think I will do.
+> 
+> It's certaing there was nothing connected do JMB363 SATA. I don't know
+> BIOS versions and CMOS (BIOS) configs.
 
-Torsten
+They don't matter.  Once the OS takes over, the controller is forced
+into multi function ahci mode and the kernel version wouldn't have any
+effect on it either.  That part of code hasn't changed for years now.
+So, yeah, looks like a genuine hardware problem to me.
+
+Thanks.
+
+-- 
+tejun
