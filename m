@@ -1,184 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream 2/2] libata: implement spurious irq handling for
- SFF and apply it to piix
-Date: Tue, 19 Jan 2010 10:49:19 +0900
-Message-ID: <4B550F9F.80503@kernel.org>
-References: <4B550EF8.1000009@kernel.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: MSI broken in libata?
+Date: Mon, 18 Jan 2010 20:03:57 -0600
+Message-ID: <4B55130D.8070503@gmail.com>
+References: <64bb37e0912250122n4e0e1842q88c0dad7e99ec6a7@mail.gmail.com>	 <4B484829.6060405@kernel.org>	 <64bb37e1001092033r1f0b4defw46c1a07101bb2d1b@mail.gmail.com>	 <4B4A7BC7.6060106@kernel.org> <4B4A815A.60503@gmail.com>	 <64bb37e1001161358r79ea2da0u88e9894fa5987ef1@mail.gmail.com>	 <4B536383.7090609@gmail.com>	 <64bb37e1001171311u21c58fbj9a13b6aaeb7b2c3f@mail.gmail.com> <64bb37e1001181251y733513cdm1be9850af880ee73@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44472 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750976Ab0ASBnq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Jan 2010 20:43:46 -0500
-In-Reply-To: <4B550EF8.1000009@kernel.org>
+Received: from mail-iw0-f197.google.com ([209.85.223.197]:53588 "EHLO
+	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754260Ab0ASCEJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2010 21:04:09 -0500
+In-Reply-To: <64bb37e1001181251y733513cdm1be9850af880ee73@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>, Sergei Shtylyov <sshtylyov>
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Traditional IDE interface sucks in that it doesn't have a reliable IRQ
-pending bit, so if the controller raises IRQ while the driver is
-expecting it not to, the IRQ won't be cleared and eventually the IRQ
-line will be killed by interrupt subsystem.  Some controllers have
-non-standard mechanism to indicate IRQ pending so that this condition
-can be detected and worked around.
+On 01/18/2010 02:51 PM, Torsten Kaiser wrote:
+> On Sun, Jan 17, 2010 at 10:11 PM, Torsten Kaiser
+> <just.for.lkml@googlemail.com>  wrote:
+>> What was different between -rc4 and my earlier tests was, that there
+>> where additional error messages from do_IRQ.
+>
+>> [  112.382903] do_IRQ: 0.165 No irq handler for vector (irq -1)
+>> [  112.382923] do_IRQ: 3.165 No irq handler for vector (irq -1)
+>> [  112.382939] do_IRQ: 1.165 No irq handler for vector (irq -1)
+>> [  112.382957] do_IRQ: 2.165 No irq handler for vector (irq -1)
+>> [  143.010051] ata2.00: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x6 frozen
+>> [  143.010060] ata2.00: failed command: READ FPDMA QUEUED
+>> [  143.010071] ata2.00: cmd 60/00:00:ad:71:d9/01:00:01:00:00/40 tag 0
+>> ncq 131072 in
+>> [  143.010073]          res 40/00:00:01:4f:c2/00:00:00:00:00/00 Emask
+>> 0x4 (timeout)
+>> [  143.010079] ata2.00: status: { DRDY }
+>> [  143.010083] ata2.00: failed command: READ FPDMA QUEUED
+>> [  143.010092] ata2.00: cmd 60/00:08:ad:70:d9/01:00:01:00:00/40 tag 1
+>> ncq 131072 in
+>> [  143.010095]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+>> 0x4 (timeout)
+>> [  143.010099] ata2.00: status: { DRDY }
+>> [  143.010108] ata2: hard resetting link
+>
+>> I will look, if I can find out, where the do_IRQ error comes from and
+>> why I didn't see it with -rc1 to -rc3.
+>
+> OK, this has nothing to do with -rc3 vs. -rc4.
+> If I kill the drive with reading a 1GB file with dd, I get the above
+> errors, include the one from do_IRQ.
+> If I kill the drive with writing a 1GB file with dd, I do not get the
+> do_IRQ error.
+> As I tested the earlier -rcs only with writes, I didn't see it there.
+> (Its not even in the old logs that contain the libata errors)
+>
+> Should I try to put some printks in arch/x86/kernel/apic/io_apic.c
+> __assign_irq_vector() or is there a better way to look at the irq
+> vectors?
 
-This patch adds an optional operation ->sff_irq_check() which will be
-called for each port from the ata_sff_interrupt() if an unexpected
-interrupt is received.  If the operation returns %true,
-->sff_check_status() and ->sff_irq_clear() will be cleared for the
-port.  Note that this doesn't mark the interrupt as handled so it
-won't prevent IRQ subsystem from killing the IRQ if this mechanism
-fails to clear the spurious IRQ.
-
-This patch also implements ->sff_irq_check() for ata_piix.  Note that
-this adds slight overhead to shared IRQ operation as IRQs which are
-destined for other controllers will trigger extra register accesses to
-check whether IDE interrupt is pending but this solves rare screaming
-IRQ cases and for some curious reason also helps weird BIOS related
-glitch on Samsung n130 as reported in bko#14314.
-
-  http://bugzilla.kernel.org/show_bug.cgi?id=14314
-
-* piix_base_ops dropped as suggested by Sergei.
-
-* Spurious IRQ detection doesn't kick in anymore if polling qc is in
-  progress.  This provides less protection but some controllers have
-  possible data corruption issues if the wrong register is accessed
-  while a command is in progress.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Johannes Stezenbach <js@sig21.net>
-Reported-by: Hans Werner <hwerner4@gmx.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
----
-Jeff, these two are for #upstream but generated on top of
-#upstream-fixes because the piix sata 32bit bmdma patch is currently
-only in #upstream-fixes.  Please pull -fixes into #upstream before
-applying these two.  Thanks.
-
- drivers/ata/ata_piix.c   |   20 +++++++++++++++-----
- drivers/ata/libata-sff.c |   35 ++++++++++++++++++++++++++++++++---
- include/linux/libata.h   |    1 +
- 3 files changed, 48 insertions(+), 8 deletions(-)
-
-Index: ata/include/linux/libata.h
-===================================================================
---- ata.orig/include/linux/libata.h
-+++ ata/include/linux/libata.h
-@@ -857,6 +857,7 @@ struct ata_port_operations {
- 	unsigned int (*sff_data_xfer)(struct ata_device *dev,
- 			unsigned char *buf, unsigned int buflen, int rw);
- 	u8   (*sff_irq_on)(struct ata_port *);
-+	bool (*sff_irq_check)(struct ata_port *);
- 	void (*sff_irq_clear)(struct ata_port *);
- 
- 	void (*bmdma_setup)(struct ata_queued_cmd *qc);
-Index: ata/drivers/ata/ata_piix.c
-===================================================================
---- ata.orig/drivers/ata/ata_piix.c
-+++ ata/drivers/ata/ata_piix.c
-@@ -173,6 +173,7 @@ static int piix_sidpr_scr_read(struct at
- 			       unsigned int reg, u32 *val);
- static int piix_sidpr_scr_write(struct ata_link *link,
- 				unsigned int reg, u32 val);
-+static bool piix_irq_check(struct ata_port *ap);
- #ifdef CONFIG_PM
- static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
- static int piix_pci_device_resume(struct pci_dev *pdev);
-@@ -309,8 +310,13 @@ static struct scsi_host_template piix_sh
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static struct ata_port_operations piix_pata_ops = {
-+static struct ata_port_operations piix_sata_ops = {
- 	.inherits		= &ata_bmdma32_port_ops,
-+	.sff_irq_check		= piix_irq_check,
-+};
-+
-+static struct ata_port_operations piix_pata_ops = {
-+	.inherits		= &piix_sata_ops,
- 	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= piix_set_piomode,
- 	.set_dmamode		= piix_set_dmamode,
-@@ -328,10 +334,6 @@ static struct ata_port_operations ich_pa
- 	.set_dmamode		= ich_set_dmamode,
- };
- 
--static struct ata_port_operations piix_sata_ops = {
--	.inherits		= &ata_bmdma32_port_ops,
--};
--
- static struct ata_port_operations piix_sidpr_sata_ops = {
- 	.inherits		= &piix_sata_ops,
- 	.hardreset		= sata_std_hardreset,
-@@ -962,6 +964,14 @@ static int piix_sidpr_scr_write(struct a
- 	return 0;
- }
- 
-+static bool piix_irq_check(struct ata_port *ap)
-+{
-+	if (unlikely(!ap->ioaddr.bmdma_addr))
-+		return false;
-+
-+	return ap->ops->bmdma_status(ap) & ATA_DMA_INTR;
-+}
-+
- #ifdef CONFIG_PM
- static int piix_broken_suspend(void)
- {
-Index: ata/drivers/ata/libata-sff.c
-===================================================================
---- ata.orig/drivers/ata/libata-sff.c
-+++ ata/drivers/ata/libata-sff.c
-@@ -1760,7 +1760,7 @@ irqreturn_t ata_sff_interrupt(int irq, v
- {
- 	struct ata_host *host = dev_instance;
- 	unsigned int i;
--	unsigned int handled = 0;
-+	unsigned int handled = 0, polling = 0;
- 	unsigned long flags;
- 
- 	/* TODO: make _irqsave conditional on x86 PCI IDE legacy mode */
-@@ -1774,8 +1774,37 @@ irqreturn_t ata_sff_interrupt(int irq, v
- 			continue;
- 
- 		qc = ata_qc_from_tag(ap, ap->link.active_tag);
--		if (qc && !(qc->tf.flags & ATA_TFLAG_POLLING))
--			handled |= ata_sff_host_intr(ap, qc);
-+		if (qc) {
-+			if (!(qc->tf.flags & ATA_TFLAG_POLLING))
-+				handled |= ata_sff_host_intr(ap, qc);
-+			else
-+				polling |= 1 << i;
-+		}
-+	}
-+
-+	/*
-+	 * If no port was expecting IRQ but the controller is actually
-+	 * asserting IRQ line, nobody cared will ensue.  Check IRQ
-+	 * pending status if available and clear spurious IRQ.
-+	 */
-+	if (!handled) {
-+		for (i = 0; i < host->n_ports; i++) {
-+			struct ata_port *ap = host->ports[i];
-+
-+			if (polling & (1 << i))
-+				continue;
-+
-+			if (!ap->ops->sff_irq_check ||
-+			    !ap->ops->sff_irq_check(ap))
-+				continue;
-+
-+			if (printk_ratelimit())
-+				ata_port_printk(ap, KERN_INFO,
-+						"clearing spurious IRQ\n");
-+
-+			ap->ops->sff_check_status(ap);
-+			ap->ops->sff_irq_clear(ap);
-+		}
- 	}
- 
- 	spin_unlock_irqrestore(&host->lock, flags);
+Might not be a bad idea. Something definitely seems to be banging on 
+vector 165. Any references to 165 in dmesg prior to that? I wonder where 
+that is coming from..
