@@ -1,35 +1,41 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 25/64] ide: use standard timing for XFER_PIO_SLOW mode
- in ide_timing_compute()
-Date: Tue, 19 Jan 2010 11:48:16 -0800 (PST)
-Message-ID: <20100119.114816.78180589.davem@davemloft.net>
-References: <20100119.012526.203639880.davem@davemloft.net>
-	<201001191609.42582.bzolnier@gmail.com>
-	<4B560B41.6080205@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 11133] PIIX4 DMA timeout issue
+Date: Tue, 19 Jan 2010 19:55:46 GMT
+Message-ID: <201001191955.o0JJtkXR011854@demeter.kernel.org>
+References: <bug-11133-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34692
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932105Ab0ASTsG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 14:48:06 -0500
-In-Reply-To: <4B560B41.6080205@ru.mvista.com>
+Received: from demeter.kernel.org ([140.211.167.39]:60727 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976Ab0ASTzr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 14:55:47 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0JJtklT011855
+	for <linux-ide@vger.kernel.org>; Tue, 19 Jan 2010 19:55:46 GMT
+In-Reply-To: <bug-11133-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Date: Tue, 19 Jan 2010 22:42:57 +0300
+http://bugzilla.kernel.org/show_bug.cgi?id=11133
 
->   But shouldn't this just be merged to "ide: use standard timing for
->   XFER_PIO_SLOW mode in ide_timing_compute()" since it's the patch that
->   introduced that check?
 
-It's fine either way.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-I can break the ide-next-2.6 tree for everyone by rebasing it to
-unwind the 50 or so patches I applied from Bart yesterday to do this,
-but really is that pain worth it since right thing is there in the
-end?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+          Component|Other                       |IDE
+         AssignedTo|drivers_other@kernel-bugs.o |io_ide@kernel-bugs.osdl.org
+                   |sdl.org                     |
+            Product|Drivers                     |IO/Storage
+         Regression|---                         |No
+
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
