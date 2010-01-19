@@ -1,58 +1,184 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream 1/2] libata: cleanup ata_sff_interrupt()
-Date: Tue, 19 Jan 2010 10:46:32 +0900
-Message-ID: <4B550EF8.1000009@kernel.org>
+Subject: [PATCH #upstream 2/2] libata: implement spurious irq handling for
+ SFF and apply it to piix
+Date: Tue, 19 Jan 2010 10:49:19 +0900
+Message-ID: <4B550F9F.80503@kernel.org>
+References: <4B550EF8.1000009@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35858 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44472 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751930Ab0ASBk4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Jan 2010 20:40:56 -0500
+	id S1750976Ab0ASBnq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Jan 2010 20:43:46 -0500
+In-Reply-To: <4B550EF8.1000009@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>, Sergei Shtylyov <sshtylyov>
 
-host->ports[i] is never NULL if i < host->n_ports and non-NULL return
-from ata_qc_from_tag() guarantees that the returned qc is active.
-Drop unnecessary tests.
+Traditional IDE interface sucks in that it doesn't have a reliable IRQ
+pending bit, so if the controller raises IRQ while the driver is
+expecting it not to, the IRQ won't be cleared and eventually the IRQ
+line will be killed by interrupt subsystem.  Some controllers have
+non-standard mechanism to indicate IRQ pending so that this condition
+can be detected and worked around.
 
-Superflous () dropped as suggested by Sergei.
+This patch adds an optional operation ->sff_irq_check() which will be
+called for each port from the ata_sff_interrupt() if an unexpected
+interrupt is received.  If the operation returns %true,
+->sff_check_status() and ->sff_irq_clear() will be cleared for the
+port.  Note that this doesn't mark the interrupt as handled so it
+won't prevent IRQ subsystem from killing the IRQ if this mechanism
+fails to clear the spurious IRQ.
+
+This patch also implements ->sff_irq_check() for ata_piix.  Note that
+this adds slight overhead to shared IRQ operation as IRQs which are
+destined for other controllers will trigger extra register accesses to
+check whether IDE interrupt is pending but this solves rare screaming
+IRQ cases and for some curious reason also helps weird BIOS related
+glitch on Samsung n130 as reported in bko#14314.
+
+  http://bugzilla.kernel.org/show_bug.cgi?id=14314
+
+* piix_base_ops dropped as suggested by Sergei.
+
+* Spurious IRQ detection doesn't kick in anymore if polling qc is in
+  progress.  This provides less protection but some controllers have
+  possible data corruption issues if the wrong register is accessed
+  while a command is in progress.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Johannes Stezenbach <js@sig21.net>
+Reported-by: Hans Werner <hwerner4@gmx.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 ---
- drivers/ata/libata-sff.c |   17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+Jeff, these two are for #upstream but generated on top of
+#upstream-fixes because the piix sata 32bit bmdma patch is currently
+only in #upstream-fixes.  Please pull -fixes into #upstream before
+applying these two.  Thanks.
 
+ drivers/ata/ata_piix.c   |   20 +++++++++++++++-----
+ drivers/ata/libata-sff.c |   35 ++++++++++++++++++++++++++++++++---
+ include/linux/libata.h   |    1 +
+ 3 files changed, 48 insertions(+), 8 deletions(-)
+
+Index: ata/include/linux/libata.h
+===================================================================
+--- ata.orig/include/linux/libata.h
++++ ata/include/linux/libata.h
+@@ -857,6 +857,7 @@ struct ata_port_operations {
+ 	unsigned int (*sff_data_xfer)(struct ata_device *dev,
+ 			unsigned char *buf, unsigned int buflen, int rw);
+ 	u8   (*sff_irq_on)(struct ata_port *);
++	bool (*sff_irq_check)(struct ata_port *);
+ 	void (*sff_irq_clear)(struct ata_port *);
+ 
+ 	void (*bmdma_setup)(struct ata_queued_cmd *qc);
+Index: ata/drivers/ata/ata_piix.c
+===================================================================
+--- ata.orig/drivers/ata/ata_piix.c
++++ ata/drivers/ata/ata_piix.c
+@@ -173,6 +173,7 @@ static int piix_sidpr_scr_read(struct at
+ 			       unsigned int reg, u32 *val);
+ static int piix_sidpr_scr_write(struct ata_link *link,
+ 				unsigned int reg, u32 val);
++static bool piix_irq_check(struct ata_port *ap);
+ #ifdef CONFIG_PM
+ static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ static int piix_pci_device_resume(struct pci_dev *pdev);
+@@ -309,8 +310,13 @@ static struct scsi_host_template piix_sh
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+-static struct ata_port_operations piix_pata_ops = {
++static struct ata_port_operations piix_sata_ops = {
+ 	.inherits		= &ata_bmdma32_port_ops,
++	.sff_irq_check		= piix_irq_check,
++};
++
++static struct ata_port_operations piix_pata_ops = {
++	.inherits		= &piix_sata_ops,
+ 	.cable_detect		= ata_cable_40wire,
+ 	.set_piomode		= piix_set_piomode,
+ 	.set_dmamode		= piix_set_dmamode,
+@@ -328,10 +334,6 @@ static struct ata_port_operations ich_pa
+ 	.set_dmamode		= ich_set_dmamode,
+ };
+ 
+-static struct ata_port_operations piix_sata_ops = {
+-	.inherits		= &ata_bmdma32_port_ops,
+-};
+-
+ static struct ata_port_operations piix_sidpr_sata_ops = {
+ 	.inherits		= &piix_sata_ops,
+ 	.hardreset		= sata_std_hardreset,
+@@ -962,6 +964,14 @@ static int piix_sidpr_scr_write(struct a
+ 	return 0;
+ }
+ 
++static bool piix_irq_check(struct ata_port *ap)
++{
++	if (unlikely(!ap->ioaddr.bmdma_addr))
++		return false;
++
++	return ap->ops->bmdma_status(ap) & ATA_DMA_INTR;
++}
++
+ #ifdef CONFIG_PM
+ static int piix_broken_suspend(void)
+ {
 Index: ata/drivers/ata/libata-sff.c
 ===================================================================
 --- ata.orig/drivers/ata/libata-sff.c
 +++ ata/drivers/ata/libata-sff.c
-@@ -1767,18 +1767,15 @@ irqreturn_t ata_sff_interrupt(int irq, v
- 	spin_lock_irqsave(&host->lock, flags);
+@@ -1760,7 +1760,7 @@ irqreturn_t ata_sff_interrupt(int irq, v
+ {
+ 	struct ata_host *host = dev_instance;
+ 	unsigned int i;
+-	unsigned int handled = 0;
++	unsigned int handled = 0, polling = 0;
+ 	unsigned long flags;
  
- 	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap;
-+		struct ata_port *ap = host->ports[i];
-+		struct ata_queued_cmd *qc;
+ 	/* TODO: make _irqsave conditional on x86 PCI IDE legacy mode */
+@@ -1774,8 +1774,37 @@ irqreturn_t ata_sff_interrupt(int irq, v
+ 			continue;
  
--		ap = host->ports[i];
--		if (ap &&
--		    !(ap->flags & ATA_FLAG_DISABLED)) {
--			struct ata_queued_cmd *qc;
-+		if (unlikely(ap->flags & ATA_FLAG_DISABLED))
-+			continue;
- 
--			qc = ata_qc_from_tag(ap, ap->link.active_tag);
--			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
--			    (qc->flags & ATA_QCFLAG_ACTIVE))
--				handled |= ata_sff_host_intr(ap, qc);
--		}
-+		qc = ata_qc_from_tag(ap, ap->link.active_tag);
-+		if (qc && !(qc->tf.flags & ATA_TFLAG_POLLING))
-+			handled |= ata_sff_host_intr(ap, qc);
+ 		qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-		if (qc && !(qc->tf.flags & ATA_TFLAG_POLLING))
+-			handled |= ata_sff_host_intr(ap, qc);
++		if (qc) {
++			if (!(qc->tf.flags & ATA_TFLAG_POLLING))
++				handled |= ata_sff_host_intr(ap, qc);
++			else
++				polling |= 1 << i;
++		}
++	}
++
++	/*
++	 * If no port was expecting IRQ but the controller is actually
++	 * asserting IRQ line, nobody cared will ensue.  Check IRQ
++	 * pending status if available and clear spurious IRQ.
++	 */
++	if (!handled) {
++		for (i = 0; i < host->n_ports; i++) {
++			struct ata_port *ap = host->ports[i];
++
++			if (polling & (1 << i))
++				continue;
++
++			if (!ap->ops->sff_irq_check ||
++			    !ap->ops->sff_irq_check(ap))
++				continue;
++
++			if (printk_ratelimit())
++				ata_port_printk(ap, KERN_INFO,
++						"clearing spurious IRQ\n");
++
++			ap->ops->sff_check_status(ap);
++			ap->ops->sff_irq_clear(ap);
++		}
  	}
  
  	spin_unlock_irqrestore(&host->lock, flags);
