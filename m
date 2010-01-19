@@ -1,76 +1,33 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 50/64] ide-timings: use ->pio_mode value to determine
- fastest PIO speed
-Date: Tue, 19 Jan 2010 01:48:10 -0800 (PST)
-Message-ID: <20100119.014810.05382307.davem@davemloft.net>
+Subject: Re: [PATCH 51/64] alim15x3: fix handling of address setup timings
+Date: Tue, 19 Jan 2010 01:53:18 -0800 (PST)
+Message-ID: <20100119.015318.108902562.davem@davemloft.net>
 References: <20100118171349.14623.90030.sendpatchset@localhost>
-	<20100118172058.14623.81306.sendpatchset@localhost>
+	<20100118172105.14623.5133.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46202
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44780
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755358Ab0ASJsB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 04:48:01 -0500
-In-Reply-To: <20100118172058.14623.81306.sendpatchset@localhost>
+	by vger.kernel.org with ESMTP id S1752075Ab0ASJxI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 04:53:08 -0500
+In-Reply-To: <20100118172105.14623.5133.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 18 Jan 2010 18:20:58 +0100
+Date: Mon, 18 Jan 2010 18:21:05 +0100
 
-> @@ -189,8 +189,7 @@ int ide_timing_compute(ide_drive_t *driv
->  	 * DMA cycle timing is slower/equal than the fastest PIO timing.
->  	 */
->  	if (speed >= XFER_SW_DMA_0) {
-> -		u8 pio = ide_get_best_pio_mode(drive, 255, 5);
-> -		ide_timing_compute(drive, XFER_PIO_0 + pio, &p, T, UT);
-> +		ide_timing_compute(drive, drive->pio_mode, &p, T, UT);
->  		ide_timing_merge(&p, t, t, IDE_TIMING_ALL);
->  	}
->  
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] alim15x3: fix handling of address setup timings
+> 
+> Account for the requirements of the other device on the port.
+> 
+> Based on libata pata_ali host driver.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-The comment above this code should be changed to match
-the new behavior.
-
-I've done that for you when checking this in, as follows:
-
-ide-timings: use ->pio_mode value to determine fastest PIO speed
-
-Use the current PIO mode value instead of the physical maximum one
-to determine the fastest allowed PIO for shared PIO/DMA timings.
-
-Affected host drivers: amd74xx and via82cxxx.
-
-[ Update comment to match -DaveM ]
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/ide/ide-timings.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ide/ide-timings.c b/drivers/ide/ide-timings.c
-index c6053ab..c7a65ee 100644
---- a/drivers/ide/ide-timings.c
-+++ b/drivers/ide/ide-timings.c
-@@ -186,11 +186,10 @@ int ide_timing_compute(ide_drive_t *drive, u8 speed,
- 	/*
- 	 * Even in DMA/UDMA modes we still use PIO access for IDENTIFY,
- 	 * S.M.A.R.T and some other commands. We have to ensure that the
--	 * DMA cycle timing is slower/equal than the fastest PIO timing.
-+	 * DMA cycle timing is slower/equal than the current PIO timing.
- 	 */
- 	if (speed >= XFER_SW_DMA_0) {
--		u8 pio = ide_get_best_pio_mode(drive, 255, 5);
--		ide_timing_compute(drive, XFER_PIO_0 + pio, &p, T, UT);
-+		ide_timing_compute(drive, drive->pio_mode, &p, T, UT);
- 		ide_timing_merge(&p, t, t, IDE_TIMING_ALL);
- 	}
- 
--- 
-1.6.5
-
+Applied.
