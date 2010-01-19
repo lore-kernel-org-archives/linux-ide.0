@@ -1,56 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 46/64] ide: add drive->pio_mode field
-Date: Tue, 19 Jan 2010 16:09:46 +0100
-Message-ID: <201001191609.46434.bzolnier@gmail.com>
-References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118172028.14623.55296.sendpatchset@localhost> <4B54B656.2090307@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
+ NULL pointer dereference at 00000024(?)
+Date: Tue, 19 Jan 2010 15:45:29 GMT
+Message-ID: <201001191545.o0JFjTqo017722@demeter.kernel.org>
+References: <bug-14994-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754139Ab0ASPL5@vger.kernel.org>
-In-Reply-To: <4B54B656.2090307@ru.mvista.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:46367 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754292Ab0ASPpb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 10:45:31 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0JFjTtf017723
+	for <linux-ide@vger.kernel.org>; Tue, 19 Jan 2010 15:45:29 GMT
+In-Reply-To: <bug-14994-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Monday 18 January 2010 08:28:22 pm Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] ide: add drive->pio_mode field
-> >
-> > Add pio_mode field to ide_drive_t matching pio_mode field used in
-> > struct ata_device.
-> >
-> > The validity of the field is restricted to ->set_pio_mode method
-> > only currently in IDE subsystem.
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  drivers/ide/ide-devsets.c   |    2 ++
-> >  drivers/ide/ide-probe.c     |    2 ++
-> >  drivers/ide/ide-xfer-mode.c |    3 +++
-> >  include/linux/ide.h         |    1 +
-> >  4 files changed, 8 insertions(+)
-> >
-> > Index: b/drivers/ide/ide-devsets.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-devsets.c
-> > +++ b/drivers/ide/ide-devsets.c
-> > @@ -105,6 +105,8 @@ static int set_pio_mode(ide_drive_t *dri
-> >  		return -ENOSYS;
-> >  
-> >  	if (set_pio_mode_abuse(drive->hwif, arg)) {
-> > +		drive->pio_mode = arg + XFER_PIO_0;
-> > +
-> >   
-> 
->    Er, didn't understand this... these 'arg' values are not really PIO 
-> modes, no?
+http://bugzilla.kernel.org/show_bug.cgi?id=14994
 
-In the usual case they are and a few 'special' ->set_pio_mode implementations
-will extract the desired 'arg' value just fine by doing '- XFER_PIO_0'..
 
---
-Bartlomiej Zolnierkiewicz
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+          Component|i386                        |IDE
+         AssignedTo|platform_i386@kernel-bugs.o |io_ide@kernel-bugs.osdl.org
+                   |sdl.org                     |
+            Product|Platform Specific/Hardware  |IO/Storage
+
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
