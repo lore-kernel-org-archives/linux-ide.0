@@ -1,51 +1,96 @@
-From: Bart Hartgers <bart.hartgers@gmail.com>
-Subject: Re: [patch 2/2] sata_via: Delay on vt6420 when starting ATAPI DMA
-	write
-Date: Wed, 20 Jan 2010 11:43:17 +0100
-Message-ID: <7eb6a4d81001200243k7ca637cco25d319a43edf86f5@mail.gmail.com>
-References: <20100116235653.898098245@gmail.com>
-	 <20100116235851.884756038@gmail.com> <4B5678E2.2050709@gmail.com>
-	 <4B568C63.4050506@gmail.com>
-	 <7eb6a4d81001192233i5418249ct5a1717045f75167c@mail.gmail.com>
-	 <4B56A8A0.3050309@gmail.com>
+From: Denis Turischev <denis@compulab.co.il>
+Subject: pata_sch: fix PSTS register reading.
+Date: Wed, 20 Jan 2010 13:45:22 +0200
+Message-ID: <4B56ECD2.20107@compulab.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:36938 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962Ab0ATKnV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 05:43:21 -0500
-In-Reply-To: <4B56A8A0.3050309@gmail.com>
+Received: from compulab.co.il ([67.18.134.219]:47575 "EHLO compulab.co.il"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751760Ab0ATLoj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Jan 2010 06:44:39 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, juergen.metzdorf@telelev-dsl.de, markpschool@hotmail.com, sporadic.crash@gmail.com, apopov@sirma.bg, david@coomber.co.za, jay4mail@gmail.com
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, stable@kernel.org
 
-Hi,
+pata_sch: fix PSTS register reading.
 
-2010/1/20 Tejun Heo <htejun@gmail.com>:
-> Hello,
->
-> On 01/20/2010 03:33 PM, Bart Hartgers wrote:
->> Well, the ata_sff_pause actually does a ndelay(400), and with today's
->> processors that would be a 'slow path', right?
->
-> unlikely() is used to mark very unlikely paths not the slow ones and I
-> don't really think DMA_TO_DEVICE would qualify as an unlikely path.
->
+According to Poulsbo SCH datasheet (p. 353): "Reading reserved bits returns
+an indeterminate, inconsistent value".
+Bit 7 of PSTS register read as 1 when there is slave disk drive attached,
+despite being described as reserved with zero value. This causes wrong 
+feature
+decoding in ata_sff_tf_read.
 
-Ok, I am convinced; I'll drop the unlikely.
+Fix it by implementing pata_sch specific sff_tf_read with appropriate bit
+masks on PSTS register.
 
-Groeten,
-Bart
+Signed-off-by: Denis Turischev <denis@compulab.co.il>
+CC: stable@kernel.org
 
-> Thanks.
->
-> --
-> tejun
->
-
-
-
--- 
-Bart Hartgers - New e-mail: bart.hartgers@gmail.com
+--- linux-2.6.33-rc4.orig/drivers/ata/pata_sch.c    2010-01-13 
+07:15:00.000000000 +0200
++++ linux-2.6.33-rc4/drivers/ata/pata_sch.c    2010-01-20 
+11:19:16.000000000 +0200
+@@ -49,6 +49,11 @@
+     USD    = (1 << 31),    /* Use Synchronous DMA */
+ };
+ 
++/* see SCH datasheet page 353 */
++enum {
++    PSTSM    = 0x7f,        /* PSTS Bit Mask */
++};
++
+ static int sch_init_one(struct pci_dev *pdev,
+              const struct pci_device_id *ent);
+ static void sch_set_piomode(struct ata_port *ap, struct ata_device *adev);
+@@ -75,11 +80,47 @@
+     ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
++/**
++ *    sch_tf_read - input device's ATA taskfile shadow registers
++ *    @ap: Port from which input is read
++ *    @tf: ATA taskfile register set for storing input
++ *
++ *    Note: Original code is ata_sff_tf_read().
++ */
++
++static void sch_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
++{
++    struct ata_ioports *ioaddr = &ap->ioaddr;
++
++    tf->command = ata_sff_check_status(ap);
++    tf->feature = ioread8(ioaddr->error_addr) && PSTSM;
++    tf->nsect = ioread8(ioaddr->nsect_addr);
++    tf->lbal = ioread8(ioaddr->lbal_addr);
++    tf->lbam = ioread8(ioaddr->lbam_addr);
++    tf->lbah = ioread8(ioaddr->lbah_addr);
++    tf->device = ioread8(ioaddr->device_addr);
++
++    if (tf->flags & ATA_TFLAG_LBA48) {
++        if (likely(ioaddr->ctl_addr)) {
++            iowrite8(tf->ctl | ATA_HOB, ioaddr->ctl_addr);
++            tf->hob_feature = ioread8(ioaddr->error_addr) && PSTSM;
++            tf->hob_nsect = ioread8(ioaddr->nsect_addr);
++            tf->hob_lbal = ioread8(ioaddr->lbal_addr);
++            tf->hob_lbam = ioread8(ioaddr->lbam_addr);
++            tf->hob_lbah = ioread8(ioaddr->lbah_addr);
++            iowrite8(tf->ctl, ioaddr->ctl_addr);
++            ap->last_ctl = tf->ctl;
++        } else
++            WARN_ON_ONCE(1);
++    }
++}
++
+ static struct ata_port_operations sch_pata_ops = {
+     .inherits        = &ata_bmdma_port_ops,
+     .cable_detect        = ata_cable_unknown,
+     .set_piomode        = sch_set_piomode,
+     .set_dmamode        = sch_set_dmamode,
++    .sff_tf_read        = sch_tf_read,
+ };
+ 
+ static struct ata_port_info sch_port_info = {
