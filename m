@@ -1,42 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 1/2] sata_via: Correctly setup PIO/DMA for pata slave
- on vt6421.
-Date: Wed, 20 Jan 2010 12:33:05 +0900
-Message-ID: <4B567971.7000904@gmail.com>
-References: <20100116235653.898098245@gmail.com> <20100116235849.969478053@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [patch 2/2] sata_via: Delay on vt6420 when starting ATAPI DMA
+   write
+Date: Tue, 19 Jan 2010 22:53:55 -0600
+Message-ID: <4B568C63.4050506@gmail.com>
+References: <20100116235653.898098245@gmail.com> <20100116235851.884756038@gmail.com> <4B5678E2.2050709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:39938 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754890Ab0ATD1C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 22:27:02 -0500
-In-Reply-To: <20100116235849.969478053@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754928Ab0ATEyG@vger.kernel.org>
+In-Reply-To: <4B5678E2.2050709@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bart Hartgers <bart.hartgers@gmail.com>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, juergen.metzdorf@telelev-dsl.de, markpschool@hotmail.com, sporadic.crash@gmail.com, apopov@sirma.bg, david@coomber.co.za, jay4mail@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Bart Hartgers <bart.hartgers@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 01/17/2010 08:56 AM, Bart Hartgers wrote:
-> Before only the timings for master were set. Datasheet can be found
-> here: ftp://ftp.vtbridge.org/Docs/Storage/DS_VT6421A_100_CCPL.PDF
-> Surprisingly, a slave drive works without this patch. According to the
-> datasheet, the controller by default derives the DMA mode from the 
-> Set Features command issued to a drive. Not sure about the PIO
-> timings, though. The real problem is that the timings for the master
-> effectively are the ones tuned for the slave. If these support
-> different UDMA-settings, there is trouble, especially when the slave
-> supports a higher UDMA than the master. 
-> 
-> Anyhow, using the same mechanism for both master and slave seems like 
-> a good idea.
-> 
-> Signed-off-by: Bart Hartgers <bart.hartgers@gmail.com>
+On 01/19/2010 09:30 PM, Tejun Heo wrote:
+> Hello,
+>
+> On 01/17/2010 08:56 AM, Bart Hartgers wrote:
+>> When writing a disc on certain lite-on dvd-writers (also rebadged as
+>> optiarc/LG/...) connected to a vt6420, the ATAPI CDB ends up in the
+>> datastream and on the disc, causing silent corruption.  Delaying
+>> between sending the CDB and starting DMA seems to prevent this.
+>>
+>> I do not know if there are burners that do not suffer from this, but
+>> the patch should be safe for those as well.
+>>
+>> There are many reports of this issue, but AFAICT no solution was
+>> found before. For example:
+>> http://lkml.indiana.edu/hypermail/linux/kernel/0802.3/0561.html
+>>
+>> Signed-off-by: Bart Hartgers<bart.hartgers@gmail.com>
+>
+> Ah... you found solution for this?  That's great.  This is one of the
+> three problems that have been lingering for years - the other two
+> being pata_ali ATAPI DMA problem and sata_sil data corruption problem.
+> I'll be ecstatic if this fix works.  Just one thing, I don't think
+> we'll need a warning message there.  It's useful during development
+> but it doesn't really provide any useful information afterwards.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Another tiny nitpick about the patch, the unlikely() around the 
+DMA_TO_DEVICE check probably shouldn't be there - unlikely() is for 
+things that will always be either highly unlikely or a slow path, 
+neither of which really apply.
 
-Thanks.
-
--- 
-tejun
+>
+> Digging up the mailing list and cc'ing people who have reported this
+> problem.  If you still have the affected systems, can you guys please
+> test the patch in the following message and see whether it fixes the
+> problem?
+>
+>    http://article.gmane.org/gmane.linux.kernel/939112/raw
+>
+> Thanks a lot.  :-)
+>
