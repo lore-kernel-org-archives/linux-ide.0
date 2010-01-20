@@ -1,53 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: HSM violations from ATA PACKET cmd ABRT errors in initial comms
- with   LG GH22 SATA DVDRW
-Date: Wed, 20 Jan 2010 12:00:42 +0900
-Message-ID: <4B5671DA.7000904@gmail.com>
-References: <4B37C58D.2090200@gmail.com>	<4B37D50F.4010804@gmail.com>	<19257.17141.825766.63548@pilspetsen.it.uu.se> <19265.3552.13209.914969@pilspetsen.it.uu.se>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_nv times out for BD-ROM iHOS104-08
+Date: Tue, 19 Jan 2010 20:59:01 -0600
+Message-ID: <51f3faa71001191859l3c323a8ev6b7c0cced2c59e92@mail.gmail.com>
+References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu>
+	 <4B31C8EE.3030003@kernel.org>
+	 <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com>
+	 <4B331771.3090309@kernel.org>
+	 <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com>
+	 <4B5666B4.6000804@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:50358 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab0ATCyj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 21:54:39 -0500
-Received: by pxi12 with SMTP id 12so5180416pxi.33
-        for <linux-ide@vger.kernel.org>; Tue, 19 Jan 2010 18:54:38 -0800 (PST)
-In-Reply-To: <19265.3552.13209.914969@pilspetsen.it.uu.se>
+Received: from mail-iw0-f197.google.com ([209.85.223.197]:57655 "EHLO
+	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646Ab0ATC7G convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 21:59:06 -0500
+In-Reply-To: <4B5666B4.6000804@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Robert Hancock <hancockrwd@gmail.com>, thomas.schorpp@gmail.com, thomas schorpp <thomas.schorpp@googlemail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: =?ISO-8859-1?Q?Cengiz_G=FCnay?= <cgunay@emory.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Mikael.
+2010/1/19 Tejun Heo <tj@kernel.org>:
+> Hello, Cengiz.
+>
+> On 01/17/2010 06:34 AM, Cengiz G=FCnay wrote:
+>> 2009/12/24 Tejun Heo <tj@kernel.org>:
+>>> I don't think the controller has anything to do with the issue but
+>>> just in case can you please try it with a different controller?
+>>
+>> I tried the iHOS BD-ROM with a VIA VT6412 SATA controller today and =
+it worked:
+>
+> Hmm.... it worked? =A0Does kernel parameter sata_nv.adma_enabled=3D0 =
+make
+> any difference? =A0Can you please attach boot log with the kernel
+> parameter specified?
 
-On 01/04/2010 06:36 AM, Mikael Pettersson wrote:
-> I've looked at the available AC_ERR_ values and how they're treated by
-> libata-eh, and to avoid resets but allow for retries it seems that one
-> should use AC_ERR_OTHER, or possibly AC_ERR_DEV, or possibly no AC_ERR_
-> at all (i.e., zero). So please first try the patch below. If it doesn't
-> eliminate the reset loop, change the AC_ERR_OTHER to AC_ERR_DEV and try
-> again. And if that one still causes reset loops, try a plain 0.
-> 
-> /Mikael
-> 
-> --- linux-2.6.32/drivers/ata/sata_promise.c.~1~	2009-12-03 12:38:32.000000000 +0100
-> +++ linux-2.6.32/drivers/ata/sata_promise.c	2010-01-03 22:08:08.000000000 +0100
-> @@ -862,7 +862,7 @@ static void pdc_error_intr(struct ata_po
->  	if (port_status & PDC_DRIVE_ERR)
->  		ac_err_mask |= AC_ERR_DEV;
->  	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
-> -		ac_err_mask |= AC_ERR_HSM;
-> +		ac_err_mask |= AC_ERR_OTHER; /* or AC_ERR_DEV, or zero */
-
-I think AC_ERR_OTHER can still be too much.  AC_ERR_* bits should only
-be set when the command failed for that reason.  Here, underrun is
-expected, so not really an error condition.  But, for example, under
-or overrun for an ATA R/W command should trigger HSM failure.  I think
-the above error detection logic needs to be improved a bit.
-
-Thanks.
-
--- 
-tejun
+Think you meant maybe sata_nv.swncq=3D0 instead - this is an MCP51
+controller so it doesn't support ADMA. I don't imagine SWNCQ would
+make any difference with an ATAPI device, but wouldn't hurt to try.
