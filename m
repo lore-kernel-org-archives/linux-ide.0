@@ -1,39 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 1/2] sata_via: Correctly setup PIO/DMA for pata slave
- on vt6421.
-Date: Wed, 20 Jan 2010 14:35:13 -0500
-Message-ID: <4B575AF1.5020607@pobox.com>
-References: <20100116235653.898098245@gmail.com> <20100116235849.969478053@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream 2/2] libata: implement spurious irq handling
+ for SFF and apply it to piix
+Date: Thu, 21 Jan 2010 08:45:06 +0900
+Message-ID: <4B579582.4050806@kernel.org>
+References: <4B550EF8.1000009@kernel.org> <4B550F9F.80503@kernel.org> <4B575A84.3030005@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:53110 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092Ab0ATTfS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 14:35:18 -0500
-In-Reply-To: <20100116235849.969478053@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:36569 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753246Ab0ATXnO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Jan 2010 18:43:14 -0500
+In-Reply-To: <4B575A84.3030005@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bart Hartgers <bart.hartgers@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On 01/16/2010 06:56 PM, Bart Hartgers wrote:
-> Before only the timings for master were set. Datasheet can be found
-> here: ftp://ftp.vtbridge.org/Docs/Storage/DS_VT6421A_100_CCPL.PDF
-> Surprisingly, a slave drive works without this patch. According to the
-> datasheet, the controller by default derives the DMA mode from the
-> Set Features command issued to a drive. Not sure about the PIO
-> timings, though. The real problem is that the timings for the master
-> effectively are the ones tuned for the slave. If these support
-> different UDMA-settings, there is trouble, especially when the slave
-> supports a higher UDMA than the master.
->
-> Anyhow, using the same mechanism for both master and slave seems like
-> a good idea.
->
-> Signed-off-by: Bart Hartgers<bart.hartgers@gmail.com>
+Hello,
 
-applied
+On 01/21/2010 04:33 AM, Jeff Garzik wrote:
+> Overall, as long as the drive is in Bus-Idle mode, it should be safe to
+> go ahead and read Status, for pretty much every controller and drive.
 
+Hmmm... I was a bit worried about the case Alan mentioned several
+times where access to AltStatus while data transfer is going on can
+lead to silent data corruption.
 
+> I would make exception only for the new SATA FIS-based controllers,
+> where we know that hitting Status is likely both pointless and wasteful,
+> as well as being superfluous because the newer FIS-based controllers all
+> have irq status registers.
+
+FIS-based ones need their own interrupt handlers anyway so,
+fortunately, things like irq_check callback isn't necessary to begin
+with.  :-)
+
+> Additionally, I think we should have a "fast-timeout" and
+> "slow-timeout", whereby we check Status after a short period (5
+> seconds?) to make sure we did not lose an interrupt.  If Status is !BSY,
+> then we can proceed with handling qc success/failure immediately.
+
+Does this happen often?  What I find more common is just plain
+timeouts, so I think it would improve our exception latency if we
+apply different timeouts for each trial.  ie. For the first RW try,
+set the timeout to 7 secs.  For the second, 15 and then to 30.  This
+wouldn't harm the correctness while allowing libata to react much
+faster to transient failures.
+
+Another thing is I can think of which can improve our robustness is
+dynamic irqpoll support such that when screaming IRQ happens, IRQ
+subsystem not only shuts down the IRQ line but also begins selectively
+irqpolling it.
+
+Thanks.
+
+-- 
+tejun
