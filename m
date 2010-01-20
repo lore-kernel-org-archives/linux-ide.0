@@ -1,56 +1,55 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [patch 2/2] sata_via: Delay on vt6420 when starting ATAPI DMA
-   write
-Date: Tue, 19 Jan 2010 22:53:55 -0600
-Message-ID: <4B568C63.4050506@gmail.com>
-References: <20100116235653.898098245@gmail.com> <20100116235851.884756038@gmail.com> <4B5678E2.2050709@gmail.com>
+Subject: [PATCH] libata: make functions/variables static
+Date: Tue, 19 Jan 2010 23:03:39 -0600
+Message-ID: <4B568EAB.1030207@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754928Ab0ATEyG@vger.kernel.org>
-In-Reply-To: <4B5678E2.2050709@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Bart Hartgers <bart.hartgers@gmail.com>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, juergen.metzdorf@telelev-dsl.de, markpschool@hotmail.com, sporadic.crash@gmail.com, apopov@sirma.bg, david@coomber.co.za, jay4mail@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f197.google.com ([209.85.223.197]:58245 "EHLO
+	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236Ab0ATFEL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 00:04:11 -0500
+Received: by iwn35 with SMTP id 35so3522283iwn.4
+        for <linux-ide@vger.kernel.org>; Tue, 19 Jan 2010 21:04:09 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-On 01/19/2010 09:30 PM, Tejun Heo wrote:
-> Hello,
->
-> On 01/17/2010 08:56 AM, Bart Hartgers wrote:
->> When writing a disc on certain lite-on dvd-writers (also rebadged as
->> optiarc/LG/...) connected to a vt6420, the ATAPI CDB ends up in the
->> datastream and on the disc, causing silent corruption.  Delaying
->> between sending the CDB and starting DMA seems to prevent this.
->>
->> I do not know if there are burners that do not suffer from this, but
->> the patch should be safe for those as well.
->>
->> There are many reports of this issue, but AFAICT no solution was
->> found before. For example:
->> http://lkml.indiana.edu/hypermail/linux/kernel/0802.3/0561.html
->>
->> Signed-off-by: Bart Hartgers<bart.hartgers@gmail.com>
->
-> Ah... you found solution for this?  That's great.  This is one of the
-> three problems that have been lingering for years - the other two
-> being pata_ali ATAPI DMA problem and sata_sil data corruption problem.
-> I'll be ecstatic if this fix works.  Just one thing, I don't think
-> we'll need a warning message there.  It's useful during development
-> but it doesn't really provide any useful information afterwards.
+Make some variables in ahci and a function in pata_pcmcia static, as found
+using sparse.
 
-Another tiny nitpick about the patch, the unlikely() around the 
-DMA_TO_DEVICE check probably shouldn't be there - unlikely() is for 
-things that will always be either highly unlikely or a slow path, 
-neither of which really apply.
+Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 
->
-> Digging up the mailing list and cc'ing people who have reported this
-> problem.  If you still have the affected systems, can you guys please
-> test the patch in the following message and see whether it fixes the
-> problem?
->
->    http://article.gmane.org/gmane.linux.kernel/939112/raw
->
-> Thanks a lot.  :-)
->
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index b8bea10..265d0d4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -356,10 +356,10 @@ static ssize_t ahci_show_host_version(struct device *dev,
+ static ssize_t ahci_show_port_cmd(struct device *dev,
+ 				  struct device_attribute *attr, char *buf);
+ 
+-DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
+-DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
+-DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
+-DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
++static DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
++static DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
++static DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
++static DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
+ 
+ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index 1b392c9..3610353 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -136,7 +136,7 @@ static unsigned int ata_data_xfer_8bit(struct ata_device *dev,
+  *
+  */
+  
+-void pcmcia_8bit_drain_fifo(struct ata_queued_cmd *qc)
++static void pcmcia_8bit_drain_fifo(struct ata_queued_cmd *qc)
+ {
+ 	int count;
+ 	struct ata_port *ap;
