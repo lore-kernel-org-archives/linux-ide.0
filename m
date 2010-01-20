@@ -1,34 +1,37 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13399] kernel crash SONY DVD-ROM with cd
-Date: Tue, 19 Jan 2010 22:52:33 GMT
-Message-ID: <201001192252.o0JMqXY4016297@demeter.kernel.org>
-References: <bug-13399-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: sata_nv times out for BD-ROM iHOS104-08
+Date: Wed, 20 Jan 2010 11:13:08 +0900
+Message-ID: <4B5666B4.6000804@kernel.org>
+References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<4B31C8EE.3030003@kernel.org> <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com> 	<4B331771.3090309@kernel.org> <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58530 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932099Ab0ASWwf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jan 2010 17:52:35 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0JMqXo4016298
-	for <linux-ide@vger.kernel.org>; Tue, 19 Jan 2010 22:52:33 GMT
-In-Reply-To: <bug-13399-11633@http.bugzilla.kernel.org/>
+Received: from hera.kernel.org ([140.211.167.34]:52732 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756102Ab0ATCHG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Jan 2010 21:07:06 -0500
+In-Reply-To: <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13399
+Hello, Cengiz.
 
+On 01/17/2010 06:34 AM, Cengiz G=C3=BCnay wrote:
+> 2009/12/24 Tejun Heo <tj@kernel.org>:
+>> I don't think the controller has anything to do with the issue but
+>> just in case can you please try it with a different controller?
+>=20
+> I tried the iHOS BD-ROM with a VIA VT6412 SATA controller today and i=
+t worked:
 
+Hmm.... it worked?  Does kernel parameter sata_nv.adma_enabled=3D0 make
+any difference?  Can you please attach boot log with the kernel
+parameter specified?
 
+Thanks.
 
-
---- Comment #61 from David Woodhouse <dwmw2@infradead.org>  2010-01-19 22:52:30 ---
-When I get home next week, I'll (try to remember to) build another test kernel
-with drivers/ide, and see what happens. Poke me again if I forget again; sorry.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--=20
+tejun
