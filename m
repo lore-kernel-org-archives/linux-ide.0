@@ -1,39 +1,115 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: SATA_SIL on IXP425 workaround
-Date: Thu, 21 Jan 2010 22:47:20 +0100
-Message-ID: <m3sk9zceqf.fsf@intrepid.localdomain>
-References: <m33a4nfvva.fsf@intrepid.localdomain>
-	<201001141659.19687.bzolnier@gmail.com> <4B57DEE9.8030604@garzik.org>
-	<4B57F8D6.6080902@garzik.org> <4B589EFC.6050002@garzik.org>
+From: Mike Cui <cuicui@gmail.com>
+Subject: Re: 2.6.32 seemed to have broken nVidia MCP7A sata controller
+Date: Thu, 21 Jan 2010 15:48:30 -0800
+Message-ID: <7c8826911001211548l532a8f39y65b13b3ea4d0f93c@mail.gmail.com>
+References: <7c8826910912182213o2e0e8af7ic305f150c52e0618@mail.gmail.com>
+	 <4B2C80DD.9080005@garzik.org> <4B2D1CF3.4070106@gmail.com>
+	 <7c8826910912191437k4e1d93bap12874a6d6e0046d3@mail.gmail.com>
+	 <51f3faa70912271352g2784edc8oc899bd6def7b7275@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:51362 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752221Ab0AUVrY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jan 2010 16:47:24 -0500
-In-Reply-To: <4B589EFC.6050002@garzik.org> (Jeff Garzik's message of "Thu, 21
-	Jan 2010 13:37:48 -0500")
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:33286 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755343Ab0AUXsb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 18:48:31 -0500
+In-Reply-To: <51f3faa70912271352g2784edc8oc899bd6def7b7275@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Jeff Garzik <jeff@garzik.org> writes:
+I finally got a chance to try this on an x58 motherboard. It works
+fine. It looks like the nvidia controller is the problem. Or maybe
+it's just my motherboard.
 
-> It is definitely possible to do all 32-bit accesses...  but that
-> requires activating and exclusively using the command buffering
-> feature, because direct 32-bit access to the taskfile registers will
-> result in a 32-bit access to Data rather than the desired effect.
+Thanks.
 
-Command buffering? The DS for SIL3512 lists IDEx taskfile registers
-for command buffering, but I can't see any explanation there.
-
-BTW I don't know requirements of other platforms, but IXP4xx has only
-problems with 8- and 16-bit PCI memory reads. Other ops including
-all memory writes, and all "port" I/O are ok.
-
-Unfortunately I can't test any patch ATM, -ENOHW. I might be able to get
-access to this hw again, but I don't know at this point.
--- 
-Krzysztof Halasa
+On Sun, Dec 27, 2009 at 1:52 PM, Robert Hancock <hancockrwd@gmail.com> =
+wrote:
+> On Sat, Dec 19, 2009 at 4:37 PM, Mike Cui <cuicui@gmail.com> wrote:
+>> Thanks, changing that one line fixed it. I can try to find an intel
+>> motherboard sometime next week to see if it's the drive or the
+>> controller.
+>
+> Hi Mike, did you ever get a chance to try this test?
+>
+>>
+>> On Sat, Dec 19, 2009 at 10:35 AM, Robert Hancock <hancockrwd@gmail.c=
+om> wrote:
+>>> On 12/19/2009 01:29 AM, Jeff Garzik wrote:
+>>>>
+>>>> On 12/19/2009 01:13 AM, Mike Cui wrote:
+>>>>>
+>>>>> I have an nVidia MCP7A AHCI controller. I upgraded to 2.6.32.2 an=
+d my
+>>>>> system deterministically freezes trying to mount file systems. On=
+ce in
+>>>>> a while it will come back and finish booting after freezing for 1
+>>>>> minute or 2. dmesg indicates that there were NCQ errors, but 2.6.=
+31
+>>>>> anb before has always worked flawlessly for me. What changed in
+>>>>> 2.6.32? I will be more than happy to help track down this issue.
+>>>>
+>>>>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+>>>>> ata1.00: cmd 61/08:00:4f:ad:03/00:00:00:00:00/40 tag 0 ncq 4096 o=
+ut
+>>>>> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>>>> ata1: hard resetting link
+>>>>> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>>>> ata1.00: configured for UDMA/133
+>>>>> ata1.00: device reported invalid CHS sector 0
+>>>>
+>>>> Looks like things are timing out, and then go downhill from there.=
+ This
+>>>> explanation of timeout gives some hints on possible causes:
+>>>> http://ata.wiki.kernel.org/index.php/Libata_error_messages#Error_c=
+lasses
+>>>>
+>>>> The ideal would be if you could bisect between 2.6.31 and 2.6.32, =
+to see
+>>>> if it's a software change that is the cause.
+>>>>
+>>>> Looking at drivers/ata/ahci.c history, the only thing that -might-=
+ cause
+>>>> problems is 388539f3ff0cf1de926b03f94e1eec112358f74d ('git show $c=
+ommit'
+>>>> for full commit info and diff).
+>>>
+>>> I suspect that as well (it's the commit that adds FPDMA auto-activa=
+te on DMA
+>>> setup FIS support). Your drive indicates it's supported but it's po=
+ssible
+>>> it's broken on that drive or the controller. If the drive doesn't s=
+et the
+>>> activate bit in the DMA setup FIS properly or the controller doesn'=
+t respect
+>>> it, then FPDMA requests will stall.
+>>>
+>>> Mike, can you try and revert that patch, or else just change this l=
+ine in
+>>> drivers/ata/ahci.c:
+>>>
+>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pi.flags |=3D=
+ ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
+>>>
+>>> to
+>>>
+>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pi.flags |=3D=
+ ATA_FLAG_NCQ;
+>>>
+>>> and rebuild and see if it works better?
+>>>
+>>> I tend to suspect the controller is the problem (I've got WD drives=
+ that
+>>> work fine with AA on Intel AHCI, though it could be model-specific)=
+=2E I guess
+>>> the only way to verify for sure which one it is would be if someone=
+ else had
+>>> that particular drive model on a different AHCI controller and coul=
+d verify
+>>> if it worked with 2.6.32+ or not.
+>>>
+>>
+>
