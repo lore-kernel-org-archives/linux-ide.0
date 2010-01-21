@@ -1,81 +1,71 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 46/64] ide: add drive->pio_mode field
-Date: Thu, 21 Jan 2010 20:48:15 +0300
-Message-ID: <4B58935F.4080700@ru.mvista.com>
-References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118172028.14623.55296.sendpatchset@localhost> <4B54B656.2090307@ru.mvista.com> <201001191609.46434.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Thu, 21 Jan 2010 13:37:48 -0500
+Message-ID: <4B589EFC.6050002@garzik.org>
+References: <m33a4nfvva.fsf@intrepid.localdomain> <201001141659.19687.bzolnier@gmail.com> <4B57DEE9.8030604@garzik.org> <4B57F8D6.6080902@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([206.112.117.35]:40409 "HELO
-	gateway-1237.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752271Ab0AURuG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 12:50:06 -0500
-In-Reply-To: <201001191609.46434.bzolnier@gmail.com>
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:52718 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075Ab0AUShv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 13:37:51 -0500
+In-Reply-To: <4B57F8D6.6080902@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-Hello.
-
-Bartlomiej Zolnierkiewicz wrote:
-
-> On Monday 18 January 2010 08:28:22 pm Sergei Shtylyov wrote:
->   
->> Bartlomiej Zolnierkiewicz wrote:
+On 01/21/2010 01:48 AM, Jeff Garzik wrote:
+> On 01/20/2010 11:58 PM, Jeff Garzik wrote:
+>> On 01/14/2010 10:59 AM, Bartlomiej Zolnierkiewicz wrote:
+>>> On Monday 09 November 2009 06:31:21 pm Krzysztof Halasa wrote:
+>>>> I'm trying to add a workaround for IXP4xx CPUs to SATA SIL driver. The
+>>>> problem is that IXP4xx CPUs (Intel's XScale (ARM) network-oriented
+>>>> processors) are unable to perform 8 and 16-bit read from PCI MMIO, they
+>>>> can only do a full 32-bit readl(); SIL chips respond to that with PCI
+>>>> abort. The workaround is to use 8 and 16-bit regular IO reads (inb/inw)
+>>>> instead (MMIO write is not a problem).
+>>>>
+>>>> For SIL3x12 the workaround is simple (attached) and it works on my
+>>>> 3512.
+>>>> I'm not sure about 3114 (the 4-port chip) - the PIO BARs have TF, CTL
+>>>> and BWDMA registers which are common to channels 0 and 2, and (the
+>>>> other
+>>>> set) to channels 1 and 3. Channel selection is done with bit 4 of
+>>>> device/head TF register, this is similar (same?) as PATA master/slave.
+>>>> Does that mean that I can simply treat channel 0 as PRI master, ch#2 as
+>>>> PRI slave, ch#1 as SEC master and ch#3 as SEC slave, and the SFF code
+>>>> will select the right device correctly? Does it need additional code?
+>>>> I don't have anything based on 3114.
+>>>>
+>>>> Note: the large PRD is not a problem here, the transfer can be started
+>>>> by MMIO write. Only reads are an issue.
+>>>
+>>> FWIW your patch is now in my atang tree (I'm aware that Jeff is working
+>>> on generic solution but in the meantime this non-intrusive patch allows
+>>> sata_sil to work on IXP425).
 >>
->>     
->>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>> Subject: [PATCH] ide: add drive->pio_mode field
->>>
->>> Add pio_mode field to ide_drive_t matching pio_mode field used in
->>> struct ata_device.
->>>
->>> The validity of the field is restricted to ->set_pio_mode method
->>> only currently in IDE subsystem.
->>>
->>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>> ---
->>>  drivers/ide/ide-devsets.c   |    2 ++
->>>  drivers/ide/ide-probe.c     |    2 ++
->>>  drivers/ide/ide-xfer-mode.c |    3 +++
->>>  include/linux/ide.h         |    1 +
->>>  4 files changed, 8 insertions(+)
->>>
->>> Index: b/drivers/ide/ide-devsets.c
->>> ===================================================================
->>> --- a/drivers/ide/ide-devsets.c
->>> +++ b/drivers/ide/ide-devsets.c
->>> @@ -105,6 +105,8 @@ static int set_pio_mode(ide_drive_t *dri
->>>  		return -ENOSYS;
->>>  
->>>  	if (set_pio_mode_abuse(drive->hwif, arg)) {
->>> +		drive->pio_mode = arg + XFER_PIO_0;
->>> +
->>>   
->>>       
->>    Er, didn't understand this... these 'arg' values are not really PIO 
->> modes, no?
->>     
+>> I was asking an open question, is a generic solution possible?
+>>
+>> Something like the attached patch might work, due it is completely
+>> untested, and I did not verify that the BMDMA Status register is not
+>> stomped. Also, the additional ioread32() calls in bmdma start/stop are
+>> LIKELY to be unnecessary.
 >
-> In the usual case they are
+> As I suspected, there is a W1C register in there. But it does look
+> possible to do all-32-bit accesses.
 
-   But after set_pio_mode_abuse() returned non-zero we know it's not 
-usual case, no?
+It is definitely possible to do all 32-bit accesses...  but that 
+requires activating and exclusively using the command buffering feature, 
+because direct 32-bit access to the taskfile registers will result in a 
+32-bit access to Data rather than the desired effect.
 
->  and a few 'special' ->set_pio_mode implementations
-> will extract the desired 'arg' value just fine by doing '- XFER_PIO_0'..
->   
+The chip docs are at http://gkernel.sourceforge.net/specs/sii/ for those 
+unfamiliar with my doc archive.
 
-   I don't understand why we should change drive->pio_mode if we know 
-it's not a PIO mode but "abuse value". Perhaps you're dropping the mode 
-argument from set_pio_mode() in some of the next patches? Doesn't seem a 
-good idea, given that this "abuse case" still exist...
+	Jeff
 
-> --
-> Bartlomiej Zolnierkiewicz
->   
 
-WBR, Sergei
 
