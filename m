@@ -1,83 +1,150 @@
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: WARNING: at drivers/ata/libata-core.c:5162 ata_qc_issue
-Date: Wed, 20 Jan 2010 23:38:03 -0500
-Message-ID: <87d699441001202038m906038dgd7a849adabe8509@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Wed, 20 Jan 2010 23:58:17 -0500
+Message-ID: <4B57DEE9.8030604@garzik.org>
+References: <m33a4nfvva.fsf@intrepid.localdomain> <201001141659.19687.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed;
+ boundary="------------020700000907060607050008"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f202.google.com ([209.85.221.202]:43068 "EHLO
-	mail-qy0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754226Ab0AUEiE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 23:38:04 -0500
-Received: by qyk40 with SMTP id 40so3317164qyk.22
-        for <linux-ide@vger.kernel.org>; Wed, 20 Jan 2010 20:38:03 -0800 (PST)
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:41115 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752999Ab0AUE6U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 23:58:20 -0500
+In-Reply-To: <201001141659.19687.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------020700000907060607050008
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I recently set up a box with (basically) 2.6.32.2 (specifically
-gentoo-2.6.32-r1), and got the warning below when I started up smartd,
-which is set to scan all the devices. This machine has an Areca
-1300ix-16 controller (mvsas driver, no raid), and a number of WDC
-WD20EADS-00S2B0 drives attached (2TB, SATA).
+On 01/14/2010 10:59 AM, Bartlomiej Zolnierkiewicz wrote:
+> On Monday 09 November 2009 06:31:21 pm Krzysztof Halasa wrote:
+>> I'm trying to add a workaround for IXP4xx CPUs to SATA SIL driver. The
+>> problem is that IXP4xx CPUs (Intel's XScale (ARM) network-oriented
+>> processors) are unable to perform 8 and 16-bit read from PCI MMIO, they
+>> can only do a full 32-bit readl(); SIL chips respond to that with PCI
+>> abort. The workaround is to use 8 and 16-bit regular IO reads (inb/inw)
+>> instead (MMIO write is not a problem).
+>>
+>> For SIL3x12 the workaround is simple (attached) and it works on my 3512.
+>> I'm not sure about 3114 (the 4-port chip) - the PIO BARs have TF, CTL
+>> and BWDMA registers which are common to channels 0 and 2, and (the other
+>> set) to channels 1 and 3. Channel selection is done with bit 4 of
+>> device/head TF register, this is similar (same?) as PATA master/slave.
+>> Does that mean that I can simply treat channel 0 as PRI master, ch#2 as
+>> PRI slave, ch#1 as SEC master and ch#3 as SEC slave, and the SFF code
+>> will select the right device correctly? Does it need additional code?
+>> I don't have anything based on 3114.
+>>
+>> Note: the large PRD is not a problem here, the transfer can be started
+>> by MMIO write. Only reads are an issue.
+>
+> FWIW your patch is now in my atang tree (I'm aware that Jeff is working
+> on generic solution but in the meantime this non-intrusive patch allows
+> sata_sil to work on IXP425).
 
-Please let me know if you need any other information.
+I was asking an open question, is a generic solution possible?
 
-[706120.572560] ------------[ cut here ]------------
-[706120.572566] WARNING: at drivers/ata/libata-core.c:5162
-ata_qc_issue+0x11c/0x365()
-[706120.572568] Hardware name: X8DT6
-[706120.572569] Modules linked in: w83627hf hwmon_vid iTCO_wdt
-iTCO_vendor_support
-[706120.572575] Pid: 29946, comm: smartd Not tainted 2.6.32-gentoo-r1 #2
-[706120.572576] Call Trace:
-[706120.572582]  [<ffffffff812ed8db>] ? scsi_host_alloc_command+0x1b/0x62
-[706120.572584]  [<ffffffff81317e4f>] ? ata_qc_issue+0x11c/0x365
-[706120.572588]  [<ffffffff81068bec>] warn_slowpath_common+0x77/0xa4
-[706120.572591]  [<ffffffff8131c345>] ? ata_scsi_pass_thru+0x0/0x242
-[706120.572593]  [<ffffffff81068c28>] warn_slowpath_null+0xf/0x11
-[706120.572595]  [<ffffffff81317e4f>] ata_qc_issue+0x11c/0x365
-[706120.572598]  [<ffffffff8131c345>] ? ata_scsi_pass_thru+0x0/0x242
-[706120.572600]  [<ffffffff812ed1f1>] ? scsi_done+0x0/0x12
-[706120.572602]  [<ffffffff8131d5f1>] __ata_scsi_queuecmd+0x19e/0x1f8
-[706120.572605]  [<ffffffff812ed1f1>] ? scsi_done+0x0/0x12
-[706120.572607]  [<ffffffff8131d675>] ata_sas_queuecmd+0x2a/0x3c
-[706120.572611]  [<ffffffff813033f9>] sas_queuecommand+0x82/0x269
-[706120.572614]  [<ffffffff812ed4c7>] scsi_dispatch_cmd+0x1c3/0x23e
-[706120.572617]  [<ffffffff812f2e2e>] scsi_request_fn+0x39f/0x4e9
-[706120.572622]  [<ffffffff8124a3ce>] __blk_run_queue+0x3d/0x71
-[706120.572625]  [<ffffffff81241e7d>] elv_insert+0xa5/0x248
-[706120.572627]  [<ffffffff812420ba>] __elv_add_request+0x9a/0xa2
-[706120.572630]  [<ffffffff8124d954>] blk_execute_rq_nowait+0x62/0x8c
-[706120.572632]  [<ffffffff8124da08>] blk_execute_rq+0x8a/0xae
-[706120.572636]  [<ffffffff8105cf95>] ? check_preempt_wakeup+0xf7/0x16b
-[706120.572639]  [<ffffffff8122f4db>] ? security_capable+0x27/0x29
-[706120.572642]  [<ffffffff81250bfc>] sg_io+0x273/0x386
-[706120.572645]  [<ffffffff81065055>] ? default_wake_function+0xd/0xf
-[706120.572648]  [<ffffffff8125123b>] scsi_cmd_ioctl+0x20f/0x3e8
-[706120.572651]  [<ffffffff813a31a1>] ? sock_def_readable+0x3f/0x6c
-[706120.572654]  [<ffffffff8105e85e>] ? select_task_rq_fair+0x4b6/0x87e
-[706120.572656]  [<ffffffff8105def3>] ? enqueue_entity+0x25f/0x26b
-[706120.572660]  [<ffffffff8130b7af>] sd_ioctl+0xa2/0xc7
-[706120.572663]  [<ffffffff8124eb9e>] __blkdev_driver_ioctl+0x62/0x77
-[706120.572665]  [<ffffffff8124f398>] blkdev_ioctl+0x7e5/0x81d
-[706120.572668]  [<ffffffff81062cfd>] ? finish_task_switch+0x43/0xad
-[706120.572672]  [<ffffffff8112bc99>] ? fsnotify_clear_marks_by_inode+0x28/0xdd
-[706120.572675]  [<ffffffff810fb38c>] ? virt_to_head_page+0x9/0x2a
-[706120.572678]  [<ffffffff8139f7b8>] ? sock_destroy_inode+0x14/0x16
-[706120.572680]  [<ffffffff810fb38c>] ? virt_to_head_page+0x9/0x2a
-[706120.572683]  [<ffffffff81126f74>] block_ioctl+0x38/0x3c
-[706120.572686]  [<ffffffff8110f43c>] vfs_ioctl+0x2a/0x78
-[706120.572688]  [<ffffffff8110f971>] do_vfs_ioctl+0x46c/0x4ad
-[706120.572691]  [<ffffffff81104200>] ? __fput+0x1a9/0x1b8
-[706120.572694]  [<ffffffff8110fa07>] sys_ioctl+0x55/0x77
-[706120.572697]  [<ffffffff81031b2b>] system_call_fastpath+0x16/0x1b
-[706120.572699] ---[ end trace 77cd22c8c073dd64 ]---
+Something like the attached patch might work, due it is completely 
+untested, and I did not verify that the BMDMA Status register is not 
+stomped.  Also, the additional ioread32() calls in bmdma start/stop are 
+LIKELY to be unnecessary.
 
-Thanks,
+	Jeff
 
---
-Ilia Mirkin
-imirkin@alum.mit.edu
+
+
+
+
+--------------020700000907060607050008
+Content-Type: text/plain;
+ name="patch.sata_sil-mmio32"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="patch.sata_sil-mmio32"
+
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 3cb69d5..7fa6164 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -270,9 +270,11 @@ static void sil_bmdma_stop(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *mmio_base = ap->host->iomap[SIL_MMIO_BAR];
+ 	void __iomem *bmdma2 = mmio_base + sil_port[ap->port_no].bmdma2;
++	u32 tmp;
+ 
+ 	/* clear start/stop bit - can safely always write 0 */
+-	iowrite8(0, bmdma2);
++	tmp = ioread32(bmdma2) & 0xffffff00;
++	iowrite32(tmp | 0, bmdma2);
+ 
+ 	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+ 	ata_sff_dma_pause(ap);
+@@ -296,14 +298,17 @@ static void sil_bmdma_start(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *mmio_base = ap->host->iomap[SIL_MMIO_BAR];
+ 	void __iomem *bmdma2 = mmio_base + sil_port[ap->port_no].bmdma2;
+-	u8 dmactl = ATA_DMA_START;
++	u32 dmactl = ATA_DMA_START;
++	u32 tmp;
+ 
+ 	/* set transfer direction, start host DMA transaction
+ 	   Note: For Large Block Transfer to work, the DMA must be started
+ 	   using the bmdma2 register. */
+ 	if (!rw)
+ 		dmactl |= ATA_DMA_WR;
+-	iowrite8(dmactl, bmdma2);
++
++	tmp = ioread32(bmdma2) & 0xffffff00;
++	iowrite32(tmp | dmactl, bmdma2);
+ }
+ 
+ /* The way God intended PCI IDE scatter/gather lists to look and behave... */
+@@ -571,13 +576,13 @@ static void sil_freeze(struct ata_port *ap)
+ 	 * This is because the controller will not give us access to the
+ 	 * taskfile registers while a DMA is in progress
+ 	 */
+-	iowrite8(ioread8(ap->ioaddr.bmdma_addr) & ~SIL_DMA_ENABLE,
+-		 ap->ioaddr.bmdma_addr);
++	tmp = ioread32(ap->ioaddr.bmdma_addr);
++	iowrite32(tmp & ~SIL_DMA_ENABLE, ap->ioaddr.bmdma_addr);
+ 
+ 	/* According to ata_bmdma_stop, an HDMA transition requires
+ 	 * on PIO cycle. But we can't read a taskfile register.
+ 	 */
+-	ioread8(ap->ioaddr.bmdma_addr);
++	ioread32(ap->ioaddr.bmdma_addr);
+ }
+ 
+ static void sil_thaw(struct ata_port *ap)
+@@ -667,7 +672,7 @@ static void sil_init_controller(struct ata_host *host)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	void __iomem *mmio_base = host->iomap[SIL_MMIO_BAR];
+-	u8 cls;
++	u32 cls;
+ 	u32 tmp;
+ 	int i;
+ 
+@@ -676,9 +681,12 @@ static void sil_init_controller(struct ata_host *host)
+ 	if (cls) {
+ 		cls >>= 3;
+ 		cls++;  /* cls = (line_size/8)+1 */
+-		for (i = 0; i < host->n_ports; i++)
+-			writew(cls << 8 | cls,
++		for (i = 0; i < host->n_ports; i++) {
++			tmp = readl(mmio_base + sil_port[i].fifo_cfg) &
++			      0xffff0000;
++			writel(tmp | cls << 8 | cls,
+ 			       mmio_base + sil_port[i].fifo_cfg);
++		}
+ 	} else
+ 		dev_printk(KERN_WARNING, &pdev->dev,
+ 			   "cache line size not set.  Driver may not function\n");
+
+--------------020700000907060607050008--
