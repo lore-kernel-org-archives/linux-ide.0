@@ -1,45 +1,26 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata fix
-Date: Wed, 20 Jan 2010 23:29:31 -0500
-Message-ID: <20100121042931.GA17744@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH #upstream-fixes] libata-sff: remove CONFIG_NO_ATA_LEGACY
+Date: Wed, 20 Jan 2010 23:32:49 -0500
+Message-ID: <4B57D8F1.8040504@pobox.com>
+References: <20100120142943.GE3580@faui49.informatik.uni-erlangen.de> <4B579C4A.3040907@gmail.com> <4B579C85.7010008@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:52638 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754124Ab0AUE3d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Jan 2010 23:29:33 -0500
-Content-Disposition: inline
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:60171 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754273Ab0AUEcv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 23:32:51 -0500
+In-Reply-To: <4B579C85.7010008@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Reinhard.Tartler@informatik.uni-erlangen.de
+
+On 01/20/2010 07:15 PM, Tejun Heo wrote:
+> Oops, Jeff, please send this #upstream.  I was thinking #upstream but
+> my fingers had their own mind.  Thanks.
+
+yep, definitely #upstream material...
 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/libata-eh.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-Tejun Heo (1):
-      libata: retry FS IOs even if it has failed with AC_ERR_INVALID
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0ea97c9..9f6cfac 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2028,8 +2028,9 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 			qc->err_mask &= ~(AC_ERR_DEV | AC_ERR_OTHER);
- 
- 		/* determine whether the command is worth retrying */
--		if (!(qc->err_mask & AC_ERR_INVALID) &&
--		    ((qc->flags & ATA_QCFLAG_IO) || qc->err_mask != AC_ERR_DEV))
-+		if (qc->flags & ATA_QCFLAG_IO ||
-+		    (!(qc->err_mask & AC_ERR_INVALID) &&
-+		     qc->err_mask != AC_ERR_DEV))
- 			qc->flags |= ATA_QCFLAG_RETRY;
- 
- 		/* accumulate error info */
