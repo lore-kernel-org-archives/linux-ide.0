@@ -1,35 +1,39 @@
-From: "Paul Check" <paul@thechecks.ca>
-Subject: Re: Intermittent SATA link down SStatus 0
-Date: Thu, 21 Jan 2010 16:08:36 -0500
-Message-ID: <c9b548c76ace3c52752bec43ffe7127a.squirrel@thechecks.ca>
-References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
-    <fbae475f602d8f79f27d2d36be0de4f7.squirrel@thechecks.ca>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: SATA_SIL on IXP425 workaround
+Date: Thu, 21 Jan 2010 22:47:20 +0100
+Message-ID: <m3sk9zceqf.fsf@intrepid.localdomain>
+References: <m33a4nfvva.fsf@intrepid.localdomain>
+	<201001141659.19687.bzolnier@gmail.com> <4B57DEE9.8030604@garzik.org>
+	<4B57F8D6.6080902@garzik.org> <4B589EFC.6050002@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from d72-38-7-254.commercial1.cgocable.net ([72.38.7.254]:3610 "EHLO
-	max" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755200Ab0AUVIi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jan 2010 16:08:38 -0500
-Received: from d72-38-7-254.commercial1.cgocable.net
-	([72.38.7.254] helo=thechecks.ca ident=gaeogfo)
-	by max with esmtp (Exim 4.71)
-	(envelope-from <paul@thechecks.ca>)
-	id 1NY4Ga-0006CD-GT
-	for linux-ide@vger.kernel.org; Thu, 21 Jan 2010 16:08:36 -0500
-In-Reply-To: <fbae475f602d8f79f27d2d36be0de4f7.squirrel@thechecks.ca>
+Received: from khc.piap.pl ([195.187.100.11]:51362 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752221Ab0AUVrY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jan 2010 16:47:24 -0500
+In-Reply-To: <4B589EFC.6050002@garzik.org> (Jeff Garzik's message of "Thu, 21
+	Jan 2010 13:37:48 -0500")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-With pata disabled, the ata assignments still move around, so this was
-unrelated.  I will report back if I still get the link down after 20
-boots.  P
+Jeff Garzik <jeff@garzik.org> writes:
 
-> Now, with pata_marvell NOT compiled into the kernel, on the first try I am
-> getting the hard drives on ata1.00, ata1.01, ata2.00 and ata2.01, and the
-> Sony BWU on sata3, which seems "correct" given the ports I have the drives
-> plugged into.
+> It is definitely possible to do all 32-bit accesses...  but that
+> requires activating and exclusively using the command buffering
+> feature, because direct 32-bit access to the taskfile registers will
+> result in a 32-bit access to Data rather than the desired effect.
 
+Command buffering? The DS for SIL3512 lists IDEx taskfile registers
+for command buffering, but I can't see any explanation there.
 
+BTW I don't know requirements of other platforms, but IXP4xx has only
+problems with 8- and 16-bit PCI memory reads. Other ops including
+all memory writes, and all "port" I/O are ok.
+
+Unfortunately I can't test any patch ATM, -ENOHW. I might be able to get
+access to this hw again, but I don't know at this point.
+-- 
+Krzysztof Halasa
