@@ -1,91 +1,62 @@
-From: Chandra Nepali <edu4madh@gmail.com>
-Subject: port multiplier problem
-Date: Thu, 21 Jan 2010 11:57:39 -0500
-Message-ID: <4B588783.9030001@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Intermittent SATA link down SStatus 0
+Date: Thu, 21 Jan 2010 17:11:03 +0000
+Message-ID: <20100121171103.3db5b496@lxorguk.ukuu.org.uk>
+References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:35027 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab0AUQ5o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 11:57:44 -0500
-Received: by fxm20 with SMTP id 20so214058fxm.1
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2010 08:57:42 -0800 (PST)
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59136 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753256Ab0AURIo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 12:08:44 -0500
+In-Reply-To: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Paul Check <paul@thechecks.ca>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+On Thu, 21 Jan 2010 10:57:39 -0500
+"Paul Check" <paul@thechecks.ca> wrote:
 
-I wish to be personally CC'ed the answers/comments posted to the list in 
-response to my posting.
- 
-Sorry, before I sent this massage to linux-kernel@.... by mistake.
+> I am having an intermittent problem:
+> 
+> ata1.01: SATA link down (SStatus 0 SControl 301)
+> 
+> which is causing one of my four hard drives to not get recognized.
+> 
+> This happens on ata1.01, ata2.00 or ata2.01, although it seems to happen
+> more on the 01 channels, I believe.  My motherboard is an ASUS P6T Deluxe
+> V2, with the Marvel 88SE61XX ATA controller.
 
-I have a disk array of 12 disks. The interface card has two sil3726 port 
-multiplier for 10 disks (5 disks in each port multiplier) and 2 direct 
-sata connectors. The host controller is sil3124. It was connected to 
-suse 10.4 and working fine.
+My first suspect would be power - that's a drive dropping off the link by
+the look of it. One thing you could try is swapping the cables over
+(first the SATA and then the power) and seeing if the problem moves with
+either.
 
-There was a high voltage accident (high voltage to disk array only, not 
-computer) and because of that we replaced the power supply of this disk 
-array. Now, we are getting some problem, disks are not being 
-recognized,. So, I connected it to Fedora 12 (To correct if it is 
-because of some bugs) with driver sil24. Here are few things that I have 
-tested.
+Do you get other errors (in particular a message about resetting) just
+before the link down error?
 
-1) If I connect only one disk to direct sata connector, it works fine.
-2) If I connect two disks to both direct sata connectors, it won't work.
-3) If I connect  one disk to one direct sata and one disk directly to 
-host controller, it works.
-3) If I connect one or more disk to PM, it won't work.
-4) If I connect one disk to direct sata and one to PM, it won't work.
+> Would deselecting the pata_marvell likely get rid of this problem? The
+> descriptor says:
 
-BIOS could not recognize the disk in case of failure. It says "Not valid 
-disk ..........".
+Probably not. The Marvell situation is this (ignoring Jeff's devel driver
+whose state I'm not sure of)
 
-Below is the error from dmesg in case of failure:
-==================================
-aic7xxx 0000:03:04.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-scsi2 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
-       <Adaptec aic7899 Ultra160 SCSI adapter>
-       aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+PATA_MARVELL - can drive SATA and PATA ports but without all the extra
+features
+AHCI - can drive Marvell SATA fully featured but not the PATA at all.
 
-sata_sil24 0000:03:02.0: version 1.1
-sata_sil24 0000:03:02.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-scsi3 : sata_sil24
-scsi4 : sata_sil24
-scsi5 : sata_sil24
-scsi6 : sata_sil24
-ata3: SATA max UDMA/100 host m128@0xea009000 port 0xea000000 irq 18
-ata4: SATA max UDMA/100 host m128@0xea009000 port 0xea002000 irq 18
-ata5: SATA max UDMA/100 host m128@0xea009000 port 0xea004000 irq 18
-ata6: SATA max UDMA/100 host m128@0xea009000 port 0xea006000 irq 18
-aic7xxx 0000:03:04.1: PCI INT B -> GSI 18 (level, low) -> IRQ 18
-ata3: SATA link down (SStatus 0 SControl 0)
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-ata4.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-ata4.00: hard resetting link
-ata4.00: SATA link down (SStatus 0 SControl 10)
-ata4.01: hard resetting link
-ata4.01: SATA link down (SStatus 0 SControl 320)
-ata4.02: hard resetting link
-ata4.02: SATA link down (SStatus 0 SControl 320)
-ata4.03: hard resetting link
-ata4.03: SATA link down (SStatus 0 SControl 320)
-ata4.04: hard resetting link
-ata4.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4.05: hard resetting link
-ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-ata4.04: failed to IDENTIFY (I/O error, err_mask=0x11)
-ata4.15: hard resetting link
-ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-...........................
-...........................
-===================================
+The kernel tries to select the AHCI driver if it sees no PATA drive is
+present. So you can turn it off on a SATA only box but I'd expect no
+change.
 
-I appreciate your help.
+> As I look through kern.log I see that the numbering on the ATA channels is
+> not always consistent.  For example, sometimes the Seagates come on
+> ata3.00, ata3.01, ata4.00 and ata4.01. Is this usual, or indicating a
+> problem with the controller/driver?
+> 
+> Regards, Paul (on list)
 
-Thanks
-Manojg
+Difficult to tell without more info.
