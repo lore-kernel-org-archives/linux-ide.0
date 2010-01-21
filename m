@@ -1,60 +1,24 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream 2/2] libata: implement spurious irq handling
- for SFF and apply it to piix
-Date: Thu, 21 Jan 2010 08:45:06 +0900
-Message-ID: <4B579582.4050806@kernel.org>
-References: <4B550EF8.1000009@kernel.org> <4B550F9F.80503@kernel.org> <4B575A84.3030005@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] libata-sff: remove CONFIG_NO_ATA_LEGACY
+Date: Thu, 21 Jan 2010 09:15:01 +0900
+Message-ID: <4B579C85.7010008@kernel.org>
+References: <20100120142943.GE3580@faui49.informatik.uni-erlangen.de> <4B579C4A.3040907@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36569 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:38422 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753246Ab0ATXnO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Jan 2010 18:43:14 -0500
-In-Reply-To: <4B575A84.3030005@garzik.org>
+	id S932124Ab0AUANh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Jan 2010 19:13:37 -0500
+In-Reply-To: <4B579C4A.3040907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Reinhard.Tartler@informatik.uni-erlangen.de
 
-Hello,
-
-On 01/21/2010 04:33 AM, Jeff Garzik wrote:
-> Overall, as long as the drive is in Bus-Idle mode, it should be safe to
-> go ahead and read Status, for pretty much every controller and drive.
-
-Hmmm... I was a bit worried about the case Alan mentioned several
-times where access to AltStatus while data transfer is going on can
-lead to silent data corruption.
-
-> I would make exception only for the new SATA FIS-based controllers,
-> where we know that hitting Status is likely both pointless and wasteful,
-> as well as being superfluous because the newer FIS-based controllers all
-> have irq status registers.
-
-FIS-based ones need their own interrupt handlers anyway so,
-fortunately, things like irq_check callback isn't necessary to begin
-with.  :-)
-
-> Additionally, I think we should have a "fast-timeout" and
-> "slow-timeout", whereby we check Status after a short period (5
-> seconds?) to make sure we did not lose an interrupt.  If Status is !BSY,
-> then we can proceed with handling qc success/failure immediately.
-
-Does this happen often?  What I find more common is just plain
-timeouts, so I think it would improve our exception latency if we
-apply different timeouts for each trial.  ie. For the first RW try,
-set the timeout to 7 secs.  For the second, 15 and then to 30.  This
-wouldn't harm the correctness while allowing libata to react much
-faster to transient failures.
-
-Another thing is I can think of which can improve our robustness is
-dynamic irqpoll support such that when screaming IRQ happens, IRQ
-subsystem not only shuts down the IRQ line but also begins selectively
-irqpolling it.
-
-Thanks.
+Oops, Jeff, please send this #upstream.  I was thinking #upstream but
+my fingers had their own mind.  Thanks.
 
 -- 
 tejun
