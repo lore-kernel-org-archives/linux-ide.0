@@ -1,29 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 08/64] pata_cmd64x: fix PIO setup
-Date: Wed, 20 Jan 2010 23:14:10 -0500
-Message-ID: <4B57D492.1060508@garzik.org>
-References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118171455.14623.81852.sendpatchset@localhost>
+Subject: Re: [PATCH 13/64] pata_cs5535: use correct values for PIO1 and PIO2
+ data timings
+Date: Wed, 20 Jan 2010 23:16:14 -0500
+Message-ID: <4B57D50E.9090907@garzik.org>
+References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118171538.14623.27441.sendpatchset@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752538Ab0AUEOX@vger.kernel.org>
-In-Reply-To: <20100118171455.14623.81852.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:38534 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806Ab0AUEQT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2010 23:16:19 -0500
+In-Reply-To: <20100118171538.14623.27441.sendpatchset@localhost>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
-On 01/18/2010 12:14 PM, Bartlomiej Zolnierkiewicz wrote:
+On 01/18/2010 12:15 PM, Bartlomiej Zolnierkiewicz wrote:
 > From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Subject: [PATCH] pata_cmd64x: fix PIO setup
+> Subject: [PATCH] pata_cs5535: use correct values for PIO1 and PIO2 data timings
 >
-> Fix incorrect handling of recovery clocks value == 16 resulting
-> in overclocked recovery timings&  potentially underclocked active
-> timings.
+> There shouldn't be any problems with it as IDE cs5535 host driver
+> has been using those values for years and they match values given
+> in the (publicly available) datasheet.
 >
 > Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
 > ---
->   drivers/ata/pata_cmd64x.c |    6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
+>   drivers/ata/pata_cs5535.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
-applied 8-11
+applied 13-14
+
+
