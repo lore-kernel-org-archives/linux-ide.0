@@ -1,43 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 05/64] pata_atiixp: remove superfluous wrapper function
-Date: Thu, 21 Jan 2010 12:23:16 +0100
-Message-ID: <201001211223.16924.bzolnier@gmail.com>
-References: <20100118171349.14623.90030.sendpatchset@localhost> <4B57D2E4.30203@garzik.org> <4B57D365.3040201@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes] libata-sff: remove CONFIG_NO_ATA_LEGACY
+Date: Thu, 21 Jan 2010 12:04:05 +0000
+Message-ID: <20100121120405.1085b6d3@lxorguk.ukuu.org.uk>
+References: <20100120142943.GE3580@faui49.informatik.uni-erlangen.de>
+	<4B579C4A.3040907@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:48973 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969Ab0AUL0Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 06:26:16 -0500
-In-Reply-To: <4B57D365.3040201@garzik.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39330 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752689Ab0AUMDw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 07:03:52 -0500
+In-Reply-To: <4B579C4A.3040907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Reinhard.Tartler@informatik.uni-erlangen.de
 
-On Thursday 21 January 2010 05:09:09 am Jeff Garzik wrote:
-> On 01/20/2010 11:07 PM, Jeff Garzik wrote:
-> > On 01/18/2010 12:14 PM, Bartlomiej Zolnierkiewicz wrote:
-> >> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> >> Subject: [PATCH] pata_atiixp: remove superfluous wrapper function
-> >>
-> >> Fix documentation for ->set_[pio,dma]mode methods while at it.
-> >>
-> >> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> >> ---
-> >> drivers/ata/pata_atiixp.c | 29 +++++++----------------------
-> >> 1 file changed, 7 insertions(+), 22 deletions(-)
-> >
-> > applied
+On Thu, 21 Jan 2010 09:14:02 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+> CONFIG_NO_ATA_LEGACY isn't used by anyone.  Drop it.
 > 
-> undone...  it broke the build, presumably because it requires something 
-> in your tree that's not in libata-dev.git
+> Reported-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-Jeff, as noted in the first mail those patches are against atang tree
-(which has many changes which are missing from your libata-dev tree)..
+Not unless this is cleared with the FRV maintainers who were using
+it and I believe may still need it.
 
---
-Bartlomiej Zolnierkiewicz
+Mr Howells ?
+
+
