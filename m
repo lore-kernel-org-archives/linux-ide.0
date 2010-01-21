@@ -1,71 +1,108 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA_SIL on IXP425 workaround
-Date: Thu, 21 Jan 2010 13:37:48 -0500
-Message-ID: <4B589EFC.6050002@garzik.org>
-References: <m33a4nfvva.fsf@intrepid.localdomain> <201001141659.19687.bzolnier@gmail.com> <4B57DEE9.8030604@garzik.org> <4B57F8D6.6080902@garzik.org>
+From: "Paul Check" <paul@thechecks.ca>
+Subject: Re: Intermittent SATA link down SStatus 0
+Date: Thu, 21 Jan 2010 14:24:35 -0500
+Message-ID: <fbae475f602d8f79f27d2d36be0de4f7.squirrel@thechecks.ca>
+References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:52718 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab0AUShv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 13:37:51 -0500
-In-Reply-To: <4B57F8D6.6080902@garzik.org>
+Received: from d72-38-7-254.commercial1.cgocable.net ([72.38.7.254]:3854 "EHLO
+	max" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754531Ab0AUTYg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jan 2010 14:24:36 -0500
+Received: from d72-38-7-254.commercial1.cgocable.net
+	([72.38.7.254] helo=thechecks.ca ident=www-data)
+	by max with esmtp (Exim 4.71)
+	(envelope-from <paul@thechecks.ca>)
+	id 1NY2du-0005Lr-WB
+	for linux-ide@vger.kernel.org; Thu, 21 Jan 2010 14:24:35 -0500
+In-Reply-To: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On 01/21/2010 01:48 AM, Jeff Garzik wrote:
-> On 01/20/2010 11:58 PM, Jeff Garzik wrote:
->> On 01/14/2010 10:59 AM, Bartlomiej Zolnierkiewicz wrote:
->>> On Monday 09 November 2009 06:31:21 pm Krzysztof Halasa wrote:
->>>> I'm trying to add a workaround for IXP4xx CPUs to SATA SIL driver. The
->>>> problem is that IXP4xx CPUs (Intel's XScale (ARM) network-oriented
->>>> processors) are unable to perform 8 and 16-bit read from PCI MMIO, they
->>>> can only do a full 32-bit readl(); SIL chips respond to that with PCI
->>>> abort. The workaround is to use 8 and 16-bit regular IO reads (inb/inw)
->>>> instead (MMIO write is not a problem).
->>>>
->>>> For SIL3x12 the workaround is simple (attached) and it works on my
->>>> 3512.
->>>> I'm not sure about 3114 (the 4-port chip) - the PIO BARs have TF, CTL
->>>> and BWDMA registers which are common to channels 0 and 2, and (the
->>>> other
->>>> set) to channels 1 and 3. Channel selection is done with bit 4 of
->>>> device/head TF register, this is similar (same?) as PATA master/slave.
->>>> Does that mean that I can simply treat channel 0 as PRI master, ch#2 as
->>>> PRI slave, ch#1 as SEC master and ch#3 as SEC slave, and the SFF code
->>>> will select the right device correctly? Does it need additional code?
->>>> I don't have anything based on 3114.
->>>>
->>>> Note: the large PRD is not a problem here, the transfer can be started
->>>> by MMIO write. Only reads are an issue.
->>>
->>> FWIW your patch is now in my atang tree (I'm aware that Jeff is working
->>> on generic solution but in the meantime this non-intrusive patch allows
->>> sata_sil to work on IXP425).
->>
->> I was asking an open question, is a generic solution possible?
->>
->> Something like the attached patch might work, due it is completely
->> untested, and I did not verify that the BMDMA Status register is not
->> stomped. Also, the additional ioread32() calls in bmdma start/stop are
->> LIKELY to be unnecessary.
+I decided to try running 2.6.31 without the pata_marvell anyway, just to
+see what would happen. It will be difficult to diagnose due to the fact
+that the problem was only intermittent, but here are some interesting
+observations so far:
+
+With my old 2.6.31 kernel and pata_marvell selected, I had been getting
+line such as the following in kern.log:
+
+kernel: [    1.293997] scsi0 : pata_marvell
+kernel: [    1.294093] scsi1 : pata_marvell
+
+Sometimes instead of scsi0 and scsi1 it would say scsi4 and scsi5.  It
+appears that when pata_marvell was associated with scsi0 and scsi1, my
+drives would register on ata3 and ata4.  But, when pata_marvell was
+associated with scsi4 and scsi5, the drives would be associated with ata1
+and ata2.  [Note: The four hard drives are plugged into sata ports 1
+through 4, the Sony BWU into port 5 and the front eSATA into port 6.]
+
+Now, with pata_marvell NOT compiled into the kernel, on the first try I am
+getting the hard drives on ata1.00, ata1.01, ata2.00 and ata2.01, and the
+Sony BWU on sata3, which seems "correct" given the ports I have the drives
+plugged into.
+
+Also, I now see:
+
+ata7: DUMMY
+
+whereas before this entry did not occur.
+
+So, it does appear that the pata_marvell module was at least responsible
+for the shifting ata entries (answering one of my questions). We'll see if
+it also gets rid of the much more serious link down problem.  I will try
+multiple reboots later to see if I can trigger that old bad link down
+behaviour.
+
+P
+
+> I am having an intermittent problem:
 >
-> As I suspected, there is a W1C register in there. But it does look
-> possible to do all-32-bit accesses.
-
-It is definitely possible to do all 32-bit accesses...  but that 
-requires activating and exclusively using the command buffering feature, 
-because direct 32-bit access to the taskfile registers will result in a 
-32-bit access to Data rather than the desired effect.
-
-The chip docs are at http://gkernel.sourceforge.net/specs/sii/ for those 
-unfamiliar with my doc archive.
-
-	Jeff
-
+> ata1.01: SATA link down (SStatus 0 SControl 301)
+>
+> which is causing one of my four hard drives to not get recognized.
+>
+> This happens on ata1.01, ata2.00 or ata2.01, although it seems to happen
+> more on the 01 channels, I believe.  My motherboard is an ASUS P6T Deluxe
+> V2, with the Marvel 88SE61XX ATA controller.
+>
+> I am running the 2.6.31 kernel.  A variety of ATA controllers are enabled
+> in my kernel (as per default?) including AHCI SATA Support (SATA_AHCI),
+> Marvell SATA Support (SATA_MV), Generic ATA Support (ATA_Generic), and
+> Marvell PATA Support via Legacy Mode (PATA_MARVELL), among others.
+>
+> I see that the pata, generic and ahci are getting loaded (from lsmod):
+>
+> libata                189532  4 pata_marvell,ata_generic,ahci,ata_piix
+>
+> I am not using hardware RAID (although do have software RAID 1 running).
+>
+> The BIOS for the board has been updated to the latest version.  The disks
+> are Seagate ST31000528AS 1 TB drives (4 of them, 2 sets of RAID 1).  I
+> also have a Sony BWU-300S plugged in.
+>
+> Would deselecting the pata_marvell likely get rid of this problem? The
+> descriptor says:
+>
+> As I look through kern.log I see that the numbering on the ATA channels is
+> not always consistent.  For example, sometimes the Seagates come on
+> ata3.00, ata3.01, ata4.00 and ata4.01. Is this usual, or indicating a
+> problem with the controller/driver?
+>
+> Regards, Paul (on list)
+>
+>
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
