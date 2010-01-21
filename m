@@ -1,58 +1,48 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Intermittent SATA link down SStatus 0
-Date: Thu, 21 Jan 2010 11:49:16 -0500
-Message-ID: <4B58858C.5080502@garzik.org>
-References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
+Subject: Re: [PATCH 05/64] pata_atiixp: remove superfluous wrapper function
+Date: Thu, 21 Jan 2010 11:50:13 -0500
+Message-ID: <4B5885C5.1010607@garzik.org>
+References: <20100118171349.14623.90030.sendpatchset@localhost> <4B57D2E4.30203@garzik.org> <4B57D365.3040201@garzik.org> <201001211223.16924.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:34516 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab0AUQtT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 11:49:19 -0500
-Received: by yxe17 with SMTP id 17so163655yxe.33
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2010 08:49:18 -0800 (PST)
-In-Reply-To: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:39804 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147Ab0AUQuQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 11:50:16 -0500
+In-Reply-To: <201001211223.16924.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Check <paul@thechecks.ca>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 01/21/2010 10:57 AM, Paul Check wrote:
-> I am having an intermittent problem:
+On 01/21/2010 06:23 AM, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 21 January 2010 05:09:09 am Jeff Garzik wrote:
+>> On 01/20/2010 11:07 PM, Jeff Garzik wrote:
+>>> On 01/18/2010 12:14 PM, Bartlomiej Zolnierkiewicz wrote:
+>>>> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+>>>> Subject: [PATCH] pata_atiixp: remove superfluous wrapper function
+>>>>
+>>>> Fix documentation for ->set_[pio,dma]mode methods while at it.
+>>>>
+>>>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+>>>> ---
+>>>> drivers/ata/pata_atiixp.c | 29 +++++++----------------------
+>>>> 1 file changed, 7 insertions(+), 22 deletions(-)
+>>>
+>>> applied
+>>
+>> undone...  it broke the build, presumably because it requires something
+>> in your tree that's not in libata-dev.git
 >
-> ata1.01: SATA link down (SStatus 0 SControl 301)
->
-> which is causing one of my four hard drives to not get recognized.
->
-> This happens on ata1.01, ata2.00 or ata2.01, although it seems to happen
-> more on the 01 channels, I believe.  My motherboard is an ASUS P6T Deluxe
-> V2, with the Marvel 88SE61XX ATA controller.
->
-> I am running the 2.6.31 kernel.  A variety of ATA controllers are enabled
-> in my kernel (as per default?) including AHCI SATA Support (SATA_AHCI),
-> Marvell SATA Support (SATA_MV), Generic ATA Support (ATA_Generic), and
-> Marvell PATA Support via Legacy Mode (PATA_MARVELL), among others.
->
-> I see that the pata, generic and ahci are getting loaded (from lsmod):
->
-> libata                189532  4 pata_marvell,ata_generic,ahci,ata_piix
->
-> I am not using hardware RAID (although do have software RAID 1 running).
->
-> The BIOS for the board has been updated to the latest version.  The disks
-> are Seagate ST31000528AS 1 TB drives (4 of them, 2 sets of RAID 1).  I
-> also have a Sony BWU-300S plugged in.
->
-> Would deselecting the pata_marvell likely get rid of this problem? The
-> descriptor says:
+> Jeff, as noted in the first mail those patches are against atang tree
+> (which has many changes which are missing from your libata-dev tree)..
 
-Link-down means the hardware is reporting that the link between host and 
-drive disconnected.  Removing unused or PATA drivers will probably not 
-have any effect.
+Yes, hence "presumably because it requires something in your tree"
 
-Check your SATA cables and/or power supply.
+Would you be willing to submit a push against the latest 
+libata-dev.git#upstream?
 
 	Jeff
 
