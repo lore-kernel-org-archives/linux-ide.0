@@ -1,25 +1,25 @@
-From: Robert Hancock <hancockrwd@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: PATA port not detected when using AHCI on Intel 82801GB/GR/GH
-Date: Thu, 21 Jan 2010 23:01:28 -0600
-Message-ID: <4B593128.1040104@gmail.com>
+Date: Fri, 22 Jan 2010 00:31:45 -0500
+Message-ID: <4B593841.2030900@garzik.org>
 References: <4B591D61.8030003@infernix.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f196.google.com ([209.85.223.196]:44314 "EHLO
-	mail-iw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745Ab0AVFBb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jan 2010 00:01:31 -0500
-Received: by iwn34 with SMTP id 34so696635iwn.21
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2010 21:01:30 -0800 (PST)
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:54282 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732Ab0AVFbr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jan 2010 00:31:47 -0500
+Received: by gxk9 with SMTP id 9so795046gxk.8
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2010 21:31:47 -0800 (PST)
 In-Reply-To: <4B591D61.8030003@infernix.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: infernix <infernix@infernix.net>
 Cc: linux-ide@vger.kernel.org
 
-On 01/21/2010 09:37 PM, infernix wrote:
+On 01/21/2010 10:37 PM, infernix wrote:
 > Hi,
 >
 > I've got an Intel SS4200(-ESW) here which according to lspci has an
@@ -57,7 +57,10 @@ On 01/21/2010 09:37 PM, infernix wrote:
 > consequence i lose 2 sata ports as can be seen in the dmesg output. Or I
 > could set it to full SATA but then the PATA port is rendered useless.
 
-If the board has PATA ports driven off the chipset, then in AHCI mode 
-you should get two devices showing up, one AHCI controller for the SATA 
-ports and one IDE controller for the PATA ports which ata_piix should 
-drive. Is that not happening on this board?
+What PCI device is the PATA port?  Does the pata_marvell driver enable it?
+
+Can you provide full lspci?
+
+	Jeff
+
+
