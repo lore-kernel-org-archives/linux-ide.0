@@ -1,66 +1,93 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: infernix <infernix@infernix.net>
 Subject: Re: PATA port not detected when using AHCI on Intel 82801GB/GR/GH
-Date: Fri, 22 Jan 2010 00:31:45 -0500
-Message-ID: <4B593841.2030900@garzik.org>
-References: <4B591D61.8030003@infernix.net>
+Date: Fri, 22 Jan 2010 13:57:49 +0100
+Message-ID: <4B59A0CD.4000801@infernix.net>
+References: <4B591D61.8030003@infernix.net> <4B593128.1040104@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:54282 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732Ab0AVFbr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jan 2010 00:31:47 -0500
-Received: by gxk9 with SMTP id 9so795046gxk.8
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2010 21:31:47 -0800 (PST)
-In-Reply-To: <4B591D61.8030003@infernix.net>
+Received: from dx.infernix.net ([83.96.151.193]:36450 "EHLO dx.infernix.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751658Ab0AVM5t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Jan 2010 07:57:49 -0500
+Received: from [192.168.0.3] (believe.infernix.lan [192.168.0.3])
+	by dx.infernix.net (8.14.3/8.14.3/Debian-5) with ESMTP id o0MCvjGY027565
+	for <linux-ide@vger.kernel.org>; Fri, 22 Jan 2010 13:57:46 +0100
+In-Reply-To: <4B593128.1040104@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: infernix <infernix@infernix.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 01/21/2010 10:37 PM, infernix wrote:
-> Hi,
->
-> I've got an Intel SS4200(-ESW) here which according to lspci has an
-> Intel 82801GB/GR/GH controller. It has 4 sata ports + 1 pata port in
-> which i have a 4GB IDE flash DOM. It also has a SIL 3132 for 2 external
-> eSATA ports. There are no disks connected to any of the SATA ports.
->
-> The bios allows for two modes:
->
-> - Compatible mode, which makes the kernel use ata_piix. lspci shows that
-> the chipset uses pci id 8086:27c0.
->
-> - Enhanced mode (with sub options IDE, RAID or AHCI - using AHCI here),
-> which of course makes the kernel use ahci. lspci shows the the chipset
-> now uses pci id 8086:27c1.
->
-> In compatible mode, the bios can be configured to make the pata
-> controller the first and the sata controller the second controller under
-> ata_piix. This works and I can boot off the IDE in the PATA DOM without
-> issues. The DOM works fine under ata_piix as /dev/sda.
->
-> The problem is with the Enhanced mode with the sub mode set to AHCI (or
-> IDE for that matter, it didn't change anything). In Enhanced AHCI mode,
-> the SATA ports are detected just fine, but the PATA port is not
-> detected. As I'm using an IDE DOM as root device, I can't boot in AHCI
-> mode.
->
-> What's weird though is that if I enable the old IDE PIIX driver, the
-> PATA port does get detected and the DOM shows up as /dev/hda. But
-> performance is abysmal, and since this is now deprecated we should try
-> to get the PATA port working while in Enhanced AHCI mode.
->
-> Running in compatible mode is not an option because this allows me to
-> chose PATA for controller 0 and SATA for controller 1, but as a
-> consequence i lose 2 sata ports as can be seen in the dmesg output. Or I
-> could set it to full SATA but then the PATA port is rendered useless.
+On 22/01/10 06:01, Robert Hancock wrote:
+> If the board has PATA ports driven off the chipset, then in AHCI mode
+> you should get two devices showing up, one AHCI controller for the SATA
+> ports and one IDE controller for the PATA ports which ata_piix should
+> drive. Is that not happening on this board?
 
-What PCI device is the PATA port?  Does the pata_marvell driver enable it?
+This is indeed the problem. In AHCI mode, the PATA port is undetected. 
+ata_piix does not handle it at all.
 
-Can you provide full lspci?
 
-	Jeff
+On 22/01/10 06:31, Jeff Garzik wrote:
+ > What PCI device is the PATA port? Does the pata_marvell driver enable it?
+
+In compatible mode it's /dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0 
+because i configured the bios to use PATA+SATA. This is the ICH7 
+controller (according to lspci).
+
+In Enhanced AHCI mode it does not show up at all on lspci. Poking around 
+in /sys shows that ide-gd is responsible for discovering hda; without 
+CONFIG_IDE, it's not found at all.
+
+The pata_marvell driver is unrelated, it only serves the two external 
+eSATA ports, nothing else. You can even see that it's situated close to 
+the eSATA ports whereas the Intel ICH7 SATA and PATA ports are on the 
+complete opposite side of the board: 
+http://ss4200.pbworks.com/f/IMG_2187.jpg
+
+Full mobo image here: http://ss4200.pbworks.com/f/CIMG0326.jpg
+
+ > Can you provide full lspci?
+
+Sure, compatible mode: 
+http://dx.infernix.net/ss4200/lspci-vv.compatible_mode
+
+Enhanced ahci mode: 
+http://dx.infernix.net/ss4200/lspci-vv.enhanced_ahci_mode
+
+And just for completion sake, here's what I have enabled in the normal 
+2.6.33-rc3 build:
+
+CONFIG_ATA=y
+CONFIG_ATA_VERBOSE_ERROR=y
+CONFIG_ATA_ACPI=y
+CONFIG_SATA_PMP=y
+CONFIG_SATA_AHCI=y
+CONFIG_SATA_SIL24=y
+CONFIG_ATA_SFF=y
+CONFIG_ATA_PIIX=y
+CONFIG_SATA_SIL=y
+CONFIG_PATA_ACPI=y
+CONFIG_ATA_GENERIC=y
+CONFIG_PATA_MPIIX=y
+CONFIG_PATA_OLDPIIX=y
+CONFIG_PATA_SCH=y
+# CONFIG_IDE is not set
+
+The build with the IDE driver also has:
+
+CONFIG_IDE=y
+CONFIG_IDE_XFER_MODE=y
+CONFIG_IDE_GD=y
+CONFIG_IDE_GD_ATA=y
+CONFIG_BLK_DEV_IDEACPI=y
+CONFIG_IDE_PROC_FS=y
+CONFIG_IDE_GENERIC=y
+CONFIG_BLK_DEV_IDEDMA_SFF=y
+CONFIG_BLK_DEV_IDEPCI=y
+CONFIG_IDEPCI_PCIBUS_ORDER=y
+CONFIG_BLK_DEV_IDEDMA_PCI=y
+CONFIG_BLK_DEV_IDEDMA=y
 
 
