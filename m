@@ -1,115 +1,64 @@
-From: Mike Cui <cuicui@gmail.com>
-Subject: Re: 2.6.32 seemed to have broken nVidia MCP7A sata controller
-Date: Thu, 21 Jan 2010 15:48:30 -0800
-Message-ID: <7c8826911001211548l532a8f39y65b13b3ea4d0f93c@mail.gmail.com>
-References: <7c8826910912182213o2e0e8af7ic305f150c52e0618@mail.gmail.com>
-	 <4B2C80DD.9080005@garzik.org> <4B2D1CF3.4070106@gmail.com>
-	 <7c8826910912191437k4e1d93bap12874a6d6e0046d3@mail.gmail.com>
-	 <51f3faa70912271352g2784edc8oc899bd6def7b7275@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream 2/2] libata: implement spurious irq handling
+ for SFF and apply it to piix
+Date: Fri, 22 Jan 2010 09:36:36 +0900
+Message-ID: <4B58F314.9070606@kernel.org>
+References: <4B550EF8.1000009@kernel.org> <4B550F9F.80503@kernel.org> <4B575A84.3030005@garzik.org> <4B579582.4050806@kernel.org> <4B588664.4040602@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:33286 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755343Ab0AUXsb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 18:48:31 -0500
-In-Reply-To: <51f3faa70912271352g2784edc8oc899bd6def7b7275@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:55113 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751898Ab0AVAem (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jan 2010 19:34:42 -0500
+In-Reply-To: <4B588664.4040602@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Hans Werner <hwerner4@gmx.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-I finally got a chance to try this on an x58 motherboard. It works
-fine. It looks like the nvidia controller is the problem. Or maybe
-it's just my motherboard.
+On 01/22/2010 01:52 AM, Jeff Garzik wrote:
+>> Hmmm... I was a bit worried about the case Alan mentioned several
+>> times where access to AltStatus while data transfer is going on can
+>> lead to silent data corruption.
+> 
+> If a drive is in Bus-Idle, as I mentioned, then there is no active data
+> transfer.
+
+Oh, you meant reading status instead of altstatus?
+
+>> Does this happen often?  What I find more common is just plain
+>> timeouts, so I think it would improve our exception latency if we
+>> apply different timeouts for each trial.  ie. For the first RW try,
+>> set the timeout to 7 secs.  For the second, 15 and then to 30.  This
+>> wouldn't harm the correctness while allowing libata to react much
+>> faster to transient failures.
+> 
+> Lost interrupts do not happen often, but they do happen.  Google finds
+> plenty of examples.
+
+Yeap, but genuine timeouts seem to happen more commonly and shortening
+initial timeout would also work for non-SFF controllers, so I think
+it would be better to do that instead.
+
+>> Another thing is I can think of which can improve our robustness is
+>> dynamic irqpoll support such that when screaming IRQ happens, IRQ
+>> subsystem not only shuts down the IRQ line but also begins selectively
+>> irqpolling it.
+> 
+> Does this ever happen when data transfer is active?  AFAIK this happens
+> during probe or reset or set-xfer or bus-idle or some other auxiliary
+> moment in time.
+
+It usually does but there are other components too.  A USB host in my
+x61s often causes IRQ storm after STR cycle.  There also was a strange
+I2C device which shared IRQ line with ATA controller and killed the
+IRQ line when the system status changed.  It's just that with
+shareable IRQs, there's no reason the kernel should be this
+vulnereable to these not-so-uncommon failure modes.
 
 Thanks.
 
-On Sun, Dec 27, 2009 at 1:52 PM, Robert Hancock <hancockrwd@gmail.com> =
-wrote:
-> On Sat, Dec 19, 2009 at 4:37 PM, Mike Cui <cuicui@gmail.com> wrote:
->> Thanks, changing that one line fixed it. I can try to find an intel
->> motherboard sometime next week to see if it's the drive or the
->> controller.
->
-> Hi Mike, did you ever get a chance to try this test?
->
->>
->> On Sat, Dec 19, 2009 at 10:35 AM, Robert Hancock <hancockrwd@gmail.c=
-om> wrote:
->>> On 12/19/2009 01:29 AM, Jeff Garzik wrote:
->>>>
->>>> On 12/19/2009 01:13 AM, Mike Cui wrote:
->>>>>
->>>>> I have an nVidia MCP7A AHCI controller. I upgraded to 2.6.32.2 an=
-d my
->>>>> system deterministically freezes trying to mount file systems. On=
-ce in
->>>>> a while it will come back and finish booting after freezing for 1
->>>>> minute or 2. dmesg indicates that there were NCQ errors, but 2.6.=
-31
->>>>> anb before has always worked flawlessly for me. What changed in
->>>>> 2.6.32? I will be more than happy to help track down this issue.
->>>>
->>>>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
->>>>> ata1.00: cmd 61/08:00:4f:ad:03/00:00:00:00:00/40 tag 0 ncq 4096 o=
-ut
->>>>> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->>>>> ata1: hard resetting link
->>>>> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>>> ata1.00: configured for UDMA/133
->>>>> ata1.00: device reported invalid CHS sector 0
->>>>
->>>> Looks like things are timing out, and then go downhill from there.=
- This
->>>> explanation of timeout gives some hints on possible causes:
->>>> http://ata.wiki.kernel.org/index.php/Libata_error_messages#Error_c=
-lasses
->>>>
->>>> The ideal would be if you could bisect between 2.6.31 and 2.6.32, =
-to see
->>>> if it's a software change that is the cause.
->>>>
->>>> Looking at drivers/ata/ahci.c history, the only thing that -might-=
- cause
->>>> problems is 388539f3ff0cf1de926b03f94e1eec112358f74d ('git show $c=
-ommit'
->>>> for full commit info and diff).
->>>
->>> I suspect that as well (it's the commit that adds FPDMA auto-activa=
-te on DMA
->>> setup FIS support). Your drive indicates it's supported but it's po=
-ssible
->>> it's broken on that drive or the controller. If the drive doesn't s=
-et the
->>> activate bit in the DMA setup FIS properly or the controller doesn'=
-t respect
->>> it, then FPDMA requests will stall.
->>>
->>> Mike, can you try and revert that patch, or else just change this l=
-ine in
->>> drivers/ata/ahci.c:
->>>
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pi.flags |=3D=
- ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
->>>
->>> to
->>>
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pi.flags |=3D=
- ATA_FLAG_NCQ;
->>>
->>> and rebuild and see if it works better?
->>>
->>> I tend to suspect the controller is the problem (I've got WD drives=
- that
->>> work fine with AA on Intel AHCI, though it could be model-specific)=
-=2E I guess
->>> the only way to verify for sure which one it is would be if someone=
- else had
->>> that particular drive model on a different AHCI controller and coul=
-d verify
->>> if it worked with 2.6.32+ or not.
->>>
->>
->
+-- 
+tejun
