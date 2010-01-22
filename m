@@ -1,122 +1,45 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: 2.6.32 seemed to have broken nVidia MCP7A sata controller
-Date: Thu, 21 Jan 2010 18:36:43 -0600
-Message-ID: <51f3faa71001211636s52a68af3u66f2832d81e7cbc0@mail.gmail.com>
-References: <7c8826910912182213o2e0e8af7ic305f150c52e0618@mail.gmail.com>
-	 <4B2C80DD.9080005@garzik.org> <4B2D1CF3.4070106@gmail.com>
-	 <7c8826910912191437k4e1d93bap12874a6d6e0046d3@mail.gmail.com>
-	 <51f3faa70912271352g2784edc8oc899bd6def7b7275@mail.gmail.com>
-	 <7c8826911001211548l532a8f39y65b13b3ea4d0f93c@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH #upstream-fixes] libata-sff: remove CONFIG_NO_ATA_LEGACY
+Date: Fri, 22 Jan 2010 09:48:54 +0900
+Message-ID: <4B58F5F6.9090001@gmail.com>
+References: <20100120142943.GE3580@faui49.informatik.uni-erlangen.de>	<4B579C4A.3040907@gmail.com> <20100121120405.1085b6d3@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f196.google.com ([209.85.223.196]:60696 "EHLO
-	mail-iw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438Ab0AVAgs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 19:36:48 -0500
-In-Reply-To: <7c8826911001211548l532a8f39y65b13b3ea4d0f93c@mail.gmail.com>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:58886 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754113Ab0AVAqi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2010 19:46:38 -0500
+In-Reply-To: <20100121120405.1085b6d3@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Cui <cuicui@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Reinhard.Tartler@informatik.uni-erlangen.de, David Howells <dhowells@redhat.com>
 
-On Thu, Jan 21, 2010 at 5:48 PM, Mike Cui <cuicui@gmail.com> wrote:
-> I finally got a chance to try this on an x58 motherboard. It works
-> fine. It looks like the nvidia controller is the problem. Or maybe
-> it's just my motherboard.
+(cc'ing David Howells, who BTW is on vacation till Feb) Hi!
 
-I'll try and cook up a patch to disable AA on this chipset. Can you
-post the output of "lspci -nn" ?
+On 01/21/2010 09:04 PM, Alan Cox wrote:
+> On Thu, 21 Jan 2010 09:14:02 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> CONFIG_NO_ATA_LEGACY isn't used by anyone.  Drop it.
+>>
+>> Reported-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+>> Signed-off-by: Tejun Heo <tj@kernel.org>
+> 
+> Not unless this is cleared with the FRV maintainers who were using
+> it and I believe may still need it.
+> 
+> Mr Howells ?
 
->
-> Thanks.
->
-> On Sun, Dec 27, 2009 at 1:52 PM, Robert Hancock <hancockrwd@gmail.com=
-> wrote:
->> On Sat, Dec 19, 2009 at 4:37 PM, Mike Cui <cuicui@gmail.com> wrote:
->>> Thanks, changing that one line fixed it. I can try to find an intel
->>> motherboard sometime next week to see if it's the drive or the
->>> controller.
->>
->> Hi Mike, did you ever get a chance to try this test?
->>
->>>
->>> On Sat, Dec 19, 2009 at 10:35 AM, Robert Hancock <hancockrwd@gmail.=
-com> wrote:
->>>> On 12/19/2009 01:29 AM, Jeff Garzik wrote:
->>>>>
->>>>> On 12/19/2009 01:13 AM, Mike Cui wrote:
->>>>>>
->>>>>> I have an nVidia MCP7A AHCI controller. I upgraded to 2.6.32.2 a=
-nd my
->>>>>> system deterministically freezes trying to mount file systems. O=
-nce in
->>>>>> a while it will come back and finish booting after freezing for =
-1
->>>>>> minute or 2. dmesg indicates that there were NCQ errors, but 2.6=
-=2E31
->>>>>> anb before has always worked flawlessly for me. What changed in
->>>>>> 2.6.32? I will be more than happy to help track down this issue.
->>>>>
->>>>>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
->>>>>> ata1.00: cmd 61/08:00:4f:ad:03/00:00:00:00:00/40 tag 0 ncq 4096 =
-out
->>>>>> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->>>>>> ata1: hard resetting link
->>>>>> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>>>> ata1.00: configured for UDMA/133
->>>>>> ata1.00: device reported invalid CHS sector 0
->>>>>
->>>>> Looks like things are timing out, and then go downhill from there=
-=2E This
->>>>> explanation of timeout gives some hints on possible causes:
->>>>> http://ata.wiki.kernel.org/index.php/Libata_error_messages#Error_=
-classes
->>>>>
->>>>> The ideal would be if you could bisect between 2.6.31 and 2.6.32,=
- to see
->>>>> if it's a software change that is the cause.
->>>>>
->>>>> Looking at drivers/ata/ahci.c history, the only thing that -might=
-- cause
->>>>> problems is 388539f3ff0cf1de926b03f94e1eec112358f74d ('git show $=
-commit'
->>>>> for full commit info and diff).
->>>>
->>>> I suspect that as well (it's the commit that adds FPDMA auto-activ=
-ate on DMA
->>>> setup FIS support). Your drive indicates it's supported but it's p=
-ossible
->>>> it's broken on that drive or the controller. If the drive doesn't =
-set the
->>>> activate bit in the DMA setup FIS properly or the controller doesn=
-'t respect
->>>> it, then FPDMA requests will stall.
->>>>
->>>> Mike, can you try and revert that patch, or else just change this =
-line in
->>>> drivers/ata/ahci.c:
->>>>
->>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pi.flags |=3D ATA_FLAG_NCQ | ATA_FL=
-AG_FPDMA_AA;
->>>>
->>>> to
->>>>
->>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pi.flags |=3D ATA_FLAG_NCQ;
->>>>
->>>> and rebuild and see if it works better?
->>>>
->>>> I tend to suspect the controller is the problem (I've got WD drive=
-s that
->>>> work fine with AA on Intel AHCI, though it could be model-specific=
-). I guess
->>>> the only way to verify for sure which one it is would be if someon=
-e else had
->>>> that particular drive model on a different AHCI controller and cou=
-ld verify
->>>> if it worked with 2.6.32+ or not.
->>>>
->>>
->>
->
+David, the patch in question is,
+
+  http://lkml.org/lkml/2010/1/20/396
+
+Does FRV still need it?
+
+Thanks.
+
+-- 
+tejun
