@@ -1,55 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_nv times out for BD-ROM iHOS104-08
-Date: Sat, 23 Jan 2010 12:45:41 +0900
-Message-ID: <4B5A70E5.6050106@kernel.org>
-References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<4B31C8EE.3030003@kernel.org> <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com> 	<4B331771.3090309@kernel.org> <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com> 	<4B5666B4.6000804@kernel.org> <51f3faa71001191859l3c323a8ev6b7c0cced2c59e92@mail.gmail.com> <d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATA port not detected when using AHCI on Intel 82801GB/GR/GH
+Date: Sat, 23 Jan 2010 10:14:57 +0000
+Message-ID: <20100123101457.7f8cbb3f@lxorguk.ukuu.org.uk>
+References: <4B591D61.8030003@infernix.net>
+	<4B593128.1040104@gmail.com>
+	<4B59A0CD.4000801@infernix.net>
+	<4B5A4F7A.4040709@gmail.com>
+	<4B5A5F09.1070300@infernix.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48182 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752146Ab0AWIzN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 23 Jan 2010 03:55:13 -0500
-In-Reply-To: <d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52081 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754715Ab0AWKMz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jan 2010 05:12:55 -0500
+In-Reply-To: <4B5A5F09.1070300@infernix.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Cengiz_G=FCnay?= <cgunay@emory.edu>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: infernix <infernix@infernix.net>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-Hello,
+> Can we force ata_piix to pick up the IDE controller? I mean the old IDE 
+> PIIX driver can do it (albeit terribly slow), so why can't ata_piix? I 
 
-On 01/22/2010 11:11 PM, Cengiz G=FCnay wrote:
-> On Tue, Jan 19, 2010 at 9:59 PM, Robert Hancock <hancockrwd@gmail.com=
-> wrote:
->>>> 2009/12/24 Tejun Heo <tj@kernel.org>:
->>> Hmm.... it worked?  Does kernel parameter sata_nv.adma_enabled=3D0 =
-make
->>> any difference?  Can you please attach boot log with the kernel
->>> parameter specified?
->>
->> Think you meant maybe sata_nv.swncq=3D0 instead - this is an MCP51
->> controller so it doesn't support ADMA. I don't imagine SWNCQ would
->> make any difference with an ATAPI device, but wouldn't hurt to try.
->=20
-> Thanks for following this up. I tried both of your suggested kernel
-> parameters (attached). Neither solved my problem, but also it looks
-> like I couldn't turn off the SWNCQ mode. Even though I set it to zero=
-,
-> sata_nv still shows that it uses it. Although the order of my devices
-> changed, so I assume it did something.
+I doubt PIIX is doing it - the legacy IDE bits are.
 
-The parameter isn't being passed to the module loaded by initrd.  You
-probably need to edit modules.conf and then regenerate initrd.  :-(
+What I think is going on is this (and I don't have docs so I am guessing)
 
-> I hope this helps shed some light! I will also try the kernel patch -=
--
-> not sure if that is suited for the problem I'm having?
+	- The SOHO NAS has the IDE DOM wired to the LPC bus somewhere
+	  directly (as legacy IDE)
+	- The PATA port is intentionally disabled by the firmware to make
+	  room for the DOM.
 
-Yeah, I was about to suggest trying the patch.  It could be that the
-timeout used by the new TUR code is too aggressive.
+In which case loading "pata_legacy" ought to make the right magic occur.
+Can you send me an
 
-Thanks.
+If that is the case I suspect the PIIX PATA port is not used at all
+by the sytstem (is it even wired to pins anywhere ?). If it is used then
+presumably the original NAS firmware does something truely hideous along
+the lines of
 
---=20
-tejun
+-	Load boot image from DOM
+-	Turn off DOM/on PIIX
+-	Start using PIIX
+
+Alan
