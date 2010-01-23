@@ -1,76 +1,55 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: PATA port not detected when using AHCI on Intel 82801GB/GR/GH
-Date: Sat, 23 Jan 2010 01:18:24 -0600
-Message-ID: <51f3faa71001222318k573d95e6h422b2cd3276e61@mail.gmail.com>
-References: <4B591D61.8030003@infernix.net> <4B593128.1040104@gmail.com>
-	 <4B59A0CD.4000801@infernix.net> <4B5A4F7A.4040709@gmail.com>
-	 <4B5A5F09.1070300@infernix.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: sata_nv times out for BD-ROM iHOS104-08
+Date: Sat, 23 Jan 2010 12:45:41 +0900
+Message-ID: <4B5A70E5.6050106@kernel.org>
+References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<4B31C8EE.3030003@kernel.org> <d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com> 	<4B331771.3090309@kernel.org> <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com> 	<4B5666B4.6000804@kernel.org> <51f3faa71001191859l3c323a8ev6b7c0cced2c59e92@mail.gmail.com> <d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f186.google.com ([209.85.223.186]:60333 "EHLO
-	mail-iw0-f186.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932066Ab0AWHS1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jan 2010 02:18:27 -0500
-Received: by iwn16 with SMTP id 16so776501iwn.33
-        for <linux-ide@vger.kernel.org>; Fri, 22 Jan 2010 23:18:24 -0800 (PST)
-In-Reply-To: <4B5A5F09.1070300@infernix.net>
+Received: from hera.kernel.org ([140.211.167.34]:48182 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752146Ab0AWIzN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Jan 2010 03:55:13 -0500
+In-Reply-To: <d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: infernix <infernix@infernix.net>
-Cc: linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?Cengiz_G=FCnay?= <cgunay@emory.edu>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Jan 22, 2010 at 8:29 PM, infernix <infernix@infernix.net> wrote=
-:
-> On 23/01/10 02:23, Robert Hancock wrote:
+Hello,
+
+On 01/22/2010 11:11 PM, Cengiz G=FCnay wrote:
+> On Tue, Jan 19, 2010 at 9:59 PM, Robert Hancock <hancockrwd@gmail.com=
+> wrote:
+>>>> 2009/12/24 Tejun Heo <tj@kernel.org>:
+>>> Hmm.... it worked?  Does kernel parameter sata_nv.adma_enabled=3D0 =
+make
+>>> any difference?  Can you please attach boot log with the kernel
+>>> parameter specified?
 >>
->> =A0From what I can gather from the ICH7 datasheet, when using AHCI t=
-he IDE
->> controller is supposed to show up as device 1f.1 and the SATA contro=
-ller
->> as 1f.2. It seems like for some reason your BIOS is disabling the ID=
-E
->> controller entirely in that mode, which appears rather wrong.
->
-> Well kind of, but not completely since that old IDE PIIX driver does =
-work
-> when its set to Enhanced AHCI. It's just that it doesn't show up on t=
-he PCI
-> bus, or so it seems at least.
->
->> Do you have the latest BIOS for that board?
->
-> Yes, but it's a SOHO NAS box by Intel; the SS4200-E is the branded on=
-e that
-> comes with some kind of EMC NAS software, and the ESW is the OEM vers=
-ion
-> which is sold under various names, without the software. I've got the
-> latter.
->
-> In either case, there's no BIOS upgrades, only "firmware" which is th=
-e EMC
-> NAS stuff that gets shipped with the -E version, and Intel put up a n=
-otice
-> on Jan 10th that the product is discontinued since Dec '09. So that's=
- a dead
-> end.
->
-> Can we force ata_piix to pick up the IDE controller? I mean the old I=
-DE PIIX
-> driver can do it (albeit terribly slow), so why can't ata_piix? I won=
-'t lose
-> sleep if I have to pass an option to the kernel or modprobe for this =
-to
-> happen as it's an uncommon case.
+>> Think you meant maybe sata_nv.swncq=3D0 instead - this is an MCP51
+>> controller so it doesn't support ADMA. I don't imagine SWNCQ would
+>> make any difference with an ATAPI device, but wouldn't hurt to try.
+>=20
+> Thanks for following this up. I tried both of your suggested kernel
+> parameters (attached). Neither solved my problem, but also it looks
+> like I couldn't turn off the SWNCQ mode. Even though I set it to zero=
+,
+> sata_nv still shows that it uses it. Although the order of my devices
+> changed, so I assume it did something.
 
-I don't think it actually is the IDE PIIX driver that's picking it up,
-it's the generic IDE driver which detects it by banging ports
-randomly, and doesn't know anything about DMA support, which is likely
-why it's so slow. ata_piix doesn't know about anything that doesn't
-show up on the PCI bus.
+The parameter isn't being passed to the module loaded by initrd.  You
+probably need to edit modules.conf and then regenerate initrd.  :-(
 
-Since the chipset does have open documentation, one might be able to
-develop a PCI quirk that would re-enable the disabled IDE interface so
-that ata_piix can access it. That would likely be the best option,
-albeit still rather ugly and highly system-specific..
+> I hope this helps shed some light! I will also try the kernel patch -=
+-
+> not sure if that is suited for the problem I'm having?
+
+Yeah, I was about to suggest trying the patch.  It could be that the
+timeout used by the new TUR code is too aggressive.
+
+Thanks.
+
+--=20
+tejun
