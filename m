@@ -1,38 +1,34 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH] hdparm: Fix error in sector offset reporting
-Date: Sun, 24 Jan 2010 01:16:33 -0500
-Message-ID: <4B5BE5C1.4030703@teksavvy.com>
-References: <yq1fx5wwryk.fsf@sermon.lab.mkp.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Intermittent SATA link down SStatus 0
+Date: Mon, 25 Jan 2010 14:06:55 +0900
+Message-ID: <4B5D26EF.4030709@kernel.org>
+References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:18179 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751110Ab0AXG1l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jan 2010 01:27:41 -0500
-In-Reply-To: <yq1fx5wwryk.fsf@sermon.lab.mkp.net>
+Received: from hera.kernel.org ([140.211.167.34]:47724 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776Ab0AYFAk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jan 2010 00:00:40 -0500
+In-Reply-To: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Paul Check <paul@thechecks.ca>
 Cc: linux-ide@vger.kernel.org
 
-Martin K. Petersen wrote:
-> The sector offset reporting is off by a factor of two...
+On 01/22/2010 12:57 AM, Paul Check wrote:
+> I am having an intermittent problem:
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ata1.01: SATA link down (SStatus 0 SControl 301)
 > 
-> diff -urN -X /home/mkp/bin/dontdiff hdparm-9.27.orig/identify.c hdparm-9.27/identify.c
-> --- hdparm-9.27.orig/identify.c	2009-08-20 10:31:01.000000000 -0400
-> +++ hdparm-9.27/identify.c	2010-01-23 14:07:43.000000000 -0500
-> @@ -938,7 +938,7 @@
->  			printf("\t%-31s %11u bytes\n","Physical Sector size:", sector_bytes * pfactor);
->  			if ((val[209] & 0xc000) == 0x4000) {
->  				unsigned int offset = val[209] & 0x1fff;
-> -				printf("\t%-31s %11u bytes\n", "Logical Sector-0 offset:", offset * lsize);
-> +				printf("\t%-31s %11u bytes\n", "Logical Sector-0 offset:", offset * sector_bytes);
-..
+> which is causing one of my four hard drives to not get recognized.
 
-Thanks, applied.   I *like* easy fixes like that!
+Most likely fixed by commit 5040ab67a2c6d5710ba497dc52a8f7035729d7b0.
+Can you please try 2.6.33-rc5?
 
--ml
+Thanks.
+
+-- 
+tejun
+
