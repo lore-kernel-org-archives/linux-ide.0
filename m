@@ -1,34 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Intermittent SATA link down SStatus 0
-Date: Mon, 25 Jan 2010 14:06:55 +0900
-Message-ID: <4B5D26EF.4030709@kernel.org>
-References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Mon, 25 Jan 2010 14:56:34 GMT
+Message-ID: <201001251456.o0PEuYSu019495@demeter.kernel.org>
+References: <bug-12874-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47724 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750776Ab0AYFAk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Jan 2010 00:00:40 -0500
-In-Reply-To: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
+Received: from demeter.kernel.org ([140.211.167.39]:60680 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773Ab0AYO4e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jan 2010 09:56:34 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0PEuYOD019496
+	for <linux-ide@vger.kernel.org>; Mon, 25 Jan 2010 14:56:34 GMT
+In-Reply-To: <bug-12874-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Check <paul@thechecks.ca>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 01/22/2010 12:57 AM, Paul Check wrote:
-> I am having an intermittent problem:
-> 
-> ata1.01: SATA link down (SStatus 0 SControl 301)
-> 
-> which is causing one of my four hard drives to not get recognized.
+http://bugzilla.kernel.org/show_bug.cgi?id=12874
 
-Most likely fixed by commit 5040ab67a2c6d5710ba497dc52a8f7035729d7b0.
-Can you please try 2.6.33-rc5?
 
-Thanks.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+     Kernel Version|2.6.29-rc7                  |2.6.32
+
+
+
 
 -- 
-tejun
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
