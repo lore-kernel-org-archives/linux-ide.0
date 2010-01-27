@@ -1,38 +1,46 @@
-From: Vishal Rao <vishalrao@gmail.com>
+From: David Rees <drees76@gmail.com>
 Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
-Date: Wed, 27 Jan 2010 05:54:56 +0530
-Message-ID: <aacba7e1001261624m4358e4ebwcf8e2305b0c5fc16@mail.gmail.com>
+Date: Tue, 26 Jan 2010 16:32:49 -0800
+Message-ID: <72dbd3151001261632t7bbe43d0nb7490eae02185c81@mail.gmail.com>
 References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>
-	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>
-	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
-	 <4B5F62C2.4000800@pobox.com>
+	<20100126160243.018b87e3@lxorguk.ukuu.org.uk> <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
+	<72dbd3151001261251s606ebf00h86c2ce63293305b6@mail.gmail.com>
+	<aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:38940 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679Ab0A0AZH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2010 19:25:07 -0500
-In-Reply-To: <4B5F62C2.4000800@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754183Ab0A0Ad0@vger.kernel.org>
+In-Reply-To: <aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vishal Rao <vishalrao@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
 
-2010/1/27 Jeff Garzik <jgarzik@pobox.com>:
-> On 01/26/2010 11:19 AM, Vishal Rao wrote:
->> 2010/1/26 Alan Cox<alan@lxorguk.ukuu.org.uk>:
->>> What controllers did you test with ?
->> Tested with my own Crucial CT128M225 model which has the IndiLinx
->> Barefoot controller.
+On Tue, Jan 26, 2010 at 4:21 PM, Vishal Rao <vishalrao@gmail.com> wrote:
+> 2010/1/27 David Rees <drees76@gmail.com>:
+>> Have there been any other reports of NCQ issues with similar Crucial
+>> drives or Indilinx?
 >
-> By controller, I think Alan meant the host controller (ata_piix, ahci,
-> etc.)?
+> I haven't personally seen reports of NCQ specific issues. I have seen
+> people (online) reporting "issues" with Linux distro installations
+> hanging/freezing etc. and some prior attempts at SMART fixes which
+> I also initially tried but did not work for me.
+>
+> I have tried to "publicise" this issue (forum, blog, mailing list posts)
+> in the hope more users may search and identify the correct issue
+> so that it may be better verified.
 
-Oh I see, I have an Intel DP35DP motherboard with onboard IDE controller
-with AHCI enabled. I hope thats sufficient information for now. I did read
-that simply setting the mode to legacy IDE would disable NCQ there but
-would disable for all drives connected.
+See, that's just the problem.  I'm running couple OCZ SSD with an
+Indilinx controller and also know that Mark Lord and a bunch of others
+are also running them on Linux without issues.  And supposedly all the
+Indilinx firmware for the different resellers are based on the same
+base firmware.
 
-Please let me know if further info/log files (dmesg, lspci etc) would help
-and I will pastebin them...
+I did have an issue with one of them on a particular motherboard
+locking up, but it turned out that the whole SATA controller was flaky
+and went away after I replaced the motherboard.
+
+So my concern is that you're proposing to black list NCQ for all users
+of those particular models of SSD when it's more likely at this point
+that it's a problem with your specific setup.
+
+-Dave
