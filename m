@@ -1,40 +1,57 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
-Date: Tue, 26 Jan 2010 21:23:06 -0500
-Message-ID: <4B5FA38A.5040700@teksavvy.com>
-References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>	 <4B5F62C2.4000800@pobox.com> <aacba7e1001261624m4358e4ebwcf8e2305b0c5fc16@mail.gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: [PATCH] ahci: disable FPDMA auto-activate optimization on NVIDIA
+ AHCI
+Date: Tue, 26 Jan 2010 22:33:23 -0600
+Message-ID: <4B5FC213.1060601@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754660Ab0A0CXM@vger.kernel.org>
-In-Reply-To: <aacba7e1001261624m4358e4ebwcf8e2305b0c5fc16@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vishal Rao <vishalrao@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f186.google.com ([209.85.223.186]:52985 "EHLO
+	mail-iw0-f186.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953Ab0A0Edj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2010 23:33:39 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+Cc: Mike Cui <cuicui@gmail.com>, Peer Chen <pchen@nvidia.com>
 
-Vishal Rao wrote:
-> 2010/1/27 Jeff Garzik <jgarzik@pobox.com>:
->> On 01/26/2010 11:19 AM, Vishal Rao wrote:
->>> 2010/1/26 Alan Cox<alan@lxorguk.ukuu.org.uk>:
->>>> What controllers did you test with ?
->>> Tested with my own Crucial CT128M225 model which has the IndiLinx
->>> Barefoot controller.
->> By controller, I think Alan meant the host controller (ata_piix, ahci,
->> etc.)?
-> 
-> Oh I see, I have an Intel DP35DP motherboard with onboard IDE controller
-> with AHCI enabled. I hope thats sufficient information for now. I did read
-> that simply setting the mode to legacy IDE would disable NCQ there but
-> would disable for all drives connected.
-> 
-> Please let me know if further info/log files (dmesg, lspci etc) would help
-> and I will pastebin them...
-..
+Mike Cui reported that his system with an NVIDIA MCP79 (aka MCP7A) chipset
+stopped working with 2.6.32. The problem appears to be that 2.6.32 now enables
+the FPDMA auto-activate optimization in the ahci driver. The drive works fine
+with this enabled on an Intel AHCI so this appears to be a chipset bug.
+Since MCP79 is a fairly recent NVIDIA chipset and we don't have any info on
+whether any other NVIDIA chipsets have this issue, disable FPDMA AA optimization
+on all NVIDIA AHCI controllers for now.
 
-Can you identify the specific Indilinx build number that your drive firmware
-is based upon?  If not, then at least post the identify data for us to examine:
+Should address http://bugzilla.kernel.org/show_bug.cgi?id=14922
 
-   hdparm --Istdout /dev/sd?
+Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
 
--ml
+---
+
+Mike, can you test this out and make sure this resolves the problem for you?
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index b8bea10..47e57dc 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -3067,8 +3067,16 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ahci_save_initial_config(pdev, hpriv);
+ 
+ 	/* prepare host */
+-	if (hpriv->cap & HOST_CAP_NCQ)
+-		pi.flags |= ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
++	if (hpriv->cap & HOST_CAP_NCQ) {
++		pi.flags |= ATA_FLAG_NCQ;
++		/* Auto-activate optimization is supposed to be supported on
++		   all AHCI controllers indicating NCQ support, but it seems
++		   to be broken at least on some NVIDIA MCP79 chipsets.
++		   Until we get info on which NVIDIA chipsets don't have this
++		   issue, if any, disable AA on all NVIDIA AHCIs. */
++		if (pdev->vendor != PCI_VENDOR_ID_NVIDIA)
++			pi.flags |= ATA_FLAG_FPDMA_AA;
++	}
+ 
+ 	if (hpriv->cap & HOST_CAP_PMP)
+ 		pi.flags |= ATA_FLAG_PMP;
