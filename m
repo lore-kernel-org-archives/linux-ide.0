@@ -1,46 +1,42 @@
-From: David Rees <drees76@gmail.com>
+From: Vishal Rao <vishalrao@gmail.com>
 Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
-Date: Tue, 26 Jan 2010 16:32:49 -0800
-Message-ID: <72dbd3151001261632t7bbe43d0nb7490eae02185c81@mail.gmail.com>
+Date: Wed, 27 Jan 2010 06:19:05 +0530
+Message-ID: <aacba7e1001261649v6f5cc037h41adcf253b978386@mail.gmail.com>
 References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>
-	<20100126160243.018b87e3@lxorguk.ukuu.org.uk> <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
-	<72dbd3151001261251s606ebf00h86c2ce63293305b6@mail.gmail.com>
-	<aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
+	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>
+	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
+	 <72dbd3151001261251s606ebf00h86c2ce63293305b6@mail.gmail.com>
+	 <aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
+	 <72dbd3151001261632t7bbe43d0nb7490eae02185c81@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754183Ab0A0Ad0@vger.kernel.org>
-In-Reply-To: <aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vishal Rao <vishalrao@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-px0-f182.google.com ([209.85.216.182]:56050 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754909Ab0A0AtI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2010 19:49:08 -0500
+In-Reply-To: <72dbd3151001261632t7bbe43d0nb7490eae02185c81@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Rees <drees76@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
 
-On Tue, Jan 26, 2010 at 4:21 PM, Vishal Rao <vishalrao@gmail.com> wrote:
-> 2010/1/27 David Rees <drees76@gmail.com>:
->> Have there been any other reports of NCQ issues with similar Crucial
->> drives or Indilinx?
->
-> I haven't personally seen reports of NCQ specific issues. I have seen
-> people (online) reporting "issues" with Linux distro installations
-> hanging/freezing etc. and some prior attempts at SMART fixes which
-> I also initially tried but did not work for me.
->
-> I have tried to "publicise" this issue (forum, blog, mailing list posts)
-> in the hope more users may search and identify the correct issue
-> so that it may be better verified.
+2010/1/27 David Rees <drees76@gmail.com>:
+> So my concern is that you're proposing to black list NCQ for all users
+> of those particular models of SSD when it's more likely at this point
+> that it's a problem with your specific setup.
 
-See, that's just the problem.  I'm running couple OCZ SSD with an
-Indilinx controller and also know that Mark Lord and a bunch of others
-are also running them on Linux without issues.  And supposedly all the
-Indilinx firmware for the different resellers are based on the same
-base firmware.
+Yes, a valid concern. I guess I didn't delve more because it's working
+fine on my copy of Windows 7 RC (on the same hardware) with no sign
+of error logs and pretty much the same perf as Linux with NCQ forced off.
 
-I did have an issue with one of them on a particular motherboard
-locking up, but it turned out that the whole SATA controller was flaky
-and went away after I replaced the motherboard.
+What I can do personally is plug in my SSD into my tablet PC sitting next
+to me and do a few more tests and get back to you all - it could be a couple
+of days. I know its still just one user (me) reporting though.
 
-So my concern is that you're proposing to black list NCQ for all users
-of those particular models of SSD when it's more likely at this point
-that it's a problem with your specific setup.
+FYI I had posted on the manufacturer's website/forums (quite active with
+a lot of owners) and got NO response indicating there aren't too many
+Linux users with this model - again "can't prove a negative" sort of way.
 
--Dave
+In any case, the workaround (should anyone face this issue) is to simply
+add " libata.force=noncq " to the kernel boot options.
