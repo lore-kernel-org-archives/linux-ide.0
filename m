@@ -1,37 +1,79 @@
-From: Vishal Rao <vishalrao@gmail.com>
-Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
-Date: Wed, 27 Jan 2010 21:44:51 +0530
-Message-ID: <aacba7e1001270814s3ebdcc62i39d6ed0efeb194eb@mail.gmail.com>
-References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>
-	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>
-	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
-	 <72dbd3151001261251s606ebf00h86c2ce63293305b6@mail.gmail.com>
-	 <aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
-	 <be3a4a1001270739u2c0cecfevd87269d947ff7dc0@mail.gmail.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: 2.6.32.4 - still getting ext4 related crashes
+Date: Wed, 27 Jan 2010 15:40:06 -0500
+Message-ID: <4B60A4A6.3070001@redhat.com>
+References: <20100122085035.GA5020@nik-nb2.linuxbox.cz> <20100122213827.GH21263@thunk.org> <20100124071943.GA4407@nik-comp.linuxbox.cz> <20100124094853.GA4382@thunk.org> <20100126204754.GA4637@nik-comp.linuxbox.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f172.google.com ([209.85.222.172]:57134 "EHLO
-	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850Ab0A0QO6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jan 2010 11:14:58 -0500
-In-Reply-To: <be3a4a1001270739u2c0cecfevd87269d947ff7dc0@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53812 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753551Ab0A0Ukj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Jan 2010 15:40:39 -0500
+In-Reply-To: <20100126204754.GA4637@nik-comp.linuxbox.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jarod Wilson <jarod@wilsonet.com>
-Cc: David Rees <drees76@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
+To: Nikola Ciprich <extmaillist@linuxbox.cz>
+Cc: tytso@mit.edu, Nikola Ciprich <nikola.ciprich@linuxbox.cz>, ext4 maillist <linux-ext4@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-2010/1/27 Jarod Wilson <jarod@wilsonet.com>:
-> How to define a group gets... Messy. Just as a data point, my own
-> Barefoot-based SSD, an OCZ Vertex, has no NCQ-related problems
-> whatsoever, so far as I know. Its currently hooked to a Zotac ION
-> board, which has ahci-driven sata controllers of some sort, was
-> previously in a Dell Studio Hybrid, where it also worked just fine.
+On 01/26/2010 03:47 PM, Nikola Ciprich wrote:
+> Hello Theo,
+> Actually it's ME who appreciates YOUR efforts ;)
+> I'm sorry for late reply, I did a lot of testing and I've been a bit
+> busy lately.
+> It's getting quite weird. I  can 100% reproduce it.
+> BUT - the thing is, I can reproduce it only on external eSATA box with
+> long eSATA cable. I've tried it on two different machines, and with
+> two different disk boxes. Using shorter cabling seems to fix the problem.
+> I'd just close the problem stating that it's caused byt crappy cable,
+> but what worries me is why it was working with older kernels?
+> Does it mean our backups were just silently being damaged and new
+> kernel somehow detects the problem? (and if it's the hw problem,
+> kernel could maybe show it the better way then just crashing).
+> I'm going to repeat tests with older kernels which were working
+> OK, and I can also test newer ones. I'll also try to get new
+> cable of same length to check it again.
+> Do You have any other ideas what else I should check?
+> with best regards
+> nik
+>
+>    
 
-Thanks for data point. I'm personally hoping for other Crucial users
-specifically.
+Hi Nik,
 
-Is NCQ enabled - if you grep dmesg for ata ?
+If you only see this with an external S-ATA box and a long cable, we 
+might have issues with S-ATA (and knock on issues with error handling up 
+the stack).
 
-The kernel already appears to blacklist (disable NCQ for) OCZ
-SSD models with firmware version "02.10104".
+Can you summarize/repost the log of the panic with the linux-ide people 
+cc'ed (added above)?
+
+Thanks!
+
+Ric
+
+>
+> On Sun, Jan 24, 2010 at 04:48:53AM -0500, tytso@mit.edu wrote:
+>    
+>> On Sun, Jan 24, 2010 at 08:19:43AM +0100, Nikola Ciprich wrote:
+>>      
+>>> Hi,
+>>> yes, I can reproduce it reliably, I'll give it a try tomorrow and
+>>> report.
+>>> have a nice day.
+>>>        
+>> Thanks, I appreciate it.  If it does reproduce on 2.6.33-rc3+, could
+>> you send me the output of "dumpe2fs -h /dev/XXX"?
+>>
+>> Best regards,
+>>
+>> 					- Ted
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>      
+>    
+
