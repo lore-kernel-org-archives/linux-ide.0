@@ -1,59 +1,52 @@
-From: Vishal Rao <vishalrao@gmail.com>
+From: Jarod Wilson <jarod@wilsonet.com>
 Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
-Date: Wed, 27 Jan 2010 17:45:35 +0530
-Message-ID: <aacba7e1001270415o7795db4bva32a5a23068e5d08@mail.gmail.com>
+Date: Wed, 27 Jan 2010 10:39:16 -0500
+Message-ID: <be3a4a1001270739u2c0cecfevd87269d947ff7dc0@mail.gmail.com>
 References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>
 	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>
 	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
-	 <4B5F62C2.4000800@pobox.com>
-	 <aacba7e1001261624m4358e4ebwcf8e2305b0c5fc16@mail.gmail.com>
-	 <4B5FA38A.5040700@teksavvy.com>
-	 <aacba7e1001262136o3b1cfb97yed421bba02580bef@mail.gmail.com>
+	 <72dbd3151001261251s606ebf00h86c2ce63293305b6@mail.gmail.com>
+	 <aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754628Ab0A0MPi@vger.kernel.org>
-In-Reply-To: <aacba7e1001262136o3b1cfb97yed421bba02580bef@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f186.google.com ([209.85.223.186]:33157 "EHLO
+	mail-iw0-f186.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754047Ab0A0PjR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jan 2010 10:39:17 -0500
+In-Reply-To: <aacba7e1001261621v6abb4270i996a28d19c9f7d7@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Vishal Rao <vishalrao@gmail.com>
+Cc: David Rees <drees76@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
 
-2010/1/27 Vishal Rao <vishalrao@gmail.com>:
-> And here is the output of hdparm --Istdout /dev/sd? :
-> http://pastebin.ubuntu.com/363660/
+On Tue, Jan 26, 2010 at 7:21 PM, Vishal Rao <vishalrao@gmail.com> wrote:
+> 2010/1/27 David Rees <drees76@gmail.com>:
+>> Have there been any other reports of NCQ issues with similar Crucial
+>> drives or Indilinx?
+>
+> I haven't personally seen reports of NCQ specific issues. I have seen
+> people (online) reporting "issues" with Linux distro installations
+> hanging/freezing etc. and some prior attempts at SMART fixes which
+> I also initially tried but did not work for me.
+>
+> I have tried to "publicise" this issue (forum, blog, mailing list posts)
+> in the hope more users may search and identify the correct issue
+> so that it may be better verified.
+>
+> Unfortunately, the Crucial ID string is not model-agnostic (if thats
+> the right term)... meaning the patch has 3 lines to ID the 3 current
+> models that I know of including my own 128 GB model.
+>
+> Not sure if there's a better, more generic way to match a whole group
+> of SSDs (same model family or various vendors) which trigger NCQ errors?
 
-Apologies, pasting the output inline:
+How to define a group gets... Messy. Just as a data point, my own
+Barefoot-based SSD, an OCZ Vertex, has no NCQ-related problems
+whatsoever, so far as I know. Its currently hooked to a Zotac ION
+board, which has ahci-driven sata controllers of some sort, was
+previously in a Dell Studio Hybrid, where it also worked just fine.
 
-/dev/sda:
-0c5a 3fff c837 0010 0000 0000 003f 0000
-0000 0000 5335 3935 3031 352d 4146 4258
-2d42 3131 3931 3936 0000 ffff 3000 3139
-3136 2020 2020 4352 5543 4941 4c5f 4354
-3132 384d 3232 3520 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8001
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0101 c2b0 0ee7 0000 0007
-0003 0078 0078 0078 0078 4000 0000 0000
-0000 0000 0000 001f 0506 0000 004c 0040
-01e0 0000 346b 7d01 4022 3469 3c01 4022
-407f 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 c2b0 0ee7 0000 0000
-0000 0000 4000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0009 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0001 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0001 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 27a5
+-- 
+Jarod Wilson
+jarod@wilsonet.com
