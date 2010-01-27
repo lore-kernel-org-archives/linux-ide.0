@@ -1,53 +1,59 @@
 From: Vishal Rao <vishalrao@gmail.com>
 Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
-Date: Wed, 27 Jan 2010 11:06:13 +0530
-Message-ID: <aacba7e1001262136o3b1cfb97yed421bba02580bef@mail.gmail.com>
+Date: Wed, 27 Jan 2010 17:45:35 +0530
+Message-ID: <aacba7e1001270415o7795db4bva32a5a23068e5d08@mail.gmail.com>
 References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>
 	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>
 	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
 	 <4B5F62C2.4000800@pobox.com>
 	 <aacba7e1001261624m4358e4ebwcf8e2305b0c5fc16@mail.gmail.com>
 	 <4B5FA38A.5040700@teksavvy.com>
+	 <aacba7e1001262136o3b1cfb97yed421bba02580bef@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752067Ab0A0FgQ@vger.kernel.org>
-In-Reply-To: <4B5FA38A.5040700@teksavvy.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754628Ab0A0MPi@vger.kernel.org>
+In-Reply-To: <aacba7e1001262136o3b1cfb97yed421bba02580bef@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Mark Lord <kernel@teksavvy.com>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-2010/1/27 Mark Lord <kernel@teksavvy.com>:
-> Can you identify the specific Indilinx build number that your drive f=
-irmware
-> is based upon? =A0If not, then at least post the identify data for us=
- to
-> examine:
->
-> =A0hdparm --Istdout /dev/sd?
+2010/1/27 Vishal Rao <vishalrao@gmail.com>:
+> And here is the output of hdparm --Istdout /dev/sd? :
+> http://pastebin.ubuntu.com/363660/
 
+Apologies, pasting the output inline:
 
-Thanks for taking the time on this.
-
-I am unsure of the "specific IndiLinx firmware build number" though I'v=
-e
-noticed the release numbers are common for different manufacturers.
-=46or example my disk came with the then-latest firmware "1819"
-(with TRIM) which had write-perf issues then they recently released
-"1916" which added TRIM and GC support (seems to work very well
-I should say).
-
-Linux logs "CRUCIAL_CT128M225" and "1916" in my dmesg, speaking
-of which, here is my latest full dmesg: http://pastebin.ubuntu.com/3636=
-59/
-
-And here is the output of hdparm --Istdout /dev/sd? :
-http://pastebin.ubuntu.com/363660/
-
-I am running the following on Kubuntu development version, uname -a is:
-"Linux thunderbird 2.6.32-11-generic #16~vishalrao2 SMP Tue Jan 26
-19:03:33 IST 2010 x86_64 GNU/Linux"
-
-The " ~vishalrao2 " portion indicating it being the proposed patch -
-in that good old "works for me" kind of way.
+/dev/sda:
+0c5a 3fff c837 0010 0000 0000 003f 0000
+0000 0000 5335 3935 3031 352d 4146 4258
+2d42 3131 3931 3936 0000 ffff 3000 3139
+3136 2020 2020 4352 5543 4941 4c5f 4354
+3132 384d 3232 3520 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 8001
+0000 2f00 4000 0200 0200 0007 3fff 0010
+003f fc10 00fb 0101 c2b0 0ee7 0000 0007
+0003 0078 0078 0078 0078 4000 0000 0000
+0000 0000 0000 001f 0506 0000 004c 0040
+01e0 0000 346b 7d01 4022 3469 3c01 4022
+407f 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 c2b0 0ee7 0000 0000
+0000 0000 4000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0009 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0001 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0001 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 27a5
