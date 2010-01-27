@@ -1,57 +1,53 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: [PATCH] ahci: disable FPDMA auto-activate optimization on NVIDIA
- AHCI
-Date: Tue, 26 Jan 2010 22:33:23 -0600
-Message-ID: <4B5FC213.1060601@gmail.com>
+From: Vishal Rao <vishalrao@gmail.com>
+Subject: Re: [PATCH] ata: Disable NCQ for Crucial M225 brand SSDs
+Date: Wed, 27 Jan 2010 11:06:13 +0530
+Message-ID: <aacba7e1001262136o3b1cfb97yed421bba02580bef@mail.gmail.com>
+References: <aacba7e1001260704m27c99a0dy6c3f50c38ce6b430@mail.gmail.com>
+	 <20100126160243.018b87e3@lxorguk.ukuu.org.uk>
+	 <aacba7e1001260819k24088c81m14b4c702fccddd29@mail.gmail.com>
+	 <4B5F62C2.4000800@pobox.com>
+	 <aacba7e1001261624m4358e4ebwcf8e2305b0c5fc16@mail.gmail.com>
+	 <4B5FA38A.5040700@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f186.google.com ([209.85.223.186]:52985 "EHLO
-	mail-iw0-f186.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953Ab0A0Edj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2010 23:33:39 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752067Ab0A0FgQ@vger.kernel.org>
+In-Reply-To: <4B5FA38A.5040700@teksavvy.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
-Cc: Mike Cui <cuicui@gmail.com>, Peer Chen <pchen@nvidia.com>
 
-Mike Cui reported that his system with an NVIDIA MCP79 (aka MCP7A) chipset
-stopped working with 2.6.32. The problem appears to be that 2.6.32 now enables
-the FPDMA auto-activate optimization in the ahci driver. The drive works fine
-with this enabled on an Intel AHCI so this appears to be a chipset bug.
-Since MCP79 is a fairly recent NVIDIA chipset and we don't have any info on
-whether any other NVIDIA chipsets have this issue, disable FPDMA AA optimization
-on all NVIDIA AHCI controllers for now.
+2010/1/27 Mark Lord <kernel@teksavvy.com>:
+> Can you identify the specific Indilinx build number that your drive f=
+irmware
+> is based upon? =A0If not, then at least post the identify data for us=
+ to
+> examine:
+>
+> =A0hdparm --Istdout /dev/sd?
 
-Should address http://bugzilla.kernel.org/show_bug.cgi?id=14922
 
-Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+Thanks for taking the time on this.
 
----
+I am unsure of the "specific IndiLinx firmware build number" though I'v=
+e
+noticed the release numbers are common for different manufacturers.
+=46or example my disk came with the then-latest firmware "1819"
+(with TRIM) which had write-perf issues then they recently released
+"1916" which added TRIM and GC support (seems to work very well
+I should say).
 
-Mike, can you test this out and make sure this resolves the problem for you?
+Linux logs "CRUCIAL_CT128M225" and "1916" in my dmesg, speaking
+of which, here is my latest full dmesg: http://pastebin.ubuntu.com/3636=
+59/
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b8bea10..47e57dc 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -3067,8 +3067,16 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	ahci_save_initial_config(pdev, hpriv);
- 
- 	/* prepare host */
--	if (hpriv->cap & HOST_CAP_NCQ)
--		pi.flags |= ATA_FLAG_NCQ | ATA_FLAG_FPDMA_AA;
-+	if (hpriv->cap & HOST_CAP_NCQ) {
-+		pi.flags |= ATA_FLAG_NCQ;
-+		/* Auto-activate optimization is supposed to be supported on
-+		   all AHCI controllers indicating NCQ support, but it seems
-+		   to be broken at least on some NVIDIA MCP79 chipsets.
-+		   Until we get info on which NVIDIA chipsets don't have this
-+		   issue, if any, disable AA on all NVIDIA AHCIs. */
-+		if (pdev->vendor != PCI_VENDOR_ID_NVIDIA)
-+			pi.flags |= ATA_FLAG_FPDMA_AA;
-+	}
- 
- 	if (hpriv->cap & HOST_CAP_PMP)
- 		pi.flags |= ATA_FLAG_PMP;
+And here is the output of hdparm --Istdout /dev/sd? :
+http://pastebin.ubuntu.com/363660/
+
+I am running the following on Kubuntu development version, uname -a is:
+"Linux thunderbird 2.6.32-11-generic #16~vishalrao2 SMP Tue Jan 26
+19:03:33 IST 2010 x86_64 GNU/Linux"
+
+The " ~vishalrao2 " portion indicating it being the proposed patch -
+in that good old "works for me" kind of way.
