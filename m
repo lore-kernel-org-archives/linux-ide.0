@@ -1,59 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] ahci: add Acer G725 to broken suspend list
-Date: Thu, 28 Jan 2010 16:04:15 +0900
-Message-ID: <4B6136EF.706@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] libata: fix ata_id_logical_per_physical_sectors
+Date: Thu, 28 Jan 2010 11:42:34 +0100
+Message-ID: <20100128104234.GA25693@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58163 "EHLO hera.kernel.org"
+Received: from verein.lst.de ([213.95.11.210]:54786 "EHLO verein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751616Ab0A1G6E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jan 2010 01:58:04 -0500
+	id S1751023Ab0A1Kpl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Jan 2010 05:45:41 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: jani-matti.hatinen@iki.fi
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, stable@kernel.org
 
-Acer G725 shares the same suspend problem with the HP laptops which
-lose ATA devices on resume.  New firmware which fixes the problem is
-already available.  Add G725 with old firmwares to the broken suspend
-list.
+The value we get from the low byte of the ATA_ID_SECTOR_SIZE word is not not
+a plain multiple, but the log of it, so fix the helper to give the correct
+answer.  Without this we'll get an incorrect minimal I/O size in the block
+limits VPD page for 4k sector drives.
 
-This problem has been reported in bko#15104.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=3D15104
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Jani-Matti H=E4tinen <jani-matti.hatinen@iki.fi>
----
- drivers/ata/ahci.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b8bea10..b343903 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2868,6 +2868,21 @@ static bool ahci_broken_suspend(struct pci_dev *=
-pdev)
- 			},
- 			.driver_data =3D "F.23",	/* cutoff BIOS version */
- 		},
-+		/*
-+		 * Acer eMachines G725 has the same problem.  BIOS
-+		 * V1.03 is known to be broken.  V3.04 is known to
-+		 * work.  Inbetween, there are V1.06, V2.06 and V3.03
-+		 * that we don't have much idea about.  For now,
-+		 * blacklist anything older than V3.04.
-+		 */
-+		{
-+			.ident =3D "G725",
-+			.matches =3D {
-+				DMI_MATCH(DMI_SYS_VENDOR, "eMachines"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "eMachines G725"),
-+			},
-+			.driver_data =3D "V3.04",	/* cutoff BIOS version */
-+		},
- 		{ }	/* terminate list */
- 	};
- 	const struct dmi_system_id *dmi =3D dmi_first_match(sysids);
+Index: linux-2.6/include/linux/ata.h
+===================================================================
+--- linux-2.6.orig/include/linux/ata.h	2010-01-28 11:17:41.968003842 +0100
++++ linux-2.6/include/linux/ata.h	2010-01-28 11:20:02.355268610 +0100
+@@ -649,7 +649,7 @@ static inline int ata_id_has_large_logic
+ 
+ static inline u8 ata_id_logical_per_physical_sectors(const u16 *id)
+ {
+-	return id[ATA_ID_SECTOR_SIZE] & 0xf;
++	return 1 << (id[ATA_ID_SECTOR_SIZE] & 0xf);
+ }
+ 
+ static inline int ata_id_has_lba48(const u16 *id)
