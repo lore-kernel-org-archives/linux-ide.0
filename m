@@ -1,207 +1,263 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 63/68] sl82c105: convert to ide2libata
-Date: Fri, 29 Jan 2010 17:09:53 +0100
-Message-ID: <20100129160953.21495.21479.sendpatchset@localhost>
+Subject: [PATCH 58/68] pata_sc1200: move code to be re-used by ide2libata to pata_sc1200.h
+Date: Fri, 29 Jan 2010 17:09:21 +0100
+Message-ID: <20100129160921.21495.71686.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755962Ab0A2QKO@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:47963 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755557Ab0A2QJa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:09:30 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] sl82c105: convert to ide2libata
+Subject: [PATCH] pata_sc1200: move code to be re-used by ide2libata to pata_sc1200.h
+
+Convert C99 style comments while at it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_sl82c105.h |    4 +
- drivers/ide/sl82c105.c      |  103 +++-----------------------------------------
- 2 files changed, 12 insertions(+), 95 deletions(-)
+ drivers/ata/pata_sc1200.c |  108 --------------------------------------------
+ drivers/ata/pata_sc1200.h |  112 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 113 insertions(+), 107 deletions(-)
 
-Index: b/drivers/ata/pata_sl82c105.h
+Index: b/drivers/ata/pata_sc1200.c
 ===================================================================
---- a/drivers/ata/pata_sl82c105.h
-+++ b/drivers/ata/pata_sl82c105.h
-@@ -27,13 +27,17 @@ static void sl82c105_configure_dmamode(s
- 	static u16 dma_timing[3] = {
- 		0x707, 0x201, 0x200
- 	};
-+#ifndef __IDE2LIBATA
- 	u16 dummy;
-+#endif
- 	int timing = 0x44 + (8 * ap->port_no) + (4 * adev->devno);
- 	int dma = adev->dma_mode - XFER_MW_DMA_0;
+--- a/drivers/ata/pata_sc1200.c
++++ b/drivers/ata/pata_sc1200.c
+@@ -41,113 +41,7 @@
+ #define DRV_NAME	"sc1200"
+ #define DRV_VERSION	"0.2.6"
  
- 	pci_write_config_word(pdev, timing, dma_timing[dma]);
-+#ifndef __IDE2LIBATA
- 	/* Can we lose this oddity of the old driver */
- 	pci_read_config_word(pdev, timing, &dummy);
-+#endif
- }
+-#define SC1200_REV_A	0x00
+-#define SC1200_REV_B1	0x01
+-#define SC1200_REV_B3	0x02
+-#define SC1200_REV_C1	0x03
+-#define SC1200_REV_D1	0x04
+-
+-/**
+- *	sc1200_clock	-	PCI clock
+- *
+- *	Return the PCI bus clocking for the SC1200 chipset configuration
+- *	in use. We return 0 for 33MHz 1 for 48MHz and 2 for 66Mhz
+- */
+-
+-static int sc1200_clock(void)
+-{
+-	/* Magic registers that give us the chipset data */
+-	u8 chip_id = inb(0x903C);
+-	u8 silicon_rev = inb(0x903D);
+-	u16 pci_clock;
+-
+-	if (chip_id == 0x04 && silicon_rev < SC1200_REV_B1)
+-		return 0;	/* 33 MHz mode */
+-
+-	/* Clock generator configuration 0x901E its 8/9 are the PCI clocking
+-	   0/3 is 33Mhz 1 is 48 2 is 66 */
+-
+-	pci_clock = inw(0x901E);
+-	pci_clock >>= 8;
+-	pci_clock &= 0x03;
+-	if (pci_clock == 3)
+-		pci_clock = 0;
+-	return pci_clock;
+-}
+-
+-/**
+- *	sc1200_set_piomode		-	PIO setup
+- *	@ap: ATA interface
+- *	@adev: device on the interface
+- *
+- *	Set our PIO requirements. This is fairly simple on the SC1200
+- */
+-
+-static void sc1200_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-{
+-	static const u32 pio_timings[4][5] = {
+-		{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},	// format0  33Mhz
+-		{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},	// format1, 33Mhz
+-		{0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},	// format1, 48Mhz
+-		{0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}	// format1, 66Mhz
+-	};
+-
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u32 format;
+-	unsigned int reg = 0x40 + 0x10 * ap->port_no;
+-	int mode = adev->pio_mode - XFER_PIO_0;
+-
+-	pci_read_config_dword(pdev, reg + 4, &format);
+-	format >>= 31;
+-	format += sc1200_clock();
+-	pci_write_config_dword(pdev, reg + 8 * adev->devno,
+-				pio_timings[format][mode]);
+-}
+-
+-/**
+- *	sc1200_set_dmamode		-	DMA timing setup
+- *	@ap: ATA interface
+- *	@adev: Device being configured
+- *
+- *	We cannot mix MWDMA and UDMA without reloading timings each switch
+- *	master to slave.
+- */
+-
+-static void sc1200_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+-{
+-	static const u32 udma_timing[3][3] = {
+-		{ 0x00921250, 0x00911140, 0x00911030 },
+-		{ 0x00932470, 0x00922260, 0x00922140 },
+-		{ 0x009436A1, 0x00933481, 0x00923261 }
+-	};
+-
+-	static const u32 mwdma_timing[3][3] = {
+-		{ 0x00077771, 0x00012121, 0x00002020 },
+-		{ 0x000BBBB2, 0x00024241, 0x00013131 },
+-		{ 0x000FFFF3, 0x00035352, 0x00015151 }
+-	};
+-
+-	int clock = sc1200_clock();
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned int reg = 0x40 + 0x10 * ap->port_no;
+-	int mode = adev->dma_mode;
+-	u32 format;
+-
+-	if (mode >= XFER_UDMA_0)
+-		format = udma_timing[clock][mode - XFER_UDMA_0];
+-	else
+-		format = mwdma_timing[clock][mode - XFER_MW_DMA_0];
+-
+-	if (adev->devno == 0) {
+-		u32 timings;
+-
+-		pci_read_config_dword(pdev, reg + 4, &timings);
+-		timings &= 0x80000000UL;
+-		timings |= format;
+-		pci_write_config_dword(pdev, reg + 4, timings);
+-	} else
+-		pci_write_config_dword(pdev, reg + 12, format);
+-}
++#include "pata_sc1200.h"
  
  /**
-Index: b/drivers/ide/sl82c105.c
+  *	sc1200_qc_issue		-	command issue
+Index: b/drivers/ata/pata_sc1200.h
 ===================================================================
---- a/drivers/ide/sl82c105.c
-+++ b/drivers/ide/sl82c105.c
-@@ -24,16 +24,8 @@
- 
- #define DRV_NAME "sl82c105"
- 
--/*
-- * SL82C105 PCI config register 0x40 bits.
-- */
--#define CTRL_IDE_IRQB   (1 << 30)
--#define CTRL_IDE_IRQA   (1 << 28)
--#define CTRL_LEGIRQ     (1 << 11)
--#define CTRL_P1F16      (1 << 5)
--#define CTRL_P1EN       (1 << 4)
--#define CTRL_P0F16      (1 << 1)
--#define CTRL_P0EN       (1 << 0)
-+#include <linux/ide2libata.h>
-+#include "../ata/pata_sl82c105.h"
- 
- /*
-  * Convert a PIO mode and cycle time to the required on/off times
-@@ -89,25 +81,8 @@ static void sl82c105_set_pio_mode(ide_hw
- 			  ide_pio_cycle_time(drive, pio), drv_ctrl);
- }
- 
--/*
-- * Configure the chipset for DMA mode.
-- */
- static void sl82c105_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
- {
--	static u16 mwdma_timings[] = {0x0707, 0x0201, 0x0200};
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--	u16 drv_ctrl;
--	const u8 speed = drive->dma_mode;
--
--	drv_ctrl = mwdma_timings[speed - XFER_MW_DMA_0];
--
--	/*
--	 * Store the DMA timings so that we can actually program
--	 * them when DMA will be turned on...
--	 */
--	timings &= 0x0000ffff;
--	timings |= (unsigned long)drv_ctrl << 16;
--	ide_set_drivedata(drive, (void *)timings);
- }
- 
- static int sl82c105_test_irq(ide_hwif_t *hwif)
-@@ -121,23 +96,6 @@ static int sl82c105_test_irq(ide_hwif_t
- }
- 
- /*
-- * The SL82C105 holds off all IDE interrupts while in DMA mode until
-- * all DMA activity is completed.  Sometimes this causes problems (eg,
-- * when the drive wants to report an error condition).
-- *
-- * 0x7e is a "chip testing" register.  Bit 2 resets the DMA controller
-- * state machine.  We need to kick this to work around various bugs.
-- */
--static inline void sl82c105_reset_host(struct pci_dev *dev)
--{
--	u16 val;
--
--	pci_read_config_word(dev, 0x7e, &val);
--	pci_write_config_word(dev, 0x7e, val | (1 << 2));
--	pci_write_config_word(dev, 0x7e, val & ~(1 << 2));
--}
--
--/*
-  * If we get an IRQ timeout, it might be that the DMA state machine
-  * got confused.  Fix from Todd Inglett.  Details from Winbond.
-  *
-@@ -171,7 +129,7 @@ static void sl82c105_dma_lost_irq(ide_dr
- 		printk(KERN_INFO "sl82c105: DMA was enabled\n");
- 	}
- 
--	sl82c105_reset_host(dev);
-+	sl82c105_reset_engine(hwif);
- }
- 
- /*
-@@ -184,22 +142,16 @@ static void sl82c105_dma_lost_irq(ide_dr
-  */
- static void sl82c105_dma_start(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif	= drive->hwif;
--	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	int reg 		= 0x44 + drive->dn * 4;
--
--	pci_write_config_word(dev, reg,
--			      (unsigned long)ide_get_drivedata(drive) >> 16);
-+	ide_hwif_t *hwif = drive->hwif;
- 
--	sl82c105_reset_host(dev);
-+	sl82c105_configure_dmamode(hwif, drive);
-+	sl82c105_reset_engine(hwif);
- 	ide_dma_start(drive);
- }
- 
- static void sl82c105_dma_clear(ide_drive_t *drive)
- {
--	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
--
--	sl82c105_reset_host(dev);
-+	sl82c105_reset_engine(drive->hwif);
- }
- 
- static int sl82c105_dma_end(ide_drive_t *drive)
-@@ -229,39 +181,6 @@ static void sl82c105_resetproc(ide_drive
- }
- 
- /*
-- * Return the revision of the Winbond bridge
-- * which this function is part of.
-- */
--static u8 sl82c105_bridge_revision(struct pci_dev *dev)
--{
--	struct pci_dev *bridge;
--
--	/*
--	 * The bridge should be part of the same device, but function 0.
--	 */
--	bridge = pci_get_bus_and_slot(dev->bus->number,
--			       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
--	if (!bridge)
--		return -1;
--
--	/*
--	 * Make sure it is a Winbond 553 and is an ISA bridge.
--	 */
--	if (bridge->vendor != PCI_VENDOR_ID_WINBOND ||
--	    bridge->device != PCI_DEVICE_ID_WINBOND_83C553 ||
--	    bridge->class >> 8 != PCI_CLASS_BRIDGE_ISA) {
--	    	pci_dev_put(bridge);
--		return -1;
--	}
--	/*
--	 * We need to find function 0's revision, not function 1
--	 */
--	pci_dev_put(bridge);
--
--	return bridge->revision;
--}
--
--/*
-  * Enable the PCI device
-  * 
-  * --BenH: It's arch fixup code that should enable channels that
-@@ -271,13 +190,7 @@ static u8 sl82c105_bridge_revision(struc
-  */
- static int init_chipset_sl82c105(struct pci_dev *dev)
- {
--	u32 val;
--
--	pci_read_config_dword(dev, 0x40, &val);
--	val |= CTRL_P0EN | CTRL_P0F16 | CTRL_P1F16;
--	pci_write_config_dword(dev, 0x40, val);
--
--	return 0;
-+	return sl82c105_fixup(&dev->dev);
- }
- 
- static const struct ide_port_ops sl82c105_port_ops = {
+--- /dev/null
++++ b/drivers/ata/pata_sc1200.h
+@@ -0,0 +1,112 @@
++
++#define SC1200_REV_A	0x00
++#define SC1200_REV_B1	0x01
++#define SC1200_REV_B3	0x02
++#define SC1200_REV_C1	0x03
++#define SC1200_REV_D1	0x04
++
++/**
++ *	sc1200_clock	-	PCI clock
++ *
++ *	Return the PCI bus clocking for the SC1200 chipset configuration
++ *	in use. We return 0 for 33MHz 1 for 48MHz and 2 for 66Mhz
++ */
++
++static int sc1200_clock(void)
++{
++	/* Magic registers that give us the chipset data */
++	u8 chip_id = inb(0x903C);
++	u8 silicon_rev = inb(0x903D);
++	u16 pci_clock;
++
++	if (chip_id == 0x04 && silicon_rev < SC1200_REV_B1)
++		return 0;	/* 33 MHz mode */
++
++	/* Clock generator configuration 0x901E its 8/9 are the PCI clocking
++	   0/3 is 33Mhz 1 is 48 2 is 66 */
++
++	pci_clock = inw(0x901E);
++	pci_clock >>= 8;
++	pci_clock &= 0x03;
++	if (pci_clock == 3)
++		pci_clock = 0;
++	return pci_clock;
++}
++
++/**
++ *	sc1200_set_piomode		-	PIO setup
++ *	@ap: ATA interface
++ *	@adev: device on the interface
++ *
++ *	Set our PIO requirements. This is fairly simple on the SC1200
++ */
++
++static void sc1200_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	static const u32 pio_timings[4][5] = {
++		/* format0  33Mhz */
++		{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},
++		/* format1, 33Mhz */
++		{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},
++		/* format1, 48Mhz */
++		{0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},
++		/* format1, 66Mhz */
++		{0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}
++	};
++
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	u32 format;
++	unsigned int reg = 0x40 + 0x10 * ap->port_no;
++	int mode = adev->pio_mode - XFER_PIO_0;
++
++	pci_read_config_dword(pdev, reg + 4, &format);
++	format >>= 31;
++	format += sc1200_clock();
++	pci_write_config_dword(pdev, reg + 8 * adev->devno,
++				pio_timings[format][mode]);
++}
++
++/**
++ *	sc1200_set_dmamode		-	DMA timing setup
++ *	@ap: ATA interface
++ *	@adev: Device being configured
++ *
++ *	We cannot mix MWDMA and UDMA without reloading timings each switch
++ *	master to slave.
++ */
++
++static void sc1200_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++{
++	static const u32 udma_timing[3][3] = {
++		{ 0x00921250, 0x00911140, 0x00911030 },
++		{ 0x00932470, 0x00922260, 0x00922140 },
++		{ 0x009436A1, 0x00933481, 0x00923261 }
++	};
++
++	static const u32 mwdma_timing[3][3] = {
++		{ 0x00077771, 0x00012121, 0x00002020 },
++		{ 0x000BBBB2, 0x00024241, 0x00013131 },
++		{ 0x000FFFF3, 0x00035352, 0x00015151 }
++	};
++
++	int clock = sc1200_clock();
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	unsigned int reg = 0x40 + 0x10 * ap->port_no;
++	int mode = adev->dma_mode;
++	u32 format;
++
++	if (mode >= XFER_UDMA_0)
++		format = udma_timing[clock][mode - XFER_UDMA_0];
++	else
++		format = mwdma_timing[clock][mode - XFER_MW_DMA_0];
++
++	if (adev->devno == 0) {
++		u32 timings;
++
++		pci_read_config_dword(pdev, reg + 4, &timings);
++		timings &= 0x80000000UL;
++		timings |= format;
++		pci_write_config_dword(pdev, reg + 4, timings);
++	} else
++		pci_write_config_dword(pdev, reg + 12, format);
++}
