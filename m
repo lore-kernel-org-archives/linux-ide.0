@@ -1,481 +1,163 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 40/68] pata_cmd64x: move code to be re-used by ide2libata to pata_cmd64x.h
-Date: Fri, 29 Jan 2010 17:07:24 +0100
-Message-ID: <20100129160724.21495.94049.sendpatchset@localhost>
+Subject: [PATCH 38/68] atiixp: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:07:12 +0100
+Message-ID: <20100129160712.21495.19893.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755112Ab0A2QPl@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.157]:35978 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754897Ab0A2QHU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:07:20 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cmd64x: move code to be re-used by ide2libata to pata_cmd64x.h
+Subject: [PATCH] atiixp: convert to ide2libata
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cmd64x.c |  215 ----------------------------------------------
- drivers/ata/pata_cmd64x.h |  215 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 216 insertions(+), 214 deletions(-)
+ drivers/ide/atiixp.c |  126 +--------------------------------------------------
+ 1 file changed, 4 insertions(+), 122 deletions(-)
 
-Index: b/drivers/ata/pata_cmd64x.c
+Index: b/drivers/ide/atiixp.c
 ===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -34,49 +34,7 @@
- #define DRV_NAME "pata_cmd64x"
- #define DRV_VERSION "0.2.5"
+--- a/drivers/ide/atiixp.c
++++ b/drivers/ide/atiixp.c
+@@ -12,130 +12,12 @@
  
--/*
-- * CMD64x specific registers definition.
-- */
+ #define DRV_NAME "atiixp"
+ 
+-#define ATIIXP_IDE_PIO_TIMING		0x40
+-#define ATIIXP_IDE_MDMA_TIMING		0x44
+-#define ATIIXP_IDE_PIO_CONTROL		0x48
+-#define ATIIXP_IDE_PIO_MODE		0x4a
+-#define ATIIXP_IDE_UDMA_CONTROL		0x54
+-#define ATIIXP_IDE_UDMA_MODE		0x56
 -
--enum {
--	CFR 		= 0x50,
--		CFR_INTR_CH0  = 0x04,
--	CMDTIM 		= 0x52,
--	ARTTIM0 	= 0x53,
--	DRWTIM0 	= 0x54,
--	ARTTIM1 	= 0x55,
--	DRWTIM1 	= 0x56,
--	ARTTIM23 	= 0x57,
--		ARTTIM23_DIS_RA2  = 0x04,
--		ARTTIM23_DIS_RA3  = 0x08,
--		ARTTIM23_INTR_CH1 = 0x10,
--	DRWTIM2 	= 0x58,
--	BRST 		= 0x59,
--	DRWTIM3 	= 0x5b,
--	BMIDECR0	= 0x70,
--	MRDMODE		= 0x71,
--		MRDMODE_INTR_CH0 = 0x04,
--		MRDMODE_INTR_CH1 = 0x08,
--	BMIDESR0	= 0x72,
--	UDIDETCR0	= 0x73,
--	DTPR0		= 0x74,
--	BMIDECR1	= 0x78,
--	BMIDECSR	= 0x79,
--	UDIDETCR1	= 0x7B,
--	DTPR1		= 0x7C
+-typedef struct {
+-	u8 command_width;
+-	u8 recover_width;
+-} atiixp_ide_timing;
+-
+-static atiixp_ide_timing pio_timing[] = {
+-	{ 0x05, 0x0d },
+-	{ 0x04, 0x07 },
+-	{ 0x03, 0x04 },
+-	{ 0x02, 0x02 },
+-	{ 0x02, 0x00 },
 -};
 -
--static int cmd648_cable_detect(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 r;
+-static atiixp_ide_timing mdma_timing[] = {
+-	{ 0x07, 0x07 },
+-	{ 0x02, 0x01 },
+-	{ 0x02, 0x00 },
+-};
 -
--	/* Check cable detect bits */
--	pci_read_config_byte(pdev, BMIDECSR, &r);
--	if (r & (1 << ap->port_no))
+-static DEFINE_SPINLOCK(atiixp_lock);
+-
+-/**
+- *	atiixp_set_pio_mode	-	set host controller for PIO mode
+- *	@hwif: port
+- *	@drive: drive
+- *
+- *	Set the interface PIO mode.
+- */
+-
+-static void atiixp_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	unsigned long flags;
+-	int timing_shift = (drive->dn ^ 1) * 8;
+-	u32 pio_timing_data;
+-	u16 pio_mode_data;
+-	const u8 pio = drive->pio_mode - XFER_PIO_0;
+-
+-	spin_lock_irqsave(&atiixp_lock, flags);
+-
+-	pci_read_config_word(dev, ATIIXP_IDE_PIO_MODE, &pio_mode_data);
+-	pio_mode_data &= ~(0x07 << (drive->dn * 4));
+-	pio_mode_data |= (pio << (drive->dn * 4));
+-	pci_write_config_word(dev, ATIIXP_IDE_PIO_MODE, pio_mode_data);
+-
+-	pci_read_config_dword(dev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
+-	pio_timing_data &= ~(0xff << timing_shift);
+-	pio_timing_data |= (pio_timing[pio].recover_width << timing_shift) |
+-		 (pio_timing[pio].command_width << (timing_shift + 4));
+-	pci_write_config_dword(dev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
+-
+-	spin_unlock_irqrestore(&atiixp_lock, flags);
+-}
+-
+-/**
+- *	atiixp_set_dma_mode	-	set host controller for DMA mode
+- *	@hwif: port
+- *	@drive: drive
+- *
+- *	Set a ATIIXP host controller to the desired DMA mode.  This involves
+- *	programming the right timing data into the PCI configuration space.
+- */
+-
+-static void atiixp_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	unsigned long flags;
+-	int timing_shift = (drive->dn ^ 1) * 8;
+-	u32 tmp32;
+-	u16 tmp16;
+-	u16 udma_ctl = 0;
+-	const u8 speed = drive->dma_mode;
+-
+-	spin_lock_irqsave(&atiixp_lock, flags);
+-
+-	pci_read_config_word(dev, ATIIXP_IDE_UDMA_CONTROL, &udma_ctl);
+-
+-	if (speed >= XFER_UDMA_0) {
+-		pci_read_config_word(dev, ATIIXP_IDE_UDMA_MODE, &tmp16);
+-		tmp16 &= ~(0x07 << (drive->dn * 4));
+-		tmp16 |= ((speed & 0x07) << (drive->dn * 4));
+-		pci_write_config_word(dev, ATIIXP_IDE_UDMA_MODE, tmp16);
+-
+-		udma_ctl |= (1 << drive->dn);
+-	} else if (speed >= XFER_MW_DMA_0) {
+-		u8 i = speed & 0x03;
+-
+-		pci_read_config_dword(dev, ATIIXP_IDE_MDMA_TIMING, &tmp32);
+-		tmp32 &= ~(0xff << timing_shift);
+-		tmp32 |= (mdma_timing[i].recover_width << timing_shift) |
+-			 (mdma_timing[i].command_width << (timing_shift + 4));
+-		pci_write_config_dword(dev, ATIIXP_IDE_MDMA_TIMING, tmp32);
+-
+-		udma_ctl &= ~(1 << drive->dn);
+-	}
+-
+-	pci_write_config_word(dev, ATIIXP_IDE_UDMA_CONTROL, udma_ctl);
+-
+-	spin_unlock_irqrestore(&atiixp_lock, flags);
+-}
+-
+-static int atiixp_cable_detect(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	u8 udma_mode = 0, ch = hwif->channel;
+-
+-	pci_read_config_byte(pdev, ATIIXP_IDE_UDMA_MODE + ch, &udma_mode);
+-
+-	if ((udma_mode & 0x07) >= 0x04 || (udma_mode & 0x70) >= 0x40)
 -		return ATA_CBL_PATA80;
--	return ATA_CBL_PATA40;
--}
-+#include "pata_cmd64x.h"
- 
- /**
-  *	cmd64x_prereset	-	perform reset handling
-@@ -113,158 +71,6 @@ out:
- }
- 
- /**
-- *	cmd64x_set_timing	-	set PIO and MWDMA timing
-- *	@ap: ATA interface
-- *	@adev: ATA device
-- *	@mode: mode
-- *
-- *	Called to do the PIO and MWDMA mode setup.
-- */
--
--static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 mode)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	struct ata_timing t;
--	const unsigned long T = 1000000 / 33;
--	const u8 setup_data[] = { 0x40, 0x40, 0x40, 0x80, 0x00 };
--
--	u8 reg;
--
--	/* Port layout is not logical so use a table */
--	const u8 arttim_port[2][2] = {
--		{ ARTTIM0, ARTTIM1 },
--		{ ARTTIM23, ARTTIM23 }
--	};
--	const u8 drwtim_port[2][2] = {
--		{ DRWTIM0, DRWTIM1 },
--		{ DRWTIM2, DRWTIM3 }
--	};
--
--	int arttim = arttim_port[ap->port_no][adev->devno];
--	int drwtim = drwtim_port[ap->port_no][adev->devno];
--
--	/* ata_timing_compute is smart and will produce timings for MWDMA
--	   that don't violate the drives PIO capabilities. */
--	ata_timing_compute(adev->id, mode, adev->pio_mode, &t, T, 0);
--
--	if (ap->port_no) {
--		/* Slave has shared address setup */
--		struct ata_device *pair = ata_dev_pair(adev);
--
--		if (pair) {
--			struct ata_timing tp;
--
--			ata_timing_compute(pair->id, pair->pio_mode,
--					pair->pio_mode, &tp, T, 0);
--			ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
--			if (pair->dma_mode) {
--				ata_timing_compute(pair->id, pair->dma_mode,
--						pair->pio_mode, &tp, T, 0);
--				ata_timing_merge(&tp, &t, &t, ATA_TIMING_SETUP);
--			}
--		}
--	}
--
--	printk(KERN_DEBUG DRV_NAME ": active %d recovery %d setup %d.\n",
--		t.active, t.recover, t.setup);
--	if (t.recover > 16) {
--		t.active += t.recover - 16;
--		t.recover = 16;
--	}
--	if (t.active > 16)
--		t.active = 16;
--
--	/* Now convert the clocks into values we can actually stuff into
--	   the chip */
--
--	if (t.recover == 16)
--		t.recover = 0;
--	else if (t.recover > 1)
--		t.recover--;
 -	else
--		t.recover = 15;
--
--	if (t.setup > 4)
--		t.setup = 0xC0;
--	else
--		t.setup = setup_data[t.setup];
--
--	t.active &= 0x0F;	/* 0 = 16 */
--
--	/* Load setup timing */
--	pci_read_config_byte(pdev, arttim, &reg);
--	reg &= 0x3F;
--	reg |= t.setup;
--	pci_write_config_byte(pdev, arttim, reg);
--
--	/* Load active/recovery */
--	pci_write_config_byte(pdev, drwtim, (t.active << 4) | t.recover);
+-		return ATA_CBL_PATA40;
 -}
--
--/**
-- *	cmd64x_set_piomode	-	set initial PIO mode data
-- *	@ap: ATA interface
-- *	@adev: ATA device
-- *
-- *	Used when configuring the devices ot set the PIO timings. All the
-- *	actual work is done by the PIO/MWDMA setting helper
-- */
--
--static void cmd64x_set_piomode(struct ata_port *ap, struct ata_device *adev)
--{
--	cmd64x_set_timing(ap, adev, adev->pio_mode);
--}
--
--/**
-- *	cmd64x_set_dmamode	-	set initial DMA mode data
-- *	@ap: ATA interface
-- *	@adev: ATA device
-- *
-- *	Called to do the DMA mode setup.
-- */
--
--static void cmd64x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
--{
--	static const u8 udma_data[] = {
--		0x30, 0x20, 0x10, 0x20, 0x10, 0x00
--	};
--
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 regU, regD;
--
--	int pciU = UDIDETCR0 + 8 * ap->port_no;
--	int pciD = BMIDESR0 + 8 * ap->port_no;
--	int shift = 2 * adev->devno;
--
--	pci_read_config_byte(pdev, pciD, &regD);
--	pci_read_config_byte(pdev, pciU, &regU);
--
--	/* DMA bits off */
--	regD &= ~(0x20 << adev->devno);
--	/* DMA control bits */
--	regU &= ~(0x30 << shift);
--	/* DMA timing bits */
--	regU &= ~(0x05 << adev->devno);
--
--	if (adev->dma_mode >= XFER_UDMA_0) {
--		/* Merge the timing value */
--		regU |= udma_data[adev->dma_mode - XFER_UDMA_0] << shift;
--		/* Merge the control bits */
--		regU |= 1 << adev->devno; /* UDMA on */
--		if (adev->dma_mode > XFER_UDMA_2) /* 15nS timing */
--			regU |= 4 << adev->devno;
--	} else {
--		regU &= ~ (1 << adev->devno);	/* UDMA off */
--		cmd64x_set_timing(ap, adev, adev->dma_mode);
--	}
--
--	regD |= 0x20 << adev->devno;
--
--	pci_write_config_byte(pdev, pciU, regU);
--	pci_write_config_byte(pdev, pciD, regD);
--}
--
--/**
-  *	cmd648_dma_stop	-	DMA stop callback
-  *	@qc: Command in progress
-  *
-@@ -325,25 +131,6 @@ static struct ata_port_operations cmd648
- 	.cable_detect	= cmd648_cable_detect,
++#include <linux/ide2libata.h>
++#include <../ata/pata_atiixp.h>
+ 
+ static const struct ide_port_ops atiixp_port_ops = {
+-	.set_pio_mode		= atiixp_set_pio_mode,
+-	.set_dma_mode		= atiixp_set_dma_mode,
++	.set_pio_mode		= atiixp_set_piomode,
++	.set_dma_mode		= atiixp_set_dmamode,
+ 	.cable_detect		= atiixp_cable_detect,
  };
  
--static int cmd64x_fixup(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--	u8 mrdmode;
--
--	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
--	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
--	mrdmode &= ~0x30;	/* IRQ set up */
--	mrdmode |= 0x02;	/* Memory read line enable */
--	pci_write_config_byte(pdev, MRDMODE, mrdmode);
--
--	/* PPC specific fixup copied from old driver */
--#ifdef CONFIG_PPC
--	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
--#endif
--
--	return 0;
--}
--
- static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	static const struct ata_port_info cmd_info[6] = {
-Index: b/drivers/ata/pata_cmd64x.h
-===================================================================
---- /dev/null
-+++ b/drivers/ata/pata_cmd64x.h
-@@ -0,0 +1,215 @@
-+
-+/*
-+ * CMD64x specific registers definition.
-+ */
-+
-+enum {
-+	CFR 		= 0x50,
-+		CFR_INTR_CH0  = 0x04,
-+	CMDTIM 		= 0x52,
-+	ARTTIM0 	= 0x53,
-+	DRWTIM0 	= 0x54,
-+	ARTTIM1 	= 0x55,
-+	DRWTIM1 	= 0x56,
-+	ARTTIM23 	= 0x57,
-+		ARTTIM23_DIS_RA2  = 0x04,
-+		ARTTIM23_DIS_RA3  = 0x08,
-+		ARTTIM23_INTR_CH1 = 0x10,
-+	DRWTIM2 	= 0x58,
-+	BRST 		= 0x59,
-+	DRWTIM3 	= 0x5b,
-+	BMIDECR0	= 0x70,
-+	MRDMODE		= 0x71,
-+		MRDMODE_INTR_CH0 = 0x04,
-+		MRDMODE_INTR_CH1 = 0x08,
-+	BMIDESR0	= 0x72,
-+	UDIDETCR0	= 0x73,
-+	DTPR0		= 0x74,
-+	BMIDECR1	= 0x78,
-+	BMIDECSR	= 0x79,
-+	UDIDETCR1	= 0x7B,
-+	DTPR1		= 0x7C
-+};
-+
-+static int cmd648_cable_detect(struct ata_port *ap)
-+{
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u8 r;
-+
-+	/* Check cable detect bits */
-+	pci_read_config_byte(pdev, BMIDECSR, &r);
-+	if (r & (1 << ap->port_no))
-+		return ATA_CBL_PATA80;
-+	return ATA_CBL_PATA40;
-+}
-+
-+/**
-+ *	cmd64x_set_timing	-	set PIO and MWDMA timing
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
-+ *	@mode: mode
-+ *
-+ *	Called to do the PIO and MWDMA mode setup.
-+ */
-+
-+static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 mode)
-+{
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	struct ata_timing t;
-+	const unsigned long T = 1000000 / 33;
-+	const u8 setup_data[] = { 0x40, 0x40, 0x40, 0x80, 0x00 };
-+
-+	u8 reg;
-+
-+	/* Port layout is not logical so use a table */
-+	const u8 arttim_port[2][2] = {
-+		{ ARTTIM0, ARTTIM1 },
-+		{ ARTTIM23, ARTTIM23 }
-+	};
-+	const u8 drwtim_port[2][2] = {
-+		{ DRWTIM0, DRWTIM1 },
-+		{ DRWTIM2, DRWTIM3 }
-+	};
-+
-+	int arttim = arttim_port[ap->port_no][adev->devno];
-+	int drwtim = drwtim_port[ap->port_no][adev->devno];
-+
-+	/* ata_timing_compute is smart and will produce timings for MWDMA
-+	   that don't violate the drives PIO capabilities. */
-+	ata_timing_compute(adev->id, mode, adev->pio_mode, &t, T, 0);
-+
-+	if (ap->port_no) {
-+		/* Slave has shared address setup */
-+		struct ata_device *pair = ata_dev_pair(adev);
-+
-+		if (pair) {
-+			struct ata_timing tp;
-+
-+			ata_timing_compute(pair->id, pair->pio_mode,
-+					pair->pio_mode, &tp, T, 0);
-+			ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
-+			if (pair->dma_mode) {
-+				ata_timing_compute(pair->id, pair->dma_mode,
-+						pair->pio_mode, &tp, T, 0);
-+				ata_timing_merge(&tp, &t, &t, ATA_TIMING_SETUP);
-+			}
-+		}
-+	}
-+
-+	printk(KERN_DEBUG DRV_NAME ": active %d recovery %d setup %d.\n",
-+		t.active, t.recover, t.setup);
-+	if (t.recover > 16) {
-+		t.active += t.recover - 16;
-+		t.recover = 16;
-+	}
-+	if (t.active > 16)
-+		t.active = 16;
-+
-+	/* Now convert the clocks into values we can actually stuff into
-+	   the chip */
-+
-+	if (t.recover == 16)
-+		t.recover = 0;
-+	else if (t.recover > 1)
-+		t.recover--;
-+	else
-+		t.recover = 15;
-+
-+	if (t.setup > 4)
-+		t.setup = 0xC0;
-+	else
-+		t.setup = setup_data[t.setup];
-+
-+	t.active &= 0x0F;	/* 0 = 16 */
-+
-+	/* Load setup timing */
-+	pci_read_config_byte(pdev, arttim, &reg);
-+	reg &= 0x3F;
-+	reg |= t.setup;
-+	pci_write_config_byte(pdev, arttim, reg);
-+
-+	/* Load active/recovery */
-+	pci_write_config_byte(pdev, drwtim, (t.active << 4) | t.recover);
-+}
-+
-+/**
-+ *	cmd64x_set_piomode	-	set initial PIO mode data
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
-+ *
-+ *	Used when configuring the devices ot set the PIO timings. All the
-+ *	actual work is done by the PIO/MWDMA setting helper
-+ */
-+
-+static void cmd64x_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	cmd64x_set_timing(ap, adev, adev->pio_mode);
-+}
-+
-+/**
-+ *	cmd64x_set_dmamode	-	set initial DMA mode data
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
-+ *
-+ *	Called to do the DMA mode setup.
-+ */
-+
-+static void cmd64x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	static const u8 udma_data[] = {
-+		0x30, 0x20, 0x10, 0x20, 0x10, 0x00
-+	};
-+
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u8 regU, regD;
-+
-+	int pciU = UDIDETCR0 + 8 * ap->port_no;
-+	int pciD = BMIDESR0 + 8 * ap->port_no;
-+	int shift = 2 * adev->devno;
-+
-+	pci_read_config_byte(pdev, pciD, &regD);
-+	pci_read_config_byte(pdev, pciU, &regU);
-+
-+	/* DMA bits off */
-+	regD &= ~(0x20 << adev->devno);
-+	/* DMA control bits */
-+	regU &= ~(0x30 << shift);
-+	/* DMA timing bits */
-+	regU &= ~(0x05 << adev->devno);
-+
-+	if (adev->dma_mode >= XFER_UDMA_0) {
-+		/* Merge the timing value */
-+		regU |= udma_data[adev->dma_mode - XFER_UDMA_0] << shift;
-+		/* Merge the control bits */
-+		regU |= 1 << adev->devno; /* UDMA on */
-+		if (adev->dma_mode > XFER_UDMA_2) /* 15nS timing */
-+			regU |= 4 << adev->devno;
-+	} else {
-+		regU &= ~(1 << adev->devno);	/* UDMA off */
-+		cmd64x_set_timing(ap, adev, adev->dma_mode);
-+	}
-+
-+	regD |= 0x20 << adev->devno;
-+
-+	pci_write_config_byte(pdev, pciU, regU);
-+	pci_write_config_byte(pdev, pciD, regD);
-+}
-+
-+static int cmd64x_fixup(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	u8 mrdmode;
-+
-+	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
-+	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
-+	mrdmode &= ~0x30;	/* IRQ set up */
-+	mrdmode |= 0x02;	/* Memory read line enable */
-+	pci_write_config_byte(pdev, MRDMODE, mrdmode);
-+
-+	/* PPC specific fixup copied from old driver */
-+#ifdef CONFIG_PPC
-+	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
-+#endif
-+
-+	return 0;
-+}
