@@ -1,41 +1,107 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 19/68] ide: add hwif->port_no field
-Date: Fri, 29 Jan 2010 17:05:12 +0100
-Message-ID: <20100129160512.21495.75268.sendpatchset@localhost>
+Subject: [PATCH 16/68] pata_via: move short cable handling to pata_via.h
+Date: Fri, 29 Jan 2010 17:04:53 +0100
+Message-ID: <20100129160453.21495.30904.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753601Ab0A2QF3@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.154]:45357 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab0A2QFa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:05:30 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add hwif->port_no field
+Subject: [PATCH] pata_via: move short cable handling to pata_via.h
 
-Add port_no field to ide_hwif_t matching port_no field used in
-struct ata_port.
+It is a generic code and can be shared between pata_via & via82cxxx drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- include/linux/ide.h |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/ata/pata_via.c |   28 +---------------------------
+ drivers/ata/pata_via.h |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 27 deletions(-)
 
-Index: b/include/linux/ide.h
+Index: b/drivers/ata/pata_via.c
 ===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -682,7 +682,12 @@ typedef struct hwif_s {
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -60,7 +60,6 @@
+ #include <linux/delay.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
  
- 	u8 major;	/* our major number */
- 	u8 index;	/* 0 for ide0; 1 for ide1; ... */
--	u8 channel;	/* for dual-port chips: 0=primary, 1=secondary */
+ #define DRV_NAME "pata_via"
+ #define DRV_VERSION "0.3.4"
+@@ -127,32 +126,7 @@ struct via_port {
+ 	u8 cached_device;
+ };
+ 
+-/*
+- *	Cable special cases
+- */
+-
+-static const struct dmi_system_id cable_dmi_table[] = {
+-	{
+-		.ident = "Acer Ferrari 3400",
+-		.matches = {
+-			DMI_MATCH(DMI_BOARD_VENDOR, "Acer,Inc."),
+-			DMI_MATCH(DMI_BOARD_NAME, "Ferrari 3400"),
+-		},
+-	},
+-	{ }
+-};
+-
+-static int via_cable_override(struct pci_dev *pdev)
+-{
+-	/* Systems by DMI */
+-	if (dmi_check_system(cable_dmi_table))
+-		return 1;
+-	/* Arima W730-K8/Targa Visionary 811/... */
+-	if (pdev->subsystem_vendor == 0x161F && pdev->subsystem_device == 0x2032)
+-		return 1;
+-	return 0;
+-}
+-
++#include "pata_via.h"
+ 
+ /**
+  *	via_cable_detect	-	cable detection
+Index: b/drivers/ata/pata_via.h
+===================================================================
+--- /dev/null
++++ b/drivers/ata/pata_via.h
+@@ -0,0 +1,29 @@
 +
-+	union {
-+		/* for dual-port chips: 0=primary, 1=secondary */
-+		u8 channel;
-+		u8 port_no;
-+	};
- 
- 	u32 host_flags;
- 
++#include <linux/dmi.h>
++
++/*
++ *	Cable special cases
++ */
++
++static const struct dmi_system_id cable_dmi_table[] = {
++	{
++		.ident = "Acer Ferrari 3400",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Acer,Inc."),
++			DMI_MATCH(DMI_BOARD_NAME, "Ferrari 3400"),
++		},
++	},
++	{ }
++};
++
++static int via_cable_override(struct pci_dev *pdev)
++{
++	/* Systems by DMI */
++	if (dmi_check_system(cable_dmi_table))
++		return 1;
++	/* Arima W730-K8/Targa Visionary 811/... */
++	if (pdev->subsystem_vendor == 0x161F &&
++	    pdev->subsystem_device == 0x2032)
++		return 1;
++	return 0;
++}
