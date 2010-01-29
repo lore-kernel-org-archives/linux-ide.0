@@ -1,58 +1,65 @@
-From: "Ulli.Brennenstuhl" <Ulli.Brennenstuhl@fs.ei.tum.de>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Fri, 29 Jan 2010 17:13:08 +0100
-Message-ID: <4B630914.9010503@fs.ei.tum.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 25/68] it8213: always program control bits
+Date: Fri, 29 Jan 2010 20:36:08 +0300
+Message-ID: <4B631C88.2020307@ru.mvista.com>
+References: <20100129160308.21495.14120.sendpatchset@localhost> <20100129160551.21495.52656.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stella.fs.ei.tum.de ([129.187.54.7]:43458 "EHLO
-	stella.fs.ei.tum.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088Ab0A2Qq4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:46:56 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.fs.ei.tum.de (Postfix) with ESMTP id AFAB01C36A
-	for <linux-ide@vger.kernel.org>; Fri, 29 Jan 2010 17:13:08 +0100 (CET)
-Received: from stella.fs.ei.tum.de ([127.0.0.1])
-	by localhost (stella.fs.ei.tum.de [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id rRPDX9zMxXmv for <linux-ide@vger.kernel.org>;
-	Fri, 29 Jan 2010 17:13:08 +0100 (CET)
-Received: from [192.168.113.68] (dick.fs.ei.tum.de [192.168.113.68])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by stella.fs.ei.tum.de (Postfix) with ESMTP id 784E31C35D
-	for <linux-ide@vger.kernel.org>; Fri, 29 Jan 2010 17:13:08 +0100 (CET)
+Received: from gateway-2929.mvista.com ([206.112.117.47]:35164 "HELO
+	gateway-2929.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754119Ab0A2R41 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 12:56:27 -0500
+In-Reply-To: <20100129160551.21495.52656.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The last message of this discussion is more than one year old, but still 
-there was no solution to this problem.
+Hello.
 
-I recently encountered the same problem that a raid created with mdadm 
-consisting of three SAMSUNG HD154UI sata harddisks had random errors and 
-mdadm --examine would randomly report that checksums are wrong/correct.
+Bartlomiej Zolnierkiewicz wrote:
 
-The sata controller with the SIL 3114 chipset runs on an old Epox 8K3A 
-board with a VIA KT133 chipset. I noticed that placing the controller in 
-another pci slot would change the results of mdadm --examine.
-While in one slot it was the checksums were randomly changing between 
-correct and wrong in another slot it was always displayed as wrong.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] it8213: always program control bits
+>
+> This matches behavior of libata pata_it8213 host driver.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/it8213.c |    6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> Index: b/drivers/ide/it8213.c
+> ===================================================================
+> --- a/drivers/ide/it8213.c
+> +++ b/drivers/ide/it8213.c
+> @@ -55,15 +55,13 @@ static void it8213_set_pio_mode(ide_hwif
+>  	if (is_slave) {
+>  		master_data |=  0x4000;
+>  		master_data &= ~0x0070;
+> -		if (pio > 1)
+> -			master_data = master_data | (control << 4);
+> +		master_data = master_data | (control << 4);
+>   
 
-After deactivating every single bios option that somehow optimizes the 
-pci bus the problem seems to be gone. After some more testing I could 
-narrow the problem down to the option "PCI Master 0 WS Write", which 
-controls if requests to the pci bus are executed immediately (with zero 
-wait states) or if every write request will be delayed by one wait state.
+    master_data |= control << 4; /* it's C after all */
 
-Obviously this reduces the performance. I didn't perform tests but the 
-resync speed of the raid dropped from ~ 28mb/s to ~ 17mb/s.
+>  		pci_read_config_byte(dev, slave_port, &slave_data);
+>  		slave_data = slave_data & 0xf0;
+>  		slave_data = slave_data | (timings[pio][0] << 2) | timings[pio][1];
+>  	} else {
+>  		master_data &= ~0x3307;
+> -		if (pio > 1)
+> -			master_data = master_data | control;
+> +		master_data = master_data | control;
+>   
 
-I hope this also solves the problems for other people and it would be 
-interesting if any change to the driver would allow to reenable the "PCI 
-Master 0 WS Write" option.
+    master_data |= control;
 
+>  		master_data = master_data | (timings[pio][0] << 12) | (timings[pio][1] << 8);
+>   
 
-Regards,
-Ulli Brennenstuhl
+MBR, Sergei
 
