@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 46/68] pata_cs5535: move code to be re-used by ide2libata to pata_cs5535.h
-Date: Fri, 29 Jan 2010 17:08:04 +0100
-Message-ID: <20100129160804.21495.98303.sendpatchset@localhost>
+Subject: [PATCH 51/68] slc90e66: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:08:36 +0100
+Message-ID: <20100129160836.21495.59042.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755340Ab0A2QI0@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755480Ab0A2QIu@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,254 +11,160 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cs5535: move code to be re-used by ide2libata to pata_cs5535.h
+Subject: [PATCH] slc90e66: convert to ide2libata
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cs5535.c |  113 ---------------------------------------------
- drivers/ata/pata_cs5535.h |  114 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 115 insertions(+), 112 deletions(-)
+ drivers/ata/pata_efar.h |   13 ++++-
+ drivers/ide/slc90e66.c  |  113 ++----------------------------------------------
+ 2 files changed, 16 insertions(+), 110 deletions(-)
 
-Index: b/drivers/ata/pata_cs5535.c
+Index: b/drivers/ata/pata_efar.h
 ===================================================================
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -41,118 +41,7 @@
- #define DRV_NAME	"cs5535"
- #define DRV_VERSION	"0.2.12"
+--- a/drivers/ata/pata_efar.h
++++ b/drivers/ata/pata_efar.h
+@@ -146,7 +146,16 @@ static void efar_set_dmamode(struct ata_
+ 		pci_write_config_byte(dev, 0x48, udma_enable);
  
--/*
-- *	The Geode (Aka Athlon GX now) uses an internal MSR based
-- *	bus system for control. Demented but there you go.
-- */
--
--#define MSR_ATAC_BASE    	0x51300000
--#define ATAC_GLD_MSR_CAP 	(MSR_ATAC_BASE+0)
--#define ATAC_GLD_MSR_CONFIG    (MSR_ATAC_BASE+0x01)
--#define ATAC_GLD_MSR_SMI       (MSR_ATAC_BASE+0x02)
--#define ATAC_GLD_MSR_ERROR     (MSR_ATAC_BASE+0x03)
--#define ATAC_GLD_MSR_PM        (MSR_ATAC_BASE+0x04)
--#define ATAC_GLD_MSR_DIAG      (MSR_ATAC_BASE+0x05)
--#define ATAC_IO_BAR            (MSR_ATAC_BASE+0x08)
--#define ATAC_RESET             (MSR_ATAC_BASE+0x10)
--#define ATAC_CH0D0_PIO         (MSR_ATAC_BASE+0x20)
--#define ATAC_CH0D0_DMA         (MSR_ATAC_BASE+0x21)
--#define ATAC_CH0D1_PIO         (MSR_ATAC_BASE+0x22)
--#define ATAC_CH0D1_DMA         (MSR_ATAC_BASE+0x23)
--#define ATAC_PCI_ABRTERR       (MSR_ATAC_BASE+0x24)
--
--#define ATAC_BM0_CMD_PRIM      0x00
--#define ATAC_BM0_STS_PRIM      0x02
--#define ATAC_BM0_PRD           0x04
--
--#define CS5535_CABLE_DETECT    0x48
--
--/**
-- *	cs5535_cable_detect	-	detect cable type
-- *	@ap: Port to detect on
-- *
-- *	Perform cable detection for ATA66 capable cable. Return a libata
-- *	cable type.
-- */
--
--static int cs5535_cable_detect(struct ata_port *ap)
--{
--	u8 cable;
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	pci_read_config_byte(pdev, CS5535_CABLE_DETECT, &cable);
--	if (cable & 1)
--		return ATA_CBL_PATA80;
--	else
--		return ATA_CBL_PATA40;
--}
--
--/**
-- *	cs5535_set_piomode		-	PIO setup
-- *	@ap: ATA interface
-- *	@adev: device on the interface
-- *
-- *	Set our PIO requirements. The CS5535 is pretty clean about all this
-- */
--
--static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
--{
--	static const u16 pio_timings[5] = {
--		0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
--	};
--	static const u16 pio_cmd_timings[5] = {
--		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
--	};
--	u32 reg, dummy;
--	struct ata_device *pair = ata_dev_pair(adev);
--
--	int mode = adev->pio_mode - XFER_PIO_0;
--	int cmdmode = mode;
--
--	/* Command timing has to be for the lowest of the pair of devices */
--	if (pair) {
--		int pairmode = pair->pio_mode - XFER_PIO_0;
--		cmdmode = min(mode, pairmode);
--		/* Write the other drive timing register if it changed */
--		if (cmdmode < pairmode)
--			wrmsr(ATAC_CH0D0_PIO + 2 * pair->devno,
--				pio_cmd_timings[cmdmode] << 16 | pio_timings[pairmode], 0);
--	}
--	/* Write the drive timing register */
--	wrmsr(ATAC_CH0D0_PIO + 2 * adev->devno,
--		pio_cmd_timings[cmdmode] << 16 | pio_timings[mode], 0);
--
--	/* Set the PIO "format 1" bit in the DMA timing register */
--	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
--	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg | 0x80000000UL, 0);
--}
--
--/**
-- *	cs5535_set_dmamode		-	DMA timing setup
-- *	@ap: ATA interface
-- *	@adev: Device being configured
-- *
-- */
--
--static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
--{
--	static const u32 udma_timings[5] = {
--		0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061
--	};
--	static const u32 mwdma_timings[3] = {
--		0x7F0FFFF3, 0x7F035352, 0x7F024241
--	};
--	u32 reg, dummy;
--	int mode = adev->dma_mode;
--
--	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
--	reg &= 0x80000000UL;
--	if (mode >= XFER_UDMA_0)
--		reg |= udma_timings[mode - XFER_UDMA_0];
--	else
--		reg |= mwdma_timings[mode - XFER_MW_DMA_0];
--	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, 0);
--}
-+#include "pata_cs5535.h"
- 
- static struct scsi_host_template cs5535_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
-Index: b/drivers/ata/pata_cs5535.h
-===================================================================
---- /dev/null
-+++ b/drivers/ata/pata_cs5535.h
-@@ -0,0 +1,114 @@
-+
-+/*
-+ *	The Geode (Aka Athlon GX now) uses an internal MSR based
-+ *	bus system for control. Demented but there you go.
-+ */
-+
-+#define MSR_ATAC_BASE    	0x51300000
-+#define ATAC_GLD_MSR_CAP 	(MSR_ATAC_BASE+0)
-+#define ATAC_GLD_MSR_CONFIG	(MSR_ATAC_BASE+0x01)
-+#define ATAC_GLD_MSR_SMI	(MSR_ATAC_BASE+0x02)
-+#define ATAC_GLD_MSR_ERROR	(MSR_ATAC_BASE+0x03)
-+#define ATAC_GLD_MSR_PM		(MSR_ATAC_BASE+0x04)
-+#define ATAC_GLD_MSR_DIAG	(MSR_ATAC_BASE+0x05)
-+#define ATAC_IO_BAR		(MSR_ATAC_BASE+0x08)
-+#define ATAC_RESET		(MSR_ATAC_BASE+0x10)
-+#define ATAC_CH0D0_PIO		(MSR_ATAC_BASE+0x20)
-+#define ATAC_CH0D0_DMA		(MSR_ATAC_BASE+0x21)
-+#define ATAC_CH0D1_PIO		(MSR_ATAC_BASE+0x22)
-+#define ATAC_CH0D1_DMA		(MSR_ATAC_BASE+0x23)
-+#define ATAC_PCI_ABRTERR	(MSR_ATAC_BASE+0x24)
-+
-+#define ATAC_BM0_CMD_PRIM	0x00
-+#define ATAC_BM0_STS_PRIM	0x02
-+#define ATAC_BM0_PRD		0x04
-+
-+#define CS5535_CABLE_DETECT	0x48
-+
-+/**
-+ *	cs5535_cable_detect	-	detect cable type
-+ *	@ap: Port to detect on
-+ *
-+ *	Perform cable detection for ATA66 capable cable. Return a libata
-+ *	cable type.
-+ */
-+
-+static int cs5535_cable_detect(struct ata_port *ap)
-+{
-+	u8 cable;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+
-+	pci_read_config_byte(pdev, CS5535_CABLE_DETECT, &cable);
-+	if (cable & 1)
-+		return ATA_CBL_PATA80;
-+	else
-+		return ATA_CBL_PATA40;
-+}
-+
-+/**
-+ *	cs5535_set_piomode		-	PIO setup
-+ *	@ap: ATA interface
-+ *	@adev: device on the interface
-+ *
-+ *	Set our PIO requirements. The CS5535 is pretty clean about all this
-+ */
-+
-+static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	static const u16 pio_timings[5] = {
-+		0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
-+	};
-+	static const u16 pio_cmd_timings[5] = {
-+		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
-+	};
-+	u32 reg, dummy;
-+	struct ata_device *pair = ata_dev_pair(adev);
-+
-+	int mode = adev->pio_mode - XFER_PIO_0;
-+	int cmdmode = mode;
-+
-+	/* Command timing has to be for the lowest of the pair of devices */
-+	if (pair) {
-+		int pairmode = pair->pio_mode - XFER_PIO_0;
-+		cmdmode = min(mode, pairmode);
-+		/* Write the other drive timing register if it changed */
-+		if (cmdmode < pairmode)
-+			wrmsr(ATAC_CH0D0_PIO + 2 * pair->devno,
-+				pio_cmd_timings[cmdmode] << 16 |
-+				pio_timings[pairmode], 0);
+ 		spin_unlock_irqrestore(&efar_lock, flags);
+-	} else
+-		/* MWDMA is driven by the PIO timings. */
++	} else {
++		/* Normal DMA is driven by the PIO timings. */
++#ifdef __IDE2LIBATA
++		if (speed >= XFER_MW_DMA_0)
++			adev->pio_mode = ata_mwdma_to_pio(speed) + XFER_PIO_0;
++		else
++			adev->pio_mode = XFER_PIO_2; /* for SWDMA2 */
++		efar_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 1);
++#else
+ 		efar_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
++#endif
 +	}
-+	/* Write the drive timing register */
-+	wrmsr(ATAC_CH0D0_PIO + 2 * adev->devno,
-+		pio_cmd_timings[cmdmode] << 16 | pio_timings[mode], 0);
-+
-+	/* Set the PIO "format 1" bit in the DMA timing register */
-+	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
-+	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg | 0x80000000UL, 0);
-+}
-+
-+/**
-+ *	cs5535_set_dmamode		-	DMA timing setup
-+ *	@ap: ATA interface
-+ *	@adev: Device being configured
-+ *
-+ */
-+
-+static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	static const u32 udma_timings[5] = {
-+		0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061
-+	};
-+	static const u32 mwdma_timings[3] = {
-+		0x7F0FFFF3, 0x7F035352, 0x7F024241
-+	};
-+	u32 reg, dummy;
-+	int mode = adev->dma_mode;
-+
-+	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
-+	reg &= 0x80000000UL;
-+	if (mode >= XFER_UDMA_0)
-+		reg |= udma_timings[mode - XFER_UDMA_0];
-+	else
-+		reg |= mwdma_timings[mode - XFER_MW_DMA_0];
-+	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, 0);
-+}
+ }
+Index: b/drivers/ide/slc90e66.c
+===================================================================
+--- a/drivers/ide/slc90e66.c
++++ b/drivers/ide/slc90e66.c
+@@ -16,116 +16,13 @@
+ 
+ #define DRV_NAME "slc90e66"
+ 
+-static DEFINE_SPINLOCK(slc90e66_lock);
+-
+-static void slc90e66_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	int is_slave		= drive->dn & 1;
+-	int master_port		= hwif->channel ? 0x42 : 0x40;
+-	int slave_port		= 0x44;
+-	unsigned long flags;
+-	u16 master_data;
+-	u8 slave_data;
+-	int control = 0;
+-	const u8 pio = drive->pio_mode - XFER_PIO_0;
+-
+-				     /* ISP  RTC */
+-	static const u8 timings[][2] = {
+-					{ 0, 0 },
+-					{ 0, 0 },
+-					{ 1, 0 },
+-					{ 2, 1 },
+-					{ 2, 3 }, };
+-
+-	spin_lock_irqsave(&slc90e66_lock, flags);
+-	pci_read_config_word(dev, master_port, &master_data);
+-
+-	if (pio > 1)
+-		control |= 1;	/* Programmable timing on */
+-	if (drive->media == ide_disk)
+-		control |= 4;	/* Prefetch, post write */
+-	if (ide_pio_need_iordy(drive, pio))
+-		control |= 2;	/* IORDY */
+-	if (is_slave) {
+-		master_data |=  0x4000;
+-		master_data &= ~0x0070;
+-		/* Set PPE, IE and TIME */
+-		master_data |= control << 4;
+-		pci_read_config_byte(dev, slave_port, &slave_data);
+-		slave_data &= hwif->channel ? 0x0f : 0xf0;
+-		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) <<
+-			       (hwif->channel ? 4 : 0);
+-	} else {
+-		master_data &= ~0x3307;
+-		/* enable PPE, IE and TIME */
+-		master_data |= control;
+-		master_data |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
+-	}
+-	pci_write_config_word(dev, master_port, master_data);
+-	if (is_slave)
+-		pci_write_config_byte(dev, slave_port, slave_data);
+-	spin_unlock_irqrestore(&slc90e66_lock, flags);
+-}
+-
+-static void slc90e66_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	u8 maslave		= hwif->channel ? 0x42 : 0x40;
+-	int sitre = 0, a_speed	= 7 << (drive->dn * 4);
+-	int u_speed = 0, u_flag = 1 << drive->dn;
+-	u16			reg4042, reg44, reg48, reg4a;
+-	const u8 speed		= drive->dma_mode;
+-
+-	pci_read_config_word(dev, maslave, &reg4042);
+-	sitre = (reg4042 & 0x4000) ? 1 : 0;
+-	pci_read_config_word(dev, 0x44, &reg44);
+-	pci_read_config_word(dev, 0x48, &reg48);
+-	pci_read_config_word(dev, 0x4a, &reg4a);
+-
+-	if (speed >= XFER_UDMA_0) {
+-		u_speed = (speed - XFER_UDMA_0) << (drive->dn * 4);
+-
+-		if (!(reg48 & u_flag))
+-			pci_write_config_word(dev, 0x48, reg48|u_flag);
+-		if ((reg4a & a_speed) != u_speed) {
+-			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
+-			pci_read_config_word(dev, 0x4a, &reg4a);
+-			pci_write_config_word(dev, 0x4a, reg4a|u_speed);
+-		}
+-	} else {
+-		const u8 mwdma_to_pio[] = { 0, 3, 4 };
+-
+-		if (reg48 & u_flag)
+-			pci_write_config_word(dev, 0x48, reg48 & ~u_flag);
+-		if (reg4a & a_speed)
+-			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
+-
+-		if (speed >= XFER_MW_DMA_0)
+-			drive->pio_mode =
+-				mwdma_to_pio[speed - XFER_MW_DMA_0] + XFER_PIO_0;
+-		else
+-			drive->pio_mode = XFER_PIO_2; /* for SWDMA2 */
+-
+-		slc90e66_set_pio_mode(hwif, drive);
+-	}
+-}
+-
+-static int slc90e66_cable_detect(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u8 reg47 = 0, mask = hwif->channel ? 0x01 : 0x02;
+-
+-	pci_read_config_byte(dev, 0x47, &reg47);
+-
+-	/* bit[0(1)]: 0:80, 1:40 */
+-	return (reg47 & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-}
++#include <linux/ide2libata.h>
++#include "../ata/pata_efar.h"
+ 
+ static const struct ide_port_ops slc90e66_port_ops = {
+-	.set_pio_mode		= slc90e66_set_pio_mode,
+-	.set_dma_mode		= slc90e66_set_dma_mode,
+-	.cable_detect		= slc90e66_cable_detect,
++	.set_pio_mode		= efar_set_piomode,
++	.set_dma_mode		= efar_set_dmamode,
++	.cable_detect		= efar_cable_detect,
+ };
+ 
+ static const struct ide_port_info slc90e66_chipset __devinitdata = {
