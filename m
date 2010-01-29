@@ -1,163 +1,164 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 38/68] atiixp: convert to ide2libata
-Date: Fri, 29 Jan 2010 17:07:12 +0100
-Message-ID: <20100129160712.21495.19893.sendpatchset@localhost>
+Subject: [PATCH 34/68] amd74xx: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:06:47 +0100
+Message-ID: <20100129160647.21495.41249.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:35978 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754897Ab0A2QHU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:07:20 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754873Ab0A2QHK@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] atiixp: convert to ide2libata
+Subject: [PATCH] amd74xx: convert to ide2libata
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/atiixp.c |  126 +--------------------------------------------------
- 1 file changed, 4 insertions(+), 122 deletions(-)
+ drivers/ata/pata_amd.h |    2 +
+ drivers/ide/amd74xx.c  |   85 +++++++++++++------------------------------------
+ 2 files changed, 25 insertions(+), 62 deletions(-)
 
-Index: b/drivers/ide/atiixp.c
+Index: b/drivers/ata/pata_amd.h
 ===================================================================
---- a/drivers/ide/atiixp.c
-+++ b/drivers/ide/atiixp.c
-@@ -12,130 +12,12 @@
+--- a/drivers/ata/pata_amd.h
++++ b/drivers/ata/pata_amd.h
+@@ -25,7 +25,9 @@ static void timing_setup(struct ata_port
+ 	int dn = ap->port_no * 2 + adev->devno;
+ 	struct ata_timing at, apeer;
+ 	int T, UT;
++#ifndef __IDE2LIBATA
+ 	const int amd_clock = 33333;	/* KHz. */
++#endif
+ 	u8 t;
  
- #define DRV_NAME "atiixp"
+ 	T = 1000000000 / amd_clock;
+Index: b/drivers/ide/amd74xx.c
+===================================================================
+--- a/drivers/ide/amd74xx.c
++++ b/drivers/ide/amd74xx.c
+@@ -26,9 +26,6 @@
+ enum {
+ 	AMD_IDE_CONFIG		= 0x41,
+ 	AMD_CABLE_DETECT	= 0x42,
+-	AMD_DRIVE_TIMING	= 0x48,
+-	AMD_8BIT_TIMING		= 0x4e,
+-	AMD_ADDRESS_SETUP	= 0x4c,
+ 	AMD_UDMA_TIMING		= 0x50,
+ };
  
--#define ATIIXP_IDE_PIO_TIMING		0x40
--#define ATIIXP_IDE_MDMA_TIMING		0x44
--#define ATIIXP_IDE_PIO_CONTROL		0x48
--#define ATIIXP_IDE_PIO_MODE		0x4a
--#define ATIIXP_IDE_UDMA_CONTROL		0x54
--#define ATIIXP_IDE_UDMA_MODE		0x56
--
--typedef struct {
--	u8 command_width;
--	u8 recover_width;
--} atiixp_ide_timing;
--
--static atiixp_ide_timing pio_timing[] = {
--	{ 0x05, 0x0d },
--	{ 0x04, 0x07 },
--	{ 0x03, 0x04 },
--	{ 0x02, 0x02 },
--	{ 0x02, 0x00 },
--};
--
--static atiixp_ide_timing mdma_timing[] = {
--	{ 0x07, 0x07 },
--	{ 0x02, 0x01 },
--	{ 0x02, 0x00 },
--};
--
--static DEFINE_SPINLOCK(atiixp_lock);
--
--/**
-- *	atiixp_set_pio_mode	-	set host controller for PIO mode
-- *	@hwif: port
-- *	@drive: drive
-- *
-- *	Set the interface PIO mode.
+@@ -36,83 +33,47 @@ static unsigned int amd_80w;
+ static unsigned int amd_clock;
+ 
+ static char *amd_dma[] = { "16", "25", "33", "44", "66", "100", "133" };
+-static unsigned char amd_cyc2udma[] = { 6, 6, 5, 4, 0, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3, 7 };
+ 
+ static inline u8 amd_offset(struct pci_dev *dev)
+ {
+ 	return (dev->vendor == PCI_VENDOR_ID_NVIDIA) ? 0x10 : 0;
+ }
+ 
+-/*
+- * amd_set_speed() writes timing values to the chipset registers
 - */
++#include <linux/ide2libata.h>
++#include "../ata/pata_amd.h"
+ 
+-static void amd_set_speed(struct pci_dev *dev, u8 dn, u8 udma_mask,
+-			  struct ata_timing *timing)
++static int amd_get_clock(ide_hwif_t *hwif)
+ {
+-	u8 t = 0, offset = amd_offset(dev);
++	int clock = 0;
+ 
+-	pci_read_config_byte(dev, AMD_ADDRESS_SETUP + offset, &t);
+-	t = (t & ~(3 << ((3 - dn) << 1))) | ((clamp_val(timing->setup, 1, 4) - 1) << ((3 - dn) << 1));
+-	pci_write_config_byte(dev, AMD_ADDRESS_SETUP + offset, t);
 -
--static void atiixp_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
+-	pci_write_config_byte(dev, AMD_8BIT_TIMING + offset + (1 - (dn >> 1)),
+-		((clamp_val(timing->act8b, 1, 16) - 1) << 4) | (clamp_val(timing->rec8b, 1, 16) - 1));
+-
+-	pci_write_config_byte(dev, AMD_DRIVE_TIMING + offset + (3 - dn),
+-		((clamp_val(timing->active, 1, 16) - 1) << 4) | (clamp_val(timing->recover, 1, 16) - 1));
+-
+-	switch (udma_mask) {
+-	case ATA_UDMA2: t = timing->udma ? (0xc0 | (clamp_val(timing->udma, 2, 5) - 2)) : 0x03; break;
+-	case ATA_UDMA4: t = timing->udma ? (0xc0 | amd_cyc2udma[clamp_val(timing->udma, 2, 10)]) : 0x03; break;
+-	case ATA_UDMA5: t = timing->udma ? (0xc0 | amd_cyc2udma[clamp_val(timing->udma, 1, 10)]) : 0x03; break;
+-	case ATA_UDMA6: t = timing->udma ? (0xc0 | amd_cyc2udma[clamp_val(timing->udma, 1, 15)]) : 0x03; break;
+-	default: return;
+-	}
++	switch (hwif->udma_mask) {
++	case ATA_UDMA2:
++		clock = 1; break;
++	case ATA_UDMA4:
++		clock = 2; break;
++	case ATA_UDMA5:
++		clock = 3; break;
++	case ATA_UDMA6:
++		clock = 4; break;
++	};
+ 
+-	if (timing->udma)
+-		pci_write_config_byte(dev, AMD_UDMA_TIMING + offset + 3 - dn, t);
++	return clock;
+ }
+ 
+ /*
+- * amd_set_drive() computes timing values and configures the chipset
+- * to a desired transfer mode.  It also can be called by upper layers.
++ * amd_set_pio_mode() is a callback from upper layers for PIO-only tuning.
+  */
+ 
+-static void amd_set_drive(ide_hwif_t *hwif, ide_drive_t *drive)
++static void amd_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ {
 -	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	unsigned long flags;
--	int timing_shift = (drive->dn ^ 1) * 8;
--	u32 pio_timing_data;
--	u16 pio_mode_data;
--	const u8 pio = drive->pio_mode - XFER_PIO_0;
--
--	spin_lock_irqsave(&atiixp_lock, flags);
--
--	pci_read_config_word(dev, ATIIXP_IDE_PIO_MODE, &pio_mode_data);
--	pio_mode_data &= ~(0x07 << (drive->dn * 4));
--	pio_mode_data |= (pio << (drive->dn * 4));
--	pci_write_config_word(dev, ATIIXP_IDE_PIO_MODE, pio_mode_data);
--
--	pci_read_config_dword(dev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
--	pio_timing_data &= ~(0xff << timing_shift);
--	pio_timing_data |= (pio_timing[pio].recover_width << timing_shift) |
--		 (pio_timing[pio].command_width << (timing_shift + 4));
--	pci_write_config_dword(dev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
--
--	spin_unlock_irqrestore(&atiixp_lock, flags);
--}
--
--/**
-- *	atiixp_set_dma_mode	-	set host controller for DMA mode
-- *	@hwif: port
-- *	@drive: drive
-- *
-- *	Set a ATIIXP host controller to the desired DMA mode.  This involves
-- *	programming the right timing data into the PCI configuration space.
-- */
--
--static void atiixp_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	unsigned long flags;
--	int timing_shift = (drive->dn ^ 1) * 8;
--	u32 tmp32;
--	u16 tmp16;
--	u16 udma_ctl = 0;
+-	ide_drive_t *peer = ide_get_pair_dev(drive);
+-	struct ata_timing t, p;
+-	int T, UT;
+-	u8 udma_mask = hwif->ultra_mask;
 -	const u8 speed = drive->dma_mode;
 -
--	spin_lock_irqsave(&atiixp_lock, flags);
+-	T = 1000000000 / amd_clock;
+-	UT = (udma_mask == ATA_UDMA2) ? T : (T / 2);
 -
--	pci_read_config_word(dev, ATIIXP_IDE_UDMA_CONTROL, &udma_ctl);
+-	ata_timing_compute(drive->id, speed, drive->pio_mode, &t, T, UT);
 -
--	if (speed >= XFER_UDMA_0) {
--		pci_read_config_word(dev, ATIIXP_IDE_UDMA_MODE, &tmp16);
--		tmp16 &= ~(0x07 << (drive->dn * 4));
--		tmp16 |= ((speed & 0x07) << (drive->dn * 4));
--		pci_write_config_word(dev, ATIIXP_IDE_UDMA_MODE, tmp16);
--
--		udma_ctl |= (1 << drive->dn);
--	} else if (speed >= XFER_MW_DMA_0) {
--		u8 i = speed & 0x03;
--
--		pci_read_config_dword(dev, ATIIXP_IDE_MDMA_TIMING, &tmp32);
--		tmp32 &= ~(0xff << timing_shift);
--		tmp32 |= (mdma_timing[i].recover_width << timing_shift) |
--			 (mdma_timing[i].command_width << (timing_shift + 4));
--		pci_write_config_dword(dev, ATIIXP_IDE_MDMA_TIMING, tmp32);
--
--		udma_ctl &= ~(1 << drive->dn);
+-	if (peer) {
+-		ata_timing_compute(peer->id, peer->pio_mode,
+-				   peer->pio_mode, &p, T, UT);
+-		ata_timing_merge(&p, &t, &t, ATA_TIMING_8BIT);
 -	}
 -
--	pci_write_config_word(dev, ATIIXP_IDE_UDMA_CONTROL, udma_ctl);
+-	if (speed == XFER_UDMA_5 && amd_clock <= 33333) t.udma = 1;
+-	if (speed == XFER_UDMA_6 && amd_clock <= 33333) t.udma = 15;
 -
--	spin_unlock_irqrestore(&atiixp_lock, flags);
--}
--
--static int atiixp_cable_detect(ide_hwif_t *hwif)
--{
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	u8 udma_mode = 0, ch = hwif->channel;
--
--	pci_read_config_byte(pdev, ATIIXP_IDE_UDMA_MODE + ch, &udma_mode);
--
--	if ((udma_mode & 0x07) >= 0x04 || (udma_mode & 0x70) >= 0x40)
--		return ATA_CBL_PATA80;
--	else
--		return ATA_CBL_PATA40;
--}
-+#include <linux/ide2libata.h>
-+#include <../ata/pata_atiixp.h>
+-	amd_set_speed(dev, drive->dn, udma_mask, &t);
++	timing_setup(hwif, drive, 0x40 + amd_offset(to_pci_dev(hwif->dev)),
++		     drive->pio_mode, amd_get_clock(hwif));
+ }
  
- static const struct ide_port_ops atiixp_port_ops = {
--	.set_pio_mode		= atiixp_set_pio_mode,
--	.set_dma_mode		= atiixp_set_dma_mode,
-+	.set_pio_mode		= atiixp_set_piomode,
-+	.set_dma_mode		= atiixp_set_dmamode,
- 	.cable_detect		= atiixp_cable_detect,
+-/*
+- * amd_set_pio_mode() is a callback from upper layers for PIO-only tuning.
+- */
+-
+-static void amd_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
++static void amd_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ {
+-	drive->dma_mode = drive->pio_mode;
+-	amd_set_drive(hwif, drive);
++	timing_setup(hwif, drive, 0x40 + amd_offset(to_pci_dev(hwif->dev)),
++		     drive->dma_mode, amd_get_clock(hwif));
+ }
+ 
+ static void amd7409_cable_detect(struct pci_dev *dev)
+@@ -188,7 +149,7 @@ static int amd_cable_detect(ide_hwif_t *
+ 
+ static const struct ide_port_ops amd_port_ops = {
+ 	.set_pio_mode		= amd_set_pio_mode,
+-	.set_dma_mode		= amd_set_drive,
++	.set_dma_mode		= amd_set_dma_mode,
+ 	.cable_detect		= amd_cable_detect,
  };
  
