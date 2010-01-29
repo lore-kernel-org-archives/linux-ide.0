@@ -1,51 +1,109 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Fri, 29 Jan 2010 13:37:06 -0600
-Message-ID: <4B6338E2.1040507@gmail.com>
-References: <4B630914.9010503@fs.ei.tum.de>
+Subject: Re: [kekcsibe@gmail.com: PROBLEM: Pioneer DVD-RW DVR-112D does not
+ work since linux 2.6.29]
+Date: Fri, 29 Jan 2010 13:43:05 -0600
+Message-ID: <4B633A49.8000700@gmail.com>
+References: <20100129044834.GB25869@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f201.google.com ([209.85.223.201]:37103 "EHLO
-	mail-iw0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339Ab0A2ThK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 14:37:10 -0500
-Received: by iwn39 with SMTP id 39so334024iwn.1
-        for <linux-ide@vger.kernel.org>; Fri, 29 Jan 2010 11:37:09 -0800 (PST)
-In-Reply-To: <4B630914.9010503@fs.ei.tum.de>
+Received: from mail-qy0-f182.google.com ([209.85.221.182]:40282 "EHLO
+	mail-qy0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754422Ab0A2TnK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 14:43:10 -0500
+Received: by qyk12 with SMTP id 12so1047596qyk.21
+        for <linux-ide@vger.kernel.org>; Fri, 29 Jan 2010 11:43:09 -0800 (PST)
+In-Reply-To: <20100129044834.GB25869@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Ulli.Brennenstuhl" <Ulli.Brennenstuhl@fs.ei.tum.de>
-Cc: linux-ide@vger.kernel.org
+To: kekcsibe@gmail.com
+Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-ide <linux-ide@vger.kernel.org>
 
-On 01/29/2010 10:13 AM, Ulli.Brennenstuhl wrote:
-> The last message of this discussion is more than one year old, but still
-> there was no solution to this problem.
+On 01/28/2010 10:48 PM, Borislav Petkov wrote:
+> Hi Skrab=C3=A1k,
 >
-> I recently encountered the same problem that a raid created with mdadm
-> consisting of three SAMSUNG HD154UI sata harddisks had random errors and
-> mdadm --examine would randomly report that checksums are wrong/correct.
+> I'm forwarding your mail to linux-ide where all those issues should b=
+e
+> reported. Also, it would be helpful if you sent the whole dmesg outpu=
+t
+> of the failing kernel.
 >
-> The sata controller with the SIL 3114 chipset runs on an old Epox 8K3A
-> board with a VIA KT133 chipset. I noticed that placing the controller in
-> another pci slot would change the results of mdadm --examine.
-> While in one slot it was the checksums were randomly changing between
-> correct and wrong in another slot it was always displayed as wrong.
+> Reattaching your files too.
 >
-> After deactivating every single bios option that somehow optimizes the
-> pci bus the problem seems to be gone. After some more testing I could
-> narrow the problem down to the option "PCI Master 0 WS Write", which
-> controls if requests to the pci bus are executed immediately (with zero
-> wait states) or if every write request will be delayed by one wait state.
+> Thanks.
 >
-> Obviously this reduces the performance. I didn't perform tests but the
-> resync speed of the raid dropped from ~ 28mb/s to ~ 17mb/s.
+> ----- Forwarded message from Skrabak Csaba<kekcsibe@gmail.com>  -----
 >
-> I hope this also solves the problems for other people and it would be
-> interesting if any change to the driver would allow to reenable the "PCI
-> Master 0 WS Write" option.
+> From: Skrabak Csaba<kekcsibe@gmail.com>
+> To: Borislav Petkov<petkovbb@gmail.com>
+> Date: Fri, 29 Jan 2010 04:27:08 +0100
+> Subject: PROBLEM: Pioneer DVD-RW DVR-112D does not work since linux 2=
+=2E6.29
+> Message-ID:<b7a1ac7c1001281927g13323d38tcd71271aee0137ca@mail.gmail.c=
+om>
+>
+> Dear Maintainer,
+>
+> I have found your e-mail address in the MAINTAINERS file of the linux
+> kernel 2.6.32.6 source.
+>
+> I have a problem getting my DVD recorder working. I have been using
+> 2.6.22 with no problem at all. Later I have tried 2.6.29, which
+> produced funny issues: booting up netinstaller CD worked just fine,
+> but when coming to loading the drivers, DVD stopped working, so it
+> could not install the packages. I also tried a Windows XP install CD,
+> which also booted fine, but after installing, Windows could not use
+> the drive. I kept on using the old 2.6.22 linux. But the newest
+> versions of udev and other packages found in Debian unstable
+> repositories don't seem to be compatible any longer with my old but
+> working kernel. So I decided to try if the problem has been fixed in
+> 2.6.32.6 and my DVD drive could work again like it does with 2.6.22.
+> Now I experience the same problems, which in detail are:
+>
+> Mount outputs attached dvd.txt and does not mount. Gnome also does no=
+t
+> mount CD-ROM Device (shows error message).
+>
+=2E..
 
-I don't imagine there's anything the driver's likely to be able to do to 
-avoid it. That sounds like a definite chipset bug. The PCI interface on 
-older VIA chipsets was pretty notorious for them.
+
+>
+> Can it be that my DVD drive has in fact a minor defect, but the old
+> 2.6.22 kernel driver just overlooked that? Were there any changes in
+> the driver since then that could make the driver pickier? Can I do
+> something to overcome it (maybe a config parameter, fstab corrections=
+,
+> udev reconfiguration) or must I wait until a new kernel version comes=
+?
+>
+> Using web search I found plenty of questions dealing with the same
+> error message but all they could answer was that the DVD was dead. Bu=
+t
+> it is definitely not.
+>
+> Please tell me if you know something that or somebody who could help
+> me solving my problem.
+
+Here's your output:
+
+kazimir:~# mount /cdrom
+sr 1:0:0:0: [sr0] Result: hostbyte=3D0x00 driverbyte=3D0x08
+sr 1:0:0:0: [sr0] Sense Key : 0x5 [current]
+sr 1:0:0:0: [sr0] <<vendor>> ASC=3D0xa8 ASCQ=3D0x1ASC=3D0xa8 ASCQ=3D0x1
+sr 1:0:0:0: [sr0] CDB: cdb[0]=3D0x28: 28 00 00 00 00 10 00 00 02 00
+end_request: I/O error, dev sr0, sector 64
+Buffer I/O error on device sr0, logical block 8
+
+The kernel tried to read some sectors off the disk (command 0x28) and=20
+the drive returned an error. ASC of 0xa8 is a vendor-specific error=20
+code, so only Pioneer can likely say what that error means.
+
+You're sure that 2.6.22 is still able to successfully access this drive=
+?=20
+Any unusual dmesg output there?
+
+  The fact that it doesn't seem to work properly in Windows either does=
+=20
+seem to suggest a drive fault.
