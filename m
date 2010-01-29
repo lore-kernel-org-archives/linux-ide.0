@@ -1,182 +1,80 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 64/68] pata_triflex: move code to be re-used by ide2libata to pata_triflex.h
-Date: Fri, 29 Jan 2010 17:10:00 +0100
-Message-ID: <20100129161000.21495.71355.sendpatchset@localhost>
+Subject: [PATCH 66/68] pata_via: factor out code for finding ISA bridge
+Date: Fri, 29 Jan 2010 17:10:13 +0100
+Message-ID: <20100129161013.21495.89241.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:47963 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755570Ab0A2QKI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:10:08 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756052Ab0A2QKf@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_triflex: move code to be re-used by ide2libata to pata_triflex.h
+Subject: [PATCH] pata_via: factor out code for finding ISA bridge
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_triflex.c |   72 ---------------------------------------------
- drivers/ata/pata_triflex.h |   69 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 70 insertions(+), 71 deletions(-)
+ drivers/ata/pata_via.c |   35 +++++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 12 deletions(-)
 
-Index: b/drivers/ata/pata_triflex.c
+Index: b/drivers/ata/pata_via.c
 ===================================================================
---- a/drivers/ata/pata_triflex.c
-+++ b/drivers/ata/pata_triflex.c
-@@ -69,77 +69,7 @@ static int triflex_prereset(struct ata_l
- 	return ata_sff_prereset(link, deadline);
- }
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -431,6 +431,28 @@ static struct ata_port_operations via_po
+ 	.sff_data_xfer	= ata_sff_data_xfer_noirq,
+ };
  
--
--
--/**
-- *	triflex_load_timing		-	timing configuration
-- *	@ap: ATA interface
-- *	@adev: Device on the bus
-- *	@speed: speed to configure
-- *
-- *	The Triflex has one set of timings per device per channel. This
-- *	means we must do some switching. As the PIO and DMA timings don't
-- *	match we have to do some reloading unlike PIIX devices where tuning
-- *	tricks can avoid it.
-- */
--
--static void triflex_load_timing(struct ata_port *ap, struct ata_device *adev, int speed)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 timing = 0;
--	u32 triflex_timing, old_triflex_timing;
--	int channel_offset = ap->port_no ? 0x74: 0x70;
--	unsigned int is_slave	= (adev->devno != 0);
--
--
--	pci_read_config_dword(pdev, channel_offset, &old_triflex_timing);
--	triflex_timing = old_triflex_timing;
--
--	switch(speed)
--	{
--		case XFER_MW_DMA_2:
--			timing = 0x0103;break;
--		case XFER_MW_DMA_1:
--			timing = 0x0203;break;
--		case XFER_MW_DMA_0:
--			timing = 0x0808;break;
--		case XFER_SW_DMA_2:
--		case XFER_SW_DMA_1:
--		case XFER_SW_DMA_0:
--			timing = 0x0F0F;break;
--		case XFER_PIO_4:
--			timing = 0x0202;break;
--		case XFER_PIO_3:
--			timing = 0x0204;break;
--		case XFER_PIO_2:
--			timing = 0x0404;break;
--		case XFER_PIO_1:
--			timing = 0x0508;break;
--		case XFER_PIO_0:
--			timing = 0x0808;break;
--		default:
--			BUG();
--	}
--	triflex_timing &= ~ (0xFFFF << (16 * is_slave));
--	triflex_timing |= (timing << (16 * is_slave));
--
--	if (triflex_timing != old_triflex_timing)
--		pci_write_config_dword(pdev, channel_offset, triflex_timing);
--}
--
--/**
-- *	triflex_set_piomode	-	set initial PIO mode data
-- *	@ap: ATA interface
-- *	@adev: ATA device
-- *
-- *	Use the timing loader to set up the PIO mode. We have to do this
-- *	because DMA start/stop will only be called once DMA occurs. If there
-- *	has been no DMA then the PIO timings are still needed.
-- */
--static void triflex_set_piomode(struct ata_port *ap, struct ata_device *adev)
--{
--	triflex_load_timing(ap, adev, adev->pio_mode);
--}
-+#include "pata_triflex.h"
- 
- /**
-  *	triflex_dma_start	-	DMA start callback
-Index: b/drivers/ata/pata_triflex.h
-===================================================================
---- /dev/null
-+++ b/drivers/ata/pata_triflex.h
-@@ -0,0 +1,69 @@
-+
-+/**
-+ *	triflex_load_timing		-	timing configuration
-+ *	@ap: ATA interface
-+ *	@adev: Device on the bus
-+ *	@speed: speed to configure
-+ *
-+ *	The Triflex has one set of timings per device per channel. This
-+ *	means we must do some switching. As the PIO and DMA timings don't
-+ *	match we have to do some reloading unlike PIIX devices where tuning
-+ *	tricks can avoid it.
-+ */
-+
-+static void triflex_load_timing(struct ata_port *ap, struct ata_device *adev,
-+				int speed)
++static const struct via_isa_bridge *via_config_find(void)
 +{
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u32 timing = 0;
-+	u32 triflex_timing, old_triflex_timing;
-+	int channel_offset = ap->port_no ? 0x74 : 0x70;
-+	unsigned int is_slave	= (adev->devno != 0);
++	const struct via_isa_bridge *config;
++	struct pci_dev *isa;
 +
-+	pci_read_config_dword(pdev, channel_offset, &old_triflex_timing);
-+	triflex_timing = old_triflex_timing;
++	for (config = via_isa_bridges; config->id != PCI_DEVICE_ID_VIA_ANON;
++	     config++) {
++		isa = pci_get_device(PCI_VENDOR_ID_VIA +
++			!!(config->flags & VIA_BAD_ID), config->id, NULL);
++		if (isa) {
++			u8 rev = isa->revision;
 +
-+	switch (speed) {
-+	case XFER_MW_DMA_2:
-+		timing = 0x0103; break;
-+	case XFER_MW_DMA_1:
-+		timing = 0x0203; break;
-+	case XFER_MW_DMA_0:
-+		timing = 0x0808; break;
-+	case XFER_SW_DMA_2:
-+	case XFER_SW_DMA_1:
-+	case XFER_SW_DMA_0:
-+		timing = 0x0F0F; break;
-+	case XFER_PIO_4:
-+		timing = 0x0202; break;
-+	case XFER_PIO_3:
-+		timing = 0x0204; break;
-+	case XFER_PIO_2:
-+		timing = 0x0404; break;
-+	case XFER_PIO_1:
-+		timing = 0x0508; break;
-+	case XFER_PIO_0:
-+		timing = 0x0808; break;
-+	default:
-+		BUG();
++			pci_dev_put(isa);
++
++			if (rev >= config->rev_min && rev <= config->rev_max)
++				break;
++		}
 +	}
-+	triflex_timing &= ~(0xFFFF << (16 * is_slave));
-+	triflex_timing |= (timing << (16 * is_slave));
 +
-+	if (triflex_timing != old_triflex_timing)
-+		pci_write_config_dword(pdev, channel_offset, triflex_timing);
++	return config;
 +}
 +
-+/**
-+ *	triflex_set_piomode	-	set initial PIO mode data
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
-+ *
-+ *	Use the timing loader to set up the PIO mode. We have to do this
-+ *	because DMA start/stop will only be called once DMA occurs. If there
-+ *	has been no DMA then the PIO timings are still needed.
-+ */
-+static void triflex_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	triflex_load_timing(ap, adev, adev->pio_mode);
-+}
+ /**
+  *	via_config_fifo		-	set up the FIFO
+  *	@pdev: PCI device
+@@ -544,7 +566,6 @@ static int via_init_one(struct pci_dev *
+ 		.port_ops = &via_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+-	struct pci_dev *isa;
+ 	const struct via_isa_bridge *config;
+ 	static int printed_version;
+ 	u8 enable;
+@@ -563,17 +584,7 @@ static int via_init_one(struct pci_dev *
+ 
+ 	/* To find out how the IDE will behave and what features we
+ 	   actually have to look at the bridge not the IDE controller */
+-	for (config = via_isa_bridges; config->id != PCI_DEVICE_ID_VIA_ANON;
+-	     config++)
+-		if ((isa = pci_get_device(PCI_VENDOR_ID_VIA +
+-			!!(config->flags & VIA_BAD_ID),
+-			config->id, NULL))) {
+-			u8 rev = isa->revision;
+-			pci_dev_put(isa);
+-
+-			if (rev >= config->rev_min && rev <= config->rev_max)
+-				break;
+-		}
++	config = via_config_find();
+ 
+ 	if (!(config->flags & VIA_NO_ENABLES)) {
+ 		/* 0x40 low bits indicate enabled channels */
