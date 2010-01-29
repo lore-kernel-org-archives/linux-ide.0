@@ -1,340 +1,199 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 50/68] pata_efar: move code to be re-used by ide2libata to pata_efar.h
-Date: Fri, 29 Jan 2010 17:08:29 +0100
-Message-ID: <20100129160829.21495.39844.sendpatchset@localhost>
+Subject: [PATCH 53/68] it8213: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:08:49 +0100
+Message-ID: <20100129160849.21495.882.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755461Ab0A2QIm@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:53041 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755395Ab0A2QI4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:08:56 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_efar: move code to be re-used by ide2libata to pata_efar.h
+Subject: [PATCH] it8213: convert to ide2libata
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_efar.c |  151 -----------------------------------------------
- drivers/ata/pata_efar.h |  152 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 153 insertions(+), 150 deletions(-)
+ drivers/ata/pata_it8213.h |   11 +++
+ drivers/ide/it8213.c      |  138 +---------------------------------------------
+ 2 files changed, 13 insertions(+), 136 deletions(-)
 
-Index: b/drivers/ata/pata_efar.c
+Index: b/drivers/ata/pata_it8213.h
 ===================================================================
---- a/drivers/ata/pata_efar.c
-+++ b/drivers/ata/pata_efar.c
-@@ -49,156 +49,7 @@ static int efar_pre_reset(struct ata_lin
- 	return ata_sff_prereset(link, deadline);
- }
+--- a/drivers/ata/pata_it8213.h
++++ b/drivers/ata/pata_it8213.h
+@@ -141,9 +141,16 @@ static void it8213_set_dmamode(struct at
+ 		ideconf |= u_clock << devid;
+ 		pci_write_config_word(dev, 0x54, ideconf);
+ 	} else {
+-		/* MWDMA is driven by the PIO timings. */
++		/* Normal DMA is driven by the PIO timings. */
++#ifdef __IDE2LIBATA
++		if (speed >= XFER_MW_DMA_0)
++			adev->pio_mode = ata_mwdma_to_pio(speed) + XFER_PIO_0;
++		else
++			adev->pio_mode = XFER_PIO_2; /* for SWDMA2 */
++		it8213_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 1);
++#else
+ 		it8213_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
+-
++#endif
+ 		udma_enable &= ~(1 << devid);
+ 	}
+ 	pci_write_config_byte(dev, 0x48, udma_enable);
+Index: b/drivers/ide/it8213.c
+===================================================================
+--- a/drivers/ide/it8213.c
++++ b/drivers/ide/it8213.c
+@@ -15,142 +15,12 @@
+ 
+ #define DRV_NAME "it8213"
  
 -/**
-- *	efar_cable_detect	-	check for 40/80 pin
-- *	@ap: Port
+- *	it8213_set_pio_mode	-	set host controller for PIO mode
+- *	@hwif: port
+- *	@drive: drive
 - *
-- *	Perform cable detection for the EFAR ATA interface. This is
-- *	different to the PIIX arrangement
+- *	Set the interface PIO mode.
 - */
 -
--static int efar_cable_detect(struct ata_port *ap)
+-static void it8213_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 tmp;
--
--	pci_read_config_byte(pdev, 0x47, &tmp);
--	if (tmp & (2 >> ap->port_no))
--		return ATA_CBL_PATA40;
--	return ATA_CBL_PATA80;
--}
--
--static DEFINE_SPINLOCK(efar_lock);
--
--static void efar_set_timings(struct ata_port *ap, struct ata_device *adev,
--			     u8 pio, bool use_mwdma)
--{
--	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	int is_slave		= drive->dn & 1;
+-	int master_port		= 0x40;
+-	int slave_port		= 0x44;
 -	unsigned long flags;
--	unsigned int is_slave	= (adev->devno != 0);
--	u8 master_port		= ap->port_no ? 0x42 : 0x40;
 -	u16 master_data;
 -	u8 slave_data;
--	u8 udma_enable;
+-	static DEFINE_SPINLOCK(tune_lock);
 -	int control = 0;
+-	const u8 pio = drive->pio_mode - XFER_PIO_0;
 -
--	/*
--	 *	See Intel Document 298600-004 for the timing programing rules
--	 *	for PIIX/ICH. The EFAR is a clone so very similar
--	 */
+-	static const u8 timings[][2] = {
+-					{ 0, 0 },
+-					{ 0, 0 },
+-					{ 1, 0 },
+-					{ 2, 1 },
+-					{ 2, 3 }, };
 -
--	static const	 /* ISP  RTC */
--	u8 timings[][2]	= { { 0, 0 },
--			    { 0, 0 },
--			    { 1, 0 },
--			    { 2, 1 },
--			    { 2, 3 }, };
--
--	if (pio > 1 || use_mwdma)
--		control |= 1;	/* TIME */
--	if (ata_pio_need_iordy(adev) || use_mwdma)
--		control |= 2;	/* IE */
--	/* Intel specifies that the prefetch/posting is for disk only */
--	if (adev->class == ATA_DEV_ATA)
--		control |= 4;	/* PPE */
--	/* If the drive MWDMA is faster than it can do PIO then
--	   we must force PIO into PIO0 */
--	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
--		/* Enable DMA timing only */
--		control |= 8;	/* PIO cycles in PIO0 */
--
--	spin_lock_irqsave(&efar_lock, flags);
--
+-	spin_lock_irqsave(&tune_lock, flags);
 -	pci_read_config_word(dev, master_port, &master_data);
 -
--	/* Set PPE, IE, and TIME as appropriate */
--	if (is_slave == 0) {
--		master_data &= 0xCCF0;
--		master_data |= control;
--		master_data |= (timings[pio][0] << 12) |
--			(timings[pio][1] << 8);
+-	if (pio > 1)
+-		control |= 1;	/* Programmable timing on */
+-	if (drive->media != ide_disk)
+-		control |= 4;	/* ATAPI */
+-	if (ide_pio_need_iordy(drive, pio))
+-		control |= 2;	/* IORDY */
+-	if (is_slave) {
+-		master_data |=  0x4000;
+-		master_data &= ~0x0070;
+-		master_data = master_data | (control << 4);
+-		pci_read_config_byte(dev, slave_port, &slave_data);
+-		slave_data = slave_data & 0xf0;
+-		slave_data = slave_data | (timings[pio][0] << 2) | timings[pio][1];
 -	} else {
--		int shift = 4 * ap->port_no;
--
--		master_data &= 0xFF0F;
--		master_data |= (control << 4);
--
--		/* Slave timing in separate register */
--		pci_read_config_byte(dev, 0x44, &slave_data);
--		slave_data &= ap->port_no ? 0x0F : 0xF0;
--		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << shift;
+-		master_data &= ~0x3307;
+-		master_data = master_data | control;
+-		master_data = master_data | (timings[pio][0] << 12) | (timings[pio][1] << 8);
 -	}
--
--	master_data |= 0x4000;	/* Ensure SITRE is set */
 -	pci_write_config_word(dev, master_port, master_data);
 -	if (is_slave)
--		pci_write_config_byte(dev, 0x44, slave_data);
--
--	pci_read_config_byte(dev, 0x48, &udma_enable);
--	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
--	pci_write_config_byte(dev, 0x48, udma_enable);
--
--	spin_unlock_irqrestore(&efar_lock, flags);
+-		pci_write_config_byte(dev, slave_port, slave_data);
+-	spin_unlock_irqrestore(&tune_lock, flags);
 -}
 -
 -/**
-- *	efar_set_piomode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: Device to program
+- *	it8213_set_dma_mode	-	set host controller for DMA mode
+- *	@hwif: port
+- *	@drive: drive
 - *
-- *	Set PIO mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
+- *	Tune the ITE chipset for the DMA mode.
 - */
 -
--static void efar_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-static void it8213_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	efar_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
--}
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	u8 maslave		= 0x40;
+-	int a_speed		= 3 << (drive->dn * 4);
+-	int u_flag		= 1 << drive->dn;
+-	int v_flag		= 0x01 << drive->dn;
+-	int w_flag		= 0x10 << drive->dn;
+-	int u_speed		= 0;
+-	u16			reg4042, reg4a;
+-	u8			reg48, reg54, reg55;
+-	const u8 speed		= drive->dma_mode;
 -
--/**
-- *	efar_set_dmamode - Initialize host controller PATA DMA timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: Device to program
-- *
-- *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void efar_set_dmamode (struct ata_port *ap, struct ata_device *adev)
--{
--	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned long flags;
--	u8 speed		= adev->dma_mode;
--	int devid		= adev->devno + 2 * ap->port_no;
--	u8 udma_enable;
+-	pci_read_config_word(dev, maslave, &reg4042);
+-	pci_read_config_byte(dev, 0x48, &reg48);
+-	pci_read_config_word(dev, 0x4a, &reg4a);
+-	pci_read_config_byte(dev, 0x54, &reg54);
+-	pci_read_config_byte(dev, 0x55, &reg55);
 -
 -	if (speed >= XFER_UDMA_0) {
--		unsigned int udma = speed - XFER_UDMA_0;
--		u16 udma_timing;
+-		u8 udma = speed - XFER_UDMA_0;
 -
--		spin_lock_irqsave(&efar_lock, flags);
+-		u_speed = min_t(u8, 2 - (udma & 1), udma) << (drive->dn * 4);
 -
--		pci_read_config_byte(dev, 0x48, &udma_enable);
+-		if (!(reg48 & u_flag))
+-			pci_write_config_byte(dev, 0x48, reg48 | u_flag);
+-		if (speed >= XFER_UDMA_5)
+-			pci_write_config_byte(dev, 0x55, (u8) reg55|w_flag);
+-		else
+-			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
 -
--		udma_enable |= (1 << devid);
+-		if ((reg4a & a_speed) != u_speed)
+-			pci_write_config_word(dev, 0x4a, (reg4a & ~a_speed) | u_speed);
+-		if (speed > XFER_UDMA_2) {
+-			if (!(reg54 & v_flag))
+-				pci_write_config_byte(dev, 0x54, reg54 | v_flag);
+-		} else
+-			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+-	} else {
+-		const u8 mwdma_to_pio[] = { 0, 3, 4 };
 -
--		/* Load the UDMA mode number */
--		pci_read_config_word(dev, 0x4A, &udma_timing);
--		udma_timing &= ~(7 << (4 * devid));
--		udma_timing |= udma << (4 * devid);
--		pci_write_config_word(dev, 0x4A, udma_timing);
+-		if (reg48 & u_flag)
+-			pci_write_config_byte(dev, 0x48, reg48 & ~u_flag);
+-		if (reg4a & a_speed)
+-			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
+-		if (reg54 & v_flag)
+-			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+-		if (reg55 & w_flag)
+-			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
 -
--		pci_write_config_byte(dev, 0x48, udma_enable);
+-		if (speed >= XFER_MW_DMA_0)
+-			drive->pio_mode =
+-				mwdma_to_pio[speed - XFER_MW_DMA_0] + XFER_PIO_0;
+-		else
+-			drive->pio_mode = XFER_PIO_2; /* for SWDMA2 */
 -
--		spin_unlock_irqrestore(&efar_lock, flags);
--	} else
--		/* MWDMA is driven by the PIO timings. */
--		efar_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
+-		it8213_set_pio_mode(hwif, drive);
+-	}
 -}
-+#include "pata_efar.h"
+-
+-static int it8213_cable_detect(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u8 reg42h = 0;
+-
+-	pci_read_config_byte(dev, 0x42, &reg42h);
+-
+-	return (reg42h & 0x02) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-}
++#include <linux/ide2libata.h>
++#include "../ata/pata_it8213.h"
  
- static struct scsi_host_template efar_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
-Index: b/drivers/ata/pata_efar.h
-===================================================================
---- /dev/null
-+++ b/drivers/ata/pata_efar.h
-@@ -0,0 +1,152 @@
-+
-+/**
-+ *	efar_cable_detect	-	check for 40/80 pin
-+ *	@ap: Port
-+ *
-+ *	Perform cable detection for the EFAR ATA interface. This is
-+ *	different to the PIIX arrangement
-+ */
-+
-+static int efar_cable_detect(struct ata_port *ap)
-+{
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u8 tmp;
-+
-+	pci_read_config_byte(pdev, 0x47, &tmp);
-+	if (tmp & (2 >> ap->port_no))
-+		return ATA_CBL_PATA40;
-+	return ATA_CBL_PATA80;
-+}
-+
-+static DEFINE_SPINLOCK(efar_lock);
-+
-+static void efar_set_timings(struct ata_port *ap, struct ata_device *adev,
-+			     u8 pio, bool use_mwdma)
-+{
-+	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned long flags;
-+	unsigned int is_slave	= (adev->devno != 0);
-+	u8 master_port		= ap->port_no ? 0x42 : 0x40;
-+	u16 master_data;
-+	u8 slave_data;
-+	u8 udma_enable;
-+	int control = 0;
-+
-+	/*
-+	 *	See Intel Document 298600-004 for the timing programing rules
-+	 *	for PIIX/ICH. The EFAR is a clone so very similar
-+	 */
-+
-+	static const	 /* ISP  RTC */
-+	u8 timings[][2]	= { { 0, 0 },
-+			    { 0, 0 },
-+			    { 1, 0 },
-+			    { 2, 1 },
-+			    { 2, 3 }, };
-+
-+	if (pio > 1 || use_mwdma)
-+		control |= 1;	/* TIME */
-+	if (ata_pio_need_iordy(adev) || use_mwdma)
-+		control |= 2;	/* IE */
-+	/* Intel specifies that the prefetch/posting is for disk only */
-+	if (adev->class == ATA_DEV_ATA)
-+		control |= 4;	/* PPE */
-+	/* If the drive MWDMA is faster than it can do PIO then
-+	   we must force PIO into PIO0 */
-+	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
-+		/* Enable DMA timing only */
-+		control |= 8;	/* PIO cycles in PIO0 */
-+
-+	spin_lock_irqsave(&efar_lock, flags);
-+
-+	pci_read_config_word(dev, master_port, &master_data);
-+
-+	/* Set PPE, IE, and TIME as appropriate */
-+	if (is_slave == 0) {
-+		master_data &= 0xCCF0;
-+		master_data |= control;
-+		master_data |= (timings[pio][0] << 12) |
-+			(timings[pio][1] << 8);
-+	} else {
-+		int shift = 4 * ap->port_no;
-+
-+		master_data &= 0xFF0F;
-+		master_data |= (control << 4);
-+
-+		/* Slave timing in separate register */
-+		pci_read_config_byte(dev, 0x44, &slave_data);
-+		slave_data &= ap->port_no ? 0x0F : 0xF0;
-+		slave_data |=
-+			((timings[pio][0] << 2) | timings[pio][1]) << shift;
-+	}
-+
-+	master_data |= 0x4000;	/* Ensure SITRE is set */
-+	pci_write_config_word(dev, master_port, master_data);
-+	if (is_slave)
-+		pci_write_config_byte(dev, 0x44, slave_data);
-+
-+	pci_read_config_byte(dev, 0x48, &udma_enable);
-+	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
-+	pci_write_config_byte(dev, 0x48, udma_enable);
-+
-+	spin_unlock_irqrestore(&efar_lock, flags);
-+}
-+
-+/**
-+ *	efar_set_piomode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: Device to program
-+ *
-+ *	Set PIO mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void efar_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	efar_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
-+}
-+
-+/**
-+ *	efar_set_dmamode - Initialize host controller PATA DMA timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: Device to program
-+ *
-+ *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void efar_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned long flags;
-+	u8 speed		= adev->dma_mode;
-+	int devid		= adev->devno + 2 * ap->port_no;
-+	u8 udma_enable;
-+
-+	if (speed >= XFER_UDMA_0) {
-+		unsigned int udma = speed - XFER_UDMA_0;
-+		u16 udma_timing;
-+
-+		spin_lock_irqsave(&efar_lock, flags);
-+
-+		pci_read_config_byte(dev, 0x48, &udma_enable);
-+
-+		udma_enable |= (1 << devid);
-+
-+		/* Load the UDMA mode number */
-+		pci_read_config_word(dev, 0x4A, &udma_timing);
-+		udma_timing &= ~(7 << (4 * devid));
-+		udma_timing |= udma << (4 * devid);
-+		pci_write_config_word(dev, 0x4A, udma_timing);
-+
-+		pci_write_config_byte(dev, 0x48, udma_enable);
-+
-+		spin_unlock_irqrestore(&efar_lock, flags);
-+	} else
-+		/* MWDMA is driven by the PIO timings. */
-+		efar_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
-+}
+ static const struct ide_port_ops it8213_port_ops = {
+-	.set_pio_mode		= it8213_set_pio_mode,
+-	.set_dma_mode		= it8213_set_dma_mode,
++	.set_pio_mode		= it8213_set_piomode,
++	.set_dma_mode		= it8213_set_dmamode,
+ 	.cable_detect		= it8213_cable_detect,
+ };
+ 
