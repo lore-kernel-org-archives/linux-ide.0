@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 29/68] ata_piix: move code to be re-used by ide2libata to ata_piix.h
-Date: Fri, 29 Jan 2010 17:06:16 +0100
-Message-ID: <20100129160616.21495.19482.sendpatchset@localhost>
+Subject: [PATCH 24/68] ide: change ->cable_detect method return type to 'int'
+Date: Fri, 29 Jan 2010 17:05:44 +0100
+Message-ID: <20100129160544.21495.34179.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:23261 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466Ab0A2QGY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:06:24 -0500
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:53041 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754340Ab0A2QFw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:05:52 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,490 +15,362 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ata_piix: move code to be re-used by ide2libata to ata_piix.h
+Subject: [PATCH] ide: change ->cable_detect method return type to 'int'
+
+Change ->cable_detect method return type to match ->cable_detect method
+used in struct ata_port_operations.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/ata_piix.c |  220 -----------------------------------------------
- drivers/ata/ata_piix.h |  226 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 226 insertions(+), 220 deletions(-)
+ drivers/ide/aec62xx.c      |    2 +-
+ drivers/ide/alim15x3.c     |    2 +-
+ drivers/ide/amd74xx.c      |    2 +-
+ drivers/ide/atiixp.c       |    2 +-
+ drivers/ide/cmd64x.c       |    2 +-
+ drivers/ide/cs5535.c       |    2 +-
+ drivers/ide/cs5536.c       |    2 +-
+ drivers/ide/hpt366.c       |    2 +-
+ drivers/ide/it8213.c       |    2 +-
+ drivers/ide/it821x.c       |    2 +-
+ drivers/ide/jmicron.c      |    2 +-
+ drivers/ide/palm_bk3710.c  |    2 +-
+ drivers/ide/pdc202xx_new.c |    2 +-
+ drivers/ide/pdc202xx_old.c |    2 +-
+ drivers/ide/piix.c         |    2 +-
+ drivers/ide/pmac.c         |    2 +-
+ drivers/ide/scc_pata.c     |    2 +-
+ drivers/ide/serverworks.c  |    2 +-
+ drivers/ide/siimage.c      |    2 +-
+ drivers/ide/sis5513.c      |    2 +-
+ drivers/ide/slc90e66.c     |    2 +-
+ drivers/ide/tc86c001.c     |    2 +-
+ drivers/ide/tx4939ide.c    |    2 +-
+ drivers/ide/via82cxxx.c    |    2 +-
+ include/linux/ide.h        |    2 +-
+ 25 files changed, 25 insertions(+), 25 deletions(-)
 
-Index: b/drivers/ata/ata_piix.c
+Index: b/drivers/ide/aec62xx.c
 ===================================================================
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -629,178 +629,6 @@ static int piix_pata_prereset(struct ata
- 	return ata_sff_prereset(link, deadline);
- }
- 
--static DEFINE_SPINLOCK(piix_lock);
--
--static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
--			     u8 pio, bool use_mwdma)
--{
--	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned long flags;
--	unsigned int is_slave	= (adev->devno != 0);
--	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
--	unsigned int slave_port	= 0x44;
--	u16 master_data;
--	u8 slave_data;
--	u8 udma_enable;
--	int control = 0;
--
--	/*
--	 *	See Intel Document 298600-004 for the timing programing rules
--	 *	for ICH controllers.
--	 */
--
--	static const	 /* ISP  RTC */
--	u8 timings[][2]	= { { 0, 0 },
--			    { 0, 0 },
--			    { 1, 0 },
--			    { 2, 1 },
--			    { 2, 3 }, };
--
--	if (pio >= 2 || use_mwdma)
--		control |= 1;	/* TIME1 enable */
--	if (ata_pio_need_iordy(adev) || use_mwdma)
--		control |= 2;	/* IE enable */
--	/* Intel specifies that the PPE functionality is for disk only */
--	if (adev->class == ATA_DEV_ATA)
--		control |= 4;	/* PPE enable */
--	/* If the drive MWDMA is faster than it can do PIO then
--	   we must force PIO into PIO0 */
--	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
--		/* Enable DMA timing only */
--		control |= 8;	/* PIO cycles in PIO0 */
--
--	spin_lock_irqsave(&piix_lock, flags);
--
--	/* PIO configuration clears DTE unconditionally.  It will be
--	 * programmed in set_dmamode which is guaranteed to be called
--	 * after set_piomode if any DMA mode is available.
--	 */
--	pci_read_config_word(dev, master_port, &master_data);
--	if (is_slave) {
--		/* clear TIME1|IE1|PPE1|DTE1 */
--		master_data &= 0xff0f;
--		/* Enable SITRE (separate slave timing register) */
--		master_data |= 0x4000;
--		/* enable PPE1, IE1 and TIME1 as needed */
--		master_data |= (control << 4);
--		pci_read_config_byte(dev, slave_port, &slave_data);
--		slave_data &= (ap->port_no ? 0x0f : 0xf0);
--		/* Load the timing nibble for this slave */
--		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
--						<< (ap->port_no ? 4 : 0);
--	} else {
--		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
--		master_data &= 0xccf0;
--		/* Enable PPE, IE and TIME as appropriate */
--		master_data |= control;
--		/* load ISP and RCT */
--		master_data |=
--			(timings[pio][0] << 12) |
--			(timings[pio][1] << 8);
--	}
--	pci_write_config_word(dev, master_port, master_data);
--	if (is_slave)
--		pci_write_config_byte(dev, slave_port, slave_data);
--
--	/* Ensure the UDMA bit is off - it will be turned back on if
--	   UDMA is selected */
--
--	if (ap->udma_mask) {
--		pci_read_config_byte(dev, 0x48, &udma_enable);
--		udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
--		pci_write_config_byte(dev, 0x48, udma_enable);
--	}
--
--	spin_unlock_irqrestore(&piix_lock, flags);
--}
--
--/**
-- *	piix_set_piomode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: Drive in question
-- *
-- *	Set PIO mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
--{
--	piix_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
--}
--
--/**
-- *	do_pata_set_dmamode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: Drive in question
-- *	@isich: set if the chip is an ICH device
-- *
-- *	Set UDMA mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev, int isich)
--{
--	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned long flags;
--	u8 speed		= adev->dma_mode;
--	int devid		= adev->devno + 2 * ap->port_no;
--	u8 udma_enable		= 0;
--
--	if (speed >= XFER_UDMA_0) {
--		unsigned int udma = speed - XFER_UDMA_0;
--		u16 udma_timing;
--		u16 ideconf;
--		int u_clock, u_speed;
--
--		spin_lock_irqsave(&piix_lock, flags);
--
--		pci_read_config_byte(dev, 0x48, &udma_enable);
--
--		/*
--		 * UDMA is handled by a combination of clock switching and
--		 * selection of dividers
--		 *
--		 * Handy rule: Odd modes are UDMATIMx 01, even are 02
--		 *	       except UDMA0 which is 00
--		 */
--		u_speed = min(2 - (udma & 1), udma);
--		if (udma == 5)
--			u_clock = 0x1000;	/* 100Mhz */
--		else if (udma > 2)
--			u_clock = 1;		/* 66Mhz */
--		else
--			u_clock = 0;		/* 33Mhz */
--
--		udma_enable |= (1 << devid);
--
--		/* Load the CT/RP selection */
--		pci_read_config_word(dev, 0x4A, &udma_timing);
--		udma_timing &= ~(3 << (4 * devid));
--		udma_timing |= u_speed << (4 * devid);
--		pci_write_config_word(dev, 0x4A, udma_timing);
--
--		if (isich) {
--			/* Select a 33/66/100Mhz clock */
--			pci_read_config_word(dev, 0x54, &ideconf);
--			ideconf &= ~(0x1001 << devid);
--			ideconf |= u_clock << devid;
--			/* For ICH or later we should set bit 10 for better
--			   performance (WR_PingPong_En) */
--			pci_write_config_word(dev, 0x54, ideconf);
--		}
--
--		pci_write_config_byte(dev, 0x48, udma_enable);
--
--		spin_unlock_irqrestore(&piix_lock, flags);
--	} else
--		/* MWDMA is driven by the PIO timings. */
--		piix_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
--}
--
- /**
-  *	piix_set_dmamode - Initialize host controller PATA DMA timings
-  *	@ap: Port whose timings we are configuring
-@@ -817,22 +645,6 @@ static void piix_set_dmamode(struct ata_
- 	do_pata_set_dmamode(ap, adev, 0);
- }
- 
--/**
-- *	ich_set_dmamode - Initialize host controller PATA DMA timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: um
-- *
-- *	Set MW/UDMA mode for device, in host controller PCI config space.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev)
--{
--	do_pata_set_dmamode(ap, adev, 1);
--}
--
- /*
-  * Serial ATA Index/Data Pair Superset Registers access
-  *
-@@ -1145,38 +957,6 @@ static int piix_disable_ahci(struct pci_
- 	return rc;
- }
- 
--/**
-- *	piix_check_450nx_errata	-	Check for problem 450NX setup
-- *	@ata_dev: the PCI device to check
-- *
-- *	Check for the present of 450NX errata #19 and errata #25. If
-- *	they are found return an error code so we can turn off DMA
-- */
--
--static int __devinit piix_check_450nx_errata(struct pci_dev *ata_dev)
--{
--	struct pci_dev *pdev = NULL;
--	u16 cfg;
--	int no_piix_dma = 0;
--
--	while ((pdev = pci_get_device(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454NX, pdev)) != NULL) {
--		/* Look for 450NX PXB. Check for problem configurations
--		   A PCI quirk checks bit 6 already */
--		pci_read_config_word(pdev, 0x41, &cfg);
--		/* Only on the original revision: IDE DMA can hang */
--		if (pdev->revision == 0x00)
--			no_piix_dma = 1;
--		/* On all revisions below 5 PXB bus lock must be disabled for IDE */
--		else if (cfg & (1<<14) && pdev->revision < 5)
--			no_piix_dma = 2;
--	}
--	if (no_piix_dma)
--		dev_printk(KERN_WARNING, &ata_dev->dev, "450NX errata present, disabling IDE DMA.\n");
--	if (no_piix_dma == 2)
--		dev_printk(KERN_WARNING, &ata_dev->dev, "A BIOS update may resolve this.\n");
--	return no_piix_dma;
--}
--
- static void __devinit piix_init_pcs(struct ata_host *host,
- 				    const struct piix_map_db *map_db)
- {
-Index: b/drivers/ata/ata_piix.h
-===================================================================
---- a/drivers/ata/ata_piix.h
-+++ b/drivers/ata/ata_piix.h
-@@ -43,3 +43,229 @@ static int ich_short_ata40(struct pci_de
- 
+--- a/drivers/ide/aec62xx.c
++++ b/drivers/ide/aec62xx.c
+@@ -160,7 +160,7 @@ static int init_chipset_aec62xx(struct p
  	return 0;
  }
-+
-+#ifdef __LINUX_LIBATA_H__
-+static DEFINE_SPINLOCK(piix_lock);
-+
-+static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
-+			     u8 pio, bool use_mwdma)
-+{
-+	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned long flags;
-+	unsigned int is_slave	= (adev->devno != 0);
-+	unsigned int master_port = ap->port_no ? 0x42 : 0x40;
-+	unsigned int slave_port	 = 0x44;
-+	u16 master_data;
-+	u8 slave_data;
-+	u8 udma_enable;
-+	int control = 0;
-+
-+	/*
-+	 *	See Intel Document 298600-004 for the timing programing rules
-+	 *	for ICH controllers.
-+	 */
-+
-+	static const	 /* ISP  RTC */
-+	u8 timings[][2]	= { { 0, 0 },
-+			    { 0, 0 },
-+			    { 1, 0 },
-+			    { 2, 1 },
-+			    { 2, 3 }, };
-+
-+	if (pio >= 2 || use_mwdma)
-+		control |= 1;	/* TIME1 enable */
-+	if (ata_pio_need_iordy(adev) || use_mwdma)
-+		control |= 2;	/* IE enable */
-+	/* Intel specifies that the PPE functionality is for disk only */
-+	if (adev->class == ATA_DEV_ATA)
-+		control |= 4;	/* PPE enable */
-+	/* If the drive MWDMA is faster than it can do PIO then
-+	   we must force PIO into PIO0 */
-+	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
-+		/* Enable DMA timing only */
-+		control |= 8;	/* PIO cycles in PIO0 */
-+
-+	spin_lock_irqsave(&piix_lock, flags);
-+
-+	/* PIO configuration clears DTE unconditionally.  It will be
-+	 * programmed in set_dmamode which is guaranteed to be called
-+	 * after set_piomode if any DMA mode is available.
-+	 */
-+	pci_read_config_word(dev, master_port, &master_data);
-+	if (is_slave) {
-+		/* clear TIME1|IE1|PPE1|DTE1 */
-+		master_data &= 0xff0f;
-+		/* Enable SITRE (separate slave timing register) */
-+		master_data |= 0x4000;
-+		/* enable PPE1, IE1 and TIME1 as needed */
-+		master_data |= (control << 4);
-+		pci_read_config_byte(dev, slave_port, &slave_data);
-+		slave_data &= (ap->port_no ? 0x0f : 0xf0);
-+		/* Load the timing nibble for this slave */
-+		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
-+						<< (ap->port_no ? 4 : 0);
-+	} else {
-+		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
-+		master_data &= 0xccf0;
-+		/* Enable PPE, IE and TIME as appropriate */
-+		master_data |= control;
-+		/* load ISP and RCT */
-+		master_data |=
-+			(timings[pio][0] << 12) |
-+			(timings[pio][1] << 8);
-+	}
-+	pci_write_config_word(dev, master_port, master_data);
-+	if (is_slave)
-+		pci_write_config_byte(dev, slave_port, slave_data);
-+
-+	/* Ensure the UDMA bit is off - it will be turned back on if
-+	   UDMA is selected */
-+
-+	if (ap->udma_mask) {
-+		pci_read_config_byte(dev, 0x48, &udma_enable);
-+		udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
-+		pci_write_config_byte(dev, 0x48, udma_enable);
-+	}
-+
-+	spin_unlock_irqrestore(&piix_lock, flags);
-+}
-+
-+/**
-+ *	piix_set_piomode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: Drive in question
-+ *
-+ *	Set PIO mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	piix_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
-+}
-+
-+/**
-+ *	do_pata_set_dmamode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: Drive in question
-+ *	@isich: set if the chip is an ICH device
-+ *
-+ *	Set UDMA mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev,
-+				int isich)
-+{
-+	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned long flags;
-+	u8 speed		= adev->dma_mode;
-+	int devid		= adev->devno + 2 * ap->port_no;
-+	u8 udma_enable		= 0;
-+
-+	if (speed >= XFER_UDMA_0) {
-+		unsigned int udma = speed - XFER_UDMA_0;
-+		u16 udma_timing;
-+		u16 ideconf;
-+		int u_clock, u_speed;
-+
-+		spin_lock_irqsave(&piix_lock, flags);
-+
-+		pci_read_config_byte(dev, 0x48, &udma_enable);
-+
-+		/*
-+		 * UDMA is handled by a combination of clock switching and
-+		 * selection of dividers
-+		 *
-+		 * Handy rule: Odd modes are UDMATIMx 01, even are 02
-+		 *	       except UDMA0 which is 00
-+		 */
-+		u_speed = min(2 - (udma & 1), udma);
-+		if (udma == 5)
-+			u_clock = 0x1000;	/* 100Mhz */
-+		else if (udma > 2)
-+			u_clock = 1;		/* 66Mhz */
-+		else
-+			u_clock = 0;		/* 33Mhz */
-+
-+		udma_enable |= (1 << devid);
-+
-+		/* Load the CT/RP selection */
-+		pci_read_config_word(dev, 0x4A, &udma_timing);
-+		udma_timing &= ~(3 << (4 * devid));
-+		udma_timing |= u_speed << (4 * devid);
-+		pci_write_config_word(dev, 0x4A, udma_timing);
-+
-+		if (isich) {
-+			/* Select a 33/66/100Mhz clock */
-+			pci_read_config_word(dev, 0x54, &ideconf);
-+			ideconf &= ~(0x1001 << devid);
-+			ideconf |= u_clock << devid;
-+			/* For ICH or later we should set bit 10 for better
-+			   performance (WR_PingPong_En) */
-+			pci_write_config_word(dev, 0x54, ideconf);
-+		}
-+
-+		pci_write_config_byte(dev, 0x48, udma_enable);
-+
-+		spin_unlock_irqrestore(&piix_lock, flags);
-+	} else
-+		/* MWDMA is driven by the PIO timings. */
-+		piix_set_timings(ap, adev, ata_mwdma_to_pio(speed), 1);
-+}
-+
-+/**
-+ *	ich_set_dmamode - Initialize host controller PATA DMA timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: um
-+ *
-+ *	Set MW/UDMA mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	do_pata_set_dmamode(ap, adev, 1);
-+}
-+
-+/**
-+ *	piix_check_450nx_errata	-	Check for problem 450NX setup
-+ *	@ata_dev: the PCI device to check
-+ *
-+ *	Check for the present of 450NX errata #19 and errata #25. If
-+ *	they are found return an error code so we can turn off DMA
-+ */
-+
-+static int __devinit piix_check_450nx_errata(struct pci_dev *ata_dev)
-+{
-+	struct pci_dev *pdev = NULL;
-+	u16 cfg;
-+	int no_piix_dma = 0;
-+
-+	while ((pdev = pci_get_device(PCI_VENDOR_ID_INTEL,
-+				PCI_DEVICE_ID_INTEL_82454NX, pdev)) != NULL) {
-+		/* Look for 450NX PXB. Check for problem configurations
-+		   A PCI quirk checks bit 6 already */
-+		pci_read_config_word(pdev, 0x41, &cfg);
-+		/* Only on the original revision: IDE DMA can hang */
-+		if (pdev->revision == 0x00)
-+			no_piix_dma = 1;
-+		/* On all revs below 5 PXB bus lock must be disabled for IDE */
-+		else if (cfg & (1<<14) && pdev->revision < 5)
-+			no_piix_dma = 2;
-+	}
-+	if (no_piix_dma)
-+		dev_printk(KERN_WARNING, &ata_dev->dev,
-+			   "450NX errata present, disabling IDE DMA.\n");
-+	if (no_piix_dma == 2)
-+		dev_printk(KERN_WARNING, &ata_dev->dev,
-+			   "A BIOS update may resolve this.\n");
-+	return no_piix_dma;
-+}
-+#endif
+ 
+-static u8 atp86x_cable_detect(ide_hwif_t *hwif)
++static int atp86x_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u8 ata66 = 0, mask = hwif->channel ? 0x02 : 0x01;
+Index: b/drivers/ide/alim15x3.c
+===================================================================
+--- a/drivers/ide/alim15x3.c
++++ b/drivers/ide/alim15x3.c
+@@ -317,7 +317,7 @@ out:
+  *	of UDMA66 transfers. It doesn't check the drives.
+  */
+ 
+-static u8 ali_cable_detect(ide_hwif_t *hwif)
++static int ali_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u8 cbl = ATA_CBL_PATA40, tmpbyte;
+Index: b/drivers/ide/amd74xx.c
+===================================================================
+--- a/drivers/ide/amd74xx.c
++++ b/drivers/ide/amd74xx.c
+@@ -178,7 +178,7 @@ static int init_chipset_amd74xx(struct p
+ 	return 0;
+ }
+ 
+-static u8 amd_cable_detect(ide_hwif_t *hwif)
++static int amd_cable_detect(ide_hwif_t *hwif)
+ {
+ 	if ((amd_80w >> hwif->channel) & 1)
+ 		return ATA_CBL_PATA80;
+Index: b/drivers/ide/atiixp.c
+===================================================================
+--- a/drivers/ide/atiixp.c
++++ b/drivers/ide/atiixp.c
+@@ -120,7 +120,7 @@ static void atiixp_set_dma_mode(ide_hwif
+ 	spin_unlock_irqrestore(&atiixp_lock, flags);
+ }
+ 
+-static u8 atiixp_cable_detect(ide_hwif_t *hwif)
++static int atiixp_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 	u8 udma_mode = 0, ch = hwif->channel;
+Index: b/drivers/ide/cmd64x.c
+===================================================================
+--- a/drivers/ide/cmd64x.c
++++ b/drivers/ide/cmd64x.c
+@@ -312,7 +312,7 @@ static int init_chipset_cmd64x(struct pc
+ 	return 0;
+ }
+ 
+-static u8 cmd64x_cable_detect(ide_hwif_t *hwif)
++static int cmd64x_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev  *dev	= to_pci_dev(hwif->dev);
+ 	u8 bmidecsr = 0, mask	= hwif->channel ? 0x02 : 0x01;
+Index: b/drivers/ide/cs5535.c
+===================================================================
+--- a/drivers/ide/cs5535.c
++++ b/drivers/ide/cs5535.c
+@@ -153,7 +153,7 @@ static void cs5535_set_pio_mode(ide_hwif
+ 	cs5535_set_speed(drive, drive->pio_mode);
+ }
+ 
+-static u8 cs5535_cable_detect(ide_hwif_t *hwif)
++static int cs5535_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u8 bit;
+Index: b/drivers/ide/cs5536.c
+===================================================================
+--- a/drivers/ide/cs5536.c
++++ b/drivers/ide/cs5536.c
+@@ -110,7 +110,7 @@ static void cs5536_program_dtc(ide_drive
+  *	Returns a cable type.
+  */
+ 
+-static u8 cs5536_cable_detect(ide_hwif_t *hwif)
++static int cs5536_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 	u32 cfg;
+Index: b/drivers/ide/hpt366.c
+===================================================================
+--- a/drivers/ide/hpt366.c
++++ b/drivers/ide/hpt366.c
+@@ -1215,7 +1215,7 @@ static int init_chipset_hpt366(struct pc
+ 	return 0;
+ }
+ 
+-static u8 hpt3xx_cable_detect(ide_hwif_t *hwif)
++static int hpt3xx_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev	*dev	= to_pci_dev(hwif->dev);
+ 	struct hpt_info *info	= hpt3xx_get_info(hwif->dev);
+Index: b/drivers/ide/it8213.c
+===================================================================
+--- a/drivers/ide/it8213.c
++++ b/drivers/ide/it8213.c
+@@ -140,7 +140,7 @@ static void it8213_set_dma_mode(ide_hwif
+ 	}
+ }
+ 
+-static u8 it8213_cable_detect(ide_hwif_t *hwif)
++static int it8213_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u8 reg42h = 0;
+Index: b/drivers/ide/it821x.c
+===================================================================
+--- a/drivers/ide/it821x.c
++++ b/drivers/ide/it821x.c
+@@ -423,7 +423,7 @@ static void it821x_set_dma_mode(ide_hwif
+  *	the needed logic onboard.
+  */
+ 
+-static u8 it821x_cable_detect(ide_hwif_t *hwif)
++static int it821x_cable_detect(ide_hwif_t *hwif)
+ {
+ 	/* The reference driver also only does disk side */
+ 	return ATA_CBL_PATA80;
+Index: b/drivers/ide/jmicron.c
+===================================================================
+--- a/drivers/ide/jmicron.c
++++ b/drivers/ide/jmicron.c
+@@ -26,7 +26,7 @@ typedef enum {
+  *	Returns the cable type.
+  */
+ 
+-static u8 jmicron_cable_detect(ide_hwif_t *hwif)
++static int jmicron_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 
+Index: b/drivers/ide/palm_bk3710.c
+===================================================================
+--- a/drivers/ide/palm_bk3710.c
++++ b/drivers/ide/palm_bk3710.c
+@@ -274,7 +274,7 @@ static void __devinit palm_bk3710_chipin
+ 	palm_bk3710_setpiomode(base, NULL, 1, 600, 0);
+ }
+ 
+-static u8 palm_bk3710_cable_detect(ide_hwif_t *hwif)
++static int palm_bk3710_cable_detect(ide_hwif_t *hwif)
+ {
+ 	return ATA_CBL_PATA80;
+ }
+Index: b/drivers/ide/pdc202xx_new.c
+===================================================================
+--- a/drivers/ide/pdc202xx_new.c
++++ b/drivers/ide/pdc202xx_new.c
+@@ -180,7 +180,7 @@ static void pdcnew_set_pio_mode(ide_hwif
+ 	}
+ }
+ 
+-static u8 pdcnew_cable_detect(ide_hwif_t *hwif)
++static int pdcnew_cable_detect(ide_hwif_t *hwif)
+ {
+ 	if (get_indexed_reg(hwif, 0x0b) & 0x04)
+ 		return ATA_CBL_PATA40;
+Index: b/drivers/ide/pdc202xx_old.c
+===================================================================
+--- a/drivers/ide/pdc202xx_old.c
++++ b/drivers/ide/pdc202xx_old.c
+@@ -103,7 +103,7 @@ static int pdc202xx_test_irq(ide_hwif_t
+ 	}
+ }
+ 
+-static u8 pdc2026x_cable_detect(ide_hwif_t *hwif)
++static int pdc2026x_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u16 CIS, mask = hwif->channel ? (1 << 11) : (1 << 10);
+Index: b/drivers/ide/piix.c
+===================================================================
+--- a/drivers/ide/piix.c
++++ b/drivers/ide/piix.c
+@@ -243,7 +243,7 @@ static void ich_clear_irq(ide_drive_t *d
+ 
+ #include "../ata/ata_piix.h"
+ 
+-static u8 piix_cable_detect(ide_hwif_t *hwif)
++static int piix_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 	u8 reg54h = 0, mask = hwif->channel ? 0xc0 : 0x30;
+Index: b/drivers/ide/pmac.c
+===================================================================
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -912,7 +912,7 @@ static int pmac_ide_do_resume(pmac_ide_h
+ 	return 0;
+ }
+ 
+-static u8 pmac_ide_cable_detect(ide_hwif_t *hwif)
++static int pmac_ide_cable_detect(ide_hwif_t *hwif)
+ {
+ 	pmac_ide_hwif_t *pmif =
+ 		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
+Index: b/drivers/ide/scc_pata.c
+===================================================================
+--- a/drivers/ide/scc_pata.c
++++ b/drivers/ide/scc_pata.c
+@@ -754,7 +754,7 @@ static int __devinit scc_init_dma(ide_hw
+ 	return ide_allocate_dma_engine(hwif);
+ }
+ 
+-static u8 scc_cable_detect(ide_hwif_t *hwif)
++static int scc_cable_detect(ide_hwif_t *hwif)
+ {
+ 	return ATA_CBL_PATA80;
+ }
+Index: b/drivers/ide/serverworks.c
+===================================================================
+--- a/drivers/ide/serverworks.c
++++ b/drivers/ide/serverworks.c
+@@ -301,7 +301,7 @@ static u8 ata66_svwks_cobalt(ide_hwif_t
+ 	return ATA_CBL_PATA40;
+ }
+ 
+-static u8 svwks_cable_detect(ide_hwif_t *hwif)
++static int svwks_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 
+Index: b/drivers/ide/siimage.c
+===================================================================
+--- a/drivers/ide/siimage.c
++++ b/drivers/ide/siimage.c
+@@ -667,7 +667,7 @@ static void __devinit init_iops_siimage(
+  *	Check for the presence of an ATA66 capable cable on the interface.
+  */
+ 
+-static u8 sil_cable_detect(ide_hwif_t *hwif)
++static int sil_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+ 	unsigned long addr	= siimage_selreg(hwif, 0);
+Index: b/drivers/ide/sis5513.c
+===================================================================
+--- a/drivers/ide/sis5513.c
++++ b/drivers/ide/sis5513.c
+@@ -508,7 +508,7 @@ static int init_chipset_sis5513(struct p
+ 
+ #include "../ata/pata_sis.h"
+ 
+-static u8 sis_cable_detect(ide_hwif_t *hwif)
++static int sis_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 	u8 ata66 = 0;
+Index: b/drivers/ide/slc90e66.c
+===================================================================
+--- a/drivers/ide/slc90e66.c
++++ b/drivers/ide/slc90e66.c
+@@ -115,7 +115,7 @@ static void slc90e66_set_dma_mode(ide_hw
+ 	}
+ }
+ 
+-static u8 slc90e66_cable_detect(ide_hwif_t *hwif)
++static int slc90e66_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u8 reg47 = 0, mask = hwif->channel ? 0x01 : 0x02;
+Index: b/drivers/ide/tc86c001.c
+===================================================================
+--- a/drivers/ide/tc86c001.c
++++ b/drivers/ide/tc86c001.c
+@@ -130,7 +130,7 @@ static void tc86c001_dma_start(ide_drive
+ 	ide_dma_start(drive);
+ }
+ 
+-static u8 tc86c001_cable_detect(ide_hwif_t *hwif)
++static int tc86c001_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	unsigned long sc_base = pci_resource_start(dev, 5);
+Index: b/drivers/ide/tx4939ide.c
+===================================================================
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -189,7 +189,7 @@ static void tx4939ide_clear_irq(ide_driv
+ 	tx4939ide_writew(ctl, base, TX4939IDE_Int_Ctl);
+ }
+ 
+-static u8 tx4939ide_cable_detect(ide_hwif_t *hwif)
++static int tx4939ide_cable_detect(ide_hwif_t *hwif)
+ {
+ 	void __iomem *base = TX4939IDE_BASE(hwif);
+ 
+Index: b/drivers/ide/via82cxxx.c
+===================================================================
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -352,7 +352,7 @@ static int init_chipset_via82cxxx(struct
+ 
+ #include "../ata/pata_via.h"
+ 
+-static u8 via82cxxx_cable_detect(ide_hwif_t *hwif)
++static int via82cxxx_cable_detect(ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 	struct ide_host *host = pci_get_drvdata(pdev);
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -644,7 +644,7 @@ struct ide_port_ops {
+ 	u8	(*mdma_filter)(ide_drive_t *);
+ 	u8	(*udma_filter)(ide_drive_t *);
+ 
+-	u8	(*cable_detect)(struct hwif_s *);
++	int	(*cable_detect)(struct hwif_s *);
+ };
+ 
+ struct ide_dma_ops {
