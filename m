@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 59/68] sc1200: convert to ide2libata
-Date: Fri, 29 Jan 2010 17:09:28 +0100
-Message-ID: <20100129160928.21495.87738.sendpatchset@localhost>
+Subject: [PATCH 64/68] pata_triflex: move code to be re-used by ide2libata to pata_triflex.h
+Date: Fri, 29 Jan 2010 17:10:00 +0100
+Message-ID: <20100129161000.21495.71355.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:53041 "EHLO
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:47963 "EHLO
 	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755774Ab0A2QJg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:09:36 -0500
+	with ESMTP id S1755570Ab0A2QKI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:10:08 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,155 +15,168 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] sc1200: convert to ide2libata
+Subject: [PATCH] pata_triflex: move code to be re-used by ide2libata to pata_triflex.h
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/sc1200.c |  113 +--------------------------------------------------
- 1 file changed, 4 insertions(+), 109 deletions(-)
+ drivers/ata/pata_triflex.c |   72 ---------------------------------------------
+ drivers/ata/pata_triflex.h |   69 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 70 insertions(+), 71 deletions(-)
 
-Index: b/drivers/ide/sc1200.c
+Index: b/drivers/ata/pata_triflex.c
 ===================================================================
---- a/drivers/ide/sc1200.c
-+++ b/drivers/ide/sc1200.c
-@@ -23,73 +23,8 @@
+--- a/drivers/ata/pata_triflex.c
++++ b/drivers/ata/pata_triflex.c
+@@ -69,77 +69,7 @@ static int triflex_prereset(struct ata_l
+ 	return ata_sff_prereset(link, deadline);
+ }
  
- #define DRV_NAME "sc1200"
- 
--#define SC1200_REV_A	0x00
--#define SC1200_REV_B1	0x01
--#define SC1200_REV_B3	0x02
--#define SC1200_REV_C1	0x03
--#define SC1200_REV_D1	0x04
 -
--#define PCI_CLK_33	0x00
--#define PCI_CLK_48	0x01
--#define PCI_CLK_66	0x02
--#define PCI_CLK_33A	0x03
 -
--static unsigned short sc1200_get_pci_clock (void)
+-/**
+- *	triflex_load_timing		-	timing configuration
+- *	@ap: ATA interface
+- *	@adev: Device on the bus
+- *	@speed: speed to configure
+- *
+- *	The Triflex has one set of timings per device per channel. This
+- *	means we must do some switching. As the PIO and DMA timings don't
+- *	match we have to do some reloading unlike PIIX devices where tuning
+- *	tricks can avoid it.
+- */
+-
+-static void triflex_load_timing(struct ata_port *ap, struct ata_device *adev, int speed)
 -{
--	unsigned char chip_id, silicon_revision;
--	unsigned int pci_clock;
--	/*
--	 * Check the silicon revision, as not all versions of the chip
--	 * have the register with the fast PCI bus timings.
--	 */
--	chip_id = inb (0x903c);
--	silicon_revision = inb (0x903d);
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u32 timing = 0;
+-	u32 triflex_timing, old_triflex_timing;
+-	int channel_offset = ap->port_no ? 0x74: 0x70;
+-	unsigned int is_slave	= (adev->devno != 0);
 -
--	// Read the fast pci clock frequency
--	if (chip_id == 0x04 && silicon_revision < SC1200_REV_B1) {
--		pci_clock = PCI_CLK_33;
--	} else {
--		// check clock generator configuration (cfcc)
--		// the clock is in bits 8 and 9 of this word
 -
--		pci_clock = inw (0x901e);
--		pci_clock >>= 8;
--		pci_clock &= 0x03;
--		if (pci_clock == PCI_CLK_33A)
--			pci_clock = PCI_CLK_33;
+-	pci_read_config_dword(pdev, channel_offset, &old_triflex_timing);
+-	triflex_timing = old_triflex_timing;
+-
+-	switch(speed)
+-	{
+-		case XFER_MW_DMA_2:
+-			timing = 0x0103;break;
+-		case XFER_MW_DMA_1:
+-			timing = 0x0203;break;
+-		case XFER_MW_DMA_0:
+-			timing = 0x0808;break;
+-		case XFER_SW_DMA_2:
+-		case XFER_SW_DMA_1:
+-		case XFER_SW_DMA_0:
+-			timing = 0x0F0F;break;
+-		case XFER_PIO_4:
+-			timing = 0x0202;break;
+-		case XFER_PIO_3:
+-			timing = 0x0204;break;
+-		case XFER_PIO_2:
+-			timing = 0x0404;break;
+-		case XFER_PIO_1:
+-			timing = 0x0508;break;
+-		case XFER_PIO_0:
+-			timing = 0x0808;break;
+-		default:
+-			BUG();
 -	}
--	return pci_clock;
+-	triflex_timing &= ~ (0xFFFF << (16 * is_slave));
+-	triflex_timing |= (timing << (16 * is_slave));
+-
+-	if (triflex_timing != old_triflex_timing)
+-		pci_write_config_dword(pdev, channel_offset, triflex_timing);
 -}
 -
--/*
-- * Here are the standard PIO mode 0-4 timings for each "format".
-- * Format-0 uses fast data reg timings, with slower command reg timings.
-- * Format-1 uses fast timings for all registers, but won't work with all drives.
+-/**
+- *	triflex_set_piomode	-	set initial PIO mode data
+- *	@ap: ATA interface
+- *	@adev: ATA device
+- *
+- *	Use the timing loader to set up the PIO mode. We have to do this
+- *	because DMA start/stop will only be called once DMA occurs. If there
+- *	has been no DMA then the PIO timings are still needed.
 - */
--static const unsigned int sc1200_pio_timings[4][5] =
--	{{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},	// format0  33Mhz
--	 {0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},	// format1, 33Mhz
--	 {0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},	// format1, 48Mhz
--	 {0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}};	// format1, 66Mhz
--
--/*
-- * After chip reset, the PIO timings are set to 0x00009172, which is not valid.
-- */
--//#define SC1200_BAD_PIO(timings) (((timings)&~0x80000000)==0x00009172)
--
--static void sc1200_tunepio(ide_drive_t *drive, u8 pio)
+-static void triflex_set_piomode(struct ata_port *ap, struct ata_device *adev)
 -{
--	ide_hwif_t *hwif = drive->hwif;
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	unsigned int basereg = hwif->channel ? 0x50 : 0x40, format = 0;
--
--	pci_read_config_dword(pdev, basereg + 4, &format);
--	format = (format >> 31) & 1;
--	if (format)
--		format += sc1200_get_pci_clock();
--	pci_write_config_dword(pdev, basereg + ((drive->dn & 1) << 3),
--			       sc1200_pio_timings[format][pio]);
+-	triflex_load_timing(ap, adev, adev->pio_mode);
 -}
-+#include <linux/ide2libata.h>
-+#include "../ata/pata_sc1200.h"
++#include "pata_triflex.h"
  
- /*
-  *	The SC1200 specifies that two drives sharing a cable cannot mix
-@@ -122,46 +57,6 @@ out:
- 	return mask;
- }
- 
--static void sc1200_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	struct pci_dev		*dev = to_pci_dev(hwif->dev);
--	unsigned int		reg, timings;
--	unsigned short		pci_clock;
--	unsigned int		basereg = hwif->channel ? 0x50 : 0x40;
--	const u8		mode = drive->dma_mode;
--
--	static const u32 udma_timing[3][3] = {
--		{ 0x00921250, 0x00911140, 0x00911030 },
--		{ 0x00932470, 0x00922260, 0x00922140 },
--		{ 0x009436a1, 0x00933481, 0x00923261 },
--	};
--
--	static const u32 mwdma_timing[3][3] = {
--		{ 0x00077771, 0x00012121, 0x00002020 },
--		{ 0x000bbbb2, 0x00024241, 0x00013131 },
--		{ 0x000ffff3, 0x00035352, 0x00015151 },
--	};
--
--	pci_clock = sc1200_get_pci_clock();
--
--	/*
--	 * Note that each DMA mode has several timings associated with it.
--	 * The correct timing depends on the fast PCI clock freq.
--	 */
--
--	if (mode >= XFER_UDMA_0)
--		timings =  udma_timing[pci_clock][mode - XFER_UDMA_0];
--	else
--		timings = mwdma_timing[pci_clock][mode - XFER_MW_DMA_0];
--
--	if ((drive->dn & 1) == 0) {
--		pci_read_config_dword(dev, basereg + 4, &reg);
--		timings |= reg & 0x80000000;	/* preserve PIO format bit */
--		pci_write_config_dword(dev, basereg + 4, timings);
--	} else
--		pci_write_config_dword(dev, basereg + 12, timings);
--}
--
- /*  Replacement for the standard ide_dma_end action in
-  *  dma_proc.
-  *
-@@ -218,7 +113,7 @@ static void sc1200_set_pio_mode(ide_hwif
- 		return;
- 	}
- 
--	sc1200_tunepio(drive, pio);
-+	sc1200_set_piomode(hwif, drive);
- }
- 
- #ifdef CONFIG_PM
-@@ -275,7 +170,7 @@ static int sc1200_resume (struct pci_dev
- 
- static const struct ide_port_ops sc1200_port_ops = {
- 	.set_pio_mode		= sc1200_set_pio_mode,
--	.set_dma_mode		= sc1200_set_dma_mode,
-+	.set_dma_mode		= sc1200_set_dmamode,
- 	.udma_filter		= sc1200_udma_filter,
- };
- 
+ /**
+  *	triflex_dma_start	-	DMA start callback
+Index: b/drivers/ata/pata_triflex.h
+===================================================================
+--- /dev/null
++++ b/drivers/ata/pata_triflex.h
+@@ -0,0 +1,69 @@
++
++/**
++ *	triflex_load_timing		-	timing configuration
++ *	@ap: ATA interface
++ *	@adev: Device on the bus
++ *	@speed: speed to configure
++ *
++ *	The Triflex has one set of timings per device per channel. This
++ *	means we must do some switching. As the PIO and DMA timings don't
++ *	match we have to do some reloading unlike PIIX devices where tuning
++ *	tricks can avoid it.
++ */
++
++static void triflex_load_timing(struct ata_port *ap, struct ata_device *adev,
++				int speed)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	u32 timing = 0;
++	u32 triflex_timing, old_triflex_timing;
++	int channel_offset = ap->port_no ? 0x74 : 0x70;
++	unsigned int is_slave	= (adev->devno != 0);
++
++	pci_read_config_dword(pdev, channel_offset, &old_triflex_timing);
++	triflex_timing = old_triflex_timing;
++
++	switch (speed) {
++	case XFER_MW_DMA_2:
++		timing = 0x0103; break;
++	case XFER_MW_DMA_1:
++		timing = 0x0203; break;
++	case XFER_MW_DMA_0:
++		timing = 0x0808; break;
++	case XFER_SW_DMA_2:
++	case XFER_SW_DMA_1:
++	case XFER_SW_DMA_0:
++		timing = 0x0F0F; break;
++	case XFER_PIO_4:
++		timing = 0x0202; break;
++	case XFER_PIO_3:
++		timing = 0x0204; break;
++	case XFER_PIO_2:
++		timing = 0x0404; break;
++	case XFER_PIO_1:
++		timing = 0x0508; break;
++	case XFER_PIO_0:
++		timing = 0x0808; break;
++	default:
++		BUG();
++	}
++	triflex_timing &= ~(0xFFFF << (16 * is_slave));
++	triflex_timing |= (timing << (16 * is_slave));
++
++	if (triflex_timing != old_triflex_timing)
++		pci_write_config_dword(pdev, channel_offset, triflex_timing);
++}
++
++/**
++ *	triflex_set_piomode	-	set initial PIO mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ *
++ *	Use the timing loader to set up the PIO mode. We have to do this
++ *	because DMA start/stop will only be called once DMA occurs. If there
++ *	has been no DMA then the PIO timings are still needed.
++ */
++static void triflex_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	triflex_load_timing(ap, adev, adev->pio_mode);
++}
