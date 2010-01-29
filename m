@@ -1,170 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 07/68] pata_pcmcia: move IDs table to pata_pcmcia.h
-Date: Fri, 29 Jan 2010 17:03:54 +0100
-Message-ID: <20100129160354.21495.63933.sendpatchset@localhost>
-References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753501Ab0A2QUk@vger.kernel.org>
-In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+From: "Ulli.Brennenstuhl" <Ulli.Brennenstuhl@fs.ei.tum.de>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Fri, 29 Jan 2010 17:13:08 +0100
+Message-ID: <4B630914.9010503@fs.ei.tum.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from stella.fs.ei.tum.de ([129.187.54.7]:43458 "EHLO
+	stella.fs.ei.tum.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab0A2Qq4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:46:56 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.fs.ei.tum.de (Postfix) with ESMTP id AFAB01C36A
+	for <linux-ide@vger.kernel.org>; Fri, 29 Jan 2010 17:13:08 +0100 (CET)
+Received: from stella.fs.ei.tum.de ([127.0.0.1])
+	by localhost (stella.fs.ei.tum.de [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id rRPDX9zMxXmv for <linux-ide@vger.kernel.org>;
+	Fri, 29 Jan 2010 17:13:08 +0100 (CET)
+Received: from [192.168.113.68] (dick.fs.ei.tum.de [192.168.113.68])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by stella.fs.ei.tum.de (Postfix) with ESMTP id 784E31C35D
+	for <linux-ide@vger.kernel.org>; Fri, 29 Jan 2010 17:13:08 +0100 (CET)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_pcmcia: move IDs table to pata_pcmcia.h
+The last message of this discussion is more than one year old, but still 
+there was no solution to this problem.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/pata_pcmcia.c |   67 ----------------------------------------------
- drivers/ata/pata_pcmcia.h |   66 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 67 insertions(+), 66 deletions(-)
+I recently encountered the same problem that a raid created with mdadm 
+consisting of three SAMSUNG HD154UI sata harddisks had random errors and 
+mdadm --examine would randomly report that checksums are wrong/correct.
 
-Index: b/drivers/ata/pata_pcmcia.c
-===================================================================
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -388,72 +388,7 @@ static void pcmcia_remove_one(struct pcm
- 	kfree(info);
- }
- 
--static struct pcmcia_device_id pcmcia_devices[] = {
--	PCMCIA_DEVICE_FUNC_ID(4),
--	PCMCIA_DEVICE_MANF_CARD(0x0000, 0x0000),	/* Corsair */
--	PCMCIA_DEVICE_MANF_CARD(0x0007, 0x0000),	/* Hitachi */
--	PCMCIA_DEVICE_MANF_CARD(0x000a, 0x0000),	/* I-O Data CFA */
--	PCMCIA_DEVICE_MANF_CARD(0x001c, 0x0001),	/* Mitsubishi CFA */
--	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x0704),
--	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x2904),
--	PCMCIA_DEVICE_MANF_CARD(0x0045, 0x0401),	/* SanDisk CFA */
--	PCMCIA_DEVICE_MANF_CARD(0x004f, 0x0000),	/* Kingston */
--	PCMCIA_DEVICE_MANF_CARD(0x0097, 0x1620), 	/* TI emulated */
--	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
--	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
--	PCMCIA_DEVICE_MANF_CARD(0x00ce, 0x0000),	/* Samsung */
--	PCMCIA_DEVICE_MANF_CARD(0x0319, 0x0000),	/* Hitachi */
--	PCMCIA_DEVICE_MANF_CARD(0x2080, 0x0001),
--	PCMCIA_DEVICE_MANF_CARD(0x4e01, 0x0100),	/* Viking CFA */
--	PCMCIA_DEVICE_MANF_CARD(0x4e01, 0x0200),	/* Lexar, Viking CFA */
--	PCMCIA_DEVICE_PROD_ID123("Caravelle", "PSC-IDE ", "PSC000", 0x8c36137c, 0xd0693ab8, 0x2768a9f0),
--	PCMCIA_DEVICE_PROD_ID123("CDROM", "IDE", "MCD-601p", 0x1b9179ca, 0xede88951, 0x0d902f74),
--	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
--	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
--	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
--	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
--	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
--	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
--	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
--	PCMCIA_DEVICE_PROD_ID12("EXP", "CD+GAME", 0x6f58c983, 0x63c13aaf),
--	PCMCIA_DEVICE_PROD_ID12("EXP   ", "CD-ROM", 0x0a5c52fd, 0x66536591),
--	PCMCIA_DEVICE_PROD_ID12("EXP   ", "PnPIDE", 0x0a5c52fd, 0x0c694728),
--	PCMCIA_DEVICE_PROD_ID12("FREECOM", "PCCARD-IDE", 0x5714cbf7, 0x48e0ab8e),
--	PCMCIA_DEVICE_PROD_ID12("HITACHI", "FLASH", 0xf4f43949, 0x9eb86aae),
--	PCMCIA_DEVICE_PROD_ID12("HITACHI", "microdrive", 0xf4f43949, 0xa6d76178),
--	PCMCIA_DEVICE_PROD_ID12("Hyperstone", "Model1", 0x3d5b9ef5, 0xca6ab420),
--	PCMCIA_DEVICE_PROD_ID12("IBM", "microdrive", 0xb569a6e5, 0xa6d76178),
--	PCMCIA_DEVICE_PROD_ID12("IBM", "IBM17JSSFP20", 0xb569a6e5, 0xf2508753),
--	PCMCIA_DEVICE_PROD_ID12("KINGSTON", "CF8GB", 0x2e6d1829, 0xacbe682e),
--	PCMCIA_DEVICE_PROD_ID12("IO DATA", "CBIDE2      ", 0x547e66dc, 0x8671043b),
--	PCMCIA_DEVICE_PROD_ID12("IO DATA", "PCIDE", 0x547e66dc, 0x5c5ab149),
--	PCMCIA_DEVICE_PROD_ID12("IO DATA", "PCIDEII", 0x547e66dc, 0xb3662674),
--	PCMCIA_DEVICE_PROD_ID12("LOOKMEET", "CBIDE2      ", 0xe37be2b5, 0x8671043b),
--	PCMCIA_DEVICE_PROD_ID12("M-Systems", "CF300", 0x7ed2ad87, 0x7e9e78ee),
--	PCMCIA_DEVICE_PROD_ID12("M-Systems", "CF500", 0x7ed2ad87, 0x7a13045c),
--	PCMCIA_DEVICE_PROD_ID2("NinjaATA-", 0xebe0bd79),
--	PCMCIA_DEVICE_PROD_ID12("PCMCIA", "CD-ROM", 0x281f1c5d, 0x66536591),
--	PCMCIA_DEVICE_PROD_ID12("PCMCIA", "PnPIDE", 0x281f1c5d, 0x0c694728),
--	PCMCIA_DEVICE_PROD_ID12("SHUTTLE TECHNOLOGY LTD.", "PCCARD-IDE/ATAPI Adapter", 0x4a3f0ba0, 0x322560e1),
--	PCMCIA_DEVICE_PROD_ID12("SEAGATE", "ST1", 0x87c1b330, 0xe1f30883),
--	PCMCIA_DEVICE_PROD_ID12("SAMSUNG", "04/05/06", 0x43d74cb4, 0x6a22777d),
--	PCMCIA_DEVICE_PROD_ID12("SMI VENDOR", "SMI PRODUCT", 0x30896c92, 0x703cc5f6),
--	PCMCIA_DEVICE_PROD_ID12("TOSHIBA", "MK2001MPL", 0xb4585a1a, 0x3489e003),
--	PCMCIA_DEVICE_PROD_ID1("TRANSCEND    512M   ", 0xd0909443),
--	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF45", 0x709b1bf1, 0xf68b6f32),
--	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF80", 0x709b1bf1, 0x2a54d4b1),
--	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS2GCF120", 0x709b1bf1, 0x969aa4f2),
--	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS4GCF120", 0x709b1bf1, 0xf54a91c8),
--	PCMCIA_DEVICE_PROD_ID12("WIT", "IDE16", 0x244e5994, 0x3e232852),
--	PCMCIA_DEVICE_PROD_ID12("WEIDA", "TWTTI", 0xcc7cf69c, 0x212bb918),
--	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
--	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
--	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
--	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
--	PCMCIA_DEVICE_NULL,
--};
--
--MODULE_DEVICE_TABLE(pcmcia, pcmcia_devices);
-+#include "pata_pcmcia.h"
- 
- static struct pcmcia_driver pcmcia_driver = {
- 	.owner		= THIS_MODULE,
-Index: b/drivers/ata/pata_pcmcia.h
-===================================================================
---- /dev/null
-+++ b/drivers/ata/pata_pcmcia.h
-@@ -0,0 +1,66 @@
-+
-+static struct pcmcia_device_id pcmcia_devices[] = {
-+	PCMCIA_DEVICE_FUNC_ID(4),
-+	PCMCIA_DEVICE_MANF_CARD(0x0000, 0x0000),	/* Corsair */
-+	PCMCIA_DEVICE_MANF_CARD(0x0007, 0x0000),	/* Hitachi */
-+	PCMCIA_DEVICE_MANF_CARD(0x000a, 0x0000),	/* I-O Data CFA */
-+	PCMCIA_DEVICE_MANF_CARD(0x001c, 0x0001),	/* Mitsubishi CFA */
-+	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x0704),
-+	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x2904),
-+	PCMCIA_DEVICE_MANF_CARD(0x0045, 0x0401),	/* SanDisk CFA */
-+	PCMCIA_DEVICE_MANF_CARD(0x004f, 0x0000),	/* Kingston */
-+	PCMCIA_DEVICE_MANF_CARD(0x0097, 0x1620), 	/* TI emulated */
-+	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
-+	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
-+	PCMCIA_DEVICE_MANF_CARD(0x00ce, 0x0000),	/* Samsung */
-+	PCMCIA_DEVICE_MANF_CARD(0x0319, 0x0000),	/* Hitachi */
-+	PCMCIA_DEVICE_MANF_CARD(0x2080, 0x0001),
-+	PCMCIA_DEVICE_MANF_CARD(0x4e01, 0x0100),	/* Viking CFA */
-+	PCMCIA_DEVICE_MANF_CARD(0x4e01, 0x0200),	/* Lexar, Viking CFA */
-+	PCMCIA_DEVICE_PROD_ID123("Caravelle", "PSC-IDE ", "PSC000", 0x8c36137c, 0xd0693ab8, 0x2768a9f0),
-+	PCMCIA_DEVICE_PROD_ID123("CDROM", "IDE", "MCD-601p", 0x1b9179ca, 0xede88951, 0x0d902f74),
-+	PCMCIA_DEVICE_PROD_ID123("PCMCIA", "IDE CARD", "F1", 0x281f1c5d, 0x1907960c, 0xf7fde8b9),
-+	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "CD-ROM", 0x78f308dc, 0x66536591),
-+	PCMCIA_DEVICE_PROD_ID12("ARGOSY", "PnPIDE", 0x78f308dc, 0x0c694728),
-+	PCMCIA_DEVICE_PROD_ID12("CNF   ", "CD-ROM", 0x46d7db81, 0x66536591),
-+	PCMCIA_DEVICE_PROD_ID12("CNF CD-M", "CD-ROM", 0x7d93b852, 0x66536591),
-+	PCMCIA_DEVICE_PROD_ID12("Creative Technology Ltd.", "PCMCIA CD-ROM Interface Card", 0xff8c8a45, 0xfe8020c4),
-+	PCMCIA_DEVICE_PROD_ID12("Digital Equipment Corporation.", "Digital Mobile Media CD-ROM", 0x17692a66, 0xef1dcbde),
-+	PCMCIA_DEVICE_PROD_ID12("EXP", "CD+GAME", 0x6f58c983, 0x63c13aaf),
-+	PCMCIA_DEVICE_PROD_ID12("EXP   ", "CD-ROM", 0x0a5c52fd, 0x66536591),
-+	PCMCIA_DEVICE_PROD_ID12("EXP   ", "PnPIDE", 0x0a5c52fd, 0x0c694728),
-+	PCMCIA_DEVICE_PROD_ID12("FREECOM", "PCCARD-IDE", 0x5714cbf7, 0x48e0ab8e),
-+	PCMCIA_DEVICE_PROD_ID12("HITACHI", "FLASH", 0xf4f43949, 0x9eb86aae),
-+	PCMCIA_DEVICE_PROD_ID12("HITACHI", "microdrive", 0xf4f43949, 0xa6d76178),
-+	PCMCIA_DEVICE_PROD_ID12("Hyperstone", "Model1", 0x3d5b9ef5, 0xca6ab420),
-+	PCMCIA_DEVICE_PROD_ID12("IBM", "microdrive", 0xb569a6e5, 0xa6d76178),
-+	PCMCIA_DEVICE_PROD_ID12("IBM", "IBM17JSSFP20", 0xb569a6e5, 0xf2508753),
-+	PCMCIA_DEVICE_PROD_ID12("KINGSTON", "CF8GB", 0x2e6d1829, 0xacbe682e),
-+	PCMCIA_DEVICE_PROD_ID12("IO DATA", "CBIDE2      ", 0x547e66dc, 0x8671043b),
-+	PCMCIA_DEVICE_PROD_ID12("IO DATA", "PCIDE", 0x547e66dc, 0x5c5ab149),
-+	PCMCIA_DEVICE_PROD_ID12("IO DATA", "PCIDEII", 0x547e66dc, 0xb3662674),
-+	PCMCIA_DEVICE_PROD_ID12("LOOKMEET", "CBIDE2      ", 0xe37be2b5, 0x8671043b),
-+	PCMCIA_DEVICE_PROD_ID12("M-Systems", "CF300", 0x7ed2ad87, 0x7e9e78ee),
-+	PCMCIA_DEVICE_PROD_ID12("M-Systems", "CF500", 0x7ed2ad87, 0x7a13045c),
-+	PCMCIA_DEVICE_PROD_ID2("NinjaATA-", 0xebe0bd79),
-+	PCMCIA_DEVICE_PROD_ID12("PCMCIA", "CD-ROM", 0x281f1c5d, 0x66536591),
-+	PCMCIA_DEVICE_PROD_ID12("PCMCIA", "PnPIDE", 0x281f1c5d, 0x0c694728),
-+	PCMCIA_DEVICE_PROD_ID12("SHUTTLE TECHNOLOGY LTD.", "PCCARD-IDE/ATAPI Adapter", 0x4a3f0ba0, 0x322560e1),
-+	PCMCIA_DEVICE_PROD_ID12("SEAGATE", "ST1", 0x87c1b330, 0xe1f30883),
-+	PCMCIA_DEVICE_PROD_ID12("SAMSUNG", "04/05/06", 0x43d74cb4, 0x6a22777d),
-+	PCMCIA_DEVICE_PROD_ID12("SMI VENDOR", "SMI PRODUCT", 0x30896c92, 0x703cc5f6),
-+	PCMCIA_DEVICE_PROD_ID12("TOSHIBA", "MK2001MPL", 0xb4585a1a, 0x3489e003),
-+	PCMCIA_DEVICE_PROD_ID1("TRANSCEND    512M   ", 0xd0909443),
-+	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF45", 0x709b1bf1, 0xf68b6f32),
-+	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF80", 0x709b1bf1, 0x2a54d4b1),
-+	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS2GCF120", 0x709b1bf1, 0x969aa4f2),
-+	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS4GCF120", 0x709b1bf1, 0xf54a91c8),
-+	PCMCIA_DEVICE_PROD_ID12("WIT", "IDE16", 0x244e5994, 0x3e232852),
-+	PCMCIA_DEVICE_PROD_ID12("WEIDA", "TWTTI", 0xcc7cf69c, 0x212bb918),
-+	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
-+	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
-+	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
-+	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
-+	PCMCIA_DEVICE_NULL,
-+};
-+MODULE_DEVICE_TABLE(pcmcia, pcmcia_devices);
+The sata controller with the SIL 3114 chipset runs on an old Epox 8K3A 
+board with a VIA KT133 chipset. I noticed that placing the controller in 
+another pci slot would change the results of mdadm --examine.
+While in one slot it was the checksums were randomly changing between 
+correct and wrong in another slot it was always displayed as wrong.
+
+After deactivating every single bios option that somehow optimizes the 
+pci bus the problem seems to be gone. After some more testing I could 
+narrow the problem down to the option "PCI Master 0 WS Write", which 
+controls if requests to the pci bus are executed immediately (with zero 
+wait states) or if every write request will be delayed by one wait state.
+
+Obviously this reduces the performance. I didn't perform tests but the 
+resync speed of the raid dropped from ~ 28mb/s to ~ 17mb/s.
+
+I hope this also solves the problems for other people and it would be 
+interesting if any change to the driver would allow to reenable the "PCI 
+Master 0 WS Write" option.
+
+
+Regards,
+Ulli Brennenstuhl
+
