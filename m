@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 57/68] pdc202xx_old: convert to ide2libata
-Date: Fri, 29 Jan 2010 17:09:15 +0100
-Message-ID: <20100129160915.21495.44971.sendpatchset@localhost>
+Subject: [PATCH 59/68] sc1200: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:09:28 +0100
+Message-ID: <20100129160928.21495.87738.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-fx0-f220.google.com ([209.85.220.220]:53041 "EHLO
 	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755662Ab0A2QJZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:09:25 -0500
+	with ESMTP id S1755774Ab0A2QJg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:09:36 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -15,160 +15,155 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pdc202xx_old: convert to ide2libata
+Subject: [PATCH] sc1200: convert to ide2libata
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_pdc202xx_old.h |   12 ++++++
- drivers/ide/pdc202xx_old.c      |   80 +++-------------------------------------
- 2 files changed, 18 insertions(+), 74 deletions(-)
+ drivers/ide/sc1200.c |  113 +--------------------------------------------------
+ 1 file changed, 4 insertions(+), 109 deletions(-)
 
-Index: b/drivers/ata/pata_pdc202xx_old.h
+Index: b/drivers/ide/sc1200.c
 ===================================================================
---- a/drivers/ata/pata_pdc202xx_old.h
-+++ b/drivers/ata/pata_pdc202xx_old.h
-@@ -1,7 +1,11 @@
+--- a/drivers/ide/sc1200.c
++++ b/drivers/ide/sc1200.c
+@@ -23,73 +23,8 @@
  
- static int pdc2026x_cable_detect(struct ata_port *ap)
- {
-+#ifndef __IDE2LIBATA
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+#else
-+	struct pci_dev *pdev = to_pci_dev(ap->dev);
-+#endif
- 	u16 cis;
+ #define DRV_NAME "sc1200"
  
- 	pci_read_config_word(pdev, 0x50, &cis);
-@@ -23,7 +27,11 @@ static int pdc2026x_cable_detect(struct
- 
- static void pdc202xx_configure_piomode(struct ata_port *ap, struct ata_device *adev, int pio)
- {
-+#ifndef __IDE2LIBATA
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+#else
-+	struct pci_dev *pdev = to_pci_dev(ap->dev);
-+#endif
- 	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
- 	static u16 pio_timing[5] = {
- 		0x0913, 0x050C , 0x0308, 0x0206, 0x0104
-@@ -70,7 +78,11 @@ static void pdc202xx_set_piomode(struct
- 
- static void pdc202xx_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
-+#ifndef __IDE2LIBATA
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+#else
-+	struct pci_dev *pdev = to_pci_dev(ap->dev);
-+#endif
- 	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
- 	static u8 udma_timing[6][2] = {
- 		{ 0x60, 0x03 },	/* 33 Mhz Clock */
-Index: b/drivers/ide/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pdc202xx_old.c
-+++ b/drivers/ide/pdc202xx_old.c
-@@ -21,66 +21,8 @@
- 
- #define DRV_NAME "pdc202xx_old"
- 
--static void pdc202xx_set_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-#define SC1200_REV_A	0x00
+-#define SC1200_REV_B1	0x01
+-#define SC1200_REV_B3	0x02
+-#define SC1200_REV_C1	0x03
+-#define SC1200_REV_D1	0x04
+-
+-#define PCI_CLK_33	0x00
+-#define PCI_CLK_48	0x01
+-#define PCI_CLK_66	0x02
+-#define PCI_CLK_33A	0x03
+-
+-static unsigned short sc1200_get_pci_clock (void)
 -{
--	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	u8 drive_pci		= 0x60 + (drive->dn << 2);
--	const u8 speed		= drive->dma_mode;
+-	unsigned char chip_id, silicon_revision;
+-	unsigned int pci_clock;
+-	/*
+-	 * Check the silicon revision, as not all versions of the chip
+-	 * have the register with the fast PCI bus timings.
+-	 */
+-	chip_id = inb (0x903c);
+-	silicon_revision = inb (0x903d);
 -
--	u8			AP = 0, BP = 0, CP = 0;
--	u8			TA = 0, TB = 0, TC = 0;
--
--	pci_read_config_byte(dev, drive_pci,     &AP);
--	pci_read_config_byte(dev, drive_pci + 1, &BP);
--	pci_read_config_byte(dev, drive_pci + 2, &CP);
--
--	switch(speed) {
--		case XFER_UDMA_5:
--		case XFER_UDMA_4:	TB = 0x20; TC = 0x01; break;
--		case XFER_UDMA_2:	TB = 0x20; TC = 0x01; break;
--		case XFER_UDMA_3:
--		case XFER_UDMA_1:	TB = 0x40; TC = 0x02; break;
--		case XFER_UDMA_0:
--		case XFER_MW_DMA_2:	TB = 0x60; TC = 0x03; break;
--		case XFER_MW_DMA_1:	TB = 0x60; TC = 0x04; break;
--		case XFER_MW_DMA_0:	TB = 0xE0; TC = 0x0F; break;
--		case XFER_PIO_4:	TA = 0x01; TB = 0x04; break;
--		case XFER_PIO_3:	TA = 0x02; TB = 0x06; break;
--		case XFER_PIO_2:	TA = 0x03; TB = 0x08; break;
--		case XFER_PIO_1:	TA = 0x05; TB = 0x0C; break;
--		case XFER_PIO_0:
--		default:		TA = 0x09; TB = 0x13; break;
--	}
--
--	if (speed < XFER_SW_DMA_0) {
--		/*
--		 * preserve SYNC_INT / ERDDY_EN bits while clearing
--		 * Prefetch_EN / IORDY_EN / PA[3:0] bits of register A
--		 */
--		AP &= ~0x3f;
--		if (ide_pio_need_iordy(drive, speed - XFER_PIO_0))
--			AP |= 0x20;	/* set IORDY_EN bit */
--		if (drive->media == ide_disk)
--			AP |= 0x10;	/* set Prefetch_EN bit */
--		/* clear PB[4:0] bits of register B */
--		BP &= ~0x1f;
--		pci_write_config_byte(dev, drive_pci,     AP | TA);
--		pci_write_config_byte(dev, drive_pci + 1, BP | TB);
+-	// Read the fast pci clock frequency
+-	if (chip_id == 0x04 && silicon_revision < SC1200_REV_B1) {
+-		pci_clock = PCI_CLK_33;
 -	} else {
--		/* clear MB[2:0] bits of register B */
--		BP &= ~0xe0;
--		/* clear MC[3:0] bits of register C */
--		CP &= ~0x0f;
--		pci_write_config_byte(dev, drive_pci + 1, BP | TB);
--		pci_write_config_byte(dev, drive_pci + 2, CP | TC);
+-		// check clock generator configuration (cfcc)
+-		// the clock is in bits 8 and 9 of this word
+-
+-		pci_clock = inw (0x901e);
+-		pci_clock >>= 8;
+-		pci_clock &= 0x03;
+-		if (pci_clock == PCI_CLK_33A)
+-			pci_clock = PCI_CLK_33;
 -	}
+-	return pci_clock;
 -}
 -
--static void pdc202xx_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-/*
+- * Here are the standard PIO mode 0-4 timings for each "format".
+- * Format-0 uses fast data reg timings, with slower command reg timings.
+- * Format-1 uses fast timings for all registers, but won't work with all drives.
+- */
+-static const unsigned int sc1200_pio_timings[4][5] =
+-	{{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},	// format0  33Mhz
+-	 {0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},	// format1, 33Mhz
+-	 {0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},	// format1, 48Mhz
+-	 {0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}};	// format1, 66Mhz
+-
+-/*
+- * After chip reset, the PIO timings are set to 0x00009172, which is not valid.
+- */
+-//#define SC1200_BAD_PIO(timings) (((timings)&~0x80000000)==0x00009172)
+-
+-static void sc1200_tunepio(ide_drive_t *drive, u8 pio)
 -{
--	drive->dma_mode = drive->pio_mode;
--	pdc202xx_set_mode(hwif, drive);
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	unsigned int basereg = hwif->channel ? 0x50 : 0x40, format = 0;
+-
+-	pci_read_config_dword(pdev, basereg + 4, &format);
+-	format = (format >> 31) & 1;
+-	if (format)
+-		format += sc1200_get_pci_clock();
+-	pci_write_config_dword(pdev, basereg + ((drive->dn & 1) << 3),
+-			       sc1200_pio_timings[format][pio]);
 -}
 +#include <linux/ide2libata.h>
-+#include "../ata/pata_pdc202xx_old.h"
++#include "../ata/pata_sc1200.h"
  
- static int pdc202xx_test_irq(ide_hwif_t *hwif)
- {
-@@ -103,16 +45,6 @@ static int pdc202xx_test_irq(ide_hwif_t
- 	}
+ /*
+  *	The SC1200 specifies that two drives sharing a cable cannot mix
+@@ -122,46 +57,6 @@ out:
+ 	return mask;
  }
  
--static int pdc2026x_cable_detect(ide_hwif_t *hwif)
+-static void sc1200_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	u16 CIS, mask = hwif->channel ? (1 << 11) : (1 << 10);
+-	struct pci_dev		*dev = to_pci_dev(hwif->dev);
+-	unsigned int		reg, timings;
+-	unsigned short		pci_clock;
+-	unsigned int		basereg = hwif->channel ? 0x50 : 0x40;
+-	const u8		mode = drive->dma_mode;
 -
--	pci_read_config_word(dev, 0x50, &CIS);
+-	static const u32 udma_timing[3][3] = {
+-		{ 0x00921250, 0x00911140, 0x00911030 },
+-		{ 0x00932470, 0x00922260, 0x00922140 },
+-		{ 0x009436a1, 0x00933481, 0x00923261 },
+-	};
 -
--	return (CIS & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-	static const u32 mwdma_timing[3][3] = {
+-		{ 0x00077771, 0x00012121, 0x00002020 },
+-		{ 0x000bbbb2, 0x00024241, 0x00013131 },
+-		{ 0x000ffff3, 0x00035352, 0x00015151 },
+-	};
+-
+-	pci_clock = sc1200_get_pci_clock();
+-
+-	/*
+-	 * Note that each DMA mode has several timings associated with it.
+-	 * The correct timing depends on the fast PCI clock freq.
+-	 */
+-
+-	if (mode >= XFER_UDMA_0)
+-		timings =  udma_timing[pci_clock][mode - XFER_UDMA_0];
+-	else
+-		timings = mwdma_timing[pci_clock][mode - XFER_MW_DMA_0];
+-
+-	if ((drive->dn & 1) == 0) {
+-		pci_read_config_dword(dev, basereg + 4, &reg);
+-		timings |= reg & 0x80000000;	/* preserve PIO format bit */
+-		pci_write_config_dword(dev, basereg + 4, timings);
+-	} else
+-		pci_write_config_dword(dev, basereg + 12, timings);
 -}
 -
- /*
-  * Set the control register to use the 66MHz system
-  * clock for UDMA 3/4/5 mode operation when necessary.
-@@ -233,14 +165,14 @@ static void __devinit pdc202ata4_fixup_i
- 	 IDE_HFLAG_OFF_BOARD)
+ /*  Replacement for the standard ide_dma_end action in
+  *  dma_proc.
+  *
+@@ -218,7 +113,7 @@ static void sc1200_set_pio_mode(ide_hwif
+ 		return;
+ 	}
  
- static const struct ide_port_ops pdc20246_port_ops = {
--	.set_pio_mode		= pdc202xx_set_pio_mode,
--	.set_dma_mode		= pdc202xx_set_mode,
-+	.set_pio_mode		= pdc202xx_set_piomode,
-+	.set_dma_mode		= pdc202xx_set_dmamode,
- 	.test_irq		= pdc202xx_test_irq,
- };
+-	sc1200_tunepio(drive, pio);
++	sc1200_set_piomode(hwif, drive);
+ }
  
- static const struct ide_port_ops pdc2026x_port_ops = {
--	.set_pio_mode		= pdc202xx_set_pio_mode,
--	.set_dma_mode		= pdc202xx_set_mode,
-+	.set_pio_mode		= pdc202xx_set_piomode,
-+	.set_dma_mode		= pdc202xx_set_dmamode,
- 	.cable_detect		= pdc2026x_cable_detect,
+ #ifdef CONFIG_PM
+@@ -275,7 +170,7 @@ static int sc1200_resume (struct pci_dev
+ 
+ static const struct ide_port_ops sc1200_port_ops = {
+ 	.set_pio_mode		= sc1200_set_pio_mode,
+-	.set_dma_mode		= sc1200_set_dma_mode,
++	.set_dma_mode		= sc1200_set_dmamode,
+ 	.udma_filter		= sc1200_udma_filter,
  };
  
