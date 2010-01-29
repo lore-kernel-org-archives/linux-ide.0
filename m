@@ -1,161 +1,213 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 42/68] pata_cs5520: move code to be re-used by ide2libata to pata_cs5520.h
-Date: Fri, 29 Jan 2010 17:07:37 +0100
-Message-ID: <20100129160737.21495.16421.sendpatchset@localhost>
+Subject: [PATCH 48/68] pata_cypress: move code to be re-used by ide2libata to pata_cypress.h
+Date: Fri, 29 Jan 2010 17:08:16 +0100
+Message-ID: <20100129160816.21495.94589.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:53041 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653Ab0A2QHp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:07:45 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755415Ab0A2QId@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cs5520: move code to be re-used by ide2libata to pata_cs5520.h
+Subject: [PATCH] pata_cypress: move code to be re-used by ide2libata to pata_cypress.h
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cs5520.c |   60 ----------------------------------------------
- drivers/ata/pata_cs5520.h |   60 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 61 insertions(+), 59 deletions(-)
+ drivers/ata/pata_cypress.c |   88 ---------------------------------------------
+ drivers/ata/pata_cypress.h |   88 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 89 insertions(+), 87 deletions(-)
 
-Index: b/drivers/ata/pata_cs5520.c
+Index: b/drivers/ata/pata_cypress.c
 ===================================================================
---- a/drivers/ata/pata_cs5520.c
-+++ b/drivers/ata/pata_cs5520.c
-@@ -43,65 +43,7 @@
- #define DRV_NAME	"pata_cs5520"
- #define DRV_VERSION	"0.6.6"
+--- a/drivers/ata/pata_cypress.c
++++ b/drivers/ata/pata_cypress.c
+@@ -20,93 +20,7 @@
+ #define DRV_NAME "pata_cypress"
+ #define DRV_VERSION "0.1.5"
  
--struct pio_clocks
--{
--	int address;
--	int assert;
--	int recovery;
--};
+-/* here are the offset definitions for the registers */
 -
--static const struct pio_clocks cs5520_pio_clocks[]={
--	{3, 6, 11},
--	{2, 5, 6},
--	{1, 4, 3},
--	{1, 3, 2},
--	{1, 2, 1}
+-enum {
+-	CY82_IDE_CMDREG		= 0x04,
+-	CY82_IDE_ADDRSETUP	= 0x48,
+-	CY82_IDE_MASTER_IOR	= 0x4C,
+-	CY82_IDE_MASTER_IOW	= 0x4D,
+-	CY82_IDE_SLAVE_IOR	= 0x4E,
+-	CY82_IDE_SLAVE_IOW	= 0x4F,
+-	CY82_IDE_MASTER_8BIT	= 0x50,
+-	CY82_IDE_SLAVE_8BIT	= 0x51,
+-
+-	CY82_INDEX_PORT		= 0x22,
+-	CY82_DATA_PORT		= 0x23,
+-
+-	CY82_INDEX_CTRLREG1	= 0x01,
+-	CY82_INDEX_CHANNEL0	= 0x30,
+-	CY82_INDEX_CHANNEL1	= 0x31,
+-	CY82_INDEX_TIMEOUT	= 0x32
 -};
 -
 -/**
-- *	cs5520_set_timings	-	program PIO timings
-- *	@ap: ATA port
+- *	cy82c693_set_piomode	-	set initial PIO mode data
+- *	@ap: ATA interface
 - *	@adev: ATA device
 - *
-- *	Program the PIO mode timings for the controller according to the pio
-- *	clocking table.
+- *	Called to do the PIO mode setup.
 - */
 -
--static void cs5520_set_timings(struct ata_port *ap, struct ata_device *adev, int pio)
+-static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
 -{
 -	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	int slave = adev->devno;
+-	struct ata_timing t;
+-	const unsigned long T = 1000000 / 33;
+-	short time_16, time_8;
+-	u32 addr;
 -
--	pio -= XFER_PIO_0;
+-	ata_timing_compute(adev->id, adev->pio_mode, adev->pio_mode, &t, T, 1);
 -
--	/* Channel command timing */
--	pci_write_config_byte(pdev, 0x62 + ap->port_no,
--				(cs5520_pio_clocks[pio].recovery << 4) |
--				(cs5520_pio_clocks[pio].assert));
--	/* FIXME: should these use address ? */
--	/* Read command timing */
--	pci_write_config_byte(pdev, 0x64 +  4*ap->port_no + slave,
--				(cs5520_pio_clocks[pio].recovery << 4) |
--				(cs5520_pio_clocks[pio].assert));
--	/* Write command timing */
--	pci_write_config_byte(pdev, 0x66 +  4*ap->port_no + slave,
--				(cs5520_pio_clocks[pio].recovery << 4) |
--				(cs5520_pio_clocks[pio].assert));
+-	time_16 = clamp_val(t.recover - 1, 0, 15) |
+-		  (clamp_val(t.active - 1, 0, 15) << 4);
+-	time_8 = clamp_val(t.act8b - 1, 0, 15) |
+-		 (clamp_val(t.rec8b - 1, 0, 15) << 4);
+-
+-	if (adev->devno == 0) {
+-		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
+-
+-		addr &= ~0x0F;	/* Mask bits */
+-		addr |= clamp_val(t.setup - 1, 0, 15);
+-
+-		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
+-		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOR, time_16);
+-		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOW, time_16);
+-		pci_write_config_byte(pdev, CY82_IDE_MASTER_8BIT, time_8);
+-	} else {
+-		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
+-
+-		addr &= ~0xF0;	/* Mask bits */
+-		addr |= (clamp_val(t.setup - 1, 0, 15) << 4);
+-
+-		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
+-		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOR, time_16);
+-		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOW, time_16);
+-		pci_write_config_byte(pdev, CY82_IDE_SLAVE_8BIT, time_8);
+-	}
 -}
 -
 -/**
-- *	cs5520_set_piomode	-	program PIO timings
-- *	@ap: ATA port
+- *	cy82c693_set_dmamode	-	set initial DMA mode data
+- *	@ap: ATA interface
 - *	@adev: ATA device
 - *
-- *	Program the PIO mode timings for the controller according to the pio
-- *	clocking table.
+- *	Called to do the DMA mode setup.
 - */
 -
--static void cs5520_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-static void cy82c693_set_dmamode(struct ata_port *ap, struct ata_device *adev)
 -{
--	cs5520_set_timings(ap, adev, adev->pio_mode);
+-	int reg = CY82_INDEX_CHANNEL0 + ap->port_no;
+-
+-	/* Be afraid, be very afraid. Magic registers  in low I/O space */
+-	outb(reg, 0x22);
+-	outb(adev->dma_mode - XFER_MW_DMA_0, 0x23);
+-
+-	/* 0x50 gives the best behaviour on the Alpha's using this chip */
+-	outb(CY82_INDEX_TIMEOUT, 0x22);
+-	outb(0x50, 0x23);
 -}
-+#include "pata_cs5520.h"
++#include "pata_cypress.h"
  
- static struct scsi_host_template cs5520_sht = {
+ static struct scsi_host_template cy82c693_sht = {
  	ATA_BMDMA_SHT(DRV_NAME),
-Index: b/drivers/ata/pata_cs5520.h
+Index: b/drivers/ata/pata_cypress.h
 ===================================================================
 --- /dev/null
-+++ b/drivers/ata/pata_cs5520.h
-@@ -0,0 +1,60 @@
++++ b/drivers/ata/pata_cypress.h
+@@ -0,0 +1,88 @@
 +
-+struct pio_clocks {
-+	int address;
-+	int assert;
-+	int recovery;
-+};
++/* here are the offset definitions for the registers */
 +
-+static const struct pio_clocks cs5520_pio_clocks[] = {
-+	{ 3, 6, 11 },
-+	{ 2, 5,  6 },
-+	{ 1, 4,  3 },
-+	{ 1, 3,  2 },
-+	{ 1, 2,  1 }
++enum {
++	CY82_IDE_CMDREG		= 0x04,
++	CY82_IDE_ADDRSETUP	= 0x48,
++	CY82_IDE_MASTER_IOR	= 0x4C,
++	CY82_IDE_MASTER_IOW	= 0x4D,
++	CY82_IDE_SLAVE_IOR	= 0x4E,
++	CY82_IDE_SLAVE_IOW	= 0x4F,
++	CY82_IDE_MASTER_8BIT	= 0x50,
++	CY82_IDE_SLAVE_8BIT	= 0x51,
++
++	CY82_INDEX_PORT		= 0x22,
++	CY82_DATA_PORT		= 0x23,
++
++	CY82_INDEX_CTRLREG1	= 0x01,
++	CY82_INDEX_CHANNEL0	= 0x30,
++	CY82_INDEX_CHANNEL1	= 0x31,
++	CY82_INDEX_TIMEOUT	= 0x32
 +};
 +
 +/**
-+ *	cs5520_set_timings	-	program PIO timings
-+ *	@ap: ATA port
++ *	cy82c693_set_piomode	-	set initial PIO mode data
++ *	@ap: ATA interface
 + *	@adev: ATA device
 + *
-+ *	Program the PIO mode timings for the controller according to the pio
-+ *	clocking table.
++ *	Called to do the PIO mode setup.
 + */
 +
-+static void cs5520_set_timings(struct ata_port *ap, struct ata_device *adev,
-+			       int pio)
++static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
 +{
 +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	int slave = adev->devno;
++	struct ata_timing t;
++	const unsigned long T = 1000000 / 33;
++	short time_16, time_8;
++	u32 addr;
 +
-+	pio -= XFER_PIO_0;
++	ata_timing_compute(adev->id, adev->pio_mode, adev->pio_mode, &t, T, 1);
 +
-+	/* Channel command timing */
-+	pci_write_config_byte(pdev, 0x62 + ap->port_no,
-+				(cs5520_pio_clocks[pio].recovery << 4) |
-+				(cs5520_pio_clocks[pio].assert));
-+	/* FIXME: should these use address ? */
-+	/* Read command timing */
-+	pci_write_config_byte(pdev, 0x64 +  4*ap->port_no + slave,
-+				(cs5520_pio_clocks[pio].recovery << 4) |
-+				(cs5520_pio_clocks[pio].assert));
-+	/* Write command timing */
-+	pci_write_config_byte(pdev, 0x66 +  4*ap->port_no + slave,
-+				(cs5520_pio_clocks[pio].recovery << 4) |
-+				(cs5520_pio_clocks[pio].assert));
++	time_16 = clamp_val(t.recover - 1, 0, 15) |
++		  (clamp_val(t.active - 1, 0, 15) << 4);
++	time_8 = clamp_val(t.act8b - 1, 0, 15) |
++		 (clamp_val(t.rec8b - 1, 0, 15) << 4);
++
++	if (adev->devno == 0) {
++		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
++
++		addr &= ~0x0F;	/* Mask bits */
++		addr |= clamp_val(t.setup - 1, 0, 15);
++
++		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
++		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOR, time_16);
++		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOW, time_16);
++		pci_write_config_byte(pdev, CY82_IDE_MASTER_8BIT, time_8);
++	} else {
++		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
++
++		addr &= ~0xF0;	/* Mask bits */
++		addr |= (clamp_val(t.setup - 1, 0, 15) << 4);
++
++		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
++		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOR, time_16);
++		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOW, time_16);
++		pci_write_config_byte(pdev, CY82_IDE_SLAVE_8BIT, time_8);
++	}
 +}
 +
 +/**
-+ *	cs5520_set_piomode	-	program PIO timings
-+ *	@ap: ATA port
++ *	cy82c693_set_dmamode	-	set initial DMA mode data
++ *	@ap: ATA interface
 + *	@adev: ATA device
 + *
-+ *	Program the PIO mode timings for the controller according to the pio
-+ *	clocking table.
++ *	Called to do the DMA mode setup.
 + */
 +
-+static void cs5520_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static void cy82c693_set_dmamode(struct ata_port *ap, struct ata_device *adev)
 +{
-+	cs5520_set_timings(ap, adev, adev->pio_mode);
++	int reg = CY82_INDEX_CHANNEL0 + ap->port_no;
++
++	/* Be afraid, be very afraid. Magic registers  in low I/O space */
++	outb(reg, 0x22);
++	outb(adev->dma_mode - XFER_MW_DMA_0, 0x23);
++
++	/* 0x50 gives the best behaviour on the Alpha's using this chip */
++	outb(CY82_INDEX_TIMEOUT, 0x22);
++	outb(0x50, 0x23);
 +}
