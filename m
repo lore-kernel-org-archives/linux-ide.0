@@ -1,76 +1,267 @@
-From: Catalin Marinas <catalin.marinas@arm.com>
-Subject: [PATCH] Call flush_dcache_page around PIO data transfers in
-	libata-aff.c
-Date: Fri, 29 Jan 2010 16:10:26 +0000
-Message-ID: <20100129160150.22571.28609.stgit@pc1117.cambridge.arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:58575 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752699Ab0A2QNc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:13:32 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 45/68] cs5530: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:07:56 +0100
+Message-ID: <20100129160756.21495.80648.sendpatchset@localhost>
+References: <20100129160308.21495.14120.sendpatchset@localhost>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755257Ab0A2QOs@vger.kernel.org>
+In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Depending on the direction of the transfer, flush_dcache_page() must be
-called either before (ATA_TFLAG_WRITE) or after (!ATA_TFLAG_WRITE) the
-data copying to avoid D-cache aliasing with user space or I-D cache
-coherency issues (when reading data from an ATA device using PIO, the
-kernel dirties the D-cache but there is no flush_dcache_page() required
-on Harvard architectures).
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] cs5530: convert to ide2libata
 
-Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
+ drivers/ata/pata_cs5530.h |   16 ++--
+ drivers/ide/cs5530.c      |  149 ++++------------------------------------------
+ 2 files changed, 25 insertions(+), 140 deletions(-)
 
-This patch allows the ARM boards to use a rootfs on CompactFlash with
-the PATA platform driver.
-
-As Anfei Zhou mentioned in a recent patch ("flush dcache before writing
-into page to avoid alias"), on some architectures there may be a
-performance benefit in differentiating the flush_dcache_page() calls
-based on whether the kernel or the user page needs flushing.
-
-IMHO, we should differentiate based on the direction (kernel reading
-or writing from/to such page). In the ARM case with PIPT Harvard caches
-(newer processors), the kernel reading from a page that may be mapped in
-user space shouldn't need cache flushing. The kernel writing to such
-page would require D-cache flushing because of coherency with the
-I-cache. Currently on ARM, the latter happens in both cases.
-
-Thanks.
-
-
- drivers/ata/libata-sff.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 741065c..3d3c854 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -874,6 +874,9 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+Index: b/drivers/ata/pata_cs5530.h
+===================================================================
+--- a/drivers/ata/pata_cs5530.h
++++ b/drivers/ata/pata_cs5530.h
+@@ -1,4 +1,9 @@
  
- 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
- 
-+	if (do_write)
-+		flush_dcache_page(page);
++static const unsigned int cs5530_pio_timings[2][5] = {
++	{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},
++	{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010}
++};
 +
- 	if (PageHighMem(page)) {
- 		unsigned long flags;
+ /**
+  *	cs5530_set_piomode		-	PIO setup
+  *	@ap: ATA interface
+@@ -10,10 +15,6 @@
  
-@@ -893,6 +896,9 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
- 				       do_write);
+ static void cs5530_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+-	static const unsigned int cs5530_pio_timings[2][5] = {
+-		{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},
+-		{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010}
+-	};
+ 	void __iomem *base = cs5530_port_base(ap);
+ 	u32 tuning;
+ 	int format;
+@@ -44,8 +45,9 @@ static void cs5530_set_dmamode(struct at
+ {
+ 	void __iomem *base = cs5530_port_base(ap);
+ 	u32 tuning, timing = 0;
++#ifndef __IDE2LIBATA
+ 	u8 reg;
+-
++#endif
+ 	/* Find out which table to use */
+ 	tuning = ioread32(base + 0x04);
+ 
+@@ -77,15 +79,15 @@ static void cs5530_set_dmamode(struct at
+ 		iowrite32(tuning, base + 0x04);
+ 		iowrite32(timing, base + 0x0C);
  	}
+-
++#ifndef __IDE2LIBATA
+ 	/* Set the DMA capable bit in the BMDMA area */
+ 	reg = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+ 	reg |= (1 << (5 + adev->devno));
+ 	iowrite8(reg, ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
  
-+	if (!do_write)
-+		flush_dcache_page(page);
+ 	/* Remember the last DMA setup we did */
+-
+ 	ap->private_data = adev;
++#endif
+ }
+ 
+ 
+Index: b/drivers/ide/cs5530.c
+===================================================================
+--- a/drivers/ide/cs5530.c
++++ b/drivers/ide/cs5530.c
+@@ -23,15 +23,19 @@
+ 
+ #define DRV_NAME "cs5530"
+ 
+-/*
+- * Here are the standard PIO mode 0-4 timings for each "format".
+- * Format-0 uses fast data reg timings, with slower command reg timings.
+- * Format-1 uses fast timings for all registers, but won't work with all drives.
+- */
+-static unsigned int cs5530_pio_timings[2][5] = {
+-	{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},
+-	{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010}
+-};
++static void __iomem *cs5530_port_base(ide_hwif_t *hwif)
++{
++	unsigned long bmdma = hwif->dma_base;
 +
- 	qc->curbytes += qc->sect_size;
- 	qc->cursg_ofs += qc->sect_size;
++	return (void __iomem *)((bmdma & ~0x0F) + 0x20 + 0x10 * hwif->port_no);
++}
++
++#include <linux/ide2libata.h>
++#define ioread32(p)		inl((unsigned long)p)
++#define iowrite32(v, p)		outl(v, (unsigned long)p)
++#include "../ata/pata_cs5530.h"
++#undef iowrite32
++#undef ioread32
  
-
+ /*
+  * After chip reset, the PIO timings are set to 0x0000e132, which is not valid.
+@@ -40,26 +44,6 @@ static unsigned int cs5530_pio_timings[2
+ #define CS5530_BASEREG(hwif)	(((hwif)->dma_base & ~0xf) + ((hwif)->channel ? 0x30 : 0x20))
+ 
+ /**
+- *	cs5530_set_pio_mode	-	set host controller for PIO mode
+- *	@hwif: port
+- *	@drive: drive
+- *
+- *	Handles setting of PIO mode for the chipset.
+- *
+- *	The init_hwif_cs5530() routine guarantees that all drives
+- *	will have valid default PIO timings set up before we get here.
+- */
+-
+-static void cs5530_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	unsigned long basereg = CS5530_BASEREG(hwif);
+-	unsigned int format = (inl(basereg + 4) >> 31) & 1;
+-	const u8 pio = drive->pio_mode - XFER_PIO_0;
+-
+-	outl(cs5530_pio_timings[format][pio], basereg + ((drive->dn & 1)<<3));
+-}
+-
+-/**
+  *	cs5530_udma_filter	-	UDMA filter
+  *	@drive: drive
+  *
+@@ -100,34 +84,6 @@ out:
+ 	return mask;
+ }
+ 
+-static void cs5530_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	unsigned long basereg;
+-	unsigned int reg, timings = 0;
+-
+-	switch (drive->dma_mode) {
+-		case XFER_UDMA_0:	timings = 0x00921250; break;
+-		case XFER_UDMA_1:	timings = 0x00911140; break;
+-		case XFER_UDMA_2:	timings = 0x00911030; break;
+-		case XFER_MW_DMA_0:	timings = 0x00077771; break;
+-		case XFER_MW_DMA_1:	timings = 0x00012121; break;
+-		case XFER_MW_DMA_2:	timings = 0x00002020; break;
+-	}
+-	basereg = CS5530_BASEREG(hwif);
+-	reg = inl(basereg + 4);			/* get drive0 config register */
+-	timings |= reg & 0x80000000;		/* preserve PIO format bit */
+-	if ((drive-> dn & 1) == 0) {		/* are we configuring drive0? */
+-		outl(timings, basereg + 4);	/* write drive0 config register */
+-	} else {
+-		if (timings & 0x00100000)
+-			reg |=  0x00100000;	/* enable UDMA timings for both drives */
+-		else
+-			reg &= ~0x00100000;	/* disable UDMA timings for both drives */
+-		outl(reg, basereg + 4);		/* write drive0 config register */
+-		outl(timings, basereg + 12);	/* write drive1 config register */
+-	}
+-}
+-
+ /**
+  *	init_chipset_5530	-	set up 5530 bridge
+  *	@dev: PCI device
+@@ -137,84 +93,11 @@ static void cs5530_set_dma_mode(ide_hwif
+ 
+ static int init_chipset_cs5530(struct pci_dev *dev)
+ {
+-	struct pci_dev *master_0 = NULL, *cs5530_0 = NULL;
+-
+ 	if (pci_resource_start(dev, 4) == 0)
+ 		return -EFAULT;
+ 
+-	dev = NULL;
+-	while ((dev = pci_get_device(PCI_VENDOR_ID_CYRIX, PCI_ANY_ID, dev)) != NULL) {
+-		switch (dev->device) {
+-			case PCI_DEVICE_ID_CYRIX_PCI_MASTER:
+-				master_0 = pci_dev_get(dev);
+-				break;
+-			case PCI_DEVICE_ID_CYRIX_5530_LEGACY:
+-				cs5530_0 = pci_dev_get(dev);
+-				break;
+-		}
+-	}
+-	if (!master_0) {
+-		printk(KERN_ERR DRV_NAME ": unable to locate PCI MASTER function\n");
+-		goto out;
+-	}
+-	if (!cs5530_0) {
+-		printk(KERN_ERR DRV_NAME ": unable to locate CS5530 LEGACY function\n");
+-		goto out;
+-	}
+-
+-	/*
+-	 * Enable BusMaster and MemoryWriteAndInvalidate for the cs5530:
+-	 * -->  OR 0x14 into 16-bit PCI COMMAND reg of function 0 of the cs5530
+-	 */
+-
+-	pci_set_master(cs5530_0);
+-	pci_try_set_mwi(cs5530_0);
+-
+-	/*
+-	 * Set PCI CacheLineSize to 16-bytes:
+-	 * --> Write 0x04 into 8-bit PCI CACHELINESIZE reg of function 0 of the cs5530
+-	 */
+-
+-	pci_write_config_byte(cs5530_0, PCI_CACHE_LINE_SIZE, 0x04);
+-
+-	/*
+-	 * Disable trapping of UDMA register accesses (Win98 hack):
+-	 * --> Write 0x5006 into 16-bit reg at offset 0xd0 of function 0 of the cs5530
+-	 */
+-
+-	pci_write_config_word(cs5530_0, 0xd0, 0x5006);
+-
+-	/*
+-	 * Bit-1 at 0x40 enables MemoryWriteAndInvalidate on internal X-bus:
+-	 * The other settings are what is necessary to get the register
+-	 * into a sane state for IDE DMA operation.
+-	 */
+-
+-	pci_write_config_byte(master_0, 0x40, 0x1e);
+-
+-	/* 
+-	 * Set max PCI burst size (16-bytes seems to work best):
+-	 *	   16bytes: set bit-1 at 0x41 (reg value of 0x16)
+-	 *	all others: clear bit-1 at 0x41, and do:
+-	 *	  128bytes: OR 0x00 at 0x41
+-	 *	  256bytes: OR 0x04 at 0x41
+-	 *	  512bytes: OR 0x08 at 0x41
+-	 *	 1024bytes: OR 0x0c at 0x41
+-	 */
+-
+-	pci_write_config_byte(master_0, 0x41, 0x14);
+-
+-	/*
+-	 * These settings are necessary to get the chip
+-	 * into a sane state for IDE DMA operation.
+-	 */
++	(void)cs5530_init_chip(&dev->dev);
+ 
+-	pci_write_config_byte(master_0, 0x42, 0x00);
+-	pci_write_config_byte(master_0, 0x43, 0xc1);
+-
+-out:
+-	pci_dev_put(master_0);
+-	pci_dev_put(cs5530_0);
+ 	return 0;
+ }
+ 
+@@ -240,8 +123,8 @@ static void __devinit init_hwif_cs5530 (
+ }
+ 
+ static const struct ide_port_ops cs5530_port_ops = {
+-	.set_pio_mode		= cs5530_set_pio_mode,
+-	.set_dma_mode		= cs5530_set_dma_mode,
++	.set_pio_mode		= cs5530_set_piomode,
++	.set_dma_mode		= cs5530_set_dmamode,
+ 	.udma_filter		= cs5530_udma_filter,
+ };
+ 
