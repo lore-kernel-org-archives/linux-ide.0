@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 01/68] piix: add new short cable IDs
-Date: Fri, 29 Jan 2010 17:03:14 +0100
-Message-ID: <20100129160314.21495.61408.sendpatchset@localhost>
+Subject: [PATCH 02/68] libata: CodingStyle fixes for ATA timings code
+Date: Fri, 29 Jan 2010 17:03:21 +0100
+Message-ID: <20100129160321.21495.15414.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752355Ab0A2QDa@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752836Ab0A2QDn@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,29 +11,82 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] piix: add new short cable IDs
-
-Based on commits 6034734 and 760cdb7 for ata_piix.
+Subject: [PATCH] libata: CodingStyle fixes for ATA timings code
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/piix.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/ata/libata-core.c |   39 +++++++++++++++++++++++++--------------
+ 1 file changed, 25 insertions(+), 14 deletions(-)
 
-Index: b/drivers/ide/piix.c
+Index: b/drivers/ata/libata-core.c
 ===================================================================
---- a/drivers/ide/piix.c
-+++ b/drivers/ide/piix.c
-@@ -256,9 +256,12 @@ static const struct ich_laptop ich_lapto
- 	{ 0x27DF, 0x1025, 0x0102 },	/* ICH7 on Acer 5602aWLMi */
- 	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
- 	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
-+	{ 0x27DF, 0x1028, 0x02b0 },	/* ICH7 on unknown Dell */
- 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
- 	{ 0x27DF, 0x103C, 0x30A1 },	/* ICH7 on HP Compaq nc2400 */
-+	{ 0x27DF, 0x103C, 0x361a },	/* ICH7 on unkown HP  */
- 	{ 0x27DF, 0x1071, 0xD221 },	/* ICH7 on Hercules EC-900 */
-+	{ 0x27DF, 0x152D, 0x0778 },	/* ICH7 on unknown Intel */
- 	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on Acer Aspire 2023WLMi */
- 	{ 0x24CA, 0x1025, 0x003d },	/* ICH4 on ACER TM290 */
- 	{ 0x266F, 0x1025, 0x0066 },	/* ICH6 on ACER Aspire 1694WLMi */
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3076,10 +3076,11 @@ static const struct ata_timing ata_timin
+ 	{ 0xFF }
+ };
+ 
+-#define ENOUGH(v, unit)		(((v)-1)/(unit)+1)
+-#define EZ(v, unit)		((v)?ENOUGH(v, unit):0)
++#define ENOUGH(v, unit)		(((v) - 1) / (unit) + 1)
++#define EZ(v, unit)		((v) ? ENOUGH(v, unit) : 0)
+ 
+-static void ata_timing_quantize(const struct ata_timing *t, struct ata_timing *q, int T, int UT)
++static void ata_timing_quantize(const struct ata_timing *t,
++				struct ata_timing *q, int T, int UT)
+ {
+ 	q->setup	= EZ(t->setup      * 1000,  T);
+ 	q->act8b	= EZ(t->act8b      * 1000,  T);
+@@ -3095,15 +3096,24 @@ static void ata_timing_quantize(const st
+ void ata_timing_merge(const struct ata_timing *a, const struct ata_timing *b,
+ 		      struct ata_timing *m, unsigned int what)
+ {
+-	if (what & ATA_TIMING_SETUP  ) m->setup   = max(a->setup,   b->setup);
+-	if (what & ATA_TIMING_ACT8B  ) m->act8b   = max(a->act8b,   b->act8b);
+-	if (what & ATA_TIMING_REC8B  ) m->rec8b   = max(a->rec8b,   b->rec8b);
+-	if (what & ATA_TIMING_CYC8B  ) m->cyc8b   = max(a->cyc8b,   b->cyc8b);
+-	if (what & ATA_TIMING_ACTIVE ) m->active  = max(a->active,  b->active);
+-	if (what & ATA_TIMING_RECOVER) m->recover = max(a->recover, b->recover);
+-	if (what & ATA_TIMING_DMACK_HOLD) m->dmack_hold = max(a->dmack_hold, b->dmack_hold);
+-	if (what & ATA_TIMING_CYCLE  ) m->cycle   = max(a->cycle,   b->cycle);
+-	if (what & ATA_TIMING_UDMA   ) m->udma    = max(a->udma,    b->udma);
++	if (what & ATA_TIMING_SETUP)
++		m->setup      = max(a->setup,      b->setup);
++	if (what & ATA_TIMING_ACT8B)
++		m->act8b      = max(a->act8b,      b->act8b);
++	if (what & ATA_TIMING_REC8B)
++		m->rec8b      = max(a->rec8b,      b->rec8b);
++	if (what & ATA_TIMING_CYC8B)
++		m->cyc8b      = max(a->cyc8b,      b->cyc8b);
++	if (what & ATA_TIMING_ACTIVE)
++		m->active     = max(a->active,     b->active);
++	if (what & ATA_TIMING_RECOVER)
++		m->recover    = max(a->recover,    b->recover);
++	if (what & ATA_TIMING_DMACK_HOLD)
++		m->dmack_hold = max(a->dmack_hold, b->dmack_hold);
++	if (what & ATA_TIMING_CYCLE)
++		m->cycle      = max(a->cycle,      b->cycle);
++	if (what & ATA_TIMING_UDMA)
++		m->udma       = max(a->udma,       b->udma);
+ }
+ 
+ const struct ata_timing *ata_timing_find_mode(u8 xfer_mode)
+@@ -3129,7 +3139,8 @@ int ata_timing_compute(struct ata_device
+ 	 * Find the mode.
+ 	 */
+ 
+-	if (!(s = ata_timing_find_mode(speed)))
++	s = ata_timing_find_mode(speed);
++	if (!s)
+ 		return -EINVAL;
+ 
+ 	memcpy(t, s, sizeof(*s));
+@@ -3162,7 +3173,7 @@ int ata_timing_compute(struct ata_device
+ 
+ 	/*
+ 	 * Even in DMA/UDMA modes we still use PIO access for IDENTIFY,
+-	 * S.M.A.R.T * and some other commands. We have to ensure that the
++	 * S.M.A.R.T and some other commands. We have to ensure that the
+ 	 * DMA cycle timing is slower/equal than the fastest PIO timing.
+ 	 */
+ 
