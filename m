@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 48/68] pata_cypress: move code to be re-used by ide2libata to pata_cypress.h
-Date: Fri, 29 Jan 2010 17:08:16 +0100
-Message-ID: <20100129160816.21495.94589.sendpatchset@localhost>
+Subject: [PATCH 46/68] pata_cs5535: move code to be re-used by ide2libata to pata_cs5535.h
+Date: Fri, 29 Jan 2010 17:08:04 +0100
+Message-ID: <20100129160804.21495.98303.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755415Ab0A2QId@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755340Ab0A2QI0@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,203 +11,254 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cypress: move code to be re-used by ide2libata to pata_cypress.h
+Subject: [PATCH] pata_cs5535: move code to be re-used by ide2libata to pata_cs5535.h
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cypress.c |   88 ---------------------------------------------
- drivers/ata/pata_cypress.h |   88 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 89 insertions(+), 87 deletions(-)
+ drivers/ata/pata_cs5535.c |  113 ---------------------------------------------
+ drivers/ata/pata_cs5535.h |  114 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 115 insertions(+), 112 deletions(-)
 
-Index: b/drivers/ata/pata_cypress.c
+Index: b/drivers/ata/pata_cs5535.c
 ===================================================================
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -20,93 +20,7 @@
- #define DRV_NAME "pata_cypress"
- #define DRV_VERSION "0.1.5"
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -41,118 +41,7 @@
+ #define DRV_NAME	"cs5535"
+ #define DRV_VERSION	"0.2.12"
  
--/* here are the offset definitions for the registers */
--
--enum {
--	CY82_IDE_CMDREG		= 0x04,
--	CY82_IDE_ADDRSETUP	= 0x48,
--	CY82_IDE_MASTER_IOR	= 0x4C,
--	CY82_IDE_MASTER_IOW	= 0x4D,
--	CY82_IDE_SLAVE_IOR	= 0x4E,
--	CY82_IDE_SLAVE_IOW	= 0x4F,
--	CY82_IDE_MASTER_8BIT	= 0x50,
--	CY82_IDE_SLAVE_8BIT	= 0x51,
--
--	CY82_INDEX_PORT		= 0x22,
--	CY82_DATA_PORT		= 0x23,
--
--	CY82_INDEX_CTRLREG1	= 0x01,
--	CY82_INDEX_CHANNEL0	= 0x30,
--	CY82_INDEX_CHANNEL1	= 0x31,
--	CY82_INDEX_TIMEOUT	= 0x32
--};
--
--/**
-- *	cy82c693_set_piomode	-	set initial PIO mode data
-- *	@ap: ATA interface
-- *	@adev: ATA device
-- *
-- *	Called to do the PIO mode setup.
+-/*
+- *	The Geode (Aka Athlon GX now) uses an internal MSR based
+- *	bus system for control. Demented but there you go.
 - */
 -
--static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-#define MSR_ATAC_BASE    	0x51300000
+-#define ATAC_GLD_MSR_CAP 	(MSR_ATAC_BASE+0)
+-#define ATAC_GLD_MSR_CONFIG    (MSR_ATAC_BASE+0x01)
+-#define ATAC_GLD_MSR_SMI       (MSR_ATAC_BASE+0x02)
+-#define ATAC_GLD_MSR_ERROR     (MSR_ATAC_BASE+0x03)
+-#define ATAC_GLD_MSR_PM        (MSR_ATAC_BASE+0x04)
+-#define ATAC_GLD_MSR_DIAG      (MSR_ATAC_BASE+0x05)
+-#define ATAC_IO_BAR            (MSR_ATAC_BASE+0x08)
+-#define ATAC_RESET             (MSR_ATAC_BASE+0x10)
+-#define ATAC_CH0D0_PIO         (MSR_ATAC_BASE+0x20)
+-#define ATAC_CH0D0_DMA         (MSR_ATAC_BASE+0x21)
+-#define ATAC_CH0D1_PIO         (MSR_ATAC_BASE+0x22)
+-#define ATAC_CH0D1_DMA         (MSR_ATAC_BASE+0x23)
+-#define ATAC_PCI_ABRTERR       (MSR_ATAC_BASE+0x24)
+-
+-#define ATAC_BM0_CMD_PRIM      0x00
+-#define ATAC_BM0_STS_PRIM      0x02
+-#define ATAC_BM0_PRD           0x04
+-
+-#define CS5535_CABLE_DETECT    0x48
+-
+-/**
+- *	cs5535_cable_detect	-	detect cable type
+- *	@ap: Port to detect on
+- *
+- *	Perform cable detection for ATA66 capable cable. Return a libata
+- *	cable type.
+- */
+-
+-static int cs5535_cable_detect(struct ata_port *ap)
 -{
+-	u8 cable;
 -	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	struct ata_timing t;
--	const unsigned long T = 1000000 / 33;
--	short time_16, time_8;
--	u32 addr;
 -
--	ata_timing_compute(adev->id, adev->pio_mode, adev->pio_mode, &t, T, 1);
--
--	time_16 = clamp_val(t.recover - 1, 0, 15) |
--		  (clamp_val(t.active - 1, 0, 15) << 4);
--	time_8 = clamp_val(t.act8b - 1, 0, 15) |
--		 (clamp_val(t.rec8b - 1, 0, 15) << 4);
--
--	if (adev->devno == 0) {
--		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
--
--		addr &= ~0x0F;	/* Mask bits */
--		addr |= clamp_val(t.setup - 1, 0, 15);
--
--		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
--		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOR, time_16);
--		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOW, time_16);
--		pci_write_config_byte(pdev, CY82_IDE_MASTER_8BIT, time_8);
--	} else {
--		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
--
--		addr &= ~0xF0;	/* Mask bits */
--		addr |= (clamp_val(t.setup - 1, 0, 15) << 4);
--
--		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
--		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOR, time_16);
--		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOW, time_16);
--		pci_write_config_byte(pdev, CY82_IDE_SLAVE_8BIT, time_8);
--	}
+-	pci_read_config_byte(pdev, CS5535_CABLE_DETECT, &cable);
+-	if (cable & 1)
+-		return ATA_CBL_PATA80;
+-	else
+-		return ATA_CBL_PATA40;
 -}
 -
 -/**
-- *	cy82c693_set_dmamode	-	set initial DMA mode data
+- *	cs5535_set_piomode		-	PIO setup
 - *	@ap: ATA interface
-- *	@adev: ATA device
+- *	@adev: device on the interface
 - *
-- *	Called to do the DMA mode setup.
+- *	Set our PIO requirements. The CS5535 is pretty clean about all this
 - */
 -
--static void cy82c693_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+-static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
 -{
--	int reg = CY82_INDEX_CHANNEL0 + ap->port_no;
+-	static const u16 pio_timings[5] = {
+-		0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
+-	};
+-	static const u16 pio_cmd_timings[5] = {
+-		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
+-	};
+-	u32 reg, dummy;
+-	struct ata_device *pair = ata_dev_pair(adev);
 -
--	/* Be afraid, be very afraid. Magic registers  in low I/O space */
--	outb(reg, 0x22);
--	outb(adev->dma_mode - XFER_MW_DMA_0, 0x23);
+-	int mode = adev->pio_mode - XFER_PIO_0;
+-	int cmdmode = mode;
 -
--	/* 0x50 gives the best behaviour on the Alpha's using this chip */
--	outb(CY82_INDEX_TIMEOUT, 0x22);
--	outb(0x50, 0x23);
+-	/* Command timing has to be for the lowest of the pair of devices */
+-	if (pair) {
+-		int pairmode = pair->pio_mode - XFER_PIO_0;
+-		cmdmode = min(mode, pairmode);
+-		/* Write the other drive timing register if it changed */
+-		if (cmdmode < pairmode)
+-			wrmsr(ATAC_CH0D0_PIO + 2 * pair->devno,
+-				pio_cmd_timings[cmdmode] << 16 | pio_timings[pairmode], 0);
+-	}
+-	/* Write the drive timing register */
+-	wrmsr(ATAC_CH0D0_PIO + 2 * adev->devno,
+-		pio_cmd_timings[cmdmode] << 16 | pio_timings[mode], 0);
+-
+-	/* Set the PIO "format 1" bit in the DMA timing register */
+-	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
+-	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg | 0x80000000UL, 0);
 -}
-+#include "pata_cypress.h"
+-
+-/**
+- *	cs5535_set_dmamode		-	DMA timing setup
+- *	@ap: ATA interface
+- *	@adev: Device being configured
+- *
+- */
+-
+-static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+-{
+-	static const u32 udma_timings[5] = {
+-		0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061
+-	};
+-	static const u32 mwdma_timings[3] = {
+-		0x7F0FFFF3, 0x7F035352, 0x7F024241
+-	};
+-	u32 reg, dummy;
+-	int mode = adev->dma_mode;
+-
+-	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
+-	reg &= 0x80000000UL;
+-	if (mode >= XFER_UDMA_0)
+-		reg |= udma_timings[mode - XFER_UDMA_0];
+-	else
+-		reg |= mwdma_timings[mode - XFER_MW_DMA_0];
+-	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, 0);
+-}
++#include "pata_cs5535.h"
  
- static struct scsi_host_template cy82c693_sht = {
+ static struct scsi_host_template cs5535_sht = {
  	ATA_BMDMA_SHT(DRV_NAME),
-Index: b/drivers/ata/pata_cypress.h
+Index: b/drivers/ata/pata_cs5535.h
 ===================================================================
 --- /dev/null
-+++ b/drivers/ata/pata_cypress.h
-@@ -0,0 +1,88 @@
++++ b/drivers/ata/pata_cs5535.h
+@@ -0,0 +1,114 @@
 +
-+/* here are the offset definitions for the registers */
-+
-+enum {
-+	CY82_IDE_CMDREG		= 0x04,
-+	CY82_IDE_ADDRSETUP	= 0x48,
-+	CY82_IDE_MASTER_IOR	= 0x4C,
-+	CY82_IDE_MASTER_IOW	= 0x4D,
-+	CY82_IDE_SLAVE_IOR	= 0x4E,
-+	CY82_IDE_SLAVE_IOW	= 0x4F,
-+	CY82_IDE_MASTER_8BIT	= 0x50,
-+	CY82_IDE_SLAVE_8BIT	= 0x51,
-+
-+	CY82_INDEX_PORT		= 0x22,
-+	CY82_DATA_PORT		= 0x23,
-+
-+	CY82_INDEX_CTRLREG1	= 0x01,
-+	CY82_INDEX_CHANNEL0	= 0x30,
-+	CY82_INDEX_CHANNEL1	= 0x31,
-+	CY82_INDEX_TIMEOUT	= 0x32
-+};
-+
-+/**
-+ *	cy82c693_set_piomode	-	set initial PIO mode data
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
-+ *
-+ *	Called to do the PIO mode setup.
++/*
++ *	The Geode (Aka Athlon GX now) uses an internal MSR based
++ *	bus system for control. Demented but there you go.
 + */
 +
-+static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
++#define MSR_ATAC_BASE    	0x51300000
++#define ATAC_GLD_MSR_CAP 	(MSR_ATAC_BASE+0)
++#define ATAC_GLD_MSR_CONFIG	(MSR_ATAC_BASE+0x01)
++#define ATAC_GLD_MSR_SMI	(MSR_ATAC_BASE+0x02)
++#define ATAC_GLD_MSR_ERROR	(MSR_ATAC_BASE+0x03)
++#define ATAC_GLD_MSR_PM		(MSR_ATAC_BASE+0x04)
++#define ATAC_GLD_MSR_DIAG	(MSR_ATAC_BASE+0x05)
++#define ATAC_IO_BAR		(MSR_ATAC_BASE+0x08)
++#define ATAC_RESET		(MSR_ATAC_BASE+0x10)
++#define ATAC_CH0D0_PIO		(MSR_ATAC_BASE+0x20)
++#define ATAC_CH0D0_DMA		(MSR_ATAC_BASE+0x21)
++#define ATAC_CH0D1_PIO		(MSR_ATAC_BASE+0x22)
++#define ATAC_CH0D1_DMA		(MSR_ATAC_BASE+0x23)
++#define ATAC_PCI_ABRTERR	(MSR_ATAC_BASE+0x24)
++
++#define ATAC_BM0_CMD_PRIM	0x00
++#define ATAC_BM0_STS_PRIM	0x02
++#define ATAC_BM0_PRD		0x04
++
++#define CS5535_CABLE_DETECT	0x48
++
++/**
++ *	cs5535_cable_detect	-	detect cable type
++ *	@ap: Port to detect on
++ *
++ *	Perform cable detection for ATA66 capable cable. Return a libata
++ *	cable type.
++ */
++
++static int cs5535_cable_detect(struct ata_port *ap)
 +{
++	u8 cable;
 +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	struct ata_timing t;
-+	const unsigned long T = 1000000 / 33;
-+	short time_16, time_8;
-+	u32 addr;
 +
-+	ata_timing_compute(adev->id, adev->pio_mode, adev->pio_mode, &t, T, 1);
-+
-+	time_16 = clamp_val(t.recover - 1, 0, 15) |
-+		  (clamp_val(t.active - 1, 0, 15) << 4);
-+	time_8 = clamp_val(t.act8b - 1, 0, 15) |
-+		 (clamp_val(t.rec8b - 1, 0, 15) << 4);
-+
-+	if (adev->devno == 0) {
-+		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
-+
-+		addr &= ~0x0F;	/* Mask bits */
-+		addr |= clamp_val(t.setup - 1, 0, 15);
-+
-+		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
-+		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOR, time_16);
-+		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOW, time_16);
-+		pci_write_config_byte(pdev, CY82_IDE_MASTER_8BIT, time_8);
-+	} else {
-+		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
-+
-+		addr &= ~0xF0;	/* Mask bits */
-+		addr |= (clamp_val(t.setup - 1, 0, 15) << 4);
-+
-+		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
-+		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOR, time_16);
-+		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOW, time_16);
-+		pci_write_config_byte(pdev, CY82_IDE_SLAVE_8BIT, time_8);
-+	}
++	pci_read_config_byte(pdev, CS5535_CABLE_DETECT, &cable);
++	if (cable & 1)
++		return ATA_CBL_PATA80;
++	else
++		return ATA_CBL_PATA40;
 +}
 +
 +/**
-+ *	cy82c693_set_dmamode	-	set initial DMA mode data
++ *	cs5535_set_piomode		-	PIO setup
 + *	@ap: ATA interface
-+ *	@adev: ATA device
++ *	@adev: device on the interface
 + *
-+ *	Called to do the DMA mode setup.
++ *	Set our PIO requirements. The CS5535 is pretty clean about all this
 + */
 +
-+static void cy82c693_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
 +{
-+	int reg = CY82_INDEX_CHANNEL0 + ap->port_no;
++	static const u16 pio_timings[5] = {
++		0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
++	};
++	static const u16 pio_cmd_timings[5] = {
++		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
++	};
++	u32 reg, dummy;
++	struct ata_device *pair = ata_dev_pair(adev);
 +
-+	/* Be afraid, be very afraid. Magic registers  in low I/O space */
-+	outb(reg, 0x22);
-+	outb(adev->dma_mode - XFER_MW_DMA_0, 0x23);
++	int mode = adev->pio_mode - XFER_PIO_0;
++	int cmdmode = mode;
 +
-+	/* 0x50 gives the best behaviour on the Alpha's using this chip */
-+	outb(CY82_INDEX_TIMEOUT, 0x22);
-+	outb(0x50, 0x23);
++	/* Command timing has to be for the lowest of the pair of devices */
++	if (pair) {
++		int pairmode = pair->pio_mode - XFER_PIO_0;
++		cmdmode = min(mode, pairmode);
++		/* Write the other drive timing register if it changed */
++		if (cmdmode < pairmode)
++			wrmsr(ATAC_CH0D0_PIO + 2 * pair->devno,
++				pio_cmd_timings[cmdmode] << 16 |
++				pio_timings[pairmode], 0);
++	}
++	/* Write the drive timing register */
++	wrmsr(ATAC_CH0D0_PIO + 2 * adev->devno,
++		pio_cmd_timings[cmdmode] << 16 | pio_timings[mode], 0);
++
++	/* Set the PIO "format 1" bit in the DMA timing register */
++	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
++	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg | 0x80000000UL, 0);
++}
++
++/**
++ *	cs5535_set_dmamode		-	DMA timing setup
++ *	@ap: ATA interface
++ *	@adev: Device being configured
++ *
++ */
++
++static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++{
++	static const u32 udma_timings[5] = {
++		0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061
++	};
++	static const u32 mwdma_timings[3] = {
++		0x7F0FFFF3, 0x7F035352, 0x7F024241
++	};
++	u32 reg, dummy;
++	int mode = adev->dma_mode;
++
++	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
++	reg &= 0x80000000UL;
++	if (mode >= XFER_UDMA_0)
++		reg |= udma_timings[mode - XFER_UDMA_0];
++	else
++		reg |= mwdma_timings[mode - XFER_MW_DMA_0];
++	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, 0);
 +}
