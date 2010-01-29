@@ -1,80 +1,103 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 13/68] alim15x3: use pata_ali.h
-Date: Fri, 29 Jan 2010 17:04:34 +0100
-Message-ID: <20100129160434.21495.56474.sendpatchset@localhost>
+Subject: [PATCH 14/68] pata_sis: move short cable handling to pata_sis.h
+Date: Fri, 29 Jan 2010 17:04:40 +0100
+Message-ID: <20100129160440.21495.4832.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753967Ab0A2QEr@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.157]:8213 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966Ab0A2QEs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:04:48 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] alim15x3: use pata_ali.h
+Subject: [PATCH] pata_sis: move short cable handling to pata_sis.h
+
+It is a generic code and can be shared between pata_sis & sis5513 drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/alim15x3.c |   42 +-----------------------------------------
- 1 file changed, 1 insertion(+), 41 deletions(-)
+ drivers/ata/pata_sis.c |   30 +-----------------------------
+ drivers/ata/pata_sis.h |   30 ++++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 29 deletions(-)
 
-Index: b/drivers/ide/alim15x3.c
+Index: b/drivers/ata/pata_sis.c
 ===================================================================
---- a/drivers/ide/alim15x3.c
-+++ b/drivers/ide/alim15x3.c
-@@ -33,7 +33,6 @@
- #include <linux/pci.h>
- #include <linux/ide.h>
- #include <linux/init.h>
--#include <linux/dmi.h>
+--- a/drivers/ata/pata_sis.c
++++ b/drivers/ata/pata_sis.c
+@@ -45,35 +45,7 @@ struct sis_chipset {
+ 	   up code later */
+ };
  
- #include <asm/io.h>
- 
-@@ -308,46 +307,7 @@ out:
- 	return 0;
- }
- 
--/*
-- *	Cable special cases
-- */
--
--static const struct dmi_system_id cable_dmi_table[] = {
--	{
--		.ident = "HP Pavilion N5430",
--		.matches = {
--			DMI_MATCH(DMI_BOARD_VENDOR, "Hewlett-Packard"),
--			DMI_MATCH(DMI_BOARD_VERSION, "OmniBook N32N-736"),
--		},
--	},
--	{
--		.ident = "Toshiba Satellite S1800-814",
--		.matches = {
--			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
--			DMI_MATCH(DMI_PRODUCT_NAME, "S1800-814"),
--		},
--	},
--	{ }
+-struct sis_laptop {
+-	u16 device;
+-	u16 subvendor;
+-	u16 subdevice;
 -};
 -
--static int ali_cable_override(struct pci_dev *pdev)
+-static const struct sis_laptop sis_laptop[] = {
+-	/* devid, subvendor, subdev */
+-	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
+-	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
+-	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
+-	/* end marker */
+-	{ 0, }
+-};
+-
+-static int sis_short_ata40(struct pci_dev *dev)
 -{
--	/* Fujitsu P2000 */
--	if (pdev->subsystem_vendor == 0x10CF &&
--	    pdev->subsystem_device == 0x10AF)
--		return 1;
+-	const struct sis_laptop *lap = &sis_laptop[0];
 -
--	/* Mitac 8317 (Winbook-A) and relatives */
--	if (pdev->subsystem_vendor == 0x1071 &&
--	    pdev->subsystem_device == 0x8317)
--		return 1;
--
--	/* Systems by DMI */
--	if (dmi_check_system(cable_dmi_table))
--		return 1;
+-	while (lap->device) {
+-		if (lap->device == dev->device &&
+-		    lap->subvendor == dev->subsystem_vendor &&
+-		    lap->subdevice == dev->subsystem_device)
+-			return 1;
+-		lap++;
+-	}
 -
 -	return 0;
 -}
-+#include "../ata/pata_ali.h"
++#include "pata_sis.h"
  
  /**
-  *	ali_cable_detect	-	cable detection
+  *	sis_old_port_base		-	return PCI configuration base for dev
+Index: b/drivers/ata/pata_sis.h
+===================================================================
+--- /dev/null
++++ b/drivers/ata/pata_sis.h
+@@ -0,0 +1,30 @@
++
++struct sis_laptop {
++	u16 device;
++	u16 subvendor;
++	u16 subdevice;
++};
++
++static const struct sis_laptop sis_laptop[] = {
++	/* devid, subvendor, subdev */
++	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
++	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
++	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
++	/* end marker */
++	{ 0, }
++};
++
++static int sis_short_ata40(struct pci_dev *dev)
++{
++	const struct sis_laptop *lap = &sis_laptop[0];
++
++	while (lap->device) {
++		if (lap->device == dev->device &&
++		    lap->subvendor == dev->subsystem_vendor &&
++		    lap->subdevice == dev->subsystem_device)
++			return 1;
++		lap++;
++	}
++
++	return 0;
++}
