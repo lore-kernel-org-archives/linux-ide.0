@@ -1,178 +1,222 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 47/68] cs5535: convert to ide2libata
-Date: Fri, 29 Jan 2010 17:08:10 +0100
-Message-ID: <20100129160810.21495.19266.sendpatchset@localhost>
+Subject: [PATCH 49/68] cy82c693: convert to ide2libata
+Date: Fri, 29 Jan 2010 17:08:23 +0100
+Message-ID: <20100129160823.21495.16081.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:53041 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011Ab0A2QIS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:08:18 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755434Ab0A2QOL@vger.kernel.org>
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] cs5535: convert to ide2libata
+Subject: [PATCH] cy82c693: convert to ide2libata
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/cs5535.c |  141 +--------------------------------------------------
- 1 file changed, 4 insertions(+), 137 deletions(-)
+ drivers/ata/pata_cypress.h |   30 ++++++++--
+ drivers/ide/cy82c693.c     |  130 +--------------------------------------------
+ 2 files changed, 29 insertions(+), 131 deletions(-)
 
-Index: b/drivers/ide/cs5535.c
+Index: b/drivers/ata/pata_cypress.h
 ===================================================================
---- a/drivers/ide/cs5535.c
-+++ b/drivers/ide/cs5535.c
-@@ -28,145 +28,12 @@
+--- a/drivers/ata/pata_cypress.h
++++ b/drivers/ata/pata_cypress.h
+@@ -30,12 +30,31 @@ enum {
  
- #define DRV_NAME "cs5535"
+ static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
++#ifndef __IDE2LIBATA
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	int bus_speed = 33;
++#else
++	struct pci_dev *pdev = ap->port_no ? to_pci_dev(ap->host->dev2)
++					   : to_pci_dev(ap->host->dev);
++	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
++#endif
++	const unsigned long T = 1000000 / bus_speed;
+ 	struct ata_timing t;
+-	const unsigned long T = 1000000 / 33;
+ 	short time_16, time_8;
+ 	u32 addr;
  
--#define MSR_ATAC_BASE		0x51300000
--#define ATAC_GLD_MSR_CAP	(MSR_ATAC_BASE+0)
--#define ATAC_GLD_MSR_CONFIG	(MSR_ATAC_BASE+0x01)
--#define ATAC_GLD_MSR_SMI	(MSR_ATAC_BASE+0x02)
--#define ATAC_GLD_MSR_ERROR	(MSR_ATAC_BASE+0x03)
--#define ATAC_GLD_MSR_PM		(MSR_ATAC_BASE+0x04)
--#define ATAC_GLD_MSR_DIAG	(MSR_ATAC_BASE+0x05)
--#define ATAC_IO_BAR		(MSR_ATAC_BASE+0x08)
--#define ATAC_RESET		(MSR_ATAC_BASE+0x10)
--#define ATAC_CH0D0_PIO		(MSR_ATAC_BASE+0x20)
--#define ATAC_CH0D0_DMA		(MSR_ATAC_BASE+0x21)
--#define ATAC_CH0D1_PIO		(MSR_ATAC_BASE+0x22)
--#define ATAC_CH0D1_DMA		(MSR_ATAC_BASE+0x23)
--#define ATAC_PCI_ABRTERR	(MSR_ATAC_BASE+0x24)
--#define ATAC_BM0_CMD_PRIM	0x00
--#define ATAC_BM0_STS_PRIM	0x02
--#define ATAC_BM0_PRD		0x04
--#define CS5535_CABLE_DETECT	0x48
--
--/* Format I PIO settings. We separate out cmd and data for safer timings */
--
--static unsigned int cs5535_pio_cmd_timings[5] =
--{ 0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131 };
--static unsigned int cs5535_pio_dta_timings[5] =
--{ 0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131 };
--
--static unsigned int cs5535_mwdma_timings[3] =
--{ 0x7F0FFFF3, 0x7F035352, 0x7f024241 };
--
--static unsigned int cs5535_udma_timings[5] =
--{ 0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061 };
--
--/* Macros to check if the register is the reset value -  reset value is an
--   invalid timing and indicates the register has not been set previously */
--
--#define CS5535_BAD_PIO(timings) ( (timings&~0x80000000UL) == 0x00009172 )
--#define CS5535_BAD_DMA(timings) ( (timings & 0x000FFFFF) == 0x00077771 )
--
--/****
-- *	cs5535_set_speed         -     Configure the chipset to the new speed
-- *	@drive: Drive to set up
-- *	@speed: desired speed
-- *
-- *	cs5535_set_speed() configures the chipset to a new speed.
-- */
--static void cs5535_set_speed(ide_drive_t *drive, const u8 speed)
--{
--	u32 reg = 0, dummy;
--	u8 unit = drive->dn & 1;
--
--	/* Set the PIO timings */
--	if (speed < XFER_SW_DMA_0) {
--		ide_drive_t *pair = ide_get_pair_dev(drive);
--		u8 cmd, pioa;
--
--		cmd = pioa = speed - XFER_PIO_0;
--
--		if (pair) {
--			u8 piob = pair->pio_mode - XFER_PIO_0;
--
--			if (piob < cmd)
--				cmd = piob;
--		}
--
--		/* Write the speed of the current drive */
--		reg = (cs5535_pio_cmd_timings[cmd] << 16) |
--			cs5535_pio_dta_timings[pioa];
--		wrmsr(unit ? ATAC_CH0D1_PIO : ATAC_CH0D0_PIO, reg, 0);
--
--		/* And if nessesary - change the speed of the other drive */
--		rdmsr(unit ?  ATAC_CH0D0_PIO : ATAC_CH0D1_PIO, reg, dummy);
--
--		if (((reg >> 16) & cs5535_pio_cmd_timings[cmd]) !=
--			cs5535_pio_cmd_timings[cmd]) {
--			reg &= 0x0000FFFF;
--			reg |= cs5535_pio_cmd_timings[cmd] << 16;
--			wrmsr(unit ? ATAC_CH0D0_PIO : ATAC_CH0D1_PIO, reg, 0);
--		}
--
--		/* Set bit 31 of the DMA register for PIO format 1 timings */
--		rdmsr(unit ?  ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, dummy);
--		wrmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA,
--					reg | 0x80000000UL, 0);
--	} else {
--		rdmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, dummy);
--
--		reg &= 0x80000000UL;  /* Preserve the PIO format bit */
--
--		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_4)
--			reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
--		else if (speed >= XFER_MW_DMA_0 && speed <= XFER_MW_DMA_2)
--			reg |= cs5535_mwdma_timings[speed - XFER_MW_DMA_0];
--		else
--			return;
--
--		wrmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, 0);
--	}
--}
--
--/**
-- *	cs5535_set_dma_mode	-	set host controller for DMA mode
-- *	@hwif: port
-- *	@drive: drive
-- *
-- *	Programs the chipset for DMA mode.
++#ifdef __IDE2LIBATA
++	/* select primary or secondary channel */
++	if (ap->port_no > 0) {  /* drive is on the secondary channel */
++		pdev = pci_get_slot(pdev->bus, pdev->devfn + 1);
++		if (!pdev) {
++			printk(KERN_ERR "%s: tune_drive: "
++				"Cannot find secondary interface!\n",
++				adev->name);
++			return;
++		}
++	}
++#endif
+ 	ata_timing_compute(adev->id, adev->pio_mode, adev->pio_mode, &t, T, 1);
+ 
+ 	time_16 = clamp_val(t.recover - 1, 0, 15) |
+@@ -79,10 +98,11 @@ static void cy82c693_set_dmamode(struct
+ 	int reg = CY82_INDEX_CHANNEL0 + ap->port_no;
+ 
+ 	/* Be afraid, be very afraid. Magic registers  in low I/O space */
+-	outb(reg, 0x22);
+-	outb(adev->dma_mode - XFER_MW_DMA_0, 0x23);
++	outb(reg, CY82_INDEX_PORT);
++	outb((adev->dma_mode - XFER_MW_DMA_0) |
++	     ((adev->dma_mode & 0x10) >> 2), CY82_DATA_PORT);
+ 
+ 	/* 0x50 gives the best behaviour on the Alpha's using this chip */
+-	outb(CY82_INDEX_TIMEOUT, 0x22);
+-	outb(0x50, 0x23);
++	outb(CY82_INDEX_TIMEOUT, CY82_INDEX_PORT);
++	outb(0x50, CY82_DATA_PORT);
+ }
+Index: b/drivers/ide/cy82c693.c
+===================================================================
+--- a/drivers/ide/cy82c693.c
++++ b/drivers/ide/cy82c693.c
+@@ -18,130 +18,8 @@
+ 
+ #define DRV_NAME "cy82c693"
+ 
+-/*
+- *	NOTE: the value for busmaster timeout is tricky and I got it by
+- *	trial and error!  By using a to low value will cause DMA timeouts
+- *	and drop IDE performance, and by using a to high value will cause
+- *	audio playback to scatter.
+- *	If you know a better value or how to calc it, please let me know.
 - */
 -
--static void cs5535_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	cs5535_set_speed(drive, drive->dma_mode);
--}
--
--/**
-- *	cs5535_set_pio_mode	-	set host controller for PIO mode
-- *	@hwif: port
-- *	@drive: drive
-- *
-- *	A callback from the upper layers for PIO-only tuning.
+-/* twice the value written in cy82c693ub datasheet */
+-#define BUSMASTER_TIMEOUT	0x50
+-/*
+- * the value above was tested on my machine and it seems to work okay
 - */
 -
--static void cs5535_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-/* here are the offset definitions for the registers */
+-#define CY82_IDE_CMDREG		0x04
+-#define CY82_IDE_ADDRSETUP	0x48
+-#define CY82_IDE_MASTER_IOR	0x4C
+-#define CY82_IDE_MASTER_IOW	0x4D
+-#define CY82_IDE_SLAVE_IOR	0x4E
+-#define CY82_IDE_SLAVE_IOW	0x4F
+-#define CY82_IDE_MASTER_8BIT	0x50
+-#define CY82_IDE_SLAVE_8BIT	0x51
+-
+-#define CY82_INDEX_PORT		0x22
+-#define CY82_DATA_PORT		0x23
+-
+-#define CY82_INDEX_CHANNEL0	0x30
+-#define CY82_INDEX_CHANNEL1	0x31
+-#define CY82_INDEX_TIMEOUT	0x32
+-
+-/*
+- * set DMA mode a specific channel for CY82C693
+- */
+-
+-static void cy82c693_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	cs5535_set_speed(drive, drive->pio_mode);
+-	const u8 mode = drive->dma_mode;
+-	u8 single = (mode & 0x10) >> 4, index = 0, data = 0;
+-
+-	index = hwif->channel ? CY82_INDEX_CHANNEL1 : CY82_INDEX_CHANNEL0;
+-
+-	data = (mode & 3) | (single << 2);
+-
+-	outb(index, CY82_INDEX_PORT);
+-	outb(data, CY82_DATA_PORT);
+-
+-	/*
+-	 * note: below we set the value for Bus Master IDE TimeOut Register
+-	 * I'm not absolutly sure what this does, but it solved my problem
+-	 * with IDE DMA and sound, so I now can play sound and work with
+-	 * my IDE driver at the same time :-)
+-	 *
+-	 * If you know the correct (best) value for this register please
+-	 * let me know - ASK
+-	 */
+-
+-	data = BUSMASTER_TIMEOUT;
+-	outb(CY82_INDEX_TIMEOUT, CY82_INDEX_PORT);
+-	outb(data, CY82_DATA_PORT);
 -}
 -
--static int cs5535_cable_detect(ide_hwif_t *hwif)
+-static void cy82c693_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
 -	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	u8 bit;
+-	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
+-	const unsigned long T = 1000000 / bus_speed;
+-	unsigned int addrCtrl;
+-	struct ata_timing t;
+-	u8 mode = drive->pio_mode, time_16, time_8;
 -
--	/* if a 80 wire cable was detected */
--	pci_read_config_byte(dev, CS5535_CABLE_DETECT, &bit);
+-	/* select primary or secondary channel */
+-	if (hwif->index > 0) {  /* drive is on the secondary channel */
+-		dev = pci_get_slot(dev->bus, dev->devfn+1);
+-		if (!dev) {
+-			printk(KERN_ERR "%s: tune_drive: "
+-				"Cannot find secondary interface!\n",
+-				drive->name);
+-			return;
+-		}
+-	}
 -
--	return (bit & 1) ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+-	ata_timing_compute(drive->id, mode, mode, &t, T, 1);
+-
+-	time_16 = clamp_val(t.recover - 1, 0, 15) |
+-		  (clamp_val(t.active - 1, 0, 15) << 4);
+-	time_8 = clamp_val(t.act8b - 1, 0, 15) |
+-		 (clamp_val(t.rec8b - 1, 0, 15) << 4);
+-
+-	/* now let's write  the clocks registers */
+-	if ((drive->dn & 1) == 0) {
+-		/*
+-		 * set master drive
+-		 * address setup control register
+-		 * is 32 bit !!!
+-		 */
+-		pci_read_config_dword(dev, CY82_IDE_ADDRSETUP, &addrCtrl);
+-
+-		addrCtrl &= (~0xF);
+-		addrCtrl |= clamp_val(t.setup - 1, 0, 15);
+-		pci_write_config_dword(dev, CY82_IDE_ADDRSETUP, addrCtrl);
+-
+-		/* now let's set the remaining registers */
+-		pci_write_config_byte(dev, CY82_IDE_MASTER_IOR, time_16);
+-		pci_write_config_byte(dev, CY82_IDE_MASTER_IOW, time_16);
+-		pci_write_config_byte(dev, CY82_IDE_MASTER_8BIT, time_8);
+-	} else {
+-		/*
+-		 * set slave drive
+-		 * address setup control register
+-		 * is 32 bit !!!
+-		 */
+-		pci_read_config_dword(dev, CY82_IDE_ADDRSETUP, &addrCtrl);
+-
+-		addrCtrl &= (~0xF0);
+-		addrCtrl |= (clamp_val(t.setup - 1, 0, 15) << 4);
+-		pci_write_config_dword(dev, CY82_IDE_ADDRSETUP, addrCtrl);
+-
+-		/* now let's set the remaining registers */
+-		pci_write_config_byte(dev, CY82_IDE_SLAVE_IOR, time_16);
+-		pci_write_config_byte(dev, CY82_IDE_SLAVE_IOW, time_16);
+-		pci_write_config_byte(dev, CY82_IDE_SLAVE_8BIT, time_8);
+-	}
 -}
 +#include <linux/ide2libata.h>
-+#include "../ata/pata_cs5535.h"
++#include "../ata/pata_cypress.h"
  
- static const struct ide_port_ops cs5535_port_ops = {
--	.set_pio_mode		= cs5535_set_pio_mode,
--	.set_dma_mode		= cs5535_set_dma_mode,
-+	.set_pio_mode		= cs5535_set_piomode,
-+	.set_dma_mode		= cs5535_set_dmamode,
- 	.cable_detect		= cs5535_cable_detect,
+ static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
+ {
+@@ -157,8 +35,8 @@ static void __devinit init_iops_cy82c693
+ }
+ 
+ static const struct ide_port_ops cy82c693_port_ops = {
+-	.set_pio_mode		= cy82c693_set_pio_mode,
+-	.set_dma_mode		= cy82c693_set_dma_mode,
++	.set_pio_mode		= cy82c693_set_piomode,
++	.set_dma_mode		= cy82c693_set_dmamode,
  };
  
+ static const struct ide_port_info cy82c693_chipset __devinitdata = {
