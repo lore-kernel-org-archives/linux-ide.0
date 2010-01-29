@@ -1,31 +1,468 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 66/68] pata_via: factor out code for finding ISA bridge
-Date: Fri, 29 Jan 2010 17:10:13 +0100
-Message-ID: <20100129161013.21495.89241.sendpatchset@localhost>
+Subject: [PATCH 67/68] pata_via: move code to be re-used by ide2libata to pata_via.h
+Date: Fri, 29 Jan 2010 17:10:19 +0100
+Message-ID: <20100129161019.21495.77643.sendpatchset@localhost>
 References: <20100129160308.21495.14120.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756052Ab0A2QKf@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.153]:60129 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755849Ab0A2QK2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2010 11:10:28 -0500
 In-Reply-To: <20100129160308.21495.14120.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_via: factor out code for finding ISA bridge
+Subject: [PATCH] pata_via: move code to be re-used by ide2libata to pata_via.h
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_via.c |   35 +++++++++++++++++++++++------------
- 1 file changed, 23 insertions(+), 12 deletions(-)
+ drivers/ata/pata_via.c |  237 -----------------------------------------------
+ drivers/ata/pata_via.h |  242 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 242 insertions(+), 237 deletions(-)
 
 Index: b/drivers/ata/pata_via.c
 ===================================================================
 --- a/drivers/ata/pata_via.c
 +++ b/drivers/ata/pata_via.c
-@@ -431,6 +431,28 @@ static struct ata_port_operations via_po
+@@ -64,64 +64,6 @@
+ #define DRV_NAME "pata_via"
+ #define DRV_VERSION "0.3.4"
+ 
+-enum {
+-	VIA_BAD_PREQ	= 0x01, /* Crashes if PREQ# till DDACK# set */
+-	VIA_BAD_CLK66	= 0x02, /* 66 MHz clock doesn't work correctly */
+-	VIA_SET_FIFO	= 0x04, /* Needs to have FIFO split set */
+-	VIA_NO_UNMASK	= 0x08, /* Doesn't work with IRQ unmasking on */
+-	VIA_BAD_ID	= 0x10, /* Has wrong vendor ID (0x1107) */
+-	VIA_BAD_AST	= 0x20, /* Don't touch Address Setup Timing */
+-	VIA_NO_ENABLES	= 0x40, /* Has no enablebits */
+-	VIA_SATA_PATA	= 0x80, /* SATA/PATA combined configuration */
+-};
+-
+-enum {
+-	VIA_IDFLAG_SINGLE = (1 << 0), /* single channel controller) */
+-};
+-
+-/*
+- * VIA SouthBridge chips.
+- */
+-
+-static const struct via_isa_bridge {
+-	const char *name;
+-	u16 id;
+-	u8 rev_min;
+-	u8 rev_max;
+-	u8 udma_mask;
+-	u8 flags;
+-} via_isa_bridges[] = {
+-	{ "vx855",	PCI_DEVICE_ID_VIA_VX855,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
+-	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
+-	{ "vt8261",	PCI_DEVICE_ID_VIA_8261,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
+-	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_NO_ENABLES },
+-	{ "vt6415",	PCI_DEVICE_ID_VIA_6415,     0x00, 0xff, ATA_UDMA6, VIA_BAD_AST | VIA_NO_ENABLES },
+-	{ "vt8237a",	PCI_DEVICE_ID_VIA_8237A,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vt8233a",	PCI_DEVICE_ID_VIA_8233A,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ "vt8233c",	PCI_DEVICE_ID_VIA_8233C_0,  0x00, 0x2f, ATA_UDMA5, },
+-	{ "vt8233",	PCI_DEVICE_ID_VIA_8233_0,   0x00, 0x2f, ATA_UDMA5, },
+-	{ "vt8231",	PCI_DEVICE_ID_VIA_8231,     0x00, 0x2f, ATA_UDMA5, },
+-	{ "vt82c686b",	PCI_DEVICE_ID_VIA_82C686,   0x40, 0x4f, ATA_UDMA5, },
+-	{ "vt82c686a",	PCI_DEVICE_ID_VIA_82C686,   0x10, 0x2f, ATA_UDMA4, },
+-	{ "vt82c686",	PCI_DEVICE_ID_VIA_82C686,   0x00, 0x0f, ATA_UDMA2, VIA_BAD_CLK66 },
+-	{ "vt82c596b",	PCI_DEVICE_ID_VIA_82C596,   0x10, 0x2f, ATA_UDMA4, },
+-	{ "vt82c596a",	PCI_DEVICE_ID_VIA_82C596,   0x00, 0x0f, ATA_UDMA2, VIA_BAD_CLK66 },
+-	{ "vt82c586b",	PCI_DEVICE_ID_VIA_82C586_0, 0x47, 0x4f, ATA_UDMA2, VIA_SET_FIFO },
+-	{ "vt82c586b",	PCI_DEVICE_ID_VIA_82C586_0, 0x40, 0x46, ATA_UDMA2, VIA_SET_FIFO | VIA_BAD_PREQ },
+-	{ "vt82c586b",	PCI_DEVICE_ID_VIA_82C586_0, 0x30, 0x3f, ATA_UDMA2, VIA_SET_FIFO },
+-	{ "vt82c586a",	PCI_DEVICE_ID_VIA_82C586_0, 0x20, 0x2f, ATA_UDMA2, VIA_SET_FIFO },
+-	{ "vt82c586",	PCI_DEVICE_ID_VIA_82C586_0, 0x00, 0x0f,      0x00, VIA_SET_FIFO },
+-	{ "vt82c576",	PCI_DEVICE_ID_VIA_82C576,   0x00, 0x2f,      0x00, VIA_SET_FIFO | VIA_NO_UNMASK },
+-	{ "vt82c576",	PCI_DEVICE_ID_VIA_82C576,   0x00, 0x2f,      0x00, VIA_SET_FIFO | VIA_NO_UNMASK | VIA_BAD_ID },
+-	{ "vtxxxx",	PCI_DEVICE_ID_VIA_ANON,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
+-	{ NULL }
+-};
+-
+ struct via_port {
+ 	u8 cached_device;
+ };
+@@ -188,108 +130,6 @@ static int via_pre_reset(struct ata_link
+ 	return ata_sff_prereset(link, deadline);
+ }
+ 
+-
+-/**
+- *	via_do_set_mode	-	set transfer mode data
+- *	@ap: ATA interface
+- *	@adev: ATA device
+- *	@mode: ATA mode being programmed
+- *	@set_ast: Set to program address setup
+- *	@udma_type: UDMA mode/format of registers
+- *
+- *	Program the VIA registers for DMA and PIO modes. Uses the ata timing
+- *	support in order to compute modes.
+- *
+- *	FIXME: Hotplug will require we serialize multiple mode changes
+- *	on the two channels.
+- */
+-
+-static void via_do_set_mode(struct ata_port *ap, struct ata_device *adev,
+-			    int mode, int set_ast, int udma_type)
+-{
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	struct ata_device *peer = ata_dev_pair(adev);
+-	struct ata_timing t, p;
+-	static int via_clock = 33333;	/* Bus clock in kHZ */
+-	unsigned long T =  1000000000 / via_clock;
+-	unsigned long UT = T;
+-	int ut;
+-	int offset = 3 - (2*ap->port_no) - adev->devno;
+-
+-	switch (udma_type) {
+-	case ATA_UDMA4:
+-		UT = T / 2; break;
+-	case ATA_UDMA5:
+-		UT = T / 3; break;
+-	case ATA_UDMA6:
+-		UT = T / 4; break;
+-	}
+-
+-	/* Calculate the timing values we require */
+-	ata_timing_compute(adev->id, mode, adev->pio_mode, &t, T, UT);
+-
+-	/* We share 8bit timing so we must merge the constraints */
+-	if (peer) {
+-		if (peer->pio_mode) {
+-			ata_timing_compute(peer->id, peer->pio_mode,
+-					   peer->pio_mode, &p, T, UT);
+-			ata_timing_merge(&p, &t, &t, ATA_TIMING_8BIT);
+-		}
+-	}
+-
+-	/* Address setup is programmable but breaks on UDMA133 setups */
+-	if (set_ast) {
+-		u8 setup;	/* 2 bits per drive */
+-		int shift = 2 * offset;
+-
+-		pci_read_config_byte(pdev, 0x4C, &setup);
+-		setup &= ~(3 << shift);
+-		setup |= (clamp_val(t.setup, 1, 4) - 1) << shift;
+-		pci_write_config_byte(pdev, 0x4C, setup);
+-	}
+-
+-	/* Load the PIO mode bits */
+-	pci_write_config_byte(pdev, 0x4F - ap->port_no,
+-		((clamp_val(t.act8b, 1, 16) - 1) << 4) | (clamp_val(t.rec8b, 1, 16) - 1));
+-	pci_write_config_byte(pdev, 0x48 + offset,
+-		((clamp_val(t.active, 1, 16) - 1) << 4) | (clamp_val(t.recover, 1, 16) - 1));
+-
+-	/* Load the UDMA bits according to type */
+-	switch (udma_type) {
+-	case ATA_UDMA2:
+-	default:
+-		ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 5) - 2)) : 0x03;
+-		break;
+-	case ATA_UDMA4:
+-		ut = t.udma ? (0xe8 | (clamp_val(t.udma, 2, 9) - 2)) : 0x0f;
+-		break;
+-	case ATA_UDMA5:
+-		ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 9) - 2)) : 0x07;
+-		break;
+-	case ATA_UDMA6:
+-		ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 9) - 2)) : 0x07;
+-		break;
+-	}
+-
+-	/* Set UDMA unless device is not UDMA capable */
+-	if (udma_type) {
+-		u8 udma_etc;
+-
+-		pci_read_config_byte(pdev, 0x50 + offset, &udma_etc);
+-
+-		/* clear transfer mode bit */
+-		udma_etc &= ~0x20;
+-
+-		if (t.udma) {
+-			/* preserve 80-wire cable detection bit */
+-			udma_etc &= 0x10;
+-			udma_etc |= ut;
+-		}
+-
+-		pci_write_config_byte(pdev, 0x50 + offset, udma_etc);
+-	}
+-}
+-
+ static void via_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	const struct via_isa_bridge *config = ap->host->private_data;
+@@ -431,83 +271,6 @@ static struct ata_port_operations via_po
  	.sff_data_xfer	= ata_sff_data_xfer_noirq,
  };
  
+-static const struct via_isa_bridge *via_config_find(void)
+-{
+-	const struct via_isa_bridge *config;
+-	struct pci_dev *isa;
+-
+-	for (config = via_isa_bridges; config->id != PCI_DEVICE_ID_VIA_ANON;
+-	     config++) {
+-		isa = pci_get_device(PCI_VENDOR_ID_VIA +
+-			!!(config->flags & VIA_BAD_ID), config->id, NULL);
+-		if (isa) {
+-			u8 rev = isa->revision;
+-
+-			pci_dev_put(isa);
+-
+-			if (rev >= config->rev_min && rev <= config->rev_max)
+-				break;
+-		}
+-	}
+-
+-	return config;
+-}
+-
+-/**
+- *	via_config_fifo		-	set up the FIFO
+- *	@pdev: PCI device
+- *	@flags: configuration flags
+- *
+- *	Set the FIFO properties for this device if necessary. Used both on
+- *	set up and on and the resume path
+- */
+-
+-static void via_config_fifo(struct pci_dev *pdev, unsigned int flags)
+-{
+-	u8 enable;
+-
+-	/* 0x40 low bits indicate enabled channels */
+-	pci_read_config_byte(pdev, 0x40 , &enable);
+-	enable &= 3;
+-
+-	if (flags & VIA_SET_FIFO) {
+-		static const u8 fifo_setting[4] = {0x00, 0x60, 0x00, 0x20};
+-		u8 fifo;
+-
+-		pci_read_config_byte(pdev, 0x43, &fifo);
+-
+-		/* Clear PREQ# until DDACK# for errata */
+-		if (flags & VIA_BAD_PREQ)
+-			fifo &= 0x7F;
+-		else
+-			fifo &= 0x9f;
+-		/* Turn on FIFO for enabled channels */
+-		fifo |= fifo_setting[enable];
+-		pci_write_config_byte(pdev, 0x43, fifo);
+-	}
+-}
+-
+-static void via_fixup(struct pci_dev *pdev, const struct via_isa_bridge *config)
+-{
+-	u32 timing;
+-
+-	/* Initialise the FIFO for the enabled channels. */
+-	via_config_fifo(pdev, config->flags);
+-
+-	if (config->udma_mask == ATA_UDMA4) {
+-		/* The 66 MHz devices require we enable the clock */
+-		pci_read_config_dword(pdev, 0x50, &timing);
+-		timing |= 0x80008;
+-		pci_write_config_dword(pdev, 0x50, timing);
+-	}
+-	if (config->flags & VIA_BAD_CLK66) {
+-		/* Disable the 66MHz clock on problem devices */
+-		pci_read_config_dword(pdev, 0x50, &timing);
+-		timing &= ~0x80008;
+-		pci_write_config_dword(pdev, 0x50, timing);
+-	}
+-}
+-
+ /**
+  *	via_init_one		-	discovery callback
+  *	@pdev: PCI device
+Index: b/drivers/ata/pata_via.h
+===================================================================
+--- a/drivers/ata/pata_via.h
++++ b/drivers/ata/pata_via.h
+@@ -1,4 +1,64 @@
+ 
++#ifdef __LINUX_LIBATA_H__
++enum {
++	VIA_BAD_PREQ	= 0x01, /* Crashes if PREQ# till DDACK# set */
++	VIA_BAD_CLK66	= 0x02, /* 66 MHz clock doesn't work correctly */
++	VIA_SET_FIFO	= 0x04, /* Needs to have FIFO split set */
++	VIA_NO_UNMASK	= 0x08, /* Doesn't work with IRQ unmasking on */
++	VIA_BAD_ID	= 0x10, /* Has wrong vendor ID (0x1107) */
++	VIA_BAD_AST	= 0x20, /* Don't touch Address Setup Timing */
++	VIA_NO_ENABLES	= 0x40, /* Has no enablebits */
++	VIA_SATA_PATA	= 0x80, /* SATA/PATA combined configuration */
++};
++
++enum {
++	VIA_IDFLAG_SINGLE = (1 << 0), /* single channel controller */
++};
++
++/*
++ * VIA SouthBridge chips.
++ */
++
++static const struct via_isa_bridge {
++	const char *name;
++	u16 id;
++	u8 rev_min;
++	u8 rev_max;
++	u8 udma_mask;
++	u8 flags;
++} via_isa_bridges[] = {
++	{ "vx855",	PCI_DEVICE_ID_VIA_VX855,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
++	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
++	{ "vt8261",	PCI_DEVICE_ID_VIA_8261,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_SATA_PATA },
++	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST | VIA_NO_ENABLES },
++	{ "vt6415",	PCI_DEVICE_ID_VIA_6415,     0x00, 0xff, ATA_UDMA6, VIA_BAD_AST | VIA_NO_ENABLES },
++	{ "vt8237a",	PCI_DEVICE_ID_VIA_8237A,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vt8233a",	PCI_DEVICE_ID_VIA_8233A,    0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ "vt8233c",	PCI_DEVICE_ID_VIA_8233C_0,  0x00, 0x2f, ATA_UDMA5, },
++	{ "vt8233",	PCI_DEVICE_ID_VIA_8233_0,   0x00, 0x2f, ATA_UDMA5, },
++	{ "vt8231",	PCI_DEVICE_ID_VIA_8231,     0x00, 0x2f, ATA_UDMA5, },
++	{ "vt82c686b",	PCI_DEVICE_ID_VIA_82C686,   0x40, 0x4f, ATA_UDMA5, },
++	{ "vt82c686a",	PCI_DEVICE_ID_VIA_82C686,   0x10, 0x2f, ATA_UDMA4, },
++	{ "vt82c686",	PCI_DEVICE_ID_VIA_82C686,   0x00, 0x0f, ATA_UDMA2, VIA_BAD_CLK66 },
++	{ "vt82c596b",	PCI_DEVICE_ID_VIA_82C596,   0x10, 0x2f, ATA_UDMA4, },
++	{ "vt82c596a",	PCI_DEVICE_ID_VIA_82C596,   0x00, 0x0f, ATA_UDMA2, VIA_BAD_CLK66 },
++	{ "vt82c586b",	PCI_DEVICE_ID_VIA_82C586_0, 0x47, 0x4f, ATA_UDMA2, VIA_SET_FIFO },
++	{ "vt82c586b",	PCI_DEVICE_ID_VIA_82C586_0, 0x40, 0x46, ATA_UDMA2, VIA_SET_FIFO | VIA_BAD_PREQ },
++	{ "vt82c586b",	PCI_DEVICE_ID_VIA_82C586_0, 0x30, 0x3f, ATA_UDMA2, VIA_SET_FIFO },
++	{ "vt82c586a",	PCI_DEVICE_ID_VIA_82C586_0, 0x20, 0x2f, ATA_UDMA2, VIA_SET_FIFO },
++	{ "vt82c586",	PCI_DEVICE_ID_VIA_82C586_0, 0x00, 0x0f,      0x00, VIA_SET_FIFO },
++	{ "vt82c576",	PCI_DEVICE_ID_VIA_82C576,   0x00, 0x2f,      0x00, VIA_SET_FIFO | VIA_NO_UNMASK },
++	{ "vt82c576",	PCI_DEVICE_ID_VIA_82C576,   0x00, 0x2f,      0x00, VIA_SET_FIFO | VIA_NO_UNMASK | VIA_BAD_ID },
++	{ "vtxxxx",	PCI_DEVICE_ID_VIA_ANON,     0x00, 0x2f, ATA_UDMA6, VIA_BAD_AST },
++	{ NULL }
++};
++#endif
++
+ #include <linux/dmi.h>
+ 
+ /*
+@@ -27,3 +87,185 @@ static int via_cable_override(struct pci
+ 		return 1;
+ 	return 0;
+ }
++
++#ifdef __LINUX_LIBATA_H__
++/**
++ *	via_do_set_mode	-	set transfer mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ *	@mode: ATA mode being programmed
++ *	@set_ast: Set to program address setup
++ *	@udma_type: UDMA mode/format of registers
++ *
++ *	Program the VIA registers for DMA and PIO modes. Uses the ata timing
++ *	support in order to compute modes.
++ *
++ *	FIXME: Hotplug will require we serialize multiple mode changes
++ *	on the two channels.
++ */
++
++static void via_do_set_mode(struct ata_port *ap, struct ata_device *adev,
++			    int mode, int set_ast, int udma_type)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	struct ata_device *peer = ata_dev_pair(adev);
++	struct ata_timing t, p;
++	static int via_clock = 33333;	/* Bus clock in kHZ */
++	unsigned long T =  1000000000 / via_clock;
++	unsigned long UT = T;
++	int ut;
++	int offset = 3 - (2*ap->port_no) - adev->devno;
++
++	switch (udma_type) {
++	case ATA_UDMA4:
++		UT = T / 2; break;
++	case ATA_UDMA5:
++		UT = T / 3; break;
++	case ATA_UDMA6:
++		UT = T / 4; break;
++	}
++
++	/* Calculate the timing values we require */
++	ata_timing_compute(adev->id, mode, adev->pio_mode, &t, T, UT);
++
++	/* We share 8bit timing so we must merge the constraints */
++	if (peer) {
++		if (peer->pio_mode) {
++			ata_timing_compute(peer->id, peer->pio_mode,
++					   peer->pio_mode, &p, T, UT);
++			ata_timing_merge(&p, &t, &t, ATA_TIMING_8BIT);
++		}
++	}
++
++	/* Address setup is programmable but breaks on UDMA133 setups */
++	if (set_ast) {
++		u8 setup;	/* 2 bits per drive */
++		int shift = 2 * offset;
++
++		pci_read_config_byte(pdev, 0x4C, &setup);
++		setup &= ~(3 << shift);
++		setup |= (clamp_val(t.setup, 1, 4) - 1) << shift;
++		pci_write_config_byte(pdev, 0x4C, setup);
++	}
++
++	/* Load the PIO mode bits */
++	pci_write_config_byte(pdev, 0x4F - ap->port_no,
++		((clamp_val(t.act8b, 1, 16) - 1) << 4) |
++		(clamp_val(t.rec8b, 1, 16) - 1));
++	pci_write_config_byte(pdev, 0x48 + offset,
++		((clamp_val(t.active, 1, 16) - 1) << 4) |
++		(clamp_val(t.recover, 1, 16) - 1));
++
++	/* Load the UDMA bits according to type */
++	switch (udma_type) {
++	case ATA_UDMA2:
++	default:
++		ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 5) - 2)) : 0x03;
++		break;
++	case ATA_UDMA4:
++		ut = t.udma ? (0xe8 | (clamp_val(t.udma, 2, 9) - 2)) : 0x0f;
++		break;
++	case ATA_UDMA5:
++		ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 9) - 2)) : 0x07;
++		break;
++	case ATA_UDMA6:
++		ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 9) - 2)) : 0x07;
++		break;
++	}
++
++	/* Set UDMA unless device is not UDMA capable */
++	if (udma_type) {
++		u8 udma_etc;
++
++		pci_read_config_byte(pdev, 0x50 + offset, &udma_etc);
++
++		/* clear transfer mode bit */
++		udma_etc &= ~0x20;
++
++		if (t.udma) {
++			/* preserve 80-wire cable detection bit */
++			udma_etc &= 0x10;
++			udma_etc |= ut;
++		}
++
++		pci_write_config_byte(pdev, 0x50 + offset, udma_etc);
++	}
++}
++
 +static const struct via_isa_bridge *via_config_find(void)
 +{
 +	const struct via_isa_bridge *config;
@@ -48,33 +485,58 @@ Index: b/drivers/ata/pata_via.c
 +	return config;
 +}
 +
- /**
-  *	via_config_fifo		-	set up the FIFO
-  *	@pdev: PCI device
-@@ -544,7 +566,6 @@ static int via_init_one(struct pci_dev *
- 		.port_ops = &via_port_ops
- 	};
- 	const struct ata_port_info *ppi[] = { NULL, NULL };
--	struct pci_dev *isa;
- 	const struct via_isa_bridge *config;
- 	static int printed_version;
- 	u8 enable;
-@@ -563,17 +584,7 @@ static int via_init_one(struct pci_dev *
- 
- 	/* To find out how the IDE will behave and what features we
- 	   actually have to look at the bridge not the IDE controller */
--	for (config = via_isa_bridges; config->id != PCI_DEVICE_ID_VIA_ANON;
--	     config++)
--		if ((isa = pci_get_device(PCI_VENDOR_ID_VIA +
--			!!(config->flags & VIA_BAD_ID),
--			config->id, NULL))) {
--			u8 rev = isa->revision;
--			pci_dev_put(isa);
--
--			if (rev >= config->rev_min && rev <= config->rev_max)
--				break;
--		}
-+	config = via_config_find();
- 
- 	if (!(config->flags & VIA_NO_ENABLES)) {
- 		/* 0x40 low bits indicate enabled channels */
++/**
++ *	via_config_fifo		-	set up the FIFO
++ *	@pdev: PCI device
++ *	@flags: configuration flags
++ *
++ *	Set the FIFO properties for this device if necessary. Used both on
++ *	set up and on and the resume path
++ */
++
++static void via_config_fifo(struct pci_dev *pdev, unsigned int flags)
++{
++	u8 enable;
++
++	/* 0x40 low bits indicate enabled channels */
++	pci_read_config_byte(pdev, 0x40 , &enable);
++	enable &= 3;
++
++	if (flags & VIA_SET_FIFO) {
++		static const u8 fifo_setting[4] = {0x00, 0x60, 0x00, 0x20};
++		u8 fifo;
++
++		pci_read_config_byte(pdev, 0x43, &fifo);
++
++		/* Clear PREQ# until DDACK# for errata */
++		if (flags & VIA_BAD_PREQ)
++			fifo &= 0x7F;
++		else
++			fifo &= 0x9f;
++		/* Turn on FIFO for enabled channels */
++		fifo |= fifo_setting[enable];
++		pci_write_config_byte(pdev, 0x43, fifo);
++	}
++}
++
++static void via_fixup(struct pci_dev *pdev, const struct via_isa_bridge *config)
++{
++	u32 timing;
++
++	/* Initialise the FIFO for the enabled channels. */
++	via_config_fifo(pdev, config->flags);
++
++	if (config->udma_mask == ATA_UDMA4) {
++		/* The 66 MHz devices require we enable the clock */
++		pci_read_config_dword(pdev, 0x50, &timing);
++		timing |= 0x80008;
++		pci_write_config_dword(pdev, 0x50, timing);
++	}
++	if (config->flags & VIA_BAD_CLK66) {
++		/* Disable the 66MHz clock on problem devices */
++		pci_read_config_dword(pdev, 0x50, &timing);
++		timing &= ~0x80008;
++		pci_write_config_dword(pdev, 0x50, timing);
++	}
++}
++#endif
