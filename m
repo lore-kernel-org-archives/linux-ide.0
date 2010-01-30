@@ -1,9 +1,9 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 6/9] pata_cs5536: move code to be re-used by ide2libata to pata_cs5536.h
-Date: Sat, 30 Jan 2010 20:49:58 +0100
-Message-ID: <20100130194958.30779.65426.sendpatchset@localhost>
+Subject: [PATCH 8/9] pata_sil680: move code to be re-used by ide2libata to pata_sil680.h
+Date: Sat, 30 Jan 2010 20:50:11 +0100
+Message-ID: <20100130195011.30779.2992.sendpatchset@localhost>
 References: <20100130194918.30779.25485.sendpatchset@localhost>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754655Ab0A3Tve@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754693Ab0A3Tu4@vger.kernel.org>
 In-Reply-To: <20100130194918.30779.25485.sendpatchset@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -11,383 +11,505 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cs5536: move code to be re-used by ide2libata to pata_cs5536.h
+Subject: [PATCH] pata_sil680: move code to be re-used by ide2libata to pata_sil680.h
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cs5536.c |  174 ---------------------------------------------
- drivers/ata/pata_cs5536.h |  175 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 176 insertions(+), 173 deletions(-)
+ drivers/ata/pata_sil680.c |  236 ----------------------------------------------
+ drivers/ata/pata_sil680.h |  235 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 236 insertions(+), 235 deletions(-)
 
-Index: b/drivers/ata/pata_cs5536.c
+Index: b/drivers/ata/pata_sil680.c
 ===================================================================
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -15,19 +15,6 @@
-  * You should have received a copy of the GNU General Public License
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307	 USA
-- *
-- * Documentation:
-- *	Available from AMD web site.
-- *
-- * The IDE timing registers for the CS5536 live in the Geode Machine
-- * Specific Register file and not PCI config space.  Most BIOSes
-- * virtualize the PCI registers so the chip looks like a standard IDE
-- * controller.	Unfortunately not all implementations get this right.
-- * In particular some have problems with unaligned accesses to the
-- * virtualized PCI registers.  This driver always does full dword
-- * writes to work around the issue.  Also, in case of a bad BIOS this
-- * driver can be loaded with the "msr=1" parameter which forces using
-- * the Machine Specific Registers to configure the device.
-  */
+--- a/drivers/ata/pata_sil680.c
++++ b/drivers/ata/pata_sil680.c
+@@ -36,160 +36,7 @@
  
- #include <linux/kernel.h>
-@@ -43,166 +30,7 @@
- #define DRV_NAME	"pata_cs5536"
- #define DRV_VERSION	"0.0.7"
+ #define SIL680_MMIO_BAR		5
  
--enum {
--	MSR_IDE_CFG		= 0x51300010,
--	PCI_IDE_CFG		= 0x40,
+-/**
+- *	sil680_selreg		-	return register base
+- *	@hwif: interface
+- *	@r: config offset
+- *
+- *	Turn a config register offset into the right address in either
+- *	PCI space or MMIO space to access the control register in question
+- *	Thankfully this is a configuration operation so isnt performance
+- *	criticial.
+- */
 -
--	CFG			= 0,
--	DTC			= 2,
--	CAST			= 3,
--	ETC			= 4,
--
--	IDE_CFG_CHANEN		= (1 << 1),
--	IDE_CFG_CABLE		= (1 << 17) | (1 << 16),
--
--	IDE_D0_SHIFT		= 24,
--	IDE_D1_SHIFT		= 16,
--	IDE_DRV_MASK		= 0xff,
--
--	IDE_CAST_D0_SHIFT	= 6,
--	IDE_CAST_D1_SHIFT	= 4,
--	IDE_CAST_DRV_MASK	= 0x3,
--	IDE_CAST_CMD_MASK	= 0xff,
--	IDE_CAST_CMD_SHIFT	= 24,
--
--	IDE_ETC_UDMA_MASK	= 0xc0,
--};
--
--static int use_msr;
--
--static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+-static unsigned long sil680_selreg(struct ata_port *ap, int r)
 -{
--	if (unlikely(use_msr)) {
--		u32 dummy;
--
--		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
--		return 0;
--	}
--
--	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
--}
--
--static int cs5536_write(struct pci_dev *pdev, int reg, int val)
--{
--	if (unlikely(use_msr)) {
--		wrmsr(MSR_IDE_CFG + reg, val, 0);
--		return 0;
--	}
--
--	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
--}
--
--static void cs5536_program_dtc(struct ata_device *adev, u8 tim)
--{
--	struct pci_dev *pdev = to_pci_dev(adev->link->ap->host->dev);
--	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
--	u32 dtc;
--
--	cs5536_read(pdev, DTC, &dtc);
--	dtc &= ~(IDE_DRV_MASK << dshift);
--	dtc |= tim << dshift;
--	cs5536_write(pdev, DTC, dtc);
+-	unsigned long base = 0xA0 + r;
+-	base += (ap->port_no << 4);
+-	return base;
 -}
 -
 -/**
-- *	cs5536_cable_detect	-	detect cable type
-- *	@ap: Port to detect on
+- *	sil680_seldev		-	return register base
+- *	@hwif: interface
+- *	@r: config offset
 - *
-- *	Perform cable detection for ATA66 capable cable.
-- *
-- *	Returns a cable type.
+- *	Turn a config register offset into the right address in either
+- *	PCI space or MMIO space to access the control register in question
+- *	including accounting for the unit shift.
 - */
 -
--static int cs5536_cable_detect(struct ata_port *ap)
+-static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
+-{
+-	unsigned long base = 0xA0 + r;
+-	base += (ap->port_no << 4);
+-	base |= adev->devno ? 2 : 0;
+-	return base;
+-}
+-
+-
+-/**
+- *	sil680_cable_detect	-	cable detection
+- *	@ap: ATA port
+- *
+- *	Perform cable detection. The SIL680 stores this in PCI config
+- *	space for us.
+- */
+-
+-static int sil680_cable_detect(struct ata_port *ap)
 -{
 -	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 cfg;
--
--	cs5536_read(pdev, CFG, &cfg);
--
--	if (cfg & IDE_CFG_CABLE)
+-	unsigned long addr = sil680_selreg(ap, 0);
+-	u8 ata66;
+-	pci_read_config_byte(pdev, addr, &ata66);
+-	if (ata66 & 1)
 -		return ATA_CBL_PATA80;
 -	else
 -		return ATA_CBL_PATA40;
 -}
 -
 -/**
-- *	cs5536_set_piomode		-	PIO setup
+- *	sil680_set_piomode	-	set initial PIO mode data
 - *	@ap: ATA interface
-- *	@adev: device on the interface
+- *	@adev: ATA device
+- *
+- *	Program the SIL680 registers for PIO mode. Note that the task speed
+- *	registers are shared between the devices so we must pick the lowest
+- *	mode for command work.
 - */
 -
--static void cs5536_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-static void sil680_set_piomode(struct ata_port *ap, struct ata_device *adev)
 -{
--	static const u8 drv_timings[5] = {
--		0x98, 0x55, 0x32, 0x21, 0x20,
--	};
+-	static u16 speed_p[5] = { 0x328A, 0x2283, 0x1104, 0x10C3, 0x10C1 };
+-	static u16 speed_t[5] = { 0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1 };
 -
--	static const u8 addr_timings[5] = {
--		0x2, 0x1, 0x0, 0x0, 0x0,
--	};
--
--	static const u8 cmd_timings[5] = {
--		0x99, 0x92, 0x90, 0x22, 0x20,
--	};
--
+-	unsigned long tfaddr = sil680_selreg(ap, 0x02);
+-	unsigned long addr = sil680_seldev(ap, adev, 0x04);
+-	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
 -	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	int pio = adev->pio_mode - XFER_PIO_0;
+-	int lowest_pio = pio;
+-	int port_shift = 4 * adev->devno;
+-	u16 reg;
+-	u8 mode;
+-
 -	struct ata_device *pair = ata_dev_pair(adev);
--	int mode = adev->pio_mode - XFER_PIO_0;
--	int cmdmode = mode;
--	int cshift = adev->devno ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
--	u32 cast;
 -
--	if (pair)
--		cmdmode = min(mode, pair->pio_mode - XFER_PIO_0);
+-	if (pair != NULL && adev->pio_mode > pair->pio_mode)
+-		lowest_pio = pair->pio_mode - XFER_PIO_0;
 -
--	cs5536_program_dtc(adev, drv_timings[mode]);
+-	pci_write_config_word(pdev, addr, speed_p[pio]);
+-	pci_write_config_word(pdev, tfaddr, speed_t[lowest_pio]);
 -
--	cs5536_read(pdev, CAST, &cast);
+-	pci_read_config_word(pdev, tfaddr-2, &reg);
+-	pci_read_config_byte(pdev, addr_mask, &mode);
 -
--	cast &= ~(IDE_CAST_DRV_MASK << cshift);
--	cast |= addr_timings[mode] << cshift;
+-	reg &= ~0x0200;			/* Clear IORDY */
+-	mode &= ~(3 << port_shift);	/* Clear IORDY and DMA bits */
 -
--	cast &= ~(IDE_CAST_CMD_MASK << IDE_CAST_CMD_SHIFT);
--	cast |= cmd_timings[cmdmode] << IDE_CAST_CMD_SHIFT;
--
--	cs5536_write(pdev, CAST, cast);
+-	if (ata_pio_need_iordy(adev)) {
+-		reg |= 0x0200;		/* Enable IORDY */
+-		mode |= 1 << port_shift;
+-	}
+-	pci_write_config_word(pdev, tfaddr-2, reg);
+-	pci_write_config_byte(pdev, addr_mask, mode);
 -}
 -
 -/**
-- *	cs5536_set_dmamode		-	DMA timing setup
+- *	sil680_set_dmamode	-	set initial DMA mode data
 - *	@ap: ATA interface
-- *	@adev: Device being configured
+- *	@adev: ATA device
 - *
+- *	Program the MWDMA/UDMA modes for the sil680 k
+- *	chipset. The MWDMA mode values are pulled from a lookup table
+- *	while the chipset uses mode number for UDMA.
 - */
 -
--static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+-static void sil680_set_dmamode(struct ata_port *ap, struct ata_device *adev)
 -{
--	static const u8 udma_timings[6] = {
--		0xc2, 0xc1, 0xc0, 0xc4, 0xc5, 0xc6,
+-	static u8 ultra_table[2][7] = {
+-		{ 0x0C, 0x07, 0x05, 0x04, 0x02, 0x01, 0xFF },	/* 100MHz */
+-		{ 0x0F, 0x0B, 0x07, 0x05, 0x03, 0x02, 0x01 },	/* 133Mhz */
 -	};
--
--	static const u8 mwdma_timings[3] = {
--		0x67, 0x21, 0x20,
--	};
+-	static u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
 -
 -	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u32 etc;
--	int mode = adev->dma_mode;
--	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+-	unsigned long ma = sil680_seldev(ap, adev, 0x08);
+-	unsigned long ua = sil680_seldev(ap, adev, 0x0C);
+-	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
+-	int port_shift = adev->devno * 4;
+-	u8 scsc, mode;
+-	u16 multi, ultra;
 -
--	cs5536_read(pdev, ETC, &etc);
+-	pci_read_config_byte(pdev, 0x8A, &scsc);
+-	pci_read_config_byte(pdev, addr_mask, &mode);
+-	pci_read_config_word(pdev, ma, &multi);
+-	pci_read_config_word(pdev, ua, &ultra);
 -
--	if (mode >= XFER_UDMA_0) {
--		etc &= ~(IDE_DRV_MASK << dshift);
--		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
--	} else { /* MWDMA */
--		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
--		cs5536_program_dtc(adev, mwdma_timings[mode - XFER_MW_DMA_0]);
+-	/* Mask timing bits */
+-	ultra &= ~0x3F;
+-	mode &= ~(0x03 << port_shift);
+-
+-	/* Extract scsc */
+-	scsc = (scsc & 0x30) ? 1 : 0;
+-
+-	if (adev->dma_mode >= XFER_UDMA_0) {
+-		multi = 0x10C1;
+-		ultra |= ultra_table[scsc][adev->dma_mode - XFER_UDMA_0];
+-		mode |= (0x03 << port_shift);
+-	} else {
+-		multi = dma_table[adev->dma_mode - XFER_MW_DMA_0];
+-		mode |= (0x02 << port_shift);
+-	}
+-	pci_write_config_byte(pdev, addr_mask, mode);
+-	pci_write_config_word(pdev, ma, multi);
+-	pci_write_config_word(pdev, ua, ultra);
+-}
++#include "pata_sil680.h"
+ 
+ static struct scsi_host_template sil680_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+@@ -202,87 +49,6 @@ static struct ata_port_operations sil680
+ 	.set_dmamode	= sil680_set_dmamode,
+ };
+ 
+-/**
+- *	sil680_init_chip		-	chip setup
+- *	@pdev: PCI device
+- *
+- *	Perform all the chip setup which must be done both when the device
+- *	is powered up on boot and when we resume in case we resumed from RAM.
+- *	Returns the final clock settings.
+- */
+-
+-static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
+-{
+-	u8 tmpbyte	= 0;
+-
+-	/* FIXME: double check */
+-	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE,
+-			      pdev->revision ? 1 : 255);
+-
+-	pci_write_config_byte(pdev, 0x80, 0x00);
+-	pci_write_config_byte(pdev, 0x84, 0x00);
+-
+-	pci_read_config_byte(pdev, 0x8A, &tmpbyte);
+-
+-	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
+-		tmpbyte & 1, tmpbyte & 0x30);
+-
+-	*try_mmio = 0;
+-#ifdef CONFIG_PPC
+-	if (machine_is(cell))
+-		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
+-#endif
+-
+-	switch (tmpbyte & 0x30) {
+-	case 0x00:
+-		/* 133 clock attempt to force it on */
+-		pci_write_config_byte(pdev, 0x8A, tmpbyte|0x10);
+-		break;
+-	case 0x30:
+-		/* if clocking is disabled */
+-		/* 133 clock attempt to force it on */
+-		pci_write_config_byte(pdev, 0x8A, tmpbyte & ~0x20);
+-		break;
+-	case 0x10:
+-		/* 133 already */
+-		break;
+-	case 0x20:
+-		/* BIOS set PCI x2 clocking */
+-		break;
 -	}
 -
--	cs5536_write(pdev, ETC, etc);
+-	pci_read_config_byte(pdev,   0x8A, &tmpbyte);
+-	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
+-		tmpbyte & 1, tmpbyte & 0x30);
+-
+-	pci_write_config_byte(pdev,  0xA1, 0x72);
+-	pci_write_config_word(pdev,  0xA2, 0x328A);
+-	pci_write_config_dword(pdev, 0xA4, 0x62DD62DD);
+-	pci_write_config_dword(pdev, 0xA8, 0x43924392);
+-	pci_write_config_dword(pdev, 0xAC, 0x40094009);
+-	pci_write_config_byte(pdev,  0xB1, 0x72);
+-	pci_write_config_word(pdev,  0xB2, 0x328A);
+-	pci_write_config_dword(pdev, 0xB4, 0x62DD62DD);
+-	pci_write_config_dword(pdev, 0xB8, 0x43924392);
+-	pci_write_config_dword(pdev, 0xBC, 0x40094009);
+-
+-	switch (tmpbyte & 0x30) {
+-	case 0x00:
+-		printk(KERN_INFO "sil680: 100MHz clock.\n");
+-		break;
+-	case 0x10:
+-		printk(KERN_INFO "sil680: 133MHz clock.\n");
+-		break;
+-	case 0x20:
+-		printk(KERN_INFO "sil680: Using PCI clock.\n");
+-		break;
+-	/* This last case is _NOT_ ok */
+-	case 0x30:
+-		printk(KERN_ERR "sil680: Clock disabled ?\n");
+-	}
+-	return tmpbyte & 0x30;
 -}
-+#include "pata_cs5536.h"
- 
- static struct scsi_host_template cs5536_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
-Index: b/drivers/ata/pata_cs5536.h
+-
+ static int __devinit sil680_init_one(struct pci_dev *pdev,
+ 				     const struct pci_device_id *id)
+ {
+Index: b/drivers/ata/pata_sil680.h
 ===================================================================
 --- /dev/null
-+++ b/drivers/ata/pata_cs5536.h
-@@ -0,0 +1,175 @@
-+/*
-+ * Documentation:
-+ *	Available from AMD web site.
++++ b/drivers/ata/pata_sil680.h
+@@ -0,0 +1,235 @@
++/**
++ *	sil680_selreg		-	return register base
++ *	@hwif: interface
++ *	@r: config offset
 + *
-+ * The IDE timing registers for the CS5536 live in the Geode Machine
-+ * Specific Register file and not PCI config space.  Most BIOSes
-+ * virtualize the PCI registers so the chip looks like a standard IDE
-+ * controller.	Unfortunately not all implementations get this right.
-+ * In particular some have problems with unaligned accesses to the
-+ * virtualized PCI registers.  This driver always does full dword
-+ * writes to work around the issue.  Also, in case of a bad BIOS this
-+ * driver can be loaded with the "msr=1" parameter which forces using
-+ * the Machine Specific Registers to configure the device.
++ *	Turn a config register offset into the right address in either
++ *	PCI space or MMIO space to access the control register in question
++ *	Thankfully this is a configuration operation so isnt performance
++ *	criticial.
 + */
 +
-+enum {
-+	MSR_IDE_CFG		= 0x51300010,
-+	PCI_IDE_CFG		= 0x40,
-+
-+	CFG			= 0,
-+	DTC			= 2,
-+	CAST			= 3,
-+	ETC			= 4,
-+
-+	IDE_CFG_CHANEN		= (1 << 1),
-+	IDE_CFG_CABLE		= (1 << 17) | (1 << 16),
-+
-+	IDE_D0_SHIFT		= 24,
-+	IDE_D1_SHIFT		= 16,
-+	IDE_DRV_MASK		= 0xff,
-+
-+	IDE_CAST_D0_SHIFT	= 6,
-+	IDE_CAST_D1_SHIFT	= 4,
-+	IDE_CAST_DRV_MASK	= 0x3,
-+	IDE_CAST_CMD_MASK	= 0xff,
-+	IDE_CAST_CMD_SHIFT	= 24,
-+
-+	IDE_ETC_UDMA_MASK	= 0xc0,
-+};
-+
-+static int use_msr;
-+
-+static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
++static unsigned long sil680_selreg(struct ata_port *ap, int r)
 +{
-+	if (unlikely(use_msr)) {
-+		u32 dummy;
-+
-+		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
-+		return 0;
-+	}
-+
-+	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
-+}
-+
-+static int cs5536_write(struct pci_dev *pdev, int reg, int val)
-+{
-+	if (unlikely(use_msr)) {
-+		wrmsr(MSR_IDE_CFG + reg, val, 0);
-+		return 0;
-+	}
-+
-+	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
-+}
-+
-+static void cs5536_program_dtc(struct ata_device *adev, u8 tim)
-+{
-+	struct pci_dev *pdev = to_pci_dev(adev->link->ap->host->dev);
-+	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
-+	u32 dtc;
-+
-+	cs5536_read(pdev, DTC, &dtc);
-+	dtc &= ~(IDE_DRV_MASK << dshift);
-+	dtc |= tim << dshift;
-+	cs5536_write(pdev, DTC, dtc);
++	unsigned long base = 0xA0 + r;
++	base += (ap->port_no << 4);
++	return base;
 +}
 +
 +/**
-+ *	cs5536_cable_detect	-	detect cable type
-+ *	@ap: Port to detect on
++ *	sil680_seldev		-	return register base
++ *	@hwif: interface
++ *	@r: config offset
 + *
-+ *	Perform cable detection for ATA66 capable cable.
-+ *
-+ *	Returns a cable type.
++ *	Turn a config register offset into the right address in either
++ *	PCI space or MMIO space to access the control register in question
++ *	including accounting for the unit shift.
 + */
 +
-+static int cs5536_cable_detect(struct ata_port *ap)
++static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
++{
++	unsigned long base = 0xA0 + r;
++	base += (ap->port_no << 4);
++	base |= adev->devno ? 2 : 0;
++	return base;
++}
++
++
++/**
++ *	sil680_cable_detect	-	cable detection
++ *	@ap: ATA port
++ *
++ *	Perform cable detection. The SIL680 stores this in PCI config
++ *	space for us.
++ */
++
++static int sil680_cable_detect(struct ata_port *ap)
 +{
 +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u32 cfg;
-+
-+	cs5536_read(pdev, CFG, &cfg);
-+
-+	if (cfg & IDE_CFG_CABLE)
++	unsigned long addr = sil680_selreg(ap, 0);
++	u8 ata66;
++	pci_read_config_byte(pdev, addr, &ata66);
++	if (ata66 & 1)
 +		return ATA_CBL_PATA80;
 +	else
 +		return ATA_CBL_PATA40;
 +}
 +
 +/**
-+ *	cs5536_set_piomode		-	PIO setup
++ *	sil680_set_piomode	-	set initial PIO mode data
 + *	@ap: ATA interface
-+ *	@adev: device on the interface
++ *	@adev: ATA device
++ *
++ *	Program the SIL680 registers for PIO mode. Note that the task speed
++ *	registers are shared between the devices so we must pick the lowest
++ *	mode for command work.
 + */
 +
-+static void cs5536_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static void sil680_set_piomode(struct ata_port *ap, struct ata_device *adev)
 +{
-+	static const u8 drv_timings[5] = {
-+		0x98, 0x55, 0x32, 0x21, 0x20,
-+	};
++	static u16 speed_p[5] = { 0x328A, 0x2283, 0x1104, 0x10C3, 0x10C1 };
++	static u16 speed_t[5] = { 0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1 };
 +
-+	static const u8 addr_timings[5] = {
-+		0x2, 0x1, 0x0, 0x0, 0x0,
-+	};
-+
-+	static const u8 cmd_timings[5] = {
-+		0x99, 0x92, 0x90, 0x22, 0x20,
-+	};
-+
++	unsigned long tfaddr = sil680_selreg(ap, 0x02);
++	unsigned long addr = sil680_seldev(ap, adev, 0x04);
++	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
 +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	int pio = adev->pio_mode - XFER_PIO_0;
++	int lowest_pio = pio;
++	int port_shift = 4 * adev->devno;
++	u16 reg;
++	u8 mode;
++
 +	struct ata_device *pair = ata_dev_pair(adev);
-+	int mode = adev->pio_mode - XFER_PIO_0;
-+	int cmdmode = mode;
-+	int cshift = adev->devno ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
-+	u32 cast;
 +
-+	if (pair)
-+		cmdmode = min(mode, pair->pio_mode - XFER_PIO_0);
++	if (pair != NULL && adev->pio_mode > pair->pio_mode)
++		lowest_pio = pair->pio_mode - XFER_PIO_0;
 +
-+	cs5536_program_dtc(adev, drv_timings[mode]);
++	pci_write_config_word(pdev, addr, speed_p[pio]);
++	pci_write_config_word(pdev, tfaddr, speed_t[lowest_pio]);
 +
-+	cs5536_read(pdev, CAST, &cast);
++	pci_read_config_word(pdev, tfaddr-2, &reg);
++	pci_read_config_byte(pdev, addr_mask, &mode);
 +
-+	cast &= ~(IDE_CAST_DRV_MASK << cshift);
-+	cast |= addr_timings[mode] << cshift;
++	reg &= ~0x0200;			/* Clear IORDY */
++	mode &= ~(3 << port_shift);	/* Clear IORDY and DMA bits */
 +
-+	cast &= ~(IDE_CAST_CMD_MASK << IDE_CAST_CMD_SHIFT);
-+	cast |= cmd_timings[cmdmode] << IDE_CAST_CMD_SHIFT;
-+
-+	cs5536_write(pdev, CAST, cast);
++	if (ata_pio_need_iordy(adev)) {
++		reg |= 0x0200;		/* Enable IORDY */
++		mode |= 1 << port_shift;
++	}
++	pci_write_config_word(pdev, tfaddr-2, reg);
++	pci_write_config_byte(pdev, addr_mask, mode);
 +}
 +
 +/**
-+ *	cs5536_set_dmamode		-	DMA timing setup
++ *	sil680_set_dmamode	-	set initial DMA mode data
 + *	@ap: ATA interface
-+ *	@adev: Device being configured
++ *	@adev: ATA device
 + *
++ *	Program the MWDMA/UDMA modes for the sil680 k
++ *	chipset. The MWDMA mode values are pulled from a lookup table
++ *	while the chipset uses mode number for UDMA.
 + */
 +
-+static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++static void sil680_set_dmamode(struct ata_port *ap, struct ata_device *adev)
 +{
-+	static const u8 udma_timings[6] = {
-+		0xc2, 0xc1, 0xc0, 0xc4, 0xc5, 0xc6,
++	static u8 ultra_table[2][7] = {
++		{ 0x0C, 0x07, 0x05, 0x04, 0x02, 0x01, 0xFF },	/* 100MHz */
++		{ 0x0F, 0x0B, 0x07, 0x05, 0x03, 0x02, 0x01 },	/* 133Mhz */
 +	};
-+
-+	static const u8 mwdma_timings[3] = {
-+		0x67, 0x21, 0x20,
-+	};
++	static u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
 +
 +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u32 etc;
-+	int mode = adev->dma_mode;
-+	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
++	unsigned long ma = sil680_seldev(ap, adev, 0x08);
++	unsigned long ua = sil680_seldev(ap, adev, 0x0C);
++	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
++	int port_shift = adev->devno * 4;
++	u8 scsc, mode;
++	u16 multi, ultra;
 +
-+	cs5536_read(pdev, ETC, &etc);
++	pci_read_config_byte(pdev, 0x8A, &scsc);
++	pci_read_config_byte(pdev, addr_mask, &mode);
++	pci_read_config_word(pdev, ma, &multi);
++	pci_read_config_word(pdev, ua, &ultra);
 +
-+	if (mode >= XFER_UDMA_0) {
-+		etc &= ~(IDE_DRV_MASK << dshift);
-+		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
-+	} else { /* MWDMA */
-+		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
-+		cs5536_program_dtc(adev, mwdma_timings[mode - XFER_MW_DMA_0]);
++	/* Mask timing bits */
++	ultra &= ~0x3F;
++	mode &= ~(0x03 << port_shift);
++
++	/* Extract scsc */
++	scsc = (scsc & 0x30) ? 1 : 0;
++
++	if (adev->dma_mode >= XFER_UDMA_0) {
++		multi = 0x10C1;
++		ultra |= ultra_table[scsc][adev->dma_mode - XFER_UDMA_0];
++		mode |= (0x03 << port_shift);
++	} else {
++		multi = dma_table[adev->dma_mode - XFER_MW_DMA_0];
++		mode |= (0x02 << port_shift);
++	}
++	pci_write_config_byte(pdev, addr_mask, mode);
++	pci_write_config_word(pdev, ma, multi);
++	pci_write_config_word(pdev, ua, ultra);
++}
++
++/**
++ *	sil680_init_chip		-	chip setup
++ *	@pdev: PCI device
++ *
++ *	Perform all the chip setup which must be done both when the device
++ *	is powered up on boot and when we resume in case we resumed from RAM.
++ *	Returns the final clock settings.
++ */
++
++static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
++{
++	u8 tmpbyte	= 0;
++
++	/* FIXME: double check */
++	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE,
++			      pdev->revision ? 1 : 255);
++
++	pci_write_config_byte(pdev, 0x80, 0x00);
++	pci_write_config_byte(pdev, 0x84, 0x00);
++
++	pci_read_config_byte(pdev, 0x8A, &tmpbyte);
++
++	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
++		tmpbyte & 1, tmpbyte & 0x30);
++
++	*try_mmio = 0;
++#ifdef CONFIG_PPC
++	if (machine_is(cell))
++		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
++#endif
++
++	switch (tmpbyte & 0x30) {
++	case 0x00:
++		/* 133 clock attempt to force it on */
++		pci_write_config_byte(pdev, 0x8A, tmpbyte|0x10);
++		break;
++	case 0x30:
++		/* if clocking is disabled */
++		/* 133 clock attempt to force it on */
++		pci_write_config_byte(pdev, 0x8A, tmpbyte & ~0x20);
++		break;
++	case 0x10:
++		/* 133 already */
++		break;
++	case 0x20:
++		/* BIOS set PCI x2 clocking */
++		break;
 +	}
 +
-+	cs5536_write(pdev, ETC, etc);
++	pci_read_config_byte(pdev,   0x8A, &tmpbyte);
++	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
++		tmpbyte & 1, tmpbyte & 0x30);
++
++	pci_write_config_byte(pdev,  0xA1, 0x72);
++	pci_write_config_word(pdev,  0xA2, 0x328A);
++	pci_write_config_dword(pdev, 0xA4, 0x62DD62DD);
++	pci_write_config_dword(pdev, 0xA8, 0x43924392);
++	pci_write_config_dword(pdev, 0xAC, 0x40094009);
++	pci_write_config_byte(pdev,  0xB1, 0x72);
++	pci_write_config_word(pdev,  0xB2, 0x328A);
++	pci_write_config_dword(pdev, 0xB4, 0x62DD62DD);
++	pci_write_config_dword(pdev, 0xB8, 0x43924392);
++	pci_write_config_dword(pdev, 0xBC, 0x40094009);
++
++	switch (tmpbyte & 0x30) {
++	case 0x00:
++		printk(KERN_INFO "sil680: 100MHz clock.\n");
++		break;
++	case 0x10:
++		printk(KERN_INFO "sil680: 133MHz clock.\n");
++		break;
++	case 0x20:
++		printk(KERN_INFO "sil680: Using PCI clock.\n");
++		break;
++	/* This last case is _NOT_ ok */
++	case 0x30:
++		printk(KERN_ERR "sil680: Clock disabled ?\n");
++	}
++	return tmpbyte & 0x30;
 +}
