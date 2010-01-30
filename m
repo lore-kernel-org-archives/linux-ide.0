@@ -1,307 +1,271 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/9] cs5536: convert to ide2libata
-Date: Sat, 30 Jan 2010 20:50:04 +0100
-Message-ID: <20100130195004.30779.89524.sendpatchset@localhost>
+Subject: [PATCH 5/9] ide2libata: add missing credits
+Date: Sat, 30 Jan 2010 20:49:51 +0100
+Message-ID: <20100130194951.30779.98709.sendpatchset@localhost>
 References: <20100130194918.30779.25485.sendpatchset@localhost>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:50554 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754112Ab0A3TuN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jan 2010 14:50:13 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754546Ab0A3TuL@vger.kernel.org>
 In-Reply-To: <20100130194918.30779.25485.sendpatchset@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] cs5536: convert to ide2libata
+Subject: [PATCH] ide2libata: add missing credits
+
+I forgot to credit myself. :)
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cs5536.h |   22 +++++
- drivers/ide/cs5536.c      |  189 +---------------------------------------------
- 2 files changed, 26 insertions(+), 185 deletions(-)
+ drivers/ide/aec62xx.c  |    4 ++--
+ drivers/ide/atiixp.c   |    4 ++--
+ drivers/ide/cs5520.c   |    3 ++-
+ drivers/ide/cs5530.c   |    4 ++--
+ drivers/ide/cs5535.c   |    4 ++--
+ drivers/ide/it8213.c   |    4 ++--
+ drivers/ide/it821x.c   |    4 ++--
+ drivers/ide/piix.c     |    3 ++-
+ drivers/ide/sc1200.c   |    4 ++--
+ drivers/ide/sl82c105.c |    2 +-
+ drivers/ide/slc90e66.c |    3 ++-
+ drivers/ide/triflex.c  |    4 +++-
+ 12 files changed, 24 insertions(+), 19 deletions(-)
 
-Index: b/drivers/ata/pata_cs5536.h
+Index: b/drivers/ide/aec62xx.c
 ===================================================================
---- a/drivers/ata/pata_cs5536.h
-+++ b/drivers/ata/pata_cs5536.h
-@@ -64,7 +64,11 @@ static int cs5536_write(struct pci_dev *
- 
- static void cs5536_program_dtc(struct ata_device *adev, u8 tim)
- {
-+#ifndef __IDE2LIBATA
- 	struct pci_dev *pdev = to_pci_dev(adev->link->ap->host->dev);
-+#else
-+	struct pci_dev *pdev = to_pci_dev(adev->hwif->dev);
-+#endif
- 	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
- 	u32 dtc;
- 
-@@ -121,11 +125,19 @@ static void cs5536_set_piomode(struct at
- 	int mode = adev->pio_mode - XFER_PIO_0;
- 	int cmdmode = mode;
- 	int cshift = adev->devno ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
-+#ifdef __IDE2LIBATA
-+	unsigned long timings = (unsigned long)ide_get_drivedata(adev);
-+#endif
- 	u32 cast;
- 
- 	if (pair)
- 		cmdmode = min(mode, pair->pio_mode - XFER_PIO_0);
- 
-+#ifdef __IDE2LIBATA
-+	timings &= (IDE_DRV_MASK << 8);
-+	timings |= drv_timings[mode];
-+	ide_set_drivedata(adev, (void *)timings);
-+#endif
- 	cs5536_program_dtc(adev, drv_timings[mode]);
- 
- 	cs5536_read(pdev, CAST, &cast);
-@@ -160,7 +172,9 @@ static void cs5536_set_dmamode(struct at
- 	u32 etc;
- 	int mode = adev->dma_mode;
- 	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
--
-+#ifdef __IDE2LIBATA
-+	unsigned long timings = (unsigned long)ide_get_drivedata(adev);
-+#endif
- 	cs5536_read(pdev, ETC, &etc);
- 
- 	if (mode >= XFER_UDMA_0) {
-@@ -168,7 +182,13 @@ static void cs5536_set_dmamode(struct at
- 		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
- 	} else { /* MWDMA */
- 		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
-+#ifndef __IDE2LIBATA
- 		cs5536_program_dtc(adev, mwdma_timings[mode - XFER_MW_DMA_0]);
-+#else
-+		timings &= IDE_DRV_MASK;
-+		timings |= mwdma_timings[mode - XFER_MW_DMA_0] << 8;
-+		ide_set_drivedata(adev, (void *)timings);
-+#endif
- 	}
- 
- 	cs5536_write(pdev, ETC, etc);
-Index: b/drivers/ide/cs5536.c
-===================================================================
---- a/drivers/ide/cs5536.c
-+++ b/drivers/ide/cs5536.c
+--- a/drivers/ide/aec62xx.c
++++ b/drivers/ide/aec62xx.c
 @@ -1,7 +1,7 @@
  /*
-  * CS5536 PATA support
-  * (C) 2007 Martin K. Petersen <mkp@mkp.net>
-- * (C) 2009 Bartlomiej Zolnierkiewicz
-+ * (C) 2009-2010 Bartlomiej Zolnierkiewicz
+  * Copyright (C) 1999-2002	Andre Hedrick <andre@linux-ide.org>
+  * Copyright (C) 2007		MontaVista Software, Inc. <source@mvista.com>
+- *
++ * Copyright (C) 2007-2010	Bartlomiej Zolnierkiewicz
+  */
+ 
+ #include <linux/module.h>
+@@ -173,6 +173,6 @@ static void __exit aec62xx_ide_exit(void
+ module_init(aec62xx_ide_init);
+ module_exit(aec62xx_ide_exit);
+ 
+-MODULE_AUTHOR("Andre Hedrick");
++MODULE_AUTHOR("Andre Hedrick, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for ARTOP AEC62xx IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/atiixp.c
+===================================================================
+--- a/drivers/ide/atiixp.c
++++ b/drivers/ide/atiixp.c
+@@ -1,6 +1,6 @@
+ /*
+  *  Copyright (C) 2003 ATI Inc. <hyu@ati.com>
+- *  Copyright (C) 2004,2007 Bartlomiej Zolnierkiewicz
++ *  Copyright (C) 2004,2007-2010 Bartlomiej Zolnierkiewicz
+  */
+ 
+ #include <linux/types.h>
+@@ -88,6 +88,6 @@ static void __exit atiixp_ide_exit(void)
+ module_init(atiixp_ide_init);
+ module_exit(atiixp_ide_exit);
+ 
+-MODULE_AUTHOR("HUI YU");
++MODULE_AUTHOR("HUI YU, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for ATI IXP IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/cs5520.c
+===================================================================
+--- a/drivers/ide/cs5520.c
++++ b/drivers/ide/cs5520.c
+@@ -13,6 +13,7 @@
+  *	*** This driver is strictly experimental ***
   *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -15,19 +15,6 @@
-  * You should have received a copy of the GNU General Public License
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-- *
-- * Documentation:
-- *	Available from AMD web site.
-- *
-- * The IDE timing registers for the CS5536 live in the Geode Machine
-- * Specific Register file and not PCI config space.  Most BIOSes
-- * virtualize the PCI registers so the chip looks like a standard IDE
-- * controller.  Unfortunately not all implementations get this right.
-- * In particular some have problems with unaligned accesses to the
-- * virtualized PCI registers.  This driver always does full dword
-- * writes to work around the issue.  Also, in case of a bad BIOS this
-- * driver can be loaded with the "msr=1" parameter which forces using
-- * the Machine Specific Registers to configure the device.
+  *	(c) Copyright Red Hat Inc 2002
++ *	(c) Copyright Bartlomiej Zolnierkiewicz 2010
+  * 
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License as published by the
+@@ -127,6 +128,6 @@ static int __init cs5520_ide_init(void)
+ 
+ module_init(cs5520_ide_init);
+ 
+-MODULE_AUTHOR("Alan Cox");
++MODULE_AUTHOR("Alan Cox, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for Cyrix 5510/5520 IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/cs5530.c
+===================================================================
+--- a/drivers/ide/cs5530.c
++++ b/drivers/ide/cs5530.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (C) 2000			Andre Hedrick <andre@linux-ide.org>
+  * Copyright (C) 2000			Mark Lord <mlord@pobox.com>
+- * Copyright (C) 2007			Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2007-2010		Bartlomiej Zolnierkiewicz
+  *
+  * May be copied or modified under the terms of the GNU General Public License
+  *
+@@ -173,6 +173,6 @@ static void __exit cs5530_ide_exit(void)
+ module_init(cs5530_ide_init);
+ module_exit(cs5530_ide_exit);
+ 
+-MODULE_AUTHOR("Mark Lord");
++MODULE_AUTHOR("Mark Lord, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for Cyrix/NS 5530 IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/cs5535.c
+===================================================================
+--- a/drivers/ide/cs5535.c
++++ b/drivers/ide/cs5535.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (C) 2004-2005 Advanced Micro Devices, Inc.
+- * Copyright (C)      2007 Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
+  *
+  * History:
+  * 09/20/2005 - Jaya Kumar <jayakumar.ide@gmail.com>
+@@ -82,6 +82,6 @@ static void __exit cs5535_ide_exit(void)
+ module_init(cs5535_ide_init);
+ module_exit(cs5535_ide_exit);
+ 
+-MODULE_AUTHOR("AMD");
++MODULE_AUTHOR("AMD, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for AMD/NS CS5535 IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/it8213.c
+===================================================================
+--- a/drivers/ide/it8213.c
++++ b/drivers/ide/it8213.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2006 Jack Lee
+  * Copyright (C) 2006 Alan Cox
+- * Copyright (C) 2007 Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
   */
  
  #include <linux/kernel.h>
-@@ -39,174 +26,8 @@
+@@ -79,6 +79,6 @@ static void __exit it8213_ide_exit(void)
+ module_init(it8213_ide_init);
+ module_exit(it8213_ide_exit);
  
- #define DRV_NAME	"cs5536"
+-MODULE_AUTHOR("Jack Lee, Alan Cox");
++MODULE_AUTHOR("Jack Lee, Alan Cox, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for the ITE 8213");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/it821x.c
+===================================================================
+--- a/drivers/ide/it821x.c
++++ b/drivers/ide/it821x.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (C) 2004		Red Hat
+- * Copyright (C) 2007		Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2007-2010	Bartlomiej Zolnierkiewicz
+  *
+  *  May be copied or modified under the terms of the GNU General Public License
+  *  Based in part on the ITE vendor provided SCSI driver.
+@@ -352,6 +352,6 @@ module_exit(it821x_ide_exit);
+ module_param_named(noraid, it8212_noraid, int, S_IRUGO);
+ MODULE_PARM_DESC(noraid, "Force card into bypass mode");
  
--enum {
--	MSR_IDE_CFG		= 0x51300010,
--	PCI_IDE_CFG		= 0x40,
--
--	CFG			= 0,
--	DTC			= 2,
--	CAST			= 3,
--	ETC			= 4,
--
--	IDE_CFG_CHANEN		= (1 << 1),
--	IDE_CFG_CABLE		= (1 << 17) | (1 << 16),
--
--	IDE_D0_SHIFT		= 24,
--	IDE_D1_SHIFT		= 16,
--	IDE_DRV_MASK		= 0xff,
--
--	IDE_CAST_D0_SHIFT	= 6,
--	IDE_CAST_D1_SHIFT	= 4,
--	IDE_CAST_DRV_MASK	= 0x3,
--
--	IDE_CAST_CMD_SHIFT	= 24,
--	IDE_CAST_CMD_MASK	= 0xff,
--
--	IDE_ETC_UDMA_MASK	= 0xc0,
--};
--
--static int use_msr;
--
--static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
--{
--	if (unlikely(use_msr)) {
--		u32 dummy;
--
--		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
--		return 0;
--	}
--
--	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
--}
--
--static int cs5536_write(struct pci_dev *pdev, int reg, int val)
--{
--	if (unlikely(use_msr)) {
--		wrmsr(MSR_IDE_CFG + reg, val, 0);
--		return 0;
--	}
--
--	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
--}
--
--static void cs5536_program_dtc(ide_drive_t *drive, u8 tim)
--{
--	struct pci_dev *pdev = to_pci_dev(drive->hwif->dev);
--	int dshift = (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
--	u32 dtc;
--
--	cs5536_read(pdev, DTC, &dtc);
--	dtc &= ~(IDE_DRV_MASK << dshift);
--	dtc |= tim << dshift;
--	cs5536_write(pdev, DTC, dtc);
--}
--
--/**
-- *	cs5536_cable_detect	-	detect cable type
-- *	@hwif: Port to detect on
-- *
-- *	Perform cable detection for ATA66 capable cable.
-- *
-- *	Returns a cable type.
-- */
--
--static int cs5536_cable_detect(ide_hwif_t *hwif)
--{
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	u32 cfg;
--
--	cs5536_read(pdev, CFG, &cfg);
--
--	if (cfg & IDE_CFG_CABLE)
--		return ATA_CBL_PATA80;
--	else
--		return ATA_CBL_PATA40;
--}
--
--/**
-- *	cs5536_set_pio_mode		-	PIO timing setup
-- *	@hwif: ATA port
-- *	@drive: ATA device
-- */
--
--static void cs5536_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	static const u8 drv_timings[5] = {
--		0x98, 0x55, 0x32, 0x21, 0x20,
--	};
--
--	static const u8 addr_timings[5] = {
--		0x2, 0x1, 0x0, 0x0, 0x0,
--	};
--
--	static const u8 cmd_timings[5] = {
--		0x99, 0x92, 0x90, 0x22, 0x20,
--	};
--
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	ide_drive_t *pair = ide_get_pair_dev(drive);
--	int cshift = (drive->dn & 1) ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--	u32 cast;
--	const u8 pio = drive->pio_mode - XFER_PIO_0;
--	u8 cmd_pio = pio;
--
--	if (pair)
--		cmd_pio = min_t(u8, pio, pair->pio_mode - XFER_PIO_0);
--
--	timings &= (IDE_DRV_MASK << 8);
--	timings |= drv_timings[pio];
--	ide_set_drivedata(drive, (void *)timings);
--
--	cs5536_program_dtc(drive, drv_timings[pio]);
--
--	cs5536_read(pdev, CAST, &cast);
--
--	cast &= ~(IDE_CAST_DRV_MASK << cshift);
--	cast |= addr_timings[pio] << cshift;
--
--	cast &= ~(IDE_CAST_CMD_MASK << IDE_CAST_CMD_SHIFT);
--	cast |= cmd_timings[cmd_pio] << IDE_CAST_CMD_SHIFT;
--
--	cs5536_write(pdev, CAST, cast);
--}
--
--/**
-- *	cs5536_set_dma_mode		-	DMA timing setup
-- *	@hwif: ATA port
-- *	@drive: ATA device
-- */
--
--static void cs5536_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	static const u8 udma_timings[6] = {
--		0xc2, 0xc1, 0xc0, 0xc4, 0xc5, 0xc6,
--	};
--
--	static const u8 mwdma_timings[3] = {
--		0x67, 0x21, 0x20,
--	};
--
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	int dshift = (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--	u32 etc;
--	const u8 mode = drive->dma_mode;
--
--	cs5536_read(pdev, ETC, &etc);
--
--	if (mode >= XFER_UDMA_0) {
--		etc &= ~(IDE_DRV_MASK << dshift);
--		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
--	} else { /* MWDMA */
--		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
--		timings &= IDE_DRV_MASK;
--		timings |= mwdma_timings[mode - XFER_MW_DMA_0] << 8;
--		ide_set_drivedata(drive, (void *)timings);
--	}
--
--	cs5536_write(pdev, ETC, etc);
--}
-+#include <linux/ide2libata.h>
-+#include "../ata/pata_cs5536.h"
+-MODULE_AUTHOR("Alan Cox");
++MODULE_AUTHOR("Alan Cox, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for the ITE 821x");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/piix.c
+===================================================================
+--- a/drivers/ide/piix.c
++++ b/drivers/ide/piix.c
+@@ -3,6 +3,7 @@
+  *  Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
+  *  Copyright (C) 2003 Red Hat
+  *  Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
++ *  Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
+  *
+  *  May be copied or modified under the terms of the GNU General Public License
+  */
+@@ -230,6 +231,6 @@ static void __exit piix_ide_exit(void)
+ module_init(piix_ide_init);
+ module_exit(piix_ide_exit);
  
- static void cs5536_dma_start(ide_drive_t *drive)
- {
-@@ -232,8 +53,8 @@ static int cs5536_dma_end(ide_drive_t *d
- }
+-MODULE_AUTHOR("Andre Hedrick, Andrzej Krzysztofowicz");
++MODULE_AUTHOR("Andre Hedrick, Andrzej Krzysztofowicz, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for Intel PIIX IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/sc1200.c
+===================================================================
+--- a/drivers/ide/sc1200.c
++++ b/drivers/ide/sc1200.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (C) 2000-2002		Mark Lord <mlord@pobox.com>
+- * Copyright (C)      2007		Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2007-2010		Bartlomiej Zolnierkiewicz
+  *
+  * May be copied or modified under the terms of the GNU General Public License
+  *
+@@ -244,6 +244,6 @@ static void __exit sc1200_ide_exit(void)
+ module_init(sc1200_ide_init);
+ module_exit(sc1200_ide_exit);
  
- static const struct ide_port_ops cs5536_port_ops = {
--	.set_pio_mode		= cs5536_set_pio_mode,
--	.set_dma_mode		= cs5536_set_dma_mode,
-+	.set_pio_mode		= cs5536_set_piomode,
-+	.set_dma_mode		= cs5536_set_dmamode,
- 	.cable_detect		= cs5536_cable_detect,
- };
+-MODULE_AUTHOR("Mark Lord");
++MODULE_AUTHOR("Mark Lord, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for NS SC1200 IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/sl82c105.c
+===================================================================
+--- a/drivers/ide/sl82c105.c
++++ b/drivers/ide/sl82c105.c
+@@ -11,7 +11,7 @@
+  *  -- Benjamin Herrenschmidt (01/11/03) benh@kernel.crashing.org
+  *
+  * Copyright (C) 2006-2007,2009 MontaVista Software, Inc. <source@mvista.com>
+- * Copyright (C)      2007 Bartlomiej Zolnierkiewicz
++ * Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
+  */
+ 
+ #include <linux/types.h>
+Index: b/drivers/ide/slc90e66.c
+===================================================================
+--- a/drivers/ide/slc90e66.c
++++ b/drivers/ide/slc90e66.c
+@@ -1,6 +1,7 @@
+ /*
+  *  Copyright (C) 2000-2002 Andre Hedrick <andre@linux-ide.org>
+  *  Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
++ *  Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
+  *
+  * This is a look-alike variation of the ICH0 PIIX4 Ultra-66,
+  * but this keeps the ISA-Bridge and slots alive.
+@@ -68,6 +69,6 @@ static void __exit slc90e66_ide_exit(voi
+ module_init(slc90e66_ide_init);
+ module_exit(slc90e66_ide_exit);
+ 
+-MODULE_AUTHOR("Andre Hedrick");
++MODULE_AUTHOR("Andre Hedrick, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for SLC90E66 IDE");
+ MODULE_LICENSE("GPL");
+Index: b/drivers/ide/triflex.c
+===================================================================
+--- a/drivers/ide/triflex.c
++++ b/drivers/ide/triflex.c
+@@ -6,6 +6,8 @@
+  * Copyright (C) 2002 Hewlett-Packard Development Group, L.P.
+  * Author: Torben Mathiasen <torben.mathiasen@hp.com>
+  *
++ * Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+@@ -90,7 +92,7 @@ static void __exit triflex_ide_exit(void
+ module_init(triflex_ide_init);
+ module_exit(triflex_ide_exit);
+ 
+-MODULE_AUTHOR("Torben Mathiasen");
++MODULE_AUTHOR("Torben Mathiasen, Bartlomiej Zolnierkiewicz");
+ MODULE_DESCRIPTION("PCI driver module for Compaq Triflex IDE");
+ MODULE_LICENSE("GPL");
  
