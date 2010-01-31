@@ -1,80 +1,50 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH] ahci: disable FPDMA auto-activate optimization on NVIDIA
-	AHCI
-Date: Sun, 31 Jan 2010 11:10:19 -0600
-Message-ID: <51f3faa71001310910h1d810eebx392201ac4143bacf@mail.gmail.com>
-References: <4B5FC213.1060601@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/10] treewide: Fix format strings that misuse continuations
+Date: Sun, 31 Jan 2010 12:02:02 -0800
+Message-ID: <cover.1264967493.git.joe@perches.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f173.google.com ([209.85.223.173]:52249 "EHLO
-	mail-iw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026Ab0AaRKU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jan 2010 12:10:20 -0500
-In-Reply-To: <4B5FC213.1060601@gmail.com>
+Received: from mail.perches.com ([173.55.12.10]:1631 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753810Ab0AaUCT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 31 Jan 2010 15:02:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Cui <cuicui@gmail.com>
-Cc: Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: linux-kernel@vger.kernel.org
+Cc: Mike Frysinger <vapier@gentoo.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Sonic Zhang <sonic.zhang@analog.com>, Greg Kroah-Hartman <gregkh@suse.de>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Matt Mackall <mpm@selenic.com>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, uclinux-dist-devel@blackfin.uclinux.org, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-mm@kvack.org, alsa-devel@alsa-project.org
 
-Hi Mike, have you had a chance to try out this patch yet?
+Format strings that are continued with \ are frequently misused.
+Change them to use mostly single line formats, some longer than 80 chars.
+Fix a few miscellaneous typos at the same time.
 
-On Tue, Jan 26, 2010 at 10:33 PM, Robert Hancock <hancockrwd@gmail.com>=
- wrote:
-> Mike Cui reported that his system with an NVIDIA MCP79 (aka MCP7A) ch=
-ipset
-> stopped working with 2.6.32. The problem appears to be that 2.6.32 no=
-w enables
-> the FPDMA auto-activate optimization in the ahci driver. The drive wo=
-rks fine
-> with this enabled on an Intel AHCI so this appears to be a chipset bu=
-g.
-> Since MCP79 is a fairly recent NVIDIA chipset and we don't have any i=
-nfo on
-> whether any other NVIDIA chipsets have this issue, disable FPDMA AA o=
-ptimization
-> on all NVIDIA AHCI controllers for now.
->
-> Should address http://bugzilla.kernel.org/show_bug.cgi?id=3D14922
->
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
->
-> ---
->
-> Mike, can you test this out and make sure this resolves the problem f=
-or you?
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index b8bea10..47e57dc 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -3067,8 +3067,16 @@ static int ahci_init_one(struct pci_dev *pdev,=
- const struct pci_device_id *ent)
-> =A0 =A0 =A0 =A0ahci_save_initial_config(pdev, hpriv);
->
-> =A0 =A0 =A0 =A0/* prepare host */
-> - =A0 =A0 =A0 if (hpriv->cap & HOST_CAP_NCQ)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pi.flags |=3D ATA_FLAG_NCQ | ATA_FLAG_F=
-PDMA_AA;
-> + =A0 =A0 =A0 if (hpriv->cap & HOST_CAP_NCQ) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pi.flags |=3D ATA_FLAG_NCQ;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Auto-activate optimization is suppos=
-ed to be supported on
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0all AHCI controllers indicating =
-NCQ support, but it seems
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0to be broken at least on some NV=
-IDIA MCP79 chipsets.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Until we get info on which NVIDI=
-A chipsets don't have this
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0issue, if any, disable AA on all=
- NVIDIA AHCIs. */
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (pdev->vendor !=3D PCI_VENDOR_ID_NVI=
-DIA)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pi.flags |=3D ATA_FLAG_=
-=46PDMA_AA;
-> + =A0 =A0 =A0 }
->
-> =A0 =A0 =A0 =A0if (hpriv->cap & HOST_CAP_PMP)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pi.flags |=3D ATA_FLAG_PMP;
->
+Joe Perches (10):
+  arch/powerpc: Fix continuation line formats
+  arch/blackfin: Fix continuation line formats
+  drivers/ide: Fix continuation line formats
+  drivers/serial/bfin_5xx.c: Fix continuation line formats
+  drivers/scsi/arcmsr: Fix continuation line formats
+  drivers/staging: Fix continuation line formats
+  drivers/net/amd8111e.c: Fix continuation line formats
+  fs/proc/array.c: Fix continuation line formats
+  mm/slab.c: Fix continuation line formats
+  sound/soc/blackfin: Fix continuation line formats
+
+ arch/blackfin/mach-common/smp.c                    |    4 +-
+ arch/powerpc/kernel/nvram_64.c                     |    6 +-
+ arch/powerpc/platforms/pseries/hotplug-cpu.c       |    8 ++--
+ arch/powerpc/platforms/pseries/smp.c               |    4 +-
+ drivers/ide/au1xxx-ide.c                           |    4 +-
+ drivers/ide/pmac.c                                 |    4 +-
+ drivers/net/amd8111e.c                             |    3 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c                   |   49 +++++++++----------
+ drivers/serial/bfin_5xx.c                          |    6 +--
+ drivers/staging/dream/qdsp5/audio_mp3.c            |    3 +-
+ .../rtl8187se/ieee80211/ieee80211_softmac_wx.c     |    3 +-
+ drivers/staging/rtl8187se/r8180_core.c             |    3 +-
+ drivers/staging/sep/sep_driver.c                   |    3 +-
+ fs/proc/array.c                                    |    7 ++-
+ mm/slab.c                                          |    4 +-
+ sound/soc/blackfin/bf5xx-ac97-pcm.c                |    8 +--
+ sound/soc/blackfin/bf5xx-i2s-pcm.c                 |    3 +-
+ sound/soc/blackfin/bf5xx-tdm-pcm.c                 |    3 +-
+ 18 files changed, 55 insertions(+), 70 deletions(-)
+
