@@ -1,50 +1,53 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 00/10] treewide: Fix format strings that misuse continuations
-Date: Sun, 31 Jan 2010 12:02:02 -0800
-Message-ID: <cover.1264967493.git.joe@perches.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1631 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753810Ab0AaUCT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 31 Jan 2010 15:02:19 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH 03/10] drivers/ide: Fix continuation line formats
+Date: Sun, 31 Jan 2010 12:02:05 -0800
+Message-ID: <ece016e6151fc8d34963de26205777a4e53b5e26.1264967499.git.joe@perches.com>
+References: <cover.1264967493.git.joe@perches.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754185Ab0AaUC1@vger.kernel.org>
+In-Reply-To: <cover.1264967493.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Mike Frysinger <vapier@gentoo.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Sonic Zhang <sonic.zhang@analog.com>, Greg Kroah-Hartman <gregkh@suse.de>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Matt Mackall <mpm@selenic.com>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, uclinux-dist-devel@blackfin.uclinux.org, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-mm@kvack.org, alsa-devel@alsa-project.org
+Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Format strings that are continued with \ are frequently misused.
-Change them to use mostly single line formats, some longer than 80 chars.
-Fix a few miscellaneous typos at the same time.
+String constants that are continued on subsequent lines with \
+are not good.
 
-Joe Perches (10):
-  arch/powerpc: Fix continuation line formats
-  arch/blackfin: Fix continuation line formats
-  drivers/ide: Fix continuation line formats
-  drivers/serial/bfin_5xx.c: Fix continuation line formats
-  drivers/scsi/arcmsr: Fix continuation line formats
-  drivers/staging: Fix continuation line formats
-  drivers/net/amd8111e.c: Fix continuation line formats
-  fs/proc/array.c: Fix continuation line formats
-  mm/slab.c: Fix continuation line formats
-  sound/soc/blackfin: Fix continuation line formats
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/ide/au1xxx-ide.c |    4 ++--
+ drivers/ide/pmac.c       |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
- arch/blackfin/mach-common/smp.c                    |    4 +-
- arch/powerpc/kernel/nvram_64.c                     |    6 +-
- arch/powerpc/platforms/pseries/hotplug-cpu.c       |    8 ++--
- arch/powerpc/platforms/pseries/smp.c               |    4 +-
- drivers/ide/au1xxx-ide.c                           |    4 +-
- drivers/ide/pmac.c                                 |    4 +-
- drivers/net/amd8111e.c                             |    3 +-
- drivers/scsi/arcmsr/arcmsr_hba.c                   |   49 +++++++++----------
- drivers/serial/bfin_5xx.c                          |    6 +--
- drivers/staging/dream/qdsp5/audio_mp3.c            |    3 +-
- .../rtl8187se/ieee80211/ieee80211_softmac_wx.c     |    3 +-
- drivers/staging/rtl8187se/r8180_core.c             |    3 +-
- drivers/staging/sep/sep_driver.c                   |    3 +-
- fs/proc/array.c                                    |    7 ++-
- mm/slab.c                                          |    4 +-
- sound/soc/blackfin/bf5xx-ac97-pcm.c                |    8 +--
- sound/soc/blackfin/bf5xx-i2s-pcm.c                 |    3 +-
- sound/soc/blackfin/bf5xx-tdm-pcm.c                 |    3 +-
- 18 files changed, 55 insertions(+), 70 deletions(-)
-
+diff --git a/drivers/ide/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
+index 87cef0c..4beb296 100644
+--- a/drivers/ide/au1xxx-ide.c
++++ b/drivers/ide/au1xxx-ide.c
+@@ -300,8 +300,8 @@ static int auide_dma_test_irq(ide_drive_t *drive)
+ 	 */
+ 	drive->waiting_for_dma++;
+ 	if (drive->waiting_for_dma >= DMA_WAIT_TIMEOUT) {
+-		printk(KERN_WARNING "%s: timeout waiting for ddma to \
+-                                     complete\n", drive->name);
++		printk(KERN_WARNING "%s: timeout waiting for ddma to complete\n",
++		       drive->name);
+ 		return 1;
+ 	}
+ 	udelay(10);
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index 7a4e788..081e3b9 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1651,8 +1651,8 @@ pmac_ide_dma_test_irq (ide_drive_t *drive)
+ 		if ((status & FLUSH) == 0)
+ 			break;
+ 		if (++timeout > 100) {
+-			printk(KERN_WARNING "ide%d, ide_dma_test_irq \
+-			timeout flushing channel\n", hwif->index);
++			printk(KERN_WARNING "ide%d, ide_dma_test_irq timeout flushing channel\n",
++			       hwif->index);
+ 			break;
+ 		}
+ 	}	
+-- 
+1.6.6.rc0.57.gad7a
