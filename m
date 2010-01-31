@@ -1,117 +1,80 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 7/9] cs5536: convert to ide2libata
-Date: Sun, 31 Jan 2010 01:30:23 +0100
-Message-ID: <201001310130.23898.bzolnier@gmail.com>
-References: <20100130194918.30779.25485.sendpatchset@localhost> <20100130195004.30779.89524.sendpatchset@localhost> <4B64AAE3.5040501@garzik.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH] ahci: disable FPDMA auto-activate optimization on NVIDIA
+	AHCI
+Date: Sun, 31 Jan 2010 11:10:19 -0600
+Message-ID: <51f3faa71001310910h1d810eebx392201ac4143bacf@mail.gmail.com>
+References: <4B5FC213.1060601@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:37158 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202Ab0AaAbQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jan 2010 19:31:16 -0500
-In-Reply-To: <4B64AAE3.5040501@garzik.org>
+Received: from mail-iw0-f173.google.com ([209.85.223.173]:52249 "EHLO
+	mail-iw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026Ab0AaRKU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jan 2010 12:10:20 -0500
+In-Reply-To: <4B5FC213.1060601@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Cui <cuicui@gmail.com>
+Cc: Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-On Saturday 30 January 2010 10:55:47 pm Jeff Garzik wrote:
-> On 01/30/2010 02:50 PM, Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> > Subject: [PATCH] cs5536: convert to ide2libata
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> > ---
-> >   drivers/ata/pata_cs5536.h |   22 +++++
-> >   drivers/ide/cs5536.c      |  189 +---------------------------------------------
-> >   2 files changed, 26 insertions(+), 185 deletions(-)
-> >
-> > Index: b/drivers/ata/pata_cs5536.h
-> > ===================================================================
-> > --- a/drivers/ata/pata_cs5536.h
-> > +++ b/drivers/ata/pata_cs5536.h
-> > @@ -64,7 +64,11 @@ static int cs5536_write(struct pci_dev *
-> >
-> >   static void cs5536_program_dtc(struct ata_device *adev, u8 tim)
-> >   {
-> > +#ifndef __IDE2LIBATA
-> >   	struct pci_dev *pdev = to_pci_dev(adev->link->ap->host->dev);
-> > +#else
-> > +	struct pci_dev *pdev = to_pci_dev(adev->hwif->dev);
-> > +#endif
-> >   	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
-> >   	u32 dtc;
-> >
-> > @@ -121,11 +125,19 @@ static void cs5536_set_piomode(struct at
-> >   	int mode = adev->pio_mode - XFER_PIO_0;
-> >   	int cmdmode = mode;
-> >   	int cshift = adev->devno ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
-> > +#ifdef __IDE2LIBATA
-> > +	unsigned long timings = (unsigned long)ide_get_drivedata(adev);
-> > +#endif
-> >   	u32 cast;
-> >
-> >   	if (pair)
-> >   		cmdmode = min(mode, pair->pio_mode - XFER_PIO_0);
-> >
-> > +#ifdef __IDE2LIBATA
-> > +	timings&= (IDE_DRV_MASK<<  8);
-> > +	timings |= drv_timings[mode];
-> > +	ide_set_drivedata(adev, (void *)timings);
-> > +#endif
-> >   	cs5536_program_dtc(adev, drv_timings[mode]);
-> >
-> >   	cs5536_read(pdev, CAST,&cast);
-> > @@ -160,7 +172,9 @@ static void cs5536_set_dmamode(struct at
-> >   	u32 etc;
-> >   	int mode = adev->dma_mode;
-> >   	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
-> > -
-> > +#ifdef __IDE2LIBATA
-> > +	unsigned long timings = (unsigned long)ide_get_drivedata(adev);
-> > +#endif
-> >   	cs5536_read(pdev, ETC,&etc);
-> >
-> >   	if (mode>= XFER_UDMA_0) {
-> > @@ -168,7 +182,13 @@ static void cs5536_set_dmamode(struct at
-> >   		etc |= udma_timings[mode - XFER_UDMA_0]<<  dshift;
-> >   	} else { /* MWDMA */
-> >   		etc&= ~(IDE_ETC_UDMA_MASK<<  dshift);
-> > +#ifndef __IDE2LIBATA
-> >   		cs5536_program_dtc(adev, mwdma_timings[mode - XFER_MW_DMA_0]);
-> > +#else
-> > +		timings&= IDE_DRV_MASK;
-> > +		timings |= mwdma_timings[mode - XFER_MW_DMA_0]<<  8;
-> > +		ide_set_drivedata(adev, (void *)timings);
-> > +#endif
-> >   	}
-> >
-> >   	cs5536_write(pdev, ETC, etc);
-> 
-> Wow, that's really turning into a rat's nest of ifdefs, isn't it?
+Hi Mike, have you had a chance to try out this patch yet?
 
-I'm sorry to say it but this is missing the point entirely.
-
-With such ifdefs around I'm finally able to see some still remaining to
-be fixed libata PATA issues (BTW work on ide2libata is what allowed me to
-quickly do previous "PATA fixes" and "more PATA fixes" patchsets).
-
-i.e. I can see that pata_cs5536 still needs to be fixed to handle non-matching
-PIO/MWDMA timings (pata_ali.h patch is even better example of the concept).
-
-[ As added bonus I'm cutting LOC and enabling possibility of sharing testing
-  efforts for much of IDE/libata low-level code ('"leave it alone" stability
-  promise of an old-IDE' is a wishful thinking anyway given that whole kernel
-  evolves, not to even mention that it is completely unnecessary as we have
-  much better stability promise in distributions that need it -- they are
-  simply using much older kernel version (i.e. RHEL). ]
-
-In reality I'm doing a long overdue work that should have been done four yours
-ago before commit 669a5db got merged without any review or integration work
-being done...
-
--- 
-Bartlomiej Zolnierkiewicz
+On Tue, Jan 26, 2010 at 10:33 PM, Robert Hancock <hancockrwd@gmail.com>=
+ wrote:
+> Mike Cui reported that his system with an NVIDIA MCP79 (aka MCP7A) ch=
+ipset
+> stopped working with 2.6.32. The problem appears to be that 2.6.32 no=
+w enables
+> the FPDMA auto-activate optimization in the ahci driver. The drive wo=
+rks fine
+> with this enabled on an Intel AHCI so this appears to be a chipset bu=
+g.
+> Since MCP79 is a fairly recent NVIDIA chipset and we don't have any i=
+nfo on
+> whether any other NVIDIA chipsets have this issue, disable FPDMA AA o=
+ptimization
+> on all NVIDIA AHCI controllers for now.
+>
+> Should address http://bugzilla.kernel.org/show_bug.cgi?id=3D14922
+>
+> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+>
+> ---
+>
+> Mike, can you test this out and make sure this resolves the problem f=
+or you?
+>
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index b8bea10..47e57dc 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -3067,8 +3067,16 @@ static int ahci_init_one(struct pci_dev *pdev,=
+ const struct pci_device_id *ent)
+> =A0 =A0 =A0 =A0ahci_save_initial_config(pdev, hpriv);
+>
+> =A0 =A0 =A0 =A0/* prepare host */
+> - =A0 =A0 =A0 if (hpriv->cap & HOST_CAP_NCQ)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pi.flags |=3D ATA_FLAG_NCQ | ATA_FLAG_F=
+PDMA_AA;
+> + =A0 =A0 =A0 if (hpriv->cap & HOST_CAP_NCQ) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pi.flags |=3D ATA_FLAG_NCQ;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Auto-activate optimization is suppos=
+ed to be supported on
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0all AHCI controllers indicating =
+NCQ support, but it seems
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0to be broken at least on some NV=
+IDIA MCP79 chipsets.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Until we get info on which NVIDI=
+A chipsets don't have this
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0issue, if any, disable AA on all=
+ NVIDIA AHCIs. */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (pdev->vendor !=3D PCI_VENDOR_ID_NVI=
+DIA)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pi.flags |=3D ATA_FLAG_=
+=46PDMA_AA;
+> + =A0 =A0 =A0 }
+>
+> =A0 =A0 =A0 =A0if (hpriv->cap & HOST_CAP_PMP)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pi.flags |=3D ATA_FLAG_PMP;
+>
