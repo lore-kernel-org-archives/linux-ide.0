@@ -1,43 +1,57 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 00/68] ide2libata
-Date: Mon, 01 Feb 2010 05:14:32 -0800 (PST)
-Message-ID: <20100201.051432.226757615.davem@davemloft.net>
-References: <20100201114824.29682015@lxorguk.ukuu.org.uk>
-	<20100201.044813.27473014.davem@davemloft.net>
-	<20100201125845.3f468363@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 0/4] small atang update
+Date: Mon, 01 Feb 2010 15:08:32 +0100
+Message-ID: <20100201140832.15716.393.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55316
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751838Ab0BANOS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2010 08:14:18 -0500
-In-Reply-To: <20100201125845.3f468363@lxorguk.ukuu.org.uk>
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:58995 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187Ab0BAOIn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2010 09:08:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: jeff@garzik.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Date: Mon, 1 Feb 2010 12:58:45 +0000
 
->> > The old drivers contain a fair amount of crap, magic and gueswork so a
->> > good deal of human analysis and testing is needed to move any change
->> > around and prove it's real and valid not guesswork and fudging.
->> 
->> And then once that hard work is done, we kind of just toss it
->> for one side of the equation?
-> 
-> I don't where you got that idea from.
-> 
-> The "merge" makes it harder to maintain both, adds lots of ifdefs and
-> artificial divisions of code stuffed into include files. Its ugly as sin
-> and makes *both* sets of drivers harder to maintain.
+On top of atang-v4.1:
+- port opti621 over ide2libata
+- remove obsolete /proc/ide/ interface
 
-I have not advocated the ifdef implementation.
 
-I have advocated one where the data structures are actually
-the same, and there are no ifdefs.
+The following changes since commit 3f5a01832c9a81e77bdb748d0b3c578e87280ed9:
+  Bartlomiej Zolnierkiewicz (1):
+        siimage: convert to ide2libata
 
-Please reread my initial reply.
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.2
+
+Bartlomiej Zolnierkiewicz (4):
+      pata_opti: move code to be re-used by ide2libata to pata_opti.h
+      opti621: convert to ide2libata
+      ide: remove obsolete /proc/ide/hdx/ settings
+      ide: remove obsolete /proc/ide/ interface
+
+ drivers/ata/pata_opti.c       |   90 +-----
+ drivers/ata/pata_opti.h       |  141 ++++++++
+ drivers/ide/Kconfig           |   11 -
+ drivers/ide/Makefile          |    7 -
+ drivers/ide/ide-cd.c          |   54 ---
+ drivers/ide/ide-disk.c        |    3 -
+ drivers/ide/ide-disk.h        |    9 -
+ drivers/ide/ide-disk_proc.c   |  174 ---------
+ drivers/ide/ide-floppy.c      |    3 -
+ drivers/ide/ide-floppy.h      |    9 -
+ drivers/ide/ide-floppy_proc.c |   45 ---
+ drivers/ide/ide-gd.c          |   18 -
+ drivers/ide/ide-probe.c       |    9 -
+ drivers/ide/ide-proc.c        |  789 -----------------------------------------
+ drivers/ide/ide-tape.c        |   98 -----
+ drivers/ide/ide.c             |    4 -
+ drivers/ide/opti621.c         |  114 +------
+ include/linux/ide.h           |   73 ----
+ 18 files changed, 151 insertions(+), 1500 deletions(-)
+ create mode 100644 drivers/ata/pata_opti.h
+ delete mode 100644 drivers/ide/ide-disk_proc.c
+ delete mode 100644 drivers/ide/ide-floppy_proc.c
+ delete mode 100644 drivers/ide/ide-proc.c
