@@ -1,83 +1,39 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] new hardware support for atang tree
-Date: Wed, 3 Feb 2010 19:40:20 +0100
-Message-ID: <201002031940.20129.bzolnier@gmail.com>
+From: National Liverwood Award <autosrenaudinc@bellnet.ca>
+Subject: (unknown)
+Date: Mon, 1 Feb 2010 8:50:33 -0500
+Message-ID: <20100201085033.H2AF2.870.root__13778.8406842903$1265222984$gmane$org@toroondcbfep01>
+Reply-To: nationwidedept12@hotmail.co.uk
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:60838 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756862Ab0BCSks (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 13:40:48 -0500
+Received: from toroondcbmts03-srv.bellnexxia.net ([207.236.237.37]:33849 "EHLO
+	toroondcbmts03-srv.bellnexxia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757108Ab0BCStb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Feb 2010 13:49:31 -0500
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Thomas Abraham <thomas.ab@samsung.com>, ben-linux@fluff.org, linux-arm-kernel@lists.infradead.org, Thomas Chou <thomas@wytron.com.tw>, Nios2 development list <nios2-dev@sopc.et.ntust.edu.tw>, Ian Abbott <abbotti@mev.co.uk>
 
 
-Since I haven't seen any progress on mainstreaming of s3c-ide and
-pata_altera_cf patches in the recent months I decided to merge them
-into staging section of my tree in order to help in keeping them
-in-sync with ongoing changes..
+--
+Dear Prize winner,
+Your email address have been selected as one of
+two winners of the NATIONAL LIVERWOOD LOTTERY,computer ballot draws and
+thus will be a privileged recipient of the grand draw prize of
+=C2=A31,500,000.00 You/Your company, attached to Winning File Reference=
+ number
+LIUK/5020/0261/20; ticket number 219-8IO-97/A.
 
+Please contact our payment bank *Nation wide Bank*=20
 
-DISCLAIMER: the fact of getting patches merged into atang tree means
-that from now on they will be getting updates for changes happening
-in atang tree and it should not be treated as an indication regarding
-decisions taken by 'upstream' kernel trees
-
-
-The following changes since commit 18c77417cbb9c595935d5ccb2e55309f0fb75a06:
-  Bartlomiej Zolnierkiewicz (1):
-        ide: remove hwif_chipset_t type
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.4
-
-Thomas Abraham (8):
-      S3C64XX: Add physical address definition for Compact Flash controller.
-      S3C64XX: Add MEM_SYS_CFG register definition.
-      S3C64XX: Add IDE controller register definitions.
-      S3C64XX: Add clock source definition for IDE controller.
-      S3C64XX: Add platform data and driver resources for IDE controller driver.
-      S3C6410: Add platform data for S3C IDE controller driver
-      S3C64XX: Include IDE device code in compilation.
-      drivers/staging: Add Samsung S3C IDE controller driver
-
-Thomas Chou (1):
-      drivers/staging: New PATA driver for Altera CompactFlash.
-
- arch/arm/mach-s3c6400/include/mach/map.h        |    4 +
- arch/arm/mach-s3c6410/mach-smdk6410.c           |   14 +-
- arch/arm/plat-s3c/include/plat/devs.h           |    1 +
- arch/arm/plat-s3c/include/plat/ide.h            |   36 +
- arch/arm/plat-s3c/include/plat/regs-ide.h       |   56 ++
- arch/arm/plat-s3c64xx/Makefile                  |    1 +
- arch/arm/plat-s3c64xx/clock.c                   |    6 +
- arch/arm/plat-s3c64xx/dev-ide.c                 |   88 +++
- arch/arm/plat-s3c64xx/include/plat/regs-clock.h |    3 +
- drivers/staging/Kconfig                         |    4 +
- drivers/staging/Makefile                        |    2 +
- drivers/staging/pata_altera_cf/Kconfig          |   11 +
- drivers/staging/pata_altera_cf/Makefile         |    1 +
- drivers/staging/pata_altera_cf/TODO             |    5 +
- drivers/staging/pata_altera_cf/pata_altera_cf.c |  582 ++++++++++++++++
- drivers/staging/s3c-ide/Kconfig                 |    8 +
- drivers/staging/s3c-ide/Makefile                |    1 +
- drivers/staging/s3c-ide/TODO                    |    6 +
- drivers/staging/s3c-ide/s3c-ide.c               |  822 +++++++++++++++++++++++
- 19 files changed, 1650 insertions(+), 1 deletions(-)
- create mode 100644 arch/arm/plat-s3c/include/plat/ide.h
- create mode 100644 arch/arm/plat-s3c/include/plat/regs-ide.h
- create mode 100644 arch/arm/plat-s3c64xx/dev-ide.c
- create mode 100644 drivers/staging/pata_altera_cf/Kconfig
- create mode 100644 drivers/staging/pata_altera_cf/Makefile
- create mode 100644 drivers/staging/pata_altera_cf/TODO
- create mode 100644 drivers/staging/pata_altera_cf/pata_altera_cf.c
- create mode 100644 drivers/staging/s3c-ide/Kconfig
- create mode 100644 drivers/staging/s3c-ide/Makefile
- create mode 100644 drivers/staging/s3c-ide/TODO
- create mode 100644 drivers/staging/s3c-ide/s3c-ide.c
+Mr Marvin Harris
+Email:nationwidedept12@hotmail.co.uk
+PLEASE ENSURE YOU FILL THE FORM BELOW;
+1.Name:
+2.Occupation
+3.Address:
+4.Country:
+5.Tel
+6.Age:
