@@ -1,39 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [PATCH 00/68] ide2libata
-Date: Mon, 1 Feb 2010 11:07:23 +0000
-Message-ID: <20100201110723.54870f7f@lxorguk.ukuu.org.uk>
-References: <20100129160308.21495.14120.sendpatchset@localhost>
-	<4B6355DF.9050001@garzik.org>
-	<20100129232540.41f6c4f6@lxorguk.ukuu.org.uk>
+Date: Mon, 01 Feb 2010 03:17:25 -0800 (PST)
+Message-ID: <20100201.031725.144446744.davem@davemloft.net>
+References: <20100129232540.41f6c4f6@lxorguk.ukuu.org.uk>
 	<20100131.234726.124893364.davem@davemloft.net>
+	<20100201110723.54870f7f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42507 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751095Ab0BALGe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2010 06:06:34 -0500
-In-Reply-To: <20100131.234726.124893364.davem@davemloft.net>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38029
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751648Ab0BALRM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2010 06:17:12 -0500
+In-Reply-To: <20100201110723.54870f7f@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
+To: alan@lxorguk.ukuu.org.uk
 Cc: jeff@garzik.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> The cost and risk is testing the morphing changes, but I think the
-> scales tip towards making this truly worth it.
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Date: Mon, 1 Feb 2010 11:07:23 +0000
 
-The cost and risk is taking two stable and quite maintainable stacks and
-turning them into one unmaintainable broken one..
+> I'm amazed that you'd suggest trashing the current ATA stack to make the
+> maintenance of the old ones easier - which aren't supposed to be in flux
+> in the first place.
 
-I'm a little surprised that the old IDE layer which was supposed to be
-maintenance only is getting this treatment - except for the research
-value of seeing what the differences are in the drivers.
-
-I'm amazed that you'd suggest trashing the current ATA stack to make the
-maintenance of the old ones easier - which aren't supposed to be in flux
-in the first place.
-
-Alan
-
-
+I'm not, I'm saying leave the ATA stack as it is, but make the IDE
+legacy layer such that PATA drivers can compile into it.
