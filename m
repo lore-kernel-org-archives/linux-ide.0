@@ -1,53 +1,49 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 03/10] drivers/ide: Fix continuation line formats
-Date: Sun, 31 Jan 2010 12:02:05 -0800
-Message-ID: <ece016e6151fc8d34963de26205777a4e53b5e26.1264967499.git.joe@perches.com>
-References: <cover.1264967493.git.joe@perches.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754185Ab0AaUC1@vger.kernel.org>
-In-Reply-To: <cover.1264967493.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 00/68] ide2libata
+Date: Sun, 31 Jan 2010 23:47:26 -0800 (PST)
+Message-ID: <20100131.234726.124893364.davem@davemloft.net>
+References: <20100129160308.21495.14120.sendpatchset@localhost>
+	<4B6355DF.9050001@garzik.org>
+	<20100129232540.41f6c4f6@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:32805
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751042Ab0BAHrN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2010 02:47:13 -0500
+In-Reply-To: <20100129232540.41f6c4f6@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk
+Cc: jeff@garzik.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-String constants that are continued on subsequent lines with \
-are not good.
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Date: Fri, 29 Jan 2010 23:25:40 +0000
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ide/au1xxx-ide.c |    4 ++--
- drivers/ide/pmac.c       |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+> The old IDE "maintenance mode" seems to be drifting - the rate of change
+> is rather high for that claim.
 
-diff --git a/drivers/ide/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
-index 87cef0c..4beb296 100644
---- a/drivers/ide/au1xxx-ide.c
-+++ b/drivers/ide/au1xxx-ide.c
-@@ -300,8 +300,8 @@ static int auide_dma_test_irq(ide_drive_t *drive)
- 	 */
- 	drive->waiting_for_dma++;
- 	if (drive->waiting_for_dma >= DMA_WAIT_TIMEOUT) {
--		printk(KERN_WARNING "%s: timeout waiting for ddma to \
--                                     complete\n", drive->name);
-+		printk(KERN_WARNING "%s: timeout waiting for ddma to complete\n",
-+		       drive->name);
- 		return 1;
- 	}
- 	udelay(10);
-diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-index 7a4e788..081e3b9 100644
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -1651,8 +1651,8 @@ pmac_ide_dma_test_irq (ide_drive_t *drive)
- 		if ((status & FLUSH) == 0)
- 			break;
- 		if (++timeout > 100) {
--			printk(KERN_WARNING "ide%d, ide_dma_test_irq \
--			timeout flushing channel\n", hwif->index);
-+			printk(KERN_WARNING "ide%d, ide_dma_test_irq timeout flushing channel\n",
-+			       hwif->index);
- 			break;
- 		}
- 	}	
--- 
-1.6.6.rc0.57.gad7a
+I think there's another angle to this.
+
+By making the IDE layer build from the same code as the ATA
+driver, the legacy IDE layer gets an indirect tester base.
+
+I like that.
+
+However what I don't like is how this is implemented.  We shouldn't
+pretend the data structures are the same by using macros in some
+header file, we should truly abstract out the data types properly such
+that these drivers in fact use the same datastructures.
+
+For the price of a few series of data structure morphs, we eliminate
+the tester-base issue of legacy IDE.  There's one driver for both
+ATA and legacy IDE, the stuff in front is just a presentation and
+probing layer, nothing more.
+
+The cost and risk is testing the morphing changes, but I think the
+scales tip towards making this truly worth it.
+
+Bart, thanks for working on this and publishing what you came up
+with.
