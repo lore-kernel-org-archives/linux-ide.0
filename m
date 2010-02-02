@@ -1,54 +1,83 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: port multiplier problem
-Date: Tue, 2 Feb 2010 08:44:50 -0800
-Message-ID: <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>
-References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>
-	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>
-	 <4B683DEF.3000302@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 0/2] atang update for 02/02/10
+Date: Tue, 02 Feb 2010 18:27:01 +0100
+Message-ID: <20100202172701.7599.2028.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:44524 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756527Ab0BBQpA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 11:45:00 -0500
-In-Reply-To: <4B683DEF.3000302@gmail.com>
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:52784 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756670Ab0BBR1N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 12:27:13 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chandra Shekhar Sah <edu4madh@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Tue, Feb 2, 2010 at 6:59 AM, Chandra Shekhar Sah <edu4madh@gmail.com> wrote:
-> Hi Tejun,
->
-> I have attached full dmesg output, while 9 disks are connected to PMP, and
-> no disk to "direct sata".
 
-Linux version 2.6.31.12-174.2.3.fc12.i686.PAE
-(mockbuild@x86-04.phx2.fedoraproject.org)
-...
-ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-ata3.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-ata3.00: hard resetting link
-ata3.00: SATA link down (SStatus 0 SControl 10)
-ata3.01: hard resetting link
-ata3.01: SATA link down (SStatus 0 SControl 320)
-ata3.02: hard resetting link
-ata3.02: SATA link down (SStatus 0 SControl 320)
-ata3.03: hard resetting link
-ata3.03: SATA link down (SStatus 0 SControl 320)
-ata3.04: hard resetting link
-ata3.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata3.05: hard resetting link
-ata3.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+On top of atang-v4.2:
+- nobody has IDE VLB controllers nowadays so move support for them
+  to staging/out and schedule for removal in 2.6.36 (unless somebody
+  steps in to work on it)
+- do a small cleanup
 
-Sil3726 has only 5 ports. 6th port is an enclosure management port.
-Wasn't there a patch submitted to ignore the enclosure mgt port?
+The following changes since commit 7119919586b313e5dfe9c146f616550406040b7a:
+  Bartlomiej Zolnierkiewicz (1):
+        ide: remove obsolete /proc/ide/ interface
 
-I doubt this is the problem Chandra is seeing but it could be related.
+are available in the git repository at:
 
-Chandra, just to be complete, can you share which drive model and
-firmware is printed on the drive label?
+  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.3
 
-thanks,
-grant
+Bartlomiej Zolnierkiewicz (2):
+      move host drivers for VLB IDE controllers to staging/out
+      ide: remove hwif_chipset_t type
+
+ drivers/ide/Kconfig                            |   72 ------------------------
+ drivers/ide/Makefile                           |    7 --
+ drivers/ide/at91_ide.c                         |    1 -
+ drivers/ide/au1xxx-ide.c                       |    1 -
+ drivers/ide/buddha.c                           |    1 -
+ drivers/ide/cmd640.c                           |    1 -
+ drivers/ide/delkin_cb.c                        |    1 -
+ drivers/ide/falconide.c                        |    1 -
+ drivers/ide/gayle.c                            |    1 -
+ drivers/ide/icside.c                           |    2 -
+ drivers/ide/ide-cs.c                           |    1 -
+ drivers/ide/ide-dma.c                          |    2 +-
+ drivers/ide/ide-generic.c                      |    1 -
+ drivers/ide/ide-h8300.c                        |    1 -
+ drivers/ide/ide-pnp.c                          |    1 -
+ drivers/ide/ide-probe.c                        |    2 -
+ drivers/ide/ide_platform.c                     |    1 -
+ drivers/ide/macide.c                           |    1 -
+ drivers/ide/palm_bk3710.c                      |    1 -
+ drivers/ide/pmac.c                             |    1 -
+ drivers/ide/q40ide.c                           |    1 -
+ drivers/ide/rapide.c                           |    1 -
+ drivers/ide/scc_pata.c                         |    1 -
+ drivers/ide/sgiioc4.c                          |    1 -
+ drivers/ide/tx4938ide.c                        |    1 -
+ drivers/ide/tx4939ide.c                        |    1 -
+ drivers/staging/Kconfig                        |    2 +
+ drivers/staging/Makefile                       |    1 +
+ drivers/staging/ide-vlb/Kconfig                |   69 +++++++++++++++++++++++
+ drivers/staging/ide-vlb/Makefile               |    7 ++
+ drivers/staging/ide-vlb/TODO                   |    5 ++
+ drivers/{ide => staging/ide-vlb}/ali14xx.c     |    1 -
+ drivers/{ide => staging/ide-vlb}/dtc2278.c     |    1 -
+ drivers/{ide => staging/ide-vlb}/ht6560b.c     |   17 +++---
+ drivers/{ide => staging/ide-vlb}/ide-4drives.c |    1 -
+ drivers/{ide => staging/ide-vlb}/qd65xx.c      |    3 +-
+ drivers/{ide => staging/ide-vlb}/qd65xx.h      |    0
+ drivers/{ide => staging/ide-vlb}/umc8672.c     |    1 -
+ include/linux/ide.h                            |   17 ------
+ 39 files changed, 94 insertions(+), 137 deletions(-)
+ create mode 100644 drivers/staging/ide-vlb/Kconfig
+ create mode 100644 drivers/staging/ide-vlb/Makefile
+ create mode 100644 drivers/staging/ide-vlb/TODO
+ rename drivers/{ide => staging/ide-vlb}/ali14xx.c (99%)
+ rename drivers/{ide => staging/ide-vlb}/dtc2278.c (99%)
+ rename drivers/{ide => staging/ide-vlb}/ht6560b.c (99%)
+ rename drivers/{ide => staging/ide-vlb}/ide-4drives.c (98%)
+ rename drivers/{ide => staging/ide-vlb}/qd65xx.c (99%)
+ rename drivers/{ide => staging/ide-vlb}/qd65xx.h (100%)
+ rename drivers/{ide => staging/ide-vlb}/umc8672.c (99%)
