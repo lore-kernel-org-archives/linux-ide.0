@@ -1,57 +1,54 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: port multiplier problem
-Date: Tue, 2 Feb 2010 11:04:38 -0800
-Message-ID: <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>
-References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>
-	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>
-	 <4B683DEF.3000302@gmail.com>
-	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>
-	 <4B686B2B.2080406@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] move host drivers for VLB IDE controllers to staging/out
+Date: Tue, 2 Feb 2010 22:22:29 +0100
+Message-ID: <201002022222.29728.bzolnier@gmail.com>
+References: <20100202172701.7599.2028.sendpatchset@localhost> <20100202172708.7599.51937.sendpatchset@localhost> <20100202180041.3fe575f8@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:39651 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756357Ab0BBTFY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 14:05:24 -0500
-In-Reply-To: <4B686B2B.2080406@gmail.com>
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:51892 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756614Ab0BBVXB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 16:23:01 -0500
+In-Reply-To: <20100202180041.3fe575f8@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chandra Shekhar Sah <edu4madh@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>
 
-On Tue, Feb 2, 2010 at 10:12 AM, Chandra Shekhar Sah <edu4madh@gmail.co=
-m> wrote:
-> Hi Grant,
->
-> There are 6 Seagate Barracuda and 6 Hitachi DeskStar.
+On Tuesday 02 February 2010 07:00:41 pm Alan Cox wrote:
+> On Tue, 02 Feb 2010 18:27:08 +0100
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] move host drivers for VLB IDE controllers to staging/out
+> > 
+> > - they are for really old hardware that nobody has any longer
+> > - they all require 'magic' parameters to work
+> > - many controllers are also supported by pata_legacy driver
+> > 
+> > so move them to staging/out and schedule for removal in 2.6.36
+> > unless somebody steps in to work on them.
+> > 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Acked-by: Alan Cox <alan@linux.intel.com>
+> 
+> When I actually tried some of the VLB bits while working on the
+> pata_legacy stuff it was clear these hadn't been maintained/used for a
+> very long time indeed. Most of them also are hacks doing stuff like fixed
+> mode settings.
+> 
+> However if the point of the old IDE code was as claimed to keep it as a
+> 'stable' layer throwing chunks of it out doesn't strike me as in keeping
+> with the stated plan ...
 
-I thought 0x1095/0x3726 was a Silicon Image part. Can you confirm this?
+I've always been under the impression that the claim was about adding new
+stuff and not about removing dead code or ongoing efforts to make whole
+kernel more maintainable.  Either way, Dave would be a much better person
+to clarify it..
 
-If it is, this sounds like a broken implementation to me. Here is what
-the Silicon Image 3726 Data Sheet says in the introduction:
-    Silicon Image=E2=80=99s SiI3726 is 1-to-5 SATA Port Multiplier desi=
-gned to
-provide a high performance link between a single SATA host port and 5
-SATA device ports.
-
-So I don't know where the 6th device is getting connected. Some
-explanation/data sheet from the HW vendor would be helpful at this
-point.
-
-> Seagate Model: ST3750640AS
-> Firmware: 3.AAK
->
-> Hitachi Model:HDS721075KLA330
-> Firmware: Not sure
-
-Both of these drives work behind Sil3726. (First hand experience).
-
->
-> I have attached pictures of both labels, in case.
-
-Perfect - thanks for posting those.
-
-thanks,
-grant
+--
+Bartlomiej Zolnierkiewicz
