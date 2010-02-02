@@ -1,51 +1,113 @@
-From: David Miller <davem@davemloft.net>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
  PIO data transfers in libata-aff.c
-Date: Tue, 02 Feb 2010 15:21:40 -0800 (PST)
-Message-ID: <20100202.152140.216335166.davem@davemloft.net>
-References: <1265151518.2800.715.camel@mulgrave.site>
-	<20100202150537.0f6a01c0.akpm@linux-foundation.org>
-	<4B68B1E0.4090004@pobox.com>
+Date: Tue, 02 Feb 2010 17:21:09 -0600
+Message-ID: <1265152869.2800.781.camel@mulgrave.site>
+References: <201002022211.o12MB8cJ017441@imap1.linux-foundation.org>
+	 <1265151518.2800.715.camel@mulgrave.site>
+	 <20100202150537.0f6a01c0.akpm@linux-foundation.org>
+	 <4B68B1E0.4090004@pobox.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53957
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752792Ab0BBXV0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 18:21:26 -0500
+Received: from cantor2.suse.de ([195.135.220.15]:37160 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752792Ab0BBXVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Feb 2010 18:21:18 -0500
 In-Reply-To: <4B68B1E0.4090004@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: akpm@linux-foundation.org, James.Bottomley@suse.de, jeff@garzik.org, linux-ide@vger.kernel.org, catalin.marinas@arm.com, stable@kernel.org, tj@kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, catalin.marinas@arm.com, stable@kernel.org, tj@kernel.org
 
-From: Jeff Garzik <jgarzik@pobox.com>
-Date: Tue, 02 Feb 2010 18:14:40 -0500
-
-> The patch in question only affects PIO transfers, not DMA.  Data is
+On Tue, 2010-02-02 at 18:14 -0500, Jeff Garzik wrote:
+> On 02/02/2010 06:05 PM, Andrew Morton wrote:
+> > On Tue, 02 Feb 2010 16:58:38 -0600
+> > James Bottomley<James.Bottomley@suse.de>  wrote:
+> >
+> >> On Tue, 2010-02-02 at 14:11 -0800, akpm@linux-foundation.org wrote:
+> >>> From: Catalin Marinas<catalin.marinas@arm.com>
+> >>>
+> >>> Depending on the direction of the transfer, flush_dcache_page() must be
+> >>> called either before (ATA_TFLAG_WRITE) or after (!ATA_TFLAG_WRITE) the
+> >>> data copying to avoid D-cache aliasing with user space or I-D cache
+> >>> coherency issues (when reading data from an ATA device using PIO, the
+> >>> kernel dirties the D-cache but there is no flush_dcache_page() required on
+> >>> Harvard architectures).
+> >>>
+> >>> This patch allows the ARM boards to use a rootfs on CompactFlash with the
+> >>> PATA platform driver.
+> >>>
+> >>> As Anfei Zhou mentioned in a recent patch ("flush dcache before writing
+> >>> into page to avoid alias"), on some architectures there may be a
+> >>> performance benefit in differentiating the flush_dcache_page() calls based
+> >>> on whether the kernel or the user page needs flushing.
+> >>>
+> >>> IMHO, we should differentiate based on the direction (kernel reading or
+> >>> writing from/to such page).  In the ARM case with PIPT Harvard caches
+> >>> (newer processors), the kernel reading from a page that may be mapped in
+> >>> user space shouldn't need cache flushing.  The kernel writing to such page
+> >>> would require D-cache flushing because of coherency with the I-cache.
+> >>> Currently on ARM, the latter happens in both cases.
+> >>>
+> >>> Signed-off-by: Catalin Marinas<catalin.marinas@arm.com>
+> >>> Cc: Jeff Garzik<jgarzik@pobox.com>
+> >>> Cc: Tejun Heo<tj@kernel.org>
+> >>> Cc:<stable@kernel.org>
+> >>> Signed-off-by: Andrew Morton<akpm@linux-foundation.org>
+> >>> ---
+> >>>
+> >>>   drivers/ata/libata-sff.c |    6 ++++++
+> >>>   1 file changed, 6 insertions(+)
+> >>>
+> >>> diff -puN drivers/ata/libata-sff.c~ata-call-flush_dcache_page-around-pio-data-transfers-in-libata-affc drivers/ata/libata-sff.c
+> >>> --- a/drivers/ata/libata-sff.c~ata-call-flush_dcache_page-around-pio-data-transfers-in-libata-affc
+> >>> +++ a/drivers/ata/libata-sff.c
+> >>> @@ -874,6 +874,9 @@ static void ata_pio_sector(struct ata_qu
+> >>>
+> >>>   	DPRINTK("data %s\n", qc->tf.flags&  ATA_TFLAG_WRITE ? "write" : "read");
+> >>>
+> >>> +	if (do_write)
+> >>> +		flush_dcache_page(page);
+> >>> +
+> >>
+> >> This looks wrong; the upper layers should already have made the page
+> >> aliases coherent from user to kernel by calling flush_dcache_page (in
+> >> __get_user_pages()), so the aliases should already be up to date and
+> >> this flush is spurious.
+> >
+> > The upper layers don't know that the CPU touched the data!  If the
+> > driver did a DMA transfer then such a flush is unneeded, so we don't do
+> > it.
+> 
+> The patch in question only affects PIO transfers, not DMA.  Data is 
 > transferred from a kernel buffer to hardware via out[bwl] via
 > 
 > 	page data -> CPU register -> out[bwl]
-> 
+
+No flush required here ... all the aliases should be up to date after
+__get_user_pages()
+
 > or, data is transferred from hardware to a kernel buffer via
 > 
 > 	in[bwl] -> CPU register -> page data
-> 
+
+This writes to the page via the kernel alias, so the kernel alias
+becomes dirty.  In order to make the underlying page up to date, the
+kernel alias must be flushed  this flush *must* occur while the page is
+mapped along the kernel alias.  In order that the user aliases see the
+correct data, any speculation they may have done before the kernel alias
+was flushed must be invalidated (depending on architectures ... some
+architectures won't speculate reads in this case).  This invalidation
+*should* be occurring further up the stack .. but if the architecture
+has implemented this invalidation in the dma ops, then
+flush_dcache_page() may be needed.
+
 > So what are the flushing rules given those conditions?
 
-Any time you touch a page cache page with the cpu, you have
-to get it purged from aliasing caches before it gets mapped
-into userspace or similar.
+See above.
 
-That's the problem on these machines.
+James
 
-Actually, sparc64 is probably susceptible to the same problem.
 
-And it's not an issue in the IDE layer, know why? :-)
-
-In the IDE layer we have arch specific ide_*() interfaces which is
-where all of this PIO dma flushing stuff deserves to live.
-
-ATA should do something similar instead of randomly scattering
-flush_dcache_page() calls all over the place.
