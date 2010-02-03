@@ -1,44 +1,94 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
-Date: Wed, 03 Feb 2010 12:25:22 -0500
-Message-ID: <4B69B182.9040400@pobox.com>
-References: <cover.1265095093.git.joe@perches.com> <12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com> <4B69B0A0.2040701@teksavvy.com>
+Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
+ PIO data transfers in libata-aff.c
+Date: Wed, 03 Feb 2010 12:29:12 -0500
+Message-ID: <4B69B268.5070300@pobox.com>
+References: <1265151518.2800.715.camel@mulgrave.site>	<20100202150537.0f6a01c0.akpm@linux-foundation.org>	<4B68B1E0.4090004@pobox.com>	<20100202.152140.216335166.davem@davemloft.net>	<1265153568.2800.815.camel@mulgrave.site>	<1265192325.1970.28.camel@pc1117.cambridge.arm.com>	<1265215254.2873.201.camel@mulgrave.site>	<4B69ABCA.1030507@pobox.com>	<20100203090631.44753f3b.akpm@linux-foundation.org>	<4B69AF42.5050508@pobox.com> <20100203092027.dbaf120b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B69B0A0.2040701@teksavvy.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yx0-f189.google.com ([209.85.210.189]:35550 "EHLO
+	mail-yx0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932737Ab0BCR3P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 12:29:15 -0500
+Received: by yxe27 with SMTP id 27so1336379yxe.4
+        for <linux-ide@vger.kernel.org>; Wed, 03 Feb 2010 09:29:14 -0800 (PST)
+In-Reply-To: <20100203092027.dbaf120b.akpm@linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Catalin Marinas <catalin.marinas@arm.com>, David Miller <davem@davemloft.net>, jeff@garzik.org, linux-ide@vger.kernel.org, stable@kernel.org, tj@kernel.org
 
-On 02/03/2010 12:21 PM, Mark Lord wrote:
-> Joe Perches wrote:
->> String constants that are continued on subsequent lines with \
->> are not good.
->>
->> Signed-off-by: Joe Perches <joe@perches.com>
->> ---
->> drivers/ata/pata_at91.c | 4 ++--
->> 1 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
->> index 41c94b1..d222c0d 100644
->> --- a/drivers/ata/pata_at91.c
->> +++ b/drivers/ata/pata_at91.c
->> @@ -153,8 +153,8 @@ static void pata_at91_set_piomode(struct ata_port
->> *ap, struct ata_device *adev)
->> /* Compute ATA timing and set it to SMC */
->> ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
->> if (ret) {
->> - dev_warn(ap->dev, "Failed to compute ATA timing %d, \
->> - set PIO_0 timing\n", ret);
->> + dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0
->> timing\n",
->> + ret);
-> ..
+On 02/03/2010 12:20 PM, Andrew Morton wrote:
+> On Wed, 03 Feb 2010 12:15:46 -0500 Jeff Garzik<jgarzik@pobox.com>  wrote:
 >
-> NAK. Just stick the ret); part onto the same line and be done with it.
+>> On 02/03/2010 12:06 PM, Andrew Morton wrote:
+>>> On Wed, 03 Feb 2010 12:00:58 -0500 Jeff Garzik<jgarzik@pobox.com>   wrote:
+>>>
+>>>> On 02/03/2010 11:40 AM, James Bottomley wrote:
+>>>>> The fix to libata looks to be just that it should kmap all the time
+>>>>> rather than trying to fiddle with the page to see if its higmem.  For
+>>>>> kmap on a normal page, we should just return the offset map address and
+>>>>> do all the flushing.
+>>>>
+>>>> libata tests PageHighMem() because it was measurably faster to do things
+>>>> the current way (which includes local_irq_save/restore, only for
+>>>> highmem) on boxes where it actually matters.
+>>>>
+>>>> It seems more efficient to add a flush where necessary, than
+>>>> unconditionally punish everyone...
+>>>
+>>> kmap_atomic() tests PageHighMem() too - it's pretty lightweight for
+>>> lowmem pages.
+>>
+>> Note the lack of local_irq_save/restore in our code, though...  These
+>> PIO xfers are __slow__, from the perspective of a CPU manufactured in
+>> the past decade; you are definitely disabling local interrupts for a
+>> long time.  I suppose we could do
+>>
+>> 	if (high mem)
+>> 		local irq save
+>> 		kmap
+>> 		xfer
+>> 		kunmap
+>> 		local irq restore
+>> 	else
+>> 		kmap
+>> 		xfer
+>> 		kunmap
+>>
+>> does that solve the problem for ARM, for 2.6.33?
+>>
+>
+> It's unclear (to me) why that code is using KM_IRQ0 at all.  Can't it
+> use a non-irq kmap slot?
 
-Agreed...
+libata may have to transfer data in response to an interrupt.  That is 
+normal interrupt-driven PIO -- although it should be noted that the code 
+supports polled PIO as well.
+
+
+>>> Anyway, I'd draw your attention to this claim in the changelog: "This
+>>> patch allows the ARM boards to use a rootfs on CompactFlash with the
+>>> PATA platform driver." Immediate-term, we should be looking for a small
+>>> fix for this issue which is acceptable for 2.6.33 and 2.6.32 and earlier.
+>>
+>> Sure...  see above.  hopefully one that does not punish -everybody-
+>> though.  It would be sad to unconditionally slow down millions of volume
+>> platform (read: x86) users for some embedded boards.
+>
+> Well.
+> ata-call-flush_dcache_page-around-pio-data-transfers-in-libata-affc.patch
+> is a no-op on x86.  It only has an effect on architectures which
+> implement flush_dcache_page().  And I expect flush_dcache_page() is
+> pretty light on those architectures, when compared with a PIO-mode
+> transfer.
+
+I don't object to the patch...  as long as the arch people are happy. 
+Arch people seem to be the ones complaining, though.
+
+	Jeff
+
+
+
