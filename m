@@ -1,55 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
- PIO data transfers in libata-aff.c
-Date: Wed, 03 Feb 2010 13:12:07 -0500
-Message-ID: <4B69BC77.4040907@pobox.com>
-References: <1265151518.2800.715.camel@mulgrave.site>	<20100202150537.0f6a01c0.akpm@linux-foundation.org>	<4B68B1E0.4090004@pobox.com>	<20100202.152140.216335166.davem@davemloft.net>	<1265153568.2800.815.camel@mulgrave.site>	<1265192325.1970.28.camel@pc1117.cambridge.arm.com>	<1265215254.2873.201.camel@mulgrave.site>	<4B69ABCA.1030507@pobox.com>	<20100203090631.44753f3b.akpm@linux-foundation.org>	<4B69AF42.5050508@pobox.com>	<20100203174620.0fba7837@lxorguk.ukuu.org.uk>	<4B69B7E2.4070808@pobox.com> <20100203180049.4aa066ad@lxorguk.ukuu.org.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] libata: fix ata_id_logical_per_physical_sectors
+Date: Wed, 03 Feb 2010 13:14:23 -0500
+Message-ID: <yq1bpg6mbk0.fsf@sermon.lab.mkp.net>
+References: <20100128104234.GA25693@lst.de> <20100128123011.GA32001@lst.de>
+	<20100203173721.GA21703@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f224.google.com ([209.85.217.224]:38573 "EHLO
-	mail-gx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142Ab0BCSMK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 13:12:10 -0500
-Received: by gxk24 with SMTP id 24so2081511gxk.1
-        for <linux-ide@vger.kernel.org>; Wed, 03 Feb 2010 10:12:09 -0800 (PST)
-In-Reply-To: <20100203180049.4aa066ad@lxorguk.ukuu.org.uk>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:60129 "EHLO
+	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab0BCSQf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 13:16:35 -0500
+In-Reply-To: <20100203173721.GA21703@lst.de> (Christoph Hellwig's message of
+	"Wed, 3 Feb 2010 18:37:21 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@suse.de>, Catalin Marinas <catalin.marinas@arm.com>, David Miller <davem@davemloft.net>, jeff@garzik.org, linux-ide@vger.kernel.org, stable@kernel.org, tj@kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, stable@kernel.org
 
-On 02/03/2010 01:00 PM, Alan Cox wrote:
-> On Wed, 03 Feb 2010 12:52:34 -0500
-> Jeff Garzik<jgarzik@pobox.com>  wrote:
->
->> On 02/03/2010 12:46 PM, Alan Cox wrote:
->>> And indeed there was a patch I proposed in 2008 for this bounce
->>> buffer latency: See the archive
->>>
->>> Date: Fri, 29 Feb 2008 13:51:06 +0000
->>> From: Alan Cox<alan@lxorguk.ukuu.org.uk>
->>> To: linux-ide@vger.kernel.org, jeff@garzik.org
->>> Subject: [RFC PATCH] libata: PIO via bounce buffer
->>>
->>> although it doesn't deal with the dcache coherency issue and seems to
->>> need a little tweaking to apply due to other changes
->>
->> Yeah, I definitely liked the idea.  I wonder if we could do the
->> allocation during port_start rather than at the time of bounce?
->
-> I actually got better numbers using kmalloc - no idea why - perhaps we
-> get a hot page ?
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Seems logical.  It surprises me, though, that being lockless and 
-completely avoiding the kmalloc infrastructure wasn't a bigger win.  Was 
-this measured on UP?
+Christoph> Without this patch the minimum I/O size for 4k drives will be
+Christoph> reported incorrectly, which will make paritions misaligned on
+Christoph> modern distros.
 
-If your approach has the lowest cost, let's get it in...  I like 
-decisions informed by hard data.  :)
+I'm in total agreement with the patch (feel free to add my Acked-by:).
 
-	Jeff
+However, the minimum I/O size should still be reported correctly.  We
+don't allow min_io to be smaller than physical_block_size...
 
+[root@10 ~]# grep . /sys/block/sdc/queue/{logical_block,physical_block,minimum_io}_size
+/sys/block/sdc/queue/logical_block_size:512
+/sys/block/sdc/queue/physical_block_size:4096
+/sys/block/sdc/queue/minimum_io_size:4096
 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
