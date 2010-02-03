@@ -1,44 +1,34 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14583] SSD system stall, HSM Violation
-Date: Wed, 3 Feb 2010 06:29:37 GMT
-Message-ID: <201002030629.o136TbqT010457@demeter.kernel.org>
-References: <bug-14583-11633@http.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: 520 Bytes sector size
+Date: Wed, 03 Feb 2010 03:46:16 -0500
+Message-ID: <yq1d40md7vr.fsf@sermon.lab.mkp.net>
+References: <93b143da1002020450sf495912ib0ea75989d1d8928@mail.gmail.com>
+	<yq1aavrqlxw.fsf@sermon.lab.mkp.net>
+	<20100202232540.7f5327f6@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:34173 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754345Ab0BCG3h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 01:29:37 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o136Tbfi010458
-	for <linux-ide@vger.kernel.org>; Wed, 3 Feb 2010 06:29:37 GMT
-In-Reply-To: <bug-14583-11633@http.bugzilla.kernel.org/>
+Received: from acsinet11.oracle.com ([141.146.126.233]:50199 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755543Ab0BCIsc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 03:48:32 -0500
+In-Reply-To: <20100202232540.7f5327f6@lxorguk.ukuu.org.uk> (Alan Cox's message
+	of "Tue, 2 Feb 2010 23:25:40 +0000")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Porat <dan.porat@gmail.com>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14583
+>>>>> "Alan" == Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
+>> Linux does not support 520-byte sectors unless the drive is formatted
+>> with DIF and hanging off a DIF-capable HBA.
 
-Andrew Simpson <andrewnz.simpson@gmail.com> changed:
+Alan> Is that true even with sg - I wouldn't have thought sg minded, it
+Alan> doesn't seem to mind about strange sized transfers for CD-ROM ?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |WILL_NOT_FIX
-
-
-
-
---- Comment #45 from Andrew Simpson <andrewnz.simpson@gmail.com>  2010-02-03 06:29:28 ---
-Closing bug report, since it's not actually kernel related.  Thanks all.
-
-Open bug report for this problem is on freedesktop.org bugzilla:
-
- https://bugs.freedesktop.org/show_bug.cgi?id=25673
+Did not work last I mucked with it a while back.  If I recall correctly
+there were a few places where we assumed multiples of 512.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Martin K. Petersen	Oracle Linux Engineering
