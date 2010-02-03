@@ -1,32 +1,82 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
- PIO data transfers in libata-aff.c
-Date: Tue, 02 Feb 2010 15:39:27 -0800 (PST)
-Message-ID: <20100202.153927.70718550.davem@davemloft.net>
-References: <4B68B1E0.4090004@pobox.com>
-	<20100202.152140.216335166.davem@davemloft.net>
-	<1265153568.2800.815.camel@mulgrave.site>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] move host drivers for VLB IDE controllers to staging/out
+Date: Wed, 3 Feb 2010 01:08:50 +0100
+Message-ID: <201002030108.50647.bzolnier@gmail.com>
+References: <20100202172701.7599.2028.sendpatchset@localhost> <201002022222.29728.bzolnier@gmail.com> <4B68AE6A.8030304@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48666
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752806Ab0BBXjQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 18:39:16 -0500
-In-Reply-To: <1265153568.2800.815.camel@mulgrave.site>
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:41793 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755660Ab0BCAJj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2010 19:09:39 -0500
+In-Reply-To: <4B68AE6A.8030304@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: jgarzik@pobox.com, akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, catalin.marinas@arm.com, stable@kernel.org, tj@kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>
 
-From: James Bottomley <James.Bottomley@suse.de>
-Date: Tue, 02 Feb 2010 17:32:48 -0600
+On Tuesday 02 February 2010 11:59:54 pm Jeff Garzik wrote:
+> On 02/02/2010 04:22 PM, Bartlomiej Zolnierkiewicz wrote:
+> > On Tuesday 02 February 2010 07:00:41 pm Alan Cox wrote:
+> >> On Tue, 02 Feb 2010 18:27:08 +0100
+> >> Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>  wrote:
+> >>
+> >>> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> >>> Subject: [PATCH] move host drivers for VLB IDE controllers to staging/out
+> >>>
+> >>> - they are for really old hardware that nobody has any longer
+> >>> - they all require 'magic' parameters to work
+> >>> - many controllers are also supported by pata_legacy driver
+> >>>
+> >>> so move them to staging/out and schedule for removal in 2.6.36
+> >>> unless somebody steps in to work on them.
+> >>>
+> >>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> >>
+> >> Acked-by: Alan Cox<alan@linux.intel.com>
+> >>
+> >> When I actually tried some of the VLB bits while working on the
+> >> pata_legacy stuff it was clear these hadn't been maintained/used for a
+> >> very long time indeed. Most of them also are hacks doing stuff like fixed
+> >> mode settings.
+> >>
+> >> However if the point of the old IDE code was as claimed to keep it as a
+> >> 'stable' layer throwing chunks of it out doesn't strike me as in keeping
+> >> with the stated plan ...
+> >
+> > I've always been under the impression that the claim was about adding new
+> > stuff and not about removing dead code or ongoing efforts to make whole
+> > kernel more maintainable.  Either way, Dave would be a much better person
+> > to clarify it..
+> 
+> David's statements at the time were
+> 
+> 	I'm going to treat IDE as pure legacy, rather than as
+> 	competition with the PATA drivers which is what people whould
+> 	be moving over to.
 
-> What it looks like we need is kmap_for_pio() and kunmap_for_pio() which
-> take flags (or API extensions) indicating whether we're transferring to
-> or from the device, which return the correct kernel address to the page
-> (mapping it if it's in highmem) and perform the correct
-> flushes/invalidates.
+I believe that the competition part was the result of misinterpretation
+of the nature of large volume of changes as resulting in added features
+while those changes were mainly re-organizing and shrinking the source
+code size (by ~30% in total during last 3 years)..
 
-That sounds like a good idea.
+> "pure legacy" does not usually imply accepting major changes to drivers, 
+> changing APIs, and the like.
+
+Your definition probably matches RHEL (or SLES) nicely but upstream kernel
+and its APIs (i.e. block layer ones) evolve all the time.
+
+It is impossible for any piece of kernel code to be a truly 'lone island'.
+
+> But if IDE users are happy with this abrupt change of direction, the 
+> resumption of frequent, large IDE changes, then that's their call...   I 
+> would rather they just use libata, but who am I to judge?  ;-)
+
+With atang tree they are free of this dilemma and through code sharing
+they can (to some degree) use both at the same time! :-)
+
+--
+Bartlomiej Zolnierkiewicz
