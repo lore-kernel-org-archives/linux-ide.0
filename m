@@ -1,36 +1,45 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: 520 Bytes sector size
-Date: Wed, 03 Feb 2010 12:19:46 -0500
-Message-ID: <4B69B032.4010600@teksavvy.com>
-References: <93b143da1002020450sf495912ib0ea75989d1d8928@mail.gmail.com>	<yq1aavrqlxw.fsf@sermon.lab.mkp.net> <20100202232540.7f5327f6@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
+Date: Wed, 03 Feb 2010 12:21:36 -0500
+Message-ID: <4B69B0A0.2040701@teksavvy.com>
+References: <cover.1265095093.git.joe@perches.com> <12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:11321 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:63943 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932610Ab0BCRTt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 12:19:49 -0500
-In-Reply-To: <20100202232540.7f5327f6@lxorguk.ukuu.org.uk>
+	with ESMTP id S932622Ab0BCRVi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 12:21:38 -0500
+In-Reply-To: <12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Porat <dan.porat@gmail.com>, linux-ide@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Tue, 02 Feb 2010 18:04:11 -0500
-> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+Joe Perches wrote:
+> String constants that are continued on subsequent lines with \
+> are not good.
 > 
->>>>>>> "Dan" == Dan Porat <dan.porat@gmail.com> writes:
->> Dan> I would like to run 520 Bytes disk in native mode.  What changes I
->> Dan> have to run in sg driver ?  Is there any kernel already adapted for
->> Dan> 520 bytes sector size ?
->>
->> Linux does not support 520-byte sectors unless the drive is formatted
->> with DIF and hanging off a DIF-capable HBA.
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/ata/pata_at91.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+> index 41c94b1..d222c0d 100644
+> --- a/drivers/ata/pata_at91.c
+> +++ b/drivers/ata/pata_at91.c
+> @@ -153,8 +153,8 @@ static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
+>  	/* Compute ATA timing and set it to SMC */
+>  	ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
+>  	if (ret) {
+> -		dev_warn(ap->dev, "Failed to compute ATA timing %d, \
+> -				set PIO_0 timing\n", ret);
+> +		dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0 timing\n",
+> +			 ret);
 ..
 
-The ATA READ_LONG and WRITE_LONG commands both use 520 byte sectors,
-and both work with libata.
+NAK.  Just stick the ret); part onto the same line and be done with it.
 
 -ml
