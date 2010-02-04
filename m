@@ -1,133 +1,29 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: port multiplier problem
-Date: Wed, 3 Feb 2010 18:37:53 -0800
-Message-ID: <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
-References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>
-	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>
-	 <4B683DEF.3000302@gmail.com>
-	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>
-	 <4B686B2B.2080406@gmail.com>
-	 <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>
-	 <4B687B7C.2070406@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 03/10] drivers/ide: Fix continuation line formats
+Date: Wed, 03 Feb 2010 18:44:51 -0800 (PST)
+Message-ID: <20100203.184451.77330811.davem@davemloft.net>
+References: <cover.1264967493.git.joe@perches.com>
+	<ece016e6151fc8d34963de26205777a4e53b5e26.1264967499.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:44360 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477Ab0BDCh6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 21:37:58 -0500
-In-Reply-To: <4B687B7C.2070406@gmail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38324
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750725Ab0BDCoh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 21:44:37 -0500
+In-Reply-To: <ece016e6151fc8d34963de26205777a4e53b5e26.1264967499.git.joe@perches.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chandra Shekhar Sah <edu4madh@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: joe@perches.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Feb 2, 2010 at 11:22 AM, Chandra Shekhar Sah <edu4madh@gmail.co=
-m> wrote:
-> Hi Grant,
->
-> Thank for reply.
-> Yes, PMP is sil3726. The backplane of the disk array has two PMP (eac=
-h
-> 1-to-5 as you have mentioned) and two sata direct connection without =
-PMP.
-> So, 10 disk are behind 2 PMP.
+From: Joe Perches <joe@perches.com>
+Date: Sun, 31 Jan 2010 12:02:05 -0800
 
-Ah ok. That explains your "5-5-1-1" comment now. I tried to find a
-Data sheet for this board but only found one in Chinese:
-    www.norco.com.cn/UpLoadFile/Manual/DS-12X0-CN.pdf
+> String constants that are continued on subsequent lines with \
+> are not good.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-and I unfortunately don't speak/read chinese. Probably doesn't matter
-though since...
-
-This email thread looks like a duplicate of a previous bug report:
-   http://markmail.org/message/lp3ynvfefejpiy2r
-
-(or search for  "Ubuntu 9.04 (2.6.28-14) and eSATA Port Multiplier
-(PMP) Not working")
-
-Chandra, you might read through that thread and dmesg output (posted by=
- Chris K)
-to see what else you have in common.
-
-I had two questions on that thread that never got answered:
-   http://markmail.org/message/snpekoj4qexrslk5
-
-| How can we find out if anyone has the SEMB properly wired up?
-| Would it be hard to make libata aware of "SEMB port not responding" c=
-ase?
-| ie if the SEMB port times out or has no link, reduce the port count o=
-f
-| the sil3726 PMP by one.
-|
-| Maybe add a "enable_sil24_semb" flag to libata?
-| (avoid checking unless someone asks for it). I hate magic flags but a=
-lso
-| don't want to subject most people to the timeout delay.
-
-I (or Gwendal) can post a patch (and lightly test) for any of the above=
-=2E
-Just need to get some guidance so we don't waste our time.
-
-thanks,
-grant
-
-> Total is 12 disks. The sata host controller is
-> sil3124. Picture of the backplane is attached.
->
-> Thanks,
-> Chandra
->
-> On 2/2/10 2:04 PM, Grant Grundler wrote:
->>
->> On Tue, Feb 2, 2010 at 10:12 AM, Chandra Shekhar Sah<edu4madh@gmail.=
-com>
->> =C2=A0wrote:
->>
->>>
->>> Hi Grant,
->>>
->>> There are 6 Seagate Barracuda and 6 Hitachi DeskStar.
->>>
->>
->> I thought 0x1095/0x3726 was a Silicon Image part. Can you confirm th=
-is?
->>
->> If it is, this sounds like a broken implementation to me. Here is wh=
-at
->> the Silicon Image 3726 Data Sheet says in the introduction:
->> =C2=A0 =C2=A0 Silicon Image=E2=80=99s SiI3726 is 1-to-5 SATA Port Mu=
-ltiplier designed to
->> provide a high performance link between a single SATA host port and =
-5
->> SATA device ports.
->>
->> So I don't know where the 6th device is getting connected. Some
->> explanation/data sheet from the HW vendor would be helpful at this
->> point.
->>
->>
->>>
->>> Seagate Model: ST3750640AS
->>> Firmware: 3.AAK
->>>
->>> Hitachi Model:HDS721075KLA330
->>> Firmware: Not sure
->>>
->>
->> Both of these drives work behind Sil3726. (First hand experience).
->>
->>
->>>
->>> I have attached pictures of both labels, in case.
->>>
->>
->> Perfect - thanks for posting those.
->>
->> thanks,
->> grant
->>
->>
->
->
+Applied, thanks.
