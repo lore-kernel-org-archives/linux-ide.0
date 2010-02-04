@@ -1,45 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: port multiplier problem
-Date: Thu, 04 Feb 2010 12:24:29 +0900
-Message-ID: <4B6A3DED.6060708@kernel.org>
-References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>	 <4B683DEF.3000302@gmail.com>	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>	 <4B686B2B.2080406@gmail.com>	 <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>	 <4B687B7C.2070406@gmail.com> <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
+Date: Wed, 03 Feb 2010 19:36:19 -0800
+Message-ID: <1265254579.31964.2.camel@Joe-Laptop.home>
+References: <cover.1265095093.git.joe@perches.com>
+	 <12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
+	 <4B69B0A0.2040701@teksavvy.com> <1265224535.24887.16.camel@Joe-Laptop.home>
+	 <m3pr4lye1i.fsf@intrepid.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40373 "EHLO hera.kernel.org"
+Received: from mail.perches.com ([173.55.12.10]:1848 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754858Ab0BDDRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Feb 2010 22:17:51 -0500
-In-Reply-To: <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
+	id S1751352Ab0BDDgU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Feb 2010 22:36:20 -0500
+In-Reply-To: <m3pr4lye1i.fsf@intrepid.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Chandra Shekhar Sah <edu4madh@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Mark Lord <kernel@teksavvy.com>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 02/04/2010 11:37 AM, Grant Grundler wrote:
-> I had two questions on that thread that never got answered:
->    http://markmail.org/message/snpekoj4qexrslk5
-> 
-> | How can we find out if anyone has the SEMB properly wired up?
-> | Would it be hard to make libata aware of "SEMB port not responding" case?
-> | ie if the SEMB port times out or has no link, reduce the port count of
-> | the sil3726 PMP by one.
-> |
-> | Maybe add a "enable_sil24_semb" flag to libata?
-> | (avoid checking unless someone asks for it). I hate magic flags but also
-> | don't want to subject most people to the timeout delay.
-> 
-> I (or Gwendal) can post a patch (and lightly test) for any of the above.
-> Just need to get some guidance so we don't waste our time.
+On Thu, 2010-02-04 at 02:39 +0100, Krzysztof Halasa wrote: 
+> Joe Perches <joe@perches.com> writes:
+> It's been already agreed they are OK for any code.
+> There is no problem with complexity there, is there?
 
-It's not really sil24 tho.  But anyways, I think we can just disable
-them altogether.  It's not like they have ever worked.  Just limiting
-both 3726 and 4726 to 5 ports should be fine.  That said, I'm not
-quite sure this is relevant to the reported problem but it's worth a
-shot.
+There's no complexity problem.
+You're welcome to do it however you chose.
+Just as I did.
 
-Thanks.
+cheers, Joe
 
--- 
-tejun
