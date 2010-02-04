@@ -1,122 +1,138 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: port multiplier problem
-Date: Thu, 4 Feb 2010 09:59:14 -0800
-Message-ID: <da824cf31002040959y63f3484cv6d551acd49b80fa7@mail.gmail.com>
-References: <4B5885F7.2020007@gmail.com> <4B6833DD.1020001@gmail.com>
-	 <4B683581.7070708@kernel.org> <4B683DEF.3000302@gmail.com>
-	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>
-	 <4B686B2B.2080406@gmail.com>
-	 <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>
-	 <4B687B7C.2070406@gmail.com>
-	 <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
-	 <4B6A3DED.6060708@kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
+ PIO data transfers in libata-aff.c
+Date: Thu, 04 Feb 2010 15:36:36 -0600
+Message-ID: <1265319396.29959.7.camel@mulgrave.site>
+References: <1265218789.2873.276.camel@mulgrave.site>
+	 <1265294017.28746.88.camel@pc1117.cambridge.arm.com>
+	 <1265295694.29959.3.camel@mulgrave.site>
+	 <1265297951.28746.116.camel@pc1117.cambridge.arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:42711 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756272Ab0BDR7S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2010 12:59:18 -0500
-In-Reply-To: <4B6A3DED.6060708@kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:53563 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754348Ab0BDVgs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Feb 2010 16:36:48 -0500
+In-Reply-To: <1265297951.28746.116.camel@pc1117.cambridge.arm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Chandra Shekhar Sah <edu4madh@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, jeff@garzik.org, linux-ide@vger.kernel.org, stable@kernel.org, tj@kernel.org
 
-On Wed, Feb 3, 2010 at 7:24 PM, Tejun Heo <tj@kernel.org> wrote:
-> On 02/04/2010 11:37 AM, Grant Grundler wrote:
->> I had two questions on that thread that never got answered:
->> =C2=A0 =C2=A0http://markmail.org/message/snpekoj4qexrslk5
->>
->> | How can we find out if anyone has the SEMB properly wired up?
->> | Would it be hard to make libata aware of "SEMB port not responding=
-" case?
->> | ie if the SEMB port times out or has no link, reduce the port coun=
-t of
->> | the sil3726 PMP by one.
->> |
->> | Maybe add a "enable_sil24_semb" flag to libata?
->> | (avoid checking unless someone asks for it). I hate magic flags bu=
-t also
->> | don't want to subject most people to the timeout delay.
->>
->> I (or Gwendal) can post a patch (and lightly test) for any of the ab=
-ove.
->> Just need to get some guidance so we don't waste our time.
->
-> It's not really sil24 tho. =C2=A0But anyways, I think we can just dis=
-able
-> them altogether. =C2=A0It's not like they have ever worked. =C2=A0Jus=
-t limiting
-> both 3726 and 4726 to 5 ports should be fine.
+On Thu, 2010-02-04 at 15:39 +0000, Catalin Marinas wrote:
+> On Thu, 2010-02-04 at 15:01 +0000, James Bottomley wrote:
+> > On Thu, 2010-02-04 at 14:33 +0000, Catalin Marinas wrote:
+> > > On Wed, 2010-02-03 at 17:39 +0000, James Bottomley wrote:
+> > > > On Wed, 2010-02-03 at 12:29 -0500, Jeff Garzik wrote:
+> > > > > On 02/03/2010 12:20 PM, Andrew Morton wrote:
+> > > > > > On Wed, 03 Feb 2010 12:15:46 -0500 Jeff Garzik<jgarzik@pobox.com>  wrote:
+> > > > > >> On 02/03/2010 12:06 PM, Andrew Morton wrote:
+> > > > > >>> Anyway, I'd draw your attention to this claim in the changelog: "This
+> > > > > >>> patch allows the ARM boards to use a rootfs on CompactFlash with the
+> > > > > >>> PATA platform driver." Immediate-term, we should be looking for a small
+> > > > > >>> fix for this issue which is acceptable for 2.6.33 and 2.6.32 and earlier.
+> > > > > >>
+> > > > > >> Sure...  see above.  hopefully one that does not punish -everybody-
+> > > > > >> though.  It would be sad to unconditionally slow down millions of volume
+> > > > > >> platform (read: x86) users for some embedded boards.
+> > > > > >
+> > > > > > Well.
+> > > > > > ata-call-flush_dcache_page-around-pio-data-transfers-in-libata-affc.patch
+> > > > > > is a no-op on x86.  It only has an effect on architectures which
+> > > > > > implement flush_dcache_page().  And I expect flush_dcache_page() is
+> > > > > > pretty light on those architectures, when compared with a PIO-mode
+> > > > > > transfer.
+> > > > >
+> > > > > I don't object to the patch...  as long as the arch people are happy.
+> > > > > Arch people seem to be the ones complaining, though
+> > > >
+> > > > Apart from the contents, which is looking like sprinkle mainline with
+> > > > random flushes, I'm unhappy that something which could be better
+> > > > implemented by thinking about the problem is now being rammed through as
+> > > > a must have bug fix.
+> > > >
+> > > > We got this piece of crap in the same way:
+> > > >
+> > > > commit 2d4dc890b5c8fabd818a8586607e6843c4375e62
+> > > > Author: Ilya Loginov <isloginov@gmail.com>
+> > > > Date:   Thu Nov 26 09:16:19 2009 +0100
+> > > >
+> > > >     block: add helpers to run flush_dcache_page() against a bio and a
+> > > > request's pages
+> > > >
+> > > > Which is another race to flush everywhere until my coherence problem
+> > > > goes away.
+> > > >
+> > > > This scattershot approach to coherency is really damaging in the long
+> > > > term because all these random flushes are going to mask real problems we
+> > > > may or may not have in the arch APIs ... and worse, they'll mask
+> > > > mostly ... there'll likely be times when the masking is incomplete and
+> > > > we're left with incredibly hard to debug data loss or binary crashes.
+> > >
+> > > I agree that this could be solved in a better way and I'm in favour of
+> > > API improvements. The current API and description in cachetlb.txt
+> > > suggest that flush_dcache_page() is the best approach when modifying
+> > > page cache pages.
+> > >
+> > > AFAICT, there are two main use cases of flush_dcache_page() (could be
+> > > more but that's what affects ARM): (1) filesystems modifying page cache
+> > > pages (NFS, cramfs etc.) and (2) drivers doing PIO (block, HCD) that may
+> > > write directly to page cache pages. Point (2) is a newer addition (as
+> > > the one above) to fix coherency problems on Harvard architectures.
+> > >
+> > > As long as you use filesystems like cramfs that call
+> > > flush_dcache_page(), the PIO block driver doesn't need to do any
+> > > flushing. That's one of the reasons why MTD didn't need any for a long
+> > > time. Once you start using filesystems like ext2, there is no
+> > > flush_dcache_page() called by the VFS layer, so we thought about moving
+> > > this into the driver (for a long time I had a dirty hack in
+> > > mpage_end_io_read() to call flush_dcache_page()).
+> > >
+> > > If we state that flush_dcache_page() should not be used in driver code,
+> > > than we need additional API for this (like pio_map_page etc. to be in
+> > > line with the dma_map_* functions). This would allow architectures to
+> > > implement them however they like.
+> > >
+> > > I can go on linux-arch with a proposed patch if this sounds acceptable.
+> > 
+> > I think I'd prefer some type of kmap_ variant.  The reason is that all
+> > the semantics are going to be the same as kmap ... down to having the
+> > slots for atomic.  All we need is the extra flag giving the direction of
+> > transfer and, of course, what you get back is a virtual address pointer
+> > (all the dma operations return physical address handles).
+> 
+> Would a kmap_pio API always require a page structure as argument?
 
-Sorry - You are right. I meant "enable_sil3726_semb".
+This seems a reasonable requirement.
 
-I'm not sure we need to limit the SEMB ports anymore either. See below.
+> There is a similar situation for HCD drivers and USB mass storage which
+> I raised recently. The idea that the USB mass storage code should do the
+> cache flushing was rejected as this has to be pushed down to the HCD
+> driver. However, the HCD driver doesn't get page information, only a
+> urb->transfer_buffer pointer to which it may do either DMA or PIO (both
+> may actually happen in the same driver as an optimisation).
 
-> =C2=A0That said, I'm not
-> quite sure this is relevant to the reported problem but it's worth a
-> shot.
+You'd want to do dma_map or kmap at a point after the DMA or PIO
+decision is made.
 
-I didn't have a better idea.
+> If we enforce the use of a kmap_pio API in the USB mass storage, it
+> wouldn't be optimal since this code is not aware of whether the HCD
+> driver would do PIO or DMA.
 
-I'm seeing this in sata_pmp_quirks() since ATA_LFLAG_NO_SRST was introd=
-uced:
- 337 static void sata_pmp_quirks(struct ata_port *ap)
- 338 {
- 339         u32 *gscr =3D ap->link.device->gscr;
- 340         u16 vendor =3D sata_pmp_gscr_vendor(gscr);
- 341         u16 devid =3D sata_pmp_gscr_devid(gscr);
- 342         struct ata_link *link;
- 343
- 344         if (vendor =3D=3D 0x1095 && devid =3D=3D 0x3726) {
- 345                 /* sil3726 quirks */
- 346                 ata_for_each_link(link, ap, EDGE) {
- 347                         /* Class code report is unreliable and SRS=
-T
- 348                          * times out under certain configurations.
- 349                          */
- 350                         if (link->pmp < 5)
- 351                                 link->flags |=3D ATA_LFLAG_NO_SRST=
- |
- 352                                                ATA_LFLAG_ASSUME_AT=
-A;
- 353
- 354                         /* port 5 is for SEMB device and it
-doesn't like SR     ST */
- 355                         if (link->pmp =3D=3D 5)
- 356                                 link->flags |=3D ATA_LFLAG_NO_SRST=
- |
- 357                                                ATA_LFLAG_ASSUME_SE=
-MB;
- 358                 }
+So, if the decision isn't made until the HCD driver, then surely this
+belongs there.
+
+> Looking at the HCD drivers, there are more similarities to the DMA API
+> like pio_map_page, pio_map_single etc. I personally don't care much
+> about how the API is named but rather where such API should be called
+> from.
+
+the API usage is similar to the dma one.  The point I was making is the
+semantics are similar to kmap because of the slot and atomic/non atomic
+requirements.
+
+James
 
 
-But the ATA_LFLAG_NO_SRST used in line 351 is not present in the
-2.6.26 tree I know works with PMPs. The original commit comment isn't
-specific about exactly which HW had problems:
-    http://www.mail-archive.com/git-commits-head@vger.kernel.org/msg243=
-35.html
-
-   "Some links on some PMPs locks up on SRST and/or report incorrect
-    device signature.  Implement ATA_LFLAG_NO_SRST, ASSUME_ATA and
-    ASSUME_SEMB to handle these quirky links.  NO_SRST makes EH avoid
-    SRST.  ASSUME_ATA and SEMB forces class code to ATA and SEMB_UNSUP
-    respectively.  Note that SEMB isn't currently supported yet so the
-    _UNSUP variant is used."
-
-
-Can you publish which PMP implementations sometimes lock up on SRST?
-
-I doubt this is related to the problem Chandra is seeing but again,
-don't have better ideas.
-
-BTW, this same kernel works fine without disabling port 5 (SEMB port).
-I didn't know
-this until I just looked. I know previous source trees Google used
-ignored SEMB port
-on 3726 and I mistakenly assumed this one did too. :(
-
-thanks,
-grant
