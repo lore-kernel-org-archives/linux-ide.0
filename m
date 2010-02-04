@@ -1,33 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] new hardware support for atang tree
-Date: Wed, 03 Feb 2010 14:58:07 -0500
-Message-ID: <4B69D54F.4040705@garzik.org>
-References: <201002031940.20129.bzolnier@gmail.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
+Date: Thu, 04 Feb 2010 02:39:53 +0100
+Message-ID: <m3pr4lye1i.fsf@intrepid.localdomain>
+References: <cover.1265095093.git.joe@perches.com>
+	<12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
+	<4B69B0A0.2040701@teksavvy.com>
+	<1265224535.24887.16.camel@Joe-Laptop.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:54399 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757692Ab0BCT6J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2010 14:58:09 -0500
-In-Reply-To: <201002031940.20129.bzolnier@gmail.com>
+Received: from khc.piap.pl ([195.187.100.11]:45660 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933094Ab0BDBj4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Feb 2010 20:39:56 -0500
+In-Reply-To: <1265224535.24887.16.camel@Joe-Laptop.home> (Joe Perches's
+	message of "Wed, 03 Feb 2010 11:15:35 -0800")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Thomas Abraham <thomas.ab@samsung.com>, ben-linux@fluff.org, linux-arm-kernel@lists.infradead.org, Thomas Chou <thomas@wytron.com.tw>, Nios2 development list <nios2-dev@sopc.et.ntust.edu.tw>, Ian Abbott <abbotti@mev.co.uk>
+To: Joe Perches <joe@perches.com>
+Cc: Mark Lord <kernel@teksavvy.com>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 02/03/2010 01:40 PM, Bartlomiej Zolnierkiewicz wrote:
->
-> Since I haven't seen any progress on mainstreaming of s3c-ide and
-> pata_altera_cf patches in the recent months I decided to merge them
+Joe Perches <joe@perches.com> writes:
 
-pata_altera_cf still needs to be updated to v3, taking into account 
-Alan's feedback.  A ping in Nov 2009 resulted in no response.
+> If it's ever agreed that all lines > 80 cols are OK or
+> new args after column 80 are OK, then sure.
 
-	Jeff
-
-
-
-
-
+It's been already agreed they are OK for any code.
+There is no problem with complexity there, is there?
+-- 
+Krzysztof Halasa
