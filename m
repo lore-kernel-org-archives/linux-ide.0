@@ -1,110 +1,108 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] Proposed libata updates for 2.6.33-rc
-Date: Thu, 4 Feb 2010 02:13:22 -0500
-Message-ID: <20100204071322.GA20387@havoc.gtf.org>
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: Re: [git patches] new hardware support for atang tree
+Date: Thu, 4 Feb 2010 08:16:54 +0000
+Message-ID: <20100204081654.GD13267@trinity.fluff.org>
+References: <201002031940.20129.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:48903 "EHLO havoc.gtf.org"
+Received: from trinity.fluff.org ([89.16.178.74]:47295 "EHLO trinity.fluff.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752024Ab0BDHNX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Feb 2010 02:13:23 -0500
+	id S1751072Ab0BDIRB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Feb 2010 03:17:01 -0500
 Content-Disposition: inline
+In-Reply-To: <201002031940.20129.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, dgilbert@interlog.com, tj@kernel.org, hch@infradead.org, catalin.marinas@arm.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Nios2 development list <nios2-dev@sopc.et.ntust.edu.tw>, linux-kernel@vger.kernel.org, Ian Abbott <abbotti@mev.co.uk>, Thomas Abraham <thomas.ab@samsung.com>, Thomas Chou <thomas@wytron.com.tw>, ben-linux@fluff.org, linux-arm-kernel@lists.infradead.org
 
+On Wed, Feb 03, 2010 at 07:40:20PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Since I haven't seen any progress on mainstreaming of s3c-ide and
+> pata_altera_cf patches in the recent months I decided to merge them
+> into staging section of my tree in order to help in keeping them
+> in-sync with ongoing changes..
 
-Below is the current content of the 'upstream-linus' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Please be aware the plat-s3c64xx and plat-s3c is currently in the process
+of being removed, the s3c64xx is an development dead-end and thus we know
+exactly what has to be supported, plat-s3c is getting so empty i've shoved
+the stuff either up into plat-s3c24xx or down into plat-samsung.
 
-consisting of the following proposed 2.6.33-rc fixes:
+Quite a lot of this change is currently in RMK's trees, the rest is just
+being finalised for submission next week.
 
- drivers/ata/ahci.c        |   15 +++++++++++++++
- drivers/ata/libata-scsi.c |    2 +-
- drivers/ata/libata-sff.c  |    3 +++
- include/linux/ata.h       |    4 ++--
- 4 files changed, 21 insertions(+), 3 deletions(-)
-
-Catalin Marinas (1):
-      [libata] Call flush_dcache_page after PIO data transfers in libata-sff.c
-
-Christoph Hellwig (1):
-      libata: fix ata_id_logical_per_physical_sectors
-
-Douglas Gilbert (1):
-      libata-scsi passthru: fix bug which truncated LBA48 return values
-
-Tejun Heo (1):
-      ahci: add Acer G725 to broken suspend list
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b8bea10..b343903 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2868,6 +2868,21 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
- 			},
- 			.driver_data = "F.23",	/* cutoff BIOS version */
- 		},
-+		/*
-+		 * Acer eMachines G725 has the same problem.  BIOS
-+		 * V1.03 is known to be broken.  V3.04 is known to
-+		 * work.  Inbetween, there are V1.06, V2.06 and V3.03
-+		 * that we don't have much idea about.  For now,
-+		 * blacklist anything older than V3.04.
-+		 */
-+		{
-+			.ident = "G725",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "eMachines"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "eMachines G725"),
-+			},
-+			.driver_data = "V3.04",	/* cutoff BIOS version */
-+		},
- 		{ }	/* terminate list */
- 	};
- 	const struct dmi_system_id *dmi = dmi_first_match(sysids);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f4ea5a8..d096fbc 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2875,7 +2875,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	 * write indication (used for PIO/DMA setup), result TF is
- 	 * copied back and we don't whine too much about its failure.
- 	 */
--	tf->flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	if (scmd->sc_data_direction == DMA_TO_DEVICE)
- 		tf->flags |= ATA_TFLAG_WRITE;
+I might be interested in taking the platform definitions into my tree
+as the registers should be usable either for libata or ide.
  
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 741065c..730ef3c 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -893,6 +893,9 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
- 				       do_write);
- 	}
- 
-+	if (!do_write)
-+		flush_dcache_page(page);
-+
- 	qc->curbytes += qc->sect_size;
- 	qc->cursg_ofs += qc->sect_size;
- 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 38a6948..20f3156 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -647,9 +647,9 @@ static inline int ata_id_has_large_logical_sectors(const u16 *id)
- 	return id[ATA_ID_SECTOR_SIZE] & (1 << 13);
- }
- 
--static inline u8 ata_id_logical_per_physical_sectors(const u16 *id)
-+static inline u16 ata_id_logical_per_physical_sectors(const u16 *id)
- {
--	return id[ATA_ID_SECTOR_SIZE] & 0xf;
-+	return 1 << (id[ATA_ID_SECTOR_SIZE] & 0xf);
- }
- 
- static inline int ata_id_has_lba48(const u16 *id)
+> DISCLAIMER: the fact of getting patches merged into atang tree means
+> that from now on they will be getting updates for changes happening
+> in atang tree and it should not be treated as an indication regarding
+> decisions taken by 'upstream' kernel trees
+> 
+> 
+> The following changes since commit 18c77417cbb9c595935d5ccb2e55309f0fb75a06:
+>   Bartlomiej Zolnierkiewicz (1):
+>         ide: remove hwif_chipset_t type
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.4
+> 
+> Thomas Abraham (8):
+>       S3C64XX: Add physical address definition for Compact Flash controller.
+>       S3C64XX: Add MEM_SYS_CFG register definition.
+>       S3C64XX: Add IDE controller register definitions.
+>       S3C64XX: Add clock source definition for IDE controller.
+>       S3C64XX: Add platform data and driver resources for IDE controller driver.
+>       S3C6410: Add platform data for S3C IDE controller driver
+>       S3C64XX: Include IDE device code in compilation.
+>       drivers/staging: Add Samsung S3C IDE controller driver
+> 
+> Thomas Chou (1):
+>       drivers/staging: New PATA driver for Altera CompactFlash.
+> 
+>  arch/arm/mach-s3c6400/include/mach/map.h        |    4 +
+>  arch/arm/mach-s3c6410/mach-smdk6410.c           |   14 +-
+>  arch/arm/plat-s3c/include/plat/devs.h           |    1 +
+>  arch/arm/plat-s3c/include/plat/ide.h            |   36 +
+>  arch/arm/plat-s3c/include/plat/regs-ide.h       |   56 ++
+>  arch/arm/plat-s3c64xx/Makefile                  |    1 +
+>  arch/arm/plat-s3c64xx/clock.c                   |    6 +
+>  arch/arm/plat-s3c64xx/dev-ide.c                 |   88 +++
+>  arch/arm/plat-s3c64xx/include/plat/regs-clock.h |    3 +
+>  drivers/staging/Kconfig                         |    4 +
+>  drivers/staging/Makefile                        |    2 +
+>  drivers/staging/pata_altera_cf/Kconfig          |   11 +
+>  drivers/staging/pata_altera_cf/Makefile         |    1 +
+>  drivers/staging/pata_altera_cf/TODO             |    5 +
+>  drivers/staging/pata_altera_cf/pata_altera_cf.c |  582 ++++++++++++++++
+>  drivers/staging/s3c-ide/Kconfig                 |    8 +
+>  drivers/staging/s3c-ide/Makefile                |    1 +
+>  drivers/staging/s3c-ide/TODO                    |    6 +
+>  drivers/staging/s3c-ide/s3c-ide.c               |  822 +++++++++++++++++++++++
+>  19 files changed, 1650 insertions(+), 1 deletions(-)
+>  create mode 100644 arch/arm/plat-s3c/include/plat/ide.h
+>  create mode 100644 arch/arm/plat-s3c/include/plat/regs-ide.h
+>  create mode 100644 arch/arm/plat-s3c64xx/dev-ide.c
+>  create mode 100644 drivers/staging/pata_altera_cf/Kconfig
+>  create mode 100644 drivers/staging/pata_altera_cf/Makefile
+>  create mode 100644 drivers/staging/pata_altera_cf/TODO
+>  create mode 100644 drivers/staging/pata_altera_cf/pata_altera_cf.c
+>  create mode 100644 drivers/staging/s3c-ide/Kconfig
+>  create mode 100644 drivers/staging/s3c-ide/Makefile
+>  create mode 100644 drivers/staging/s3c-ide/TODO
+>  create mode 100644 drivers/staging/s3c-ide/s3c-ide.c
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+-- 
+-- 
+Ben
+
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
+
