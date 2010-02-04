@@ -1,38 +1,110 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
-Date: Wed, 03 Feb 2010 21:16:15 -0800
-Message-ID: <1265260575.31964.13.camel@Joe-Laptop.home>
-References: <cover.1265095093.git.joe@perches.com>
-	 <12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
-	 <4B69B0A0.2040701@teksavvy.com> <1265224535.24887.16.camel@Joe-Laptop.home>
-	 <4B6A5443.6090804@teksavvy.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] Proposed libata updates for 2.6.33-rc
+Date: Thu, 4 Feb 2010 02:13:22 -0500
+Message-ID: <20100204071322.GA20387@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1853 "EHLO mail.perches.com"
+Received: from havoc.gtf.org ([69.61.125.42]:48903 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751326Ab0BDFQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Feb 2010 00:16:16 -0500
-In-Reply-To: <4B6A5443.6090804@teksavvy.com>
+	id S1752024Ab0BDHNX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Feb 2010 02:13:23 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>, Sergey Matyukevich <geomatsi@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, dgilbert@interlog.com, tj@kernel.org, hch@infradead.org, catalin.marinas@arm.com
 
-On Wed, 2010-02-03 at 23:59 -0500, Mark Lord wrote:
-> You are the code nanny trying to get this patch in.  Not me.
 
-Nope, I'm just the guy that identified the defect
-and proposed a patch.  You can fix it differently
-if you want.  Jeff could fix it differently as well.
-I don't care that much.  I don't own a device that
-uses this controller.  I'll never see the message.
-Perhaps no one ever will.
+Below is the current content of the 'upstream-linus' branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Maybe Sergey Matyukevich, the original author, wants
-to fix it up in another way.
-http://patchwork.kernel.org/patch/76246/
+consisting of the following proposed 2.6.33-rc fixes:
 
-cheers, Joe
+ drivers/ata/ahci.c        |   15 +++++++++++++++
+ drivers/ata/libata-scsi.c |    2 +-
+ drivers/ata/libata-sff.c  |    3 +++
+ include/linux/ata.h       |    4 ++--
+ 4 files changed, 21 insertions(+), 3 deletions(-)
 
+Catalin Marinas (1):
+      [libata] Call flush_dcache_page after PIO data transfers in libata-sff.c
+
+Christoph Hellwig (1):
+      libata: fix ata_id_logical_per_physical_sectors
+
+Douglas Gilbert (1):
+      libata-scsi passthru: fix bug which truncated LBA48 return values
+
+Tejun Heo (1):
+      ahci: add Acer G725 to broken suspend list
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index b8bea10..b343903 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2868,6 +2868,21 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 			},
+ 			.driver_data = "F.23",	/* cutoff BIOS version */
+ 		},
++		/*
++		 * Acer eMachines G725 has the same problem.  BIOS
++		 * V1.03 is known to be broken.  V3.04 is known to
++		 * work.  Inbetween, there are V1.06, V2.06 and V3.03
++		 * that we don't have much idea about.  For now,
++		 * blacklist anything older than V3.04.
++		 */
++		{
++			.ident = "G725",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "eMachines"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "eMachines G725"),
++			},
++			.driver_data = "V3.04",	/* cutoff BIOS version */
++		},
+ 		{ }	/* terminate list */
+ 	};
+ 	const struct dmi_system_id *dmi = dmi_first_match(sysids);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index f4ea5a8..d096fbc 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2875,7 +2875,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	 * write indication (used for PIO/DMA setup), result TF is
+ 	 * copied back and we don't whine too much about its failure.
+ 	 */
+-	tf->flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	if (scmd->sc_data_direction == DMA_TO_DEVICE)
+ 		tf->flags |= ATA_TFLAG_WRITE;
+ 
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 741065c..730ef3c 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -893,6 +893,9 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 				       do_write);
+ 	}
+ 
++	if (!do_write)
++		flush_dcache_page(page);
++
+ 	qc->curbytes += qc->sect_size;
+ 	qc->cursg_ofs += qc->sect_size;
+ 
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 38a6948..20f3156 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -647,9 +647,9 @@ static inline int ata_id_has_large_logical_sectors(const u16 *id)
+ 	return id[ATA_ID_SECTOR_SIZE] & (1 << 13);
+ }
+ 
+-static inline u8 ata_id_logical_per_physical_sectors(const u16 *id)
++static inline u16 ata_id_logical_per_physical_sectors(const u16 *id)
+ {
+-	return id[ATA_ID_SECTOR_SIZE] & 0xf;
++	return 1 << (id[ATA_ID_SECTOR_SIZE] & 0xf);
+ }
+ 
+ static inline int ata_id_has_lba48(const u16 *id)
