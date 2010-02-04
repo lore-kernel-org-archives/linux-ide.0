@@ -1,57 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: port multiplier problem
-Date: Thu, 04 Feb 2010 12:21:08 +0900
-Message-ID: <4B6A3D24.8020802@kernel.org>
-References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>	 <4B683DEF.3000302@gmail.com> <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>
+Date: Thu, 04 Feb 2010 12:24:29 +0900
+Message-ID: <4B6A3DED.6060708@kernel.org>
+References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>	 <4B683DEF.3000302@gmail.com>	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>	 <4B686B2B.2080406@gmail.com>	 <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>	 <4B687B7C.2070406@gmail.com> <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45569 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:40373 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753328Ab0BDDOc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Feb 2010 22:14:32 -0500
-In-Reply-To: <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>
+	id S1754858Ab0BDDRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Feb 2010 22:17:51 -0500
+In-Reply-To: <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Grant Grundler <grundler@google.com>
 Cc: Chandra Shekhar Sah <edu4madh@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
-
-On 02/03/2010 01:44 AM, Grant Grundler wrote:
-> On Tue, Feb 2, 2010 at 6:59 AM, Chandra Shekhar Sah <edu4madh@gmail.com> wrote:
->> Hi Tejun,
->>
->> I have attached full dmesg output, while 9 disks are connected to PMP, and
->> no disk to "direct sata".
+On 02/04/2010 11:37 AM, Grant Grundler wrote:
+> I had two questions on that thread that never got answered:
+>    http://markmail.org/message/snpekoj4qexrslk5
 > 
-> Linux version 2.6.31.12-174.2.3.fc12.i686.PAE
-> (mockbuild@x86-04.phx2.fedoraproject.org)
-> ...
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> ata3.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> ata3.00: hard resetting link
-> ata3.00: SATA link down (SStatus 0 SControl 10)
-> ata3.01: hard resetting link
-> ata3.01: SATA link down (SStatus 0 SControl 320)
-> ata3.02: hard resetting link
-> ata3.02: SATA link down (SStatus 0 SControl 320)
-> ata3.03: hard resetting link
-> ata3.03: SATA link down (SStatus 0 SControl 320)
-> ata3.04: hard resetting link
-> ata3.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.05: hard resetting link
-> ata3.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> | How can we find out if anyone has the SEMB properly wired up?
+> | Would it be hard to make libata aware of "SEMB port not responding" case?
+> | ie if the SEMB port times out or has no link, reduce the port count of
+> | the sil3726 PMP by one.
+> |
+> | Maybe add a "enable_sil24_semb" flag to libata?
+> | (avoid checking unless someone asks for it). I hate magic flags but also
+> | don't want to subject most people to the timeout delay.
 > 
-> Sil3726 has only 5 ports. 6th port is an enclosure management port.
-> Wasn't there a patch submitted to ignore the enclosure mgt port?
+> I (or Gwendal) can post a patch (and lightly test) for any of the above.
+> Just need to get some guidance so we don't waste our time.
 
-Eh... I don't think it got included.
-
-> I doubt this is the problem Chandra is seeing but it could be related.
-
-Doesn't seem to be.  IDENTIFY failures are coming from normal ports.
+It's not really sil24 tho.  But anyways, I think we can just disable
+them altogether.  It's not like they have ever worked.  Just limiting
+both 3726 and 4726 to 5 ports should be fine.  That said, I'm not
+quite sure this is relevant to the reported problem but it's worth a
+shot.
 
 Thanks.
 
