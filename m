@@ -1,126 +1,228 @@
-From: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
-	PIO data transfers in libata-aff.c
-Date: Thu, 04 Feb 2010 15:39:11 +0000
-Message-ID: <1265297951.28746.116.camel@pc1117.cambridge.arm.com>
-References: <1265218789.2873.276.camel@mulgrave.site>
-	 <1265294017.28746.88.camel@pc1117.cambridge.arm.com>
-	 <1265295694.29959.3.camel@mulgrave.site>
+From: Chandra Shekhar Sah <edu4madh@gmail.com>
+Subject: Re: port multiplier problem
+Date: Thu, 04 Feb 2010 11:39:56 -0500
+Message-ID: <4B6AF85C.6050104@gmail.com>
+References: <4B5885F7.2020007@gmail.com> <4B679EA9.6030203@kernel.org>	 <4B6833DD.1020001@gmail.com> <4B683581.7070708@kernel.org>	 <4B683DEF.3000302@gmail.com>	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>	 <4B686B2B.2080406@gmail.com>	 <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>	 <4B687B7C.2070406@gmail.com> <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:39633 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932371Ab0BDPri (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2010 10:47:38 -0500
-In-Reply-To: <1265295694.29959.3.camel@mulgrave.site>
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:61323 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758325Ab0BDQkE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2010 11:40:04 -0500
+In-Reply-To: <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, jeff@garzik.org, linux-ide@vger.kernel.org, stable@kernel.org, tj@kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, 2010-02-04 at 15:01 +0000, James Bottomley wrote:
-> On Thu, 2010-02-04 at 14:33 +0000, Catalin Marinas wrote:
-> > On Wed, 2010-02-03 at 17:39 +0000, James Bottomley wrote:
-> > > On Wed, 2010-02-03 at 12:29 -0500, Jeff Garzik wrote:
-> > > > On 02/03/2010 12:20 PM, Andrew Morton wrote:
-> > > > > On Wed, 03 Feb 2010 12:15:46 -0500 Jeff Garzik<jgarzik@pobox.com>  wrote:
-> > > > >> On 02/03/2010 12:06 PM, Andrew Morton wrote:
-> > > > >>> Anyway, I'd draw your attention to this claim in the changelog: "This
-> > > > >>> patch allows the ARM boards to use a rootfs on CompactFlash with the
-> > > > >>> PATA platform driver." Immediate-term, we should be looking for a small
-> > > > >>> fix for this issue which is acceptable for 2.6.33 and 2.6.32 and earlier.
-> > > > >>
-> > > > >> Sure...  see above.  hopefully one that does not punish -everybody-
-> > > > >> though.  It would be sad to unconditionally slow down millions of volume
-> > > > >> platform (read: x86) users for some embedded boards.
-> > > > >
-> > > > > Well.
-> > > > > ata-call-flush_dcache_page-around-pio-data-transfers-in-libata-affc.patch
-> > > > > is a no-op on x86.  It only has an effect on architectures which
-> > > > > implement flush_dcache_page().  And I expect flush_dcache_page() is
-> > > > > pretty light on those architectures, when compared with a PIO-mode
-> > > > > transfer.
-> > > >
-> > > > I don't object to the patch...  as long as the arch people are happy.
-> > > > Arch people seem to be the ones complaining, though
-> > >
-> > > Apart from the contents, which is looking like sprinkle mainline with
-> > > random flushes, I'm unhappy that something which could be better
-> > > implemented by thinking about the problem is now being rammed through as
-> > > a must have bug fix.
-> > >
-> > > We got this piece of crap in the same way:
-> > >
-> > > commit 2d4dc890b5c8fabd818a8586607e6843c4375e62
-> > > Author: Ilya Loginov <isloginov@gmail.com>
-> > > Date:   Thu Nov 26 09:16:19 2009 +0100
-> > >
-> > >     block: add helpers to run flush_dcache_page() against a bio and a
-> > > request's pages
-> > >
-> > > Which is another race to flush everywhere until my coherence problem
-> > > goes away.
-> > >
-> > > This scattershot approach to coherency is really damaging in the long
-> > > term because all these random flushes are going to mask real problems we
-> > > may or may not have in the arch APIs ... and worse, they'll mask
-> > > mostly ... there'll likely be times when the masking is incomplete and
-> > > we're left with incredibly hard to debug data loss or binary crashes.
-> >
-> > I agree that this could be solved in a better way and I'm in favour of
-> > API improvements. The current API and description in cachetlb.txt
-> > suggest that flush_dcache_page() is the best approach when modifying
-> > page cache pages.
-> >
-> > AFAICT, there are two main use cases of flush_dcache_page() (could be
-> > more but that's what affects ARM): (1) filesystems modifying page cache
-> > pages (NFS, cramfs etc.) and (2) drivers doing PIO (block, HCD) that may
-> > write directly to page cache pages. Point (2) is a newer addition (as
-> > the one above) to fix coherency problems on Harvard architectures.
-> >
-> > As long as you use filesystems like cramfs that call
-> > flush_dcache_page(), the PIO block driver doesn't need to do any
-> > flushing. That's one of the reasons why MTD didn't need any for a long
-> > time. Once you start using filesystems like ext2, there is no
-> > flush_dcache_page() called by the VFS layer, so we thought about moving
-> > this into the driver (for a long time I had a dirty hack in
-> > mpage_end_io_read() to call flush_dcache_page()).
-> >
-> > If we state that flush_dcache_page() should not be used in driver code,
-> > than we need additional API for this (like pio_map_page etc. to be in
-> > line with the dma_map_* functions). This would allow architectures to
-> > implement them however they like.
-> >
-> > I can go on linux-arch with a proposed patch if this sounds acceptable.
-> 
-> I think I'd prefer some type of kmap_ variant.  The reason is that all
-> the semantics are going to be the same as kmap ... down to having the
-> slots for atomic.  All we need is the extra flag giving the direction of
-> transfer and, of course, what you get back is a virtual address pointer
-> (all the dma operations return physical address handles).
+Hi Grant,
 
-Would a kmap_pio API always require a page structure as argument?
+I compared PMP part with Chris dmesg and here are some similarities:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Similarity
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D
+sata_sil24 0000:03:02.0: version 1.1
+sata_sil24 0000:03:02.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+scsi3 : sata_sil24
+scsi4 : sata_sil24
+scsi5 : sata_sil24
+scsi6 : sata_sil24
+ata3: SATA max UDMA/100 host m128@0xea009000 port 0xea000000 irq 18
+ata4: SATA max UDMA/100 host m128@0xea009000 port 0xea002000 irq 18
+ata5: SATA max UDMA/100 host m128@0xea009000 port 0xea004000 irq 18
+ata6: SATA max UDMA/100 host m128@0xea009000 port 0xea006000 irq 18
+aic7xxx 0000:03:04.1: PCI INT B -> GSI 18 (level, low) -> IRQ 18
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata3.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+ata3.00: hard resetting link
+ata3.00: SATA link down (SStatus 0 SControl 10)
+ata3.01: hard resetting link
+ata3.01: SATA link down (SStatus 0 SControl 320)
+ata3.02: hard resetting link
+ata3.02: SATA link down (SStatus 0 SControl 320)
+ata3.03: hard resetting link
+ata3.03: SATA link down (SStatus 0 SControl 320)
+ata3.04: hard resetting link
+ata3.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.05: hard resetting link
+ata3.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+ata3.04: failed to IDENTIFY (I/O error, err_mask=3D0x11)
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-There is a similar situation for HCD drivers and USB mass storage which
-I raised recently. The idea that the USB mass storage code should do the
-cache flushing was rejected as this has to be pushed down to the HCD
-driver. However, the HCD driver doesn't get page information, only a
-urb->transfer_buffer pointer to which it may do either DMA or PIO (both
-may actually happen in the same driver as an optimisation).
+However, I got some extra errors in my case (shown below):
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+ata3.04: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xf
+ata3.04: SError: { PHYRdyChg DevExch }
 
-If we enforce the use of a kmap_pio API in the USB mass storage, it
-wouldn't be optimal since this code is not aware of whether the HCD
-driver would do PIO or DMA.
+ata3.04: PHY status changed but maxed out on retries, giving up
+ata3.04: Manully issue scan to resume this link
+ata3.04: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xf t4
+ata3.04: irq_stat 0x01060002, failed to transmit command FIS
+ata3.04: SError: { PHYRdyChg CommWake DevExch }
+ata3.04: limiting SATA link speed to 1.5 Gbps
 
-Looking at the HCD drivers, there are more similarities to the DMA API
-like pio_map_page, pio_map_single etc. I personally don't care much
-about how the API is named but rather where such API should be called
-from.
+ata4.15: hard resetting link
+ata3.15: qc timeout (cmd 0xe4)
+ata3.01: failed to read SCR 2 (Emask=3D0x4)
+ata3.01: COMRESET failed (errno=3D-5)
+ata3.01: failed to read SCR 0 (Emask=3D0x40)
+ata3.01: reset failed, giving up
 
-Regards.
+ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+ata4: PMP SError.N set for some ports, repeating recovery
+ata4.04: hard resetting link
 
--- 
-Catalin
+ata4.15: hard resetting link
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+SELinux: initialized (dev rpc_pipefs, type rpc_pipefs), uses genfs_cont=
+exts
+ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+
+ata4: PMP SError.N set for some ports, repeating recovery
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Chris's post remind me about the LED light. In my drives (all hot=20
+swappable), each has two LEDs: one for power (green light) and another=20
+(orange light) probably showing the activity of the drive and it is=20
+related with PMP because this orange light does not lit if I connect th=
+e=20
+drive to direct sata port (with direct sata connection, disks are=20
+working fine).
+
+When the disk array was working fine (few months ago), the orange light=
+=20
+lit for a very short time when the disk's power is switched on and then=
+=20
+it turns off. It lit again when disk is working. However, now the orang=
+e=20
+light does not turn off. I saw similar thing in the manual of sil3726=20
+PMP, saying that some light turn off after disk is ready (I don't know=20
+which light).
+
+Thanks,
+CN
+
+
+On 2/3/10 9:37 PM, Grant Grundler wrote:
+> On Tue, Feb 2, 2010 at 11:22 AM, Chandra Shekhar Sah<edu4madh@gmail.c=
+om>  wrote:
+>   =20
+>> Hi Grant,
+>>
+>> Thank for reply.
+>> Yes, PMP is sil3726. The backplane of the disk array has two PMP (ea=
+ch
+>> 1-to-5 as you have mentioned) and two sata direct connection without=
+ PMP.
+>> So, 10 disk are behind 2 PMP.
+>>     =20
+> Ah ok. That explains your "5-5-1-1" comment now. I tried to find a
+> Data sheet for this board but only found one in Chinese:
+>      www.norco.com.cn/UpLoadFile/Manual/DS-12X0-CN.pdf
+>
+> and I unfortunately don't speak/read chinese. Probably doesn't matter
+> though since...
+>
+> This email thread looks like a duplicate of a previous bug report:
+>     http://markmail.org/message/lp3ynvfefejpiy2r
+>
+> (or search for  "Ubuntu 9.04 (2.6.28-14) and eSATA Port Multiplier
+> (PMP) Not working")
+>
+> Chandra, you might read through that thread and dmesg output (posted =
+by Chris K)
+> to see what else you have in common.
+>
+> I had two questions on that thread that never got answered:
+>     http://markmail.org/message/snpekoj4qexrslk5
+>
+> | How can we find out if anyone has the SEMB properly wired up?
+> | Would it be hard to make libata aware of "SEMB port not responding"=
+ case?
+> | ie if the SEMB port times out or has no link, reduce the port count=
+ of
+> | the sil3726 PMP by one.
+> |
+> | Maybe add a "enable_sil24_semb" flag to libata?
+> | (avoid checking unless someone asks for it). I hate magic flags but=
+ also
+> | don't want to subject most people to the timeout delay.
+>
+> I (or Gwendal) can post a patch (and lightly test) for any of the abo=
+ve.
+> Just need to get some guidance so we don't waste our time.
+>
+> thanks,
+> grant
+>
+>   =20
+>> Total is 12 disks. The sata host controller is
+>> sil3124. Picture of the backplane is attached.
+>>
+>> Thanks,
+>> Chandra
+>>
+>> On 2/2/10 2:04 PM, Grant Grundler wrote:
+>>     =20
+>>> On Tue, Feb 2, 2010 at 10:12 AM, Chandra Shekhar Sah<edu4madh@gmail=
+=2Ecom>
+>>>   wrote:
+>>>
+>>>       =20
+>>>> Hi Grant,
+>>>>
+>>>> There are 6 Seagate Barracuda and 6 Hitachi DeskStar.
+>>>>
+>>>>         =20
+>>> I thought 0x1095/0x3726 was a Silicon Image part. Can you confirm t=
+his?
+>>>
+>>> If it is, this sounds like a broken implementation to me. Here is w=
+hat
+>>> the Silicon Image 3726 Data Sheet says in the introduction:
+>>>      Silicon Image=E2=80=99s SiI3726 is 1-to-5 SATA Port Multiplier=
+ designed to
+>>> provide a high performance link between a single SATA host port and=
+ 5
+>>> SATA device ports.
+>>>
+>>> So I don't know where the 6th device is getting connected. Some
+>>> explanation/data sheet from the HW vendor would be helpful at this
+>>> point.
+>>>
+>>>
+>>>       =20
+>>>> Seagate Model: ST3750640AS
+>>>> Firmware: 3.AAK
+>>>>
+>>>> Hitachi Model:HDS721075KLA330
+>>>> Firmware: Not sure
+>>>>
+>>>>         =20
+>>> Both of these drives work behind Sil3726. (First hand experience).
+>>>
+>>>
+>>>       =20
+>>>> I have attached pictures of both labels, in case.
+>>>>
+>>>>         =20
+>>> Perfect - thanks for posting those.
+>>>
+>>> thanks,
+>>> grant
+>>>
+>>>
+>>>       =20
+>>
+>>     =20
+>   =20
 
