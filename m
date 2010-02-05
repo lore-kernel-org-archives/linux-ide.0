@@ -1,55 +1,75 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [smartmontools-support] SATA drive reset/disable events on ICH7
- ata_piix when polling SMART info
-Date: Fri, 5 Feb 2010 09:17:05 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1002050911500.7774@p34.internal.lan>
-References: <4B6C2635.105@buttersideup.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] non-existant config in kernel source (CONFIG_AHCI)
+Date: Fri, 05 Feb 2010 17:08:45 +0300
+Message-ID: <4B6C266D.6060209@ru.mvista.com>
+References: <20100205132959.GB6874@faui49.informatik.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:54345 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932962Ab0BEORI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Feb 2010 09:17:08 -0500
-In-Reply-To: <4B6C2635.105@buttersideup.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100205132959.GB6874@faui49.informatik.uni-erlangen.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Erik Inge Bols?? <knan-lkml@anduin.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos@i4.informatik.uni-erlangen.de, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: "smartmontools-support@lists.sourceforge.net" <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
 
+Hello.
 
+Christoph Egger wrote:
 
-On Fri, 5 Feb 2010, Tim Small wrote:
-
-> Hi,
+> 	As part of the VAMOS[0] research project at the University of
+> Erlangen we're checking referential integrity between kernel KConfig
+> options and in-code Conditional blocks.
 >
-> I have a couple of Debian Lenny ("2.6.26-2-amd64") boxes on rented
-> hardware, each has a couple of SATA drives:
+> 	While there's one place that is checking for CONFIG_AHCI, this
+> config being referenced from printed books and people pointing to this
+> config item I can't find it anywhere in the kernel kconfig
+> infrastruture and it doesn't seem to ever have been there (since
+> git). Is this maybe a typo for CONFIG_SATA_AHCI? reading the
+> information for the affected piece of source it would actually make
+> sense.
 >
-> One has 2x 1TB Seagate Barracuda 7200.11 model ST31000333AS firmware SD35
+> 	Please keep me informed of this patch getting confirmed /
+> merged so we can keep track of it.
 >
-> The other has 2x 2TB WD Caviar Green model WDC WD20EADS-00R6B0 firmware
-> 01.00A01
+> Regards
 >
-> ... the machines are currently set up to run smartd, and also log HDD
-> temp via munin.  ata_piix is the driver in use.
+> 	Christoph Egger
 >
-> The WD machine did this sort of thing a couple of times, which got my
-> attention.
+> [0] http://vamos1.informatik.uni-erlangen.de/
 >
+> ----
+> From 60136f94d9c97f9a788738e30731e25bd794322b Mon Sep 17 00:00:00 2001
+> From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+> Date: Fri, 5 Feb 2010 13:26:33 +0100
+> Subject: [PATCH] CONFIG_AHCI is really CONFIG_SATA_AHCI
+>
+> The marvell driver comtains a fallback to ahci for the sata ports
+>   
 
-I have seen people report similar problems with the following drives:
+   Only "contains".
 
-1 - Velociraptors (me/others) (don't work at all in raid correctly)
-http://forums.storagereview.com/index.php/topic/27303-velociraptor-premature-failure-rate-bad-drives-premature-to-market/
-2 - Green Drives (search this list, there are similar problems) in Linux.
+> which is incorrectly checked as CONFIG_AHCI while the only AHCI config
+> item is actually called SATA_AHCI (which also sounds sensible
+> considering it's a fallback for the sata ports).
+>
+> Signed-off-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+> ---
+>  drivers/ata/pata_marvell.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+> index 950da39..eabd138 100644
+> --- a/drivers/ata/pata_marvell.c
+> +++ b/drivers/ata/pata_marvell.c
+> @@ -147,7 +147,7 @@ static int marvell_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+>  	if (pdev->device == 0x6101)
+>  		ppi[1] = &ata_dummy_port_info;
+>  
+> -#if defined(CONFIG_AHCI) || defined(CONFIG_AHCI_MODULE)
+> +#if defined(CONFIG_SATA_AHCI) || defined(SATA_CONFIG_AHCI_MODULE)
+>   
 
-I have Caviar Black and WD RE3, they work OK in Linux.
+   You surely meant CONFIG_SATA_AHCI_MODULE.
 
---
-
-The WD Velociraptors do not work (at least in RAID).
-The Green, again, search the list I recall seeing people have problems.
-
---
-
+WBR, Sergei
